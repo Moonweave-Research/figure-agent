@@ -32,6 +32,14 @@ panels:
     )
     (fixture / "briefing.md").write_text("## §1. Topic\nCharge trapping\n", encoding="utf-8")
     (fixture / "design.md").write_text("Use compact visual grammar.\n", encoding="utf-8")
+    (fixture / "authoring_plan.md").write_text(
+        "Hero: panel C should read as deep trap first, then escape barrier.\n",
+        encoding="utf-8",
+    )
+    (fixture / "panel_goals.md").write_text(
+        "Panel C: make the reader compare shallow and deep trap escape paths.\n",
+        encoding="utf-8",
+    )
     return fixture
 
 
@@ -40,6 +48,14 @@ def _env(workspace: Path) -> dict[str, str]:
     env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
     env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
     return env
+
+
+def _file_snapshot(root: Path) -> dict[str, str]:
+    return {
+        path.relative_to(root).as_posix(): path.read_text(encoding="utf-8")
+        for path in sorted(root.rglob("*"))
+        if path.is_file()
+    }
 
 
 def test_context_pack_cli_compiles_read_only_json_payload(tmp_path: Path) -> None:
@@ -68,6 +84,42 @@ def test_context_pack_cli_compiles_read_only_json_payload(tmp_path: Path) -> Non
     assert payload["rule_catalog"] is None
     assert payload["sources"]["rule_catalog"] == ""
     assert "briefing" in payload["paper_context"]
+
+
+def test_context_pack_includes_read_only_narrative_context(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    before = _file_snapshot(fixture)
+
+    result = subprocess.run(
+        [str(PLUGIN_ROOT / "bin" / "fig-agent"), "context-pack", "context_demo", "--json"],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert _file_snapshot(fixture) == before
+    payload = json.loads(result.stdout)
+    narrative = payload["narrative_context"]
+    assert narrative["schema"] == "figure-agent.narrative-context.v1"
+    assert narrative["read_only"] is True
+    assert narrative["mode"] == "human_perspective_compiler"
+    assert narrative["sources"]["briefing"].endswith("briefing.md")
+    assert narrative["sources"]["panel_goals"].endswith("panel_goals.md")
+    assert narrative["reader_contract"]["first_takeaway_source"] == "briefing.md"
+    assert narrative["reader_contract"]["panel_story_inputs"]
+    assert narrative["reader_contract"]["human_review_questions"]
+    assert narrative["stop_boundaries"] == {
+        "autonomous_patch_selection": False,
+        "generation_executor": False,
+        "model_calls": False,
+        "prompt_loop": False,
+        "rank_scoring": False,
+        "source_mutation": False,
+    }
 
 
 def test_context_pack_scopes_per_fixture_catalog_to_its_own_fixture() -> None:

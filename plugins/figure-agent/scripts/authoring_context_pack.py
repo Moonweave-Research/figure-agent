@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import authoring_rules
+import narrative_context
 import runtime_paths
 import yaml
 from inputs import parse_spec
@@ -136,6 +137,11 @@ def build_context_pack(
         "rule_catalog": fixture_catalog,
         "project_rule_catalog": project_catalog,
         "semantic_contracts": semantic_contracts,
+        "narrative_context": narrative_context.build_narrative_context(
+            example_dir,
+            workspace_root=paths.workspace_root,
+            spec=spec,
+        ),
         "paper_context": _paper_context(example_dir),
         "scope_boundary": {
             "generation_executor": False,
