@@ -1,6 +1,7 @@
 # Anchored-Proposer Fix-Mode (Slice 5)
 
-Status: Increment 1 shipped (TDD). Increment 2 specified, not built.
+Status: Increment 1 + 2 shipped (TDD). Increment 3 (apply-pipeline e2e + geometry-derived
+proposed_offset) open.
 Branch: work/review-auto-fixes-2026-06-25. Backs memory `project_slice5_fig2_settles_clean_2026_06_25`.
 
 ## Problem (dogfood-grounded, not assumed)
@@ -41,26 +42,42 @@ id=C001 | \node[labelMute...]` — the candidate now targets the diagnosed eleme
 Test: `tests/test_candidate_generator.py::
 test_adjudicated_apply_finding_drives_candidate_at_finding_line` (RED→GREEN).
 
-## Remaining ceilings (Increment 2+, NOT built)
+## Increment 2 — verifier-gated reposition (SHIPPED)
 
-Increment 1 fixes "wrong element". Two ceilings remain before the loop can
-actually resolve a label-placement collision:
+Increment 1 fixed "wrong element" but the candidate still nudged x by 0.1cm —
+wrong direction, and `MAX_TRANSLATE_CM = 0.10` can't move the ~0.5cm C001 needs.
+Increment 2 lets the eye's exact diagnosis drive the move:
 
-1. **Direction**: the anchored candidate reuses `offset_first_coordinate`, which
-   offsets the FIRST coordinate (x=7.60) — moves the label sideways, not toward
-   clearance. Needs a diagnosed-direction offset (the finding/geometry says move
-   the y-coordinate away from the reference line).
-2. **Magnitude**: `bounded_coordinate_offset.MAX_TRANSLATE_CM = 0.10`. C001 needs
-   ~0.5cm (4.12 → 3.62). Even a correctly-directed candidate cannot move far
-   enough. The bounded-offset family can only REFINE (≤0.1cm), not author this
-   fix. The fix-mode needs either a finding-scoped larger translate budget (on a
-   fail-loud verifier) or a richer edit family (anchor change / target-position
-   move).
+- A finding may carry a structured `proposed_offset: {axis, dx_cm}` (the eye's
+  diagnosed edit). For C001 that is `{axis: y, dx_cm: -0.50}` (4.12 → 3.62).
+- `bounded_coordinate_offset.reposition_coordinate` translates the line on that
+  axis with a larger bound (`MAX_REPOSITION_CM = 0.80`) than the nudge cap. Its
+  SAFETY is the Slice 4 verifier (semantic recheck that the defect signature
+  dropped + value-preservation CLASS_VERIFIERS + auto-rollback), NOT the tiny
+  translate bound — the 0.80 cap only stops an absurd whole-figure move. The
+  0.10cm nudge family's cap is untouched.
+- `candidate_generator._finding_offset` emits a `label_reposition` candidate when
+  `proposed_offset` is present, else falls back to the bounded nudge.
 
-Every Increment-2 step must ride the Slice 4 verification spine (semantic
-recheck + value-preservation CLASS_VERIFIERS + auto-rollback) — do not relax the
-magnitude cap without a verifier that fails loud when a fix doesn't actually drop
-the C001 signature.
+Result on real fig2: the anchored candidate now rewrites the PI/PDMS/PET node
+`(7.60,4.12)` → `(7.60,3.62)` — the exact fix the eye diagnosed, which the
+bounded-nudge family could never author.
+
+Tests: `test_reposition_coordinate_*` (primitive), `test_adjudicated_finding_
+with_proposed_offset_emits_reposition` (wiring).
+
+## Increment 3 (open)
+
+1. **Apply-pipeline e2e**: drive the fig2 `label_reposition` candidate through
+   render → accept → apply and confirm the Slice 4 semantic recheck reports the
+   PI/PDMS/PET crossing actually gone (and rolls back if not). The candidate is
+   currently `review_only`/`human_required` at the acceptance gate.
+2. **Geometry-derived `proposed_offset`**: today the eye supplies dx_cm by hand
+   in the critique. Derive it from rendered geometry (label bbox vs crossed
+   reference-line position + margin) so the loop proposes the magnitude itself.
+3. **Critique-gate adversarial check**: the eye rubber-stamped a detector
+   true-positive (VC006-008) as a false positive. An accept_simplification of a
+   detector flag needs an adversarial second check, else any eye games the gate.
 
 Also surfaced: the critique gate itself rubber-stamped a detector true-positive
 as `accept_simplification:false_positive`. An EYE fix-mode needs an adversarial

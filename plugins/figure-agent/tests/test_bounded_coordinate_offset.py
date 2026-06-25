@@ -126,3 +126,20 @@ def test_offset_direction_returns_none_for_diagonal_line() -> None:
     line_bbox = [10.0, 10.0, 50.0, 80.0]
     word_bbox = [60.0, 60.0, 70.0, 70.0]
     assert bounded_coordinate_offset.offset_direction(line_bbox, word_bbox) is None
+
+
+def test_reposition_coordinate_moves_y_beyond_nudge_cap() -> None:
+    # A label crossing an axis needs a move larger than the 0.10cm nudge cap.
+    # Reposition is verifier-gated (Slice 4 semantic recheck + value preservation),
+    # so its safety is the post-apply check, not a tiny translate bound.
+    line = "\\node[labelMute, anchor=north] at (7.60,4.12) {PI, PDMS, PET};"
+    result = bounded_coordinate_offset.reposition_coordinate(line, axis="y", dx_cm=-0.50)
+    assert result is not None
+    coords = _COORD_RE.findall(result)
+    assert coords[0] == ("7.60", "3.62")
+
+
+def test_reposition_coordinate_rejects_beyond_reposition_cap() -> None:
+    line = "\\node at (1.0,1.0) {};"
+    too_far = bounded_coordinate_offset.MAX_REPOSITION_CM + 0.1
+    assert bounded_coordinate_offset.reposition_coordinate(line, axis="y", dx_cm=too_far) is None

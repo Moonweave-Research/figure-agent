@@ -15,6 +15,9 @@ findings:
     grounded_in_rule: "detector visual_clash VC006/VC007/VC008 (text_on_path/text_on_fill); panel-b x-axis at fig2.tex:80"
     observation: "The conventional-cluster caption 'PI, PDMS, PET' crosses the panel-b x-axis line. The labelMute node is anchor=north at (7.60,4.12) (fig2.tex:95) while the x-axis baseline is at y=3.90 (fig2.tex:80), so the first caption line straddles the axis. Visible in the high-zoom crop of full_q3 and in VC006/VC007/VC008."
     suggested_fix: "Lower the caption node below the x-axis: change the y of the labelMute node at fig2.tex:95 from 4.12 to ~3.62 (matching the x-axis label baseline at fig2.tex:82) so 'PI, PDMS, PET (shallow, leaky)' sits clear of the axis line."
+    proposed_offset:
+      axis: y
+      dx_cm: -0.50
     status: open
 panels: []
 audit_enumeration:

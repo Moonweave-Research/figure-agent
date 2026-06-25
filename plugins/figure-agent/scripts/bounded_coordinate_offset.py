@@ -5,6 +5,11 @@ from __future__ import annotations
 import re
 
 MAX_TRANSLATE_CM = 0.10
+# Repositioning a label off a reference line needs a larger move than the nudge
+# cap; its safety is the post-apply Slice 4 verifier (semantic recheck that the
+# defect signature dropped + value-preservation + auto-rollback), not this bound.
+# The bound only stops an absurd whole-figure move.
+MAX_REPOSITION_CM = 0.80
 _AXIS_ALIGN_TOL_PT = 0.5
 _COORD_RE = re.compile(
     r"(?P<lead>(?:at\s*)?)"
@@ -23,10 +28,7 @@ def offset_first_coordinate(line: str, *, dx_cm: float = MAX_TRANSLATE_CM) -> st
     return _COORD_RE.sub(replacement, line, count=1)
 
 
-def offset_all_coordinates(line: str, *, axis: str, dx_cm: float) -> str | None:
-    """Translate every (x,y) on a line by dx_cm on the given axis (whole-line move)."""
-    if axis not in ("x", "y") or abs(dx_cm) > MAX_TRANSLATE_CM:
-        return None
+def _translate_axis(line: str, axis: str, dx_cm: float) -> str | None:
     if _COORD_RE.search(line) is None:
         return None
 
@@ -38,6 +40,21 @@ def offset_all_coordinates(line: str, *, axis: str, dx_cm: float) -> str | None:
         return f"{match.group('lead')}({match.group('x')}, {old_y + dx_cm:.2f})"
 
     return _COORD_RE.sub(_shift, line)
+
+
+def offset_all_coordinates(line: str, *, axis: str, dx_cm: float) -> str | None:
+    """Translate every (x,y) on a line by dx_cm on the given axis (whole-line move)."""
+    if axis not in ("x", "y") or abs(dx_cm) > MAX_TRANSLATE_CM:
+        return None
+    return _translate_axis(line, axis, dx_cm)
+
+
+def reposition_coordinate(line: str, *, axis: str, dx_cm: float) -> str | None:
+    """Whole-line axis translate allowing a larger (still bounded) move than the
+    nudge cap, for verifier-gated label repositioning off a reference line."""
+    if axis not in ("x", "y") or abs(dx_cm) > MAX_REPOSITION_CM:
+        return None
+    return _translate_axis(line, axis, dx_cm)
 
 
 def offset_direction(

@@ -688,8 +688,17 @@ def test_candidate_generator_refuses_source_hash_mismatch_when_ledger_claims_sup
     assert payload["metrics"]["refusal_count"] == 1
 
 
-def _write_apply_finding(fixture: Path, finding_line: int) -> None:
+def _write_apply_finding(
+    fixture: Path, finding_line: int, proposed_offset: dict | None = None
+) -> None:
     name = fixture.name
+    offset_block = ""
+    if proposed_offset is not None:
+        offset_block = (
+            "    proposed_offset:\n"
+            f"      axis: {proposed_offset['axis']}\n"
+            f"      dx_cm: {proposed_offset['dx_cm']}\n"
+        )
     (fixture / "critique.md").write_text(
         "---\n"
         "schema: figure-agent.critique.v1.17\n"
@@ -700,8 +709,7 @@ def _write_apply_finding(fixture: Path, finding_line: int) -> None:
         "    severity: MINOR\n"
         "    category: label_placement\n"
         f"    tex_lines: [{finding_line}, {finding_line}]\n"
-        "    status: open\n"
-        "---\n\n# critique\n",
+        "    status: open\n" + offset_block + "---\n\n# critique\n",
         encoding="utf-8",
     )
     (fixture / "critique_adjudication.yaml").write_text(
@@ -735,3 +743,25 @@ def test_adjudicated_apply_finding_drives_candidate_at_finding_line(tmp_path: Pa
 
     start_lines = {candidate["selector"]["start_line"] for candidate in payload["candidates"]}
     assert 2 in start_lines, payload
+
+
+def test_adjudicated_finding_with_proposed_offset_emits_reposition(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "% header line\n\\node[labelMute, anchor=north] at (7.60,4.12) {PI, PDMS, PET};\n",
+        encoding="utf-8",
+    )
+    # The eye diagnosed the exact fix: drop the caption 0.5cm below the axis.
+    _write_apply_finding(fixture, finding_line=2, proposed_offset={"axis": "y", "dx_cm": -0.5})
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    reposition = [c for c in payload["candidates"] if c.get("edit_class") == "label_reposition"]
+    assert reposition, payload
+    operation = reposition[0]["operations"][0]
+    # Moves the y coordinate the full diagnosed distance, past the 0.10cm nudge cap.
+    assert "(7.60, 3.62)" in operation["replacement"]

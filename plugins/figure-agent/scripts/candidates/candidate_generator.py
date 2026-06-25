@@ -105,15 +105,18 @@ def _label_offset_candidate(
     target: dict[str, str],
     source_hash: str,
     source_defect: dict[str, Any] | None = None,
+    edit_class: str = "label_offset",
+    variant_id: str = VARIANT_ID,
+    variant_dx_cm: float = 0.1,
 ) -> dict[str, Any]:
     candidate = {
         "id": candidate_id,
         "target": target,
-        "edit_class": "label_offset",
+        "edit_class": edit_class,
         "edit_family": EDIT_FAMILY,
         "family": FAMILY,
-        "variant_id": VARIANT_ID,
-        "variant": {"id": VARIANT_ID, "dx_cm": 0.1},
+        "variant_id": variant_id,
+        "variant": {"id": variant_id, "dx_cm": variant_dx_cm},
         "source_hash": source_hash,
         "affected_files": [source_rel.as_posix()],
         "selector": {
@@ -155,7 +158,7 @@ def _label_offset_candidate(
             "source_hash": source_hash,
             "source_path": source_rel.as_posix(),
             "start_line": line_number,
-            "variant_id": VARIANT_ID,
+            "variant_id": variant_id,
         }
     )
     return candidate
@@ -510,6 +513,32 @@ def _candidate_metrics(
     }
 
 
+def _finding_offset(finding: dict[str, Any], line: str) -> tuple[str, str, str, float] | None:
+    """Resolve (replacement, edit_class, variant_id, variant_dx_cm) for a finding's
+    line. A structured `proposed_offset` (the eye's exact diagnosis) drives a
+    verifier-gated `label_reposition` that may move past the 0.10cm nudge cap;
+    otherwise fall back to the bounded nudge."""
+    proposed = finding.get("proposed_offset")
+    if isinstance(proposed, dict):
+        axis = proposed.get("axis")
+        dx_cm = proposed.get("dx_cm")
+        if axis in ("x", "y") and isinstance(dx_cm, (int, float)) and not isinstance(dx_cm, bool):
+            replacement = bounded_coordinate_offset.reposition_coordinate(
+                line, axis=axis, dx_cm=float(dx_cm)
+            )
+            if replacement is not None:
+                return (
+                    replacement,
+                    "label_reposition",
+                    f"reposition_{axis}{float(dx_cm):+.2f}cm",
+                    float(dx_cm),
+                )
+    replacement = bounded_coordinate_offset.offset_first_coordinate(line)
+    if replacement is None:
+        return None
+    return (replacement, "label_offset", VARIANT_ID, 0.1)
+
+
 def _adjudicated_apply_candidates(
     name: str,
     paths: runtime_paths.RuntimePaths,
@@ -557,9 +586,10 @@ def _adjudicated_apply_candidates(
         if line_number < 1 or line_number > len(lines):
             continue
         line = lines[line_number - 1]
-        replacement = bounded_coordinate_offset.offset_first_coordinate(line)
-        if replacement is None:
+        offset = _finding_offset(finding, line)
+        if offset is None:
             continue
+        replacement, edit_class, variant_id, variant_dx_cm = offset
         finding_id = str(finding.get("id"))
         candidates.append(
             _label_offset_candidate(
@@ -583,6 +613,9 @@ def _adjudicated_apply_candidates(
                     "source_fingerprint": "",
                     "ledger_hash": "",
                 },
+                edit_class=edit_class,
+                variant_id=variant_id,
+                variant_dx_cm=variant_dx_cm,
             )
         )
     return candidates
