@@ -604,6 +604,94 @@ def test_apply_candidate_semantic_recheck_success_when_resolved(
     assert recheck["source_defect_id"] == "QD001"
 
 
+def test_verify_labels_unchanged_equal_passes_and_differ_fails():
+    assert candidate_apply._verify_labels_unchanged({"S": 1, "x": 2}, {"S": 1, "x": 2})[0] is True
+    ok, reason = candidate_apply._verify_labels_unchanged({"S": 1}, {"S": 1, "NEW": 1})
+    assert ok is False
+    assert reason == "labels_changed"
+
+
+def test_verify_labels_unchanged_skips_without_baseline():
+    # No pre-mutation PDF words => cannot compare => must not block.
+    ok, reason = candidate_apply._verify_labels_unchanged({}, {"S": 1})
+    assert ok is True
+    assert reason == "no_label_baseline"
+
+
+def test_verify_palette_locked_flags_definecolor(tmp_path: Path):
+    clean = tmp_path / "clean.tex"
+    clean.write_text("\\node (a) at (0,0) {Label};\n", encoding="utf-8")
+    assert candidate_apply._verify_palette_locked(clean)[0] is True
+    dirty = tmp_path / "dirty.tex"
+    dirty.write_text("\\definecolor{foo}{rgb}{0.1,0.2,0.3}\n", encoding="utf-8")
+    ok, reason = candidate_apply._verify_palette_locked(dirty)
+    assert ok is False
+    assert reason.startswith("palette_violation:")
+
+
+def test_run_class_verifiers_fails_on_changed_labels(tmp_path: Path):
+    tex = tmp_path / "fig.tex"
+    tex.write_text("\\node (a) at (0,0) {Label};\n", encoding="utf-8")
+    changes = [{"path": tex, "before": "x", "after": "y", "relative": "fig.tex"}]
+    result = candidate_apply._run_class_verifiers(changes, {"S": 1}, {"S": 1, "NEW": 1})
+    assert result["status"] == "failed"
+    assert any(
+        v["verifier"] == "labels_unchanged" and v["status"] == "failed" for v in result["verifiers"]
+    )
+
+
+def test_apply_candidate_rolls_back_on_value_preservation_violation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A value-preservation verifier fails => the .tex must be auto-rolled-back to
+    # its pre-mutation content and the result recorded as failed verification.
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    _set_source_defect(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    # Semantic recheck passes (target resolved), so the ONLY failure is the
+    # value-preservation gate, which we force to fail.
+    _semantic_recheck_fakes(monkeypatch, pre=[_ledger_defect("QD001")], post=[])
+    monkeypatch.setattr(
+        candidate_apply,
+        "_run_class_verifiers",
+        lambda *_args, **_kwargs: {
+            "status": "failed",
+            "verifiers": [
+                {"verifier": "labels_unchanged", "status": "failed", "reason": "labels_changed"}
+            ],
+        },
+    )
+    tex_path = fixture / "candidate_demo.tex"
+    before = tex_path.read_text(encoding="utf-8")
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+
+    assert result["status"] == "applied_with_failed_verification"
+    cv = result["post_apply"]["class_verifiers"]
+    assert cv["status"] == "failed"
+    assert cv["rolled_back"] is True
+    # the source .tex was restored to its pre-mutation content
+    assert tex_path.read_text(encoding="utf-8") == before
+
+
 def test_post_apply_export_does_not_force_golden_roll_forward(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

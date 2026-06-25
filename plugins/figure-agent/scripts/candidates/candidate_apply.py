@@ -485,6 +485,75 @@ def _pre_apply_defects(name: str, paths: runtime_paths.RuntimePaths) -> list[dic
     return defects if isinstance(defects, list) else []
 
 
+def _pdf_words(pdf_path: Path) -> Counter:
+    if not pdf_path.is_file():
+        return Counter()
+    completed = subprocess.run(
+        ["pdftotext", "-q", str(pdf_path), "-"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        return Counter()
+    return Counter(completed.stdout.split())
+
+
+def _verify_labels_unchanged(pre_words: Counter, post_words: Counter) -> tuple[bool, str]:
+    # No baseline (pre-mutation PDF absent) => cannot compare; do not block.
+    if not pre_words:
+        return (True, "no_label_baseline")
+    if pre_words == post_words:
+        return (True, "labels_unchanged")
+    return (False, "labels_changed")
+
+
+def _verify_palette_locked(tex_path: Path) -> tuple[bool, str]:
+    import lint_tex
+
+    blockers = [v for v in lint_tex.lint(tex_path) if v.severity == "blocker"]
+    if not blockers:
+        return (True, "palette_locked")
+    return (False, f"palette_violation:{blockers[0].category}")
+
+
+# Value-preservation verifiers every applied edit must pass, by edit class.
+# A value-preserving edit may change a presentation attribute (a coordinate, a
+# stroke width, a fill style) but must NOT change the rendered science text
+# (labels_unchanged) or break Style-Lock palette/font discipline (palette_locked).
+CLASS_VERIFIERS: dict[str, tuple[str, ...]] = {
+    "_default": ("labels_unchanged", "palette_locked"),
+}
+
+
+def _verifier_keys(edit_class: str) -> tuple[str, ...]:
+    return CLASS_VERIFIERS.get(edit_class, CLASS_VERIFIERS["_default"])
+
+
+def _run_class_verifiers(
+    changes: list[dict[str, Any]],
+    pre_words: Counter,
+    post_words: Counter,
+) -> dict[str, Any]:
+    results: list[dict[str, str]] = []
+    ok_all = True
+    for key in CLASS_VERIFIERS["_default"]:
+        if key == "labels_unchanged":
+            ok, reason = _verify_labels_unchanged(pre_words, post_words)
+        elif key == "palette_locked":
+            ok, reason = (True, "palette_locked")
+            for change in changes:
+                change_ok, change_reason = _verify_palette_locked(change["path"])
+                if not change_ok:
+                    ok, reason = (change_ok, change_reason)
+                    break
+        else:  # pragma: no cover - guard for an unknown verifier key
+            ok, reason = (True, key)
+        results.append({"verifier": key, "status": "success" if ok else "failed", "reason": reason})
+        ok_all = ok_all and ok
+    return {"status": "success" if ok_all else "failed", "verifiers": results}
+
+
 def apply_candidate(
     name: str,
     manifest: dict[str, Any],
@@ -619,6 +688,9 @@ def apply_candidate(
         # the post-apply recheck diffs (panel, defect_class, severity) counts
         # against this baseline, robust to coordinate-nudge fingerprint shifts.
         pre_defects = _pre_apply_defects(name, paths) if post_apply else []
+        # Snapshot rendered labels BEFORE mutation for the value-preservation gate.
+        build_pdf = example_dir / "build" / f"{name}.pdf"
+        pre_words = _pdf_words(build_pdf) if post_apply else Counter()
         changed_files: list[dict[str, str]] = []
         for change in changes:
             target = change["path"]
@@ -638,6 +710,18 @@ def apply_candidate(
         if detector_recheck is not None:
             post_apply_result["detector_recheck"] = detector_recheck
         if post_apply:
+            # Value-preservation gate (CORR-3): the applied edit must not change
+            # rendered labels or break palette discipline. On any violation,
+            # AUTO-ROLLBACK the .tex to its pre-mutation content so a
+            # science-changing edit is undone, and record it as failed verification.
+            post_words = _pdf_words(build_pdf)
+            class_verifiers = _run_class_verifiers(changes, pre_words, post_words)
+            class_verifiers["rolled_back"] = False
+            if class_verifiers["status"] != "success":
+                for change in changes:
+                    change["path"].write_text(str(change["before"]), encoding="utf-8")
+                class_verifiers["rolled_back"] = True
+            post_apply_result["class_verifiers"] = class_verifiers
             result_status = (
                 "applied_with_failed_verification"
                 if any(item.get("status") != "success" for item in post_apply_result.values())

@@ -52,7 +52,7 @@ panels:
                         "source_line": 1,
                         "panel": "C",
                     }
-                ]
+                ],
             }
         ),
         encoding="utf-8",
@@ -94,8 +94,7 @@ def test_fig_agent_analyze_panel_is_read_only_json(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
     (fixture / "candidate_demo.tex").write_text(
-        "% Panel C\n"
-        "\\node (label-a) at (0,0) {Old Label};\n",
+        "% Panel C\n\\node (label-a) at (0,0) {Old Label};\n",
         encoding="utf-8",
     )
     before = _tree(workspace)
@@ -473,9 +472,7 @@ def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> No
         "\\end{document}\n",
         encoding="utf-8",
     )
-    source_hash = "sha256:" + sha256(
-        (fixture / "candidate_demo.tex").read_bytes()
-    ).hexdigest()
+    source_hash = "sha256:" + sha256((fixture / "candidate_demo.tex").read_bytes()).hexdigest()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["operations"][0]["source_sha256"] = source_hash
     manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
@@ -540,6 +537,7 @@ def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> No
     assert set(apply_payload["post_apply"]) == {
         "compile",
         "detector_recheck",
+        "class_verifiers",
         "export",
         "status",
     }
@@ -584,9 +582,7 @@ def test_fig_agent_apply_candidate_exits_nonzero_when_post_apply_fails(
         "\\end{document}\n",
         encoding="utf-8",
     )
-    source_hash = "sha256:" + sha256(
-        (fixture / "candidate_demo.tex").read_bytes()
-    ).hexdigest()
+    source_hash = "sha256:" + sha256((fixture / "candidate_demo.tex").read_bytes()).hexdigest()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["operations"][0]["source_sha256"] = source_hash
     manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
