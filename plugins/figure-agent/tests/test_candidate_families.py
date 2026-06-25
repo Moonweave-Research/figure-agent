@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -96,8 +97,7 @@ panels:
         encoding="utf-8",
     )
     (fixture / f"{name}.tex").write_text(
-        "% Panel A\n"
-        "\\node (label-a) at (0,0) {Synthetic Label};\n",
+        "% Panel A\n\\node (label-a) at (0,0) {Synthetic Label};\n",
         encoding="utf-8",
     )
     return fixture
@@ -388,3 +388,66 @@ def test_real_panel_c_energy_family_produces_candidate() -> None:
 
     assert payload["candidates"]
     assert payload["candidates"][0]["target"]["panel"] == "C"
+
+
+def _fig2_source_text() -> str:
+    return (
+        PLUGIN_ROOT / "examples" / "fig2_trap_design_space" / "fig2_trap_design_space.tex"
+    ).read_text(encoding="utf-8")
+
+
+def test_line_weight_tier_family_emits_review_only_candidate_on_fig2_panel_b() -> None:
+    payload = candidate_families.build_family_candidates(
+        "fig2_trap_design_space",
+        panel="B",
+        family="line-weight-tier",
+        workspace_root=PLUGIN_ROOT,
+        plugin_root=PLUGIN_ROOT,
+    )
+
+    assert payload["refusals"] == []
+    candidate = payload["candidates"][0]
+    assert candidate["family"] == "line-weight-tier"
+    assert candidate["edit_class"] == "line_weight_style"
+    assert candidate["apply_authority"] == "review_only"
+    assert candidate["semantic_risks"]  # non-empty -> forces human review
+    operation = candidate["operations"][0]
+    assert operation["kind"] == "replace_text"
+    assert operation["semantic_kind"] == "line_weight_tier"
+    original = operation["original"]
+    replacement = operation["replacement"]
+    assert original != replacement
+    # original must be unique so candidate_apply's count==1 guard holds.
+    assert _fig2_source_text().count(original) == 1
+    # the only delta is a line-width numeral.
+    width_re = re.compile(r"line width\s*=\s*\d*\.?\d+pt")
+    assert width_re.sub("line width=Xpt", original) == width_re.sub("line width=Xpt", replacement)
+
+
+def test_gradient_depth_fill_family_emits_review_only_candidate_on_fig2_panel_b() -> None:
+    payload = candidate_families.build_family_candidates(
+        "fig2_trap_design_space",
+        panel="B",
+        family="gradient-depth-fill",
+        workspace_root=PLUGIN_ROOT,
+        plugin_root=PLUGIN_ROOT,
+    )
+
+    assert payload["refusals"] == []
+    candidate = payload["candidates"][0]
+    assert candidate["family"] == "gradient-depth-fill"
+    assert candidate["edit_class"] == "gradient_depth_fill"
+    assert candidate["apply_authority"] == "review_only"
+    assert candidate["semantic_risks"]
+    operation = candidate["operations"][0]
+    assert operation["kind"] == "replace_text"
+    assert operation["semantic_kind"] == "gradient_depth_fill"
+    original = operation["original"]
+    replacement = operation["replacement"]
+    assert original != replacement
+    assert _fig2_source_text().count(original) == 1
+    # flat \fill becomes \shade with same-hue stops; coordinates preserved.
+    assert original.lstrip().startswith("\\fill[")
+    assert replacement.lstrip().startswith("\\shade[")
+    coord_re = re.compile(r"\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)")
+    assert coord_re.findall(original) == coord_re.findall(replacement)
