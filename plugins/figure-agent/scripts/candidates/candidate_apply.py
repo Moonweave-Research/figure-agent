@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+from collections import Counter
 from collections.abc import Iterator
 from contextlib import contextmanager
 from hashlib import sha256
@@ -138,9 +139,7 @@ def _drift_hash_for_operation(operation: dict[str, Any], selectors: Any) -> str 
 
 def _render_gate_failures(render_manifest: dict[str, Any]) -> list[str]:
     stages = (
-        render_manifest.get("stages")
-        if isinstance(render_manifest.get("stages"), dict)
-        else {}
+        render_manifest.get("stages") if isinstance(render_manifest.get("stages"), dict) else {}
     )
     required = {
         "compile": "success",
@@ -372,10 +371,81 @@ def _required_post_apply_commands(name: str) -> list[str]:
     ]
 
 
-def _post_apply_detector_recheck(
+# Severity ordering for the semantic recheck (lower rank == higher severity).
+_SEVERITY_RANK = {"blocker": 0, "major": 1, "action": 2, "info": 3}
+
+
+def _severity_rank(severity: Any) -> int:
+    return _SEVERITY_RANK.get(str(severity or "").lower(), 99)
+
+
+def _defect_signature(defect: dict[str, Any]) -> tuple[str, str, str]:
+    target = defect.get("target") if isinstance(defect.get("target"), dict) else {}
+    panel = str(target.get("panel") or "unknown")
+    defect_class = str(defect.get("defect_class") or "")
+    severity = str(defect.get("severity") or "")
+    return (panel, defect_class, severity)
+
+
+def _semantic_recheck_verdict(
+    source_defect_id: str,
+    pre_defects: list[dict[str, Any]],
+    post_defects: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Semantic recheck: decide whether the applied edit actually resolved the
+    target defect WITHOUT introducing an equal-or-higher-severity defect.
+
+    Robust to coordinate nudges: it compares (panel, defect_class, severity)
+    multiset counts, never a line-content hash (fingerprint / sel: key), which a
+    nudge shifts even when the defect persists — the gap the old fingerprint-
+    equality recheck left open.
+    """
+    source = next(
+        (
+            defect
+            for defect in pre_defects
+            if isinstance(defect, dict) and str(defect.get("id") or "") == source_defect_id
+        ),
+        None,
+    )
+    if source is None:
+        return {
+            "status": "failed",
+            "reason": "source_defect_absent_pre_apply",
+            "source_defect_id": source_defect_id,
+        }
+    source_sig = _defect_signature(source)
+    source_rank = _severity_rank(source_sig[2])
+    pre_counts = Counter(_defect_signature(d) for d in pre_defects if isinstance(d, dict))
+    post_counts = Counter(_defect_signature(d) for d in post_defects if isinstance(d, dict))
+    if post_counts[source_sig] >= pre_counts[source_sig]:
+        return {
+            "status": "failed",
+            "reason": "source_defect_unresolved",
+            "source_defect_id": source_defect_id,
+            "signature": list(source_sig),
+        }
+    for sig, post_n in post_counts.items():
+        if _severity_rank(sig[2]) <= source_rank and post_n > pre_counts.get(sig, 0):
+            return {
+                "status": "failed",
+                "reason": "new_defect_introduced",
+                "source_defect_id": source_defect_id,
+                "introduced_signature": list(sig),
+            }
+    return {
+        "status": "success",
+        "reason": "source_defect_resolved",
+        "source_defect_id": source_defect_id,
+        "signature": list(source_sig),
+    }
+
+
+def _post_apply_semantic_recheck(
     name: str,
     paths: runtime_paths.RuntimePaths,
     manifest: dict[str, Any],
+    pre_defects: list[dict[str, Any]],
 ) -> dict[str, Any] | None:
     source_defect = manifest.get("source_defect")
     if not isinstance(source_defect, dict):
@@ -383,13 +453,27 @@ def _post_apply_detector_recheck(
     source_defect_id = source_defect.get("id")
     if not isinstance(source_defect_id, str) or not source_defect_id.strip():
         return None
-    source_fingerprint = source_defect.get("source_fingerprint")
-    if not isinstance(source_fingerprint, str) or not source_fingerprint.startswith("sha256:"):
+    import quality_defect_ledger
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        name,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    post_defects = ledger.get("defects")
+    if not isinstance(post_defects, list):
         return {
             "status": "failed",
-            "reason": "source_defect_fingerprint_missing",
+            "reason": "quality_defect_ledger_missing",
             "source_defect_id": source_defect_id,
         }
+    return _semantic_recheck_verdict(source_defect_id, pre_defects, post_defects)
+
+
+def _pre_apply_defects(name: str, paths: runtime_paths.RuntimePaths) -> list[dict[str, Any]]:
+    """Snapshot the ledger defects BEFORE mutation so the post-apply semantic
+    recheck can diff against them. Returns [] if the ledger is unavailable (the
+    recheck then reports source_defect_absent_pre_apply = failed verification)."""
     import quality_defect_ledger
 
     ledger = quality_defect_ledger.build_quality_defect_ledger(
@@ -398,24 +482,7 @@ def _post_apply_detector_recheck(
         workspace_root=paths.workspace_root,
     )
     defects = ledger.get("defects")
-    if not isinstance(defects, list):
-        return {"status": "failed", "reason": "quality_defect_ledger_missing"}
-    for defect in defects:
-        if not isinstance(defect, dict):
-            continue
-        if defect.get("source_fingerprint") == source_fingerprint:
-            return {
-                "status": "failed",
-                "reason": "source_defect_still_detected",
-                "source_defect_id": source_defect_id,
-                "source_defect_fingerprint": source_fingerprint,
-            }
-    return {
-        "status": "success",
-        "reason": "source_defect_not_detected",
-        "source_defect_id": source_defect_id,
-        "source_defect_fingerprint": source_fingerprint,
-    }
+    return defects if isinstance(defects, list) else []
 
 
 def apply_candidate(
@@ -548,6 +615,10 @@ def apply_candidate(
         if rollback_path.is_symlink():
             raise CandidateApplyError("sandbox_symlink_forbidden: rollback.patch")
         rollback_path.write_text(_rollback_patch(changes), encoding="utf-8")
+        # Snapshot the ledger BEFORE mutation for the semantic recheck (CORR-2):
+        # the post-apply recheck diffs (panel, defect_class, severity) counts
+        # against this baseline, robust to coordinate-nudge fingerprint shifts.
+        pre_defects = _pre_apply_defects(name, paths) if post_apply else []
         changed_files: list[dict[str, str]] = []
         for change in changes:
             target = change["path"]
@@ -562,7 +633,7 @@ def apply_candidate(
             )
         post_apply_result = _post_apply_checks(name, paths) if post_apply else {}
         detector_recheck = (
-            _post_apply_detector_recheck(name, paths, manifest) if post_apply else None
+            _post_apply_semantic_recheck(name, paths, manifest, pre_defects) if post_apply else None
         )
         if detector_recheck is not None:
             post_apply_result["detector_recheck"] = detector_recheck

@@ -322,7 +322,7 @@ def test_apply_candidate_uses_shared_mcp_mutation_lock(tmp_path: Path) -> None:
             candidate_set_path=Path("build/candidates/candidate_set.json"),
             acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
             apply=True,
-        post_apply=False,
+            post_apply=False,
         )
     finally:
         candidate_apply._candidate_apply_lock = original_lock
@@ -479,21 +479,58 @@ def test_apply_candidate_runs_post_apply_verification_by_default(
     assert result["post_apply"]["compile"]["status"] == "success"
 
 
-def test_apply_candidate_records_failed_detector_recheck(
+def _semantic_recheck_fakes(monkeypatch, pre, post):
+    # Robust pre/post ledger fake: any ledger call before _post_apply_checks runs
+    # (semantic review, the pre-mutation snapshot) returns `pre`; the post-apply
+    # recheck (after _post_apply_checks flips the flag) returns `post`.
+    state = {"applied": False}
+
+    def fake_post_apply(_name, _paths):
+        state["applied"] = True
+        return {
+            "compile": {"status": "success", "returncode": 0},
+            "export": {"status": "success", "returncode": 0},
+            "status": {"status": "success", "returncode": 0},
+        }
+
+    def fake_ledger(_name, **_kwargs):
+        return {"defects": post} if state["applied"] else {"defects": pre}
+
+    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+    monkeypatch.setitem(
+        sys.modules,
+        "quality_defect_ledger",
+        types.SimpleNamespace(build_quality_defect_ledger=fake_ledger),
+    )
+
+
+def _set_source_defect(fixture: Path, defect_id: str = "QD001") -> None:
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    stored = json.loads(manifest_path.read_text(encoding="utf-8"))
+    stored["source_defect"] = {"id": defect_id}
+    manifest_path.write_text(json.dumps(stored, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _ledger_defect(did: str, panel: str = "A", cls: str = "text_overlap", severity: str = "action"):
+    return {
+        "id": did,
+        "defect_class": cls,
+        "severity": severity,
+        "target": {"panel": panel, "subregion": f"sel:{did.lower()}"},
+    }
+
+
+def test_apply_candidate_records_failed_recheck_when_defect_persists(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    source_fingerprint = "sha256:" + "a" * 64
+    # Anti-gaming: the applied edit shifts the line (so the fingerprint AND the
+    # sel: sub-region key change), but the same (panel, defect_class, severity)
+    # defect persists. The old fingerprint-equality recheck wrongly passed this;
+    # the semantic recheck must report it unresolved.
     workspace = tmp_path / "workspace"
     fixture, manifest = _accepted_candidate_fixture(workspace)
-    sandbox = fixture / "build" / "candidates" / "CAND001"
-    manifest_path = sandbox / "candidate_manifest.json"
-    stored_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    stored_manifest["source_defect"] = {
-        "id": "QD001",
-        "source_fingerprint": source_fingerprint,
-    }
-    manifest_path.write_text(json.dumps(stored_manifest, sort_keys=True) + "\n", encoding="utf-8")
+    _set_source_defect(fixture)
     candidate_acceptance.write_acceptance(
         "candidate_demo",
         "CAND001",
@@ -503,22 +540,10 @@ def test_apply_candidate_records_failed_detector_recheck(
         rationale="Rendered evidence reviewed.",
         workspace_root=workspace,
     )
-
-    def fake_post_apply(_name, _paths):
-        return {
-            "compile": {"status": "success", "returncode": 0},
-            "export": {"status": "success", "returncode": 0},
-            "status": {"status": "success", "returncode": 0},
-        }
-
-    def fake_ledger(_name, **_kwargs):
-        return {"defects": [{"id": "QD999", "source_fingerprint": source_fingerprint}]}
-
-    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
-    monkeypatch.setitem(
-        sys.modules,
-        "quality_defect_ledger",
-        types.SimpleNamespace(build_quality_defect_ledger=fake_ledger),
+    _semantic_recheck_fakes(
+        monkeypatch,
+        pre=[_ledger_defect("QD001")],
+        post=[_ledger_defect("QD777")],  # same (A, text_overlap, action) signature
     )
 
     result = candidate_apply.apply_candidate(
@@ -532,28 +557,21 @@ def test_apply_candidate_records_failed_detector_recheck(
     )
 
     assert result["status"] == "applied_with_failed_verification"
-    assert result["post_apply"]["detector_recheck"] == {
-        "status": "failed",
-        "reason": "source_defect_still_detected",
-        "source_defect_id": "QD001",
-        "source_defect_fingerprint": source_fingerprint,
-    }
+    recheck = result["post_apply"]["detector_recheck"]
+    assert recheck["status"] == "failed"
+    assert recheck["reason"] == "source_defect_unresolved"
+    assert recheck["source_defect_id"] == "QD001"
 
 
-def test_apply_candidate_detector_recheck_ignores_colliding_source_defect_id(
+def test_apply_candidate_semantic_recheck_success_when_resolved(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # The applied edit removes the target defect (its (panel, defect_class,
+    # severity) signature is gone from the post-apply ledger) -> recheck success.
     workspace = tmp_path / "workspace"
     fixture, manifest = _accepted_candidate_fixture(workspace)
-    sandbox = fixture / "build" / "candidates" / "CAND001"
-    manifest_path = sandbox / "candidate_manifest.json"
-    stored_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    stored_manifest["source_defect"] = {
-        "id": "QD001",
-        "source_fingerprint": "sha256:" + "a" * 64,
-    }
-    manifest_path.write_text(json.dumps(stored_manifest, sort_keys=True) + "\n", encoding="utf-8")
+    _set_source_defect(fixture)
     candidate_acceptance.write_acceptance(
         "candidate_demo",
         "CAND001",
@@ -563,26 +581,10 @@ def test_apply_candidate_detector_recheck_ignores_colliding_source_defect_id(
         rationale="Rendered evidence reviewed.",
         workspace_root=workspace,
     )
-
-    def fake_post_apply(_name, _paths):
-        return {
-            "compile": {"status": "success", "returncode": 0},
-            "export": {"status": "success", "returncode": 0},
-            "status": {"status": "success", "returncode": 0},
-        }
-
-    def fake_ledger(_name, **_kwargs):
-        return {
-            "defects": [
-                {"id": "QD001", "source_fingerprint": "sha256:" + "b" * 64},
-            ]
-        }
-
-    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
-    monkeypatch.setitem(
-        sys.modules,
-        "quality_defect_ledger",
-        types.SimpleNamespace(build_quality_defect_ledger=fake_ledger),
+    _semantic_recheck_fakes(
+        monkeypatch,
+        pre=[_ledger_defect("QD001")],
+        post=[],  # target resolved, nothing new
     )
 
     result = candidate_apply.apply_candidate(
@@ -596,12 +598,10 @@ def test_apply_candidate_detector_recheck_ignores_colliding_source_defect_id(
     )
 
     assert result["status"] == "applied"
-    assert result["post_apply"]["detector_recheck"] == {
-        "status": "success",
-        "reason": "source_defect_not_detected",
-        "source_defect_id": "QD001",
-        "source_defect_fingerprint": "sha256:" + "a" * 64,
-    }
+    recheck = result["post_apply"]["detector_recheck"]
+    assert recheck["status"] == "success"
+    assert recheck["reason"] == "source_defect_resolved"
+    assert recheck["source_defect_id"] == "QD001"
 
 
 def test_post_apply_export_does_not_force_golden_roll_forward(
@@ -649,5 +649,59 @@ def test_apply_validates_fixture_name_before_result(tmp_path: Path) -> None:
             {"candidate_id": "CAND001"},
             workspace_root=workspace,
             apply=True,
-        post_apply=False,
+            post_apply=False,
         )
+
+
+def _defect(did, panel, cls="text_overlap", severity="action", fp=None, sub="sel:aaa"):
+    d = {
+        "id": did,
+        "defect_class": cls,
+        "severity": severity,
+        "target": {"panel": panel, "subregion": sub},
+    }
+    if fp is not None:
+        d["source_fingerprint"] = fp
+    return d
+
+
+def test_semantic_recheck_resolved_is_success():
+    pre = [_defect("QD001", "A")]
+    post: list = []
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "success"
+    assert verdict["reason"] == "source_defect_resolved"
+
+
+def test_semantic_recheck_persisting_defect_is_failed_despite_changed_fingerprint():
+    # Anti-gaming: a coordinate nudge changes the line (so the fingerprint AND the
+    # sel: sub-region key shift), but the same (panel, defect_class, severity)
+    # defect persists. The old fingerprint-equality recheck wrongly passed this.
+    pre = [_defect("QD001", "A", fp="sha256:" + "a" * 64, sub="sel:aaa")]
+    post = [_defect("QD001", "A", fp="sha256:" + "b" * 64, sub="sel:bbb")]
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "source_defect_unresolved"
+
+
+def test_semantic_recheck_new_equal_severity_defect_is_failed():
+    pre = [_defect("QD001", "A")]
+    # target resolved, but a NEW equal-severity defect appeared in panel B
+    post = [_defect("QD050", "B", sub="sel:zzz")]
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "new_defect_introduced"
+
+
+def test_semantic_recheck_new_lower_severity_defect_is_allowed():
+    # A new LOWER-severity defect does not fail the recheck (only equal/higher).
+    pre = [_defect("QD001", "A", severity="blocker")]
+    post = [_defect("QD050", "B", severity="action")]
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "success"
+
+
+def test_semantic_recheck_source_absent_pre_is_failed():
+    verdict = candidate_apply._semantic_recheck_verdict("QD404", [], [])
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "source_defect_absent_pre_apply"
