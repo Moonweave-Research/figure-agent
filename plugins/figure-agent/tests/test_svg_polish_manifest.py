@@ -7,6 +7,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+pytestmark = pytest.mark.quarantine
+
 from quality_manifest import file_sha256  # noqa: E402
 from svg_polish_manifest import (  # noqa: E402
     SvgPolishManifestError,
@@ -278,10 +280,7 @@ def test_missing_polished_svg_fails_cleanly_during_stale_check(tmp_path: Path) -
 def test_invalid_spec_fails_cleanly_during_source_set_hash(tmp_path: Path) -> None:
     fig_dir = _make_fixture(tmp_path)
     (fig_dir / "spec.yaml").write_text(
-        "name: demo_fig\n"
-        "panels:\n"
-        "  - id: A\n"
-        "    bbox_pdf_cm: [1, 1, 0, 0]\n",
+        "name: demo_fig\npanels:\n  - id: A\n    bbox_pdf_cm: [1, 1, 0, 0]\n",
         encoding="utf-8",
     )
 

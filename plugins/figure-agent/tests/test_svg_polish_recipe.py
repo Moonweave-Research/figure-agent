@@ -8,6 +8,8 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+pytestmark = pytest.mark.quarantine
+
 from svg_polish_recipe import (  # noqa: E402
     SVG_POLISH_RECIPE_RELATIVE_PATH,
     SvgPolishRecipeError,

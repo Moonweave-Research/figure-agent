@@ -9,6 +9,8 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+pytestmark = pytest.mark.quarantine
+
 import svg_polish_positive_harness as harness_mod  # noqa: E402
 from svg_polish_positive_harness import run_positive_harness  # noqa: E402
 
@@ -108,9 +110,7 @@ def test_positive_harness_cli_accepts_format_json_alias(
 
     monkeypatch.setattr(harness_mod, "run_positive_harness", fake_run_positive_harness)
 
-    exit_code = harness_mod.main(
-        ["--work-dir", str(tmp_path / "harness"), "--format", "json"]
-    )
+    exit_code = harness_mod.main(["--work-dir", str(tmp_path / "harness"), "--format", "json"])
 
     assert exit_code == 0
     payload = json.loads(capsys.readouterr().out)

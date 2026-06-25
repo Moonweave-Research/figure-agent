@@ -49,7 +49,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
+pytestmark = pytest.mark.quarantine
 
 import svg_polish_executor  # noqa: E402
 import svg_semantic_diff  # noqa: E402

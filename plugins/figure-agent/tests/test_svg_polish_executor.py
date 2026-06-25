@@ -7,6 +7,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+pytestmark = pytest.mark.quarantine
+
 from svg_polish_executor import (  # noqa: E402
     SvgPolishExecutorError,
     apply_svg_polish,
@@ -84,9 +86,7 @@ def _operation(
     }
 
 
-def _write_recipe(
-    fig_dir: Path, operations: list[dict], *, base_dir: Path | None = None
-) -> Path:
+def _write_recipe(fig_dir: Path, operations: list[dict], *, base_dir: Path | None = None) -> Path:
     recipe_path = fig_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
     write_svg_polish_recipe(recipe_path, _recipe(fig_dir, operations, base_dir=base_dir))
     return recipe_path
@@ -202,9 +202,7 @@ def test_text_exact_selector_resolves_unique_text(tmp_path: Path) -> None:
 
     output_path = apply_svg_polish(recipe_path, example_dir=fig_dir)
 
-    assert 'id="unique-text" transform="translate(0 2)"' in output_path.read_text(
-        encoding="utf-8"
-    )
+    assert 'id="unique-text" transform="translate(0 2)"' in output_path.read_text(encoding="utf-8")
 
 
 def test_selector_resolving_zero_elements_fails(tmp_path: Path) -> None:
@@ -228,9 +226,7 @@ def test_selector_resolving_too_many_elements_fails(tmp_path: Path) -> None:
     fig_dir = _make_fixture(tmp_path)
     source_path = fig_dir / "exports" / "demo_fig.svg"
     source_path.write_text(
-        "<svg>"
-        + "".join(f'<g id="d{i}" class="too-many" />' for i in range(6))
-        + "</svg>\n",
+        "<svg>" + "".join(f'<g id="d{i}" class="too-many" />' for i in range(6)) + "</svg>\n",
         encoding="utf-8",
     )
     recipe_path = _write_recipe(

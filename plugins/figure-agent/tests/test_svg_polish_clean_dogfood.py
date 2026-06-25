@@ -6,9 +6,12 @@ import time
 from pathlib import Path
 from typing import Any
 
+import pytest
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
+pytestmark = pytest.mark.quarantine
 
 import fig_driver  # noqa: E402
 import status as status_mod  # noqa: E402

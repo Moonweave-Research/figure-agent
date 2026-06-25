@@ -346,6 +346,13 @@ final-artifact blocking are live. The plugin still does not invent hidden SVG
 geometry edits; `scripts/svg_polish/svg_polish_handoff.py` scaffolds the audit and manifest
 for an already-polished SVG.
 
+**Vacuity caveat (quarantined)**: the SVG-polish recipe/executor/delta/semantic-diff/
+ship-gate machinery is inert on real figures — only the synthetic `_volume_shading_demo`
+fixture fires, because `dvisvgm` emits zero geometry IDs for real TikZ exports, so there
+is no addressable geometry for these ops to mutate. The covering tests are tagged
+`@pytest.mark.quarantine` so their green count does not imply a live guarantee on
+real figures.
+
 **Design**:
 `docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`.
 

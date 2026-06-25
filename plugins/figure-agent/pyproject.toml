@@ -23,6 +23,7 @@ select = ["E", "F", "I", "UP"]
 testpaths = ["tests"]
 markers = [
     "render: requires TeX/render/OCR system tools",
+    "quarantine: covers SVG-semantic machinery that is inert on real figures (only the synthetic _volume_shading_demo fixture fires; dvisvgm emits 0 geometry IDs). Still runs by default; the marker only lets it be filtered.",
 ]
 
 [tool.setuptools]

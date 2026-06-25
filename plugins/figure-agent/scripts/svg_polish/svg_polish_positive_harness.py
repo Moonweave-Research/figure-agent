@@ -1,3 +1,4 @@
+# inert on real figures (only synthetic _volume_shading_demo fires; dvisvgm emits 0 geometry IDs)
 """Run a deterministic positive-path SVG polish harness."""
 
 from __future__ import annotations

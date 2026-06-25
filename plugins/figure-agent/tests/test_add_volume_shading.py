@@ -9,6 +9,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+pytestmark = pytest.mark.quarantine
+
 from add_volume_shading import (  # noqa: E402
     _element_bbox,
     _gradient_vector,

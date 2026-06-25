@@ -1,3 +1,4 @@
+# inert on real figures (only synthetic _volume_shading_demo fires; dvisvgm emits 0 geometry IDs)
 """Apply bounded SVG polish recipes to fixture-local polished SVG files."""
 
 from __future__ import annotations
@@ -191,9 +192,7 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
         return value
     if value.parts and value.parts[0] == "examples":
         if len(value.parts) != 2 or ".." in value.parts:
-            raise SvgPolishExecutorError(
-                "invalid fixture path: expected examples/<fixture-name>"
-            )
+            raise SvgPolishExecutorError("invalid fixture path: expected examples/<fixture-name>")
         _validate_fixture_name_for_cli(value.parts[1], str(value))
         return Path("examples") / value.parts[1]
     if len(value.parts) == 1:
@@ -207,8 +206,7 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
             )
         return value
     raise SvgPolishExecutorError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
-        "or an absolute path"
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, or an absolute path"
     )
 
 

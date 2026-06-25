@@ -1,3 +1,4 @@
+# inert on real figures (only synthetic _volume_shading_demo fires; dvisvgm emits 0 geometry IDs)
 """Render-ship equivalence gate (spec §5 H3): does the shipped PDF render faithfully
 show each truth-bearing path? Pure colour/coord/sampling logic here is render-free
 and unit-testable; the render adapter (rsvg-convert + pdftoppm) is the only part that

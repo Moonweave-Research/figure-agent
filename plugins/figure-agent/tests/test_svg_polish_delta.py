@@ -9,6 +9,8 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+pytestmark = pytest.mark.quarantine
+
 import svg_polish_delta  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 from svg_polish_delta import (  # noqa: E402

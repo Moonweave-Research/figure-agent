@@ -3,9 +3,12 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
+pytestmark = pytest.mark.quarantine
 
 from svg_polish_handoff import (  # noqa: E402
     SvgPolishHandoffError,
@@ -307,9 +310,7 @@ def test_cli_write_rejects_existing_relative_dir_outside_examples(
     assert not (outside_dir / "polish" / "svg_polish_manifest.yaml").exists()
 
 
-def test_cli_write_accepts_examples_fixture_path(
-    tmp_path: Path, monkeypatch, capsys
-) -> None:
+def test_cli_write_accepts_examples_fixture_path(tmp_path: Path, monkeypatch, capsys) -> None:
     fig_dir, style_lock = _make_fixture(tmp_path)
     monkeypatch.chdir(tmp_path)
 

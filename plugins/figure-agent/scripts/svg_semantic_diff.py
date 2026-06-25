@@ -1,3 +1,4 @@
+# inert on real figures (only synthetic _volume_shading_demo fires; dvisvgm emits 0 geometry IDs)
 """Compare generated and polished SVGs for semantic drift."""
 
 from __future__ import annotations

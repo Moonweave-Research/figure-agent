@@ -1,3 +1,4 @@
+# inert on real figures (only synthetic _volume_shading_demo fires; dvisvgm emits 0 geometry IDs)
 """Parse and validate SVG polish recipe files."""
 
 from __future__ import annotations

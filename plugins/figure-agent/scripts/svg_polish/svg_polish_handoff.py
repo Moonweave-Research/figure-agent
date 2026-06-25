@@ -1,3 +1,4 @@
+# inert on real figures (only synthetic _volume_shading_demo fires; dvisvgm emits 0 geometry IDs)
 """Scaffold SVG polish audit and manifest files for one fixture."""
 
 from __future__ import annotations
@@ -344,9 +345,7 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
         return value
     if value.parts and value.parts[0] == "examples":
         if len(value.parts) != 2 or ".." in value.parts:
-            raise SvgPolishHandoffError(
-                "invalid fixture path: expected examples/<fixture-name>"
-            )
+            raise SvgPolishHandoffError("invalid fixture path: expected examples/<fixture-name>")
         _validate_fixture_name_for_cli(value.parts[1], str(value))
         return Path("examples") / value.parts[1]
     if len(value.parts) == 1:
@@ -360,8 +359,7 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
             )
         return value
     raise SvgPolishHandoffError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
-        "or an absolute path"
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, or an absolute path"
     )
 
 

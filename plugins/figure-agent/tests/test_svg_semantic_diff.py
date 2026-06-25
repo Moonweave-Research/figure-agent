@@ -9,6 +9,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+pytestmark = pytest.mark.quarantine
+
 from svg_semantic_diff import (  # noqa: E402
     SVG_SEMANTIC_DIFF_RELATIVE_PATH,
     SvgSemanticDiffError,
