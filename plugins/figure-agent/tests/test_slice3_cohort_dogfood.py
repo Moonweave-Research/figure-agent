@@ -45,14 +45,18 @@ def test_cohort_dogfood_gate_is_non_degenerate(tmp_path):
         run_dirs.append(run_dir)
 
     summary = roll_up_run_dirs(run_dirs)
-    # Empirical (this branch): fig2 -> decision_weak, fig3 -> lever_exhausted.
+    # The gate's purpose is NON-DEGENERACY: the cohort must surface at least one
+    # genuine quality cause (else the measurement is process-gated noise — fix
+    # plumbing/setup first). We assert that invariant, NOT which specific causes
+    # appear: the active fixtures evolve (critique/adjudication advance their
+    # stop-points), so pinning "fig2 -> decision_weak, fig3 -> lever_exhausted"
+    # made every legitimate advance revert-or-rewrite this gate. Specific-cause
+    # classification is pinned deterministically in test_stop_cause_classify.py.
     assert summary["dominant_premature_cause"] is not None, (
         "GATE FAILED: cohort produced no quality cause — fix plumbing/setup first. "
         f"histogram={summary['cohort_histogram']}"
     )
     assert is_degenerate(summary) is False
-    assert summary["cohort_histogram"]["decision_weak"] >= 1
-    assert summary["cohort_histogram"]["lever_exhausted"] >= 1
 
 
 def test_fig1_anchor_run_also_diagnoses(tmp_path):

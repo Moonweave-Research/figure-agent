@@ -61,17 +61,29 @@ def test_diagnose_run_writes_stop_report_v1(fig2_run):
         "decision_weak",
         "headroom_blind",
     )
-    # fig2 sub-regions all carry stale_detector_evidence -> decision_weak.
-    assert written["cause_histogram"]["decision_weak"] >= 1
+    # Machinery invariant (stable as the figure is worked): every enumerated
+    # sub-region is classified into exactly one of the seven causes, so the
+    # histogram sums to the sub-region count. We do NOT pin a specific cause
+    # here — fig2's stop-point legitimately moves as critique/adjudication
+    # advance it. Specific-cause classification is pinned deterministically in
+    # test_stop_cause_classify.py, not against the evolving real fixture.
+    assert written["subregions"], "fig2 must enumerate at least one sub-region"
+    assert sum(written["cause_histogram"].values()) == len(written["subregions"])
     for sub in written["subregions"]:
         assert sub["subregion_id"].startswith("sel:") or "#" in sub["subregion_id"]
         for ev in sub["evidence"]:
             assert ev["source_module"] and ev["source_ref"]
 
 
-def test_diagnose_run_fig3_is_lever_exhausted(fig3_run):
+def test_diagnose_run_fig3_produces_consistent_report(fig3_run):
+    # Same anti-pattern guard as the fig2 test: assert the diagnoser MACHINERY
+    # is consistent on the real fixture (histogram sums to sub-region count),
+    # not a transient cause value that moves as fig3 is worked. Cause-specific
+    # behaviour lives in test_stop_cause_classify.py.
     report = diagnose_run("fig3_resistance_mechanism", fig3_run)
-    assert report["cause_histogram"]["lever_exhausted"] >= 1
+    assert report["schema"] == "figure-agent.stop-report.v1"
+    assert report["subregions"], "fig3 must enumerate at least one sub-region"
+    assert sum(report["cause_histogram"].values()) == len(report["subregions"])
 
 
 def test_mirror_skipped_when_log_absent(fig2_run):
