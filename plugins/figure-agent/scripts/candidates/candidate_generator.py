@@ -11,6 +11,8 @@ from typing import Any
 import bounded_coordinate_offset
 import candidate_contracts
 import candidate_families
+import critique_adjudication
+import critique_contract
 import figure_intent_model
 import fixture_identity
 import quality_defect_ledger
@@ -508,6 +510,84 @@ def _candidate_metrics(
     }
 
 
+def _adjudicated_apply_candidates(
+    name: str,
+    paths: runtime_paths.RuntimePaths,
+    lines: list[str],
+    source_rel: Path,
+    current_source_hash: str,
+    apply_authority: str,
+) -> list[dict[str, Any]]:
+    """Emit a candidate anchored to each adjudicated `apply` finding's tex_lines.
+
+    The ledger-driven path keys candidates off detector geometry; an `apply`
+    finding carries the host-eye diagnosis (its own tex_lines) that the detector
+    ledger does not. This wires that finding line into a bounded label offset so
+    the candidate targets the diagnosed element instead of unrelated geometry.
+    """
+    example_dir = paths.examples_dir / name
+    adjudication_path = example_dir / "critique_adjudication.yaml"
+    critique_path = example_dir / "critique.md"
+    if not adjudication_path.is_file() or not critique_path.is_file():
+        return []
+    try:
+        adjudication = critique_adjudication.load_adjudication(adjudication_path)
+        frontmatter = critique_contract.load_critique_frontmatter(critique_path)
+    except (
+        critique_adjudication.CritiqueAdjudicationError,
+        critique_contract.CritiqueContractError,
+    ):
+        return []
+    findings_by_id: dict[str, dict[str, Any]] = {}
+    for index, finding in enumerate(critique_contract.critique_findings(frontmatter)):
+        finding_id = finding.get("id")
+        if isinstance(finding_id, str) and finding_id.strip():
+            findings_by_id.setdefault(finding_id.strip(), finding)
+    candidates: list[dict[str, Any]] = []
+    for decision in adjudication.get("decisions", []):
+        if not isinstance(decision, dict) or decision.get("decision") != "apply":
+            continue
+        finding = findings_by_id.get(str(decision.get("finding_id") or ""))
+        if finding is None:
+            continue
+        tex_lines = finding.get("tex_lines")
+        if not (isinstance(tex_lines, list) and tex_lines and isinstance(tex_lines[0], int)):
+            continue
+        line_number = tex_lines[0]
+        if line_number < 1 or line_number > len(lines):
+            continue
+        line = lines[line_number - 1]
+        replacement = bounded_coordinate_offset.offset_first_coordinate(line)
+        if replacement is None:
+            continue
+        finding_id = str(finding.get("id"))
+        candidates.append(
+            _label_offset_candidate(
+                name=name,
+                candidate_id="",
+                source_rel=source_rel,
+                line_number=line_number,
+                line=line,
+                replacement=replacement,
+                apply_authority=apply_authority,
+                target={
+                    "panel": str(finding.get("panel") or "unknown"),
+                    "subregion": f"adjudicated:{finding_id}",
+                },
+                source_hash=current_source_hash,
+                source_defect={
+                    "id": finding_id,
+                    "source": "adjudicated_finding",
+                    "defect_class": str(finding.get("category") or "label_offset"),
+                    "evidence": [],
+                    "source_fingerprint": "",
+                    "ledger_hash": "",
+                },
+            )
+        )
+    return candidates
+
+
 def build_candidate_set(
     name: str,
     *,
@@ -568,6 +648,26 @@ def build_candidate_set(
         base["tex_hash"],
         apply_authority,
     )
+    covered_lines = {
+        candidate["selector"]["start_line"]
+        for candidate in candidates
+        if isinstance(candidate.get("selector"), dict)
+    }
+    for adjudicated in _adjudicated_apply_candidates(
+        name,
+        paths,
+        lines,
+        source_rel,
+        base["tex_hash"],
+        apply_authority,
+    ):
+        start_line = adjudicated["selector"]["start_line"]
+        if start_line in covered_lines:
+            continue
+        covered_lines.add(start_line)
+        candidates.append(adjudicated)
+    for index, candidate in enumerate(candidates, start=1):
+        candidate["id"] = f"CAND{index:03d}"
     if not candidates and not refusals:
         refusals = [{"code": "no_supported_candidate"}]
 

@@ -686,3 +686,52 @@ def test_candidate_generator_refuses_source_hash_mismatch_when_ledger_claims_sup
     assert payload["refusals"] == [{"code": "stale_detector_evidence", "defect_id": "QD001"}]
     assert payload["metrics"]["candidate_count"] == 0
     assert payload["metrics"]["refusal_count"] == 1
+
+
+def _write_apply_finding(fixture: Path, finding_line: int) -> None:
+    name = fixture.name
+    (fixture / "critique.md").write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1.17\n"
+        f"fixture: {name}\n"
+        "verdict: revise\n"
+        "findings:\n"
+        "  - id: C001\n"
+        "    severity: MINOR\n"
+        "    category: label_placement\n"
+        f"    tex_lines: [{finding_line}, {finding_line}]\n"
+        "    status: open\n"
+        "---\n\n# critique\n",
+        encoding="utf-8",
+    )
+    (fixture / "critique_adjudication.yaml").write_text(
+        "schema: figure-agent.critique-adjudication.v1\n"
+        f"fixture: {name}\n"
+        "source_critique_hash: sha256:" + "0" * 64 + "\n"
+        "decisions:\n"
+        "  - finding_id: C001\n"
+        "    decision: apply\n"
+        "    reason: lower the caption below the axis\n"
+        f"    patch_target: examples/{name}/{name}.tex lines {finding_line}-{finding_line}\n"
+        "    evidence: critique.md finding C001.\n",
+        encoding="utf-8",
+    )
+
+
+def test_adjudicated_apply_finding_drives_candidate_at_finding_line(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "% header line\n\\node[labelMute] at (7.60,4.12) {PI, PDMS, PET};\n",
+        encoding="utf-8",
+    )
+    # No detector evidence: the only actionable signal is the adjudicated finding.
+    _write_apply_finding(fixture, finding_line=2)
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    start_lines = {candidate["selector"]["start_line"] for candidate in payload["candidates"]}
+    assert 2 in start_lines, payload
