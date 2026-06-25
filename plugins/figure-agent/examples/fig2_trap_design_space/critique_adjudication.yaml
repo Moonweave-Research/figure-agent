@@ -1,0 +1,9 @@
+schema: figure-agent.critique-adjudication.v1
+fixture: fig2_trap_design_space
+source_critique_hash: sha256:cfde5b4a9f84a3e18d2eee88eda55f2d6d032f4dd863967ada95520875b73d9b
+decisions:
+- finding_id: C001
+  decision: apply
+  reason: PI/PDMS/PET caption crosses the panel-b x-axis; lower the caption node below the axis (bounded coordinate offset).
+  patch_target: examples/fig2_trap_design_space/fig2_trap_design_space.tex lines 95-96
+  evidence: critique.md finding C001.
