@@ -15,13 +15,12 @@ import figure_intent_model
 import fixture_identity
 import quality_defect_ledger
 import runtime_paths
+from check_visual_clash import extract_pdf_words_and_page
 from quality_manifest import file_sha256
 
 SCHEMA = "figure-agent.candidate-set.v1"
 ZERO_HASH = "sha256:" + "0" * 64
-COORDINATE_OFFSET_DEFECT_CLASSES = frozenset(
-    {"label_offset", "text_overlap", "whitespace_balance"}
-)
+COORDINATE_OFFSET_DEFECT_CLASSES = frozenset({"label_offset", "text_overlap", "whitespace_balance"})
 ACTIONABILITY_REFUSAL_CODES = frozenset(
     {
         "stale_detector_evidence",
@@ -188,9 +187,7 @@ def _actionability_refusals(defect: dict[str, Any]) -> list[dict[str, str]]:
     )
     defect_id = str(defect.get("id") or "")
     return [
-        {"code": gap, "defect_id": defect_id}
-        for gap in gaps
-        if gap in ACTIONABILITY_REFUSAL_CODES
+        {"code": gap, "defect_id": defect_id} for gap in gaps if gap in ACTIONABILITY_REFUSAL_CODES
     ]
 
 
@@ -270,6 +267,106 @@ def _defect_sort_key(
     )
 
 
+def _defect_node_id(defect: dict[str, Any]) -> str | None:
+    evidence = defect.get("evidence")
+    if not isinstance(evidence, list):
+        return None
+    for entry in evidence:
+        if isinstance(entry, dict):
+            node_id = entry.get("node_id")
+            if isinstance(node_id, str) and node_id.strip():
+                return node_id.strip()
+    return None
+
+
+def _detector_candidate_index(example_dir: Path) -> dict[str, dict[str, Any]]:
+    report = example_dir / "build" / "undeclared_geometry.json"
+    if not report.is_file():
+        return {}
+    try:
+        data = json.loads(report.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return {}
+    candidates = data.get("candidates")
+    if not isinstance(candidates, list):
+        return {}
+    index: dict[str, dict[str, Any]] = {}
+    for candidate in candidates:
+        if isinstance(candidate, dict) and isinstance(candidate.get("id"), str):
+            index[candidate["id"]] = candidate
+    return index
+
+
+def _word_bbox_for_text(
+    words: list[dict[str, Any]],
+    nearest_text: str,
+    line_bbox_pt: list[float],
+) -> list[float] | None:
+    """Return the bbox of the word matching nearest_text closest to the line."""
+    line_cx = (line_bbox_pt[0] + line_bbox_pt[2]) / 2.0
+    line_cy = (line_bbox_pt[1] + line_bbox_pt[3]) / 2.0
+    best: list[float] | None = None
+    best_dist = float("inf")
+    for word in words:
+        if str(word.get("text", "")) != nearest_text:
+            continue
+        try:
+            bbox = [
+                float(word["xmin"]),
+                float(word["ymin"]),
+                float(word["xmax"]),
+                float(word["ymax"]),
+            ]
+        except (KeyError, TypeError, ValueError):
+            continue
+        word_cx = (bbox[0] + bbox[2]) / 2.0
+        word_cy = (bbox[1] + bbox[3]) / 2.0
+        dist = (word_cx - line_cx) ** 2 + (word_cy - line_cy) ** 2
+        if dist < best_dist:
+            best_dist = dist
+            best = bbox
+    return best
+
+
+def _geometry_aware_replacement(
+    defect: dict[str, Any],
+    line: str,
+    detector_index: dict[str, dict[str, Any]],
+    pdf_path: Path,
+) -> str | None:
+    """Offset the near-miss line away from its flagged text, axis- and sign-aware.
+
+    Falls back to None whenever the detector geometry or rendered words are not
+    available, so the caller can use the blind first-coordinate offset.
+    """
+    node_id = _defect_node_id(defect)
+    if node_id is None:
+        return None
+    detector_candidate = detector_index.get(node_id)
+    if not isinstance(detector_candidate, dict):
+        return None
+    line_bbox = detector_candidate.get("bbox_pt")
+    nearest_text = detector_candidate.get("nearest_text")
+    if not isinstance(line_bbox, list) or len(line_bbox) != 4:
+        return None
+    if not isinstance(nearest_text, str) or not nearest_text:
+        return None
+    if not pdf_path.is_file():
+        return None
+    try:
+        words, _page = extract_pdf_words_and_page(pdf_path)
+    except Exception:  # noqa: BLE001 - rendered words are best-effort
+        return None
+    word_bbox = _word_bbox_for_text(words, nearest_text, line_bbox)
+    if word_bbox is None:
+        return None
+    direction = bounded_coordinate_offset.offset_direction(line_bbox, word_bbox)
+    if direction is None:
+        return None
+    axis, dx_cm = direction
+    return bounded_coordinate_offset.offset_all_coordinates(line, axis=axis, dx_cm=dx_cm)
+
+
 def _defect_candidates(
     name: str,
     paths: runtime_paths.RuntimePaths,
@@ -285,17 +382,24 @@ def _defect_candidates(
     )
     defects = ledger.get("defects")
     if not isinstance(defects, list):
-        return [], [], {
-            "safe_candidate_defect_count": 0,
-            "candidate_supported_defect_count": 0,
-            "unsupported_safe_defect_count": 0,
-        }
+        return (
+            [],
+            [],
+            {
+                "safe_candidate_defect_count": 0,
+                "candidate_supported_defect_count": 0,
+                "unsupported_safe_defect_count": 0,
+            },
+        )
     refusals: list[dict[str, str]] = []
     sortable_candidates: list[tuple[tuple[int, str, str, int, str, str, str], dict[str, Any]]] = []
     safe_count = 0
     supported_count = 0
     unsupported_count = 0
     ledger_hash = str(ledger.get("ledger_hash") or "")
+    example_dir = paths.examples_dir / name
+    detector_index = _detector_candidate_index(example_dir)
+    pdf_path = example_dir / "build" / f"{name}.pdf"
     for defect in defects:
         if not isinstance(defect, dict):
             continue
@@ -328,7 +432,9 @@ def _defect_candidates(
             continue
         supported_count += 1
         line = lines[line_number - 1]
-        replacement = bounded_coordinate_offset.offset_first_coordinate(line)
+        replacement = _geometry_aware_replacement(defect, line, detector_index, pdf_path)
+        if replacement is None:
+            replacement = bounded_coordinate_offset.offset_first_coordinate(line)
         if replacement is None:
             _append_refusals(
                 refusals,
@@ -352,11 +458,15 @@ def _defect_candidates(
     for index, (_sort_key, candidate) in enumerate(sorted(sortable_candidates), start=1):
         candidate["id"] = f"CAND{index:03d}"
         candidates.append(candidate)
-    return candidates, refusals, {
-        "safe_candidate_defect_count": safe_count,
-        "candidate_supported_defect_count": supported_count,
-        "unsupported_safe_defect_count": unsupported_count,
-    }
+    return (
+        candidates,
+        refusals,
+        {
+            "safe_candidate_defect_count": safe_count,
+            "candidate_supported_defect_count": supported_count,
+            "unsupported_safe_defect_count": unsupported_count,
+        },
+    )
 
 
 def _candidate_metrics(

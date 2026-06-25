@@ -60,3 +60,69 @@ def test_negative_coordinate_offsets() -> None:
     result = bounded_coordinate_offset.offset_first_coordinate(line)
     assert result is not None
     assert _COORD_RE.findall(result)[0] == ("-0.40", "1.00")
+
+
+def test_offset_all_coordinates_translates_whole_line_on_y() -> None:
+    line = "\\draw (0.45,6.15) -- (4.78,6.15);"
+    result = bounded_coordinate_offset.offset_all_coordinates(line, axis="y", dx_cm=-0.10)
+    assert result is not None
+    coords = _COORD_RE.findall(result)
+    assert coords[0] == ("0.45", "6.05")
+    assert coords[1] == ("4.78", "6.05")
+
+
+def test_offset_all_coordinates_translates_whole_line_on_x() -> None:
+    line = "\\draw[axisArr] (6.10,3.90) -- (6.10,9.15);"
+    result = bounded_coordinate_offset.offset_all_coordinates(line, axis="x", dx_cm=-0.10)
+    assert result is not None
+    coords = _COORD_RE.findall(result)
+    assert coords[0] == ("6.00", "3.90")
+    assert coords[1] == ("6.00", "9.15")
+
+
+def test_offset_all_coordinates_rejects_overlarge_offset() -> None:
+    line = "\\draw (0.45,6.15) -- (4.78,6.15);"
+    assert bounded_coordinate_offset.offset_all_coordinates(line, axis="y", dx_cm=0.5) is None
+
+
+def test_offset_direction_horizontal_line_text_above_in_pt_moves_negative_tikz_y() -> None:
+    # fig2 line 49: horizontal line at pt-y 174.33; word 'shallow' sits at SMALLER
+    # pt-y (165-172). pdfplumber y grows downward and tikz-y is flipped, so moving
+    # the line AWAY (to larger pt-y) is a NEGATIVE tikz-y offset.
+    line_bbox = [12.76, 174.33, 135.50, 174.33]
+    word_bbox = [21.5, 165.5, 45.6, 172.1]
+    axis, dx_cm = bounded_coordinate_offset.offset_direction(line_bbox, word_bbox)
+    assert axis == "y"
+    assert dx_cm < 0
+
+
+def test_offset_direction_horizontal_line_text_below_in_pt_moves_positive_tikz_y() -> None:
+    line_bbox = [12.76, 174.33, 135.50, 174.33]
+    word_bbox = [21.5, 176.0, 45.6, 182.0]
+    axis, dx_cm = bounded_coordinate_offset.offset_direction(line_bbox, word_bbox)
+    assert axis == "y"
+    assert dx_cm > 0
+
+
+def test_offset_direction_vertical_line_text_right_moves_negative_tikz_x() -> None:
+    # fig2 line 72/81: vertical line; word sits to the RIGHT (larger pt-x). x is not
+    # flipped, so moving the line AWAY (to smaller pt-x) is a NEGATIVE tikz-x offset.
+    line_bbox = [140.31, 12.76, 140.31, 276.38]
+    word_bbox = [141.6, 57.6, 145.7, 64.3]
+    axis, dx_cm = bounded_coordinate_offset.offset_direction(line_bbox, word_bbox)
+    assert axis == "x"
+    assert dx_cm < 0
+
+
+def test_offset_direction_vertical_line_text_left_moves_positive_tikz_x() -> None:
+    line_bbox = [140.31, 12.76, 140.31, 276.38]
+    word_bbox = [120.8, 57.6, 139.2, 64.3]
+    axis, dx_cm = bounded_coordinate_offset.offset_direction(line_bbox, word_bbox)
+    assert axis == "x"
+    assert dx_cm > 0
+
+
+def test_offset_direction_returns_none_for_diagonal_line() -> None:
+    line_bbox = [10.0, 10.0, 50.0, 80.0]
+    word_bbox = [60.0, 60.0, 70.0, 70.0]
+    assert bounded_coordinate_offset.offset_direction(line_bbox, word_bbox) is None

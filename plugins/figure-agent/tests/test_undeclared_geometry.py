@@ -32,6 +32,21 @@ def test_empty_source_writes_empty_report(tmp_path: Path) -> None:
     assert payload["schema"] == "figure-agent.undeclared-geometry.v1"
     assert payload["candidates"] == []
     assert payload["total"] == 0
+    assert "source_hashes" not in payload
+
+
+def test_payload_emits_source_hashes_when_tex_path_given(tmp_path: Path) -> None:
+    from quality_manifest import file_sha256
+
+    fixture_dir = tmp_path / "examples" / "demo"
+    pdf_path = fixture_dir / "build" / "demo.pdf"
+    pdf_path.parent.mkdir(parents=True)
+    tex_path = fixture_dir / "demo.tex"
+    tex_path.write_text(r"\draw (0,0) -- (1,1);", encoding="utf-8")
+
+    payload = undeclared_geometry_payload(pdf_path, [], tex_path=tex_path)
+
+    assert payload["source_hashes"] == {"examples/demo/demo.tex": file_sha256(tex_path)}
 
 
 def test_undeclared_rect_boundary_is_reported() -> None:

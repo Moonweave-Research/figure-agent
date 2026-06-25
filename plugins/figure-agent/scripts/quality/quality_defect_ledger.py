@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from hashlib import sha256
 from pathlib import Path
@@ -23,6 +24,10 @@ SCHEMA = "figure-agent.quality-defect-ledger.v1"
 CANDIDATE_SUPPORTED_DEFECT_CLASSES = frozenset(
     {"label_offset", "text_overlap", "whitespace_balance"}
 )
+# Mirrors candidate_tex_index.PANEL_HINT_RE; kept local because that module is off
+# the live ledger path. A `% Panel X` comment line opens a panel region that holds
+# until the next marker, mapping each detector source_line to its enclosing panel.
+_PANEL_HINT_RE = re.compile(r"^\s*%\s*Panel\s+([A-Za-z0-9_-]+)\b")
 
 
 def _canonical_hash(payload: Any) -> str:
@@ -225,6 +230,33 @@ def _normalize_detector_defect(defect: dict[str, Any]) -> dict[str, Any]:
     return defect
 
 
+def _source_panel_map(example_dir: Path, name: str) -> list[tuple[int, str]]:
+    """Return ascending (line_number, panel) markers from the fixture .tex."""
+    source = example_dir / f"{name}.tex"
+    if not source.is_file():
+        return []
+    try:
+        lines = source.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return []
+    markers: list[tuple[int, str]] = []
+    for index, line in enumerate(lines, start=1):
+        match = _PANEL_HINT_RE.match(line)
+        if match is not None:
+            markers.append((index, match.group(1)))
+    return markers
+
+
+def _panel_for_source_line(markers: list[tuple[int, str]], source_line: int) -> str | None:
+    panel: str | None = None
+    for marker_line, marker_panel in markers:
+        if marker_line <= source_line:
+            panel = marker_panel
+        else:
+            break
+    return panel
+
+
 def _undeclared_geometry_defects(
     example_dir: Path,
     name: str,
@@ -241,6 +273,7 @@ def _undeclared_geometry_defects(
     if not isinstance(candidates, list):
         return []
     freshness = _detector_freshness(example_dir, name, graph_hash, data)
+    panel_markers = _source_panel_map(example_dir, name)
     defects: list[dict[str, Any]] = []
     for candidate in candidates:
         if not isinstance(candidate, dict):
@@ -261,6 +294,14 @@ def _undeclared_geometry_defects(
         selector_hash = _line_selector_hash(example_dir, name, source_line)
         if selector_hash is not None:
             selector_hint["selector_text_hash"] = selector_hash
+        # Undeclared-geometry candidates carry no panel of their own. Prefer an
+        # explicit candidate panel when present; otherwise map the source_line to
+        # the enclosing `% Panel X` marker so the target resolves to a declared id.
+        target = _explicit_target(candidate)
+        if target["panel"] == "unknown":
+            mapped_panel = _panel_for_source_line(panel_markers, source_line)
+            if mapped_panel is not None:
+                target = {"panel": mapped_panel, "subregion": "label-a"}
         defect = {
             "source": "deterministic_audit",
             "evidence": [
@@ -275,7 +316,7 @@ def _undeclared_geometry_defects(
             "affected_files": [f"examples/{name}/{name}.tex"],
             "freshness": freshness,
             "selector_hint": selector_hint,
-            "target": _explicit_target(candidate),
+            "target": target,
             "suggested_change": {
                 "operation_type": "tikz_coordinate_adjust",
                 "summary": "Clear the label endpoint from the nearby text by a bounded amount",

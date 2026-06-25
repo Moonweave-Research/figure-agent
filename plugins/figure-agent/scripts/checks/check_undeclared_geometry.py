@@ -13,7 +13,23 @@ from typing import Any
 
 import pdfplumber
 import yaml
-from check_visual_clash import extract_pdf_words_and_page
+
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+for script_dir in reversed(
+    (
+        SCRIPTS_DIR,
+        SCRIPTS_DIR / "checks",
+        SCRIPTS_DIR / "candidates",
+        SCRIPTS_DIR / "quality",
+        SCRIPTS_DIR / "loop",
+        SCRIPTS_DIR / "driver",
+        SCRIPTS_DIR / "svg_polish",
+    )
+):
+    sys.path.insert(0, str(script_dir))
+
+from check_visual_clash import extract_pdf_words_and_page  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
 
 SCHEMA = "figure-agent.undeclared-geometry.v1"
 CM_TO_PT = 72.0 / 2.54
@@ -592,10 +608,15 @@ def detect_undeclared_geometry(
     return candidates
 
 
-def undeclared_geometry_payload(pdf_path: Path, candidates: list[dict[str, Any]]) -> dict[str, Any]:
+def undeclared_geometry_payload(
+    pdf_path: Path,
+    candidates: list[dict[str, Any]],
+    *,
+    tex_path: Path | None = None,
+) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
-    return {
+    payload: dict[str, Any] = {
         "schema": SCHEMA,
         "fixture": fixture_name,
         "render_pdf": f"build/{pdf_path.name}",
@@ -603,6 +624,11 @@ def undeclared_geometry_payload(pdf_path: Path, candidates: list[dict[str, Any]]
         "candidates": candidates,
         "total": len(candidates),
     }
+    if tex_path is not None:
+        payload["source_hashes"] = {
+            f"examples/{fixture_name}/{tex_path.name}": file_sha256(tex_path)
+        }
+    return payload
 
 
 def _load_spec(spec_path: Path) -> dict[str, Any]:
@@ -696,7 +722,7 @@ def main(argv: list[str] | None = None) -> int:
         # `candidates`, so the critique undeclared-geometry accounting gate does not
         # require it to be hand-accounted. Non-schematic fixtures are unchanged.
         accounted = actionable if profile == "schematic" else candidates
-        payload = undeclared_geometry_payload(pdf_path, accounted)
+        payload = undeclared_geometry_payload(pdf_path, accounted, tex_path=tex_path)
         if profile == "schematic":
             payload["profile"] = "schematic"
             payload["downranked"] = downranked

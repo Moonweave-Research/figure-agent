@@ -50,9 +50,7 @@ def _write_undeclared_candidate_defect(
         ]
     }
     payload["source_hashes"] = source_hashes or {
-        f"examples/{fixture.name}/{fixture.name}.tex": file_sha256(
-            fixture / f"{fixture.name}.tex"
-        )
+        f"examples/{fixture.name}/{fixture.name}.tex": file_sha256(fixture / f"{fixture.name}.tex")
     }
     build_dir = fixture / "build"
     build_dir.mkdir(exist_ok=True)
@@ -265,7 +263,7 @@ def test_candidate_targets_ledger_defect_line_not_first_offsettable(tmp_path: Pa
                         "source_line": 3,
                         "panel": "A",
                     }
-                ]
+                ],
             }
         ),
         encoding="utf-8",
@@ -327,9 +325,7 @@ def test_candidate_generator_skips_line_weight_style_safe_defect(
     )
 
     assert payload["candidates"] == []
-    assert payload["refusals"] == [
-        {"code": "unsupported_candidate_family", "defect_id": "QD001"}
-    ]
+    assert payload["refusals"] == [{"code": "unsupported_candidate_family", "defect_id": "QD001"}]
 
 
 def test_candidate_generator_refuses_unknown_panel_safe_defect(
@@ -475,9 +471,7 @@ def test_candidate_generator_skips_unsupported_defect_and_reaches_supported(
                     "source_fingerprint": "sha256:" + "b" * 64,
                     "evidence": [{"node_id": "UG002"}],
                     "freshness": {
-                        "source_hashes": {
-                            "examples/candidate_demo/candidate_demo.tex": source_hash
-                        }
+                        "source_hashes": {"examples/candidate_demo/candidate_demo.tex": source_hash}
                     },
                     "selector_hint": {
                         "kind": "line_range",
@@ -552,14 +546,71 @@ def test_multi_candidate_generation_enumerates_supported_defects_with_metrics(
     }
 
 
+def test_candidate_offset_is_geometry_aware_for_horizontal_near_miss(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    # A horizontal near-miss line must be cleared by moving it on tikz-y (whole
+    # line), not by the blind first-coordinate +x nudge that leaves the gap intact.
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "\\draw[dashed] (0.45,6.15) -- (4.78,6.15);\n",
+        encoding="utf-8",
+    )
+    source_hash = file_sha256(fixture / "candidate_demo.tex")
+    build_dir = fixture / "build"
+    build_dir.mkdir()
+    (build_dir / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "source_hashes": {"examples/candidate_demo/candidate_demo.tex": source_hash},
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": 1,
+                        "panel": "A",
+                        "kind": "label_endpoint_near_miss",
+                        "nearest_text": "shallow",
+                        "bbox_pt": [12.76, 174.33, 135.50, 174.33],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (build_dir / "candidate_demo.pdf").write_bytes(b"%PDF-1.4 fake")
+
+    def fake_extract(_pdf_path):
+        words = [
+            {"text": "shallow", "xmin": 21.5, "ymin": 165.5, "xmax": 45.6, "ymax": 172.1},
+        ]
+        return words, (512.0, 289.0)
+
+    monkeypatch.setattr(
+        candidate_generator,
+        "extract_pdf_words_and_page",
+        fake_extract,
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    op = payload["candidates"][0]["operations"][0]
+    # whole line moved on y to a smaller tikz-y (away from text), x unchanged.
+    assert op["replacement"] == "\\draw[dashed] (0.45, 6.05) -- (4.78, 6.05);"
+
+
 def test_candidate_ids_are_stable_for_identical_source_and_ledger_hashes(
     tmp_path: Path,
 ) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
     (fixture / "candidate_demo.tex").write_text(
-        "\\node (label-a) at (0,0) {A};\n"
-        "\\draw (1.0,2.0) -- (3.0,2.0) node[right] {S};\n",
+        "\\node (label-a) at (0,0) {A};\n\\draw (1.0,2.0) -- (3.0,2.0) node[right] {S};\n",
         encoding="utf-8",
     )
     _write_undeclared_candidate_defects(fixture, [2, 1])
