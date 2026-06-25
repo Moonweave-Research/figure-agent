@@ -934,3 +934,83 @@ def test_quality_defect_ledger_maps_panel_from_source_markers(tmp_path: Path) ->
     assert defect["target"]["panel"] == "B"
     assert defect["actionability"]["gaps"] == []
     assert ledger["actionability_metrics"]["unknown_panel_defect_count"] == 0
+
+
+def test_quality_defect_ledger_assigns_distinct_subregions(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    name = fixture.name
+    (fixture / f"{name}.tex").write_text(
+        "% Panel A\n"
+        "\\draw (0,0) -- (1,0) node[right] {first label};\n"
+        "\\draw (0,1) -- (1,1) node[right] {second label};\n",
+        encoding="utf-8",
+    )
+    _write_undeclared_geometry_report(
+        fixture,
+        [
+            {
+                "id": "UG001",
+                "kind": "label_endpoint_near_miss",
+                "recommended_action": "add_micro_defect",
+                "source_line": 2,
+                "nearest_text": "first label",
+                "evidence": "near miss line 2",
+                "bbox_pt": [10.0, 20.0, 30.0, 20.0],
+                "distance_pt": 2.0,
+            },
+            {
+                "id": "UG002",
+                "kind": "label_endpoint_near_miss",
+                "recommended_action": "add_micro_defect",
+                "source_line": 3,
+                "nearest_text": "second label",
+                "evidence": "near miss line 3",
+                "bbox_pt": [10.0, 40.0, 30.0, 40.0],
+                "distance_pt": 2.0,
+            },
+        ],
+    )
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        name,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    subregions = [
+        d["target"]["subregion"]
+        for d in ledger["defects"]
+        if d.get("defect_class") == "text_overlap"
+    ]
+    assert len(subregions) == 2, ledger["defects"]
+    assert subregions[0] != subregions[1], subregions
+    assert "label-a" not in subregions, subregions
+
+
+def test_subregion_ordinal_fallback_is_distinct() -> None:
+    defects = [
+        {"defect_class": "text_overlap", "target": {"panel": "A", "subregion": "label-a"}},
+        {"defect_class": "text_overlap", "target": {"panel": "A", "subregion": "label-a"}},
+        {"defect_class": "text_overlap", "target": {"panel": "B", "subregion": "label-a"}},
+    ]
+    quality_defect_ledger._assign_subregion_keys(defects)
+    subs = [d["target"]["subregion"] for d in defects]
+    assert subs == ["text_overlap#0", "text_overlap#1", "text_overlap#0"], subs
+
+
+def test_subregion_preserves_explicit_value() -> None:
+    defects = [
+        {"defect_class": "text_overlap", "target": {"panel": "A", "subregion": "hero"}},
+        {
+            "defect_class": "text_overlap",
+            "target": {"panel": "A", "subregion": "label-a"},
+            "selector_hint": {
+                "kind": "line_range",
+                "selector_text_hash": "sha256:abcdef0123456789",
+            },
+        },
+    ]
+    quality_defect_ledger._assign_subregion_keys(defects)
+    assert defects[0]["target"]["subregion"] == "hero"
+    assert defects[1]["target"]["subregion"] == "sel:abcdef012345"

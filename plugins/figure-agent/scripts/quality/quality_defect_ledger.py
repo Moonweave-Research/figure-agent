@@ -127,6 +127,43 @@ def _explicit_target(raw: dict[str, Any]) -> dict[str, str]:
     return {"panel": "unknown", "subregion": "label-a"}
 
 
+def _subregion_for_defect(defect: dict[str, Any], ordinals: dict[tuple[str, str], int]) -> str:
+    target = defect.get("target")
+    panel = target.get("panel", "unknown") if isinstance(target, dict) else "unknown"
+    # 1. Preserve an already-explicit, non-default subregion.
+    if isinstance(target, dict):
+        existing = target.get("subregion")
+        if isinstance(existing, str) and existing.strip() and existing.strip() != "label-a":
+            return existing.strip()
+    # 2. Selector hash when available (stable across runs).
+    selector_hint = defect.get("selector_hint")
+    if isinstance(selector_hint, dict):
+        sel_hash = selector_hint.get("selector_text_hash")
+        if isinstance(sel_hash, str) and sel_hash:
+            return f"sel:{sel_hash.split(':')[-1][:12]}"
+        value = selector_hint.get("value")
+        if isinstance(value, str) and value.strip():
+            return f"sel:{_canonical_hash(value.strip()).split(':')[-1][:12]}"
+    # 3. Per-(panel, defect_class) ordinal fallback.
+    defect_class = str(defect.get("defect_class") or "defect")
+    key = (panel, defect_class)
+    index = ordinals.get(key, 0)
+    ordinals[key] = index + 1
+    return f"{defect_class}#{index}"
+
+
+def _assign_subregion_keys(defects: list[dict[str, Any]]) -> None:
+    ordinals: dict[tuple[str, str], int] = {}
+    for defect in defects:
+        if not isinstance(defect, dict):
+            continue
+        target = defect.get("target")
+        if not isinstance(target, dict):
+            target = {"panel": "unknown", "subregion": "label-a"}
+            defect["target"] = target
+        target["subregion"] = _subregion_for_defect(defect, ordinals)
+
+
 def _line_selector_hash(example_dir: Path, name: str, line_number: int) -> str | None:
     source = example_dir / f"{name}.tex"
     if not source.is_file():
@@ -638,6 +675,9 @@ def build_quality_defect_ledger(
     for defect in defects:
         if isinstance(defect, dict):
             defect["source_fingerprint"] = _source_fingerprint(defect)
+    # Slice 2: stamp a distinct, stable sub-region key AFTER the fingerprint so
+    # defect identity is unchanged; only target["subregion"] gains a real value.
+    _assign_subregion_keys(defects)
     actionability_metrics = _annotate_actionability(defects, _declared_panels(example_dir))
 
     payload = {

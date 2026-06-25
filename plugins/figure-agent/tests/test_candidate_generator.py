@@ -523,8 +523,11 @@ def test_multi_candidate_generation_enumerates_supported_defects_with_metrics(
     candidates = payload["candidates"]
     assert [candidate["id"] for candidate in candidates] == ["CAND001", "CAND002"]
     assert [candidate["selector"]["start_line"] for candidate in candidates] == [1, 3]
+    subregions = [candidate["target"]["subregion"] for candidate in candidates]
+    assert subregions[0] != subregions[1], subregions
     for candidate in candidates:
-        assert candidate["target"] == {"panel": "A", "subregion": "label-a"}
+        assert candidate["target"]["panel"] == "A"
+        assert candidate["target"]["subregion"] != "label-a"
         assert candidate["edit_family"] == "bounded_coordinate_offset"
         assert candidate["family"] == "bounded-coordinate-offset"
         assert candidate["variant"] == {"id": "dx+0.10cm", "dx_cm": 0.1}
