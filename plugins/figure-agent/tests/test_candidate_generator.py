@@ -689,7 +689,10 @@ def test_candidate_generator_refuses_source_hash_mismatch_when_ledger_claims_sup
 
 
 def _write_apply_finding(
-    fixture: Path, finding_line: int, proposed_offset: dict | None = None
+    fixture: Path,
+    finding_line: int,
+    proposed_offset: dict | None = None,
+    target_texts: list | None = None,
 ) -> None:
     name = fixture.name
     offset_block = ""
@@ -699,6 +702,10 @@ def _write_apply_finding(
             f"      axis: {proposed_offset['axis']}\n"
             f"      dx_cm: {proposed_offset['dx_cm']}\n"
         )
+    texts_block = ""
+    if target_texts is not None:
+        rows = "".join(f"      - {text!r}\n" for text in target_texts)
+        texts_block = "    target_texts:\n" + rows
     (fixture / "critique.md").write_text(
         "---\n"
         "schema: figure-agent.critique.v1.17\n"
@@ -709,7 +716,7 @@ def _write_apply_finding(
         "    severity: MINOR\n"
         "    category: label_placement\n"
         f"    tex_lines: [{finding_line}, {finding_line}]\n"
-        "    status: open\n" + offset_block + "---\n\n# critique\n",
+        "    status: open\n" + offset_block + texts_block + "---\n\n# critique\n",
         encoding="utf-8",
     )
     (fixture / "critique_adjudication.yaml").write_text(
@@ -765,3 +772,28 @@ def test_adjudicated_finding_with_proposed_offset_emits_reposition(tmp_path: Pat
     operation = reposition[0]["operations"][0]
     # Moves the y coordinate the full diagnosed distance, past the 0.10cm nudge cap.
     assert "(7.60, 3.62)" in operation["replacement"]
+
+
+def test_adjudicated_finding_carries_target_texts_for_verifier(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "% header line\n\\node[labelMute, anchor=north] at (7.60,4.12) {PI, PDMS, PET};\n",
+        encoding="utf-8",
+    )
+    # The finding names the crossing texts so the post-apply (visual_clash)
+    # verifier can confirm they no longer cross — the ledger is blind to them.
+    _write_apply_finding(fixture, finding_line=2, target_texts=["PI,", "PDMS,", "PET"])
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    anchored = [
+        c
+        for c in payload["candidates"]
+        if c.get("source_defect", {}).get("source") == "adjudicated_finding"
+    ]
+    assert anchored, payload
+    assert anchored[0]["source_defect"]["target_texts"] == ["PI,", "PDMS,", "PET"]

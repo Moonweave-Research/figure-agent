@@ -612,6 +612,11 @@ def _adjudicated_apply_candidates(
                     "evidence": [],
                     "source_fingerprint": "",
                     "ledger_hash": "",
+                    "target_texts": [
+                        str(text)
+                        for text in (finding.get("target_texts") or [])
+                        if isinstance(text, str)
+                    ],
                 },
                 edit_class=edit_class,
                 variant_id=variant_id,

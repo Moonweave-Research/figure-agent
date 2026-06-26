@@ -441,6 +441,50 @@ def _semantic_recheck_verdict(
     }
 
 
+def _finding_recheck_verdict(
+    target_texts: list[Any], post_crossing_texts: list[Any]
+) -> dict[str, Any]:
+    """Recheck for a finding-sourced (visual_clash-grounded) fix.
+
+    The quality_defect_ledger is undeclared_geometry-grounded and blind to the
+    visual_clash crossings a critique finding catches, so a finding-sourced fix
+    cannot be verified by the ledger-based semantic recheck. Instead verify
+    against the post-apply crossing texts: the fix is resolved iff none of the
+    texts the finding targeted are still flagged as crossings.
+    """
+    targets = {str(text) for text in target_texts}
+    unresolved = sorted(targets & {str(text) for text in post_crossing_texts})
+    if unresolved:
+        return {
+            "status": "failed",
+            "reason": "finding_crossing_unresolved",
+            "unresolved_texts": unresolved,
+        }
+    return {
+        "status": "success",
+        "reason": "finding_crossing_resolved",
+        "resolved_texts": sorted(targets),
+    }
+
+
+def _post_crossing_texts(example_dir: Path) -> list[str]:
+    """Texts flagged by the post-apply visual_clash detector — the crossings a
+    critique finding is grounded in (the ledger is blind to this defect class)."""
+    report = example_dir / "build" / "visual_clash.json"
+    try:
+        data = json.loads(report.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return []
+    candidates = data.get("candidates")
+    if not isinstance(candidates, list):
+        return []
+    return [
+        str(candidate.get("text"))
+        for candidate in candidates
+        if isinstance(candidate, dict) and candidate.get("text")
+    ]
+
+
 def _post_apply_semantic_recheck(
     name: str,
     paths: runtime_paths.RuntimePaths,
@@ -453,6 +497,20 @@ def _post_apply_semantic_recheck(
     source_defect_id = source_defect.get("id")
     if not isinstance(source_defect_id, str) or not source_defect_id.strip():
         return None
+    if source_defect.get("source") == "adjudicated_finding":
+        # Finding-sourced fixes are visual_clash-grounded; the ledger (and the
+        # ledger-based recheck) is blind to them. Verify against the post-apply
+        # crossing texts instead. No target_texts => cannot verify => fail-safe.
+        target_texts = source_defect.get("target_texts")
+        if not isinstance(target_texts, list) or not target_texts:
+            return {
+                "status": "failed",
+                "reason": "finding_target_texts_missing",
+                "source_defect_id": source_defect_id,
+            }
+        return _finding_recheck_verdict(
+            target_texts, _post_crossing_texts(paths.examples_dir / name)
+        )
     import quality_defect_ledger
 
     ledger = quality_defect_ledger.build_quality_defect_ledger(

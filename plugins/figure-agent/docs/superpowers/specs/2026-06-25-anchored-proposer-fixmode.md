@@ -1,7 +1,7 @@
 # Anchored-Proposer Fix-Mode (Slice 5)
 
-Status: Increment 1 + 2 shipped (TDD). Increment 3 (apply-pipeline e2e + geometry-derived
-proposed_offset) open.
+Status: Increment 1 + 2 + 3 shipped (TDD). Increment 4 (destination-aware geometry,
+richer edits for tight layouts, apply-e2e on apply_eligible figure) open.
 Branch: work/review-auto-fixes-2026-06-25. Backs memory `project_slice5_fig2_settles_clean_2026_06_25`.
 
 ## Problem (dogfood-grounded, not assumed)
@@ -66,19 +66,49 @@ bounded-nudge family could never author.
 Tests: `test_reposition_coordinate_*` (primitive), `test_adjudicated_finding_
 with_proposed_offset_emits_reposition` (wiring).
 
-## Increment 3 (open)
+## Increment 3 — finding↔verifier bridge (SHIPPED)
 
-1. **Apply-pipeline e2e**: drive the fig2 `label_reposition` candidate through
-   render → accept → apply and confirm the Slice 4 semantic recheck reports the
-   PI/PDMS/PET crossing actually gone (and rolls back if not). The candidate is
-   currently `review_only`/`human_required` at the acceptance gate.
-2. **Geometry-derived `proposed_offset`**: today the eye supplies dx_cm by hand
-   in the critique. Derive it from rendered geometry (label bbox vs crossed
-   reference-line position + margin) so the loop proposes the magnitude itself.
-3. **Critique-gate adversarial check**: the eye rubber-stamped a detector
-   true-positive (VC006-008) as a false positive. An accept_simplification of a
-   detector flag needs an adversarial second check, else any eye games the gate.
+Apply-e2e dogfooding found the shipped fix-mode was NOT end-to-end functional:
+- The eye's hand-supplied `proposed_offset` for fig2 (`-0.50cm`) is geometrically
+  WRONG — applied + recompiled, the caption collides with the panel-c title
+  (axis↔panel-c-title gap is only 0.75cm). A coordinate offset has no clean
+  solution for that tight layout. (Reverted the experiment.)
+- VERIFIER-DEAD-ON-ARRIVAL: the anchored candidate's `source_defect.id` is the
+  critique finding id (`C001`), never in `quality_defect_ledger` (QD001-006, ALL
+  undeclared_geometry-grounded). `_semantic_recheck_verdict('C001', …)` →
+  `source_defect_absent_pre_apply`, so EVERY anchored candidate always failed the
+  recheck. ROOT: critique findings are **visual_clash**-grounded (VC###) while the
+  ledger/verifier is **undeclared_geometry**-grounded (QD/UG###) — the verifier is
+  structurally BLIND to the defect class the critique catches.
 
-Also surfaced: the critique gate itself rubber-stamped a detector true-positive
-as `accept_simplification:false_positive`. An EYE fix-mode needs an adversarial
-check on accept_simplification of a detector flag, else any eye games the gate.
+Fix (the bridge): a finding-sourced fix verifies against the **post-apply
+visual_clash** detector, not the ledger.
+- `candidate_apply._finding_recheck_verdict(target_texts, post_crossing_texts)`:
+  resolved iff none of the texts the finding targeted still cross.
+- `_post_apply_semantic_recheck` branches on `source_defect.source ==
+  "adjudicated_finding"` → reads post `build/visual_clash.json` texts → finding
+  recheck; no `target_texts` ⇒ fail-safe (`finding_target_texts_missing`).
+- The finding carries structured `target_texts`; `candidate_generator` threads
+  them into the candidate's `source_defect`.
+- Real fig2: CAND007 carries `target_texts=[PI,, PDMS,, PET]`; recheck →
+  `failed/finding_crossing_unresolved` against the bad-reposition post (PI,/PET
+  still cross), `success` against a clean post. The verifier now CATCHES the
+  wrong fix.
+
+Tests: `test_finding_recheck_*`, `test_post_apply_recheck_finding_sourced_*`,
+`test_adjudicated_finding_carries_target_texts_for_verifier`.
+
+## Increment 4 (open)
+
+1. **DESTINATION-aware geometry-derived `proposed_offset`**: derive dx_cm from
+   rendered geometry AND confirm the destination is clear of all nearby elements
+   (fig2 showed moving DOWN hits panel c) — not just clear of the one crossed line.
+2. **Richer edit family for tight layouts**: when no coordinate offset has a clean
+   solution (fig2's 0.75cm gap), the loop needs anchor/text-width edits or must
+   escalate to human redesign.
+3. **Apply-pipeline e2e on an apply_eligible figure**: drive a finding-sourced
+   reposition through the real `apply_candidate` (fig2 is `review_only` by panel
+   design); the spine + bridge are unit-proven (good fix → applied, bad →
+   failed-verification).
+4. **Critique-gate adversarial check** on `accept_simplification` of a detector
+   true-positive (the eye rubber-stamped VC006-008 once), else any eye games the gate.

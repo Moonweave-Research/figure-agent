@@ -793,3 +793,57 @@ def test_semantic_recheck_source_absent_pre_is_failed():
     verdict = candidate_apply._semantic_recheck_verdict("QD404", [], [])
     assert verdict["status"] == "failed"
     assert verdict["reason"] == "source_defect_absent_pre_apply"
+
+
+def test_finding_recheck_fails_when_a_target_text_still_crosses():
+    # The verifier ledger is undeclared_geometry-grounded and blind to the
+    # visual_clash crossings a critique finding catches, so a finding-sourced
+    # fix verifies against the post-apply crossing texts directly.
+    verdict = candidate_apply._finding_recheck_verdict(
+        ["PI,", "PDMS,", "PET"], ["PI,", "PET", "(shallow,"]
+    )
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_crossing_unresolved"
+    assert "PI," in verdict["unresolved_texts"]
+
+
+def test_finding_recheck_succeeds_when_no_target_text_crosses():
+    verdict = candidate_apply._finding_recheck_verdict(["PI,", "PDMS,", "PET"], ["Origin", "S85"])
+    assert verdict["status"] == "success"
+    assert verdict["reason"] == "finding_crossing_resolved"
+
+
+def test_post_apply_recheck_finding_sourced_uses_post_visual_clash(tmp_path: Path) -> None:
+    import runtime_paths
+
+    workspace = tmp_path / "workspace"
+    build = workspace / "examples" / "demo" / "build"
+    build.mkdir(parents=True)
+    (build / "visual_clash.json").write_text(
+        json.dumps({"candidates": [{"id": "VC001", "kind": "text_on_path", "text": "PI,"}]}),
+        encoding="utf-8",
+    )
+    paths = runtime_paths.resolve_runtime_paths(workspace_root=workspace)
+    manifest = {
+        "source_defect": {
+            "id": "C001",
+            "source": "adjudicated_finding",
+            "target_texts": ["PI,", "PET"],
+        }
+    }
+    verdict = candidate_apply._post_apply_semantic_recheck("demo", paths, manifest, [])
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_crossing_unresolved"
+    assert "PI," in verdict["unresolved_texts"]
+
+
+def test_post_apply_recheck_finding_sourced_without_target_texts_is_failed(tmp_path: Path) -> None:
+    import runtime_paths
+
+    workspace = tmp_path / "workspace"
+    (workspace / "examples" / "demo" / "build").mkdir(parents=True)
+    paths = runtime_paths.resolve_runtime_paths(workspace_root=workspace)
+    manifest = {"source_defect": {"id": "C001", "source": "adjudicated_finding"}}
+    verdict = candidate_apply._post_apply_semantic_recheck("demo", paths, manifest, [])
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_target_texts_missing"

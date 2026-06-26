@@ -18,6 +18,10 @@ findings:
     proposed_offset:
       axis: y
       dx_cm: -0.50
+    target_texts:
+      - "PI,"
+      - "PDMS,"
+      - "PET"
     status: open
 panels: []
 audit_enumeration:
