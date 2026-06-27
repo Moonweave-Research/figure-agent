@@ -563,6 +563,48 @@ def test_apply_candidate_records_failed_recheck_when_defect_persists(
     assert recheck["source_defect_id"] == "QD001"
 
 
+def test_apply_candidate_rolls_back_on_failed_detector_recheck(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Autonomy safety: a fix the recheck reports as failed must be UNDONE, not
+    # left applied and merely flagged — the verifier replaces the human gate, so
+    # it must roll the .tex back so a known-ineffective fix never persists.
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    _set_source_defect(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    _semantic_recheck_fakes(
+        monkeypatch,
+        pre=[_ledger_defect("QD001")],
+        post=[_ledger_defect("QD777")],  # same signature persists -> recheck failed
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+
+    assert result["status"] == "applied_with_failed_verification"
+    assert result["post_apply"]["detector_recheck"]["status"] == "failed"
+    assert result["post_apply"]["class_verifiers"]["rolled_back"] is True
+    # The ineffective edit is reverted to the pre-apply source, not left applied.
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == "source\n"
+
+
 def test_apply_candidate_semantic_recheck_success_when_resolved(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

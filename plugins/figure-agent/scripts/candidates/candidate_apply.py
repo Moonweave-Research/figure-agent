@@ -791,16 +791,21 @@ def apply_candidate(
             post_apply_result["detector_recheck"] = detector_recheck
         if post_apply:
             # Value-preservation gate (CORR-3): the applied edit must not change
-            # rendered labels or break palette discipline. On any violation,
-            # AUTO-ROLLBACK the .tex to its pre-mutation content so a
-            # science-changing edit is undone, and record it as failed verification.
+            # rendered labels or break palette discipline. AUTO-ROLLBACK the .tex
+            # to its pre-mutation content on any violation. Autonomy safety: also
+            # roll back when the efficacy recheck (detector_recheck) failed — the
+            # verifier replaces the human gate, so a known-ineffective fix must be
+            # UNDONE, never left applied and merely flagged.
             post_words = _pdf_words(build_pdf)
             class_verifiers = _run_class_verifiers(changes, pre_words, post_words)
-            class_verifiers["rolled_back"] = False
-            if class_verifiers["status"] != "success":
+            recheck_failed = (
+                isinstance(detector_recheck, dict) and detector_recheck.get("status") != "success"
+            )
+            rolled_back = class_verifiers["status"] != "success" or recheck_failed
+            if rolled_back:
                 for change in changes:
                     change["path"].write_text(str(change["before"]), encoding="utf-8")
-                class_verifiers["rolled_back"] = True
+            class_verifiers["rolled_back"] = rolled_back
             post_apply_result["class_verifiers"] = class_verifiers
             result_status = (
                 "applied_with_failed_verification"

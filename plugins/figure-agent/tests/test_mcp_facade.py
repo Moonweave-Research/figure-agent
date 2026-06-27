@@ -1778,8 +1778,16 @@ def test_mcp_apply_candidate_mutates_tex_and_honors_gate(
     assert applied["status"] in {"applied", "applied_with_failed_verification"}, applied
     assert applied["success"] is (applied["status"] == "applied")
     after = tex_path.read_text(encoding="utf-8")
-    assert after != before
     apply_result = applied["apply_result"]
+    rolled_back = bool(
+        apply_result.get("post_apply", {}).get("class_verifiers", {}).get("rolled_back")
+    )
+    if rolled_back:
+        # Autonomy: a failed-verification fix is auto-rolled-back, so the working
+        # tree is restored to its pre-apply content rather than left mutated.
+        assert after == before
+    else:
+        assert after != before
     assert apply_result["status"] == applied["status"]
     if applied["status"] == "applied":
         assert applied.get("error") is None

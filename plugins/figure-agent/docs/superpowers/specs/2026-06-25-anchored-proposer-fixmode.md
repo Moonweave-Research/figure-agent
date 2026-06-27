@@ -1,7 +1,8 @@
 # Anchored-Proposer Fix-Mode (Slice 5)
 
-Status: Increment 1 + 2 + 3 + 4a shipped (TDD). Increment 4 remainder (destination-aware
-proposer geometry, richer edits for tight layouts, apply-e2e on apply_eligible figure) open.
+Status: Increment 1 + 2 + 3 + 4a + 4b shipped (TDD). DIRECTION = autonomy (human gates were
+design-phase scaffolding). Next: relax render-evaluate + review_only gates (verifier now UNDOES
+bad fixes), destination-aware proposer geometry, richer edits for tight layouts.
 Branch: work/review-auto-fixes-2026-06-25. Backs memory `project_slice5_fig2_settles_clean_2026_06_25`.
 
 ## Problem (dogfood-grounded, not assumed)
@@ -110,12 +111,29 @@ through `_post_apply_semantic_recheck`. So destination-awareness is now enforced
 at the fail-loud verifier even before the proposer is destination-aware. Tests:
 `test_finding_recheck_*new_crossing*`, `test_post_apply_recheck_finding_sourced_flags_new_crossing`.
 
-Open:
-1. **DESTINATION-aware geometry-derived `proposed_offset`**: derive dx_cm from
+**4b — rollback on failed recheck (SHIPPED).** Absolute verification (drove the
+real `apply_candidate` on fig2 e2e) found the apply was BLOCKED before the
+verifier by human gates (render `evaluate=="rendered_needs_human_review"` +
+`review_only` authority floor), and a CODE GAP: `detector_recheck` failure only
+SET `applied_with_failed_verification` but did NOT roll back the `.tex` (only the
+value-preservation gate rolled back). A reposition preserves label text, so a
+known-ineffective finding fix would be LEFT APPLIED. Direction is autonomy (human
+gates were design-phase safety scaffolding), so the verifier must REPLACE the
+human gate — which means it must UNDO, not just flag. The apply flow now rolls
+the `.tex` back when EITHER value-preservation OR `detector_recheck` fails
+(recorded in `class_verifiers.rolled_back`; no new post_apply key, CLI contract
+intact). Test: `test_apply_candidate_rolls_back_on_failed_detector_recheck`.
+
+Open (toward autonomy):
+1. **Relax the human gates** (render `evaluate` needs_human_review + `review_only`
+   authority) so an anchored fix can auto-apply, now that the verifier UNDOES bad
+   fixes. This is the actual autonomy enablement; gate it on cohort dogfood
+   confidence, not a single figure.
+2. **DESTINATION-aware geometry-derived `proposed_offset`**: derive dx_cm from
    rendered geometry AND confirm the destination is clear of all nearby elements
    (fig2 showed moving DOWN hits panel c) — not just clear of the one crossed line.
-   (The 4a verifier already REJECTS a destination-unaware move; this makes the
-   proposer AVOID it.)
+   (4a REJECTS + 4b UNDOES a destination-unaware move; this makes the proposer
+   AVOID wasting an apply on it.)
 2. **Richer edit family for tight layouts**: when no coordinate offset has a clean
    solution (fig2's 0.75cm gap), the loop needs anchor/text-width edits or must
    escalate to human redesign.

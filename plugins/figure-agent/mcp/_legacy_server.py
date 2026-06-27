@@ -1610,15 +1610,27 @@ def _apply_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
     if success:
         error = None
     elif status == "applied_with_failed_verification":
-        # The .tex was mutated and a rollback.patch was produced, but the
-        # post-apply compile/export/status verification failed: the working tree
-        # is modified and the caller may need to roll back via apply_result.
-        error = _error(
-            "unsupported_operation",
-            "apply-candidate mutated the working tree but post-apply verification "
-            "failed (status applied_with_failed_verification); roll back via "
-            "apply_result.rollback_patch.",
-        )
+        # Post-apply verification failed. The efficacy recheck and the
+        # value-preservation gate AUTO-ROLL-BACK the .tex, so when rolled_back is
+        # set the working tree is already restored; otherwise (e.g. an
+        # export/compile stage failed) the mutation persists and the caller rolls
+        # back via apply_result.rollback_patch.
+        post = payload.get("post_apply", {}) if isinstance(payload, dict) else {}
+        verifiers = post.get("class_verifiers", {}) if isinstance(post, dict) else {}
+        if isinstance(verifiers, dict) and verifiers.get("rolled_back"):
+            error = _error(
+                "unsupported_operation",
+                "apply-candidate post-apply verification failed (status "
+                "applied_with_failed_verification); the edit was automatically rolled "
+                "back, working tree unchanged.",
+            )
+        else:
+            error = _error(
+                "unsupported_operation",
+                "apply-candidate mutated the working tree but post-apply verification "
+                "failed (status applied_with_failed_verification); roll back via "
+                "apply_result.rollback_patch.",
+            )
     else:
         # blocked/ready and any other non-applied status: the gate refused the
         # candidate before mutating; the working tree is unchanged.
