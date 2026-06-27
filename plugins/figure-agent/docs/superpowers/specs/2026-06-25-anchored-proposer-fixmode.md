@@ -1,7 +1,7 @@
 # Anchored-Proposer Fix-Mode (Slice 5)
 
-Status: Increment 1 + 2 + 3 shipped (TDD). Increment 4 (destination-aware geometry,
-richer edits for tight layouts, apply-e2e on apply_eligible figure) open.
+Status: Increment 1 + 2 + 3 + 4a shipped (TDD). Increment 4 remainder (destination-aware
+proposer geometry, richer edits for tight layouts, apply-e2e on apply_eligible figure) open.
 Branch: work/review-auto-fixes-2026-06-25. Backs memory `project_slice5_fig2_settles_clean_2026_06_25`.
 
 ## Problem (dogfood-grounded, not assumed)
@@ -98,11 +98,24 @@ visual_clash** detector, not the ledger.
 Tests: `test_finding_recheck_*`, `test_post_apply_recheck_finding_sourced_*`,
 `test_adjudicated_finding_carries_target_texts_for_verifier`.
 
-## Increment 4 (open)
+## Increment 4
 
+**4a — new-crossing recheck (SHIPPED).** The finding recheck now also fails when a
+fix CLEARS its target texts but introduces a NEW crossing absent pre-apply (a
+destination-unaware move that pushes the label onto another element, e.g. fig2's
+caption onto the panel-c title). `_finding_recheck_verdict(target, post, pre)`
+adds `post − pre` detection (`finding_new_crossing_introduced`); the apply flow
+snapshots `pre_crossing = _post_crossing_texts()` before mutation and threads it
+through `_post_apply_semantic_recheck`. So destination-awareness is now enforced
+at the fail-loud verifier even before the proposer is destination-aware. Tests:
+`test_finding_recheck_*new_crossing*`, `test_post_apply_recheck_finding_sourced_flags_new_crossing`.
+
+Open:
 1. **DESTINATION-aware geometry-derived `proposed_offset`**: derive dx_cm from
    rendered geometry AND confirm the destination is clear of all nearby elements
    (fig2 showed moving DOWN hits panel c) — not just clear of the one crossed line.
+   (The 4a verifier already REJECTS a destination-unaware move; this makes the
+   proposer AVOID it.)
 2. **Richer edit family for tight layouts**: when no coordinate offset has a clean
    solution (fig2's 0.75cm gap), the loop needs anchor/text-width edits or must
    escalate to human redesign.

@@ -813,6 +813,30 @@ def test_finding_recheck_succeeds_when_no_target_text_crosses():
     assert verdict["reason"] == "finding_crossing_resolved"
 
 
+def test_finding_recheck_fails_when_fix_clears_target_but_introduces_new_crossing():
+    # Destination-unaware fix: the targets are cleared but the move pushed the
+    # label onto another element (a NEW crossing absent pre-apply).
+    verdict = candidate_apply._finding_recheck_verdict(
+        ["PI,", "PDMS,", "PET"],
+        ["S85", "(shallow,"],
+        pre_crossing_texts=["PI,", "PDMS,", "PET", "S85"],
+    )
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_new_crossing_introduced"
+    assert "(shallow," in verdict["introduced_texts"]
+
+
+def test_finding_recheck_success_ignores_stable_baseline_crossings():
+    # Baseline false-positive crossings present both pre and post must not count
+    # as newly introduced.
+    verdict = candidate_apply._finding_recheck_verdict(
+        ["PI,", "PDMS,", "PET"],
+        ["Origin", "S85"],
+        pre_crossing_texts=["PI,", "PDMS,", "PET", "Origin", "S85"],
+    )
+    assert verdict["status"] == "success"
+
+
 def test_post_apply_recheck_finding_sourced_uses_post_visual_clash(tmp_path: Path) -> None:
     import runtime_paths
 
@@ -847,3 +871,38 @@ def test_post_apply_recheck_finding_sourced_without_target_texts_is_failed(tmp_p
     verdict = candidate_apply._post_apply_semantic_recheck("demo", paths, manifest, [])
     assert verdict["status"] == "failed"
     assert verdict["reason"] == "finding_target_texts_missing"
+
+
+def test_post_apply_recheck_finding_sourced_flags_new_crossing(tmp_path: Path) -> None:
+    import runtime_paths
+
+    workspace = tmp_path / "workspace"
+    build = workspace / "examples" / "demo" / "build"
+    build.mkdir(parents=True)
+    # Post state: the targeted texts cleared, but the move introduced a new
+    # crossing "(shallow," that was not present pre-apply.
+    (build / "visual_clash.json").write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {"id": "VC001", "kind": "text_on_path", "text": "(shallow,"},
+                    {"id": "VC002", "kind": "text_on_fill", "text": "S85"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    paths = runtime_paths.resolve_runtime_paths(workspace_root=workspace)
+    manifest = {
+        "source_defect": {
+            "id": "C001",
+            "source": "adjudicated_finding",
+            "target_texts": ["PI,", "PET"],
+        }
+    }
+    verdict = candidate_apply._post_apply_semantic_recheck(
+        "demo", paths, manifest, [], ["PI,", "PET", "S85"]
+    )
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_new_crossing_introduced"
+    assert "(shallow," in verdict["introduced_texts"]

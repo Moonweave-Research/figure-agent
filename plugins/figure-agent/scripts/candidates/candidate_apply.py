@@ -442,7 +442,9 @@ def _semantic_recheck_verdict(
 
 
 def _finding_recheck_verdict(
-    target_texts: list[Any], post_crossing_texts: list[Any]
+    target_texts: list[Any],
+    post_crossing_texts: list[Any],
+    pre_crossing_texts: list[Any] | None = None,
 ) -> dict[str, Any]:
     """Recheck for a finding-sourced (visual_clash-grounded) fix.
 
@@ -450,16 +452,28 @@ def _finding_recheck_verdict(
     visual_clash crossings a critique finding catches, so a finding-sourced fix
     cannot be verified by the ledger-based semantic recheck. Instead verify
     against the post-apply crossing texts: the fix is resolved iff none of the
-    texts the finding targeted are still flagged as crossings.
+    texts the finding targeted are still flagged as crossings AND it introduced
+    no NEW crossing (a destination-unaware move can clear the target yet push the
+    label onto another element). New crossings need pre_crossing_texts to tell an
+    edit-introduced crossing from a stable baseline false-positive.
     """
     targets = {str(text) for text in target_texts}
-    unresolved = sorted(targets & {str(text) for text in post_crossing_texts})
+    post = {str(text) for text in post_crossing_texts}
+    unresolved = sorted(targets & post)
     if unresolved:
         return {
             "status": "failed",
             "reason": "finding_crossing_unresolved",
             "unresolved_texts": unresolved,
         }
+    if pre_crossing_texts is not None:
+        introduced = sorted(post - {str(text) for text in pre_crossing_texts})
+        if introduced:
+            return {
+                "status": "failed",
+                "reason": "finding_new_crossing_introduced",
+                "introduced_texts": introduced,
+            }
     return {
         "status": "success",
         "reason": "finding_crossing_resolved",
@@ -490,6 +504,7 @@ def _post_apply_semantic_recheck(
     paths: runtime_paths.RuntimePaths,
     manifest: dict[str, Any],
     pre_defects: list[dict[str, Any]],
+    pre_crossing_texts: list[str] | None = None,
 ) -> dict[str, Any] | None:
     source_defect = manifest.get("source_defect")
     if not isinstance(source_defect, dict):
@@ -509,7 +524,9 @@ def _post_apply_semantic_recheck(
                 "source_defect_id": source_defect_id,
             }
         return _finding_recheck_verdict(
-            target_texts, _post_crossing_texts(paths.examples_dir / name)
+            target_texts,
+            _post_crossing_texts(paths.examples_dir / name),
+            pre_crossing_texts=pre_crossing_texts,
         )
     import quality_defect_ledger
 
@@ -746,6 +763,9 @@ def apply_candidate(
         # the post-apply recheck diffs (panel, defect_class, severity) counts
         # against this baseline, robust to coordinate-nudge fingerprint shifts.
         pre_defects = _pre_apply_defects(name, paths) if post_apply else []
+        # Snapshot pre-apply visual_clash crossings so a finding-sourced recheck
+        # can tell an edit-introduced NEW crossing from a stable baseline.
+        pre_crossing = _post_crossing_texts(example_dir) if post_apply else []
         # Snapshot rendered labels BEFORE mutation for the value-preservation gate.
         build_pdf = example_dir / "build" / f"{name}.pdf"
         pre_words = _pdf_words(build_pdf) if post_apply else Counter()
@@ -763,7 +783,9 @@ def apply_candidate(
             )
         post_apply_result = _post_apply_checks(name, paths) if post_apply else {}
         detector_recheck = (
-            _post_apply_semantic_recheck(name, paths, manifest, pre_defects) if post_apply else None
+            _post_apply_semantic_recheck(name, paths, manifest, pre_defects, pre_crossing)
+            if post_apply
+            else None
         )
         if detector_recheck is not None:
             post_apply_result["detector_recheck"] = detector_recheck
