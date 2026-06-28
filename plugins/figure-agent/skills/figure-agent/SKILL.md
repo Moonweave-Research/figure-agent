@@ -165,6 +165,8 @@ polish backport, or actions the current mode forbids.
                          + perception data pack (extract.yaml + overlay.png)
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_critique <name>     required before export when usable reference grounding exists
+/fig_ground <name>       author tex/semantic assertions from briefing §6/§7 so a
+                         reversed force/bend direction is fail-loud (Layer 2)
 /fig_adjudicate <name>   scaffold critique_adjudication.yaml from critique.md
                          after `fig-agent helper critique_lint.py <name>`;
                          unresolved findings default to needs_human

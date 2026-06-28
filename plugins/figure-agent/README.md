@@ -33,6 +33,7 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 /fig_extract  (optional) reference PNG -> OCR + palette clusters + optional vtracer structural hints
 /fig_compile  Build the TikZ → PDF + PNG, run Style Lock + collision checks
 /fig_critique Have host Claude read the build PNG and write critique.md
+/fig_ground   Ground physics intent — author tex/semantic assertions from briefing §6/§7
 /fig_adjudicate Scaffold critique_adjudication.yaml after critique lint passes
 /fig_loop     Record a verify-only loop checkpoint
 /fig_export   Export final PDF / SVG / TIFF / PNG
