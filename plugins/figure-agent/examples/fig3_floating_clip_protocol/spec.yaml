@@ -1,6 +1,21 @@
 name: fig3_floating_clip_protocol
 title: "Fig 3 (SI/methods) — Floating-clip protocol: polarity-dependent bending probes locked trapped charge (schematic)"
 style_profile: polymer-paper
+
+# Physics invariant (briefing §6): polarity-dependent bending is THE novelty — the
+# +V-drive (P3) and -V-drive (P4) Coulomb forces must point in OPPOSITE x-directions
+# (same direction = wrong figure). Encoded as two near-anchored direction assertions.
+tex_assertions:
+  - id: p3-plus-drive-force-toward-electrode
+    anchor_style: forceArr
+    near: [11.05, 3.55]
+    axis: x
+    direction: increasing
+  - id: p4-minus-drive-force-reversed
+    anchor_style: forceArr
+    near: [14.20, 3.55]
+    axis: x
+    direction: decreasing
 panels:
   - id: P1
     caption: Pole — clip grounded, HV injects and traps charge; cantilever neutral

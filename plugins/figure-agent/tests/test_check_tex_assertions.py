@@ -125,6 +125,64 @@ def test_payload_has_stable_shape():
     assert payload["total"] == 1
 
 
+P3 = (11.05, 3.55, 11.62, 3.55)  # forceArr points +x
+P4 = (14.20, 3.55, 13.63, 3.55)  # forceArr points -x
+
+
+def test_select_draw_near_picks_the_closest_start():
+    assert cta.select_draw([P3, P4], near=(11.05, 3.55)) == ("ok", P3)
+    assert cta.select_draw([P3, P4], near=(14.20, 3.55)) == ("ok", P4)
+
+
+def test_select_draw_single_without_near_is_ok():
+    assert cta.select_draw([P3], near=None) == ("ok", P3)
+
+
+def test_select_draw_multiple_without_near_is_ambiguous():
+    assert cta.select_draw([P3, P4], near=None) == ("ambiguous", None)
+
+
+def test_select_draw_near_matching_none_is_missing():
+    assert cta.select_draw([P3, P4], near=(50.0, 50.0)) == ("missing", None)
+
+
+def test_select_draw_empty_is_missing():
+    assert cta.select_draw([], near=None) == ("missing", None)
+
+
+def test_parse_accepts_near():
+    parsed = cta.parse_tex_assertions({"tex_assertions": [{**ASSERTION, "near": [1.0, 2.0]}]})
+    assert parsed[0]["near"] == [1.0, 2.0]
+
+
+def test_parse_rejects_malformed_near():
+    with pytest.raises(cta.TexAssertionError):
+        cta.parse_tex_assertions({"tex_assertions": [{**ASSERTION, "near": [1.0]}]})
+
+
+def test_check_with_near_resolves_two_same_style_draws():
+    # fig3_floating_clip's polarity-dependent P3(+x)/P4(-x) forceArrs share a style.
+    tex = (
+        "\\draw[forceArr] (11.05,3.55) -- (11.62,3.55);\n"
+        "\\draw[forceArr] (14.20,3.55) -- (13.63,3.55);\n"
+    )
+    p3 = {
+        "id": "p3",
+        "anchor_style": "forceArr",
+        "axis": "x",
+        "direction": "increasing",
+        "near": [11.05, 3.55],
+    }
+    p4 = {
+        "id": "p4",
+        "anchor_style": "forceArr",
+        "axis": "x",
+        "direction": "decreasing",
+        "near": [14.20, 3.55],
+    }
+    assert cta.check_tex_assertions(tex, [p3, p4]) == []
+
+
 def test_cli_strict_flags_violation_and_writes_json(tmp_path):
     import json
     import subprocess

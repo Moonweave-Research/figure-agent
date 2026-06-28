@@ -112,8 +112,42 @@ tested independently of the compile wiring).
   the repulsion `.tex` PASSES and the attraction variant (from the probe) is
   `violated`. Throwaway attraction variant; do not commit it.
 
+## Extension — `near` anchor disambiguation (SHIPPED, the fig3 case)
+
+fig3_floating_clip_protocol's core novelty invariant — the +V-drive (P3) and
+-V-drive (P4) Coulomb forces point in OPPOSITE x-directions (polarity-dependent;
+same direction = the wrong, Hirai/Tamura-like figure) — was the "real second case"
+that needed more than a single styled draw: both forces share the `forceArr` style,
+so `find_styled_draws` returns two ⇒ `anchor_ambiguous`.
+
+Resolved minimally by an optional `near: [x, y]` on an assertion. `select_draw`
+picks the same-style draw whose START coordinate is within `NEAR_TOLERANCE_CM` (0.5)
+of `near` (in tikz coords — no pixel/pdf mapping). Then "P3/P4 opposite" is two
+ordinary direction assertions, each near-anchored to its own arrow — no new
+cross-element relation primitive needed (YAGNI):
+
+```yaml
+tex_assertions:
+  - id: p3-plus-drive-force-toward-electrode
+    anchor_style: forceArr
+    near: [11.05, 3.55]
+    axis: x
+    direction: increasing
+  - id: p4-minus-drive-force-reversed
+    anchor_style: forceArr
+    near: [14.20, 3.55]
+    axis: x
+    direction: decreasing
+```
+
+Dogfood: correct fig3 = both PASS; a variant where P4's arrow is flipped to +x
+(polarity-INDEPENDENT) = `p4-…-reversed` violated.
+
 ## Out of scope
 
 - Layer 2 (agent reads docs → authors assertions) is process, not this build.
 - compile.sh / loop-gate wiring — optional follow-on.
+- Explicit cross-element relation primitive (arrow vs `\fill`, curved-path
+  direction) — still deferred; two near-anchored direction assertions covered the
+  P3/P4 case without it.
 - No new render-based or pixel-geometric checks (proven fragile).
