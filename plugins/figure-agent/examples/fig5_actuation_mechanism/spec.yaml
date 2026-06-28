@@ -1,3 +1,14 @@
 name: fig5_actuation_mechanism
 title: "Fig 5 — Floating-clip actuation mechanism (v0.10 validation figure; story not final)"
 style_profile: polymer-paper
+
+# Physics intent from the research doc (detailed_figure_composition.md, Fig 5(a)
+# "Coulomb Repulsion"): the Coulomb force on the negative trapped charge points
+# AWAY from the drive electrode (on the +x side) — i.e. the forceArr arrow runs
+# in -x. Attraction (force toward the electrode) would be the trivial Maxwell-stress
+# behaviour and is the wrong figure.
+tex_assertions:
+  - id: force-repels-not-attracts
+    anchor_style: forceArr
+    axis: x
+    direction: decreasing
