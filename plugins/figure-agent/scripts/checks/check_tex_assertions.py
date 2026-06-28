@@ -52,6 +52,25 @@ def find_styled_draws(tex_text: str, style: str) -> list[tuple[float, float, flo
     ]
 
 
+# Option bracket allowing ONE level of nesting (e.g. an inline arrow tip spec
+# `-{Stealth[length=6pt,width=4.5pt]}`, whose inner `]` breaks a flat `[^\]]*`).
+_OPT = r"\[(?:[^\[\]]*\[[^\]]*\])*[^\[\]]*\]"
+_ALL_DRAW_RE = re.compile(
+    r"\\draw\s*(?:" + _OPT + r")?\s*"
+    rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*--\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
+)
+
+
+def find_all_draws(tex_text: str) -> list[tuple[float, float, float, float]]:
+    """Coordinates of every straight `\\draw … (x1,y1) -- (x2,y2)` regardless of
+    style (for arrows drawn with inline options and no named style — `near`
+    disambiguates). Bezier `.. controls ..` segments are not matched."""
+    return [
+        (float(x1), float(y1), float(x2), float(y2))
+        for x1, y1, x2, y2 in _ALL_DRAW_RE.findall(tex_text)
+    ]
+
+
 def check_direction(
     coords: tuple[float, float, float, float],
     *,
@@ -106,11 +125,16 @@ def parse_tex_assertions(spec: dict) -> list[dict]:
         if not isinstance(item, dict):
             raise TexAssertionError(f"tex_assertions[{index}] must be a mapping")
         out: dict = {}
-        for field in ("id", "anchor_style", "axis", "direction"):
+        for field in ("id", "axis", "direction"):
             value = item.get(field)
             if not isinstance(value, str) or not value.strip():
                 raise TexAssertionError(f"tex_assertions[{index}].{field} is required")
             out[field] = value.strip()
+        anchor_style = item.get("anchor_style")
+        if anchor_style is not None:
+            if not isinstance(anchor_style, str) or not anchor_style.strip():
+                raise TexAssertionError(f"tex_assertions[{index}].anchor_style must be a string")
+            out["anchor_style"] = anchor_style.strip()
         if out["axis"] not in AXES:
             raise TexAssertionError(f"tex_assertions[{index}].axis must be one of {AXES}")
         if out["direction"] not in DIRECTIONS:
@@ -131,6 +155,10 @@ def parse_tex_assertions(spec: dict) -> list[dict]:
             ):
                 raise TexAssertionError(f"tex_assertions[{index}].near must be [x, y] numbers")
             out["near"] = [float(near[0]), float(near[1])]
+        if "anchor_style" not in out and "near" not in out:
+            raise TexAssertionError(
+                f"tex_assertions[{index}] requires anchor_style or near to locate the draw"
+            )
         parsed.append(out)
     return parsed
 
@@ -140,18 +168,16 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
     missing/ambiguous. A passing assertion produces no issue."""
     issues: list[dict] = []
     for assertion in assertions:
-        draws = find_styled_draws(tex_text, assertion["anchor_style"])
+        style = assertion.get("anchor_style")
+        draws = find_styled_draws(tex_text, style) if style else find_all_draws(tex_text)
+        anchor = repr(style) if style else "any draw near the declared point"
         status, coords = select_draw(draws, assertion.get("near"))
         if status == "missing":
             issues.append(
                 {
                     "id": assertion["id"],
                     "status": "anchor_missing",
-                    "message": (
-                        f"assertion {assertion['id']!r}: no draw with style "
-                        f"{assertion['anchor_style']!r}"
-                        + (" near the declared point" if assertion.get("near") else "")
-                    ),
+                    "message": f"assertion {assertion['id']!r}: no draw matched ({anchor})",
                 }
             )
             continue
@@ -161,9 +187,8 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
                     "id": assertion["id"],
                     "status": "anchor_ambiguous",
                     "message": (
-                        f"assertion {assertion['id']!r}: style "
-                        f"{assertion['anchor_style']!r} matches {len(draws)} draws "
-                        "(add `near` to disambiguate)"
+                        f"assertion {assertion['id']!r}: {anchor} matches {len(draws)} draws "
+                        "(add or tighten `near` to disambiguate)"
                     ),
                 }
             )

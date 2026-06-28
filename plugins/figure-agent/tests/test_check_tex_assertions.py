@@ -183,6 +183,57 @@ def test_check_with_near_resolves_two_same_style_draws():
     assert cta.check_tex_assertions(tex, [p3, p4]) == []
 
 
+def test_find_all_draws_matches_inline_styled_draw():
+    tex = "\\draw[-{Stealth}, cRed!80!black, line width=0.7pt] (11.55,1.3) -- (10.85,1.3);"
+    assert cta.find_all_draws(tex) == [(11.55, 1.3, 10.85, 1.3)]
+
+
+def test_find_all_draws_matches_unstyled_draw():
+    assert cta.find_all_draws("\\draw (0,0) -- (1,2);") == [(0.0, 0.0, 1.0, 2.0)]
+
+
+def test_find_all_draws_handles_nested_option_brackets():
+    # fig1's Coulomb arrow has an inline arrow-tip spec with NESTED brackets.
+    tex = "\\draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt] (11.55, 1.3) -- (10.85, 1.3);"
+    assert cta.find_all_draws(tex) == [(11.55, 1.3, 10.85, 1.3)]
+
+
+def test_find_all_draws_returns_multiple():
+    assert len(cta.find_all_draws("\\draw[a] (0,0)--(1,0);\n\\draw[b] (5,5)--(6,5);")) == 2
+
+
+def test_find_all_draws_ignores_bezier_curves():
+    assert cta.find_all_draws("\\draw[beam] (0,0) .. controls (1,1) .. (2,2);") == []
+
+
+def test_parse_accepts_near_only_without_anchor_style():
+    parsed = cta.parse_tex_assertions(
+        {
+            "tex_assertions": [
+                {"id": "x", "near": [11.55, 1.3], "axis": "x", "direction": "decreasing"}
+            ]
+        }
+    )
+    assert "anchor_style" not in parsed[0]
+    assert parsed[0]["near"] == [11.55, 1.3]
+
+
+def test_parse_rejects_neither_anchor_style_nor_near():
+    with pytest.raises(cta.TexAssertionError):
+        cta.parse_tex_assertions(
+            {"tex_assertions": [{"id": "x", "axis": "x", "direction": "decreasing"}]}
+        )
+
+
+def test_check_near_only_resolves_inline_styled_draw():
+    tex = (
+        "\\draw[axisArr] (0,0) -- (5,0);\n"
+        "\\draw[-{Stealth}, cRed!80!black] (11.55,1.3) -- (10.85,1.3);\n"
+    )
+    a = {"id": "coulomb-left", "near": [11.55, 1.3], "axis": "x", "direction": "decreasing"}
+    assert cta.check_tex_assertions(tex, [a]) == []
+
+
 def test_cli_strict_flags_violation_and_writes_json(tmp_path):
     import json
     import subprocess

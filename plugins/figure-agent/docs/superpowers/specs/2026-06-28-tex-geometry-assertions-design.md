@@ -155,6 +155,22 @@ tex_assertions:
 Dogfood: correct fig3 = both PASS; a variant where P4's arrow is flipped to +x
 (polarity-INDEPENDENT) = `p4-…-reversed` violated.
 
+## Extension — inline-styled (un-named) draws via `near`-only (SHIPPED, the fig1 case)
+
+fig1's Coulomb-repulsion arrow is `\draw[-{Stealth[length=6pt,width=4.5pt]},
+cRed!80!black, line width=0.7pt] (11.55,1.3)--(10.85,1.3)` — drawn with INLINE
+options and no named style, so `anchor_style` has nothing to match. Two changes:
+- `anchor_style` is now OPTIONAL; an assertion may anchor by `near` alone, matched
+  against `find_all_draws` (any straight `\draw … (x1,y1)--(x2,y2)`). parse requires
+  `anchor_style` OR `near`.
+- The option-bracket regex now allows ONE level of nesting (the inline arrow-tip
+  spec `Stealth[…]` whose inner `]` broke a flat `[^\]]*`) — a dogfood the easy test
+  (`{Stealth}`, no inner brackets) had missed; added a nested-bracket test.
+
+fig1 grounds with `{near: [11.55,1.3], axis: x, direction: decreasing}` (the arrow's
+tail is unique within tolerance) and PASSES. Cohort declared_unenforced: 2 → 1 (only
+fig2, whose invariants are slope/cluster/structural, remains).
+
 ## Out of scope
 
 - Layer 2's agent-authoring (reads docs → writes assertions) stays LLM; its
