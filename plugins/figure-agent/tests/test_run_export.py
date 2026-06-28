@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -93,7 +94,7 @@ def _write_hashed_critique(fixture: Path, name: str, critique_input_hash: str) -
         "      nearest_object: demo\n"
         "      intended_target: demo\n"
         "      matches: true\n"
-        "      proposed_fix: \"\"\n"
+        '      proposed_fix: ""\n'
         "  physical_plausibility:\n"
         "    - check: floating_components\n"
         "      finding: no floating components\n"
@@ -126,8 +127,8 @@ def _write_hashed_critique(fixture: Path, name: str, critique_input_hash: str) -
         "  subregion_integration:\n"
         "    verdict: not_applicable\n"
         "    confidence: low\n"
-        "    rationale: \"\"\n"
-        "    evidence: \"\"\n"
+        '    rationale: ""\n'
+        '    evidence: ""\n'
         "    blocking_items: []\n"
         "    recommended_action: none\n"
         "  component_fidelity:\n"
@@ -168,8 +169,8 @@ def _write_hashed_critique(fixture: Path, name: str, critique_input_hash: str) -
         "  reference_fidelity:\n"
         "    verdict: not_applicable\n"
         "    confidence: low\n"
-        "    rationale: \"\"\n"
-        "    evidence: \"\"\n"
+        '    rationale: ""\n'
+        '    evidence: ""\n'
         "    blocking_items: []\n"
         "    recommended_action: none\n"
         "  publication_readiness:\n"
@@ -201,6 +202,57 @@ def test_run_export_blocks_reference_fixture_without_critique(
     assert "critique_missing" in captured.err
     assert "/fig_critique ref_fig" in captured.err
     assert "--skip-critique" in captured.err
+
+
+def test_run_export_blocks_on_violated_tex_assertion(tmp_path: Path, monkeypatch, capsys) -> None:
+    repo = _make_reference_fixture(tmp_path)
+    build = repo / "examples" / "ref_fig" / "build"
+    (build / "tex_assertions.json").write_text(
+        json.dumps(
+            {
+                "issues": [
+                    {
+                        "id": "force-repels",
+                        "status": "violated",
+                        "message": "forceArr is not decreasing on x",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    # --skip-critique bypasses the critique gate; the physics gate must still block.
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
+
+    rc = run_export.main()
+
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert "tex_assertion" in captured.err.lower()
+    assert "force-repels" in captured.err
+
+
+def test_run_export_blocks_on_violated_semantic_assertion(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = _make_reference_fixture(tmp_path)
+    build = repo / "examples" / "ref_fig" / "build"
+    (build / "semantic_assertions.json").write_text(
+        json.dumps(
+            {"issues": [{"id": "shallow-above-deep", "status": "violated", "message": "reversed"}]}
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
+
+    rc = run_export.main()
+
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert "semantic_assertion" in captured.err.lower()
+    assert "shallow-above-deep" in captured.err
 
 
 def test_run_export_rejects_unsafe_fixture_name_before_regenerate(
@@ -277,9 +329,7 @@ def test_run_export_skip_critique_still_blocks_declared_missing_reference(
     assert "reference/missing.png" in captured.err
 
 
-def test_run_export_skip_critique_allows_regenerate(
-    tmp_path: Path, monkeypatch, capsys
-) -> None:
+def test_run_export_skip_critique_allows_regenerate(tmp_path: Path, monkeypatch, capsys) -> None:
     repo = _make_reference_fixture(tmp_path)
     regenerated: list[tuple[Path, str]] = []
     monkeypatch.setattr(run_export, "REPO_ROOT", repo)
@@ -299,9 +349,7 @@ def test_run_export_skip_critique_allows_regenerate(
     assert "regenerated exports/ for ref_fig" in captured.out
 
 
-def test_run_export_regenerate_uses_explicit_plugin_root(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_run_export_regenerate_uses_explicit_plugin_root(tmp_path: Path, monkeypatch) -> None:
     workspace = tmp_path / "workspace"
     fixture = workspace / "examples" / "ref_fig"
     (fixture / "build").mkdir(parents=True)
@@ -324,9 +372,7 @@ def test_run_export_regenerate_uses_explicit_plugin_root(
     assert (fixture / "exports" / "ref_fig.pdf").read_bytes() == b"%PDF"
 
 
-def test_run_export_blocks_hash_stale_critique(
-    tmp_path: Path, monkeypatch, capsys
-) -> None:
+def test_run_export_blocks_hash_stale_critique(tmp_path: Path, monkeypatch, capsys) -> None:
     repo = _make_reference_fixture(tmp_path)
     fixture = repo / "examples" / "ref_fig"
     old_hash = _critique_input_hash(fixture, "ref_fig")

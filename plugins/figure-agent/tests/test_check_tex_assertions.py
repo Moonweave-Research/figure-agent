@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -232,6 +233,34 @@ def test_check_near_only_resolves_inline_styled_draw():
     )
     a = {"id": "coulomb-left", "near": [11.55, 1.3], "axis": "x", "direction": "decreasing"}
     assert cta.check_tex_assertions(tex, [a]) == []
+
+
+def test_read_blocking_issues_filters_to_blocking_statuses(tmp_path):
+    p = tmp_path / "tex_assertions.json"
+    p.write_text(
+        json.dumps(
+            {
+                "issues": [
+                    {"id": "a", "status": "violated"},
+                    {"id": "b", "status": "indeterminate"},
+                    {"id": "c", "status": "anchor_missing"},
+                    {"id": "d", "status": "anchor_ambiguous"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert {i["id"] for i in cta.read_blocking_issues(p)} == {"a", "c", "d"}
+
+
+def test_read_blocking_issues_empty_when_no_file(tmp_path):
+    assert cta.read_blocking_issues(tmp_path / "nope.json") == []
+
+
+def test_read_blocking_issues_empty_when_all_pass(tmp_path):
+    p = tmp_path / "tex_assertions.json"
+    p.write_text(json.dumps({"issues": []}), encoding="utf-8")
+    assert cta.read_blocking_issues(p) == []
 
 
 def test_cli_strict_flags_violation_and_writes_json(tmp_path):

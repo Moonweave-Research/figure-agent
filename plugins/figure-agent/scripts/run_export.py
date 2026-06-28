@@ -33,6 +33,7 @@ for script_dir in reversed(SCRIPT_IMPORT_DIRS):
 
 import fixture_identity  # noqa: E402
 import runtime_paths  # noqa: E402
+from check_tex_assertions import read_blocking_issues  # noqa: E402
 from critique_lint import lint_critique  # noqa: E402
 from export_freshness import (  # noqa: E402
     EXPORT_FRESH,
@@ -156,6 +157,25 @@ def main(
                     file=sys.stderr,
                 )
                 return 1
+
+    # Physics gate (not bypassed by --skip-critique): a violated/unverified
+    # assertion is wrong or unchecked physics — no render detector catches a
+    # reversed force/bend (tex_assertions) or a reversed above/left-of relation
+    # (semantic_assertions), so a figure must not export with one open.
+    for artifact, label in (
+        ("tex_assertions.json", "tex_assertions"),
+        ("semantic_assertions.json", "semantic_assertions"),
+    ):
+        blockers = read_blocking_issues(example_dir / "build" / artifact)
+        if blockers:
+            first = blockers[0]
+            print(
+                f"run_export.py: {label}_unverified for {args.name}: "
+                f"{first.get('id')} {first.get('status')}: {first.get('message')}; "
+                "fix the figure's physics (or the assertion) before /fig_export.",
+                file=sys.stderr,
+            )
+            return 1
 
     state = compute_export_state(example_dir, args.name)
 

@@ -214,6 +214,28 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
     return issues
 
 
+# Statuses that should BLOCK export: a violated assertion is wrong physics; a
+# missing/ambiguous anchor means an authored assertion is unverified. 'indeterminate'
+# (within tolerance) is advisory, not blocking.
+BLOCKING_STATUSES = ("violated", "anchor_missing", "anchor_ambiguous")
+
+
+def read_blocking_issues(json_path) -> list[dict]:
+    """Blocking issues from a build/tex_assertions.json (missing/unreadable => [])."""
+    try:
+        data = json.loads(Path(json_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return []
+    issues = data.get("issues")
+    if not isinstance(issues, list):
+        return []
+    return [
+        issue
+        for issue in issues
+        if isinstance(issue, dict) and issue.get("status") in BLOCKING_STATUSES
+    ]
+
+
 def tex_assertions_payload(tex_path, issues: list[dict], assertion_count: int) -> dict:
     return {
         "schema": SCHEMA,
