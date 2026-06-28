@@ -125,14 +125,44 @@ gone AND no new crossing) → SUCCESS, else auto-rollback.
   and the finding-recheck reports SUCCESS (PI,/PDMS,/PET crossing cleared, 0 new
   crossing). Throwaway; do NOT commit a fig2 mutation.
 
-## Alternatives considered
+## Approach 2 — geometry-derived refit (SHIPPED, TDD)
 
-- **Approach 2 — geometry-derived destination-aware refit.** The proposer measures
-  the clean space around the crossed line, predicts the text-width that collapses the
-  label to fit, and computes the reposition itself (no eye-supplied magnitude). More
-  autonomous but needs wrap prediction + space measurement. This is the explicit NEXT
-  increment after Approach 1 (mirrors how Inc2's eye-supplied offset preceded
-  geometry-derivation).
+Removes the eye-supplied magnitudes: a finding carrying ONLY its `tex_lines` (no
+`proposed_edit`/`proposed_offset`) gets a `label_refit` derived from the figure
+itself. New module `scripts/label_refit_derive.py`:
+
+- `parse_node` (coord + text-width) · `nearest_crossed_hline(node_x, node_y,
+  tex_lines)` = the closest horizontal `\draw (..,Y)--(..,Y)` BELOW the node whose
+  x-span contains it (within `MAX_CROSS_DISTANCE_CM`) · `count_lines`/`node_line_count`
+  (wrap count from the rendered words, a height RATIO so pt-vs-px cancels) ·
+  `derive_refit` → `{label_refit, text_width_cm = lines × current_width × WIDTH_MARGIN,
+  reposition{y, dx = (Y − CLEAR_MARGIN_CM) − node_y}}`.
+- `candidate_generator._finding_with_derived_edit` runs this as a FALLBACK in
+  `_adjudicated_apply_candidates` when the finding has no eye diagnosis; it feeds the
+  Inc B `_finding_refit` path. Words come from the build PDF (`_load_build_words`).
+
+**Crossed-line source = tex-scan, NOT pixel detection (dogfood reversal).** First
+tried detector-derived line location (max autonomy); 4 heuristics all mis-located
+the axis (label sits ON the line → broken by glyphs where measured; same fragility
+as the reverted geometric verifier), and px→tikz scale is underdetermined under
+\resizebox. The line's tikz-y is EXACT in the figure's own `\draw`, so tex-scan is
+both robust and still eye-free.
+
+**Two dogfooded constants (fig2):** `WIDTH_MARGIN = 1.10` — `lines × current_width`
+≈ the natural 1-line width, but AT that width the text wraps back on kerning (5.20cm
+still wrapped); 10% headroom guarantees one line. `CLEAR_MARGIN_CM = 0.12` — 0.05cm
+sits in the dark-ratio detector's noise band at the line (still flagged), 0.20cm
+drifts toward the next element below (re-flags); 0.10–0.15cm clears robustly.
+
+e2e (ZERO eye input) on real fig2 C001: derived `text width 5.72cm` + `y 4.12→3.78`
+→ PI,/PDMS,/PET crossing cleared, 0 new crossing, `labels_unchanged` True,
+finding-recheck `success`. TDD D1–D4. YAGNI: horizontal reference line +
+label-crosses-from-above only; a too-far/too-wide derivation is caught by 4a/4b.
+
+Next refinement: destination-aware margin (derive the gap to the next element below
+instead of a fixed CLEAR_MARGIN) so the drop adapts per figure.
+
+## Alternatives considered
 - **Approach 3 — generic multi-attribute edit engine** (rewrite any node attribute:
   text-width/anchor/align/font-size/position from a flexible proposal). Over-built for
   the one defect class we have. Rejected (YAGNI). Add attributes when a real finding
@@ -141,5 +171,5 @@ gone AND no new crossing) → SUCCESS, else auto-rollback.
 ## Out of scope
 
 - Text-changing edits (caption-shorten) and structural relayout — ESCALATE.
-- Geometry-derived magnitudes (Approach 2) — next increment.
 - New verifiers or any verifier relaxation — none needed.
+- Destination-aware margin (derive the gap to the next element below) — next refinement.
