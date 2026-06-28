@@ -37,10 +37,19 @@ def has_tex_assertions(spec: dict) -> bool:
     return isinstance(raw, list) and len(raw) > 0
 
 
+def has_semantic_assertions(spec: dict) -> bool:
+    raw = spec.get("semantic_assertions")
+    return isinstance(raw, list) and len(raw) > 0
+
+
 def classify_grounding(briefing_text: str, spec: dict) -> str:
+    # A figure is enforced by EITHER assertion family: tex_assertions for directional
+    # facts (force/bend direction), semantic_assertions for label-relational ones
+    # (shallow above deep). Counting only tex_assertions false-WARNs the latter.
     if not has_physics_invariants(briefing_text):
         return "undeclared"
-    return "grounded" if has_tex_assertions(spec) else "declared_unenforced"
+    enforced = has_tex_assertions(spec) or has_semantic_assertions(spec)
+    return "grounded" if enforced else "declared_unenforced"
 
 
 SCHEMA = "figure-agent.physics-grounding.v1"
@@ -81,8 +90,8 @@ def main() -> int:
         write_grounding_json(result["figure"], result["status"], args.json_output)
     if result["status"] == "declared_unenforced":
         print(
-            f"WARN physics_grounding: {result['figure']} declares physics invariants "
-            "but has no tex_assertions (read the briefing §6/§7 and author them)"
+            f"WARN physics_grounding: {result['figure']} declares physics invariants but has "
+            "no tex_assertions or semantic_assertions (read the briefing §6/§7 and author them)"
         )
     else:
         print(f"physics grounding: {result['figure']} = {result['status']}")

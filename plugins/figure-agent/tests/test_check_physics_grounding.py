@@ -34,6 +34,13 @@ def test_has_tex_assertions_false_for_empty_or_absent():
     assert cpg.has_tex_assertions({}) is False
 
 
+def test_grounded_via_semantic_assertions_too():
+    # A label-relational invariant (shallow above deep) is enforced by
+    # semantic_assertions, not tex_assertions — that figure is still grounded.
+    spec = {"semantic_assertions": [{"id": "shallow-above-deep"}]}
+    assert cpg.classify_grounding(BRIEFING_WITH, spec) == "grounded"
+
+
 def test_classify_grounded():
     assert cpg.classify_grounding(BRIEFING_WITH, {"tex_assertions": [{"id": "a"}]}) == "grounded"
 
