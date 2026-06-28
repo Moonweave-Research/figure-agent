@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import bounded_coordinate_offset
+import bounded_text_width
 import candidate_contracts
 import candidate_families
 import critique_adjudication
@@ -513,11 +514,49 @@ def _candidate_metrics(
     }
 
 
+def _finding_refit(finding: dict[str, Any], line: str) -> tuple[str, str, str, float] | None:
+    """A `proposed_edit` (edit_class=label_refit) drives a value-preserving footprint
+    refit: set the node's text-width AND reposition it, both bounded. This is the
+    combined edit a single coordinate offset cannot author (e.g. widen a wrapped
+    caption to one line so it fits the clean gap below a crossed axis). Text is never
+    changed, so it rides the existing labels_unchanged verifier."""
+    proposed = finding.get("proposed_edit")
+    if not isinstance(proposed, dict) or proposed.get("edit_class") != "label_refit":
+        return None
+    target_cm = proposed.get("text_width_cm")
+    reposition = proposed.get("reposition")
+    if not isinstance(target_cm, (int, float)) or isinstance(target_cm, bool):
+        return None
+    if not isinstance(reposition, dict):
+        return None
+    axis = reposition.get("axis")
+    dx_cm = reposition.get("dx_cm")
+    if axis not in ("x", "y") or not isinstance(dx_cm, (int, float)) or isinstance(dx_cm, bool):
+        return None
+    widened = bounded_text_width.set_text_width(line, target_cm=float(target_cm))
+    if widened is None:
+        return None
+    replacement = bounded_coordinate_offset.reposition_coordinate(
+        widened, axis=axis, dx_cm=float(dx_cm)
+    )
+    if replacement is None:
+        return None
+    return (
+        replacement,
+        "label_refit",
+        f"refit_w{float(target_cm):.2f}cm_{axis}{float(dx_cm):+.2f}cm",
+        float(dx_cm),
+    )
+
+
 def _finding_offset(finding: dict[str, Any], line: str) -> tuple[str, str, str, float] | None:
     """Resolve (replacement, edit_class, variant_id, variant_dx_cm) for a finding's
-    line. A structured `proposed_offset` (the eye's exact diagnosis) drives a
-    verifier-gated `label_reposition` that may move past the 0.10cm nudge cap;
-    otherwise fall back to the bounded nudge."""
+    line. A structured `proposed_edit` (a value-preserving footprint refit) drives a
+    combined text-width + reposition; else a `proposed_offset` drives a verifier-gated
+    `label_reposition` past the 0.10cm nudge cap; else fall back to the bounded nudge."""
+    refit = _finding_refit(finding, line)
+    if refit is not None:
+        return refit
     proposed = finding.get("proposed_offset")
     if isinstance(proposed, dict):
         axis = proposed.get("axis")

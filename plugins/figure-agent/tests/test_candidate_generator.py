@@ -693,6 +693,7 @@ def _write_apply_finding(
     finding_line: int,
     proposed_offset: dict | None = None,
     target_texts: list | None = None,
+    proposed_edit: dict | None = None,
 ) -> None:
     name = fixture.name
     offset_block = ""
@@ -701,6 +702,16 @@ def _write_apply_finding(
             "    proposed_offset:\n"
             f"      axis: {proposed_offset['axis']}\n"
             f"      dx_cm: {proposed_offset['dx_cm']}\n"
+        )
+    edit_block = ""
+    if proposed_edit is not None:
+        edit_block = (
+            "    proposed_edit:\n"
+            f"      edit_class: {proposed_edit['edit_class']}\n"
+            f"      text_width_cm: {proposed_edit['text_width_cm']}\n"
+            "      reposition:\n"
+            f"        axis: {proposed_edit['reposition']['axis']}\n"
+            f"        dx_cm: {proposed_edit['reposition']['dx_cm']}\n"
         )
     texts_block = ""
     if target_texts is not None:
@@ -716,7 +727,7 @@ def _write_apply_finding(
         "    severity: MINOR\n"
         "    category: label_placement\n"
         f"    tex_lines: [{finding_line}, {finding_line}]\n"
-        "    status: open\n" + offset_block + texts_block + "---\n\n# critique\n",
+        "    status: open\n" + offset_block + edit_block + texts_block + "---\n\n# critique\n",
         encoding="utf-8",
     )
     (fixture / "critique_adjudication.yaml").write_text(
@@ -772,6 +783,41 @@ def test_adjudicated_finding_with_proposed_offset_emits_reposition(tmp_path: Pat
     operation = reposition[0]["operations"][0]
     # Moves the y coordinate the full diagnosed distance, past the 0.10cm nudge cap.
     assert "(7.60, 3.62)" in operation["replacement"]
+
+
+def test_adjudicated_finding_with_proposed_edit_emits_label_refit(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "% header line\n"
+        "\\node[labelMute, anchor=north, text width=2.6cm, align=center] at (7.60,4.12)"
+        " {PI, PDMS, PET (shallow, leaky)};\n",
+        encoding="utf-8",
+    )
+    # The eye diagnosed a combined refit a single offset cannot author: widen the
+    # caption to one line AND drop it below the axis into the 0.75cm gap.
+    _write_apply_finding(
+        fixture,
+        finding_line=2,
+        proposed_edit={
+            "edit_class": "label_refit",
+            "text_width_cm": 5.6,
+            "reposition": {"axis": "y", "dx_cm": -0.28},
+        },
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    refit = [c for c in payload["candidates"] if c.get("edit_class") == "label_refit"]
+    assert refit, payload
+    replacement = refit[0]["operations"][0]["replacement"]
+    # Both attributes rewritten, text untouched (value-preserving).
+    assert "text width=5.60cm" in replacement
+    assert "(7.60, 3.84)" in replacement
+    assert "{PI, PDMS, PET (shallow, leaky)}" in replacement
 
 
 def test_adjudicated_finding_carries_target_texts_for_verifier(tmp_path: Path) -> None:
