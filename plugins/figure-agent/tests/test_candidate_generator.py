@@ -820,6 +820,39 @@ def test_adjudicated_finding_with_proposed_edit_emits_label_refit(tmp_path: Path
     assert "{PI, PDMS, PET (shallow, leaky)}" in replacement
 
 
+def test_finding_without_proposed_edit_gets_a_geometry_derived_one():
+    # Approach 2: no eye-supplied proposed_edit, but the crossed line is in the .tex
+    # and the wrap line-count is read from the rendered words -> derive the refit.
+    lines = [
+        "% header",
+        "\\node[anchor=north, text width=1.6cm, align=center] at (5,0.2)",
+        "  {alpha beta gamma}",
+        "\\draw (0,0) -- (10,0);",
+    ]
+    finding = {"id": "C001", "tex_lines": [2, 3]}
+    words = [
+        {"text": "alpha", "xmin": 0, "ymin": 0, "xmax": 20, "ymax": 18},
+        {"text": "beta", "xmin": 0, "ymin": 24, "xmax": 20, "ymax": 42},  # second line
+    ]
+    result = candidate_generator._finding_with_derived_edit(finding, lines, words)
+    assert result["proposed_edit"] == {
+        "edit_class": "label_refit",
+        "text_width_cm": 3.52,  # 2 lines x 1.6cm x 1.10 margin
+        "reposition": {"axis": "y", "dx_cm": -0.32},  # (0.0 - 0.12) - 0.2
+    }
+
+
+def test_finding_with_proposed_edit_is_left_unchanged():
+    edit = {
+        "edit_class": "label_refit",
+        "text_width_cm": 5.6,
+        "reposition": {"axis": "y", "dx_cm": -0.28},
+    }
+    finding = {"id": "C001", "tex_lines": [2, 3], "proposed_edit": edit}
+    result = candidate_generator._finding_with_derived_edit(finding, ["a", "b", "c"], [])
+    assert result["proposed_edit"] == edit
+
+
 def test_adjudicated_finding_carries_target_texts_for_verifier(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)

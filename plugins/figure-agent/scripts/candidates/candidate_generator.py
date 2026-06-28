@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ import critique_adjudication
 import critique_contract
 import figure_intent_model
 import fixture_identity
+import label_refit_derive
 import quality_defect_ledger
 import runtime_paths
 from check_visual_clash import extract_pdf_words_and_page
@@ -578,6 +580,58 @@ def _finding_offset(finding: dict[str, Any], line: str) -> tuple[str, str, str, 
     return (replacement, "label_offset", VARIANT_ID, 0.1)
 
 
+def _node_text_from_finding(finding: dict[str, Any], lines: list[str]) -> str | None:
+    """The node's `{...}` content spanning the finding's tex_lines range."""
+    tex_lines = finding.get("tex_lines")
+    if not (isinstance(tex_lines, list) and tex_lines and isinstance(tex_lines[0], int)):
+        return None
+    start = tex_lines[0]
+    end = tex_lines[-1] if isinstance(tex_lines[-1], int) else start
+    node_tex = "\n".join(lines[start - 1 : end])
+    match = re.search(r"\{(.+?)\}", node_tex, re.DOTALL)
+    return match.group(1) if match else None
+
+
+def _finding_with_derived_edit(
+    finding: dict[str, Any], lines: list[str], words: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """When a finding carries no eye-supplied proposed_edit, derive a value-preserving
+    label_refit from the figure itself: the crossed reference line from the .tex
+    draws + the wrap line-count from the rendered words. Returns the finding
+    unchanged when an edit is already present or no refit can be derived (the
+    derived edit still rides the existing fail-loud verifier)."""
+    if isinstance(finding.get("proposed_edit"), dict) or isinstance(
+        finding.get("proposed_offset"), dict
+    ):
+        return finding
+    tex_lines = finding.get("tex_lines")
+    if not (isinstance(tex_lines, list) and tex_lines and isinstance(tex_lines[0], int)):
+        return finding
+    if not 1 <= tex_lines[0] <= len(lines):
+        return finding
+    node_line = lines[tex_lines[0] - 1]
+    node_text = _node_text_from_finding(finding, lines)
+    if node_text is None:
+        return finding
+    lines_count = label_refit_derive.node_line_count(node_text, words)
+    derived = label_refit_derive.derive_refit(node_line, lines, lines_count)
+    if derived is None:
+        return finding
+    return {**finding, "proposed_edit": derived}
+
+
+def _load_build_words(name: str, paths: runtime_paths.RuntimePaths) -> list[dict[str, Any]]:
+    """Rendered pdftotext words for the figure's build PDF (best-effort, [] if absent)."""
+    pdf_path = paths.examples_dir / name / "build" / f"{name}.pdf"
+    if not pdf_path.is_file():
+        return []
+    try:
+        words, _page = extract_pdf_words_and_page(pdf_path)
+    except Exception:  # noqa: BLE001 - rendered words are best-effort
+        return []
+    return words
+
+
 def _adjudicated_apply_candidates(
     name: str,
     paths: runtime_paths.RuntimePaths,
@@ -612,6 +666,7 @@ def _adjudicated_apply_candidates(
         if isinstance(finding_id, str) and finding_id.strip():
             findings_by_id.setdefault(finding_id.strip(), finding)
     candidates: list[dict[str, Any]] = []
+    words = _load_build_words(name, paths)
     for decision in adjudication.get("decisions", []):
         if not isinstance(decision, dict) or decision.get("decision") != "apply":
             continue
@@ -625,6 +680,9 @@ def _adjudicated_apply_candidates(
         if line_number < 1 or line_number > len(lines):
             continue
         line = lines[line_number - 1]
+        # Approach 2: with no eye-supplied diagnosis, derive a label_refit from the
+        # figure's own geometry (crossed line from .tex + wrap count from the render).
+        finding = _finding_with_derived_edit(finding, lines, words)
         offset = _finding_offset(finding, line)
         if offset is None:
             continue
