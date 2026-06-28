@@ -30,13 +30,25 @@ detection).
 
 ## Design — two layers
 
-**Layer 2 — intent source (process, agent-driven; not code).** Physics intent
-already lives in the project research docs: per-figure `briefing.md` §6/§7 (physics
-invariants + author-intent), and the master plan
+**Layer 2 — intent source (process, agent-driven), with a deterministic backstop.**
+Physics intent already lives in the project research docs: per-figure `briefing.md`
+§6/§7 (physics invariants + author-intent), and the master plan
 `02_Surfur_Polymer/docs/figure_set/planning/detailed_figure_composition.md`. The
 agent READS those, extracts the directional invariants, and authors them as
-assertions; with no docs it falls back to general physics. (This formalizes exactly
-what was done by hand to catch fig5's error.)
+assertions; with no docs it falls back to general physics.
+
+Layer 2 is formalized by `scripts/checks/check_physics_grounding.py` (a deterministic
+meta-check, TDD'd) — the agent-authoring is irreducibly LLM, but the meta-check is its
+fail-loud TRIGGER + backstop. It classifies each figure:
+- **grounded** — declares physics invariants (briefing §6/§7) AND has `tex_assertions`.
+- **declared_unenforced** — declares invariants but no `tex_assertions` ⇒ WARN: the
+  agent must read §6/§7 + the plan and author directional assertions. (A cohort
+  survey found fig1/fig2/fig3_trapping/fig4 here — intent declared, never enforced.)
+- **undeclared** — no Physics-invariants section (general-physics fallback / trivial).
+
+So the loop is: `check_physics_grounding` surfaces which figures need grounding →
+the agent reads the docs and authors `tex_assertions` → `check_tex_assertions`
+fail-loud enforces them. (This formalizes exactly what was done by hand for fig5.)
 
 **Layer 1 — deterministic enforcement (this build, TDD).** A new checker evaluates
 the agent-authored assertions against the `.tex` — a fail-loud verifier that holds
@@ -145,7 +157,9 @@ Dogfood: correct fig3 = both PASS; a variant where P4's arrow is flipped to +x
 
 ## Out of scope
 
-- Layer 2 (agent reads docs → authors assertions) is process, not this build.
+- Layer 2's agent-authoring (reads docs → writes assertions) stays LLM; its
+  deterministic backstop `check_physics_grounding` IS built (classifies grounded /
+  declared_unenforced / undeclared).
 - compile.sh / loop-gate wiring — optional follow-on.
 - Explicit cross-element relation primitive (arrow vs `\fill`, curved-path
   direction) — still deferred; two near-anchored direction assertions covered the
