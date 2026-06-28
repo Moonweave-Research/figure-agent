@@ -93,6 +93,17 @@ fi
   "${STRICT_ARGS[@]}" \
   --json-output "${BUILD_DIR}/semantic_assertions.json" \
   "$PDF_OUT"
+# Directional-physics assertions read from the .tex (a reversed force/bend arrow is
+# a defect no render detector catches). STRICT-gated like the other clash checkers.
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_tex_assertions.py" \
+  "${STRICT_ARGS[@]}" \
+  --json-output "${BUILD_DIR}/tex_assertions.json" \
+  "$FILE"
+# Physics-intent grounding meta-check (advisory: which figures still need assertions).
+# Always report-only — it surfaces a TODO, not a defect, so it never fails a build.
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_physics_grounding.py" \
+  --json-output "${BUILD_DIR}/physics_grounding.json" \
+  "$PWD"
 if [[ -f "coordinate_hints.yaml" ]]; then
     "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" "${STRICT_ARGS[@]}" .
 fi

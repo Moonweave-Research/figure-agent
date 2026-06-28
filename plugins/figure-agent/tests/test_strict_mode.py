@@ -26,6 +26,14 @@ GOLDEN_PDF = (
 )
 
 
+def test_compile_sh_wires_the_physics_checks() -> None:
+    compile_sh = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+    # tex-geometry assertions are STRICT-gated (a reversed arrow is a defect);
+    assert "scripts/checks/check_tex_assertions.py" in compile_sh
+    # the grounding meta-check is advisory (report-only — never fails a build).
+    assert "scripts/checks/check_physics_grounding.py" in compile_sh
+
+
 def _require_golden_pdf() -> None:
     if not GOLDEN_PDF.exists():
         pytest.skip(f"{GOLDEN_PDF} not present; run /fig_compile golden_trap_depth_picture")
