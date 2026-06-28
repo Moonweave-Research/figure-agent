@@ -1,0 +1,162 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "checks"))
+
+import check_tex_assertions as cta  # noqa: E402
+
+FORCE_AWAY = "\\draw[forceArr] (3.50,4.85) -- (2.55,4.85);"  # points -x (repulsion)
+FORCE_TOWARD = "\\draw[forceArr] (4.28,4.85) -- (5.35,4.85);"  # points +x (attraction)
+
+
+def test_find_styled_draws_returns_coords():
+    assert cta.find_styled_draws(FORCE_AWAY, "forceArr") == [(3.50, 4.85, 2.55, 4.85)]
+
+
+def test_find_styled_draws_matches_style_among_other_options():
+    line = "\\draw[line width=1.3pt, forceArr, ->] (1.0,2.0) -- (3.0,2.0);"
+    assert cta.find_styled_draws(line, "forceArr") == [(1.0, 2.0, 3.0, 2.0)]
+
+
+def test_find_styled_draws_empty_when_style_absent():
+    assert cta.find_styled_draws("\\draw[defArr] (0,0) -- (1,1);", "forceArr") == []
+
+
+def test_find_styled_draws_does_not_match_a_different_style_substring():
+    # "forceArr" must be word-bounded — "forceArrow" should not match "forceArr".
+    assert cta.find_styled_draws("\\draw[forceArrow] (0,0) -- (1,1);", "forceArr") == []
+
+
+def test_find_styled_draws_returns_all_matches():
+    tex = FORCE_AWAY + "\n" + FORCE_TOWARD
+    assert len(cta.find_styled_draws(tex, "forceArr")) == 2
+
+
+def test_check_direction_pass_when_decreasing_x_holds():
+    assert cta.check_direction((3.50, 4.85, 2.55, 4.85), axis="x", direction="decreasing") == "pass"
+
+
+def test_check_direction_violated_when_decreasing_x_is_actually_increasing():
+    assert (
+        cta.check_direction((4.28, 4.85, 5.35, 4.85), axis="x", direction="decreasing")
+        == "violated"
+    )
+
+
+def test_check_direction_pass_for_increasing():
+    assert cta.check_direction((1.0, 0.0, 3.0, 0.0), axis="x", direction="increasing") == "pass"
+
+
+def test_check_direction_indeterminate_within_tolerance():
+    assert (
+        cta.check_direction((3.50, 4.85, 3.50, 5.40), axis="x", direction="decreasing")
+        == "indeterminate"
+    )
+
+
+def test_check_direction_uses_the_y_axis():
+    # y2 < y1 => decreasing on y.
+    assert cta.check_direction((0.0, 4.0, 0.0, 1.0), axis="y", direction="decreasing") == "pass"
+
+
+import pytest  # noqa: E402
+
+ASSERTION = {
+    "id": "force-repels",
+    "anchor_style": "forceArr",
+    "axis": "x",
+    "direction": "decreasing",
+}
+
+
+def test_parse_tex_assertions_returns_validated_list():
+    parsed = cta.parse_tex_assertions({"tex_assertions": [ASSERTION]})
+    assert parsed == [ASSERTION]
+
+
+def test_parse_tex_assertions_empty_when_absent():
+    assert cta.parse_tex_assertions({"name": "x"}) == []
+
+
+def test_parse_tex_assertions_rejects_missing_field():
+    with pytest.raises(cta.TexAssertionError):
+        cta.parse_tex_assertions({"tex_assertions": [{"id": "a", "anchor_style": "forceArr"}]})
+
+
+def test_parse_tex_assertions_rejects_bad_axis():
+    bad = {**ASSERTION, "axis": "z"}
+    with pytest.raises(cta.TexAssertionError):
+        cta.parse_tex_assertions({"tex_assertions": [bad]})
+
+
+def test_check_passes_a_correct_repulsion_figure():
+    issues = cta.check_tex_assertions(FORCE_AWAY, [ASSERTION])
+    assert issues == []
+
+
+def test_check_flags_a_reversed_attraction_figure():
+    issues = cta.check_tex_assertions(FORCE_TOWARD, [ASSERTION])
+    assert len(issues) == 1
+    assert issues[0]["id"] == "force-repels"
+    assert issues[0]["status"] == "violated"
+
+
+def test_check_reports_anchor_missing():
+    issues = cta.check_tex_assertions("\\draw[defArr] (0,0) -- (1,1);", [ASSERTION])
+    assert issues[0]["status"] == "anchor_missing"
+
+
+def test_check_reports_anchor_ambiguous_when_style_matches_twice():
+    tex = FORCE_AWAY + "\n" + FORCE_TOWARD
+    issues = cta.check_tex_assertions(tex, [ASSERTION])
+    assert issues[0]["status"] == "anchor_ambiguous"
+
+
+def test_payload_has_stable_shape():
+    payload = cta.tex_assertions_payload(
+        Path("examples/demo/build/demo.tex"),
+        cta.check_tex_assertions(FORCE_TOWARD, [ASSERTION]),
+        assertion_count=1,
+    )
+    assert payload["schema"] == "figure-agent.tex-assertions.v1"
+    assert payload["checked"] == 1
+    assert payload["total"] == 1
+
+
+def test_cli_strict_flags_violation_and_writes_json(tmp_path):
+    import json
+    import subprocess
+
+    fixture = tmp_path / "demo"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text(
+        "name: demo\n"
+        "tex_assertions:\n"
+        "  - id: force-repels\n"
+        "    anchor_style: forceArr\n"
+        "    axis: x\n"
+        "    direction: decreasing\n",
+        encoding="utf-8",
+    )
+    (fixture / "demo.tex").write_text(FORCE_TOWARD + "\n", encoding="utf-8")  # attraction = wrong
+    script = Path(__file__).resolve().parents[1] / "scripts" / "checks" / "check_tex_assertions.py"
+    jout = fixture / "tex_assertions.json"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            str(fixture / "demo.tex"),
+            "--strict",
+            "--json-output",
+            str(jout),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert "violated" in result.stdout
+    data = json.loads(jout.read_text(encoding="utf-8"))
+    assert data["schema"] == "figure-agent.tex-assertions.v1"
+    assert data["total"] == 1
