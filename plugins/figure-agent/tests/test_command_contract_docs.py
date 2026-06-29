@@ -157,6 +157,6 @@ def test_wave0_queue_bottleneck_plan_is_read_only_and_documented() -> None:
         assert "bottleneck_report" in doc
 
     assert "figure-agent.queue-bottleneck-report.v1" in plan
-    assert "fig-agent queue --mode review --goal "Wave 0 bottleneck scan" --json" in plan
+    assert 'fig-agent queue --mode review --goal "Wave 0 bottleneck scan" --json' in plan
     assert "Forbidden in Wave 0: accepted/golden mutation" in plan
     assert "read-only" in queue_doc
