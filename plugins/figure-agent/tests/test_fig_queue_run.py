@@ -22,6 +22,10 @@ def _queue() -> dict[str, Any]:
         "unfiltered_total": 3,
         "rows": [],
         "summary": {"total": 3, "errors": 0},
+        "bottleneck_report": {
+            "schema": "figure-agent.queue-bottleneck-report.v1",
+            "total_rows": 3,
+        },
         "command_plan": {
             "schema": "figure-agent.fixture-command-plan.v1",
             "executable_count": 2,
@@ -88,6 +92,9 @@ def test_plan_only_reports_planned_runs_without_executing(
 
     assert payload["schema"] == "figure-agent.queue-run.v1"
     assert payload["execute"] is False
+    assert payload["queue"]["bottleneck_report"]["schema"] == (
+        "figure-agent.queue-bottleneck-report.v1"
+    )
     assert payload["summary"] == {
         "planned_executable": 2,
         "planned_blocked": 1,

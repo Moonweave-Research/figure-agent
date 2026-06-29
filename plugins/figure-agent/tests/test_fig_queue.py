@@ -119,6 +119,29 @@ def test_build_queue_json_rows_and_summaries(
         "acceptance_not_declared": 1,
         "critique_stale": 1,
     }
+    assert queue["bottleneck_report"] == {
+        "schema": "figure-agent.queue-bottleneck-report.v1",
+        "source": "fig-agent queue over live fig-agent status/driver state",
+        "total_rows": 2,
+        "errors": 0,
+        "dominant_action": [
+            {"key": "release_blocked", "count": 1},
+            {"key": "run_critique", "count": 1},
+        ],
+        "dominant_first_blocker": [
+            {"key": "acceptance_not_declared", "count": 1},
+            {"key": "critique_stale", "count": 1},
+        ],
+        "dominant_required_actor": [
+            {"key": "host_llm", "count": 1},
+            {"key": "release_operator", "count": 1},
+        ],
+        "dominant_blocking_source": [
+            {"key": "accepted_or_final_ready_required", "count": 1},
+            {"key": "host_llm_critique_required", "count": 1},
+        ],
+        "command_plan": {"executable": 0, "blocked": 2, "complete": 0},
+    }
 
 
 def test_build_queue_filters_requested_fixtures(
