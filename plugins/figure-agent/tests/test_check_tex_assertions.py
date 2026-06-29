@@ -195,7 +195,10 @@ def test_find_all_draws_matches_unstyled_draw():
 
 def test_find_all_draws_handles_nested_option_brackets():
     # fig1's Coulomb arrow has an inline arrow-tip spec with NESTED brackets.
-    tex = "\\draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt] (11.55, 1.3) -- (10.85, 1.3);"
+    tex = (
+        "\\draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, "
+        "line width=0.7pt] (11.55, 1.3) -- (10.85, 1.3);"
+    )
     assert cta.find_all_draws(tex) == [(11.55, 1.3, 10.85, 1.3)]
 
 
