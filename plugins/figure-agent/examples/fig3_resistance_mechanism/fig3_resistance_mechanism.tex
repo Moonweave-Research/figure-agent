@@ -9,8 +9,9 @@
 \begin{document}
 \begin{tikzpicture}[
   font=\sffamily\fontsize{7}{8.4}\selectfont,
-  trapx/.style={cRed!55!black, font=\fontsize{5}{5}\selectfont},
+  trapx/.style={cGray!62!black, font=\fontsize{5.5}{5.5}\selectfont},
   walk/.style={cGray!35!black, line width=0.6pt, -{Stealth[length=1.2mm]}},
+  carrier/.style={circle, fill=cGray!60!black, inner sep=0pt, minimum size=1.35mm},
   lbl/.style={align=center, font=\fontsize{6.5}{8}\selectfont},
   sub/.style={align=center, font=\fontsize{6}{7.4}\selectfont},
   pl/.style={font=\fontsize{7.5}{9}\selectfont, font=\bfseries},
@@ -24,27 +25,29 @@
 \node[font=\fontsize{6.5}{8}\selectfont] at (1.7,4.36) {$+V$};
 \node[font=\fontsize{6.5}{8}\selectfont] at (1.7,0.26) {$-$};
 \node[anchor=west, font=\fontsize{5.5}{6.5}\selectfont, cAmber!55!black] at (0.4,3.72) {sulfur polymer};
-\foreach \x/\y in {0.7/3.5, 1.35/3.1, 2.0/3.55, 2.6/3.0, 0.95/2.45, 1.7/2.05, 2.4/2.4, 1.25/1.4, 2.1/1.1, 2.75/1.7, 0.8/1.15}{
+\foreach \x/\y in {0.7/3.4, 2.45/3.4, 2.75/2.7, 0.78/2.62, 1.85/2.05, 1.05/1.2, 2.4/1.15, 0.75/0.95}{
   \node[trapx] at (\x,\y) {$\times$};
 }
 % fig-agent:start object=carrier_walk panel=A kind=path truth_bearing=true
-\draw[walk] (0.45,3.70) .. controls (0.9,3.25) and (1.55,3.05) .. (2.45,2.75);
-\draw[walk, -] (2.45,2.75) .. controls (1.25,2.45) and (2.35,2.15) .. (1.65,1.85);
-\node[trapx] at (1.65,1.85) {$\times$};
+\node[carrier] at (1.12,3.52) {};
+\draw[walk,-] (1.12,3.46) .. controls (1.6,3.2) and (1.55,2.9) .. (1.0,2.66);
+\draw[walk,-] (1.0,2.66) .. controls (0.65,2.45) and (1.05,2.15) .. (1.55,2.08);
+\draw[walk] (1.55,2.08) .. controls (1.85,2.0) and (1.5,1.78) .. (1.6,1.92);
+\node[trapx] at (1.6,1.8) {$\times$};
 % fig-agent:end object=carrier_walk
-\node[sub, cGray!45!black] at (1.7,-0.35) {carrier (sign-agnostic),\\repeatedly trapped};
 
 % I-vs-t decay sparkline, tucked beside the cell
 % fig-agent:start object=current_sparkline panel=A kind=inset_plot truth_bearing=true
-\begin{scope}[shift={(3.35,2.15)}]
-  \draw[cGray!45!black, line width=0.35pt] (-0.35,0.45) -- (0.05,0.45);
-  \draw[-{Stealth[length=0.9mm]}, line width=0.4pt] (0,0) -- (1.9,0) node[right]{$t$};
-  \draw[-{Stealth[length=0.9mm]}, line width=0.4pt] (0,0) -- (0,1.85) node[above]{$I$};
-  \draw[cBlue!65!black, line width=0.85pt] plot[smooth, domain=0.16:1.85, samples=36] (\x, {0.25 + 1.45/(1+3.2*\x)});
+\begin{scope}[shift={(3.5,2.35)}]
+  \draw[cGray!45!black, line width=0.35pt] (-0.45,0.5) -- (-0.02,0.5);
+  \draw[-{Stealth[length=0.9mm]}, line width=0.4pt] (0,0) -- (1.55,0) node[right]{$t$};
+  \draw[-{Stealth[length=0.9mm]}, line width=0.4pt] (0,0) -- (0,1.55) node[above]{$I$};
+  % power-law absorption current, decaying toward zero (no steady-state floor → not Debye)
+  \draw[cGray!72!black, line width=0.9pt] plot[smooth, domain=0.0:1.45, samples=40] (\x, {1.4/(1+3.4*\x)});
+  \node[font=\fontsize{5.5}{6}\selectfont, cGray!50!black, anchor=west] at (0.42,1.04) {$\propto t^{-n}$};
 \end{scope}
 % fig-agent:end object=current_sparkline
-\node[lbl] at (4.5,1.55) {current decays $\Rightarrow$ $R\uparrow$};
-\node[sub, cGray!45!black] at (4.5,0.95) {broader $g(E)\Rightarrow$ larger $n$\\$\Rightarrow$ slower decay};
+\node[lbl] at (4.4,1.4) {current decays $\Rightarrow$ $R\uparrow$};
 
 % ===================== (b) g(E): DISCRETE -> CONTINUOUS evolution =====================
 \node[pl] at (5.95,4.3) {b};
