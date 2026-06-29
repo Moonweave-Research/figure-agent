@@ -24,6 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.fixture-driver-queue.v1"
 COMMAND_PLAN_SCHEMA = "figure-agent.fixture-command-plan.v1"
 OPERATOR_HANDOFF_SCHEMA = "figure-agent.queue-operator-handoff.v1"
+BOTTLENECK_REPORT_SCHEMA = "figure-agent.queue-bottleneck-report.v1"
 _FILTER_KEYS = (
     "required_actor",
     "action",
@@ -467,6 +468,39 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+
+def _bottleneck_leaders(rows: list[dict[str, Any]], key: str) -> list[dict[str, Any]]:
+    counts = _count(rows, key)
+    return [
+        {"key": value, "count": count}
+        for value, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    ]
+
+
+def _command_plan_summary(rows: list[dict[str, Any]]) -> dict[str, int]:
+    plan = build_command_plan(rows)
+    return {
+        "executable": int(plan.get("executable_count", 0)),
+        "blocked": int(plan.get("blocked_count", 0)),
+        "complete": int(plan.get("complete_count", 0)),
+    }
+
+
+def build_bottleneck_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize the live queue/status bottlenecks without executing work."""
+
+    return {
+        "schema": BOTTLENECK_REPORT_SCHEMA,
+        "source": "fig-agent queue over live fig-agent status/driver state",
+        "total_rows": len(rows),
+        "errors": sum(1 for row in rows if row.get("action") == "error"),
+        "dominant_action": _bottleneck_leaders(rows, "action")[:3],
+        "dominant_first_blocker": _bottleneck_leaders(rows, "first_blocker")[:3],
+        "dominant_required_actor": _bottleneck_leaders(rows, "required_actor")[:3],
+        "dominant_blocking_source": _bottleneck_leaders(rows, "blocking_source")[:3],
+        "command_plan": _command_plan_summary(rows),
+    }
+
 def build_queue(
     *,
     repo_root: Path = REPO_ROOT,
@@ -527,6 +561,7 @@ def build_queue(
         "unfiltered_total": len(rows),
         "rows": filtered_rows,
         "summary": _summary(filtered_rows),
+        "bottleneck_report": build_bottleneck_report(filtered_rows),
     }
     if include_command_plan:
         queue["command_plan"] = build_command_plan(filtered_rows)
