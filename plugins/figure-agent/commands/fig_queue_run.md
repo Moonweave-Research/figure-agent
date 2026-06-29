@@ -82,7 +82,7 @@ make SVG polish handoff executable; `svg_editor` rows remain blocked.
 | `mode`, `goal`, `execute`, `max_steps`, `max_fixtures` | selected run settings |
 | `fixtures` | explicit fixture args, or empty list when scanning the queue |
 | `filters` | active queue filters |
-| `queue` | source queue summary plus command plan |
+| `queue` | source queue summary, `bottleneck_report`, and command plan |
 | `runs` | one record per attempted fixture |
 | `summary` | planned executable, planned blocked, planned complete, attempted, unattempted executable, executed command, failed, and blocked counts |
 

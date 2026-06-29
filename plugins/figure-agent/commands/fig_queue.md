@@ -149,6 +149,23 @@ driver has a current loop checkpoint or gate explanation:
 | `svg_polish_next_action` | next action from the SVG polish gate/readiness summary |
 | `svg_polish_blocking_sources` | unique blocker sources copied from `svg_polish_gate.blocking_items` and `svg_polish_readiness.blocking_items`, for example `driver_prerequisite`, `driver_blocker`, or `tikz_vs_svg_polish_trigger` |
 
+`bottleneck_report` includes a live, read-only bottleneck rollup derived from the filtered queue rows:
+
+| Field | Notes |
+|---|---|
+| `schema` | `figure-agent.queue-bottleneck-report.v1` |
+| `source` | states that the report comes from live queue/status driver state |
+| `total_rows`, `errors` | filtered row count and controlled error count |
+| `dominant_action` | top action counts, sorted by count then key |
+| `dominant_first_blocker` | top `/fig_status` first-blocker counts |
+| `dominant_required_actor` | top required actor counts |
+| `dominant_blocking_source` | top queue blocking-source counts |
+| `command_plan` | executable, blocked, and complete counts using queue command-plan rules |
+
+Use this report as the Wave 0 corpus bottleneck scan before choosing an
+execution wave. It is read-only and does not mutate accepted, golden, export, or
+figure source state.
+
 `summary` includes:
 
 - `total`
