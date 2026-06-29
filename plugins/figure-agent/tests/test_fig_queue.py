@@ -119,6 +119,129 @@ def test_build_queue_json_rows_and_summaries(
         "acceptance_not_declared": 1,
         "critique_stale": 1,
     }
+    assert queue["rows"][0]["bottleneck_category"] == "host_critique"
+    assert queue["rows"][1]["bottleneck_category"] == "human_acceptance"
+    assert queue["summary"]["by_bottleneck_category"] == {
+        "host_critique": 1,
+        "human_acceptance": 1,
+    }
+    report = queue["bottleneck_report"]
+    assert report["schema"] == "figure-agent.queue-bottleneck-report.v1"
+    assert report["source"] == "fig-agent queue over live fig-agent status/driver state"
+    assert report["total_rows"] == 2
+    assert report["errors"] == 0
+    assert report["dominant_action"] == [
+        {"key": "release_blocked", "count": 1},
+        {"key": "run_critique", "count": 1},
+    ]
+    assert report["dominant_first_blocker"] == [
+        {"key": "acceptance_not_declared", "count": 1},
+        {"key": "critique_stale", "count": 1},
+    ]
+    assert report["dominant_required_actor"] == [
+        {"key": "host_llm", "count": 1},
+        {"key": "release_operator", "count": 1},
+    ]
+    assert report["dominant_blocking_source"] == [
+        {"key": "accepted_or_final_ready_required", "count": 1},
+        {"key": "host_llm_critique_required", "count": 1},
+    ]
+    assert report["by_bottleneck_category"] == {
+        "mechanical_tool": 0,
+        "host_critique": 1,
+        "human_acceptance": 1,
+        "reference_context": 0,
+        "template_style": 0,
+    }
+    assert [item["category"] for item in report["bottleneck_categories"]] == [
+        "mechanical_tool",
+        "host_critique",
+        "human_acceptance",
+        "reference_context",
+        "template_style",
+    ]
+    assert report["command_plan"] == {"executable": 0, "blocked": 2, "complete": 0}
+
+
+def test_bottleneck_report_classifies_five_operator_buckets() -> None:
+    rows = [
+        {
+            "fixture": "needs_render",
+            "action": "run_compile",
+            "required_actor": "workflow_agent",
+            "requires_human": False,
+            "safe_command": "fig-agent compile needs_render",
+            "stop_boundary": None,
+            "first_blocker": "render_missing",
+            "blocking_source": "driver.action",
+        },
+        {
+            "fixture": "needs_host_critique",
+            "action": "run_critique",
+            "required_actor": "host_llm",
+            "requires_human": False,
+            "safe_command": "/fig_critique needs_host_critique",
+            "stop_boundary": "host_llm_critique_required",
+            "first_blocker": "critique_stale",
+            "blocking_source": "host_llm_critique_required",
+        },
+        {
+            "fixture": "needs_acceptance",
+            "action": "release_blocked",
+            "required_actor": "release_operator",
+            "requires_human": True,
+            "safe_command": None,
+            "stop_boundary": "accepted_or_final_ready_required",
+            "first_blocker": "acceptance_not_declared",
+            "blocking_source": "accepted_or_final_ready_required",
+        },
+        {
+            "fixture": "needs_reference",
+            "action": "run_critique",
+            "required_actor": "host_llm",
+            "requires_human": False,
+            "safe_command": "/fig_critique needs_reference",
+            "stop_boundary": "reference_missing",
+            "first_blocker": "reference_missing",
+            "blocking_source": "reference_missing",
+        },
+        {
+            "fixture": "needs_style_template",
+            "action": "polish_handoff_stop",
+            "required_actor": "svg_editor",
+            "requires_human": False,
+            "safe_command": None,
+            "stop_boundary": "mode_forbidden_action",
+            "first_blocker": "svg_polish_delta_stale",
+            "blocking_source": "svg_polish_manifest",
+            "svg_polish_next_action": "refresh_svg_polish_handoff",
+            "svg_polish_blocking_sources": ["aesthetic_delta"],
+        },
+    ]
+
+    report = fig_queue.build_bottleneck_report(rows)
+
+    assert report["by_bottleneck_category"] == {
+        "mechanical_tool": 1,
+        "host_critique": 1,
+        "human_acceptance": 1,
+        "reference_context": 1,
+        "template_style": 1,
+    }
+    rollup = {entry["category"]: entry for entry in report["bottleneck_categories"]}
+    assert rollup["mechanical_tool"]["example_fixtures"] == ["needs_render"]
+    assert rollup["host_critique"]["example_fixtures"] == ["needs_host_critique"]
+    assert rollup["human_acceptance"]["example_fixtures"] == ["needs_acceptance"]
+    assert rollup["reference_context"]["example_fixtures"] == ["needs_reference"]
+    assert rollup["template_style"]["example_fixtures"] == ["needs_style_template"]
+    assert {
+        "key": "blocking_source:reference_missing",
+        "count": 1,
+    } in rollup["reference_context"]["top_signals"]
+    assert rollup["template_style"]["top_signals"][0] == {
+        "key": "action:polish_handoff_stop",
+        "count": 1,
+    }
 
 
 def test_build_queue_filters_requested_fixtures(
@@ -590,6 +713,7 @@ def test_build_queue_records_missing_fixture_as_error(tmp_path: Path) -> None:
             "required_actor": "workflow_agent",
             "blocking_source": "fixture_not_found",
             "requires_human": False,
+            "bottleneck_category": "mechanical_tool",
             "error": "examples/missing/ not found",
         }
     ]
@@ -636,6 +760,7 @@ def test_build_queue_rejects_unsafe_fixture_name_before_driver(
             "required_actor": "workflow_agent",
             "blocking_source": "unsafe_fixture_name",
             "requires_human": False,
+            "bottleneck_category": "mechanical_tool",
             "error": "fixture name must be a single examples/<name> directory name",
         }
     ]

@@ -146,3 +146,26 @@ def test_runtime_docs_define_cowork_entrypoint_fallback_and_root_split() -> None
         assert "FIGURE_AGENT_PLUGIN_ROOT" in doc, doc_path
         assert "FIGURE_AGENT_WORKSPACE" in doc, doc_path
         assert "CLAUDE_PROJECT_DIR" in doc, doc_path
+
+
+def test_wave0_queue_bottleneck_plan_is_read_only_and_documented() -> None:
+    plan = _read("docs/milestones/2026-06-29-wave0-queue-bottleneck-plan.md")
+    queue_doc = _read("commands/fig_queue.md")
+    queue_run_doc = _read("commands/fig_queue_run.md")
+
+    for doc in (plan, queue_doc, queue_run_doc):
+        assert "bottleneck_report" in doc
+
+    assert "figure-agent.queue-bottleneck-report.v1" in plan
+    assert 'fig-agent queue --mode review --goal "Wave 0 bottleneck scan" --json' in plan
+    assert "Forbidden in Wave 0: accepted/golden mutation" in plan
+    assert "read-only" in queue_doc
+    for category in (
+        "mechanical_tool",
+        "host_critique",
+        "human_acceptance",
+        "reference_context",
+        "template_style",
+    ):
+        assert category in plan
+        assert category in queue_doc

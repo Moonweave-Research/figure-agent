@@ -168,6 +168,7 @@ def run_queue(
         "queue": {
             "schema": queue.get("schema"),
             "summary": queue.get("summary"),
+            "bottleneck_report": queue.get("bottleneck_report"),
             "unfiltered_total": queue.get("unfiltered_total"),
             "command_plan": command_plan,
         },

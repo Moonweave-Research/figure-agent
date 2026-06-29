@@ -24,6 +24,21 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.fixture-driver-queue.v1"
 COMMAND_PLAN_SCHEMA = "figure-agent.fixture-command-plan.v1"
 OPERATOR_HANDOFF_SCHEMA = "figure-agent.queue-operator-handoff.v1"
+BOTTLENECK_REPORT_SCHEMA = "figure-agent.queue-bottleneck-report.v1"
+BOTTLENECK_CATEGORIES = (
+    "mechanical_tool",
+    "host_critique",
+    "human_acceptance",
+    "reference_context",
+    "template_style",
+)
+BOTTLENECK_CATEGORY_DEFINITIONS = {
+    "mechanical_tool": "source, render, export, closeout, or deterministic tool work",
+    "host_critique": "host LLM critique or adjudication judgment work",
+    "human_acceptance": "human, acceptance, release, publication, or golden-state gate",
+    "reference_context": "missing or stale reference, briefing, or context input",
+    "template_style": "SVG polish, template, editorial, style, palette, or aesthetic gate",
+}
 _FILTER_KEYS = (
     "required_actor",
     "action",
@@ -45,6 +60,16 @@ _ACTORS = (
 )
 _EXECUTABLE_ACTIONS = frozenset(
     {
+        fig_driver.ACTION_RUN_ADJUDICATE,
+        fig_driver.ACTION_RUN_COMPILE,
+        fig_driver.ACTION_RUN_EXPORT,
+        fig_driver.ACTION_RUN_FIG_LOOP,
+    }
+)
+_MECHANICAL_ACTIONS = frozenset(
+    {
+        "error",
+        fig_driver.ACTION_CREATE_OR_FIX_SOURCE,
         fig_driver.ACTION_RUN_ADJUDICATE,
         fig_driver.ACTION_RUN_COMPILE,
         fig_driver.ACTION_RUN_EXPORT,
@@ -107,6 +132,9 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
     if isinstance(guidance, dict):
         row["operator_guidance"] = guidance
     row.update(_svg_polish_fields(summary, mode=mode))
+    category = _bottleneck_category_for_row(row)
+    if category is not None:
+        row["bottleneck_category"] = category
     return row
 
 
@@ -178,6 +206,7 @@ def _error_row(name: str, *, mode: str, stop_boundary: str, error: str) -> dict[
         "required_actor": "workflow_agent",
         "blocking_source": stop_boundary,
         "requires_human": False,
+        "bottleneck_category": "mechanical_tool",
         "error": error,
     }
 
@@ -212,6 +241,7 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "by_first_blocker": _count(rows, "first_blocker"),
         "by_required_actor": _count(rows, "required_actor"),
         "by_blocking_source": _count(rows, "blocking_source"),
+        "by_bottleneck_category": _count(rows, "bottleneck_category"),
     }
     by_svg_gate = _count(rows, "svg_polish_gate_state")
     if by_svg_gate:
@@ -466,6 +496,197 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "complete": complete,
     }
 
+def _bottleneck_leaders(rows: list[dict[str, Any]], key: str) -> list[dict[str, Any]]:
+    counts = _count(rows, key)
+    return [
+        {"key": value, "count": count}
+        for value, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    ]
+
+
+def _command_plan_summary(rows: list[dict[str, Any]]) -> dict[str, int]:
+    plan = build_command_plan(rows)
+    return {
+        "executable": int(plan.get("executable_count", 0)),
+        "blocked": int(plan.get("blocked_count", 0)),
+        "complete": int(plan.get("complete_count", 0)),
+    }
+
+
+def _row_signal_text(row: dict[str, Any]) -> str:
+    values: list[str] = []
+    keys = (
+        "action",
+        "stop_boundary",
+        "first_blocker",
+        "blocking_source",
+        "required_actor",
+        "render_state",
+        "critique_state",
+        "export_state",
+        "acceptance_state",
+        "publication_gate_state",
+        "svg_polish_gate_state",
+        "svg_polish_recommended_path",
+        "svg_polish_next_action",
+    )
+    for key in keys:
+        value = row.get(key)
+        if isinstance(value, str):
+            values.append(value.lower())
+    blockers = row.get("svg_polish_blocking_sources")
+    if isinstance(blockers, list):
+        values.extend(item.lower() for item in blockers if isinstance(item, str))
+    return " ".join(values)
+
+
+def _row_mentions(row: dict[str, Any], tokens: tuple[str, ...]) -> bool:
+    text = _row_signal_text(row)
+    return any(token in text for token in tokens)
+
+
+def _row_fields_mention(
+    row: dict[str, Any], tokens: tuple[str, ...], fields: tuple[str, ...]
+) -> bool:
+    values = [
+        value.lower()
+        for field in fields
+        if isinstance((value := row.get(field)), str)
+    ]
+    text = " ".join(values)
+    return any(token in text for token in tokens)
+
+
+def _bottleneck_category_for_row(row: dict[str, Any]) -> str | None:
+    action = row.get("action")
+    if action == fig_driver.ACTION_COMPLETE:
+        return None
+    reference_tokens = ("reference", "briefing", "context_pack")
+    blocker_fields = ("first_blocker", "stop_boundary", "blocking_source")
+    if action == fig_driver.ACTION_RUN_CRITIQUE:
+        if _row_fields_mention(row, reference_tokens, blocker_fields):
+            return "reference_context"
+        return "host_critique"
+    if _row_mentions(
+        row,
+        (
+            "svg_polish",
+            "polish",
+            "style",
+            "aesthetic",
+            "palette",
+            "template",
+            "editorial",
+            "journal_art_direction",
+        ),
+    ):
+        return "template_style"
+    if action in {
+        fig_driver.ACTION_HUMAN_GATE_STOP,
+        fig_driver.ACTION_RELEASE_BLOCKED,
+    }:
+        return "human_acceptance"
+    if row.get("required_actor") in {"human", "release_operator"}:
+        return "human_acceptance"
+    if row.get("requires_human") is True:
+        return "human_acceptance"
+    if _row_fields_mention(
+        row,
+        ("acceptance", "accepted", "force_golden", "golden", "publication", "provenance"),
+        ("action", "stop_boundary", "blocking_source", "publication_gate_state"),
+    ):
+        return "human_acceptance"
+    if row.get("required_actor") == "host_llm":
+        if _row_fields_mention(row, reference_tokens, blocker_fields):
+            return "reference_context"
+        return "host_critique"
+    if _row_mentions(row, ("critique_required", "critique_stale", "critique_missing")):
+        return "host_critique"
+    if action in _MECHANICAL_ACTIONS:
+        return "mechanical_tool"
+    if _row_fields_mention(row, reference_tokens, ("stop_boundary", "blocking_source")):
+        return "reference_context"
+    return "mechanical_tool"
+
+
+def _effective_bottleneck_category(row: dict[str, Any]) -> str | None:
+    category = row.get("bottleneck_category")
+    if isinstance(category, str) and category in BOTTLENECK_CATEGORIES:
+        return category
+    return _bottleneck_category_for_row(row)
+
+
+def _bottleneck_category_counts(rows: list[dict[str, Any]]) -> dict[str, int]:
+    counts = {category: 0 for category in BOTTLENECK_CATEGORIES}
+    for row in rows:
+        category = _effective_bottleneck_category(row)
+        if category is not None:
+            counts[category] += 1
+    return counts
+
+
+def _category_signals(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    signal_counts: Counter[str] = Counter()
+    for row in rows:
+        for key in ("action", "first_blocker", "stop_boundary", "blocking_source"):
+            value = row.get(key)
+            if isinstance(value, str) and value:
+                signal_counts[f"{key}:{value}"] += 1
+    return [
+        {"key": value, "count": count}
+        for value, count in sorted(
+            signal_counts.items(), key=lambda item: (-item[1], item[0])
+        )[:5]
+    ]
+
+
+def _bottleneck_category_rollup(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    grouped: dict[str, list[dict[str, Any]]] = {
+        category: [] for category in BOTTLENECK_CATEGORIES
+    }
+    for row in rows:
+        category = _effective_bottleneck_category(row)
+        if category is not None:
+            grouped[category].append(row)
+    return [
+        {
+            "category": category,
+            "definition": BOTTLENECK_CATEGORY_DEFINITIONS[category],
+            "count": len(category_rows),
+            "example_fixtures": [
+                fixture
+                for fixture in (
+                    row.get("fixture")
+                    for row in sorted(
+                        category_rows,
+                        key=lambda item: str(item.get("fixture") or ""),
+                    )[:5]
+                )
+                if isinstance(fixture, str) and fixture
+            ],
+            "top_signals": _category_signals(category_rows),
+        }
+        for category, category_rows in grouped.items()
+    ]
+
+
+def build_bottleneck_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize the live queue/status bottlenecks without executing work."""
+
+    return {
+        "schema": BOTTLENECK_REPORT_SCHEMA,
+        "source": "fig-agent queue over live fig-agent status/driver state",
+        "total_rows": len(rows),
+        "errors": sum(1 for row in rows if row.get("action") == "error"),
+        "dominant_action": _bottleneck_leaders(rows, "action")[:3],
+        "dominant_first_blocker": _bottleneck_leaders(rows, "first_blocker")[:3],
+        "dominant_required_actor": _bottleneck_leaders(rows, "required_actor")[:3],
+        "dominant_blocking_source": _bottleneck_leaders(rows, "blocking_source")[:3],
+        "by_bottleneck_category": _bottleneck_category_counts(rows),
+        "bottleneck_categories": _bottleneck_category_rollup(rows),
+        "command_plan": _command_plan_summary(rows),
+    }
+
 
 def build_queue(
     *,
@@ -527,6 +748,7 @@ def build_queue(
         "unfiltered_total": len(rows),
         "rows": filtered_rows,
         "summary": _summary(filtered_rows),
+        "bottleneck_report": build_bottleneck_report(filtered_rows),
     }
     if include_command_plan:
         queue["command_plan"] = build_command_plan(filtered_rows)
