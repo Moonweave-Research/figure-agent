@@ -643,18 +643,14 @@ def _print_human(report: dict[str, Any]) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("name", help="fixture name under examples/")
-    parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
+    parser.add_argument("--repo-root", type=Path, default=None)
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
 
     try:
-        resolved_repo_root = (
-            runtime_paths.resolve_runtime_paths().workspace_root
-            if args.repo_root == REPO_ROOT
-            else args.repo_root
-        )
+        resolved_repo_root = args.repo_root or runtime_paths.resolve_runtime_paths().workspace_root
         report = compute_closeout(
             args.name,
             repo_root=resolved_repo_root,
