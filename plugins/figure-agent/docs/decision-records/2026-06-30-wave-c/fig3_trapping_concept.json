@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-decision-record.v1",
+  "fixture": "fig3_trapping_concept",
+  "packet_schema": "figure-agent.release-decision-packet.v1",
+  "queue_run_id": "wave-c-target-selection-release-2026-06-30",
+  "decision_kind": "accept_current_generated_export",
+  "agent_recommendation": "Treat the current generated export as an accept-current dogfood candidate, while keeping actual acceptance and release-state mutation explicit.",
+  "human_decision": "selected_as_real_manuscript_accept_current_candidate",
+  "human_note": "Use this real manuscript figure to test whether the agent can recommend acceptance without asking the human to inspect from scratch.",
+  "follow_up": {
+    "implementation_slice": "Record candidate acceptance evidence only; rerun the release queue before any separate acceptance-state update."
+  },
+  "mutation_boundary": "no_source_mutation"
+}

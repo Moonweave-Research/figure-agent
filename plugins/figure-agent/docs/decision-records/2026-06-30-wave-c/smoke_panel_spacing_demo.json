@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-decision-record.v1",
+  "fixture": "smoke_panel_spacing_demo",
+  "packet_schema": "figure-agent.style-direction-packet.v1",
+  "queue_run_id": "wave-c-target-selection-review-2026-06-30",
+  "decision_kind": "request_bounded_tikz_polish",
+  "agent_recommendation": "Use the demo fixture as a low-risk bounded-polish lane for spacing and style-rule extraction, not as a manuscript release target.",
+  "human_decision": "selected_as_demo_bounded_polish_candidate",
+  "human_note": "This demo is safe for style-rule dogfood because it exercises panel spacing without changing the manuscript figures.",
+  "follow_up": {
+    "implementation_slice": "Extract a bounded panel-spacing/style-lock comparison packet; do not mutate source in this selection record."
+  },
+  "mutation_boundary": "no_source_mutation"
+}
