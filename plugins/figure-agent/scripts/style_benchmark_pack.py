@@ -298,3 +298,72 @@ def load_pack(
         "candidate_rejection_rules": candidate_rejection_rules,
         "safety": safety,
     }
+
+
+def summarize_pack(pack: dict[str, Any]) -> dict[str, Any]:
+    """Return compact queue-safe context for a validated style benchmark pack."""
+    state = pack.get("state")
+    summary: dict[str, Any] = {
+        "schema": SCHEMA,
+        "state": state,
+        "fixture": pack.get("fixture"),
+        "path": pack.get("path"),
+    }
+    if state != "present":
+        return summary
+
+    linked_files = pack.get("linked_files")
+    linked_summary: dict[str, str] = {}
+    if isinstance(linked_files, dict):
+        for key in ("benchmark_contract", "aesthetic_intent"):
+            value = linked_files.get(key)
+            if isinstance(value, str) and value:
+                linked_summary[key] = value
+
+    slots = pack.get("candidate_family_slots")
+    candidate_slot_ids: list[str] = []
+    candidate_mutation_boundaries: dict[str, str] = {}
+    if isinstance(slots, list):
+        for slot in slots:
+            if not isinstance(slot, dict):
+                continue
+            slot_id = slot.get("id")
+            boundary = slot.get("mutation_boundary")
+            if isinstance(slot_id, str) and slot_id:
+                candidate_slot_ids.append(slot_id)
+                if isinstance(boundary, str) and boundary:
+                    candidate_mutation_boundaries[slot_id] = boundary
+
+    questions = pack.get("human_only_questions")
+    top_questions = [
+        question
+        for question in (questions if isinstance(questions, list) else [])
+        if isinstance(question, str) and question
+    ][:3]
+
+    safety = pack.get("safety")
+    safety_boundary = {
+        key: safety.get(key)
+        for key in (
+            "source_mutation",
+            "accepted_state_mutation",
+            "release_state_mutation",
+            "generated_export_mutation",
+            "golden_mutation",
+            "svg_polish_default",
+        )
+        if isinstance(safety, dict) and safety.get(key) is False
+    }
+
+    summary.update(
+        {
+            "target_style_class": pack.get("target_style_class"),
+            "default_recommendation": pack.get("default_recommendation"),
+            "candidate_slot_ids": candidate_slot_ids,
+            "candidate_mutation_boundaries": candidate_mutation_boundaries,
+            "safety_boundary": safety_boundary,
+            "linked_files": linked_summary,
+            "top_human_only_questions": top_questions,
+        }
+    )
+    return summary

@@ -67,6 +67,123 @@ def _write_fixture(root: Path, name: str) -> None:
     (fixture / "spec.yaml").write_text(f"name: {name}\npanels: []\n", encoding="utf-8")
 
 
+def test_queue_surfaces_missing_style_benchmark_pack_non_fatal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action=fig_queue.fig_driver.ACTION_COMPLETE,
+            stop_boundary=None,
+            first_blocker="none",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="triage",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["style_benchmark_pack_state"] == "missing"
+    assert row["style_benchmark_pack_path"] == (
+        "docs/style-benchmark-packs/2026-06-30-wave-c/alpha.json"
+    )
+    assert "style_benchmark_pack_error" not in row
+    assert queue["summary"]["errors"] == 0
+    assert queue["summary"]["by_style_benchmark_pack_state"] == {"missing": 1}
+
+
+def test_queue_surfaces_present_style_benchmark_pack_without_mutation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = "fig1_overview_v2_pair_001_vault"
+    _write_fixture(tmp_path, fixture)
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action=fig_queue.fig_driver.ACTION_COMPLETE,
+            stop_boundary=None,
+            first_blocker="none",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="triage",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    pack = row["style_benchmark_pack"]
+    assert row["style_benchmark_pack_state"] == "present"
+    assert pack["target_style_class"]
+    assert pack["default_recommendation"] == (
+        "keep_current_style_until_candidate_beats_benchmark"
+    )
+    assert pack["safety_boundary"] == {
+        "accepted_state_mutation": False,
+        "generated_export_mutation": False,
+        "golden_mutation": False,
+        "release_state_mutation": False,
+        "source_mutation": False,
+        "svg_polish_default": False,
+    }
+    assert set(pack["candidate_slot_ids"]) == {
+        "current_style",
+        "restrained_tikz_refinement",
+        "editorial_redesign",
+        "svg_polish_handoff",
+    }
+    assert row["acceptance_state"] == "NOT_DECLARED"
+    assert row["release_ready"] is False
+    assert queue["summary"]["by_style_benchmark_pack_state"] == {"present": 1}
+
+
+def test_queue_marks_malformed_style_benchmark_pack_invalid_not_recommended(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plugin_root = tmp_path / "plugin"
+    pack_dir = plugin_root / "docs" / "style-benchmark-packs" / "2026-06-30-wave-c"
+    pack_dir.mkdir(parents=True)
+    (pack_dir / "alpha.json").write_text("{not valid json", encoding="utf-8")
+    workspace_root = tmp_path / "workspace"
+    _write_fixture(workspace_root, "alpha")
+    monkeypatch.setenv("FIGURE_AGENT_PLUGIN_ROOT", str(plugin_root))
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action=fig_queue.fig_driver.ACTION_COMPLETE,
+            stop_boundary=None,
+            first_blocker="none",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=workspace_root,
+        mode="release",
+        goal="triage",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["style_benchmark_pack_state"] == "invalid"
+    assert "style_benchmark_pack_error" in row
+    assert "style_benchmark_pack" not in row
+    assert queue["summary"]["errors"] == 0
+    assert queue["summary"]["by_style_benchmark_pack_state"] == {"invalid": 1}
+
+
 def test_build_queue_json_rows_and_summaries(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -2261,3 +2378,174 @@ def test_main_outputs_human_decision_digest_table(
     assert "human_decision_digest mode=release total=1 digest_rows=1" in out
     assert "accept-current candidates (1)" in out
     assert "- alpha: recommend=accept_current_generated_export" in out
+
+
+def test_queue_row_surfaces_compact_style_benchmark_pack(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+
+    def fake_load_pack(name: str, *, workspace_root: Path) -> dict[str, Any]:
+        assert name == "alpha"
+        assert workspace_root == tmp_path
+        return {
+            "schema": fig_queue.style_benchmark_pack.SCHEMA,
+            "state": "present",
+            "fixture": "alpha",
+            "path": "docs/style-benchmark-packs/wave/alpha.json",
+            "linked_files": {
+                "source_decision_packet": "docs/decision-packets/wave/alpha.json",
+                "source_decision_record": "docs/decision-records/wave/alpha.json",
+                "benchmark_contract": "examples/alpha/benchmark_contract.yaml",
+                "aesthetic_intent": "examples/alpha/aesthetic_intent.yaml",
+            },
+            "target_style_class": "restrained editorial multipanel scientific schematic",
+            "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
+            "candidate_family_slots": [
+                {"id": "current_style", "mutation_boundary": "no_source_mutation"},
+                {
+                    "id": "restrained_tikz_refinement",
+                    "mutation_boundary": "source_mutation_requires_separate_approval",
+                },
+                {
+                    "id": "editorial_redesign",
+                    "mutation_boundary": "source_mutation_requires_separate_approval",
+                },
+                {
+                    "id": "svg_polish_handoff",
+                    "mutation_boundary": "svg_artifact_mutation_requires_separate_approval",
+                },
+            ],
+            "human_only_questions": [
+                "Does the candidate improve journal fit?",
+                "Is the current style sufficient?",
+                "Should this become flagship-level?",
+                "Do not copy this fourth question into compact output.",
+            ],
+            "safety": {
+                "source_mutation": False,
+                "accepted_state_mutation": False,
+                "release_state_mutation": False,
+                "generated_export_mutation": False,
+                "golden_mutation": False,
+                "svg_polish_default": False,
+            },
+        }
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    monkeypatch.setattr(fig_queue.style_benchmark_pack, "load_pack", fake_load_pack)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="style-benchmark-surface",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    row = queue["rows"][0]
+    assert row["style_benchmark_pack_state"] == "present"
+    summary = row["style_benchmark_pack"]
+    assert summary == row["style_direction_packet"]["style_benchmark_pack"]
+    assert summary["target_style_class"] == (
+        "restrained editorial multipanel scientific schematic"
+    )
+    assert summary["default_recommendation"] == (
+        "keep_current_style_until_candidate_beats_benchmark"
+    )
+    assert summary["candidate_slot_ids"] == [
+        "current_style",
+        "restrained_tikz_refinement",
+        "editorial_redesign",
+        "svg_polish_handoff",
+    ]
+    assert summary["candidate_mutation_boundaries"]["current_style"] == (
+        "no_source_mutation"
+    )
+    assert summary["linked_files"] == {
+        "benchmark_contract": "examples/alpha/benchmark_contract.yaml",
+        "aesthetic_intent": "examples/alpha/aesthetic_intent.yaml",
+    }
+    assert summary["top_human_only_questions"] == [
+        "Does the candidate improve journal fit?",
+        "Is the current style sufficient?",
+        "Should this become flagship-level?",
+    ]
+    assert summary["safety_boundary"] == {
+        "source_mutation": False,
+        "accepted_state_mutation": False,
+        "release_state_mutation": False,
+        "generated_export_mutation": False,
+        "golden_mutation": False,
+        "svg_polish_default": False,
+    }
+    assert "measurable_checks" not in summary
+    assert queue["summary"]["by_style_benchmark_pack_state"] == {"present": 1}
+    assert queue["command_plan"]["complete"][0]["style_benchmark_pack_state"] == "present"
+
+
+def test_queue_row_surfaces_missing_style_benchmark_pack_without_failing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+
+    def fake_load_pack(name: str, *, workspace_root: Path) -> dict[str, Any]:
+        assert workspace_root == tmp_path
+        return {
+            "schema": fig_queue.style_benchmark_pack.SCHEMA,
+            "state": "missing",
+            "fixture": name,
+            "path": "docs/style-benchmark-packs/2026-06-30-wave-c/alpha.json",
+        }
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    monkeypatch.setattr(fig_queue.style_benchmark_pack, "load_pack", fake_load_pack)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="style-benchmark-surface",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["style_benchmark_pack_state"] == "missing"
+    assert "style_benchmark_pack" not in row
+    assert "style_benchmark_pack" not in row["style_direction_packet"]
+    assert queue["summary"]["by_style_benchmark_pack_state"] == {"missing": 1}
+
+
+def test_malformed_style_benchmark_pack_is_invalid_not_recommendation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+
+    def fake_load_pack(name: str, *, workspace_root: Path) -> dict[str, Any]:
+        assert workspace_root == tmp_path
+        raise fig_queue.style_benchmark_pack.StyleBenchmarkPackError("schema_invalid")
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    monkeypatch.setattr(fig_queue.style_benchmark_pack, "load_pack", fake_load_pack)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="style-benchmark-surface",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["style_benchmark_pack_state"] == "invalid"
+    assert row["style_benchmark_pack_error"] == "schema_invalid"
+    assert "style_benchmark_pack" not in row
+    assert "style_benchmark_pack" not in row["style_direction_packet"]
+    assert queue["summary"]["by_style_benchmark_pack_state"] == {"invalid": 1}

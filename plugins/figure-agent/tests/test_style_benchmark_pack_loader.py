@@ -245,3 +245,50 @@ def test_style_benchmark_pack_rejects_svg_polish_default(tmp_path: Path) -> None
             plugin_root=plugin_root,
             pack_path=pack_path,
         )
+
+
+def test_style_benchmark_pack_summary_is_compact_and_read_only(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "plugin"
+    pack_path = _minimal_pack(plugin_root)
+
+    pack = style_benchmark_pack.load_pack(
+        "contract_demo",
+        plugin_root=plugin_root,
+        pack_path=pack_path,
+    )
+    summary = style_benchmark_pack.summarize_pack(pack)
+
+    assert summary["state"] == "present"
+    assert summary["target_style_class"] == (
+        "restrained editorial multipanel scientific schematic"
+    )
+    assert summary["default_recommendation"] == (
+        "keep_current_style_until_candidate_beats_benchmark"
+    )
+    assert summary["candidate_slot_ids"] == [
+        "current_style",
+        "restrained_tikz_refinement",
+        "editorial_redesign",
+        "svg_polish_handoff",
+    ]
+    assert summary["candidate_mutation_boundaries"] == {
+        "current_style": "no_source_mutation",
+        "restrained_tikz_refinement": "source_mutation_requires_separate_approval",
+        "editorial_redesign": "source_mutation_requires_separate_approval",
+        "svg_polish_handoff": "svg_artifact_mutation_requires_separate_approval",
+    }
+    assert summary["linked_files"] == {
+        "benchmark_contract": "examples/contract_demo/benchmark_contract.yaml",
+        "aesthetic_intent": "examples/contract_demo/aesthetic_intent.yaml",
+    }
+    assert summary["top_human_only_questions"] == ["Does the candidate improve journal fit?"]
+    assert summary["safety_boundary"] == {
+        "source_mutation": False,
+        "accepted_state_mutation": False,
+        "release_state_mutation": False,
+        "generated_export_mutation": False,
+        "golden_mutation": False,
+        "svg_polish_default": False,
+    }
+    assert "measurable_checks" not in summary
+    assert "candidate_rejection_rules" not in summary

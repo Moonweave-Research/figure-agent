@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fig_driver  # noqa: E402
 import runtime_paths  # noqa: E402
+import style_benchmark_pack  # noqa: E402
 from driver_actor import (  # noqa: E402
     blocking_source_for_driver_summary,
     required_actor_for_driver_summary,
@@ -72,6 +73,7 @@ _FILTER_KEYS = (
     "svg_polish_next_action",
     "svg_polish_blocking_sources",
     "polish_blocker_reason",
+    "style_benchmark_pack_state",
 )
 _ACTORS = (
     "workflow_agent",
@@ -164,7 +166,9 @@ def _first_blocker(summary: dict[str, Any]) -> str | None:
     return stripped
 
 
-def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
+def _row_from_summary(
+    summary: dict[str, Any], *, mode: str, repo_root: Path
+) -> dict[str, Any]:
     status = summary.get("status")
     if not isinstance(status, dict):
         status = {}
@@ -204,6 +208,9 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
     if isinstance(guidance, dict):
         row["operator_guidance"] = guidance
     row.update(_svg_polish_fields(summary, mode=mode))
+    fixture = row.get("fixture")
+    if isinstance(fixture, str) and fixture:
+        row.update(_style_benchmark_pack_fields(fixture, workspace_root=repo_root))
     polish_blocker = _polish_blocker_detail(row, mode=mode)
     if polish_blocker is not None:
         row["polish_blocker"] = polish_blocker
@@ -257,6 +264,30 @@ def validate_human_decision_record(record: dict[str, Any]) -> list[str]:
     ):
         errors.append("release acceptance decisions must not imply golden mutation")
     return errors
+
+
+def _style_benchmark_pack_fields(name: str, *, workspace_root: Path) -> dict[str, Any]:
+    try:
+        payload = style_benchmark_pack.load_pack(name, workspace_root=workspace_root)
+    except (
+        OSError,
+        json.JSONDecodeError,
+        style_benchmark_pack.StyleBenchmarkPackError,
+    ) as exc:
+        return {
+            "style_benchmark_pack_state": "invalid",
+            "style_benchmark_pack_error": str(exc),
+        }
+    summary = style_benchmark_pack.summarize_pack(payload)
+    state = summary.get("state")
+    fields = {
+        "style_benchmark_pack_state": state,
+        "style_benchmark_pack_path": summary.get("path"),
+    }
+    if state != "present":
+        return {key: value for key, value in fields.items() if value is not None}
+    fields["style_benchmark_pack"] = summary
+    return fields
 
 
 def _svg_polish_fields(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
@@ -379,6 +410,9 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     by_polish_blocker = _count(rows, "polish_blocker_reason")
     if by_polish_blocker:
         summary["by_polish_blocker_reason"] = by_polish_blocker
+    by_style_pack = _count(rows, "style_benchmark_pack_state")
+    if by_style_pack:
+        summary["by_style_benchmark_pack_state"] = by_style_pack
     return summary
 
 
@@ -828,7 +862,7 @@ def _style_direction_packet(row: dict[str, Any]) -> dict[str, Any] | None:
         if release_blocked
         else "keep_current_style_with_optional_bounded_tikz_polish"
     )
-    return {
+    packet = {
         "schema": STYLE_DIRECTION_PACKET_SCHEMA,
         "fixture": fixture,
         "state": "release_policy_blocked" if release_blocked else "review_complete",
@@ -887,6 +921,10 @@ def _style_direction_packet(row: dict[str, Any]) -> dict[str, Any] | None:
             ],
         },
     }
+    pack_summary = row.get("style_benchmark_pack")
+    if isinstance(pack_summary, dict):
+        packet["style_benchmark_pack"] = pack_summary
+    return packet
 
 
 def _polish_blocker_detail(row: dict[str, Any], *, mode: str) -> dict[str, Any] | None:
@@ -1101,6 +1139,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                     "reason": reason,
                     "operator_handoff": _operator_handoff(row, reason=reason),
                     "style_direction_packet": row.get("style_direction_packet"),
+                    "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
                 }
             )
             continue
@@ -1125,6 +1164,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "polish_blocker_reason": row.get("polish_blocker_reason"),
                 "reason": reason,
                 "operator_handoff": _operator_handoff(row, reason=reason),
+                "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
             }
         )
     return {
@@ -1304,6 +1344,7 @@ def _digest_row(row: dict[str, Any], *, group: str) -> dict[str, Any]:
         "packet_schemas": _packet_schemas(row),
         "packet_recommendations": _packet_recommendations(row),
         "one_line_risk": _digest_one_line_risk(row),
+        "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
         "next_action": _DIGEST_NEXT_ACTIONS[group],
     }
 
@@ -1612,7 +1653,7 @@ def build_queue(
                 )
             )
             continue
-        rows.append(_row_from_summary(driver_summary, mode=mode))
+        rows.append(_row_from_summary(driver_summary, mode=mode, repo_root=repo_root))
     active_filters = _active_filters(filters)
     filtered_rows = _filter_rows(rows, active_filters)
     queue = {
@@ -1678,6 +1719,7 @@ def print_table(queue: dict[str, Any]) -> None:
     rows = queue.get("rows", [])
     show_svg_columns = _has_svg_polish_columns(rows)
     show_style_columns = _has_style_direction_columns(rows)
+    show_style_pack_columns = _has_style_benchmark_pack_columns(rows)
     header = ["fixture", "actor", "action", "stop_boundary", "first_blocker"]
     if show_svg_columns:
         header.extend(
@@ -1692,6 +1734,8 @@ def print_table(queue: dict[str, Any]) -> None:
         )
     if show_style_columns:
         header.extend(["style_recommendation"])
+    if show_style_pack_columns:
+        header.extend(["style_pack"])
     header.extend(["next_step", "next_command"])
     print("\t".join(header))
     for row in rows:
@@ -1719,6 +1763,8 @@ def print_table(queue: dict[str, Any]) -> None:
                 packet.get("agent_recommendation") if isinstance(packet, dict) else None
             )
             cells.append(_cell(recommendation))
+        if show_style_pack_columns:
+            cells.append(_cell(row.get("style_benchmark_pack_state")))
         cells.extend(
             [
                 _cell(_table_next_step(row)),
@@ -1746,6 +1792,7 @@ def _summary_table_keys() -> tuple[str, ...]:
         "by_svg_polish_next_action",
         "by_svg_polish_blocking_source",
         "by_polish_blocker_reason",
+        "by_style_benchmark_pack_state",
     )
 
 
@@ -1782,6 +1829,12 @@ def _has_style_direction_columns(rows: Any) -> bool:
     return any(isinstance(row, dict) and "style_direction_packet" in row for row in rows)
 
 
+def _has_style_benchmark_pack_columns(rows: Any) -> bool:
+    if not isinstance(rows, list):
+        return False
+    return any(isinstance(row, dict) and "style_benchmark_pack_state" in row for row in rows)
+
+
 def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int:
     parser = argparse.ArgumentParser(prog="fig_queue.py")
     parser.add_argument("fixtures", nargs="*")
@@ -1797,6 +1850,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
     parser.add_argument("--svg-polish-recommended-path")
     parser.add_argument("--svg-polish-next-action")
     parser.add_argument("--svg-polish-blocking-source", dest="svg_polish_blocking_sources")
+    parser.add_argument("--style-benchmark-pack-state")
     parser.add_argument("--command-plan", action="store_true")
     parser.add_argument("--commands", action="store_true")
     parser.add_argument("--human-decision-digest", action="store_true")
@@ -1823,6 +1877,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
             "svg_polish_recommended_path": args.svg_polish_recommended_path,
             "svg_polish_next_action": args.svg_polish_next_action,
             "svg_polish_blocking_sources": args.svg_polish_blocking_sources,
+            "style_benchmark_pack_state": args.style_benchmark_pack_state,
         },
         include_command_plan=args.command_plan or args.commands,
     )
