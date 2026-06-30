@@ -21,8 +21,8 @@ Hard boundaries preserved:
 - Did not edit fixture `.tex`, `briefing.md`, `spec.yaml`, `design.md`,
   `caption.md`, `critique.md`, `reference/`, `build/`, `exports/`, or accepted
   state files.
-- Did not run compile/export/acceptance/golden/publication commands.
-- Did not invent reference images, audit crops, or host critique conclusions.
+- did not run compile/export/acceptance/golden/publication commands.
+- did not invent reference images, audit crops, or host critique conclusions.
 - Treated `/fig_critique <fixture>` as host main-loop authority, not a normal
   worker-authored CLI critique.
 
