@@ -142,11 +142,7 @@ quality_axes:
     rationale: The figure is readable, but typography and whitespace remain draft-like at thumbnail scale.
     evidence: 'print_thumbnail crop: captions and secondary labels are legible but low-impact.'
     blocking_items:
-    - id: quality_axes.journal_polish
-      severity: NIT
-      action: patch
-      finding_id: C001
-      reason: Improve high-impact polish after scientific content is stable.
+    - C001 - Improve high-impact polish after scientific content is stable.
     recommended_action: patch
   reference_fidelity:
     verdict: not_applicable
@@ -161,11 +157,7 @@ quality_axes:
     rationale: Scientifically ready for review, with only polish-level improvement recommended.
     evidence: journal_polish axis and print-scale crop.
     blocking_items:
-    - id: quality_axes.publication_readiness
-      severity: NIT
-      action: patch
-      finding_id: C001
-      reason: Thumbnail polish remains the next bottleneck.
+    - C001 - Thumbnail polish remains the next bottleneck.
     recommended_action: patch
 top_tier_audit:
   first_glance_message:
@@ -274,6 +266,7 @@ editorial_art_direction:
     concrete_fix: none
     blocks_high_impact: false
     recommended_path: continue_tikz
+    remaining_tikz_lever: Adjust TikZ typography/label positioning locally before any SVG polish handoff.
   human_art_direction_gate:
     verdict: pass
     evidence: Current render and print-scale crops.
@@ -333,212 +326,226 @@ micro_defects:
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC001_a.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC001 was inspected in build/audit_crops/visual_clash/VC001_a.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC001 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC001_a.png; this is an
+    intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC001
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC001 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M002
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC002_PDMS.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC002 was inspected in build/audit_crops/visual_clash/VC002_PDMS.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC002 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC002_PDMS.png; this is
+    an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC002
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC002 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M003
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC003_crop.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC003 was inspected in build/audit_crops/visual_clash/VC003_crop.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC003 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC003_crop.png; this is
+    an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC003
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC003 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M004
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC004_crop.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC004 was inspected in build/audit_crops/visual_clash/VC004_crop.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC004 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC004_crop.png; this is
+    an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC004
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC004 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M005
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC005_b.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC005 was inspected in build/audit_crops/visual_clash/VC005_b.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC005 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC005_b.png; this is an
+    intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC005
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC005 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M006
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC006_Sulfur.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC006 was inspected in build/audit_crops/visual_clash/VC006_Sulfur.png; the enlarged crop shows a detector
-    candidate caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the
-    full current render and print-scale crops.
+  observation: VC006 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC006_Sulfur.png; this
+    is an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC006
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC006 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M007
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC007_E.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC007 was inspected in build/audit_crops/visual_clash/VC007_E.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC007 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC007_E.png; this is an
+    intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC007
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC007 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M008
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC008_injection.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC008 was inspected in build/audit_crops/visual_clash/VC008_injection.png; the enlarged crop shows a detector
-    candidate caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the
-    full current render and print-scale crops.
+  observation: VC008 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC008_injection.png; this
+    is an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC008
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC008 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M009
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC009_E.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC009 was inspected in build/audit_crops/visual_clash/VC009_E.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC009 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC009_E.png; this is an
+    intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC009
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC009 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M010
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC010_HOMO.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC010 was inspected in build/audit_crops/visual_clash/VC010_HOMO.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC010 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC010_HOMO.png; this is
+    an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC010
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC010 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M011
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC011_fast.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC011 was inspected in build/audit_crops/visual_clash/VC011_fast.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC011 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC011_fast.png; this is
+    an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC011
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC011 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M012
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC012_V.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC012 was inspected in build/audit_crops/visual_clash/VC012_V.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC012 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC012_V.png; this is an
+    intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC012
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC012 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M013
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC013_t.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC013 was inspected in build/audit_crops/visual_clash/VC013_t.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC013 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC013_t.png; this is an
+    intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC013
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC013 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M014
   crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC014_HOMO.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC014 was inspected in build/audit_crops/visual_clash/VC014_HOMO.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC014 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC014_HOMO.png; this is
+    an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC014
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC014 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 crop_audit_log:
 - crop_id: VC001_a
   path: build/audit_crops/visual_clash/VC001_a.png
@@ -547,6 +554,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC002_PDMS
   path: build/audit_crops/visual_clash/VC002_PDMS.png
   source: visual_clash:VC002
@@ -554,6 +562,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC003_crop
   path: build/audit_crops/visual_clash/VC003_crop.png
   source: visual_clash:VC003
@@ -561,6 +570,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC004_crop
   path: build/audit_crops/visual_clash/VC004_crop.png
   source: visual_clash:VC004
@@ -568,6 +578,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC005_b
   path: build/audit_crops/visual_clash/VC005_b.png
   source: visual_clash:VC005
@@ -575,6 +586,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC006_Sulfur
   path: build/audit_crops/visual_clash/VC006_Sulfur.png
   source: visual_clash:VC006
@@ -582,6 +594,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC007_E
   path: build/audit_crops/visual_clash/VC007_E.png
   source: visual_clash:VC007
@@ -589,6 +602,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC008_injection
   path: build/audit_crops/visual_clash/VC008_injection.png
   source: visual_clash:VC008
@@ -596,6 +610,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC009_E
   path: build/audit_crops/visual_clash/VC009_E.png
   source: visual_clash:VC009
@@ -603,6 +618,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC010_HOMO
   path: build/audit_crops/visual_clash/VC010_HOMO.png
   source: visual_clash:VC010
@@ -610,6 +626,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC011_fast
   path: build/audit_crops/visual_clash/VC011_fast.png
   source: visual_clash:VC011
@@ -617,6 +634,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC012_V
   path: build/audit_crops/visual_clash/VC012_V.png
   source: visual_clash:VC012
@@ -624,6 +642,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC013_t
   path: build/audit_crops/visual_clash/VC013_t.png
   source: visual_clash:VC013
@@ -631,6 +650,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC014_HOMO
   path: build/audit_crops/visual_clash/VC014_HOMO.png
   source: visual_clash:VC014
@@ -638,6 +658,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: full_q1
   path: build/audit_crops/full_q1.png
   source: full_render
@@ -645,6 +666,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: full_q2
   path: build/audit_crops/full_q2.png
   source: full_render
@@ -652,6 +674,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: full_q3
   path: build/audit_crops/full_q3.png
   source: full_render
@@ -659,6 +682,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: full_q4
   path: build/audit_crops/full_q4.png
   source: full_render
@@ -666,6 +690,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: print_178mm
   path: build/audit_crops/print_178mm.png
   source: print_scale
@@ -673,6 +698,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: print_thumbnail
   path: build/audit_crops/print_thumbnail.png
   source: print_scale
@@ -680,6 +706,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 panels: []
 findings:
 - id: C001

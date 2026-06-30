@@ -95,16 +95,8 @@ quality_axes:
     rationale: The shallow/deep annotation subregion is semantically correct but locally crowded by guide/rule lines.
     evidence: VC003, VC005, VC006, VC007, VC008 crops.
     blocking_items:
-    - id: quality_axes.subregion_integration
-      severity: MINOR
-      action: patch
-      finding_id: C001
-      reason: Shallow label/rule collision.
-    - id: quality_axes.subregion_integration
-      severity: MINOR
-      action: patch
-      finding_id: C002
-      reason: Deep label/rule collision.
+    - C001 - Shallow label/rule collision.
+    - C002 - Deep label/rule collision.
     recommended_action: patch
   component_fidelity:
     verdict: pass
@@ -126,16 +118,8 @@ quality_axes:
     rationale: Overall layout is strong, but several labels are crossed or crowded by vertical rules at high zoom.
     evidence: VC003-VC008 crop inspection.
     blocking_items:
-    - id: quality_axes.composition_layout
-      severity: MINOR
-      action: patch
-      finding_id: C001
-      reason: Shallow annotation crowding.
-    - id: quality_axes.composition_layout
-      severity: MINOR
-      action: patch
-      finding_id: C002
-      reason: Deep annotation crowding.
+    - C001 - Shallow annotation crowding.
+    - C002 - Deep annotation crowding.
     recommended_action: patch
   label_annotation_semantics:
     verdict: needs_patch
@@ -143,16 +127,8 @@ quality_axes:
     rationale: Labels target the correct objects but local label/rule overlaps reduce readability.
     evidence: VC003, VC005, VC006, VC007, VC008.
     blocking_items:
-    - id: quality_axes.label_annotation_semantics
-      severity: MINOR
-      action: patch
-      finding_id: C001
-      reason: Shallow label overlap.
-    - id: quality_axes.label_annotation_semantics
-      severity: MINOR
-      action: patch
-      finding_id: C002
-      reason: Deep label overlap.
+    - C001 - Shallow label overlap.
+    - C002 - Deep label overlap.
     recommended_action: patch
   journal_polish:
     verdict: needs_patch
@@ -160,16 +136,8 @@ quality_axes:
     rationale: Print-scale readability is acceptable for the main story but compromised around dense annotations.
     evidence: print_178mm and print_thumbnail crops.
     blocking_items:
-    - id: quality_axes.journal_polish
-      severity: MINOR
-      action: patch
-      finding_id: C001
-      reason: Annotation cleanup needed.
-    - id: quality_axes.journal_polish
-      severity: MINOR
-      action: patch
-      finding_id: C002
-      reason: Annotation cleanup needed.
+    - C001 - Annotation cleanup needed.
+    - C002 - Annotation cleanup needed.
     recommended_action: patch
   reference_fidelity:
     verdict: not_applicable
@@ -184,16 +152,8 @@ quality_axes:
     rationale: Scientific content is usable, but annotation collisions should be patched before release.
     evidence: Open findings C001 and C002.
     blocking_items:
-    - id: quality_axes.publication_readiness
-      severity: MINOR
-      action: patch
-      finding_id: C001
-      reason: Shallow label collision.
-    - id: quality_axes.publication_readiness
-      severity: MINOR
-      action: patch
-      finding_id: C002
-      reason: Deep label collision.
+    - C001 - Shallow label collision.
+    - C002 - Deep label collision.
     recommended_action: patch
 top_tier_audit:
   first_glance_message:
@@ -302,6 +262,7 @@ editorial_art_direction:
     concrete_fix: C001/C002 - patch TikZ label positions/rule lengths.
     blocks_high_impact: false
     recommended_path: continue_tikz
+    remaining_tikz_lever: Adjust TikZ typography/label positioning locally before any SVG polish handoff.
   human_art_direction_gate:
     verdict: pass
     evidence: Current render, visual-clash crops, and print-scale crops.
@@ -364,32 +325,34 @@ micro_defects:
   crop: examples/fig4_trap_energy_diagram/build/audit_crops/visual_clash/VC001_Trap.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC001 was inspected in build/audit_crops/visual_clash/VC001_Trap.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC001 was inspected in examples/fig4_trap_energy_diagram/build/audit_crops/visual_clash/VC001_Trap.png; this
+    is an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC001
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC001 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M002
   crop: examples/fig4_trap_energy_diagram/build/audit_crops/visual_clash/VC002_of.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC002 was inspected in build/audit_crops/visual_clash/VC002_of.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC002 was inspected in examples/fig4_trap_energy_diagram/build/audit_crops/visual_clash/VC002_of.png; this
+    is an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC002
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC002 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M003
   crop: examples/fig4_trap_energy_diagram/build/audit_crops/visual_clash/VC003_shallow.png
   kind: label_path_near_miss
@@ -407,17 +370,18 @@ micro_defects:
   crop: examples/fig4_trap_energy_diagram/build/audit_crops/visual_clash/VC004_tail.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC004 was inspected in build/audit_crops/visual_clash/VC004_tail.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC004 was inspected in examples/fig4_trap_energy_diagram/build/audit_crops/visual_clash/VC004_tail.png; this
+    is an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC004
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC004 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M005
   crop: examples/fig4_trap_energy_diagram/build/audit_crops/visual_clash/VC005_0.1_0.3.png
   kind: label_glyph_overlaps_internal_drawing
@@ -474,17 +438,18 @@ micro_defects:
   crop: examples/fig4_trap_energy_diagram/build/audit_crops/visual_clash/VC009_crop.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC009 was inspected in build/audit_crops/visual_clash/VC009_crop.png; the enlarged crop shows a detector candidate
-    caused by intentional schematic text over pale fill or guide geometry, while the glyph remains legible in the full current
-    render and print-scale crops.
+  observation: VC009 was inspected in examples/fig4_trap_energy_diagram/build/audit_crops/visual_clash/VC009_crop.png; this
+    is an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
+    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
+    hidden.
   linked_finding_id: ''
   visual_clash_ref: VC009
   text_boundary_ref: ''
   label_path_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: Intentional schematic typography over light fills or guide geometry remains readable in
-    the current artifact and does not obscure a scientific target.
+  accept_simplification_rationale: VC009 is acceptable because the candidate is intentional schematic typography over separate
+    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 crop_audit_log:
 - crop_id: VC001_Trap
   path: build/audit_crops/visual_clash/VC001_Trap.png
@@ -493,6 +458,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC002_of
   path: build/audit_crops/visual_clash/VC002_of.png
   source: visual_clash:VC002
@@ -500,6 +466,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC003_shallow
   path: build/audit_crops/visual_clash/VC003_shallow.png
   source: visual_clash:VC003
@@ -507,6 +474,7 @@ crop_audit_log:
   verdict: defect
   linked_micro_defect_id: M003
   rationale: Crop inspected directly; visible defect is linked to the named micro defect.
+  unintended_visible_anomaly: label/rule crowding visible in this crop
 - crop_id: VC004_tail
   path: build/audit_crops/visual_clash/VC004_tail.png
   source: visual_clash:VC004
@@ -514,6 +482,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: VC005_0.1_0.3
   path: build/audit_crops/visual_clash/VC005_0.1_0.3.png
   source: visual_clash:VC005
@@ -521,6 +490,7 @@ crop_audit_log:
   verdict: defect
   linked_micro_defect_id: M005
   rationale: Crop inspected directly; visible defect is linked to the named micro defect.
+  unintended_visible_anomaly: label/rule crowding visible in this crop
 - crop_id: VC006_traps
   path: build/audit_crops/visual_clash/VC006_traps.png
   source: visual_clash:VC006
@@ -528,6 +498,7 @@ crop_audit_log:
   verdict: defect
   linked_micro_defect_id: M006
   rationale: Crop inspected directly; visible defect is linked to the named micro defect.
+  unintended_visible_anomaly: label/rule crowding visible in this crop
 - crop_id: VC007_S_S
   path: build/audit_crops/visual_clash/VC007_S_S.png
   source: visual_clash:VC007
@@ -535,6 +506,7 @@ crop_audit_log:
   verdict: defect
   linked_micro_defect_id: M007
   rationale: Crop inspected directly; visible defect is linked to the named micro defect.
+  unintended_visible_anomaly: label/rule crowding visible in this crop
 - crop_id: VC008_eV
   path: build/audit_crops/visual_clash/VC008_eV.png
   source: visual_clash:VC008
@@ -542,6 +514,7 @@ crop_audit_log:
   verdict: defect
   linked_micro_defect_id: M008
   rationale: Crop inspected directly; visible defect is linked to the named micro defect.
+  unintended_visible_anomaly: label/rule crowding visible in this crop
 - crop_id: VC009_crop
   path: build/audit_crops/visual_clash/VC009_crop.png
   source: visual_clash:VC009
@@ -549,6 +522,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: full_q1
   path: build/audit_crops/full_q1.png
   source: full_render
@@ -556,6 +530,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: full_q2
   path: build/audit_crops/full_q2.png
   source: full_render
@@ -563,6 +538,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: full_q3
   path: build/audit_crops/full_q3.png
   source: full_render
@@ -570,6 +546,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: full_q4
   path: build/audit_crops/full_q4.png
   source: full_render
@@ -577,6 +554,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: print_178mm
   path: build/audit_crops/print_178mm.png
   source: print_scale
@@ -584,6 +562,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 - crop_id: print_thumbnail
   path: build/audit_crops/print_thumbnail.png
   source: print_scale
@@ -591,6 +570,7 @@ crop_audit_log:
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
+  unintended_visible_anomaly: none
 panels: []
 findings:
 - id: C001
