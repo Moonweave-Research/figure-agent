@@ -299,7 +299,10 @@ def _helper(argv: list[str]) -> int:
 def _closeout(argv: list[str]) -> int:
     import fig_closeout
 
-    return fig_closeout.main(argv)
+    has_repo_root = any(arg == "--repo-root" or arg.startswith("--repo-root=") for arg in argv)
+    if has_repo_root:
+        return fig_closeout.main(argv)
+    return fig_closeout.main(["--repo-root", str(_paths().workspace_root), *argv])
 
 
 def _text_boundary(argv: list[str]) -> int:

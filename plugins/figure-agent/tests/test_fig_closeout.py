@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -758,3 +759,24 @@ def test_closeout_cli_reports_status_errors_without_traceback(
     assert captured.out == ""
     assert "fig_closeout.py: cannot compute status for examples/loop_demo" in captured.err
     assert "Traceback" not in captured.err
+
+
+def test_fig_agent_closeout_uses_plugin_workspace_from_repo_root() -> None:
+    plugin_root = Path(__file__).resolve().parents[1]
+    repo_root = plugin_root.parents[1]
+    env = os.environ.copy()
+    env.pop("CLAUDE_PROJECT_DIR", None)
+    env.pop("FIGURE_AGENT_WORKSPACE", None)
+    result = subprocess.run(
+        [str(plugin_root / "bin" / "fig-agent"), "closeout", "smoke_trap_demo", "--json"],
+        cwd=repo_root,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert "examples/smoke_trap_demo/ not found" not in result.stderr
+    data = json.loads(result.stdout)
+    assert data["fixture"] == "smoke_trap_demo"
+    assert result.returncode == (0 if data["closeout_complete"] else 1)
