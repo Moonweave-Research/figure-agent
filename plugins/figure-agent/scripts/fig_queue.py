@@ -24,6 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.fixture-driver-queue.v1"
 COMMAND_PLAN_SCHEMA = "figure-agent.fixture-command-plan.v1"
 OPERATOR_HANDOFF_SCHEMA = "figure-agent.queue-operator-handoff.v1"
+HUMAN_DECISION_PACKET_SCHEMA = "figure-agent.human-decision-packet.v1"
 BOTTLENECK_REPORT_SCHEMA = "figure-agent.queue-bottleneck-report.v1"
 WORKSPACE_DIAGNOSTIC_SCHEMA = "figure-agent.queue-workspace-diagnostic.v1"
 BOTTLENECK_CATEGORIES = (
@@ -434,6 +435,118 @@ def _host_llm_handoff_details(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _decision_packet_evidence_refs(row: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for key in ("first_blocker", "blocking_source", "stop_boundary"):
+        value = row.get(key)
+        if isinstance(value, str) and value and value != "-":
+            refs.append(f"{key}:{value}")
+    return refs
+
+
+def _human_decision_packet(row: dict[str, Any], *, actor: str) -> dict[str, Any]:
+    fixture = _cell(row.get("fixture"))
+    first_blocker = _cell(row.get("first_blocker"))
+    blocking_source = _cell(row.get("blocking_source"))
+    stop_boundary = _cell(row.get("stop_boundary"))
+    common = {
+        "schema": HUMAN_DECISION_PACKET_SCHEMA,
+        "fixture": fixture,
+        "required_actor": actor,
+        "evidence_refs": _decision_packet_evidence_refs(row),
+        "follow_up": {
+            "after_decision": "rerun /fig_queue",
+            "do_not_do": [
+                "do not ask the human to inspect raw artifacts without a recommendation",
+                "do not mutate accepted, golden, or publication state implicitly",
+            ],
+        },
+    }
+    if actor == "release_operator":
+        return common | {
+            "packet_kind": "approval_packet",
+            "human_question": (
+                f"I recommend a bounded release/golden decision for `{fixture}`. "
+                "Approve the explicit roll-forward only if the prepared visual "
+                "preview/diff is acceptable?"
+            ),
+            "agent_recommendation": (
+                "Keep this as an explicit release decision. If the current build "
+                "preview is acceptable, approve the bounded roll-forward; otherwise "
+                "defer for another dogfood or visual-polish pass."
+            ),
+            "recommended_choice_id": "approve_bounded_roll_forward",
+            "choices": [
+                {
+                    "id": "approve_bounded_roll_forward",
+                    "label": "Approve bounded roll-forward",
+                    "effect": "allow the operator to run the explicit force-golden/export step",
+                },
+                {
+                    "id": "reject_and_keep_current_baseline",
+                    "label": "Keep current baseline",
+                    "effect": "leave tracked golden or release state unchanged",
+                },
+                {
+                    "id": "defer_for_visual_dogfood",
+                    "label": "Defer for visual dogfood",
+                    "effect": "request another critique/style pass before release mutation",
+                },
+            ],
+            "risks": [
+                "approving changes the protected release/golden baseline",
+                "rejecting may leave a fresh ready build unpromoted",
+                "deferring preserves safety but delays release closure",
+            ],
+            "gate_context": {
+                "first_blocker": first_blocker,
+                "blocking_source": blocking_source,
+                "stop_boundary": stop_boundary,
+            },
+        }
+    return common | {
+        "packet_kind": "choice_packet",
+        "human_question": (
+            f"`{fixture}` needs a bounded human decision. Should we accept the "
+            "current review state, request one local polish pass, or open a broader "
+            "redesign direction?"
+        ),
+        "agent_recommendation": (
+            "Ask for a choice among concrete paths instead of asking for open-ended "
+            "inspection. Default to accepting the current review state when no "
+            "freshness or defect blocker remains."
+        ),
+        "recommended_choice_id": "accept_current_review_state",
+        "choices": [
+            {
+                "id": "accept_current_review_state",
+                "label": "Accept current review state",
+                "effect": "record acceptance or proceed to the next release/final gate",
+            },
+            {
+                "id": "request_bounded_polish_pass",
+                "label": "Request bounded polish pass",
+                "effect": "ask the agent to propose and apply one local style/hierarchy patch",
+            },
+            {
+                "id": "request_redesign_direction",
+                "label": "Request redesign direction",
+                "effect": "stop local patching and prepare broader art-direction alternatives",
+            },
+        ],
+        "risks": [
+            "accepting may lock in a merely solid style",
+            "bounded polish can improve finish but may not change the overall style class",
+            "redesign can find a better visual language but expands scope materially",
+        ],
+        "gate_context": {
+            "first_blocker": first_blocker,
+            "blocking_source": blocking_source,
+            "stop_boundary": stop_boundary,
+        },
+    }
+
+
 def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
     fixture = _cell(row.get("fixture"))
     actor = _cell(row.get("required_actor"))
@@ -491,6 +604,7 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
             "schema": OPERATOR_HANDOFF_SCHEMA,
             "fixture": fixture,
             "required_actor": actor,
+            "decision_packet": _human_decision_packet(row, actor=actor),
             "next_step": "Record the required human decision before continuing automation.",
             "command": None,
             "reason": reason,
@@ -503,6 +617,7 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
             "schema": OPERATOR_HANDOFF_SCHEMA,
             "fixture": fixture,
             "required_actor": actor,
+            "decision_packet": _human_decision_packet(row, actor=actor),
             "next_step": (
                 "Perform explicit release/golden review; do not force golden implicitly."
             ),

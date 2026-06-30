@@ -386,6 +386,86 @@ def test_queue_command_plan_uses_operator_guidance_for_complete_rows(
     assert queue["command_plan"]["complete"][0]["reason"] == "mode_scoped_complete"
 
 
+def test_release_operator_handoff_includes_decision_packet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="force_golden_required",
+            first_blocker="export_tracked_golden",
+            blocking_source="force_golden_required",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="human gate",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    handoff = queue["command_plan"]["blocked"][0]["operator_handoff"]
+    packet = handoff["decision_packet"]
+    assert packet["schema"] == "figure-agent.human-decision-packet.v1"
+    assert packet["packet_kind"] == "approval_packet"
+    assert "alpha" in packet["human_question"]
+    assert packet["recommended_choice_id"] == "approve_bounded_roll_forward"
+    assert [choice["id"] for choice in packet["choices"]] == [
+        "approve_bounded_roll_forward",
+        "reject_and_keep_current_baseline",
+        "defer_for_visual_dogfood",
+    ]
+    assert packet["agent_recommendation"]
+    assert packet["evidence_refs"] == [
+        "first_blocker:export_tracked_golden",
+        "blocking_source:force_golden_required",
+        "stop_boundary:force_golden_required",
+    ]
+    assert packet["follow_up"]["after_decision"] == "rerun /fig_queue"
+
+
+def test_human_handoff_includes_choice_packet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="human_gate_stop",
+            stop_boundary="human_gate_required",
+            first_blocker="acceptance_not_declared",
+            blocking_source="human_gate_required",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="human gate",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    packet = queue["command_plan"]["blocked"][0]["operator_handoff"]["decision_packet"]
+    assert packet["packet_kind"] == "choice_packet"
+    assert packet["recommended_choice_id"] == "accept_current_review_state"
+    assert [choice["id"] for choice in packet["choices"]] == [
+        "accept_current_review_state",
+        "request_bounded_polish_pass",
+        "request_redesign_direction",
+    ]
+    assert "alpha" in packet["human_question"]
+    assert packet["risks"]
+
+
 def test_queue_table_keeps_blocked_handoff_when_driver_guidance_is_present(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
