@@ -1,28 +1,28 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig2_trap_design_space
-generated_at: 2026-06-30T08:52:00Z
+generated_at: 2026-06-30T09:30:00Z
 generator: critique_brief.py
 generator_version: sha256:0bf8abd441f6688290a6abc8b4fda75a2d131526615ba5df7b07dc4d1ec04c94
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:c9110edd163bcf1ffaa10d51309665b91b862ef96549883e00f655c3ac0a9d78
-verdict: revise
+critique_input_hash: sha256:8e32e1a826cb2a054cdbab8de994bdb5622032a4da9ddf9f27f37285aa18c08a
+verdict: pass
 findings:
   - id: C001
     severity: MINOR
     category: label_placement
     tex_lines: [95, 96]
-    grounded_in_rule: "detector visual_clash VC006/VC007/VC008 (text_on_path/text_on_fill); panel-b x-axis at fig2.tex:80"
-    observation: "The conventional-cluster caption 'PI, PDMS, PET' crosses the panel-b x-axis line. The labelMute node is anchor=north at (7.60,4.12) (fig2.tex:95) while the x-axis baseline is at y=3.90 (fig2.tex:80), so the first caption line straddles the axis. Visible in the high-zoom crop of full_q3 and in VC006/VC007/VC008."
-    suggested_fix: "Lower the caption node below the x-axis: change the y of the labelMute node at fig2.tex:95 from 4.12 to ~3.62 (matching the x-axis label baseline at fig2.tex:82) so 'PI, PDMS, PET (shallow, leaky)' sits clear of the axis line."
+    grounded_in_rule: "detector visual_clash VC005/VC006/VC007 (text_on_path/text_on_fill); panel-b x-axis at fig2.tex:80"
+    observation: "Resolved in the current render: the conventional-cluster caption 'PI, PDMS, PET' was moved above the blue cluster with anchor=south at (7.60,5.58), clearing the panel-b x-axis baseline at y=3.90 and avoiding the panel-c seam. Compile evidence reports no text collisions."
+    suggested_fix: "Applied: moved the labelMute node at fig2.tex:95 from anchor=north/y=4.12 to anchor=south/y=5.58 so 'PI, PDMS, PET (shallow, leaky)' sits above the conventional cluster instead of crossing the x-axis."
     proposed_offset:
       axis: y
-      dx_cm: -0.50
+      dy_cm: 1.46
     target_texts:
       - "PI,"
       - "PDMS,"
       - "PET"
-    status: open
+    status: resolved
 panels: []
 audit_enumeration:
   structural_completeness:
@@ -201,12 +201,12 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   label_annotation_semantics:
-    verdict: needs_patch
+    verdict: pass
     confidence: high
-    rationale: "Most labels bind correctly, but the conventional-cluster caption 'PI, PDMS, PET' crosses the panel-b x-axis line (C001); detector flags VC006/VC007/VC008 were correct and are no longer dismissed as false positives."
-    evidence: "High-zoom crop of full_q3 shows 'PI, PDMS, PET' straddling the x-axis baseline; VC006/VC007/VC008."
-    blocking_items: ["C001 - PI/PDMS/PET caption crosses the panel-b x-axis line"]
-    recommended_action: patch
+    rationale: "The conventional-cluster caption now sits above the blue cluster and no longer crosses the panel-b x-axis or panel-c seam; current compile evidence reports no collisions."
+    evidence: "fig-agent compile fig2_trap_design_space after the patch: OK no collisions, no text-boundary clashes, no label-path proximity candidates."
+    blocking_items: []
+    recommended_action: none
   journal_polish:
     verdict: pass
     confidence: high
@@ -222,12 +222,12 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   publication_readiness:
-    verdict: needs_patch
+    verdict: pass
     confidence: high
-    rationale: "One open MINOR label-placement finding (C001) remains; the figure is otherwise print-legible. publication_readiness mirrors the most severe upstream axis (label_annotation_semantics)."
-    evidence: "C001 PI/PDMS/PET x-axis crossing; print-scale crops print_178mm and print_thumbnail are otherwise legible; reference fidelity is not_applicable."
-    blocking_items: ["C001 - PI/PDMS/PET caption crosses the panel-b x-axis line"]
-    recommended_action: patch
+    rationale: "No open patch finding remains after the caption relocation; the figure is print-legible and briefing-grounded."
+    evidence: "Current compile reports no collisions; print-scale crops print_178mm and print_thumbnail remain legible; reference fidelity is not_applicable."
+    blocking_items: []
+    recommended_action: none
 top_tier_audit:
   first_glance_message:
     verdict: pass
@@ -348,15 +348,15 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:c9110edd163bcf1ffaa10d51309665b91b862ef96549883e00f655c3ac0a9d78
-  benchmark_level: draft
+  assessed_artifact_hash: sha256:8e32e1a826cb2a054cdbab8de994bdb5622032a4da9ddf9f27f37285aa18c08a
+  benchmark_level: solid_manuscript
   confidence: high
   blockers: []
   regression_detected: false
   regressions: []
   score_is_gateable: false
-  next_quality_bottleneck: label_semantics
-  rationale: "Report-only assessment: one open MINOR label-placement finding (C001, PI/PDMS/PET crossing the panel-b x-axis) keeps the figure at draft until patched."
+  next_quality_bottleneck: polish
+  rationale: "Fresh post-patch assessment: C001 is resolved, detector collision checks pass, and the remaining visual-clash candidates are accepted direct-label or false-positive schematic conventions."
 aesthetic_gate_audit:
   - slot: maturity_restraint
     verdict: pass
@@ -475,14 +475,13 @@ aesthetic_antipattern_audit:
     rationale: "Route none because no decorative-only detail is visible."
     linked_evidence: []
 weakest_panel_coherence:
-  panel_id: "B"
+  panel_id: "none"
   subregion_id: "none"
-  weakness_type: composition
-  route: tikz_patch
-  evidence: "High-zoom full_q3 shows the 'PI, PDMS, PET' caption crossing the panel-b x-axis line (C001)."
-  rationale: "Panel b is the limiter: its conventional-cluster caption straddles the x-axis baseline, a fixable label-placement collision."
-  linked_evidence:
-    - quality_axes.label_annotation_semantics
+  weakness_type: none
+  route: none
+  evidence: "Post-patch compile reports no collisions; the conventional-cluster caption is above the blue cluster and clear of the x-axis."
+  rationale: "Panel b no longer has a blocking coherence defect; remaining polish is advisory."
+  linked_evidence: []
 reference_learning_accountability:
   learned_principle: "not_applicable"
   rejected_copy_target: "not_applicable"
@@ -546,10 +545,10 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC004 is not a defect: S85 is a direct point label sitting clear to the right of its gold marker."
   - id: M005
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC005_S60.png
-    kind: label_curve_near_label
+    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC005_PI.png
+    kind: label_path_near_miss
     severity: NIT
-    observation: "VC005 S60: trajectory start label beneath the first gold point."
+    observation: "VC005 PI,: first token of the relocated 'PI, PDMS, PET' caption above the conventional cluster; no x-axis crossing remains."
     linked_finding_id: ""
     visual_clash_ref: "VC005"
     text_boundary_ref: ""
@@ -557,40 +556,46 @@ micro_defects:
     undeclared_geometry_ref: ""
     status: accept_simplification
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC005 is not a defect: S60 is a direct point label clear of the arc and the panel boundary."
+    accept_simplification_rationale: "VC005 is not a defect after the patch: PI is part of the conventional-cluster caption, now above the cluster and clear of the x-axis."
   - id: M006
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC006_PI.png
-    kind: label_stacked_on_reference_line
-    severity: MINOR
-    observation: "VC006 PI,: first token of the 'PI, PDMS, PET' caption that crosses the panel-b x-axis line (x-axis baseline y=3.90, caption node anchor=north at y=4.12)."
-    linked_finding_id: "C001"
+    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC006_PDMS.png
+    kind: label_path_near_miss
+    severity: NIT
+    observation: "VC006 PDMS,: middle token of the relocated conventional-cluster caption; clear of the x-axis after the patch."
+    linked_finding_id: ""
     visual_clash_ref: "VC006"
     text_boundary_ref: ""
     label_path_ref: ""
     undeclared_geometry_ref: ""
-    status: open
+    status: accept_simplification
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC006 is not a defect after the patch: PDMS is part of the relocated conventional-cluster caption, not stacked on the axis."
   - id: M007
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC007_PDMS.png
-    kind: label_stacked_on_reference_line
-    severity: MINOR
-    observation: "VC007 PDMS,: middle token of the 'PI, PDMS, PET' caption straddling the panel-b x-axis line."
-    linked_finding_id: "C001"
+    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC007_PET.png
+    kind: label_path_near_miss
+    severity: NIT
+    observation: "VC007 PET: last token of the relocated conventional-cluster caption; clear of the x-axis after the patch."
+    linked_finding_id: ""
     visual_clash_ref: "VC007"
     text_boundary_ref: ""
     label_path_ref: ""
     undeclared_geometry_ref: ""
-    status: open
+    status: accept_simplification
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC007 is not a defect after the patch: PET is part of the relocated conventional-cluster caption, not stacked on the axis."
   - id: M008
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC008_PET.png
-    kind: label_stacked_on_reference_line
-    severity: MINOR
-    observation: "VC008 PET: last token of the 'PI, PDMS, PET' caption straddling the panel-b x-axis line."
-    linked_finding_id: "C001"
+    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC008_S60.png
+    kind: label_curve_near_label
+    severity: NIT
+    observation: "VC008 S60: trajectory start label beneath the first gold point."
+    linked_finding_id: ""
     visual_clash_ref: "VC008"
     text_boundary_ref: ""
     label_path_ref: ""
     undeclared_geometry_ref: ""
-    status: open
+    status: accept_simplification
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC008 is not a defect: S60 is a direct point label clear of the arc and the panel boundary."
   - id: M009
     crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC009_trap-distribution.png
     kind: label_path_near_miss
@@ -982,58 +987,58 @@ crop_audit_log:
     unintended_visible_anomaly: none
     anomaly_rationale: "No anomaly visible."
     anomaly_link: "accept_simplification:convention_acceptable"
-  - crop_id: VC005_S60
-    path: build/audit_crops/visual_clash/VC005_S60.png
+  - crop_id: VC005_PI
+    path: build/audit_crops/visual_clash/VC005_PI.png
     source: visual_clash:VC005
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "'PI,' is part of the relocated conventional-cluster caption and is clear of the panel-b x-axis."
+    observed_objects: ["PI caption token", "blue conventional cluster", "panel-b x-axis line"]
+    local_relationship: "Caption sits above the blue cluster, away from the x-axis baseline."
+    candidate_refs: ["VC005"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:convention_acceptable"
+  - crop_id: VC006_PDMS
+    path: build/audit_crops/visual_clash/VC006_PDMS.png
+    source: visual_clash:VC006
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "'PDMS,' is part of the relocated conventional-cluster caption and is clear of the panel-b x-axis."
+    observed_objects: ["PDMS caption token", "blue conventional cluster", "panel-b x-axis line"]
+    local_relationship: "Caption sits above the blue cluster, away from the x-axis baseline."
+    candidate_refs: ["VC006"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:convention_acceptable"
+  - crop_id: VC007_PET
+    path: build/audit_crops/visual_clash/VC007_PET.png
+    source: visual_clash:VC007
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "'PET' is part of the relocated conventional-cluster caption and is clear of the panel-b x-axis."
+    observed_objects: ["PET caption token", "blue conventional cluster", "panel-b x-axis line"]
+    local_relationship: "Caption sits above the blue cluster, away from the x-axis baseline."
+    candidate_refs: ["VC007"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:convention_acceptable"
+  - crop_id: VC008_S60
+    path: build/audit_crops/visual_clash/VC008_S60.png
+    source: visual_clash:VC008
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "S60 label is clear beneath the first gold point."
     observed_objects: ["S60 label", "gold start marker"]
     local_relationship: "Direct point label clear of the arc."
-    candidate_refs: ["VC005"]
+    candidate_refs: ["VC008"]
     unintended_visible_anomaly: none
     anomaly_rationale: "No anomaly visible."
     anomaly_link: "accept_simplification:convention_acceptable"
-  - crop_id: VC006_PI
-    path: build/audit_crops/visual_clash/VC006_PI.png
-    source: visual_clash:VC006
-    inspected: true
-    verdict: defect
-    linked_micro_defect_id: "M006"
-    rationale: "'PI,' is the first token of the 'PI, PDMS, PET' caption that crosses the panel-b x-axis line (C001)."
-    observed_objects: ["PI, caption token", "panel-b x-axis line"]
-    local_relationship: "The caption line sits on the x-axis baseline rather than clear below it."
-    candidate_refs: ["VC006"]
-    unintended_visible_anomaly: present
-    anomaly_rationale: "Caption crosses the x-axis line; tracked by C001."
-    anomaly_link: "C001"
-  - crop_id: VC007_PDMS
-    path: build/audit_crops/visual_clash/VC007_PDMS.png
-    source: visual_clash:VC007
-    inspected: true
-    verdict: defect
-    linked_micro_defect_id: "M007"
-    rationale: "'PDMS,' is the middle token of the caption straddling the panel-b x-axis line (C001)."
-    observed_objects: ["PDMS, caption token", "panel-b x-axis line"]
-    local_relationship: "The caption line sits on the x-axis baseline rather than clear below it."
-    candidate_refs: ["VC007"]
-    unintended_visible_anomaly: present
-    anomaly_rationale: "Caption crosses the x-axis line; tracked by C001."
-    anomaly_link: "C001"
-  - crop_id: VC008_PET
-    path: build/audit_crops/visual_clash/VC008_PET.png
-    source: visual_clash:VC008
-    inspected: true
-    verdict: defect
-    linked_micro_defect_id: "M008"
-    rationale: "'PET' is the last token of the caption straddling the panel-b x-axis line (C001)."
-    observed_objects: ["PET caption token", "panel-b x-axis line"]
-    local_relationship: "The caption line sits on the x-axis baseline rather than clear below it."
-    candidate_refs: ["VC008"]
-    unintended_visible_anomaly: present
-    anomaly_rationale: "Caption crosses the x-axis line; tracked by C001."
-    anomaly_link: "C001"
   - crop_id: VC009_trap-distribution
     path: build/audit_crops/visual_clash/VC009_trap-distribution.png
     source: visual_clash:VC009
@@ -1064,7 +1069,7 @@ crop_audit_log:
 
 # Vision Critique — fig2_trap_design_space
 
-The current Fig2 render needs one revision (verdict: revise). The figure lands the
+The current Fig2 render passes the host critique after the bounded C001 patch. The figure lands the
 paper's central finding — sulfur composition opening a charge-trap design space beyond
 conventional dielectrics — through a clear left-to-right argument: panel a (origin of
 deep traps and the Coulomb-well contrast), panel b (the hero composition-tunable
@@ -1073,17 +1078,14 @@ briefing constraints are honored (monomer-level S• radical, two separated clus
 a composition arrow, number-free icons, qualitative plateau+descent arc, no Fig 1 g(E_t)
 reuse).
 
-Open finding C001 (MINOR, label_placement): the conventional-cluster caption
-'PI, PDMS, PET' crosses the panel-b x-axis line. High-zoom inspection of full_q3 shows
-the caption straddling the axis baseline (node anchor=north at y=4.12, fig2.tex:95;
-x-axis at y=3.90, fig2.tex:80). The visual_clash detector flagged this as VC006/VC007/
-VC008; an earlier pass wrongly dismissed those as false positives — they are corrected
-here to an open finding linked to C001. The fix is a bounded downward offset of the
-caption node (y 4.12 → ~3.62). A secondary, milder observation: the panel-b x-axis label
-'trap-distribution breadth (n)' hangs far below its axis and crowds the panel-c seam;
-left as an observation, not opened as a finding.
+Resolved finding C001 (MINOR, label_placement): the conventional-cluster caption
+'PI, PDMS, PET' no longer crosses the panel-b x-axis line. The applied patch moves the
+caption from anchor=north at y=4.12 to anchor=south at y=5.58, placing it above the blue
+conventional cluster while leaving the panel-b x-axis and panel-c seam clear. A direct
+post-patch compile reports no text collisions, no text-boundary clashes, and no
+label-path proximity candidates.
 
-The remaining visual-clash candidates (VC001–VC005, VC009, VC010) are false positives or
+The remaining visual-clash candidates (VC001–VC010) are false positives or
 accepted direct labels, and the eighteen undeclared-geometry candidates UG001–UG018 are
 intended schematic geometry. Print-scale proxies at 178 mm and thumbnail width keep the
-message legible. One open finding (C001) remains.
+message legible. No open finding remains.
