@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig2_trap_design_space
-source_critique_hash: sha256:cfde5b4a9f84a3e18d2eee88eda55f2d6d032f4dd863967ada95520875b73d9b
+source_critique_hash: sha256:b4704cefb5ddb1e65e95e7fbb3bf9627a0fd2ded40d62f92b29cb20c48d0b048
 decisions:
 - finding_id: C001
   decision: apply

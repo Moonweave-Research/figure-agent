@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: '2026-06-08T11:39:33Z'
+generated_at: '2026-06-30T08:52:00Z'
 generator: critique_brief.py
-generator_version: sha256:fcc9b3cafab5bd0b965e3de3a984e98de9a643d23ab544c3bcdc1d7d223f78a4
+generator_version: sha256:0bf8abd441f6688290a6abc8b4fda75a2d131526615ba5df7b07dc4d1ec04c94
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:4a5bd34c6bc8ccde0617ee41871ec84cc13f7af93932da1995469be0cfe1c5a0
+critique_input_hash: sha256:ac68e79690d73fdcff333c982b16a270cf6213a808cb631356a053e4e0ea30de
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -383,7 +383,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:4a5bd34c6bc8ccde0617ee41871ec84cc13f7af93932da1995469be0cfe1c5a0
+  assessed_artifact_hash: sha256:ac68e79690d73fdcff333c982b16a270cf6213a808cb631356a053e4e0ea30de
   benchmark_level: high_impact_candidate
   confidence: medium
   blockers: []
