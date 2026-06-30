@@ -331,7 +331,9 @@ def build_human_decision_digest(rows: list[dict[str, Any]]) -> dict[str, Any]:
         groups[group].append(
             {
                 "fixture": row.get("fixture"),
-                "agent_recommendation": release_recommendation or style_recommendation or "review row",
+                "agent_recommendation": (
+                    release_recommendation or style_recommendation or "review row"
+                ),
                 "risk": release_risk or style_risk or _cell(row.get("first_blocker")),
                 "next_action": _digest_next_action(group),
             }
