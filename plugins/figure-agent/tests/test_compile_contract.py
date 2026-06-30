@@ -60,6 +60,33 @@ compile smoke
 
 
 @pytest.mark.skipif(
+    shutil.which("lualatex") is None
+    or shutil.which("pdftocairo") is None
+    or shutil.which("pdftotext") is None
+    or shutil.which("pdftoppm") is None,
+    reason="requires lualatex, pdftocairo, pdftotext, and pdftoppm",
+)
+def test_compile_wraps_bare_tikz_snippet(tmp_path: Path) -> None:
+    tex_path = tmp_path / "bare_snippet.tex"
+    tex_path.write_text(r"\node (label-a) at (0,0) {Bare Label};
+", encoding="utf-8")
+
+    result = subprocess.run(
+        ["bash", "scripts/compile.sh", str(tex_path)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert (tmp_path / "build" / "bare_snippet.pdf").exists()
+    assert (tmp_path / "build" / "bare_snippet.png").exists()
+    assert not (tmp_path / "bare_snippet.pdf").exists()
+    assert not (tmp_path / "bare_snippet.png").exists()
+
+
+@pytest.mark.skipif(
     shutil.which("lualatex") is None or shutil.which("pdftocairo") is None,
     reason="requires lualatex and pdftocairo",
 )
