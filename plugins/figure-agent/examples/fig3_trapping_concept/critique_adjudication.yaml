@@ -1,0 +1,9 @@
+schema: figure-agent.critique-adjudication.v1
+fixture: fig3_trapping_concept
+source_critique_hash: sha256:189064735606758237e6368544e5b95811bc3f49b41a8f1d84dff2b7c731c3b9
+decisions:
+- finding_id: C001
+  decision: needs_human
+  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C001.

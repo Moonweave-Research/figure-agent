@@ -297,28 +297,117 @@ journal_grade_assessment:
   score_rationale: Current artifact is scientifically plausible and readable at full size, but annotation collisions are the
     next quality bottleneck.
 aesthetic_antipattern_audit:
-- id: draft_schematic_polish
+- id: annotation_noise_competes_with_science
   verdict: present
   severity: MINOR
   route: tikz_patch
-  evidence: Current render and visual-clash crops were inspected for draft schematic polish.
+  evidence: VC003, VC005, VC006, VC007, and VC008 show annotation crowding in the current render.
   rationale: Current artifact needs a local TikZ label-position patch, not SVG polish.
   linked_evidence:
-  - crop_audit_log
+  - C001
+  - quality_axes.composition_layout
+- id: childish_shape_language
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
+- id: cramped_or_dead_whitespace
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
+- id: dead_flat_vector_finish
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
+- id: decorative_detail_without_explanatory_value
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
+- id: generic_template_look
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
+- id: low_authority_typography
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
+- id: panel_style_mismatch
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
+- id: poster_gradient_decoration
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
+- id: reference_overcopying
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
+- id: reference_underlearning
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
+- id: uniform_line_weight_monotony
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
+- id: weak_hero_anchor
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Current render, print-scale crops, and required audit crops were inspected.
+  rationale: This antipattern is not currently observed as a blocking issue.
+  linked_evidence: []
 weakest_panel_coherence:
-- panel_id: a
-  weakness: Panel a carries dense shallow/deep annotation text crossed by rule/guide geometry.
-  severity: MINOR
+  panel_id: a
+  subregion_id: shallow_deep_annotation_region
+  weakness_type: composition
   route: tikz_patch
-  evidence: VC003, VC005, VC006, VC007, VC008 crops.
-  rationale: Current artifact panel coherence was inspected directly.
+  evidence: VC003, VC005, VC006, VC007, and VC008 show local annotation crowding.
+  rationale: Panel a is the limiter because shallow/deep labels are crossed or crowded by rule geometry.
   linked_evidence:
-  - crop_audit_log
+  - C001
+  - quality_axes.label_annotation_semantics
 reference_learning_accountability:
-- id: no_reference_pack
+  learned_principle: not_applicable
+  rejected_copy_target: not_applicable
+  overcopying: not_applicable
+  underlearning: not_applicable
   route: none
   evidence: No active reference-learning pack is declared in the current fixture brief/spec.
-  rationale: No reference-learning pack is active; critique is grounded in briefing/spec/current render only.
+  rationale: Critique is grounded in briefing, spec, current render, and detector evidence rather than reference transfer.
   linked_evidence: []
 micro_defects:
 - id: M001
@@ -450,127 +539,245 @@ micro_defects:
   accept_simplification_reason: intentional_schematic
   accept_simplification_rationale: VC009 is acceptable because the candidate is intentional schematic typography over separate
     light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
+- id: M010
+  crop: examples/fig4_trap_energy_diagram/build/audit_crops/full_q1.png
+  kind: label_path_near_miss
+  severity: MINOR
+  observation: UG001 was inspected through undeclared_geometry.json and corresponds to the same local annotation/rule crowding tracked by C001.
+  linked_finding_id: C001
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG001
+  status: open
+  accept_simplification_reason: ''
+  accept_simplification_rationale: ''
 crop_audit_log:
 - crop_id: VC001_Trap
   path: build/audit_crops/visual_clash/VC001_Trap.png
   source: visual_clash:VC001
+  observed_objects:
+  - VC001_Trap
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - VC001
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
   unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible anomaly was observed in this crop.
+  anomaly_link: ''
 - crop_id: VC002_of
   path: build/audit_crops/visual_clash/VC002_of.png
   source: visual_clash:VC002
+  observed_objects:
+  - VC002_of
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - VC002
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
   unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible anomaly was observed in this crop.
+  anomaly_link: ''
 - crop_id: VC003_shallow
   path: build/audit_crops/visual_clash/VC003_shallow.png
   source: visual_clash:VC003
+  observed_objects:
+  - VC003_shallow
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - VC003
   inspected: true
   verdict: defect
   linked_micro_defect_id: M003
   rationale: Crop inspected directly; visible defect is linked to the named micro defect.
-  unintended_visible_anomaly: label/rule crowding visible in this crop
+  unintended_visible_anomaly: present
+  anomaly_rationale: The visible anomaly is the linked label/rule crowding micro-defect.
+  anomaly_link: M003
 - crop_id: VC004_tail
   path: build/audit_crops/visual_clash/VC004_tail.png
   source: visual_clash:VC004
+  observed_objects:
+  - VC004_tail
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - VC004
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
   unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible anomaly was observed in this crop.
+  anomaly_link: ''
 - crop_id: VC005_0.1_0.3
   path: build/audit_crops/visual_clash/VC005_0.1_0.3.png
   source: visual_clash:VC005
+  observed_objects:
+  - VC005_0.1_0.3
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - VC005
   inspected: true
   verdict: defect
   linked_micro_defect_id: M005
   rationale: Crop inspected directly; visible defect is linked to the named micro defect.
-  unintended_visible_anomaly: label/rule crowding visible in this crop
+  unintended_visible_anomaly: present
+  anomaly_rationale: The visible anomaly is the linked label/rule crowding micro-defect.
+  anomaly_link: M005
 - crop_id: VC006_traps
   path: build/audit_crops/visual_clash/VC006_traps.png
   source: visual_clash:VC006
+  observed_objects:
+  - VC006_traps
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - VC006
   inspected: true
   verdict: defect
   linked_micro_defect_id: M006
   rationale: Crop inspected directly; visible defect is linked to the named micro defect.
-  unintended_visible_anomaly: label/rule crowding visible in this crop
+  unintended_visible_anomaly: present
+  anomaly_rationale: The visible anomaly is the linked label/rule crowding micro-defect.
+  anomaly_link: M006
 - crop_id: VC007_S_S
   path: build/audit_crops/visual_clash/VC007_S_S.png
   source: visual_clash:VC007
+  observed_objects:
+  - VC007_S_S
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - VC007
   inspected: true
   verdict: defect
   linked_micro_defect_id: M007
   rationale: Crop inspected directly; visible defect is linked to the named micro defect.
-  unintended_visible_anomaly: label/rule crowding visible in this crop
+  unintended_visible_anomaly: present
+  anomaly_rationale: The visible anomaly is the linked label/rule crowding micro-defect.
+  anomaly_link: M007
 - crop_id: VC008_eV
   path: build/audit_crops/visual_clash/VC008_eV.png
   source: visual_clash:VC008
+  observed_objects:
+  - VC008_eV
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - VC008
   inspected: true
   verdict: defect
   linked_micro_defect_id: M008
   rationale: Crop inspected directly; visible defect is linked to the named micro defect.
-  unintended_visible_anomaly: label/rule crowding visible in this crop
+  unintended_visible_anomaly: present
+  anomaly_rationale: The visible anomaly is the linked label/rule crowding micro-defect.
+  anomaly_link: M008
 - crop_id: VC009_crop
   path: build/audit_crops/visual_clash/VC009_crop.png
   source: visual_clash:VC009
+  observed_objects:
+  - VC009_crop
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - VC009
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
   unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible anomaly was observed in this crop.
+  anomaly_link: ''
 - crop_id: full_q1
   path: build/audit_crops/full_q1.png
   source: full_render
+  observed_objects:
+  - full_q1
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - full_q1
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
   unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible anomaly was observed in this crop.
+  anomaly_link: ''
 - crop_id: full_q2
   path: build/audit_crops/full_q2.png
   source: full_render
+  observed_objects:
+  - full_q2
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - full_q2
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
   unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible anomaly was observed in this crop.
+  anomaly_link: ''
 - crop_id: full_q3
   path: build/audit_crops/full_q3.png
   source: full_render
+  observed_objects:
+  - full_q3
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - full_q3
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
   unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible anomaly was observed in this crop.
+  anomaly_link: ''
 - crop_id: full_q4
   path: build/audit_crops/full_q4.png
   source: full_render
+  observed_objects:
+  - full_q4
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - full_q4
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
   unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible anomaly was observed in this crop.
+  anomaly_link: ''
 - crop_id: print_178mm
   path: build/audit_crops/print_178mm.png
   source: print_scale
+  observed_objects:
+  - print_178mm
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - print_178mm
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
   unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible anomaly was observed in this crop.
+  anomaly_link: ''
 - crop_id: print_thumbnail
   path: build/audit_crops/print_thumbnail.png
   source: print_scale
+  observed_objects:
+  - print_thumbnail
+  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
+  candidate_refs:
+  - print_thumbnail
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
   rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
   unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible anomaly was observed in this crop.
+  anomaly_link: ''
 panels: []
 findings:
 - id: C001
