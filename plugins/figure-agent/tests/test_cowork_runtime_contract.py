@@ -112,6 +112,58 @@ def test_fig_agent_closeout_uses_public_wrapper_without_type_error(
     ]
 
 
+def test_public_wrapper_bootstrap_checks_pdfplumber(monkeypatch: pytest.MonkeyPatch) -> None:
+    loader = importlib.machinery.SourceFileLoader(
+        "fig_agent_bin_dependency_contract",
+        str(PLUGIN_ROOT / "bin" / "fig-agent"),
+    )
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+
+    imported: list[str] = []
+
+    def fake_import_module(module_name: str) -> object:
+        imported.append(module_name)
+        if module_name == "pdfplumber":
+            raise ImportError(module_name)
+        return object()
+
+    monkeypatch.setattr(module.importlib, "import_module", fake_import_module)
+
+    assert module._missing_project_python_modules() == ["pdfplumber"]
+    assert imported == ["yaml", "PIL", "pdfplumber"]
+
+
+def test_public_wrapper_doctor_checks_pdfplumber(monkeypatch: pytest.MonkeyPatch) -> None:
+    loader = importlib.machinery.SourceFileLoader(
+        "fig_agent_bin_doctor_dependency_contract",
+        str(PLUGIN_ROOT / "bin" / "fig-agent"),
+    )
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+
+    imported: list[str] = []
+
+    def fake_import_module(module_name: str) -> object:
+        imported.append(module_name)
+        if module_name == "pdfplumber":
+            raise ImportError(module_name)
+        return object()
+
+    monkeypatch.setattr(module.shutil, "which", lambda _name: "/bin/tool")
+    monkeypatch.setattr(module.importlib, "import_module", fake_import_module)
+
+    deps = module._dependency_diagnostics()
+
+    assert deps["state"] == "missing"
+    assert deps["missing"] == ["python:pdfplumber"]
+    assert imported == ["yaml", "PIL", "pdfplumber"]
+
+
 def test_doctor_reports_workspace_missing_without_bundle_false_positive(
     tmp_path: Path,
 ) -> None:

@@ -40,7 +40,7 @@ import runtime_paths  # noqa: E402
 
 def _missing_project_python_modules() -> list[str]:
     missing = []
-    for module_name in ("yaml", "PIL"):
+    for module_name in ("yaml", "PIL", "pdfplumber"):
         try:
             importlib.import_module(module_name)
         except ImportError:
@@ -155,7 +155,7 @@ def _dependency_diagnostics() -> dict:
     tex_engine = os.environ.get("LATEX_ENGINE") or "lualatex"
     binaries = ("uv", "python3", tex_engine, "pdftocairo", "rsvg-convert")
     missing = [name for name in binaries if shutil.which(name) is None]
-    py_modules = ("yaml", "PIL")
+    py_modules = ("yaml", "PIL", "pdfplumber")
     for module_name in py_modules:
         try:
             importlib.import_module(module_name)
