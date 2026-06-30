@@ -567,6 +567,9 @@ def render_candidate_set(
             "apply_authority": candidate.get("apply_authority"),
             "effective_apply_authority": effective,
             "risk": candidate.get("risk"),
+            "expected_delta": candidate.get("expected_delta", []),
+            "semantic_risks": candidate.get("semantic_risks", []),
+            "boundedness": candidate.get("boundedness", {}),
             "rollback": candidate.get("rollback"),
         }
         if isinstance(candidate.get("source_defect"), dict):

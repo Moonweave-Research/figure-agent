@@ -231,6 +231,17 @@ def _manifest_summary(manifest: dict[str, Any]) -> dict[str, Any]:
         "artifact_count": len(artifacts) if isinstance(artifacts, list) else 0,
         "source_commit": base.get("source_commit") if isinstance(base, dict) else None,
         "risk": manifest.get("risk"),
+        "expected_delta": (
+            manifest.get("expected_delta") if isinstance(manifest.get("expected_delta"), list) else []
+        ),
+        "semantic_risks": (
+            manifest.get("semantic_risks")
+            if isinstance(manifest.get("semantic_risks"), list)
+            else []
+        ),
+        "boundedness": (
+            manifest.get("boundedness") if isinstance(manifest.get("boundedness"), dict) else {}
+        ),
         "stages": manifest.get("stages") if isinstance(manifest.get("stages"), dict) else {},
         "visual_review": manifest.get("visual_review")
         if isinstance(manifest.get("visual_review"), dict)
