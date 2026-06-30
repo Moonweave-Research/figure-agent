@@ -156,6 +156,15 @@ def run_queue(
         )
         for item in planned_items
     ]
+    queue_payload = {
+        "schema": queue.get("schema"),
+        "summary": queue.get("summary"),
+        "bottleneck_report": queue.get("bottleneck_report"),
+        "unfiltered_total": queue.get("unfiltered_total"),
+        "command_plan": command_plan,
+    }
+    if "workspace_diagnostic" in queue:
+        queue_payload["workspace_diagnostic"] = queue["workspace_diagnostic"]
     return {
         "schema": SCHEMA,
         "mode": mode,
@@ -165,13 +174,7 @@ def run_queue(
         "max_fixtures": max_fixtures,
         "fixtures": list(fixtures or []),
         "filters": queue.get("filters", {}),
-        "queue": {
-            "schema": queue.get("schema"),
-            "summary": queue.get("summary"),
-            "bottleneck_report": queue.get("bottleneck_report"),
-            "unfiltered_total": queue.get("unfiltered_total"),
-            "command_plan": command_plan,
-        },
+        "queue": queue_payload,
         "runs": runs,
         "summary": _summary(command_plan=command_plan, runs=runs),
     }
