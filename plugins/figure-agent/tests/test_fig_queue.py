@@ -2771,3 +2771,140 @@ def test_malformed_style_benchmark_pack_is_invalid_not_recommendation(
     assert "style_benchmark_pack" not in row
     assert "style_benchmark_pack" not in row["style_direction_packet"]
     assert queue["summary"]["by_style_benchmark_pack_state"] == {"invalid": 1}
+
+
+def test_queue_surfaces_design_direction_ready_human_choice(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    monkeypatch.setattr(
+        fig_queue.style_benchmark_pack,
+        "load_pack",
+        lambda name, *, workspace_root: {"state": "present"},
+    )
+    monkeypatch.setattr(
+        fig_queue.style_benchmark_comparison,
+        "load_comparison",
+        lambda name, *, workspace_root: {
+            "state": "present",
+            "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
+        },
+    )
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="design-direction-surfacing",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    row = queue["rows"][0]
+    assert row["design_direction_state"] == "ready_for_human_choice"
+    assert row["design_direction_packet_schema"] == "figure-agent.design-direction-packet.v1"
+    assert row["design_direction_default"] == (
+        "keep_current_style_until_candidate_beats_benchmark"
+    )
+    assert row["design_direction_next_agent_action"] == (
+        "prepare_bounded_candidate_or_stop_for_human_choice"
+    )
+    assert row["design_direction_human_question"].startswith("I recommend keeping")
+    assert row["bottleneck_category"] == "template_style"
+    assert row["required_actor"] == "human"
+    assert queue["summary"]["by_design_direction_state"] == {"ready_for_human_choice": 1}
+    assert queue["command_plan"]["executable_count"] == 0
+
+
+@pytest.mark.parametrize(
+    ("pack_state", "comparison_state", "expected_state", "expected_blocker"),
+    [
+        ("missing", "present", "blocked_missing_style_pack", "style_benchmark_pack_missing"),
+        ("present", "missing", "blocked_missing_comparison", "style_benchmark_comparison_missing"),
+    ],
+)
+def test_queue_surfaces_design_direction_blockers(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    pack_state: str,
+    comparison_state: str,
+    expected_state: str,
+    expected_blocker: str,
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    monkeypatch.setattr(
+        fig_queue.style_benchmark_pack,
+        "load_pack",
+        lambda name, *, workspace_root: {"state": pack_state},
+    )
+    monkeypatch.setattr(
+        fig_queue.style_benchmark_comparison,
+        "load_comparison",
+        lambda name, *, workspace_root: {"state": comparison_state},
+    )
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="design-direction-surfacing",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["design_direction_state"] == expected_state
+    assert row["design_direction_blocker_reason"] == expected_blocker
+    assert row["bottleneck_category"] == "template_style"
+
+
+def test_polish_queue_surfaces_svg_polish_evidence_missing_as_design_blocker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="human_gate_stop",
+            stop_boundary="mode_forbidden",
+            first_blocker="svg_polish_not_ready",
+            svg_polish_gate={
+                "state": "blocked",
+                "can_start_svg_polish": False,
+                "recommended_path": "continue_tikz",
+                "next_action": "run_fig_critique",
+                "blocking_sources": ["driver_prerequisite"],
+            },
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    monkeypatch.setattr(
+        fig_queue.style_benchmark_pack,
+        "load_pack",
+        lambda name, *, workspace_root: {"state": "present"},
+    )
+    monkeypatch.setattr(
+        fig_queue.style_benchmark_comparison,
+        "load_comparison",
+        lambda name, *, workspace_root: {"state": "present"},
+    )
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="polish",
+        goal="design-direction-surfacing",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["svg_polish_evidence_state"] == "blocked_missing_positive_readiness"
+    assert row["design_direction_state"] == "ready_for_human_choice"
+    assert row["design_direction_blocker_reason"] == "svg_polish_evidence_missing"
