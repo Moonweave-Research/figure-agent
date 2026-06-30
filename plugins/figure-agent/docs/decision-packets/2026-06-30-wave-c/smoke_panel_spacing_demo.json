@@ -1,0 +1,71 @@
+{
+  "schema": "figure-agent.style-direction-packet.v1",
+  "packet_kind": "bounded_spacing_style_lock_packet",
+  "fixture": "smoke_panel_spacing_demo",
+  "packet_schema": "figure-agent.style-direction-packet.v1",
+  "source_decision_record": "docs/decision-records/2026-06-30-wave-c/smoke_panel_spacing_demo.json",
+  "source_queue_run_id": "wave-c-target-selection-review-2026-06-30",
+  "queue_goal": "wave-c-target-selection",
+  "decision_kind": "request_bounded_tikz_polish",
+  "human_decision": "selected_as_demo_bounded_polish_candidate",
+  "agent_recommendation": "Use the demo fixture as a low-risk bounded-polish lane for spacing and style-rule extraction, not as a manuscript release target.",
+  "bounded_packet": {
+    "packet_kind": "bounded_spacing_style_lock_packet",
+    "target_surface": "panel spacing and local TikZ style rules",
+    "recommended_choice_id": "extract_spacing_style_lock",
+    "recommended_action": "Prepare a small comparison note for spacing/style invariants before any source polish slice is opened.",
+    "non_goals": [
+      "manuscript release acceptance",
+      "accepted-state mutation",
+      "generated export mutation",
+      "tracked golden mutation",
+      "figure source mutation"
+    ],
+    "style_lock_checks": [
+      "preserve fixture identity and panel semantics",
+      "compare current panel spacing before proposing TikZ edits",
+      "keep any future polish bounded to demo-fixture spacing/style extraction"
+    ]
+  },
+  "current_state": {
+    "benchmark_contract": "examples/smoke_panel_spacing_demo/benchmark_contract.yaml",
+    "primary_defect_class": "panel_boundary_overlap",
+    "candidate_family": "panel-layout",
+    "candidate_edit_class": "panel_spacing_adjust",
+    "detector_metric": "panel_spacing.boundary_overlap_count",
+    "detector_expectation": "decrease_or_equal",
+    "review_mode_interpretation": "demo fixture is safe for spacing/style dogfood, not manuscript acceptance"
+  },
+  "bounded_scope": {
+    "mutation_boundary": "no_source_mutation",
+    "allowed_adjustments": [
+      "prepare a spacing/style comparison note",
+      "extract style-lock checks",
+      "propose a later bounded TikZ polish slice"
+    ],
+    "forbidden_adjustments": [
+      "do not edit figure source files",
+      "do not write generated exports",
+      "do not edit accepted state",
+      "do not edit release state",
+      "do not edit tracked golden artifacts"
+    ]
+  },
+  "evidence_refs": [
+    "docs/milestones/2026-06-30-wave-c-dogfood-target-selection.md",
+    "docs/decision-records/2026-06-30-wave-c/smoke_panel_spacing_demo.json"
+  ],
+  "risk": {
+    "primary": "A demo spacing packet can be mistaken for manuscript acceptance unless it preserves the style-direction schema and no-source-mutation boundary."
+  },
+  "follow_up": {
+    "implementation_slice": "Extract a bounded panel-spacing/style-lock comparison packet; do not mutate source in this selection record."
+  },
+  "mutation_boundary": "no_source_mutation",
+  "safety": {
+    "source_mutation": false,
+    "release_state_mutation": false,
+    "golden_mutation": false,
+    "generated_export_mutation": false
+  }
+}
