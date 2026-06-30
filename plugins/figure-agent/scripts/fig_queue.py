@@ -28,6 +28,7 @@ OPERATOR_HANDOFF_SCHEMA = "figure-agent.queue-operator-handoff.v1"
 HUMAN_DECISION_PACKET_SCHEMA = "figure-agent.human-decision-packet.v1"
 RELEASE_DECISION_PACKET_SCHEMA = "figure-agent.release-decision-packet.v1"
 STYLE_DIRECTION_PACKET_SCHEMA = "figure-agent.style-direction-packet.v1"
+SVG_POLISH_EVIDENCE_PACKET_SCHEMA = "figure-agent.svg-polish-readiness-evidence.v1"
 HUMAN_DECISION_RECORD_SCHEMA = "figure-agent.human-decision-record.v1"
 HUMAN_DECISION_DIGEST_SCHEMA = "figure-agent.human-decision-digest.v1"
 BOTTLENECK_REPORT_SCHEMA = "figure-agent.queue-bottleneck-report.v1"
@@ -77,6 +78,7 @@ _FILTER_KEYS = (
     "svg_polish_next_action",
     "svg_polish_blocking_sources",
     "polish_blocker_reason",
+    "svg_polish_evidence_state",
     "style_benchmark_pack_state",
 )
 _ACTORS = (
@@ -219,6 +221,10 @@ def _row_from_summary(
     if polish_blocker is not None:
         row["polish_blocker"] = polish_blocker
         row["polish_blocker_reason"] = polish_blocker["reason"]
+    svg_polish_evidence = _svg_polish_evidence_packet(row, mode=mode)
+    if svg_polish_evidence is not None:
+        row["svg_polish_evidence_packet"] = svg_polish_evidence
+        row["svg_polish_evidence_state"] = svg_polish_evidence["state"]
     decision_packet = _release_decision_packet(row)
     if decision_packet is not None:
         row["decision_packet"] = decision_packet
@@ -414,6 +420,9 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     by_polish_blocker = _count(rows, "polish_blocker_reason")
     if by_polish_blocker:
         summary["by_polish_blocker_reason"] = by_polish_blocker
+    by_svg_polish_evidence = _count(rows, "svg_polish_evidence_state")
+    if by_svg_polish_evidence:
+        summary["by_svg_polish_evidence_state"] = by_svg_polish_evidence
     by_style_pack = _count(rows, "style_benchmark_pack_state")
     if by_style_pack:
         summary["by_style_benchmark_pack_state"] = by_style_pack
@@ -990,6 +999,57 @@ def _polish_blocker_detail(row: dict[str, Any], *, mode: str) -> dict[str, Any] 
     }
 
 
+def _svg_polish_evidence_packet(row: dict[str, Any], *, mode: str) -> dict[str, Any] | None:
+    if mode != "polish":
+        return None
+    fixture = _cell(row.get("fixture"))
+    can_start = row.get("can_start_svg_polish")
+    recommended_path = row.get("svg_polish_recommended_path")
+    next_action = row.get("svg_polish_next_action")
+    sources = row.get("svg_polish_blocking_sources")
+    source_list = (
+        [item for item in sources if isinstance(item, str)]
+        if isinstance(sources, list)
+        else []
+    )
+    is_positive = can_start is True and recommended_path == "ready_for_svg_polish"
+    packet: dict[str, Any] = {
+        "schema": SVG_POLISH_EVIDENCE_PACKET_SCHEMA,
+        "fixture": fixture,
+        "state": "ready_for_svg_polish" if is_positive else "not_qualified",
+        "can_start_svg_polish": can_start,
+        "recommended_path": recommended_path,
+        "next_action": next_action,
+        "blocking_sources": source_list,
+        "forbidden_scope": [
+            "scientific repair in SVG",
+            "semantic repair in SVG",
+            "label-target repair in SVG",
+            "release, export, or golden mutation from polish evidence",
+        ],
+        "human_gate": (
+            "SVG artifact mutation still requires an explicit "
+            "request_svg_polish_handoff_evidence decision record."
+        ),
+    }
+    if is_positive:
+        packet["positive_evidence"] = [
+            "can_start_svg_polish=true",
+            "recommended_path=ready_for_svg_polish",
+        ]
+        return packet
+
+    reason = row.get("polish_blocker_reason")
+    if not isinstance(reason, str) or not reason:
+        reason = "ready_for_svg_polish_evidence_missing"
+    packet["missing_prerequisite_reason"] = reason
+    packet["required_positive_evidence"] = [
+        "can_start_svg_polish=true",
+        "recommended_path=ready_for_svg_polish",
+    ]
+    return packet
+
+
 def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
     fixture = _cell(row.get("fixture"))
     actor = _cell(row.get("required_actor"))
@@ -1086,6 +1146,7 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
             "fixture": fixture,
             "required_actor": actor,
             "polish_blocker": polish_blocker,
+            "svg_polish_evidence_packet": row.get("svg_polish_evidence_packet"),
             "next_step": (
                 polish_blocker["next_step"]
                 if isinstance(polish_blocker, dict)
@@ -1133,44 +1194,47 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
     for row in rows:
         if row.get("action") == fig_driver.ACTION_COMPLETE:
             reason = "mode_scoped_complete"
-            complete.append(
-                {
-                    "fixture": row.get("fixture"),
-                    "action": row.get("action"),
-                    "required_actor": row.get("required_actor"),
-                    "blocking_source": row.get("blocking_source"),
-                    "stop_boundary": row.get("stop_boundary"),
-                    "reason": reason,
-                    "operator_handoff": _operator_handoff(row, reason=reason),
-                    "style_direction_packet": row.get("style_direction_packet"),
-                    "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
-                }
-            )
-            continue
-        reason = _blocked_reason(row)
-        if reason is None:
-            executable.append(
-                {
-                    "fixture": row.get("fixture"),
-                    "action": row.get("action"),
-                    "safe_command": row.get("safe_command"),
-                    "required_actor": row.get("required_actor"),
-                }
-            )
-            continue
-        blocked.append(
-            {
+            item = {
                 "fixture": row.get("fixture"),
                 "action": row.get("action"),
                 "required_actor": row.get("required_actor"),
                 "blocking_source": row.get("blocking_source"),
                 "stop_boundary": row.get("stop_boundary"),
-                "polish_blocker_reason": row.get("polish_blocker_reason"),
                 "reason": reason,
                 "operator_handoff": _operator_handoff(row, reason=reason),
+                "style_direction_packet": row.get("style_direction_packet"),
                 "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
             }
-        )
+            if row.get("svg_polish_evidence_state") is not None:
+                item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
+            complete.append(item)
+            continue
+        reason = _blocked_reason(row)
+        if reason is None:
+            item = {
+                "fixture": row.get("fixture"),
+                "action": row.get("action"),
+                "safe_command": row.get("safe_command"),
+                "required_actor": row.get("required_actor"),
+            }
+            if row.get("svg_polish_evidence_state") is not None:
+                item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
+            executable.append(item)
+            continue
+        item = {
+            "fixture": row.get("fixture"),
+            "action": row.get("action"),
+            "required_actor": row.get("required_actor"),
+            "blocking_source": row.get("blocking_source"),
+            "stop_boundary": row.get("stop_boundary"),
+            "polish_blocker_reason": row.get("polish_blocker_reason"),
+            "reason": reason,
+            "operator_handoff": _operator_handoff(row, reason=reason),
+            "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
+        }
+        if row.get("svg_polish_evidence_state") is not None:
+            item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
+        blocked.append(item)
     return {
         "schema": COMMAND_PLAN_SCHEMA,
         "executable_count": len(executable),
@@ -1734,6 +1798,7 @@ def print_table(queue: dict[str, Any]) -> None:
                 "polish_next",
                 "polish_blockers",
                 "polish_reason",
+                "svg_evidence",
             ]
         )
     if show_style_columns:
@@ -1759,6 +1824,7 @@ def print_table(queue: dict[str, Any]) -> None:
                     _cell(row.get("svg_polish_next_action")),
                     _cell(row.get("svg_polish_blocking_sources")),
                     _cell(row.get("polish_blocker_reason")),
+                    _cell(row.get("svg_polish_evidence_state")),
                 ]
             )
         if show_style_columns:
@@ -1796,6 +1862,7 @@ def _summary_table_keys() -> tuple[str, ...]:
         "by_svg_polish_next_action",
         "by_svg_polish_blocking_source",
         "by_polish_blocker_reason",
+        "by_svg_polish_evidence_state",
         "by_style_benchmark_pack_state",
     )
 
@@ -1823,6 +1890,7 @@ def _has_svg_polish_columns(rows: Any) -> bool:
         "svg_polish_recommended_path",
         "svg_polish_next_action",
         "svg_polish_blocking_sources",
+        "svg_polish_evidence_state",
     }
     return any(isinstance(row, dict) and not keys.isdisjoint(row) for row in rows)
 
@@ -1854,6 +1922,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
     parser.add_argument("--svg-polish-recommended-path")
     parser.add_argument("--svg-polish-next-action")
     parser.add_argument("--svg-polish-blocking-source", dest="svg_polish_blocking_sources")
+    parser.add_argument("--svg-polish-evidence-state")
     parser.add_argument("--style-benchmark-pack-state")
     parser.add_argument("--command-plan", action="store_true")
     parser.add_argument("--commands", action="store_true")
@@ -1881,6 +1950,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
             "svg_polish_recommended_path": args.svg_polish_recommended_path,
             "svg_polish_next_action": args.svg_polish_next_action,
             "svg_polish_blocking_sources": args.svg_polish_blocking_sources,
+            "svg_polish_evidence_state": args.svg_polish_evidence_state,
             "style_benchmark_pack_state": args.style_benchmark_pack_state,
         },
         include_command_plan=args.command_plan or args.commands,

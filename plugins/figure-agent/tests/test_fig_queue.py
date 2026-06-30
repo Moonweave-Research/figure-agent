@@ -888,6 +888,15 @@ def test_polish_queue_rows_surface_svg_polish_gate(
     assert row["svg_polish_blocking_sources"] == ["tikz_vs_svg_polish_trigger"]
     assert row["polish_blocker_reason"] == "continue_tikz_recommended"
     assert row["polish_blocker"]["upstream_packet"] == "style_direction_packet"
+    assert row["svg_polish_evidence_state"] == "not_qualified"
+    evidence = row["svg_polish_evidence_packet"]
+    assert evidence["schema"] == fig_queue.SVG_POLISH_EVIDENCE_PACKET_SCHEMA
+    assert evidence["missing_prerequisite_reason"] == "continue_tikz_recommended"
+    assert evidence["required_positive_evidence"] == [
+        "can_start_svg_polish=true",
+        "recommended_path=ready_for_svg_polish",
+    ]
+    assert "semantic repair in SVG" in evidence["forbidden_scope"]
 
 
 def test_polish_queue_summary_counts_svg_gate_and_blockers(
@@ -959,9 +968,21 @@ def test_polish_queue_summary_counts_svg_gate_and_blockers(
         "crop_audit_summary": 1,
         "tikz_vs_svg_polish_trigger": 1,
     }
+    assert queue["summary"]["by_svg_polish_evidence_state"] == {
+        "not_qualified": 1,
+        "ready_for_svg_polish": 1,
+    }
     assert queue["summary"]["by_polish_blocker_reason"] == {
         "continue_tikz_recommended": 1
     }
+    by_fixture = {row["fixture"]: row for row in queue["rows"]}
+    assert by_fixture["beta"]["svg_polish_evidence_packet"]["positive_evidence"] == [
+        "can_start_svg_polish=true",
+        "recommended_path=ready_for_svg_polish",
+    ]
+    assert by_fixture["alpha"]["svg_polish_evidence_packet"][
+        "missing_prerequisite_reason"
+    ] == "continue_tikz_recommended"
 
 
 def test_polish_queue_decomposes_mode_forbidden_prerequisites(
@@ -1034,6 +1055,10 @@ def test_polish_queue_decomposes_mode_forbidden_prerequisites(
     }
     manifest_handoff = queue["command_plan"]["blocked"][2]["operator_handoff"]
     assert manifest_handoff["polish_blocker"]["reason"] == (
+        "svg_polish_artifact_missing_or_stale"
+    )
+    assert manifest_handoff["svg_polish_evidence_packet"]["state"] == "not_qualified"
+    assert manifest_handoff["svg_polish_evidence_packet"]["missing_prerequisite_reason"] == (
         "svg_polish_artifact_missing_or_stale"
     )
 
@@ -1375,7 +1400,7 @@ def test_print_table_includes_svg_polish_columns_when_present(
     assert (
         "fixture\tactor\taction\tstop_boundary\tfirst_blocker\t"
         "svg_gate\tcan_svg\tpolish_path\tpolish_next\tpolish_blockers\t"
-        "polish_reason\tnext_step\tnext_command"
+        "polish_reason\tsvg_evidence\tnext_step\tnext_command"
     ) in out
     assert (
         "alpha\tworkflow_agent\trun_fig_loop\tmode_forbidden_action\t"
