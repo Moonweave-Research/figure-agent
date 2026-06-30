@@ -107,6 +107,10 @@ def _queue_filters_from_args(args: argparse.Namespace) -> dict[str, str | None]:
         "svg_polish_recommended_path": args.svg_polish_recommended_path,
         "svg_polish_next_action": args.svg_polish_next_action,
         "svg_polish_blocking_sources": args.svg_polish_blocking_sources,
+        "polish_blocker_reason": args.polish_blocker_reason,
+        "svg_polish_evidence_state": args.svg_polish_evidence_state,
+        "style_benchmark_pack_state": args.style_benchmark_pack_state,
+        "style_benchmark_comparison_state": args.style_benchmark_comparison_state,
     }
     missing = set(QUEUE_FILTER_KEYS) - set(values)
     extra = set(values) - set(QUEUE_FILTER_KEYS)
@@ -201,6 +205,10 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
     parser.add_argument("--svg-polish-recommended-path")
     parser.add_argument("--svg-polish-next-action")
     parser.add_argument("--svg-polish-blocking-source", dest="svg_polish_blocking_sources")
+    parser.add_argument("--polish-blocker-reason")
+    parser.add_argument("--svg-polish-evidence-state")
+    parser.add_argument("--style-benchmark-pack-state")
+    parser.add_argument("--style-benchmark-comparison-state")
     args = parser.parse_args(argv)
     if args.execute and args.dry_run:
         print(
