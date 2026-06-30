@@ -2074,117 +2074,190 @@ def test_wrapper_queue_from_parent_uses_plugin_examples() -> None:
     assert payload["summary"]["total"] > 0
 
 
-def test_human_decision_record_validation_rejects_unknown_kind_and_style_mutation() -> None:
-    record = {
-        "schema": fig_queue.HUMAN_DECISION_RECORD_SCHEMA,
-        "fixture": "fig1_overview_v2_pair_001_vault",
-        "packet_schema": fig_queue.STYLE_DIRECTION_PACKET_SCHEMA,
-        "packet_run_id": "queue-run-2026-06-30T14:00:00Z",
-        "decision_kind": "invent_new_visual_language_now",
-        "agent_recommendation": "keep_current_style_then_record_release_decision",
-        "human_decision": "keep current style",
-        "human_note": "Style packet is not release acceptance.",
-        "follow_up": "rerun /fig_queue --mode release",
-        "mutation_boundary": "release_state_mutation_allowed",
-    }
+def test_human_decision_digest_groups_queue_packets_without_mutation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    for name in [
+        "accept_me",
+        "force_golden_fixture",
+        "fig5_actuation_mechanism",
+        "needs_svg_evidence",
+    ]:
+        _write_fixture(tmp_path, name)
 
-    errors = fig_queue.validate_human_decision_record(record)
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        if name == "force_golden_fixture":
+            return _summary(
+                name,
+                action="release_blocked",
+                stop_boundary="force_golden_required",
+                first_blocker="export_tracked_golden",
+                blocking_source="force_golden_required",
+            )
+        if name == "needs_svg_evidence":
+            return _summary(
+                name,
+                action="polish_handoff_stop",
+                stop_boundary="mode_forbidden_action",
+                first_blocker="svg_polish_manifest_stale",
+                svg_polish_gate={
+                    "state": "blocked",
+                    "can_start_svg_polish": False,
+                    "next_action": "refresh_svg_polish_handoff",
+                    "blocking_items": [{"source": "svg_polish_manifest"}],
+                },
+            )
+        return _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="accepted_or_final_ready_required",
+            first_blocker="acceptance_not_declared",
+            blocking_source="accepted_or_final_ready_required",
+        )
 
-    assert any("decision_kind must be one of" in error for error in errors)
-    assert "style decisions must not authorize release or golden mutation" in errors
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
 
-
-def test_human_decision_record_validation_keeps_release_and_golden_boundaries_separate() -> None:
-    record = {
-        "schema": fig_queue.HUMAN_DECISION_RECORD_SCHEMA,
-        "fixture": "fig1_overview_v2_pair_001_vault",
-        "packet_schema": fig_queue.RELEASE_DECISION_PACKET_SCHEMA,
-        "packet_run_id": "queue-run-2026-06-30T14:00:00Z",
-        "decision_kind": "accept_current_generated_export",
-        "agent_recommendation": "accept_current_generated_export",
-        "human_decision": "accept current generated export",
-        "human_note": "Release acceptance does not force golden.",
-        "follow_up": "record accepted state explicitly",
-        "mutation_boundary": "golden_mutation_allowed",
-    }
-
-    errors = fig_queue.validate_human_decision_record(record)
-
-    assert "release acceptance decisions must not imply golden mutation" in errors
-
-
-def test_human_decision_digest_groups_queue_rows_and_excludes_dirty_stale_fig5() -> None:
-    rows = [
-        {
-            "fixture": "fig1_overview_v2_pair_001_vault",
-            "required_actor": "release_operator",
-            "render_state": "FRESH",
-            "first_blocker": "acceptance_not_declared",
-            "decision_packet": {
-                "schema": fig_queue.RELEASE_DECISION_PACKET_SCHEMA,
-                "recommended_choice_id": "accept_current_generated_export",
-                "choices": [
-                    {
-                        "id": "accept_current_generated_export",
-                        "risk": "may lock in the current solid manuscript style",
-                    }
-                ],
-            },
-            "style_direction_packet": {
-                "schema": fig_queue.STYLE_DIRECTION_PACKET_SCHEMA,
-                "agent_recommendation": "keep_current_style_then_record_release_decision",
-                "choices": [],
-            },
-        },
-        {
-            "fixture": "fig3_trapping_concept",
-            "required_actor": "svg_editor",
-            "render_state": "FRESH",
-            "first_blocker": "mode_forbidden_action",
-            "polish_blocker_reason": "continue_tikz_recommended",
-            "style_direction_packet": {
-                "schema": fig_queue.STYLE_DIRECTION_PACKET_SCHEMA,
-                "agent_recommendation": "keep_current_style_with_optional_bounded_tikz_polish",
-                "choices": [
-                    {
-                        "id": "bounded_tikz_source_polish",
-                        "risk": "should stay one local pass",
-                    }
-                ],
-            },
-        },
-        {
-            "fixture": "smoke_annotation_box_demo",
-            "required_actor": "svg_editor",
-            "render_state": "FRESH",
-            "first_blocker": "mode_forbidden_action",
-            "polish_blocker_reason": "ready_for_svg_polish_evidence_missing",
-        },
-        {
-            "fixture": "fig5_actuation_mechanism",
-            "required_actor": "workflow_agent",
-            "render_state": "STALE",
-            "first_blocker": "render_stale",
-        },
-    ]
-
-    digest = fig_queue.build_human_decision_digest(rows)
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="decision-dogfood",
+        fixtures=None,
+    )
+    digest = fig_queue.build_human_decision_digest(queue)
 
     assert digest["schema"] == "figure-agent.human-decision-digest.v1"
-    assert digest["mutation_boundary"] == "read_only_no_source_release_golden_mutation"
-    assert digest["group_counts"] == {
-        "accept_current_candidates": 1,
-        "bounded_tikz_polish_candidates": 1,
-        "redesign_benchmark_candidates": 0,
-        "svg_polish_evidence_missing": 1,
-        "dirty_stale_excluded": 1,
+    assert digest["source"] == "live fig_queue rows"
+    assert digest["safety"] == {
+        "source_mutation": False,
+        "release_state_mutation": False,
+        "golden_mutation": False,
     }
-    assert digest["groups"]["accept_current_candidates"][0]["fixture"] == (
-        "fig1_overview_v2_pair_001_vault"
+    assert digest["packet_schemas"] == [
+        "figure-agent.release-decision-packet.v1",
+        "figure-agent.style-direction-packet.v1",
+    ]
+    groups = {group["id"]: group for group in digest["groups"]}
+    assert [row["fixture"] for row in groups["accept_current_candidates"]["rows"]] == [
+        "accept_me"
+    ]
+    assert groups["accept_current_candidates"]["rows"][0]["packet_schemas"] == [
+        "figure-agent.release-decision-packet.v1",
+        "figure-agent.style-direction-packet.v1",
+    ]
+    assert groups["redesign_benchmark_candidates"]["rows"][0]["fixture"] == (
+        "force_golden_fixture"
     )
-    assert digest["groups"]["dirty_stale_excluded"][0]["fixture"] == (
+    assert groups["svg_polish_evidence_missing"]["rows"][0]["fixture"] == (
+        "needs_svg_evidence"
+    )
+    assert groups["dirty_stale_fixtures_excluded"]["rows"][0]["fixture"] == (
         "fig5_actuation_mechanism"
     )
-    assert digest["groups"]["dirty_stale_excluded"][0]["next_action"] == (
-        "exclude from strategy work unless explicitly targeted"
+    assert "explicitly targets" in groups["dirty_stale_fixtures_excluded"]["next_action"]
+
+
+def test_human_decision_digest_does_not_exclude_targeted_fig5(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "fig5_actuation_mechanism")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="accepted_or_final_ready_required",
+            first_blocker="acceptance_not_declared",
+            blocking_source="accepted_or_final_ready_required",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="decision-dogfood",
+        fixtures=["fig5_actuation_mechanism"],
     )
+    digest = fig_queue.build_human_decision_digest(
+        queue,
+        targeted_fixtures=["fig5_actuation_mechanism"],
+    )
+
+    groups = {group["id"]: group for group in digest["groups"]}
+    assert groups["dirty_stale_fixtures_excluded"]["rows"] == []
+    assert [row["fixture"] for row in groups["accept_current_candidates"]["rows"]] == [
+        "fig5_actuation_mechanism"
+    ]
+
+
+def test_main_outputs_human_decision_digest_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="accepted_or_final_ready_required",
+            first_blocker="acceptance_not_declared",
+            blocking_source="accepted_or_final_ready_required",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    assert (
+        fig_queue.main(
+            [
+                "--mode",
+                "release",
+                "--goal",
+                "decision-dogfood",
+                "--human-decision-digest",
+                "--json",
+            ],
+            repo_root=tmp_path,
+        )
+        == 0
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.human-decision-digest.v1"
+    assert payload["groups"][0]["id"] == "accept_current_candidates"
+    assert payload["groups"][0]["rows"][0]["fixture"] == "alpha"
+
+
+def test_main_outputs_human_decision_digest_table(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="accepted_or_final_ready_required",
+            first_blocker="acceptance_not_declared",
+            blocking_source="accepted_or_final_ready_required",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    assert (
+        fig_queue.main(
+            [
+                "--mode",
+                "release",
+                "--goal",
+                "decision-dogfood",
+                "--human-decision-digest",
+            ],
+            repo_root=tmp_path,
+        )
+        == 0
+    )
+
+    out = capsys.readouterr().out
+    assert "human_decision_digest mode=release total=1 digest_rows=1" in out
+    assert "accept-current candidates (1)" in out
+    assert "- alpha: recommend=accept_current_generated_export" in out
