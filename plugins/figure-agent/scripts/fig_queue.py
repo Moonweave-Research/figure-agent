@@ -25,6 +25,7 @@ SCHEMA = "figure-agent.fixture-driver-queue.v1"
 COMMAND_PLAN_SCHEMA = "figure-agent.fixture-command-plan.v1"
 OPERATOR_HANDOFF_SCHEMA = "figure-agent.queue-operator-handoff.v1"
 HUMAN_DECISION_PACKET_SCHEMA = "figure-agent.human-decision-packet.v1"
+RELEASE_DECISION_PACKET_SCHEMA = "figure-agent.release-decision-packet.v1"
 BOTTLENECK_REPORT_SCHEMA = "figure-agent.queue-bottleneck-report.v1"
 WORKSPACE_DIAGNOSTIC_SCHEMA = "figure-agent.queue-workspace-diagnostic.v1"
 BOTTLENECK_CATEGORIES = (
@@ -93,9 +94,7 @@ def _fixture_names(repo_root: Path, fixtures: list[str] | None) -> list[str]:
     )
 
 
-def _workspace_diagnostic(
-    repo_root: Path, fixtures: list[str] | None
-) -> dict[str, Any] | None:
+def _workspace_diagnostic(repo_root: Path, fixtures: list[str] | None) -> dict[str, Any] | None:
     if fixtures:
         return None
     examples_dir = repo_root / "examples"
@@ -155,9 +154,7 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
     next_action = summary.get("next_action_summary")
     if isinstance(next_action, dict) and next_action.get("action") == fig_driver.ACTION_COMPLETE:
         boundary = next_action.get("decision_boundary")
-        blocks_progress = (
-            isinstance(boundary, dict) and boundary.get("blocks_progress") is True
-        )
+        blocks_progress = isinstance(boundary, dict) and boundary.get("blocks_progress") is True
         if not blocks_progress:
             action = fig_driver.ACTION_COMPLETE
     row = {
@@ -174,6 +171,9 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
         "critique_state": status.get("critique_state"),
         "export_state": status.get("export_state"),
         "acceptance_state": status.get("acceptance_state"),
+        "final_artifact_state": status.get("final_artifact_state"),
+        "final_artifact_kind": status.get("final_artifact_kind"),
+        "final_artifact_path": status.get("final_artifact_path"),
         "publication_gate_state": status.get("publication_gate_state"),
         "release_ready": status.get("release_ready"),
         "required_actor": required_actor_for_driver_summary(summary),
@@ -184,6 +184,9 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
     if isinstance(guidance, dict):
         row["operator_guidance"] = guidance
     row.update(_svg_polish_fields(summary, mode=mode))
+    decision_packet = _release_decision_packet(row)
+    if decision_packet is not None:
+        row["decision_packet"] = decision_packet
     category = _bottleneck_category_for_row(row)
     if category is not None:
         row["bottleneck_category"] = category
@@ -547,6 +550,137 @@ def _human_decision_packet(row: dict[str, Any], *, actor: str) -> dict[str, Any]
     }
 
 
+def _release_current_state(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "render_state": row.get("render_state"),
+        "critique_state": row.get("critique_state"),
+        "export_state": row.get("export_state"),
+        "acceptance_state": row.get("acceptance_state"),
+        "final_artifact_state": row.get("final_artifact_state"),
+        "final_artifact_kind": row.get("final_artifact_kind"),
+        "final_artifact_path": row.get("final_artifact_path"),
+        "publication_gate_state": row.get("publication_gate_state"),
+        "release_ready": row.get("release_ready"),
+    }
+
+
+def _release_decision_choices(row: dict[str, Any]) -> list[dict[str, Any]]:
+    fixture = _cell(row.get("fixture"))
+    final_kind = row.get("final_artifact_kind")
+    final_state = row.get("final_artifact_state")
+    choices = [
+        {
+            "id": "accept_current_generated_export",
+            "label": "Accept current generated export",
+            "effect": (
+                "record human acceptance for the generated export when the preview is acceptable"
+            ),
+            "risk": (
+                "may lock in the current solid manuscript style without a broader "
+                "visual-language redesign"
+            ),
+            "follow_up": {
+                "command": None,
+                "manual_record_path": f"examples/{fixture}/acceptance",
+            },
+        },
+        {
+            "id": "declare_final_artifact",
+            "label": "Declare final artifact",
+            "effect": (
+                "record an explicit final artifact such as a polished SVG manifest "
+                "when it is the intended release asset"
+            ),
+            "risk": (
+                "a missing, stale, or invalid final artifact keeps release blocked "
+                "until the declaration is repaired"
+            ),
+            "follow_up": {
+                "command": None,
+                "manual_record_path": f"examples/{fixture}/spec.yaml final_artifact",
+            },
+        },
+        {
+            "id": "reject_current_artifact",
+            "label": "Reject current artifact",
+            "effect": (
+                "keep accepted/final-ready state unset and send the fixture back "
+                "to dogfood or style work"
+            ),
+            "risk": "preserves quality control but delays release closure",
+            "follow_up": {"command": "rerun /fig_queue after recording rejection"},
+        },
+        {
+            "id": "defer_for_dogfood",
+            "label": "Defer for dogfood",
+            "effect": "postpone release mutation and request another bounded review/style slice",
+            "risk": "safe default, but can keep a visually adequate fixture from shipping",
+            "follow_up": {"command": "rerun /fig_queue --mode review"},
+        },
+    ]
+    if final_kind == "polished_svg" and final_state in {
+        "MISSING",
+        "STALE",
+        "INVALID",
+        "BLOCKED",
+    }:
+        choices[1] = choices[1] | {
+            "warning": (
+                f"declared polished SVG final artifact is {final_state}; "
+                "repair or refresh it before treating it as final"
+            ),
+        }
+    if final_kind == "polished_svg" and final_state == "FRESH":
+        choices[1] = choices[1] | {
+            "evidence": "declared polished SVG final artifact is fresh",
+        }
+    return choices
+
+
+def _release_decision_packet(row: dict[str, Any]) -> dict[str, Any] | None:
+    if row.get("action") != fig_driver.ACTION_RELEASE_BLOCKED:
+        return None
+    stop_boundary = row.get("stop_boundary")
+    if stop_boundary not in {
+        fig_driver.STOP_ACCEPTED_OR_FINAL_READY,
+        fig_driver.STOP_FORCE_GOLDEN,
+    }:
+        return None
+    fixture = _cell(row.get("fixture"))
+    force_golden = stop_boundary == fig_driver.STOP_FORCE_GOLDEN
+    packet_kind = (
+        "force_golden_decision_packet" if force_golden else "release_acceptance_decision_packet"
+    )
+    recommendation = (
+        "Do not force the tracked golden automatically. Ask the release "
+        "operator to approve, reject, or defer the protected baseline change "
+        "after reviewing the prepared diff."
+        if force_golden
+        else "Keep the release boundary blocked until a human explicitly accepts "
+        "the current generated export or declares a fresh final artifact."
+    )
+    recommended_choice = "defer_for_dogfood" if force_golden else "accept_current_generated_export"
+    return {
+        "schema": RELEASE_DECISION_PACKET_SCHEMA,
+        "packet_kind": packet_kind,
+        "fixture": fixture,
+        "boundary": stop_boundary,
+        "required_actor": _cell(row.get("required_actor")),
+        "current_state": _release_current_state(row),
+        "agent_recommendation": recommendation,
+        "recommended_choice_id": recommended_choice,
+        "choices": _release_decision_choices(row),
+        "evidence_refs": _decision_packet_evidence_refs(row),
+        "follow_up": {
+            "after_decision": "rerun /fig_queue --mode release",
+            "do_not_do": [
+                "do not mutate accepted, golden, or publication state implicitly",
+                "do not treat numeric scores as release authority",
+            ],
+        },
+    }
+
+
 def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
     fixture = _cell(row.get("fixture"))
     actor = _cell(row.get("required_actor"))
@@ -617,9 +751,11 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
             "schema": OPERATOR_HANDOFF_SCHEMA,
             "fixture": fixture,
             "required_actor": actor,
-            "decision_packet": _human_decision_packet(row, actor=actor),
+            "decision_packet": row.get("decision_packet")
+            or _human_decision_packet(row, actor=actor),
             "next_step": (
-                "Perform explicit release/golden review; do not force golden implicitly."
+                "Review the fixture-specific release decision packet; do not force golden "
+                "or acceptance implicitly."
             ),
             "command": None,
             "reason": reason,
@@ -724,6 +860,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "complete": complete,
     }
 
+
 def _bottleneck_leaders(rows: list[dict[str, Any]], key: str) -> list[dict[str, Any]]:
     counts = _count(rows, key)
     return [
@@ -776,11 +913,7 @@ def _row_mentions(row: dict[str, Any], tokens: tuple[str, ...]) -> bool:
 def _row_fields_mention(
     row: dict[str, Any], tokens: tuple[str, ...], fields: tuple[str, ...]
 ) -> bool:
-    values = [
-        value.lower()
-        for field in fields
-        if isinstance((value := row.get(field)), str)
-    ]
+    values = [value.lower() for field in fields if isinstance((value := row.get(field)), str)]
     text = " ".join(values)
     return any(token in text for token in tokens)
 
@@ -862,16 +995,12 @@ def _category_signals(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 signal_counts[f"{key}:{value}"] += 1
     return [
         {"key": value, "count": count}
-        for value, count in sorted(
-            signal_counts.items(), key=lambda item: (-item[1], item[0])
-        )[:5]
+        for value, count in sorted(signal_counts.items(), key=lambda item: (-item[1], item[0]))[:5]
     ]
 
 
 def _bottleneck_category_rollup(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    grouped: dict[str, list[dict[str, Any]]] = {
-        category: [] for category in BOTTLENECK_CATEGORIES
-    }
+    grouped: dict[str, list[dict[str, Any]]] = {category: [] for category in BOTTLENECK_CATEGORIES}
     for row in rows:
         category = _effective_bottleneck_category(row)
         if category is not None:
@@ -1028,9 +1157,7 @@ def print_table(queue: dict[str, Any]) -> None:
     show_svg_columns = _has_svg_polish_columns(rows)
     header = ["fixture", "actor", "action", "stop_boundary", "first_blocker"]
     if show_svg_columns:
-        header.extend(
-            ["svg_gate", "can_svg", "polish_path", "polish_next", "polish_blockers"]
-        )
+        header.extend(["svg_gate", "can_svg", "polish_path", "polish_next", "polish_blockers"])
     header.extend(["next_step", "next_command"])
     print("\t".join(header))
     for row in rows:
@@ -1059,11 +1186,7 @@ def print_table(queue: dict[str, Any]) -> None:
         )
         print("\t".join(cells))
     summary = queue.get("summary", {})
-    print(
-        "summary "
-        f"total={summary.get('total', 0)} "
-        f"errors={summary.get('errors', 0)}"
-    )
+    print(f"summary total={summary.get('total', 0)} errors={summary.get('errors', 0)}")
     for key in _summary_table_keys():
         formatted = _format_summary_counts(summary.get(key))
         if formatted:
@@ -1133,9 +1256,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
     args = parser.parse_args(argv)
 
     resolved_repo_root = (
-        runtime_paths.resolve_runtime_paths().workspace_root
-        if repo_root is None
-        else repo_root
+        runtime_paths.resolve_runtime_paths().workspace_root if repo_root is None else repo_root
     )
     queue = build_queue(
         repo_root=resolved_repo_root,

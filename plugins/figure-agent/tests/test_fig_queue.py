@@ -35,6 +35,9 @@ def _summary(
             "critique_state": "FRESH",
             "export_state": "FRESH",
             "acceptance_state": "NOT_DECLARED",
+            "final_artifact_state": "FRESH",
+            "final_artifact_kind": "generated_export",
+            "final_artifact_path": f"exports/{name}.svg",
             "publication_gate_state": "NOT_APPLICABLE",
             "release_ready": False,
         },
@@ -386,6 +389,131 @@ def test_queue_command_plan_uses_operator_guidance_for_complete_rows(
     assert queue["command_plan"]["complete"][0]["reason"] == "mode_scoped_complete"
 
 
+def test_release_queue_row_includes_fixture_specific_acceptance_packet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="accepted_or_final_ready_required",
+            first_blocker="acceptance_not_declared",
+            blocking_source="accepted_or_final_ready_required",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="triage",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    row = queue["rows"][0]
+    packet = row["decision_packet"]
+    assert packet["schema"] == "figure-agent.release-decision-packet.v1"
+    assert packet["packet_kind"] == "release_acceptance_decision_packet"
+    assert packet["boundary"] == "accepted_or_final_ready_required"
+    assert packet["current_state"] == {
+        "render_state": "FRESH",
+        "critique_state": "FRESH",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "final_artifact_state": "FRESH",
+        "final_artifact_kind": "generated_export",
+        "final_artifact_path": "exports/alpha.svg",
+        "publication_gate_state": "NOT_APPLICABLE",
+        "release_ready": False,
+    }
+    assert packet["recommended_choice_id"] == "accept_current_generated_export"
+    assert [choice["id"] for choice in packet["choices"]] == [
+        "accept_current_generated_export",
+        "declare_final_artifact",
+        "reject_current_artifact",
+        "defer_for_dogfood",
+    ]
+    assert packet["choices"][0]["follow_up"]["manual_record_path"] == ("examples/alpha/acceptance")
+    assert queue["command_plan"]["blocked"][0]["operator_handoff"]["decision_packet"] == packet
+
+
+def test_release_packet_distinguishes_force_golden_boundary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="force_golden_required",
+            first_blocker="export_tracked_golden",
+            blocking_source="force_golden_required",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="triage",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    packet = queue["rows"][0]["decision_packet"]
+    assert packet["packet_kind"] == "force_golden_decision_packet"
+    assert packet["boundary"] == "force_golden_required"
+    assert packet["recommended_choice_id"] == "defer_for_dogfood"
+    assert "Do not force" in packet["agent_recommendation"]
+
+
+def test_release_packet_flags_declared_polished_svg_final_artifact_states(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "missing_svg")
+    _write_fixture(tmp_path, "stale_svg")
+    _write_fixture(tmp_path, "fresh_svg")
+
+    final_states = {
+        "missing_svg": "MISSING",
+        "stale_svg": "STALE",
+        "fresh_svg": "FRESH",
+    }
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="accepted_or_final_ready_required",
+            first_blocker="acceptance_not_declared",
+            blocking_source="accepted_or_final_ready_required",
+        )
+        summary["status"]["final_artifact_state"] = final_states[name]
+        summary["status"]["final_artifact_kind"] = "polished_svg"
+        summary["status"]["final_artifact_path"] = "polish/svg_polish_manifest.json"
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="triage",
+        fixtures=None,
+    )
+
+    packets = {row["fixture"]: row["decision_packet"] for row in queue["rows"]}
+    assert "is MISSING" in packets["missing_svg"]["choices"][1]["warning"]
+    assert "is STALE" in packets["stale_svg"]["choices"][1]["warning"]
+    assert packets["fresh_svg"]["choices"][1]["evidence"] == (
+        "declared polished SVG final artifact is fresh"
+    )
+
+
 def test_release_operator_handoff_includes_decision_packet(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -675,9 +803,7 @@ def test_polish_queue_filters_ready_svg_polish_candidates(
     assert queue["unfiltered_total"] == 2
     assert [row["fixture"] for row in queue["rows"]] == ["beta"]
     assert queue["summary"]["by_svg_polish_gate_state"] == {"ready": 1}
-    assert queue["summary"]["by_svg_polish_recommended_path"] == {
-        "ready_for_svg_polish": 1
-    }
+    assert queue["summary"]["by_svg_polish_recommended_path"] == {"ready_for_svg_polish": 1}
 
 
 def test_polish_queue_filters_svg_polish_blocking_source(
@@ -721,9 +847,7 @@ def test_polish_queue_filters_svg_polish_blocking_source(
         filters={"svg_polish_blocking_sources": "tikz_vs_svg_polish_trigger"},
     )
 
-    assert queue["filters"] == {
-        "svg_polish_blocking_sources": "tikz_vs_svg_polish_trigger"
-    }
+    assert queue["filters"] == {"svg_polish_blocking_sources": "tikz_vs_svg_polish_trigger"}
     assert [row["fixture"] for row in queue["rows"]] == ["alpha"]
     assert queue["summary"]["by_svg_polish_blocking_source"] == {
         "crop_audit_summary": 1,
@@ -846,9 +970,7 @@ def test_build_queue_rejects_unsafe_fixture_name_before_driver(
             "error": "fixture name must be a single examples/<name> directory name",
         }
     ]
-    assert queue["command_plan"]["blocked"][0]["reason"] == (
-        "stop_boundary:unsafe_fixture_name"
-    )
+    assert queue["command_plan"]["blocked"][0]["reason"] == ("stop_boundary:unsafe_fixture_name")
 
 
 def test_print_table_outputs_rows_and_summary(capsys: pytest.CaptureFixture[str]) -> None:
@@ -889,10 +1011,7 @@ def test_print_table_outputs_rows_and_summary(capsys: pytest.CaptureFixture[str]
     fig_queue.print_table(queue)
 
     out = capsys.readouterr().out
-    assert (
-        "fixture\tactor\taction\tstop_boundary\tfirst_blocker\tnext_step\tnext_command"
-        in out
-    )
+    assert "fixture\tactor\taction\tstop_boundary\tfirst_blocker\tnext_step\tnext_command" in out
     assert (
         "alpha\thost_llm\trun_critique\thost_llm_critique_required\t"
         "critique_stale\tRefresh stale host-vision critique for this fixture.\t"
@@ -932,10 +1051,7 @@ def test_print_table_outputs_grouped_summary_counts(
     assert "summary by_action=run_compile:1,run_critique:4" in out
     assert "summary by_required_actor=host_llm:4,workflow_agent:3" in out
     assert "summary by_svg_polish_next_action=run_fig_compile:1,run_fig_critique:4" in out
-    assert (
-        "summary by_svg_polish_blocking_source=driver_blocker:2,driver_prerequisite:6"
-        in out
-    )
+    assert "summary by_svg_polish_blocking_source=driver_blocker:2,driver_prerequisite:6" in out
 
 
 def test_print_table_includes_svg_polish_columns_when_present(
@@ -1020,25 +1136,29 @@ def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsy
 
     monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
 
-    assert fig_queue.main(
-        ["--mode", "review", "--goal", "triage", "--json"],
-        repo_root=tmp_path,
-    ) == 0
+    assert (
+        fig_queue.main(
+            ["--mode", "review", "--goal", "triage", "--json"],
+            repo_root=tmp_path,
+        )
+        == 0
+    )
 
     payload = json.loads(capsys.readouterr().out)
     assert payload["schema"] == "figure-agent.fixture-driver-queue.v1"
     assert payload["rows"][0]["fixture"] == "alpha"
 
 
-
-
 def test_main_warns_when_implicit_workspace_has_no_examples(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    assert fig_queue.main(
-        ["--mode", "review", "--goal", "triage", "--json"],
-        repo_root=tmp_path,
-    ) == 2
+    assert (
+        fig_queue.main(
+            ["--mode", "review", "--goal", "triage", "--json"],
+            repo_root=tmp_path,
+        )
+        == 2
+    )
 
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
@@ -1076,10 +1196,13 @@ def test_main_accepts_format_json_alias(
 
     monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
 
-    assert fig_queue.main(
-        ["--mode", "review", "--goal", "triage", "--format", "json"],
-        repo_root=tmp_path,
-    ) == 0
+    assert (
+        fig_queue.main(
+            ["--mode", "review", "--goal", "triage", "--format", "json"],
+            repo_root=tmp_path,
+        )
+        == 0
+    )
 
     payload = json.loads(capsys.readouterr().out)
     assert payload["schema"] == "figure-agent.fixture-driver-queue.v1"
@@ -1170,20 +1293,23 @@ def test_main_json_accepts_filter_flags(
 
     monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
 
-    assert fig_queue.main(
-        [
-            "--mode",
-            "review",
-            "--goal",
-            "triage",
-            "--actor",
-            "host_llm",
-            "--action",
-            "run_critique",
-            "--json",
-        ],
-        repo_root=tmp_path,
-    ) == 0
+    assert (
+        fig_queue.main(
+            [
+                "--mode",
+                "review",
+                "--goal",
+                "triage",
+                "--actor",
+                "host_llm",
+                "--action",
+                "run_critique",
+                "--json",
+            ],
+            repo_root=tmp_path,
+        )
+        == 0
+    )
 
     payload = json.loads(capsys.readouterr().out)
     assert payload["filters"] == {
@@ -1495,12 +1621,14 @@ def test_wave4_mixed_queue_keeps_authority_boundaries() -> None:
     assert host_handoffs["fig3_floating_clip_protocol"]["handoff_kind"] == (
         "critique_briefing_required"
     )
-    assert "examples/fig3_floating_clip_protocol/spec.yaml" in host_handoffs[
-        "fig3_floating_clip_protocol"
-    ]["allowed_scope"]
-    assert "confirm briefing/reference inputs are present before critique" in host_handoffs[
-        "fig4_trap_energy_diagram"
-    ]["closeout_checks"]
+    assert (
+        "examples/fig3_floating_clip_protocol/spec.yaml"
+        in host_handoffs["fig3_floating_clip_protocol"]["allowed_scope"]
+    )
+    assert (
+        "confirm briefing/reference inputs are present before critique"
+        in host_handoffs["fig4_trap_energy_diagram"]["closeout_checks"]
+    )
 
     assert report["command_plan"] == {
         "executable": 7,
@@ -1641,9 +1769,7 @@ def test_command_plan_accepts_quoted_safe_draft_export_fixture_with_spaces() -> 
     )
 
     assert plan["blocked"] == []
-    assert plan["executable"][0]["safe_command"] == (
-        "fig-agent export 'beta demo'"
-    )
+    assert plan["executable"][0]["safe_command"] == ("fig-agent export 'beta demo'")
 
 
 def test_command_plan_blocked_handoff_covers_human_and_release_rows(
@@ -1682,9 +1808,7 @@ def test_command_plan_blocked_handoff_covers_human_and_release_rows(
     assert plan["blocked"][1]["operator_handoff"]["command"] is None
 
 
-def test_command_plan_uses_filtered_rows(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_command_plan_uses_filtered_rows(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _write_fixture(tmp_path, "alpha")
     _write_fixture(tmp_path, "beta")
 
@@ -1738,14 +1862,15 @@ def test_main_commands_prints_executable_commands_only(
 
     monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
 
-    assert fig_queue.main(
-        ["--mode", "review", "--goal", "triage", "--commands"],
-        repo_root=tmp_path,
-    ) == 0
+    assert (
+        fig_queue.main(
+            ["--mode", "review", "--goal", "triage", "--commands"],
+            repo_root=tmp_path,
+        )
+        == 0
+    )
 
-    assert capsys.readouterr().out.splitlines() == [
-        "fig-agent loop alpha --goal triage --json"
-    ]
+    assert capsys.readouterr().out.splitlines() == ["fig-agent loop alpha --goal triage --json"]
 
 
 def test_wrapper_queue_from_parent_uses_plugin_examples() -> None:
