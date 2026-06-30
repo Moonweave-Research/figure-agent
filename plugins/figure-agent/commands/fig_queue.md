@@ -4,7 +4,7 @@ description: Read-only multi-fixture driver queue. Aggregates /fig_drive decisio
 
 Inspect the driver-selected next action for multiple fixtures.
 
-**Usage**: `/fig_queue --mode <mode> --goal "<goal>" [filters] [<fixture> ...] [--json | --format json]`
+**Usage**: `/fig_queue --mode <mode> --goal "<goal>" [filters] [<fixture> ...] [--json | --format json | --human-decision-digest]`
 
 Run from the plugin root:
 
@@ -18,6 +18,7 @@ fig-agent queue --mode review --goal "<goal>" --actor host_llm
 fig-agent queue --mode review --goal "<goal>" --action run_fig_loop
 fig-agent queue --mode review --goal "<goal>" --actor workflow_agent --command-plan --json
 fig-agent queue --mode review --goal "<goal>" --actor workflow_agent --commands
+fig-agent queue --mode release --goal "decision-dogfood" --human-decision-digest --json
 ```
 
 `/fig_queue` is an operator dashboard over `/fig_drive`. It calls the existing
@@ -82,6 +83,8 @@ Use `--command-plan` to add a read-only `command_plan` object to JSON output.
 Use `--commands` to print only executable deterministic workflow commands, one
 per line. Neither mode executes anything.
 
+Use `--human-decision-digest` to print a compact, read-only human-facing digest derived from the same live queue rows. The digest groups release/style decision packets into accept-current, bounded TikZ polish, redesign benchmark, SVG-polish evidence missing, and dirty/stale excluded buckets. With fixture arguments, explicitly targeted fixtures are not strategy-excluded by the default `fig5_actuation_mechanism` stale/dirty guard. This surface does not edit source, accepted state, golden state, final artifacts, or exports.
+
 Output is a table by default. `--json` and `--format json` both print the same
 JSON contract; `--format table` is accepted as the explicit table form.
 
@@ -115,6 +118,7 @@ blocked and visible in the command plan.
 | `rows` | list | one compact row per fixture or controlled error |
 | `summary` | object | total/error counts plus grouped counts |
 | `command_plan` | object | present only with `--command-plan`, `--commands`, or API opt-in |
+| `human_decision_digest` | output mode | emitted instead of the queue contract when `--human-decision-digest` is supplied |
 
 Each row includes:
 
