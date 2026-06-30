@@ -41,8 +41,30 @@ cd "$(dirname "$TEX_INPUT")"
 FILE="$(basename "$TEX_INPUT")"
 BASE="${FILE%.tex}"
 BUILD_DIR="build"
+WRAPPED_FILE="${BUILD_DIR}/.${BASE}.figure-agent-wrapper.tex"
+COMPILE_FILE="$FILE"
 
 mkdir -p "$BUILD_DIR"
+
+if ! grep -q '\\documentclass' "$FILE"; then
+  cat > "$WRAPPED_FILE" <<EOF
+\documentclass[border=8pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{90mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\textsf{\fontsize{8}{10}\selectfont}},
+]
+EOF
+  cat "$FILE" >> "$WRAPPED_FILE"
+  cat >> "$WRAPPED_FILE" <<EOF
+\end{tikzpicture}%
+}
+\end{document}
+EOF
+  COMPILE_FILE="$WRAPPED_FILE"
+fi
 
 PDF_OUT="${BUILD_DIR}/${BASE}.pdf"
 PNG_OUT="${BUILD_DIR}/${BASE}.png"
@@ -56,7 +78,7 @@ cleanup_failed_build() {
 trap cleanup_failed_build ERR
 
 rm -f "$PDF_OUT" "$PNG_OUT"
-"$ENGINE" -interaction=nonstopmode -output-directory="$BUILD_DIR" "$FILE"
+"$ENGINE" -interaction=nonstopmode -jobname="$BASE" -output-directory="$BUILD_DIR" "$COMPILE_FILE"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
 # The PDF/PNG now exist and are valid. The remaining checkers are report-only
 # unless FIGURE_AGENT_STRICT=1. In report-only mode, a best-effort checker that
