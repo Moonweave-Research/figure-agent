@@ -1449,6 +1449,8 @@ def test_wrapper_queue_from_parent_uses_plugin_examples() -> None:
     env = os.environ.copy()
     env.pop("FIGURE_AGENT_WORKSPACE", None)
     env.pop("CLAUDE_PROJECT_DIR", None)
+    env.pop("FIGURE_AGENT_PLUGIN_ROOT", None)
+    env.pop("CLAUDE_PLUGIN_ROOT", None)
 
     result = subprocess.run(
         [
