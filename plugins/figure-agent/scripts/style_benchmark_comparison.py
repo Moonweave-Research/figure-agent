@@ -256,6 +256,7 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
     candidate_list = candidates if isinstance(candidates, list) else []
     candidate_results: dict[str, str] = {}
     candidate_mutation_boundaries: dict[str, str] = {}
+    candidate_handoff_states: dict[str, str] = {}
     for candidate in candidate_list:
         if not isinstance(candidate, dict):
             continue
@@ -268,6 +269,16 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
         boundary = candidate.get("mutation_boundary")
         if isinstance(boundary, str) and boundary:
             candidate_mutation_boundaries[candidate_id] = boundary
+        if candidate_id == "editorial_redesign" and result in {
+            "eligible",
+            "blocked_requires_separate_approval",
+        }:
+            candidate_handoff_states[candidate_id] = "handoff_only"
+        if candidate_id == "svg_polish_handoff" and result in {
+            "blocked_missing_evidence",
+            "blocked_requires_separate_approval",
+        }:
+            candidate_handoff_states[candidate_id] = "handoff_blocked"
 
     human_questions = payload.get("human_only_questions")
     question_list = human_questions if isinstance(human_questions, list) else []
@@ -283,6 +294,7 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
         "default_recommendation": payload.get("default_recommendation"),
         "candidate_results": candidate_results,
         "candidate_mutation_boundaries": candidate_mutation_boundaries,
+        "candidate_handoff_states": candidate_handoff_states,
         "top_human_only_questions": [
             item for item in question_list if isinstance(item, str) and item
         ][:3],

@@ -2512,6 +2512,203 @@ def test_queue_row_surfaces_compact_style_benchmark_pack(
     assert queue["command_plan"]["complete"][0]["style_benchmark_pack_state"] == "present"
 
 
+def test_queue_row_surfaces_style_comparison_editorial_handoff_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+
+    def fake_load_pack(name: str, *, workspace_root: Path) -> dict[str, Any]:
+        assert name == "alpha"
+        assert workspace_root == tmp_path
+        return {
+            "schema": fig_queue.style_benchmark_pack.SCHEMA,
+            "state": "present",
+            "fixture": "alpha",
+            "path": "docs/style-benchmark-packs/wave/alpha.json",
+            "linked_files": {},
+            "target_style_class": "restrained editorial multipanel scientific schematic",
+            "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
+            "candidate_family_slots": [
+                {"id": "current_style", "mutation_boundary": "no_source_mutation"},
+                {
+                    "id": "restrained_tikz_refinement",
+                    "mutation_boundary": "source_mutation_requires_separate_approval",
+                },
+                {
+                    "id": "editorial_redesign",
+                    "mutation_boundary": "source_mutation_requires_separate_approval",
+                },
+                {
+                    "id": "svg_polish_handoff",
+                    "mutation_boundary": "svg_artifact_mutation_requires_separate_approval",
+                },
+            ],
+            "human_only_questions": [],
+            "safety": {
+                "source_mutation": False,
+                "accepted_state_mutation": False,
+                "release_state_mutation": False,
+                "generated_export_mutation": False,
+                "golden_mutation": False,
+                "svg_polish_default": False,
+            },
+        }
+
+    def fake_load_comparison(name: str, *, workspace_root: Path) -> dict[str, Any]:
+        assert name == "alpha"
+        assert workspace_root == tmp_path
+        return {
+            "schema": fig_queue.style_benchmark_comparison.SCHEMA,
+            "fixture": "alpha",
+            "path": "docs/style-benchmark-comparisons/wave/alpha.json",
+            "human_style_decision": "keep_current_style",
+            "target_style_class": "restrained editorial multipanel scientific schematic",
+            "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
+            "forbidden_semantic_changes": [
+                "do not change panel roles",
+                "do not rename labels",
+            ],
+            "benchmark_measurable_checks": ["style_lock_typography remains clean"],
+            "human_only_questions": [
+                "Does the candidate improve journal fit?",
+                "Does it feel editorial?",
+                "Should this become flagship-level?",
+                "Do not surface this fourth question.",
+            ],
+            "candidate_family_comparisons": [
+                {
+                    "id": "current_style",
+                    "result": "winner_candidate",
+                    "mutation_boundary": "no_source_mutation",
+                },
+                {
+                    "id": "restrained_tikz_refinement",
+                    "result": "blocked_requires_separate_approval",
+                    "mutation_boundary": "source_mutation_requires_separate_approval",
+                },
+                {
+                    "id": "editorial_redesign",
+                    "result": "eligible",
+                    "mutation_boundary": "source_mutation_requires_separate_approval",
+                },
+                {
+                    "id": "svg_polish_handoff",
+                    "result": "blocked_missing_evidence",
+                    "mutation_boundary": "svg_artifact_mutation_requires_separate_approval",
+                },
+            ],
+        }
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    monkeypatch.setattr(fig_queue.style_benchmark_pack, "load_pack", fake_load_pack)
+    monkeypatch.setattr(
+        fig_queue.style_benchmark_comparison, "load_comparison", fake_load_comparison
+    )
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="style-comparison-surface",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    row = queue["rows"][0]
+    assert row["style_benchmark_comparison_state"] == "present"
+    comparison = row["style_benchmark_comparison"]
+    assert comparison == row["style_direction_packet"]["style_benchmark_comparison"]
+    assert comparison["candidate_results"]["editorial_redesign"] == "eligible"
+    assert comparison["candidate_handoff_states"]["editorial_redesign"] == "handoff_only"
+    assert comparison["candidate_results"]["svg_polish_handoff"] == "blocked_missing_evidence"
+    assert comparison["candidate_handoff_states"]["svg_polish_handoff"] == "handoff_blocked"
+    assert comparison["candidate_mutation_boundaries"]["editorial_redesign"] == (
+        "source_mutation_requires_separate_approval"
+    )
+    assert comparison["top_human_only_questions"] == [
+        "Does the candidate improve journal fit?",
+        "Does it feel editorial?",
+        "Should this become flagship-level?",
+    ]
+    assert comparison["safety_boundary"] == {
+        "source_mutation": False,
+        "semantic_change": False,
+        "accepted_state_mutation": False,
+        "release_state_mutation": False,
+        "generated_export_mutation": False,
+        "golden_mutation": False,
+    }
+    assert queue["summary"]["by_style_benchmark_comparison_state"] == {"present": 1}
+    assert queue["command_plan"]["complete"][0]["style_benchmark_comparison_state"] == "present"
+
+
+def test_queue_row_surfaces_missing_style_comparison_without_failing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+
+    def fake_load_comparison(name: str, *, workspace_root: Path) -> dict[str, Any]:
+        assert workspace_root == tmp_path
+        raise fig_queue.style_benchmark_comparison.StyleBenchmarkComparisonError(
+            "comparison_missing"
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    monkeypatch.setattr(
+        fig_queue.style_benchmark_comparison, "load_comparison", fake_load_comparison
+    )
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="style-comparison-surface",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["style_benchmark_comparison_state"] == "missing"
+    assert "style_benchmark_comparison" not in row
+    assert "style_benchmark_comparison" not in row["style_direction_packet"]
+    assert queue["summary"]["by_style_benchmark_comparison_state"] == {"missing": 1}
+
+
+def test_malformed_style_comparison_is_invalid_not_editorial_handoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+
+    def fake_load_comparison(name: str, *, workspace_root: Path) -> dict[str, Any]:
+        assert workspace_root == tmp_path
+        raise fig_queue.style_benchmark_comparison.StyleBenchmarkComparisonError("schema_invalid")
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    monkeypatch.setattr(
+        fig_queue.style_benchmark_comparison, "load_comparison", fake_load_comparison
+    )
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="style-comparison-surface",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["style_benchmark_comparison_state"] == "invalid"
+    assert row["style_benchmark_comparison_error"] == "schema_invalid"
+    assert "style_benchmark_comparison" not in row
+    assert "style_benchmark_comparison" not in row["style_direction_packet"]
+    assert queue["summary"]["by_style_benchmark_comparison_state"] == {"invalid": 1}
+
+
 def test_queue_row_surfaces_missing_style_benchmark_pack_without_failing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
