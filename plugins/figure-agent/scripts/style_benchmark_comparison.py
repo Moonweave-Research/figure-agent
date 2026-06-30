@@ -247,3 +247,57 @@ def load_comparison(
         "candidate_rejection_rules": rejection_rules,
         "candidate_family_comparisons": candidates,
     }
+
+def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
+    """Return compact read-only queue metadata for a style comparison packet."""
+
+    candidates = payload.get("candidate_family_comparisons")
+    candidate_list = candidates if isinstance(candidates, list) else []
+    candidate_results: dict[str, str] = {}
+    candidate_mutation_boundaries: dict[str, str] = {}
+    for candidate in candidate_list:
+        if not isinstance(candidate, dict):
+            continue
+        candidate_id = candidate.get("id")
+        if not isinstance(candidate_id, str) or not candidate_id:
+            continue
+        result = candidate.get("result")
+        if isinstance(result, str) and result:
+            candidate_results[candidate_id] = result
+        boundary = candidate.get("mutation_boundary")
+        if isinstance(boundary, str) and boundary:
+            candidate_mutation_boundaries[candidate_id] = boundary
+
+    human_questions = payload.get("human_only_questions")
+    question_list = human_questions if isinstance(human_questions, list) else []
+    forbidden_semantics = payload.get("forbidden_semantic_changes")
+    forbidden_list = forbidden_semantics if isinstance(forbidden_semantics, list) else []
+    measurable_checks = payload.get("benchmark_measurable_checks")
+    measurable_list = measurable_checks if isinstance(measurable_checks, list) else []
+    return {
+        "state": "present",
+        "path": payload.get("path"),
+        "human_style_decision": payload.get("human_style_decision"),
+        "target_style_class": payload.get("target_style_class"),
+        "default_recommendation": payload.get("default_recommendation"),
+        "candidate_results": candidate_results,
+        "candidate_mutation_boundaries": candidate_mutation_boundaries,
+        "top_human_only_questions": [
+            item for item in question_list if isinstance(item, str) and item
+        ][:3],
+        "forbidden_semantic_change_count": len(
+            [item for item in forbidden_list if isinstance(item, str) and item]
+        ),
+        "benchmark_measurable_check_count": len(
+            [item for item in measurable_list if isinstance(item, str) and item]
+        ),
+        "safety_boundary": {
+            "source_mutation": False,
+            "semantic_change": False,
+            "accepted_state_mutation": False,
+            "release_state_mutation": False,
+            "generated_export_mutation": False,
+            "golden_mutation": False,
+        },
+    }
+
