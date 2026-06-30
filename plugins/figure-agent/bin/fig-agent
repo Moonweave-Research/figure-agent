@@ -1150,9 +1150,13 @@ def main(argv: list[str] | None = None) -> int:
     if command == "drive":
         return _script_main("fig_driver", rest)
     if command == "queue":
-        return _script_main("fig_queue", rest)
+        import fig_queue
+
+        return fig_queue.main(rest, repo_root=_paths().workspace_root)
     if command == "queue-run":
-        return _script_main("fig_queue_run", rest)
+        import fig_queue_run
+
+        return fig_queue_run.main(rest, repo_root=_paths().workspace_root)
     if command == "improve":
         return _script_main("fig_improve", rest)
     if command == "e2e-smoke":
