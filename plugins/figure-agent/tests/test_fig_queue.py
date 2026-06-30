@@ -950,6 +950,42 @@ def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsy
     assert payload["rows"][0]["fixture"] == "alpha"
 
 
+
+
+def test_main_warns_when_implicit_workspace_has_no_examples(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert fig_queue.main(
+        ["--mode", "review", "--goal", "triage", "--json"],
+        repo_root=tmp_path,
+    ) == 0
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert payload["summary"] == {
+        "total": 0,
+        "errors": 0,
+        "by_action": {},
+        "by_stop_boundary": {},
+        "by_first_blocker": {},
+        "by_required_actor": {},
+        "by_blocking_source": {},
+        "by_bottleneck_category": {},
+    }
+    assert payload["workspace_diagnostic"] == {
+        "schema": "figure-agent.queue-workspace-diagnostic.v1",
+        "state": "missing_examples",
+        "workspace_root": str(tmp_path),
+        "missing": ["examples"],
+        "message": (
+            "implicit queue discovery found no examples/ directory; run from the "
+            "figure-agent plugin root or set FIGURE_AGENT_WORKSPACE/CLAUDE_PROJECT_DIR "
+            "to a workspace with examples/"
+        ),
+    }
+    assert "implicit queue discovery found no examples/ directory" in captured.err
+
+
 def test_main_accepts_format_json_alias(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:
