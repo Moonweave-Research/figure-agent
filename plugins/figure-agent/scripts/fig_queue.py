@@ -26,6 +26,7 @@ COMMAND_PLAN_SCHEMA = "figure-agent.fixture-command-plan.v1"
 OPERATOR_HANDOFF_SCHEMA = "figure-agent.queue-operator-handoff.v1"
 HUMAN_DECISION_PACKET_SCHEMA = "figure-agent.human-decision-packet.v1"
 RELEASE_DECISION_PACKET_SCHEMA = "figure-agent.release-decision-packet.v1"
+STYLE_DIRECTION_PACKET_SCHEMA = "figure-agent.style-direction-packet.v1"
 BOTTLENECK_REPORT_SCHEMA = "figure-agent.queue-bottleneck-report.v1"
 WORKSPACE_DIAGNOSTIC_SCHEMA = "figure-agent.queue-workspace-diagnostic.v1"
 BOTTLENECK_CATEGORIES = (
@@ -53,6 +54,7 @@ _FILTER_KEYS = (
     "svg_polish_recommended_path",
     "svg_polish_next_action",
     "svg_polish_blocking_sources",
+    "polish_blocker_reason",
 )
 _ACTORS = (
     "workflow_agent",
@@ -184,9 +186,16 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
     if isinstance(guidance, dict):
         row["operator_guidance"] = guidance
     row.update(_svg_polish_fields(summary, mode=mode))
+    polish_blocker = _polish_blocker_detail(row, mode=mode)
+    if polish_blocker is not None:
+        row["polish_blocker"] = polish_blocker
+        row["polish_blocker_reason"] = polish_blocker["reason"]
     decision_packet = _release_decision_packet(row)
     if decision_packet is not None:
         row["decision_packet"] = decision_packet
+    style_packet = _style_direction_packet(row)
+    if style_packet is not None:
+        row["style_direction_packet"] = style_packet
     category = _bottleneck_category_for_row(row)
     if category is not None:
         row["bottleneck_category"] = category
@@ -310,6 +319,9 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     by_svg_blocker = _count_list_items(rows, "svg_polish_blocking_sources")
     if by_svg_blocker:
         summary["by_svg_polish_blocking_source"] = by_svg_blocker
+    by_polish_blocker = _count(rows, "polish_blocker_reason")
+    if by_polish_blocker:
+        summary["by_polish_blocker_reason"] = by_polish_blocker
     return summary
 
 
@@ -689,6 +701,142 @@ def _release_decision_packet(row: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def _style_direction_packet(row: dict[str, Any]) -> dict[str, Any] | None:
+    action = row.get("action")
+    stop_boundary = row.get("stop_boundary")
+    eligible = action == fig_driver.ACTION_COMPLETE or (
+        action == fig_driver.ACTION_RELEASE_BLOCKED
+        and stop_boundary == fig_driver.STOP_ACCEPTED_OR_FINAL_READY
+    )
+    if not eligible:
+        return None
+    fixture = _cell(row.get("fixture"))
+    release_blocked = action == fig_driver.ACTION_RELEASE_BLOCKED
+    recommendation = (
+        "keep_current_style_then_record_release_decision"
+        if release_blocked
+        else "keep_current_style_with_optional_bounded_tikz_polish"
+    )
+    return {
+        "schema": STYLE_DIRECTION_PACKET_SCHEMA,
+        "fixture": fixture,
+        "state": "release_policy_blocked" if release_blocked else "review_complete",
+        "current_style_assessment": (
+            "No queue-visible defect blocker remains; the current visual language "
+            "is acceptable as a solid manuscript schematic unless this fixture is "
+            "being promoted to a flagship/cover-level visual."
+        ),
+        "agent_recommendation": recommendation,
+        "evidence_refs": _decision_packet_evidence_refs(row)
+        + [
+            f"render_state:{_cell(row.get('render_state'))}",
+            f"critique_state:{_cell(row.get('critique_state'))}",
+            f"export_state:{_cell(row.get('export_state'))}",
+        ],
+        "choices": [
+            {
+                "id": "keep_current_style",
+                "label": "Keep current style",
+                "scope_change": False,
+                "risk": "may remain solid-manuscript rather than flagship polish",
+                "next_slice": (
+                    "record acceptance/final-artifact decision"
+                    if release_blocked
+                    else "proceed to release queue"
+                ),
+            },
+            {
+                "id": "bounded_tikz_source_polish",
+                "label": "Bounded TikZ source polish",
+                "scope_change": False,
+                "risk": "can improve hierarchy but should stay one local pass",
+                "next_slice": "open one targeted typography/spacing/stroke polish task",
+            },
+            {
+                "id": "svg_polish_handoff",
+                "label": "SVG polish handoff",
+                "scope_change": True,
+                "risk": "requires positive ready_for_svg_polish evidence and sidecar artifacts",
+                "next_slice": "run polish queue and require can_start_svg_polish=true",
+            },
+            {
+                "id": "full_style_redesign",
+                "label": "Full style redesign",
+                "scope_change": True,
+                "risk": "changes visual language and needs benchmark comparison",
+                "next_slice": "create redesign alternatives against the benchmark fixture",
+            },
+        ],
+        "does_not_block_release": True,
+        "follow_up": {
+            "after_decision": "rerun /fig_queue in the chosen mode",
+            "do_not_do": [
+                "do not mutate source or release state from this packet",
+                "do not treat the packet as acceptance",
+            ],
+        },
+    }
+
+
+def _polish_blocker_detail(row: dict[str, Any], *, mode: str) -> dict[str, Any] | None:
+    if mode != "polish" or row.get("stop_boundary") != fig_driver.STOP_MODE_FORBIDDEN:
+        return None
+    fixture = _cell(row.get("fixture"))
+    sources = row.get("svg_polish_blocking_sources")
+    source_list = (
+        [item for item in sources if isinstance(item, str)]
+        if isinstance(sources, list)
+        else []
+    )
+    recommended_path = row.get("svg_polish_recommended_path")
+    next_action = row.get("svg_polish_next_action")
+    can_start = row.get("can_start_svg_polish")
+    if can_start is True or recommended_path == "ready_for_svg_polish":
+        reason = "ready_for_svg_polish"
+        upstream_packet = "svg_polish_handoff"
+        next_step = "Start the explicit SVG polish handoff; keep semantic/release gates intact."
+    elif next_action == "resolve_release_boundary":
+        reason = "accepted_or_final_ready_missing"
+        upstream_packet = "release_decision_packet"
+        next_step = "Resolve explicit acceptance/final-artifact policy before polish handoff."
+    elif "driver_prerequisite" in source_list or next_action in {
+        "run_fig_critique",
+        "run_fig_adjudicate",
+        "run_fig_export",
+        "run_fig_compile",
+    }:
+        reason = "review_loop_prerequisite_not_closed"
+        upstream_packet = "review_queue"
+        next_step = "Close review/export prerequisites before considering SVG polish."
+    elif recommended_path == "continue_tikz" or "tikz_vs_svg_polish_trigger" in source_list:
+        reason = "continue_tikz_recommended"
+        upstream_packet = "style_direction_packet"
+        next_step = "Use bounded TikZ/source polish; SVG polish is not the current route."
+    elif (
+        any("manifest" in source or "delta" in source for source in source_list)
+        or next_action in {
+            "refresh_svg_polish_handoff",
+            "repair_svg_polish_manifest",
+        }
+    ):
+        reason = "svg_polish_artifact_missing_or_stale"
+        upstream_packet = "svg_polish_handoff"
+        next_step = "Repair or refresh SVG polish manifest/delta/semantic-diff artifacts."
+    else:
+        reason = "ready_for_svg_polish_evidence_missing"
+        upstream_packet = "style_direction_packet"
+        next_step = "Return to review/style-direction evidence before opening SVG polish."
+    return {
+        "fixture": fixture,
+        "reason": reason,
+        "upstream_packet": upstream_packet,
+        "next_step": next_step,
+        "can_start_svg_polish": can_start,
+        "recommended_path": recommended_path,
+        "blocking_sources": source_list,
+    }
+
+
 def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
     fixture = _cell(row.get("fixture"))
     actor = _cell(row.get("required_actor"))
@@ -707,6 +855,7 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
                     "schema": OPERATOR_HANDOFF_SCHEMA,
                     "fixture": fixture,
                     "required_actor": actor,
+                    "style_direction_packet": row.get("style_direction_packet"),
                     "next_step": next_step,
                     "command": None,
                     "reason": reason,
@@ -761,6 +910,7 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
             "required_actor": actor,
             "decision_packet": row.get("decision_packet")
             or _human_decision_packet(row, actor=actor),
+            "style_direction_packet": row.get("style_direction_packet"),
             "next_step": (
                 "Review the fixture-specific release decision packet; do not force golden "
                 "or acceptance implicitly."
@@ -777,11 +927,17 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
             "closeout_checks": ["rerun /fig_queue after release decision"],
         }
     if actor == "svg_editor":
+        polish_blocker = row.get("polish_blocker")
         return {
             "schema": OPERATOR_HANDOFF_SCHEMA,
             "fixture": fixture,
             "required_actor": actor,
-            "next_step": "Complete SVG polish handoff outside queue automation.",
+            "polish_blocker": polish_blocker,
+            "next_step": (
+                polish_blocker["next_step"]
+                if isinstance(polish_blocker, dict)
+                else "Complete SVG polish handoff outside queue automation."
+            ),
             "command": None,
             "reason": reason,
             "allowed_scope": ["declared polished SVG handoff scope"],
@@ -833,6 +989,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                     "stop_boundary": row.get("stop_boundary"),
                     "reason": reason,
                     "operator_handoff": _operator_handoff(row, reason=reason),
+                    "style_direction_packet": row.get("style_direction_packet"),
                 }
             )
             continue
@@ -854,6 +1011,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "required_actor": row.get("required_actor"),
                 "blocking_source": row.get("blocking_source"),
                 "stop_boundary": row.get("stop_boundary"),
+                "polish_blocker_reason": row.get("polish_blocker_reason"),
                 "reason": reason,
                 "operator_handoff": _operator_handoff(row, reason=reason),
             }
@@ -1163,9 +1321,21 @@ def _table_next_command(row: dict[str, Any]) -> str | None:
 def print_table(queue: dict[str, Any]) -> None:
     rows = queue.get("rows", [])
     show_svg_columns = _has_svg_polish_columns(rows)
+    show_style_columns = _has_style_direction_columns(rows)
     header = ["fixture", "actor", "action", "stop_boundary", "first_blocker"]
     if show_svg_columns:
-        header.extend(["svg_gate", "can_svg", "polish_path", "polish_next", "polish_blockers"])
+        header.extend(
+            [
+                "svg_gate",
+                "can_svg",
+                "polish_path",
+                "polish_next",
+                "polish_blockers",
+                "polish_reason",
+            ]
+        )
+    if show_style_columns:
+        header.extend(["style_recommendation"])
     header.extend(["next_step", "next_command"])
     print("\t".join(header))
     for row in rows:
@@ -1184,8 +1354,15 @@ def print_table(queue: dict[str, Any]) -> None:
                     _cell(row.get("svg_polish_recommended_path")),
                     _cell(row.get("svg_polish_next_action")),
                     _cell(row.get("svg_polish_blocking_sources")),
+                    _cell(row.get("polish_blocker_reason")),
                 ]
             )
+        if show_style_columns:
+            packet = row.get("style_direction_packet")
+            recommendation = (
+                packet.get("agent_recommendation") if isinstance(packet, dict) else None
+            )
+            cells.append(_cell(recommendation))
         cells.extend(
             [
                 _cell(_table_next_step(row)),
@@ -1212,6 +1389,7 @@ def _summary_table_keys() -> tuple[str, ...]:
         "by_svg_polish_recommended_path",
         "by_svg_polish_next_action",
         "by_svg_polish_blocking_source",
+        "by_polish_blocker_reason",
     )
 
 
@@ -1240,6 +1418,12 @@ def _has_svg_polish_columns(rows: Any) -> bool:
         "svg_polish_blocking_sources",
     }
     return any(isinstance(row, dict) and not keys.isdisjoint(row) for row in rows)
+
+
+def _has_style_direction_columns(rows: Any) -> bool:
+    if not isinstance(rows, list):
+        return False
+    return any(isinstance(row, dict) and "style_direction_packet" in row for row in rows)
 
 
 def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int:

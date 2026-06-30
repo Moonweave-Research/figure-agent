@@ -514,6 +514,72 @@ def test_release_packet_flags_declared_polished_svg_final_artifact_states(
     )
 
 
+def test_review_complete_row_surfaces_style_direction_packet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    packet = queue["rows"][0]["style_direction_packet"]
+    assert packet["schema"] == "figure-agent.style-direction-packet.v1"
+    assert packet["state"] == "review_complete"
+    assert packet["does_not_block_release"] is True
+    assert packet["agent_recommendation"] == (
+        "keep_current_style_with_optional_bounded_tikz_polish"
+    )
+    assert [choice["id"] for choice in packet["choices"]] == [
+        "keep_current_style",
+        "bounded_tikz_source_polish",
+        "svg_polish_handoff",
+        "full_style_redesign",
+    ]
+    assert queue["command_plan"]["complete"][0]["style_direction_packet"] == packet
+
+
+def test_release_policy_blocked_row_surfaces_style_direction_packet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="accepted_or_final_ready_required",
+            first_blocker="acceptance_not_declared",
+            blocking_source="accepted_or_final_ready_required",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="triage",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    packet = queue["rows"][0]["style_direction_packet"]
+    assert packet["state"] == "release_policy_blocked"
+    assert packet["agent_recommendation"] == "keep_current_style_then_record_release_decision"
+    assert packet["choices"][3]["scope_change"] is True
+    handoff = queue["command_plan"]["blocked"][0]["operator_handoff"]
+    assert handoff["style_direction_packet"] == packet
+
+
 def test_release_operator_handoff_includes_decision_packet(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -679,6 +745,8 @@ def test_polish_queue_rows_surface_svg_polish_gate(
     assert row["svg_polish_next_action"] == "rerun_fig_loop"
     assert row["svg_polish_recommended_path"] == "continue_tikz"
     assert row["svg_polish_blocking_sources"] == ["tikz_vs_svg_polish_trigger"]
+    assert row["polish_blocker_reason"] == "continue_tikz_recommended"
+    assert row["polish_blocker"]["upstream_packet"] == "style_direction_packet"
 
 
 def test_polish_queue_summary_counts_svg_gate_and_blockers(
@@ -750,6 +818,83 @@ def test_polish_queue_summary_counts_svg_gate_and_blockers(
         "crop_audit_summary": 1,
         "tikz_vs_svg_polish_trigger": 1,
     }
+    assert queue["summary"]["by_polish_blocker_reason"] == {
+        "continue_tikz_recommended": 1
+    }
+
+
+def test_polish_queue_decomposes_mode_forbidden_prerequisites(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "needs_review")
+    _write_fixture(tmp_path, "needs_release")
+    _write_fixture(tmp_path, "needs_svg_manifest")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        if name == "needs_review":
+            return _summary(
+                name,
+                action="run_critique",
+                stop_boundary="mode_forbidden_action",
+                first_blocker="critique_stale",
+                svg_polish_gate={
+                    "state": "blocked",
+                    "can_start_svg_polish": False,
+                    "next_action": "run_fig_critique",
+                    "blocking_items": [{"source": "driver_prerequisite"}],
+                },
+            )
+        if name == "needs_release":
+            return _summary(
+                name,
+                action="run_fig_loop",
+                stop_boundary="mode_forbidden_action",
+                first_blocker="acceptance_not_declared",
+                svg_polish_gate={
+                    "state": "blocked",
+                    "can_start_svg_polish": False,
+                    "next_action": "resolve_release_boundary",
+                    "blocking_items": [{"source": "driver_prerequisite"}],
+                },
+            )
+        return _summary(
+            name,
+            action="polish_handoff_stop",
+            stop_boundary="mode_forbidden_action",
+            first_blocker="svg_polish_manifest_stale",
+            svg_polish_gate={
+                "state": "blocked",
+                "can_start_svg_polish": False,
+                "next_action": "refresh_svg_polish_handoff",
+                "blocking_items": [{"source": "svg_polish_manifest"}],
+            },
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="polish",
+        goal="triage",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    reasons = {row["fixture"]: row["polish_blocker_reason"] for row in queue["rows"]}
+    assert reasons == {
+        "needs_release": "accepted_or_final_ready_missing",
+        "needs_review": "review_loop_prerequisite_not_closed",
+        "needs_svg_manifest": "svg_polish_artifact_missing_or_stale",
+    }
+    assert queue["summary"]["by_polish_blocker_reason"] == {
+        "accepted_or_final_ready_missing": 1,
+        "review_loop_prerequisite_not_closed": 1,
+        "svg_polish_artifact_missing_or_stale": 1,
+    }
+    manifest_handoff = queue["command_plan"]["blocked"][2]["operator_handoff"]
+    assert manifest_handoff["polish_blocker"]["reason"] == (
+        "svg_polish_artifact_missing_or_stale"
+    )
 
 
 def test_polish_queue_filters_ready_svg_polish_candidates(
@@ -1089,7 +1234,7 @@ def test_print_table_includes_svg_polish_columns_when_present(
     assert (
         "fixture\tactor\taction\tstop_boundary\tfirst_blocker\t"
         "svg_gate\tcan_svg\tpolish_path\tpolish_next\tpolish_blockers\t"
-        "next_step\tnext_command"
+        "polish_reason\tnext_step\tnext_command"
     ) in out
     assert (
         "alpha\tworkflow_agent\trun_fig_loop\tmode_forbidden_action\t"
