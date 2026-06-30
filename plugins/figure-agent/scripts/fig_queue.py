@@ -221,7 +221,6 @@ def _row_from_summary(
     if isinstance(fixture, str) and fixture:
         row.update(_style_benchmark_pack_fields(fixture, workspace_root=repo_root))
         row.update(_style_benchmark_comparison_fields(fixture, workspace_root=repo_root))
-        row.update(_design_direction_fields(fixture, row))
     polish_blocker = _polish_blocker_detail(row, mode=mode)
     if polish_blocker is not None:
         row["polish_blocker"] = polish_blocker
@@ -230,6 +229,8 @@ def _row_from_summary(
     if svg_polish_evidence is not None:
         row["svg_polish_evidence_packet"] = svg_polish_evidence
         row["svg_polish_evidence_state"] = svg_polish_evidence["state"]
+    if isinstance(fixture, str) and fixture:
+        row.update(_design_direction_fields(fixture, row))
     decision_packet = _release_decision_packet(row)
     if decision_packet is not None:
         row["decision_packet"] = decision_packet
@@ -361,7 +362,10 @@ def _design_direction_fields(fixture: str, row: dict[str, Any]) -> dict[str, Any
     blocker_reasons = packet.get("blocking_reasons")
     if isinstance(blocker_reasons, list) and blocker_reasons:
         fields["design_direction_blocker_reason"] = blocker_reasons[0]
-    if row.get("svg_polish_evidence_state") == "blocked_missing_positive_readiness":
+    if row.get("svg_polish_evidence_state") in {
+        "blocked_missing_positive_readiness",
+        "not_qualified",
+    }:
         fields["design_direction_blocker_reason"] = "svg_polish_evidence_missing"
     if packet.get("state") == "ready_for_human_choice" and row.get("action") == fig_driver.ACTION_COMPLETE:
         fields["required_actor"] = "human"
