@@ -2905,6 +2905,6 @@ def test_polish_queue_surfaces_svg_polish_evidence_missing_as_design_blocker(
     )
 
     row = queue["rows"][0]
-    assert row["svg_polish_evidence_state"] == "blocked_missing_positive_readiness"
+    assert row["svg_polish_evidence_state"] == "not_qualified"
     assert row["design_direction_state"] == "ready_for_human_choice"
     assert row["design_direction_blocker_reason"] == "svg_polish_evidence_missing"

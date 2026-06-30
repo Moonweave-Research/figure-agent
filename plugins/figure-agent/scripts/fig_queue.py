@@ -308,6 +308,8 @@ def _style_benchmark_pack_fields(name: str, *, workspace_root: Path) -> dict[str
 def _style_benchmark_comparison_fields(name: str, *, workspace_root: Path) -> dict[str, Any]:
     try:
         payload = style_benchmark_comparison.load_comparison(name, workspace_root=workspace_root)
+        if payload.get("state") not in {None, "present"}:
+            return {"style_benchmark_comparison_state": payload.get("state")}
     except style_benchmark_comparison.StyleBenchmarkComparisonError as exc:
         state = "missing" if str(exc) == "comparison_missing" else "invalid"
         fields = {"style_benchmark_comparison_state": state}
@@ -361,7 +363,7 @@ def _design_direction_fields(fixture: str, row: dict[str, Any]) -> dict[str, Any
         fields["design_direction_blocker_reason"] = blocker_reasons[0]
     if row.get("svg_polish_evidence_state") == "blocked_missing_positive_readiness":
         fields["design_direction_blocker_reason"] = "svg_polish_evidence_missing"
-    if packet.get("state") == "ready_for_human_choice":
+    if packet.get("state") == "ready_for_human_choice" and row.get("action") == fig_driver.ACTION_COMPLETE:
         fields["required_actor"] = "human"
         fields["requires_human"] = True
         fields["blocking_source"] = "design_direction_human_choice"
@@ -1629,7 +1631,7 @@ def _row_fields_mention(
 
 def _bottleneck_category_for_row(row: dict[str, Any]) -> str | None:
     action = row.get("action")
-    if row.get("design_direction_state") in {
+    if action == fig_driver.ACTION_COMPLETE and row.get("design_direction_state") in {
         "ready_for_human_choice",
         "blocked_missing_style_pack",
         "blocked_missing_comparison",
