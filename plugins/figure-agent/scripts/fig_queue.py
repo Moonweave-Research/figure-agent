@@ -651,6 +651,13 @@ def _release_decision_packet(row: dict[str, Any]) -> dict[str, Any] | None:
     packet_kind = (
         "force_golden_decision_packet" if force_golden else "release_acceptance_decision_packet"
     )
+    question = (
+        f"`{fixture}` has a tracked-golden release boundary. Should the release "
+        "operator approve, reject, or defer the protected golden change?"
+        if force_golden
+        else f"`{fixture}` is release-blocked only by acceptance/final-artifact "
+        "policy. Which explicit release decision should be recorded?"
+    )
     recommendation = (
         "Do not force the tracked golden automatically. Ask the release "
         "operator to approve, reject, or defer the protected baseline change "
@@ -667,6 +674,7 @@ def _release_decision_packet(row: dict[str, Any]) -> dict[str, Any] | None:
         "boundary": stop_boundary,
         "required_actor": _cell(row.get("required_actor")),
         "current_state": _release_current_state(row),
+        "human_question": question,
         "agent_recommendation": recommendation,
         "recommended_choice_id": recommended_choice,
         "choices": _release_decision_choices(row),
