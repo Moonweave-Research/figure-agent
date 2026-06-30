@@ -1223,6 +1223,54 @@ def test_build_queue_can_include_command_plan(
     }
 
 
+def test_command_plan_treats_next_action_complete_as_complete(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(
+            name,
+            action="run_fig_loop",
+            stop_boundary=None,
+            first_blocker="acceptance_not_declared",
+            safe_command="fig-agent loop alpha --goal triage --json",
+            blocking_source="status_action_required",
+        )
+        summary["next_action_summary"] = {
+            "action": "complete",
+            "blocking_source": "status_action_required",
+            "requires_human": False,
+            "safe_command": None,
+            "decision_boundary": {
+                "schema": "figure-agent.decision-boundary.v1",
+                "kind": "none",
+                "authority": "none",
+                "blocks_progress": False,
+                "blocks_release": False,
+            },
+        }
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    assert queue["rows"][0]["action"] == "complete"
+    assert queue["rows"][0]["driver_action"] == "run_fig_loop"
+    assert queue["rows"][0]["safe_command"] is None
+    assert queue["command_plan"]["executable_count"] == 0
+    assert queue["command_plan"]["blocked_count"] == 0
+    assert queue["command_plan"]["complete_count"] == 1
+    assert queue["command_plan"]["complete"][0]["fixture"] == "alpha"
+
+
 def test_host_llm_operator_handoff_separates_reference_context() -> None:
     rows = [
         {

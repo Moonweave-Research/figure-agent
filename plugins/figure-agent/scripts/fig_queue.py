@@ -149,13 +149,26 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
     status = summary.get("status")
     if not isinstance(status, dict):
         status = {}
+    raw_action = summary.get("action")
+    action = raw_action
+    next_action = summary.get("next_action_summary")
+    if isinstance(next_action, dict) and next_action.get("action") == fig_driver.ACTION_COMPLETE:
+        boundary = next_action.get("decision_boundary")
+        blocks_progress = (
+            isinstance(boundary, dict) and boundary.get("blocks_progress") is True
+        )
+        if not blocks_progress:
+            action = fig_driver.ACTION_COMPLETE
     row = {
         "fixture": summary.get("fixture"),
         "mode": mode,
-        "action": summary.get("action"),
+        "action": action,
+        "driver_action": raw_action,
         "stop_boundary": summary.get("stop_boundary"),
         "first_blocker": _first_blocker(summary),
-        "safe_command": summary.get("safe_command"),
+        "safe_command": (
+            None if action == fig_driver.ACTION_COMPLETE else summary.get("safe_command")
+        ),
         "render_state": status.get("render_state"),
         "critique_state": status.get("critique_state"),
         "export_state": status.get("export_state"),

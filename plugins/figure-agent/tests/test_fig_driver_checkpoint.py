@@ -36,6 +36,7 @@ def _write_loop_run(
     editorial_art_direction_summary: dict[str, Any] | None = None,
     aesthetic_lever_summary: dict[str, Any] | None = None,
     journal_art_direction_playbook_summary: dict[str, Any] | None = None,
+    next_action_summary: dict[str, Any] | None = None,
     mtime: float | None = None,
 ) -> Path:
     run_dir = repo_root / ".scratch" / "fig-loop-runs" / run_id
@@ -66,6 +67,8 @@ def _write_loop_run(
         iteration["journal_art_direction_playbook_summary"] = (
             journal_art_direction_playbook_summary
         )
+    if next_action_summary is not None:
+        iteration["next_action_summary"] = next_action_summary
     manifest_path = run_dir / "run_manifest.json"
     iteration_path = run_dir / "iteration_001.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -156,6 +159,11 @@ def test_latest_loop_checkpoint_selects_newest_current_run_and_preserves_summari
     editorial_summary = {"polish_recommended_path": "ready_for_svg_polish"}
     aesthetic_summary = {"evaluation_state": "needs_patch"}
     journal_summary = {"evaluation_state": "needs_patch"}
+    next_action_summary = {
+        "schema": "figure-agent.next-action-summary.v1",
+        "action": "complete",
+        "decision_boundary": {"blocks_progress": False},
+    }
     newest = _write_loop_run(
         tmp_path,
         run_id="20260521-130000-000000-driver_demo",
@@ -165,6 +173,7 @@ def test_latest_loop_checkpoint_selects_newest_current_run_and_preserves_summari
         editorial_art_direction_summary=editorial_summary,
         aesthetic_lever_summary=aesthetic_summary,
         journal_art_direction_playbook_summary=journal_summary,
+        next_action_summary=next_action_summary,
         mtime=new_time,
     )
 
@@ -182,4 +191,5 @@ def test_latest_loop_checkpoint_selects_newest_current_run_and_preserves_summari
         "editorial_art_direction_summary": editorial_summary,
         "aesthetic_lever_summary": aesthetic_summary,
         "journal_art_direction_playbook_summary": journal_summary,
+        "next_action_summary": next_action_summary,
     }

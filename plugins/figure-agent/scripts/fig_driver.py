@@ -891,6 +891,23 @@ def _select_action(
                     ),
                     checkpoint=loop_checkpoint,
                 )
+            loop_next_action = loop_checkpoint.get("next_action_summary")
+            if isinstance(loop_next_action, dict):
+                boundary = loop_next_action.get("decision_boundary")
+                blocks_progress = (
+                    isinstance(boundary, dict) and boundary.get("blocks_progress") is True
+                )
+                if (
+                    loop_next_action.get("action") == ACTION_COMPLETE
+                    and not blocks_progress
+                ):
+                    return make(
+                        ACTION_COMPLETE,
+                        safe_command=None,
+                        stop_boundary=None,
+                        reason="latest /fig_loop checkpoint reports no progress blocker.",
+                        checkpoint=loop_checkpoint,
+                    )
             if loop_stop in {"no_actionable_findings", "verify_only_complete"}:
                 return make(
                     ACTION_COMPLETE,

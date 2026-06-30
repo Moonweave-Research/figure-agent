@@ -106,6 +106,7 @@ def _write_loop_run(
     aesthetic_lever_summary: dict[str, Any] | None = None,
     journal_art_direction_playbook_summary: dict[str, Any] | None = None,
     basin_summary: dict[str, Any] | None = None,
+    next_action_summary: dict[str, Any] | None = None,
     fixture_name: str | None = None,
 ) -> Path:
     run_dir = repo_root / ".scratch" / "fig-loop-runs" / run_id
@@ -140,6 +141,8 @@ def _write_loop_run(
         iteration["journal_art_direction_playbook_summary"] = journal_art_direction_playbook_summary
     if basin_summary is not None:
         iteration["basin_summary"] = basin_summary
+    if next_action_summary is not None:
+        iteration["next_action_summary"] = next_action_summary
     manifest_path = run_dir / "run_manifest.json"
     iteration_path = run_dir / "iteration_001.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -1448,6 +1451,43 @@ def test_review_mode_does_not_block_on_nonblocking_top_tier_audit_summary(
     assert summary["action"] == "complete"
     assert summary["stop_boundary"] is None
     assert summary["safe_command"] is None
+
+
+def test_review_mode_completes_when_latest_loop_next_action_is_complete(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="status_action_required",
+        escalation_level="agent_action_required",
+        recommended_next_action=(
+            "fixture has no accepted or final-ready declaration; no plugin action remains"
+        ),
+        next_action_summary={
+            "schema": "figure-agent.next-action-summary.v1",
+            "action": "complete",
+            "requires_human": False,
+            "safe_command": None,
+            "decision_boundary": {
+                "schema": "figure-agent.decision-boundary.v1",
+                "kind": "none",
+                "authority": "none",
+                "blocks_progress": False,
+                "blocks_release": False,
+            },
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "complete"
+    assert summary["stop_boundary"] is None
+    assert summary["safe_command"] is None
+    assert summary["loop_checkpoint"]["final_stop_reason"] == "status_action_required"
+    assert summary["loop_checkpoint"]["next_action_summary"]["action"] == "complete"
 
 
 def test_review_mode_surfaces_editorial_human_gate_from_latest_loop(
