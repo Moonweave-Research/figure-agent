@@ -89,36 +89,36 @@ if [[ ${#STRICT_ARGS[@]} -eq 0 ]]; then
   trap - ERR
   set +e
 fi
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visual_clash.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/visual_clash.json" \
   "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_text_boundary_clash.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/text_boundary_clash.json" \
   "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_path_proximity.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/label_path_proximity.json" \
   "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_undeclared_geometry.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/undeclared_geometry.json" \
   "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_hyphenation.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/label_hyphenation.json" \
   "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/semantic_assertions.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/semantic_assertions.json" \
   "$PDF_OUT"
 # Directional-physics assertions read from the .tex (a reversed force/bend arrow is
 # a defect no render detector catches). STRICT-gated like the other clash checkers.
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_tex_assertions.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/tex_assertions.json" \
   "$FILE"
 # Physics-intent grounding meta-check (advisory: which figures still need assertions).
@@ -127,7 +127,7 @@ fi
   --json-output "${BUILD_DIR}/physics_grounding.json" \
   "$PWD"
 if [[ -f "coordinate_hints.yaml" ]]; then
-    "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" "${STRICT_ARGS[@]}" .
+    "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} .
 fi
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"
 # Injection receipt (spec §4 Phase 1a): surface the injected use_as_constraint
