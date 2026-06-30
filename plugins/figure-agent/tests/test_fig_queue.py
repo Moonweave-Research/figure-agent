@@ -1269,6 +1269,130 @@ def test_host_llm_operator_handoff_separates_reference_context() -> None:
     assert "confirm reference/context paths resolve before critique" in reference["closeout_checks"]
 
 
+def test_wave4_mixed_queue_keeps_authority_boundaries() -> None:
+    executable_loop_rows = [
+        {
+            "fixture": name,
+            "action": "run_fig_loop",
+            "required_actor": "workflow_agent",
+            "requires_human": False,
+            "safe_command": f"fig-agent loop {name} --goal Wave4 --json",
+            "blocking_source": "driver.action",
+            "stop_boundary": None,
+            "first_blocker": "acceptance_not_declared",
+        }
+        for name in [
+            "fig5_actuation_mechanism",
+            "smoke_annotation_box_demo",
+            "smoke_contrast_demo",
+            "smoke_label_overlap_demo",
+            "smoke_leader_line_demo",
+            "smoke_panel_spacing_demo",
+            "smoke_trap_demo",
+        ]
+    ]
+    rows = [
+        *executable_loop_rows,
+        {
+            "fixture": "_volume_shading_demo",
+            "action": "create_or_fix_source",
+            "required_actor": "workflow_agent",
+            "requires_human": False,
+            "safe_command": None,
+            "blocking_source": "driver.action",
+            "stop_boundary": None,
+            "first_blocker": "source_not_authored",
+        },
+        *[
+            {
+                "fixture": name,
+                "action": "run_critique",
+                "required_actor": "host_llm",
+                "requires_human": False,
+                "safe_command": f"/fig_critique {name}",
+                "blocking_source": "host_llm_critique_required",
+                "stop_boundary": "host_llm_critique_required",
+                "first_blocker": "critique_stale",
+            }
+            for name in [
+                "fig1_overview_v2_pair_001_vault",
+                "fig2_trap_design_space",
+                "fig3_resistance_mechanism",
+            ]
+        ],
+        *[
+            {
+                "fixture": name,
+                "action": "run_critique",
+                "required_actor": "host_llm",
+                "requires_human": False,
+                "safe_command": f"/fig_critique {name}",
+                "blocking_source": "host_llm_critique_required",
+                "stop_boundary": "host_llm_critique_required",
+                "first_blocker": "critique_briefing_required",
+            }
+            for name in [
+                "fig3_floating_clip_protocol",
+                "fig3_trapping_concept",
+                "fig4_trap_energy_diagram",
+            ]
+        ],
+    ]
+
+    plan = fig_queue.build_command_plan(rows)
+    report = fig_queue.build_bottleneck_report(rows)
+
+    assert plan["executable_count"] == 7
+    assert plan["blocked_count"] == 7
+    assert [item["fixture"] for item in plan["executable"]] == [
+        row["fixture"] for row in executable_loop_rows
+    ]
+    assert plan["blocked"][0]["fixture"] == "_volume_shading_demo"
+    assert plan["blocked"][0]["reason"] == "safe_command:missing"
+
+    host_handoffs = {
+        item["fixture"]: item["operator_handoff"]
+        for item in plan["blocked"]
+        if item["required_actor"] == "host_llm"
+    }
+    assert host_handoffs["fig1_overview_v2_pair_001_vault"]["handoff_kind"] == (
+        "critique_stale_refresh"
+    )
+    assert host_handoffs["fig2_trap_design_space"]["forbidden_scope"] == [
+        "source edits",
+        "export mutation",
+        "accepted/golden mutation",
+        "publication state mutation",
+    ]
+    assert host_handoffs["fig3_floating_clip_protocol"]["handoff_kind"] == (
+        "critique_briefing_required"
+    )
+    assert "examples/fig3_floating_clip_protocol/spec.yaml" in host_handoffs[
+        "fig3_floating_clip_protocol"
+    ]["allowed_scope"]
+    assert "confirm briefing/reference inputs are present before critique" in host_handoffs[
+        "fig4_trap_energy_diagram"
+    ]["closeout_checks"]
+
+    assert report["command_plan"] == {
+        "executable": 7,
+        "blocked": 7,
+        "complete": 0,
+    }
+    assert report["by_bottleneck_category"] == {
+        "mechanical_tool": 8,
+        "host_critique": 3,
+        "human_acceptance": 0,
+        "reference_context": 3,
+        "template_style": 0,
+    }
+    assert report["dominant_first_blocker"] == [
+        {"key": "acceptance_not_declared", "count": 7},
+        {"key": "critique_briefing_required", "count": 3},
+        {"key": "critique_stale", "count": 3},
+    ]
+
+
 def test_command_plan_quotes_closeout_handoff_fixture_names_with_spaces() -> None:
     plan = fig_queue.build_command_plan(
         [
