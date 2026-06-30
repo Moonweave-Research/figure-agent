@@ -5,7 +5,7 @@ generated_at: '2026-06-30T09:05:00Z'
 generator: critique_brief.py
 generator_version: sha256:0bf8abd441f6688290a6abc8b4fda75a2d131526615ba5df7b07dc4d1ec04c94
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:1be4fa6d23dde95aa221b06db0d4ef61dbb5a3acdfc3452121cb7ddf0aae0de2
+critique_input_hash: sha256:ef547934837a852168f2c0d5c2f4c1bff3573e9cef75579f4b53c08b3eedc607
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -126,7 +126,7 @@ quality_axes:
     confidence: high
     rationale: Layout is clean and balanced; detector visual-clash candidates are accepted schematic text/fill contacts rather
       than semantic occlusions.
-    evidence: VC001-VC014 crop inspection and full render.
+    evidence: VC001-VC005 crop inspection and full render.
     blocking_items: []
     recommended_action: none
   label_annotation_semantics:
@@ -137,13 +137,13 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   journal_polish:
-    verdict: needs_patch
+    verdict: pass
     confidence: medium
-    rationale: The figure is readable, but typography and whitespace remain draft-like at thumbnail scale.
-    evidence: 'print_thumbnail crop: captions and secondary labels are legible but low-impact.'
-    blocking_items:
-    - C001 - Improve high-impact polish after scientific content is stable.
-    recommended_action: patch
+    rationale: Header typography was collapsed to compact one-line manuscript titles, panel fills were quieted, and bottom
+      captions were tightened to concise result statements while preserving the scientific mechanism contrast.
+    evidence: Current render plus print_178mm and print_thumbnail crops after the typography polish pass.
+    blocking_items: []
+    recommended_action: none
   reference_fidelity:
     verdict: not_applicable
     confidence: high
@@ -152,13 +152,13 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   publication_readiness:
-    verdict: needs_patch
+    verdict: pass
     confidence: medium
-    rationale: Scientifically ready for review, with only polish-level improvement recommended.
-    evidence: journal_polish axis and print-scale crop.
-    blocking_items:
-    - C001 - Thumbnail polish remains the next bottleneck.
-    recommended_action: patch
+    rationale: Scientifically ready for review; the open decision is human art-direction acceptance rather than an actionable
+      source patch.
+    evidence: journal_polish axis, full render, print_178mm, and print_thumbnail.
+    blocking_items: []
+    recommended_action: none
 top_tier_audit:
   first_glance_message:
     verdict: pass
@@ -276,27 +276,28 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:1be4fa6d23dde95aa221b06db0d4ef61dbb5a3acdfc3452121cb7ddf0aae0de2
+  assessed_artifact_hash: sha256:ef547934837a852168f2c0d5c2f4c1bff3573e9cef75579f4b53c08b3eedc607
   benchmark_level: solid_manuscript
   confidence: high
   blockers: []
   regression_detected: false
   regressions: []
   score_is_gateable: true
-  next_quality_bottleneck: polish
-  rationale: Current artifact supports the scientific contrast; next bottleneck is high-impact polish rather than source semantics.
-  overall_score: 82
+  next_quality_bottleneck: human_policy
+  rationale: Current artifact supports the scientific contrast and the requested typography polish pass has been applied; the
+    remaining bottleneck is human acceptance or later art-direction dogfood, not a known source-level defect.
+  overall_score: 84
   sub_scores:
     storyline: 82
     composition: 82
     component_fidelity: 82
     scientific_plausibility: 82
     label_semantics: 82
-    polish: 82
+    polish: 84
     reference_fidelity: 80
-    export_scale_readability: 77
-  score_rationale: Current artifact supports the scientific contrast; next bottleneck is high-impact polish rather than source
-    semantics.
+    export_scale_readability: 80
+  score_rationale: Current artifact supports the scientific contrast; compact headers and concise result captions improve
+    polish/readability, with any further upgrade now an art-direction choice.
 aesthetic_antipattern_audit:
 - id: annotation_noise_competes_with_science
   verdict: absent
@@ -408,10 +409,10 @@ reference_learning_accountability:
   linked_evidence: []
 micro_defects:
 - id: M001
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC001_a.png
+  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC001_E.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC001 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC001_a.png; this is an
+  observation: VC001 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC001_E.png; this is an
     intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
     from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
     hidden.
@@ -424,10 +425,10 @@ micro_defects:
   accept_simplification_rationale: VC001 is acceptable because the candidate is intentional schematic typography over separate
     light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M002
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC002_PDMS.png
+  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC002_injection.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC002 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC002_PDMS.png; this is
+  observation: VC002 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC002_injection.png; this is
     an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
     from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
     hidden.
@@ -472,10 +473,10 @@ micro_defects:
   accept_simplification_rationale: VC004 is acceptable because the candidate is intentional schematic typography over separate
     light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M005
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC005_b.png
+  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC005_E.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: VC005 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC005_b.png; this is an
+  observation: VC005 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC005_E.png; this is an
     intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
     from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
     hidden.
@@ -486,150 +487,6 @@ micro_defects:
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
   accept_simplification_rationale: VC005 is acceptable because the candidate is intentional schematic typography over separate
-    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
-- id: M006
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC006_Sulfur.png
-  kind: label_glyph_overlaps_internal_drawing
-  severity: NIT
-  observation: VC006 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC006_Sulfur.png; this
-    is an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
-    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
-    hidden.
-  linked_finding_id: ''
-  visual_clash_ref: VC006
-  text_boundary_ref: ''
-  label_path_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: VC006 is acceptable because the candidate is intentional schematic typography over separate
-    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
-- id: M007
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC007_E.png
-  kind: label_glyph_overlaps_internal_drawing
-  severity: NIT
-  observation: VC007 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC007_E.png; this is an
-    intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
-    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
-    hidden.
-  linked_finding_id: ''
-  visual_clash_ref: VC007
-  text_boundary_ref: ''
-  label_path_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: VC007 is acceptable because the candidate is intentional schematic typography over separate
-    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
-- id: M008
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC008_injection.png
-  kind: label_glyph_overlaps_internal_drawing
-  severity: NIT
-  observation: VC008 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC008_injection.png; this
-    is an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
-    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
-    hidden.
-  linked_finding_id: ''
-  visual_clash_ref: VC008
-  text_boundary_ref: ''
-  label_path_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: VC008 is acceptable because the candidate is intentional schematic typography over separate
-    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
-- id: M009
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC009_E.png
-  kind: label_glyph_overlaps_internal_drawing
-  severity: NIT
-  observation: VC009 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC009_E.png; this is an
-    intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
-    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
-    hidden.
-  linked_finding_id: ''
-  visual_clash_ref: VC009
-  text_boundary_ref: ''
-  label_path_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: VC009 is acceptable because the candidate is intentional schematic typography over separate
-    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
-- id: M010
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC010_HOMO.png
-  kind: label_glyph_overlaps_internal_drawing
-  severity: NIT
-  observation: VC010 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC010_HOMO.png; this is
-    an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
-    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
-    hidden.
-  linked_finding_id: ''
-  visual_clash_ref: VC010
-  text_boundary_ref: ''
-  label_path_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: VC010 is acceptable because the candidate is intentional schematic typography over separate
-    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
-- id: M011
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC011_fast.png
-  kind: label_glyph_overlaps_internal_drawing
-  severity: NIT
-  observation: VC011 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC011_fast.png; this is
-    an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
-    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
-    hidden.
-  linked_finding_id: ''
-  visual_clash_ref: VC011
-  text_boundary_ref: ''
-  label_path_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: VC011 is acceptable because the candidate is intentional schematic typography over separate
-    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
-- id: M012
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC012_V.png
-  kind: label_glyph_overlaps_internal_drawing
-  severity: NIT
-  observation: VC012 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC012_V.png; this is an
-    intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
-    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
-    hidden.
-  linked_finding_id: ''
-  visual_clash_ref: VC012
-  text_boundary_ref: ''
-  label_path_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: VC012 is acceptable because the candidate is intentional schematic typography over separate
-    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
-- id: M013
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC013_t.png
-  kind: label_glyph_overlaps_internal_drawing
-  severity: NIT
-  observation: VC013 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC013_t.png; this is an
-    intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
-    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
-    hidden.
-  linked_finding_id: ''
-  visual_clash_ref: VC013
-  text_boundary_ref: ''
-  label_path_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: VC013 is acceptable because the candidate is intentional schematic typography over separate
-    light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
-- id: M014
-  crop: examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC014_HOMO.png
-  kind: label_glyph_overlaps_internal_drawing
-  severity: NIT
-  observation: VC014 was inspected in examples/fig3_trapping_concept/build/audit_crops/visual_clash/VC014_HOMO.png; this is
-    an intentional schematic overlay/guide-line candidate and a false positive for release because the text remains distinct
-    from the light background or axis/guide geometry in the current render and print-scale crops, with no scientific target
-    hidden.
-  linked_finding_id: ''
-  visual_clash_ref: VC014
-  text_boundary_ref: ''
-  label_path_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: VC014 is acceptable because the candidate is intentional schematic typography over separate
     light background or guide geometry; the current artifact remains readable and no semantic mark is obscured.
 - id: M015
   crop: examples/fig3_trapping_concept/build/audit_crops/full_q1.png
@@ -891,38 +748,12 @@ micro_defects:
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
   accept_simplification_rationale: The current schematic remains readable and target-correct; this detector candidate does not require a source patch.
-- id: M035
-  crop: examples/fig3_trapping_concept/build/audit_crops/full_q1.png
-  kind: label_path_near_miss
-  severity: NIT
-  observation: UG021 was inspected through undeclared_geometry.json; the candidate reflects intentional schematic guide geometry or label proximity without hiding a scientific target.
-  linked_finding_id: ''
-  visual_clash_ref: ''
-  text_boundary_ref: ''
-  label_path_ref: ''
-  undeclared_geometry_ref: UG021
-  status: accept_simplification
-  accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: The current schematic remains readable and target-correct; this detector candidate does not require a source patch.
-- id: M036
-  crop: examples/fig3_trapping_concept/build/audit_crops/full_q1.png
-  kind: label_path_near_miss
-  severity: NIT
-  observation: UG022 was inspected through undeclared_geometry.json; the candidate reflects intentional schematic guide geometry or label proximity without hiding a scientific target.
-  linked_finding_id: ''
-  visual_clash_ref: ''
-  text_boundary_ref: ''
-  label_path_ref: ''
-  undeclared_geometry_ref: UG022
-  status: accept_simplification
-  accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: The current schematic remains readable and target-correct; this detector candidate does not require a source patch.
 crop_audit_log:
-- crop_id: VC001_a
-  path: build/audit_crops/visual_clash/VC001_a.png
+- crop_id: VC001_E
+  path: build/audit_crops/visual_clash/VC001_E.png
   source: visual_clash:VC001
   observed_objects:
-  - VC001_a
+  - VC001_E
   local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
   candidate_refs:
   - VC001
@@ -933,11 +764,11 @@ crop_audit_log:
   unintended_visible_anomaly: none
   anomaly_rationale: No unintended visible anomaly was observed in this crop.
   anomaly_link: ''
-- crop_id: VC002_PDMS
-  path: build/audit_crops/visual_clash/VC002_PDMS.png
+- crop_id: VC002_injection
+  path: build/audit_crops/visual_clash/VC002_injection.png
   source: visual_clash:VC002
   observed_objects:
-  - VC002_PDMS
+  - VC002_injection
   local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
   candidate_refs:
   - VC002
@@ -978,149 +809,14 @@ crop_audit_log:
   unintended_visible_anomaly: none
   anomaly_rationale: No unintended visible anomaly was observed in this crop.
   anomaly_link: ''
-- crop_id: VC005_b
-  path: build/audit_crops/visual_clash/VC005_b.png
+- crop_id: VC005_E
+  path: build/audit_crops/visual_clash/VC005_E.png
   source: visual_clash:VC005
   observed_objects:
-  - VC005_b
+  - VC005_E
   local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
   candidate_refs:
   - VC005
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
-  unintended_visible_anomaly: none
-  anomaly_rationale: No unintended visible anomaly was observed in this crop.
-  anomaly_link: ''
-- crop_id: VC006_Sulfur
-  path: build/audit_crops/visual_clash/VC006_Sulfur.png
-  source: visual_clash:VC006
-  observed_objects:
-  - VC006_Sulfur
-  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
-  candidate_refs:
-  - VC006
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
-  unintended_visible_anomaly: none
-  anomaly_rationale: No unintended visible anomaly was observed in this crop.
-  anomaly_link: ''
-- crop_id: VC007_E
-  path: build/audit_crops/visual_clash/VC007_E.png
-  source: visual_clash:VC007
-  observed_objects:
-  - VC007_E
-  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
-  candidate_refs:
-  - VC007
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
-  unintended_visible_anomaly: none
-  anomaly_rationale: No unintended visible anomaly was observed in this crop.
-  anomaly_link: ''
-- crop_id: VC008_injection
-  path: build/audit_crops/visual_clash/VC008_injection.png
-  source: visual_clash:VC008
-  observed_objects:
-  - VC008_injection
-  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
-  candidate_refs:
-  - VC008
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
-  unintended_visible_anomaly: none
-  anomaly_rationale: No unintended visible anomaly was observed in this crop.
-  anomaly_link: ''
-- crop_id: VC009_E
-  path: build/audit_crops/visual_clash/VC009_E.png
-  source: visual_clash:VC009
-  observed_objects:
-  - VC009_E
-  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
-  candidate_refs:
-  - VC009
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
-  unintended_visible_anomaly: none
-  anomaly_rationale: No unintended visible anomaly was observed in this crop.
-  anomaly_link: ''
-- crop_id: VC010_HOMO
-  path: build/audit_crops/visual_clash/VC010_HOMO.png
-  source: visual_clash:VC010
-  observed_objects:
-  - VC010_HOMO
-  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
-  candidate_refs:
-  - VC010
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
-  unintended_visible_anomaly: none
-  anomaly_rationale: No unintended visible anomaly was observed in this crop.
-  anomaly_link: ''
-- crop_id: VC011_fast
-  path: build/audit_crops/visual_clash/VC011_fast.png
-  source: visual_clash:VC011
-  observed_objects:
-  - VC011_fast
-  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
-  candidate_refs:
-  - VC011
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
-  unintended_visible_anomaly: none
-  anomaly_rationale: No unintended visible anomaly was observed in this crop.
-  anomaly_link: ''
-- crop_id: VC012_V
-  path: build/audit_crops/visual_clash/VC012_V.png
-  source: visual_clash:VC012
-  observed_objects:
-  - VC012_V
-  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
-  candidate_refs:
-  - VC012
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
-  unintended_visible_anomaly: none
-  anomaly_rationale: No unintended visible anomaly was observed in this crop.
-  anomaly_link: ''
-- crop_id: VC013_t
-  path: build/audit_crops/visual_clash/VC013_t.png
-  source: visual_clash:VC013
-  observed_objects:
-  - VC013_t
-  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
-  candidate_refs:
-  - VC013
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: Crop inspected directly; no actionable defect beyond accepted detector candidate.
-  unintended_visible_anomaly: none
-  anomaly_rationale: No unintended visible anomaly was observed in this crop.
-  anomaly_link: ''
-- crop_id: VC014_HOMO
-  path: build/audit_crops/visual_clash/VC014_HOMO.png
-  source: visual_clash:VC014
-  observed_objects:
-  - VC014_HOMO
-  local_relationship: Required audit crop inspected; local relationships are target-correct unless linked as a defect.
-  candidate_refs:
-  - VC014
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
@@ -1224,14 +920,19 @@ findings:
   severity: NIT
   category: style
   tex_lines:
-  - 10
-  - 149
-  - 152
-  observation: At print_thumbnail scale the figure remains legible but the large two-line headers and bottom captions feel
-    like draft schematic typography rather than high-impact journal polish.
-  suggested_fix: Tighten title/caption typography and consider slightly stronger panel hierarchy after source semantics are
-    accepted.
-  status: open
+  - 28
+  - 29
+  - 37
+  - 38
+  - 145
+  - 148
+  observation: >-
+    Resolved in the current render: the previous large two-line headers were replaced with compact one-line panel titles,
+    panel backgrounds were quieted, and bottom captions were tightened to concise result statements.
+  suggested_fix: >-
+    No source patch required for this finding; future dogfood can still explore higher-touch art direction if the human
+    reviewer wants a more editorial/illustrated treatment.
+  status: resolved
 aesthetic_gate_audit:
 - slot: maturity_restraint
   verdict: pass
@@ -1300,4 +1001,4 @@ aesthetic_gate_audit:
 
 # Vision Critique — fig3_trapping_concept
 
-The current render is scientifically coherent and review-ready. It clearly contrasts PDMS fast recombination with sulfur-polymer deep-trap retention. The only open issue is polish-level: at thumbnail scale the typography and caption hierarchy remain draft-like rather than publication-illustration mature.
+The current render is scientifically coherent and review-ready. It clearly contrasts PDMS fast recombination with sulfur-polymer deep-trap retention, and the requested polish pass has tightened the panel titles, softened the panel backgrounds, and simplified bottom captions. Remaining refinement is a human art-direction choice for later dogfood rather than an open source-level defect.

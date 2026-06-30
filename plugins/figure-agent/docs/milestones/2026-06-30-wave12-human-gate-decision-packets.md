@@ -17,16 +17,21 @@ The human should only need to judge a proposal, add taste/domain feedback, or ap
 ## Current queue state
 
 - Automated review-mode executable work: 0
-- Review-mode complete fixtures: 11
-- Remaining gated fixtures: 3
+- Review-mode complete fixtures: 13
+- Remaining gated fixtures: 1
 
 Remaining gates:
 
 | Fixture | Gate type | Agent interpretation |
 | --- | --- | --- |
-| `fig1_overview_v2_pair_001_vault` | tracked golden roll-forward | Human should approve or reject replacing tracked golden exports after seeing the agent's difference/risk summary. |
-| `fig3_trapping_concept` | acceptance / art-direction | Human should choose between locking current solid-manuscript schematic or requesting high-impact polish. |
-| `fig4_trap_energy_diagram` | acceptance / art-direction | Agent applied the local TikZ annotation cleanup for C001/C002; this is now an acceptance/art-direction decision, not a known visual-defect blocker. |
+| `fig1_overview_v2_pair_001_vault` | tracked golden / release boundary | Human approved the bounded golden roll-forward, and the agent ran it. The status model still classifies tracked golden as a release-operator gate because golden baselines remain protected by policy. |
+
+Recently closed gates:
+
+| Fixture | Closed by | Current interpretation |
+| --- | --- | --- |
+| `fig3_trapping_concept` | one TikZ typography polish pass + refreshed critique/adjudication/export | Review-mode complete; remaining acceptance/final-artifact declaration is a future release decision, not an automated review blocker. |
+| `fig4_trap_energy_diagram` | local TikZ annotation cleanup + refreshed critique/adjudication/export | Review-mode complete; remaining acceptance/final-artifact declaration is a future release decision, not a known visual-defect blocker. |
 
 ## Packet 1: `fig1_overview_v2_pair_001_vault`
 
@@ -63,6 +68,13 @@ If approved:
 ./plugins/figure-agent/bin/fig-agent queue-run --mode review --goal Wave12-human-gate --dry-run --json
 ```
 
+Wave12 decision/action:
+
+- Human approved replacing the tracked golden export, with the note that future dogfood/critique may continue to refine the figure.
+- Agent ran `fig-agent export fig1_overview_v2_pair_001_vault --force-golden`.
+- Result: tracked PDF/SVG golden exports were regenerated; status is `render_state=FRESH`, `critique_state=FRESH`, `export_state=TRACKED_GOLDEN`, `workflow_ready=true`.
+- Policy note: `TRACKED_GOLDEN` still reports as `force_golden_required` in queue because tracked-golden baselines remain release-protected even after the explicit roll-forward command.
+
 Risk:
 
 - This mutates tracked golden export artifacts. It is reversible in git, but it changes the release baseline and therefore should remain explicit.
@@ -83,7 +95,7 @@ Evidence:
 
 - Scientific/content axes pass.
 - Detector surface has no text-boundary clashes, no label-path candidates, and no tex assertion issues.
-- Open finding C001 is `NIT/style`: typography/header/caption polish for high-impact journal finish.
+- Original open finding C001 was `NIT/style`: typography/header/caption polish for high-impact journal finish.
 
 Agent recommendation:
 
@@ -104,6 +116,14 @@ Choices:
 Risk:
 
 - Accepting now may leave it less polished than a high-impact graphical abstract, but no current evidence says the scientific message is wrong.
+
+Wave12 decision/action:
+
+- Human chose the TikZ polish pass.
+- Agent replaced large two-line headers with compact one-line titles, quieted panel backgrounds, and tightened bottom captions to concise result statements.
+- Refreshed critique/adjudication/export evidence.
+- Current state: `render_state=FRESH`, `critique_state=FRESH`, `export_state=FRESH`, `workflow_ready=true`, review-mode action `complete`.
+- Updated critique: C001 is `resolved`; `journal_polish=pass`; `publication_readiness=pass`; next quality bottleneck is `human_policy`.
 
 ## Packet 3: `fig4_trap_energy_diagram`
 

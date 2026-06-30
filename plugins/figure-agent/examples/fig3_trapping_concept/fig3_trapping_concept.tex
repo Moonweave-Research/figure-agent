@@ -25,21 +25,17 @@
   recArr/.style={-{Stealth[length=4pt,width=3pt]}, cGray, line width=0.9pt},
   escArr/.style={-{Stealth[length=3pt,width=2pt]}, cGray!70, line width=0.5pt, dashed},
   axisArr/.style={-{Stealth[length=3.5pt,width=2.5pt]}, cGray, line width=0.6pt},
+  headerTitle/.style={font=\textsf{\bfseries\fontsize{7.4}{8.8}\selectfont}, text=cGray!92!black},
+  resultCaption/.style={font=\textsf{\bfseries\fontsize{7.0}{8.4}\selectfont}, text=cGray!88!black},
 ]
 
 % ─── Panel backgrounds ───────────────────────────────────────────────────────
-\fill[cLGray!22, rounded corners=2.5mm] (0, 0)    rectangle (5.80, 5.60);
-\fill[cLGray!22, rounded corners=2.5mm] (6.20, 0) rectangle (12.00, 5.60);
+\fill[cLGray!16, rounded corners=1.8mm] (0, 0)    rectangle (5.80, 5.60);
+\fill[cLGray!16, rounded corners=1.8mm] (6.20, 0) rectangle (12.00, 5.60);
 
-% ─── Panel headers (a) (b) — two-line: bold title + gray subtitle ──────────
-\node[font=\textsf{\bfseries\fontsize{10}{12}\selectfont}, anchor=west]
-    at (0.30, 5.95) {(a) PDMS};
-\node[font=\textsf{\fontsize{7.5}{9}\selectfont}, cGray, anchor=west]
-    at (0.30, 5.55) {polarization mechanism};
-\node[font=\textsf{\bfseries\fontsize{10}{12}\selectfont}, anchor=west]
-    at (6.50, 5.95) {(b) Sulfur Polymer};
-\node[font=\textsf{\fontsize{7.5}{9}\selectfont}, cGray, anchor=west]
-    at (6.50, 5.55) {trap mechanism};
+% ─── Panel headers — compact manuscript-style titles ───────────────────────
+\node[headerTitle, anchor=west] at (0.30, 5.86) {(a) PDMS control};
+\node[headerTitle, anchor=west] at (6.50, 5.86) {(b) Sulfur-polymer traps};
 
 % ══════════════════════════════════════════════════════════════════════════════
 % PANEL (a): PDMS — clean bandgap + polarization glyph
@@ -146,10 +142,10 @@
 \end{scope}
 
 % ─── Bottom captions ────────────────────────────────────────────────────────
-\node[font=\textsf{\bfseries\fontsize{8.5}{10.5}\selectfont}, anchor=north]
-    at (3.20, -0.15) {fast $V(t)$ loss};
-\node[font=\textsf{\bfseries\fontsize{8.5}{10.5}\selectfont}, anchor=north]
-    at (9.10, -0.15) {long retention};
+\node[resultCaption, anchor=north]
+    at (3.20, -0.15) {fast voltage decay};
+\node[resultCaption, anchor=north]
+    at (9.10, -0.15) {trap-mediated long retention};
 
 \end{tikzpicture}%
 }
