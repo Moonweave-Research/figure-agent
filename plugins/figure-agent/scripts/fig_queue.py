@@ -27,6 +27,7 @@ OPERATOR_HANDOFF_SCHEMA = "figure-agent.queue-operator-handoff.v1"
 HUMAN_DECISION_PACKET_SCHEMA = "figure-agent.human-decision-packet.v1"
 RELEASE_DECISION_PACKET_SCHEMA = "figure-agent.release-decision-packet.v1"
 STYLE_DIRECTION_PACKET_SCHEMA = "figure-agent.style-direction-packet.v1"
+HUMAN_DECISION_RECORD_SCHEMA = "figure-agent.human-decision-record.v1"
 HUMAN_DECISION_DIGEST_SCHEMA = "figure-agent.human-decision-digest.v1"
 BOTTLENECK_REPORT_SCHEMA = "figure-agent.queue-bottleneck-report.v1"
 WORKSPACE_DIAGNOSTIC_SCHEMA = "figure-agent.queue-workspace-diagnostic.v1"
@@ -44,6 +45,28 @@ BOTTLENECK_CATEGORY_DEFINITIONS = {
     "reference_context": "missing or stale reference, briefing, or context input",
     "template_style": "SVG polish, template, editorial, style, palette, or aesthetic gate",
 }
+HUMAN_DECISION_KINDS = (
+    "accept_current_generated_export",
+    "declare_final_artifact",
+    "reject_current_artifact",
+    "defer_for_dogfood",
+    "request_bounded_tikz_polish",
+    "request_svg_polish_candidate_evidence",
+    "request_full_style_redesign",
+)
+MUTATION_BOUNDARIES = (
+    "no_source_mutation",
+    "source_mutation_allowed",
+    "release_state_mutation_allowed",
+    "golden_mutation_allowed",
+)
+_DIGEST_GROUPS = (
+    "accept_current_candidates",
+    "bounded_tikz_polish_candidates",
+    "redesign_benchmark_candidates",
+    "svg_polish_evidence_missing",
+    "dirty_stale_excluded",
+)
 _FILTER_KEYS = (
     "required_actor",
     "action",
@@ -202,6 +225,125 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
     if category is not None:
         row["bottleneck_category"] = category
     return row
+
+
+def validate_human_decision_record(record: dict[str, Any]) -> list[str]:
+    """Return validation errors for a durable human decision record."""
+    errors: list[str] = []
+    required_string_fields = (
+        "fixture",
+        "packet_schema",
+        "packet_run_id",
+        "decision_kind",
+        "agent_recommendation",
+        "human_decision",
+        "human_note",
+        "follow_up",
+        "mutation_boundary",
+    )
+    if record.get("schema") != HUMAN_DECISION_RECORD_SCHEMA:
+        errors.append("schema must be figure-agent.human-decision-record.v1")
+    for field in required_string_fields:
+        value = record.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{field} must be a non-empty string")
+    decision_kind = record.get("decision_kind")
+    if isinstance(decision_kind, str) and decision_kind not in HUMAN_DECISION_KINDS:
+        errors.append(f"decision_kind must be one of {', '.join(HUMAN_DECISION_KINDS)}")
+    mutation_boundary = record.get("mutation_boundary")
+    if isinstance(mutation_boundary, str) and mutation_boundary not in MUTATION_BOUNDARIES:
+        errors.append(f"mutation_boundary must be one of {', '.join(MUTATION_BOUNDARIES)}")
+    packet_schema = record.get("packet_schema")
+    if packet_schema == STYLE_DIRECTION_PACKET_SCHEMA and mutation_boundary in {
+        "release_state_mutation_allowed",
+        "golden_mutation_allowed",
+    }:
+        errors.append("style decisions must not authorize release or golden mutation")
+    if decision_kind in {"accept_current_generated_export", "declare_final_artifact"} and (
+        mutation_boundary == "golden_mutation_allowed"
+    ):
+        errors.append("release acceptance decisions must not imply golden mutation")
+    return errors
+
+
+def _packet_summary(packet: Any) -> tuple[str | None, str | None]:
+    if not isinstance(packet, dict):
+        return None, None
+    recommendation = packet.get("recommended_choice_id") or packet.get("agent_recommendation")
+    risk = None
+    risks = packet.get("risks")
+    if isinstance(risks, list):
+        risk = next((item for item in risks if isinstance(item, str) and item), None)
+    if risk is None:
+        choices = packet.get("choices")
+        if isinstance(choices, list):
+            for choice in choices:
+                if isinstance(choice, dict) and isinstance(choice.get("risk"), str):
+                    risk = choice["risk"]
+                    break
+    return (recommendation if isinstance(recommendation, str) else None, risk)
+
+
+def _digest_group_for_row(row: dict[str, Any]) -> str | None:
+    fixture = _cell(row.get("fixture"))
+    if fixture == "fig5_actuation_mechanism" or row.get("render_state") == "STALE":
+        return "dirty_stale_excluded"
+    polish_reason = row.get("polish_blocker_reason")
+    if polish_reason == "continue_tikz_recommended":
+        return "bounded_tikz_polish_candidates"
+    if polish_reason == "ready_for_svg_polish_evidence_missing":
+        return "svg_polish_evidence_missing"
+    style_packet = row.get("style_direction_packet")
+    if isinstance(style_packet, dict):
+        recommendation = style_packet.get("agent_recommendation")
+        if recommendation == "keep_current_style_with_optional_bounded_tikz_polish":
+            return "bounded_tikz_polish_candidates"
+        if recommendation == "full_style_redesign":
+            return "redesign_benchmark_candidates"
+    decision_packet = row.get("decision_packet")
+    if isinstance(decision_packet, dict):
+        if decision_packet.get("recommended_choice_id") == "accept_current_generated_export":
+            return "accept_current_candidates"
+        return "redesign_benchmark_candidates"
+    if row.get("required_actor") in {"human", "release_operator"}:
+        return "accept_current_candidates"
+    return None
+
+
+def _digest_next_action(group: str) -> str:
+    return {
+        "accept_current_candidates": "record explicit release/style acceptance or defer",
+        "bounded_tikz_polish_candidates": "open one bounded TikZ polish slice",
+        "redesign_benchmark_candidates": "prepare benchmark comparison before redesign",
+        "svg_polish_evidence_missing": "collect positive SVG-polish readiness evidence first",
+        "dirty_stale_excluded": "exclude from strategy work unless explicitly targeted",
+    }[group]
+
+
+def build_human_decision_digest(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    groups: dict[str, list[dict[str, Any]]] = {group: [] for group in _DIGEST_GROUPS}
+    for row in rows:
+        group = _digest_group_for_row(row)
+        if group is None:
+            continue
+        release_recommendation, release_risk = _packet_summary(row.get("decision_packet"))
+        style_recommendation, style_risk = _packet_summary(row.get("style_direction_packet"))
+        groups[group].append(
+            {
+                "fixture": row.get("fixture"),
+                "agent_recommendation": release_recommendation or style_recommendation or "review row",
+                "risk": release_risk or style_risk or _cell(row.get("first_blocker")),
+                "next_action": _digest_next_action(group),
+            }
+        )
+    return {
+        "schema": HUMAN_DECISION_DIGEST_SCHEMA,
+        "source": "live fig_queue rows",
+        "total_rows": len(rows),
+        "groups": groups,
+        "group_counts": {group: len(items) for group, items in groups.items()},
+        "mutation_boundary": "read_only_no_source_release_golden_mutation",
+    }
 
 
 def _svg_polish_fields(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
@@ -1569,6 +1711,7 @@ def build_queue(
         "rows": filtered_rows,
         "summary": _summary(filtered_rows),
         "bottleneck_report": build_bottleneck_report(filtered_rows),
+        "human_decision_digest": build_human_decision_digest(filtered_rows),
     }
     diagnostic = _workspace_diagnostic(repo_root, fixtures)
     if diagnostic is not None:

@@ -2072,3 +2072,119 @@ def test_wrapper_queue_from_parent_uses_plugin_examples() -> None:
     payload = json.loads(result.stdout)
     assert payload["unfiltered_total"] > 0
     assert payload["summary"]["total"] > 0
+
+
+def test_human_decision_record_validation_rejects_unknown_kind_and_style_mutation() -> None:
+    record = {
+        "schema": fig_queue.HUMAN_DECISION_RECORD_SCHEMA,
+        "fixture": "fig1_overview_v2_pair_001_vault",
+        "packet_schema": fig_queue.STYLE_DIRECTION_PACKET_SCHEMA,
+        "packet_run_id": "queue-run-2026-06-30T14:00:00Z",
+        "decision_kind": "invent_new_visual_language_now",
+        "agent_recommendation": "keep_current_style_then_record_release_decision",
+        "human_decision": "keep current style",
+        "human_note": "Style packet is not release acceptance.",
+        "follow_up": "rerun /fig_queue --mode release",
+        "mutation_boundary": "release_state_mutation_allowed",
+    }
+
+    errors = fig_queue.validate_human_decision_record(record)
+
+    assert any("decision_kind must be one of" in error for error in errors)
+    assert "style decisions must not authorize release or golden mutation" in errors
+
+
+def test_human_decision_record_validation_keeps_release_and_golden_boundaries_separate() -> None:
+    record = {
+        "schema": fig_queue.HUMAN_DECISION_RECORD_SCHEMA,
+        "fixture": "fig1_overview_v2_pair_001_vault",
+        "packet_schema": fig_queue.RELEASE_DECISION_PACKET_SCHEMA,
+        "packet_run_id": "queue-run-2026-06-30T14:00:00Z",
+        "decision_kind": "accept_current_generated_export",
+        "agent_recommendation": "accept_current_generated_export",
+        "human_decision": "accept current generated export",
+        "human_note": "Release acceptance does not force golden.",
+        "follow_up": "record accepted state explicitly",
+        "mutation_boundary": "golden_mutation_allowed",
+    }
+
+    errors = fig_queue.validate_human_decision_record(record)
+
+    assert "release acceptance decisions must not imply golden mutation" in errors
+
+
+def test_human_decision_digest_groups_queue_rows_and_excludes_dirty_stale_fig5() -> None:
+    rows = [
+        {
+            "fixture": "fig1_overview_v2_pair_001_vault",
+            "required_actor": "release_operator",
+            "render_state": "FRESH",
+            "first_blocker": "acceptance_not_declared",
+            "decision_packet": {
+                "schema": fig_queue.RELEASE_DECISION_PACKET_SCHEMA,
+                "recommended_choice_id": "accept_current_generated_export",
+                "choices": [
+                    {
+                        "id": "accept_current_generated_export",
+                        "risk": "may lock in the current solid manuscript style",
+                    }
+                ],
+            },
+            "style_direction_packet": {
+                "schema": fig_queue.STYLE_DIRECTION_PACKET_SCHEMA,
+                "agent_recommendation": "keep_current_style_then_record_release_decision",
+                "choices": [],
+            },
+        },
+        {
+            "fixture": "fig3_trapping_concept",
+            "required_actor": "svg_editor",
+            "render_state": "FRESH",
+            "first_blocker": "mode_forbidden_action",
+            "polish_blocker_reason": "continue_tikz_recommended",
+            "style_direction_packet": {
+                "schema": fig_queue.STYLE_DIRECTION_PACKET_SCHEMA,
+                "agent_recommendation": "keep_current_style_with_optional_bounded_tikz_polish",
+                "choices": [
+                    {
+                        "id": "bounded_tikz_source_polish",
+                        "risk": "should stay one local pass",
+                    }
+                ],
+            },
+        },
+        {
+            "fixture": "smoke_annotation_box_demo",
+            "required_actor": "svg_editor",
+            "render_state": "FRESH",
+            "first_blocker": "mode_forbidden_action",
+            "polish_blocker_reason": "ready_for_svg_polish_evidence_missing",
+        },
+        {
+            "fixture": "fig5_actuation_mechanism",
+            "required_actor": "workflow_agent",
+            "render_state": "STALE",
+            "first_blocker": "render_stale",
+        },
+    ]
+
+    digest = fig_queue.build_human_decision_digest(rows)
+
+    assert digest["schema"] == "figure-agent.human-decision-digest.v1"
+    assert digest["mutation_boundary"] == "read_only_no_source_release_golden_mutation"
+    assert digest["group_counts"] == {
+        "accept_current_candidates": 1,
+        "bounded_tikz_polish_candidates": 1,
+        "redesign_benchmark_candidates": 0,
+        "svg_polish_evidence_missing": 1,
+        "dirty_stale_excluded": 1,
+    }
+    assert digest["groups"]["accept_current_candidates"][0]["fixture"] == (
+        "fig1_overview_v2_pair_001_vault"
+    )
+    assert digest["groups"]["dirty_stale_excluded"][0]["fixture"] == (
+        "fig5_actuation_mechanism"
+    )
+    assert digest["groups"]["dirty_stale_excluded"][0]["next_action"] == (
+        "exclude from strategy work unless explicitly targeted"
+    )
