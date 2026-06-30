@@ -332,7 +332,9 @@ def _style_benchmark_comparison_fields(name: str, *, workspace_root: Path) -> di
     return {key: value for key, value in fields.items() if value is not None}
 
 
-def _design_direction_source_payload(row: dict[str, Any], *, prefix: str) -> dict[str, object] | None:
+def _design_direction_source_payload(
+    row: dict[str, Any], *, prefix: str
+) -> dict[str, object] | None:
     payload = row.get(prefix)
     if isinstance(payload, dict):
         return payload
@@ -367,7 +369,10 @@ def _design_direction_fields(fixture: str, row: dict[str, Any]) -> dict[str, Any
         "not_qualified",
     }:
         fields["design_direction_blocker_reason"] = "svg_polish_evidence_missing"
-    if packet.get("state") == "ready_for_human_choice" and row.get("action") == fig_driver.ACTION_COMPLETE:
+    if (
+        packet.get("state") == "ready_for_human_choice"
+        and row.get("action") == fig_driver.ACTION_COMPLETE
+    ):
         fields["required_actor"] = "human"
         fields["requires_human"] = True
         fields["blocking_source"] = "design_direction_human_choice"
