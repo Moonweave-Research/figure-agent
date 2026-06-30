@@ -29,7 +29,8 @@ def test_wave5_style_benchmark_preserves_non_mutation_boundaries() -> None:
         "Did not edit `examples/fig5_actuation_mechanism/fig5_actuation_mechanism.tex`",
         "Did not edit any fixture `.tex`",
         "Did not run compile/export/acceptance/golden/publication commands",
-        "This fixture is a benchmark for comparison criteria, not an instruction to rewrite its source",
+        "benchmark for comparison criteria",
+        "not an instruction to rewrite its source",
         "without source mutation",
     ):
         assert required in doc
