@@ -68,8 +68,10 @@ compile smoke
 )
 def test_compile_wraps_bare_tikz_snippet(tmp_path: Path) -> None:
     tex_path = tmp_path / "bare_snippet.tex"
-    tex_path.write_text(r"\node (label-a) at (0,0) {Bare Label};
-", encoding="utf-8")
+    tex_path.write_text(
+        "\\node (label-a) at (0,0) {Bare Label};\n",
+        encoding="utf-8",
+    )
 
     result = subprocess.run(
         ["bash", "scripts/compile.sh", str(tex_path)],
