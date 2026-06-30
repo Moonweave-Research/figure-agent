@@ -107,7 +107,9 @@ def test_fig_agent_closeout_uses_public_wrapper_without_type_error(
     monkeypatch.setitem(sys.modules, "fig_closeout", types.SimpleNamespace(main=fake_main))
 
     assert module._closeout(["smoke_trap_demo", "--json"]) == 7
-    assert calls == [["smoke_trap_demo", "--json"]]
+    assert calls == [
+        ["smoke_trap_demo", "--json", "--repo-root", str(PLUGIN_ROOT)]
+    ]
 
 
 def test_doctor_reports_workspace_missing_without_bundle_false_positive(
