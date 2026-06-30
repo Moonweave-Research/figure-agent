@@ -27,6 +27,7 @@ OPERATOR_HANDOFF_SCHEMA = "figure-agent.queue-operator-handoff.v1"
 HUMAN_DECISION_PACKET_SCHEMA = "figure-agent.human-decision-packet.v1"
 RELEASE_DECISION_PACKET_SCHEMA = "figure-agent.release-decision-packet.v1"
 STYLE_DIRECTION_PACKET_SCHEMA = "figure-agent.style-direction-packet.v1"
+HUMAN_DECISION_DIGEST_SCHEMA = "figure-agent.human-decision-digest.v1"
 BOTTLENECK_REPORT_SCHEMA = "figure-agent.queue-bottleneck-report.v1"
 WORKSPACE_DIAGNOSTIC_SCHEMA = "figure-agent.queue-workspace-diagnostic.v1"
 BOTTLENECK_CATEGORIES = (
@@ -1099,6 +1100,247 @@ def _command_plan_summary(rows: list[dict[str, Any]]) -> dict[str, int]:
     }
 
 
+
+
+_DIGEST_GROUP_LABELS = {
+    "accept_current_candidates": "accept-current candidates",
+    "bounded_tikz_polish_candidates": "bounded TikZ polish candidates",
+    "redesign_benchmark_candidates": "redesign benchmark candidates",
+    "svg_polish_evidence_missing": "SVG-polish evidence missing",
+    "dirty_stale_fixtures_excluded": "dirty/stale fixtures excluded from strategy work",
+}
+_DIGEST_NEXT_ACTIONS = {
+    "accept_current_candidates": (
+        "Record an explicit human release/style decision, then rerun /fig_queue --mode release."
+    ),
+    "bounded_tikz_polish_candidates": (
+        "Open one bounded TikZ/source polish slice; avoid release/golden mutation."
+    ),
+    "redesign_benchmark_candidates": (
+        "Prepare benchmark alternatives before changing the visual language."
+    ),
+    "svg_polish_evidence_missing": (
+        "Collect or refresh SVG-polish readiness evidence before opening SVG editing."
+    ),
+    "dirty_stale_fixtures_excluded": (
+        "Exclude from strategy work unless the human explicitly targets this fixture."
+    ),
+}
+
+
+def _packet_recommendations(row: dict[str, Any]) -> list[dict[str, str]]:
+    recommendations: list[dict[str, str]] = []
+    for key in ("decision_packet", "style_direction_packet"):
+        packet = row.get(key)
+        if not isinstance(packet, dict):
+            continue
+        schema = packet.get("schema")
+        recommendation = packet.get("agent_recommendation")
+        choice_id = packet.get("recommended_choice_id")
+        if not isinstance(schema, str) or not isinstance(recommendation, str):
+            continue
+        item = {"packet": schema, "recommendation": recommendation}
+        if isinstance(choice_id, str) and choice_id:
+            item["recommended_choice_id"] = choice_id
+        recommendations.append(item)
+    return recommendations
+
+
+def _packet_schemas(row: dict[str, Any]) -> list[str]:
+    return [item["packet"] for item in _packet_recommendations(row)]
+
+
+def _choice_risk(packet: dict[str, Any], choice_id: str | None) -> str | None:
+    choices = packet.get("choices")
+    if not isinstance(choices, list):
+        return None
+    for choice in choices:
+        if not isinstance(choice, dict):
+            continue
+        if choice_id is not None and choice.get("id") != choice_id:
+            continue
+        risk = choice.get("risk")
+        if isinstance(risk, str) and risk:
+            return risk
+    return None
+
+
+def _digest_one_line_risk(row: dict[str, Any]) -> str:
+    decision_packet = row.get("decision_packet")
+    if isinstance(decision_packet, dict):
+        risk = _choice_risk(
+            decision_packet,
+            decision_packet.get("recommended_choice_id")
+            if isinstance(decision_packet.get("recommended_choice_id"), str)
+            else None,
+        )
+        if risk:
+            return risk
+        risks = decision_packet.get("risks")
+        if isinstance(risks, list):
+            for item in risks:
+                if isinstance(item, str) and item:
+                    return item
+    style_packet = row.get("style_direction_packet")
+    if isinstance(style_packet, dict):
+        risk = _choice_risk(style_packet, "keep_current_style")
+        if risk:
+            return risk
+    polish_reason = row.get("polish_blocker_reason")
+    if isinstance(polish_reason, str) and polish_reason:
+        return f"polish gate is blocked by {polish_reason}"
+    first_blocker = row.get("first_blocker")
+    if isinstance(first_blocker, str) and first_blocker and first_blocker != "-":
+        return f"first blocker remains {first_blocker}"
+    return "no queue-visible one-line risk was available"
+
+
+def _row_is_dirty_stale_excluded(
+    row: dict[str, Any], *, targeted_fixtures: set[str]
+) -> bool:
+    fixture = row.get("fixture")
+    if not isinstance(fixture, str):
+        return False
+    if fixture == "fig5_actuation_mechanism" and fixture not in targeted_fixtures:
+        return True
+    if fixture in targeted_fixtures:
+        return False
+    if row.get("required_actor") in {"workflow_agent", "host_llm"}:
+        return False
+    signal = _row_signal_text(row)
+    return "dirty" in signal and "stale" in signal
+
+
+def _digest_group_key(row: dict[str, Any], *, targeted_fixtures: set[str]) -> str | None:
+    if _row_is_dirty_stale_excluded(row, targeted_fixtures=targeted_fixtures):
+        return "dirty_stale_fixtures_excluded"
+    polish_reason = row.get("polish_blocker_reason")
+    if polish_reason in {
+        "svg_polish_artifact_missing_or_stale",
+        "ready_for_svg_polish_evidence_missing",
+    }:
+        return "svg_polish_evidence_missing"
+    if polish_reason == "continue_tikz_recommended":
+        return "bounded_tikz_polish_candidates"
+    style_packet = row.get("style_direction_packet")
+    if isinstance(style_packet, dict):
+        recommendation = style_packet.get("agent_recommendation")
+        if isinstance(recommendation, str) and "redesign" in recommendation:
+            return "redesign_benchmark_candidates"
+        return "accept_current_candidates"
+    decision_packet = row.get("decision_packet")
+    if isinstance(decision_packet, dict):
+        recommended = decision_packet.get("recommended_choice_id")
+        if recommended == "defer_for_visual_dogfood":
+            return "redesign_benchmark_candidates"
+        return "accept_current_candidates"
+    if row.get("svg_polish_gate_state") == "blocked":
+        return "svg_polish_evidence_missing"
+    return None
+
+
+def _digest_row(row: dict[str, Any], *, group: str) -> dict[str, Any]:
+    fixture = _cell(row.get("fixture"))
+    return {
+        "fixture": fixture,
+        "action": _cell(row.get("action")),
+        "required_actor": _cell(row.get("required_actor")),
+        "first_blocker": _cell(row.get("first_blocker")),
+        "packet_schemas": _packet_schemas(row),
+        "packet_recommendations": _packet_recommendations(row),
+        "one_line_risk": _digest_one_line_risk(row),
+        "next_action": _DIGEST_NEXT_ACTIONS[group],
+    }
+
+
+def build_human_decision_digest(
+    queue: dict[str, Any], *, targeted_fixtures: list[str] | None = None
+) -> dict[str, Any]:
+    """Build a compact, read-only digest from live queue decision packets."""
+
+    rows = queue.get("rows")
+    source_rows = rows if isinstance(rows, list) else []
+    targeted = {fixture for fixture in targeted_fixtures or [] if isinstance(fixture, str)}
+    grouped: dict[str, list[dict[str, Any]]] = {key: [] for key in _DIGEST_GROUP_LABELS}
+    for row in source_rows:
+        if not isinstance(row, dict):
+            continue
+        group = _digest_group_key(row, targeted_fixtures=targeted)
+        if group is None:
+            continue
+        grouped[group].append(_digest_row(row, group=group))
+    groups = [
+        {
+            "id": group,
+            "label": _DIGEST_GROUP_LABELS[group],
+            "count": len(items),
+            "next_action": _DIGEST_NEXT_ACTIONS[group],
+            "rows": sorted(items, key=lambda item: item["fixture"]),
+        }
+        for group, items in grouped.items()
+    ]
+    packet_schemas = sorted(
+        {
+            schema
+            for group in groups
+            for item in group["rows"]
+            for schema in item["packet_schemas"]
+        }
+    )
+    return {
+        "schema": HUMAN_DECISION_DIGEST_SCHEMA,
+        "source": "live fig_queue rows",
+        "mode": queue.get("mode"),
+        "goal": queue.get("goal"),
+        "total_rows": len(source_rows),
+        "digest_rows": sum(group["count"] for group in groups),
+        "packet_schemas": packet_schemas,
+        "groups": groups,
+        "safety": {
+            "source_mutation": False,
+            "release_state_mutation": False,
+            "golden_mutation": False,
+        },
+    }
+
+
+def print_human_decision_digest(digest: dict[str, Any]) -> None:
+    print(
+        "human_decision_digest "
+        f"mode={_cell(digest.get('mode'))} "
+        f"total={digest.get('total_rows', 0)} "
+        f"digest_rows={digest.get('digest_rows', 0)}"
+    )
+    groups = digest.get("groups")
+    if not isinstance(groups, list):
+        return
+    for group in groups:
+        if not isinstance(group, dict) or group.get("count") == 0:
+            continue
+        print(f"\n{_cell(group.get('label'))} ({group.get('count')})")
+        print(f"next_action: {_cell(group.get('next_action'))}")
+        rows = group.get("rows")
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            recommendations = row.get("packet_recommendations")
+            recommendation_text = "-"
+            if isinstance(recommendations, list) and recommendations:
+                recommendation_text = "; ".join(
+                    _cell(item.get("recommended_choice_id") or item.get("recommendation"))
+                    for item in recommendations
+                    if isinstance(item, dict)
+                )
+            print(
+                "- "
+                f"{_cell(row.get('fixture'))}: "
+                f"recommend={recommendation_text}; "
+                f"risk={_cell(row.get('one_line_risk'))}"
+            )
+
+
 def _row_signal_text(row: dict[str, Any]) -> str:
     values: list[str] = []
     keys = (
@@ -1498,6 +1740,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
     parser.add_argument("--svg-polish-blocking-source", dest="svg_polish_blocking_sources")
     parser.add_argument("--command-plan", action="store_true")
     parser.add_argument("--commands", action="store_true")
+    parser.add_argument("--human-decision-digest", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("table", "json"), default="table")
     args = parser.parse_args(argv)
@@ -1525,7 +1768,13 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
         include_command_plan=args.command_plan or args.commands,
     )
     _print_workspace_diagnostic(queue)
-    if args.commands:
+    if args.human_decision_digest:
+        digest = build_human_decision_digest(queue, targeted_fixtures=list(args.fixtures) or None)
+        if args.json or args.format == "json":
+            print(json.dumps(digest, indent=2, sort_keys=True))
+        else:
+            print_human_decision_digest(digest)
+    elif args.commands:
         command_plan = queue["command_plan"]
         for item in command_plan["executable"]:
             print(item["safe_command"])
