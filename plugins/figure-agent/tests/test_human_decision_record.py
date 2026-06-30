@@ -77,7 +77,10 @@ def test_style_decision_does_not_equal_release_acceptance() -> None:
 
 
 def test_style_record_rejects_release_or_golden_mutation_boundary() -> None:
-    with pytest.raises(HumanDecisionRecordError, match="style_decision_cannot_mutate_release_state"):
+    with pytest.raises(
+        HumanDecisionRecordError,
+        match="style_decision_cannot_mutate_release_state",
+    ):
         validate_decision_record(
             _record(
                 packet_schema=STYLE_DIRECTION_PACKET_SCHEMA,
