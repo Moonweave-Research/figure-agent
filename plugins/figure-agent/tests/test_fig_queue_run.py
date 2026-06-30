@@ -387,6 +387,10 @@ def test_main_passes_svg_polish_filters_to_queue(
         "svg_polish_recommended_path": "continue_tikz",
         "svg_polish_next_action": "run_fig_critique",
         "svg_polish_blocking_sources": "driver_prerequisite",
+        "polish_blocker_reason": None,
+        "svg_polish_evidence_state": None,
+        "style_benchmark_pack_state": None,
+        "style_benchmark_comparison_state": None,
     }
     payload = json.loads(capsys.readouterr().out)
     assert payload["filters"] == {
