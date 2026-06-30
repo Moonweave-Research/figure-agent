@@ -367,6 +367,60 @@ def _export_row_is_safe(row: dict[str, Any]) -> bool:
     )
 
 
+def _host_llm_handoff_details(row: dict[str, Any]) -> dict[str, Any]:
+    first_blocker = _cell(row.get("first_blocker"))
+    blocking_source = _cell(row.get("blocking_source"))
+    category = _effective_bottleneck_category(row) or "host_critique"
+    details = {
+        "first_blocker": first_blocker,
+        "blocking_source": blocking_source,
+        "bottleneck_category": category,
+    }
+    if category == "reference_context":
+        if first_blocker == "critique_briefing_required":
+            return details | {
+                "handoff_kind": "critique_briefing_required",
+                "next_step": (
+                    "Prepare explicit briefing/reference context, then run host-vision "
+                    "critique for this fixture."
+                ),
+                "allowed_scope_extra": [
+                    f"examples/{_cell(row.get('fixture'))}/spec.yaml",
+                    f"examples/{_cell(row.get('fixture'))}/reference/",
+                ],
+                "closeout_checks_extra": [
+                    "confirm briefing/reference inputs are present before critique",
+                ],
+            }
+        return details | {
+            "handoff_kind": "reference_context_required",
+            "next_step": (
+                "Fix declared reference/context inputs, then run host-vision "
+                "critique for this fixture."
+            ),
+            "allowed_scope_extra": [
+                f"examples/{_cell(row.get('fixture'))}/spec.yaml",
+                f"examples/{_cell(row.get('fixture'))}/reference/",
+            ],
+            "closeout_checks_extra": [
+                "confirm reference/context paths resolve before critique",
+            ],
+        }
+    if first_blocker == "critique_stale":
+        return details | {
+            "handoff_kind": "critique_stale_refresh",
+            "next_step": "Refresh stale host-vision critique for this fixture.",
+            "allowed_scope_extra": [],
+            "closeout_checks_extra": [],
+        }
+    return details | {
+        "handoff_kind": "host_critique_refresh",
+        "next_step": "Refresh host-vision critique for this fixture.",
+        "allowed_scope_extra": [],
+        "closeout_checks_extra": [],
+    }
+
+
 def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
     fixture = _cell(row.get("fixture"))
     actor = _cell(row.get("required_actor"))
@@ -393,21 +447,29 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
                     "closeout_checks": ["rerun /fig_queue in the next broader mode"],
                 }
     if actor == "host_llm":
+        details = _host_llm_handoff_details(row)
         return {
             "schema": OPERATOR_HANDOFF_SCHEMA,
             "fixture": fixture,
             "required_actor": actor,
-            "next_step": "Refresh host-vision critique for this fixture.",
+            "handoff_kind": details["handoff_kind"],
+            "first_blocker": details["first_blocker"],
+            "blocking_source": details["blocking_source"],
+            "bottleneck_category": details["bottleneck_category"],
+            "next_step": details["next_step"],
             "command": row.get("safe_command"),
             "reason": reason,
             "allowed_scope": [
                 f"examples/{fixture}/critique.md",
+                f"examples/{fixture}/critique_adjudication.yaml",
                 f"examples/{fixture}/build/audit_crops/",
+                *details["allowed_scope_extra"],
             ],
             "forbidden_scope": common_forbidden,
             "closeout_checks": [
                 "run critique_lint",
                 "sync or scaffold critique_adjudication.yaml",
+                *details["closeout_checks_extra"],
                 "rerun /fig_queue",
             ],
         }

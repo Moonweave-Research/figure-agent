@@ -420,7 +420,7 @@ def test_queue_table_keeps_blocked_handoff_when_driver_guidance_is_present(
     fig_queue.print_table(queue)
 
     table = capsys.readouterr().out
-    assert "Refresh host-vision critique for this fixture." in table
+    assert "Refresh stale host-vision critique for this fixture." in table
     assert "driver guidance should not replace queue handoff" not in table
 
 
@@ -1197,11 +1197,16 @@ def test_build_queue_can_include_command_plan(
         "schema": "figure-agent.queue-operator-handoff.v1",
         "fixture": "gamma",
         "required_actor": "host_llm",
-        "next_step": "Refresh host-vision critique for this fixture.",
+        "handoff_kind": "critique_stale_refresh",
+        "first_blocker": "critique_stale",
+        "blocking_source": "host_llm_critique_required",
+        "bottleneck_category": "host_critique",
+        "next_step": "Refresh stale host-vision critique for this fixture.",
         "command": "/fig_critique gamma",
         "reason": "required_actor:host_llm",
         "allowed_scope": [
             "examples/gamma/critique.md",
+            "examples/gamma/critique_adjudication.yaml",
             "examples/gamma/build/audit_crops/",
         ],
         "forbidden_scope": [
@@ -1216,6 +1221,49 @@ def test_build_queue_can_include_command_plan(
             "rerun /fig_queue",
         ],
     }
+
+
+def test_host_llm_operator_handoff_separates_reference_context() -> None:
+    rows = [
+        {
+            "fixture": "needs_briefing",
+            "action": "run_critique",
+            "required_actor": "host_llm",
+            "requires_human": False,
+            "safe_command": "/fig_critique needs_briefing",
+            "blocking_source": "host_llm_critique_required",
+            "stop_boundary": "host_llm_critique_required",
+            "first_blocker": "critique_briefing_required",
+        },
+        {
+            "fixture": "needs_reference",
+            "action": "run_critique",
+            "required_actor": "host_llm",
+            "requires_human": False,
+            "safe_command": None,
+            "blocking_source": "reference_missing",
+            "stop_boundary": "reference_missing",
+            "first_blocker": "reference_missing",
+        },
+    ]
+
+    plan = fig_queue.build_command_plan(rows)
+    briefing = plan["blocked"][0]["operator_handoff"]
+    reference = plan["blocked"][1]["operator_handoff"]
+
+    assert briefing["handoff_kind"] == "critique_briefing_required"
+    assert briefing["bottleneck_category"] == "reference_context"
+    assert briefing["first_blocker"] == "critique_briefing_required"
+    assert "briefing/reference context" in briefing["next_step"]
+    assert "examples/needs_briefing/reference/" in briefing["allowed_scope"]
+    assert "confirm briefing/reference inputs are present before critique" in briefing["closeout_checks"]
+
+    assert reference["handoff_kind"] == "reference_context_required"
+    assert reference["bottleneck_category"] == "reference_context"
+    assert reference["blocking_source"] == "reference_missing"
+    assert "Fix declared reference/context inputs" in reference["next_step"]
+    assert "examples/needs_reference/spec.yaml" in reference["allowed_scope"]
+    assert "confirm reference/context paths resolve before critique" in reference["closeout_checks"]
 
 
 def test_command_plan_quotes_closeout_handoff_fixture_names_with_spaces() -> None:
