@@ -177,7 +177,7 @@ def run_queue(
     }
 
 
-def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
+def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int:
     parser = argparse.ArgumentParser(prog="fig_queue_run.py")
     parser.add_argument("fixtures", nargs="*")
     parser.add_argument("--mode", choices=list(fig_driver.MODES), required=True)
@@ -208,7 +208,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     try:
         resolved_repo_root = (
             runtime_paths.resolve_runtime_paths().workspace_root
-            if repo_root == REPO_ROOT
+            if repo_root is None
             else repo_root
         )
         payload = run_queue(

@@ -880,7 +880,7 @@ def _has_svg_polish_columns(rows: Any) -> bool:
     return any(isinstance(row, dict) and not keys.isdisjoint(row) for row in rows)
 
 
-def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
+def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int:
     parser = argparse.ArgumentParser(prog="fig_queue.py")
     parser.add_argument("fixtures", nargs="*")
     parser.add_argument("--mode", choices=list(fig_driver.MODES), required=True)
@@ -903,7 +903,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
 
     resolved_repo_root = (
         runtime_paths.resolve_runtime_paths().workspace_root
-        if repo_root == REPO_ROOT
+        if repo_root is None
         else repo_root
     )
     queue = build_queue(
