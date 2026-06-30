@@ -2119,7 +2119,7 @@ def test_human_decision_digest_groups_queue_packets_without_mutation(
 
     queue = fig_queue.build_queue(
         repo_root=tmp_path,
-        mode="release",
+        mode="polish",
         goal="decision-dogfood",
         fixtures=None,
     )
