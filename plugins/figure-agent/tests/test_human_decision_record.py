@@ -172,3 +172,81 @@ def test_svg_polish_handoff_choice_requires_evidence_language() -> None:
                 mutation_boundary="no_source_mutation",
             )
         )
+
+
+def test_design_direction_decision_record_validates_without_mutation() -> None:
+    validated = validate_decision_record(
+        _record(
+            packet_schema="figure-agent.design-direction-packet.v1",
+            packet_timestamp="2026-07-01T00:00:00Z",
+            queue_run_id=None,
+            decision_kind="prepare_bounded_tikz_refinement",
+            agent_recommendation=(
+                "I recommend keeping the current style unless a candidate beats the benchmark."
+            ),
+            human_decision="prepare bounded TikZ refinement candidates",
+            human_note="Compare one bounded candidate before changing direction.",
+            follow_up={"implementation_slice": "prepare a bounded TikZ candidate packet only"},
+            mutation_boundary="no_source_mutation",
+        )
+    )
+
+    assert validated["packet_schema"] == "figure-agent.design-direction-packet.v1"
+    assert validated["decision_kind"] == "prepare_bounded_tikz_refinement"
+    assert validated["mutation_boundary"] == "no_source_mutation"
+
+
+@pytest.mark.parametrize(
+    "decision_kind",
+    [
+        "keep_current_style",
+        "prepare_bounded_tikz_refinement",
+        "prepare_editorial_redesign_candidates",
+        "prepare_svg_polish_handoff",
+        "defer_design_decision",
+    ],
+)
+def test_design_direction_decision_ids_validate_without_mutation(decision_kind: str) -> None:
+    validated = validate_decision_record(
+        _record(
+            packet_schema="figure-agent.design-direction-packet.v1",
+            packet_timestamp="2026-07-01T00:00:00Z",
+            queue_run_id=None,
+            decision_kind=decision_kind,
+            agent_recommendation="Record a design direction only; no artifact mutation is authorized.",
+            human_decision=decision_kind,
+            human_note="Human selected this design direction as policy state only.",
+            follow_up={"implementation_slice": "record design direction only"},
+            mutation_boundary="no_source_mutation",
+        )
+    )
+
+    assert validated["decision_kind"] == decision_kind
+
+
+def test_design_direction_record_rejects_mutating_boundary() -> None:
+    with pytest.raises(HumanDecisionRecordError, match="design_direction_decision_cannot_authorize_mutation"):
+        validate_decision_record(
+            _record(
+                packet_schema="figure-agent.design-direction-packet.v1",
+                packet_timestamp="2026-07-01T00:00:00Z",
+                queue_run_id=None,
+                decision_kind="prepare_editorial_redesign_candidates",
+                follow_up={"implementation_slice": "prepare non-mutating editorial candidates"},
+                mutation_boundary="source_mutation_allowed",
+            )
+        )
+
+
+def test_design_direction_record_rejects_legacy_style_decision_ids() -> None:
+    with pytest.raises(HumanDecisionRecordError, match="design_direction_decision_kind_unknown"):
+        validate_decision_record(
+            _record(
+                packet_schema="figure-agent.design-direction-packet.v1",
+                packet_timestamp="2026-07-01T00:00:00Z",
+                queue_run_id=None,
+                decision_kind="request_full_style_redesign",
+                follow_up={"implementation_slice": "prepare redesign benchmark candidates"},
+                mutation_boundary="no_source_mutation",
+            )
+        )
