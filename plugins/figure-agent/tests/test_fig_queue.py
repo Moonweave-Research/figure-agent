@@ -815,7 +815,7 @@ def test_print_table_outputs_rows_and_summary(capsys: pytest.CaptureFixture[str]
     )
     assert (
         "alpha\thost_llm\trun_critique\thost_llm_critique_required\t"
-        "critique_stale\tRefresh host-vision critique for this fixture.\t"
+        "critique_stale\tRefresh stale host-vision critique for this fixture.\t"
         "/fig_critique alpha"
     ) in out
     assert "summary total=1 errors=0" in out
