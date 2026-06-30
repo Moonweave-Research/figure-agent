@@ -241,7 +241,8 @@ def _semantic_risks_for(edit_class: str) -> list[str]:
         ]
     if edit_class == "panel_spacing_adjust":
         return [
-            "panel-spacing adjustment must not change panel identity, ordering, or scientific claims"
+            "panel-spacing adjustment must not change panel identity, ordering, "
+            "or scientific claims"
         ]
     if edit_class == "line_weight_style":
         return [

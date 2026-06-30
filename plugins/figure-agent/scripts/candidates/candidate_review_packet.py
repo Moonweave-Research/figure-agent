@@ -232,7 +232,9 @@ def _manifest_summary(manifest: dict[str, Any]) -> dict[str, Any]:
         "source_commit": base.get("source_commit") if isinstance(base, dict) else None,
         "risk": manifest.get("risk"),
         "expected_delta": (
-            manifest.get("expected_delta") if isinstance(manifest.get("expected_delta"), list) else []
+            manifest.get("expected_delta")
+            if isinstance(manifest.get("expected_delta"), list)
+            else []
         ),
         "semantic_risks": (
             manifest.get("semantic_risks")
