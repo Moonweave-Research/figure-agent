@@ -224,7 +224,7 @@ def test_main_warns_when_queue_workspace_has_no_examples(
     assert fig_queue_run.main(
         ["--mode", "review", "--goal", "triage", "--dry-run"],
         repo_root=tmp_path,
-    ) == 0
+    ) == 2
 
     captured = capsys.readouterr()
     payload = json.loads(captured.out)

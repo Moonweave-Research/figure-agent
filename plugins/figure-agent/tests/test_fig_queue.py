@@ -958,7 +958,7 @@ def test_main_warns_when_implicit_workspace_has_no_examples(
     assert fig_queue.main(
         ["--mode", "review", "--goal", "triage", "--json"],
         repo_root=tmp_path,
-    ) == 0
+    ) == 2
 
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
