@@ -70,6 +70,14 @@ def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
                 "apply_authority": "apply_eligible",
                 "effective_apply_authority": "review_only",
                 "risk": "low",
+                "expected_delta": ["increase panel boundary clearance"],
+                "semantic_risks": ["panel spacing must preserve panel semantics"],
+                "boundedness": {
+                    "changes": "increase panel boundary clearance",
+                    "does_not_change": ["accepted state", "tracked golden exports", "SVG artifacts"],
+                    "requires_human_review": True,
+                    "not_svg_polish": True,
+                },
                 "rollback": {"strategy": "reverse_operations"},
             },
             sort_keys=True,
@@ -343,6 +351,23 @@ def test_review_packet_includes_semantic_review_state(tmp_path: Path) -> None:
     assert packet["semantic_invariant_report"]["status"] == "pass"
     assert packet["semantic_invariant_report"]["verdict"] == "pass"
     assert packet["semantic_invariant_report"]["blocks_apply"] is False
+
+
+def test_review_packet_summarizes_bounded_candidate_context(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    summary = packet["manifest_summary"]
+    assert summary["expected_delta"] == ["increase panel boundary clearance"]
+    assert summary["semantic_risks"] == ["panel spacing must preserve panel semantics"]
+    assert summary["boundedness"]["not_svg_polish"] is True
+    assert "accepted state" in summary["boundedness"]["does_not_change"]
 
 
 def test_review_packet_reports_optional_missing_semantic_review(

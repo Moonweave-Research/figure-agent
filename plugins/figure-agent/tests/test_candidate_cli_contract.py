@@ -178,6 +178,48 @@ def test_fig_agent_candidates_accepts_panel_family_filters(tmp_path: Path) -> No
     assert output.is_file()
 
 
+def test_fig_agent_candidates_accepts_design_safe_family_aliases(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "% Panel C\n"
+        "\\node[anchor=west, text width=2.0cm] at (3.0, 2.4) {mobility edge};\n"
+        "\\node[anchor=west] at (3.0, 2.0) {shallow};\n"
+        "\\draw[line width=0.50pt] (0,0) -- (1,0);\n"
+        "\\fill[cAmber!12] (0,0) rectangle (1,1);\n",
+        encoding="utf-8",
+    )
+
+    families = {
+        "label_offset": "label_offset",
+        "text_width_refit": "text_width_refit",
+        "panel_spacing_adjustment": "panel_spacing_adjust",
+        "stroke_hierarchy_adjustment": "line_weight_style",
+        "nonsemantic_background_quieting": "gradient_depth_fill",
+    }
+    for family, edit_class in families.items():
+        result = _run(
+            workspace,
+            "candidates",
+            "candidate_demo",
+            "--panel",
+            "C",
+            "--family",
+            family,
+            "--json",
+        )
+
+        assert result.returncode == 0, result.stderr
+        candidate = json.loads(result.stdout)["candidates"][0]
+        assert candidate["family"] == family
+        assert candidate["edit_class"] == edit_class
+        assert candidate["candidate_hash"].startswith("sha256:")
+        assert candidate["boundedness"]["not_svg_polish"] is True
+        assert "fig-agent compile candidate_demo --strict" in candidate["verification"][
+            "required_commands"
+        ]
+
+
 def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
