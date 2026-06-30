@@ -25,6 +25,7 @@ SCHEMA = "figure-agent.fixture-driver-queue.v1"
 COMMAND_PLAN_SCHEMA = "figure-agent.fixture-command-plan.v1"
 OPERATOR_HANDOFF_SCHEMA = "figure-agent.queue-operator-handoff.v1"
 BOTTLENECK_REPORT_SCHEMA = "figure-agent.queue-bottleneck-report.v1"
+WORKSPACE_DIAGNOSTIC_SCHEMA = "figure-agent.queue-workspace-diagnostic.v1"
 BOTTLENECK_CATEGORIES = (
     "mechanical_tool",
     "host_critique",
@@ -89,6 +90,36 @@ def _fixture_names(repo_root: Path, fixtures: list[str] | None) -> list[str]:
         for path in examples_dir.iterdir()
         if path.is_dir() and (path / "spec.yaml").is_file()
     )
+
+
+def _workspace_diagnostic(
+    repo_root: Path, fixtures: list[str] | None
+) -> dict[str, Any] | None:
+    if fixtures:
+        return None
+    examples_dir = repo_root / "examples"
+    if examples_dir.is_dir():
+        return None
+    return {
+        "schema": WORKSPACE_DIAGNOSTIC_SCHEMA,
+        "state": "missing_examples",
+        "workspace_root": str(repo_root),
+        "missing": ["examples"],
+        "message": (
+            "implicit queue discovery found no examples/ directory; run from the "
+            "figure-agent plugin root or set FIGURE_AGENT_WORKSPACE/CLAUDE_PROJECT_DIR "
+            "to a workspace with examples/"
+        ),
+    }
+
+
+def _print_workspace_diagnostic(queue: dict[str, Any]) -> None:
+    diagnostic = queue.get("workspace_diagnostic")
+    if not isinstance(diagnostic, dict):
+        return
+    message = diagnostic.get("message")
+    if isinstance(message, str) and message:
+        print(f"fig_queue.py: {message}", file=sys.stderr)
 
 
 def _first_blocker(summary: dict[str, Any]) -> str | None:
@@ -750,6 +781,9 @@ def build_queue(
         "summary": _summary(filtered_rows),
         "bottleneck_report": build_bottleneck_report(filtered_rows),
     }
+    diagnostic = _workspace_diagnostic(repo_root, fixtures)
+    if diagnostic is not None:
+        queue["workspace_diagnostic"] = diagnostic
     if include_command_plan:
         queue["command_plan"] = build_command_plan(filtered_rows)
     return queue
@@ -925,6 +959,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
         },
         include_command_plan=args.command_plan or args.commands,
     )
+    _print_workspace_diagnostic(queue)
     if args.commands:
         command_plan = queue["command_plan"]
         for item in command_plan["executable"]:
