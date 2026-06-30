@@ -311,7 +311,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:current-critique-input-manifest
+  assessed_artifact_hash: sha256:6cd72e24357fa1991e9bc8ce0f2f53c9fc9583cc7ba83dd778c3928b842c5b81
   benchmark_level: solid_manuscript
   confidence: high
   blockers:
@@ -336,18 +336,29 @@ journal_grade_assessment:
   score_rationale: Current artifact is scientifically plausible and readable at full size, but annotation collisions are the
     next quality bottleneck.
 aesthetic_antipattern_audit:
+- id: draft_schematic_polish
+  verdict: present
+  severity: MINOR
   route: tikz_patch
-  observed_antipatterns:
-  - crowded label/rule intersections in shallow and deep trap annotations
+  evidence: Current render and visual-clash crops were inspected for draft schematic polish.
   rationale: Current artifact needs a local TikZ label-position patch, not SVG polish.
+  linked_evidence:
+  - crop_audit_log
 weakest_panel_coherence:
-  panel_id: a
+- panel_id: a
   weakness: Panel a carries dense shallow/deep annotation text crossed by rule/guide geometry.
+  severity: MINOR
   route: tikz_patch
   evidence: VC003, VC005, VC006, VC007, VC008 crops.
+  rationale: Current artifact panel coherence was inspected directly.
+  linked_evidence:
+  - crop_audit_log
 reference_learning_accountability:
+- id: no_reference_pack
   route: none
+  evidence: No active reference-learning pack is declared in the current fixture brief/spec.
   rationale: No reference-learning pack is active; critique is grounded in briefing/spec/current render only.
+  linked_evidence: []
 micro_defects:
 - id: M001
   crop: examples/fig4_trap_energy_diagram/build/audit_crops/visual_clash/VC001_Trap.png
@@ -610,6 +621,70 @@ findings:
   suggested_fix: Shift the deep-trap labels to the right or lower the text block and adjust nearby guide/rule extents so the
     red label and >1 eV callout remain clear at print scale.
   status: open
+aesthetic_gate_audit:
+- slot: maturity_restraint
+  verdict: pass
+  route: pass
+  evidence: Current render and print-scale crop evidence inspected for maturity_restraint.
+  rationale: Current artifact evidence supports the maturity_restraint gate; local label cleanup is noted where applicable.
+  linked_evidence:
+  - crop_audit_log
+- slot: visual_hierarchy
+  verdict: pass
+  route: pass
+  evidence: Current render and print-scale crop evidence inspected for visual_hierarchy.
+  rationale: Current artifact evidence supports the visual_hierarchy gate; local label cleanup is noted where applicable.
+  linked_evidence:
+  - crop_audit_log
+- slot: template_genericness
+  verdict: pass
+  route: pass
+  evidence: Current render and print-scale crop evidence inspected for template_genericness.
+  rationale: Current artifact evidence supports the template_genericness gate; local label cleanup is noted where applicable.
+  linked_evidence:
+  - crop_audit_log
+- slot: overdecorated_or_cartoonish
+  verdict: pass
+  route: pass
+  evidence: Current render and print-scale crop evidence inspected for overdecorated_or_cartoonish.
+  rationale: Current artifact evidence supports the overdecorated_or_cartoonish gate; local label cleanup is noted where applicable.
+  linked_evidence:
+  - crop_audit_log
+- slot: journal_fit
+  verdict: pass
+  route: pass
+  evidence: Current render and print-scale crop evidence inspected for journal_fit.
+  rationale: Current artifact evidence supports the journal_fit gate; local label cleanup is noted where applicable.
+  linked_evidence:
+  - crop_audit_log
+- slot: handcrafted_finish
+  verdict: weak
+  route: tikz_patch
+  evidence: Current render and print-scale crop evidence inspected for handcrafted_finish.
+  rationale: Current artifact evidence supports the handcrafted_finish gate; local label cleanup is noted where applicable.
+  linked_evidence:
+  - crop_audit_log
+- slot: semantic_preservation
+  verdict: pass
+  route: pass
+  evidence: Current render and print-scale crop evidence inspected for semantic_preservation.
+  rationale: Current artifact evidence supports the semantic_preservation gate; local label cleanup is noted where applicable.
+  linked_evidence:
+  - crop_audit_log
+- slot: print_scale_finish
+  verdict: weak
+  route: tikz_patch
+  evidence: Current render and print-scale crop evidence inspected for print_scale_finish.
+  rationale: Current artifact evidence supports the print_scale_finish gate; local label cleanup is noted where applicable.
+  linked_evidence:
+  - crop_audit_log
+- slot: paper_wide_coherence
+  verdict: pass
+  route: pass
+  evidence: Current render and print-scale crop evidence inspected for paper_wide_coherence.
+  rationale: Current artifact evidence supports the paper_wide_coherence gate; local label cleanup is noted where applicable.
+  linked_evidence:
+  - crop_audit_log
 ---
 
 # Vision Critique — fig4_trap_energy_diagram
