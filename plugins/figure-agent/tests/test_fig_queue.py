@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -1405,3 +1407,31 @@ def test_main_commands_prints_executable_commands_only(
     assert capsys.readouterr().out.splitlines() == [
         "fig-agent loop alpha --goal triage --json"
     ]
+
+
+def test_wrapper_queue_from_parent_uses_plugin_examples() -> None:
+    env = os.environ.copy()
+    env.pop("FIGURE_AGENT_WORKSPACE", None)
+    env.pop("CLAUDE_PROJECT_DIR", None)
+
+    result = subprocess.run(
+        [
+            str(Path("figure-agent") / "bin" / "fig-agent"),
+            "queue",
+            "--mode",
+            "review",
+            "--goal",
+            "cwd trap regression",
+            "--json",
+        ],
+        cwd=Path(__file__).resolve().parents[2],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    payload = json.loads(result.stdout)
+    assert payload["unfiltered_total"] > 0
+    assert payload["summary"]["total"] > 0

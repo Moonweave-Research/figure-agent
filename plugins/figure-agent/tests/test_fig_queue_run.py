@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -353,6 +355,37 @@ def test_main_passes_svg_polish_filters_to_queue(
         "svg_polish_next_action": "run_fig_critique",
         "svg_polish_blocking_sources": "driver_prerequisite",
     }
+
+
+def test_wrapper_queue_run_from_parent_uses_plugin_examples() -> None:
+    env = os.environ.copy()
+    env.pop("FIGURE_AGENT_WORKSPACE", None)
+    env.pop("CLAUDE_PROJECT_DIR", None)
+
+    result = subprocess.run(
+        [
+            str(Path("figure-agent") / "bin" / "fig-agent"),
+            "queue-run",
+            "--mode",
+            "review",
+            "--goal",
+            "cwd trap regression",
+            "--dry-run",
+            "--json",
+            "--max-fixtures",
+            "1",
+        ],
+        cwd=Path(__file__).resolve().parents[2],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    payload = json.loads(result.stdout)
+    assert payload["queue"]["unfiltered_total"] > 0
+    assert payload["queue"]["summary"]["total"] > 0
 
 
 def test_queue_run_filter_surface_matches_fig_queue() -> None:
