@@ -76,7 +76,19 @@ def _maybe_reexec_with_uv_project() -> None:
 
 
 def _paths() -> runtime_paths.RuntimePaths:
-    return runtime_paths.resolve_runtime_paths(plugin_root=PLUGIN_ROOT)
+    explicit_workspace = os.environ.get("FIGURE_AGENT_WORKSPACE") or os.environ.get(
+        "CLAUDE_PROJECT_DIR"
+    )
+    workspace_root = None
+    if (
+        explicit_workspace is None
+        and runtime_paths.plugin_root_kind(PLUGIN_ROOT) == "source_tree"
+    ):
+        workspace_root = PLUGIN_ROOT
+    return runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace_root,
+    )
 
 
 def _with_runtime_env() -> dict[str, str]:
