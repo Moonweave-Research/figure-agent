@@ -4,7 +4,7 @@ description: Read-only multi-fixture driver queue. Aggregates /fig_drive decisio
 
 Inspect the driver-selected next action for multiple fixtures.
 
-**Usage**: `/fig_queue --mode <mode> --goal "<goal>" [filters] [<fixture> ...] [--json | --format json | --human-decision-digest]`
+**Usage**: `/fig_queue --mode <mode> --goal "<goal>" [filters] [<fixture> ...] [--json | --format json] [--human-decision-digest]`
 
 Run from the plugin root:
 
@@ -103,6 +103,24 @@ The command plan treats a row as executable only when all of these are true:
 Host critique, human review, release/golden approval, SVG polish handoff,
 missing commands, non-allowlisted actions, and rows with stop boundaries remain
 blocked and visible in the command plan.
+
+
+## Human decision digest
+
+With `--human-decision-digest`, output switches to `schema: figure-agent.human-decision-digest.v1`. The digest is derived from live queue rows and preserves both release decision packet and style direction packet recommendations when both are present on a row. It is intentionally an opt-in output mode, not an extra field on the default `figure-agent.fixture-driver-queue.v1` JSON payload.
+
+Top-level digest fields:
+
+| Field | Notes |
+|---|---|
+| `schema` | `figure-agent.human-decision-digest.v1` |
+| `source` | `live fig_queue rows` |
+| `mode` / `goal` | copied from the queue invocation |
+| `total_rows` | live queue row count before digest grouping |
+| `digest_rows` | number of rows included in human-facing groups |
+| `packet_schemas` | packet schemas surfaced by grouped rows |
+| `groups` | accept-current, bounded TikZ polish, redesign benchmark, SVG-polish evidence missing, and dirty/stale excluded groups |
+| `safety` | all mutation flags are false |
 
 ## Output JSON contract
 

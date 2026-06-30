@@ -155,6 +155,9 @@ def test_wave0_queue_bottleneck_plan_is_read_only_and_documented() -> None:
 
     for doc in (plan, queue_doc, queue_run_doc):
         assert "bottleneck_report" in doc
+    assert "--human-decision-digest" in queue_doc
+    assert "figure-agent.human-decision-digest.v1" in queue_doc
+    assert "source, accepted state, golden state" in queue_doc
 
     assert "figure-agent.queue-bottleneck-report.v1" in plan
     assert 'fig-agent queue --mode review --goal "Wave 0 bottleneck scan" --json' in plan
