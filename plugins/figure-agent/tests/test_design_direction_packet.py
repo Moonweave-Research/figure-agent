@@ -13,7 +13,6 @@ from design_direction_packet import (  # noqa: E402
     build_design_direction_packet,
 )
 
-
 FIXTURE = "fig1_overview_v2_pair_001_vault"
 
 

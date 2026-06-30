@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import fixture_identity
 
 SCHEMA = "figure-agent.design-direction-packet.v1"

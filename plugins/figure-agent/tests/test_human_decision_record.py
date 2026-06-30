@@ -213,7 +213,9 @@ def test_design_direction_decision_ids_validate_without_mutation(decision_kind: 
             packet_timestamp="2026-07-01T00:00:00Z",
             queue_run_id=None,
             decision_kind=decision_kind,
-            agent_recommendation="Record a design direction only; no artifact mutation is authorized.",
+            agent_recommendation=(
+                "Record a design direction only; no artifact mutation is authorized."
+            ),
             human_decision=decision_kind,
             human_note="Human selected this design direction as policy state only.",
             follow_up={"implementation_slice": "record design direction only"},
@@ -225,7 +227,10 @@ def test_design_direction_decision_ids_validate_without_mutation(decision_kind: 
 
 
 def test_design_direction_record_rejects_mutating_boundary() -> None:
-    with pytest.raises(HumanDecisionRecordError, match="design_direction_decision_cannot_authorize_mutation"):
+    with pytest.raises(
+        HumanDecisionRecordError,
+        match="design_direction_decision_cannot_authorize_mutation",
+    ):
         validate_decision_record(
             _record(
                 packet_schema="figure-agent.design-direction-packet.v1",
