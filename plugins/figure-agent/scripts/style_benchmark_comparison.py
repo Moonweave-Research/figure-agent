@@ -220,6 +220,12 @@ def load_comparison(
     candidates = _validate_candidates(payload, pack)
     forbidden_semantic_changes = _string_list(payload, "forbidden_semantic_changes")
     measurable_checks = _string_list(payload, "benchmark_measurable_checks")
+    measurable_text = "\n".join(measurable_checks)
+    if (
+        "style_lock_typography" not in measurable_text
+        or "tiny/scriptsize/huge" not in measurable_text
+    ):
+        raise StyleBenchmarkComparisonError("style_lock_typography_check_missing")
     human_only_questions = _string_list(payload, "human_only_questions")
     rejection_rules = _string_list(payload, "candidate_rejection_rules")
     if "semantic" not in "\n".join(rejection_rules):

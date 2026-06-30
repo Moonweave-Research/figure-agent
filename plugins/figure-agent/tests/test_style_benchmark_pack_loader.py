@@ -126,6 +126,14 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                     "metric": "text_boundary.blocker_count",
                     "expected_movement": "decrease_or_equal",
                 },
+                {
+                    "id": "style_lock_typography",
+                    "source": "style lock lint",
+                    "must_pass": [
+                        "no new local tiny/scriptsize/huge overrides",
+                        "panel labels and role labels keep controlled hierarchy",
+                    ],
+                },
             ],
             "human_only_questions": ["Does the candidate improve journal fit?"],
             "candidate_rejection_rules": [
@@ -239,6 +247,28 @@ def test_style_benchmark_pack_rejects_svg_polish_default(tmp_path: Path) -> None
     with pytest.raises(
         style_benchmark_pack.StyleBenchmarkPackError,
         match="safety_invalid",
+    ):
+        style_benchmark_pack.load_pack(
+            "contract_demo",
+            plugin_root=plugin_root,
+            pack_path=pack_path,
+        )
+
+
+def test_style_benchmark_pack_requires_local_font_hierarchy_lint(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "plugin"
+    pack_path = _minimal_pack(plugin_root)
+    payload = json.loads(pack_path.read_text(encoding="utf-8"))
+    payload["measurable_checks"] = [
+        check
+        for check in payload["measurable_checks"]
+        if check["id"] != "style_lock_typography"
+    ]
+    _write_json(pack_path, payload)
+
+    with pytest.raises(
+        style_benchmark_pack.StyleBenchmarkPackError,
+        match="style_lock_typography_missing",
     ):
         style_benchmark_pack.load_pack(
             "contract_demo",

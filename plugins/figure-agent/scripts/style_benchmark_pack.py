@@ -208,6 +208,17 @@ def _validate_measurable_checks(
     ]
     if missing_codes:
         raise StyleBenchmarkPackError("benchmark_contract_hard_regressions_mismatch")
+
+    style_lock_check = checks.get("style_lock_typography")
+    if not isinstance(style_lock_check, dict):
+        raise StyleBenchmarkPackError("style_lock_typography_missing")
+    style_lock_must_pass = style_lock_check.get("must_pass")
+    if not isinstance(style_lock_must_pass, list) or not all(
+        isinstance(item, str) for item in style_lock_must_pass
+    ):
+        raise StyleBenchmarkPackError("style_lock_typography_invalid")
+    if "no new local tiny/scriptsize/huge overrides" not in style_lock_must_pass:
+        raise StyleBenchmarkPackError("style_lock_typography_incomplete")
     return list(raw_checks)
 
 

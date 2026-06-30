@@ -155,7 +155,29 @@ def test_prettier_candidate_cannot_allow_semantic_change(tmp_path: Path) -> None
                 "fig1_overview_v2_pair_001_vault",
                 plugin_root=plugin_root,
                 comparison_path=relative_path,
-            )
+        )
+
+
+def test_comparison_requires_local_font_hierarchy_lint(tmp_path: Path) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["benchmark_measurable_checks"] = [
+        check
+        for check in payload["benchmark_measurable_checks"]
+        if "style_lock_typography" not in check
+    ]
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="style_lock_typography_check_missing",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
 
 
 def test_svg_polish_candidate_requires_ready_for_svg_polish_evidence(tmp_path: Path) -> None:
