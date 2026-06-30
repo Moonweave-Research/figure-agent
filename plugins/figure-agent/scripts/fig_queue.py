@@ -122,6 +122,13 @@ def _print_workspace_diagnostic(queue: dict[str, Any]) -> None:
         print(f"fig_queue.py: {message}", file=sys.stderr)
 
 
+def workspace_diagnostic_exit_code(queue: dict[str, Any]) -> int:
+    diagnostic = queue.get("workspace_diagnostic")
+    if isinstance(diagnostic, dict) and diagnostic.get("state") == "missing_examples":
+        return 2
+    return 0
+
+
 def _first_blocker(summary: dict[str, Any]) -> str | None:
     status_explanation = summary.get("status_explanation")
     if not isinstance(status_explanation, dict):
@@ -968,7 +975,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
         print(json.dumps(queue, indent=2, sort_keys=True))
     else:
         print_table(queue)
-    return 0
+    return workspace_diagnostic_exit_code(queue)
 
 
 if __name__ == "__main__":

@@ -227,9 +227,10 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
     except ValueError as exc:
         print(f"fig_queue_run.py: {exc}", file=sys.stderr)
         return 2
-    fig_queue._print_workspace_diagnostic(payload.get("queue", {}))
+    queue = payload.get("queue", {})
+    fig_queue._print_workspace_diagnostic(queue)
     print(json.dumps(payload, indent=2, sort_keys=True))
-    return 0
+    return fig_queue.workspace_diagnostic_exit_code(queue)
 
 
 if __name__ == "__main__":
