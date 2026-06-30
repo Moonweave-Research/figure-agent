@@ -135,6 +135,34 @@ host vision review, not a replacement for it.
 this worker left it blocked rather than creating source outside a narrowed
 source-authoring task.
 
+
+## Integrated probe findings
+
+The required parallel probes were read-only and their findings were integrated as
+boundary notes rather than source mutations:
+
+- Use `./bin/fig-agent` wrapper commands for queue/status/compile/export/loop
+  work. Direct script execution can miss import paths; direct
+  `critique_brief.py` required `PYTHONPATH=scripts:scripts/quality:scripts/svg_polish`.
+- `fig1_overview_v2_pair_001_vault` is accepted/tracked-golden and still stale
+  on critique; do not force golden or claim acceptance without explicit human
+  approval.
+- `fig2_trap_design_space` has stale critique/adjudication debt and at least one
+  open critique finding in the existing artifact chain; refresh host critique
+  before export or acceptance claims.
+- `fig3_resistance_mechanism` has stale critique and current build diagnostics
+  (`physics_grounding`/undeclared geometry/visual clash reports) that must be
+  reconciled by host critique rather than trusted from stale prose.
+- `fig3_floating_clip_protocol` and `fig4_trap_energy_diagram` remain
+  briefing-grounded. Do not invent reference-image pointers; the generated
+  critique brief plus build/audit crops are the handoff inputs.
+- `fig3_trapping_concept` has no external reference tree today, so reference
+  reconciliation is briefing/spec/context-pack based unless a later task adds
+  real reference assets.
+- `fig4_trap_energy_diagram` has a content tension around semi-quantitative
+  caption language (`~0.1–0.3 eV`, `>1 eV`) versus the briefing's qualitative
+  schematic warning; leave this for host/domain review, not mechanical mutation.
+
 ## Wave 5 recommended next work
 
 1. Host runs `/fig_critique` for the 6 host rows above and commits refreshed
