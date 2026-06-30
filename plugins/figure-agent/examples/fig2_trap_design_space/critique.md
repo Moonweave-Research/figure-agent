@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig2_trap_design_space
-generated_at: 2026-06-25T00:00:00Z
+generated_at: 2026-06-30T08:52:00Z
 generator: critique_brief.py
 generator_version: sha256:0bf8abd441f6688290a6abc8b4fda75a2d131526615ba5df7b07dc4d1ec04c94
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:eda70552bb2cb17e6bcc664446535cbb5f2b28d7835e5f5b7f90628eeaf021f8
+critique_input_hash: sha256:c9110edd163bcf1ffaa10d51309665b91b862ef96549883e00f655c3ac0a9d78
 verdict: revise
 findings:
   - id: C001
@@ -348,7 +348,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:eda70552bb2cb17e6bcc664446535cbb5f2b28d7835e5f5b7f90628eeaf021f8
+  assessed_artifact_hash: sha256:c9110edd163bcf1ffaa10d51309665b91b862ef96549883e00f655c3ac0a9d78
   benchmark_level: draft
   confidence: high
   blockers: []
