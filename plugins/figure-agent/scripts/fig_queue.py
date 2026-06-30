@@ -303,6 +303,30 @@ def _style_benchmark_pack_fields(name: str, *, workspace_root: Path) -> dict[str
     return fields
 
 
+def _style_benchmark_comparison_fields(name: str, *, workspace_root: Path) -> dict[str, Any]:
+    try:
+        payload = style_benchmark_comparison.load_comparison(name, workspace_root=workspace_root)
+    except style_benchmark_comparison.StyleBenchmarkComparisonError as exc:
+        state = "missing" if str(exc) == "comparison_missing" else "invalid"
+        fields = {"style_benchmark_comparison_state": state}
+        if state == "invalid":
+            fields["style_benchmark_comparison_error"] = str(exc)
+        return fields
+    except (OSError, json.JSONDecodeError) as exc:
+        return {
+            "style_benchmark_comparison_state": "invalid",
+            "style_benchmark_comparison_error": str(exc),
+        }
+    summary = style_benchmark_comparison.summarize_comparison(payload)
+    fields = {
+        "style_benchmark_comparison_state": summary.get("state"),
+        "style_benchmark_comparison_path": summary.get("path"),
+    }
+    if summary.get("state") == "present":
+        fields["style_benchmark_comparison"] = summary
+    return {key: value for key, value in fields.items() if value is not None}
+
+
 def _svg_polish_fields(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
     if mode != "polish":
         return {}
@@ -1213,8 +1237,6 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "operator_handoff": _operator_handoff(row, reason=reason),
                 "style_direction_packet": row.get("style_direction_packet"),
                 "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
-        "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
-            "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
                 "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
             }
             if row.get("svg_polish_evidence_state") is not None:
@@ -1243,7 +1265,6 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "reason": reason,
             "operator_handoff": _operator_handoff(row, reason=reason),
             "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
-        "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
             "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
         }
         if row.get("svg_polish_evidence_state") is not None:

@@ -248,6 +248,7 @@ def load_comparison(
         "candidate_family_comparisons": candidates,
     }
 
+
 def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
     """Return compact read-only queue metadata for a style comparison packet."""
 
@@ -300,4 +301,3 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
             "golden_mutation": False,
         },
     }
-
