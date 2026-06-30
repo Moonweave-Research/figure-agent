@@ -175,6 +175,7 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
         "final_artifact_kind": status.get("final_artifact_kind"),
         "final_artifact_path": status.get("final_artifact_path"),
         "publication_gate_state": status.get("publication_gate_state"),
+        "publication_gate_failures": status.get("publication_gate_failures"),
         "release_ready": status.get("release_ready"),
         "required_actor": required_actor_for_driver_summary(summary),
         "blocking_source": blocking_source_for_driver_summary(summary),
@@ -560,14 +561,39 @@ def _release_current_state(row: dict[str, Any]) -> dict[str, Any]:
         "final_artifact_kind": row.get("final_artifact_kind"),
         "final_artifact_path": row.get("final_artifact_path"),
         "publication_gate_state": row.get("publication_gate_state"),
+        "publication_gate_failures": row.get("publication_gate_failures"),
         "release_ready": row.get("release_ready"),
     }
 
 
-def _release_decision_choices(row: dict[str, Any]) -> list[dict[str, Any]]:
+def _release_decision_choices(row: dict[str, Any], *, force_golden: bool) -> list[dict[str, Any]]:
     fixture = _cell(row.get("fixture"))
     final_kind = row.get("final_artifact_kind")
     final_state = row.get("final_artifact_state")
+    if force_golden:
+        return [
+            {
+                "id": "approve_force_golden_roll_forward",
+                "label": "Approve force-golden roll-forward",
+                "effect": "allow the explicit protected golden update after preview/diff review",
+                "risk": "changes the tracked release baseline for this fixture",
+                "follow_up": {"command": f"fig-agent export {fixture} --force-golden"},
+            },
+            {
+                "id": "reject_and_keep_current_golden",
+                "label": "Keep current golden",
+                "effect": "leave tracked golden and release state unchanged",
+                "risk": "may leave a ready visual update unpromoted",
+                "follow_up": {"command": None, "manual_record_path": "release review note"},
+            },
+            {
+                "id": "defer_for_visual_dogfood",
+                "label": "Defer for visual dogfood",
+                "effect": "request another bounded review/style pass before baseline mutation",
+                "risk": "preserves safety but delays release closure",
+                "follow_up": {"command": "rerun /fig_queue --mode review"},
+            },
+        ]
     choices = [
         {
             "id": "accept_current_generated_export",
@@ -581,7 +607,9 @@ def _release_decision_choices(row: dict[str, Any]) -> list[dict[str, Any]]:
             ),
             "follow_up": {
                 "command": None,
-                "manual_record_path": f"examples/{fixture}/acceptance",
+                "manual_record_path": (
+                    f"examples/{fixture}/QUALITY_AUDIT.md and accepted: true in spec.yaml"
+                ),
             },
         },
         {
@@ -658,15 +686,42 @@ def _release_decision_packet(row: dict[str, Any]) -> dict[str, Any] | None:
         else f"`{fixture}` is release-blocked only by acceptance/final-artifact "
         "policy. Which explicit release decision should be recorded?"
     )
-    recommendation = (
-        "Do not force the tracked golden automatically. Ask the release "
-        "operator to approve, reject, or defer the protected baseline change "
-        "after reviewing the prepared diff."
-        if force_golden
-        else "Keep the release boundary blocked until a human explicitly accepts "
-        "the current generated export or declares a fresh final artifact."
+    publication_failures = row.get("publication_gate_failures")
+    agent_publication_failures = (
+        [
+            failure
+            for failure in publication_failures
+            if isinstance(failure, dict) and failure.get("actor") == "agent"
+        ]
+        if isinstance(publication_failures, list)
+        else []
     )
-    recommended_choice = "defer_for_dogfood" if force_golden else "accept_current_generated_export"
+    acceptance_state = row.get("acceptance_state")
+    if force_golden:
+        recommendation = (
+            "Do not force the tracked golden automatically. Ask the release "
+            "operator to approve, reject, or defer the protected baseline change "
+            "after reviewing the prepared diff."
+        )
+        recommended_choice = "defer_for_visual_dogfood"
+    elif agent_publication_failures:
+        recommendation = (
+            "Resolve deterministic publication-gate failures before asking for "
+            "human acceptance as the release-closing action."
+        )
+        recommended_choice = "defer_for_dogfood"
+    elif acceptance_state == "NOT_ACCEPTED":
+        recommendation = (
+            "Resolve QUALITY_AUDIT.md defects before setting accepted: true in "
+            "spec.yaml; this is not just a missing declaration."
+        )
+        recommended_choice = "defer_for_dogfood"
+    else:
+        recommendation = (
+            "Keep the release boundary blocked until a human explicitly accepts "
+            "the current generated export or declares a fresh final artifact."
+        )
+        recommended_choice = "accept_current_generated_export"
     return {
         "schema": RELEASE_DECISION_PACKET_SCHEMA,
         "packet_kind": packet_kind,
@@ -677,7 +732,7 @@ def _release_decision_packet(row: dict[str, Any]) -> dict[str, Any] | None:
         "human_question": question,
         "agent_recommendation": recommendation,
         "recommended_choice_id": recommended_choice,
-        "choices": _release_decision_choices(row),
+        "choices": _release_decision_choices(row, force_golden=force_golden),
         "evidence_refs": _decision_packet_evidence_refs(row),
         "follow_up": {
             "after_decision": "rerun /fig_queue --mode release",

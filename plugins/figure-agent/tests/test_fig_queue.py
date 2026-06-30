@@ -39,6 +39,7 @@ def _summary(
             "final_artifact_kind": "generated_export",
             "final_artifact_path": f"exports/{name}.svg",
             "publication_gate_state": "NOT_APPLICABLE",
+            "publication_gate_failures": None,
             "release_ready": False,
         },
         "status_explanation": {
@@ -427,6 +428,7 @@ def test_release_queue_row_includes_fixture_specific_acceptance_packet(
         "final_artifact_kind": "generated_export",
         "final_artifact_path": "exports/alpha.svg",
         "publication_gate_state": "NOT_APPLICABLE",
+        "publication_gate_failures": None,
         "release_ready": False,
     }
     assert packet["recommended_choice_id"] == "accept_current_generated_export"
@@ -436,7 +438,9 @@ def test_release_queue_row_includes_fixture_specific_acceptance_packet(
         "reject_current_artifact",
         "defer_for_dogfood",
     ]
-    assert packet["choices"][0]["follow_up"]["manual_record_path"] == ("examples/alpha/acceptance")
+    assert packet["choices"][0]["follow_up"]["manual_record_path"] == (
+        "examples/alpha/QUALITY_AUDIT.md and accepted: true in spec.yaml"
+    )
     assert queue["command_plan"]["blocked"][0]["operator_handoff"]["decision_packet"] == packet
 
 
@@ -467,7 +471,13 @@ def test_release_packet_distinguishes_force_golden_boundary(
     packet = queue["rows"][0]["decision_packet"]
     assert packet["packet_kind"] == "force_golden_decision_packet"
     assert packet["boundary"] == "force_golden_required"
-    assert packet["recommended_choice_id"] == "defer_for_dogfood"
+    assert packet["recommended_choice_id"] == "defer_for_visual_dogfood"
+    assert [choice["id"] for choice in packet["choices"]] == [
+        "approve_force_golden_roll_forward",
+        "reject_and_keep_current_golden",
+        "defer_for_visual_dogfood",
+    ]
+    assert packet["choices"][0]["follow_up"]["command"] == ("fig-agent export alpha --force-golden")
     assert "Do not force" in packet["agent_recommendation"]
 
 
@@ -477,11 +487,15 @@ def test_release_packet_flags_declared_polished_svg_final_artifact_states(
     _write_fixture(tmp_path, "missing_svg")
     _write_fixture(tmp_path, "stale_svg")
     _write_fixture(tmp_path, "fresh_svg")
+    _write_fixture(tmp_path, "invalid_svg")
+    _write_fixture(tmp_path, "blocked_svg")
 
     final_states = {
         "missing_svg": "MISSING",
         "stale_svg": "STALE",
         "fresh_svg": "FRESH",
+        "invalid_svg": "INVALID",
+        "blocked_svg": "BLOCKED",
     }
 
     def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
@@ -509,9 +523,86 @@ def test_release_packet_flags_declared_polished_svg_final_artifact_states(
     packets = {row["fixture"]: row["decision_packet"] for row in queue["rows"]}
     assert "is MISSING" in packets["missing_svg"]["choices"][1]["warning"]
     assert "is STALE" in packets["stale_svg"]["choices"][1]["warning"]
+    assert "is INVALID" in packets["invalid_svg"]["choices"][1]["warning"]
+    assert "is BLOCKED" in packets["blocked_svg"]["choices"][1]["warning"]
     assert packets["fresh_svg"]["choices"][1]["evidence"] == (
         "declared polished SVG final artifact is fresh"
     )
+
+
+def test_release_packet_defers_when_publication_gate_has_agent_failures(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="accepted_or_final_ready_required",
+            first_blocker="publication_gate_required",
+            blocking_source="accepted_or_final_ready_required",
+        )
+        summary["status"]["acceptance_state"] = "NOT_ACCEPTED"
+        summary["status"]["publication_gate_state"] = "HUMAN_ACCEPTANCE_REQUIRED"
+        summary["status"]["publication_gate_failures"] = [
+            {
+                "code": "missing_quality_audit",
+                "actor": "agent",
+                "required_action": "create QUALITY_AUDIT.md",
+            }
+        ]
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="triage",
+        fixtures=None,
+    )
+
+    packet = queue["rows"][0]["decision_packet"]
+    assert packet["recommended_choice_id"] == "defer_for_dogfood"
+    assert "deterministic publication-gate failures" in packet["agent_recommendation"]
+    assert packet["current_state"]["publication_gate_failures"] == [
+        {
+            "code": "missing_quality_audit",
+            "actor": "agent",
+            "required_action": "create QUALITY_AUDIT.md",
+        }
+    ]
+
+
+def test_release_packet_distinguishes_not_accepted_from_not_declared(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="accepted_or_final_ready_required",
+            first_blocker="acceptance_not_declared",
+            blocking_source="accepted_or_final_ready_required",
+        )
+        summary["status"]["acceptance_state"] = "NOT_ACCEPTED"
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="triage",
+        fixtures=None,
+    )
+
+    packet = queue["rows"][0]["decision_packet"]
+    assert packet["recommended_choice_id"] == "defer_for_dogfood"
+    assert "QUALITY_AUDIT.md defects" in packet["agent_recommendation"]
 
 
 def test_release_operator_handoff_includes_decision_packet(
@@ -543,12 +634,11 @@ def test_release_operator_handoff_includes_decision_packet(
     assert packet["schema"] == "figure-agent.release-decision-packet.v1"
     assert packet["packet_kind"] == "force_golden_decision_packet"
     assert "alpha" in packet["human_question"]
-    assert packet["recommended_choice_id"] == "defer_for_dogfood"
+    assert packet["recommended_choice_id"] == "defer_for_visual_dogfood"
     assert [choice["id"] for choice in packet["choices"]] == [
-        "accept_current_generated_export",
-        "declare_final_artifact",
-        "reject_current_artifact",
-        "defer_for_dogfood",
+        "approve_force_golden_roll_forward",
+        "reject_and_keep_current_golden",
+        "defer_for_visual_dogfood",
     ]
     assert packet["agent_recommendation"]
     assert packet["evidence_refs"] == [
