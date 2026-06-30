@@ -1256,7 +1256,10 @@ def test_host_llm_operator_handoff_separates_reference_context() -> None:
     assert briefing["first_blocker"] == "critique_briefing_required"
     assert "briefing/reference context" in briefing["next_step"]
     assert "examples/needs_briefing/reference/" in briefing["allowed_scope"]
-    assert "confirm briefing/reference inputs are present before critique" in briefing["closeout_checks"]
+    assert (
+        "confirm briefing/reference inputs are present before critique"
+        in briefing["closeout_checks"]
+    )
 
     assert reference["handoff_kind"] == "reference_context_required"
     assert reference["bottleneck_category"] == "reference_context"
