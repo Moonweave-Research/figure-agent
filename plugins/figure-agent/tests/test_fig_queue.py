@@ -540,14 +540,15 @@ def test_release_operator_handoff_includes_decision_packet(
 
     handoff = queue["command_plan"]["blocked"][0]["operator_handoff"]
     packet = handoff["decision_packet"]
-    assert packet["schema"] == "figure-agent.human-decision-packet.v1"
-    assert packet["packet_kind"] == "approval_packet"
+    assert packet["schema"] == "figure-agent.release-decision-packet.v1"
+    assert packet["packet_kind"] == "force_golden_decision_packet"
     assert "alpha" in packet["human_question"]
-    assert packet["recommended_choice_id"] == "approve_bounded_roll_forward"
+    assert packet["recommended_choice_id"] == "defer_for_dogfood"
     assert [choice["id"] for choice in packet["choices"]] == [
-        "approve_bounded_roll_forward",
-        "reject_and_keep_current_baseline",
-        "defer_for_visual_dogfood",
+        "accept_current_generated_export",
+        "declare_final_artifact",
+        "reject_current_artifact",
+        "defer_for_dogfood",
     ]
     assert packet["agent_recommendation"]
     assert packet["evidence_refs"] == [
@@ -555,7 +556,7 @@ def test_release_operator_handoff_includes_decision_packet(
         "blocking_source:force_golden_required",
         "stop_boundary:force_golden_required",
     ]
-    assert packet["follow_up"]["after_decision"] == "rerun /fig_queue"
+    assert packet["follow_up"]["after_decision"] == "rerun /fig_queue --mode release"
 
 
 def test_human_handoff_includes_choice_packet(
@@ -1803,7 +1804,8 @@ def test_command_plan_blocked_handoff_covers_human_and_release_rows(
     )
     assert plan["blocked"][0]["operator_handoff"]["command"] is None
     assert plan["blocked"][1]["operator_handoff"]["next_step"] == (
-        "Perform explicit release/golden review; do not force golden implicitly."
+        "Review the fixture-specific release decision packet; do not force golden "
+        "or acceptance implicitly."
     )
     assert plan["blocked"][1]["operator_handoff"]["command"] is None
 
