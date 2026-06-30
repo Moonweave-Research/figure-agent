@@ -197,6 +197,9 @@ promoted to durable artifacts or summarized in a leader-owned audit.
 - Mutation check: PASS — `git status --short --
   plugins/figure-agent/examples/fig5_actuation_mechanism/fig5_actuation_mechanism.tex`
   was empty after compile execution.
+- Type/syntax check: PASS — `python -m compileall -q plugins/figure-agent/scripts plugins/figure-agent/tests`.
+- Targeted regression tests: PASS — `python -m pytest tests/test_fig_queue.py tests/test_command_contract_docs.py tests/test_golden_acceptance.py tests/test_closeout_readiness.py tests/test_fig_closeout.py` (`87 passed`).
+- Lint/static checks: PASS — `git diff --check`; PASS — `uv run ruff check scripts tests`.
 
 ## Coordination note
 
