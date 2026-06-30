@@ -1269,109 +1269,116 @@ def test_host_llm_operator_handoff_separates_reference_context() -> None:
     assert "confirm reference/context paths resolve before critique" in reference["closeout_checks"]
 
 
-def test_wave4_bottleneck_plan_preserves_host_reference_and_closeout_handoffs() -> None:
+def test_wave4_mixed_queue_keeps_authority_boundaries() -> None:
+    executable_loop_rows = [
+        {
+            "fixture": name,
+            "action": "run_fig_loop",
+            "required_actor": "workflow_agent",
+            "requires_human": False,
+            "safe_command": f"fig-agent loop {name} --goal Wave4 --json",
+            "blocking_source": "driver.action",
+            "stop_boundary": None,
+            "first_blocker": "acceptance_not_declared",
+        }
+        for name in [
+            "fig5_actuation_mechanism",
+            "smoke_annotation_box_demo",
+            "smoke_contrast_demo",
+            "smoke_label_overlap_demo",
+            "smoke_leader_line_demo",
+            "smoke_panel_spacing_demo",
+            "smoke_trap_demo",
+        ]
+    ]
     rows = [
+        *executable_loop_rows,
         {
             "fixture": "_volume_shading_demo",
             "action": "create_or_fix_source",
             "required_actor": "workflow_agent",
             "requires_human": False,
             "safe_command": None,
+            "blocking_source": "driver.action",
             "stop_boundary": None,
             "first_blocker": "source_not_authored",
-            "blocking_source": "driver.action",
-        },
-        {
-            "fixture": "fig1_overview_v2_pair_001_vault",
-            "action": "run_critique",
-            "required_actor": "host_llm",
-            "requires_human": False,
-            "safe_command": "/fig_critique fig1_overview_v2_pair_001_vault",
-            "stop_boundary": "host_llm_critique_required",
-            "first_blocker": "critique_stale",
-            "blocking_source": "host_llm_critique_required",
-        },
-        {
-            "fixture": "fig2_trap_design_space",
-            "action": "run_critique",
-            "required_actor": "host_llm",
-            "requires_human": False,
-            "safe_command": "/fig_critique fig2_trap_design_space",
-            "stop_boundary": "host_llm_critique_required",
-            "first_blocker": "critique_stale",
-            "blocking_source": "host_llm_critique_required",
-        },
-        {
-            "fixture": "fig3_resistance_mechanism",
-            "action": "run_critique",
-            "required_actor": "host_llm",
-            "requires_human": False,
-            "safe_command": "/fig_critique fig3_resistance_mechanism",
-            "stop_boundary": "host_llm_critique_required",
-            "first_blocker": "critique_stale",
-            "blocking_source": "host_llm_critique_required",
         },
         *[
             {
-                "fixture": fixture,
+                "fixture": name,
                 "action": "run_critique",
                 "required_actor": "host_llm",
                 "requires_human": False,
-                "safe_command": f"/fig_critique {fixture}",
-                "stop_boundary": "host_llm_critique_required",
-                "first_blocker": "critique_briefing_required",
+                "safe_command": f"/fig_critique {name}",
                 "blocking_source": "host_llm_critique_required",
+                "stop_boundary": "host_llm_critique_required",
+                "first_blocker": "critique_stale",
             }
-            for fixture in (
-                "fig3_floating_clip_protocol",
-                "fig3_trapping_concept",
-                "fig4_trap_energy_diagram",
-            )
+            for name in [
+                "fig1_overview_v2_pair_001_vault",
+                "fig2_trap_design_space",
+                "fig3_resistance_mechanism",
+            ]
         ],
         *[
             {
-                "fixture": fixture,
-                "action": "run_export",
-                "required_actor": "workflow_agent",
+                "fixture": name,
+                "action": "run_critique",
+                "required_actor": "host_llm",
                 "requires_human": False,
-                "safe_command": f"fig-agent export {fixture}",
-                "stop_boundary": "closeout_required",
-                "first_blocker": "export_missing",
-                "blocking_source": "closeout_required",
+                "safe_command": f"/fig_critique {name}",
+                "blocking_source": "host_llm_critique_required",
+                "stop_boundary": "host_llm_critique_required",
+                "first_blocker": "critique_briefing_required",
             }
-            for fixture in (
-                "smoke_annotation_box_demo",
-                "smoke_contrast_demo",
-                "smoke_label_overlap_demo",
-                "smoke_leader_line_demo",
-                "smoke_panel_spacing_demo",
-                "smoke_trap_demo",
-            )
+            for name in [
+                "fig3_floating_clip_protocol",
+                "fig3_trapping_concept",
+                "fig4_trap_energy_diagram",
+            ]
         ],
-        {
-            "fixture": "fig5_actuation_mechanism",
-            "action": "run_compile",
-            "required_actor": "workflow_agent",
-            "requires_human": False,
-            "safe_command": "fig-agent compile fig5_actuation_mechanism",
-            "stop_boundary": None,
-            "first_blocker": "render_missing",
-            "blocking_source": "driver.action",
-        },
     ]
 
     plan = fig_queue.build_command_plan(rows)
     report = fig_queue.build_bottleneck_report(rows)
 
-    assert plan["executable"] == [
-        {
-            "fixture": "fig5_actuation_mechanism",
-            "action": "run_compile",
-            "safe_command": "fig-agent compile fig5_actuation_mechanism",
-            "required_actor": "workflow_agent",
-        }
+    assert plan["executable_count"] == 7
+    assert plan["blocked_count"] == 7
+    assert [item["fixture"] for item in plan["executable"]] == [
+        row["fixture"] for row in executable_loop_rows
     ]
-    assert plan["blocked_count"] == 13
+    assert plan["blocked"][0]["fixture"] == "_volume_shading_demo"
+    assert plan["blocked"][0]["reason"] == "safe_command:missing"
+
+    host_handoffs = {
+        item["fixture"]: item["operator_handoff"]
+        for item in plan["blocked"]
+        if item["required_actor"] == "host_llm"
+    }
+    assert host_handoffs["fig1_overview_v2_pair_001_vault"]["handoff_kind"] == (
+        "critique_stale_refresh"
+    )
+    assert host_handoffs["fig2_trap_design_space"]["forbidden_scope"] == [
+        "source edits",
+        "export mutation",
+        "accepted/golden mutation",
+        "publication state mutation",
+    ]
+    assert host_handoffs["fig3_floating_clip_protocol"]["handoff_kind"] == (
+        "critique_briefing_required"
+    )
+    assert "examples/fig3_floating_clip_protocol/spec.yaml" in host_handoffs[
+        "fig3_floating_clip_protocol"
+    ]["allowed_scope"]
+    assert "confirm briefing/reference inputs are present before critique" in host_handoffs[
+        "fig4_trap_energy_diagram"
+    ]["closeout_checks"]
+
+    assert report["command_plan"] == {
+        "executable": 7,
+        "blocked": 7,
+        "complete": 0,
+    }
     assert report["by_bottleneck_category"] == {
         "mechanical_tool": 8,
         "host_critique": 3,
@@ -1379,42 +1386,10 @@ def test_wave4_bottleneck_plan_preserves_host_reference_and_closeout_handoffs() 
         "reference_context": 3,
         "template_style": 0,
     }
-
-    blocked_by_fixture = {row["fixture"]: row for row in plan["blocked"]}
-    assert (
-        blocked_by_fixture["fig1_overview_v2_pair_001_vault"]["operator_handoff"]["handoff_kind"]
-        == "critique_stale_refresh"
-    )
-    assert (
-        blocked_by_fixture["fig3_floating_clip_protocol"]["operator_handoff"]["handoff_kind"]
-        == "critique_briefing_required"
-    )
-    assert (
-        "examples/fig3_floating_clip_protocol/spec.yaml"
-        in blocked_by_fixture["fig3_floating_clip_protocol"]["operator_handoff"]["allowed_scope"]
-    )
-    assert blocked_by_fixture["smoke_panel_spacing_demo"]["operator_handoff"] == {
-        "schema": "figure-agent.queue-operator-handoff.v1",
-        "fixture": "smoke_panel_spacing_demo",
-        "required_actor": "workflow_agent",
-        "next_step": "Run read-only closeout inspection before continuing automation.",
-        "command": "fig-agent closeout smoke_panel_spacing_demo --json",
-        "reason": "stop_boundary:closeout_required",
-        "allowed_scope": ["read-only closeout inspection"],
-        "forbidden_scope": [
-            "source edits",
-            "export mutation",
-            "accepted/golden mutation",
-            "publication state mutation",
-        ],
-        "closeout_checks": [
-            "read JSON output even when exit code is 1",
-            "follow closeout.next_action",
-            "rerun /fig_queue after resolving the blocked row",
-        ],
-    }
-    assert blocked_by_fixture["_volume_shading_demo"]["operator_handoff"]["allowed_scope"] == [
-        "read-only inspection"
+    assert report["dominant_first_blocker"] == [
+        {"key": "acceptance_not_declared", "count": 7},
+        {"key": "critique_briefing_required", "count": 3},
+        {"key": "critique_stale", "count": 3},
     ]
 
 
