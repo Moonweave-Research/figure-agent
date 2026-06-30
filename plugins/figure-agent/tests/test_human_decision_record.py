@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from human_decision_record import (  # noqa: E402
     RELEASE_DECISION_PACKET_SCHEMA,
     SCHEMA,
+    STYLE_CHOICE_DECISION_KINDS,
     STYLE_DIRECTION_PACKET_SCHEMA,
     HumanDecisionRecordError,
     validate_decision_record,
@@ -79,7 +80,7 @@ def test_style_decision_does_not_equal_release_acceptance() -> None:
 def test_style_record_rejects_release_or_golden_mutation_boundary() -> None:
     with pytest.raises(
         HumanDecisionRecordError,
-        match="style_decision_cannot_mutate_release_state",
+        match="style_decision_cannot_authorize_mutation",
     ):
         validate_decision_record(
             _record(
@@ -89,6 +90,23 @@ def test_style_record_rejects_release_or_golden_mutation_boundary() -> None:
                 decision_kind="request_bounded_tikz_polish",
                 follow_up={"implementation_slice": "open one bounded TikZ polish pass"},
                 mutation_boundary="golden_mutation_allowed",
+            )
+        )
+
+
+def test_style_record_rejects_source_mutation_boundary() -> None:
+    with pytest.raises(
+        HumanDecisionRecordError,
+        match="style_decision_cannot_authorize_mutation",
+    ):
+        validate_decision_record(
+            _record(
+                packet_schema=STYLE_DIRECTION_PACKET_SCHEMA,
+                packet_timestamp="2026-06-30T14:00:00Z",
+                queue_run_id=None,
+                decision_kind="request_restrained_tikz_refinement",
+                follow_up={"implementation_slice": "open a later bounded TikZ refinement slice"},
+                mutation_boundary="source_mutation_allowed",
             )
         )
 
@@ -107,3 +125,50 @@ def test_style_preference_from_release_packet_cannot_approve_release_state() -> 
 def test_follow_up_requires_command_or_implementation_slice() -> None:
     with pytest.raises(HumanDecisionRecordError, match="follow_up_missing_action"):
         validate_decision_record(_record(follow_up={}))
+
+
+@pytest.mark.parametrize("decision_kind", sorted(STYLE_CHOICE_DECISION_KINDS))
+def test_style_choice_decision_ids_validate_without_mutation(decision_kind: str) -> None:
+    follow_up = {
+        "implementation_slice": (
+            "record style policy only; require ready_for_svg_polish evidence before "
+            "any SVG handoff"
+        )
+    }
+
+    validated = validate_decision_record(
+        _record(
+            packet_schema=STYLE_DIRECTION_PACKET_SCHEMA,
+            packet_timestamp="2026-07-01T00:00:00Z",
+            queue_run_id=None,
+            decision_kind=decision_kind,
+            agent_recommendation="Record the style choice without mutating artifacts.",
+            human_decision=decision_kind,
+            human_note="Human selected this style route as policy state only.",
+            follow_up=follow_up,
+            mutation_boundary="no_source_mutation",
+        )
+    )
+
+    assert validated["decision_kind"] == decision_kind
+    assert validated["mutation_boundary"] == "no_source_mutation"
+
+
+def test_svg_polish_handoff_choice_requires_evidence_language() -> None:
+    with pytest.raises(
+        HumanDecisionRecordError,
+        match="svg_polish_handoff_requires_evidence",
+    ):
+        validate_decision_record(
+            _record(
+                packet_schema=STYLE_DIRECTION_PACKET_SCHEMA,
+                packet_timestamp="2026-07-01T00:00:00Z",
+                queue_run_id=None,
+                decision_kind="request_svg_polish_handoff_evidence",
+                agent_recommendation="Try SVG polish next.",
+                human_decision="request SVG polish",
+                human_note="Looks like a polish task.",
+                follow_up={"implementation_slice": "prepare an SVG handoff"},
+                mutation_boundary="no_source_mutation",
+            )
+        )

@@ -16,8 +16,12 @@ DECISION_KINDS = frozenset(
         "declare_final_artifact",
         "reject_current_artifact",
         "defer_for_dogfood",
+        "keep_current_style",
         "request_bounded_tikz_polish",
+        "request_restrained_tikz_refinement",
+        "request_editorial_redesign_benchmark",
         "request_svg_polish_candidate_evidence",
+        "request_svg_polish_handoff_evidence",
         "request_full_style_redesign",
     }
 )
@@ -29,7 +33,22 @@ RELEASE_DECISION_KINDS = frozenset(
         "defer_for_dogfood",
     }
 )
-STYLE_DECISION_KINDS = DECISION_KINDS - RELEASE_DECISION_KINDS
+STYLE_CHOICE_DECISION_KINDS = frozenset(
+    {
+        "keep_current_style",
+        "request_restrained_tikz_refinement",
+        "request_editorial_redesign_benchmark",
+        "request_svg_polish_handoff_evidence",
+    }
+)
+LEGACY_STYLE_DECISION_KINDS = frozenset(
+    {
+        "request_bounded_tikz_polish",
+        "request_svg_polish_candidate_evidence",
+        "request_full_style_redesign",
+    }
+)
+STYLE_DECISION_KINDS = STYLE_CHOICE_DECISION_KINDS | LEGACY_STYLE_DECISION_KINDS
 PACKET_SCHEMAS = frozenset({RELEASE_DECISION_PACKET_SCHEMA, STYLE_DIRECTION_PACKET_SCHEMA})
 MUTATION_BOUNDARIES = frozenset(
     {
@@ -41,6 +60,9 @@ MUTATION_BOUNDARIES = frozenset(
 )
 _RELEASE_MUTATION_BOUNDARIES = frozenset(
     {"release_state_mutation_allowed", "golden_mutation_allowed"}
+)
+_SVG_POLISH_DECISION_KINDS = frozenset(
+    {"request_svg_polish_candidate_evidence", "request_svg_polish_handoff_evidence"}
 )
 
 
@@ -80,6 +102,17 @@ def _validate_follow_up(value: Any) -> dict[str, str | None]:
     return {"command": command, "implementation_slice": implementation_slice}
 
 
+def _combined_decision_text(record: dict[str, Any], follow_up: dict[str, str | None]) -> str:
+    parts = [
+        record.get("agent_recommendation"),
+        record.get("human_decision"),
+        record.get("human_note"),
+        follow_up.get("command"),
+        follow_up.get("implementation_slice"),
+    ]
+    return "\n".join(part for part in parts if isinstance(part, str))
+
+
 def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
     """Return a normalized durable decision record or raise a schema error.
 
@@ -111,15 +144,25 @@ def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
     mutation_boundary = _required_string(record, "mutation_boundary")
     if mutation_boundary not in MUTATION_BOUNDARIES:
         raise HumanDecisionRecordError(f"mutation_boundary_unknown:{mutation_boundary}")
+    follow_up = _validate_follow_up(record.get("follow_up"))
 
     if packet_schema == STYLE_DIRECTION_PACKET_SCHEMA:
-        if mutation_boundary in _RELEASE_MUTATION_BOUNDARIES:
-            raise HumanDecisionRecordError("style_decision_cannot_mutate_release_state")
+        if mutation_boundary != "no_source_mutation":
+            raise HumanDecisionRecordError("style_decision_cannot_authorize_mutation")
         if decision_kind in RELEASE_DECISION_KINDS:
             raise HumanDecisionRecordError("release_decision_requires_release_packet")
     if packet_schema == RELEASE_DECISION_PACKET_SCHEMA and decision_kind in STYLE_DECISION_KINDS:
         if mutation_boundary in _RELEASE_MUTATION_BOUNDARIES:
             raise HumanDecisionRecordError("style_preference_cannot_approve_release")
+    if decision_kind in STYLE_DECISION_KINDS and mutation_boundary != "no_source_mutation":
+        raise HumanDecisionRecordError("style_decision_cannot_authorize_mutation")
+    if decision_kind in _SVG_POLISH_DECISION_KINDS:
+        decision_text = _combined_decision_text(record, follow_up)
+        if (
+            "ready_for_svg_polish" not in decision_text
+            and "evidence" not in decision_text.lower()
+        ):
+            raise HumanDecisionRecordError("svg_polish_handoff_requires_evidence")
 
     return {
         "schema": SCHEMA,
@@ -131,6 +174,6 @@ def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
         "agent_recommendation": _required_string(record, "agent_recommendation"),
         "human_decision": _required_string(record, "human_decision"),
         "human_note": _required_string(record, "human_note"),
-        "follow_up": _validate_follow_up(record.get("follow_up")),
+        "follow_up": follow_up,
         "mutation_boundary": mutation_boundary,
     }

@@ -51,8 +51,12 @@ HUMAN_DECISION_KINDS = (
     "declare_final_artifact",
     "reject_current_artifact",
     "defer_for_dogfood",
+    "keep_current_style",
     "request_bounded_tikz_polish",
+    "request_restrained_tikz_refinement",
+    "request_editorial_redesign_benchmark",
     "request_svg_polish_candidate_evidence",
+    "request_svg_polish_handoff_evidence",
     "request_full_style_redesign",
 )
 MUTATION_BOUNDARIES = (
