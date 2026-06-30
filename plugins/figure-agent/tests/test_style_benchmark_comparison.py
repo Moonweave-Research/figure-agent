@@ -197,3 +197,24 @@ def test_svg_polish_candidate_requires_ready_for_svg_polish_evidence(tmp_path: P
                 plugin_root=plugin_root,
                 comparison_path=relative_path,
             )
+
+
+def test_editorial_redesign_cannot_be_winner_without_rendered_candidate_and_approval(
+    tmp_path: Path,
+) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    editorial = payload["candidate_family_comparisons"][2]
+    editorial["result"] = "winner_candidate"
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="non_current_winner_requires_real_candidate",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
