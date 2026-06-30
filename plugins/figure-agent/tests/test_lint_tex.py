@@ -299,6 +299,25 @@ def test_no_flagship_macro_emits_warn(tmp_path: Path) -> None:
     assert flagship_warns[0].severity == "warn"
 
 
+
+
+def test_extreme_local_font_size_emits_style_lock_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\node {\tiny unreadable label};" + "\n")
+
+    violations = lint(tex)
+    font_warns = [v for v in violations if v.category == "extreme_local_font_size"]
+
+    assert len(font_warns) == 1
+    assert font_warns[0].severity == "warn"
+    assert "print hierarchy" in font_warns[0].message
+
+
+def test_commented_extreme_local_font_size_avoids_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"% \node {\Huge dead draft label};" + "\n")
+
+    assert not any(v.category == "extreme_local_font_size" for v in lint(tex))
+
+
 def test_thin_stroke_below_threshold_emits_warn(tmp_path: Path) -> None:
     tex = _write(tmp_path, r"\draw[line width=0.20pt] (0,0) -- (1,1);" + "\n")
     violations = lint(tex)
