@@ -239,6 +239,28 @@ def test_main_accepts_json_and_dry_run_flags_as_plan_only_noops(
     assert [run["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
 
 
+def test_main_returns_nonzero_for_implicit_missing_examples_workspace(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    queue = _queue()
+    queue["workspace_diagnostic"] = {
+        "schema": "figure-agent.queue-workspace-diagnostic.v1",
+        "state": "missing_examples",
+        "workspace_root": "/repo-root",
+        "missing": ["examples"],
+        "message": "implicit queue discovery found no examples/ directory",
+    }
+
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: queue)
+
+    assert fig_queue_run.main(["--mode", "review", "--goal", "triage"]) == 2
+
+    captured = capsys.readouterr()
+    assert "implicit queue discovery found no examples/ directory" in captured.err
+    payload = json.loads(captured.out)
+    assert payload["queue"]["workspace_diagnostic"]["state"] == "missing_examples"
+
+
 def test_main_rejects_execute_with_dry_run_without_running(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
