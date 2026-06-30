@@ -247,7 +247,11 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
         "semantic_risks": ["panel spacing must preserve panel semantics"],
         "boundedness": {
             "changes": "increase panel boundary clearance",
-            "does_not_change": ["accepted state", "tracked golden exports", "SVG artifacts"],
+            "does_not_change": [
+                "accepted state",
+                "tracked golden exports",
+                "SVG artifacts",
+            ],
             "requires_human_review": True,
             "not_svg_polish": True,
         },
