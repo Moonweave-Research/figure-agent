@@ -12,6 +12,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import design_direction_packet  # noqa: E402
 import fig_driver  # noqa: E402
 import runtime_paths  # noqa: E402
 import style_benchmark_comparison  # noqa: E402
@@ -220,6 +221,7 @@ def _row_from_summary(
     if isinstance(fixture, str) and fixture:
         row.update(_style_benchmark_pack_fields(fixture, workspace_root=repo_root))
         row.update(_style_benchmark_comparison_fields(fixture, workspace_root=repo_root))
+        row.update(_design_direction_fields(fixture, row))
     polish_blocker = _polish_blocker_detail(row, mode=mode)
     if polish_blocker is not None:
         row["polish_blocker"] = polish_blocker
@@ -325,6 +327,45 @@ def _style_benchmark_comparison_fields(name: str, *, workspace_root: Path) -> di
     if summary.get("state") == "present":
         fields["style_benchmark_comparison"] = summary
     return {key: value for key, value in fields.items() if value is not None}
+
+
+def _design_direction_source_payload(row: dict[str, Any], *, prefix: str) -> dict[str, object] | None:
+    payload = row.get(prefix)
+    if isinstance(payload, dict):
+        return payload
+    state = row.get(f"{prefix}_state")
+    if isinstance(state, str) and state:
+        return {"state": state}
+    return None
+
+
+def _design_direction_fields(fixture: str, row: dict[str, Any]) -> dict[str, Any]:
+    packet = design_direction_packet.build_design_direction_packet(
+        fixture,
+        queue_row=row,
+        style_pack=_design_direction_source_payload(row, prefix="style_benchmark_pack"),
+        comparison=_design_direction_source_payload(row, prefix="style_benchmark_comparison"),
+        svg_polish_state={"state": row.get("svg_polish_evidence_state", "not_checked")},
+    )
+    fields: dict[str, Any] = {
+        "design_direction_state": packet.get("state"),
+        "design_direction_packet_schema": packet.get("schema"),
+        "design_direction_next_agent_action": packet.get("next_agent_action"),
+    }
+    if packet.get("default_recommendation") is not None:
+        fields["design_direction_default"] = packet.get("default_recommendation")
+    if packet.get("human_question") is not None:
+        fields["design_direction_human_question"] = packet.get("human_question")
+    blocker_reasons = packet.get("blocking_reasons")
+    if isinstance(blocker_reasons, list) and blocker_reasons:
+        fields["design_direction_blocker_reason"] = blocker_reasons[0]
+    if row.get("svg_polish_evidence_state") == "blocked_missing_positive_readiness":
+        fields["design_direction_blocker_reason"] = "svg_polish_evidence_missing"
+    if packet.get("state") == "ready_for_human_choice":
+        fields["required_actor"] = "human"
+        fields["requires_human"] = True
+        fields["blocking_source"] = "design_direction_human_choice"
+    return fields
 
 
 def _svg_polish_fields(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
@@ -456,6 +497,9 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     by_style_comparison = _count(rows, "style_benchmark_comparison_state")
     if by_style_comparison:
         summary["by_style_benchmark_comparison_state"] = by_style_comparison
+    by_design_direction = _count(rows, "design_direction_state")
+    if by_design_direction:
+        summary["by_design_direction_state"] = by_design_direction
     return summary
 
 
@@ -1238,6 +1282,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "style_direction_packet": row.get("style_direction_packet"),
                 "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
                 "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
+                "design_direction_state": row.get("design_direction_state"),
             }
             if row.get("svg_polish_evidence_state") is not None:
                 item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
@@ -1266,6 +1311,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "operator_handoff": _operator_handoff(row, reason=reason),
             "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
             "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
+            "design_direction_state": row.get("design_direction_state"),
         }
         if row.get("svg_polish_evidence_state") is not None:
             item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
@@ -1583,6 +1629,12 @@ def _row_fields_mention(
 
 def _bottleneck_category_for_row(row: dict[str, Any]) -> str | None:
     action = row.get("action")
+    if row.get("design_direction_state") in {
+        "ready_for_human_choice",
+        "blocked_missing_style_pack",
+        "blocked_missing_comparison",
+    }:
+        return "template_style"
     if action == fig_driver.ACTION_COMPLETE:
         return None
     reference_tokens = ("reference", "briefing", "context_pack")
@@ -1906,6 +1958,7 @@ def _summary_table_keys() -> tuple[str, ...]:
         "by_svg_polish_evidence_state",
         "by_style_benchmark_pack_state",
         "by_style_benchmark_comparison_state",
+        "by_design_direction_state",
     )
 
 
