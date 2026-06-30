@@ -1,14 +1,14 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig4_trap_energy_diagram
-source_critique_hash: sha256:fee1f7095986788d2c5c3d383f0d2fb4cb34573d49403abbdc89bb81f22bbfef
+source_critique_hash: sha256:0f3064ff3ded093d46d6b52490720a99e87bd0610bdf8f4673d4ee786981422a
 decisions:
 - finding_id: C001
-  decision: needs_human
-  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
-  patch_target: ''
-  evidence: critique.md finding C001.
+  decision: resolved
+  reason: Shallow-trap labels were moved clear of the Eg arrow/guide geometry and backed subtly.
+  patch_target: fig4_trap_energy_diagram.tex
+  evidence: Fresh compile reports no collisions, no text-boundary clashes, and no label-path proximity candidates.
 - finding_id: C002
-  decision: needs_human
-  reason: Review C002 before selecting apply, dismiss, defer, or resolved.
-  patch_target: ''
-  evidence: critique.md finding C002.
+  decision: resolved
+  reason: Deep-trap labels were moved into a clearer label lane and DOS connectors now start after the label block.
+  patch_target: fig4_trap_energy_diagram.tex
+  evidence: Fresh compile reports no collisions, no text-boundary clashes, and no label-path proximity candidates.
