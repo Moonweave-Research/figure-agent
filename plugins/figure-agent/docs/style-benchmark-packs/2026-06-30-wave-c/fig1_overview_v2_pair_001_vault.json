@@ -1,0 +1,110 @@
+{
+  "schema": "figure-agent.style-benchmark-candidate-pack.v1",
+  "fixture": "fig1_overview_v2_pair_001_vault",
+  "source_decision_packet": "docs/decision-packets/2026-06-30-wave-c/fig1_overview_v2_pair_001_vault.json",
+  "source_decision_record": "docs/decision-records/2026-06-30-wave-c/fig1_overview_v2_pair_001_vault.json",
+  "benchmark_contract": "examples/fig1_overview_v2_pair_001_vault/benchmark_contract.yaml",
+  "aesthetic_intent": "examples/fig1_overview_v2_pair_001_vault/aesthetic_intent.yaml",
+  "target_style_class": "restrained editorial multipanel scientific schematic",
+  "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
+  "purpose": "Compare future style directions against a semantic benchmark before any source, SVG, acceptance, release-state, or golden mutation.",
+  "current_style": {
+    "strengths": [
+      "mature multipanel story with A-F roles and row-level evidence flow",
+      "paper-local style profile with restrained editorial hierarchy",
+      "semantic color economy across polymer, shallow trap, deep trap, and force families",
+      "existing benchmark_contract and aesthetic_intent assets for detector-grounded review"
+    ],
+    "weaknesses": [
+      "dense Row 2 evidence panels can regress into cramped label or rule crowding",
+      "component detail must stay mechanism-bound to avoid generic icon polish",
+      "publication and provenance readiness remain explicit human policy gates"
+    ]
+  },
+  "forbidden_semantic_changes": [
+    "change A/B/C/D/E/F panel roles or move evidence between columns",
+    "rename symbols, measured quantities, force families, or apparatus labels",
+    "swap shallow/deep trap color semantics or force-direction meaning",
+    "remove required labels, spokes, apparatus elements, or theory-guarded mechanisms",
+    "use SVG polish to repair scientific, semantic, or label-target errors that belong in TikZ/source review"
+  ],
+  "candidate_family_slots": [
+    {
+      "id": "current_style",
+      "label": "Keep current style",
+      "mutation_boundary": "no_source_mutation",
+      "entry_condition": "No candidate clearly improves manuscript value without increasing semantic or release risk.",
+      "acceptance_rule": "Accept as benchmark winner when alternatives improve only taste language or introduce semantic ambiguity."
+    },
+    {
+      "id": "restrained_tikz_refinement",
+      "label": "Restrained TikZ refinement",
+      "mutation_boundary": "source_mutation_requires_separate_approval",
+      "entry_condition": "A bounded source-level patch can improve typography, whitespace, stroke rhythm, or component fidelity without changing meaning.",
+      "acceptance_rule": "Must preserve all forbidden semantics and improve at least one measurable check or named aesthetic lever."
+    },
+    {
+      "id": "editorial_redesign",
+      "label": "Editorial redesign",
+      "mutation_boundary": "source_mutation_requires_separate_approval",
+      "entry_condition": "Human explicitly asks for a broader visual-language alternative after seeing benchmark tradeoffs.",
+      "acceptance_rule": "Must beat current style on journal-fit and readability while preserving panel roles, labels, semantic colors, and mechanism story."
+    },
+    {
+      "id": "svg_polish_handoff",
+      "label": "SVG polish handoff",
+      "mutation_boundary": "svg_artifact_mutation_requires_separate_approval",
+      "entry_condition": "TikZ/source semantics are locked and ready_for_svg_polish evidence is positive.",
+      "acceptance_rule": "May adjust only optical spacing, stroke finish, or texture nuance; semantic repair must return to TikZ/source review."
+    }
+  ],
+  "measurable_checks": [
+    {
+      "id": "benchmark_contract_hard_regressions",
+      "source": "benchmark_contract.yaml",
+      "must_pass": [
+        "source_compile_failure absent",
+        "candidate_hard_gate_rejected absent"
+      ]
+    },
+    {
+      "id": "text_boundary_delta",
+      "source": "benchmark_contract.yaml",
+      "metric": "text_boundary.blocker_count",
+      "expected_movement": "decrease_or_equal"
+    },
+    {
+      "id": "style_lock_typography",
+      "source": "style lock lint",
+      "must_pass": [
+        "no new local tiny/scriptsize/huge overrides",
+        "panel labels and role labels keep controlled hierarchy"
+      ]
+    },
+    {
+      "id": "visual_clash_delta",
+      "source": "detector reports when rendered artifacts exist",
+      "expected_movement": "decrease_or_equal"
+    }
+  ],
+  "human_only_questions": [
+    "Does the candidate improve journal fit enough to justify leaving the current restrained manuscript style?",
+    "Does the candidate feel editorial rather than generic template polish?",
+    "Should the release operator defer protected golden mutation until a comparison view is reviewed?",
+    "Is this figure being promoted toward a flagship visual, or should it remain a restrained main-text overview?"
+  ],
+  "candidate_rejection_rules": [
+    "reject a prettier candidate if it changes semantics, labels, panel roles, or color meaning",
+    "reject SVG polish if it is being used to fix source-level semantic defects",
+    "reject broad redesign if the only improvement is non-measurable taste language",
+    "reject any route that implies accepted-state, release-state, final-artifact, export, or golden mutation without a separate explicit gate"
+  ],
+  "safety": {
+    "source_mutation": false,
+    "accepted_state_mutation": false,
+    "release_state_mutation": false,
+    "generated_export_mutation": false,
+    "golden_mutation": false,
+    "svg_polish_default": false
+  }
+}
