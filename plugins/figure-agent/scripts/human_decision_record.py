@@ -9,6 +9,7 @@ import fixture_identity
 SCHEMA = "figure-agent.human-decision-record.v1"
 RELEASE_DECISION_PACKET_SCHEMA = "figure-agent.release-decision-packet.v1"
 STYLE_DIRECTION_PACKET_SCHEMA = "figure-agent.style-direction-packet.v1"
+DESIGN_DIRECTION_PACKET_SCHEMA = "figure-agent.design-direction-packet.v1"
 
 DECISION_KINDS = frozenset(
     {
@@ -23,6 +24,10 @@ DECISION_KINDS = frozenset(
         "request_svg_polish_candidate_evidence",
         "request_svg_polish_handoff_evidence",
         "request_full_style_redesign",
+        "prepare_bounded_tikz_refinement",
+        "prepare_editorial_redesign_candidates",
+        "prepare_svg_polish_handoff",
+        "defer_design_decision",
     }
 )
 RELEASE_DECISION_KINDS = frozenset(
@@ -49,7 +54,22 @@ LEGACY_STYLE_DECISION_KINDS = frozenset(
     }
 )
 STYLE_DECISION_KINDS = STYLE_CHOICE_DECISION_KINDS | LEGACY_STYLE_DECISION_KINDS
-PACKET_SCHEMAS = frozenset({RELEASE_DECISION_PACKET_SCHEMA, STYLE_DIRECTION_PACKET_SCHEMA})
+DESIGN_DIRECTION_DECISION_KINDS = frozenset(
+    {
+        "keep_current_style",
+        "prepare_bounded_tikz_refinement",
+        "prepare_editorial_redesign_candidates",
+        "prepare_svg_polish_handoff",
+        "defer_design_decision",
+    }
+)
+PACKET_SCHEMAS = frozenset(
+    {
+        RELEASE_DECISION_PACKET_SCHEMA,
+        STYLE_DIRECTION_PACKET_SCHEMA,
+        DESIGN_DIRECTION_PACKET_SCHEMA,
+    }
+)
 MUTATION_BOUNDARIES = frozenset(
     {
         "no_source_mutation",
@@ -151,6 +171,15 @@ def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
             raise HumanDecisionRecordError("style_decision_cannot_authorize_mutation")
         if decision_kind in RELEASE_DECISION_KINDS:
             raise HumanDecisionRecordError("release_decision_requires_release_packet")
+    if packet_schema == DESIGN_DIRECTION_PACKET_SCHEMA:
+        if mutation_boundary != "no_source_mutation":
+            raise HumanDecisionRecordError(
+                "design_direction_decision_cannot_authorize_mutation"
+            )
+        if decision_kind not in DESIGN_DIRECTION_DECISION_KINDS:
+            raise HumanDecisionRecordError(
+                f"design_direction_decision_kind_unknown:{decision_kind}"
+            )
     if packet_schema == RELEASE_DECISION_PACKET_SCHEMA and decision_kind in STYLE_DECISION_KINDS:
         if mutation_boundary in _RELEASE_MUTATION_BOUNDARIES:
             raise HumanDecisionRecordError("style_preference_cannot_approve_release")
