@@ -2867,36 +2867,36 @@ def test_queue_surfaces_design_direction_ready_human_choice(
                     "id": "current_style",
                     "result": "winner_candidate",
                     "mutation_boundary": "no_source_mutation",
-                    "can_improve": "Keeps current style as the benchmark.",
-                    "semantic_changes_forbidden": "May not change panel roles.",
-                    "evidence_to_prove_better": "A challenger must improve checks.",
+                    "what_can_improve": ["Keeps current style as the benchmark."],
+                    "forbidden_semantic_changes": ["May not change panel roles."],
+                    "proof_criteria": ["A challenger must improve checks."],
                     "human_only_question": "Is the current style sufficient?",
                 },
                 {
                     "id": "restrained_tikz_refinement",
                     "result": "eligible",
                     "mutation_boundary": "source_mutation_requires_separate_approval",
-                    "can_improve": "Can improve typography.",
-                    "semantic_changes_forbidden": "May not change labels.",
-                    "evidence_to_prove_better": "Must improve a measurable check.",
+                    "what_can_improve": ["Can improve typography."],
+                    "forbidden_semantic_changes": ["May not change labels."],
+                    "proof_criteria": ["Must improve a measurable check."],
                     "human_only_question": "Is source approval worthwhile?",
                 },
                 {
                     "id": "editorial_redesign",
                     "result": "eligible",
                     "mutation_boundary": "source_mutation_requires_separate_approval",
-                    "can_improve": "Can improve journal fit.",
-                    "semantic_changes_forbidden": "May not trade meaning for polish.",
-                    "evidence_to_prove_better": "Must prove semantic preservation.",
+                    "what_can_improve": ["Can improve journal fit."],
+                    "forbidden_semantic_changes": ["May not trade meaning for polish."],
+                    "proof_criteria": ["Must prove semantic preservation."],
                     "human_only_question": "Is redesign worth semantic risk?",
                 },
                 {
                     "id": "svg_polish_handoff",
                     "result": "blocked_missing_evidence",
                     "mutation_boundary": "svg_artifact_mutation_requires_separate_approval",
-                    "can_improve": "Can improve optical finish.",
-                    "semantic_changes_forbidden": "May not repair science in SVG.",
-                    "evidence_to_prove_better": "Requires ready_for_svg_polish evidence.",
+                    "what_can_improve": ["Can improve optical finish."],
+                    "forbidden_semantic_changes": ["May not repair science in SVG."],
+                    "proof_criteria": ["Requires ready_for_svg_polish evidence."],
                     "human_only_question": "Should SVG polish remain blocked?",
                 },
             ],
@@ -2940,14 +2940,14 @@ def test_queue_surfaces_design_direction_ready_human_choice(
         "style_benchmark_comparison:docs/style-benchmark-comparisons/alpha.json",
     ]
     assert row["design_direction_candidate_family_evidence"]["current_style"] == {
-        "can_improve": "Keeps current style as the benchmark.",
-        "semantic_changes_forbidden": "May not change panel roles.",
-        "evidence_to_prove_better": "A challenger must improve checks.",
+        "what_can_improve": ["Keeps current style as the benchmark."],
+        "forbidden_semantic_changes": ["May not change panel roles."],
+        "proof_criteria": ["A challenger must improve checks."],
         "human_only_question": "Is the current style sufficient?",
     }
     assert row["design_direction_summary"]["candidate_family_evidence"][
         "svg_polish_handoff"
-    ]["evidence_to_prove_better"] == "Requires ready_for_svg_polish evidence."
+    ]["proof_criteria"] == ["Requires ready_for_svg_polish evidence."]
     assert row["design_direction_human_question"].startswith("I recommend keeping")
     assert row["bottleneck_category"] == "template_style"
     assert row["required_actor"] == "human"

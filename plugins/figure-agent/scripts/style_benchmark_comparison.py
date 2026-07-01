@@ -222,16 +222,6 @@ def _validate_candidates(
                 "mutation_boundary": boundary,
                 "authorizes_mutation": False,
                 "semantic_change_allowed": False,
-                "can_improve": _required_string(candidate, "can_improve"),
-                "semantic_changes_forbidden": _required_string(
-                    candidate,
-                    "semantic_changes_forbidden",
-                ),
-                "evidence_to_prove_better": _required_string(
-                    candidate,
-                    "evidence_to_prove_better",
-                ),
-                "human_only_question": _required_string(candidate, "human_only_question"),
                 "comparison_basis": _string_list(candidate, "comparison_basis"),
                 "failure_modes": _string_list(candidate, "failure_modes"),
                 "prerequisite_evidence": _string_list(candidate, "prerequisite_evidence"),
@@ -347,19 +337,6 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
             "blocked_requires_separate_approval",
         }:
             candidate_handoff_states[candidate_id] = "handoff_blocked"
-        evidence = {
-            key: candidate.get(key)
-            for key in (
-                "can_improve",
-                "semantic_changes_forbidden",
-                "evidence_to_prove_better",
-                "human_only_question",
-            )
-        }
-        if all(isinstance(value, str) and value for value in evidence.values()):
-            candidate_family_evidence[candidate_id] = {
-                key: value for key, value in evidence.items() if isinstance(value, str)
-            }
 
     human_questions = payload.get("human_only_questions")
     question_list = human_questions if isinstance(human_questions, list) else []

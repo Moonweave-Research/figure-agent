@@ -180,10 +180,6 @@ def _validate_candidate_slots(payload: dict[str, Any]) -> list[dict[str, Any]]:
             "mutation_boundary": raw.get("mutation_boundary"),
             "entry_condition": raw.get("entry_condition"),
             "acceptance_rule": raw.get("acceptance_rule"),
-            "can_improve": raw.get("can_improve"),
-            "semantic_changes_forbidden": raw.get("semantic_changes_forbidden"),
-            "evidence_to_prove_better": raw.get("evidence_to_prove_better"),
-            "human_only_question": raw.get("human_only_question"),
         }
         if not all(isinstance(value, str) and value.strip() for value in values.values()):
             raise StyleBenchmarkPackError("candidate_family_slots_invalid")
@@ -362,7 +358,6 @@ def load_pack(
         "linked_files": linked,
         "target_style_class": raw["target_style_class"],
         "default_recommendation": raw["default_recommendation"],
-        "forbidden_semantic_changes": forbidden,
         "candidate_family_slots": slots,
         "forbidden_semantic_changes": forbidden,
         "measurable_checks": checks,
@@ -409,17 +404,27 @@ def summarize_pack(pack: dict[str, Any]) -> dict[str, Any]:
                 evidence = {
                     key: slot.get(key)
                     for key in (
-                        "can_improve",
-                        "semantic_changes_forbidden",
-                        "evidence_to_prove_better",
+                        "what_can_improve",
+                        "forbidden_semantic_changes",
+                        "proof_criteria",
                         "human_only_question",
                     )
                 }
-                if all(isinstance(value, str) and value for value in evidence.values()):
+                if all(
+                    (
+                        isinstance(value, str) and value
+                        if key == "human_only_question"
+                        else isinstance(value, list) and bool(value)
+                    )
+                    for key, value in evidence.items()
+                ):
                     candidate_family_evidence[slot_id] = {
                         key: value
                         for key, value in evidence.items()
-                        if isinstance(value, str)
+                        if (
+                            isinstance(value, str)
+                            or isinstance(value, list)
+                        )
                     }
 
     questions = pack.get("human_only_questions")

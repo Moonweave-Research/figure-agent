@@ -115,9 +115,9 @@ def test_ready_packet_preserves_read_only_candidate_family_evidence() -> None:
         comparison=_comparison(
             candidate_family_evidence={
                 "current_style": {
-                    "can_improve": "Keeps current style as the benchmark.",
-                    "semantic_changes_forbidden": "May not change panel roles.",
-                    "evidence_to_prove_better": "A challenger must improve checks.",
+                    "what_can_improve": ["Keeps current style as the benchmark."],
+                    "forbidden_semantic_changes": ["May not change panel roles."],
+                    "proof_criteria": ["A challenger must improve checks."],
                     "human_only_question": "Is the current style sufficient?",
                 }
             }
@@ -126,9 +126,9 @@ def test_ready_packet_preserves_read_only_candidate_family_evidence() -> None:
 
     assert packet["candidate_family_evidence"] == {
         "current_style": {
-            "can_improve": "Keeps current style as the benchmark.",
-            "semantic_changes_forbidden": "May not change panel roles.",
-            "evidence_to_prove_better": "A challenger must improve checks.",
+            "what_can_improve": ["Keeps current style as the benchmark."],
+            "forbidden_semantic_changes": ["May not change panel roles."],
+            "proof_criteria": ["A challenger must improve checks."],
             "human_only_question": "Is the current style sufficient?",
         }
     }

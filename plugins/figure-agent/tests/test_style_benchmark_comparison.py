@@ -23,9 +23,9 @@ REAL_COMPARISON = (
 )
 REAL_COMPARISON_DIR = REAL_COMPARISON.parent
 REQUIRED_FAMILY_EVIDENCE_KEYS = {
-    "can_improve",
-    "semantic_changes_forbidden",
-    "evidence_to_prove_better",
+    "what_can_improve",
+    "forbidden_semantic_changes",
+    "proof_criteria",
     "human_only_question",
 }
 
@@ -97,22 +97,6 @@ def test_real_wave_f_style_benchmark_comparison_loads() -> None:
             "mutation_boundary": "no_source_mutation",
             "authorizes_mutation": False,
             "semantic_change_allowed": False,
-            "can_improve": (
-                "Keeps the current manuscript-ready style as the benchmark while "
-                "future candidates prove a real gain."
-            ),
-            "semantic_changes_forbidden": (
-                "May not change panel roles, measured quantities, force families, "
-                "semantic colors, required labels, or mechanism story."
-            ),
-            "evidence_to_prove_better": (
-                "A challenger must improve benchmark checks or named aesthetic "
-                "levers without adding hard regressions or semantic risk."
-            ),
-            "human_only_question": (
-                "Is staying with the current restrained overview preferable to "
-                "leaving it for a visually different candidate?"
-            ),
             "comparison_basis": [
                 "human decision selected keep_current_style as policy state only",
                 (
@@ -270,43 +254,9 @@ def test_comparison_summary_preserves_read_only_family_evidence() -> None:
     summary = style_benchmark_comparison.summarize_comparison(payload)
 
     current = summary["candidate_family_evidence"]["current_style"]
-    assert current["can_improve"].startswith("Keeps the current manuscript-ready")
-    assert "panel roles" in current["semantic_changes_forbidden"]
-    assert "hard regressions" in current["evidence_to_prove_better"]
-    assert current["human_only_question"].endswith("visually different candidate?")
-
-
-def test_candidate_family_requires_bounded_benchmark_contract_fields(
-    tmp_path: Path,
-) -> None:
-    plugin_root, relative_path = _real_payload_copy(tmp_path)
-    path = plugin_root / relative_path
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    del payload["candidate_family_comparisons"][0]["human_only_question"]
-    _write_comparison(path, payload)
-
-    with pytest.raises(
-        style_benchmark_comparison.StyleBenchmarkComparisonError,
-        match="human_only_question_invalid",
-    ):
-        style_benchmark_comparison.load_comparison(
-            "fig1_overview_v2_pair_001_vault",
-            plugin_root=plugin_root,
-            comparison_path=relative_path,
-        )
-
-
-def test_comparison_summary_preserves_read_only_family_evidence() -> None:
-    payload = style_benchmark_comparison.load_comparison(
-        "fig1_overview_v2_pair_001_vault",
-        plugin_root=PLUGIN_ROOT,
-    )
-    summary = style_benchmark_comparison.summarize_comparison(payload)
-
-    current = summary["candidate_family_evidence"]["current_style"]
-    assert current["can_improve"].startswith("Keeps the current manuscript-ready")
-    assert "panel roles" in current["semantic_changes_forbidden"]
-    assert "hard regressions" in current["evidence_to_prove_better"]
+    assert current["what_can_improve"][0].startswith("Keeps the current manuscript-ready")
+    assert "panel roles" in current["forbidden_semantic_changes"][0]
+    assert "hard regressions" in current["proof_criteria"][0]
     assert current["human_only_question"].endswith("visually different candidate?")
 
 

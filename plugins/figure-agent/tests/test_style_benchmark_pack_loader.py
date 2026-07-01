@@ -391,10 +391,10 @@ def test_style_benchmark_pack_summary_is_compact_and_read_only(tmp_path: Path) -
         "svg_polish_handoff": "svg_artifact_mutation_requires_separate_approval",
     }
     assert summary["candidate_family_evidence"]["current_style"] == {
-        "can_improve": "Keeps the benchmark stable until a candidate proves a gain.",
-        "semantic_changes_forbidden": "May not change panel roles or labels.",
-        "evidence_to_prove_better": "A challenger must improve benchmark checks.",
-        "human_only_question": "Is the current style already sufficient?",
+        "what_can_improve": ["baseline clarity can remain sufficient"],
+        "forbidden_semantic_changes": ["semantic meaning must not change"],
+        "proof_criteria": ["alternative must beat measurable checks"],
+        "human_only_question": "Is current style good enough?",
     }
     assert summary["linked_files"] == {
         "benchmark_contract": "examples/contract_demo/benchmark_contract.yaml",
