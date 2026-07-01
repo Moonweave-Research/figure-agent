@@ -96,7 +96,10 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                     "mutation_boundary": "no_source_mutation",
                     "entry_condition": "No candidate clearly improves manuscript value.",
                     "acceptance_rule": "Accept when alternatives introduce ambiguity.",
-                    **_family_detail("current_style"),
+                    "can_improve": "Keeps the benchmark stable until a candidate proves a gain.",
+                    "semantic_changes_forbidden": "May not change panel roles or labels.",
+                    "evidence_to_prove_better": "A challenger must improve benchmark checks.",
+                    "human_only_question": "Is the current style already sufficient?",
                 },
                 {
                     "id": "restrained_tikz_refinement",
@@ -104,7 +107,10 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                     "mutation_boundary": "source_mutation_requires_separate_approval",
                     "entry_condition": "A bounded source-level patch can improve style.",
                     "acceptance_rule": "Preserve all forbidden semantics.",
-                    **_family_detail("restrained_tikz_refinement"),
+                    "can_improve": "Can improve typography and spacing.",
+                    "semantic_changes_forbidden": "May not change semantic labels.",
+                    "evidence_to_prove_better": "Must improve a measurable check.",
+                    "human_only_question": "Is bounded source approval worthwhile?",
                 },
                 {
                     "id": "editorial_redesign",
@@ -112,7 +118,10 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                     "mutation_boundary": "source_mutation_requires_separate_approval",
                     "entry_condition": "Human explicitly asks for a broader alternative.",
                     "acceptance_rule": "Beat current style while preserving meaning.",
-                    **_family_detail("editorial_redesign"),
+                    "can_improve": "Can improve journal fit and visual hierarchy.",
+                    "semantic_changes_forbidden": "May not trade meaning for prettier composition.",
+                    "evidence_to_prove_better": "Must prove semantic preservation.",
+                    "human_only_question": "Is broader redesign worth semantic risk?",
                 },
                 {
                     "id": "svg_polish_handoff",
@@ -123,7 +132,10 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                         "ready_for_svg_polish evidence is positive."
                     ),
                     "acceptance_rule": "May adjust only optical finish.",
-                    **_family_detail("svg_polish_handoff"),
+                    "can_improve": "Can improve only optical finish after source lock.",
+                    "semantic_changes_forbidden": "May not repair scientific meaning in SVG.",
+                    "evidence_to_prove_better": "Requires ready_for_svg_polish evidence.",
+                    "human_only_question": "Should SVG polish remain blocked?",
                 },
             ],
             "measurable_checks": [
