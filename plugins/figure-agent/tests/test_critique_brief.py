@@ -385,6 +385,64 @@ Explain transient-current trapping in a compact mechanism schematic.
     assert "overall_score: 0-100" not in brief
 
 
+def test_critique_brief_reference_free_mode_keeps_aesthetic_intent_accounting(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_example(tmp_path, section6=None)
+    (example_dir / "briefing.md").write_text(
+        """## §1. Topic
+
+Explain transient-current trapping as a restrained publication mechanism schematic.
+
+## §3. Binding physics-correctness rules
+
+1. n is trap-energy breadth, not trap density.
+2. Do NOT commit to electron vs hole transport.
+""",
+        encoding="utf-8",
+    )
+    (example_dir / "aesthetic_intent.yaml").write_text(
+        """
+schema: figure-agent.aesthetic-intent.v1
+fixture: review_demo
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: avoid cartoon-like oversized labels and decorative gradients
+must_avoid:
+  - id: toy_diagram
+    pattern: rounded generic blocks and unmodulated flat color
+    severity: MAJOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: semantically correct TikZ lacks print-scale optical refinement
+    recommended_path: ready_for_svg_polish
+""".lstrip(),
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    (example_dir / "build" / "visual_clash.json").write_text(
+        '{"fixture":"review_demo","candidates":[],"total":0}\n',
+        encoding="utf-8",
+    )
+    fresh_time = os.stat(example_dir / "aesthetic_intent.yaml").st_mtime + 1
+    os.utime(png_path, (fresh_time, fresh_time))
+
+    brief = generate_for(example_dir)
+
+    assert "## Aesthetic Intent Calibration" in brief
+    assert "## Reference-free briefing-grounded critique mode" in brief
+    assert "does not waive it" in brief
+    assert "must still cite exact aesthetic intent" in brief
+    assert "anchors and current-artifact evidence" in brief
+    assert brief.index("## Aesthetic Intent Calibration") < brief.index(
+        "## Reference-free briefing-grounded critique mode"
+    )
+
+
 def test_critique_brief_errors_when_png_missing(tmp_path, capsys, monkeypatch):
     example_dir = _write_example(tmp_path, section6="- invariant", png=False)
 

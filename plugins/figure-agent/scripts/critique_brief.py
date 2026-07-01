@@ -303,7 +303,9 @@ Use exactly these lenses:
 Every panel/top-level finding MUST include `grounded_in_rule` naming the briefing
 section/rule number, spec panel_goal, or detector id that anchors it. Do not add
 generic best-practice findings without one of those anchors. Do not score, gate,
-auto-edit, or auto-apply.
+auto-edit, or auto-apply. If an aesthetic intent section exists, reference-free
+mode does not waive it: aesthetic claims must still cite exact aesthetic intent
+anchors and current-artifact evidence.
 
 ### Explicit briefing rules
 {rules}{panel_goal_section}

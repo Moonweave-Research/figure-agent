@@ -18,6 +18,7 @@ from aesthetic_intent import (  # noqa: E402
     AestheticIntentError,
     load_optional_aesthetic_intent,
 )
+from briefing_grounding import has_reference_free_grounding_context  # noqa: E402
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     build_adjudication_scaffold,
@@ -55,6 +56,10 @@ from paper_aesthetic_context import (  # noqa: E402
     paper_context_anchors,
 )
 from quality_manifest import file_sha256  # noqa: E402
+from reference_contract import (  # noqa: E402
+    declared_figure_reference_path,
+    participating_panel_reference_paths,
+)
 from svg_polish_delta import (  # noqa: E402
     SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH,
     SvgPolishDeltaError,
@@ -621,6 +626,72 @@ def _aesthetic_intent_accounting_violations(
                 "aesthetic intent pack exists; critique slots must cite at least "
                 "one exact aesthetic-intent anchor from target fields or item ids "
                 "with current-artifact evidence: " + ", ".join(missing)
+            ),
+        )
+    ]
+
+
+def _reference_free_grounding_violations(
+    example_dir: Path,
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    if not has_reference_free_grounding_context(example_dir):
+        return []
+
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        spec: dict[str, Any] = {}
+    else:
+        try:
+            spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="reference_free_grounding",
+                    message=f"spec.yaml invalid for reference-free grounding check: {exc}",
+                )
+            ]
+    if declared_figure_reference_path(example_dir, spec) is not None:
+        return []
+    if participating_panel_reference_paths(example_dir, spec):
+        return []
+
+    try:
+        findings = critique_findings(frontmatter)
+    except CritiqueContractError as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="critique_contract",
+                message=str(exc),
+            )
+        ]
+    missing: list[str] = []
+    try:
+        for index, finding in enumerate(findings):
+            label = critique_finding_id(finding, f"finding[{index}]")
+            grounded_in_rule = finding.get("grounded_in_rule")
+            if not isinstance(grounded_in_rule, str) or not grounded_in_rule.strip():
+                missing.append(label)
+    except CritiqueContractError as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="critique_contract",
+                message=str(exc),
+            )
+        ]
+    if not missing:
+        return []
+    return [
+        CritiqueLintViolation(
+            severity="blocker",
+            category="reference_free_grounding",
+            message=(
+                "reference-free critique findings must include grounded_in_rule "
+                "anchored to a briefing rule, panel_goal, or detector id: "
+                + ", ".join(missing)
             ),
         )
     ]
@@ -2157,6 +2228,9 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
         return violations
 
     violations.extend(_aesthetic_intent_accounting_violations(example_dir, frontmatter))
+    if violations:
+        return violations
+    violations.extend(_reference_free_grounding_violations(example_dir, frontmatter))
     if violations:
         return violations
     violations.extend(_paper_aesthetic_context_accounting_violations(example_dir, frontmatter))

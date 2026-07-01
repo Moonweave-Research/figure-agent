@@ -1069,6 +1069,30 @@ def _write_visual_clash_report(fig_dir: Path, *, candidate_ids: tuple[str, ...])
     return report
 
 
+def _write_reference_free_grounding_context(fig_dir: Path) -> None:
+    (fig_dir / "spec.yaml").write_text(
+        f"""name: {fig_dir.name}
+panels:
+  - id: a
+    caption: reference-free panel
+""",
+        encoding="utf-8",
+    )
+    (fig_dir / "briefing.md").write_text(
+        """## 1. Topic
+
+Explain transient-current trapping as a restrained publication mechanism schematic.
+
+## 3. Binding physics-correctness rules
+
+1. n is trap-energy breadth, not trap density.
+2. Do NOT commit to electron vs hole transport.
+""",
+        encoding="utf-8",
+    )
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+
+
 def _write_text_boundary_clash_report(fig_dir: Path, *, candidate_ids: tuple[str, ...]) -> Path:
     report = fig_dir / "build" / "text_boundary_clash.json"
     report.parent.mkdir(parents=True, exist_ok=True)
@@ -1289,6 +1313,67 @@ def test_lint_critique_accepts_valid_v1_3_critique(tmp_path: Path) -> None:
             "    status: open\n"
             "    tex_lines: [10, 20]\n"
             "    observation: ordinary finding\n"
+        ),
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_rejects_reference_free_finding_without_grounding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_reference_free_grounding_context(fig_dir)
+    _write_critique(
+        fig_dir,
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: reference-free finding lacks a rule anchor\n"
+        ),
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["reference_free_grounding"]
+    assert "grounded_in_rule" in violations[0].message
+    assert "C001" in violations[0].message
+
+
+def test_lint_critique_accepts_reference_free_aesthetic_intent_grounding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_reference_free_grounding_context(fig_dir)
+    _write_aesthetic_intent(fig_dir)
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        top_tier_yaml=_top_tier_yaml_with_aesthetic_anchor("mature_restraint"),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml_with_aesthetic_anchors(),
+        findings_yaml=(
+            "panels:\n"
+            "  - id: a\n"
+            "    findings:\n"
+            "      - id: P001\n"
+            "        status: open\n"
+            "        grounded_in_rule: Briefing §3 rule 1\n"
+            "        observation: panel finding cites the explicit physics rule\n"
+            "findings:\n"
+            "  - id: C001\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    grounded_in_rule: detector id visual_clash.json empty audit\n"
+            "    observation: top-level finding cites detector evidence\n"
         ),
     )
 
