@@ -35,22 +35,25 @@ def _is_present(payload: dict[str, object] | None) -> bool:
 
 
 def _evidence_refs(
-    style_pack: dict[str, object], comparison: dict[str, object]
+    *,
+    style_pack: dict[str, object] | None,
+    comparison: dict[str, object] | None,
 ) -> list[str]:
     refs: list[str] = []
-    for prefix, payload in (
-        ("style_benchmark_pack", style_pack),
-        ("style_benchmark_comparison", comparison),
-    ):
-        path = payload.get("path")
+    if isinstance(style_pack, dict):
+        path = style_pack.get("path")
         if isinstance(path, str) and path:
-            refs.append(f"{prefix}:{path}")
-    linked_files = style_pack.get("linked_files")
-    if isinstance(linked_files, dict):
-        for label in ("benchmark_contract", "aesthetic_intent"):
-            path = linked_files.get(label)
-            if isinstance(path, str) and path:
-                refs.append(f"{label}:{path}")
+            refs.append(f"style_benchmark_pack:{path}")
+        linked_files = style_pack.get("linked_files")
+        if isinstance(linked_files, dict):
+            for label in ("benchmark_contract", "aesthetic_intent"):
+                value = linked_files.get(label)
+                if isinstance(value, str) and value:
+                    refs.append(f"{label}:{value}")
+    if isinstance(comparison, dict):
+        path = comparison.get("path")
+        if isinstance(path, str) and path:
+            refs.append(f"style_benchmark_comparison:{path}")
     return refs
 
 
@@ -72,6 +75,7 @@ def build_design_direction_packet(
             "mutation_boundary": MUTATION_BOUNDARY,
             "alternatives": [],
             "blocking_reasons": ["style_benchmark_pack_missing"],
+            "evidence_refs": _evidence_refs(style_pack=style_pack, comparison=comparison),
             "next_agent_action": "create_style_benchmark_pack",
         }
     if not _is_present(comparison):
@@ -82,6 +86,7 @@ def build_design_direction_packet(
             "mutation_boundary": MUTATION_BOUNDARY,
             "alternatives": [],
             "blocking_reasons": ["style_benchmark_comparison_missing"],
+            "evidence_refs": _evidence_refs(style_pack=style_pack, comparison=comparison),
             "next_agent_action": "create_style_benchmark_comparison",
         }
     return {
@@ -95,6 +100,7 @@ def build_design_direction_packet(
         "alternatives": ALTERNATIVES.copy(),
         "mutation_boundary": MUTATION_BOUNDARY,
         "human_question": HUMAN_QUESTION,
+        "evidence_refs": _evidence_refs(style_pack=style_pack, comparison=comparison),
         "next_agent_action": "prepare_bounded_candidate_or_stop_for_human_choice",
         "source_queue_action": queue_row.get("action"),
         "svg_polish_state": (svg_polish_state or {}).get("state", "not_checked"),

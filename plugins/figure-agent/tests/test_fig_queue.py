@@ -2787,9 +2787,9 @@ def test_queue_surfaces_design_direction_ready_human_choice(
         "load_pack",
         lambda name, *, workspace_root: {
             "state": "present",
-            "path": "docs/style-benchmark-packs/2026-06-30-wave-c/alpha.json",
+            "path": "docs/style-benchmark-packs/alpha.json",
             "linked_files": {
-                "benchmark_contract": "docs/benchmark-contracts/alpha.yaml",
+                "benchmark_contract": "docs/benchmarks/alpha.yaml",
                 "aesthetic_intent": "docs/aesthetic-intents/alpha.yaml",
             },
         },
@@ -2799,7 +2799,7 @@ def test_queue_surfaces_design_direction_ready_human_choice(
         "load_comparison",
         lambda name, *, workspace_root: {
             "state": "present",
-            "path": "docs/style-benchmark-comparisons/2026-07-01-wave-f/alpha.json",
+            "path": "docs/style-benchmark-comparisons/alpha.json",
             "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
         },
     )
@@ -2821,6 +2821,19 @@ def test_queue_surfaces_design_direction_ready_human_choice(
     assert row["design_direction_next_agent_action"] == (
         "prepare_bounded_candidate_or_stop_for_human_choice"
     )
+    assert row["design_direction_alternatives"] == [
+        "current_style",
+        "bounded_tikz_refinement",
+        "editorial_redesign",
+        "svg_polish_handoff",
+    ]
+    assert row["design_direction_mutation_boundary"] == "no_source_mutation"
+    assert row["design_direction_evidence_refs"] == [
+        "style_benchmark_pack:docs/style-benchmark-packs/alpha.json",
+        "benchmark_contract:docs/benchmarks/alpha.yaml",
+        "aesthetic_intent:docs/aesthetic-intents/alpha.yaml",
+        "style_benchmark_comparison:docs/style-benchmark-comparisons/alpha.json",
+    ]
     assert row["design_direction_human_question"].startswith("I recommend keeping")
     assert row["design_direction_mutation_boundary"] == "no_source_mutation"
     assert "editorial_redesign" in row["design_direction_alternatives"]

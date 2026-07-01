@@ -25,10 +25,10 @@ def _queue_row(**overrides: object) -> dict[str, object]:
 def _style_pack(**overrides: object) -> dict[str, object]:
     pack: dict[str, object] = {
         "state": "present",
-        "path": "docs/style-benchmark-packs/2026-06-30-wave-c/fig1.json",
+        "path": "docs/style-benchmark-packs/pack.json",
         "linked_files": {
-            "benchmark_contract": "docs/benchmark-contracts/fig1.yaml",
-            "aesthetic_intent": "docs/aesthetic-intents/fig1.yaml",
+            "benchmark_contract": "docs/benchmarks/contract.yaml",
+            "aesthetic_intent": "docs/aesthetic-intents/intent.yaml",
         },
     }
     pack.update(overrides)
@@ -38,7 +38,7 @@ def _style_pack(**overrides: object) -> dict[str, object]:
 def _comparison(**overrides: object) -> dict[str, object]:
     comparison: dict[str, object] = {
         "state": "present",
-        "path": "docs/style-benchmark-comparisons/2026-07-01-wave-f/fig1.json",
+        "path": "docs/style-benchmark-comparisons/comparison.json",
         "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
     }
     comparison.update(overrides)
@@ -70,6 +70,12 @@ def test_ready_packet_summarizes_recommendation_and_human_choice_boundary() -> N
             "I recommend keeping the current style unless a candidate beats the "
             "benchmark. Which direction should I prepare next?"
         ),
+        "evidence_refs": [
+            "style_benchmark_pack:docs/style-benchmark-packs/pack.json",
+            "benchmark_contract:docs/benchmarks/contract.yaml",
+            "aesthetic_intent:docs/aesthetic-intents/intent.yaml",
+            "style_benchmark_comparison:docs/style-benchmark-comparisons/comparison.json",
+        ],
         "next_agent_action": "prepare_bounded_candidate_or_stop_for_human_choice",
         "source_queue_action": "run_review",
         "svg_polish_state": "ready_for_svg_polish",
@@ -98,6 +104,9 @@ def test_packet_blocks_when_style_pack_is_missing(style_pack: dict[str, object] 
         "mutation_boundary": "no_source_mutation",
         "alternatives": [],
         "blocking_reasons": ["style_benchmark_pack_missing"],
+        "evidence_refs": [
+            "style_benchmark_comparison:docs/style-benchmark-comparisons/comparison.json",
+        ],
         "next_agent_action": "create_style_benchmark_pack",
     }
     assert "human_question" not in packet
@@ -119,6 +128,11 @@ def test_packet_blocks_when_comparison_is_missing(comparison: dict[str, object] 
         "mutation_boundary": "no_source_mutation",
         "alternatives": [],
         "blocking_reasons": ["style_benchmark_comparison_missing"],
+        "evidence_refs": [
+            "style_benchmark_pack:docs/style-benchmark-packs/pack.json",
+            "benchmark_contract:docs/benchmarks/contract.yaml",
+            "aesthetic_intent:docs/aesthetic-intents/intent.yaml",
+        ],
         "next_agent_action": "create_style_benchmark_comparison",
     }
     assert "human_question" not in packet

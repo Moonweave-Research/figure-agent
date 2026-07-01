@@ -359,19 +359,19 @@ def _design_direction_fields(fixture: str, row: dict[str, Any]) -> dict[str, Any
     }
     if packet.get("default_recommendation") is not None:
         fields["design_direction_default"] = packet.get("default_recommendation")
-    if packet.get("human_question") is not None:
-        fields["design_direction_human_question"] = packet.get("human_question")
     alternatives = packet.get("alternatives")
     if isinstance(alternatives, list):
         fields["design_direction_alternatives"] = [
-            item for item in alternatives if isinstance(item, str) and item
+            alternative for alternative in alternatives if isinstance(alternative, str)
         ]
     if packet.get("mutation_boundary") is not None:
         fields["design_direction_mutation_boundary"] = packet.get("mutation_boundary")
+    if packet.get("human_question") is not None:
+        fields["design_direction_human_question"] = packet.get("human_question")
     evidence_refs = packet.get("evidence_refs")
     if isinstance(evidence_refs, list):
         fields["design_direction_evidence_refs"] = [
-            item for item in evidence_refs if isinstance(item, str) and item
+            ref for ref in evidence_refs if isinstance(ref, str)
         ]
     blocker_reasons = packet.get("blocking_reasons")
     if isinstance(blocker_reasons, list) and blocker_reasons:

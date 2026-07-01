@@ -247,6 +247,19 @@ Stop condition:
 - `fig3_trapping_concept` and at least one benchmark fixture show a compact
   design/release decision summary in queue output.
 
+Implementation review note:
+
+- Queue design-direction rows are read-only summaries: they expose
+  `design_direction_default`, `design_direction_alternatives`,
+  `design_direction_human_question`, `design_direction_mutation_boundary`, and
+  `design_direction_evidence_refs`.
+- Missing benchmark packs remain non-fatal as
+  `style_benchmark_pack_state=missing`; missing comparisons surface
+  `design_direction_blocker_reason=style_benchmark_comparison_missing`.
+- Design-direction summaries must only point to evidence and bounded choices;
+  they must not include source, SVG, export, acceptance, golden, final-artifact,
+  or publication mutation commands.
+
 ## Wave 4: Bounded Candidate Or Redesign Benchmark Pack
 
 Outcome: if the human decision requests dogfood or redesign, create evidence
@@ -398,4 +411,3 @@ Remaining blocker:
 Next recommended wave:
 - <number and reason>
 ```
-
