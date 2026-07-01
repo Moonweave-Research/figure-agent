@@ -75,11 +75,13 @@ def _alternative_mutation_boundaries(
             continue
         boundaries = payload.get("candidate_mutation_boundaries")
         if isinstance(boundaries, dict):
-            return {
+            normalized = {
                 key: value
                 for key, value in boundaries.items()
                 if isinstance(key, str) and isinstance(value, str)
             }
+            if normalized:
+                return normalized
     return {"current_style": MUTATION_BOUNDARY}
 
 
