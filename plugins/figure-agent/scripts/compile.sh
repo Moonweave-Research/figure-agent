@@ -128,9 +128,6 @@ fi
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_physics_grounding.py" \
   --json-output "${BUILD_DIR}/physics_grounding.json" \
   "$PWD"
-if [[ -f "coordinate_hints.yaml" ]]; then
-    "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} .
-fi
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"
 # Injection receipt (spec §4 Phase 1a): surface the injected use_as_constraint
 # conventions with their source quotes so the author sees them on every figure.

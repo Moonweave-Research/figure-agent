@@ -385,8 +385,7 @@ redirect to matplotlib?"):
 - Style Lock source: `styles/polymer-paper-preamble.sty` (\IsoCharge, \GradSlab, \IsoBlock, \IsoConeTip)
 - Compile chain: `scripts/compile.sh` (lualatex; optional `FIGURE_AGENT_STRICT=1`
   hard gate)
-- Checks: `fig-agent helper check_collisions.py`, `fig-agent helper check_visual_clash.py`,
-  `fig-agent helper check_layout_drift.py` (auto-fires when `coordinate_hints.yaml` exists)
+- Checks: `fig-agent helper check_collisions.py`, `fig-agent helper check_visual_clash.py`
 - Perception pack: `scripts/perception_pack.py` writes
   `build/perception/extract.yaml` and `build/perception/overlay.png`
 - Export: `scripts/export_svg.sh`, `scripts/svg_to_png.sh`

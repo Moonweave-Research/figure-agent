@@ -194,7 +194,7 @@ but should not decide host-vision verdicts.
 - `check_collisions.py`, `check_visual_clash.py`,
   `check_visual_clash_budget.py`
 - `check_text_boundary_clash.py`, `check_label_path_proximity.py`,
-  `check_undeclared_geometry.py`, `check_layout_drift.py`
+  `check_undeclared_geometry.py`
 - `perception_pack.py`, `reference_aesthetic_metrics.py`
 
 Add here when the output is a deterministic detector artifact under

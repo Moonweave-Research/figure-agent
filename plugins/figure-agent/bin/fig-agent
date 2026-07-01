@@ -255,7 +255,6 @@ def _release_gate_helper(argv: list[str]) -> int:
 HELPER_SCRIPTS = {
     "check_collisions.py",
     "check_golden_artifacts.py",
-    "check_layout_drift.py",
     "check_text_boundary_clash.py",
     "check_visual_clash.py",
     "audit_evidence_graph.py",

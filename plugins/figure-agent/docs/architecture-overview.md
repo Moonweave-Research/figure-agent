@@ -278,8 +278,7 @@ publication-ready evidence.
 ### Layer 4 — Compile Gates
 
 **Files**: `scripts/compile.sh`, `scripts/lint_tex.py`,
-`scripts/checks/check_collisions.py`, `scripts/checks/check_visual_clash.py`,
-`scripts/checks/check_layout_drift.py`.
+`scripts/checks/check_collisions.py`, `scripts/checks/check_visual_clash.py`.
 
 Chain (in order):
 
@@ -290,14 +289,9 @@ Chain (in order):
 4. `check_collisions.py` — text bbox IoU collisions; report-only by default.
 5. `check_visual_clash.py` — render-pixel clash detection (text_on_path,
    text_on_fill, near_miss, clipping); report-only by default.
-6. `check_layout_drift.py` — only when `coordinate_hints.yaml` exists.
-   Anchors `golden_contract.required_labels` to OCR positions in the
-   reference PNG and to `pdftotext` positions in the build PDF; flags
-   matched labels whose normalized centers diverge beyond the threshold.
-   Report-only by default.
 
 `FIGURE_AGENT_STRICT=1 bash scripts/compile.sh ...` propagates `--strict`
-to the collision, clash, and drift checkers, promoting their findings to
+to the collision and clash checkers, promoting their findings to
 non-zero exit. Default mode preserves report-only ergonomics so dogfood
 iteration is not interrupted and a reviewable PNG/PDF is still emitted.
 Golden/ship decisions are made at Layer 6: fixtures with `golden_contract`
@@ -398,9 +392,7 @@ final_artifact:
 ### Layer 6 — Validation Gates
 
 **Files**: `scripts/checks/check_golden_artifacts.py`,
-`scripts/checks/check_layout_drift.py`,
-`tests/test_golden_artifact_checks.py`,
-`tests/test_check_layout_drift.py`.
+`tests/test_golden_artifact_checks.py`.
 
 Two `check_golden_artifacts` modes:
 
@@ -424,22 +416,6 @@ If `--require-accepted` / `--no-require-accepted` is omitted, the checker
 auto-escalates to accepted mode whenever `spec.yaml` declares the `accepted`
 key, whether true or false. `--no-require-accepted` is only for ad-hoc artifact
 inspection.
-
-`check_layout_drift.py` is the second Layer 6 gate (also fired from
-`compile.sh`). It is anchor-driven: each `required_labels` entry (str or
-alt-form list) is located in OCR `text_labels` (reference) and in
-`pdftotext` words (build PDF), and the Euclidean distance between
-normalized centers (`[0,1]^2` canvas) is compared to `--threshold`
-(default 0.05). Per-label status is one of `matched_ok`, `drifted`,
-`uncovered_ref`, `uncovered_build`, `uncovered_both`, or
-`excluded_ambiguous` (every token ≤ 2 chars — short symbols like `CB`,
-`VB`, `n`, `g e t` collide with substrings of unrelated OCR/pdftotext
-output, so a name match is not a position claim and the label gets a
-dedicated reporting bucket instead of a measurement). The aspect-ratio
-delta between reference PNG and build PDF is reported in the header so a
-global canvas mismatch is distinguishable from local drift. Skips silently
-when `golden_contract.required_labels` or `coordinate_hints.yaml` is
-absent; ordinary fixtures are unaffected.
 
 A second golden fixture only needs a `golden_contract` block in its
 `spec.yaml`; no script edits.
@@ -590,7 +566,6 @@ historical events; do not rewrite them.
 | Make `/fig_compile` strict in CI | `FIGURE_AGENT_STRICT=1 bash scripts/compile.sh ...` |
 | Generate coordinate hints from a reference PNG | `/fig_extract <name>` → `examples/<name>/coordinate_hints.yaml` |
 | Tune palette detection for a noisy reference | `--min-component-pixels` flag on `scripts/reference_extract.py` |
-| Diagnose label drift between reference PNG and build PDF | `uv run python3 scripts/checks/check_layout_drift.py examples/<name>` |
 | Diagnose a fixture's stage | `uv run python3 scripts/status.py examples/<name>` |
 | Replay a golden fixture from clean checkout | `bash scripts/compile.sh examples/<name>/<name>.tex && bash scripts/export_svg.sh ...` |
 
