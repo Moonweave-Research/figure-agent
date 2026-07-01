@@ -2785,13 +2785,21 @@ def test_queue_surfaces_design_direction_ready_human_choice(
     monkeypatch.setattr(
         fig_queue.style_benchmark_pack,
         "load_pack",
-        lambda name, *, workspace_root: {"state": "present"},
+        lambda name, *, workspace_root: {
+            "state": "present",
+            "path": "docs/style-benchmark-packs/2026-06-30-wave-c/alpha.json",
+            "linked_files": {
+                "benchmark_contract": "docs/benchmark-contracts/alpha.yaml",
+                "aesthetic_intent": "docs/aesthetic-intents/alpha.yaml",
+            },
+        },
     )
     monkeypatch.setattr(
         fig_queue.style_benchmark_comparison,
         "load_comparison",
         lambda name, *, workspace_root: {
             "state": "present",
+            "path": "docs/style-benchmark-comparisons/2026-07-01-wave-f/alpha.json",
             "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
         },
     )
@@ -2814,6 +2822,25 @@ def test_queue_surfaces_design_direction_ready_human_choice(
         "prepare_bounded_candidate_or_stop_for_human_choice"
     )
     assert row["design_direction_human_question"].startswith("I recommend keeping")
+    assert row["design_direction_mutation_boundary"] == "no_source_mutation"
+    assert "editorial_redesign" in row["design_direction_alternatives"]
+    assert row["design_direction_evidence_refs"] == [
+        "style_benchmark_pack:docs/style-benchmark-packs/2026-06-30-wave-c/alpha.json",
+        "style_benchmark_comparison:docs/style-benchmark-comparisons/2026-07-01-wave-f/alpha.json",
+        "benchmark_contract:docs/benchmark-contracts/alpha.yaml",
+        "aesthetic_intent:docs/aesthetic-intents/alpha.yaml",
+    ]
+    assert row["design_direction_summary"] == {
+        "schema": "figure-agent.design-direction-packet.v1",
+        "state": "ready_for_human_choice",
+        "next_agent_action": "prepare_bounded_candidate_or_stop_for_human_choice",
+        "mutation_boundary": "no_source_mutation",
+        "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
+        "human_question": row["design_direction_human_question"],
+        "alternatives": row["design_direction_alternatives"],
+        "evidence_refs": row["design_direction_evidence_refs"],
+    }
+    assert "command" not in row["design_direction_summary"]
     assert row["bottleneck_category"] == "template_style"
     assert row["required_actor"] == "human"
     assert queue["summary"]["by_design_direction_state"] == {"ready_for_human_choice": 1}
@@ -2862,6 +2889,9 @@ def test_queue_surfaces_design_direction_blockers(
     row = queue["rows"][0]
     assert row["design_direction_state"] == expected_state
     assert row["design_direction_blocker_reason"] == expected_blocker
+    assert row["design_direction_summary"]["mutation_boundary"] == "no_source_mutation"
+    assert row["design_direction_summary"]["blocking_reasons"] == [expected_blocker]
+    assert "command" not in row["design_direction_summary"]
     assert row["bottleneck_category"] == "template_style"
 
 

@@ -34,6 +34,29 @@ def _is_present(payload: dict[str, object] | None) -> bool:
     return isinstance(payload, dict) and payload.get("state") == "present"
 
 
+
+
+def _evidence_refs(
+    style_pack: dict[str, object],
+    comparison: dict[str, object],
+) -> list[str]:
+    refs: list[str] = []
+    for label, payload in (
+        ("style_benchmark_pack", style_pack),
+        ("style_benchmark_comparison", comparison),
+    ):
+        path = payload.get("path")
+        if isinstance(path, str) and path:
+            refs.append(f"{label}:{path}")
+    linked = style_pack.get("linked_files")
+    if isinstance(linked, dict):
+        for key in ("benchmark_contract", "aesthetic_intent"):
+            path = linked.get(key)
+            if isinstance(path, str) and path:
+                refs.append(f"{key}:{path}")
+    return refs
+
+
 def build_design_direction_packet(
     fixture: str,
     *,
@@ -78,4 +101,5 @@ def build_design_direction_packet(
         "next_agent_action": "prepare_bounded_candidate_or_stop_for_human_choice",
         "source_queue_action": queue_row.get("action"),
         "svg_polish_state": (svg_polish_state or {}).get("state", "not_checked"),
+        "evidence_refs": _evidence_refs(style_pack, comparison),
     }
