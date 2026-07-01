@@ -451,6 +451,14 @@ def _append_critique_freshness_diagnostics(result: dict, example_dir: Path) -> N
 
 
 def _finalize_status(result: dict, example_dir: Path) -> dict:
+    if "release_decision" not in result:
+        name = result.get("name")
+        if isinstance(name, str) and name:
+            result["release_decision"] = _release_decision_summary(
+                example_dir,
+                name,
+                exports_substate=str(result.get("exports_substate") or ""),
+            )
     _append_critique_freshness_diagnostics(result, example_dir)
     result["audit_evidence"] = summarize_audit_evidence(example_dir)
     metrics_summary = reference_aesthetic_metrics_summary(example_dir)
@@ -665,6 +673,11 @@ def infer_stage(example_dir: Path) -> dict:
     _append_reference_image_check(checks, notes, spec, example_dir)
     _append_panel_reference_checks(notes, spec, example_dir)
     final_artifact = _final_artifact_state(example_dir, name, spec)
+    release_decision = _release_decision_summary(
+        example_dir,
+        name,
+        exports_substate=exports_substate,
+    )
     notes.extend(final_artifact["notes"])
 
     if spec_path.exists() and not briefing_path.exists():
@@ -733,6 +746,7 @@ def infer_stage(example_dir: Path) -> dict:
             partial=partial,
             final_artifact=final_artifact,
             accepted=accepted,
+            release_decision=release_decision,
         )
         return _finalize_status(
             _add_critique_lint_summary(
@@ -744,6 +758,7 @@ def infer_stage(example_dir: Path) -> dict:
                     "notes": notes,
                     "accepted": accepted,
                     "exports_substate": exports_substate,
+                    "release_decision": release_decision,
                     **_status_vector(
                         4,
                         notes,
