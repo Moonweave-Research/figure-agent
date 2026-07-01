@@ -251,8 +251,9 @@ def _write_critique_with_findings(fig_dir: Path, fixture: str = "demo_fig") -> P
     critique = fig_dir / "critique.md"
     critique.write_text(
         "---\n"
-        "schema: figure-agent.critique.v1\n"
+        "schema: figure-agent.critique.v1.1\n"
         f"fixture: {fixture}\n"
+        f"{_complete_v1_1_audit_yaml()}"
         "findings:\n"
         "  - id: C001\n"
         "    status: resolved\n"
@@ -616,8 +617,7 @@ def test_build_adjudication_scaffold_from_critique_frontmatter(tmp_path: Path) -
     fig_dir.mkdir()
     critique = _write_critique_with_findings(fig_dir)
 
-    with pytest.warns(DeprecationWarning, match="legacy"):
-        scaffold = build_adjudication_scaffold(fig_dir)
+    scaffold = build_adjudication_scaffold(fig_dir)
 
     assert scaffold["schema"] == "figure-agent.critique-adjudication.v1"
     assert scaffold["fixture"] == "demo_fig"
@@ -2312,8 +2312,9 @@ def test_build_adjudication_scaffold_includes_panel_findings(tmp_path: Path) -> 
     fig_dir.mkdir()
     (fig_dir / "critique.md").write_text(
         "---\n"
-        "schema: figure-agent.critique.v1\n"
+        "schema: figure-agent.critique.v1.1\n"
         "fixture: demo_fig\n"
+        f"{_complete_v1_1_audit_yaml()}"
         "panels:\n"
         "  - id: A\n"
         "    findings:\n"
@@ -2328,8 +2329,7 @@ def test_build_adjudication_scaffold_includes_panel_findings(tmp_path: Path) -> 
         encoding="utf-8",
     )
 
-    with pytest.warns(DeprecationWarning, match="legacy"):
-        scaffold = build_adjudication_scaffold(fig_dir)
+    scaffold = build_adjudication_scaffold(fig_dir)
 
     assert [decision["finding_id"] for decision in scaffold["decisions"]] == ["P001", "C001"]
     assert scaffold["decisions"][0]["patch_target"] == "examples/demo_fig/demo_fig.tex lines 7-9"
@@ -2340,8 +2340,7 @@ def test_scaffold_adjudication_writes_reloadable_yaml(tmp_path: Path) -> None:
     fig_dir.mkdir()
     _write_critique_with_findings(fig_dir)
 
-    with pytest.warns(DeprecationWarning, match="legacy"):
-        path = scaffold_adjudication(fig_dir)
+    path = scaffold_adjudication(fig_dir)
 
     assert path == fig_dir / "critique_adjudication.yaml"
     loaded = load_adjudication(path)
@@ -2369,8 +2368,7 @@ def test_scaffold_adjudication_force_overwrites_existing_file(tmp_path: Path) ->
     existing = fig_dir / "critique_adjudication.yaml"
     existing.write_text("replace me\n", encoding="utf-8")
 
-    with pytest.warns(DeprecationWarning, match="legacy"):
-        scaffold_adjudication(fig_dir, force=True)
+    scaffold_adjudication(fig_dir, force=True)
 
     assert load_adjudication(existing)["fixture"] == "demo_fig"
 
@@ -2444,13 +2442,17 @@ def test_build_adjudication_scaffold_rejects_non_list_findings(tmp_path: Path) -
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     (fig_dir / "critique.md").write_text(
-        "---\nschema: figure-agent.critique.v1\nfixture: demo_fig\nfindings: C001\n---\n",
+        "---\n"
+        "schema: figure-agent.critique.v1.1\n"
+        "fixture: demo_fig\n"
+        f"{_complete_v1_1_audit_yaml()}"
+        "findings: C001\n"
+        "---\n",
         encoding="utf-8",
     )
 
-    with pytest.warns(DeprecationWarning, match="legacy"):
-        with pytest.raises(CritiqueAdjudicationError, match="findings must be a list"):
-            build_adjudication_scaffold(fig_dir)
+    with pytest.raises(CritiqueAdjudicationError, match="findings must be a list"):
+        build_adjudication_scaffold(fig_dir)
 
 
 def test_build_adjudication_scaffold_rejects_finding_without_id(tmp_path: Path) -> None:
@@ -2458,8 +2460,9 @@ def test_build_adjudication_scaffold_rejects_finding_without_id(tmp_path: Path) 
     fig_dir.mkdir()
     (fig_dir / "critique.md").write_text(
         "---\n"
-        "schema: figure-agent.critique.v1\n"
+        "schema: figure-agent.critique.v1.1\n"
         "fixture: demo_fig\n"
+        f"{_complete_v1_1_audit_yaml()}"
         "findings:\n"
         "  - status: open\n"
         "    tex_lines: [1, 2]\n"
@@ -2467,9 +2470,8 @@ def test_build_adjudication_scaffold_rejects_finding_without_id(tmp_path: Path) 
         encoding="utf-8",
     )
 
-    with pytest.warns(DeprecationWarning, match="legacy"):
-        with pytest.raises(CritiqueAdjudicationError, match="id must be a non-empty string"):
-            build_adjudication_scaffold(fig_dir)
+    with pytest.raises(CritiqueAdjudicationError, match="id must be a non-empty string"):
+        build_adjudication_scaffold(fig_dir)
 
 
 def test_cli_scaffold_writes_fixture_by_name(
@@ -2480,8 +2482,7 @@ def test_cli_scaffold_writes_fixture_by_name(
     fig_dir.mkdir(parents=True)
     _write_critique_with_findings(fig_dir)
 
-    with pytest.warns(DeprecationWarning, match="legacy"):
-        exit_code = main(["scaffold", "demo_fig", "--repo-root", str(tmp_path)])
+    exit_code = main(["scaffold", "demo_fig", "--repo-root", str(tmp_path)])
 
     captured = capsys.readouterr()
     assert exit_code == 0
@@ -2498,8 +2499,7 @@ def test_cli_scaffold_accepts_examples_fixture_path(
     fig_dir.mkdir(parents=True)
     _write_critique_with_findings(fig_dir)
 
-    with pytest.warns(DeprecationWarning, match="legacy"):
-        exit_code = main(["scaffold", "examples/demo_fig", "--repo-root", str(tmp_path)])
+    exit_code = main(["scaffold", "examples/demo_fig", "--repo-root", str(tmp_path)])
 
     captured = capsys.readouterr()
     assert exit_code == 0

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import warnings
 from typing import Any
 
 import critique_schema_vocab as vocab
@@ -1392,13 +1391,10 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
     """Validate schema-specific critique.md frontmatter fields."""
     critique_schema = frontmatter.get("schema")
     if critique_schema == vocab.CRITIQUE_SCHEMA_V1:
-        warnings.warn(
-            (
-                f"{vocab.CRITIQUE_SCHEMA_V1} is legacy; v1.1 critiques should include "
-                "audit_enumeration"
-            ),
-            DeprecationWarning,
-            stacklevel=2,
+        raise CritiqueContractError(
+            f"{vocab.CRITIQUE_SCHEMA_V1} is retired: it predates audit_enumeration "
+            "and ran zero validators (warn-only), so an empty critique passed. "
+            "Re-run /fig_critique to emit a v1.x critique with audit_enumeration."
         )
     elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_1:
         _validate_v1_1_audit(frontmatter)

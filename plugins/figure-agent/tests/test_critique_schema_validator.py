@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import sys
-import warnings
 from copy import deepcopy
 from pathlib import Path
 
@@ -14,14 +13,11 @@ from critique_contract import CritiqueContractError  # noqa: E402
 from critique_schema_validator import validate_critique_schema  # noqa: E402
 
 
-def test_validate_critique_schema_warns_for_v1_legacy() -> None:
-    with warnings.catch_warnings(record=True) as captured:
-        warnings.simplefilter("always")
+def test_validate_critique_schema_rejects_v1_legacy_fail_open() -> None:
+    # v1 predates audit_enumeration and ran zero validators (warn-only), so an
+    # empty/degenerate v1 critique passed. Rejecting it closes that fail-open gap.
+    with pytest.raises(CritiqueContractError, match="figure-agent.critique.v1 is retired"):
         validate_critique_schema({"schema": vocab.CRITIQUE_SCHEMA_V1})
-
-    assert len(captured) == 1
-    assert captured[0].category is DeprecationWarning
-    assert vocab.CRITIQUE_SCHEMA_V1 in str(captured[0].message)
 
 
 def test_validate_critique_schema_rejects_future_unsupported_schema() -> None:
