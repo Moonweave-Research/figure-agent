@@ -41,6 +41,10 @@ def _write_release_decision_record(plugin_root: Path) -> Path:
     return plugin_root
 
 
+def _write_authorizing_decision_record(plugin_root: Path) -> Path:
+    return _write_release_decision_record(plugin_root)
+
+
 def _ready_payload(*, critique_state: str = "passed") -> dict:
     checks = [
         {"id": "candidate_apply", "state": "passed", "reason": "", "command": None},
