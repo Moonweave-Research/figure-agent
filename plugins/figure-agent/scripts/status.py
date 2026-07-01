@@ -5,10 +5,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import human_decision_record
 import runtime_paths
 import status_next_policy
 import status_readiness_policy
@@ -41,6 +44,9 @@ from svg_polish_manifest import (
 # critique-only panel-reference edits.
 STYLE_LOCK_PATH = (
     runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
+)
+DECISION_RECORDS_ROOT = (
+    runtime_paths.resolve_runtime_paths().plugin_root / "docs" / "decision-records"
 )
 
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
