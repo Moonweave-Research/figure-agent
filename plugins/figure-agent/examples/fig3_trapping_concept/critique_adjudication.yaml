@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig3_trapping_concept
-source_critique_hash: sha256:930cc4ea574045c8da1b6eeb60877fb32b20ca525c40d15f6aec04a425e3554c
+source_critique_hash: sha256:877c62203f217a77ace86fa71e07c9ed39ffcf25b7675dc3b7e8594ad5bed31b
 decisions:
 - finding_id: C001
   decision: resolved

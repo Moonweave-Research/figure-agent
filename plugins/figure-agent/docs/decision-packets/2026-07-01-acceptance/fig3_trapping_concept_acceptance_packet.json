@@ -1,0 +1,126 @@
+{
+  "schema": "figure-agent.release-decision-packet.v1",
+  "packet_kind": "release_acceptance_decision_packet",
+  "fixture": "fig3_trapping_concept",
+  "created_at": "2026-07-01T02:38:24Z",
+  "source_goal": "post critique refresh closeout",
+  "boundary": "accepted_or_final_ready_required",
+  "mutation_boundary": "no_source_mutation",
+  "required_actor": "release_operator",
+  "purpose": "Give the release operator concrete options after the agent closed compile, critique, adjudication, export, and loop closeout for the current generated export.",
+  "current_state_summary": {
+    "artifact_class": "real_manuscript_figure",
+    "render_state": "FRESH",
+    "critique_state": "FRESH",
+    "critique_lint": "passed",
+    "adjudication_state": "fresh",
+    "export_state": "FRESH",
+    "workflow_ready": true,
+    "closeout_complete": true,
+    "acceptance_state": "NOT_DECLARED",
+    "acceptance_freshness_state": "not_accepted",
+    "final_artifact_state": "NONE",
+    "final_artifact_kind": "generated_export",
+    "final_artifact_path": "exports/fig3_trapping_concept.svg",
+    "golden_ready": false,
+    "release_ready": false,
+    "known_blockers": [
+      "acceptance_not_declared"
+    ]
+  },
+  "evidence": [
+    "fig-agent status reports render_state=FRESH, critique_state=FRESH, export_state=FRESH, workflow_ready=true, and notes=[]",
+    "fig-agent closeout reports closeout_complete=true with compile, critique, adjudication, export, and loop_rerun all passed or not_required",
+    "fig-agent loop final next_action_summary reports action=complete and no required plugin action remains",
+    "critique.md verdict is ready and critique_lint passed after current detector and crop-manifest refresh",
+    "the remaining blocker is release policy only: explicit human acceptance or a valid final-artifact decision"
+  ],
+  "artifact_hashes": {
+    "critique_md_sha256": "877c62203f217a77ace86fa71e07c9ed39ffcf25b7675dc3b7e8594ad5bed31b",
+    "critique_adjudication_yaml_sha256": "3ae2559fac59f56b479732d302386aca2eeac88221da5edaf2a0b3aea8309dab",
+    "generated_export_svg_sha256": "86b99ef750d85019f96272b455d79c67cb8f5413388adf26ab34b377ffebbdaf",
+    "generated_export_pdf_sha256": "72e35b45823defb757027590a0122274264422d301c7ba6b5d8ffb031865f24c"
+  },
+  "human_question": "I recommend accepting the current generated export as the manuscript candidate unless you want a new dogfood/style-redesign pass. Which release decision should I record next?",
+  "agent_recommendation": "Accept current generated export for this fixture's release state. The current evidence shows no source-level, detector, critique-lint, export, or loop-closeout blocker; remaining improvements are optional style dogfood or future art-direction work.",
+  "recommended_choice_id": "accept_current_generated_export",
+  "choices": [
+    {
+      "id": "accept_current_generated_export",
+      "label": "Accept current generated export",
+      "requires_explicit_authority": true,
+      "state_mutation": [
+        "record publication/quality audit evidence if required by release policy",
+        "set accepted: true in examples/fig3_trapping_concept/spec.yaml"
+      ],
+      "follow_up": {
+        "after_decision": "rerun fig-agent status fig3_trapping_concept --json and, if needed, check golden/release readiness"
+      },
+      "risk": "Locks the current restrained mechanism schematic as accepted; later flagship styling becomes a separate improvement, not a blocker."
+    },
+    {
+      "id": "defer_for_dogfood",
+      "label": "Defer for another dogfood pass",
+      "requires_explicit_authority": false,
+      "state_mutation": [],
+      "follow_up": {
+        "after_decision": "open a bounded dogfood or style-direction slice without changing accepted state"
+      },
+      "risk": "Release remains blocked even though all current plugin closeout evidence is complete."
+    },
+    {
+      "id": "request_full_style_redesign",
+      "label": "Request full style redesign",
+      "requires_explicit_authority": true,
+      "state_mutation": [],
+      "follow_up": {
+        "after_decision": "create redesign alternatives against the current generated export as the benchmark before source mutation"
+      },
+      "risk": "Changes visual language and should not be mixed with release acceptance in the same slice."
+    },
+    {
+      "id": "declare_separate_final_artifact",
+      "label": "Declare separate final artifact",
+      "requires_explicit_authority": true,
+      "state_mutation": [
+        "add a valid final_artifact declaration to spec.yaml"
+      ],
+      "follow_up": {
+        "after_decision": "verify final_artifact_state becomes FRESH before any release claim"
+      },
+      "risk": "Requires a separate artifact path and freshness proof; it must not silently bless generated output."
+    },
+    {
+      "id": "reject_current_artifact",
+      "label": "Reject current artifact",
+      "requires_explicit_authority": true,
+      "state_mutation": [
+        "record rejection rationale before any repair or redesign task"
+      ],
+      "follow_up": {
+        "after_decision": "open a bounded repair/redesign task tied to the rejection reason"
+      },
+      "risk": "Rejecting without a concrete defect can reopen completed closeout work."
+    }
+  ],
+  "disallowed_actions": [
+    "do not treat this packet as implicit human acceptance",
+    "do not set accepted: true without explicit release-operator choice",
+    "do not mutate source, generated exports, golden artifacts, or final-artifact state from this packet alone",
+    "do not start a full redesign in the same slice as acceptance-state mutation"
+  ],
+  "evidence_refs": [
+    "status.render_state:FRESH",
+    "status.critique_state:FRESH",
+    "status.export_state:FRESH",
+    "status.workflow_ready:true",
+    "status.release_ready:false",
+    "status.acceptance_state:NOT_DECLARED",
+    "closeout.closeout_complete:true",
+    "loop.stop_reason:status_action_required"
+  ],
+  "follow_up": {
+    "implementation_slice": "Wait for an explicit release decision, then mutate only the selected acceptance/final-artifact surface and rerun status.",
+    "safe_default_without_human_decision": "defer_for_dogfood"
+  }
+}
