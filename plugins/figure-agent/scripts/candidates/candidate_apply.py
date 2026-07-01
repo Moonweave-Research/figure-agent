@@ -199,7 +199,10 @@ def _acceptance_hash_diagnostics(
     diagnostics: list[dict[str, str]] = []
     if acceptance.get("schema") != "figure-agent.candidate-acceptance.v1":
         diagnostics.append(
-            _diagnostic("acceptance_schema_invalid", "acceptance schema is not candidate acceptance")
+            _diagnostic(
+                "acceptance_schema_invalid",
+                "acceptance schema is not candidate acceptance",
+            )
         )
     if acceptance.get("decision") != "accept":
         diagnostics.append(
