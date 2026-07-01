@@ -22,6 +22,8 @@ def _record(**overrides: object) -> dict[str, object]:
         "schema": SCHEMA,
         "fixture": "fig3_resistance_mechanism",
         "packet_schema": RELEASE_DECISION_PACKET_SCHEMA,
+        "packet_path": "docs/decision-packets/example-release-packet.json",
+        "packet_recommendation": "accept_current_generated_export",
         "queue_run_id": "decision-dogfood-001",
         "decision_kind": "accept_current_generated_export",
         "agent_recommendation": "Record explicit acceptance only after human review.",
@@ -43,6 +45,8 @@ def test_release_decision_record_validates_without_side_effects(tmp_path: Path) 
     assert validated["schema"] == SCHEMA
     assert validated["fixture"] == "fig3_resistance_mechanism"
     assert validated["packet_schema"] == RELEASE_DECISION_PACKET_SCHEMA
+    assert validated["packet_path"] == "docs/decision-packets/example-release-packet.json"
+    assert validated["packet_recommendation"] == "accept_current_generated_export"
     assert validated["decision_kind"] == "accept_current_generated_export"
     assert validated["mutation_boundary"] == "release_state_mutation_allowed"
     assert source.read_text(encoding="utf-8") == "original source\n"
@@ -59,6 +63,70 @@ def test_release_decision_record_validates_without_side_effects(tmp_path: Path) 
 def test_unknown_enums_are_rejected(field: str, value: str, message: str) -> None:
     with pytest.raises(HumanDecisionRecordError, match=message):
         validate_decision_record(_record(**{field: value}))
+
+
+@pytest.mark.parametrize(
+    "decision_kind",
+    [
+        "accept_current_generated_export",
+        "declare_separate_final_artifact",
+        "reject_current_artifact",
+        "defer_for_dogfood",
+    ],
+)
+def test_wave_one_release_decision_ids_validate_without_mutation(decision_kind: str) -> None:
+    validated = validate_decision_record(
+        _record(
+            decision_kind=decision_kind,
+            packet_recommendation="accept_current_generated_export",
+            agent_recommendation="Record the release decision separate from the packet.",
+            human_decision=decision_kind,
+            human_note="Human decision record only; no Wave 1 state mutation.",
+            follow_up={"implementation_slice": "record decision only"},
+            mutation_boundary="no_source_mutation",
+        )
+    )
+
+    assert validated["decision_kind"] == decision_kind
+    assert validated["mutation_boundary"] == "no_source_mutation"
+
+
+@pytest.mark.parametrize(
+    "decision_kind",
+    [
+        "request_full_style_redesign",
+        "keep_current_style",
+        "request_bounded_tikz_source_polish",
+        "request_svg_polish_handoff_evidence",
+    ],
+)
+def test_wave_one_style_decision_ids_validate_without_release_acceptance(
+    decision_kind: str,
+) -> None:
+    follow_up = {
+        "implementation_slice": (
+            "record style policy only with ready_for_svg_polish evidence if SVG handoff is chosen"
+        )
+    }
+
+    validated = validate_decision_record(
+        _record(
+            packet_schema=STYLE_DIRECTION_PACKET_SCHEMA,
+            packet_path="docs/decision-packets/example-style-packet.json",
+            packet_recommendation="keep_current_style",
+            packet_timestamp="2026-07-01T00:00:00Z",
+            queue_run_id=None,
+            decision_kind=decision_kind,
+            agent_recommendation="Record the style choice without accepting release.",
+            human_decision=decision_kind,
+            human_note="Style policy only; this does not approve release acceptance.",
+            follow_up=follow_up,
+            mutation_boundary="no_source_mutation",
+        )
+    )
+
+    assert validated["decision_kind"] == decision_kind
+    assert validated["mutation_boundary"] == "no_source_mutation"
 
 
 def test_packet_identity_requires_timestamp_or_queue_run_id() -> None:

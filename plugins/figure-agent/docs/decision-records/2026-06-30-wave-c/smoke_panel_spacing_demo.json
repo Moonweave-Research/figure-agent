@@ -2,6 +2,8 @@
   "schema": "figure-agent.human-decision-record.v1",
   "fixture": "smoke_panel_spacing_demo",
   "packet_schema": "figure-agent.style-direction-packet.v1",
+  "packet_path": "docs/decision-packets/2026-06-30-wave-c/smoke_panel_spacing_demo.json",
+  "packet_recommendation": "extract_spacing_style_lock",
   "queue_run_id": "wave-c-target-selection-review-2026-06-30",
   "decision_kind": "request_bounded_tikz_polish",
   "agent_recommendation": "Use the demo fixture as a low-risk bounded-polish lane for spacing and style-rule extraction, not as a manuscript release target.",

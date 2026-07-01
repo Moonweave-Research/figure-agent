@@ -2,6 +2,8 @@
   "schema": "figure-agent.human-decision-record.v1",
   "fixture": "fig1_overview_v2_pair_001_vault",
   "packet_schema": "figure-agent.release-decision-packet.v1",
+  "packet_path": "docs/decision-packets/2026-06-30-wave-c/fig1_overview_v2_pair_001_vault.json",
+  "packet_recommendation": "defer_for_visual_dogfood",
   "queue_run_id": "wave-c-target-selection-review-2026-06-30",
   "decision_kind": "defer_for_dogfood",
   "agent_recommendation": "Defer any protected golden or release mutation until visual dogfood compares the current build against the tracked golden baseline.",
