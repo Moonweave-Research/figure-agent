@@ -1343,6 +1343,32 @@ def test_lint_critique_rejects_reference_free_finding_without_grounding(
     assert "C001" in violations[0].message
 
 
+def test_lint_critique_rejects_reference_free_finding_grounded_in_generic_prose(
+    tmp_path: Path,
+) -> None:
+    # M5: a non-empty grounded_in_rule that references NO real briefing rule (§N),
+    # panel, or detector is not grounding — it is generic best-practice prose.
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_reference_free_grounding_context(fig_dir)
+    _write_critique(
+        fig_dir,
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    grounded_in_rule: general best practice for clean figures\n"
+            "    observation: reference-free finding cites no real anchor\n"
+        ),
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["reference_free_grounding"]
+    assert "C001" in violations[0].message
+
+
 def test_lint_critique_accepts_reference_free_aesthetic_intent_grounding(
     tmp_path: Path,
 ) -> None:

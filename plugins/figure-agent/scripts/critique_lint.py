@@ -18,7 +18,10 @@ from aesthetic_intent import (  # noqa: E402
     AestheticIntentError,
     load_optional_aesthetic_intent,
 )
-from briefing_grounding import has_reference_free_grounding_context  # noqa: E402
+from briefing_grounding import (  # noqa: E402
+    explicit_briefing_rule_text,
+    has_reference_free_grounding_context,
+)
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     build_adjudication_scaffold,
@@ -40,7 +43,7 @@ from external_vision_review import (  # noqa: E402
     external_vision_review_freshness,
     load_optional_external_vision_review,
 )
-from inputs import parse_spec  # noqa: E402
+from inputs import parse_briefing, parse_spec  # noqa: E402
 from inspection_trace import (  # noqa: E402
     InspectionTraceError,
     load_optional_inspection_trace,
@@ -631,6 +634,43 @@ def _aesthetic_intent_accounting_violations(
     ]
 
 
+# Canonical detector sources a grounded_in_rule may cite (mirrors the prefixes
+# _candidate_ref_from_source recognizes). Referencing one anchors the finding to a
+# real detector rather than generic best-practice prose.
+_DETECTOR_SOURCE_ANCHORS: frozenset[str] = frozenset(
+    {"visual_clash", "text_boundary", "label_path", "undeclared_geometry"}
+)
+
+
+def _grounding_anchor_set(example_dir: Path, spec: dict[str, Any]) -> set[str]:
+    """Lowercased anchor strings a reference-free grounded_in_rule must cite one of:
+    a briefing rule section marker (§N), a panel (panel <id>), or a detector source."""
+    anchors: set[str] = set(_DETECTOR_SOURCE_ANCHORS)
+    briefing_path = example_dir / "briefing.md"
+    if briefing_path.is_file():
+        sections = parse_briefing(briefing_path.read_text(encoding="utf-8"))
+        rule_text = explicit_briefing_rule_text(sections)
+        anchors.update(
+            marker.replace(" ", "").lower() for marker in re.findall(r"§\s*\d+", rule_text)
+        )
+    panels = spec.get("panels")
+    if isinstance(panels, list):
+        for panel in panels:
+            if isinstance(panel, dict):
+                panel_id = panel.get("id")
+                if isinstance(panel_id, str) and panel_id.strip():
+                    label = panel_id.strip().lower()
+                    anchors.add(f"panel {label}")
+                    anchors.add(f"panel-{label}")
+    return anchors
+
+
+def _grounding_references_anchor(grounded_in_rule: str, anchors: set[str]) -> bool:
+    text = grounded_in_rule.lower().replace(" ", "")
+    # Compare against space-stripped anchors so "§ 3" and "panel b" match "§3"/"panelb".
+    return any(anchor.replace(" ", "") in text for anchor in anchors)
+
+
 def _reference_free_grounding_violations(
     example_dir: Path,
     frontmatter: dict[str, Any],
@@ -667,13 +707,17 @@ def _reference_free_grounding_violations(
                 message=str(exc),
             )
         ]
+    anchors = _grounding_anchor_set(example_dir, spec)
     missing: list[str] = []
+    ungrounded: list[str] = []
     try:
         for index, finding in enumerate(findings):
             label = critique_finding_id(finding, f"finding[{index}]")
             grounded_in_rule = finding.get("grounded_in_rule")
             if not isinstance(grounded_in_rule, str) or not grounded_in_rule.strip():
                 missing.append(label)
+            elif not _grounding_references_anchor(grounded_in_rule, anchors):
+                ungrounded.append(label)
     except CritiqueContractError as exc:
         return [
             CritiqueLintViolation(
@@ -682,19 +726,31 @@ def _reference_free_grounding_violations(
                 message=str(exc),
             )
         ]
-    if not missing:
-        return []
-    return [
-        CritiqueLintViolation(
-            severity="blocker",
-            category="reference_free_grounding",
-            message=(
-                "reference-free critique findings must include grounded_in_rule "
-                "anchored to a briefing rule, panel_goal, or detector id: "
-                + ", ".join(missing)
-            ),
+    violations: list[CritiqueLintViolation] = []
+    if missing:
+        violations.append(
+            CritiqueLintViolation(
+                severity="blocker",
+                category="reference_free_grounding",
+                message=(
+                    "reference-free critique findings must include grounded_in_rule "
+                    "anchored to a briefing rule, panel_goal, or detector id: " + ", ".join(missing)
+                ),
+            )
         )
-    ]
+    if ungrounded:
+        violations.append(
+            CritiqueLintViolation(
+                severity="blocker",
+                category="reference_free_grounding",
+                message=(
+                    "reference-free grounded_in_rule must reference a real briefing rule "
+                    "(§N), panel, or detector source (visual_clash / text_boundary / "
+                    "label_path / undeclared_geometry), not generic prose: " + ", ".join(ungrounded)
+                ),
+            )
+        )
+    return violations
 
 
 def _paper_context_anchor_strings(pack: dict[str, Any], fixture: str) -> set[str]:
