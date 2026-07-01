@@ -135,6 +135,41 @@ def _write_semantic_review(fixture: Path) -> None:
     )
 
 
+def test_apply_candidate_rejects_recommendation_packet_as_acceptance(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    acceptance_path = sandbox / "acceptance.json"
+    acceptance = json.loads(acceptance_path.read_text(encoding="utf-8"))
+    recommendation_packet = {
+        **acceptance,
+        "schema": "figure-agent.candidate-review-packet.v1",
+        "recommended_next_action": "human_review_required",
+        "apply_readiness": {
+            "status": "ready_for_local_acceptance",
+            "blocking_reasons": [],
+        },
+    }
+    acceptance_path.write_text(
+        json.dumps(recommendation_packet, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=False,
+    )
+
+    assert result["status"] == "blocked"
+    assert result["diagnostics"][0]["code"] == "acceptance_schema_invalid"
+
+
 def test_apply_candidate_requires_acceptance_artifact(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _fixture, manifest = _rendered_candidate_fixture(workspace)
