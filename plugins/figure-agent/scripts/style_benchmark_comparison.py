@@ -262,6 +262,8 @@ def load_comparison(
     decision = _validate_linked_decision(paths.plugin_root, fixture, payload)
     candidates = _validate_candidates(payload, pack)
     forbidden_semantic_changes = _string_list(payload, "forbidden_semantic_changes")
+    if forbidden_semantic_changes != pack.get("forbidden_semantic_changes"):
+        raise StyleBenchmarkComparisonError("forbidden_semantic_changes_pack_mismatch")
     measurable_checks = _string_list(payload, "benchmark_measurable_checks")
     measurable_text = "\n".join(measurable_checks)
     if (
@@ -269,6 +271,8 @@ def load_comparison(
         or "tiny/scriptsize/huge" not in measurable_text
     ):
         raise StyleBenchmarkComparisonError("style_lock_typography_check_missing")
+    if "visual_clash_delta" not in measurable_text or "decrease_or_equal" not in measurable_text:
+        raise StyleBenchmarkComparisonError("visual_clash_delta_check_missing")
     human_only_questions = _string_list(payload, "human_only_questions")
     rejection_rules = _string_list(payload, "candidate_rejection_rules")
     if "semantic" not in "\n".join(rejection_rules):

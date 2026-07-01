@@ -358,3 +358,43 @@ def test_comparison_requires_family_proof_criteria(tmp_path: Path) -> None:
             plugin_root=plugin_root,
             comparison_path=relative_path,
         )
+
+
+def test_comparison_forbidden_semantics_must_match_pack(tmp_path: Path) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["forbidden_semantic_changes"] = ["semantic drift allowed by mistake"]
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="forbidden_semantic_changes_pack_mismatch",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
+
+
+def test_comparison_requires_visual_clash_delta_check(tmp_path: Path) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["benchmark_measurable_checks"] = [
+        check
+        for check in payload["benchmark_measurable_checks"]
+        if "visual_clash_delta" not in check
+    ]
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="visual_clash_delta_check_missing",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )

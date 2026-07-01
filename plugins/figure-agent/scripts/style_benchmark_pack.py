@@ -258,6 +258,12 @@ def _validate_measurable_checks(
     if missing_codes:
         raise StyleBenchmarkPackError("benchmark_contract_hard_regressions_mismatch")
 
+    visual_clash_check = checks.get("visual_clash_delta")
+    if not isinstance(visual_clash_check, dict):
+        raise StyleBenchmarkPackError("visual_clash_delta_missing")
+    if visual_clash_check.get("expected_movement") != "decrease_or_equal":
+        raise StyleBenchmarkPackError("visual_clash_delta_invalid")
+
     style_lock_check = checks.get("style_lock_typography")
     if not isinstance(style_lock_check, dict):
         raise StyleBenchmarkPackError("style_lock_typography_missing")
@@ -352,6 +358,7 @@ def load_pack(
         "linked_files": linked,
         "target_style_class": raw["target_style_class"],
         "default_recommendation": raw["default_recommendation"],
+        "forbidden_semantic_changes": forbidden,
         "candidate_family_slots": slots,
         "forbidden_semantic_changes": forbidden,
         "measurable_checks": checks,

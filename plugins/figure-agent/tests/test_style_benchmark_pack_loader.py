@@ -161,6 +161,11 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                         "panel labels and role labels keep controlled hierarchy",
                     ],
                 },
+                {
+                    "id": "visual_clash_delta",
+                    "source": "detector reports when rendered artifacts exist",
+                    "expected_movement": "decrease_or_equal",
+                },
             ],
             "human_only_questions": ["Does the candidate improve journal fit?"],
             "candidate_rejection_rules": [
@@ -418,6 +423,28 @@ def test_style_benchmark_pack_requires_family_evidence_fields(tmp_path: Path) ->
     with pytest.raises(
         style_benchmark_pack.StyleBenchmarkPackError,
         match="proof_criteria_invalid",
+    ):
+        style_benchmark_pack.load_pack(
+            "contract_demo",
+            plugin_root=plugin_root,
+            pack_path=pack_path,
+        )
+
+
+def test_style_benchmark_pack_requires_visual_clash_delta(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "plugin"
+    pack_path = _minimal_pack(plugin_root)
+    payload = json.loads(pack_path.read_text(encoding="utf-8"))
+    payload["measurable_checks"] = [
+        check
+        for check in payload["measurable_checks"]
+        if check["id"] != "visual_clash_delta"
+    ]
+    _write_json(pack_path, payload)
+
+    with pytest.raises(
+        style_benchmark_pack.StyleBenchmarkPackError,
+        match="visual_clash_delta_missing",
     ):
         style_benchmark_pack.load_pack(
             "contract_demo",
