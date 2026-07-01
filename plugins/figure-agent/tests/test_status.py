@@ -1200,6 +1200,41 @@ def _mark_sources_older_than_outputs(fig_dir: Path) -> None:
         os.utime(path, (fresh_time, fresh_time))
 
 
+def _write_human_decision_record(
+    records_root: Path,
+    fixture: str,
+    *,
+    decision_kind: str = "accept_current_generated_export",
+) -> Path:
+    records_root.mkdir(parents=True, exist_ok=True)
+    path = records_root / f"{fixture}_{decision_kind}.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.human-decision-record.v1",
+                "fixture": fixture,
+                "packet_schema": "figure-agent.release-decision-packet.v1",
+                "packet_path": f"docs/decision-packets/{fixture}.json",
+                "packet_recommendation": "accept_current_generated_export",
+                "packet_timestamp": "2026-07-01T00:00:00Z",
+                "decision_kind": decision_kind,
+                "agent_recommendation": "Record the release decision separately.",
+                "human_decision": decision_kind,
+                "human_note": "Human decision record only; status must not mutate release state.",
+                "follow_up": {
+                    "implementation_slice": "route the next explicit operation"
+                },
+                "mutation_boundary": "no_source_mutation",
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
 def test_final_artifact_state_none_without_polish_opt_in(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -3482,6 +3517,62 @@ def test_status_explanation_surfaces_acceptance_not_declared_release_gate(
     assert explanation["first_blocker"]["manual"] is True
     plugin_codes = {item["code"] for item in explanation["buckets"]["plugin_state"]}
     assert "critique_not_required" in plugin_codes
+
+
+def test_status_names_explicit_release_operation_when_accept_record_exists(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    fig_dir = workspace / "examples" / "releasefig"
+    fig_dir.parent.mkdir(parents=True)
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    records_root = workspace / "docs" / "decision-records"
+    _write_human_decision_record(records_root, fig_dir.name)
+    monkeypatch.setattr(status_mod, "DECISION_RECORDS_ROOT", records_root)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["acceptance_state"] == "NOT_DECLARED"
+    assert result["release_ready"] is False
+    assert result["release_decision"]["state"] == "acceptance_authorized"
+    assert "fig-agent closeout-accept releasefig" in result["next"]
+    blocker = result["status_explanation"]["first_blocker"]
+    assert blocker["code"] == "release_acceptance_decision_recorded"
+    assert blocker["next_command"].startswith("fig-agent closeout-accept releasefig")
+    summary = result["next_action_summary"]
+    assert summary["action"] == "release_blocked"
+    assert summary["requires_human"] is True
+
+
+def test_status_routes_defer_record_to_non_release_work(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    fig_dir = workspace / "examples" / "dogfoodfig"
+    fig_dir.parent.mkdir(parents=True)
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    records_root = workspace / "docs" / "decision-records"
+    _write_human_decision_record(
+        records_root,
+        fig_dir.name,
+        decision_kind="defer_for_dogfood",
+    )
+    monkeypatch.setattr(status_mod, "DECISION_RECORDS_ROOT", records_root)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["acceptance_state"] == "NOT_DECLARED"
+    assert result["release_ready"] is False
+    assert result["release_decision"]["state"] == "non_release_requested"
+    assert result["release_decision"]["route"] == "dogfood"
+    assert "closeout-accept" not in result["next"]
+    assert "dogfood" in result["next"]
+    blocker = result["status_explanation"]["first_blocker"]
+    assert blocker["code"] == "release_deferred_for_dogfood"
 
 
 def test_status_does_not_call_content_fresh_exports_stale_for_acceptance_gate(
