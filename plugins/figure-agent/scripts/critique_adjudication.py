@@ -9,6 +9,7 @@ from typing import Any
 
 import fixture_identity  # noqa: E402
 import yaml
+from briefing_grounding import has_reference_free_grounding_context  # noqa: E402
 from critique_contract import (  # noqa: E402
     CritiqueContractError,
     critique_finding_id,
@@ -424,7 +425,13 @@ def _critique_metadata_mismatches(
         participating_panel_reference_paths(example_dir, spec)
     )
     if not has_reference:
-        return [f"critique_state=NOT_REQUIRED; no /fig_critique {name} sync needed"]
+        if not has_reference_free_grounding_context(example_dir):
+            return [f"critique_state=NOT_REQUIRED; no /fig_critique {name} sync needed"]
+        if not critique_path.is_file():
+            return [
+                f"critique_state=BRIEFING_REQUIRED; run /fig_critique {name} "
+                "against explicit briefing rules and detector evidence"
+            ]
     if not critique_path.is_file():
         return [f"critique_state=MISSING; run /fig_critique {name}"]
 

@@ -17,10 +17,16 @@ from critique_adjudication import (  # noqa: E402
     load_critique_frontmatter,
     main,
     scaffold_adjudication,
+    sync_adjudication,
     validate_adjudication,
     write_adjudication,
 )
-from quality_manifest import file_sha256  # noqa: E402
+from quality_manifest import (  # noqa: E402
+    CRITIQUE_RUBRIC_VERSION,
+    compute_critique_input_hash,
+    critique_generator_version,
+    file_sha256,
+)
 
 
 def _valid_payload(critique_hash: str = "sha256:" + "a" * 64) -> dict:
@@ -525,6 +531,8 @@ def _write_v1_2_critique_with_quality_axes(
     audit_yaml: str | None = None,
     quality_axes_yaml: str | None = None,
     critique_input_hash: str | None = None,
+    generator_version: str | None = None,
+    rubric_version: str | None = None,
     journal_assessment_yaml: str | None = None,
     extra_frontmatter_yaml: str = "",
     findings_yaml: str | None = None,
@@ -540,11 +548,17 @@ def _write_v1_2_critique_with_quality_axes(
     critique_hash_yaml = (
         f"critique_input_hash: {critique_input_hash}\n" if critique_input_hash else ""
     )
+    generator_version_yaml = (
+        f"generator_version: {generator_version}\n" if generator_version else ""
+    )
+    rubric_version_yaml = f"rubric_version: {rubric_version}\n" if rubric_version else ""
     critique.write_text(
         "---\n"
         f"schema: {critique_schema}\n"
         "fixture: demo_fig\n"
         f"{critique_hash_yaml}"
+        f"{generator_version_yaml}"
+        f"{rubric_version_yaml}"
         f"{audit_yaml or _complete_v1_1_audit_yaml()}"
         f"{quality_axes_yaml or _complete_v1_2_quality_axes_yaml()}"
         f"{extra_frontmatter_yaml}"
@@ -555,6 +569,46 @@ def _write_v1_2_critique_with_quality_axes(
         encoding="utf-8",
     )
     return critique
+
+
+def _write_reference_free_grounding_fixture(repo_root: Path) -> tuple[Path, dict]:
+    fig_dir = repo_root / "examples" / "demo_fig"
+    fig_dir.mkdir(parents=True)
+    spec = {
+        "name": "demo_fig",
+        "panels": [],
+        "style_profile": "polymer-default",
+    }
+    (fig_dir / "spec.yaml").write_text(
+        "name: demo_fig\npanels: []\nstyle_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    (fig_dir / "briefing.md").write_text(
+        """## 1. Topic
+
+Explain transient-current trapping as a restrained publication mechanism schematic.
+
+## 3. Binding physics-correctness rules
+
+1. n is trap-energy breadth, not trap density.
+2. Do NOT commit to electron vs hole transport.
+""",
+        encoding="utf-8",
+    )
+    (fig_dir / "demo_fig.tex").write_text("% tikz\n", encoding="utf-8")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / "visual_clash.json").write_text(
+        '{"fixture":"demo_fig","candidates":[],"total":0}\n',
+        encoding="utf-8",
+    )
+    styles_dir = repo_root / "styles"
+    styles_dir.mkdir()
+    (styles_dir / "polymer-paper-preamble.sty").write_text("% style\n", encoding="utf-8")
+    scripts_dir = repo_root / "scripts"
+    scripts_dir.mkdir()
+    (scripts_dir / "critique_brief.py").write_text("# generator\n", encoding="utf-8")
+    return fig_dir, spec
 
 
 def test_build_adjudication_scaffold_from_critique_frontmatter(tmp_path: Path) -> None:
@@ -2319,6 +2373,49 @@ def test_scaffold_adjudication_force_overwrites_existing_file(tmp_path: Path) ->
         scaffold_adjudication(fig_dir, force=True)
 
     assert load_adjudication(existing)["fixture"] == "demo_fig"
+
+
+def test_sync_adjudication_requires_briefing_critique_for_reference_free_context(
+    tmp_path: Path,
+) -> None:
+    fig_dir, _spec = _write_reference_free_grounding_fixture(tmp_path)
+
+    with pytest.raises(CritiqueAdjudicationError, match="critique_state=BRIEFING_REQUIRED"):
+        sync_adjudication(fig_dir, repo_root=tmp_path)
+
+
+def test_sync_adjudication_accepts_fresh_reference_free_briefing_critique(
+    tmp_path: Path,
+) -> None:
+    fig_dir, spec = _write_reference_free_grounding_fixture(tmp_path)
+    style_lock_path = tmp_path / "styles" / "polymer-paper-preamble.sty"
+    generator_path = tmp_path / "scripts" / "critique_brief.py"
+    critique_input_hash = compute_critique_input_hash(
+        fig_dir,
+        "demo_fig",
+        spec,
+        style_lock_path=style_lock_path,
+        base_dir=tmp_path,
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_input_hash,
+        generator_version=critique_generator_version(generator_path),
+        rubric_version=CRITIQUE_RUBRIC_VERSION,
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    grounded_in_rule: Briefing §3 rule 1\n"
+            "    observation: reference-free critique cites the explicit rule\n"
+        ),
+    )
+
+    path = sync_adjudication(fig_dir, repo_root=tmp_path)
+
+    assert path == fig_dir / "critique_adjudication.yaml"
+    assert load_adjudication(path)["fixture"] == "demo_fig"
 
 
 def test_build_adjudication_scaffold_fails_cleanly_for_malformed_critique_yaml(
