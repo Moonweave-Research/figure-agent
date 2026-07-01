@@ -2835,25 +2835,14 @@ def test_queue_surfaces_design_direction_ready_human_choice(
         "style_benchmark_comparison:docs/style-benchmark-comparisons/alpha.json",
     ]
     assert row["design_direction_human_question"].startswith("I recommend keeping")
-    assert row["design_direction_mutation_boundary"] == "no_source_mutation"
-    assert "editorial_redesign" in row["design_direction_alternatives"]
-    assert row["design_direction_evidence_refs"] == [
-        "style_benchmark_pack:docs/style-benchmark-packs/2026-06-30-wave-c/alpha.json",
-        "style_benchmark_comparison:docs/style-benchmark-comparisons/2026-07-01-wave-f/alpha.json",
-        "benchmark_contract:docs/benchmark-contracts/alpha.yaml",
-        "aesthetic_intent:docs/aesthetic-intents/alpha.yaml",
+    assert row["design_direction_alternatives"] == [
+        "current_style",
+        "bounded_tikz_refinement",
+        "editorial_redesign",
+        "svg_polish_handoff",
     ]
-    assert row["design_direction_summary"] == {
-        "schema": "figure-agent.design-direction-packet.v1",
-        "state": "ready_for_human_choice",
-        "next_agent_action": "prepare_bounded_candidate_or_stop_for_human_choice",
-        "mutation_boundary": "no_source_mutation",
-        "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
-        "human_question": row["design_direction_human_question"],
-        "alternatives": row["design_direction_alternatives"],
-        "evidence_refs": row["design_direction_evidence_refs"],
-    }
-    assert "command" not in row["design_direction_summary"]
+    assert row["design_direction_mutation_boundary"] == "no_source_mutation"
+    assert row["design_direction_evidence_refs"] == []
     assert row["bottleneck_category"] == "template_style"
     assert row["required_actor"] == "human"
     assert queue["summary"]["by_design_direction_state"] == {"ready_for_human_choice": 1}
@@ -2907,6 +2896,73 @@ def test_queue_surfaces_design_direction_blockers(
     assert "command" not in row["design_direction_summary"]
     assert row["bottleneck_category"] == "template_style"
 
+
+
+def test_human_decision_digest_includes_design_direction_surface(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(name, action="run_compile", stop_boundary=None, first_blocker="none")
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    monkeypatch.setattr(
+        fig_queue.style_benchmark_pack,
+        "load_pack",
+        lambda name, *, workspace_root: {
+            "state": "present",
+            "path": "docs/style-benchmark-packs/wave/alpha.json",
+            "linked_files": {
+                "benchmark_contract": "examples/alpha/benchmark_contract.yaml",
+                "aesthetic_intent": "examples/alpha/aesthetic_intent.yaml",
+            },
+        },
+    )
+    monkeypatch.setattr(
+        fig_queue.style_benchmark_comparison,
+        "load_comparison",
+        lambda name, *, workspace_root: {
+            "state": "present",
+            "path": "docs/style-benchmark-comparisons/wave/alpha.json",
+            "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
+        },
+    )
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="design-direction-surface",
+        fixtures=None,
+    )
+
+    digest = queue["human_decision_digest"]
+    assert digest["packet_schemas"] == ["figure-agent.design-direction-packet.v1"]
+    groups = {group["id"]: group for group in digest["groups"]}
+    rows = groups["accept_current_candidates"]["rows"]
+    assert [row["fixture"] for row in rows] == ["alpha"]
+    row = rows[0]
+    assert row["packet_recommendations"] == [
+        {
+            "packet": "figure-agent.design-direction-packet.v1",
+            "recommendation": "keep_current_style_until_candidate_beats_benchmark",
+        }
+    ]
+    assert row["design_direction_state"] == "ready_for_human_choice"
+    assert row["design_direction_mutation_boundary"] == "no_source_mutation"
+    assert row["design_direction_alternatives"] == [
+        "current_style",
+        "bounded_tikz_refinement",
+        "editorial_redesign",
+        "svg_polish_handoff",
+    ]
+    assert row["design_direction_evidence_refs"] == [
+        "style_benchmark_pack:docs/style-benchmark-packs/wave/alpha.json",
+        "style_benchmark_comparison:docs/style-benchmark-comparisons/wave/alpha.json",
+        "benchmark_contract:examples/alpha/benchmark_contract.yaml",
+        "aesthetic_intent:examples/alpha/aesthetic_intent.yaml",
+    ]
+    assert all("fig-agent " not in ref for ref in row["design_direction_evidence_refs"])
 
 def test_polish_queue_surfaces_svg_polish_evidence_missing_as_design_blocker(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch

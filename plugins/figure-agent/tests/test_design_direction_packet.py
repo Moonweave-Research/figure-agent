@@ -25,10 +25,11 @@ def _queue_row(**overrides: object) -> dict[str, object]:
 def _style_pack(**overrides: object) -> dict[str, object]:
     pack: dict[str, object] = {
         "state": "present",
-        "path": "docs/style-benchmark-packs/pack.json",
+        "path": "docs/style-benchmark-packs/wave/fixture.json",
         "linked_files": {
-            "benchmark_contract": "docs/benchmarks/contract.yaml",
-            "aesthetic_intent": "docs/aesthetic-intents/intent.yaml",
+            "benchmark_contract": "examples/fixture/benchmark_contract.yaml",
+            "aesthetic_intent": "examples/fixture/aesthetic_intent.yaml",
+            "source_decision_packet": "docs/decision-packets/wave/fixture.json",
         },
     }
     pack.update(overrides)
@@ -38,7 +39,7 @@ def _style_pack(**overrides: object) -> dict[str, object]:
 def _comparison(**overrides: object) -> dict[str, object]:
     comparison: dict[str, object] = {
         "state": "present",
-        "path": "docs/style-benchmark-comparisons/comparison.json",
+        "path": "docs/style-benchmark-comparisons/wave/fixture.json",
         "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
     }
     comparison.update(overrides)
@@ -80,10 +81,10 @@ def test_ready_packet_summarizes_recommendation_and_human_choice_boundary() -> N
         "source_queue_action": "run_review",
         "svg_polish_state": "ready_for_svg_polish",
         "evidence_refs": [
-            "style_benchmark_pack:docs/style-benchmark-packs/2026-06-30-wave-c/fig1.json",
-            "style_benchmark_comparison:docs/style-benchmark-comparisons/2026-07-01-wave-f/fig1.json",
-            "benchmark_contract:docs/benchmark-contracts/fig1.yaml",
-            "aesthetic_intent:docs/aesthetic-intents/fig1.yaml",
+            "style_benchmark_pack:docs/style-benchmark-packs/wave/fixture.json",
+            "style_benchmark_comparison:docs/style-benchmark-comparisons/wave/fixture.json",
+            "benchmark_contract:examples/fixture/benchmark_contract.yaml",
+            "aesthetic_intent:examples/fixture/aesthetic_intent.yaml",
         ],
     }
 
