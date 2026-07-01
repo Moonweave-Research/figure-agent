@@ -3,7 +3,7 @@ fixture: fig3_trapping_concept
 target_journal: Nature Materials
 visual_maturity: restrained
 density: balanced
-reference_style: two_panel_mechanism_contrast
+reference_style: mechanism_schematic
 design_principles:
   - id: two_panel_contrast
     instruction: "Keep PDMS visually simpler than sulfur polymer so polarization-only and trap-retention mechanisms separate immediately."
@@ -24,13 +24,13 @@ must_avoid:
 polish_triggers:
   - id: tikz_micro_polish
     condition: "The mechanism is correct but print-scale label spacing, stroke hierarchy, or trap-level clarity can improve in source."
-    recommended_path: tikz_patch
+    recommended_path: continue_tikz
   - id: svg_micro_polish
     condition: "TikZ/source semantics are locked and only optical stroke/spacing finish remains."
     recommended_path: ready_for_svg_polish
 aesthetic_levers:
   - id: mechanism_contrast
-    dimension: contrast
+    dimension: cross_panel_grammar
     intent: "Make panel a read as clean polarization response and panel b as deep-trap retention without adding data-figure complexity."
     priority: required
     positive_signals:
@@ -51,7 +51,7 @@ aesthetic_levers:
       - "change the two-panel contrast story"
     default_route: tikz_patch
   - id: trap_level_legibility
-    dimension: semantic_geometry
+    dimension: component_fidelity
     intent: "Keep trapped electrons anchored to trap levels and visually separate mobile electrons from trapped electrons."
     priority: required
     positive_signals:
