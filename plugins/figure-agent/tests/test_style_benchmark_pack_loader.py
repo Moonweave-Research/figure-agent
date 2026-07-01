@@ -289,16 +289,18 @@ def test_style_benchmark_pack_requires_exact_candidate_slots(tmp_path: Path) -> 
         )
 
 
-def test_style_benchmark_pack_requires_family_proof_evidence(tmp_path: Path) -> None:
+def test_style_benchmark_pack_requires_per_family_benchmark_questions(
+    tmp_path: Path,
+) -> None:
     plugin_root = tmp_path / "plugin"
     pack_path = _minimal_pack(plugin_root)
     payload = json.loads(pack_path.read_text(encoding="utf-8"))
-    del payload["candidate_family_slots"][1]["proof_evidence"]
+    del payload["candidate_family_slots"][0]["evidence_to_prove_better"]
     _write_json(pack_path, payload)
 
     with pytest.raises(
         style_benchmark_pack.StyleBenchmarkPackError,
-        match="candidate_restrained_tikz_refinement_proof_evidence_invalid",
+        match="candidate_family_slots_invalid",
     ):
         style_benchmark_pack.load_pack(
             "contract_demo",
