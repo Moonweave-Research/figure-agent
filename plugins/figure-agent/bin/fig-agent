@@ -1213,6 +1213,79 @@ def _bounded_tikz_refinement(argv: list[str]) -> int:
     return 0
 
 
+def _bounded_tikz_request_packet(
+    name: str,
+    *,
+    mode: str,
+    goal: str,
+) -> dict[str, object]:
+    import bounded_tikz_refinement_packet
+    import fig_queue
+    import style_benchmark_comparison
+    import style_benchmark_pack
+
+    paths = _paths()
+    queue = fig_queue.build_queue(
+        repo_root=paths.workspace_root,
+        mode=mode,
+        goal=goal,
+        fixtures=[name],
+    )
+    rows = queue.get("rows")
+    queue_row = rows[0] if isinstance(rows, list) and rows else None
+    style_pack = style_benchmark_pack.load_pack(
+        name,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    try:
+        comparison = style_benchmark_comparison.load_comparison(
+            name,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+        )
+    except style_benchmark_comparison.StyleBenchmarkComparisonError as exc:
+        comparison = {"state": "missing" if str(exc) == "comparison_missing" else "invalid"}
+    return bounded_tikz_refinement_packet.build_bounded_tikz_refinement_packet(
+        name,
+        style_pack=style_pack,
+        comparison=comparison,
+        queue_row=queue_row,
+    )
+
+
+def _bounded_tikz_candidate(argv: list[str]) -> int:
+    import bounded_tikz_candidate_packet
+    import fig_driver
+
+    parser = argparse.ArgumentParser(prog="fig-agent bounded-tikz-candidate")
+    parser.add_argument("name")
+    parser.add_argument("--mode", choices=list(fig_driver.MODES), default="review")
+    parser.add_argument("--goal", default="bounded TikZ candidate packet")
+    parser.add_argument("--output")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    request_packet = _bounded_tikz_request_packet(
+        name,
+        mode=args.mode,
+        goal=args.goal,
+    )
+    packet = bounded_tikz_candidate_packet.build_bounded_tikz_candidate_packet(
+        name,
+        workspace_root=_paths().workspace_root,
+        request_packet=request_packet,
+    )
+    text = json.dumps(packet, indent=2, sort_keys=True) + "\n"
+    if args.output:
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(text, encoding="utf-8")
+    print(text, end="")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         _maybe_reexec_with_uv_project()
@@ -1328,6 +1401,8 @@ def main(argv: list[str] | None = None) -> int:
         return _design_dogfood(rest)
     if command == "bounded-tikz-refinement":
         return _bounded_tikz_refinement(rest)
+    if command == "bounded-tikz-candidate":
+        return _bounded_tikz_candidate(rest)
     print(f"fig-agent: unknown command {command!r}", file=sys.stderr)
     return 2
 
