@@ -394,6 +394,18 @@ def _design_direction_fields(fixture: str, row: dict[str, Any]) -> dict[str, Any
         ]
         fields["design_direction_evidence_refs"] = normalized_refs
         summary["evidence_refs"] = normalized_refs
+    candidate_evidence = packet.get("candidate_family_evidence")
+    if isinstance(candidate_evidence, dict):
+        normalized_candidate_evidence = {
+            key: value
+            for key, value in candidate_evidence.items()
+            if isinstance(key, str) and isinstance(value, dict)
+        }
+        if normalized_candidate_evidence:
+            fields["design_direction_candidate_family_evidence"] = (
+                normalized_candidate_evidence
+            )
+            summary["candidate_family_evidence"] = normalized_candidate_evidence
     blocker_reasons = packet.get("blocking_reasons")
     if isinstance(blocker_reasons, list) and blocker_reasons:
         normalized_blockers = [

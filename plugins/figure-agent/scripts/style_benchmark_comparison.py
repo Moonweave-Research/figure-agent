@@ -300,7 +300,7 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
     candidate_results: dict[str, str] = {}
     candidate_mutation_boundaries: dict[str, str] = {}
     candidate_handoff_states: dict[str, str] = {}
-    candidate_family_evidence: dict[str, dict[str, Any]] = {}
+    candidate_family_evidence: dict[str, dict[str, str]] = {}
     for candidate in candidate_list:
         if not isinstance(candidate, dict):
             continue
@@ -333,6 +333,19 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
             "blocked_requires_separate_approval",
         }:
             candidate_handoff_states[candidate_id] = "handoff_blocked"
+        evidence = {
+            key: candidate.get(key)
+            for key in (
+                "can_improve",
+                "semantic_changes_forbidden",
+                "evidence_to_prove_better",
+                "human_only_question",
+            )
+        }
+        if all(isinstance(value, str) and value for value in evidence.values()):
+            candidate_family_evidence[candidate_id] = {
+                key: value for key, value in evidence.items() if isinstance(value, str)
+            }
 
     human_questions = payload.get("human_only_questions")
     question_list = human_questions if isinstance(human_questions, list) else []

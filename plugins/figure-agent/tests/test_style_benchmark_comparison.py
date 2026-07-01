@@ -21,6 +21,13 @@ REAL_COMPARISON = (
     / "2026-07-01-wave-f"
     / "fig1_overview_v2_pair_001_vault.json"
 )
+REAL_COMPARISON_DIR = REAL_COMPARISON.parent
+REQUIRED_FAMILY_EVIDENCE_KEYS = {
+    "can_improve",
+    "semantic_changes_forbidden",
+    "evidence_to_prove_better",
+    "human_only_question",
+}
 
 
 def _write_comparison(path: Path, payload: dict[str, object]) -> None:
@@ -169,22 +176,36 @@ def test_real_fig3_style_benchmark_comparison_loads() -> None:
     )
 
 
-def test_candidate_family_requires_human_only_question(tmp_path: Path) -> None:
-    plugin_root, relative_path = _real_payload_copy(tmp_path)
-    path = plugin_root / relative_path
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    del payload["candidate_family_comparisons"][1]["human_only_question"]
-    _write_comparison(path, payload)
-
-    with pytest.raises(
-        style_benchmark_comparison.StyleBenchmarkComparisonError,
-        match="human_only_question_invalid",
-    ):
-        style_benchmark_comparison.load_comparison(
-            "fig1_overview_v2_pair_001_vault",
-            plugin_root=plugin_root,
-            comparison_path=relative_path,
+def test_real_wave_f_comparison_docs_encode_bounded_family_evidence() -> None:
+    for path in sorted(REAL_COMPARISON_DIR.glob("*.json")):
+        fixture = path.stem
+        payload = style_benchmark_comparison.load_comparison(
+            fixture,
+            plugin_root=PLUGIN_ROOT,
+            comparison_path=path.relative_to(PLUGIN_ROOT),
         )
+
+        candidates = {
+            candidate["id"]: candidate
+            for candidate in payload["candidate_family_comparisons"]
+        }
+        assert set(candidates) == style_benchmark_comparison.REQUIRED_CANDIDATE_FAMILIES
+        assert candidates["current_style"]["result"] == "winner_candidate"
+        assert candidates["restrained_tikz_refinement"]["mutation_boundary"] == (
+            "source_mutation_requires_separate_approval"
+        )
+        assert candidates["editorial_redesign"]["result"] == "rejected_semantic_risk"
+        assert candidates["svg_polish_handoff"]["result"] == "blocked_missing_evidence"
+        assert "ready_for_svg_polish" in "\n".join(
+            candidates["svg_polish_handoff"]["prerequisite_evidence"]
+        )
+        assert all(
+            REQUIRED_FAMILY_EVIDENCE_KEYS <= set(candidate)
+            for candidate in candidates.values()
+        )
+        rejection_rules = "\n".join(payload["candidate_rejection_rules"])
+        assert "prettier" in rejection_rules
+        assert "semantic" in rejection_rules
 
 
 def test_candidate_family_cannot_authorize_mutation(tmp_path: Path) -> None:
@@ -223,6 +244,20 @@ def test_candidate_family_requires_bounded_benchmark_contract_fields(
             plugin_root=plugin_root,
             comparison_path=relative_path,
         )
+
+
+def test_comparison_summary_preserves_read_only_family_evidence() -> None:
+    payload = style_benchmark_comparison.load_comparison(
+        "fig1_overview_v2_pair_001_vault",
+        plugin_root=PLUGIN_ROOT,
+    )
+    summary = style_benchmark_comparison.summarize_comparison(payload)
+
+    current = summary["candidate_family_evidence"]["current_style"]
+    assert current["can_improve"].startswith("Keeps the current manuscript-ready")
+    assert "panel roles" in current["semantic_changes_forbidden"]
+    assert "hard regressions" in current["evidence_to_prove_better"]
+    assert current["human_only_question"].endswith("visually different candidate?")
 
 
 def test_prettier_candidate_cannot_allow_semantic_change(tmp_path: Path) -> None:

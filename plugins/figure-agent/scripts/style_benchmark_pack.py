@@ -384,7 +384,7 @@ def summarize_pack(pack: dict[str, Any]) -> dict[str, Any]:
     slots = pack.get("candidate_family_slots")
     candidate_slot_ids: list[str] = []
     candidate_mutation_boundaries: dict[str, str] = {}
-    candidate_family_evidence: dict[str, dict[str, Any]] = {}
+    candidate_family_evidence: dict[str, dict[str, str]] = {}
     if isinstance(slots, list):
         for slot in slots:
             if not isinstance(slot, dict):
@@ -395,16 +395,21 @@ def summarize_pack(pack: dict[str, Any]) -> dict[str, Any]:
                 candidate_slot_ids.append(slot_id)
                 if isinstance(boundary, str) and boundary:
                     candidate_mutation_boundaries[slot_id] = boundary
-                candidate_family_evidence[slot_id] = {
-                    key: slot[key]
+                evidence = {
+                    key: slot.get(key)
                     for key in (
-                        "what_can_improve",
-                        "forbidden_semantic_changes",
-                        "proof_criteria",
+                        "can_improve",
+                        "semantic_changes_forbidden",
+                        "evidence_to_prove_better",
                         "human_only_question",
                     )
-                    if key in slot
                 }
+                if all(isinstance(value, str) and value for value in evidence.values()):
+                    candidate_family_evidence[slot_id] = {
+                        key: value
+                        for key, value in evidence.items()
+                        if isinstance(value, str)
+                    }
 
     questions = pack.get("human_only_questions")
     top_questions = [

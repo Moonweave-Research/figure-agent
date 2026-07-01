@@ -89,6 +89,26 @@ def _alternative_mutation_boundaries(
     return {"current_style": MUTATION_BOUNDARY}
 
 
+def _candidate_family_evidence(
+    *,
+    style_pack: dict[str, object] | None,
+    comparison: dict[str, object] | None,
+) -> dict[str, object]:
+    for payload in (comparison, style_pack):
+        if not isinstance(payload, dict):
+            continue
+        evidence = payload.get("candidate_family_evidence")
+        if isinstance(evidence, dict):
+            normalized = {
+                key: value
+                for key, value in evidence.items()
+                if isinstance(key, str) and isinstance(value, dict)
+            }
+            if normalized:
+                return normalized
+    return {}
+
+
 def build_design_direction_packet(
     fixture: str,
     *,
@@ -121,7 +141,7 @@ def build_design_direction_packet(
             "evidence_refs": _evidence_refs(style_pack=style_pack, comparison=comparison),
             "next_agent_action": "create_style_benchmark_comparison",
         }
-    return {
+    packet: dict[str, object] = {
         "schema": SCHEMA,
         "fixture": fixture,
         "state": "ready_for_human_choice",
@@ -141,3 +161,10 @@ def build_design_direction_packet(
         "source_queue_action": queue_row.get("action"),
         "svg_polish_state": (svg_polish_state or {}).get("state", "not_checked"),
     }
+    candidate_evidence = _candidate_family_evidence(
+        style_pack=style_pack,
+        comparison=comparison,
+    )
+    if candidate_evidence:
+        packet["candidate_family_evidence"] = candidate_evidence
+    return packet
