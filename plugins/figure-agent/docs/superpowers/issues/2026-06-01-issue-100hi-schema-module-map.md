@@ -157,6 +157,10 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.candidate-apply-readiness.v1` | candidate search | `candidate_acceptance.py` | operators | Human acceptance preflight; no source mutation |
 | `figure-agent.candidate-acceptance.v1` | candidate search | `candidate_acceptance.py` | `candidate_apply.py`, operators | Explicit human decision artifact required before apply |
 | `figure-agent.candidate-apply-result.v1` | candidate search | `candidate_apply.py` | operators | Explicit CLI apply boundary; current implementation refuses source mutation unless eligible and opted in |
+| `figure-agent.bounded-tikz-candidate-packet.v1` | bounded TikZ candidate handoff | `bounded_tikz_candidate_packet.py` | `bounded_tikz_candidate_apply.py`, operators | Read-only candidate packet; no source mutation authority |
+| `figure-agent.bounded-tikz-apply-result.v1` | bounded TikZ candidate handoff | `bounded_tikz_candidate_apply.py` | operators | Hash-gated apply boundary; refuses mutation on packet/source hash mismatch |
+| `figure-agent.bounded-tikz-refinement-packet.v1` | bounded TikZ candidate handoff | `bounded_tikz_refinement_packet.py` | operators | Read-only refinement request packet; `no_source_mutation` boundary |
+| `figure-agent.design-dogfood-packet.v1` | design dogfood handoff | `design_dogfood_packet.py` | operators | Read-only human-gated dogfood packet over live queue state; `no_source_mutation` boundary |
 | `figure-agent.evidence-index.v1` | candidate/evidence sync | `evidence_index.py` | `evidence_sync.py`, `closeout_readiness.py`, `quality_memory_events.py` | Fixture-local evidence summary; stale source checks can block acceptance |
 | `figure-agent.evidence-sync.v1` | candidate/evidence sync | `evidence_sync.py` | operators, closeout tools | Writes only fixture evidence index when explicitly requested |
 | `figure-agent.golden-acceptance.v1` | closeout acceptance | `golden_acceptance.py` | `closeout_readiness.py`, `quality_memory_events.py` | Explicit human/golden acceptance artifact; never inferred by MCP |
