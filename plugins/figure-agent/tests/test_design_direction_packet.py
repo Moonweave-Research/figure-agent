@@ -107,6 +107,35 @@ def test_ready_packet_summarizes_recommendation_and_human_choice_boundary() -> N
     }
 
 
+def test_ready_packet_preserves_read_only_candidate_family_evidence() -> None:
+    packet = build_design_direction_packet(
+        FIXTURE,
+        queue_row=_queue_row(action="run_review"),
+        style_pack=_style_pack(),
+        comparison=_comparison(
+            candidate_family_evidence={
+                "current_style": {
+                    "can_improve": "Keeps current style as the benchmark.",
+                    "semantic_changes_forbidden": "May not change panel roles.",
+                    "evidence_to_prove_better": "A challenger must improve checks.",
+                    "human_only_question": "Is the current style sufficient?",
+                }
+            }
+        ),
+    )
+
+    assert packet["candidate_family_evidence"] == {
+        "current_style": {
+            "can_improve": "Keeps current style as the benchmark.",
+            "semantic_changes_forbidden": "May not change panel roles.",
+            "evidence_to_prove_better": "A challenger must improve checks.",
+            "human_only_question": "Is the current style sufficient?",
+        }
+    }
+    assert packet["mutation_boundary"] == "no_source_mutation"
+    assert packet["next_agent_action"] == "prepare_bounded_candidate_or_stop_for_human_choice"
+
+
 @pytest.mark.parametrize("style_pack", [None, {"state": "missing"}])
 def test_packet_blocks_when_style_pack_is_missing(style_pack: dict[str, object] | None) -> None:
     packet = build_design_direction_packet(
