@@ -43,18 +43,6 @@ def _style_pack(**overrides: object) -> dict[str, object]:
             "editorial_redesign": "source_mutation_requires_separate_approval",
             "svg_polish_handoff": "svg_artifact_mutation_requires_separate_approval",
         },
-        "candidate_slot_ids": [
-            "current_style",
-            "restrained_tikz_refinement",
-            "editorial_redesign",
-            "svg_polish_handoff",
-        ],
-        "candidate_mutation_boundaries": {
-            "current_style": "no_source_mutation",
-            "restrained_tikz_refinement": "source_mutation_requires_separate_approval",
-            "editorial_redesign": "source_mutation_requires_separate_approval",
-            "svg_polish_handoff": "svg_artifact_mutation_requires_separate_approval",
-        },
     }
     pack.update(overrides)
     return pack
@@ -108,20 +96,14 @@ def test_ready_packet_summarizes_recommendation_and_human_choice_boundary() -> N
             "benchmark. Which direction should I prepare next?"
         ),
         "evidence_refs": [
-            "style_benchmark_pack:docs/style-benchmark-packs/pack.json",
-            "benchmark_contract:docs/benchmarks/contract.yaml",
-            "aesthetic_intent:docs/aesthetic-intents/intent.yaml",
-            "style_benchmark_comparison:docs/style-benchmark-comparisons/comparison.json",
+            "style_benchmark_pack:docs/style-benchmark-packs/wave/fixture.json",
+            "benchmark_contract:examples/fixture/benchmark_contract.yaml",
+            "aesthetic_intent:examples/fixture/aesthetic_intent.yaml",
+            "style_benchmark_comparison:docs/style-benchmark-comparisons/wave/fixture.json",
         ],
         "next_agent_action": "prepare_bounded_candidate_or_stop_for_human_choice",
         "source_queue_action": "run_review",
         "svg_polish_state": "ready_for_svg_polish",
-        "evidence_refs": [
-            "style_benchmark_pack:docs/style-benchmark-packs/wave/fixture.json",
-            "style_benchmark_comparison:docs/style-benchmark-comparisons/wave/fixture.json",
-            "benchmark_contract:examples/fixture/benchmark_contract.yaml",
-            "aesthetic_intent:examples/fixture/aesthetic_intent.yaml",
-        ],
     }
 
 
@@ -142,7 +124,7 @@ def test_packet_blocks_when_style_pack_is_missing(style_pack: dict[str, object] 
         "alternatives": [],
         "blocking_reasons": ["style_benchmark_pack_missing"],
         "evidence_refs": [
-            "style_benchmark_comparison:docs/style-benchmark-comparisons/comparison.json",
+            "style_benchmark_comparison:docs/style-benchmark-comparisons/wave/fixture.json",
         ],
         "next_agent_action": "create_style_benchmark_pack",
     }
@@ -166,9 +148,9 @@ def test_packet_blocks_when_comparison_is_missing(comparison: dict[str, object] 
         "alternatives": [],
         "blocking_reasons": ["style_benchmark_comparison_missing"],
         "evidence_refs": [
-            "style_benchmark_pack:docs/style-benchmark-packs/pack.json",
-            "benchmark_contract:docs/benchmarks/contract.yaml",
-            "aesthetic_intent:docs/aesthetic-intents/intent.yaml",
+            "style_benchmark_pack:docs/style-benchmark-packs/wave/fixture.json",
+            "benchmark_contract:examples/fixture/benchmark_contract.yaml",
+            "aesthetic_intent:examples/fixture/aesthetic_intent.yaml",
         ],
         "next_agent_action": "create_style_benchmark_comparison",
     }

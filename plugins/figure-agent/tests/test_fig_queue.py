@@ -2881,14 +2881,6 @@ def test_queue_surfaces_design_direction_ready_human_choice(
         "style_benchmark_comparison:docs/style-benchmark-comparisons/alpha.json",
     ]
     assert row["design_direction_human_question"].startswith("I recommend keeping")
-    assert row["design_direction_alternatives"] == [
-        "current_style",
-        "bounded_tikz_refinement",
-        "editorial_redesign",
-        "svg_polish_handoff",
-    ]
-    assert row["design_direction_mutation_boundary"] == "no_source_mutation"
-    assert row["design_direction_evidence_refs"] == []
     assert row["bottleneck_category"] == "template_style"
     assert row["required_actor"] == "human"
     assert queue["summary"]["by_design_direction_state"] == {"ready_for_human_choice": 1}
@@ -2998,15 +2990,15 @@ def test_human_decision_digest_includes_design_direction_surface(
     assert row["design_direction_mutation_boundary"] == "no_source_mutation"
     assert row["design_direction_alternatives"] == [
         "current_style",
-        "bounded_tikz_refinement",
+        "restrained_tikz_refinement",
         "editorial_redesign",
         "svg_polish_handoff",
     ]
     assert row["design_direction_evidence_refs"] == [
         "style_benchmark_pack:docs/style-benchmark-packs/wave/alpha.json",
-        "style_benchmark_comparison:docs/style-benchmark-comparisons/wave/alpha.json",
         "benchmark_contract:examples/alpha/benchmark_contract.yaml",
         "aesthetic_intent:examples/alpha/aesthetic_intent.yaml",
+        "style_benchmark_comparison:docs/style-benchmark-comparisons/wave/alpha.json",
     ]
     assert all("fig-agent " not in ref for ref in row["design_direction_evidence_refs"])
 

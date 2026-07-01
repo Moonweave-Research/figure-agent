@@ -357,38 +357,60 @@ def _design_direction_fields(fixture: str, row: dict[str, Any]) -> dict[str, Any
         "design_direction_packet_schema": packet.get("schema"),
         "design_direction_next_agent_action": packet.get("next_agent_action"),
     }
+    summary: dict[str, Any] = {
+        "state": packet.get("state"),
+        "schema": packet.get("schema"),
+        "next_agent_action": packet.get("next_agent_action"),
+    }
     if packet.get("default_recommendation") is not None:
         fields["design_direction_default"] = packet.get("default_recommendation")
+        summary["default_recommendation"] = packet.get("default_recommendation")
     alternatives = packet.get("alternatives")
     if isinstance(alternatives, list):
-        fields["design_direction_alternatives"] = [
+        normalized_alternatives = [
             alternative for alternative in alternatives if isinstance(alternative, str)
         ]
+        fields["design_direction_alternatives"] = normalized_alternatives
+        summary["alternatives"] = normalized_alternatives
     if packet.get("mutation_boundary") is not None:
         fields["design_direction_mutation_boundary"] = packet.get("mutation_boundary")
+        summary["mutation_boundary"] = packet.get("mutation_boundary")
     alternative_boundaries = packet.get("alternative_mutation_boundaries")
     if isinstance(alternative_boundaries, dict):
-        fields["design_direction_alternative_mutation_boundaries"] = {
+        normalized_boundaries = {
             key: value
             for key, value in alternative_boundaries.items()
             if isinstance(key, str) and isinstance(value, str)
         }
+        fields["design_direction_alternative_mutation_boundaries"] = normalized_boundaries
+        summary["alternative_mutation_boundaries"] = normalized_boundaries
     if packet.get("human_question") is not None:
         fields["design_direction_human_question"] = packet.get("human_question")
+        summary["human_question"] = packet.get("human_question")
     evidence_refs = packet.get("evidence_refs")
     if isinstance(evidence_refs, list):
-        fields["design_direction_evidence_refs"] = [
+        normalized_refs = [
             ref for ref in evidence_refs if isinstance(ref, str)
         ]
+        fields["design_direction_evidence_refs"] = normalized_refs
+        summary["evidence_refs"] = normalized_refs
     blocker_reasons = packet.get("blocking_reasons")
     if isinstance(blocker_reasons, list) and blocker_reasons:
-        fields["design_direction_blocker_reason"] = blocker_reasons[0]
-        summary["blocking_reasons"] = blocker_reasons
+        normalized_blockers = [
+            reason for reason in blocker_reasons if isinstance(reason, str)
+        ]
+        if normalized_blockers:
+            fields["design_direction_blocker_reason"] = normalized_blockers[0]
+            summary["blocking_reasons"] = normalized_blockers
     if row.get("svg_polish_evidence_state") in {
         "blocked_missing_positive_readiness",
         "not_qualified",
     }:
         fields.setdefault("design_direction_blocker_reason", "svg_polish_evidence_missing")
+        summary.setdefault("blocking_reasons", ["svg_polish_evidence_missing"])
+    fields["design_direction_summary"] = {
+        key: value for key, value in summary.items() if value is not None
+    }
     if (
         packet.get("state") == "ready_for_human_choice"
         and row.get("action") == fig_driver.ACTION_COMPLETE

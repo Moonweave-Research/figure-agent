@@ -60,7 +60,11 @@ def _evidence_refs(
 def _alternatives(style_pack: dict[str, object] | None) -> list[str]:
     if isinstance(style_pack, dict):
         slot_ids = style_pack.get("candidate_slot_ids")
-        if isinstance(slot_ids, list) and all(isinstance(item, str) for item in slot_ids):
+        if (
+            isinstance(slot_ids, list)
+            and slot_ids
+            and all(isinstance(item, str) for item in slot_ids)
+        ):
             return list(slot_ids)
     return ALTERNATIVES.copy()
 
@@ -136,5 +140,4 @@ def build_design_direction_packet(
         "next_agent_action": "prepare_bounded_candidate_or_stop_for_human_choice",
         "source_queue_action": queue_row.get("action"),
         "svg_polish_state": (svg_polish_state or {}).get("state", "not_checked"),
-        "evidence_refs": _evidence_refs(style_pack, comparison),
     }
