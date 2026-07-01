@@ -223,6 +223,7 @@ def test_parse_spec_real_fig3_fixture_pinned():
         ],
         "style_profile": "polymer-default",
         "visual_clash_cap": 14,
+        "undeclared_geometry_profile": "schematic",
         # Cleared to None after the v0.1.7.2 dogfood cleanup; the original
         # preview file was moved out of previews/ but selection_notes still
         # preserves the historical decision record.
