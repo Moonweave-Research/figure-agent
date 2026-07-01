@@ -43,6 +43,18 @@ def _style_pack(**overrides: object) -> dict[str, object]:
             "editorial_redesign": "source_mutation_requires_separate_approval",
             "svg_polish_handoff": "svg_artifact_mutation_requires_separate_approval",
         },
+        "candidate_slot_ids": [
+            "current_style",
+            "restrained_tikz_refinement",
+            "editorial_redesign",
+            "svg_polish_handoff",
+        ],
+        "candidate_mutation_boundaries": {
+            "current_style": "no_source_mutation",
+            "restrained_tikz_refinement": "source_mutation_requires_separate_approval",
+            "editorial_redesign": "source_mutation_requires_separate_approval",
+            "svg_polish_handoff": "svg_artifact_mutation_requires_separate_approval",
+        },
     }
     pack.update(overrides)
     return pack
