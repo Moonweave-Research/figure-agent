@@ -43,6 +43,10 @@ def test_wave_c_fig1_comparison_packet_matches_human_decision_record() -> None:
     assert packet["schema"] == record["packet_schema"]
     assert packet["fixture"] == record["fixture"]
     assert packet["queue_run_id"] == record["queue_run_id"]
+    assert record["packet_path"] == (
+        "docs/decision-packets/2026-06-30-wave-c/fig1_overview_v2_pair_001_vault.json"
+    )
+    assert record["packet_recommendation"] == packet["recommended_choice_id"]
     assert packet["source_human_decision_record"] == (
         "docs/decision-records/2026-06-30-wave-c/fig1_overview_v2_pair_001_vault.json"
     )
@@ -102,6 +106,10 @@ def test_wave_c_fig3_accept_current_packet_matches_human_decision_record() -> No
     assert packet["schema"] == record["packet_schema"]
     assert packet["fixture"] == record["fixture"]
     assert packet["queue_run_id"] == record["queue_run_id"]
+    assert record["packet_path"] == (
+        "docs/decision-packets/2026-06-30-wave-c/fig3_trapping_concept.json"
+    )
+    assert record["packet_recommendation"] == packet["recommended_choice_id"]
     assert packet["source_human_decision_record"] == (
         "docs/decision-records/2026-06-30-wave-c/fig3_trapping_concept.json"
     )
@@ -132,14 +140,15 @@ def test_wave_c_fig3_accept_current_packet_matches_human_decision_record() -> No
         "defer_for_dogfood",
     }
 
-def test_fig3_acceptance_defer_record_matches_packet_without_release_mutation() -> None:
+
+def test_wave_one_fig3_acceptance_record_cites_packet_recommendation() -> None:
     plugin_root = Path(__file__).resolve().parents[1]
     record_path = (
         plugin_root
         / "docs"
         / "decision-records"
         / "2026-07-01-acceptance"
-        / "fig3_trapping_concept_defer_for_dogfood.json"
+        / "fig3_trapping_concept_accept_current_generated_export.json"
     )
     packet_path = (
         plugin_root
@@ -149,28 +158,57 @@ def test_fig3_acceptance_defer_record_matches_packet_without_release_mutation() 
         / "fig3_trapping_concept_acceptance_packet.json"
     )
 
-    raw_record = json.loads(record_path.read_text(encoding="utf-8"))
-    record = validate_decision_record(raw_record)
+    record = validate_decision_record(json.loads(record_path.read_text(encoding="utf-8")))
     packet = json.loads(packet_path.read_text(encoding="utf-8"))
 
-    assert packet["schema"] == record["packet_schema"]
-    assert packet["fixture"] == record["fixture"]
-    assert packet["created_at"] == record["packet_timestamp"]
-    assert record["decision_kind"] == "defer_for_dogfood"
-    assert record["human_decision"] != packet["recommended_choice_id"]
-    assert packet["recommended_choice_id"] == "accept_current_generated_export"
-    assert packet["follow_up"]["safe_default_without_human_decision"] == record[
-        "decision_kind"
-    ]
-    assert (
+    assert record["packet_path"] == (
         "docs/decision-packets/2026-07-01-acceptance/"
         "fig3_trapping_concept_acceptance_packet.json"
-        in record["agent_recommendation"]
     )
-    assert packet["recommended_choice_id"] in record["agent_recommendation"]
+    assert record["packet_recommendation"] == packet["recommended_choice_id"]
+    assert record["decision_kind"] == "accept_current_generated_export"
+    assert packet["recommended_choice_id"] == "accept_current_generated_export"
+    assert packet["mutation_boundary"] == record["mutation_boundary"] == "no_source_mutation"
+    assert "do not set accepted: true without explicit release-operator choice" in packet[
+        "disallowed_actions"
+    ]
+    accept_choice = next(
+        choice for choice in packet["choices"] if choice["id"] == "accept_current_generated_export"
+    )
+    assert accept_choice["requires_explicit_authority"] is True
+    assert "accepted state" in record["human_note"]
+
+
+def test_wave_g_fig3_style_record_is_style_only() -> None:
+    plugin_root = Path(__file__).resolve().parents[1]
+    record_path = (
+        plugin_root
+        / "docs"
+        / "decision-records"
+        / "2026-07-01-wave-g"
+        / "fig3_trapping_concept_keep_current_style.json"
+    )
+    packet_path = (
+        plugin_root
+        / "docs"
+        / "decision-packets"
+        / "2026-07-01-wave-g"
+        / "fig3_trapping_concept_style_direction.json"
+    )
+
+    record = validate_decision_record(json.loads(record_path.read_text(encoding="utf-8")))
+    packet = json.loads(packet_path.read_text(encoding="utf-8"))
+
+    assert record["packet_schema"] == "figure-agent.style-direction-packet.v1"
+    assert record["packet_path"] == (
+        "docs/decision-packets/2026-07-01-wave-g/fig3_trapping_concept_style_direction.json"
+    )
+    assert record["packet_recommendation"] == packet["recommended_choice_id"]
+    assert record["decision_kind"] == packet["recommended_choice_id"]
     assert record["mutation_boundary"] == packet["mutation_boundary"] == "no_source_mutation"
-    assert "Do not treat" in raw_record["human_note"]
-    assert "accepted: true" in record["follow_up"]["implementation_slice"]
-    assert "final artifact" in record["follow_up"]["implementation_slice"]
-    assert "mutate source" in record["follow_up"]["implementation_slice"]
-    assert packet["choices"][1]["state_mutation"] == []
+    assert packet["recommended_choice_id"] == "keep_current_style"
+    assert "accept_current_generated_export" not in {
+        choice["id"] for choice in packet["choices"]
+    }
+    assert "does not approve" in record["human_note"]
+    assert packet["does_not_block_release"] is True
