@@ -180,8 +180,8 @@ def _declared_boundaries(spec: dict[str, Any]) -> list[dict[str, Any]]:
             bbox = _as_bbox_pt(check.get("bbox_pdf_cm"))
             if bbox is not None:
                 declared.append({"kind": "rect", "bbox_pt": bbox})
-        elif kind == "vertical_line" and isinstance(check.get("pdf_cm_x"), int | float):
-            y_range = check.get("pdf_cm_y_range")
+        elif kind == "vertical_line" and isinstance(check.get("x_pdf_cm"), int | float):
+            y_range = check.get("y_range_pdf_cm")
             if (
                 isinstance(y_range, list)
                 and len(y_range) == 2
@@ -190,12 +190,12 @@ def _declared_boundaries(spec: dict[str, Any]) -> list[dict[str, Any]]:
                 declared.append(
                     {
                         "kind": "vertical_line",
-                        "x": _cm_to_pt(check["pdf_cm_x"]),
+                        "x": _cm_to_pt(check["x_pdf_cm"]),
                         "y_range": sorted([_cm_to_pt(y_range[0]), _cm_to_pt(y_range[1])]),
                     }
                 )
-        elif kind == "horizontal_line" and isinstance(check.get("pdf_cm_y"), int | float):
-            x_range = check.get("pdf_cm_x_range")
+        elif kind == "horizontal_line" and isinstance(check.get("y_pdf_cm"), int | float):
+            x_range = check.get("x_range_pdf_cm")
             if (
                 isinstance(x_range, list)
                 and len(x_range) == 2
@@ -204,7 +204,7 @@ def _declared_boundaries(spec: dict[str, Any]) -> list[dict[str, Any]]:
                 declared.append(
                     {
                         "kind": "horizontal_line",
-                        "y": _cm_to_pt(check["pdf_cm_y"]),
+                        "y": _cm_to_pt(check["y_pdf_cm"]),
                         "x_range": sorted([_cm_to_pt(x_range[0]), _cm_to_pt(x_range[1])]),
                     }
                 )

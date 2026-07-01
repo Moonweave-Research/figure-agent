@@ -84,6 +84,8 @@ def test_undeclared_column_rule_is_reported() -> None:
 
 
 def test_declared_vertical_rule_suppresses_candidate() -> None:
+    # B1: the declared boundary must use the SAME key form the rest of the pipeline
+    # uses (check_text_boundary_clash + real spec.yaml): x_pdf_cm / y_range_pdf_cm.
     tex = r"\draw[cGray] (4.62,1.0) -- (4.62,6.0);"
     spec = {
         "text_boundary_checks": [
@@ -91,8 +93,27 @@ def test_declared_vertical_rule_suppresses_candidate() -> None:
                 "id": "de-rule",
                 "kind": "vertical_line",
                 "role": "column_rule",
-                "pdf_cm_x": 4.62,
-                "pdf_cm_y_range": [1.0, 6.0],
+                "x_pdf_cm": 4.62,
+                "y_range_pdf_cm": [1.0, 6.0],
+            }
+        ]
+    }
+
+    assert detect_undeclared_geometry(tex, [], spec) == []
+
+
+def test_declared_horizontal_rule_suppresses_candidate() -> None:
+    # B1: y_pdf_cm / x_range_pdf_cm must be recognized (they were read as the
+    # nonexistent pdf_cm_y / pdf_cm_x_range, so a declared rule was re-flagged).
+    tex = r"\draw[cGray] (1.0,2.0) -- (6.0,2.0);"
+    spec = {
+        "text_boundary_checks": [
+            {
+                "id": "de-hrule",
+                "kind": "horizontal_line",
+                "role": "axis_rule",
+                "y_pdf_cm": 2.0,
+                "x_range_pdf_cm": [1.0, 6.0],
             }
         ]
     }
