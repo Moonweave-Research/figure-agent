@@ -296,17 +296,42 @@ def _export_step(
                     "stale_reason": reason,
                 },
             )
+        release_decision = status_result.get("release_decision")
+        if (
+            isinstance(release_decision, dict)
+            and release_decision.get("state") == "non_release_requested"
+        ):
+            return _step(
+                step_id="export",
+                state="blocked",
+                reason=(
+                    "human decision record routes away from release-state mutation: "
+                    f"{release_decision.get('route', 'non_release')}"
+                ),
+                evidence={
+                    "export_state": export_state,
+                    "release_decision": release_decision,
+                    "golden_acceptance": golden_acceptance,
+                },
+            )
+        evidence = {
+            "export_state": export_state,
+            "golden_acceptance": golden_acceptance,
+        }
+        if (
+            isinstance(release_decision, dict)
+            and release_decision.get("state") == "acceptance_authorized"
+        ):
+            evidence["release_operation"] = release_decision.get("release_operation")
+        else:
+            evidence["approval_command"] = f"/fig_export {name} --force-golden"
         return _step(
             step_id="export",
             state="blocked",
             reason="tracked golden export requires deliberate manual approval"
             if reason == "missing"
             else f"tracked golden export acceptance is invalid: {reason}",
-            evidence={
-                "export_state": export_state,
-                "approval_command": f"/fig_export {name} --force-golden",
-                "golden_acceptance": golden_acceptance,
-            },
+            evidence=evidence,
         )
     return _step(
         step_id="export",
@@ -622,6 +647,7 @@ def compute_closeout(
             "publication_gate_state": status_result.get("publication_gate_state"),
             "publication_gate_failures": status_result.get("publication_gate_failures", []),
             "next": status_result.get("next"),
+            "release_decision": status_result.get("release_decision"),
         },
         "evidence_index_path": "build/evidence/evidence_index.json",
         "candidate_apply": _candidate_apply_summary(example_dir),
