@@ -15,10 +15,12 @@ DECISION_KINDS = frozenset(
     {
         "accept_current_generated_export",
         "declare_final_artifact",
+        "declare_separate_final_artifact",
         "reject_current_artifact",
         "defer_for_dogfood",
         "keep_current_style",
         "request_bounded_tikz_polish",
+        "request_bounded_tikz_source_polish",
         "request_restrained_tikz_refinement",
         "request_editorial_redesign_benchmark",
         "request_svg_polish_candidate_evidence",
@@ -34,6 +36,7 @@ RELEASE_DECISION_KINDS = frozenset(
     {
         "accept_current_generated_export",
         "declare_final_artifact",
+        "declare_separate_final_artifact",
         "reject_current_artifact",
         "defer_for_dogfood",
     }
@@ -49,6 +52,7 @@ STYLE_CHOICE_DECISION_KINDS = frozenset(
 LEGACY_STYLE_DECISION_KINDS = frozenset(
     {
         "request_bounded_tikz_polish",
+        "request_bounded_tikz_source_polish",
         "request_svg_polish_candidate_evidence",
         "request_full_style_redesign",
     }
@@ -151,6 +155,8 @@ def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
         raise HumanDecisionRecordError(f"fixture_invalid:{fixture}") from exc
 
     packet_schema = _required_string(record, "packet_schema")
+    packet_path = _required_string(record, "packet_path")
+    packet_recommendation = _required_string(record, "packet_recommendation")
     if packet_schema not in PACKET_SCHEMAS:
         raise HumanDecisionRecordError(f"packet_schema_unknown:{packet_schema}")
     packet_timestamp = _optional_string(record, "packet_timestamp")
@@ -197,6 +203,8 @@ def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
         "schema": SCHEMA,
         "fixture": fixture,
         "packet_schema": packet_schema,
+        "packet_path": packet_path,
+        "packet_recommendation": packet_recommendation,
         "packet_timestamp": packet_timestamp,
         "queue_run_id": queue_run_id,
         "decision_kind": decision_kind,
