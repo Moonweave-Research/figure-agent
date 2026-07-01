@@ -174,4 +174,3 @@ def test_fig3_acceptance_defer_record_matches_packet_without_release_mutation() 
     assert "final artifact" in record["follow_up"]["implementation_slice"]
     assert "mutate source" in record["follow_up"]["implementation_slice"]
     assert packet["choices"][1]["state_mutation"] == []
-
