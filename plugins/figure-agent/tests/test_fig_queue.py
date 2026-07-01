@@ -2316,6 +2316,7 @@ def test_human_decision_digest_groups_queue_packets_without_mutation(
         "force_golden_fixture",
         "fig5_actuation_mechanism",
         "needs_svg_evidence",
+        "needs_positive_svg_evidence",
     ]:
         _write_fixture(tmp_path, name)
 
@@ -2339,6 +2340,24 @@ def test_human_decision_digest_groups_queue_packets_without_mutation(
                     "can_start_svg_polish": False,
                     "next_action": "refresh_svg_polish_handoff",
                     "blocking_items": [{"source": "svg_polish_manifest"}],
+                },
+            )
+        if name == "needs_positive_svg_evidence":
+            return _summary(
+                name,
+                action="polish_handoff_stop",
+                stop_boundary=None,
+                first_blocker="none",
+                svg_polish_gate={
+                    "state": "ready",
+                    "can_start_svg_polish": True,
+                    "next_action": "start_svg_polish_recipe",
+                },
+                svg_polish_readiness={
+                    "can_start_svg_polish": True,
+                    "recommended_path": "ready_for_svg_polish",
+                    "next_action": "start_svg_polish_recipe",
+                    "blocking_items": [],
                 },
             )
         return _summary(
@@ -2381,9 +2400,10 @@ def test_human_decision_digest_groups_queue_packets_without_mutation(
     assert groups["redesign_benchmark_candidates"]["rows"][0]["fixture"] == (
         "force_golden_fixture"
     )
-    assert groups["svg_polish_evidence_missing"]["rows"][0]["fixture"] == (
-        "needs_svg_evidence"
-    )
+    assert [row["fixture"] for row in groups["svg_polish_evidence_missing"]["rows"]] == [
+        "needs_positive_svg_evidence",
+        "needs_svg_evidence",
+    ]
     assert groups["dirty_stale_fixtures_excluded"]["rows"][0]["fixture"] == (
         "fig5_actuation_mechanism"
     )

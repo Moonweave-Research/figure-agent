@@ -1102,7 +1102,18 @@ def _polish_blocker_detail(row: dict[str, Any], *, mode: str) -> dict[str, Any] 
     recommended_path = row.get("svg_polish_recommended_path")
     next_action = row.get("svg_polish_next_action")
     can_start = row.get("can_start_svg_polish")
-    if can_start is True or recommended_path == "ready_for_svg_polish":
+    positive_evidence = row.get("svg_polish_positive_evidence")
+    has_positive_evidence = isinstance(positive_evidence, list) and any(
+        isinstance(item, str) and item for item in positive_evidence
+    )
+    if (
+        (can_start is True or recommended_path == "ready_for_svg_polish")
+        and not has_positive_evidence
+    ):
+        reason = "ready_for_svg_polish_positive_evidence_missing"
+        upstream_packet = "style_direction_packet"
+        next_step = "Collect positive ready_for_svg_polish evidence before opening SVG polish."
+    elif can_start is True or recommended_path == "ready_for_svg_polish":
         reason = "ready_for_svg_polish"
         upstream_packet = "svg_polish_handoff"
         next_step = "Start the explicit SVG polish handoff; keep semantic/release gates intact."
@@ -1556,7 +1567,24 @@ def _digest_group_key(row: dict[str, Any], *, targeted_fixtures: set[str]) -> st
     if polish_reason in {
         "svg_polish_artifact_missing_or_stale",
         "ready_for_svg_polish_evidence_missing",
+        "ready_for_svg_polish_positive_evidence_missing",
     }:
+        return "svg_polish_evidence_missing"
+    evidence_packet = row.get("svg_polish_evidence_packet")
+    if (
+        isinstance(evidence_packet, dict)
+        and evidence_packet.get("state") == "not_qualified"
+        and (
+            row.get("svg_polish_gate_state") is not None
+            or row.get("svg_polish_recommended_path") is not None
+            or row.get("can_start_svg_polish") is not None
+        )
+        and evidence_packet.get("missing_prerequisite_reason")
+        in {
+            "ready_for_svg_polish_evidence_missing",
+            "ready_for_svg_polish_positive_evidence_missing",
+        }
+    ):
         return "svg_polish_evidence_missing"
     if polish_reason == "continue_tikz_recommended":
         return "bounded_tikz_polish_candidates"
