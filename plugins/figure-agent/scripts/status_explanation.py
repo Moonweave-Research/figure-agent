@@ -67,6 +67,7 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     stage = status.get("stage")
     release_ready = status.get("release_ready")
     final_ready = status.get("final_ready")
+    release_decision = status.get("release_decision")
 
     plugin_state: list[dict[str, Any]] = []
     fixture_freshness: list[dict[str, Any]] = []
@@ -200,13 +201,47 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
         message="fixture is not accepted; QUALITY_AUDIT.md and accepted state need human action.",
         manual=True,
     )
-    _append_if(
-        human_blockers,
+    release_decision_state = (
+        release_decision.get("state") if isinstance(release_decision, Mapping) else None
+    )
+    release_decision_applies = (
         isinstance(stage, int)
         and stage >= 4
         and acceptance == "NOT_DECLARED"
         and release_ready is False
-        and final_ready is False,
+        and final_ready is False
+    )
+    _append_if(
+        human_blockers,
+        release_decision_applies and release_decision_state == "acceptance_authorized",
+        code="release_acceptance_decision_recorded",
+        category=HUMAN_BLOCKER,
+        message=(
+            "valid human decision record exists; status is read-only and release-state "
+            "mutation still requires the explicit release operation."
+        ),
+        next_command=release_decision.get("release_operation")
+        if isinstance(release_decision, Mapping)
+        else None,
+        manual=True,
+    )
+    _append_if(
+        human_blockers,
+        release_decision_applies and release_decision_state == "non_release_requested",
+        code=f"release_deferred_for_{release_decision.get('route', 'non_release')}"
+        if isinstance(release_decision, Mapping)
+        else "release_deferred_for_non_release",
+        category=HUMAN_BLOCKER,
+        message=(
+            "valid human decision record routes this fixture to non-release work; "
+            "release acceptance remains blocked."
+        ),
+        manual=True,
+    )
+    _append_if(
+        human_blockers,
+        release_decision_applies and release_decision_state != "acceptance_authorized"
+        and release_decision_state != "non_release_requested",
         code="acceptance_not_declared",
         category=HUMAN_BLOCKER,
         message=(
