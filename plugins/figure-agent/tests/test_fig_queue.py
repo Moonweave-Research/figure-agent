@@ -24,6 +24,7 @@ def _summary(
     blocking_source: str | None = None,
     svg_polish_gate: dict[str, Any] | None = None,
     svg_polish_readiness: dict[str, Any] | None = None,
+    closeout: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     summary = {
         "fixture": name,
@@ -58,6 +59,8 @@ def _summary(
         summary["svg_polish_gate"] = svg_polish_gate
     if svg_polish_readiness is not None:
         summary["svg_polish_readiness"] = svg_polish_readiness
+    if closeout is not None:
+        summary["closeout"] = closeout
     return summary
 
 
@@ -284,6 +287,46 @@ def test_build_queue_json_rows_and_summaries(
         "template_style",
     ]
     assert report["command_plan"] == {"executable": 0, "blocked": 2, "complete": 0}
+
+
+def test_release_row_preserves_closeout_complete_without_treating_it_as_acceptance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        assert mode == "release"
+        return _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="accepted_or_final_ready_required",
+            first_blocker="acceptance_not_declared",
+            closeout={
+                "closeout_complete": True,
+                "next_action": "closeout complete",
+                "blocking_step_ids": [],
+            },
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="acceptance regression",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["closeout_complete"] is True
+    assert row["closeout_next_action"] == "closeout complete"
+    assert row["first_blocker"] == "acceptance_not_declared"
+    assert row["acceptance_state"] == "NOT_DECLARED"
+    packet = row["decision_packet"]
+    assert packet["recommended_choice_id"] == "accept_current_generated_export"
+    assert "closeout:complete_not_acceptance" in packet["evidence_refs"]
+    assert packet["current_state"]["closeout_complete"] is True
+    assert packet["current_state"]["acceptance_state"] == "NOT_DECLARED"
 
 
 def test_bottleneck_report_classifies_five_operator_buckets() -> None:

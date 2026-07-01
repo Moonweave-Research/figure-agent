@@ -2157,6 +2157,7 @@ def test_polish_mode_invalid_polished_svg_overrides_ready_checkpoint(
         "source": "critique.editorial_art_direction",
         "worst_verdict": "pass",
         "polish_recommended_path": "ready_for_svg_polish",
+        "positive_evidence": ["ready route verified by editorial checkpoint"],
     }
     _write_loop_run(
         tmp_path,
@@ -2213,6 +2214,7 @@ def test_polish_mode_missing_polished_svg_with_ready_checkpoint_starts_recipe(
         "source": "critique.editorial_art_direction",
         "worst_verdict": "pass",
         "polish_recommended_path": "ready_for_svg_polish",
+        "positive_evidence": ["ready route verified by editorial checkpoint"],
     }
     _write_loop_run(
         tmp_path,
@@ -2309,6 +2311,7 @@ def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(
         "source": "critique.editorial_art_direction",
         "worst_verdict": "pass",
         "polish_recommended_path": "ready_for_svg_polish",
+        "positive_evidence": ["ready route verified by editorial checkpoint"],
     }
     _write_loop_run(
         tmp_path,

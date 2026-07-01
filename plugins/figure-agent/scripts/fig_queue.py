@@ -216,6 +216,20 @@ def _row_from_summary(
     guidance = summary.get("operator_guidance")
     if isinstance(guidance, dict):
         row["operator_guidance"] = guidance
+    closeout = summary.get("closeout")
+    if isinstance(closeout, dict):
+        if "closeout_complete" in closeout:
+            row["closeout_complete"] = closeout.get("closeout_complete") is True
+        next_action = closeout.get("next_action")
+        if isinstance(next_action, str) and next_action:
+            row["closeout_next_action"] = next_action
+        blocking_step_ids = closeout.get("blocking_step_ids")
+        if isinstance(blocking_step_ids, list):
+            row["closeout_blocking_step_ids"] = [
+                step_id
+                for step_id in blocking_step_ids
+                if isinstance(step_id, str) and step_id
+            ]
     row.update(_svg_polish_fields(summary, mode=mode))
     fixture = row.get("fixture")
     if isinstance(fixture, str) and fixture:
@@ -706,6 +720,8 @@ def _decision_packet_evidence_refs(row: dict[str, Any]) -> list[str]:
         value = row.get(key)
         if isinstance(value, str) and value and value != "-":
             refs.append(f"{key}:{value}")
+    if row.get("closeout_complete") is True:
+        refs.append("closeout:complete_not_acceptance")
     return refs
 
 
@@ -813,7 +829,7 @@ def _human_decision_packet(row: dict[str, Any], *, actor: str) -> dict[str, Any]
 
 
 def _release_current_state(row: dict[str, Any]) -> dict[str, Any]:
-    return {
+    state = {
         "render_state": row.get("render_state"),
         "critique_state": row.get("critique_state"),
         "export_state": row.get("export_state"),
@@ -825,6 +841,11 @@ def _release_current_state(row: dict[str, Any]) -> dict[str, Any]:
         "publication_gate_failures": row.get("publication_gate_failures"),
         "release_ready": row.get("release_ready"),
     }
+    if "closeout_complete" in row:
+        state["closeout_complete"] = row.get("closeout_complete")
+    if "closeout_next_action" in row:
+        state["closeout_next_action"] = row.get("closeout_next_action")
+    return state
 
 
 def _release_decision_choices(row: dict[str, Any], *, force_golden: bool) -> list[dict[str, Any]]:
