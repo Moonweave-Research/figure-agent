@@ -197,6 +197,10 @@ def _acceptance_hash_diagnostics(
     render_manifest: dict[str, Any],
 ) -> list[dict[str, str]]:
     diagnostics: list[dict[str, str]] = []
+    if acceptance.get("schema") != "figure-agent.candidate-acceptance.v1":
+        diagnostics.append(
+            _diagnostic("acceptance_schema_invalid", "acceptance schema is not candidate acceptance")
+        )
     if acceptance.get("decision") != "accept":
         diagnostics.append(
             _diagnostic("acceptance_not_accepted", "acceptance decision is not accept")
