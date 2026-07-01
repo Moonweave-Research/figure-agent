@@ -2,6 +2,8 @@
   "schema": "figure-agent.human-decision-record.v1",
   "fixture": "fig3_trapping_concept",
   "packet_schema": "figure-agent.style-direction-packet.v1",
+  "packet_path": "docs/decision-packets/2026-07-01-wave-g/fig3_trapping_concept_style_direction.json",
+  "packet_recommendation": "keep_current_style",
   "queue_run_id": "wave-g-fig3-style-benchmark-2026-07-01",
   "decision_kind": "keep_current_style",
   "agent_recommendation": "Keep the current restrained two-panel mechanism style as the benchmark unless a future candidate beats it without increasing semantic, source, SVG, release, export, or golden risk.",

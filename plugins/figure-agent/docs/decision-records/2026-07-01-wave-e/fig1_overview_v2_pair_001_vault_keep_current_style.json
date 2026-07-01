@@ -2,6 +2,8 @@
   "schema": "figure-agent.human-decision-record.v1",
   "fixture": "fig1_overview_v2_pair_001_vault",
   "packet_schema": "figure-agent.style-direction-packet.v1",
+  "packet_path": "docs/style-benchmark-packs/2026-06-30-wave-c/fig1_overview_v2_pair_001_vault.json",
+  "packet_recommendation": "keep_current_style",
   "queue_run_id": "wave-e-style-choice-contract-2026-07-01",
   "decision_kind": "keep_current_style",
   "agent_recommendation": "Keep the current restrained editorial style unless a future candidate beats the benchmark without increasing semantic or release risk.",

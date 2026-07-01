@@ -22,6 +22,8 @@ def _record(**overrides: object) -> dict[str, object]:
         "schema": SCHEMA,
         "fixture": "fig3_resistance_mechanism",
         "packet_schema": RELEASE_DECISION_PACKET_SCHEMA,
+        "packet_path": "docs/decision-packets/test-release-packet.json",
+        "packet_recommendation": "accept_current_generated_export",
         "queue_run_id": "decision-dogfood-001",
         "decision_kind": "accept_current_generated_export",
         "agent_recommendation": "Record explicit acceptance only after human review.",
