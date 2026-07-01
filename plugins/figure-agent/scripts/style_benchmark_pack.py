@@ -180,6 +180,10 @@ def _validate_candidate_slots(payload: dict[str, Any]) -> list[dict[str, Any]]:
             "mutation_boundary": raw.get("mutation_boundary"),
             "entry_condition": raw.get("entry_condition"),
             "acceptance_rule": raw.get("acceptance_rule"),
+            "can_improve": raw.get("can_improve"),
+            "semantic_changes_forbidden": raw.get("semantic_changes_forbidden"),
+            "evidence_to_prove_better": raw.get("evidence_to_prove_better"),
+            "human_only_question": raw.get("human_only_question"),
         }
         if not all(isinstance(value, str) and value.strip() for value in values.values()):
             raise StyleBenchmarkPackError("candidate_family_slots_invalid")
