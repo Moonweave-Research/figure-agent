@@ -357,31 +357,22 @@ def _design_direction_fields(fixture: str, row: dict[str, Any]) -> dict[str, Any
         "design_direction_packet_schema": packet.get("schema"),
         "design_direction_next_agent_action": packet.get("next_agent_action"),
     }
-    summary: dict[str, Any] = {
-        "schema": packet.get("schema"),
-        "state": packet.get("state"),
-        "next_agent_action": packet.get("next_agent_action"),
-        "mutation_boundary": packet.get("mutation_boundary"),
-    }
-    for packet_key, field_key in (
-        ("default_recommendation", "design_direction_default"),
-        ("human_question", "design_direction_human_question"),
-    ):
-        value = packet.get(packet_key)
-        if value is not None:
-            fields[field_key] = value
-            summary[packet_key] = value
-    for packet_key, field_key in (
-        ("alternatives", "design_direction_alternatives"),
-        ("evidence_refs", "design_direction_evidence_refs"),
-    ):
-        value = packet.get(packet_key)
-        if isinstance(value, list):
-            fields[field_key] = value
-            summary[packet_key] = value
-    mutation_boundary = packet.get("mutation_boundary")
-    if isinstance(mutation_boundary, str) and mutation_boundary:
-        fields["design_direction_mutation_boundary"] = mutation_boundary
+    if packet.get("default_recommendation") is not None:
+        fields["design_direction_default"] = packet.get("default_recommendation")
+    if packet.get("human_question") is not None:
+        fields["design_direction_human_question"] = packet.get("human_question")
+    alternatives = packet.get("alternatives")
+    if isinstance(alternatives, list):
+        fields["design_direction_alternatives"] = [
+            item for item in alternatives if isinstance(item, str) and item
+        ]
+    if packet.get("mutation_boundary") is not None:
+        fields["design_direction_mutation_boundary"] = packet.get("mutation_boundary")
+    evidence_refs = packet.get("evidence_refs")
+    if isinstance(evidence_refs, list):
+        fields["design_direction_evidence_refs"] = [
+            item for item in evidence_refs if isinstance(item, str) and item
+        ]
     blocker_reasons = packet.get("blocking_reasons")
     if isinstance(blocker_reasons, list) and blocker_reasons:
         fields["design_direction_blocker_reason"] = blocker_reasons[0]
@@ -1413,6 +1404,12 @@ _DIGEST_NEXT_ACTIONS = {
 
 def _packet_recommendations(row: dict[str, Any]) -> list[dict[str, str]]:
     recommendations: list[dict[str, str]] = []
+    design_schema = row.get("design_direction_packet_schema")
+    design_recommendation = row.get("design_direction_default")
+    if isinstance(design_schema, str) and isinstance(design_recommendation, str):
+        recommendations.append(
+            {"packet": design_schema, "recommendation": design_recommendation}
+        )
     for key in ("decision_packet", "style_direction_packet"):
         packet = row.get(key)
         if not isinstance(packet, dict):
@@ -1517,6 +1514,11 @@ def _digest_group_key(row: dict[str, Any], *, targeted_fixtures: set[str]) -> st
         if recommended == "defer_for_visual_dogfood":
             return "redesign_benchmark_candidates"
         return "accept_current_candidates"
+    design_state = row.get("design_direction_state")
+    if design_state == "ready_for_human_choice":
+        return "accept_current_candidates"
+    if design_state in {"blocked_missing_style_pack", "blocked_missing_comparison"}:
+        return "redesign_benchmark_candidates"
     if row.get("svg_polish_gate_state") == "blocked":
         return "svg_polish_evidence_missing"
     return None
@@ -1534,6 +1536,11 @@ def _digest_row(row: dict[str, Any], *, group: str) -> dict[str, Any]:
         "one_line_risk": _digest_one_line_risk(row),
         "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
         "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
+        "design_direction_state": row.get("design_direction_state"),
+        "design_direction_human_question": row.get("design_direction_human_question"),
+        "design_direction_alternatives": row.get("design_direction_alternatives"),
+        "design_direction_mutation_boundary": row.get("design_direction_mutation_boundary"),
+        "design_direction_evidence_refs": row.get("design_direction_evidence_refs"),
         "next_action": _DIGEST_NEXT_ACTIONS[group],
     }
 

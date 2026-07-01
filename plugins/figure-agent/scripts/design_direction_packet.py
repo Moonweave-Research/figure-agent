@@ -34,26 +34,23 @@ def _is_present(payload: dict[str, object] | None) -> bool:
     return isinstance(payload, dict) and payload.get("state") == "present"
 
 
-
-
 def _evidence_refs(
-    style_pack: dict[str, object],
-    comparison: dict[str, object],
+    style_pack: dict[str, object], comparison: dict[str, object]
 ) -> list[str]:
     refs: list[str] = []
-    for label, payload in (
+    for prefix, payload in (
         ("style_benchmark_pack", style_pack),
         ("style_benchmark_comparison", comparison),
     ):
         path = payload.get("path")
         if isinstance(path, str) and path:
-            refs.append(f"{label}:{path}")
-    linked = style_pack.get("linked_files")
-    if isinstance(linked, dict):
-        for key in ("benchmark_contract", "aesthetic_intent"):
-            path = linked.get(key)
+            refs.append(f"{prefix}:{path}")
+    linked_files = style_pack.get("linked_files")
+    if isinstance(linked_files, dict):
+        for label in ("benchmark_contract", "aesthetic_intent"):
+            path = linked_files.get(label)
             if isinstance(path, str) and path:
-                refs.append(f"{key}:{path}")
+                refs.append(f"{label}:{path}")
     return refs
 
 
