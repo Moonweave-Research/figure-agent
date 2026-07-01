@@ -64,6 +64,14 @@ _NEXT_4_ACCEPTANCE_NOT_DECLARED = (
     " /fig_loop <name>, or make an explicit human acceptance/final-artifact"
     " decision before release."
 )
+_NEXT_4_ACCEPTANCE_AUTHORIZED = (
+    "valid human decision record exists; release-state mutation still requires "
+    "explicit operation: <release_operation>."
+)
+_NEXT_4_NON_RELEASE_DECISION = (
+    "valid human decision record requests <route>; keep release blocked and route "
+    "to non-release work before acceptance."
+)
 _NEXT_4_CRITIQUE_REQUIRED = (
     "run /fig_critique <name> as a final review of the current rendered candidate"
     " before treating exports as final;"
@@ -142,6 +150,7 @@ def _select_stage_4_template(
     partial: bool,
     final_artifact: Mapping[str, object] | None,
     accepted: bool | None,
+    release_decision: Mapping[str, object] | None,
 ) -> str:
     is_stale = source_stale or export_content_stale
     spec_next_template = _spec_next_template(notes)
@@ -181,6 +190,18 @@ def _select_stage_4_template(
     if accepted is False:
         return _NEXT_4_NOT_ACCEPTED
     if accepted is None:
+        if release_decision is not None:
+            state = release_decision.get("state")
+            if state == "acceptance_authorized":
+                return _NEXT_4_ACCEPTANCE_AUTHORIZED.replace(
+                    "<release_operation>",
+                    str(release_decision.get("release_operation") or "inspect status"),
+                )
+            if state == "non_release_requested":
+                return _NEXT_4_NON_RELEASE_DECISION.replace(
+                    "<route>",
+                    str(release_decision.get("route") or "non-release work"),
+                )
         return _NEXT_4_ACCEPTANCE_NOT_DECLARED
     return _NEXT_4
 
@@ -198,6 +219,7 @@ def select_next_hint(
     partial: bool = False,
     final_artifact: Mapping[str, object] | None = None,
     accepted: bool | None = None,
+    release_decision: Mapping[str, object] | None = None,
 ) -> str:
     if stage == 0:
         template = _NEXT_0
@@ -233,6 +255,7 @@ def select_next_hint(
             partial=partial,
             final_artifact=final_artifact,
             accepted=accepted,
+            release_decision=release_decision,
         )
     else:
         raise ValueError(f"unsupported status stage: {stage}")
