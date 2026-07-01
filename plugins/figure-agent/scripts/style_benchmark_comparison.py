@@ -15,6 +15,9 @@ SCHEMA = "figure-agent.style-benchmark-comparison-packet.v1"
 DEFAULT_COMPARISON_SET = "2026-07-01-wave-f"
 REQUIRED_CANDIDATE_FAMILIES = style_benchmark_pack.REQUIRED_CANDIDATE_SLOTS
 MUTATION_BOUNDARIES = style_benchmark_pack.MUTATION_BOUNDARIES
+FAMILY_DETAIL_LIST_KEYS = style_benchmark_pack.FAMILY_DETAIL_LIST_KEYS
+FAMILY_DETAIL_STRING_KEYS = style_benchmark_pack.FAMILY_DETAIL_STRING_KEYS
+
 RESULTS = frozenset(
     {
         "winner_candidate",
@@ -130,6 +133,16 @@ def _validate_linked_decision(
     return record
 
 
+def _validate_family_detail_fields(raw: dict[str, Any], *, label: str) -> dict[str, Any]:
+    details: dict[str, Any] = {}
+    for key in FAMILY_DETAIL_LIST_KEYS:
+        details[key] = _string_list(raw, key)
+    for key in FAMILY_DETAIL_STRING_KEYS:
+        value = _required_string(raw, key)
+        details[key] = value
+    return details
+
+
 def _validate_candidates(
     payload: dict[str, Any],
     pack: dict[str, Any],
@@ -173,6 +186,7 @@ def _validate_candidates(
             prerequisites = "\n".join(_string_list(candidate, "prerequisite_evidence"))
             if "ready_for_svg_polish" not in prerequisites:
                 raise StyleBenchmarkComparisonError("svg_polish_prerequisite_missing")
+        details = _validate_family_detail_fields(candidate, label=f"candidate_{candidate_id}")
         normalized.append(
             {
                 "id": candidate_id,
@@ -183,6 +197,7 @@ def _validate_candidates(
                 "comparison_basis": _string_list(candidate, "comparison_basis"),
                 "failure_modes": _string_list(candidate, "failure_modes"),
                 "prerequisite_evidence": _string_list(candidate, "prerequisite_evidence"),
+                **details,
             }
         )
     return normalized
@@ -257,6 +272,7 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
     candidate_results: dict[str, str] = {}
     candidate_mutation_boundaries: dict[str, str] = {}
     candidate_handoff_states: dict[str, str] = {}
+    candidate_family_details: dict[str, dict[str, Any]] = {}
     for candidate in candidate_list:
         if not isinstance(candidate, dict):
             continue
@@ -269,6 +285,18 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
         boundary = candidate.get("mutation_boundary")
         if isinstance(boundary, str) and boundary:
             candidate_mutation_boundaries[candidate_id] = boundary
+        detail = {
+            key: candidate.get(key)
+            for key in (
+                "can_improve",
+                "forbidden_semantic_changes",
+                "proof_evidence",
+                "human_only_question",
+            )
+            if candidate.get(key)
+        }
+        if detail:
+            candidate_family_details[candidate_id] = detail
         if candidate_id == "editorial_redesign" and result in {
             "eligible",
             "blocked_requires_separate_approval",
@@ -295,6 +323,7 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
         "candidate_results": candidate_results,
         "candidate_mutation_boundaries": candidate_mutation_boundaries,
         "candidate_handoff_states": candidate_handoff_states,
+        "candidate_family_details": candidate_family_details,
         "top_human_only_questions": [
             item for item in question_list if isinstance(item, str) and item
         ][:3],

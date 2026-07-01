@@ -27,6 +27,13 @@ MUTATION_BOUNDARIES = frozenset(
         "svg_artifact_mutation_requires_separate_approval",
     }
 )
+FAMILY_DETAIL_LIST_KEYS = (
+    "can_improve",
+    "forbidden_semantic_changes",
+    "proof_evidence",
+)
+FAMILY_DETAIL_STRING_KEYS = ("human_only_question",)
+
 SAFETY_FALSE_KEYS = frozenset(
     {
         "source_mutation",
@@ -134,11 +141,28 @@ def _validate_linked_files(
     return linked, benchmark, aesthetic
 
 
-def _validate_candidate_slots(payload: dict[str, Any]) -> list[dict[str, str]]:
+def _validate_family_detail_fields(raw: dict[str, Any], *, label: str) -> dict[str, Any]:
+    details: dict[str, Any] = {}
+    for key in FAMILY_DETAIL_LIST_KEYS:
+        value = raw.get(key)
+        if not isinstance(value, list) or not all(
+            isinstance(item, str) and item.strip() for item in value
+        ):
+            raise StyleBenchmarkPackError(f"{label}_{key}_invalid")
+        details[key] = list(value)
+    for key in FAMILY_DETAIL_STRING_KEYS:
+        value = raw.get(key)
+        if not isinstance(value, str) or not value.strip():
+            raise StyleBenchmarkPackError(f"{label}_{key}_invalid")
+        details[key] = value
+    return details
+
+
+def _validate_candidate_slots(payload: dict[str, Any]) -> list[dict[str, Any]]:
     raw_slots = payload.get("candidate_family_slots")
     if not isinstance(raw_slots, list):
         raise StyleBenchmarkPackError("candidate_family_slots_invalid")
-    slots: list[dict[str, str]] = []
+    slots: list[dict[str, Any]] = []
     ids: list[str] = []
     for raw in raw_slots:
         if not isinstance(raw, dict):
@@ -152,7 +176,10 @@ def _validate_candidate_slots(payload: dict[str, Any]) -> list[dict[str, str]]:
         }
         if not all(isinstance(value, str) and value.strip() for value in values.values()):
             raise StyleBenchmarkPackError("candidate_family_slots_invalid")
-        slot = {key: value for key, value in values.items() if isinstance(value, str)}
+        slot: dict[str, Any] = {
+            key: value for key, value in values.items() if isinstance(value, str)
+        }
+        slot.update(_validate_family_detail_fields(raw, label=f"candidate_{slot['id']}"))
         if slot["mutation_boundary"] not in MUTATION_BOUNDARIES:
             raise StyleBenchmarkPackError("mutation_boundary_invalid")
         ids.append(slot["id"])
@@ -304,6 +331,7 @@ def load_pack(
         "target_style_class": raw["target_style_class"],
         "default_recommendation": raw["default_recommendation"],
         "candidate_family_slots": slots,
+        "forbidden_semantic_changes": forbidden,
         "measurable_checks": checks,
         "human_only_questions": human_only_questions,
         "candidate_rejection_rules": candidate_rejection_rules,
@@ -334,6 +362,7 @@ def summarize_pack(pack: dict[str, Any]) -> dict[str, Any]:
     slots = pack.get("candidate_family_slots")
     candidate_slot_ids: list[str] = []
     candidate_mutation_boundaries: dict[str, str] = {}
+    candidate_family_details: dict[str, dict[str, Any]] = {}
     if isinstance(slots, list):
         for slot in slots:
             if not isinstance(slot, dict):
@@ -344,6 +373,18 @@ def summarize_pack(pack: dict[str, Any]) -> dict[str, Any]:
                 candidate_slot_ids.append(slot_id)
                 if isinstance(boundary, str) and boundary:
                     candidate_mutation_boundaries[slot_id] = boundary
+                detail = {
+                    key: slot.get(key)
+                    for key in (
+                        "can_improve",
+                        "forbidden_semantic_changes",
+                        "proof_evidence",
+                        "human_only_question",
+                    )
+                    if slot.get(key)
+                }
+                if detail:
+                    candidate_family_details[slot_id] = detail
 
     questions = pack.get("human_only_questions")
     top_questions = [
@@ -372,6 +413,7 @@ def summarize_pack(pack: dict[str, Any]) -> dict[str, Any]:
             "default_recommendation": pack.get("default_recommendation"),
             "candidate_slot_ids": candidate_slot_ids,
             "candidate_mutation_boundaries": candidate_mutation_boundaries,
+            "candidate_family_details": candidate_family_details,
             "safety_boundary": safety_boundary,
             "linked_files": linked_summary,
             "top_human_only_questions": top_questions,
