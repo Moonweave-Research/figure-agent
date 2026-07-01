@@ -31,6 +31,18 @@ def _style_pack(**overrides: object) -> dict[str, object]:
             "aesthetic_intent": "examples/fixture/aesthetic_intent.yaml",
             "source_decision_packet": "docs/decision-packets/wave/fixture.json",
         },
+        "candidate_slot_ids": [
+            "current_style",
+            "restrained_tikz_refinement",
+            "editorial_redesign",
+            "svg_polish_handoff",
+        ],
+        "candidate_mutation_boundaries": {
+            "current_style": "no_source_mutation",
+            "restrained_tikz_refinement": "source_mutation_requires_separate_approval",
+            "editorial_redesign": "source_mutation_requires_separate_approval",
+            "svg_polish_handoff": "svg_artifact_mutation_requires_separate_approval",
+        },
     }
     pack.update(overrides)
     return pack
@@ -41,6 +53,12 @@ def _comparison(**overrides: object) -> dict[str, object]:
         "state": "present",
         "path": "docs/style-benchmark-comparisons/wave/fixture.json",
         "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
+        "candidate_mutation_boundaries": {
+            "current_style": "no_source_mutation",
+            "restrained_tikz_refinement": "source_mutation_requires_separate_approval",
+            "editorial_redesign": "source_mutation_requires_separate_approval",
+            "svg_polish_handoff": "svg_artifact_mutation_requires_separate_approval",
+        },
     }
     comparison.update(overrides)
     return comparison
@@ -62,11 +80,17 @@ def test_ready_packet_summarizes_recommendation_and_human_choice_boundary() -> N
         "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
         "alternatives": [
             "current_style",
-            "bounded_tikz_refinement",
+            "restrained_tikz_refinement",
             "editorial_redesign",
             "svg_polish_handoff",
         ],
         "mutation_boundary": "no_source_mutation",
+        "alternative_mutation_boundaries": {
+            "current_style": "no_source_mutation",
+            "restrained_tikz_refinement": "source_mutation_requires_separate_approval",
+            "editorial_redesign": "source_mutation_requires_separate_approval",
+            "svg_polish_handoff": "svg_artifact_mutation_requires_separate_approval",
+        },
         "human_question": (
             "I recommend keeping the current style unless a candidate beats the "
             "benchmark. Which direction should I prepare next?"

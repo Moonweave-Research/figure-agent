@@ -366,6 +366,13 @@ def _design_direction_fields(fixture: str, row: dict[str, Any]) -> dict[str, Any
         ]
     if packet.get("mutation_boundary") is not None:
         fields["design_direction_mutation_boundary"] = packet.get("mutation_boundary")
+    alternative_boundaries = packet.get("alternative_mutation_boundaries")
+    if isinstance(alternative_boundaries, dict):
+        fields["design_direction_alternative_mutation_boundaries"] = {
+            key: value
+            for key, value in alternative_boundaries.items()
+            if isinstance(key, str) and isinstance(value, str)
+        }
     if packet.get("human_question") is not None:
         fields["design_direction_human_question"] = packet.get("human_question")
     evidence_refs = packet.get("evidence_refs")
@@ -381,11 +388,7 @@ def _design_direction_fields(fixture: str, row: dict[str, Any]) -> dict[str, Any
         "blocked_missing_positive_readiness",
         "not_qualified",
     }:
-        fields["design_direction_blocker_reason"] = "svg_polish_evidence_missing"
-        summary["blocking_reasons"] = ["svg_polish_evidence_missing"]
-    fields["design_direction_summary"] = {
-        key: value for key, value in summary.items() if value is not None
-    }
+        fields.setdefault("design_direction_blocker_reason", "svg_polish_evidence_missing")
     if (
         packet.get("state") == "ready_for_human_choice"
         and row.get("action") == fig_driver.ACTION_COMPLETE

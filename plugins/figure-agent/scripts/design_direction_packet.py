@@ -9,7 +9,7 @@ MUTATION_BOUNDARY = "no_source_mutation"
 DEFAULT_RECOMMENDATION = "keep_current_style_until_candidate_beats_benchmark"
 ALTERNATIVES = [
     "current_style",
-    "bounded_tikz_refinement",
+    "restrained_tikz_refinement",
     "editorial_redesign",
     "svg_polish_handoff",
 ]
@@ -57,6 +57,32 @@ def _evidence_refs(
     return refs
 
 
+def _alternatives(style_pack: dict[str, object] | None) -> list[str]:
+    if isinstance(style_pack, dict):
+        slot_ids = style_pack.get("candidate_slot_ids")
+        if isinstance(slot_ids, list) and all(isinstance(item, str) for item in slot_ids):
+            return list(slot_ids)
+    return ALTERNATIVES.copy()
+
+
+def _alternative_mutation_boundaries(
+    *,
+    style_pack: dict[str, object] | None,
+    comparison: dict[str, object] | None,
+) -> dict[str, str]:
+    for payload in (comparison, style_pack):
+        if not isinstance(payload, dict):
+            continue
+        boundaries = payload.get("candidate_mutation_boundaries")
+        if isinstance(boundaries, dict):
+            return {
+                key: value
+                for key, value in boundaries.items()
+                if isinstance(key, str) and isinstance(value, str)
+            }
+    return {"current_style": MUTATION_BOUNDARY}
+
+
 def build_design_direction_packet(
     fixture: str,
     *,
@@ -97,8 +123,12 @@ def build_design_direction_packet(
             "default_recommendation",
             DEFAULT_RECOMMENDATION,
         ),
-        "alternatives": ALTERNATIVES.copy(),
+        "alternatives": _alternatives(style_pack),
         "mutation_boundary": MUTATION_BOUNDARY,
+        "alternative_mutation_boundaries": _alternative_mutation_boundaries(
+            style_pack=style_pack,
+            comparison=comparison,
+        ),
         "human_question": HUMAN_QUESTION,
         "evidence_refs": _evidence_refs(style_pack=style_pack, comparison=comparison),
         "next_agent_action": "prepare_bounded_candidate_or_stop_for_human_choice",
