@@ -296,6 +296,20 @@ def test_candidate_family_requires_bounded_benchmark_contract_fields(
         )
 
 
+def test_comparison_summary_preserves_read_only_family_evidence() -> None:
+    payload = style_benchmark_comparison.load_comparison(
+        "fig1_overview_v2_pair_001_vault",
+        plugin_root=PLUGIN_ROOT,
+    )
+    summary = style_benchmark_comparison.summarize_comparison(payload)
+
+    current = summary["candidate_family_evidence"]["current_style"]
+    assert current["can_improve"].startswith("Keeps the current manuscript-ready")
+    assert "panel roles" in current["semantic_changes_forbidden"]
+    assert "hard regressions" in current["evidence_to_prove_better"]
+    assert current["human_only_question"].endswith("visually different candidate?")
+
+
 def test_prettier_candidate_cannot_allow_semantic_change(tmp_path: Path) -> None:
     plugin_root, relative_path = _real_payload_copy(tmp_path)
     path = plugin_root / relative_path
