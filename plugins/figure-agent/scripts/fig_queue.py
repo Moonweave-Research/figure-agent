@@ -357,18 +357,44 @@ def _design_direction_fields(fixture: str, row: dict[str, Any]) -> dict[str, Any
         "design_direction_packet_schema": packet.get("schema"),
         "design_direction_next_agent_action": packet.get("next_agent_action"),
     }
-    if packet.get("default_recommendation") is not None:
-        fields["design_direction_default"] = packet.get("default_recommendation")
-    if packet.get("human_question") is not None:
-        fields["design_direction_human_question"] = packet.get("human_question")
+    summary: dict[str, Any] = {
+        "schema": packet.get("schema"),
+        "state": packet.get("state"),
+        "next_agent_action": packet.get("next_agent_action"),
+        "mutation_boundary": packet.get("mutation_boundary"),
+    }
+    for packet_key, field_key in (
+        ("default_recommendation", "design_direction_default"),
+        ("human_question", "design_direction_human_question"),
+    ):
+        value = packet.get(packet_key)
+        if value is not None:
+            fields[field_key] = value
+            summary[packet_key] = value
+    for packet_key, field_key in (
+        ("alternatives", "design_direction_alternatives"),
+        ("evidence_refs", "design_direction_evidence_refs"),
+    ):
+        value = packet.get(packet_key)
+        if isinstance(value, list):
+            fields[field_key] = value
+            summary[packet_key] = value
+    mutation_boundary = packet.get("mutation_boundary")
+    if isinstance(mutation_boundary, str) and mutation_boundary:
+        fields["design_direction_mutation_boundary"] = mutation_boundary
     blocker_reasons = packet.get("blocking_reasons")
     if isinstance(blocker_reasons, list) and blocker_reasons:
         fields["design_direction_blocker_reason"] = blocker_reasons[0]
+        summary["blocking_reasons"] = blocker_reasons
     if row.get("svg_polish_evidence_state") in {
         "blocked_missing_positive_readiness",
         "not_qualified",
     }:
         fields["design_direction_blocker_reason"] = "svg_polish_evidence_missing"
+        summary["blocking_reasons"] = ["svg_polish_evidence_missing"]
+    fields["design_direction_summary"] = {
+        key: value for key, value in summary.items() if value is not None
+    }
     if (
         packet.get("state") == "ready_for_human_choice"
         and row.get("action") == fig_driver.ACTION_COMPLETE
@@ -1294,6 +1320,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
                 "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
                 "design_direction_state": row.get("design_direction_state"),
+                "design_direction_summary": row.get("design_direction_summary"),
             }
             if row.get("svg_polish_evidence_state") is not None:
                 item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
@@ -1323,6 +1350,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "style_benchmark_pack_state": row.get("style_benchmark_pack_state"),
             "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
             "design_direction_state": row.get("design_direction_state"),
+            "design_direction_summary": row.get("design_direction_summary"),
         }
         if row.get("svg_polish_evidence_state") is not None:
             item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
