@@ -159,6 +159,16 @@ Each row includes:
 | `publication_gate_state` | compact status field |
 | `release_ready` | compact status field |
 | `operator_guidance` | copied from `/fig_drive` when present; complete rows use its `next_step` to avoid hiding mode-scoped follow-up |
+| `style_benchmark_pack_state` | non-fatal style benchmark pack state, usually `present`, `missing`, or `invalid` |
+| `style_benchmark_comparison_state` | non-fatal comparison packet state, usually `present`, `missing`, or `invalid` |
+| `design_direction_state` | read-only design-direction handoff state, for example `ready_for_human_choice`, `blocked_missing_style_pack`, or `blocked_missing_comparison` |
+| `design_direction_default` | compact agent recommendation when benchmark/comparison evidence is present |
+| `design_direction_alternatives` | bounded alternative family ids; source/SVG changes still require separate approval |
+| `design_direction_mutation_boundary` | boundary for the summary itself; design-direction queue rows do not authorize source, SVG, export, accepted, golden, final-artifact, or publication mutation |
+| `design_direction_alternative_mutation_boundaries` | per-alternative boundary map copied from benchmark/comparison evidence when present |
+| `design_direction_human_question` | concise question to ask the human instead of asking for judgment from scratch |
+| `design_direction_evidence_refs` | compact refs to style benchmark pack, comparison, benchmark contract, and aesthetic intent evidence |
+| `design_direction_blocker_reason` | first design-direction blocker, such as `style_benchmark_pack_missing`, `style_benchmark_comparison_missing`, or `svg_polish_evidence_missing` |
 | `error` | present only for controlled error rows |
 
 In `--mode polish`, rows also include SVG-polish gate fields when the underlying

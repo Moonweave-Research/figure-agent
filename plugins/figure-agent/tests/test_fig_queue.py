@@ -2788,6 +2788,24 @@ def test_queue_surfaces_design_direction_ready_human_choice(
         lambda name, *, workspace_root: {
             "state": "present",
             "path": "docs/style-benchmark-packs/alpha.json",
+            "candidate_family_slots": [
+                {
+                    "id": "current_style",
+                    "mutation_boundary": "no_source_mutation",
+                },
+                {
+                    "id": "restrained_tikz_refinement",
+                    "mutation_boundary": "source_mutation_requires_separate_approval",
+                },
+                {
+                    "id": "editorial_redesign",
+                    "mutation_boundary": "source_mutation_requires_separate_approval",
+                },
+                {
+                    "id": "svg_polish_handoff",
+                    "mutation_boundary": "svg_artifact_mutation_requires_separate_approval",
+                },
+            ],
             "linked_files": {
                 "benchmark_contract": "docs/benchmarks/alpha.yaml",
                 "aesthetic_intent": "docs/aesthetic-intents/alpha.yaml",
@@ -2801,6 +2819,28 @@ def test_queue_surfaces_design_direction_ready_human_choice(
             "state": "present",
             "path": "docs/style-benchmark-comparisons/alpha.json",
             "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
+            "candidate_family_comparisons": [
+                {
+                    "id": "current_style",
+                    "result": "winner_candidate",
+                    "mutation_boundary": "no_source_mutation",
+                },
+                {
+                    "id": "restrained_tikz_refinement",
+                    "result": "eligible",
+                    "mutation_boundary": "source_mutation_requires_separate_approval",
+                },
+                {
+                    "id": "editorial_redesign",
+                    "result": "eligible",
+                    "mutation_boundary": "source_mutation_requires_separate_approval",
+                },
+                {
+                    "id": "svg_polish_handoff",
+                    "result": "blocked_missing_evidence",
+                    "mutation_boundary": "svg_artifact_mutation_requires_separate_approval",
+                },
+            ],
         },
     )
 
@@ -2823,11 +2863,17 @@ def test_queue_surfaces_design_direction_ready_human_choice(
     )
     assert row["design_direction_alternatives"] == [
         "current_style",
-        "bounded_tikz_refinement",
+        "restrained_tikz_refinement",
         "editorial_redesign",
         "svg_polish_handoff",
     ]
     assert row["design_direction_mutation_boundary"] == "no_source_mutation"
+    assert row["design_direction_alternative_mutation_boundaries"] == {
+        "current_style": "no_source_mutation",
+        "restrained_tikz_refinement": "source_mutation_requires_separate_approval",
+        "editorial_redesign": "source_mutation_requires_separate_approval",
+        "svg_polish_handoff": "svg_artifact_mutation_requires_separate_approval",
+    }
     assert row["design_direction_evidence_refs"] == [
         "style_benchmark_pack:docs/style-benchmark-packs/alpha.json",
         "benchmark_contract:docs/benchmarks/alpha.yaml",
