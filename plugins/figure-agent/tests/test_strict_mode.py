@@ -51,13 +51,17 @@ def test_check_visual_clash_false_positive_matching_requires_kind() -> None:
     )
     pattern = {
         "id": "schematic_label_injection",
+        "fixture": "fig3_trapping_concept",
         "glyph": "injection",
         "kind": "text_on_fill",
     }
 
+    # The fixture scope matches; the sole reason it is not suppressed is the
+    # kind mismatch (text_on_path issue vs text_on_fill pattern).
     filtered, suppressed = check_visual_clash.suppress_known_false_positives(
         [issue],
         [pattern],
+        "fig3_trapping_concept",
     )
 
     assert filtered == [issue]
@@ -76,10 +80,62 @@ def test_check_visual_clash_false_positive_matching_accepts_same_kind() -> None:
     filtered, suppressed = check_visual_clash.suppress_known_false_positives(
         [issue],
         patterns,
+        "fig3_trapping_concept",
     )
 
     assert filtered == []
     assert suppressed == 1
+
+
+def test_check_visual_clash_false_positive_not_suppressed_on_foreign_fixture() -> None:
+    """A PDMS clash validated on fig3_trapping_concept must NOT be silenced on
+    fig2_trap_design_space, which also renders the glyph 'PDMS'. Global
+    suppression would hide a real clash on the foreign figure."""
+    issue = check_visual_clash.VisualIssue(
+        "text_on_path",
+        "PDMS",
+        "dark=0.041, edge=0.004",
+        (1, 2, 3, 4),
+    )
+    patterns = check_visual_clash.load_known_false_positive_patterns()
+
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        [issue],
+        patterns,
+        "fig2_trap_design_space",
+    )
+
+    assert filtered == [issue]
+    assert suppressed == 0
+
+
+def test_check_visual_clash_unscoped_pattern_suppresses_nothing() -> None:
+    """Fail-closed default: a pattern with no fixture scope suppresses nothing,
+    even when glyph and kind match."""
+    issue = check_visual_clash.VisualIssue(
+        "text_on_fill",
+        "PDMS",
+        "luma_std=30.0",
+        (1, 2, 3, 4),
+    )
+    unscoped = {"id": "legacy_global", "glyph": "PDMS", "kind": "text_on_fill"}
+
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        [issue],
+        [unscoped],
+        "fig3_trapping_concept",
+    )
+
+    assert filtered == [issue]
+    assert suppressed == 0
+
+
+def test_check_visual_clash_registry_entries_declare_a_fixture() -> None:
+    """No shipped registry entry may be un-scoped; an entry without a fixture
+    would suppress nothing (fail-closed) and is therefore dead weight."""
+    patterns = check_visual_clash.load_known_false_positive_patterns()
+    unscoped = [pattern.get("id") for pattern in patterns if not pattern.get("fixture")]
+    assert unscoped == []
 
 
 def _require_golden_pdf() -> None:

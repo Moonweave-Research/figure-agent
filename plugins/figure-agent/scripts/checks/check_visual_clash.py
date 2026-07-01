@@ -32,9 +32,7 @@ class VisualIssue:
     bbox: tuple[int, int, int, int]
 
 
-KNOWN_FALSE_POSITIVES_PATH = (
-    Path(__file__).resolve().parents[2] / "_known_false_positives.yaml"
-)
+KNOWN_FALSE_POSITIVES_PATH = Path(__file__).resolve().parents[2] / "_known_false_positives.yaml"
 
 
 def extract_pdf_words_and_page(pdf_path: Path) -> tuple[list[dict], tuple[float, float]]:
@@ -327,7 +325,26 @@ def _detail_value(detail: str, key: str) -> float | None:
     return float(match.group(1))
 
 
-def _matches_known_false_positive(issue: VisualIssue, pattern: dict) -> bool:
+def _fixture_scope_matches(pattern: dict, fixture: str | None) -> bool:
+    """A known-FP pattern only suppresses on the fixture(s) it was validated on.
+
+    An un-scoped pattern (no ``fixture`` key) suppresses nothing: a global
+    suppression would silence a real clash that merely shares a glyph — e.g.
+    "PDMS", "Sulfur", "+", "−" — with a benign label on a different figure.
+    """
+    scope = pattern.get("fixture")
+    if scope is None:
+        return False
+    if isinstance(scope, str):
+        return scope == fixture
+    if isinstance(scope, list):
+        return fixture in scope
+    return False
+
+
+def _matches_known_false_positive(issue: VisualIssue, pattern: dict, fixture: str | None) -> bool:
+    if not _fixture_scope_matches(pattern, fixture):
+        return False
     pattern_id = pattern.get("id")
     kind = pattern.get("kind")
     if kind is not None and issue.kind != kind:
@@ -375,11 +392,12 @@ def _matches_known_false_positive(issue: VisualIssue, pattern: dict) -> bool:
 def suppress_known_false_positives(
     issues: list[VisualIssue],
     patterns: list[dict],
+    fixture: str | None,
 ) -> tuple[list[VisualIssue], int]:
     filtered: list[VisualIssue] = []
     suppressed = 0
     for issue in issues:
-        if any(_matches_known_false_positive(issue, pattern) for pattern in patterns):
+        if any(_matches_known_false_positive(issue, pattern, fixture) for pattern in patterns):
             suppressed += 1
         else:
             filtered.append(issue)
@@ -496,6 +514,7 @@ def main() -> int:
         issues, suppressed_count = suppress_known_false_positives(
             issues,
             load_known_false_positive_patterns(),
+            _fixture_name(args.pdf),
         )
     if args.json_output:
         write_visual_clash_json(args.pdf, issues, args.json_output)
