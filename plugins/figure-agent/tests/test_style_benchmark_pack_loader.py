@@ -96,10 +96,10 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                     "mutation_boundary": "no_source_mutation",
                     "entry_condition": "No candidate clearly improves manuscript value.",
                     "acceptance_rule": "Accept when alternatives introduce ambiguity.",
-                    "can_improve": "Keeps the benchmark stable until a candidate proves a gain.",
-                    "semantic_changes_forbidden": "May not change panel roles or labels.",
-                    "evidence_to_prove_better": "A challenger must improve benchmark checks.",
-                    "human_only_question": "Is the current style already sufficient?",
+                    "what_can_improve": ["baseline clarity can remain sufficient"],
+                    "forbidden_semantic_changes": ["semantic meaning must not change"],
+                    "proof_criteria": ["alternative must beat measurable checks"],
+                    "human_only_question": "Is current style good enough?",
                 },
                 {
                     "id": "restrained_tikz_refinement",
@@ -107,10 +107,10 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                     "mutation_boundary": "source_mutation_requires_separate_approval",
                     "entry_condition": "A bounded source-level patch can improve style.",
                     "acceptance_rule": "Preserve all forbidden semantics.",
-                    "can_improve": "Can improve typography and spacing.",
-                    "semantic_changes_forbidden": "May not change semantic labels.",
-                    "evidence_to_prove_better": "Must improve a measurable check.",
-                    "human_only_question": "Is bounded source approval worthwhile?",
+                    "what_can_improve": ["typography and whitespace"],
+                    "forbidden_semantic_changes": ["semantic meaning must not change"],
+                    "proof_criteria": ["measurable check improves"],
+                    "human_only_question": "Approve bounded source polish?",
                 },
                 {
                     "id": "editorial_redesign",
@@ -118,10 +118,10 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                     "mutation_boundary": "source_mutation_requires_separate_approval",
                     "entry_condition": "Human explicitly asks for a broader alternative.",
                     "acceptance_rule": "Beat current style while preserving meaning.",
-                    "can_improve": "Can improve journal fit and visual hierarchy.",
-                    "semantic_changes_forbidden": "May not trade meaning for prettier composition.",
-                    "evidence_to_prove_better": "Must prove semantic preservation.",
-                    "human_only_question": "Is broader redesign worth semantic risk?",
+                    "what_can_improve": ["journal fit and hierarchy"],
+                    "forbidden_semantic_changes": ["semantic meaning must not change"],
+                    "proof_criteria": ["human review and checks beat baseline"],
+                    "human_only_question": "Approve broader redesign?",
                 },
                 {
                     "id": "svg_polish_handoff",
@@ -132,10 +132,10 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                         "ready_for_svg_polish evidence is positive."
                     ),
                     "acceptance_rule": "May adjust only optical finish.",
-                    "can_improve": "Can improve only optical finish after source lock.",
-                    "semantic_changes_forbidden": "May not repair scientific meaning in SVG.",
-                    "evidence_to_prove_better": "Requires ready_for_svg_polish evidence.",
-                    "human_only_question": "Should SVG polish remain blocked?",
+                    "what_can_improve": ["optical spacing and stroke finish"],
+                    "forbidden_semantic_changes": ["semantic meaning must not change"],
+                    "proof_criteria": ["ready_for_svg_polish evidence exists"],
+                    "human_only_question": "Approve SVG polish handoff?",
                 },
             ],
             "measurable_checks": [
@@ -401,3 +401,21 @@ def test_style_benchmark_pack_summary_is_compact_and_read_only(tmp_path: Path) -
     }
     assert "measurable_checks" not in summary
     assert "candidate_rejection_rules" not in summary
+
+
+def test_style_benchmark_pack_requires_family_evidence_fields(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "plugin"
+    pack_path = _minimal_pack(plugin_root)
+    payload = json.loads(pack_path.read_text(encoding="utf-8"))
+    del payload["candidate_family_slots"][0]["proof_criteria"]
+    _write_json(pack_path, payload)
+
+    with pytest.raises(
+        style_benchmark_pack.StyleBenchmarkPackError,
+        match="proof_criteria_invalid",
+    ):
+        style_benchmark_pack.load_pack(
+            "contract_demo",
+            plugin_root=plugin_root,
+            pack_path=pack_path,
+        )
