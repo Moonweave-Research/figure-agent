@@ -301,3 +301,54 @@ def test_cli_strict_flags_violation_and_writes_json(tmp_path):
     data = json.loads(jout.read_text(encoding="utf-8"))
     assert data["schema"] == "figure-agent.tex-assertions.v1"
     assert data["total"] == 1
+
+
+# --- M1: direction must follow the arrowhead, not coordinate order ---
+
+
+def test_check_direction_flips_on_reverse_tip():
+    # coords go +x, but the head is at the START, so the arrow physically points -x.
+    coords = (0.0, 0.0, 2.0, 0.0)
+    assert cta.check_direction(coords, axis="x", direction="decreasing", tip="reverse") == "pass"
+    assert (
+        cta.check_direction(coords, axis="x", direction="increasing", tip="reverse") == "violated"
+    )
+
+
+def test_check_direction_forward_tip_is_the_default():
+    coords = (0.0, 0.0, 2.0, 0.0)
+    assert cta.check_direction(coords, axis="x", direction="increasing") == cta.check_direction(
+        coords, axis="x", direction="increasing", tip="forward"
+    )
+
+
+def test_check_tex_assertions_flags_reversed_arrowhead():
+    # Head flipped to the start: coords decrease in x but the arrow physically points
+    # +x, so a "decreasing" (points -x) assertion must be VIOLATED, not passed on
+    # coordinate order alone. This is the reversed-force-arrow the checker exists for.
+    tex = "\\draw[forceArr,{Stealth}-] (2,0) -- (0,0);"
+    assertions = [
+        {"id": "force-away", "anchor_style": "forceArr", "axis": "x", "direction": "decreasing"}
+    ]
+    issues = cta.check_tex_assertions(tex, assertions)
+    assert len(issues) == 1
+    assert issues[0]["status"] == "violated"
+
+
+def test_check_tex_assertions_forward_arrowhead_passes():
+    # Same coords, head at the end: physically points -x, decreasing holds -> pass.
+    tex = "\\draw[forceArr,-{Stealth}] (2,0) -- (0,0);"
+    assertions = [
+        {"id": "force-away", "anchor_style": "forceArr", "axis": "x", "direction": "decreasing"}
+    ]
+    assert cta.check_tex_assertions(tex, assertions) == []
+
+
+def test_check_tex_assertions_matches_styled_draw_with_inline_tip_bracket():
+    # C2: an inline tip spec with an inner ] must not break the styled-draw anchor.
+    tex = "\\draw[forceArr,-{Stealth[length=6pt,width=4.5pt]}] (0,0) -- (-1,0);"
+    assertions = [
+        {"id": "force-away", "anchor_style": "forceArr", "axis": "x", "direction": "decreasing"}
+    ]
+    # forward tip, coords -x -> decreasing holds -> pass (NOT anchor_missing).
+    assert cta.check_tex_assertions(tex, assertions) == []

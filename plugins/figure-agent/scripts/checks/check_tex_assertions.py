@@ -37,38 +37,89 @@ DIRECTIONS = ("increasing", "decreasing")
 
 _NUM = r"-?\d+(?:\.\d+)?"
 
-
-def find_styled_draws(tex_text: str, style: str) -> list[tuple[float, float, float, float]]:
-    """Coordinates of every `\\draw[…<style>…] (x1,y1) -- (x2,y2)` in the source.
-
-    The style token is matched word-bounded inside the option brackets so
-    `forceArr` does not match `forceArrow`."""
-    pattern = re.compile(
-        r"\\draw\s*\[[^\]]*\b" + re.escape(style) + r"\b[^\]]*\]\s*"
-        rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*--\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
-    )
-    return [
-        (float(x1), float(y1), float(x2), float(y2)) for x1, y1, x2, y2 in pattern.findall(tex_text)
-    ]
-
-
-# Option bracket allowing ONE level of nesting (e.g. an inline arrow tip spec
+# Option body allowing ONE level of `[...]` nesting (e.g. an inline arrow tip spec
 # `-{Stealth[length=6pt,width=4.5pt]}`, whose inner `]` breaks a flat `[^\]]*`).
-_OPT = r"\[(?:[^\[\]]*\[[^\]]*\])*[^\[\]]*\]"
+_OPT_BODY = r"(?:[^\[\]]*\[[^\]]*\])*[^\[\]]*"
+_STYLED_DRAW_RE = re.compile(
+    r"\\draw\s*\[(" + _OPT_BODY + r")\]\s*"
+    rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*--\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
+)
 _ALL_DRAW_RE = re.compile(
-    r"\\draw\s*(?:" + _OPT + r")?\s*"
+    r"\\draw\s*(?:\[(" + _OPT_BODY + r")\])?\s*"
     rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*--\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
 )
 
 
+def _styled_draws_raw(tex_text: str, style: str) -> list[tuple[float, float, float, float, str]]:
+    """Every `\\draw[…<style>…] (x1,y1) -- (x2,y2)` as (x1, y1, x2, y2, option_body).
+
+    The style token is matched word-bounded inside the option body so `forceArr`
+    does not match `forceArrow`; the option body carries the arrow-tip spec.
+    """
+    style_re = re.compile(r"\b" + re.escape(style) + r"\b")
+    out: list[tuple[float, float, float, float, str]] = []
+    for match in _STYLED_DRAW_RE.finditer(tex_text):
+        options = match.group(1)
+        if not style_re.search(options):
+            continue
+        out.append(
+            (
+                float(match.group(2)),
+                float(match.group(3)),
+                float(match.group(4)),
+                float(match.group(5)),
+                options,
+            )
+        )
+    return out
+
+
+def _all_draws_raw(tex_text: str) -> list[tuple[float, float, float, float, str]]:
+    """Every straight `\\draw … (x1,y1) -- (x2,y2)` as (x1, y1, x2, y2, option_body)."""
+    return [
+        (
+            float(match.group(2)),
+            float(match.group(3)),
+            float(match.group(4)),
+            float(match.group(5)),
+            match.group(1) or "",
+        )
+        for match in _ALL_DRAW_RE.finditer(tex_text)
+    ]
+
+
+def find_styled_draws(tex_text: str, style: str) -> list[tuple[float, float, float, float]]:
+    """Coordinates of every `\\draw[…<style>…] (x1,y1) -- (x2,y2)` in the source."""
+    return [raw[:4] for raw in _styled_draws_raw(tex_text, style)]
+
+
 def find_all_draws(tex_text: str) -> list[tuple[float, float, float, float]]:
     """Coordinates of every straight `\\draw … (x1,y1) -- (x2,y2)` regardless of
-    style (for arrows drawn with inline options and no named style — `near`
-    disambiguates). Bezier `.. controls ..` segments are not matched."""
-    return [
-        (float(x1), float(y1), float(x2), float(y2))
-        for x1, y1, x2, y2 in _ALL_DRAW_RE.findall(tex_text)
-    ]
+    style. Bezier `.. controls ..` segments are not matched."""
+    return [raw[:4] for raw in _all_draws_raw(tex_text)]
+
+
+def _tip_orientation(option_body: str) -> str:
+    """'forward' (head at end) | 'reverse' (head at start) | 'both' | 'none'.
+
+    Reads the arrow-spec option so a reversed arrowhead is not judged on coordinate
+    order alone. `{...}` tip groups are masked to a single token first so an inner
+    comma/bracket does not split the option list.
+    """
+    masked = re.sub(r"\{(?:[^{}]|\{[^{}]*\})*\}", "T", option_body)
+    for option in masked.split(","):
+        arrow = re.fullmatch(r"([<>|T]?)-([<>|T]?)", option.strip())
+        if not arrow:
+            continue
+        start_tip, end_tip = bool(arrow.group(1)), bool(arrow.group(2))
+        if start_tip and end_tip:
+            return "both"
+        if start_tip:
+            return "reverse"
+        if end_tip:
+            return "forward"
+        return "none"
+    return "none"
 
 
 def check_direction(
@@ -76,11 +127,19 @@ def check_direction(
     *,
     axis: str,
     direction: str,
+    tip: str = "forward",
     tol: float = DEFAULT_TOLERANCE_CM,
 ) -> str:
-    """'pass' | 'violated' | 'indeterminate' for a draw's endpoint direction."""
+    """'pass' | 'violated' | 'indeterminate' for a draw's PHYSICAL direction.
+
+    Physical direction is the way the arrowHEAD points, not coordinate order: a
+    `{Stealth}-` (head at start) arrow points opposite its (x1,y1)->(x2,y2) order,
+    so `tip='reverse'` flips the delta. 'both'/'none' fall back to coordinate order.
+    """
     x1, y1, x2, y2 = coords
     delta = (x2 - x1) if axis == "x" else (y2 - y1)
+    if tip == "reverse":
+        delta = -delta
     if abs(delta) <= tol:
         return "indeterminate"
     holds = delta > 0 if direction == "increasing" else delta < 0
@@ -169,9 +228,9 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
     issues: list[dict] = []
     for assertion in assertions:
         style = assertion.get("anchor_style")
-        draws = find_styled_draws(tex_text, style) if style else find_all_draws(tex_text)
+        draws = _styled_draws_raw(tex_text, style) if style else _all_draws_raw(tex_text)
         anchor = repr(style) if style else "any draw near the declared point"
-        status, coords = select_draw(draws, assertion.get("near"))
+        status, selected = select_draw(draws, assertion.get("near"))
         if status == "missing":
             issues.append(
                 {
@@ -194,9 +253,10 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
             )
             continue
         result = check_direction(
-            coords,
+            selected[:4],
             axis=assertion["axis"],
             direction=assertion["direction"],
+            tip=_tip_orientation(selected[4]),
             tol=assertion.get("tolerance_cm", DEFAULT_TOLERANCE_CM),
         )
         if result == "pass":
