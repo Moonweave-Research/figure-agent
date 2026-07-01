@@ -895,6 +895,7 @@ def test_polish_queue_rows_surface_svg_polish_gate(
     assert evidence["required_positive_evidence"] == [
         "can_start_svg_polish=true",
         "recommended_path=ready_for_svg_polish",
+        "positive_evidence[]",
     ]
     assert "semantic repair in SVG" in evidence["forbidden_scope"]
 
@@ -943,6 +944,10 @@ def test_polish_queue_summary_counts_svg_gate_and_blockers(
                 "recommended_path": "ready_for_svg_polish",
                 "next_action": "start_svg_polish_recipe",
                 "blocking_items": [],
+                "positive_evidence": [
+                    "polish_trigger_verdict=pass",
+                    "polish_route_detail=only optical cleanup remains",
+                ],
             },
         )
 
@@ -979,6 +984,8 @@ def test_polish_queue_summary_counts_svg_gate_and_blockers(
     assert by_fixture["beta"]["svg_polish_evidence_packet"]["positive_evidence"] == [
         "can_start_svg_polish=true",
         "recommended_path=ready_for_svg_polish",
+        "polish_trigger_verdict=pass",
+        "polish_route_detail=only optical cleanup remains",
     ]
     assert by_fixture["alpha"]["svg_polish_evidence_packet"][
         "missing_prerequisite_reason"
@@ -1098,6 +1105,7 @@ def test_polish_queue_filters_ready_svg_polish_candidates(
                 "recommended_path": "ready_for_svg_polish",
                 "next_action": "start_svg_polish_recipe",
                 "blocking_items": [],
+                "positive_evidence": ["polish_trigger_verdict=pass"],
             },
         )
 
@@ -1116,6 +1124,47 @@ def test_polish_queue_filters_ready_svg_polish_candidates(
     assert [row["fixture"] for row in queue["rows"]] == ["beta"]
     assert queue["summary"]["by_svg_polish_gate_state"] == {"ready": 1}
     assert queue["summary"]["by_svg_polish_recommended_path"] == {"ready_for_svg_polish": 1}
+
+
+def test_polish_queue_rejects_ready_flag_without_positive_svg_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        assert mode == "polish"
+        return _summary(
+            name,
+            action="polish_handoff_stop",
+            stop_boundary=None,
+            first_blocker="none",
+            svg_polish_gate={
+                "state": "ready",
+                "can_start_svg_polish": True,
+                "next_action": "start_svg_polish_recipe",
+            },
+            svg_polish_readiness={
+                "can_start_svg_polish": True,
+                "recommended_path": "ready_for_svg_polish",
+                "next_action": "start_svg_polish_recipe",
+                "blocking_items": [],
+            },
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="polish",
+        goal="polish triage",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["svg_polish_evidence_state"] == "not_qualified"
+    assert row["svg_polish_evidence_packet"]["missing_prerequisite_reason"] == (
+        "ready_for_svg_polish_positive_evidence_missing"
+    )
 
 
 def test_polish_queue_filters_svg_polish_blocking_source(

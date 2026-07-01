@@ -450,6 +450,13 @@ def _svg_polish_fields(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
         fields.setdefault("can_start_svg_polish", readiness.get("can_start_svg_polish"))
         fields.setdefault("svg_polish_next_action", readiness.get("next_action"))
         fields["svg_polish_recommended_path"] = readiness.get("recommended_path")
+        positive_evidence = readiness.get("positive_evidence")
+        if isinstance(positive_evidence, list):
+            normalized_positive = [
+                item for item in positive_evidence if isinstance(item, str) and item
+            ]
+            if normalized_positive:
+                fields["svg_polish_positive_evidence"] = normalized_positive
         readiness_sources = _svg_polish_blocking_sources(readiness)
         if readiness_sources:
             fields["svg_polish_blocking_sources"] = _merge_unique_strings(
@@ -1148,13 +1155,23 @@ def _svg_polish_evidence_packet(row: dict[str, Any], *, mode: str) -> dict[str, 
     can_start = row.get("can_start_svg_polish")
     recommended_path = row.get("svg_polish_recommended_path")
     next_action = row.get("svg_polish_next_action")
+    positive_evidence = row.get("svg_polish_positive_evidence")
+    positive_evidence_list = (
+        [item for item in positive_evidence if isinstance(item, str) and item]
+        if isinstance(positive_evidence, list)
+        else []
+    )
     sources = row.get("svg_polish_blocking_sources")
     source_list = (
         [item for item in sources if isinstance(item, str)]
         if isinstance(sources, list)
         else []
     )
-    is_positive = can_start is True and recommended_path == "ready_for_svg_polish"
+    is_positive = (
+        can_start is True
+        and recommended_path == "ready_for_svg_polish"
+        and bool(positive_evidence_list)
+    )
     packet: dict[str, Any] = {
         "schema": SVG_POLISH_EVIDENCE_PACKET_SCHEMA,
         "fixture": fixture,
@@ -1178,16 +1195,20 @@ def _svg_polish_evidence_packet(row: dict[str, Any], *, mode: str) -> dict[str, 
         packet["positive_evidence"] = [
             "can_start_svg_polish=true",
             "recommended_path=ready_for_svg_polish",
+            *positive_evidence_list,
         ]
         return packet
 
     reason = row.get("polish_blocker_reason")
     if not isinstance(reason, str) or not reason:
         reason = "ready_for_svg_polish_evidence_missing"
+    if can_start is True and recommended_path == "ready_for_svg_polish":
+        reason = "ready_for_svg_polish_positive_evidence_missing"
     packet["missing_prerequisite_reason"] = reason
     packet["required_positive_evidence"] = [
         "can_start_svg_polish=true",
         "recommended_path=ready_for_svg_polish",
+        "positive_evidence[]",
     ]
     return packet
 
