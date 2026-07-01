@@ -131,3 +131,32 @@ def test_wave_c_fig3_accept_current_packet_matches_human_decision_record() -> No
         "reject_current_artifact",
         "defer_for_dogfood",
     }
+
+
+def test_fig3_release_acceptance_record_is_distinct_from_decision_packet() -> None:
+    plugin_root = Path(__file__).resolve().parents[1]
+    record_path = (
+        plugin_root
+        / "docs"
+        / "decision-records"
+        / "2026-07-01-acceptance"
+        / "fig3_trapping_concept_defer_for_dogfood.json"
+    )
+
+    raw_record = json.loads(record_path.read_text(encoding="utf-8"))
+    record = validate_decision_record(raw_record)
+    packet = json.loads(
+        (plugin_root / raw_record["source_packet_path"]).read_text(encoding="utf-8")
+    )
+
+    assert raw_record["schema"] == "figure-agent.human-decision-record.v1"
+    assert packet["schema"] == raw_record["packet_schema"]
+    assert raw_record["source_packet_path"] != str(record_path.relative_to(plugin_root))
+    assert raw_record["packet_recommended_choice_id"] == packet["recommended_choice_id"]
+    assert packet["recommended_choice_id"] == "accept_current_generated_export"
+    assert record["decision_kind"] == "defer_for_dogfood"
+    assert record["decision_kind"] != packet["recommended_choice_id"]
+    assert packet["packet_kind"] == "release_acceptance_decision_packet"
+    assert "do not treat this packet as implicit human acceptance" in packet["disallowed_actions"]
+    assert record["mutation_boundary"] == "no_source_mutation"
+    assert "accepted state unchanged" in record["follow_up"]["implementation_slice"]
