@@ -204,25 +204,96 @@ def test_run_export_blocks_reference_fixture_without_critique(
     assert "--skip-critique" in captured.err
 
 
-def test_run_export_blocks_on_violated_tex_assertion(tmp_path: Path, monkeypatch, capsys) -> None:
+def test_run_export_blocks_on_violated_semantic_assertion(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    # New contract: the gate re-runs the check against the current render, so a
+    # cached JSON is irrelevant — the violation must come from the declared spec
+    # assertion evaluated against the PDF's word geometry.
     repo = _make_reference_fixture(tmp_path)
-    build = repo / "examples" / "ref_fig" / "build"
-    (build / "tex_assertions.json").write_text(
-        json.dumps(
-            {
-                "issues": [
-                    {
-                        "id": "force-repels",
-                        "status": "violated",
-                        "message": "forceArr is not decreasing on x",
-                    }
-                ]
-            }
+    fixture = repo / "examples" / "ref_fig"
+    (fixture / "spec.yaml").write_text(
+        "\n".join(
+            [
+                "name: ref_fig",
+                "style_profile: polymer-default",
+                "reference_image: reference/ref.png",
+                "panels: []",
+                "semantic_assertions:",
+                "  - id: shallow-above-deep",
+                "    relation: above",
+                "    subject: shallow",
+                "    reference: deep",
+                "",
+            ]
         ),
         encoding="utf-8",
     )
+    # shallow rendered BELOW deep (larger y-center) violates relation: above.
+    shallow = {"text": "shallow", "xmin": 0.0, "xmax": 10.0, "ymin": 95.0, "ymax": 105.0}
+    deep = {"text": "deep", "xmin": 0.0, "xmax": 10.0, "ymin": 5.0, "ymax": 15.0}
+    monkeypatch.setattr(
+        run_export, "extract_pdf_words_and_page", lambda _pdf: ([shallow, deep], (600.0, 400.0))
+    )
     monkeypatch.setattr(run_export, "REPO_ROOT", repo)
-    # --skip-critique bypasses the critique gate; the physics gate must still block.
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _e, _n: run_export.EXPORT_FRESH)
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
+
+    rc = run_export.main()
+
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert "semantic_assertion" in captured.err.lower()
+    assert "shallow-above-deep" in captured.err
+
+
+def _write_tex_assertion_fixture(
+    repo: Path, *, tex_body: str, assertion_block: str, cache_json: str | None = None
+) -> None:
+    """Overlay a tex_assertions spec + source (and optional stale cache) on ref_fig."""
+    fixture = repo / "examples" / "ref_fig"
+    (fixture / "spec.yaml").write_text(
+        "\n".join(
+            [
+                "name: ref_fig",
+                "style_profile: polymer-default",
+                "reference_image: reference/ref.png",
+                "panels: []",
+                assertion_block,
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (fixture / "ref_fig.tex").write_text(tex_body, encoding="utf-8")
+    if cache_json is not None:
+        (fixture / "build" / "tex_assertions.json").write_text(cache_json, encoding="utf-8")
+
+
+_VIOLATING_TEX = "\\draw[forceArr] (0,0) -- (2,0);\n"  # +x, violates direction: decreasing
+_SATISFYING_TEX = "\\draw[forceArr] (0,0) -- (-2,0);\n"  # -x, satisfies decreasing
+_TEX_ASSERTION_BLOCK = "\n".join(
+    [
+        "tex_assertions:",
+        "  - id: force-repels",
+        "    anchor_style: forceArr",
+        "    axis: x",
+        "    direction: decreasing",
+    ]
+)
+
+
+def test_run_export_blocks_violating_tex_source_without_cache(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    # Fresh checkout / git-clean: build/tex_assertions.json is absent. The gate must
+    # re-run the checker against the source and still block, not fail open.
+    repo = _make_reference_fixture(tmp_path)
+    _write_tex_assertion_fixture(
+        repo, tex_body=_VIOLATING_TEX, assertion_block=_TEX_ASSERTION_BLOCK
+    )
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _e, _n: run_export.EXPORT_FRESH)
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
     rc = run_export.main()
@@ -233,26 +304,72 @@ def test_run_export_blocks_on_violated_tex_assertion(tmp_path: Path, monkeypatch
     assert "force-repels" in captured.err
 
 
-def test_run_export_blocks_on_violated_semantic_assertion(
+def test_run_export_ignores_stale_clean_tex_assertion_cache(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:
+    # A stale cache claims the figure is clean, but the current source violates.
+    # The gate must trust the source, not the cache.
     repo = _make_reference_fixture(tmp_path)
-    build = repo / "examples" / "ref_fig" / "build"
-    (build / "semantic_assertions.json").write_text(
-        json.dumps(
-            {"issues": [{"id": "shallow-above-deep", "status": "violated", "message": "reversed"}]}
-        ),
-        encoding="utf-8",
+    _write_tex_assertion_fixture(
+        repo,
+        tex_body=_VIOLATING_TEX,
+        assertion_block=_TEX_ASSERTION_BLOCK,
+        cache_json=json.dumps({"issues": []}),
     )
     monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _e, _n: run_export.EXPORT_FRESH)
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
     rc = run_export.main()
 
     captured = capsys.readouterr()
     assert rc == 1
-    assert "semantic_assertion" in captured.err.lower()
-    assert "shallow-above-deep" in captured.err
+    assert "force-repels" in captured.err
+
+
+def test_run_export_blocks_malformed_tex_assertions_spec(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    # Malformed declared assertion must fail closed, not silently pass.
+    repo = _make_reference_fixture(tmp_path)
+    _write_tex_assertion_fixture(
+        repo,
+        tex_body=_VIOLATING_TEX,
+        assertion_block="\n".join(
+            [
+                "tex_assertions:",
+                "  - id: force-repels",
+                "    anchor_style: forceArr",
+                "    direction: decreasing",
+            ]
+        ),
+    )
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _e, _n: run_export.EXPORT_FRESH)
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
+
+    rc = run_export.main()
+
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert "tex_assertion" in captured.err.lower()
+
+
+def test_run_export_allows_satisfied_tex_source_without_cache(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    # Guard against over-blocking: a satisfied assertion with no cache must not block.
+    repo = _make_reference_fixture(tmp_path)
+    _write_tex_assertion_fixture(
+        repo, tex_body=_SATISFYING_TEX, assertion_block=_TEX_ASSERTION_BLOCK
+    )
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _e, _n: run_export.EXPORT_FRESH)
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
+
+    rc = run_export.main()
+
+    assert rc == 0
 
 
 def test_run_export_rejects_unsafe_fixture_name_before_regenerate(
