@@ -222,6 +222,16 @@ def _validate_candidates(
                 "mutation_boundary": boundary,
                 "authorizes_mutation": False,
                 "semantic_change_allowed": False,
+                "can_improve": _required_string(candidate, "can_improve"),
+                "semantic_changes_forbidden": _required_string(
+                    candidate,
+                    "semantic_changes_forbidden",
+                ),
+                "evidence_to_prove_better": _required_string(
+                    candidate,
+                    "evidence_to_prove_better",
+                ),
+                "human_only_question": _required_string(candidate, "human_only_question"),
                 "comparison_basis": _string_list(candidate, "comparison_basis"),
                 "failure_modes": _string_list(candidate, "failure_modes"),
                 "prerequisite_evidence": _string_list(candidate, "prerequisite_evidence"),
