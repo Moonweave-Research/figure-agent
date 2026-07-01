@@ -53,6 +53,12 @@ def build_bounded_tikz_candidate_packet(
     lines = source_text.splitlines()
     line_number = _find_target_line(lines)
     if line_number is None:
+        if _find_replacement_line(lines) is not None:
+            return _blocked_packet(
+                fixture,
+                state="blocked_candidate_already_reflected",
+                next_agent_action="refresh_benchmark_evidence_for_current_source",
+            )
         return _blocked_packet(
             fixture,
             state="blocked_target_selector_missing",
@@ -193,6 +199,14 @@ def _blocked_packet(fixture: str, *, state: str, next_agent_action: str) -> dict
 def _find_target_line(lines: list[str]) -> int | None:
     for index, line in enumerate(lines, start=1):
         if TARGET_NEEDLE in line:
+            return index
+    return None
+
+
+def _find_replacement_line(lines: list[str]) -> int | None:
+    replacement = REPLACEMENT_TEXT.strip()
+    for index, line in enumerate(lines, start=1):
+        if line.strip() == replacement:
             return index
     return None
 

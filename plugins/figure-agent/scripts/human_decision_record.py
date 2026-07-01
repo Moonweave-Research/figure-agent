@@ -27,6 +27,7 @@ DECISION_KINDS = frozenset(
         "request_svg_polish_handoff_evidence",
         "request_full_style_redesign",
         "prepare_bounded_tikz_refinement",
+        "apply_bounded_tikz_candidate",
         "prepare_editorial_redesign_candidates",
         "prepare_svg_polish_handoff",
         "defer_design_decision",
@@ -88,6 +89,7 @@ _RELEASE_MUTATION_BOUNDARIES = frozenset(
 _SVG_POLISH_DECISION_KINDS = frozenset(
     {"request_svg_polish_candidate_evidence", "request_svg_polish_handoff_evidence"}
 )
+_SOURCE_MUTATION_DECISION_KINDS = frozenset({"apply_bounded_tikz_candidate"})
 
 
 class HumanDecisionRecordError(ValueError):
@@ -191,6 +193,11 @@ def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
             raise HumanDecisionRecordError("style_preference_cannot_approve_release")
     if decision_kind in STYLE_DECISION_KINDS and mutation_boundary != "no_source_mutation":
         raise HumanDecisionRecordError("style_decision_cannot_authorize_mutation")
+    if (
+        decision_kind in _SOURCE_MUTATION_DECISION_KINDS
+        and mutation_boundary != "source_mutation_allowed"
+    ):
+        raise HumanDecisionRecordError("source_mutation_decision_requires_source_boundary")
     if decision_kind in _SVG_POLISH_DECISION_KINDS:
         decision_text = _combined_decision_text(record, follow_up)
         if (

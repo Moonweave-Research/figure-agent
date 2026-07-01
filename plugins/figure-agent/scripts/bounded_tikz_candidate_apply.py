@@ -8,10 +8,12 @@ from pathlib import Path
 from typing import Any
 
 import fixture_identity
+import human_decision_record
 
 SCHEMA = "figure-agent.bounded-tikz-apply-result.v1"
 CANDIDATE_PACKET_SCHEMA = "figure-agent.bounded-tikz-candidate-packet.v1"
 MUTATION_BOUNDARY = "source_mutation_allowed"
+SOURCE_MUTATION_DECISION_KIND = "apply_bounded_tikz_candidate"
 
 
 class BoundedTikzCandidateApplyError(ValueError):
@@ -23,6 +25,7 @@ def apply_bounded_tikz_candidate(
     *,
     workspace_root: Path,
     candidate_packet: dict[str, Any],
+    source_mutation_decision: dict[str, Any] | None = None,
     apply: bool,
 ) -> dict[str, Any]:
     """Validate and optionally apply one hash-bound bounded TikZ candidate."""
@@ -37,6 +40,14 @@ def apply_bounded_tikz_candidate(
     operation = _single_operation(candidate)
     if operation is None:
         return _blocked(fixture, [_diagnostic("operation_invalid")])
+    if apply:
+        authorization_diagnostics = _source_mutation_decision_diagnostics(
+            fixture,
+            candidate,
+            source_mutation_decision,
+        )
+        if authorization_diagnostics:
+            return _blocked(fixture, authorization_diagnostics)
     source_path = _source_path(workspace_root, fixture, operation)
     if source_path.is_symlink():
         raise BoundedTikzCandidateApplyError("source_symlink_forbidden")
@@ -104,6 +115,30 @@ def _packet_diagnostics(fixture: str, packet: dict[str, Any]) -> list[dict[str, 
     if packet.get("authorizes_source_mutation") is not False:
         diagnostics.append(_diagnostic("candidate_packet_authorizes_mutation"))
     return diagnostics
+
+
+def _source_mutation_decision_diagnostics(
+    fixture: str,
+    candidate: dict[str, Any],
+    decision: dict[str, Any] | None,
+) -> list[dict[str, str]]:
+    if not isinstance(decision, dict):
+        return [_diagnostic("source_mutation_decision_missing")]
+    try:
+        normalized = human_decision_record.validate_decision_record(decision)
+    except human_decision_record.HumanDecisionRecordError as exc:
+        return [_diagnostic(f"source_mutation_decision_invalid:{exc}")]
+    if normalized.get("fixture") != fixture:
+        return [_diagnostic("source_mutation_decision_fixture_mismatch")]
+    if normalized.get("decision_kind") != SOURCE_MUTATION_DECISION_KIND:
+        return [_diagnostic("source_mutation_decision_kind_invalid")]
+    if normalized.get("mutation_boundary") != MUTATION_BOUNDARY:
+        return [_diagnostic("source_mutation_decision_boundary_invalid")]
+    if decision.get("authorized_candidate_id") != candidate.get("id"):
+        return [_diagnostic("source_mutation_decision_candidate_id_mismatch")]
+    if decision.get("authorized_candidate_hash") != candidate.get("candidate_hash"):
+        return [_diagnostic("source_mutation_decision_candidate_hash_mismatch")]
+    return []
 
 
 def _single_operation(candidate: dict[str, Any]) -> dict[str, Any] | None:

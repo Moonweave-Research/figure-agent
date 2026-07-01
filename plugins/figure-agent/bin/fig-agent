@@ -1296,6 +1296,7 @@ def _bounded_tikz_apply(argv: list[str]) -> int:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--apply", action="store_true")
+    parser.add_argument("--authorization")
     parser.add_argument("--mode", choices=list(fig_driver.MODES), default="review")
     parser.add_argument("--goal", default="bounded TikZ candidate apply")
     parser.add_argument("--output")
@@ -1314,11 +1315,21 @@ def _bounded_tikz_apply(argv: list[str]) -> int:
         workspace_root=paths.workspace_root,
         request_packet=request_packet,
     )
+    source_mutation_decision = None
+    if args.authorization:
+        try:
+            source_mutation_decision = json.loads(
+                Path(args.authorization).read_text(encoding="utf-8")
+            )
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"fig-agent bounded-tikz-apply: authorization_invalid:{exc}", file=sys.stderr)
+            return 1
     try:
         result = bounded_tikz_candidate_apply.apply_bounded_tikz_candidate(
             name,
             workspace_root=paths.workspace_root,
             candidate_packet=candidate_packet,
+            source_mutation_decision=source_mutation_decision,
             apply=args.apply,
         )
     except bounded_tikz_candidate_apply.BoundedTikzCandidateApplyError as exc:

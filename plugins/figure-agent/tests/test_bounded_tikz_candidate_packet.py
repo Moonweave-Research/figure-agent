@@ -141,6 +141,28 @@ def test_candidate_packet_blocks_when_request_does_not_authorize_preparation(
     assert packet["authorizes_source_mutation"] is False
 
 
+def test_candidate_packet_reports_when_candidate_is_already_reflected(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = fixture / f"{FIXTURE}.tex"
+    source.write_text(
+        source.read_text(encoding="utf-8").replace("3.50, 2.85", "3.62, 2.82"),
+        encoding="utf-8",
+    )
+
+    packet = bounded_tikz_candidate_packet.build_bounded_tikz_candidate_packet(
+        FIXTURE,
+        workspace_root=workspace,
+        request_packet=_request_packet(),
+    )
+
+    assert packet["state"] == "blocked_candidate_already_reflected"
+    assert packet["candidate"] is None
+    assert packet["next_agent_action"] == "refresh_benchmark_evidence_for_current_source"
+
+
 def test_candidate_packet_rejects_unsafe_fixture(tmp_path: Path) -> None:
     with pytest.raises(
         bounded_tikz_candidate_packet.BoundedTikzCandidatePacketError,

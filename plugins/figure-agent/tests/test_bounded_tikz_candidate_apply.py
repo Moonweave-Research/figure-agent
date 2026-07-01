@@ -58,6 +58,32 @@ def _candidate_packet(workspace: Path) -> dict[str, object]:
     )
 
 
+def _source_mutation_decision(candidate_packet: dict[str, object]) -> dict[str, object]:
+    candidate = candidate_packet["candidate"]
+    assert isinstance(candidate, dict)
+    return {
+        "schema": "figure-agent.human-decision-record.v1",
+        "fixture": FIXTURE,
+        "packet_schema": "figure-agent.release-decision-packet.v1",
+        "packet_path": "docs/decision-packets/example-bounded-tikz-apply.json",
+        "packet_recommendation": "apply_bounded_tikz_candidate",
+        "queue_run_id": "bounded-tikz-apply-001",
+        "decision_kind": "apply_bounded_tikz_candidate",
+        "agent_recommendation": "Apply exactly one hash-bound bounded TikZ source patch.",
+        "human_decision": "approve source mutation for this exact bounded TikZ patch",
+        "human_note": "Source mutation is authorized only for this candidate id and hash.",
+        "follow_up": {
+            "command": (
+                "fig-agent bounded-tikz-apply fig3_trapping_concept "
+                "--apply --authorization decision.json"
+            )
+        },
+        "mutation_boundary": "source_mutation_allowed",
+        "authorized_candidate_id": candidate["id"],
+        "authorized_candidate_hash": candidate["candidate_hash"],
+    }
+
+
 def _run_fig_agent(*args: str, workspace: Path | None = None) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
@@ -109,15 +135,38 @@ def test_dry_run_reports_ready_without_mutating_source(tmp_path: Path) -> None:
     assert source.read_text(encoding="utf-8") == before
 
 
-def test_apply_exact_hash_bound_replacement(tmp_path: Path) -> None:
+def test_apply_blocks_without_source_mutation_decision(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
     source = fixture / f"{FIXTURE}.tex"
+    before = source.read_text(encoding="utf-8")
 
     result = bounded_tikz_candidate_apply.apply_bounded_tikz_candidate(
         FIXTURE,
         workspace_root=workspace,
         candidate_packet=_candidate_packet(workspace),
+        apply=True,
+    )
+
+    assert result["status"] == "blocked"
+    assert result["applied"] is False
+    assert result["diagnostics"][0]["code"] == "source_mutation_decision_missing"
+    assert source.read_text(encoding="utf-8") == before
+
+
+def test_apply_exact_hash_bound_replacement_with_source_mutation_decision(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = fixture / f"{FIXTURE}.tex"
+    candidate_packet = _candidate_packet(workspace)
+
+    result = bounded_tikz_candidate_apply.apply_bounded_tikz_candidate(
+        FIXTURE,
+        workspace_root=workspace,
+        candidate_packet=candidate_packet,
+        source_mutation_decision=_source_mutation_decision(candidate_packet),
         apply=True,
     )
 
@@ -143,6 +192,7 @@ def test_apply_blocks_source_hash_drift(tmp_path: Path) -> None:
         FIXTURE,
         workspace_root=workspace,
         candidate_packet=packet,
+        source_mutation_decision=_source_mutation_decision(packet),
         apply=True,
     )
 
@@ -169,3 +219,51 @@ def test_fig_agent_bounded_tikz_apply_dry_run_reads_workspace_source(
     assert payload["schema"] == bounded_tikz_candidate_apply.SCHEMA
     assert payload["status"] == "ready"
     assert payload["applied"] is False
+
+
+def test_fig_agent_bounded_tikz_apply_blocks_apply_without_decision(
+    tmp_path: Path,
+) -> None:
+    workspace = _baseline_workspace(tmp_path)
+
+    result = _run_fig_agent(
+        "bounded-tikz-apply",
+        FIXTURE,
+        "--apply",
+        "--json",
+        workspace=workspace,
+    )
+
+    assert result.returncode == 1
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "blocked"
+    assert payload["diagnostics"][0]["code"] == "source_mutation_decision_missing"
+
+
+def test_fig_agent_bounded_tikz_apply_uses_hash_bound_decision(
+    tmp_path: Path,
+) -> None:
+    workspace = _baseline_workspace(tmp_path)
+    source = workspace / "examples" / FIXTURE / f"{FIXTURE}.tex"
+    candidate_packet = _candidate_packet(workspace)
+    decision_path = tmp_path / "source-mutation-decision.json"
+    decision_path.write_text(
+        json.dumps(_source_mutation_decision(candidate_packet)),
+        encoding="utf-8",
+    )
+
+    result = _run_fig_agent(
+        "bounded-tikz-apply",
+        FIXTURE,
+        "--apply",
+        "--authorization",
+        str(decision_path),
+        "--json",
+        workspace=workspace,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "applied"
+    assert payload["applied"] is True
+    assert "3.62, 2.82" in source.read_text(encoding="utf-8")

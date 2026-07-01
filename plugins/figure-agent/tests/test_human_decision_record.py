@@ -52,6 +52,29 @@ def test_release_decision_record_validates_without_side_effects(tmp_path: Path) 
     assert source.read_text(encoding="utf-8") == "original source\n"
 
 
+def test_bounded_tikz_apply_decision_can_authorize_source_mutation() -> None:
+    validated = validate_decision_record(
+        _record(
+            fixture="fig3_trapping_concept",
+            decision_kind="apply_bounded_tikz_candidate",
+            packet_recommendation="apply_bounded_tikz_candidate",
+            agent_recommendation="Apply exactly one hash-bound bounded TikZ source patch.",
+            human_decision="approve this exact bounded TikZ source patch",
+            human_note="Approval is bound to candidate id and hash.",
+            follow_up={
+                "command": (
+                    "fig-agent bounded-tikz-apply fig3_trapping_concept "
+                    "--apply --authorization decision.json"
+                )
+            },
+            mutation_boundary="source_mutation_allowed",
+        )
+    )
+
+    assert validated["decision_kind"] == "apply_bounded_tikz_candidate"
+    assert validated["mutation_boundary"] == "source_mutation_allowed"
+
+
 @pytest.mark.parametrize(
     ("field", "value", "message"),
     [
