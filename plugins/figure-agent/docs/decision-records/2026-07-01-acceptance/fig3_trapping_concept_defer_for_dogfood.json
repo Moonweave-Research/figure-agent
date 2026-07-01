@@ -2,15 +2,13 @@
   "schema": "figure-agent.human-decision-record.v1",
   "fixture": "fig3_trapping_concept",
   "packet_schema": "figure-agent.release-decision-packet.v1",
-  "source_packet_path": "docs/decision-packets/2026-07-01-acceptance/fig3_trapping_concept_acceptance_packet.json",
-  "packet_recommended_choice_id": "accept_current_generated_export",
   "packet_timestamp": "2026-07-01T02:38:24Z",
   "decision_kind": "defer_for_dogfood",
-  "agent_recommendation": "Accept current generated export for this fixture's release state. The current evidence shows no source-level, detector, critique-lint, export, or loop-closeout blocker; remaining improvements are optional style dogfood or future art-direction work.",
-  "human_decision": "defer_for_dogfood",
-  "human_note": "Record that the release-acceptance packet was reviewed as a packet only. It does not itself grant acceptance, accepted-state mutation, final-artifact mutation, or release-state mutation authority.",
+  "agent_recommendation": "The source acceptance packet docs/decision-packets/2026-07-01-acceptance/fig3_trapping_concept_acceptance_packet.json recommended accept_current_generated_export, but also listed defer_for_dogfood as the safe default without an explicit human release decision.",
+  "human_decision": "defer_for_dogfood_pending_explicit_release_operator_acceptance",
+  "human_note": "Do not treat the acceptance packet or this record as release acceptance. This records a distinct defer decision only and preserves accepted, golden, final-artifact, source, export, and publication state unchanged.",
   "follow_up": {
-    "implementation_slice": "Keep accepted state unchanged; open a later explicit release-operator acceptance or final-artifact decision record before any release-state mutation."
+    "implementation_slice": "Open a bounded dogfood or style-direction slice only; do not set accepted: true, declare a final artifact, mutate source, mutate golden artifacts, or change publication/release state from this record."
   },
   "mutation_boundary": "no_source_mutation"
 }
