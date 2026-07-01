@@ -25,11 +25,11 @@ def _write_yaml(path: Path, payload: dict[str, object]) -> None:
 
 def _family_detail(name: str) -> dict[str, object]:
     return {
-        "can_improve": [f"{name} can improve bounded manuscript review"],
+        "what_can_improve": [f"{name} can improve bounded manuscript review"],
         "forbidden_semantic_changes": [
             f"{name} must preserve panel roles, labels, and shallow/deep trap color semantics"
         ],
-        "proof_evidence": [f"{name} has benchmark proof before selection"],
+        "proof_criteria": [f"{name} has benchmark proof before selection"],
         "human_only_question": f"Should {name} be preferred by a human reviewer?",
     }
 
@@ -295,12 +295,12 @@ def test_style_benchmark_pack_requires_per_family_benchmark_questions(
     plugin_root = tmp_path / "plugin"
     pack_path = _minimal_pack(plugin_root)
     payload = json.loads(pack_path.read_text(encoding="utf-8"))
-    del payload["candidate_family_slots"][0]["evidence_to_prove_better"]
+    del payload["candidate_family_slots"][0]["proof_criteria"]
     _write_json(pack_path, payload)
 
     with pytest.raises(
         style_benchmark_pack.StyleBenchmarkPackError,
-        match="candidate_family_slots_invalid",
+        match="proof_criteria_invalid",
     ):
         style_benchmark_pack.load_pack(
             "contract_demo",
@@ -373,14 +373,11 @@ def test_style_benchmark_pack_summary_is_compact_and_read_only(tmp_path: Path) -
         "editorial_redesign",
         "svg_polish_handoff",
     ]
-    assert summary["candidate_family_details"]["editorial_redesign"] == {
-        "can_improve": ["editorial_redesign can improve bounded manuscript review"],
-        "forbidden_semantic_changes": [
-            ("editorial_redesign must preserve panel roles, labels, "
-             "and shallow/deep trap color semantics")
-        ],
-        "proof_evidence": ["editorial_redesign has benchmark proof before selection"],
-        "human_only_question": "Should editorial_redesign be preferred by a human reviewer?",
+    assert summary["candidate_family_evidence"]["editorial_redesign"] == {
+        "what_can_improve": ["journal fit and hierarchy"],
+        "forbidden_semantic_changes": ["semantic meaning must not change"],
+        "proof_criteria": ["human review and checks beat baseline"],
+        "human_only_question": "Approve broader redesign?",
     }
     assert summary["candidate_mutation_boundaries"] == {
         "current_style": "no_source_mutation",

@@ -92,6 +92,21 @@ def _string_list(payload: dict[str, Any], key: str) -> list[str]:
     return list(value)
 
 
+def _family_detail_list(
+    payload: dict[str, Any],
+    key: str,
+    *,
+    legacy_key: str,
+) -> list[str]:
+    value = payload.get(key)
+    if isinstance(value, list) and all(isinstance(item, str) and item.strip() for item in value):
+        return list(value)
+    legacy_value = payload.get(legacy_key)
+    if isinstance(legacy_value, str) and legacy_value.strip():
+        return [legacy_value]
+    raise StyleBenchmarkComparisonError(f"{key}_invalid")
+
+
 def _load_json_mapping(path: Path, *, label: str) -> dict[str, Any]:
     if path.is_symlink():
         raise StyleBenchmarkComparisonError(f"{label}_symlink_forbidden")
@@ -135,14 +150,25 @@ def _validate_linked_decision(
     return record
 
 
-def _validate_family_detail_fields(raw: dict[str, Any], *, label: str) -> dict[str, Any]:
-    details: dict[str, Any] = {}
-    for key in FAMILY_DETAIL_LIST_KEYS:
-        details[key] = _string_list(raw, key)
-    for key in FAMILY_DETAIL_STRING_KEYS:
-        value = _required_string(raw, key)
-        details[key] = value
-    return details
+def _validate_family_detail_fields(raw: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "what_can_improve": _family_detail_list(
+            raw,
+            "what_can_improve",
+            legacy_key="can_improve",
+        ),
+        "forbidden_semantic_changes": _family_detail_list(
+            raw,
+            "forbidden_semantic_changes",
+            legacy_key="semantic_changes_forbidden",
+        ),
+        "proof_criteria": _family_detail_list(
+            raw,
+            "proof_criteria",
+            legacy_key="evidence_to_prove_better",
+        ),
+        "human_only_question": _required_string(raw, "human_only_question"),
+    }
 
 
 def _validate_candidates(
@@ -184,19 +210,11 @@ def _validate_candidates(
             raise StyleBenchmarkComparisonError("non_current_winner_requires_real_candidate")
         if result == "winner_candidate" and boundary != "no_source_mutation":
             raise StyleBenchmarkComparisonError("winner_candidate_authorizes_mutation")
-        what_can_improve = _string_list(candidate, "what_can_improve")
-        candidate_forbidden = _string_list(candidate, "forbidden_semantic_changes")
-        proof_criteria = _string_list(candidate, "proof_criteria")
-        human_only_question = _required_string(candidate, "human_only_question")
-        if "semantic" not in "\n".join(candidate_forbidden):
-            raise StyleBenchmarkComparisonError(
-                "candidate_forbidden_semantic_changes_incomplete"
-            )
+        details = _validate_family_detail_fields(candidate)
         if candidate_id == "svg_polish_handoff":
             prerequisites = "\n".join(_string_list(candidate, "prerequisite_evidence"))
             if "ready_for_svg_polish" not in prerequisites:
                 raise StyleBenchmarkComparisonError("svg_polish_prerequisite_missing")
-        details = _validate_family_detail_fields(candidate, label=f"candidate_{candidate_id}")
         normalized.append(
             {
                 "id": candidate_id,
@@ -204,23 +222,10 @@ def _validate_candidates(
                 "mutation_boundary": boundary,
                 "authorizes_mutation": False,
                 "semantic_change_allowed": False,
-                "can_improve": _required_string(candidate, "can_improve"),
-                "semantic_changes_forbidden": _required_string(
-                    candidate,
-                    "semantic_changes_forbidden",
-                ),
-                "evidence_to_prove_better": _required_string(
-                    candidate,
-                    "evidence_to_prove_better",
-                ),
-                "human_only_question": _required_string(candidate, "human_only_question"),
                 "comparison_basis": _string_list(candidate, "comparison_basis"),
                 "failure_modes": _string_list(candidate, "failure_modes"),
                 "prerequisite_evidence": _string_list(candidate, "prerequisite_evidence"),
-                "what_can_improve": what_can_improve,
-                "forbidden_semantic_changes": candidate_forbidden,
-                "proof_criteria": proof_criteria,
-                "human_only_question": human_only_question,
+                **details,
             }
         )
     return normalized

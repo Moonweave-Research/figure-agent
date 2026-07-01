@@ -28,9 +28,9 @@ MUTATION_BOUNDARIES = frozenset(
     }
 )
 FAMILY_DETAIL_LIST_KEYS = (
-    "can_improve",
+    "what_can_improve",
     "forbidden_semantic_changes",
-    "proof_evidence",
+    "proof_criteria",
 )
 FAMILY_DETAIL_STRING_KEYS = ("human_only_question",)
 
@@ -71,6 +71,21 @@ def _as_string(payload: dict[str, Any], key: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise StyleBenchmarkPackError(f"{key}_invalid")
     return value
+
+
+def _family_detail_list(
+    payload: dict[str, Any],
+    key: str,
+    *,
+    legacy_key: str,
+) -> list[str]:
+    value = payload.get(key)
+    if isinstance(value, list) and all(isinstance(item, str) and item.strip() for item in value):
+        return list(value)
+    legacy_value = payload.get(legacy_key)
+    if isinstance(legacy_value, str) and legacy_value.strip():
+        return [legacy_value]
+    raise StyleBenchmarkPackError(f"{key}_invalid")
 
 
 def _plugin_local_path(plugin_root: Path, raw_path: str, *, label: str) -> Path:
@@ -165,24 +180,28 @@ def _validate_candidate_slots(payload: dict[str, Any]) -> list[dict[str, Any]]:
             "mutation_boundary": raw.get("mutation_boundary"),
             "entry_condition": raw.get("entry_condition"),
             "acceptance_rule": raw.get("acceptance_rule"),
-            "can_improve": raw.get("can_improve"),
-            "semantic_changes_forbidden": raw.get("semantic_changes_forbidden"),
-            "evidence_to_prove_better": raw.get("evidence_to_prove_better"),
-            "human_only_question": raw.get("human_only_question"),
         }
         if not all(isinstance(value, str) and value.strip() for value in values.values()):
             raise StyleBenchmarkPackError("candidate_family_slots_invalid")
         slot: dict[str, Any] = {
             key: value for key, value in values.items() if isinstance(value, str)
         }
-        slot["what_can_improve"] = _as_string_list(raw, "what_can_improve")
-        slot["forbidden_semantic_changes"] = _as_string_list(
-            raw, "forbidden_semantic_changes"
+        slot["what_can_improve"] = _family_detail_list(
+            raw,
+            "what_can_improve",
+            legacy_key="can_improve",
         )
-        slot["proof_criteria"] = _as_string_list(raw, "proof_criteria")
+        slot["forbidden_semantic_changes"] = _family_detail_list(
+            raw,
+            "forbidden_semantic_changes",
+            legacy_key="semantic_changes_forbidden",
+        )
+        slot["proof_criteria"] = _family_detail_list(
+            raw,
+            "proof_criteria",
+            legacy_key="evidence_to_prove_better",
+        )
         slot["human_only_question"] = _as_string(raw, "human_only_question")
-        if "semantic" not in "\n".join(slot["forbidden_semantic_changes"]):
-            raise StyleBenchmarkPackError("slot_forbidden_semantic_changes_incomplete")
         if slot["mutation_boundary"] not in MUTATION_BOUNDARIES:
             raise StyleBenchmarkPackError("mutation_boundary_invalid")
         ids.append(slot["id"])

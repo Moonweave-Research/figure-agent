@@ -90,22 +90,6 @@ def test_real_wave_f_style_benchmark_comparison_loads() -> None:
             "mutation_boundary": "no_source_mutation",
             "authorizes_mutation": False,
             "semantic_change_allowed": False,
-            "can_improve": (
-                "Keeps the current manuscript-ready style as the benchmark while "
-                "future candidates prove a real gain."
-            ),
-            "semantic_changes_forbidden": (
-                "May not change panel roles, measured quantities, force families, "
-                "semantic colors, required labels, or mechanism story."
-            ),
-            "evidence_to_prove_better": (
-                "A challenger must improve benchmark checks or named aesthetic "
-                "levers without adding hard regressions or semantic risk."
-            ),
-            "human_only_question": (
-                "Is staying with the current restrained overview preferable to "
-                "leaving it for a visually different candidate?"
-            ),
             "comparison_basis": [
                 "human decision selected keep_current_style as policy state only",
                 (
@@ -125,24 +109,26 @@ def test_real_wave_f_style_benchmark_comparison_loads() -> None:
                 "Wave C benchmark pack defines target style class and rejection rules",
             ],
             "what_can_improve": [
-                "baseline clarity can remain sufficient without added mutation risk",
-                "future candidates may improve journal fit only if evidence beats this baseline",
+                (
+                    "Keeps the current manuscript-ready style as the benchmark while "
+                    "future candidates prove a real gain."
+                ),
             ],
             "forbidden_semantic_changes": [
                 (
-                    "semantic meaning, labels, panel roles, color meaning, "
-                    "and release state must not change"
+                    "May not change panel roles, measured quantities, force families, "
+                    "semantic colors, required labels, or mechanism story."
                 ),
             ],
             "proof_criteria": [
                 (
-                    "current style stays winner unless another family improves "
-                    "measurable checks and human art direction without regressions"
+                    "A challenger must improve benchmark checks or named aesthetic "
+                    "levers without adding hard regressions or semantic risk."
                 ),
             ],
             "human_only_question": (
-                "Is the current restrained manuscript style good enough to keep as "
-                "the benchmark winner?"
+                "Is staying with the current restrained overview preferable to "
+                "leaving it for a visually different candidate?"
             ),
         }
     ]
@@ -212,11 +198,11 @@ def test_candidate_family_cannot_authorize_mutation(tmp_path: Path) -> None:
         style_benchmark_comparison.StyleBenchmarkComparisonError,
         match="candidate_authorizes_mutation",
     ):
-            style_benchmark_comparison.load_comparison(
-                "fig1_overview_v2_pair_001_vault",
-                plugin_root=plugin_root,
-                comparison_path=relative_path,
-            )
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
 
 
 def test_candidate_family_requires_bounded_benchmark_contract_fields(
@@ -252,10 +238,10 @@ def test_prettier_candidate_cannot_allow_semantic_change(tmp_path: Path) -> None
         style_benchmark_comparison.StyleBenchmarkComparisonError,
         match="candidate_semantic_change_allowed",
     ):
-            style_benchmark_comparison.load_comparison(
-                "fig1_overview_v2_pair_001_vault",
-                plugin_root=plugin_root,
-                comparison_path=relative_path,
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
         )
 
 
@@ -293,11 +279,11 @@ def test_svg_polish_candidate_requires_ready_for_svg_polish_evidence(tmp_path: P
         style_benchmark_comparison.StyleBenchmarkComparisonError,
         match="svg_polish_prerequisite_missing",
     ):
-            style_benchmark_comparison.load_comparison(
-                "fig1_overview_v2_pair_001_vault",
-                plugin_root=plugin_root,
-                comparison_path=relative_path,
-            )
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
 
 
 def test_editorial_redesign_cannot_be_winner_without_rendered_candidate_and_approval(
@@ -325,7 +311,7 @@ def test_comparison_requires_family_proof_criteria(tmp_path: Path) -> None:
     plugin_root, relative_path = _real_payload_copy(tmp_path)
     path = plugin_root / relative_path
     payload = json.loads(path.read_text(encoding="utf-8"))
-    del payload["candidate_family_comparisons"][0]["proof_criteria"]
+    del payload["candidate_family_comparisons"][0]["evidence_to_prove_better"]
     _write_comparison(path, payload)
 
     with pytest.raises(
