@@ -1366,6 +1366,49 @@ def test_print_table_outputs_grouped_summary_counts(
     assert "summary by_svg_polish_blocking_source=driver_blocker:2,driver_prerequisite:6" in out
 
 
+def test_print_table_includes_design_direction_summary(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    queue = {
+        "schema": "figure-agent.fixture-driver-queue.v1",
+        "mode": "release",
+        "goal": "design-direction-surface",
+        "rows": [
+            {
+                "fixture": "alpha",
+                "mode": "release",
+                "action": "run_compile",
+                "stop_boundary": None,
+                "first_blocker": None,
+                "safe_command": "/fig_compile alpha",
+                "required_actor": "workflow_agent",
+                "blocking_source": "driver.action",
+                "requires_human": False,
+                "design_direction_summary": {
+                    "state": "ready_for_human_choice",
+                    "default_recommendation": (
+                        "keep_current_style_until_candidate_beats_benchmark"
+                    ),
+                    "mutation_boundary": "no_source_mutation",
+                    "evidence_refs": ["style_benchmark_pack:docs/style-benchmark-packs/a.json"],
+                },
+            }
+        ],
+        "summary": {"total": 1, "errors": 0},
+    }
+
+    fig_queue.print_table(queue)
+
+    out = capsys.readouterr().out
+    assert "first_blocker	design_direction	next_step" in out
+    assert (
+        "ready_for_human_choice; "
+        "recommendation=keep_current_style_until_candidate_beats_benchmark; "
+        "boundary=no_source_mutation; evidence_refs=1"
+    ) in out
+    assert "closeout-accept" not in out
+    assert "--accept-golden" not in out
+
 def test_print_table_includes_svg_polish_columns_when_present(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

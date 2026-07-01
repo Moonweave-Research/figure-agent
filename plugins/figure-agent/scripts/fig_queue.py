@@ -1946,6 +1946,7 @@ def print_table(queue: dict[str, Any]) -> None:
     rows = queue.get("rows", [])
     show_svg_columns = _has_svg_polish_columns(rows)
     show_style_columns = _has_style_direction_columns(rows)
+    show_design_direction_columns = _has_design_direction_columns(rows)
     show_style_pack_columns = _has_style_benchmark_pack_columns(rows)
     show_style_comparison_columns = _has_style_benchmark_comparison_columns(rows)
     header = ["fixture", "actor", "action", "stop_boundary", "first_blocker"]
@@ -1963,6 +1964,8 @@ def print_table(queue: dict[str, Any]) -> None:
         )
     if show_style_columns:
         header.extend(["style_recommendation"])
+    if show_design_direction_columns:
+        header.extend(["design_direction"])
     if show_style_pack_columns:
         header.extend(["style_pack"])
     if show_style_comparison_columns:
@@ -1995,6 +1998,8 @@ def print_table(queue: dict[str, Any]) -> None:
                 packet.get("agent_recommendation") if isinstance(packet, dict) else None
             )
             cells.append(_cell(recommendation))
+        if show_design_direction_columns:
+            cells.append(_cell(_design_direction_table_cell(row)))
         if show_style_pack_columns:
             cells.append(_cell(row.get("style_benchmark_pack_state")))
         if show_style_comparison_columns:
@@ -2066,6 +2071,27 @@ def _has_style_direction_columns(rows: Any) -> bool:
         return False
     return any(isinstance(row, dict) and "style_direction_packet" in row for row in rows)
 
+
+
+def _has_design_direction_columns(rows: Any) -> bool:
+    if not isinstance(rows, list):
+        return False
+    return any(isinstance(row, dict) and "design_direction_summary" in row for row in rows)
+
+
+def _design_direction_table_cell(row: dict[str, Any]) -> str:
+    summary = row.get("design_direction_summary")
+    if not isinstance(summary, dict):
+        return "-"
+    state = _cell(summary.get("state"))
+    recommendation = _cell(summary.get("default_recommendation"))
+    boundary = _cell(summary.get("mutation_boundary"))
+    evidence = summary.get("evidence_refs")
+    evidence_count = len(evidence) if isinstance(evidence, list) else 0
+    return (
+        f"{state}; recommendation={recommendation}; "
+        f"boundary={boundary}; evidence_refs={evidence_count}"
+    )
 
 def _has_style_benchmark_pack_columns(rows: Any) -> bool:
     if not isinstance(rows, list):
