@@ -273,9 +273,6 @@ HELPER_SCRIPTS = {
     "release_gate.py",
     "spec_bbox_helper.py",
     "subregion_iteration_log.py",
-    "svg_polish_executor.py",
-    "svg_polish_handoff.py",
-    "svg_polish_recipe.py",
     "svg_semantic_diff.py",
     "tex_coordinate_shift.py",
     "text_boundary_spec_helper.py",
@@ -312,25 +309,6 @@ def _text_boundary(argv: list[str]) -> int:
     name = _validated_fixture_name(parser, args.name)
     fixture = _paths().examples_dir / name
     command = [sys.executable, str(SCRIPTS_DIR / "text_boundary_spec_helper.py"), str(fixture)]
-    if args.write:
-        command.append("--write")
-    return _run(command, cwd=_paths().workspace_root)
-
-
-def _svg_polish_exec(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="fig-agent svg-polish-exec")
-    parser.add_argument("name")
-    parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--write", action="store_true")
-    args = parser.parse_args(argv)
-    name = _validated_fixture_name(parser, args.name)
-    command = [
-        sys.executable,
-        str(_script_path("svg_polish_executor.py")),
-        str(_paths().examples_dir / name),
-    ]
-    if args.dry_run:
-        command.append("--dry-run")
     if args.write:
         command.append("--write")
     return _run(command, cwd=_paths().workspace_root)
@@ -1388,8 +1366,6 @@ def main(argv: list[str] | None = None) -> int:
         return _helper(rest)
     if command == "text-boundary":
         return _text_boundary(rest)
-    if command == "svg-polish-exec":
-        return _svg_polish_exec(rest)
     if command == "svg-polish-delta":
         return _svg_polish_delta(rest)
     if command == "quality-map":

@@ -335,17 +335,19 @@ Adding a new fixture to Layer B: edit its `spec.yaml`, set `ae_max` based on a m
 **Status**: implemented opt-in handoff contract. Manifest schema, `/fig_status`
 state, accepted-gate validation, verify-only `/fig_loop` surfacing,
 `/fig_drive --mode polish` routing, `scripts/svg_polish/svg_polish_recipe.py`,
-`scripts/svg_polish/svg_polish_executor.py`, `scripts/svg_polish/svg_polish_delta.py`, and
-final-artifact blocking are live. The plugin still does not invent hidden SVG
-geometry edits; `scripts/svg_polish/svg_polish_handoff.py` scaffolds the audit and manifest
-for an already-polished SVG.
+`scripts/svg_polish/svg_polish_delta.py`, and
+final-artifact blocking are live. The inert automated half — `svg_polish_executor.py`,
+`svg_polish_handoff.py`, the positive harness, `add_volume_shading.py`, and the
+synthetic `_volume_shading_demo` fixture — was deleted on 2026-07-02. The plugin
+still does not invent hidden SVG geometry edits; a human or outer agent authors
+the already-polished SVG plus its audit and manifest files directly.
 
-**Vacuity caveat (quarantined)**: the SVG-polish recipe/executor/delta/semantic-diff/
+**Vacuity caveat (quarantined)**: the remaining SVG-polish recipe/delta/semantic-diff/
 ship-gate machinery is inert on real figures — only the synthetic `_volume_shading_demo`
-fixture fires, because `dvisvgm` emits zero geometry IDs for real TikZ exports, so there
-is no addressable geometry for these ops to mutate. The covering tests are tagged
-`@pytest.mark.quarantine` so their green count does not imply a live guarantee on
-real figures.
+fixture ever fired (deleted with the executor), because `dvisvgm` emits zero geometry IDs
+for real TikZ exports, so there is no addressable geometry for these ops to mutate. The
+covering tests are tagged `@pytest.mark.quarantine` so their green count does not imply
+a live guarantee on real figures.
 
 **Design**:
 `docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`.
@@ -385,9 +387,9 @@ final_artifact:
 - `/fig_loop` remains verify-only. It blocks completion when status reports
   `workflow_ready=true` but `final_ready=false`, and it surfaces the current
   final-artifact state in its decision output.
-- `scripts/svg_polish/svg_polish_handoff.py` is the UX helper for writing
-  `polish/svg_polish_audit.md` and `polish/svg_polish_manifest.yaml` after a
-  human or outer agent creates `polish/<name>.polished.svg`.
+- `polish/svg_polish_audit.md` and `polish/svg_polish_manifest.yaml` are written
+  directly by the human or outer agent after creating `polish/<name>.polished.svg`
+  (the `svg_polish_handoff.py` scaffolding helper was deleted on 2026-07-02).
 
 ### Layer 6 — Validation Gates
 

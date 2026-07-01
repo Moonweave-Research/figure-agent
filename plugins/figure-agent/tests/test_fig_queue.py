@@ -129,9 +129,7 @@ def test_queue_surfaces_present_style_benchmark_pack_without_mutation(
     pack = row["style_benchmark_pack"]
     assert row["style_benchmark_pack_state"] == "present"
     assert pack["target_style_class"]
-    assert pack["default_recommendation"] == (
-        "keep_current_style_until_candidate_beats_benchmark"
-    )
+    assert pack["default_recommendation"] == ("keep_current_style_until_candidate_beats_benchmark")
     assert pack["safety_boundary"] == {
         "accepted_state_mutation": False,
         "generated_export_mutation": False,
@@ -1020,9 +1018,7 @@ def test_polish_queue_summary_counts_svg_gate_and_blockers(
         "not_qualified": 1,
         "ready_for_svg_polish": 1,
     }
-    assert queue["summary"]["by_polish_blocker_reason"] == {
-        "continue_tikz_recommended": 1
-    }
+    assert queue["summary"]["by_polish_blocker_reason"] == {"continue_tikz_recommended": 1}
     by_fixture = {row["fixture"]: row for row in queue["rows"]}
     assert by_fixture["beta"]["svg_polish_evidence_packet"]["positive_evidence"] == [
         "can_start_svg_polish=true",
@@ -1030,9 +1026,10 @@ def test_polish_queue_summary_counts_svg_gate_and_blockers(
         "polish_trigger_verdict=pass",
         "polish_route_detail=only optical cleanup remains",
     ]
-    assert by_fixture["alpha"]["svg_polish_evidence_packet"][
-        "missing_prerequisite_reason"
-    ] == "continue_tikz_recommended"
+    assert (
+        by_fixture["alpha"]["svg_polish_evidence_packet"]["missing_prerequisite_reason"]
+        == "continue_tikz_recommended"
+    )
 
 
 def test_polish_queue_decomposes_mode_forbidden_prerequisites(
@@ -1104,9 +1101,7 @@ def test_polish_queue_decomposes_mode_forbidden_prerequisites(
         "svg_polish_artifact_missing_or_stale": 1,
     }
     manifest_handoff = queue["command_plan"]["blocked"][2]["operator_handoff"]
-    assert manifest_handoff["polish_blocker"]["reason"] == (
-        "svg_polish_artifact_missing_or_stale"
-    )
+    assert manifest_handoff["polish_blocker"]["reason"] == ("svg_polish_artifact_missing_or_stale")
     assert manifest_handoff["svg_polish_evidence_packet"]["state"] == "not_qualified"
     assert manifest_handoff["svg_polish_evidence_packet"]["missing_prerequisite_reason"] == (
         "svg_polish_artifact_missing_or_stale"
@@ -1500,6 +1495,7 @@ def test_print_table_includes_design_direction_summary(
     ) in out
     assert "closeout-accept" not in out
     assert "--accept-golden" not in out
+
 
 def test_print_table_includes_svg_polish_columns_when_present(
     capsys: pytest.CaptureFixture[str],
@@ -1995,7 +1991,7 @@ def test_wave4_mixed_queue_keeps_authority_boundaries() -> None:
     rows = [
         *executable_loop_rows,
         {
-            "fixture": "_volume_shading_demo",
+            "fixture": "_unauthored_source_demo",
             "action": "create_or_fix_source",
             "required_actor": "workflow_agent",
             "requires_human": False,
@@ -2048,7 +2044,7 @@ def test_wave4_mixed_queue_keeps_authority_boundaries() -> None:
     assert [item["fixture"] for item in plan["executable"]] == [
         row["fixture"] for row in executable_loop_rows
     ]
-    assert plan["blocked"][0]["fixture"] == "_volume_shading_demo"
+    assert plan["blocked"][0]["fixture"] == "_unauthored_source_demo"
     assert plan["blocked"][0]["reason"] == "safe_command:missing"
 
     host_handoffs = {
@@ -2433,16 +2429,12 @@ def test_human_decision_digest_groups_queue_packets_without_mutation(
         "figure-agent.style-direction-packet.v1",
     ]
     groups = {group["id"]: group for group in digest["groups"]}
-    assert [row["fixture"] for row in groups["accept_current_candidates"]["rows"]] == [
-        "accept_me"
-    ]
+    assert [row["fixture"] for row in groups["accept_current_candidates"]["rows"]] == ["accept_me"]
     assert groups["accept_current_candidates"]["rows"][0]["packet_schemas"] == [
         "figure-agent.release-decision-packet.v1",
         "figure-agent.style-direction-packet.v1",
     ]
-    assert groups["redesign_benchmark_candidates"]["rows"][0]["fixture"] == (
-        "force_golden_fixture"
-    )
+    assert groups["redesign_benchmark_candidates"]["rows"][0]["fixture"] == ("force_golden_fixture")
     assert [row["fixture"] for row in groups["svg_polish_evidence_missing"]["rows"]] == [
         "needs_positive_svg_evidence",
         "needs_svg_evidence",
@@ -2630,9 +2622,7 @@ def test_queue_row_surfaces_compact_style_benchmark_pack(
     assert row["style_benchmark_pack_state"] == "present"
     summary = row["style_benchmark_pack"]
     assert summary == row["style_direction_packet"]["style_benchmark_pack"]
-    assert summary["target_style_class"] == (
-        "restrained editorial multipanel scientific schematic"
-    )
+    assert summary["target_style_class"] == ("restrained editorial multipanel scientific schematic")
     assert summary["default_recommendation"] == (
         "keep_current_style_until_candidate_beats_benchmark"
     )
@@ -2642,9 +2632,7 @@ def test_queue_row_surfaces_compact_style_benchmark_pack(
         "editorial_redesign",
         "svg_polish_handoff",
     ]
-    assert summary["candidate_mutation_boundaries"]["current_style"] == (
-        "no_source_mutation"
-    )
+    assert summary["candidate_mutation_boundaries"]["current_style"] == ("no_source_mutation")
     assert summary["linked_files"] == {
         "benchmark_contract": "examples/alpha/benchmark_contract.yaml",
         "aesthetic_intent": "examples/alpha/aesthetic_intent.yaml",
@@ -3026,9 +3014,7 @@ def test_queue_surfaces_design_direction_ready_human_choice(
     row = queue["rows"][0]
     assert row["design_direction_state"] == "ready_for_human_choice"
     assert row["design_direction_packet_schema"] == "figure-agent.design-direction-packet.v1"
-    assert row["design_direction_default"] == (
-        "keep_current_style_until_candidate_beats_benchmark"
-    )
+    assert row["design_direction_default"] == ("keep_current_style_until_candidate_beats_benchmark")
     assert row["design_direction_next_agent_action"] == (
         "prepare_bounded_candidate_or_stop_for_human_choice"
     )
@@ -3057,9 +3043,9 @@ def test_queue_surfaces_design_direction_ready_human_choice(
         "proof_criteria": ["A challenger must improve checks."],
         "human_only_question": "Is the current style sufficient?",
     }
-    assert row["design_direction_summary"]["candidate_family_evidence"][
-        "svg_polish_handoff"
-    ]["proof_criteria"] == ["Requires ready_for_svg_polish evidence."]
+    assert row["design_direction_summary"]["candidate_family_evidence"]["svg_polish_handoff"][
+        "proof_criteria"
+    ] == ["Requires ready_for_svg_polish evidence."]
     assert row["design_direction_human_question"].startswith("I recommend keeping")
     assert row["bottleneck_category"] == "template_style"
     assert row["required_actor"] == "human"
@@ -3113,7 +3099,6 @@ def test_queue_surfaces_design_direction_blockers(
     assert row["design_direction_summary"]["blocking_reasons"] == [expected_blocker]
     assert "command" not in row["design_direction_summary"]
     assert row["bottleneck_category"] == "template_style"
-
 
 
 def test_human_decision_digest_includes_design_direction_surface(
@@ -3181,6 +3166,7 @@ def test_human_decision_digest_includes_design_direction_surface(
         "style_benchmark_comparison:docs/style-benchmark-comparisons/wave/alpha.json",
     ]
     assert all("fig-agent " not in ref for ref in row["design_direction_evidence_refs"])
+
 
 def test_polish_queue_surfaces_svg_polish_evidence_missing_as_design_blocker(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
