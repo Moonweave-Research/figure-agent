@@ -271,6 +271,125 @@ def _default_final_artifact(name: str) -> dict:
     return compute_final_artifact_state(example_dir=Path("."), name=name, spec={})
 
 
+_NON_RELEASE_DECISION_ROUTES = {
+    "defer_for_dogfood": "dogfood",
+    "reject_current_artifact": "artifact_rejection",
+    "request_full_style_redesign": "style_redesign",
+    "request_bounded_tikz_source_polish": "bounded_tikz_source_polish",
+    "request_svg_polish_handoff_evidence": "svg_polish_handoff_evidence",
+}
+
+
+def _release_operation_command(name: str, exports_substate: str) -> str:
+    command = (
+        f"fig-agent closeout-accept {name} --decision accept "
+        "--reviewer <release-operator> --rationale <recorded-human-decision>"
+    )
+    if exports_substate == "TRACKED_GOLDEN":
+        command = f"{command} --accept-golden"
+    return command
+
+
+def _decision_record_roots(example_dir: Path) -> tuple[Path, ...]:
+    roots: list[Path] = []
+    if DECISION_RECORDS_ROOT.is_dir():
+        roots.append(DECISION_RECORDS_ROOT)
+    if example_dir.parent.name == "examples":
+        local_root = example_dir.parent.parent / "docs" / "decision-records"
+        if local_root.is_dir() and local_root not in roots:
+            roots.append(local_root)
+    return tuple(roots)
+
+
+def _record_display_path(path: Path) -> str:
+    try:
+        plugin_root = runtime_paths.resolve_runtime_paths().plugin_root.resolve()
+        return path.resolve().relative_to(plugin_root).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _load_valid_decision_records(example_dir: Path, name: str) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    seen: set[Path] = set()
+    for root in _decision_record_roots(example_dir):
+        for path in sorted(root.glob("**/*.json")):
+            resolved = path.resolve()
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+                validated = human_decision_record.validate_decision_record(raw)
+            except (
+                OSError,
+                UnicodeDecodeError,
+                json.JSONDecodeError,
+                human_decision_record.HumanDecisionRecordError,
+            ):
+                continue
+            if validated.get("fixture") != name:
+                continue
+            validated["record_path"] = _record_display_path(path)
+            records.append(validated)
+    return records
+
+
+def _release_decision_summary(
+    example_dir: Path,
+    name: str,
+    *,
+    exports_substate: str,
+) -> dict[str, Any]:
+    records = _load_valid_decision_records(example_dir, name)
+    accept_records = [
+        record
+        for record in records
+        if record.get("packet_schema") == human_decision_record.RELEASE_DECISION_PACKET_SCHEMA
+        and record.get("decision_kind") == "accept_current_generated_export"
+    ]
+    if accept_records:
+        record = accept_records[-1]
+        return {
+            "schema": "figure-agent.release-decision-summary.v1",
+            "state": "acceptance_authorized",
+            "decision_kind": record["decision_kind"],
+            "record_path": record["record_path"],
+            "release_operation": _release_operation_command(name, exports_substate),
+            "message": (
+                "valid human decision record authorizes naming the explicit "
+                "release-state operation; status does not execute it"
+            ),
+        }
+    non_release_records = [
+        record
+        for record in records
+        if record.get("decision_kind") in _NON_RELEASE_DECISION_ROUTES
+    ]
+    if non_release_records:
+        record = non_release_records[-1]
+        decision_kind = str(record["decision_kind"])
+        route = _NON_RELEASE_DECISION_ROUTES[decision_kind]
+        return {
+            "schema": "figure-agent.release-decision-summary.v1",
+            "state": "non_release_requested",
+            "decision_kind": decision_kind,
+            "record_path": record["record_path"],
+            "route": route,
+            "message": (
+                "valid human decision record routes away from release-state mutation"
+            ),
+            "follow_up": record.get("follow_up"),
+        }
+    return {
+        "schema": "figure-agent.release-decision-summary.v1",
+        "state": "missing",
+        "decision_kind": None,
+        "record_path": None,
+        "message": "no valid release-authorizing human decision record found",
+    }
+
+
 def _final_artifact_state(example_dir: Path, name: str, spec: dict) -> dict:
     return compute_final_artifact_state(
         example_dir,
