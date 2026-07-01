@@ -23,6 +23,17 @@ def _write_yaml(path: Path, payload: dict[str, object]) -> None:
     path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
 
+def _family_detail(name: str) -> dict[str, object]:
+    return {
+        "can_improve": [f"{name} can improve bounded manuscript review"],
+        "forbidden_semantic_changes": [
+            f"{name} must preserve panel roles, labels, and shallow/deep trap color semantics"
+        ],
+        "proof_evidence": [f"{name} has benchmark proof before selection"],
+        "human_only_question": f"Should {name} be preferred by a human reviewer?",
+    }
+
+
 def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
     _write_json(
         plugin_root / "docs" / "decision-packets" / "wave" / f"{fixture}.json",
@@ -85,6 +96,7 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                     "mutation_boundary": "no_source_mutation",
                     "entry_condition": "No candidate clearly improves manuscript value.",
                     "acceptance_rule": "Accept when alternatives introduce ambiguity.",
+                    **_family_detail("current_style"),
                 },
                 {
                     "id": "restrained_tikz_refinement",
@@ -92,6 +104,7 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                     "mutation_boundary": "source_mutation_requires_separate_approval",
                     "entry_condition": "A bounded source-level patch can improve style.",
                     "acceptance_rule": "Preserve all forbidden semantics.",
+                    **_family_detail("restrained_tikz_refinement"),
                 },
                 {
                     "id": "editorial_redesign",
@@ -99,6 +112,7 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                     "mutation_boundary": "source_mutation_requires_separate_approval",
                     "entry_condition": "Human explicitly asks for a broader alternative.",
                     "acceptance_rule": "Beat current style while preserving meaning.",
+                    **_family_detail("editorial_redesign"),
                 },
                 {
                     "id": "svg_polish_handoff",
@@ -109,6 +123,7 @@ def _minimal_pack(plugin_root: Path, fixture: str = "contract_demo") -> Path:
                         "ready_for_svg_polish evidence is positive."
                     ),
                     "acceptance_rule": "May adjust only optical finish.",
+                    **_family_detail("svg_polish_handoff"),
                 },
             ],
             "measurable_checks": [
@@ -262,6 +277,24 @@ def test_style_benchmark_pack_requires_exact_candidate_slots(tmp_path: Path) -> 
         )
 
 
+def test_style_benchmark_pack_requires_family_proof_evidence(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "plugin"
+    pack_path = _minimal_pack(plugin_root)
+    payload = json.loads(pack_path.read_text(encoding="utf-8"))
+    del payload["candidate_family_slots"][1]["proof_evidence"]
+    _write_json(pack_path, payload)
+
+    with pytest.raises(
+        style_benchmark_pack.StyleBenchmarkPackError,
+        match="candidate_restrained_tikz_refinement_proof_evidence_invalid",
+    ):
+        style_benchmark_pack.load_pack(
+            "contract_demo",
+            plugin_root=plugin_root,
+            pack_path=pack_path,
+        )
+
+
 def test_style_benchmark_pack_rejects_svg_polish_default(tmp_path: Path) -> None:
     plugin_root = tmp_path / "plugin"
     pack_path = _minimal_pack(plugin_root)
@@ -326,6 +359,15 @@ def test_style_benchmark_pack_summary_is_compact_and_read_only(tmp_path: Path) -
         "editorial_redesign",
         "svg_polish_handoff",
     ]
+    assert summary["candidate_family_details"]["editorial_redesign"] == {
+        "can_improve": ["editorial_redesign can improve bounded manuscript review"],
+        "forbidden_semantic_changes": [
+            ("editorial_redesign must preserve panel roles, labels, "
+             "and shallow/deep trap color semantics")
+        ],
+        "proof_evidence": ["editorial_redesign has benchmark proof before selection"],
+        "human_only_question": "Should editorial_redesign be preferred by a human reviewer?",
+    }
     assert summary["candidate_mutation_boundaries"] == {
         "current_style": "no_source_mutation",
         "restrained_tikz_refinement": "source_mutation_requires_separate_approval",

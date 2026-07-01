@@ -83,33 +83,16 @@ def test_real_wave_f_style_benchmark_comparison_loads() -> None:
         for candidate in payload["candidate_family_comparisons"]
         if candidate["result"] == "winner_candidate"
     ]
-    assert winners == [
-        {
-            "id": "current_style",
-            "result": "winner_candidate",
-            "mutation_boundary": "no_source_mutation",
-            "authorizes_mutation": False,
-            "semantic_change_allowed": False,
-            "comparison_basis": [
-                "human decision selected keep_current_style as policy state only",
-                (
-                    "current style remains the benchmark until a candidate beats it "
-                    "on measurable checks and human art direction"
-                ),
-            ],
-            "failure_modes": [
-                "can still be displaced by a later candidate with stronger evidence",
-                (
-                    "does not approve release, accepted-state mutation, export "
-                    "mutation, or golden mutation"
-                ),
-            ],
-            "prerequisite_evidence": [
-                "Wave E decision record keeps current style with no_source_mutation boundary",
-                "Wave C benchmark pack defines target style class and rejection rules",
-            ],
-        }
-    ]
+    assert len(winners) == 1
+    winner = winners[0]
+    assert winner["id"] == "current_style"
+    assert winner["mutation_boundary"] == "no_source_mutation"
+    assert winner["authorizes_mutation"] is False
+    assert winner["semantic_change_allowed"] is False
+    assert winner["can_improve"]
+    assert winner["forbidden_semantic_changes"]
+    assert winner["proof_evidence"]
+    assert winner["human_only_question"]
     assert all(
         candidate["authorizes_mutation"] is False
         for candidate in payload["candidate_family_comparisons"]
@@ -145,6 +128,24 @@ def test_real_fig3_style_benchmark_comparison_loads() -> None:
         candidate["semantic_change_allowed"] is False
         for candidate in payload["candidate_family_comparisons"]
     )
+
+
+def test_candidate_family_requires_human_only_question(tmp_path: Path) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    del payload["candidate_family_comparisons"][1]["human_only_question"]
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="human_only_question_invalid",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
 
 
 def test_candidate_family_cannot_authorize_mutation(tmp_path: Path) -> None:
