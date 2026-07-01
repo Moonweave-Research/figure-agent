@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -53,10 +54,10 @@ def _request_packet() -> dict[str, object]:
     }
 
 
-def _run_fig_agent(*args: str) -> subprocess.CompletedProcess[str]:
+def _run_fig_agent(*args: str, workspace: Path | None = None) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
-    env["FIGURE_AGENT_WORKSPACE"] = str(PLUGIN_ROOT)
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace or PLUGIN_ROOT)
     return subprocess.run(
         ["uv", "run", "--project", str(PLUGIN_ROOT), "python", str(FIG_AGENT), *args],
         cwd=PLUGIN_ROOT,
@@ -65,6 +66,23 @@ def _run_fig_agent(*args: str) -> subprocess.CompletedProcess[str]:
         capture_output=True,
         check=False,
     )
+
+
+def _baseline_workspace(tmp_path: Path) -> Path:
+    workspace = tmp_path / "workspace"
+    fixture_dir = workspace / "examples" / FIXTURE
+    shutil.copytree(PLUGIN_ROOT / "examples" / FIXTURE, fixture_dir)
+    (fixture_dir / f"{FIXTURE}.tex").write_text(
+        "\n".join(
+            [
+                "% fixture",
+                r"      at (3.50, 2.85) {$kT \ll E_t$\\[-1pt](escape negligible)};",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return workspace
 
 
 def test_candidate_packet_contains_hash_bound_patch_without_mutation(tmp_path: Path) -> None:
@@ -135,8 +153,12 @@ def test_candidate_packet_rejects_unsafe_fixture(tmp_path: Path) -> None:
         )
 
 
-def test_fig_agent_bounded_tikz_candidate_cli_reads_live_fig3_source() -> None:
-    result = _run_fig_agent("bounded-tikz-candidate", FIXTURE, "--json")
+def test_fig_agent_bounded_tikz_candidate_cli_reads_workspace_source(
+    tmp_path: Path,
+) -> None:
+    workspace = _baseline_workspace(tmp_path)
+
+    result = _run_fig_agent("bounded-tikz-candidate", FIXTURE, "--json", workspace=workspace)
 
     assert result.returncode == 0, result.stderr
     packet = json.loads(result.stdout)
