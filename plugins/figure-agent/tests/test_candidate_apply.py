@@ -15,6 +15,15 @@ import candidate_acceptance  # noqa: E402
 import candidate_apply  # noqa: E402
 
 
+@pytest.fixture(autouse=True)
+def _no_real_pre_mutation_compile(monkeypatch):
+    # M3 added a best-effort pre-mutation compile when build/<name>.pdf is absent so
+    # the value-preservation gate has a baseline; neutralize the shell-out here so
+    # unit tests never invoke lualatex. Tests asserting the compile IS forced
+    # re-override this with their own spy.
+    monkeypatch.setattr(candidate_apply, "_compile_current_source", lambda *_a, **_k: None)
+
+
 def _sha256_text(text: str) -> str:
     return "sha256:" + sha256(text.encode("utf-8")).hexdigest()
 
@@ -466,6 +475,9 @@ def test_apply_candidate_records_failed_post_apply_verification(
         }
 
     monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+    # Give the value-preservation gate a stable label baseline so the ONLY failure
+    # is the mocked export, not a missing baseline (M3).
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
 
     result = candidate_apply.apply_candidate(
         "candidate_demo",
@@ -499,6 +511,7 @@ def test_apply_candidate_runs_post_apply_verification_by_default(
         }
 
     monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
 
     result = candidate_apply.apply_candidate(
         "candidate_demo",
@@ -663,6 +676,13 @@ def test_apply_candidate_semantic_recheck_success_when_resolved(
         pre=[_ledger_defect("QD001")],
         post=[],  # target resolved, nothing new
     )
+    # No build/<name>.pdf in the fixture, so M3 must force a pre-mutation compile to
+    # obtain a value-preservation baseline; spy on it and give a stable baseline.
+    compile_calls: list[str] = []
+    monkeypatch.setattr(
+        candidate_apply, "_compile_current_source", lambda name, _paths: compile_calls.append(name)
+    )
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
 
     result = candidate_apply.apply_candidate(
         "candidate_demo",
@@ -675,6 +695,7 @@ def test_apply_candidate_semantic_recheck_success_when_resolved(
     )
 
     assert result["status"] == "applied"
+    assert compile_calls == ["candidate_demo"]  # baseline absent -> forced compile
     recheck = result["post_apply"]["detector_recheck"]
     assert recheck["status"] == "success"
     assert recheck["reason"] == "source_defect_resolved"
@@ -688,10 +709,11 @@ def test_verify_labels_unchanged_equal_passes_and_differ_fails():
     assert reason == "labels_changed"
 
 
-def test_verify_labels_unchanged_skips_without_baseline():
-    # No pre-mutation PDF words => cannot compare => must not block.
+def test_verify_labels_unchanged_blocks_without_baseline():
+    # No pre-mutation baseline => value-preservation is unverifiable => FAIL CLOSED.
+    # (M3: an absent baseline must not silently pass the safety gate.)
     ok, reason = candidate_apply._verify_labels_unchanged({}, {"S": 1})
-    assert ok is True
+    assert ok is False
     assert reason == "no_label_baseline"
 
 
@@ -787,6 +809,7 @@ def test_post_apply_export_does_not_force_golden_roll_forward(
         return Completed()
 
     monkeypatch.setattr(candidate_apply.subprocess, "run", fake_run)
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
 
     result = candidate_apply.apply_candidate(
         "candidate_demo",

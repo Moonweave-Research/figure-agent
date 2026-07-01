@@ -581,10 +581,31 @@ def _pdf_words(pdf_path: Path) -> Counter:
     return Counter(completed.stdout.split())
 
 
+def _compile_current_source(name: str, paths: runtime_paths.RuntimePaths) -> None:
+    """Force a compile of the CURRENT (unmutated) source to (re)create
+    build/<name>.pdf, so the value-preservation gate has a pre-mutation label
+    baseline. Best-effort: if it fails, the baseline stays absent and the gate
+    fails closed (M3)."""
+    subprocess.run(
+        [
+            "bash",
+            str(paths.scripts_dir / "compile.sh"),
+            str(paths.examples_dir / name / f"{name}.tex"),
+        ],
+        cwd=paths.workspace_root,
+        env=_post_apply_env(paths),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+
 def _verify_labels_unchanged(pre_words: Counter, post_words: Counter) -> tuple[bool, str]:
-    # No baseline (pre-mutation PDF absent) => cannot compare; do not block.
+    # No baseline (pre-mutation PDF absent / unreadable) => value-preservation is
+    # unverifiable, so FAIL CLOSED (M3). The caller forces a pre-mutation compile
+    # before snapshotting so a legitimate apply is not blocked for a missing render.
     if not pre_words:
-        return (True, "no_label_baseline")
+        return (False, "no_label_baseline")
     if pre_words == post_words:
         return (True, "labels_unchanged")
     return (False, "labels_changed")
@@ -774,7 +795,13 @@ def apply_candidate(
         # can tell an edit-introduced NEW crossing from a stable baseline.
         pre_crossing = _post_crossing_texts(example_dir) if post_apply else []
         # Snapshot rendered labels BEFORE mutation for the value-preservation gate.
+        # M3: if the baseline PDF is absent (e.g. git clean dropped build/), force a
+        # pre-mutation compile of the CURRENT source so the gate has a real baseline
+        # instead of silently skipping. If it still cannot be produced, the gate
+        # fails closed downstream (_verify_labels_unchanged blocks on empty words).
         build_pdf = example_dir / "build" / f"{name}.pdf"
+        if post_apply and not build_pdf.is_file():
+            _compile_current_source(name, paths)
         pre_words = _pdf_words(build_pdf) if post_apply else Counter()
         changed_files: list[dict[str, str]] = []
         for change in changes:
