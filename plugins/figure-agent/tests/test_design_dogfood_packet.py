@@ -165,5 +165,5 @@ def test_fig_agent_design_dogfood_cli_reads_live_fig3_queue() -> None:
     assert packet["fixture"] == FIXTURE
     assert packet["state"] == "ready_for_human_choice"
     assert packet["mutation_boundary"] == "no_source_mutation"
-    assert packet["missing_evidence"]
+    assert packet["missing_evidence"] == []
     assert all(choice["authorizes_mutation"] is False for choice in packet["choices"])

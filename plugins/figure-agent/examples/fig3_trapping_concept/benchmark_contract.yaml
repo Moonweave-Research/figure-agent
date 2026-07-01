@@ -1,0 +1,33 @@
+schema: figure-agent.benchmark-contract.v1
+fixture: fig3_trapping_concept
+defect_class: style_benchmark_policy
+candidate_families:
+  - current-style
+  - restrained-tikz-refinement
+  - editorial-redesign
+  - svg-polish-handoff
+candidate_edit_classes:
+  - label_spacing
+  - stroke_hierarchy
+  - trap_level_clarity
+  - optical_finish
+required_detectors:
+  - text_boundary
+  - visual_clash
+  - physics_grounding
+detector_reports:
+  text_boundary: build/text_boundary_clash.json
+  visual_clash: build/visual_clash.json
+  physics_grounding: build/physics_grounding.json
+expected_movement:
+  text_boundary.blocker_count: decrease_or_equal
+  visual_clash.warning_count: decrease_or_equal
+hard_regressions:
+  - source_compile_failure
+  - candidate_hard_gate_rejected
+reference_policy:
+  kind: user_owned_dogfood
+  external_images_allowed: false
+  golden_target_allowed: false
+release:
+  release_blocking: false

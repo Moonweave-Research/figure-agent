@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-decision-record.v1",
+  "fixture": "fig3_trapping_concept",
+  "packet_schema": "figure-agent.style-direction-packet.v1",
+  "queue_run_id": "wave-g-fig3-style-benchmark-2026-07-01",
+  "decision_kind": "keep_current_style",
+  "agent_recommendation": "Keep the current restrained two-panel mechanism style as the benchmark unless a future candidate beats it without increasing semantic, source, SVG, release, export, or golden risk.",
+  "human_decision": "keep_current_style",
+  "human_note": "Record this as style policy only. It does not approve source edits, SVG edits, acceptance, release, export, final artifact, or golden mutation.",
+  "follow_up": {
+    "implementation_slice": "Use the fig3 style benchmark pack and comparison as the target before any future polish or redesign candidate is proposed."
+  },
+  "mutation_boundary": "no_source_mutation"
+}

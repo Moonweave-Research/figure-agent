@@ -1,0 +1,50 @@
+{
+  "schema": "figure-agent.style-direction-packet.v1",
+  "fixture": "fig3_trapping_concept",
+  "state": "review_complete",
+  "agent_recommendation": "keep_current_style_with_optional_bounded_tikz_polish",
+  "current_style_assessment": "No queue-visible defect blocker remains; the current visual language is acceptable as a restrained two-panel manuscript mechanism schematic unless this figure is promoted to a flagship visual.",
+  "human_question": "I recommend keeping the current style as the benchmark until a candidate beats it on explicit visual checks. Should I prepare keep-current, bounded TikZ polish, SVG polish evidence, or full redesign evidence next?",
+  "recommended_choice_id": "keep_current_style",
+  "choices": [
+    {
+      "id": "keep_current_style",
+      "label": "Keep current style",
+      "next_slice": "create style benchmark pack and comparison policy only",
+      "risk": "may remain solid-manuscript rather than flagship polish",
+      "scope_change": false
+    },
+    {
+      "id": "bounded_tikz_source_polish",
+      "label": "Bounded TikZ source polish",
+      "next_slice": "open one targeted typography, spacing, or stroke polish task",
+      "risk": "can improve hierarchy but should stay one local pass",
+      "scope_change": false
+    },
+    {
+      "id": "svg_polish_handoff",
+      "label": "SVG polish handoff",
+      "next_slice": "run polish queue and require positive ready_for_svg_polish evidence",
+      "risk": "requires positive readiness evidence and separate SVG artifact approval",
+      "scope_change": true
+    },
+    {
+      "id": "full_style_redesign",
+      "label": "Full style redesign",
+      "next_slice": "create redesign alternatives against this benchmark before source mutation",
+      "risk": "changes visual language and needs benchmark comparison",
+      "scope_change": true
+    }
+  ],
+  "does_not_block_release": true,
+  "mutation_boundary": "no_source_mutation",
+  "evidence_refs": [
+    "render_state:FRESH",
+    "critique_state:FRESH",
+    "export_state:FRESH",
+    "design-dogfood:figure-agent.design-dogfood-packet.v1"
+  ],
+  "follow_up": {
+    "implementation_slice": "Record style policy only; create benchmark evidence before any future redesign, source, SVG, release, export, or golden mutation."
+  }
+}

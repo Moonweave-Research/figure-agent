@@ -1,0 +1,109 @@
+{
+  "schema": "figure-agent.style-benchmark-comparison-packet.v1",
+  "fixture": "fig3_trapping_concept",
+  "source_style_benchmark_pack": "docs/style-benchmark-packs/2026-06-30-wave-c/fig3_trapping_concept.json",
+  "source_human_decision_record": "docs/decision-records/2026-07-01-wave-g/fig3_trapping_concept_keep_current_style.json",
+  "purpose": "Compare fig3 style candidate families before any source, SVG, accepted-state, release-state, export, or golden mutation is authorized.",
+  "forbidden_semantic_changes": [
+    "change panel roles: panel a must remain PDMS clean bandgap and panel b must remain sulfur polymer trap mechanism",
+    "rename symbols, CB/VB, E_t, kT, injection, capture, thermal escape, shallow trap, or deep trap labels",
+    "swap shallow/deep trap color semantics or invert their relative positions",
+    "remove required labels, trapped-electron clusters, trap levels, injection arrows, capture arrows, or weak escape cues",
+    "use SVG polish to repair scientific, semantic, or label-target errors that belong in TikZ/source review"
+  ],
+  "benchmark_measurable_checks": [
+    "benchmark_contract_hard_regressions must remain absent",
+    "text_boundary.blocker_count should decrease_or_equal",
+    "style_lock_typography must not add local tiny/scriptsize/huge overrides",
+    "visual_clash_delta should decrease_or_equal when rendered artifacts exist"
+  ],
+  "human_only_questions": [
+    "Does the current restrained two-panel schematic already communicate the mechanism well enough for manuscript use?",
+    "Is the remaining gap bounded source polish, or is a broader editorial redesign worth the semantic risk?",
+    "Is this figure being promoted toward a flagship visual, or should it remain a restrained main-text concept schematic?"
+  ],
+  "candidate_rejection_rules": [
+    "reject a prettier candidate if it changes semantic meaning, panel roles, labels, trap positions, or color meaning",
+    "reject SVG polish if it is being used to fix source-level semantic defects",
+    "reject broad redesign if the only improvement is non-measurable taste language",
+    "reject any route that implies accepted-state, release-state, final-artifact, export, or golden mutation without a separate explicit gate"
+  ],
+  "candidate_family_comparisons": [
+    {
+      "id": "current_style",
+      "result": "winner_candidate",
+      "mutation_boundary": "no_source_mutation",
+      "authorizes_mutation": false,
+      "semantic_change_allowed": false,
+      "comparison_basis": [
+        "human decision selected keep_current_style as style policy only",
+        "current two-panel mechanism schematic remains the benchmark until a candidate beats it on measurable checks and human art direction"
+      ],
+      "failure_modes": [
+        "can still be displaced by a later candidate with stronger evidence",
+        "does not approve source, SVG, release, accepted-state, export, final-artifact, or golden mutation"
+      ],
+      "prerequisite_evidence": [
+        "Wave G decision record keeps current style with no_source_mutation boundary",
+        "Wave G benchmark pack defines target style class and rejection rules"
+      ]
+    },
+    {
+      "id": "restrained_tikz_refinement",
+      "result": "blocked_requires_separate_approval",
+      "mutation_boundary": "source_mutation_requires_separate_approval",
+      "authorizes_mutation": false,
+      "semantic_change_allowed": false,
+      "comparison_basis": [
+        "candidate may improve typography, trap-level spacing, stroke rhythm, or label breathing room",
+        "candidate must improve at least one measurable check while preserving all forbidden semantics"
+      ],
+      "failure_modes": [
+        "reject if it changes capture, escape, or trap-level meaning while looking cleaner",
+        "reject if it only changes taste language without measurable or named aesthetic benefit"
+      ],
+      "prerequisite_evidence": [
+        "separate bounded TikZ implementation approval",
+        "fresh comparison packet after candidate patch exists"
+      ]
+    },
+    {
+      "id": "editorial_redesign",
+      "result": "rejected_semantic_risk",
+      "mutation_boundary": "source_mutation_requires_separate_approval",
+      "authorizes_mutation": false,
+      "semantic_change_allowed": false,
+      "comparison_basis": [
+        "candidate could be visually stronger but must beat current style without increasing semantic or release risk",
+        "human must explicitly ask for broader visual-language alternatives after seeing benchmark tradeoffs"
+      ],
+      "failure_modes": [
+        "reject a prettier candidate if it changes semantic meaning",
+        "reject if it weakens panel roles, label targets, trap position, color semantics, or mechanism contrast"
+      ],
+      "prerequisite_evidence": [
+        "human request for editorial redesign benchmark",
+        "semantic preservation evidence against all forbidden changes"
+      ]
+    },
+    {
+      "id": "svg_polish_handoff",
+      "result": "blocked_missing_evidence",
+      "mutation_boundary": "svg_artifact_mutation_requires_separate_approval",
+      "authorizes_mutation": false,
+      "semantic_change_allowed": false,
+      "comparison_basis": [
+        "SVG polish is only an optical finish route after TikZ/source semantics are locked",
+        "semantic or label-target defects must return to TikZ/source review"
+      ],
+      "failure_modes": [
+        "reject if SVG polish is used to repair scientific, semantic, or label-target defects",
+        "reject if no positive ready_for_svg_polish evidence exists"
+      ],
+      "prerequisite_evidence": [
+        "ready_for_svg_polish evidence required before SVG artifact handoff",
+        "separate SVG artifact mutation approval required even after positive evidence"
+      ]
+    }
+  ]
+}

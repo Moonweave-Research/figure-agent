@@ -1,0 +1,110 @@
+{
+  "schema": "figure-agent.style-benchmark-candidate-pack.v1",
+  "fixture": "fig3_trapping_concept",
+  "source_decision_packet": "docs/decision-packets/2026-07-01-wave-g/fig3_trapping_concept_style_direction.json",
+  "source_decision_record": "docs/decision-records/2026-07-01-wave-g/fig3_trapping_concept_keep_current_style.json",
+  "benchmark_contract": "examples/fig3_trapping_concept/benchmark_contract.yaml",
+  "aesthetic_intent": "examples/fig3_trapping_concept/aesthetic_intent.yaml",
+  "target_style_class": "restrained two-panel scientific mechanism schematic",
+  "default_recommendation": "keep_current_style_until_candidate_beats_benchmark",
+  "purpose": "Compare future style directions against the fig3 trap-retention benchmark before any source, SVG, acceptance, release-state, export, or golden mutation.",
+  "current_style": {
+    "strengths": [
+      "direct two-panel contrast between polarization-only PDMS and sulfur-polymer trap retention",
+      "fresh render, critique, and export evidence with no queue-visible scientific blocker",
+      "explicit physics invariants for capture direction, escape direction, trap placement, and trapped-electron anchoring",
+      "restrained manuscript schematic style that avoids data-figure overreach"
+    ],
+    "weaknesses": [
+      "may remain solid-manuscript rather than flagship visual",
+      "small labels and trap-level spacing can still benefit from bounded source polish",
+      "SVG polish readiness evidence is not yet positive and must not be assumed"
+    ]
+  },
+  "forbidden_semantic_changes": [
+    "change panel roles: panel a must remain PDMS clean bandgap and panel b must remain sulfur polymer trap mechanism",
+    "rename symbols, CB/VB, E_t, kT, injection, capture, thermal escape, shallow trap, or deep trap labels",
+    "swap shallow/deep trap color semantics or invert their relative positions",
+    "remove required labels, trapped-electron clusters, trap levels, injection arrows, capture arrows, or weak escape cues",
+    "use SVG polish to repair scientific, semantic, or label-target errors that belong in TikZ/source review"
+  ],
+  "candidate_family_slots": [
+    {
+      "id": "current_style",
+      "label": "Keep current style",
+      "mutation_boundary": "no_source_mutation",
+      "entry_condition": "No candidate clearly improves manuscript value without increasing semantic or release risk.",
+      "acceptance_rule": "Accept as benchmark winner when alternatives only improve taste language or introduce semantic ambiguity."
+    },
+    {
+      "id": "restrained_tikz_refinement",
+      "label": "Restrained TikZ refinement",
+      "mutation_boundary": "source_mutation_requires_separate_approval",
+      "entry_condition": "A bounded source-level patch can improve typography, trap-level spacing, stroke rhythm, or label breathing room without changing meaning.",
+      "acceptance_rule": "Must preserve all forbidden semantics and improve at least one measurable check or named aesthetic lever."
+    },
+    {
+      "id": "editorial_redesign",
+      "label": "Editorial redesign",
+      "mutation_boundary": "source_mutation_requires_separate_approval",
+      "entry_condition": "Human explicitly asks for a broader visual-language alternative after seeing benchmark tradeoffs.",
+      "acceptance_rule": "Must beat current style on mechanism contrast and journal fit while preserving panel roles, labels, color semantics, and trap physics."
+    },
+    {
+      "id": "svg_polish_handoff",
+      "label": "SVG polish handoff",
+      "mutation_boundary": "svg_artifact_mutation_requires_separate_approval",
+      "entry_condition": "TikZ/source semantics are locked and ready_for_svg_polish evidence is positive.",
+      "acceptance_rule": "May adjust only optical spacing, stroke finish, or texture nuance; semantic repair must return to TikZ/source review."
+    }
+  ],
+  "measurable_checks": [
+    {
+      "id": "benchmark_contract_hard_regressions",
+      "source": "benchmark_contract.yaml",
+      "must_pass": [
+        "source_compile_failure absent",
+        "candidate_hard_gate_rejected absent"
+      ]
+    },
+    {
+      "id": "text_boundary_delta",
+      "source": "benchmark_contract.yaml",
+      "metric": "text_boundary.blocker_count",
+      "expected_movement": "decrease_or_equal"
+    },
+    {
+      "id": "style_lock_typography",
+      "source": "style lock lint",
+      "must_pass": [
+        "no new local tiny/scriptsize/huge overrides",
+        "panel labels and role labels keep controlled hierarchy"
+      ]
+    },
+    {
+      "id": "visual_clash_delta",
+      "source": "detector reports when rendered artifacts exist",
+      "expected_movement": "decrease_or_equal"
+    }
+  ],
+  "human_only_questions": [
+    "Does the current restrained two-panel schematic already communicate the mechanism well enough for manuscript use?",
+    "Is the remaining gap bounded source polish, or is a broader editorial redesign worth the semantic risk?",
+    "Should SVG polish remain blocked until explicit ready_for_svg_polish evidence exists?",
+    "Is this figure being promoted toward a flagship visual, or should it remain a restrained main-text concept schematic?"
+  ],
+  "candidate_rejection_rules": [
+    "reject a prettier candidate if it changes semantic meaning, panel roles, labels, trap positions, or color meaning",
+    "reject SVG polish if it is being used to fix source-level semantic defects",
+    "reject broad redesign if the only improvement is non-measurable taste language",
+    "reject any route that implies accepted-state, release-state, final-artifact, export, or golden mutation without a separate explicit gate"
+  ],
+  "safety": {
+    "source_mutation": false,
+    "accepted_state_mutation": false,
+    "release_state_mutation": false,
+    "generated_export_mutation": false,
+    "golden_mutation": false,
+    "svg_polish_default": false
+  }
+}

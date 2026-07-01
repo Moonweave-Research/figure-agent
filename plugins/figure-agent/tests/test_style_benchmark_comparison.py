@@ -120,6 +120,33 @@ def test_real_wave_f_style_benchmark_comparison_loads() -> None:
     )
 
 
+def test_real_fig3_style_benchmark_comparison_loads() -> None:
+    payload = style_benchmark_comparison.load_comparison(
+        "fig3_trapping_concept",
+        plugin_root=PLUGIN_ROOT,
+    )
+
+    assert payload["schema"] == style_benchmark_comparison.SCHEMA
+    assert payload["human_style_decision"] == "keep_current_style"
+    assert payload["target_style_class"] == (
+        "restrained two-panel scientific mechanism schematic"
+    )
+    assert payload["default_recommendation"] == (
+        "keep_current_style_until_candidate_beats_benchmark"
+    )
+    assert {
+        candidate["id"] for candidate in payload["candidate_family_comparisons"]
+    } == style_benchmark_comparison.REQUIRED_CANDIDATE_FAMILIES
+    assert all(
+        candidate["authorizes_mutation"] is False
+        for candidate in payload["candidate_family_comparisons"]
+    )
+    assert all(
+        candidate["semantic_change_allowed"] is False
+        for candidate in payload["candidate_family_comparisons"]
+    )
+
+
 def test_candidate_family_cannot_authorize_mutation(tmp_path: Path) -> None:
     plugin_root, relative_path = _real_payload_copy(tmp_path)
     path = plugin_root / relative_path

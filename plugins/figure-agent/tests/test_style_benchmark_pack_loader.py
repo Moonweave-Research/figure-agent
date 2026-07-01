@@ -180,6 +180,31 @@ def test_real_wave_c_style_benchmark_pack_loads_and_links_contracts() -> None:
     }
 
 
+def test_real_fig3_style_benchmark_pack_loads_and_links_contracts() -> None:
+    payload = style_benchmark_pack.load_pack(
+        "fig3_trapping_concept",
+        plugin_root=PLUGIN_ROOT,
+    )
+
+    assert payload["schema"] == style_benchmark_pack.SCHEMA
+    assert payload["state"] == "present"
+    assert payload["fixture"] == "fig3_trapping_concept"
+    assert payload["target_style_class"] == (
+        "restrained two-panel scientific mechanism schematic"
+    )
+    assert {
+        slot["id"] for slot in payload["candidate_family_slots"]
+    } == style_benchmark_pack.REQUIRED_CANDIDATE_SLOTS
+    assert payload["safety"] == {
+        "accepted_state_mutation": False,
+        "generated_export_mutation": False,
+        "golden_mutation": False,
+        "release_state_mutation": False,
+        "source_mutation": False,
+        "svg_polish_default": False,
+    }
+
+
 def test_missing_style_benchmark_pack_is_structured_state() -> None:
     payload = style_benchmark_pack.load_pack(
         "smoke_panel_spacing_demo",
