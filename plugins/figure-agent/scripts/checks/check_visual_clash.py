@@ -32,7 +32,9 @@ class VisualIssue:
     bbox: tuple[int, int, int, int]
 
 
-KNOWN_FALSE_POSITIVES_PATH = Path(__file__).resolve().parent.parent / "_known_false_positives.yaml"
+KNOWN_FALSE_POSITIVES_PATH = (
+    Path(__file__).resolve().parents[2] / "_known_false_positives.yaml"
+)
 
 
 def extract_pdf_words_and_page(pdf_path: Path) -> tuple[list[dict], tuple[float, float]]:
@@ -327,6 +329,10 @@ def _detail_value(detail: str, key: str) -> float | None:
 
 def _matches_known_false_positive(issue: VisualIssue, pattern: dict) -> bool:
     pattern_id = pattern.get("id")
+    kind = pattern.get("kind")
+    if kind is not None and issue.kind != kind:
+        return False
+
     glyph = pattern.get("glyph")
     if glyph is not None and issue.text != glyph:
         return False

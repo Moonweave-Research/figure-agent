@@ -34,6 +34,54 @@ def test_compile_sh_wires_the_physics_checks() -> None:
     assert "scripts/checks/check_physics_grounding.py" in compile_sh
 
 
+def test_check_visual_clash_known_false_positive_registry_path_exists() -> None:
+    assert check_visual_clash.KNOWN_FALSE_POSITIVES_PATH == (
+        REPO_ROOT / "_known_false_positives.yaml"
+    )
+    patterns = check_visual_clash.load_known_false_positive_patterns()
+    assert any(pattern.get("id") == "material_label_pdms_path_edge" for pattern in patterns)
+
+
+def test_check_visual_clash_false_positive_matching_requires_kind() -> None:
+    issue = check_visual_clash.VisualIssue(
+        "text_on_path",
+        "injection",
+        "dark=0.041, edge=0.006",
+        (1, 2, 3, 4),
+    )
+    pattern = {
+        "id": "schematic_label_injection",
+        "glyph": "injection",
+        "kind": "text_on_fill",
+    }
+
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        [issue],
+        [pattern],
+    )
+
+    assert filtered == [issue]
+    assert suppressed == 0
+
+
+def test_check_visual_clash_false_positive_matching_accepts_same_kind() -> None:
+    issue = check_visual_clash.VisualIssue(
+        "text_on_path",
+        "PDMS",
+        "dark=0.041, edge=0.004",
+        (1, 2, 3, 4),
+    )
+    patterns = check_visual_clash.load_known_false_positive_patterns()
+
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        [issue],
+        patterns,
+    )
+
+    assert filtered == []
+    assert suppressed == 1
+
+
 def _require_golden_pdf() -> None:
     if not GOLDEN_PDF.exists():
         pytest.skip(f"{GOLDEN_PDF} not present; run /fig_compile golden_trap_depth_picture")
@@ -133,6 +181,7 @@ def test_compile_strict_flag_is_documented_in_script() -> None:
     compile_sh = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
     assert "FIGURE_AGENT_STRICT" in compile_sh
     assert "--strict" in compile_sh
+    assert "--ignore-known-fp" in compile_sh
     assert "--json-output" in compile_sh
     assert "visual_clash.json" in compile_sh
     assert "check_text_boundary_clash.py" in compile_sh

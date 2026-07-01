@@ -21,6 +21,12 @@ patterns:
     glyph: PDMS
     kind: text_on_fill
 
+  - id: material_label_pdms_path_edge
+    glyph: PDMS
+    kind: text_on_path
+    dark_max: 0.06
+    edge_max: 0.01
+
   - id: material_label_sulfur
     glyph: Sulfur
     kind: text_on_fill

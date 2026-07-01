@@ -30,8 +30,10 @@ echo 'Lint: Style Lock check (BLOCKER fails, WARN reports)...' >&2
 # collision/clash checkers so non-zero findings fail the compile (default
 # behavior is report-only with exit 0 to preserve dogfood ergonomics).
 STRICT_ARGS=()
+VISUAL_CLASH_ARGS=()
 if [[ "${FIGURE_AGENT_STRICT:-}" == "1" ]]; then
   STRICT_ARGS=(--strict)
+  VISUAL_CLASH_ARGS=(--strict --ignore-known-fp)
   echo 'Strict mode: collision/clash findings will fail the compile.' >&2
 fi
 
@@ -91,7 +93,7 @@ if [[ ${#STRICT_ARGS[@]} -eq 0 ]]; then
 fi
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visual_clash.py" \
-  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${VISUAL_CLASH_ARGS[@]+"${VISUAL_CLASH_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/visual_clash.json" \
   "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_text_boundary_clash.py" \
