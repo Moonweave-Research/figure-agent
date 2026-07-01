@@ -47,18 +47,17 @@
         "Wave E decision record keeps current style with no_source_mutation boundary",
         "Wave C benchmark pack defines target style class and rejection rules"
       ],
-      "can_improve": [
-        "preserve the current generated export as the semantic baseline until another family proves a measurable manuscript-value gain",
-        "reduce release risk by keeping accepted, export, golden, final-artifact, and publication state untouched"
+      "what_can_improve": [
+        "baseline clarity can remain sufficient without added mutation risk",
+        "future candidates may improve journal fit only if evidence beats this baseline"
       ],
       "forbidden_semantic_changes": [
-        "must not change A/B/C/D/E/F panel roles, force-family meaning, shallow/deep trap colors, apparatus labels, or measured quantities"
+        "semantic meaning, labels, panel roles, color meaning, and release state must not change"
       ],
-      "proof_evidence": [
-        "fresh render, critique, export, and benchmark evidence remain non-regressing",
-        "no alternative demonstrates better measurable checks plus human journal-fit approval"
+      "proof_criteria": [
+        "current style stays winner unless another family improves measurable checks and human art direction without regressions"
       ],
-      "human_only_question": "Is the existing restrained overview already the best manuscript-fit baseline for this figure?"
+      "human_only_question": "Is the current restrained manuscript style good enough to keep as the benchmark winner?"
     },
     {
       "id": "restrained_tikz_refinement",
@@ -78,17 +77,16 @@
         "separate bounded TikZ implementation approval",
         "fresh comparison packet after candidate patch exists"
       ],
-      "can_improve": [
-        "bounded typography, whitespace, stroke rhythm, rule crowding, or component fidelity while preserving the existing source story"
+      "what_can_improve": [
+        "typography, whitespace, stroke rhythm, label breathing room, and component fidelity"
       ],
       "forbidden_semantic_changes": [
-        "must not move evidence between columns, rename symbols or apparatus labels, alter force direction meaning, or swap shallow/deep trap color semantics"
+        "semantic meaning, labels, panel roles, color meaning, and mechanism story must not change"
       ],
-      "proof_evidence": [
-        "source-level patch has separate approval and passes benchmark hard-regression gates",
-        "text_boundary_delta or visual_clash_delta decreases_or_equal with style_lock_typography clean"
+      "proof_criteria": [
+        "fresh candidate comparison shows at least one measurable check or named aesthetic lever improves without hard regressions"
       ],
-      "human_only_question": "Is the improvement a bounded source polish rather than a broader redesign request?"
+      "human_only_question": "Is the bounded source-level polish worth a separate explicit source-mutation approval?"
     },
     {
       "id": "editorial_redesign",
@@ -108,17 +106,16 @@
         "human request for editorial redesign benchmark",
         "semantic preservation evidence against all forbidden changes"
       ],
-      "can_improve": [
-        "broader journal-fit, visual hierarchy, and editorial clarity when the current style is judged insufficient"
+      "what_can_improve": [
+        "journal fit, visual hierarchy, narrative clarity, and editorial distinctiveness"
       ],
       "forbidden_semantic_changes": [
-        "must not change panel roles, semantic colors, mechanism story, apparatus roles, measured quantities, or theory-guarded mechanisms"
+        "semantic meaning, labels, panel roles, color meaning, and mechanism story must not change"
       ],
-      "proof_evidence": [
-        "human explicitly requests editorial redesign after benchmark review",
-        "candidate beats current style on readability and journal fit while preserving every forbidden semantic change"
+      "proof_criteria": [
+        "semantic preservation evidence covers every forbidden change and human review agrees the redesign beats current style"
       ],
-      "human_only_question": "Does a broader editorial route justify its added semantic and release risk?"
+      "human_only_question": "Should this fixture leave the restrained current style for a broader editorial redesign benchmark?"
     },
     {
       "id": "svg_polish_handoff",
@@ -138,17 +135,16 @@
         "ready_for_svg_polish evidence required before SVG artifact handoff",
         "separate SVG artifact mutation approval required even after positive evidence"
       ],
-      "can_improve": [
-        "optical spacing, stroke finish, texture nuance, or export presentation after TikZ/source semantics are locked"
+      "what_can_improve": [
+        "optical spacing, stroke finish, texture nuance, and final visual polish after source semantics are locked"
       ],
       "forbidden_semantic_changes": [
-        "must not repair or alter scientific meaning, label targets, panel roles, source semantics, or color semantics in SVG space"
+        "semantic meaning, labels, label targets, panel roles, source structure, and color meaning must not change"
       ],
-      "proof_evidence": [
-        "positive ready_for_svg_polish evidence exists",
-        "separate SVG artifact mutation approval exists and no source-level semantic defect remains"
+      "proof_criteria": [
+        "ready_for_svg_polish evidence is positive and a separate SVG artifact-mutation approval exists"
       ],
-      "human_only_question": "Is SVG polish actually ready, or should semantic repair return to TikZ/source review?"
+      "human_only_question": "Are source semantics locked tightly enough to hand off only optical SVG polish?"
     }
   ]
 }

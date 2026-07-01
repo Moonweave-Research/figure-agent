@@ -85,7 +85,9 @@ def _required_string(payload: dict[str, Any], key: str) -> str:
 
 def _string_list(payload: dict[str, Any], key: str) -> list[str]:
     value = payload.get(key)
-    if not isinstance(value, list) or not all(isinstance(item, str) and item for item in value):
+    if not isinstance(value, list) or not all(
+        isinstance(item, str) and item.strip() for item in value
+    ):
         raise StyleBenchmarkComparisonError(f"{key}_invalid")
     return list(value)
 
@@ -182,6 +184,14 @@ def _validate_candidates(
             raise StyleBenchmarkComparisonError("non_current_winner_requires_real_candidate")
         if result == "winner_candidate" and boundary != "no_source_mutation":
             raise StyleBenchmarkComparisonError("winner_candidate_authorizes_mutation")
+        what_can_improve = _string_list(candidate, "what_can_improve")
+        candidate_forbidden = _string_list(candidate, "forbidden_semantic_changes")
+        proof_criteria = _string_list(candidate, "proof_criteria")
+        human_only_question = _required_string(candidate, "human_only_question")
+        if "semantic" not in "\n".join(candidate_forbidden):
+            raise StyleBenchmarkComparisonError(
+                "candidate_forbidden_semantic_changes_incomplete"
+            )
         if candidate_id == "svg_polish_handoff":
             prerequisites = "\n".join(_string_list(candidate, "prerequisite_evidence"))
             if "ready_for_svg_polish" not in prerequisites:
@@ -197,7 +207,10 @@ def _validate_candidates(
                 "comparison_basis": _string_list(candidate, "comparison_basis"),
                 "failure_modes": _string_list(candidate, "failure_modes"),
                 "prerequisite_evidence": _string_list(candidate, "prerequisite_evidence"),
-                **details,
+                "what_can_improve": what_can_improve,
+                "forbidden_semantic_changes": candidate_forbidden,
+                "proof_criteria": proof_criteria,
+                "human_only_question": human_only_question,
             }
         )
     return normalized
@@ -272,7 +285,7 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
     candidate_results: dict[str, str] = {}
     candidate_mutation_boundaries: dict[str, str] = {}
     candidate_handoff_states: dict[str, str] = {}
-    candidate_family_details: dict[str, dict[str, Any]] = {}
+    candidate_family_evidence: dict[str, dict[str, Any]] = {}
     for candidate in candidate_list:
         if not isinstance(candidate, dict):
             continue
@@ -285,18 +298,16 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
         boundary = candidate.get("mutation_boundary")
         if isinstance(boundary, str) and boundary:
             candidate_mutation_boundaries[candidate_id] = boundary
-        detail = {
-            key: candidate.get(key)
+        candidate_family_evidence[candidate_id] = {
+            key: candidate[key]
             for key in (
-                "can_improve",
+                "what_can_improve",
                 "forbidden_semantic_changes",
-                "proof_evidence",
+                "proof_criteria",
                 "human_only_question",
             )
-            if candidate.get(key)
+            if key in candidate
         }
-        if detail:
-            candidate_family_details[candidate_id] = detail
         if candidate_id == "editorial_redesign" and result in {
             "eligible",
             "blocked_requires_separate_approval",
@@ -323,7 +334,7 @@ def summarize_comparison(payload: dict[str, Any]) -> dict[str, Any]:
         "candidate_results": candidate_results,
         "candidate_mutation_boundaries": candidate_mutation_boundaries,
         "candidate_handoff_states": candidate_handoff_states,
-        "candidate_family_details": candidate_family_details,
+        "candidate_family_evidence": candidate_family_evidence,
         "top_human_only_questions": [
             item for item in question_list if isinstance(item, str) and item
         ][:3],

@@ -59,9 +59,18 @@ def _as_mapping(payload: dict[str, Any], key: str) -> dict[str, Any]:
 
 def _as_string_list(payload: dict[str, Any], key: str) -> list[str]:
     value = payload.get(key)
-    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+    if not isinstance(value, list) or not all(
+        isinstance(item, str) and item.strip() for item in value
+    ):
         raise StyleBenchmarkPackError(f"{key}_invalid")
     return list(value)
+
+
+def _as_string(payload: dict[str, Any], key: str) -> str:
+    value = payload.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise StyleBenchmarkPackError(f"{key}_invalid")
+    return value
 
 
 def _plugin_local_path(plugin_root: Path, raw_path: str, *, label: str) -> Path:
@@ -141,23 +150,6 @@ def _validate_linked_files(
     return linked, benchmark, aesthetic
 
 
-def _validate_family_detail_fields(raw: dict[str, Any], *, label: str) -> dict[str, Any]:
-    details: dict[str, Any] = {}
-    for key in FAMILY_DETAIL_LIST_KEYS:
-        value = raw.get(key)
-        if not isinstance(value, list) or not all(
-            isinstance(item, str) and item.strip() for item in value
-        ):
-            raise StyleBenchmarkPackError(f"{label}_{key}_invalid")
-        details[key] = list(value)
-    for key in FAMILY_DETAIL_STRING_KEYS:
-        value = raw.get(key)
-        if not isinstance(value, str) or not value.strip():
-            raise StyleBenchmarkPackError(f"{label}_{key}_invalid")
-        details[key] = value
-    return details
-
-
 def _validate_candidate_slots(payload: dict[str, Any]) -> list[dict[str, Any]]:
     raw_slots = payload.get("candidate_family_slots")
     if not isinstance(raw_slots, list):
@@ -179,7 +171,14 @@ def _validate_candidate_slots(payload: dict[str, Any]) -> list[dict[str, Any]]:
         slot: dict[str, Any] = {
             key: value for key, value in values.items() if isinstance(value, str)
         }
-        slot.update(_validate_family_detail_fields(raw, label=f"candidate_{slot['id']}"))
+        slot["what_can_improve"] = _as_string_list(raw, "what_can_improve")
+        slot["forbidden_semantic_changes"] = _as_string_list(
+            raw, "forbidden_semantic_changes"
+        )
+        slot["proof_criteria"] = _as_string_list(raw, "proof_criteria")
+        slot["human_only_question"] = _as_string(raw, "human_only_question")
+        if "semantic" not in "\n".join(slot["forbidden_semantic_changes"]):
+            raise StyleBenchmarkPackError("slot_forbidden_semantic_changes_incomplete")
         if slot["mutation_boundary"] not in MUTATION_BOUNDARIES:
             raise StyleBenchmarkPackError("mutation_boundary_invalid")
         ids.append(slot["id"])
@@ -362,7 +361,7 @@ def summarize_pack(pack: dict[str, Any]) -> dict[str, Any]:
     slots = pack.get("candidate_family_slots")
     candidate_slot_ids: list[str] = []
     candidate_mutation_boundaries: dict[str, str] = {}
-    candidate_family_details: dict[str, dict[str, Any]] = {}
+    candidate_family_evidence: dict[str, dict[str, Any]] = {}
     if isinstance(slots, list):
         for slot in slots:
             if not isinstance(slot, dict):
@@ -373,18 +372,16 @@ def summarize_pack(pack: dict[str, Any]) -> dict[str, Any]:
                 candidate_slot_ids.append(slot_id)
                 if isinstance(boundary, str) and boundary:
                     candidate_mutation_boundaries[slot_id] = boundary
-                detail = {
-                    key: slot.get(key)
+                candidate_family_evidence[slot_id] = {
+                    key: slot[key]
                     for key in (
-                        "can_improve",
+                        "what_can_improve",
                         "forbidden_semantic_changes",
-                        "proof_evidence",
+                        "proof_criteria",
                         "human_only_question",
                     )
-                    if slot.get(key)
+                    if key in slot
                 }
-                if detail:
-                    candidate_family_details[slot_id] = detail
 
     questions = pack.get("human_only_questions")
     top_questions = [
@@ -413,7 +410,7 @@ def summarize_pack(pack: dict[str, Any]) -> dict[str, Any]:
             "default_recommendation": pack.get("default_recommendation"),
             "candidate_slot_ids": candidate_slot_ids,
             "candidate_mutation_boundaries": candidate_mutation_boundaries,
-            "candidate_family_details": candidate_family_details,
+            "candidate_family_evidence": candidate_family_evidence,
             "safety_boundary": safety_boundary,
             "linked_files": linked_summary,
             "top_human_only_questions": top_questions,
