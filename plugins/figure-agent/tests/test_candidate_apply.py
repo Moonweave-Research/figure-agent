@@ -841,7 +841,7 @@ def test_apply_validates_fixture_name_before_result(tmp_path: Path) -> None:
         )
 
 
-def _defect(did, panel, cls="text_overlap", severity="action", fp=None, sub="sel:aaa"):
+def _defect(did, panel, cls="text_overlap", severity="action", fp=None, sub="sel:aaa", anchor=None):
     d = {
         "id": did,
         "defect_class": cls,
@@ -850,6 +850,8 @@ def _defect(did, panel, cls="text_overlap", severity="action", fp=None, sub="sel
     }
     if fp is not None:
         d["source_fingerprint"] = fp
+    if anchor is not None:
+        d["selector_hint"] = {"kind": "node_name", "value": anchor}
     return d
 
 
@@ -893,6 +895,28 @@ def test_semantic_recheck_source_absent_pre_is_failed():
     verdict = candidate_apply._semantic_recheck_verdict("QD404", [], [])
     assert verdict["status"] == "failed"
     assert verdict["reason"] == "source_defect_absent_pre_apply"
+
+
+def test_semantic_recheck_flags_resolving_the_wrong_same_signature_instance():
+    # Two same-(panel, class, severity) defects told apart by their stable anchor.
+    # The edit clears the OTHER one; the target persists -> must NOT be credited as
+    # resolved just because the (panel, class, severity) COUNT dropped (M4).
+    pre = [_defect("QD001", "A", anchor="PDMS"), _defect("QD002", "A", anchor="PET")]
+    post = [_defect("QD001", "A", anchor="PDMS")]  # target QD001/PDMS still present
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "source_defect_unresolved"
+
+
+def test_semantic_recheck_flags_severity_downgrade_as_unresolved():
+    # The target element is only downgraded (major -> action) at the same anchor,
+    # not removed -> the signature count for 'major' drops to 0 but the defect is
+    # not resolved (M4).
+    pre = [_defect("QD001", "A", severity="major", anchor="PDMS")]
+    post = [_defect("QD001", "A", severity="action", anchor="PDMS")]
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "source_defect_unresolved"
 
 
 def test_finding_recheck_fails_when_a_target_text_still_crosses():

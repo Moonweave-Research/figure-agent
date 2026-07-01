@@ -394,6 +394,29 @@ def _defect_signature(defect: dict[str, Any]) -> tuple[str, str, str]:
     return (panel, defect_class, severity)
 
 
+def _defect_anchor(defect: dict[str, Any]) -> str:
+    """A stable, nudge-invariant discriminator for a defect's target element: the
+    node text from selector_hint. It tells two same-signature labels apart, and a
+    coordinate nudge does not change it (unlike the coordinate-derived subregion)."""
+    hint = defect.get("selector_hint")
+    if isinstance(hint, dict):
+        value = hint.get("value")
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+
+def _defect_identity(defect: dict[str, Any]) -> tuple[str, str, str]:
+    """Per-instance identity: (panel, defect_class, anchor). Severity is DELIBERATELY
+    excluded so a mere severity downgrade of the same element still matches (it is
+    not a resolution), while the anchor tells same-signature instances apart — the
+    two ways the old count-only recheck credited an unresolved defect as fixed."""
+    target = defect.get("target") if isinstance(defect.get("target"), dict) else {}
+    panel = str(target.get("panel") or "unknown")
+    defect_class = str(defect.get("defect_class") or "")
+    return (panel, defect_class, _defect_anchor(defect))
+
+
 def _semantic_recheck_verdict(
     source_defect_id: str,
     pre_defects: list[dict[str, Any]],
@@ -422,16 +445,25 @@ def _semantic_recheck_verdict(
             "source_defect_id": source_defect_id,
         }
     source_sig = _defect_signature(source)
-    source_rank = _severity_rank(source_sig[2])
-    pre_counts = Counter(_defect_signature(d) for d in pre_defects if isinstance(d, dict))
-    post_counts = Counter(_defect_signature(d) for d in post_defects if isinstance(d, dict))
-    if post_counts[source_sig] >= pre_counts[source_sig]:
+    source_identity = _defect_identity(source)
+    source_rank = _severity_rank(source.get("severity"))
+    # Is the SPECIFIC target defect still present? Match by per-instance identity
+    # (panel, class, anchor) — severity-free — so that resolving a same-signature
+    # SIBLING (which only drops the count) or merely DOWNGRADING the target (which
+    # only changes its severity) is not miscredited as a resolution.
+    pre_identities = Counter(_defect_identity(d) for d in pre_defects if isinstance(d, dict))
+    post_identities = Counter(_defect_identity(d) for d in post_defects if isinstance(d, dict))
+    if post_identities[source_identity] >= pre_identities[source_identity]:
         return {
             "status": "failed",
             "reason": "source_defect_unresolved",
             "source_defect_id": source_defect_id,
+            "identity": list(source_identity),
             "signature": list(source_sig),
         }
+    # Did the edit introduce an equal-or-higher-severity defect anywhere?
+    pre_counts = Counter(_defect_signature(d) for d in pre_defects if isinstance(d, dict))
+    post_counts = Counter(_defect_signature(d) for d in post_defects if isinstance(d, dict))
     for sig, post_n in post_counts.items():
         if _severity_rank(sig[2]) <= source_rank and post_n > pre_counts.get(sig, 0):
             return {
@@ -444,6 +476,7 @@ def _semantic_recheck_verdict(
         "status": "success",
         "reason": "source_defect_resolved",
         "source_defect_id": source_defect_id,
+        "identity": list(source_identity),
         "signature": list(source_sig),
     }
 
