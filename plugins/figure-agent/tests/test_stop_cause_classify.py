@@ -109,6 +109,36 @@ def test_no_supported_candidate_is_lever_exhausted():
     assert result.cause is StopCause.lever_exhausted
 
 
+def test_fixture_scoped_no_supported_candidate_applies_to_each_subregion():
+    bundle = _bundle(
+        refusals=[{"code": "no_supported_candidate"}],
+        defects=[
+            {"id": "QD001", "target": {"panel": "A", "subregion": "sel:a"}},
+            {"id": "QD002", "target": {"panel": "B", "subregion": "sel:b"}},
+        ],
+    )
+
+    result = classify_stop_cause("sel:b", bundle)
+
+    assert result.cause is StopCause.lever_exhausted
+    assert any(e["signal_key"] == "no_supported_candidate" for e in result.evidence)
+
+
+def test_fixture_scoped_source_missing_applies_to_each_subregion():
+    bundle = _bundle(
+        refusals=[{"code": "source_missing"}],
+        defects=[
+            {"id": "QD001", "target": {"panel": "A", "subregion": "sel:a"}},
+            {"id": "QD002", "target": {"panel": "B", "subregion": "sel:b"}},
+        ],
+    )
+
+    result = classify_stop_cause("sel:a", bundle)
+
+    assert result.cause is StopCause.plumbing_stop
+    assert any(e["signal_key"] == "source_missing" for e in result.evidence)
+
+
 def test_gate_capped_family_lever_blocked_by_pure_mechanical_check():
     bundle = _bundle(
         candidates=[
