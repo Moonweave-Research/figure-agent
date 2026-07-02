@@ -48,12 +48,32 @@ rather than a wiring failure. Representative strict findings:
 Use the current real fixture before changing policy:
 
 1. Triage skipped labels into expected OCR limitations, reference omissions, and
-   genuine missing rendered labels.
+   genuine missing rendered labels. Complete for the first fig1 pass; see
+   "Triage Pass 1" below.
 2. Decide whether the checker needs label normalization for formulas/symbols
    such as `g(Et)`, `FMaxwell`, `Vactive`, and `qtr`.
 3. Decide whether strict mode should fail on `uncovered_ref` / `uncovered_both`
    for publication fixtures or keep those as report-only findings.
 4. Only then tune thresholds or add per-label exceptions.
+
+## Triage Pass 1
+
+The first real fixture pass separates comparable drift from coverage and
+normalization gaps. The checker is doing useful work, but only a subset of the
+required labels are currently comparable against the OCR reference.
+
+| Class | Labels | Interpretation | Next action |
+| --- | --- | --- | --- |
+| Real comparable drift | `localized traps`, `Debye`, `Coulomb`, `repulsion` | Reference and build both contain the phrase, and normalized centers differ beyond `0.050`. These are actionable drift findings unless the reference image is no longer the intended spatial target. | Inspect/update the fig1 layout or explicitly re-baseline the reference target. |
+| Ambiguous single-token anchor | `Probe` | Reference OCR finds `probe` near `(0.877, 0.535)` while build PDF finds `probe` near `(0.514, 0.534)`. The y coordinate is similar but x differs by a full panel, so this is likely a same-word/different-context match rather than reliable drift. | Replace the required label with a more specific phrase or add phrase/window context before enforcing. |
+| Build-only labels (`uncovered_ref`) | `Sulfur-rich polymer`, `poly(S-r-DIB) linear copolymer`, `Sulfur content`, `real space`, `energy diagram`, `poly(S-r-DIB) thin film`, `convergent evidence`, `kinetic`, `ISPD`, `mechanical`, `MIM stack`, `polymer film`, `SMU`, `Vs meter`, `I(t)`, `high n`/`hig h n`, `low n`, `electrode`, `air gap` | The rendered PDF contains these labels, but the reference OCR does not contain the same phrases. These are not evidence of missing rendered labels; they are reference/OCR coverage gaps for drift comparison. | Keep report-only unless publication policy requires reference coverage; do not tune drift threshold for these. |
+| Symbol/formula normalization gaps (`uncovered_both`) | `HV`, `Vactive`, `g(Et)`, `FMaxwell`, `qtr` | The visual content appears in split or decorated forms: examples include `HV+`, `V` + `active`, `g(E`, `Maxwell`, and `q` + `tr`. Exact token matching cannot compare these labels. | Add explicit accepted forms in `required_labels` or implement formula-aware normalization before using these as hard blockers. |
+| Broad phrase absent from exact OCR/PDF text (`uncovered_both`) | `three independent probes` | The phrase is too high-level for the current exact-token checker; neither side exposes the complete phrase contiguously. | Convert to concrete visible labels or remove from layout drift enforcement. |
+
+Policy implication: strict mode is ready to block on comparable phrase drift,
+but not ready to treat all `uncovered_*` statuses as publication blockers. The
+next code change should improve label specificity/normalization before changing
+failure policy.
 
 ## Acceptance Status
 
@@ -67,8 +87,10 @@ Use the current real fixture before changing policy:
       reports matched labels instead of taking the missing-hints skip path.
 - [x] Dogfooded matched/drifted label behavior on real `coordinate_hints.yaml`
       data.
-- [ ] Triage strict drift and uncovered-label findings before changing checker
+- [x] Triage strict drift and uncovered-label findings before changing checker
       policy or thresholds.
+- [ ] Normalize or specialize ambiguous formula/single-token labels before
+      expanding strict publication-blocking policy.
 
 ## Verification
 
@@ -85,6 +107,10 @@ Use the current real fixture before changing policy:
      `build/fig1_overview_v2_pair_001_vault.{pdf,png}`
 - `./bin/fig-agent status fig1_overview_v2_pair_001_vault --json`
   -> reports `coordinate_hints: present` and `render_state: FRESH`
+- local label-presence probe over `coordinate_hints.yaml` and extracted PDF
+  words
+  -> separates comparable drift, build-only labels, ambiguous single-token
+     anchors, and symbol/formula normalization gaps
 - `uv run pytest -q tests/test_check_layout_drift.py`
   -> covers skip behavior, drift warning behavior, and CLI success when a
      fixture has `coordinate_hints.yaml`
