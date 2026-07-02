@@ -207,6 +207,20 @@ def test_readme_current_state_matches_plugin_version() -> None:
     assert "docs/svg-polish-pipeline.md" not in experimental_section
 
 
+def test_readme_documents_svg_polish_engine_as_retired_not_opt_in_delta() -> None:
+    readme = (REPO_ROOT / "README.md").read_text()
+    release_boundary = readme.partition("### Release boundary")[2].partition(
+        "## What remains experimental / proposed"
+    )[0]
+    experimental_section = readme.partition("## What remains experimental / proposed")[2]
+
+    assert "SVG-polish delta packs" not in release_boundary
+    assert "recipe starter" not in experimental_section
+    assert "positive plumbing closes" not in experimental_section
+    assert "built-in recipe/executor/delta/manifest/semantic-diff pipeline was retired" in readme
+    assert "new first-class provenance/disclosure workflow" in experimental_section
+
+
 def test_issue_100_inventory_consistency_check_matches_plugin_version() -> None:
     inventory = (
         REPO_ROOT
@@ -238,6 +252,28 @@ def test_issue_100_inventory_distinguishes_historical_gap_rows_from_open_backlog
     assert "historical findings log" in normalized
     assert "not a live open-backlog table" in normalized
     assert "Implemented status is recorded in the Recommended Execution Order" in normalized
+
+
+def test_issue_100_inventory_does_not_present_retired_svg_polish_engine_as_current() -> None:
+    inventory = (
+        REPO_ROOT
+        / "docs"
+        / "superpowers"
+        / "issues"
+        / "2026-06-01-issue-100-comprehensive-plugin-gap-inventory.md"
+    ).read_text()
+    current_summary = inventory.partition("## Context")[2].partition("## Gap Inventory")[0]
+    normalized = " ".join(current_summary.split())
+
+    for forbidden in [
+        "optional SVG polish delta evidence",
+        "SVG polish manifests",
+        "Bounded SVG polish layer",
+        "manifest/recipe/delta based",
+    ]:
+        assert forbidden not in current_summary
+    assert "SVG polish handoff labels" in normalized
+    assert "retired built-in SVG-polish engine" in normalized
 
 
 def test_current_readme_documents_release_boundaries() -> None:

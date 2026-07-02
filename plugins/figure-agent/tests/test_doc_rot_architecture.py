@@ -34,3 +34,12 @@ def test_svg_polish_row_has_vacuity_caveat() -> None:
             )
             return
     raise AssertionError("no 'SVG polish handoff' line found in README.md")
+
+
+def test_architecture_layer_55_names_external_final_artifact_handoff() -> None:
+    text = _read(ARCH_DOC)
+    layer_model = text.partition("## Layer model")[2].partition("## Layer-by-layer reference")[0]
+
+    assert "Layer 5.5: Final Artifact" in layer_model
+    assert "external final-artifact handoff" in layer_model
+    assert "polished-SVG contract" not in layer_model

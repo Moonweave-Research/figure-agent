@@ -25,8 +25,9 @@ Current baseline:
 
 The plugin is no longer just a compiler wrapper. It is a quality kernel with
 deterministic geometry checks, crop/candidate accounting, structured critique,
-adjudication, loop state, guided runner, queue runner, SVG polish manifests,
-publication gates, and golden/accepted boundaries.
+adjudication, loop state, guided runner, queue runner, SVG polish handoff labels,
+publication gates, and golden/accepted boundaries. The retired built-in
+SVG-polish engine is not a current strength or release path.
 
 It is still not a hidden auto-designer, journal acceptance oracle, or fully
 automatic Nature/Science art director. The remaining work should make that
@@ -48,13 +49,14 @@ the workflow together.
 3. **Structured host-vision critique**
    `/fig_critique` now carries high-zoom crops, print crops, candidate
    accounting, crop-read accountability, reference packs, aesthetic intent,
-   top-tier audit slots, micro-defect categories, anti-pattern audit, and
-   optional SVG polish delta evidence.
+   top-tier audit slots, micro-defect categories, anti-pattern audit, and visible
+   SVG-polish handoff route labels.
 
-4. **Bounded SVG polish layer**
-   SVG polish is manifest/recipe/delta based. Allowed edit classes are narrow,
-   source hashes are checked, semantic backport requirements are explicit, and
-   the plugin does not silently treat SVG polish as source truth.
+4. **Retired SVG-polish engine with surviving handoff vocabulary**
+   `ready_for_svg_polish` and `svg_polish_readiness` survive as operator routing
+   labels. The built-in recipe/executor/delta/semantic-diff implementation was
+   retired after proving structurally vacuous on real figures, so non-generated
+   final artifacts require a fresh provenance/disclosure policy before release.
 
 5. **Operator-safe automation**
    `/fig_run`, `/fig_improve`, and queue commands execute only safe mechanical

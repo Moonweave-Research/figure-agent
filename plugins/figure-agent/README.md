@@ -182,7 +182,7 @@ and closeout rows stay visible as blocked operator handoffs.
 - **Opt-in:** authoring context packs, semantic claims/locked invariants,
   paper-wide context, aesthetic intent, journal style-pack catalog,
   reference-calibrated packs, reference-learning aesthetic metrics,
-  SVG-polish delta packs, and external vision review evidence.
+  SVG-polish handoff evidence labels, and external vision review evidence.
 - **Manual:** source drawing, semantic patch choices, human art direction,
   accepted/golden roll-forward, final SVG/vector editing, and any decision to
   promote an N=1 authoring rule beyond a narrow question or constraint.
@@ -198,7 +198,7 @@ Filed as promotion-policy gaps; no production workflow depends on them yet. Each
 has a decision gate that blocks broad automation until empirical data exists.
 This is a deliberate response to v0.3/v0.4 specs being rejected for lack of data.
 
-- **Real-fixture SVG polish promotion policy** — Issue 47 proved the safe negative route (`continue_tikz` blocks recipe authoring), and Issue 48 made that readiness state explicit. Issue 100D adds a fixture-aware recipe starter, and Issue 100V proves the positive plumbing closes in a deterministic fixture-shaped harness. More positive-route real fixture evidence is still needed before treating `ready_for_svg_polish` as a routine production art-direction handoff.
+- **Real-fixture SVG polish promotion policy** — `ready_for_svg_polish` remains an external handoff label only. The built-in recipe/executor/delta/manifest/semantic-diff pipeline is retired; any future SVG finalization path needs a new first-class provenance/disclosure workflow before it can become production release policy.
 
 Falsified directions kept on record in `docs/historical/` and the relevant `architecture-v0.X-*.md` files: Python+SVG-from-scratch, LLM-as-quality-judge, perception auto-detection.
 

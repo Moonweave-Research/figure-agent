@@ -80,3 +80,37 @@ def test_run_check_reports_drift_from_coordinate_hints(
 
     assert failures == 1
     assert lines == ["WARN layout drift Energy: 0.849 > 0.050"]
+
+
+def test_main_checks_coordinate_hints_fixture_instead_of_skipping(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fixture = tmp_path / "demo"
+    build = fixture / "build"
+    build.mkdir(parents=True)
+    (build / "demo.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
+    (fixture / "spec.yaml").write_text(
+        "golden_contract:\n  required_labels: [Energy]\n",
+        encoding="utf-8",
+    )
+    (fixture / "coordinate_hints.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "reference_image_size": [1000, 1000],
+                "text_labels": [{"text": "Energy", "bbox": [100, 100, 200, 140]}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        check_layout_drift,
+        "extract_pdf_words_and_page",
+        lambda _path: ([_word("Energy", 105, 105, 205, 145)], (1000.0, 1000.0)),
+    )
+
+    exit_code = check_layout_drift.main([str(fixture), "--strict"])
+
+    assert exit_code == 0
+    assert capsys.readouterr().out.strip() == "OK layout drift Energy: 0.007"
