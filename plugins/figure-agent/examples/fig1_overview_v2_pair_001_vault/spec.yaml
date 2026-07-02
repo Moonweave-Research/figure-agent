@@ -1,7 +1,7 @@
 name: fig1_overview_v2_pair_001_vault
 paper_id: pair001
 title: "Fig 1 — Charge trapping in sulfur-rich polymer (pair_001 vault arm)"
-reference_image: reference/codex_gen_overview_v1.png
+reference_image: reference/current_render_baseline_2026-07-03.png
 
 # Physics invariant (briefing §8.5): Column F cantilever bends LEFT, away from the
 # electrode = the Coulomb-repulsion signature. The F-7 Coulomb arrow is inline-styled
