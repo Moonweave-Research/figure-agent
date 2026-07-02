@@ -1426,7 +1426,7 @@ def test_declared_external_svg_handoff_blocks_release_as_unsupported(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     fig_dir = tmp_path / "external_svg_handoff"
-    _make_status_ready_fixture(fig_dir)
+    _make_status_ready_fixture(fig_dir, accepted=True)
     _write_final_artifact_spec(fig_dir, kind="polished_svg")
     _mark_sources_older_than_outputs(fig_dir)
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
