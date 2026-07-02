@@ -592,7 +592,6 @@ def test_release_queue_row_includes_fixture_specific_acceptance_packet(
     assert packet["recommended_choice_id"] == "accept_current_generated_export"
     assert [choice["id"] for choice in packet["choices"]] == [
         "accept_current_generated_export",
-        "declare_final_artifact",
         "reject_current_artifact",
         "defer_for_dogfood",
     ]
@@ -680,8 +679,12 @@ def test_release_packet_no_longer_flags_declared_polished_svg_final_artifact_sta
 
     packets = {row["fixture"]: row["decision_packet"] for row in queue["rows"]}
     for packet in packets.values():
-        assert "warning" not in packet["choices"][1]
-        assert "evidence" not in packet["choices"][1]
+        assert [choice["id"] for choice in packet["choices"]] == [
+            "accept_current_generated_export",
+            "reject_current_artifact",
+            "defer_for_dogfood",
+        ]
+        assert all(choice["id"] != "declare_final_artifact" for choice in packet["choices"])
 
 
 def test_release_packet_defers_when_publication_gate_has_agent_failures(

@@ -102,7 +102,7 @@ Stage 4 next-hint variants (priority order):
   or required siblings are missing → re-run /fig_export.
 - `partial_export` not all four export artifacts present → re-run /fig_export.
 - `critique_missing` or `critique_stale` with exports otherwise present → run `/fig_critique <name>` as a final review of the current rendered candidate before treating exports as final.
-- `final_artifact_missing` / `final_artifact_invalid` / `final_artifact_stale` / `final_artifact_blocked` for a declared polished SVG → repair the manifest, polished SVG, audit, or semantic backport before acceptance/release.
+- `final_artifact_invalid` for a declared non-generated final artifact → remove the legacy declaration or backport the intended change into TikZ/spec/source and re-run compile/export before acceptance/release. Release readiness currently supports generated exports only.
 - `accepted: false` declared in spec.yaml → resolve QUALITY_AUDIT.md defects and flip the flag.
 - otherwise → done.
 
@@ -119,9 +119,9 @@ Stage 4 corresponds to old v0.1 stage 6; print format is now `stage X/4` (was `s
 - `workflow_ready`: `true` when stage 4 has no blocking notes, render is fresh, export is fresh or tracked golden, and critique is fresh/not-required. `coordinate_hints_*` and `final_artifact_*` notes are non-blocking for workflow closure; final artifacts are enforced by `release_ready` / `final_ready`.
 - `golden_ready`: `true` when `workflow_ready` is true and `accepted: true` is declared.
 - `final_artifact_state`: `NONE`, `MISSING`, `INVALID`, `STALE`, `BLOCKED`, or `FRESH`.
-- `final_artifact_kind`: `generated_export` or `polished_svg`.
-- `final_artifact_path`: current generated export or declared polished artifact path.
-- `release_ready`: `true` when `golden_ready` is true, the export state is content-fresh (`FRESH`, not merely `TRACKED_GOLDEN`), and any declared polished SVG final artifact is fresh and unblocked.
+- `final_artifact_kind`: `generated_export` for the supported release path; unsupported declarations are reported with their declared kind and `final_artifact_state: INVALID`.
+- `final_artifact_path`: current generated export, or the legacy declaration path when reporting an unsupported final artifact.
+- `release_ready`: `true` when `golden_ready` is true, the export state is content-fresh (`FRESH`, not merely `TRACKED_GOLDEN`), and the final artifact is the generated export path (`NONE` or `FRESH` state).
 - `final_ready`: compatibility alias for `release_ready`.
 - `publication_gate_state`: `NOT_APPLICABLE`, `PASS`,
   `HUMAN_ACCEPTANCE_REQUIRED`, or `PROVENANCE_REQUIRED`. This is separate from
@@ -149,9 +149,9 @@ Stage 4 corresponds to old v0.1 stage 6; print format is now `stage X/4` (was `s
   detector-linked defects, and micro-defects with no detector reference so
   threshold tuning work has a consistent signal.
 
-For polished SVG final artifacts, `publication_gate_state` also enforces the
-publication disclosure field because the submitted artifact may include human
-SVG edits beyond generated TikZ exports.
+For submitted artifacts with human SVG edits, backport the change into
+TikZ/spec/source before release. The current release-readiness path does not
+treat polished SVG declarations as supported final artifacts.
 
 The no-argument summary includes `ready: true|false`, which follows
 `release_ready`, and appends `publication: <state>` when the publication gate
@@ -171,7 +171,7 @@ Notes that may appear:
 - `coordinate_hints_stale` — `coordinate_hints.yaml` is older than the reference image; re-run `/fig_extract <name> --rebuild`.
 - `coordinate_hints_parse_error` — `coordinate_hints.yaml` is not valid YAML; regenerate with `/fig_extract <name> --rebuild`.
 - `coordinate_hints_outdated` — `coordinate_hints.yaml` predates the current authored/rendered source and should be refreshed when reference alignment matters.
-- `final_artifact_missing`, `final_artifact_invalid`, `final_artifact_stale`, `final_artifact_blocked` — a declared polished SVG final artifact needs repair before release readiness.
+- `final_artifact_invalid` — `spec.yaml.final_artifact` declares an unsupported non-generated final artifact; remove the legacy declaration or backport the intended change into source and regenerate exports before release readiness.
 - `previews_not_directory` — `examples/<name>/previews` exists as a file, not a directory.
 - `panel_reference_image_missing` — a panel declares `bbox_pdf_cm` and `reference_image` but the image file is not found at the declared path relative to the example directory; correct the path in `spec.yaml` or add the file before running `/fig_critique <name>`.
 - `critique_reference_missing` — a declared reference input needed for critique/export is missing; fix the path or add the file before `/fig_critique` or `/fig_export`.

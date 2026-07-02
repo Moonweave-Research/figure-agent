@@ -14,7 +14,6 @@ DESIGN_DIRECTION_PACKET_SCHEMA = "figure-agent.design-direction-packet.v1"
 DECISION_KINDS = frozenset(
     {
         "accept_current_generated_export",
-        "declare_final_artifact",
         "declare_separate_final_artifact",
         "reject_current_artifact",
         "defer_for_dogfood",
@@ -36,7 +35,6 @@ DECISION_KINDS = frozenset(
 RELEASE_DECISION_KINDS = frozenset(
     {
         "accept_current_generated_export",
-        "declare_final_artifact",
         "declare_separate_final_artifact",
         "reject_current_artifact",
         "defer_for_dogfood",

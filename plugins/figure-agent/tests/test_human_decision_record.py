@@ -88,6 +88,17 @@ def test_unknown_enums_are_rejected(field: str, value: str, message: str) -> Non
         validate_decision_record(_record(**{field: value}))
 
 
+def test_legacy_queue_final_artifact_decision_id_is_rejected() -> None:
+    with pytest.raises(HumanDecisionRecordError, match="decision_kind_unknown"):
+        validate_decision_record(
+            _record(
+                decision_kind="declare_final_artifact",
+                follow_up={"implementation_slice": "declare polished SVG final artifact"},
+                mutation_boundary="no_source_mutation",
+            )
+        )
+
+
 @pytest.mark.parametrize(
     "decision_kind",
     [
