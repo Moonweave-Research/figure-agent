@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: '2026-06-30T08:52:00Z'
+generated_at: '2026-07-02T22:37:43Z'
 generator: critique_brief.py
-generator_version: sha256:0bf8abd441f6688290a6abc8b4fda75a2d131526615ba5df7b07dc4d1ec04c94
+generator_version: sha256:a3b145eaccb5fb8290c0e35f3e91ba65fa37d8892a46436894884b0e43d73a07
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:ac68e79690d73fdcff333c982b16a270cf6213a808cb631356a053e4e0ea30de
+critique_input_hash: sha256:81315aa867ce22f180d7ce6395c9928d86f93e494adfe7e4e35a95ae3428a697
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -383,7 +383,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:ac68e79690d73fdcff333c982b16a270cf6213a808cb631356a053e4e0ea30de
+  assessed_artifact_hash: sha256:81315aa867ce22f180d7ce6395c9928d86f93e494adfe7e4e35a95ae3428a697
   benchmark_level: high_impact_candidate
   confidence: medium
   blockers: []
@@ -4470,8 +4470,8 @@ findings:
 
 ## Summary
 
-Fresh v1.16 re-audit of the current render (`build/fig1_overview_v2_pair_001_vault.pdf`,
-unchanged inputs; `critique_input_hash` matches). The figure reads as a clean Nature
+Fresh v1.17 freshness refresh of the current render (`build/fig1_overview_v2_pair_001_vault.pdf`,
+with the 2026-07-03 render-baseline update; `critique_input_hash` matches). The figure reads as a clean Nature
 Communications / Nature Materials main-text Figure 1: six self-contained panels on white,
 Panel C the HERO trap-landscape model at 1.5x width, and a three-spoke evidence fan from
 Panel C into Row 2 (D kinetic, E ISPD, F mechanical). **Verdict: ready** — zero open
