@@ -1,10 +1,19 @@
 # 2026-07-02 Total-Review Execution Plan (Waves B1–B3)
 
-Status: ACTIVE — agent-team execution contract
-Branch: `work/review-auto-fixes-2026-06-25` (continue on this branch; do NOT create new branches; do NOT push — the session lead pushes after final verification)
+Status: COMPLETED / ARCHIVED — this was the agent-team execution contract for
+commit `892c0f8d` and is no longer an active branch directive.
+Branch: historical branch `work/review-auto-fixes-2026-06-25`
 Baseline SHA: `517a4652`. All `file:line` references below were verified at this SHA — **re-grep before editing; line numbers drift as tasks land.**
 
 Origin: 5-axis total review 2026-07-02 (aesthetics-vision / authoring-vocab / schema-deadweight / robustness / paper-fit), building on the 2026-07-01 full audit + P0 fail-closed wave. This plan covers machine-executable Track B only. Track A (author intent: Fig2 ε_r+P–E content, Fig3 S60/bimodal decision, Fig5 story, cohort typography/color decision) is human-only and out of scope here.
+
+Completion note: The wave landed in `892c0f8d Review hardening and publication
+gate regression fixes`, with later issue-level follow-up through PRs #96 and
+#97. Treat the task details below as historical execution context, not as
+current instructions. The notable intentional deviation is T9: the separate
+publication-gate hardening plan restored `check_layout_drift.py` as an optional
+compile-time guard when `coordinate_hints.yaml` exists, instead of deleting the
+checker outright.
 
 ## Global invariants — MUST hold after EVERY task
 
