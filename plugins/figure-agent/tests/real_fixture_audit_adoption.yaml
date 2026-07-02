@@ -10,6 +10,7 @@ fixtures:
       - row2_ef_column_rule
     label_path_check_ids:
       - panel_c_deep_escape_curve
+      - panel_c_delta_et_caliper
       - panel_c_mobility_edge_reference
     aesthetic_intent: true
     critique_reference_pack: false

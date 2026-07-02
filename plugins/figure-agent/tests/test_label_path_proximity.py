@@ -211,6 +211,7 @@ def test_fig1_vault_declares_minimal_label_path_proximity_checks() -> None:
 
     assert set(by_id) == {
         "panel_c_mobility_edge_reference",
+        "panel_c_delta_et_caliper",
         "panel_c_deep_escape_curve",
     }
     mobility = by_id["panel_c_mobility_edge_reference"]
@@ -225,6 +226,14 @@ def test_fig1_vault_declares_minimal_label_path_proximity_checks() -> None:
     assert shallow["role"] == "semantic_curve"
     assert shallow["clearance_pt"] == 5.0
     assert shallow["text_allowlist"] == ["shallow"]
+    delta_caliper = by_id["panel_c_delta_et_caliper"]
+    assert delta_caliper["kind"] == "vertical_line"
+    assert delta_caliper["role"] == "semantic_caliper"
+    assert delta_caliper["clearance_pt"] == 4.0
+    assert delta_caliper["text_allowlist"] == ["shallow"]
+    assert delta_caliper["text_phrases"] == [
+        {"id": "mobility_edge", "words": ["mobility", "edge"]}
+    ]
 
 
 def test_smoke_trap_demo_declares_band_diagram_label_path_checks() -> None:

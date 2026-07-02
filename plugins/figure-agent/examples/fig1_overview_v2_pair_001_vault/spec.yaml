@@ -176,6 +176,16 @@ label_path_proximity_checks:
       - [16.00, 2.86]
     clearance_pt: 5.0
     text_allowlist: [shallow]
+  - id: panel_c_delta_et_caliper
+    kind: vertical_line
+    role: semantic_caliper
+    x_pdf_cm: 17.10
+    y_range_pdf_cm: [1.20, 5.20]
+    clearance_pt: 4.0
+    text_allowlist: [shallow]
+    text_phrases:
+      - id: mobility_edge
+        words: [mobility, edge]
 notes: |
   pair_001 vault arm. v8.6 6-panel structure (A..F): Row 1 = A/B/C, Row 2 =
   D/E/F (3 columns, each split apparatus zone top + result zone bottom).

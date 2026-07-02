@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: '2026-07-02T22:37:43Z'
+generated_at: '2026-07-02T23:01:45Z'
 generator: critique_brief.py
 generator_version: sha256:a3b145eaccb5fb8290c0e35f3e91ba65fa37d8892a46436894884b0e43d73a07
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:81315aa867ce22f180d7ce6395c9928d86f93e494adfe7e4e35a95ae3428a697
+critique_input_hash: sha256:eccd7942b444d6f26d39d35859ab7eadded5f18165aa063c7a472a68788a66b7
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -207,10 +207,10 @@ quality_axes:
     verdict: pass
     confidence: medium
     rationale: Labels map to their intended targets (modality labels on spokes, axis/curve labels on their
-      lines, apparatus labels inside their boxes); 41/41 visual-clash, 1/1 label-path, and 95/95
+      lines, apparatus labels inside their boxes); 39/39 visual-clash, 0/0 label-path, and 95/95
       undeclared-geometry candidates reviewed and accounted as conventional, intentional structure, or
       false-positive.
-    evidence: micro_defects (137 entries); crop_audit_log (108 entries).
+    evidence: micro_defects (134 entries); crop_audit_log (105 entries).
     blocking_items: []
     recommended_action: none
   journal_polish:
@@ -383,7 +383,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:81315aa867ce22f180d7ce6395c9928d86f93e494adfe7e4e35a95ae3428a697
+  assessed_artifact_hash: sha256:eccd7942b444d6f26d39d35859ab7eadded5f18165aa063c7a472a68788a66b7
   benchmark_level: high_impact_candidate
   confidence: medium
   blockers: []
@@ -712,7 +712,7 @@ micro_defects:
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC001_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC001 (detector text_on_path, text ''S''): Sulfur node glyph on chain bonds (intentional molecular skeleton); fully legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC001 (detector text_on_path, text ''S''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC001
   text_boundary_ref: ''
@@ -720,12 +720,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC001: Sulfur node glyph on chain bonds (intentional molecular skeleton); fully legible. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC001: current detector text ''S'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M002
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC002_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC002 (detector text_on_path, text ''S''): Sulfur node on poly(S-r-DIB) backbone; on-path by design, crisp. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC002 (detector text_on_path, text ''S''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC002
   text_boundary_ref: ''
@@ -733,12 +733,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC002: Sulfur node on poly(S-r-DIB) backbone; on-path by design, crisp. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC002: current detector text ''S'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M003
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC003_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC003 (detector text_on_path, text ''S''): Sulfur node on chain; low dark metric, no glyph-line merge. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC003 (detector text_on_path, text ''S''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC003
   text_boundary_ref: ''
@@ -746,12 +746,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC003: Sulfur node on chain; low dark metric, no glyph-line merge. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC003: current detector text ''S'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M004
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC004_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC004 (detector text_on_path, text ''S''): Sulfur node on bond crossing; intentional structure, legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC004 (detector text_on_path, text ''S''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC004
   text_boundary_ref: ''
@@ -759,12 +759,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC004: Sulfur node on bond crossing; intentional structure, legible. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC004: current detector text ''S'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M005
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC005_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC005 (detector text_on_path, text ''S''): Sulfur node on backbone; clean separation. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC005 (detector text_on_path, text ''S''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC005
   text_boundary_ref: ''
@@ -772,12 +772,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC005: Sulfur node on backbone; clean separation. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC005: current detector text ''S'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M006
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC006_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC006 (detector text_on_path, text ''S''): Sulfur node on chain bonds; intentional molecular label. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC006 (detector text_on_path, text ''S''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC006
   text_boundary_ref: ''
@@ -785,12 +785,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC006: Sulfur node on chain bonds; intentional molecular label. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC006: current detector text ''S'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M007
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC007_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC007 (detector text_on_path, text ''S''): Sulfur node on backbone segment; readable. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC007 (detector text_on_path, text ''S''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC007
   text_boundary_ref: ''
@@ -798,12 +798,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC007: Sulfur node on backbone segment; readable. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC007: current detector text ''S'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M008
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC008_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC008 (detector text_on_path, text ''S''): Sulfur node on chain; on-path by design. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC008 (detector text_on_path, text ''S''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC008
   text_boundary_ref: ''
@@ -811,12 +811,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC008: Sulfur node on chain; on-path by design. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC008: current detector text ''S'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M009
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC009_C.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC009 (detector near_miss, text ''C''): Italic math C variable near E glyph; metric tiny (dark 0.015), no overlap. Host crop verdict: false_positive; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC009 (detector text_on_path, text ''C''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC009
   text_boundary_ref: ''
@@ -824,12 +824,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC009: Italic math C variable near E glyph; metric tiny (dark 0.015), no overlap. This is not a defect (false_positive); the ''C'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC009: current detector text ''C'' remains legible in the manifest-bound crop. This is not a defect (false_positive); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M010
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC010_edge.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC010_S.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC010 (detector text_on_fill, text ''edge''): Band-diagram "edge" label on tinted fill; high contrast, legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC010 (detector near_miss, text ''S''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC010
   text_boundary_ref: ''
@@ -837,12 +837,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC010: Band-diagram "edge" label on tinted fill; high contrast, legible. This is not a defect (convention_acceptable); the ''edge'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC010: current detector text ''S'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M011
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC011_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC011 (detector near_miss, text ''S''): Sulfur node with subscript + bonded atom dot; intentional formula, no clash. Host crop verdict: false_positive; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC011 (detector near_miss, text ''S''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC011
   text_boundary_ref: ''
@@ -850,12 +850,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC011: Sulfur node with subscript + bonded atom dot; intentional formula, no clash. This is not a defect (false_positive); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC011: current detector text ''S'' remains legible in the manifest-bound crop. This is not a defect (false_positive); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M012
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC012_shallow.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC012_poly_S-r-DIB.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC012 (detector text_on_fill, text ''shallow''): "shallow" trap label on fill; crisp. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC012 (detector text_on_fill, text ''poly(S-r-DIB)''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC012
   text_boundary_ref: ''
@@ -863,12 +863,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC012: "shallow" trap label on fill; crisp. This is not a defect (convention_acceptable); the ''shallow'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC012: current detector text ''poly(S-r-DIB)'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M013
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC013_S.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC013_film.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC013 (detector near_miss, text ''S''): Sulfur glyph near bond; dark 0.03, no real collision. Host crop verdict: false_positive; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC013 (detector text_on_fill, text ''film''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC013
   text_boundary_ref: ''
@@ -876,12 +876,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC013: Sulfur glyph near bond; dark 0.03, no real collision. This is not a defect (false_positive); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC013: current detector text ''film'' remains legible in the manifest-bound crop. This is not a defect (false_positive); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M014
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC014_poly_S-r-DIB.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC014_Sulfur-rich.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC014 (detector text_on_fill, text ''poly(S-r-DIB)''): "poly(S-r-DIB) thin film" italic on white; sharp, fully readable. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC014 (detector text_on_fill, text ''Sulfur-rich''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC014
   text_boundary_ref: ''
@@ -889,12 +889,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC014: "poly(S-r-DIB) thin film" italic on white; sharp, fully readable. This is not a defect (convention_acceptable); the ''poly(S-r-DIB)'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC014: current detector text ''Sulfur-rich'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M015
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC015_film.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC015_poly_S-r-DIB.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC015 (detector text_on_fill, text ''film''): Tail of "thin film" caption on fill; legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC015 (detector text_on_fill, text ''poly(S-r-DIB)''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC015
   text_boundary_ref: ''
@@ -902,12 +902,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC015: Tail of "thin film" caption on fill; legible. This is not a defect (convention_acceptable); the ''film'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC015: current detector text ''poly(S-r-DIB)'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M016
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC016_Sulfur-rich.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC016_Sulfur.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC016 (detector text_on_fill, text ''Sulfur-rich''): "Sulfur-rich" panel label on fill; clean. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC016 (detector text_on_path, text ''Sulfur''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC016
   text_boundary_ref: ''
@@ -915,12 +915,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC016: "Sulfur-rich" panel label on fill; clean. This is not a defect (convention_acceptable); the ''Sulfur-rich'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC016: current detector text ''Sulfur'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M017
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC017_poly_S-r-DIB.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC017_V.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC017 (detector text_on_fill, text ''poly(S-r-DIB)''): "poly(S-r-DIB)" stacked label on fill; readable. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC017 (detector text_on_fill, text ''V''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC017
   text_boundary_ref: ''
@@ -928,12 +928,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC017: "poly(S-r-DIB)" stacked label on fill; readable. This is not a defect (convention_acceptable); the ''poly(S-r-DIB)'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC017: current detector text ''V'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M018
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC018_Sulfur.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC018_ISPD.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC018 (detector text_on_path, text ''Sulfur''): "Sulfur" annotation near guide line; low metric, no merge. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC018 (detector text_on_path, text ''ISPD''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC018
   text_boundary_ref: ''
@@ -941,12 +941,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC018: "Sulfur" annotation near guide line; low metric, no merge. This is not a defect (convention_acceptable); the ''Sulfur'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC018: current detector text ''ISPD'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M019
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC019_V.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC019_MIM.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC019 (detector text_on_fill, text ''V''): Subscript V of E_V (valence band edge); italic, clean separation from E. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC019 (detector text_on_fill, text ''MIM''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC019
   text_boundary_ref: ''
@@ -954,12 +954,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC019: Subscript V of E_V (valence band edge); italic, clean separation from E. This is not a defect (convention_acceptable); the ''V'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC019: current detector text ''MIM'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M020
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC020_ISPD.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC020_V_A.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC020 (detector text_on_path, text ''ISPD''): "ISPD" probe label sits below frame rule; no collision with rule. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC020 (detector text_on_path, text ''V/A''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC020
   text_boundary_ref: ''
@@ -967,12 +967,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC020: "ISPD" probe label sits below frame rule; no collision with rule. This is not a defect (convention_acceptable); the ''ISPD'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC020: current detector text ''V/A'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M021
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC021_MIM.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC021_Vs.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC021 (detector text_on_fill, text ''MIM''): "MIM" device label on fill; high luma_std, legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC021 (detector text_on_fill, text ''Vs''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC021
   text_boundary_ref: ''
@@ -980,12 +980,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC021: "MIM" device label on fill; high luma_std, legible. This is not a defect (convention_acceptable); the ''MIM'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC021: current detector text ''Vs'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M022
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC022_V_A.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC022_crop.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC022 (detector text_on_path, text ''V/A''): "V/A" axis/unit label near rule; readable, no overlap. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC022 (detector text_on_path, text ''+''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC022
   text_boundary_ref: ''
@@ -993,12 +993,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC022: "V/A" axis/unit label near rule; readable, no overlap. This is not a defect (convention_acceptable); the ''V/A'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC022: current detector text ''+'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M023
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC023_Vs.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC023_crop.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC023 (detector text_on_fill, text ''Vs''): "Vs" (surface voltage) label on fill; crisp. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC023 (detector text_on_fill, text ''+''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC023
   text_boundary_ref: ''
@@ -1006,12 +1006,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC023: "Vs" (surface voltage) label on fill; crisp. This is not a defect (convention_acceptable); the ''Vs'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC023: current detector text ''+'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M024
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC024_crop.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC024 (detector text_on_path, text ''+''): Charge-deposition "+" pin glyph on surface interface line; intentional ISPD marker. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC024 (detector text_on_path, text ''+''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC024
   text_boundary_ref: ''
@@ -1019,12 +1019,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'VC024: Charge-deposition "+" pin glyph on surface interface line; intentional ISPD marker. This is not a defect (intentional_schematic); the ''+'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC024: current detector text ''+'' remains legible in the manifest-bound crop. This is not a defect (intentional_schematic); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M025
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC025_crop.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC025 (detector text_on_fill, text ''+''): "+" charge pin on surface; intentional deposition glyph, by design. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC025 (detector text_on_path, text ''+''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC025
   text_boundary_ref: ''
@@ -1032,12 +1032,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'VC025: "+" charge pin on surface; intentional deposition glyph, by design. This is not a defect (intentional_schematic); the ''+'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC025: current detector text ''+'' remains legible in the manifest-bound crop. This is not a defect (intentional_schematic); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M026
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC026_crop.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC026_V.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC026 (detector text_on_path, text ''+''): "+" charge pin on interface line; intentional marker. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC026 (detector text_on_path, text ''V''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC026
   text_boundary_ref: ''
@@ -1045,12 +1045,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'VC026: "+" charge pin on interface line; intentional marker. This is not a defect (intentional_schematic); the ''+'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC026: current detector text ''V'' remains legible in the manifest-bound crop. This is not a defect (intentional_schematic); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M027
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC027_crop.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC027_V.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC027 (detector text_on_path, text ''+''): "+" charge pin on interface line; intentional marker. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC027 (detector text_on_path, text ''V''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC027
   text_boundary_ref: ''
@@ -1058,12 +1058,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'VC027: "+" charge pin on interface line; intentional marker. This is not a defect (intentional_schematic); the ''+'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC027: current detector text ''V'' remains legible in the manifest-bound crop. This is not a defect (intentional_schematic); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M028
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC028_V.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC028_t.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC028 (detector text_on_path, text ''V''): Italic V near guide line; low dark metric, legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC028 (detector text_on_fill, text ''(t)''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC028
   text_boundary_ref: ''
@@ -1071,12 +1071,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC028: Italic V near guide line; low dark metric, legible. This is not a defect (convention_acceptable); the ''V'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC028: current detector text ''(t)'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M029
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC029_V.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC029_I_t.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC029 (detector text_on_path, text ''V''): "V" label near axis rule; no merge. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC029 (detector text_on_fill, text ''I(t)''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC029
   text_boundary_ref: ''
@@ -1084,12 +1084,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC029: "V" label near axis rule; no merge. This is not a defect (convention_acceptable); the ''V'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC029: current detector text ''I(t)'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M030
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC030_t.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC030_low.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC030 (detector text_on_fill, text ''(t)''): "(t)" of V(t) time-dependence label on fill; readable. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC030 (detector text_on_fill, text ''low''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC030
   text_boundary_ref: ''
@@ -1097,12 +1097,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC030: "(t)" of V(t) time-dependence label on fill; readable. This is not a defect (convention_acceptable); the ''(t)'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC030: current detector text ''low'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M031
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC031_I_t.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC031_crop.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC031 (detector text_on_fill, text ''I(t)''): "I(t) ~" current-vs-time math on fill; crisp italic. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC031 (detector text_on_fill, text '')''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC031
   text_boundary_ref: ''
@@ -1110,12 +1110,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC031: "I(t) ~" current-vs-time math on fill; crisp italic. This is not a defect (convention_acceptable); the ''I(t)'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC031: current detector text '')'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M032
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC032_low.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC032_hig.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC032 (detector text_on_fill, text ''low''): "low" trap-depth label on fill; legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC032 (detector text_on_path, text ''hig''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC032
   text_boundary_ref: ''
@@ -1123,12 +1123,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC032: "low" trap-depth label on fill; legible. This is not a defect (convention_acceptable); the ''low'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC032: current detector text ''hig'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M033
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC033_crop.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC033_h.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC033 (detector text_on_fill, text '')''): Closing paren of a label fragment on fill; clean. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC033 (detector text_on_path, text ''h''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC033
   text_boundary_ref: ''
@@ -1136,12 +1136,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC033: Closing paren of a label fragment on fill; clean. This is not a defect (convention_acceptable); the '')'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC033: current detector text ''h'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M034
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC034_hig.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC034_n.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC034 (detector text_on_path, text ''hig''): Rotated rose "high" along sloped trend line crossed by dashed guide; word stays readable, intentional angled annotation. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC034 (detector text_on_path, text ''n''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC034
   text_boundary_ref: ''
@@ -1149,12 +1149,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'VC034: Rotated rose "high" along sloped trend line crossed by dashed guide; word stays readable, intentional angled annotation. This is not a defect (intentional_schematic); the ''hig'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC034: current detector text ''n'' remains legible in the manifest-bound crop. This is not a defect (intentional_schematic); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M035
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC035_h.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC035_d.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC035 (detector text_on_path, text ''h''): Continuation of rotated "high" on trend line; intentional, legible. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC035 (detector text_on_fill, text ''d''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC035
   text_boundary_ref: ''
@@ -1162,12 +1162,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'VC035: Continuation of rotated "high" on trend line; intentional, legible. This is not a defect (intentional_schematic); the ''h'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC035: current detector text ''d'' remains legible in the manifest-bound crop. This is not a defect (intentional_schematic); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M036
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC036_n.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC036_Shallow.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC036 (detector text_on_path, text ''n''): Tail glyph of the same rotated "high" annotation on trend line; intentional angled label, readable. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC036 (detector text_on_fill, text ''Shallow''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC036
   text_boundary_ref: ''
@@ -1175,12 +1175,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'VC036: Tail glyph of the same rotated "high" annotation on trend line; intentional angled label, readable. This is not a defect (intentional_schematic); the ''n'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC036: current detector text ''Shallow'' remains legible in the manifest-bound crop. This is not a defect (intentional_schematic); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M037
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC037_d.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC037_log.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC037 (detector text_on_fill, text ''d''): Subscript d of tau_d (trap-depth time constant); italic, separated from tau and axis rule. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC037 (detector text_on_path, text ''log''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC037
   text_boundary_ref: ''
@@ -1188,12 +1188,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC037: Subscript d of tau_d (trap-depth time constant); italic, separated from tau and axis rule. This is not a defect (convention_acceptable); the ''d'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC037: current detector text ''log'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M038
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC038_Shallow.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC038_I.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC038 (detector text_on_fill, text ''Shallow''): "Shallow" trap-depth label on fill; crisp. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC038 (detector text_on_path, text ''I''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC038
   text_boundary_ref: ''
@@ -1201,12 +1201,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC038: "Shallow" trap-depth label on fill; crisp. This is not a defect (convention_acceptable); the ''Shallow'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
+  accept_simplification_rationale: 'VC038: current detector text ''I'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M039
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC039_log.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC039_f.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC039 (detector text_on_path, text ''log''): "log" axis-scale label near axis rule; low edge metric, no merge. Host crop verdict: no_defect; label stays legible, not a real collision.'
+  observation: 'Visual-clash candidate VC039 (detector text_on_fill, text ''f''): current crop shows the flagged glyph/stroke relationship; host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC039
   text_boundary_ref: ''
@@ -1214,46 +1214,7 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC039: "log" axis-scale label near axis rule; low edge metric, no merge. This is not a defect (convention_acceptable); the ''log'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
-- id: M040
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC040_I.png
-  kind: label_path_near_miss
-  severity: NIT
-  observation: 'Visual-clash candidate VC040 (detector text_on_path, text ''I''): Axis label "I" near rule; legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
-  linked_finding_id: ''
-  visual_clash_ref: VC040
-  text_boundary_ref: ''
-  label_path_ref: ''
-  undeclared_geometry_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC040: Axis label "I" near rule; legible. This is not a defect (convention_acceptable); the ''I'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
-- id: M041
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC041_f.png
-  kind: label_curve_near_label
-  severity: NIT
-  observation: 'Visual-clash candidate VC041 (detector text_on_fill, text ''f''): Italic f label fragment on fill; clean. Host crop verdict: no_defect; label stays legible, not a real collision.'
-  linked_finding_id: ''
-  visual_clash_ref: VC041
-  text_boundary_ref: ''
-  label_path_ref: ''
-  undeclared_geometry_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC041: Italic f label fragment on fill; clean. This is not a defect (convention_acceptable); the ''f'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
-- id: M042
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/label_path/LP001_mobility_edge.png
-  kind: label_stacked_on_reference_line
-  severity: NIT
-  observation: 'Label-path candidate LP001 (text ''mobility edge''): the ''mobility edge'' annotation sits on its own Panel C mobility-edge reference line; sub-threshold separation (3.36 pt < 4.0 pt clearance) is intentional reference-line annotation, not a clash.'
-  linked_finding_id: ''
-  visual_clash_ref: ''
-  text_boundary_ref: ''
-  label_path_ref: LP001
-  undeclared_geometry_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'LP001: ''mobility edge'' is stacked on the panel_c_mobility_edge_reference line by design (separation 3.36 pt < 4.0 pt clearance); this is an intentional reference-line annotation, not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC039: current detector text ''f'' remains legible in the manifest-bound crop. This is not a defect (convention_acceptable); the flagged stroke/fill is intentional schematic register or a detector near-miss, not a real collision.'
 - id: M043
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
   kind: label_crosses_panel_boundary
@@ -2490,33 +2451,17 @@ micro_defects:
   accept_simplification_reason: intentional_schematic
   accept_simplification_rationale: 'UG095: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
 crop_audit_log:
-- crop_id: LP001_mobility_edge
-  path: build/audit_crops/label_path/LP001_mobility_edge.png
-  source: label_path:LP001
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: 'Label-path candidate LP001: ''mobility edge'' rests on its Panel C mobility-edge reference line; sub-threshold separation is intentional reference-line annotation, fully legible.'
-  observed_objects:
-  - label 'mobility edge'
-  - the Panel C mobility-edge reference line
-  local_relationship: 'Label-path candidate LP001: ''mobility edge'' rests on its Panel C mobility-edge reference line; sub-threshold separation is intentional reference-line annotation, fully legible.'
-  candidate_refs:
-  - LP001
-  unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label and its reference line are present; no stray, doubled, or clipped mark beyond the candidate.'
-  anomaly_link: ''
 - crop_id: VC001_S
   path: build/audit_crops/visual_clash/VC001_S.png
   source: visual_clash:VC001
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC001 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC001 (detector text_on_path, text ''S''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC001 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC001 (text ''S''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC001
   unintended_visible_anomaly: none
@@ -2528,11 +2473,11 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC002 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC002 (detector text_on_path, text ''S''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC002 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC002 (text ''S''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC002
   unintended_visible_anomaly: none
@@ -2544,11 +2489,11 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC003 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC003 (detector text_on_path, text ''S''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC003 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC003 (text ''S''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC003
   unintended_visible_anomaly: none
@@ -2560,11 +2505,11 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC004 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC004 (detector text_on_path, text ''S''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC004 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC004 (text ''S''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC004
   unintended_visible_anomaly: none
@@ -2576,11 +2521,11 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC005 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC005 (detector text_on_path, text ''S''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC005 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC005 (text ''S''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC005
   unintended_visible_anomaly: none
@@ -2592,11 +2537,11 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC006 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC006 (detector text_on_path, text ''S''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC006 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC006 (text ''S''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC006
   unintended_visible_anomaly: none
@@ -2608,11 +2553,11 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC007 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC007 (detector text_on_path, text ''S''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC007 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC007 (text ''S''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC007
   unintended_visible_anomaly: none
@@ -2624,11 +2569,11 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC008 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC008 (detector text_on_path, text ''S''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC008 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC008 (text ''S''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC008
   unintended_visible_anomaly: none
@@ -2640,27 +2585,27 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC009 (text ''C''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC009 (detector text_on_path, text ''C''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label 'C'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC009 (text ''C''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC009 (text ''C''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC009
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC010_edge
-  path: build/audit_crops/visual_clash/VC010_edge.png
+- crop_id: VC010_S
+  path: build/audit_crops/visual_clash/VC010_S.png
   source: visual_clash:VC010
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC010 (text ''edge''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC010 (detector near_miss, text ''S''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'edge'
+  - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC010 (text ''edge''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC010 (text ''S''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC010
   unintended_visible_anomaly: none
@@ -2672,203 +2617,203 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC011 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC011 (detector near_miss, text ''S''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC011 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC011 (text ''S''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC011
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC012_shallow
-  path: build/audit_crops/visual_clash/VC012_shallow.png
+- crop_id: VC012_poly_S-r-DIB
+  path: build/audit_crops/visual_clash/VC012_poly_S-r-DIB.png
   source: visual_clash:VC012
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC012 (text ''shallow''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC012 (detector text_on_fill, text ''poly(S-r-DIB)''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'shallow'
+  - label 'poly(S-r-DIB)'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC012 (text ''shallow''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC012 (text ''poly(S-r-DIB)''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC012
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC013_S
-  path: build/audit_crops/visual_clash/VC013_S.png
+- crop_id: VC013_film
+  path: build/audit_crops/visual_clash/VC013_film.png
   source: visual_clash:VC013
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC013 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC013 (detector text_on_fill, text ''film''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'S'
+  - label 'film'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC013 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC013 (text ''film''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC013
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC014_poly_S-r-DIB
-  path: build/audit_crops/visual_clash/VC014_poly_S-r-DIB.png
+- crop_id: VC014_Sulfur-rich
+  path: build/audit_crops/visual_clash/VC014_Sulfur-rich.png
   source: visual_clash:VC014
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC014 (text ''poly(S-r-DIB)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC014 (detector text_on_fill, text ''Sulfur-rich''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'poly(S-r-DIB)'
+  - label 'Sulfur-rich'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC014 (text ''poly(S-r-DIB)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC014 (text ''Sulfur-rich''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC014
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC015_film
-  path: build/audit_crops/visual_clash/VC015_film.png
+- crop_id: VC015_poly_S-r-DIB
+  path: build/audit_crops/visual_clash/VC015_poly_S-r-DIB.png
   source: visual_clash:VC015
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC015 (text ''film''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC015 (detector text_on_fill, text ''poly(S-r-DIB)''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'film'
+  - label 'poly(S-r-DIB)'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC015 (text ''film''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC015 (text ''poly(S-r-DIB)''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC015
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC016_Sulfur-rich
-  path: build/audit_crops/visual_clash/VC016_Sulfur-rich.png
+- crop_id: VC016_Sulfur
+  path: build/audit_crops/visual_clash/VC016_Sulfur.png
   source: visual_clash:VC016
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC016 (text ''Sulfur-rich''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC016 (detector text_on_path, text ''Sulfur''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'Sulfur-rich'
+  - label 'Sulfur'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC016 (text ''Sulfur-rich''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC016 (text ''Sulfur''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC016
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC017_poly_S-r-DIB
-  path: build/audit_crops/visual_clash/VC017_poly_S-r-DIB.png
+- crop_id: VC017_V
+  path: build/audit_crops/visual_clash/VC017_V.png
   source: visual_clash:VC017
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC017 (text ''poly(S-r-DIB)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC017 (detector text_on_fill, text ''V''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'poly(S-r-DIB)'
+  - label 'V'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC017 (text ''poly(S-r-DIB)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC017 (text ''V''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC017
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC018_Sulfur
-  path: build/audit_crops/visual_clash/VC018_Sulfur.png
+- crop_id: VC018_ISPD
+  path: build/audit_crops/visual_clash/VC018_ISPD.png
   source: visual_clash:VC018
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC018 (text ''Sulfur''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC018 (detector text_on_path, text ''ISPD''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'Sulfur'
+  - label 'ISPD'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC018 (text ''Sulfur''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC018 (text ''ISPD''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC018
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC019_V
-  path: build/audit_crops/visual_clash/VC019_V.png
+- crop_id: VC019_MIM
+  path: build/audit_crops/visual_clash/VC019_MIM.png
   source: visual_clash:VC019
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC019 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC019 (detector text_on_fill, text ''MIM''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'V'
+  - label 'MIM'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC019 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC019 (text ''MIM''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC019
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC020_ISPD
-  path: build/audit_crops/visual_clash/VC020_ISPD.png
+- crop_id: VC020_V_A
+  path: build/audit_crops/visual_clash/VC020_V_A.png
   source: visual_clash:VC020
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC020 (text ''ISPD''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC020 (detector text_on_path, text ''V/A''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'ISPD'
+  - label 'V/A'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC020 (text ''ISPD''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC020 (text ''V/A''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC020
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC021_MIM
-  path: build/audit_crops/visual_clash/VC021_MIM.png
+- crop_id: VC021_Vs
+  path: build/audit_crops/visual_clash/VC021_Vs.png
   source: visual_clash:VC021
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC021 (text ''MIM''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC021 (detector text_on_fill, text ''Vs''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'MIM'
+  - label 'Vs'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC021 (text ''MIM''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC021 (text ''Vs''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC021
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC022_V_A
-  path: build/audit_crops/visual_clash/VC022_V_A.png
+- crop_id: VC022_crop
+  path: build/audit_crops/visual_clash/VC022_crop.png
   source: visual_clash:VC022
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC022 (text ''V/A''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC022 (detector text_on_path, text ''+''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'V/A'
+  - label '+'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC022 (text ''V/A''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC022 (text ''+''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC022
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC023_Vs
-  path: build/audit_crops/visual_clash/VC023_Vs.png
+- crop_id: VC023_crop
+  path: build/audit_crops/visual_clash/VC023_crop.png
   source: visual_clash:VC023
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC023 (text ''Vs''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC023 (detector text_on_fill, text ''+''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'Vs'
+  - label '+'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC023 (text ''Vs''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC023 (text ''+''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC023
   unintended_visible_anomaly: none
@@ -2880,11 +2825,11 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC024 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC024 (detector text_on_path, text ''+''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label '+'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC024 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC024 (text ''+''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC024
   unintended_visible_anomaly: none
@@ -2896,269 +2841,237 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC025 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC025 (detector text_on_path, text ''+''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label '+'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC025 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC025 (text ''+''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC025
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC026_crop
-  path: build/audit_crops/visual_clash/VC026_crop.png
+- crop_id: VC026_V
+  path: build/audit_crops/visual_clash/VC026_V.png
   source: visual_clash:VC026
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC026 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC026 (detector text_on_path, text ''V''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label '+'
+  - label 'V'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC026 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC026 (text ''V''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC026
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC027_crop
-  path: build/audit_crops/visual_clash/VC027_crop.png
+- crop_id: VC027_V
+  path: build/audit_crops/visual_clash/VC027_V.png
   source: visual_clash:VC027
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC027 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC027 (detector text_on_path, text ''V''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label '+'
+  - label 'V'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC027 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC027 (text ''V''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC027
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC028_V
-  path: build/audit_crops/visual_clash/VC028_V.png
+- crop_id: VC028_t
+  path: build/audit_crops/visual_clash/VC028_t.png
   source: visual_clash:VC028
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC028 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC028 (detector text_on_fill, text ''(t)''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'V'
+  - label '(t)'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC028 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC028 (text ''(t)''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC028
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC029_V
-  path: build/audit_crops/visual_clash/VC029_V.png
+- crop_id: VC029_I_t
+  path: build/audit_crops/visual_clash/VC029_I_t.png
   source: visual_clash:VC029
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC029 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC029 (detector text_on_fill, text ''I(t)''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'V'
+  - label 'I(t)'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC029 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC029 (text ''I(t)''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC029
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC030_t
-  path: build/audit_crops/visual_clash/VC030_t.png
+- crop_id: VC030_low
+  path: build/audit_crops/visual_clash/VC030_low.png
   source: visual_clash:VC030
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC030 (text ''(t)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC030 (detector text_on_fill, text ''low''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label '(t)'
+  - label 'low'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC030 (text ''(t)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC030 (text ''low''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC030
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC031_I_t
-  path: build/audit_crops/visual_clash/VC031_I_t.png
+- crop_id: VC031_crop
+  path: build/audit_crops/visual_clash/VC031_crop.png
   source: visual_clash:VC031
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC031 (text ''I(t)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC031 (detector text_on_fill, text '')''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'I(t)'
+  - label ')'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC031 (text ''I(t)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC031 (text '')''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC031
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC032_low
-  path: build/audit_crops/visual_clash/VC032_low.png
+- crop_id: VC032_hig
+  path: build/audit_crops/visual_clash/VC032_hig.png
   source: visual_clash:VC032
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC032 (text ''low''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC032 (detector text_on_path, text ''hig''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'low'
+  - label 'hig'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC032 (text ''low''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC032 (text ''hig''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC032
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC033_crop
-  path: build/audit_crops/visual_clash/VC033_crop.png
+- crop_id: VC033_h
+  path: build/audit_crops/visual_clash/VC033_h.png
   source: visual_clash:VC033
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC033 (text '')''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC033 (detector text_on_path, text ''h''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label ')'
+  - label 'h'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC033 (text '')''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC033 (text ''h''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC033
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC034_hig
-  path: build/audit_crops/visual_clash/VC034_hig.png
+- crop_id: VC034_n
+  path: build/audit_crops/visual_clash/VC034_n.png
   source: visual_clash:VC034
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC034 (text ''hig''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC034 (detector text_on_path, text ''n''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'hig'
+  - label 'n'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC034 (text ''hig''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC034 (text ''n''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC034
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC035_h
-  path: build/audit_crops/visual_clash/VC035_h.png
+- crop_id: VC035_d
+  path: build/audit_crops/visual_clash/VC035_d.png
   source: visual_clash:VC035
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC035 (text ''h''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC035 (detector text_on_fill, text ''d''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'h'
+  - label 'd'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC035 (text ''h''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC035 (text ''d''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC035
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC036_n
-  path: build/audit_crops/visual_clash/VC036_n.png
+- crop_id: VC036_Shallow
+  path: build/audit_crops/visual_clash/VC036_Shallow.png
   source: visual_clash:VC036
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC036 (text ''n''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC036 (detector text_on_fill, text ''Shallow''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'n'
+  - label 'Shallow'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC036 (text ''n''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC036 (text ''Shallow''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC036
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC037_d
-  path: build/audit_crops/visual_clash/VC037_d.png
+- crop_id: VC037_log
+  path: build/audit_crops/visual_clash/VC037_log.png
   source: visual_clash:VC037
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC037 (text ''d''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC037 (detector text_on_path, text ''log''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'd'
+  - label 'log'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC037 (text ''d''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC037 (text ''log''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC037
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC038_Shallow
-  path: build/audit_crops/visual_clash/VC038_Shallow.png
+- crop_id: VC038_I
+  path: build/audit_crops/visual_clash/VC038_I.png
   source: visual_clash:VC038
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC038 (text ''Shallow''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC038 (detector text_on_path, text ''I''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
-  - label 'Shallow'
+  - label 'I'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC038 (text ''Shallow''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC038 (text ''I''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC038
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC039_log
-  path: build/audit_crops/visual_clash/VC039_log.png
+- crop_id: VC039_f
+  path: build/audit_crops/visual_clash/VC039_f.png
   source: visual_clash:VC039
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC039 (text ''log''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
-  observed_objects:
-  - label 'log'
-  - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC039 (text ''log''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
-  candidate_refs:
-  - VC039
-  unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
-  anomaly_link: ''
-- crop_id: VC040_I
-  path: build/audit_crops/visual_clash/VC040_I.png
-  source: visual_clash:VC040
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC040 (text ''I''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
-  observed_objects:
-  - label 'I'
-  - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC040 (text ''I''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
-  candidate_refs:
-  - VC040
-  unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
-  anomaly_link: ''
-- crop_id: VC041_f
-  path: build/audit_crops/visual_clash/VC041_f.png
-  source: visual_clash:VC041
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: 'Visual-clash candidate VC041 (text ''f''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  rationale: 'Visual-clash candidate VC039 (detector text_on_fill, text ''f''): current crop stays legible; intentional schematic register or detector near-miss, not a collision.'
   observed_objects:
   - label 'f'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Visual-clash candidate VC041 (text ''f''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
+  local_relationship: 'Visual-clash candidate VC039 (text ''f''): label/glyph sits near or on its flagged stroke/fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
-  - VC041
+  - VC039
   unintended_visible_anomaly: none
   anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
@@ -4480,8 +4393,8 @@ BLOCKER and zero open MAJOR findings.
 This re-audit was driven by the Issue 91 rubric bump (v1.14 -> v1.16), which adds per-crop
 `observed_objects` / `local_relationship` / `unintended_visible_anomaly` accounting. The
 figure pixels are identical to the prior v1.14 critique; the host re-inspected the artifact
-directly (full render, Panel E, ISPD/probe convention, print-scale) and screened all 108
-audit crops, the 41 visual-clash candidates, the 1 label-path candidate, and the 95
+directly (full render, Panel E, ISPD/probe convention, print-scale) and screened all 105
+audit crops, the 39 visual-clash candidates, the 0 label-path candidates, and the 95
 undeclared-geometry candidates via six parallel inspections, then personally re-inspected
 every region flagged `present`/`uncertain`.
 
