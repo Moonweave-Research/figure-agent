@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -34,11 +35,15 @@ class DriftResult:
 
 
 def _normalize_token(text: str) -> str:
-    return text.strip(" \t\n\r.,;:()[]{}'\"!?").lower()
+    return text.strip(" \t\n\r.,;:()[]{}'\"!?+").lower()
 
 
 def _tokens(text: str) -> list[str]:
     return [token for token in (_normalize_token(part) for part in text.split()) if token]
+
+
+def _compact_text(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", text.lower())
 
 
 def _label_forms(label: LabelSpec) -> list[str]:
@@ -89,6 +94,15 @@ def _find_phrase_bbox(
         for index, normalized_token in enumerate(normalized):
             if normalized_token == token:
                 return _word_bbox(words[index])
+    phrase_compact = _compact_text(phrase)
+    if len(phrase_compact) >= 2:
+        max_window = min(3, len(words))
+        for window_size in range(1, max_window + 1):
+            for index in range(0, len(words) - window_size + 1):
+                window_words = words[index : index + window_size]
+                window_text = "".join(str(word.get("text", "")) for word in window_words)
+                if _compact_text(window_text) == phrase_compact:
+                    return _union_bbox(window_words)
     return None
 
 

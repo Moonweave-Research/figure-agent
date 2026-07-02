@@ -38,6 +38,7 @@ rather than a wiring failure. Representative strict findings:
 - `localized traps`: drift `0.094 > 0.050`
 - `Probe`: drift `0.363 > 0.050`
 - `Debye`: drift `0.095 > 0.050`
+- `g(Et)`: drift `0.308 > 0.050`
 - `Coulomb`: drift `0.294 > 0.050`
 - `repulsion`: drift `0.304 > 0.050`
 - Several required labels are currently skipped as `uncovered_ref` or
@@ -51,7 +52,9 @@ Use the current real fixture before changing policy:
    genuine missing rendered labels. Complete for the first fig1 pass; see
    "Triage Pass 1" below.
 2. Decide whether the checker needs label normalization for formulas/symbols
-   such as `g(Et)`, `FMaxwell`, `Vactive`, and `qtr`.
+   such as `g(Et)`, `FMaxwell`, `Vactive`, and `qtr`. Narrow token
+   normalization now handles decorated/split forms for several of these; see
+   "Triage Pass 2" below.
 3. Decide whether strict mode should fail on `uncovered_ref` / `uncovered_both`
    for publication fixtures or keep those as report-only findings.
 4. Only then tune thresholds or add per-label exceptions.
@@ -75,6 +78,21 @@ but not ready to treat all `uncovered_*` statuses as publication blockers. The
 next code change should improve label specificity/normalization before changing
 failure policy.
 
+## Triage Pass 2
+
+Narrow token normalization now strips simple token decorations and compares
+compact adjacent tokens. This improves the fig1 classification without changing
+strict policy:
+
+- `HV`, `Vactive`, and `qtr` moved from `uncovered_both` to `uncovered_ref`.
+  The checker can now recognize the rendered forms (`HV+`, `V` + `active`, and
+  `q` + `tr` / `qtr`) but the reference OCR still lacks comparable anchors.
+- `g(Et)` is now comparable and reports drift `0.308 > 0.050`.
+- `FMaxwell` remains `uncovered_both`; the reference/PDF OCR exposes `Maxwell`
+  but does not contain the full required label.
+- `Probe` remains an ambiguous single-token drift and should still be
+  specialized before being used as a hard publication blocker.
+
 ## Acceptance Status
 
 - [x] Identified the only current required-label fixture.
@@ -89,7 +107,8 @@ failure policy.
       data.
 - [x] Triage strict drift and uncovered-label findings before changing checker
       policy or thresholds.
-- [ ] Normalize or specialize ambiguous formula/single-token labels before
+- [x] Normalize decorated/split token forms for layout-drift matching.
+- [ ] Specialize remaining ambiguous formula/single-token labels before
       expanding strict publication-blocking policy.
 
 ## Verification
@@ -101,7 +120,7 @@ failure policy.
   -> only `fig1_overview_v2_pair_001_vault/spec.yaml`
 - `uv run python3 scripts/checks/check_layout_drift.py fig1_overview_v2_pair_001_vault --strict`
   -> exits `1` with real strict findings, including `localized traps`,
-     `Probe`, `Debye`, `Coulomb`, and `repulsion` drift warnings
+     `Probe`, `Debye`, `g(Et)`, `Coulomb`, and `repulsion` drift warnings
 - `./bin/fig-agent compile fig1_overview_v2_pair_001_vault`
   -> exits `0`, emits the same layout-drift warnings, and writes fresh
      `build/fig1_overview_v2_pair_001_vault.{pdf,png}`
