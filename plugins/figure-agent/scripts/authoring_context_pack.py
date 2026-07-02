@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,7 @@ from inputs import parse_spec
 from semantic_contracts import SemanticContractError, collect_semantic_contracts
 
 SCHEMA = "figure-agent.authoring-context-pack.v1"
+SAFE_CATALOG_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
 class AuthoringContextPackError(ValueError):
@@ -67,6 +69,59 @@ def _paper_context(example_dir: Path) -> dict[str, str]:
     }
 
 
+def _authoring_context_config(spec: dict[str, Any]) -> dict[str, Any]:
+    config = spec.get("authoring_context_pack")
+    return config if isinstance(config, dict) else {}
+
+
+def _safe_catalog_selector(value: object, *, label: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise AuthoringContextPackError(f"{label} must be a non-empty string")
+    selector = value.strip()
+    if not SAFE_CATALOG_ID.fullmatch(selector):
+        raise AuthoringContextPackError(
+            f"{label} must be a safe id or bundled catalog filename"
+        )
+    return selector
+
+
+def _catalog_path_for_selector(paths: runtime_paths.RuntimePaths, selector: str) -> Path:
+    filename = (
+        selector
+        if selector.startswith("authoring-rules-") and selector.endswith(".md")
+        else f"authoring-rules-{selector}.md"
+    )
+    return paths.plugin_root / "docs" / filename
+
+
+def _selected_rule_catalog_path(
+    spec: dict[str, Any],
+    paths: runtime_paths.RuntimePaths,
+) -> Path | None:
+    config = _authoring_context_config(spec)
+    if "rule_catalog" in config:
+        selector = _safe_catalog_selector(
+            config.get("rule_catalog"),
+            label="authoring_context_pack.rule_catalog",
+        )
+    else:
+        raw_paper_id = (
+            config.get("paper_id")
+            or spec.get("paper_id")
+            or config.get("series_id")
+            or spec.get("series_id")
+        )
+        if raw_paper_id is None:
+            return None
+        selector = _safe_catalog_selector(raw_paper_id, label="paper_id")
+    catalog_path = _catalog_path_for_selector(paths, selector)
+    if not catalog_path.is_file():
+        raise AuthoringContextPackError(
+            f"authoring_context_pack rule catalog not found: {catalog_path.name}"
+        )
+    return catalog_path
+
+
 def build_context_pack(
     name: str,
     *,
@@ -89,12 +144,10 @@ def build_context_pack(
     except SemanticContractError as exc:
         raise AuthoringContextPackError(str(exc)) from exc
 
-    catalog_path = paths.plugin_root / "docs" / "authoring-rules-pair001.md"
-    loaded_catalog = authoring_rules.load_rule_catalog(catalog_path)
-    # The per-fixture catalog applies only to its own fixture. Other figures keep
-    # the universal project catalog but get no per-fixture catalog (rule_catalog is
-    # None) so fig1-specific pair001 rules never leak into unrelated figures.
-    fixture_catalog = loaded_catalog if loaded_catalog["fixture"] == name else None
+    catalog_path = _selected_rule_catalog_path(spec, paths)
+    fixture_catalog = (
+        authoring_rules.load_rule_catalog(catalog_path) if catalog_path is not None else None
+    )
     # Optional project-scope catalog: cross-figure conventions (e.g. cantilever
     # orientation) inherited by every figure, not locked to the fig1 pilot.
     project_catalog_path = paths.plugin_root / "docs" / "authoring-rules-project.md"
@@ -114,7 +167,11 @@ def build_context_pack(
             "briefing": _relative(paths.workspace_root, example_dir / "briefing.md"),
             "design_philosophy": _relative(paths.plugin_root, philosophy_path),
             "style_lock": _relative(paths.plugin_root, style_path),
-            "rule_catalog": (_relative(paths.plugin_root, catalog_path) if fixture_catalog else ""),
+            "rule_catalog": (
+                _relative(paths.plugin_root, catalog_path)
+                if fixture_catalog and catalog_path is not None
+                else ""
+            ),
             "project_rule_catalog": (
                 _relative(paths.plugin_root, project_catalog_path) if project_catalog else ""
             ),
