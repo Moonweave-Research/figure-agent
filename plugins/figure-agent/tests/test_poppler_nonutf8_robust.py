@@ -33,6 +33,13 @@ NONUTF8_BBOX_HTML = (
     b"</page>\n"
     b"</body></html>\n"
 )
+EMPTY_PAGE_BBOX_HTML = (
+    b'<?xml version="1.0"?>\n'
+    b"<html><body>\n"
+    b'<page width="200.0" height="200.0">\n'
+    b"</page>\n"
+    b"</body></html>\n"
+)
 
 
 def _fake_pdftotext(html_bytes: bytes):
@@ -68,6 +75,30 @@ def test_check_visual_clash_extract_tolerates_nonutf8(monkeypatch, tmp_path) -> 
     assert page_size == (200.0, 200.0)
     assert len(words) == 1
     assert words[0]["xmin"] == 10.0
+
+
+def test_check_collisions_extract_rejects_empty_nontrivial_pdf(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    pdf = tmp_path / "empty_words.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n" + (b"0" * 2048))
+    monkeypatch.setattr(subprocess, "run", _fake_pdftotext(EMPTY_PAGE_BBOX_HTML))
+
+    with pytest.raises(RuntimeError, match="empty_extraction"):
+        check_collisions.extract_word_bboxes(pdf)
+
+
+def test_check_visual_clash_extract_rejects_empty_nontrivial_pdf(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    pdf = tmp_path / "empty_words.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n" + (b"0" * 2048))
+    monkeypatch.setattr(subprocess, "run", _fake_pdftotext(EMPTY_PAGE_BBOX_HTML))
+
+    with pytest.raises(RuntimeError, match="empty_extraction"):
+        check_visual_clash.extract_pdf_words_and_page(pdf)
 
 
 def _passthrough_to_nonutf8_stderr_child(monkeypatch) -> None:
