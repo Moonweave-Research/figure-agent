@@ -45,9 +45,9 @@ for script_dir in reversed(
     sys.path.insert(0, str(script_dir))
 
 import fixture_identity  # noqa: E402
+import human_attestation  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 from lint_tex import strip_tex_comment  # noqa: E402
-import human_attestation  # noqa: E402
 from publication_gate import publication_compliance_failure_records  # noqa: E402
 from quality_manifest import input_manifest_hash, yaml_frontmatter  # noqa: E402
 from reference_pack import reference_pack_failures  # noqa: E402
