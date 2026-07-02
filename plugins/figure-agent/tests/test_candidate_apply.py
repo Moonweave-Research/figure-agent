@@ -888,6 +888,69 @@ def test_apply_candidate_rollback_recompiles_or_removes_stale_pdf(
     assert result["post_apply"]["rollback_compile"]["status"] == "failed"
 
 
+def test_apply_candidate_rollback_restores_or_removes_generated_exports(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    exports = fixture / "exports"
+    exports.mkdir()
+    original_svg = exports / "candidate_demo.svg"
+    original_svg.write_bytes(b"original-svg")
+
+    _set_source_defect(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+
+    state = {"applied": False}
+
+    def fake_post_apply(_name, _paths):
+        state["applied"] = True
+        original_svg.write_bytes(b"mutated-svg")
+        (exports / "candidate_demo.png").write_bytes(b"new-png")
+        return {
+            "compile": {"status": "success", "returncode": 0},
+            "export": {"status": "success", "returncode": 0},
+            "status": {"status": "success", "returncode": 0},
+        }
+
+    def fake_ledger(_name, **_kwargs):
+        if state["applied"]:
+            return {"defects": [_ledger_defect("QD777")]}
+        return {"defects": [_ledger_defect("QD001")]}
+
+    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+    monkeypatch.setitem(
+        sys.modules,
+        "quality_defect_ledger",
+        types.SimpleNamespace(build_quality_defect_ledger=fake_ledger),
+    )
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+
+    assert result["status"] == "rolled_back"
+    assert original_svg.read_bytes() == b"original-svg"
+    assert not (exports / "candidate_demo.png").exists()
+    assert result["post_apply"]["rollback_exports"]["status"] == "success"
+
+
 def test_post_apply_export_does_not_force_golden_roll_forward(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

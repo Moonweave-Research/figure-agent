@@ -1421,7 +1421,7 @@ def test_final_artifact_generated_export_kind_keeps_current_readiness(
     assert result["workflow_ready"] is True
 
 
-def test_declared_external_svg_handoff_keeps_generated_export_status(
+def test_declared_external_svg_handoff_blocks_release_as_unsupported(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1433,14 +1433,16 @@ def test_declared_external_svg_handoff_keeps_generated_export_status(
 
     result = infer_stage(fig_dir)
 
-    assert result["final_artifact_state"] == "NONE"
-    assert result["final_artifact_kind"] == "generated_export"
-    assert result["final_artifact_path"] == "exports/external_svg_handoff.svg"
-    assert "final_artifact_missing" not in result["notes"]
+    assert result["final_artifact_state"] == "INVALID"
+    assert result["final_artifact_kind"] == "polished_svg"
+    assert result["final_artifact_path"] == "polish/external-handoff.yaml"
+    assert "final_artifact_invalid" in result["notes"]
     assert result["workflow_ready"] is True
+    assert result["golden_ready"] is True
+    assert result["release_ready"] is False
 
 
-def test_final_artifact_block_without_kind_keeps_generated_export_behavior(
+def test_final_artifact_block_without_kind_blocks_release_as_invalid(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1452,9 +1454,10 @@ def test_final_artifact_block_without_kind_keeps_generated_export_behavior(
 
     result = infer_stage(fig_dir)
 
-    assert result["final_artifact_state"] == "NONE"
-    assert result["final_artifact_kind"] == "generated_export"
-    assert "final_artifact" not in ",".join(result["notes"])
+    assert result["final_artifact_state"] == "INVALID"
+    assert result["final_artifact_kind"] == "missing"
+    assert "final_artifact_invalid" in result["notes"]
+    assert result["release_ready"] is False
 def test_malformed_spec_reports_final_artifact_invalid_without_crashing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1765,7 +1768,7 @@ def test_malformed_spec_with_fresh_build_routes_to_spec_fix_first(
     assert "fix malformed" in result["next"]
 
 
-def test_unknown_final_artifact_kind_no_longer_blocks_release(
+def test_unknown_final_artifact_kind_blocks_release(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1777,14 +1780,14 @@ def test_unknown_final_artifact_kind_no_longer_blocks_release(
 
     result = infer_stage(fig_dir)
 
-    assert result["final_artifact_state"] == "NONE"
-    assert result["final_artifact_kind"] == "generated_export"
-    assert "final_artifact_invalid" not in result["notes"]
-    assert "final artifact is invalid" not in result["next"]
+    assert result["final_artifact_state"] == "INVALID"
+    assert result["final_artifact_kind"] == "raster_polish"
+    assert "final_artifact_invalid" in result["notes"]
+    assert "final artifact is invalid" in result["next"]
     assert result["workflow_ready"] is True
     assert result["golden_ready"] is True
-    assert result["release_ready"] is True
-    assert result["final_ready"] is True
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
 def test_stage_4_export_present_critique_stale_redirects_to_fig_critique(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

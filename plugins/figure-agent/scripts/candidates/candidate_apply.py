@@ -665,6 +665,48 @@ def _rollback_compile_status(
     }
 
 
+def _export_artifact_paths(example_dir: Path, name: str) -> tuple[Path, ...]:
+    exports_dir = example_dir / "exports"
+    return (
+        exports_dir / f"{name}.pdf",
+        exports_dir / f"{name}.svg",
+        exports_dir / f"{name}.tif",
+        exports_dir / f"{name}.tiff",
+        exports_dir / f"{name}.png",
+    )
+
+
+def _snapshot_export_artifacts(example_dir: Path, name: str) -> dict[Path, bytes | None]:
+    snapshot: dict[Path, bytes | None] = {}
+    for path in _export_artifact_paths(example_dir, name):
+        snapshot[path] = path.read_bytes() if path.is_file() else None
+    return snapshot
+
+
+def _restore_export_artifacts(snapshot: dict[Path, bytes | None]) -> dict[str, Any]:
+    restored: list[str] = []
+    removed: list[str] = []
+    failures: list[dict[str, str]] = []
+    for path, content in snapshot.items():
+        try:
+            if content is None:
+                if path.exists():
+                    path.unlink()
+                    removed.append(path.name)
+                continue
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(content)
+            restored.append(path.name)
+        except OSError as exc:
+            failures.append({"path": path.as_posix(), "reason": str(exc)})
+    return {
+        "status": "success" if not failures else "failed",
+        "restored": restored,
+        "removed": removed,
+        "failures": failures,
+    }
+
+
 def _verify_labels_unchanged(pre_words: Counter, post_words: Counter) -> tuple[bool, str]:
     # No baseline (pre-mutation PDF absent / unreadable) => value-preservation is
     # unverifiable, so FAIL CLOSED (M3). The caller forces a pre-mutation compile
@@ -868,6 +910,9 @@ def apply_candidate(
         if post_apply and not build_pdf.is_file():
             _compile_current_source(name, paths)
         pre_words = _pdf_words(build_pdf) if post_apply else Counter()
+        export_snapshot = (
+            _snapshot_export_artifacts(example_dir, name) if post_apply else {}
+        )
         changed_files: list[dict[str, str]] = []
         for change in changes:
             target = change["path"]
@@ -908,6 +953,9 @@ def apply_candidate(
                     name,
                     paths,
                     build_pdf,
+                )
+                post_apply_result["rollback_exports"] = _restore_export_artifacts(
+                    export_snapshot
                 )
             class_verifiers["rolled_back"] = rolled_back
             post_apply_result["class_verifiers"] = class_verifiers

@@ -55,6 +55,21 @@ def test_tracked_golden_is_golden_ready_but_not_release_ready() -> None:
     assert vector["golden_ready"] is True
     assert vector["release_ready"] is False
     assert vector["final_ready"] is False
+
+
+def test_invalid_final_artifact_blocks_release_readiness_only() -> None:
+    vector = _vector(
+        final_artifact={
+            "state": "INVALID",
+            "kind": "polished_svg",
+            "path": "polish/demo.svg",
+        }
+    )
+
+    assert vector["workflow_ready"] is True
+    assert vector["golden_ready"] is True
+    assert vector["release_ready"] is False
+    assert vector["final_ready"] is False
 def test_publication_gate_fields_are_preserved_in_status_vector() -> None:
     publication_gate = {
         "publication_gate_state": "PROVENANCE_REQUIRED",

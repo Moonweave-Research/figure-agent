@@ -1610,10 +1610,18 @@ def _apply_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
     if success:
         error = None
     elif status == "rolled_back":
+        post = payload.get("post_apply", {}) if isinstance(payload, dict) else {}
+        rollback_exports = post.get("rollback_exports", {}) if isinstance(post, dict) else {}
+        suffix = (
+            " Source and generated exports were restored."
+            if isinstance(rollback_exports, dict)
+            and rollback_exports.get("status") == "success"
+            else " Source was restored; inspect apply_result.post_apply for generated artifact cleanup."
+        )
         error = _error(
             "unsupported_operation",
             "apply-candidate post-apply verification failed (status rolled_back); "
-            "the edit was automatically rolled back, working tree unchanged.",
+            f"the edit was automatically rolled back.{suffix}",
         )
     elif status == "applied_with_failed_verification":
         # Post-apply verification failed. The efficacy recheck and the
@@ -1624,11 +1632,18 @@ def _apply_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
         post = payload.get("post_apply", {}) if isinstance(payload, dict) else {}
         verifiers = post.get("class_verifiers", {}) if isinstance(post, dict) else {}
         if isinstance(verifiers, dict) and verifiers.get("rolled_back"):
+            rollback_exports = post.get("rollback_exports", {}) if isinstance(post, dict) else {}
+            suffix = (
+                " Source and generated exports were restored."
+                if isinstance(rollback_exports, dict)
+                and rollback_exports.get("status") == "success"
+                else " Source was restored; inspect apply_result.post_apply for generated artifact cleanup."
+            )
             error = _error(
                 "unsupported_operation",
                 "apply-candidate post-apply verification failed (status "
                 "applied_with_failed_verification); the edit was automatically rolled "
-                "back, working tree unchanged.",
+                f"back.{suffix}",
             )
         else:
             error = _error(
