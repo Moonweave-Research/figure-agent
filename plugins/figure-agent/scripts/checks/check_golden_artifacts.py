@@ -47,6 +47,7 @@ for script_dir in reversed(
 import fixture_identity  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 from lint_tex import strip_tex_comment  # noqa: E402
+import human_attestation  # noqa: E402
 from publication_gate import publication_compliance_failure_records  # noqa: E402
 from quality_manifest import input_manifest_hash, yaml_frontmatter  # noqa: E402
 from reference_pack import reference_pack_failures  # noqa: E402
@@ -641,6 +642,10 @@ def check_example(
 
         if not fixture_is_accepted(spec):
             failures.append("fixture is not marked accepted: true")
+
+        attested, attestation_reason = human_attestation.verify_attestation(example_dir)
+        if not attested:
+            failures.append(f"human attestation invalid: {attestation_reason}")
 
         required_labels = contract.get("required_labels")
         missing = missing_pdf_labels(extract_pdf_text(pdf), required_labels)
