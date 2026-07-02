@@ -93,6 +93,25 @@ strict policy:
 - `Probe` remains an ambiguous single-token drift and should still be
   specialized before being used as a hard publication blocker.
 
+## Triage Pass 3
+
+The golden contract now removes stale/non-visible labels instead of forcing the
+checker to explain known-invalid requirements:
+
+- `Probe` was replaced with the current rendered label `Vs probe`. This keeps a
+  probe-related rendered-text check while avoiding the single-token cross-panel
+  false anchor.
+- `three independent probes` was removed from `required_labels`; it is a broad
+  semantic phrase rather than contiguous rendered text in the current figure.
+- `FMaxwell` was removed from `required_labels`; the current TeX explicitly
+  records that the `F_Maxwell` arrow/label was deleted and forbidden from Panel F.
+- `high n` gained a `hig hn` alias for `pdftotext -layout`, which extracts the
+  visible label as split lines.
+
+After this cleanup, the PDF rendered-label contract has no missing labels. The
+layout-drift checker still fails strict mode on real comparable drift, which is
+the intended remaining blocker.
+
 ## Acceptance Status
 
 - [x] Identified the only current required-label fixture.
@@ -108,8 +127,10 @@ strict policy:
 - [x] Triage strict drift and uncovered-label findings before changing checker
       policy or thresholds.
 - [x] Normalize decorated/split token forms for layout-drift matching.
-- [ ] Specialize remaining ambiguous formula/single-token labels before
+- [x] Specialize remaining ambiguous formula/single-token labels before
       expanding strict publication-blocking policy.
+- [ ] Decide whether the remaining comparable drift requires layout edits or a
+      deliberate reference re-baseline.
 
 ## Verification
 
@@ -120,7 +141,10 @@ strict policy:
   -> only `fig1_overview_v2_pair_001_vault/spec.yaml`
 - `uv run python3 scripts/checks/check_layout_drift.py fig1_overview_v2_pair_001_vault --strict`
   -> exits `1` with real strict findings, including `localized traps`,
-     `Probe`, `Debye`, `g(Et)`, `Coulomb`, and `repulsion` drift warnings
+     `Debye`, `g(Et)`, `Coulomb`, and `repulsion` drift warnings
+- `missing_pdf_labels(...)` over the rendered fig1 PDF and
+  `golden_contract.required_labels`
+  -> `[]`
 - `./bin/fig-agent compile fig1_overview_v2_pair_001_vault`
   -> exits `0`, emits the same layout-drift warnings, and writes fresh
      `build/fig1_overview_v2_pair_001_vault.{pdf,png}`
