@@ -319,7 +319,6 @@ def _post_apply_env(paths: runtime_paths.RuntimePaths) -> dict[str, str]:
         paths.scripts_dir / "quality",
         paths.scripts_dir / "loop",
         paths.scripts_dir / "driver",
-        paths.scripts_dir / "svg_polish",
     )
     import_path = os.pathsep.join(str(path) for path in script_import_dirs)
     existing_pythonpath = env.get("PYTHONPATH")
