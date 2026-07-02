@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 
 import fig_loop
+import pytest
 from dogfood_metrics import is_degenerate, load_cohort, roll_up_run_dirs
 from fig_loop_stop_diagnoser import diagnose_run
 
@@ -31,6 +32,7 @@ def _compile_fresh(name: str) -> None:
     assert completed.returncode == 0, completed.stderr[-2000:]
 
 
+@pytest.mark.render
 def test_cohort_dogfood_gate_is_non_degenerate(tmp_path):
     cohort = load_cohort(COHORT)
     # Run the active-improvement set (fig2, fig3); fig1 is the recorded anchor.
