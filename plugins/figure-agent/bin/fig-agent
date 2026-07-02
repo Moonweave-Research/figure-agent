@@ -972,7 +972,12 @@ def _attest(argv: list[str]) -> int:
 def _plan_check(argv: list[str]) -> int:
     import check_plan_consistency
 
-    return check_plan_consistency.main(argv)
+    normalized = list(argv)
+    if "--examples-dir" not in normalized:
+        normalized.extend(["--examples-dir", str(_paths().workspace_root / "examples")])
+    if "--map" not in normalized:
+        normalized.extend(["--map", str(_paths().plugin_root / "docs" / "paper_figure_map.yaml")])
+    return check_plan_consistency.main(normalized)
 
 
 def _evidence_sync(argv: list[str]) -> int:

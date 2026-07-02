@@ -108,3 +108,26 @@ def test_fig_agent_plan_check_is_report_only(tmp_path: Path) -> None:
 
     assert result.returncode == 0
     assert "unmapped_fixture" in result.stdout
+
+def test_fig_agent_plan_check_defaults_are_plugin_root_relative(tmp_path: Path) -> None:
+    result = subprocess.run(
+        [
+            "uv",
+            "run",
+            "--project",
+            str(PLUGIN_ROOT),
+            "python",
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "plan-check",
+        ],
+        cwd=tmp_path,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert '"schema": "figure-agent.plan-consistency.v1"' in result.stdout
+    assert '"figure": "fig2"' in result.stdout
+    assert '"fixture": "fig5_actuation_mechanism"' in result.stdout
+    assert '"fixture": "fig3_trapping_concept"' in result.stdout
