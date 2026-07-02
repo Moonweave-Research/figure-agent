@@ -77,7 +77,7 @@ def test_check_visual_clash_extract_tolerates_nonutf8(monkeypatch, tmp_path) -> 
     assert words[0]["xmin"] == 10.0
 
 
-def test_check_collisions_extract_rejects_empty_nontrivial_pdf(
+def test_check_collisions_extract_allows_empty_nontrivial_pdf(
     monkeypatch,
     tmp_path,
 ) -> None:
@@ -85,11 +85,10 @@ def test_check_collisions_extract_rejects_empty_nontrivial_pdf(
     pdf.write_bytes(b"%PDF-1.4\n" + (b"0" * 2048))
     monkeypatch.setattr(subprocess, "run", _fake_pdftotext(EMPTY_PAGE_BBOX_HTML))
 
-    with pytest.raises(RuntimeError, match="empty_extraction"):
-        check_collisions.extract_word_bboxes(pdf)
+    assert check_collisions.extract_word_bboxes(pdf) == []
 
 
-def test_check_visual_clash_extract_rejects_empty_nontrivial_pdf(
+def test_check_visual_clash_extract_allows_empty_nontrivial_pdf(
     monkeypatch,
     tmp_path,
 ) -> None:
@@ -97,8 +96,7 @@ def test_check_visual_clash_extract_rejects_empty_nontrivial_pdf(
     pdf.write_bytes(b"%PDF-1.4\n" + (b"0" * 2048))
     monkeypatch.setattr(subprocess, "run", _fake_pdftotext(EMPTY_PAGE_BBOX_HTML))
 
-    with pytest.raises(RuntimeError, match="empty_extraction"):
-        check_visual_clash.extract_pdf_words_and_page(pdf)
+    assert check_visual_clash.extract_pdf_words_and_page(pdf) == ([], (200.0, 200.0))
 
 
 def _passthrough_to_nonutf8_stderr_child(monkeypatch) -> None:

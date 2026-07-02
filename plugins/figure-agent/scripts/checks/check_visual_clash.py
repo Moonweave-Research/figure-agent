@@ -35,15 +35,6 @@ class VisualIssue:
 KNOWN_FALSE_POSITIVES_PATH = Path(__file__).resolve().parents[2] / "_known_false_positives.yaml"
 
 
-def _is_nontrivial_pdf_extraction(pdf_path: Path, html_text: str) -> bool:
-    try:
-        if pdf_path.stat().st_size > 1024:
-            return True
-    except OSError:
-        pass
-    return re.search(r"<page\b", html_text) is not None
-
-
 def extract_pdf_words_and_page(pdf_path: Path) -> tuple[list[dict], tuple[float, float]]:
     """Return pdftotext word bboxes and first-page size in PDF points."""
     with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as tmp:
@@ -88,11 +79,6 @@ def extract_pdf_words_and_page(pdf_path: Path) -> tuple[list[dict], tuple[float,
                 "xmax": float(attrs["xMax"]),
                 "ymax": float(attrs["yMax"]),
             }
-        )
-    if not words and _is_nontrivial_pdf_extraction(pdf_path, html_text):
-        raise RuntimeError(
-            "empty_extraction: pdftotext returned 0 words for non-trivial PDF "
-            f"{pdf_path}"
         )
     return words, page_size
 

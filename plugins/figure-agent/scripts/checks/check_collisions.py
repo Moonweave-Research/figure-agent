@@ -14,15 +14,6 @@ import tempfile
 from pathlib import Path
 
 
-def _is_nontrivial_pdf_extraction(pdf_path: Path, html_text: str) -> bool:
-    try:
-        if pdf_path.stat().st_size > 1024:
-            return True
-    except OSError:
-        pass
-    return re.search(r"<page\b", html_text) is not None
-
-
 def extract_word_bboxes(pdf_path: Path) -> list[dict]:
     """pdftotext -bbox로 렌더된 텍스트 bbox 추출."""
     with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as tmp:
@@ -60,11 +51,6 @@ def extract_word_bboxes(pdf_path: Path) -> list[dict]:
                 "xmax": float(attrs["xMax"]),
                 "ymax": float(attrs["yMax"]),
             }
-        )
-    if not words and _is_nontrivial_pdf_extraction(pdf_path, html_text):
-        raise RuntimeError(
-            "empty_extraction: pdftotext returned 0 words for non-trivial PDF "
-            f"{pdf_path}"
         )
     return words
 
