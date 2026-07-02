@@ -1,6 +1,6 @@
 # Issue 91 - Layout Drift Gate Dogfood
 
-Status: real-fixture precondition missing; synthetic CLI coverage added
+Status: real-fixture dogfood complete; strict drift follow-up required
 
 Type: restored compile gate dogfood, coordinate-hints fixture coverage
 
@@ -14,41 +14,46 @@ PDF.
 
 ## Dogfood Result
 
-The repository currently has no real fixture that can exercise the restored
-gate end to end:
+The restored gate now has one checked-in real fixture path:
+`fig1_overview_v2_pair_001_vault`.
 
-- `find plugins/figure-agent/examples -name coordinate_hints.yaml -print`
-  returned no fixtures.
-- `fig1_overview_v2_pair_001_vault` is the only fixture with
+- `fig1_overview_v2_pair_001_vault` remains the only fixture with
   `golden_contract.required_labels`.
-- Direct checker run against that fixture exits successfully but skips because
-  the required hints file is absent:
-  `SKIP layout drift: missing coordinate_hints.yaml in examples/fig1_overview_v2_pair_001_vault`.
-- `scripts/compile.sh` only invokes the drift checker inside
-  `if [[ -f "coordinate_hints.yaml" ]]`; therefore current compile runs cannot
-  prove label matching, drift reporting, or false-positive behavior.
+- `coordinate_hints.yaml` was generated from the fixture reference image
+  (`reference/codex_gen_overview_v1.png`) using the local reference-extract
+  helper. The extraction produced 120 OCR text labels, 8 palette colors, and
+  28 shape components; `structural_regions` are unavailable for this reference.
+- The direct strict checker no longer takes the missing-hints skip path. It
+  exits nonzero on real drift and coverage findings.
+- The normal compile path invokes the layout-drift checker when the hints file
+  is present. Compile remains report-only for this gate and exits zero while
+  surfacing the same drift warnings.
+- `fig-agent status` now reports `coordinate_hints: present` and a fresh render.
+  Remaining publication blockers are critique/export/provenance, not missing
+  coordinate hints.
 
-This means the restored gate is wired, and focused tests now prove the
-coordinate-hints path does not skip when hints are present. It is still not
-dogfooded on real OCR/reference hints.
+The first strict dogfood pass found real label drift and OCR/coverage gaps
+rather than a wiring failure. Representative strict findings:
 
-## Minimal Fixture Plan
+- `localized traps`: drift `0.094 > 0.050`
+- `Probe`: drift `0.363 > 0.050`
+- `Debye`: drift `0.095 > 0.050`
+- `Coulomb`: drift `0.294 > 0.050`
+- `repulsion`: drift `0.304 > 0.050`
+- Several required labels are currently skipped as `uncovered_ref` or
+  `uncovered_both`, including broad panel labels and OCR-sensitive symbols.
 
-Use the smallest real-fixture path before tuning thresholds:
+## Follow-up Plan
 
-1. Pick `fig1_overview_v2_pair_001_vault` unless a smaller accepted fixture
-   gains `golden_contract.required_labels` first.
-2. Add or regenerate a real `coordinate_hints.yaml` from the fixture reference
-   image using `/fig_extract <name>` rather than hand-authoring synthetic hints.
-3. Run the direct checker:
-   `uv run python3 scripts/checks/check_layout_drift.py fig1_overview_v2_pair_001_vault --strict`.
-4. Run the compile path only after TeX/render dependencies are available:
-   `scripts/compile.sh fig1_overview_v2_pair_001_vault.tex` from the fixture
-   directory with strict mode enabled.
-5. Record each required label as matched, skipped, drifted, missing in build,
-   or missing in reference.
-6. Add focused regression tests only if this dogfood pass requires threshold,
-   token matching, or skip-policy changes.
+Use the current real fixture before changing policy:
+
+1. Triage skipped labels into expected OCR limitations, reference omissions, and
+   genuine missing rendered labels.
+2. Decide whether the checker needs label normalization for formulas/symbols
+   such as `g(Et)`, `FMaxwell`, `Vactive`, and `qtr`.
+3. Decide whether strict mode should fail on `uncovered_ref` / `uncovered_both`
+   for publication fixtures or keep those as report-only findings.
+4. Only then tune thresholds or add per-label exceptions.
 
 ## Acceptance Status
 
@@ -60,17 +65,26 @@ Use the smallest real-fixture path before tuning thresholds:
 - [x] Recorded the minimal next fixture plan.
 - [x] Added synthetic CLI coverage proving a fixture with `coordinate_hints.yaml`
       reports matched labels instead of taking the missing-hints skip path.
-- [ ] Dogfood matched/drifted label behavior on real `coordinate_hints.yaml`
+- [x] Dogfooded matched/drifted label behavior on real `coordinate_hints.yaml`
       data.
+- [ ] Triage strict drift and uncovered-label findings before changing checker
+      policy or thresholds.
 
 ## Verification
 
-- `find plugins/figure-agent/examples -maxdepth 2 -name coordinate_hints.yaml -print | wc -l`
-  -> `0`
+- `./bin/fig-agent helper reference_extract.py fig1_overview_v2_pair_001_vault --rebuild`
+  -> `OK: extracted 120 text labels, 8 palette colors (28 shape components),
+     structural_regions: unavailable`
 - `rg -n "golden_contract:|required_labels:" plugins/figure-agent/examples -g spec.yaml`
   -> only `fig1_overview_v2_pair_001_vault/spec.yaml`
 - `uv run python3 scripts/checks/check_layout_drift.py fig1_overview_v2_pair_001_vault --strict`
-  -> skipped because `coordinate_hints.yaml` is missing
+  -> exits `1` with real strict findings, including `localized traps`,
+     `Probe`, `Debye`, `Coulomb`, and `repulsion` drift warnings
+- `./bin/fig-agent compile fig1_overview_v2_pair_001_vault`
+  -> exits `0`, emits the same layout-drift warnings, and writes fresh
+     `build/fig1_overview_v2_pair_001_vault.{pdf,png}`
+- `./bin/fig-agent status fig1_overview_v2_pair_001_vault --json`
+  -> reports `coordinate_hints: present` and `render_state: FRESH`
 - `uv run pytest -q tests/test_check_layout_drift.py`
   -> covers skip behavior, drift warning behavior, and CLI success when a
      fixture has `coordinate_hints.yaml`

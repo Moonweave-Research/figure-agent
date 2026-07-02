@@ -1,0 +1,1095 @@
+metadata:
+  extraction_version: '0.3'
+  created_at: '2026-07-02T14:27:25+00:00'
+  reference_image_path: reference/codex_gen_overview_v1.png
+  reference_image_hash: sha256:bb380ccf4ed960708e2da510a206fbeecf3883c1be606af1276df99b124bad0e
+  ocr_status: ok
+  parameters:
+    min_component_pixels: 200
+    ocr_confidence_floor: 30.0
+    ocr_passes:
+    - 1.0
+    - 2.0
+    group_thresholds:
+      specific: 55
+      broad: 55
+      gray: 35
+reference_image_size:
+- 1713
+- 918
+text_labels:
+- text: Sulfur-rich
+  bbox:
+  - 136
+  - 40
+  - 243
+  - 59
+  conf: 91.955055
+- text: network
+  bbox:
+  - 252
+  - 40
+  - 332
+  - 59
+  conf: 96.301491
+- text: localized
+  bbox:
+  - 1030
+  - 40
+  - 1115
+  - 59
+  conf: 96.686836
+- text: traps
+  bbox:
+  - 1122
+  - 42
+  - 1172
+  - 63
+  conf: 96.852638
+- text: S-chain
+  bbox:
+  - 526
+  - 374
+  - 591
+  - 390
+  conf: 88.465767
+- text: length
+  bbox:
+  - 599
+  - 374
+  - 651
+  - 395
+  conf: 96.285217
+- text: ':'
+  bbox:
+  - 889
+  - 367
+  - 892
+  - 369
+  conf: 32.200474
+- text: a
+  bbox:
+  - 849
+  - 385
+  - 886
+  - 411
+  conf: 42.999443
+- text: i
+  bbox:
+  - 276
+  - 430
+  - 299
+  - 466
+  conf: 46.148869
+- text: distributed
+  bbox:
+  - 197
+  - 477
+  - 302
+  - 494
+  conf: 96.792068
+- text: release
+  bbox:
+  - 310
+  - 476
+  - 377
+  - 494
+  conf: 95.539055
+- text: V;(t)
+  bbox:
+  - 662
+  - 483
+  - 704
+  - 505
+  conf: 69.830139
+- text: decay
+  bbox:
+  - 717
+  - 484
+  - 767
+  - 505
+  conf: 96.954231
+- text: ISPD-derived
+  bbox:
+  - 957
+  - 484
+  - 1081
+  - 501
+  conf: 88.590118
+- text: g(E,)
+  bbox:
+  - 1087
+  - 483
+  - 1133
+  - 506
+  conf: 58.631634
+- text: t
+  bbox:
+  - 185
+  - 509
+  - 199
+  - 529
+  conf: 70.677834
+- text: ts
+  bbox:
+  - 308
+  - 509
+  - 322
+  - 529
+  conf: 86.153328
+- text: in
+  bbox:
+  - 204
+  - 534
+  - 212
+  - 552
+  conf: 36.935219
+- text: i
+  bbox:
+  - 204
+  - 555
+  - 207
+  - 564
+  conf: 86.900642
+- text: 4g
+  bbox:
+  - 328
+  - 537
+  - 357
+  - 559
+  conf: 77.319855
+- text: i
+  bbox:
+  - 328
+  - 561
+  - 331
+  - 569
+  conf: 91.250183
+- text: V;
+  bbox:
+  - 601
+  - 545
+  - 617
+  - 566
+  conf: 72.383522
+- text: 9(Ex)
+  bbox:
+  - 903
+  - 531
+  - 947
+  - 564
+  conf: 51.931763
+- text: ta
+  bbox:
+  - 1056
+  - 532
+  - 1079
+  - 569
+  conf: 55.68716
+- text: Set
+  bbox:
+  - 343
+  - 605
+  - 356
+  - 617
+  conf: 36.026936
+- text: 10°
+  bbox:
+  - 43
+  - 652
+  - 66
+  - 669
+  conf: 96.157013
+- text: '>'
+  bbox:
+  - 568
+  - 643
+  - 601
+  - 666
+  conf: 80.135597
+- text: 10?
+  bbox:
+  - 42
+  - 684
+  - 70
+  - 701
+  conf: 83.489647
+- text: -n
+  bbox:
+  - 453
+  - 692
+  - 471
+  - 702
+  conf: 87.694046
+- text: I(t)~t
+  bbox:
+  - 375
+  - 690
+  - 451
+  - 716
+  conf: 85.909767
+- text: \
+  bbox:
+  - 187
+  - 733
+  - 196
+  - 748
+  conf: 47.644543
+- text: non-Debye
+  bbox:
+  - 470
+  - 733
+  - 539
+  - 749
+  conf: 77.87175
+- text: tail
+  bbox:
+  - 543
+  - 733
+  - 563
+  - 746
+  conf: 94.030548
+- text: _
+  bbox:
+  - 65
+  - 774
+  - 70
+  - 783
+  conf: 37.888672
+- text: \,
+  bbox:
+  - 202
+  - 760
+  - 208
+  - 773
+  conf: 59.351311
+- text: Debye
+  bbox:
+  - 224
+  - 759
+  - 264
+  - 775
+  conf: 89.898087
+- text: '~'
+  bbox:
+  - 271
+  - 765
+  - 280
+  - 768
+  conf: 89.770004
+- text: 10"
+  bbox:
+  - 42
+  - 778
+  - 64
+  - 791
+  conf: 56.970192
+- text: ‘
+  bbox:
+  - 209
+  - 777
+  - 215
+  - 792
+  conf: 57.017193
+- text: '>'
+  bbox:
+  - 500
+  - 795
+  - 509
+  - 805
+  conf: 94.774811
+- text: 10?
+  bbox:
+  - 65
+  - 807
+  - 95
+  - 824
+  conf: 68.547058
+- text: 10°
+  bbox:
+  - 140
+  - 807
+  - 164
+  - 824
+  conf: 96.423355
+- text: '107'
+  bbox:
+  - 209
+  - 807
+  - 232
+  - 824
+  conf: 81.915108
+- text: '107'
+  bbox:
+  - 282
+  - 807
+  - 305
+  - 824
+  conf: 67.348869
+- text: 10*
+  bbox:
+  - 352
+  - 807
+  - 375
+  - 824
+  conf: 49.917435
+- text: 10°
+  bbox:
+  - 422
+  - 807
+  - 445
+  - 824
+  conf: 81.02034
+- text: '107'
+  bbox:
+  - 607
+  - 807
+  - 637
+  - 824
+  conf: 64.734077
+- text: 10°
+  bbox:
+  - 668
+  - 807
+  - 692
+  - 824
+  conf: 75.985283
+- text: 10?
+  bbox:
+  - 721
+  - 807
+  - 744
+  - 824
+  conf: 69.995972
+- text: '104'
+  bbox:
+  - 779
+  - 808
+  - 802
+  - 824
+  conf: 30.201229
+- text: t
+  bbox:
+  - 261
+  - 843
+  - 268
+  - 858
+  conf: 90.295647
+- text: (s)
+  bbox:
+  - 279
+  - 841
+  - 302
+  - 863
+  conf: 90.295647
+- text: t
+  bbox:
+  - 708
+  - 843
+  - 715
+  - 858
+  conf: 48.111237
+- text: (s)
+  bbox:
+  - 723
+  - 841
+  - 745
+  - 863
+  conf: 48.111237
+- text: Coulomb
+  bbox:
+  - 1598
+  - 582
+  - 1669
+  - 599
+  conf: 96.825676
+- text: repulsion
+  bbox:
+  - 1598
+  - 609
+  - 1670
+  - 629
+  conf: 96.918121
+- text: Maxwell
+  bbox:
+  - 1606
+  - 674
+  - 1667
+  - 690
+  conf: 96.558304
+- text: attraction
+  bbox:
+  - 1600
+  - 700
+  - 1673
+  - 716
+  conf: 89.236168
+- text: Sulfur-rich
+  bbox:
+  - 136
+  - 40
+  - 244
+  - 59
+  conf: 91.683487
+- text: network
+  bbox:
+  - 252
+  - 40
+  - 332
+  - 58
+  conf: 96.848068
+- text: localized
+  bbox:
+  - 1030
+  - 40
+  - 1115
+  - 58
+  conf: 96.409958
+- text: traps
+  bbox:
+  - 1122
+  - 42
+  - 1172
+  - 64
+  conf: 96.863602
+- text: A
+  bbox:
+  - 1518
+  - 82
+  - 1530
+  - 102
+  conf: 86.218002
+- text: /
+  bbox:
+  - 1514
+  - 105
+  - 1518
+  - 114
+  conf: 82.509529
+- text: /
+  bbox:
+  - 1509
+  - 116
+  - 1514
+  - 126
+  conf: 92.407303
+- text: ©
+  bbox:
+  - 1495
+  - 127
+  - 1517
+  - 149
+  conf: 93.526802
+- text: i
+  bbox:
+  - 1500
+  - 152
+  - 1506
+  - 164
+  conf: 53.628349
+- text: H
+  bbox:
+  - 1498
+  - 168
+  - 1502
+  - 190
+  conf: 67.820091
+- text: S
+  bbox:
+  - 1556
+  - 171
+  - 1568
+  - 186
+  conf: 53.510948
+- text: iS
+  bbox:
+  - 1597
+  - 194
+  - 1605
+  - 202
+  conf: 52.116661
+- text: '|'
+  bbox:
+  - 1496
+  - 208
+  - 1499
+  - 217
+  conf: 58.183407
+- text: EN
+  bbox:
+  - 1508
+  - 300
+  - 1528
+  - 312
+  conf: 55.133911
+- text: S-chain
+  bbox:
+  - 526
+  - 374
+  - 591
+  - 390
+  conf: 91.008781
+- text: length
+  bbox:
+  - 599
+  - 374
+  - 652
+  - 394
+  conf: 96.444923
+- text: ee
+  bbox:
+  - 430
+  - 414
+  - 644
+  - 476
+  conf: 35.640682
+- text: '1'
+  bbox:
+  - 1014
+  - 444
+  - 1024
+  - 469
+  conf: 48.708458
+- text: decay
+  bbox:
+  - 717
+  - 484
+  - 768
+  - 505
+  conf: 96.395348
+- text: ISPD-derived
+  bbox:
+  - 957
+  - 484
+  - 1081
+  - 501
+  conf: 75.635468
+- text: g(E;)
+  bbox:
+  - 1088
+  - 484
+  - 1132
+  - 506
+  conf: 81.643791
+- text: Macroscopic
+  bbox:
+  - 1356
+  - 480
+  - 1469
+  - 502
+  conf: 96.514755
+- text: probe
+  bbox:
+  - 1477
+  - 480
+  - 1528
+  - 502
+  conf: 96.531937
+- text: Coulomb
+  bbox:
+  - 1598
+  - 582
+  - 1669
+  - 598
+  conf: 96.231956
+- text: distributed
+  bbox:
+  - 196
+  - 476
+  - 302
+  - 494
+  conf: 96.450905
+- text: release
+  bbox:
+  - 310
+  - 476
+  - 376
+  - 494
+  conf: 96.63842
+- text: V;
+  bbox:
+  - 600
+  - 538
+  - 617
+  - 568
+  conf: 66.843781
+- text: Tq
+  bbox:
+  - 1060
+  - 547
+  - 1079
+  - 564
+  conf: 92.339317
+- text: i
+  bbox:
+  - 1402
+  - 612
+  - 1404
+  - 630
+  conf: 40.728035
+- text: repulsion
+  bbox:
+  - 1598
+  - 609
+  - 1670
+  - 629
+  conf: 96.799042
+- text: 10°
+  bbox:
+  - 42
+  - 652
+  - 66
+  - 670
+  conf: 96.587654
+- text: '>'
+  bbox:
+  - 568
+  - 642
+  - 602
+  - 666
+  conf: 90.065659
+- text: '|'
+  bbox:
+  - 1400
+  - 646
+  - 1402
+  - 676
+  conf: 76.4468
+- text: '107'
+  bbox:
+  - 42
+  - 684
+  - 70
+  - 701
+  conf: 73.75695
+- text: -n
+  bbox:
+  - 452
+  - 692
+  - 472
+  - 702
+  conf: 91.81501
+- text: '!'
+  bbox:
+  - 1400
+  - 681
+  - 1401
+  - 698
+  conf: 39.280071
+- text: Maxwell
+  bbox:
+  - 1606
+  - 671
+  - 1667
+  - 696
+  conf: 96.642281
+- text: So
+  bbox:
+  - 13
+  - 712
+  - 70
+  - 731
+  conf: 56.032318
+- text: attraction
+  bbox:
+  - 1600
+  - 700
+  - 1673
+  - 716
+  conf: 96.891983
+- text: '='
+  bbox:
+  - 13
+  - 726
+  - 32
+  - 740
+  conf: 78.017441
+- text: non-Debye
+  bbox:
+  - 470
+  - 734
+  - 539
+  - 750
+  conf: 92.264702
+- text: tail
+  bbox:
+  - 544
+  - 733
+  - 563
+  - 746
+  conf: 96.678162
+- text: '4'
+  bbox:
+  - 42
+  - 748
+  - 47
+  - 761
+  conf: 47.989544
+- text: \
+  bbox:
+  - 202
+  - 760
+  - 208
+  - 774
+  conf: 86.044571
+- text: Debye
+  bbox:
+  - 224
+  - 754
+  - 323
+  - 775
+  conf: 93.219101
+- text: '~'
+  bbox:
+  - 272
+  - 752
+  - 282
+  - 777
+  conf: 92.693077
+- text: 10”
+  bbox:
+  - 42
+  - 778
+  - 64
+  - 791
+  conf: 41.567802
+- text: \
+  bbox:
+  - 208
+  - 776
+  - 214
+  - 792
+  conf: 76.619987
+- text: 10°
+  bbox:
+  - 140
+  - 807
+  - 164
+  - 824
+  conf: 70.70607
+- text: '='
+  bbox:
+  - 183
+  - 800
+  - 200
+  - 830
+  conf: 56.05027
+- text: '102'
+  bbox:
+  - 607
+  - 807
+  - 637
+  - 824
+  conf: 86.062523
+- text: 10°
+  bbox:
+  - 668
+  - 807
+  - 692
+  - 824
+  conf: 87.726654
+- text: '102'
+  bbox:
+  - 721
+  - 807
+  - 744
+  - 824
+  conf: 79.20546
+- text: '104'
+  bbox:
+  - 779
+  - 808
+  - 802
+  - 824
+  conf: 90.925186
+- text: 10°
+  bbox:
+  - 832
+  - 807
+  - 855
+  - 824
+  conf: 80.466774
+- text: Shallow
+  bbox:
+  - 954
+  - 809
+  - 1012
+  - 824
+  conf: 96.866508
+- text: Deep
+  bbox:
+  - 1126
+  - 808
+  - 1164
+  - 828
+  conf: 94.680367
+- text: “ie
+  bbox:
+  - 1332
+  - 802
+  - 1384
+  - 835
+  conf: 41.625832
+- text: t
+  bbox:
+  - 708
+  - 844
+  - 716
+  - 858
+  conf: 88.669388
+- text: (s)
+  bbox:
+  - 724
+  - 841
+  - 746
+  - 863
+  conf: 88.669388
+- text: t
+  bbox:
+  - 261
+  - 843
+  - 268
+  - 858
+  conf: 92.895432
+- text: (s)
+  bbox:
+  - 279
+  - 841
+  - 302
+  - 863
+  conf: 92.895432
+palette_shape_clusters:
+  cAmber:
+    target_rgb:
+    - 153
+    - 122
+    - 30
+    threshold: 55
+    match_count: 8663
+    components:
+    - bbox:
+      - 1314
+      - 565
+      - 1337
+      - 792
+      pixel_count: 3571
+  cBlue:
+    target_rgb:
+    - 68
+    - 119
+    - 170
+    threshold: 55
+    match_count: 1880
+    components:
+    - bbox:
+      - 1542
+      - 674
+      - 1565
+      - 705
+      pixel_count: 356
+  cRed:
+    target_rgb:
+    - 204
+    - 102
+    - 119
+    threshold: 55
+    match_count: 2894
+    components:
+    - bbox:
+      - 1523
+      - 582
+      - 1556
+      - 606
+      pixel_count: 384
+  cGray:
+    target_rgb:
+    - 70
+    - 70
+    - 70
+    threshold: 35
+    match_count: 7538
+    components:
+    - bbox:
+      - 1447
+      - 812
+      - 1489
+      - 838
+      pixel_count: 637
+    - bbox:
+      - 1271
+      - 563
+      - 1273
+      - 801
+      pixel_count: 476
+    - bbox:
+      - 81
+      - 800
+      - 500
+      - 801
+      pixel_count: 419
+    - bbox:
+      - 408
+      - 364
+      - 781
+      - 365
+      pixel_count: 373
+    - bbox:
+      - 920
+      - 792
+      - 1217
+      - 793
+      pixel_count: 297
+    - bbox:
+      - 631
+      - 799
+      - 841
+      - 801
+      pixel_count: 211
+  cLGray:
+    target_rgb:
+    - 200
+    - 200
+    - 200
+    threshold: 35
+    match_count: 12208
+    components:
+    - bbox:
+      - 1302
+      - 567
+      - 1304
+      - 761
+      pixel_count: 366
+    - bbox:
+      - 1282
+      - 550
+      - 1329
+      - 564
+      pixel_count: 339
+    - bbox:
+      - 299
+      - 430
+      - 634
+      - 431
+      pixel_count: 335
+    - bbox:
+      - 1617
+      - 841
+      - 1659
+      - 882
+      pixel_count: 224
+  cBrown:
+    target_rgb:
+    - 93
+    - 72
+    - 32
+    threshold: 55
+    match_count: 10145
+    components:
+    - bbox:
+      - 1312
+      - 573
+      - 1316
+      - 793
+      pixel_count: 482
+    - bbox:
+      - 1271
+      - 564
+      - 1273
+      - 801
+      pixel_count: 423
+    - bbox:
+      - 1448
+      - 816
+      - 1487
+      - 838
+      pixel_count: 378
+    - bbox:
+      - 408
+      - 364
+      - 781
+      - 365
+      pixel_count: 373
+    - bbox:
+      - 1336
+      - 586
+      - 1338
+      - 782
+      pixel_count: 328
+    - bbox:
+      - 907
+      - 792
+      - 1218
+      - 793
+      pixel_count: 311
+    - bbox:
+      - 217
+      - 800
+      - 431
+      - 801
+      pixel_count: 214
+    - bbox:
+      - 631
+      - 799
+      - 841
+      - 801
+      pixel_count: 211
+  cArmAmber:
+    target_rgb:
+    - 139
+    - 111
+    - 62
+    threshold: 55
+    match_count: 9116
+    components:
+    - bbox:
+      - 1314
+      - 564
+      - 1337
+      - 793
+      pixel_count: 3592
+  cAmberSphere:
+    target_rgb:
+    - 221
+    - 204
+    - 119
+    threshold: 55
+    match_count: 16283
+    components:
+    - bbox:
+      - 1431
+      - 678
+      - 1473
+      - 736
+      pixel_count: 950
+    - bbox:
+      - 1433
+      - 595
+      - 1471
+      - 648
+      pixel_count: 686
+    - bbox:
+      - 1440
+      - 754
+      - 1476
+      - 806
+      pixel_count: 619
+    - bbox:
+      - 1430
+      - 630
+      - 1473
+      - 676
+      pixel_count: 521
+    - bbox:
+      - 1468
+      - 535
+      - 1493
+      - 577
+      pixel_count: 275
+    - bbox:
+      - 1457
+      - 774
+      - 1478
+      - 797
+      pixel_count: 219
+structural_regions:
+  status: unavailable
