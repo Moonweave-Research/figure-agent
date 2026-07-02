@@ -233,6 +233,11 @@ fixture (e.g. fig2) fails with `selector_missing` because no marker block
 matches. This is a single-fixture-bound premium scaffold, **not** a reusable
 component bank.
 
+The composition test stack is marked `quarantine` for this reason. The tests
+still run by default, but the marker makes the current boundary explicit: the
+stack is inert on committed real figures until at least three real fixtures
+carry compatible `% fig-agent:start` marker blocks.
+
 Every generated op is stamped `apply_authority: 'human_required'`, so the
 composition path never auto-applies a scene rewrite. The flow is wired through
 the `bin/fig-agent compose-*` subcommands (`compose-capture`,

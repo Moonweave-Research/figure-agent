@@ -10,6 +10,10 @@ import fixture_identity
 import runtime_paths
 from composition_family_templates import FAMILY_DATA
 
+# INERT on committed real figures as of 2026-07-02.
+# `FAMILY_DATA` targets fig3-only marker objects; other fixtures hit selector_missing.
+# Revisit only after N>=3 committed real figures carry compatible composition markers.
+
 SCHEMA: Final = "figure-agent.composition-candidate-set.v1"
 OPERATION_SCHEMA: Final = "figure-agent.composition-candidate-operation.v1"
 

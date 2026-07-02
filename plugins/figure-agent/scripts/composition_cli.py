@@ -21,6 +21,10 @@ import composition_visual_clash_triage
 import fixture_identity
 import runtime_paths
 
+# INERT on committed real figures as of 2026-07-02.
+# Composition subcommands are wired, but family generation is fig3-marker-bound.
+# Revisit only after N>=3 committed real figures carry compatible composition markers.
+
 
 def _validate_name(parser: argparse.ArgumentParser, name: str) -> str:
     try:

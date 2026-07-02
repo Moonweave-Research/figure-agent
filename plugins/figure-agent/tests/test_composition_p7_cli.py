@@ -6,6 +6,10 @@ import subprocess
 from hashlib import sha256
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.quarantine
+
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
 SOURCE_TEXT = (
