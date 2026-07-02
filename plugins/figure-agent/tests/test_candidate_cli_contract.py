@@ -90,6 +90,17 @@ def test_fig_agent_intent_and_candidates_are_read_only(tmp_path: Path) -> None:
     assert _tree(workspace) == before
 
 
+def test_fig_agent_attest_requires_interactive_terminal(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+
+    result = _run(workspace, "attest", "candidate_demo")
+
+    assert result.returncode == 1
+    assert "human attestation requires an interactive terminal" in result.stderr
+    assert not (fixture / "human_attestation.json").exists()
+
+
 def test_fig_agent_analyze_panel_is_read_only_json(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)

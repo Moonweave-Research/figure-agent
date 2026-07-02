@@ -2939,8 +2939,47 @@ def test_infer_stage_surfaces_publication_provenance_gate_when_audit_is_incomple
             "required_action": (
                 "Human reviewer must decide submission safety and write an explicit value."
             ),
+        },
+        {
+            "code": "invalid_human_attestation",
+            "category": "publication_provenance",
+            "actor": "human",
+            "message": "human attestation failed: missing_human_attestation",
+            "required_action": "run `fig-agent attest goldenfig` from an interactive terminal",
+        },
+    ]
+
+
+def test_infer_stage_submission_safe_text_still_requires_human_attestation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    (fig_dir / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "human-visual-acceptance: true\n"
+        "submission-safe: true\n",
+        encoding="utf-8",
+    )
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["acceptance_state"] == "ACCEPTED"
+    assert result["publication_gate_state"] == "PROVENANCE_REQUIRED"
+    assert result["publication_gate_failures"] == [
+        {
+            "code": "invalid_human_attestation",
+            "category": "publication_provenance",
+            "actor": "human",
+            "message": "human attestation failed: missing_human_attestation",
+            "required_action": "run `fig-agent attest goldenfig` from an interactive terminal",
         }
     ]
+
+
 def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

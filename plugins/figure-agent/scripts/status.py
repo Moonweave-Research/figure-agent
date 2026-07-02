@@ -656,6 +656,7 @@ def infer_stage(example_dir: Path) -> dict:
         example_dir / "QUALITY_AUDIT.md",
         accepted=accepted,
         require_disclosure=_requires_publication_disclosure(spec),
+        example_dir=example_dir,
     )
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)

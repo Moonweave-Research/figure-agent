@@ -7,9 +7,13 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import human_attestation  # noqa: E402
 from publication_gate import (  # noqa: E402
+    PUBLICATION_GATE_PASS,
+    PUBLICATION_GATE_PROVENANCE_REQUIRED,
     publication_audit_scaffold_text,
     publication_compliance_failure_records,
+    publication_gate_summary,
     write_publication_audit_scaffold,
 )
 
@@ -68,6 +72,52 @@ def test_publication_compliance_records_accept_markdown_bold_fields(tmp_path: Pa
     )
 
     assert publication_compliance_failure_records(audit, require_disclosure=True) == []
+
+
+def test_publication_gate_summary_requires_valid_human_attestation_when_accepted(
+    tmp_path: Path,
+) -> None:
+    fixture = tmp_path / "examples" / "demo_fig"
+    fixture.mkdir(parents=True)
+    (fixture / "demo_fig.tex").write_text("source\n", encoding="utf-8")
+    audit = fixture / "QUALITY_AUDIT.md"
+    audit.write_text(
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "submission-safe: true\n"
+        "disclosure-needed: no\n",
+        encoding="utf-8",
+    )
+
+    summary = publication_gate_summary(audit, accepted=True, example_dir=fixture)
+
+    assert summary["publication_gate_state"] == PUBLICATION_GATE_PROVENANCE_REQUIRED
+    assert summary["publication_gate_failures"][0]["code"] == "invalid_human_attestation"
+    assert "fig-agent attest demo_fig" in summary["publication_gate_failures"][0]["required_action"]
+
+
+def test_publication_gate_summary_accepts_valid_human_attestation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    fixture = tmp_path / "examples" / "demo_fig"
+    fixture.mkdir(parents=True)
+    (fixture / "demo_fig.tex").write_text("source\n", encoding="utf-8")
+    human_attestation.write_attestation(fixture)
+    audit = fixture / "QUALITY_AUDIT.md"
+    audit.write_text(
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "submission-safe: true\n"
+        "disclosure-needed: no\n",
+        encoding="utf-8",
+    )
+
+    summary = publication_gate_summary(audit, accepted=True, example_dir=fixture)
+
+    assert summary["publication_gate_state"] == PUBLICATION_GATE_PASS
+    assert summary["publication_gate_failures"] == []
 
 
 def test_publication_compliance_records_reject_partial_truthy_values(tmp_path: Path) -> None:

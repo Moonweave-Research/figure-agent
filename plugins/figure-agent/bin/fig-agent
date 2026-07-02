@@ -959,6 +959,16 @@ def _apply_candidate(argv: list[str]) -> int:
     return 0 if payload.get("status") == "applied" else 1
 
 
+def _attest(argv: list[str]) -> int:
+    import human_attestation
+
+    parser = argparse.ArgumentParser(prog="fig-agent attest")
+    parser.add_argument("name")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    return human_attestation.main(["create", name])
+
+
 def _evidence_sync(argv: list[str]) -> int:
     import evidence_sync
 
@@ -1403,6 +1413,8 @@ def main(argv: list[str] | None = None) -> int:
         return _accept_candidate(rest)
     if command == "apply-candidate":
         return _apply_candidate(rest)
+    if command == "attest":
+        return _attest(rest)
     if command == "evidence-sync":
         return _evidence_sync(rest)
     if command == "closeout-ready":
