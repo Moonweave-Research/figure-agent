@@ -44,6 +44,10 @@ def release_ready(
 ) -> bool:
     if not golden_ready or exports_substate != EXPORT_FRESH:
         return False
+    if final_artifact.get("kind") != "generated_export":
+        return False
+    if final_artifact.get("state") not in {"NONE", "FRESH"}:
+        return False
     return True
 
 

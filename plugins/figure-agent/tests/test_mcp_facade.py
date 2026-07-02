@@ -1802,7 +1802,8 @@ def test_mcp_apply_candidate_mutates_tex_and_honors_gate(
         assert apply_result["post_apply"]["compile"]["returncode"] == 0
     elif applied["status"] == "rolled_back":
         assert "post-apply verification failed" in applied["error"]["message"]
-        assert "working tree unchanged" in applied["error"]["message"]
+        assert "automatically rolled back" in applied["error"]["message"]
+        assert "working tree unchanged" not in applied["error"]["message"]
     else:
         assert "post-apply verification failed" in applied["error"]["message"]
         assert any(check["status"] == "failed" for check in apply_result["post_apply"].values())

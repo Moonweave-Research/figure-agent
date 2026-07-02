@@ -388,7 +388,27 @@ def _release_decision_summary(
 
 
 def _final_artifact_state(example_dir: Path, name: str, spec: dict) -> dict:
-    return _default_final_artifact(name)
+    declared = spec.get("final_artifact")
+    if declared is None:
+        return _default_final_artifact(name)
+    if not isinstance(declared, dict):
+        return {
+            "state": "INVALID",
+            "kind": "unsupported",
+            "path": None,
+            "notes": ["final_artifact_invalid"],
+            "error": "final_artifact must be a mapping",
+        }
+    kind = declared.get("kind")
+    if kind == "generated_export":
+        return _default_final_artifact(name)
+    return {
+        "state": "INVALID",
+        "kind": str(kind or "missing"),
+        "path": declared.get("manifest") if isinstance(declared.get("manifest"), str) else None,
+        "notes": ["final_artifact_invalid"],
+        "error": "unsupported final_artifact kind; only generated_export is supported",
+    }
 
 
 def _status_vector(
