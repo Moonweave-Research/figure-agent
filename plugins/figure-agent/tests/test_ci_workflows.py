@@ -78,8 +78,11 @@ def test_render_heavy_test_modules_are_marked() -> None:
         "test_export_freshness.py",
         "test_export_pipeline_equivalence.py",
         "test_plot_callout_api.py",
+        "test_slice3_cohort_dogfood.py",
     ]
 
     for filename in render_modules:
         source = (PLUGIN_ROOT / "tests" / filename).read_text(encoding="utf-8")
-        assert "pytestmark = pytest.mark.render" in source, filename
+        assert (
+            "pytestmark = pytest.mark.render" in source or "@pytest.mark.render" in source
+        ), filename

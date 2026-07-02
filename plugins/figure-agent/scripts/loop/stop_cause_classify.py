@@ -118,10 +118,9 @@ def _refusals_for(subregion_id: str, bundle: dict[str, Any]) -> list[dict[str, s
             if defect is not None and _subregion_of(defect) == subregion_id:
                 matched.append(refusal)
         else:
-            # fixture-level refusal (e.g. no_supported_candidate / source_missing):
-            # attach to a single-sub-region fixture or when only one sub-region exists.
-            if len({_subregion_of(d) for d in defects if isinstance(d, dict)} - {None}) <= 1:
-                matched.append(refusal)
+            # Fixture-level refusal (e.g. no_supported_candidate / source_missing):
+            # it applies to every enumerated subregion unless a defect_id narrows it.
+            matched.append(refusal)
     return matched
 
 
