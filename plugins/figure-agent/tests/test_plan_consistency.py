@@ -109,6 +109,7 @@ def test_fig_agent_plan_check_is_report_only(tmp_path: Path) -> None:
     assert result.returncode == 0
     assert "unmapped_fixture" in result.stdout
 
+
 def test_fig_agent_plan_check_defaults_are_plugin_root_relative(tmp_path: Path) -> None:
     result = subprocess.run(
         [
