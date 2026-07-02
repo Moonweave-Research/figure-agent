@@ -8,16 +8,24 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _write_context_fixture(workspace: Path, name: str = "context_demo") -> Path:
+def _write_context_fixture(
+    workspace: Path,
+    name: str = "context_demo",
+    *,
+    extra_spec: str = "",
+    context_pack_extra: str = "",
+) -> Path:
     fixture = workspace / "examples" / name
     fixture.mkdir(parents=True)
     (fixture / "spec.yaml").write_text(
-        """
-name: context_demo
+        f"""
+name: {name}
 title: Context Demo
 style_profile: polymer-paper
+{extra_spec}
 authoring_context_pack:
   enabled: true
+{context_pack_extra}
 panels:
   - id: C
     caption: Trap energy diagram
@@ -123,8 +131,8 @@ def test_context_pack_includes_read_only_narrative_context(tmp_path: Path) -> No
 
 
 def test_context_pack_scopes_per_fixture_catalog_to_its_own_fixture() -> None:
-    # the per-fixture pair001 catalog must reach only its own fixture; any other
-    # figure inherits the universal project catalog but no per-fixture rules
+    # the pair001 catalog is selected by declared paper id, not by an ambient
+    # hardcoded file path
     result = subprocess.run(
         [
             str(PLUGIN_ROOT / "bin" / "fig-agent"),
@@ -147,6 +155,76 @@ def test_context_pack_scopes_per_fixture_catalog_to_its_own_fixture() -> None:
     assert payload["sources"]["rule_catalog"].endswith("authoring-rules-pair001.md")
     rule_ids = [rule["id"] for rule in catalog["rules"]]
     assert "pair001.panel-c-hero-split" in rule_ids
+
+
+def test_context_pack_selects_rule_catalog_by_paper_id_for_later_figure(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        name="fig2_same_paper",
+        extra_spec="paper_id: pair001\n",
+    )
+
+    result = subprocess.run(
+        [str(PLUGIN_ROOT / "bin" / "fig-agent"), "context-pack", "fig2_same_paper", "--json"],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    catalog = payload["rule_catalog"]
+    assert catalog is not None
+    assert catalog["fixture"] == "fig1_overview_v2_pair_001_vault"
+    assert payload["sources"]["rule_catalog"].endswith("authoring-rules-pair001.md")
+    assert "pair001.panel-c-hero-split" in [rule["id"] for rule in catalog["rules"]]
+
+
+def test_context_pack_accepts_explicit_rule_catalog_selector(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        context_pack_extra="  rule_catalog: pair001\n",
+    )
+
+    result = subprocess.run(
+        [str(PLUGIN_ROOT / "bin" / "fig-agent"), "context-pack", "context_demo", "--json"],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["rule_catalog"]["fixture"] == "fig1_overview_v2_pair_001_vault"
+    assert payload["sources"]["rule_catalog"].endswith("authoring-rules-pair001.md")
+
+
+def test_context_pack_rejects_unsafe_rule_catalog_selector(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        context_pack_extra="  rule_catalog: ../pair001\n",
+    )
+
+    result = subprocess.run(
+        [str(PLUGIN_ROOT / "bin" / "fig-agent"), "context-pack", "context_demo", "--json"],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "rule_catalog" in result.stdout
 
 
 def test_context_pack_accepts_format_json_spelling(tmp_path: Path) -> None:

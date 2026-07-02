@@ -129,7 +129,8 @@ Future work should improve this kernel:
    - `fig-agent context-pack <name>` compiles read-only authoring context from
      explicit source files.
    - Fig1-derived rule catalogs remain source-anchored N=1 hypotheses until a
-     second figure validates transfer.
+     second figure validates transfer, and they are selected only by explicit
+     paper/series metadata rather than ambient hardcoded filenames.
    - Opt-in `spec.yaml` semantic claims and locked invariants become narrow
      authoring and critique checks, not broad model judgment.
 
