@@ -97,6 +97,29 @@ def test_verify_attestation_missing_key_does_not_create_home(
     assert not home.exists()
 
 
+def test_verify_attestation_missing_key_tolerates_read_only_home(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    writable_home = tmp_path / "writable_home"
+    monkeypatch.setenv("HOME", str(writable_home))
+    fixture = _fixture(tmp_path / "workspace")
+    human_attestation.write_attestation(fixture)
+
+    readonly_home = tmp_path / "readonly_home"
+    readonly_home.mkdir()
+    readonly_home.chmod(0o500)
+    monkeypatch.setenv("HOME", str(readonly_home))
+    try:
+        ok, reason = human_attestation.verify_attestation(fixture)
+    finally:
+        readonly_home.chmod(0o700)
+
+    assert ok is False
+    assert reason == "missing_attestation_key"
+    assert not (readonly_home / ".figure-agent").exists()
+
+
 def test_verify_attestation_rejects_non_ascii_signature_before_key_load(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
