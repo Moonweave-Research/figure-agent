@@ -2,7 +2,7 @@
 
 Date: 2026-07-02
 
-Status: active OMX team execution plan
+Status: completed
 
 Branch: `work/review-auto-fixes-2026-06-25`
 
@@ -162,3 +162,15 @@ Stop condition:
   change outside this plan.
 - Do not push. Final output must include changed files, verification evidence,
   and any residual release risk.
+
+## Completion Evidence
+
+- OMX team `implement-plugins-fig-342c1d95` completed all three lanes and was
+  shut down after worker results were merged.
+- Focused regression suite:
+  `315 passed, 1 deselected in 35.51s`.
+- Full non-render suite:
+  `2587 passed, 26 skipped, 36 deselected, 5 xfailed in 389.73s`.
+- Static checks:
+  `ruff check` on modified Python entry points passed, `bash -n scripts/compile.sh`
+  passed, and `python -m compileall -q scripts mcp tests` passed.
