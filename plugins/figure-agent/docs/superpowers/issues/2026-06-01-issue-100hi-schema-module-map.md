@@ -49,8 +49,8 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `v1.12` | journal art-direction playbook audit | `journal_art_direction_playbook.py`, `critique_brief.py` | `critique_lint.py`, `critique_schema_validator.py` | `fig_loop_assessments.py` | Generic journal prose invalid once opted in |
 | `v1.13` | reference learning accountability | `critique_reference_pack.py`, `reference_aesthetic_metrics.py` | `critique_lint.py` | `fig_loop_assessments.py` | Reference is learning anchor, not copy target |
 | `v1.14` | route-detail contract and richer aesthetic intent | `critique_brief.py` | `critique_lint.py`, `quality_manifest.py` | `fig_driver.py`, `fig_loop.py` | Route-specific rationale required |
-| `v1.15` | SVG polish gate/delta hardening | `svg_polish_manifest.py`, `svg_polish_delta.py` | `critique_lint.py`, `fig_driver_editorial.py` | `fig_driver.py`, `check_golden_artifacts.py` | SVG polish cannot bypass semantic backport |
-| `v1.16` | SVG polish delta audit | `svg_polish_delta.py`, `critique_brief.py` | `critique_lint.py` | `fig_driver_editorial.py` | Before/after/diff evidence required |
+| `v1.15` | retired SVG polish gate/delta hardening | retired 2026-07-02 | retired 2026-07-02 | retired 2026-07-02 | Superseded by external handoff-only route labels |
+| `v1.16` | retired SVG polish delta audit | retired 2026-07-02 | retired 2026-07-02 | retired 2026-07-02 | Superseded by external handoff-only route labels |
 | `v1.17` | grounded observation and anomaly accountability | `critique_zoom_crops.py`, `check_undeclared_geometry.py`, `critique_brief.py` | `critique_schema_validator.py`, `critique_lint.py`, `audit_evidence_summary.py` | `fig_loop_assessments.py`, `fig_driver.py` | Current grounded schema; new grounded fields should extend this |
 
 ### Non-Critique Schemas
@@ -98,11 +98,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.editorial-redesign-packet.v1` | editorial redesign handoff | `editorial_redesign_packet.py` | operators, design-direction queue handoff | Read-only redesign brief; creates no source, accepted/golden, or publication mutation authority |
 | `figure-agent.style-benchmark-candidate-pack.v1` / `figure-agent.style-benchmark-comparison-packet.v1` | style benchmark decisions | `style_benchmark_pack.py`, `style_benchmark_comparison.py` | `fig_queue.py`, operators | Read-only candidate/comparison evidence; editorial redesign and SVG polish remain handoff-only until separately approved |
 | `figure-agent.e2e-smoke.v1` | deterministic smoke | `fig_e2e_smoke.py` | operators, CI | Deterministic gate only; not host-vision readiness |
-| `figure-agent.svg-polish-manifest.v1` | final artifact integrity | `svg_polish_manifest.py` | `status.py`, `check_golden_artifacts.py` | Can block final readiness |
-| `figure-agent.svg-polish-recipe.v1` | SVG edit intent | `svg_polish_recipe.py` | `svg_polish_delta.py` | Delta-pack input only (executor deleted 2026-07-02) |
 | `figure-agent.svg-polish-readiness.v1` / `figure-agent.svg-polish-gate.v1` | SVG route/gate | `fig_driver_editorial.py` | `fig_driver.py`, `fig_loop.py` | Can route to SVG polish or semantic backport |
-| `figure-agent.svg-polish-delta.v1` | SVG before/after audit pack | `svg_polish_delta.py` | `critique_brief.py`, `critique_lint.py`, `fig_driver.py` | Can require semantic backport or human art direction |
-| `figure-agent.svg-semantic-diff.v1` | SVG semantic safety | `svg_semantic_diff.py` | `svg_polish_manifest.py` | Can block final artifact freshness |
 | `figure-agent.reference-aesthetic-metrics.v1` | numeric reference-class signal | `reference_aesthetic_metrics.py` | `critique_brief.py`, `critique_lint.py` | Advisory unless explicitly routed |
 | `figure-agent.critique-reference-pack.v1.1` / `figure-agent.reference-learning.v1` | reference learning | `critique_reference_pack.py` | `quality_manifest.py`, `critique_brief.py`, `critique_lint.py` | Freshness input; not copy target |
 | `figure-agent.aesthetic-intent.v1` / `figure-agent.aesthetic-intent.v2` | aesthetic direction | `aesthetic_intent.py` | `critique_brief.py`, `critique_lint.py`, `quality_manifest.py` | Grounding input; not acceptance |
@@ -293,8 +289,6 @@ approve human decisions.
 - `run_export.py`, `export_freshness.py`, `export_svg.sh`, `svg_to_png.sh`,
   `diff_pdf_content.py`, `git_tracked.py`
 - `check_golden_artifacts.py`, `publication_gate.py`, `fig_closeout.py`
-- `svg_polish_manifest.py`, `svg_polish_recipe.py`,
-  `svg_polish_delta.py`, `svg_semantic_diff.py`
 
 Add here when the feature changes export freshness, accepted/golden gates,
 publication compliance, SVG polish, or final-artifact readiness.

@@ -639,7 +639,7 @@ def test_release_packet_distinguishes_force_golden_boundary(
     assert "Do not force" in packet["agent_recommendation"]
 
 
-def test_release_packet_flags_declared_polished_svg_final_artifact_states(
+def test_release_packet_no_longer_flags_declared_polished_svg_final_artifact_states(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _write_fixture(tmp_path, "missing_svg")
@@ -679,13 +679,9 @@ def test_release_packet_flags_declared_polished_svg_final_artifact_states(
     )
 
     packets = {row["fixture"]: row["decision_packet"] for row in queue["rows"]}
-    assert "is MISSING" in packets["missing_svg"]["choices"][1]["warning"]
-    assert "is STALE" in packets["stale_svg"]["choices"][1]["warning"]
-    assert "is INVALID" in packets["invalid_svg"]["choices"][1]["warning"]
-    assert "is BLOCKED" in packets["blocked_svg"]["choices"][1]["warning"]
-    assert packets["fresh_svg"]["choices"][1]["evidence"] == (
-        "declared polished SVG final artifact is fresh"
-    )
+    for packet in packets.values():
+        assert "warning" not in packet["choices"][1]
+        assert "evidence" not in packet["choices"][1]
 
 
 def test_release_packet_defers_when_publication_gate_has_agent_failures(

@@ -194,26 +194,25 @@ longer matches the current state.
 
 ## Final-Artifact Surfacing
 
-When a fixture declares `spec.yaml.final_artifact.kind: polished_svg`,
-`iteration_001.json["status"]` (and the `--json` summary) exposes:
+`iteration_001.json["status"]` (and the `--json` summary) exposes compatibility
+final-artifact fields for the generated export:
 
-- `final_artifact_state` (`NONE | MISSING | INVALID | STALE | BLOCKED | FRESH`)
-- `final_artifact_kind` (`generated_export | polished_svg`)
+- `final_artifact_state`
+- `final_artifact_kind` (`generated_export`)
 - `final_artifact_path`
 
-`decision.md` mirrors all three on a `final_artifact_state:` line. For any
-non-`FRESH`, non-`NONE` polished-SVG state the loop reports
-`stop_reason: status_action_required` and forwards `/fig_status`'s per-state
-next-action hint through `recommended_next_action`:
+`decision.md` mirrors final-artifact state on a `final_artifact_state:` line.
+Legacy non-`NONE` states route through `/fig_status`'s per-state next-action
+hint:
 
 | `final_artifact_state` | Loop hands off to                                                                                  |
 |---|---|
-| `MISSING`  | create or restore `polish/<name>.polished.svg`, `svg_polish_manifest.yaml`, and `svg_polish_audit.md` |
-| `INVALID`  | fix `spec.yaml.final_artifact` and the polish manifest schema/hash/provenance                          |
-| `STALE`    | refresh `polish/svg_polish_manifest.yaml` after source/export/critique/polish/audit changes            |
-| `BLOCKED`  | semantic backport to TikZ / briefing / spec, then rerun compile/export/critique and regenerate the manifest |
+| `MISSING`  | regenerate exports before continuing |
+| `INVALID`  | fix malformed final-artifact metadata or spec state |
+| `STALE`    | rerun compile/export before continuing |
+| `BLOCKED`  | semantic backport to TikZ / briefing / spec, then rerun compile/export/critique |
 | `FRESH`    | no final-artifact block; the loop may emit `verify_only_complete` if other gates close                  |
-| `NONE`     | generated-export fixture (no polished_svg opt-in); existing loop behaviour is unchanged                 |
+| `NONE`     | generated-export fixture; existing loop behaviour is unchanged                 |
 
 The loop itself never edits the polished SVG, the manifest, the audit, or
 generated exports — it only surfaces the state and forwards the canonical
@@ -319,21 +318,11 @@ evidence they depend on is fresh.
 that final-artifact polish is the next manual phase, but it must not edit SVG,
 generated exports, source files, accepted metadata, or golden contracts.
 
-Use SVG polish only after the generated-export loop is closed enough that the
-remaining work is optical presentation cleanup. Blocking semantic
-critique/adjudication findings must be closed before final promotion; SVG
-polish must not mark unresolved findings as resolved. The polish target is one
-fixture and one generated SVG:
-
-- base export: `examples/<name>/exports/<name>.svg`
-- polished target: `examples/<name>/polish/<name>.polished.svg`
-- manifest: `examples/<name>/polish/svg_polish_manifest.yaml`
-- audit closeout: `examples/<name>/polish/svg_polish_audit.md`
-
-The handoff must record the base generated SVG path and hash, the target
-polished SVG path, the intended `spec.yaml.final_artifact` opt-in, the allowed
-visual-only edit classes, any must-backport edit class, the forbidden edit
-scope, required manifest fields, and required post-polish checks.
+Use `ready_for_svg_polish` only as an external handoff label after the
+generated-export loop is closed enough that the remaining work is optical
+presentation cleanup. Blocking semantic critique/adjudication findings must be
+closed before final promotion; external SVG polish must not mark unresolved
+findings as resolved.
 
 Allowed SVG-only edit classes are limited to:
 
@@ -346,20 +335,7 @@ Allowed SVG-only edit classes are limited to:
 - `typography_cleanup`
 - `export_cleanup`
 
-The polisher may write only:
-
-- `examples/<name>/polish/<name>.polished.svg`
-- `examples/<name>/polish/svg_polish_manifest.yaml`
-- `examples/<name>/polish/svg_polish_audit.md`
-- `examples/<name>/spec.yaml`, only to add or confirm:
-
-```yaml
-final_artifact:
-  kind: polished_svg
-  manifest: polish/svg_polish_manifest.yaml
-```
-
-The polisher must not edit:
+An external polisher must not edit:
 
 - `examples/<name>/exports/`
 - `examples/<name>/build/`
@@ -377,53 +353,14 @@ meaning, or storyline; adding apparatus parts that critique marked as
 structural defects; or fixing a root cause that belongs in TikZ, briefing, or
 `spec.yaml`.
 
-Closeout after SVG polish:
+Closeout after external SVG polish:
 
-1. If TikZ, briefing, or spec semantics changed before polish, rerun compile
-   and export before creating the polished SVG.
-2. Refresh `/fig_critique <name>` when critique freshness requires it.
-3. Add or confirm `spec.yaml.final_artifact.kind: polished_svg` only when this
-   polished SVG is intended to become the declared final artifact.
-4. Write `polish/svg_polish_audit.md` with the semantic-preservation decision,
-   edit classes, toolchain, reviewer, and any backport decision.
-5. Create or update `polish/svg_polish_manifest.yaml` last, after the audit and
-   opt-in are final, so current source, export, critique, polished SVG, and
-   audit hashes match.
-6. Run `/fig_status <name>` and require `Final artifact: polished_svg FRESH`
-   before treating the polished SVG as release-ready.
-7. Do not set `accepted: true` unless publication provenance, final-artifact
-   state, and the existing accepted/golden checks are closed.
-
-If the SVG polish is described by a bounded recipe, run the recipe executor
-before handoff. The executor defaults to dry-run and writes only
-`polish/<name>.polished.svg` in `--write` mode:
-
-```bash
-fig-agent helper svg_polish_executor.py examples/<name>
-fig-agent helper svg_polish_executor.py examples/<name> --write
-```
-
-Use the handoff scaffolder after `polish/<name>.polished.svg` exists:
-
-```bash
-fig-agent helper svg_polish_handoff.py examples/<name> \
-  --reviewer author \
-  --editor human \
-  --toolchain "Inkscape:1.4" \
-  --edit-class label_micro_position \
-  --edit-class stroke_polish \
-  --reviewed-at 2026-05-23T00:00:00Z \
-  --notes "visual-only polish" \
-  --write
-```
-
-The scaffolder writes the audit first and the manifest last. It does not edit
-SVG geometry, generated exports, critique files, accepted state, golden
-contracts, or semantic source files.
-
-If no reviewer can confidently classify every SVG edit as visual-only, set
-`backport_required: true` in the manifest and return to the semantic source
-loop instead of promoting the polished SVG.
+1. If TikZ, briefing, or spec semantics changed, rerun compile/export and
+   refresh `/fig_critique <name>` when freshness requires it.
+2. Treat the in-repo generated export as the release gate; the retired
+   final-artifact manifest no longer makes a polished SVG release-ready.
+3. Do not set `accepted: true` unless publication provenance and the existing
+   accepted/golden checks are closed.
 
 ## Auto-Patch Eligibility
 

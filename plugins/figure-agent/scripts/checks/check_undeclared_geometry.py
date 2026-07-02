@@ -23,7 +23,6 @@ for script_dir in reversed(
         SCRIPTS_DIR / "quality",
         SCRIPTS_DIR / "loop",
         SCRIPTS_DIR / "driver",
-        SCRIPTS_DIR / "svg_polish",
     )
 ):
     sys.path.insert(0, str(script_dir))

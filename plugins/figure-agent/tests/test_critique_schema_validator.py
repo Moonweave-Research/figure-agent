@@ -235,71 +235,6 @@ def _journal_art_direction_playbook_audit() -> dict:
     }
 
 
-def _svg_polish_delta_audit() -> dict:
-    return {
-        "evaluation_state": "improved",
-        "read_all_delta_images": True,
-        "delta_image_audit_log": [
-            {
-                "image_id": "before",
-                "path": "polish/aesthetic_delta/before.png",
-                "verdict": "inspected",
-                "observation": "before image shows the generated SVG baseline",
-                "observed_objects": ["generated label"],
-                "local_relationship": "generated label remains left of the icon group",
-                "delta_focus": "baseline before-polish label and icon geometry",
-            },
-            {
-                "image_id": "after",
-                "path": "polish/aesthetic_delta/after.png",
-                "verdict": "inspected",
-                "observation": "after image shows improved label spacing",
-                "observed_objects": ["polished label"],
-                "local_relationship": "polished label remains left of the same icon group",
-                "delta_focus": "after-polish label spacing",
-            },
-            {
-                "image_id": "diff",
-                "path": "polish/aesthetic_delta/diff.png",
-                "verdict": "inspected",
-                "observation": "diff image shows only local typography movement",
-                "observed_objects": ["label delta pixels"],
-                "local_relationship": "diff pixels stay around the label baseline",
-                "delta_focus": "localized typography movement",
-            },
-        ],
-        "compared_inputs": ["before", "after", "diff"],
-        "improvements": ["label spacing is cleaner in the current after image"],
-        "regressions": [],
-        "route_after_delta": "continue_svg_polish",
-        "rationale": "SVG delta improves optical polish without semantic drift",
-    }
-
-
-def _aesthetic_gate_audit() -> list[dict]:
-    return [
-        {
-            "slot": slot,
-            "verdict": "pass",
-            "route": "pass",
-            "evidence": f"current render evidence for {slot}",
-            "rationale": f"{slot} passes on current artifact evidence",
-            "linked_evidence": ["svg_polish_delta_audit.delta_image_audit_log"],
-        }
-        for slot in (
-            "maturity_restraint",
-            "visual_hierarchy",
-            "template_genericness",
-            "overdecorated_or_cartoonish",
-            "journal_fit",
-            "handcrafted_finish",
-            "semantic_preservation",
-            "print_scale_finish",
-            "paper_wide_coherence",
-        )
-    ]
-
-
 def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
     frontmatter = {
         "schema": schema,
@@ -435,9 +370,6 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
     }:
         trigger = frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]
         trigger["remaining_tikz_lever"] = "source-level label spacing can still be repaired in TikZ"
-    if schema in {CRITIQUE_SCHEMA_V1_15, CRITIQUE_SCHEMA_V1_16, CRITIQUE_SCHEMA_V1_17}:
-        frontmatter["svg_polish_delta_audit"] = _svg_polish_delta_audit()
-        frontmatter["aesthetic_gate_audit"] = _aesthetic_gate_audit()
     if schema == CRITIQUE_SCHEMA_V1_17:
         frontmatter["aesthetic_antipattern_audit"] = _aesthetic_antipattern_audit()
         frontmatter["weakest_panel_coherence"] = _weakest_panel_coherence()
@@ -491,6 +423,7 @@ def test_validate_critique_schema_rejects_v1_17_unknown_antipattern_id() -> None
 
     with pytest.raises(CritiqueContractError, match="id"):
         validate_critique_schema(frontmatter)
+
 
 
 def test_validate_critique_schema_rejects_v1_17_duplicate_antipattern_id() -> None:
@@ -578,14 +511,6 @@ def test_validate_critique_schema_rejects_v1_17_reference_underlearning_route_no
         validate_critique_schema(frontmatter)
 
 
-def test_validate_critique_schema_accepts_v1_16_crop_only_grounding() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
-    frontmatter.pop("svg_polish_delta_audit")
-    frontmatter.pop("aesthetic_gate_audit")
-
-    validate_critique_schema(frontmatter)
-
-
 def test_validate_critique_schema_rejects_v1_16_missing_crop_observed_objects() -> None:
     frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
     frontmatter["crop_audit_log"][0].pop("observed_objects")
@@ -608,100 +533,6 @@ def test_validate_critique_schema_rejects_v1_16_missing_candidate_ref() -> None:
 
     with pytest.raises(CritiqueContractError, match="VC001"):
         validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_16_generic_delta_observation() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
-    frontmatter["svg_polish_delta_audit"]["delta_image_audit_log"][0]["observation"] = "ok"
-
-    with pytest.raises(CritiqueContractError, match="observation"):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_missing_svg_delta_audit() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    frontmatter.pop("svg_polish_delta_audit")
-
-    with pytest.raises(CritiqueContractError, match="svg_polish_delta_audit"):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_missing_delta_image_id() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    frontmatter["svg_polish_delta_audit"]["delta_image_audit_log"].pop()
-
-    with pytest.raises(CritiqueContractError, match="missing delta_image_audit_log ids"):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_blocking_regression_without_escalation() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    audit = frontmatter["svg_polish_delta_audit"]
-    audit["evaluation_state"] = "improved"
-    audit["route_after_delta"] = "accept_svg_polish"
-    audit["regressions"] = [
-        {
-            "category": "semantic_drift",
-            "evidence": "diff image shifts a scientific arrow",
-            "severity": "MAJOR",
-            "linked_finding_id": "",
-        }
-    ]
-
-    with pytest.raises(
-        CritiqueContractError,
-        match="semantic_backport_required or needs_human_art_direction",
-    ):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_blocking_regression_valid_link_non_escalation() -> (
-    None
-):
-    # Edge case 18 (issue 90): a BLOCKER/MAJOR regression must escalate to
-    # semantic_backport_required / needs_human_art_direction. A valid linked
-    # finding does NOT rescue a non-escalation route.
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    audit = frontmatter["svg_polish_delta_audit"]
-    audit["evaluation_state"] = "improved"
-    audit["route_after_delta"] = "accept_svg_polish"
-    audit["regressions"] = [
-        {
-            "category": "semantic_drift",
-            "evidence": "diff image shifts a scientific arrow",
-            "severity": "MAJOR",
-            "linked_finding_id": "C001",
-        }
-    ]
-
-    with pytest.raises(
-        CritiqueContractError,
-        match="semantic_backport_required or needs_human_art_direction",
-    ):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_missing_aesthetic_gate() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    frontmatter.pop("aesthetic_gate_audit")
-
-    with pytest.raises(CritiqueContractError, match="aesthetic_gate_audit"):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_incompatible_svg_route() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    frontmatter["aesthetic_gate_audit"][0]["verdict"] = "weak"
-    frontmatter["aesthetic_gate_audit"][0]["route"] = "svg_polish"
-    trigger = frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]
-    trigger["recommended_path"] = "continue_tikz"
-
-    with pytest.raises(CritiqueContractError, match="route svg_polish requires"):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_14_continue_tikz_without_remaining_lever() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_14)
     del frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]["remaining_tikz_lever"]
 
     with pytest.raises(CritiqueContractError, match="remaining_tikz_lever"):

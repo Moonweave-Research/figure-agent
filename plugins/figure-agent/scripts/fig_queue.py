@@ -850,8 +850,6 @@ def _release_current_state(row: dict[str, Any]) -> dict[str, Any]:
 
 def _release_decision_choices(row: dict[str, Any], *, force_golden: bool) -> list[dict[str, Any]]:
     fixture = _cell(row.get("fixture"))
-    final_kind = row.get("final_artifact_kind")
-    final_state = row.get("final_artifact_state")
     if force_golden:
         return [
             {
@@ -928,22 +926,6 @@ def _release_decision_choices(row: dict[str, Any], *, force_golden: bool) -> lis
             "follow_up": {"command": "rerun /fig_queue --mode review"},
         },
     ]
-    if final_kind == "polished_svg" and final_state in {
-        "MISSING",
-        "STALE",
-        "INVALID",
-        "BLOCKED",
-    }:
-        choices[1] = choices[1] | {
-            "warning": (
-                f"declared polished SVG final artifact is {final_state}; "
-                "repair or refresh it before treating it as final"
-            ),
-        }
-    if final_kind == "polished_svg" and final_state == "FRESH":
-        choices[1] = choices[1] | {
-            "evidence": "declared polished SVG final artifact is fresh",
-        }
     return choices
 
 
@@ -1157,14 +1139,11 @@ def _polish_blocker_detail(row: dict[str, Any], *, mode: str) -> dict[str, Any] 
         next_step = "Use bounded TikZ/source polish; SVG polish is not the current route."
     elif (
         any("manifest" in source or "delta" in source for source in source_list)
-        or next_action in {
-            "refresh_svg_polish_handoff",
-            "repair_svg_polish_manifest",
-        }
+        or next_action == "refresh_svg_polish_handoff"
     ):
         reason = "svg_polish_artifact_missing_or_stale"
         upstream_packet = "svg_polish_handoff"
-        next_step = "Repair or refresh SVG polish manifest/delta/semantic-diff artifacts."
+        next_step = "Refresh external SVG-polish handoff evidence before release closure."
     else:
         reason = "ready_for_svg_polish_evidence_missing"
         upstream_packet = "style_direction_packet"

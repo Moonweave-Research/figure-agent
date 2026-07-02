@@ -332,64 +332,47 @@ Adding a new fixture to Layer B: edit its `spec.yaml`, set `ae_max` based on a m
 
 ### Layer 5.5 — Final Artifact Contract
 
-**Status**: implemented opt-in handoff contract. Manifest schema, `/fig_status`
-state, accepted-gate validation, verify-only `/fig_loop` surfacing,
-`/fig_drive --mode polish` routing, `scripts/svg_polish/svg_polish_recipe.py`,
-`scripts/svg_polish/svg_polish_delta.py`, and
-final-artifact blocking are live. The inert automated half — `svg_polish_executor.py`,
-`svg_polish_handoff.py`, the positive harness, `add_volume_shading.py`, and the
-synthetic `_volume_shading_demo` fixture — was deleted on 2026-07-02. The plugin
-still does not invent hidden SVG geometry edits; a human or outer agent authors
-the already-polished SVG plus its audit and manifest files directly.
+**Status**: built-in SVG-polish execution and final-artifact validation were
+retired on 2026-07-02. `/fig_status`, accepted-gate validation, and `/fig_loop`
+now treat generated exports as the release artifact; stale or missing final
+artifacts route back to compile/export instead of a polish manifest. The
+`ready_for_svg_polish` route vocabulary remains as an external handoff label for
+human or outer-agent art direction, but no in-repo recipe, delta, semantic-diff,
+ship-gate, manifest, or polished-SVG engine is live.
 
-**Vacuity caveat (quarantined)**: the remaining SVG-polish recipe/delta/semantic-diff/
-ship-gate machinery is inert on real figures — only the synthetic `_volume_shading_demo`
-fixture ever fired (deleted with the executor), because `dvisvgm` emits zero geometry IDs
-for real TikZ exports, so there is no addressable geometry for these ops to mutate. The
-covering tests are tagged `@pytest.mark.quarantine` so their green count does not imply
-a live guarantee on real figures.
+**Vacuity caveat (retired)**: the deleted SVG-polish machinery was inert on real
+figures because `dvisvgm` emits zero geometry IDs for real TikZ exports, so there
+was no addressable geometry for those ops to mutate.
 
 **Design**:
 `docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`.
 
-Layer 5 exports reproducible generated artifacts. Layer 5.5 is the place for
-declaring a final manuscript artifact when the generated SVG needs
-manual or outer-agent polish that is not realistic to finish in raw TikZ.
+Layer 5 exports reproducible generated artifacts. Layer 5.5 now only preserves
+handoff vocabulary for external art-direction decisions; it does not define an
+additional in-repo artifact validation engine.
 
 The contract is intentionally narrow:
 
 - TikZ remains the semantic source of truth.
-- `/fig_export` must continue to generate `exports/<name>.svg` and must not
-  overwrite `polish/<name>.polished.svg`.
-- Polished SVG is release-relevant only when `spec.yaml` explicitly opts in:
-
-```yaml
-final_artifact:
-  kind: polished_svg
-  manifest: polish/svg_polish_manifest.yaml
-```
-
-- `polish/svg_polish_manifest.yaml` records generated-export hashes, a
-  repo-relative source-set hash, critique hash, polished SVG hash, audit hash,
-  edit class, toolchain, semantic-change declaration, and reviewer provenance.
+- `/fig_export` continues to generate `exports/<name>.svg`; release readiness is
+  based on the generated export plus normal acceptance/publication gates.
+- Legacy `spec.yaml.final_artifact` declarations are ignored by status and
+  release readiness; they no longer create a second blocking artifact contract.
 - SVG-only edits are limited to optical presentation changes such as label
   nudges, stroke polish, spacing balance, and icon cleanup that preserves
   scientific meaning.
-- Any change to component identity, label meaning, mechanism arrows,
-  material semantics, panel role, storyline, or reference interpretation must
-  be backported to TikZ, briefing, or spec and rerun through compile/export,
-  critique, adjudication, and final-artifact validation.
+- Any external visual change that affects component identity, label meaning,
+  mechanism arrows, material semantics, panel role, storyline, or reference
+  interpretation must be backported to TikZ, briefing, or spec and rerun through
+  compile/export, critique, and adjudication.
 - `/fig_status` reports `final_artifact_state`, `final_artifact_kind`, and
-  `final_artifact_path`. Polished artifacts can be `MISSING`, `INVALID`,
-  `STALE`, `BLOCKED`, or `FRESH`.
-- In accepted mode, `scripts/checks/check_golden_artifacts.py` requires a fresh,
-  provenance-backed polished SVG only for fixtures that explicitly opt in.
+  `final_artifact_path` for compatibility; the kind is `generated_export` and
+  the state is `NONE`.
+- In accepted mode, `scripts/checks/check_golden_artifacts.py` no longer requires
+  a polished final artifact disclosure.
 - `/fig_loop` remains verify-only. It blocks completion when status reports
   `workflow_ready=true` but `final_ready=false`, and it surfaces the current
   final-artifact state in its decision output.
-- `polish/svg_polish_audit.md` and `polish/svg_polish_manifest.yaml` are written
-  directly by the human or outer agent after creating `polish/<name>.polished.svg`
-  (the `svg_polish_handoff.py` scaffolding helper was deleted on 2026-07-02).
 
 ### Layer 6 — Validation Gates
 

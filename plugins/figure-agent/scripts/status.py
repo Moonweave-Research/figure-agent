@@ -33,10 +33,6 @@ from reference_contract import (
     participating_panel_reference_paths,
 )
 from status_explanation import build_status_explanation
-from svg_polish_manifest import (
-    FINAL_ARTIFACT_POLISHED_SVG,
-    compute_final_artifact_state,
-)
 
 # Shared build/export freshness source set. /fig_critique adds panel references
 # for crop/reference comparisons, but status should not require a rebuild for
@@ -259,15 +255,17 @@ def _compute_render_state(
 
 
 def _requires_publication_disclosure(spec: dict) -> bool:
-    final_artifact = spec.get("final_artifact") if spec else None
-    return (
-        isinstance(final_artifact, dict)
-        and final_artifact.get("kind") == FINAL_ARTIFACT_POLISHED_SVG
-    )
+    return False
 
 
 def _default_final_artifact(name: str) -> dict:
-    return compute_final_artifact_state(example_dir=Path("."), name=name, spec={})
+    return {
+        "state": "NONE",
+        "kind": "generated_export",
+        "path": f"exports/{name}.svg" if name else None,
+        "notes": [],
+        "error": "",
+    }
 
 
 _NON_RELEASE_DECISION_ROUTES = {
@@ -390,13 +388,7 @@ def _release_decision_summary(
 
 
 def _final_artifact_state(example_dir: Path, name: str, spec: dict) -> dict:
-    return compute_final_artifact_state(
-        example_dir,
-        name,
-        spec,
-        style_lock_path=STYLE_LOCK_PATH,
-        spec_parse_error=bool(spec.get(_SPEC_PARSE_ERROR_KEY)),
-    )
+    return _default_final_artifact(name)
 
 
 def _status_vector(

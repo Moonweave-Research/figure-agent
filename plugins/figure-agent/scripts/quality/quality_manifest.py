@@ -87,11 +87,6 @@ def _authoring_context_paths(example_dir: Path) -> tuple[Path, ...]:
     return tuple(path for path in candidates if path.is_file())
 
 
-def _uses_polished_svg_final_artifact(spec: dict) -> bool:
-    final_artifact = spec.get("final_artifact")
-    return isinstance(final_artifact, dict) and final_artifact.get("kind") == "polished_svg"
-
-
 def critique_manifest_paths(
     example_dir: Path,
     name: str,
@@ -149,21 +144,6 @@ def critique_manifest_paths(
         journal_playbook_path = None
     if journal_playbook_path is not None and journal_playbook_path.exists():
         paths.append(journal_playbook_path)
-    svg_polish_delta_candidates = (
-        example_dir / "polish" / "aesthetic_delta" / "delta_manifest.json",
-        example_dir / "polish" / "aesthetic_delta" / "before.png",
-        example_dir / "polish" / "aesthetic_delta" / "after.png",
-        example_dir / "polish" / "aesthetic_delta" / "diff.png",
-        example_dir / "polish" / "svg_polish_recipe.yaml",
-        example_dir / "polish" / f"{name}.polished.svg",
-    )
-    svg_polish_delta_paths = [path for path in svg_polish_delta_candidates if path.exists()]
-    paths.extend(svg_polish_delta_paths)
-    generated_export_svg_path = example_dir / "exports" / f"{name}.svg"
-    if (
-        _uses_polished_svg_final_artifact(spec) or svg_polish_delta_paths
-    ) and generated_export_svg_path.exists():
-        paths.append(generated_export_svg_path)
     paths.extend(participating_panel_reference_paths(example_dir, spec))
     paths.extend(_authoring_context_paths(example_dir))
     return tuple(dict.fromkeys(paths))

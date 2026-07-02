@@ -3532,10 +3532,8 @@ def test_loop_blocks_verify_only_complete_when_final_artifact_missing(
     assert iteration["stop_reason"] == "status_action_required"
     assert iteration["escalation_level"] == "agent_action_required"
     action = iteration["recommended_next_action"]
-    assert "polish" in action.lower()
-    assert "polish/loop_demo.polished.svg" in action or "polish/svg_polish_manifest.yaml" in action
+    assert "regenerate exports" in action.lower()
     assert "MISSING" in decision
-    assert "polished_svg" in decision
 
 
 def test_loop_blocks_verify_only_complete_when_final_artifact_invalid(
@@ -3577,7 +3575,7 @@ def test_loop_blocks_verify_only_complete_when_final_artifact_stale(
     assert iteration["escalation_level"] == "agent_action_required"
     action = iteration["recommended_next_action"]
     assert "stale" in action.lower() or "refresh" in action.lower()
-    assert "manifest" in action.lower()
+    assert "compile/export" in action.lower()
 
 
 def test_loop_routes_to_semantic_backport_when_final_artifact_blocked(

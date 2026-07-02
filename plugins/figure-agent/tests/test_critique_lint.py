@@ -830,47 +830,6 @@ def _single_crop_audit_log_yaml() -> str:
     )
 
 
-def _svg_polish_delta_audit_yaml(*, include_diff: bool = True) -> str:
-    diff_entry = (
-        "  - image_id: diff\n"
-        "    path: polish/aesthetic_delta/diff.png\n"
-        "    verdict: inspected\n"
-        "    observation: diff image shows only local typography movement\n"
-        "    observed_objects: [adjusted label, nearby panel structure]\n"
-        "    local_relationship: Diff highlight stays local and avoids semantic geometry.\n"
-        "    delta_focus: local typography movement around the intended polished label\n"
-        if include_diff
-        else ""
-    )
-    return (
-        "svg_polish_delta_audit:\n"
-        "  evaluation_state: improved\n"
-        "  read_all_delta_images: true\n"
-        "  delta_image_audit_log:\n"
-        "  - image_id: before\n"
-        "    path: polish/aesthetic_delta/before.png\n"
-        "    verdict: inspected\n"
-        "    observation: before image shows the generated SVG baseline\n"
-        "    observed_objects: [baseline label, adjacent panel marks]\n"
-        "    local_relationship: Baseline view shows label spacing against panel structure.\n"
-        "    delta_focus: pre-polish local spacing baseline\n"
-        "  - image_id: after\n"
-        "    path: polish/aesthetic_delta/after.png\n"
-        "    verdict: inspected\n"
-        "    observation: after image shows improved label spacing\n"
-        "    observed_objects: [polished label, adjacent panel marks]\n"
-        "    local_relationship: After view preserves geometry and improves label spacing.\n"
-        "    delta_focus: post-polish local spacing result\n"
-        f"{diff_entry}"
-        "  compared_inputs: [before, after, diff]\n"
-        "  improvements:\n"
-        "  - label spacing is cleaner in the current after image\n"
-        "  regressions: []\n"
-        "  route_after_delta: continue_svg_polish\n"
-        "  rationale: SVG delta improves optical polish without semantic drift\n"
-    )
-
-
 def _aesthetic_gate_audit_yaml(*, generic: bool = False) -> str:
     slots = (
         "maturity_restraint",
@@ -894,7 +853,7 @@ def _aesthetic_gate_audit_yaml(*, generic: bool = False) -> str:
                 "    route: pass",
                 f"    evidence: {_quote_yaml_string(evidence + ' for ' + slot)}",
                 f"    rationale: {rationale} {slot}",
-                "    linked_evidence: [svg_polish_delta_audit.delta_image_audit_log]",
+                "    linked_evidence: [top_tier_audit.journal_polish]",
             ]
         )
     return "\n".join(lines) + "\n"
@@ -911,7 +870,6 @@ def _write_critique(
     editorial_yaml: str = "",
     aesthetic_lever_audit_yaml: str = "",
     journal_playbook_audit_yaml: str = "",
-    svg_polish_delta_audit_yaml: str = "",
     aesthetic_gate_audit_yaml: str = "",
     journal_grade_yaml: str = "",
     journal_polish_evidence: str | None = None,
@@ -935,7 +893,6 @@ def _write_critique(
         f"{editorial_yaml}"
         f"{aesthetic_lever_audit_yaml}"
         f"{journal_playbook_audit_yaml}"
-        f"{svg_polish_delta_audit_yaml}"
         f"{aesthetic_gate_audit_yaml}"
         f"{journal_grade_yaml}"
         f"{findings_yaml}"
@@ -945,60 +902,6 @@ def _write_critique(
     )
     return critique
 
-
-def _write_svg_polish_delta_manifest(fig_dir: Path) -> None:
-    exports = fig_dir / "exports"
-    polish = fig_dir / "polish"
-    delta = polish / "aesthetic_delta"
-    exports.mkdir(parents=True, exist_ok=True)
-    delta.mkdir(parents=True, exist_ok=True)
-    source_svg = exports / f"{fig_dir.name}.svg"
-    polished_svg = polish / f"{fig_dir.name}.polished.svg"
-    recipe = polish / "svg_polish_recipe.yaml"
-    before = delta / "before.png"
-    after = delta / "after.png"
-    diff = delta / "diff.png"
-    source_svg.write_text("<svg>before</svg>\n", encoding="utf-8")
-    polished_svg.write_text("<svg>after</svg>\n", encoding="utf-8")
-    recipe.write_text("schema: figure-agent.svg-polish-recipe.v1\n", encoding="utf-8")
-    before.write_bytes(b"before")
-    after.write_bytes(b"after")
-    diff.write_bytes(b"diff")
-    (delta / "delta_manifest.json").write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.svg-polish-delta.v1",
-                "fixture": fig_dir.name,
-                "source_svg": f"exports/{fig_dir.name}.svg",
-                "polished_svg": f"polish/{fig_dir.name}.polished.svg",
-                "recipe": "polish/svg_polish_recipe.yaml",
-                "source_svg_hash": file_sha256(source_svg),
-                "polished_svg_hash": file_sha256(polished_svg),
-                "recipe_hash": file_sha256(recipe),
-                "artifact_hashes": {
-                    "before_png_hash": file_sha256(before),
-                    "after_png_hash": file_sha256(after),
-                    "diff_png_hash": file_sha256(diff),
-                },
-                "renderer": {
-                    "executable": "scripts/svg_to_png.sh",
-                    "version": "unknown",
-                    "script_hash": file_sha256(
-                        Path(__file__).resolve().parents[1] / "scripts" / "svg_to_png.sh"
-                    ),
-                },
-                "operation_ids": ["R001"],
-                "artifacts": {
-                    "before_png": "polish/aesthetic_delta/before.png",
-                    "after_png": "polish/aesthetic_delta/after.png",
-                    "diff_png": "polish/aesthetic_delta/diff.png",
-                },
-            },
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
 
 
 def _write_external_vision_review_fixture(
@@ -2664,210 +2567,6 @@ def test_lint_critique_rejects_v1_8_missing_crop_audit_log_with_manifest(
 
     assert [violation.category for violation in violations] == ["critique_contract"]
     assert "crop_audit_log" in violations[0].message
-
-
-def test_lint_critique_requires_v1_15_when_fresh_svg_delta_exists(
-    tmp_path: Path,
-) -> None:
-    fig_dir = tmp_path / "demo_fig"
-    fig_dir.mkdir()
-    _write_svg_polish_delta_manifest(fig_dir)
-    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
-    _write_visual_clash_report(fig_dir, candidate_ids=())
-    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
-    _write_label_path_proximity_report(fig_dir, candidate_ids=())
-    _write_critique(
-        fig_dir,
-        schema="figure-agent.critique.v1.14",
-        findings_yaml="findings: []\npanels: []\n",
-        micro_defects_yaml="micro_defects: []\n",
-        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
-        editorial_yaml=_editorial_yaml_with_route_detail(),
-        journal_polish_evidence="print-scale audit: print_178mm.png passes",
-        publication_readiness_evidence="publication readiness cites print-scale evidence",
-    )
-
-    violations = critique_lint.lint_critique(fig_dir)
-
-    assert [violation.category for violation in violations] == ["svg_polish_delta_accounting"]
-    assert "figure-agent.critique.v1.16" in violations[0].message
-
-
-def test_lint_critique_accepts_v1_16_svg_delta_audit(
-    tmp_path: Path,
-) -> None:
-    fig_dir = tmp_path / "demo_fig"
-    fig_dir.mkdir()
-    _write_svg_polish_delta_manifest(fig_dir)
-    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
-    _write_visual_clash_report(fig_dir, candidate_ids=())
-    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
-    _write_label_path_proximity_report(fig_dir, candidate_ids=())
-    _write_critique(
-        fig_dir,
-        schema="figure-agent.critique.v1.16",
-        findings_yaml="findings: []\npanels: []\n",
-        micro_defects_yaml="micro_defects: []\n",
-        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
-        editorial_yaml=_editorial_yaml_with_route_detail(),
-        svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(),
-        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(),
-        journal_polish_evidence="print-scale audit: print_178mm.png passes",
-        publication_readiness_evidence="publication readiness cites print-scale evidence",
-    )
-
-    assert critique_lint.lint_critique(fig_dir) == []
-
-
-def test_lint_critique_rejects_v1_16_missing_delta_image_accounting(
-    tmp_path: Path,
-) -> None:
-    fig_dir = tmp_path / "demo_fig"
-    fig_dir.mkdir()
-    _write_svg_polish_delta_manifest(fig_dir)
-    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
-    _write_critique(
-        fig_dir,
-        schema="figure-agent.critique.v1.16",
-        findings_yaml="findings: []\npanels: []\n",
-        micro_defects_yaml="micro_defects: []\n",
-        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
-        editorial_yaml=_editorial_yaml_with_route_detail(),
-        svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(include_diff=False),
-        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(),
-        journal_polish_evidence="print-scale audit: print_178mm.png passes",
-        publication_readiness_evidence="publication readiness cites print-scale evidence",
-    )
-
-    violations = critique_lint.lint_critique(fig_dir)
-
-    assert [violation.category for violation in violations] == ["svg_polish_delta_accounting"]
-    assert "missing delta_image_audit_log ids: diff" in violations[0].message
-
-
-def test_lint_critique_rejects_v1_16_generic_aesthetic_gate_prose(
-    tmp_path: Path,
-) -> None:
-    fig_dir = tmp_path / "demo_fig"
-    fig_dir.mkdir()
-    _write_svg_polish_delta_manifest(fig_dir)
-    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
-    _write_visual_clash_report(fig_dir, candidate_ids=())
-    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
-    _write_label_path_proximity_report(fig_dir, candidate_ids=())
-    _write_critique(
-        fig_dir,
-        schema="figure-agent.critique.v1.16",
-        findings_yaml="findings: []\npanels: []\n",
-        micro_defects_yaml="micro_defects: []\n",
-        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
-        editorial_yaml=_editorial_yaml_with_route_detail(),
-        svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(),
-        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(generic=True),
-        journal_polish_evidence="print-scale audit: print_178mm.png passes",
-        publication_readiness_evidence="publication readiness cites print-scale evidence",
-    )
-
-    violations = critique_lint.lint_critique(fig_dir)
-
-    assert [violation.category for violation in violations] == ["aesthetic_gate_accounting"]
-    assert "generic aesthetic_gate_audit evidence" in violations[0].message
-
-
-def test_svg_polish_delta_audit_schemas_track_brief_emitted_version() -> None:
-    # The brief emits v1.17 for any SVG polish delta; the lint accounting set must
-    # cover that emitted version so the pin can never silently drift behind it.
-    assert (
-        critique_brief._CRITIQUE_SCHEMA_VERSION_V1_17
-        in critique_lint.SVG_POLISH_DELTA_AUDIT_SCHEMAS
-    )
-
-
-def test_lint_critique_accepts_v1_17_svg_delta_audit(
-    tmp_path: Path,
-) -> None:
-    fig_dir = tmp_path / "demo_fig"
-    fig_dir.mkdir()
-    _write_svg_polish_delta_manifest(fig_dir)
-    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
-    _write_visual_clash_report(fig_dir, candidate_ids=())
-    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
-    _write_label_path_proximity_report(fig_dir, candidate_ids=())
-    critique_path = _write_critique(
-        fig_dir,
-        schema="figure-agent.critique.v1.17",
-        findings_yaml="findings: []\npanels: []\n",
-        micro_defects_yaml="micro_defects: []\n",
-        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
-        editorial_yaml=_editorial_yaml_with_route_detail(),
-        svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(),
-        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(),
-        journal_polish_evidence="print-scale audit: print_178mm.png passes",
-        publication_readiness_evidence="publication readiness cites print-scale evidence",
-    )
-
-    # A complete v1.17 SVG-polish critique no longer draws the spurious version
-    # blocker. Assert the two accounting functions directly so the check is
-    # isolated from orthogonal full-v1.17-contract requirements (antipattern
-    # audit, weakest panel coherence) validated elsewhere.
-    frontmatter = critique_lint.load_critique_frontmatter(critique_path)
-    assert critique_lint._svg_polish_delta_accounting_violations(fig_dir, frontmatter) == []
-    assert critique_lint._aesthetic_gate_accounting_violations(frontmatter) == []
-
-
-def test_lint_critique_rejects_v1_17_missing_delta_image_accounting(
-    tmp_path: Path,
-) -> None:
-    fig_dir = tmp_path / "demo_fig"
-    fig_dir.mkdir()
-    _write_svg_polish_delta_manifest(fig_dir)
-    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
-    _write_critique(
-        fig_dir,
-        schema="figure-agent.critique.v1.17",
-        findings_yaml="findings: []\npanels: []\n",
-        micro_defects_yaml="micro_defects: []\n",
-        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
-        editorial_yaml=_editorial_yaml_with_route_detail(),
-        svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(include_diff=False),
-        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(),
-        journal_polish_evidence="print-scale audit: print_178mm.png passes",
-        publication_readiness_evidence="publication readiness cites print-scale evidence",
-    )
-
-    violations = critique_lint.lint_critique(fig_dir)
-
-    assert [violation.category for violation in violations] == ["svg_polish_delta_accounting"]
-    assert "missing delta_image_audit_log ids: diff" in violations[0].message
-
-
-def test_lint_critique_rejects_v1_17_generic_aesthetic_gate_prose(
-    tmp_path: Path,
-) -> None:
-    fig_dir = tmp_path / "demo_fig"
-    fig_dir.mkdir()
-    _write_svg_polish_delta_manifest(fig_dir)
-    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
-    _write_visual_clash_report(fig_dir, candidate_ids=())
-    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
-    _write_label_path_proximity_report(fig_dir, candidate_ids=())
-    _write_critique(
-        fig_dir,
-        schema="figure-agent.critique.v1.17",
-        findings_yaml="findings: []\npanels: []\n",
-        micro_defects_yaml="micro_defects: []\n",
-        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
-        editorial_yaml=_editorial_yaml_with_route_detail(),
-        svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(),
-        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(generic=True),
-        journal_polish_evidence="print-scale audit: print_178mm.png passes",
-        publication_readiness_evidence="publication readiness cites print-scale evidence",
-    )
-
-    violations = critique_lint.lint_critique(fig_dir)
-
-    assert [violation.category for violation in violations] == ["aesthetic_gate_accounting"]
-    assert "generic aesthetic_gate_audit evidence" in violations[0].message
 
 
 def test_lint_critique_rejects_v1_13_missing_unintended_visible_anomaly(

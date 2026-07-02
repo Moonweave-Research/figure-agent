@@ -28,7 +28,6 @@ SCRIPT_IMPORT_DIRS = (
     SCRIPTS_DIR / "quality",
     SCRIPTS_DIR / "loop",
     SCRIPTS_DIR / "driver",
-    SCRIPTS_DIR / "svg_polish",
 )
 for script_dir in reversed(SCRIPT_IMPORT_DIRS):
     sys.path.insert(0, str(script_dir))

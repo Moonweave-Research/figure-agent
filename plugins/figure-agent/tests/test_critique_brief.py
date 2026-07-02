@@ -14,12 +14,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import critique_brief  # noqa: E402
 from critique_brief import generate_for, main  # noqa: E402
 from reference_aesthetic_metrics import build_reference_aesthetic_metrics  # noqa: E402
-from svg_polish_delta import build_svg_polish_delta_pack  # noqa: E402
-from svg_polish_recipe import (  # noqa: E402
-    SVG_POLISH_RECIPE_RELATIVE_PATH,
-    svg_polish_recipe_input_hash,
-    write_svg_polish_recipe,
-)
 
 QUALITY_AXIS_NAMES = (
     "message_storyline",
@@ -100,54 +94,6 @@ def _write_real_render_pair(example_dir: Path, *, size: tuple[int, int] = (200, 
 def _fake_svg_delta_renderer(source_svg: Path, output_png: Path) -> None:
     color = "red" if "exports" in source_svg.parts else "blue"
     Image.new("RGB", (4, 4), color).save(output_png)
-
-
-def _write_svg_polish_delta_fixture(example_dir: Path) -> None:
-    (example_dir / "exports").mkdir(exist_ok=True)
-    (example_dir / "polish").mkdir(exist_ok=True)
-    (example_dir / "exports" / "review_demo.svg").write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg"><text id="label-a">A</text></svg>\n',
-        encoding="utf-8",
-    )
-    (example_dir / "polish" / "review_demo.polished.svg").write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg"><text id="label-a">A</text></svg>\n',
-        encoding="utf-8",
-    )
-    recipe_path = example_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
-    write_svg_polish_recipe(
-        recipe_path,
-        {
-            "schema": "figure-agent.svg-polish-recipe.v1",
-            "fixture": "review_demo",
-            "source_svg": "exports/review_demo.svg",
-            "target_svg": "polish/review_demo.polished.svg",
-            "recipe_input_hash": svg_polish_recipe_input_hash(
-                example_dir,
-                "review_demo",
-                source_svg="exports/review_demo.svg",
-                base_dir=example_dir.parent,
-            ),
-            "operations": [
-                {
-                    "id": "R001",
-                    "class": "label_micro_position",
-                    "selector": {"kind": "element_id", "value": "label-a"},
-                    "action": {"type": "translate", "dx": 1.0, "dy": -1.5, "unit": "px"},
-                    "rationale": "visual-only polish",
-                    "semantic_guard": {
-                        "allowed": True,
-                        "reason": "same label and target",
-                    },
-                }
-            ],
-        },
-    )
-    build_svg_polish_delta_pack(
-        example_dir,
-        recipe_path=recipe_path,
-        renderer=_fake_svg_delta_renderer,
-        base_dir=example_dir.parent,
-    )
 
 
 def _sha256(path: Path) -> str:
@@ -1876,30 +1822,6 @@ def test_critique_brief_rejects_malformed_external_vision_review(tmp_path):
         assert "external_vision_review.yaml invalid" in str(exc)
     else:
         raise AssertionError("expected CritiqueBriefError")
-
-
-def test_critique_brief_includes_svg_polish_aesthetic_delta(tmp_path):
-    example_dir = _write_example(tmp_path, section6="- invariant")
-    _write_svg_polish_delta_fixture(example_dir)
-    png_path = example_dir / "build" / "review_demo.png"
-    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
-
-    brief = generate_for(example_dir)
-
-    assert "## SVG Polish Aesthetic Delta" in brief
-    assert "Host LLM MUST compare the before/after polish images" in brief
-    assert "`polish/aesthetic_delta/before.png`" in brief
-    assert "`polish/aesthetic_delta/after.png`" in brief
-    assert "`polish/aesthetic_delta/diff.png`" in brief
-    assert "operation_ids: R001" in brief
-    assert "Did journal polish improve?" in brief
-    assert "Did any scientific semantics change?" in brief
-    assert "schema: figure-agent.critique.v1.17" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.17" in brief
-    assert "svg_polish_delta_audit:" in brief
-    assert "delta_image_audit_log:" in brief
-    assert "aesthetic_gate_audit:" in brief
-    assert "maturity_restraint | visual_hierarchy" in brief
 
 
 def test_critique_brief_includes_paper_wide_aesthetic_context(tmp_path):

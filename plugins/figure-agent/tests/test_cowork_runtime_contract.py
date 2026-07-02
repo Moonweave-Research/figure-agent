@@ -351,10 +351,7 @@ def test_fig_agent_helper_allows_whitelisted_scripts_from_plugin_root(tmp_path: 
 
 @pytest.mark.parametrize(
     ("script_name", "usage"),
-    [
-        ("check_golden_artifacts.py", "usage: check_golden_artifacts.py"),
-        ("svg_semantic_diff.py", "usage: svg_semantic_diff.py"),
-    ],
+    [("check_golden_artifacts.py", "usage: check_golden_artifacts.py")],
 )
 def test_fig_agent_helper_allows_public_gate_helpers(
     tmp_path: Path,

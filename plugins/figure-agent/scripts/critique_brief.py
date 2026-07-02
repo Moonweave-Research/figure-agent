@@ -59,12 +59,6 @@ from reference_aesthetic_metrics import reference_aesthetic_metrics_summary
 from reference_contract import compute_reference_input_failures, declared_figure_reference_path
 from semantic_contracts import SemanticContractError, semantic_claim_questions
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
-from svg_polish_delta import (
-    SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH,
-    SvgPolishDeltaError,
-    load_svg_polish_delta_manifest,
-    svg_polish_delta_is_stale,
-)
 
 MISSING_INVARIANTS = (
     "(none provided — critic should infer plausible physics constraints from §1+§2)"
@@ -820,86 +814,6 @@ def _journal_art_direction_playbook_section(pack: dict | None) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
-def _svg_polish_delta_section(example_dir: Path) -> str:
-    manifest_path = example_dir / SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH
-    if not manifest_path.is_file():
-        return ""
-    try:
-        manifest = load_svg_polish_delta_manifest(manifest_path, example_dir=example_dir)
-        if svg_polish_delta_is_stale(manifest_path, example_dir=example_dir):
-            raise CritiqueBriefError(
-                "SVG polish aesthetic delta pack is stale; regenerate it before critique"
-            )
-    except SvgPolishDeltaError as exc:
-        raise CritiqueBriefError(f"SVG polish aesthetic delta invalid: {exc}") from exc
-    artifacts = manifest["artifacts"]
-    operation_ids = ", ".join(manifest["operation_ids"])
-    lines = [
-        "## SVG Polish Aesthetic Delta",
-        "Host LLM MUST compare the before/after polish images before treating SVG "
-        "polish as an improvement.",
-        f"- before: `{artifacts['before_png']}`",
-        f"- after: `{artifacts['after_png']}`",
-        f"- diff: `{artifacts['diff_png']}`",
-        f"- recipe: `{manifest['recipe']}`",
-        f"- operation_ids: {operation_ids}",
-        f"- source_svg_hash: `{manifest['source_svg_hash']}`",
-        f"- polished_svg_hash: `{manifest['polished_svg_hash']}`",
-        f"- recipe_hash: `{manifest['recipe_hash']}`",
-        "",
-        "Questions the critique must answer:",
-        "- Did journal polish improve?",
-        "- Did any label/readability/spacing issue regress?",
-        "- Did any scientific semantics change?",
-        "- Should the route remain SVG polish, return to TikZ, or require human art direction?",
-    ]
-    return "\n" + "\n".join(lines) + "\n"
-
-
-def _svg_polish_delta_audit_schema(include_delta_audit: bool) -> str:
-    if not include_delta_audit:
-        return ""
-    return """svg_polish_delta_audit:
-  evaluation_state: <improved | no_meaningful_change | regressed |
-    needs_human_art_direction | invalid>
-  read_all_delta_images: true
-  delta_image_audit_log:
-    - image_id: before
-      path: polish/aesthetic_delta/before.png
-      verdict: inspected
-      observed_objects: ["<object names visible in before image>"]
-      local_relationship: "<relative position or clearance observed in before image>"
-      delta_focus: "<what changed or should remain unchanged in before>"
-      observation: "<specific current-artifact evidence from before image>"
-    - image_id: after
-      path: polish/aesthetic_delta/after.png
-      verdict: inspected
-      observed_objects: ["<object names visible in after image>"]
-      local_relationship: "<relative position or clearance observed in after image>"
-      delta_focus: "<what changed or should remain unchanged in after>"
-      observation: "<specific current-artifact evidence from after image>"
-    - image_id: diff
-      path: polish/aesthetic_delta/diff.png
-      verdict: inspected
-      observed_objects: ["<delta pixel/object names visible in diff image>"]
-      local_relationship: "<where the diff pixels sit relative to labels/marks>"
-      delta_focus: "<localized change visible in diff>"
-      observation: "<specific current-artifact evidence from diff image>"
-  compared_inputs: [before, after, diff]
-  improvements:
-    - "<specific improvement, or empty when not improved>"
-  regressions:
-    - category: <semantic_drift | label_readability | crop_regression |
-        print_scale_regression | overdecorated | journal_mismatch>
-      evidence: "<crop/diff/reference evidence>"
-      severity: BLOCKER | MAJOR | MINOR | NIT
-      linked_finding_id: "<finding id, or empty only for non-blocking route>"
-  route_after_delta: <continue_svg_polish | accept_svg_polish |
-    semantic_backport_required | needs_human_art_direction>
-  rationale: "<why this route is chosen; accept_svg_polish is delta-local, not release approval>"
-"""
-
-
 def _aesthetic_gate_audit_schema(include_gate: bool) -> str:
     if not include_gate:
         return ""
@@ -913,8 +827,7 @@ def _aesthetic_gate_audit_schema(include_gate: bool) -> str:
     evidence: "<specific current-artifact evidence; generic 'looks polished' prose is invalid>"
     rationale: "<why this slot takes the selected route>"
     linked_evidence:
-      - svg_polish_delta_audit.delta_image_audit_log |
-        top_tier_audit.<slot> | editorial_art_direction.<slot> | finding id
+      - top_tier_audit.<slot> | editorial_art_direction.<slot> | finding id
 """
 
 
@@ -1591,7 +1504,6 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         journal_playbook_pack
     )
     aesthetic_intent_section = _aesthetic_intent_section(aesthetic_intent_pack)
-    svg_polish_delta_section = _svg_polish_delta_section(example_dir)
     uses_aesthetic_lever_schema = _uses_aesthetic_lever_schema(aesthetic_intent_pack)
     uses_reference_learning_schema = isinstance(
         (reference_calibration_pack or {}).get("reference_learning"),
@@ -1602,10 +1514,8 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         or journal_playbook_pack is not None
         or uses_aesthetic_lever_schema
     )
-    uses_svg_polish_delta_schema = bool(svg_polish_delta_section)
     uses_grounded_observation_schema = (
-        uses_svg_polish_delta_schema
-        or (example_dir / "build" / "audit_crops" / "manifest.json").is_file()
+        (example_dir / "build" / "audit_crops" / "manifest.json").is_file()
         or (example_dir / "build" / "undeclared_geometry.json").is_file()
     )
     uses_route_detail_contract = uses_v1_14_contract or uses_grounded_observation_schema
@@ -1685,7 +1595,6 @@ zoom/reference review.
 {paper_aesthetic_context_section}
 {journal_art_direction_playbook_section}
 {aesthetic_intent_section}
-{svg_polish_delta_section}
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}
@@ -1830,8 +1739,7 @@ top_tier_audit:
 	{journal_assessment_schema}
 {_journal_art_direction_playbook_audit_schema(journal_playbook_pack)}
 {_aesthetic_lever_audit_schema(aesthetic_intent_pack)}
-{_svg_polish_delta_audit_schema(uses_svg_polish_delta_schema)}
-{_aesthetic_gate_audit_schema(uses_svg_polish_delta_schema)}
+{_aesthetic_gate_audit_schema(False)}
 {_aesthetic_antipattern_audit_schema(uses_grounded_observation_schema)}
 {_weakest_panel_coherence_schema(uses_grounded_observation_schema)}
 {_reference_learning_accountability_schema(uses_grounded_observation_schema)}

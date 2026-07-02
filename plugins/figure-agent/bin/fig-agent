@@ -29,7 +29,6 @@ SCRIPT_IMPORT_DIRS = (
     SCRIPTS_DIR / "quality",
     SCRIPTS_DIR / "loop",
     SCRIPTS_DIR / "driver",
-    SCRIPTS_DIR / "svg_polish",
 )
 for script_dir in reversed(SCRIPT_IMPORT_DIRS):
     sys.path.insert(0, str(script_dir))
@@ -273,7 +272,6 @@ HELPER_SCRIPTS = {
     "release_gate.py",
     "spec_bbox_helper.py",
     "subregion_iteration_log.py",
-    "svg_semantic_diff.py",
     "tex_coordinate_shift.py",
     "text_boundary_spec_helper.py",
 }
@@ -312,19 +310,6 @@ def _text_boundary(argv: list[str]) -> int:
     if args.write:
         command.append("--write")
     return _run(command, cwd=_paths().workspace_root)
-
-
-def _svg_polish_delta(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="fig-agent svg-polish-delta")
-    parser.add_argument("name")
-    args = parser.parse_args(argv)
-    name = _validated_fixture_name(parser, args.name)
-    script = (
-        "from pathlib import Path; "
-        "from svg_polish_delta import build_svg_polish_delta_pack; "
-        f"build_svg_polish_delta_pack(Path('examples') / {name!r}, base_dir=Path('.'))"
-    )
-    return _run([sys.executable, "-c", script], cwd=_paths().workspace_root)
 
 
 def _quality_map(argv: list[str]) -> int:
@@ -1366,8 +1351,6 @@ def main(argv: list[str] | None = None) -> int:
         return _helper(rest)
     if command == "text-boundary":
         return _text_boundary(rest)
-    if command == "svg-polish-delta":
-        return _svg_polish_delta(rest)
     if command == "quality-map":
         return _quality_map(rest)
     if command == "context-pack":

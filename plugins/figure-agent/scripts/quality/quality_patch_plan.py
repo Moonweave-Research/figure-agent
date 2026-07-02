@@ -35,9 +35,7 @@ def _is_allowed_target(path_text: str, fixture: str) -> bool:
         return False
     if path.name.startswith("accepted") or path.name.startswith("publication"):
         return False
-    return path == Path("examples") / fixture / f"{fixture}.tex" or path == (
-        Path("examples") / fixture / "polish" / "svg_polish_recipe.yaml"
-    )
+    return path == Path("examples") / fixture / f"{fixture}.tex"
 
 
 def _resolve_line(selector: dict[str, Any], lines: list[str]) -> int | None:

@@ -315,43 +315,11 @@ answer to "can SVG polish start yet?":
 ```
 
 The readiness object is explanatory only. It never grants mutation authority.
-`ready_for_svg_polish` is necessary for the recipe route, but human, top-tier,
-crop, aesthetic, semantic-backport, freshness, export, accepted, golden, and
-publication gates still take precedence.
-
-If `/fig_driver --mode polish` reaches SVG polish, follow the first command it
-surfaces. The canonical recipe path is:
-
-1. If `polish/svg_polish_recipe.yaml` is missing, start from the fixture-aware
-   bounded recipe template:
-
-```bash
-fig-agent helper svg_polish_recipe.py --template examples/<name> --write-template
-```
-
-   Then replace placeholder selectors with real SVG IDs/classes/text before
-   using the executor.
-2. If the recipe exists, inspect the executor plan:
-
-```bash
-fig-agent svg-polish-exec <name> --dry-run
-```
-
-3. After reviewing the dry-run plan, write the polished SVG only for
-   visual-only edits:
-
-```bash
-fig-agent svg-polish-exec <name> --write
-```
-
-4. Generate before/after/diff evidence for critique:
-
-```bash
-fig-agent svg-polish-delta <name>
-```
-
-5. Use `fig-agent helper svg_polish_handoff.py examples/<name> ...` after the delta pack exists to scaffold
-   audit and manifest metadata.
+`ready_for_svg_polish` is an external handoff label. Human, top-tier, crop,
+aesthetic, semantic-backport, freshness, export, accepted, golden, and
+publication gates still take precedence. The built-in SVG recipe/executor/delta
+commands were retired on 2026-07-02, so polish mode no longer surfaces an
+in-repo command that writes a polished SVG.
 
 ## Workspace Warnings
 
@@ -379,7 +347,6 @@ never recommend in that mode.
 - `edit_source_outside_patch_handoff` — review mode allows source edits only
   inside a `/fig_loop` `patch_handoff.allowed_edit_scope`.
 - `edit_generated_export` — direct edits to `exports/`.
-- `edit_polished_svg` — direct edits to `polish/<name>.polished.svg`.
 - `set_accepted` — flipping `spec.yaml.accepted` to `true`.
 - `force_golden` — `--force-golden` golden roll-forward.
 - `bypass_semantic_backport` — promoting polished SVG when the manifest

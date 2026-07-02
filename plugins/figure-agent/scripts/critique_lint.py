@@ -63,22 +63,10 @@ from reference_contract import (  # noqa: E402
     declared_figure_reference_path,
     participating_panel_reference_paths,
 )
-from svg_polish_delta import (  # noqa: E402
-    SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH,
-    SvgPolishDeltaError,
-    load_svg_polish_delta_manifest,
-    svg_polish_delta_is_stale,
-)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.7"
 CROP_AUDIT_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.8"
-SVG_POLISH_DELTA_AUDIT_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
 VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
     {
         "figure-agent.critique.v1.7",
@@ -2054,154 +2042,6 @@ def _crop_audit_accounting_violations(
     return []
 
 
-def _svg_polish_delta_accounting_violations(
-    example_dir: Path,
-    frontmatter: dict[str, Any],
-) -> list[CritiqueLintViolation]:
-    manifest_path = example_dir / SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH
-    if not manifest_path.is_file():
-        return []
-    try:
-        manifest = load_svg_polish_delta_manifest(manifest_path, example_dir=example_dir)
-        if svg_polish_delta_is_stale(manifest_path, example_dir=example_dir):
-            return [
-                CritiqueLintViolation(
-                    severity="blocker",
-                    category="svg_polish_delta_accounting",
-                    message="SVG polish delta manifest is stale; regenerate before critique",
-                )
-            ]
-    except SvgPolishDeltaError as exc:
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message=f"SVG polish delta manifest invalid: {exc}",
-            )
-        ]
-    if frontmatter.get("schema") not in SVG_POLISH_DELTA_AUDIT_SCHEMAS:
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message=(
-                    "fresh SVG polish delta requires an SVG-polish critique schema "
-                    f"({', '.join(sorted(SVG_POLISH_DELTA_AUDIT_SCHEMAS))})"
-                ),
-            )
-        ]
-    audit = frontmatter.get("svg_polish_delta_audit")
-    if not isinstance(audit, dict):
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message="missing svg_polish_delta_audit for fresh SVG polish delta",
-            )
-        ]
-    expected_paths = {
-        "before": manifest["artifacts"]["before_png"],
-        "after": manifest["artifacts"]["after_png"],
-        "diff": manifest["artifacts"]["diff_png"],
-    }
-    raw_items = audit.get("delta_image_audit_log")
-    if not isinstance(raw_items, list):
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message="svg_polish_delta_audit.delta_image_audit_log must be a list",
-            )
-        ]
-    image_ids = [
-        item.get("image_id").strip()
-        for item in raw_items
-        if isinstance(item, dict)
-        and isinstance(item.get("image_id"), str)
-        and item.get("image_id").strip()
-    ]
-    duplicate_ids = sorted({image_id for image_id in image_ids if image_ids.count(image_id) > 1})
-    if duplicate_ids:
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message=f"duplicate delta_image_audit_log ids: {', '.join(duplicate_ids)}",
-            )
-        ]
-    expected_ids = set(expected_paths)
-    unknown_ids = sorted(image_id for image_id in image_ids if image_id not in expected_ids)
-    if unknown_ids:
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message=f"unknown delta_image_audit_log ids: {', '.join(unknown_ids)}",
-            )
-        ]
-    missing_ids = sorted(expected_ids - set(image_ids))
-    if missing_ids:
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message=f"missing delta_image_audit_log ids: {', '.join(missing_ids)}",
-            )
-        ]
-    for item in raw_items:
-        if not isinstance(item, dict):
-            continue
-        image_id = item.get("image_id")
-        path = item.get("path")
-        if isinstance(image_id, str) and path != expected_paths.get(image_id):
-            return [
-                CritiqueLintViolation(
-                    severity="blocker",
-                    category="svg_polish_delta_accounting",
-                    message=(
-                        f"delta_image_audit_log path for {image_id} must match "
-                        f"manifest path {expected_paths.get(image_id)}"
-                    ),
-                )
-            ]
-    return []
-
-
-def _aesthetic_gate_accounting_violations(
-    frontmatter: dict[str, Any],
-) -> list[CritiqueLintViolation]:
-    if frontmatter.get("schema") not in SVG_POLISH_DELTA_AUDIT_SCHEMAS:
-        return []
-    raw_items = frontmatter.get("aesthetic_gate_audit")
-    if not isinstance(raw_items, list):
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="aesthetic_gate_accounting",
-                message="missing aesthetic_gate_audit for current SVG polish delta critique",
-            )
-        ]
-    for item in raw_items:
-        if not isinstance(item, dict):
-            continue
-        slot = item.get("slot")
-        evidence = _text_blob(item.get("evidence")).lower()
-        rationale = _text_blob(item.get("rationale")).lower()
-        evidence_blob = f"{evidence} {rationale}"
-        has_current_evidence = any(
-            marker in evidence_blob for marker in _CURRENT_ARTIFACT_EVIDENCE_MARKERS
-        )
-        if not has_current_evidence:
-            return [
-                CritiqueLintViolation(
-                    severity="blocker",
-                    category="aesthetic_gate_accounting",
-                    message=f"generic aesthetic_gate_audit evidence for {slot}",
-                )
-            ]
-    return []
-
-
 def _external_vision_review_violations(example_dir: Path) -> list[CritiqueLintViolation]:
     spec_path = example_dir / "spec.yaml"
     if not spec_path.is_file():
@@ -2297,13 +2137,6 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     )
     if violations:
         return violations
-    violations.extend(_svg_polish_delta_accounting_violations(example_dir, frontmatter))
-    if violations:
-        return violations
-    violations.extend(_aesthetic_gate_accounting_violations(frontmatter))
-    if violations:
-        return violations
-
     if frontmatter.get("schema") in STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS:
         violations.extend(_visual_clash_accept_simplification_violations(frontmatter))
     if violations:
