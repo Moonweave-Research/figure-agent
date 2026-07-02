@@ -51,7 +51,6 @@ BOTTLENECK_CATEGORY_DEFINITIONS = {
 }
 HUMAN_DECISION_KINDS = (
     "accept_current_generated_export",
-    "declare_final_artifact",
     "reject_current_artifact",
     "defer_for_dogfood",
     "keep_current_style",
@@ -289,8 +288,9 @@ def validate_human_decision_record(record: dict[str, Any]) -> list[str]:
         "golden_mutation_allowed",
     }:
         errors.append("style decisions must not authorize release or golden mutation")
-    if decision_kind in {"accept_current_generated_export", "declare_final_artifact"} and (
-        mutation_boundary == "golden_mutation_allowed"
+    if (
+        decision_kind == "accept_current_generated_export"
+        and mutation_boundary == "golden_mutation_allowed"
     ):
         errors.append("release acceptance decisions must not imply golden mutation")
     return errors
@@ -893,22 +893,6 @@ def _release_decision_choices(row: dict[str, Any], *, force_golden: bool) -> lis
             },
         },
         {
-            "id": "declare_final_artifact",
-            "label": "Declare final artifact",
-            "effect": (
-                "record an explicit final artifact such as a polished SVG manifest "
-                "when it is the intended release asset"
-            ),
-            "risk": (
-                "a missing, stale, or invalid final artifact keeps release blocked "
-                "until the declaration is repaired"
-            ),
-            "follow_up": {
-                "command": None,
-                "manual_record_path": f"examples/{fixture}/spec.yaml final_artifact",
-            },
-        },
-        {
             "id": "reject_current_artifact",
             "label": "Reject current artifact",
             "effect": (
@@ -983,7 +967,7 @@ def _release_decision_packet(row: dict[str, Any]) -> dict[str, Any] | None:
     else:
         recommendation = (
             "Keep the release boundary blocked until a human explicitly accepts "
-            "the current generated export or declares a fresh final artifact."
+            "the current generated export."
         )
         recommended_choice = "accept_current_generated_export"
     return {
