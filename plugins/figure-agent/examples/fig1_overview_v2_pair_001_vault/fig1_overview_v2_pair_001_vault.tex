@@ -652,8 +652,12 @@
 % Goal-1 elem-iter [2026-06-04]: y 8.10 -> 8.00. E_C label (8.30) and 'mobility
 % edge' nearly touched at zoom; -0.10 widens the E_C gap 0.20->0.30 while keeping
 % iter-28's 5.4pt clearance (>4.0pt req) above the dashed line at 7.85.
+% Human visual audit [2026-07-03]: x 12.25 -> 11.80 and y 8.00 -> 8.07. The
+% Delta-E_t caliper at x=13.40 crossed the right side of the label at reduction
+% scale; moving the label left/up preserves the mobility-edge reference line
+% while clearing the caliper and the line-stacking guard.
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!60!black,
-      anchor=west] at (12.25, 8.00) {mobility edge};
+      anchor=west] at (11.80, 8.07) {mobility edge};
 \draw[cGray!60!black, line width=0.45pt] (10.55, 5.30) -- (12.10, 5.30);
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
       anchor=west] at (12.15, 5.30) {$E_V$};
@@ -769,7 +773,9 @@
 % total shift from original 11.60) — beyond curve apex x=11.85 with margin.
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
 % Panel-loop iter L11: shallow tone !75 → !80!black (parity with high/low n + Coulomb).
-      text=cBlue!80!black, anchor=west] at (12.85, 7.45) {shallow};
+% Human visual audit [2026-07-03]: x 12.85 -> 12.30 and y 7.45 -> 7.64 to clear
+% the Delta-E_t vertical caliper while staying off the deep escape curve.
+      text=cBlue!80!black, anchor=west] at (12.30, 7.64) {shallow};
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
 % Panel-loop iter L12: deep tone !75 → !80!black (parity).
       text=cRed!80!black, anchor=west] at (11.60, 6.02) {deep};
