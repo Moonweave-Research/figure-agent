@@ -614,12 +614,15 @@ def _pdf_words(pdf_path: Path) -> Counter:
     return Counter(completed.stdout.split())
 
 
-def _compile_current_source(name: str, paths: runtime_paths.RuntimePaths) -> None:
+def _compile_current_source(
+    name: str,
+    paths: runtime_paths.RuntimePaths,
+) -> subprocess.CompletedProcess[str]:
     """Force a compile of the CURRENT (unmutated) source to (re)create
     build/<name>.pdf, so the value-preservation gate has a pre-mutation label
     baseline. Best-effort: if it fails, the baseline stays absent and the gate
     fails closed (M3)."""
-    subprocess.run(
+    return subprocess.run(
         [
             "bash",
             str(paths.scripts_dir / "compile.sh"),
@@ -631,6 +634,36 @@ def _compile_current_source(name: str, paths: runtime_paths.RuntimePaths) -> Non
         capture_output=True,
         check=False,
     )
+
+
+def _rollback_compile_status(
+    name: str,
+    paths: runtime_paths.RuntimePaths,
+    build_pdf: Path,
+) -> dict[str, Any]:
+    try:
+        completed = _compile_current_source(name, paths)
+    except Exception as exc:
+        if build_pdf.exists():
+            build_pdf.unlink()
+        return {"status": "failed", "reason": str(exc)}
+
+    returncode = getattr(completed, "returncode", 0)
+    if returncode != 0 or not build_pdf.is_file():
+        if build_pdf.exists():
+            build_pdf.unlink()
+        return {
+            "status": "failed",
+            "returncode": returncode,
+            "stdout_tail": _output_tail(getattr(completed, "stdout", "") or ""),
+            "stderr_tail": _output_tail(getattr(completed, "stderr", "") or ""),
+        }
+    return {
+        "status": "success",
+        "returncode": returncode,
+        "stdout_tail": _output_tail(getattr(completed, "stdout", "") or ""),
+        "stderr_tail": _output_tail(getattr(completed, "stderr", "") or ""),
+    }
 
 
 def _verify_labels_unchanged(pre_words: Counter, post_words: Counter) -> tuple[bool, str]:
@@ -872,13 +905,19 @@ def apply_candidate(
             if rolled_back:
                 for change in changes:
                     change["path"].write_text(str(change["before"]), encoding="utf-8")
+                post_apply_result["rollback_compile"] = _rollback_compile_status(
+                    name,
+                    paths,
+                    build_pdf,
+                )
             class_verifiers["rolled_back"] = rolled_back
             post_apply_result["class_verifiers"] = class_verifiers
-            result_status = (
-                "applied_with_failed_verification"
-                if any(item.get("status") != "success" for item in post_apply_result.values())
-                else "applied"
-            )
+            if rolled_back:
+                result_status = "rolled_back"
+            elif any(item.get("status") != "success" for item in post_apply_result.values()):
+                result_status = "applied_with_failed_verification"
+            else:
+                result_status = "applied"
             required_commands = []
         else:
             result_status = "applied_unverified"

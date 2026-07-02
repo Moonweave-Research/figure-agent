@@ -1609,6 +1609,12 @@ def _apply_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
     success = status == "applied"
     if success:
         error = None
+    elif status == "rolled_back":
+        error = _error(
+            "unsupported_operation",
+            "apply-candidate post-apply verification failed (status rolled_back); "
+            "the edit was automatically rolled back, working tree unchanged.",
+        )
     elif status == "applied_with_failed_verification":
         # Post-apply verification failed. The efficacy recheck and the
         # value-preservation gate AUTO-ROLL-BACK the .tex, so when rolled_back is

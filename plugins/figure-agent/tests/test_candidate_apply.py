@@ -604,7 +604,7 @@ def test_apply_candidate_records_failed_recheck_when_defect_persists(
         post_apply=True,
     )
 
-    assert result["status"] == "applied_with_failed_verification"
+    assert result["status"] == "rolled_back"
     recheck = result["post_apply"]["detector_recheck"]
     assert recheck["status"] == "failed"
     assert recheck["reason"] == "source_defect_unresolved"
@@ -646,7 +646,7 @@ def test_apply_candidate_rolls_back_on_failed_detector_recheck(
         post_apply=True,
     )
 
-    assert result["status"] == "applied_with_failed_verification"
+    assert result["status"] == "rolled_back"
     assert result["post_apply"]["detector_recheck"]["status"] == "failed"
     assert result["post_apply"]["class_verifiers"]["rolled_back"] is True
     # The ineffective edit is reverted to the pre-apply source, not left applied.
@@ -744,7 +744,7 @@ def test_apply_candidate_rolls_back_on_value_preservation_violation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # A value-preservation verifier fails => the .tex must be auto-rolled-back to
-    # its pre-mutation content and the result recorded as failed verification.
+    # its pre-mutation content and the result recorded as a non-terminal rollback.
     workspace = tmp_path / "workspace"
     fixture, manifest = _accepted_candidate_fixture(workspace)
     _set_source_defect(fixture)
@@ -783,12 +783,109 @@ def test_apply_candidate_rolls_back_on_value_preservation_violation(
         post_apply=True,
     )
 
-    assert result["status"] == "applied_with_failed_verification"
+    assert result["status"] == "rolled_back"
     cv = result["post_apply"]["class_verifiers"]
     assert cv["status"] == "failed"
     assert cv["rolled_back"] is True
     # the source .tex was restored to its pre-mutation content
     assert tex_path.read_text(encoding="utf-8") == before
+
+
+def test_apply_candidate_allows_reapply_after_rollback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    _set_source_defect(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    _semantic_recheck_fakes(
+        monkeypatch,
+        pre=[_ledger_defect("QD001")],
+        post=[_ledger_defect("QD777")],
+    )
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
+
+    rolled_back = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+    ready = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=False,
+        post_apply=True,
+    )
+
+    assert rolled_back["status"] == "rolled_back"
+    assert ready["status"] == "ready"
+    assert "source\n" == (fixture / "candidate_demo.tex").read_text(encoding="utf-8")
+
+
+def test_apply_candidate_rollback_recompiles_or_removes_stale_pdf(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    build_pdf = fixture / "build" / "candidate_demo.pdf"
+    build_pdf.parent.mkdir(parents=True, exist_ok=True)
+    build_pdf.write_bytes(b"mutated-pdf")
+    compile_calls: list[str] = []
+
+    _set_source_defect(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    _semantic_recheck_fakes(
+        monkeypatch,
+        pre=[_ledger_defect("QD001")],
+        post=[_ledger_defect("QD777")],
+    )
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
+
+    def fail_compile(name: str, _paths) -> None:
+        compile_calls.append(name)
+        raise RuntimeError("compile failed")
+
+    monkeypatch.setattr(candidate_apply, "_compile_current_source", fail_compile)
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+
+    assert result["status"] == "rolled_back"
+    assert compile_calls == ["candidate_demo"]
+    assert not build_pdf.exists()
+    assert result["post_apply"]["rollback_compile"]["status"] == "failed"
 
 
 def test_post_apply_export_does_not_force_golden_roll_forward(

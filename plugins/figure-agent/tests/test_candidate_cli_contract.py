@@ -575,8 +575,8 @@ def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> No
     assert json.loads(accept.stdout)["path"] == "build/candidates/CAND001/acceptance.json"
     apply_payload = json.loads(apply.stdout)
     assert apply_payload["schema"] == "figure-agent.candidate-apply-result.v1"
-    assert apply_payload["status"] in {"applied", "applied_with_failed_verification"}
-    assert set(apply_payload["post_apply"]) == {
+    assert apply_payload["status"] in {"applied", "applied_with_failed_verification", "rolled_back"}
+    assert set(apply_payload["post_apply"]) >= {
         "compile",
         "detector_recheck",
         "class_verifiers",
@@ -672,7 +672,7 @@ def test_fig_agent_apply_candidate_exits_nonzero_when_post_apply_fails(
     assert accept.returncode == 0, accept.stderr
     assert apply.returncode == 1
     payload = json.loads(apply.stdout)
-    assert payload["status"] == "applied_with_failed_verification"
+    assert payload["status"] in {"applied_with_failed_verification", "rolled_back"}
     assert payload["post_apply"]["compile"]["status"] == "failed"
 
 

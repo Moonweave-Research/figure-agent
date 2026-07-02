@@ -1281,7 +1281,11 @@ def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> 
     assert accepted["success"] is True, json.dumps(accepted, indent=2, sort_keys=True)
     assert accepted["acceptance"]["path"] == "build/candidates/CAND001/acceptance.json"
     assert applied["schema"] == "figure-agent.mcp.apply-candidate.v1"
-    assert applied["status"] in {"applied", "applied_with_failed_verification"}, json.dumps(
+    assert applied["status"] in {
+        "applied",
+        "applied_with_failed_verification",
+        "rolled_back",
+    }, json.dumps(
         applied,
         indent=2,
         sort_keys=True,
@@ -1289,7 +1293,7 @@ def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> 
     assert applied["success"] is (applied["status"] == "applied")
     assert applied["apply_result"]["status"] == applied["status"]
     assert applied["apply_result"]["post_apply"]["compile"]["returncode"] == 0
-    if applied["status"] == "applied_with_failed_verification":
+    if applied["status"] in {"applied_with_failed_verification", "rolled_back"}:
         assert "post-apply verification failed" in applied["error"]["message"]
     assert tex_path.read_text(encoding="utf-8") != before
 
@@ -1775,7 +1779,11 @@ def test_mcp_apply_candidate_mutates_tex_and_honors_gate(
     )
 
     assert applied["schema"] == "figure-agent.mcp.apply-candidate.v1"
-    assert applied["status"] in {"applied", "applied_with_failed_verification"}, applied
+    assert applied["status"] in {
+        "applied",
+        "applied_with_failed_verification",
+        "rolled_back",
+    }, applied
     assert applied["success"] is (applied["status"] == "applied")
     after = tex_path.read_text(encoding="utf-8")
     apply_result = applied["apply_result"]
@@ -1792,15 +1800,21 @@ def test_mcp_apply_candidate_mutates_tex_and_honors_gate(
     if applied["status"] == "applied":
         assert applied.get("error") is None
         assert apply_result["post_apply"]["compile"]["returncode"] == 0
+    elif applied["status"] == "rolled_back":
+        assert "post-apply verification failed" in applied["error"]["message"]
+        assert "working tree unchanged" in applied["error"]["message"]
     else:
         assert "post-apply verification failed" in applied["error"]["message"]
         assert any(check["status"] == "failed" for check in apply_result["post_apply"].values())
 
-    # Second apply of the same (now already-applied) candidate must be refused
-    # by the acceptance/drift/lock gate — proving the gate runs and is not bypassed.
+    # Second apply behavior depends on whether the first mutation persisted:
+    # rolled_back remains re-applicable, applied/applied_with_failed_verification is terminal.
     blocked = figure_agent_server._apply_candidate(
         {"name": "candidate_demo", "candidate_id": "CAND001"}
     )
+    if applied["status"] == "rolled_back":
+        assert blocked["status"] in {"applied", "applied_with_failed_verification", "rolled_back"}
+        return
     assert blocked["success"] is False
     # A pristine refusal must be distinguishable at the envelope top level from a
     # mutated-but-unverified apply: status is surfaced and the message says the
