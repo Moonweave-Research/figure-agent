@@ -15,6 +15,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import check_golden_artifacts as golden_checks  # noqa: E402
+import human_attestation  # noqa: E402
 from check_golden_artifacts import (  # noqa: E402
     audit_is_fresh,
     check_example,
@@ -368,6 +369,8 @@ def _add_quality_audit_disclosure(fixture: Path) -> None:
     )
 def _make_passing_accepted_fixture(fixture: Path, monkeypatch) -> None:
     _write_minimal_accepted_fixture(fixture)
+    monkeypatch.setenv("HOME", str(fixture.parent / "home"))
+    human_attestation.write_attestation(fixture)
     _write_passing_theory_guard(fixture)
     _mark_quality_audit_fresh(fixture)
     monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
@@ -532,6 +535,18 @@ def test_check_example_require_accepted_fails_without_contract(tmp_path: Path) -
     )
 
     assert any("golden_contract block missing" in failure for failure in failures)
+
+
+def test_require_accepted_mode_requires_human_attestation(tmp_path: Path, monkeypatch) -> None:
+    fixture = tmp_path / "attestationRequired"
+    _write_minimal_accepted_fixture(fixture)
+    _write_passing_theory_guard(fixture)
+    _mark_quality_audit_fresh(fixture)
+    monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
+
+    failures = check_example(fixture, require_accepted=True)
+
+    assert "human attestation invalid: missing_human_attestation" in failures
 
 
 def test_require_accepted_mode_requires_theory_guard(tmp_path: Path, monkeypatch) -> None:

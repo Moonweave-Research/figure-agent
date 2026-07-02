@@ -24,13 +24,13 @@ def test_verify_attestation_rejects_forged_json_without_valid_hmac(
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     fixture = _fixture(tmp_path / "workspace")
-    tex_hash = human_attestation.tex_sha256(fixture)
+    source_hash = human_attestation.source_set_sha256(fixture)
     (fixture / "human_attestation.json").write_text(
         json.dumps(
             {
                 "schema": human_attestation.SCHEMA,
                 "fixture": "demo_fig",
-                "tex_sha256": tex_hash,
+                "source_set_sha256": source_hash,
                 "created_at": "2026-07-02T00:00:00Z",
                 "signature": "sha256:not-real",
             },
@@ -46,7 +46,7 @@ def test_verify_attestation_rejects_forged_json_without_valid_hmac(
     assert reason == "bad_hmac"
 
 
-def test_verify_attestation_rejects_stale_tex_hash(
+def test_verify_attestation_rejects_stale_source_set_hash(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -58,7 +58,69 @@ def test_verify_attestation_rejects_stale_tex_hash(
     ok, reason = human_attestation.verify_attestation(fixture)
 
     assert ok is False
-    assert reason == "stale_tex_sha256"
+    assert reason == "stale_source_set_sha256"
+
+
+def test_verify_attestation_rejects_stale_briefing_hash(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    fixture = _fixture(tmp_path / "workspace")
+    (fixture / "briefing.md").write_text("briefing\n", encoding="utf-8")
+    human_attestation.write_attestation(fixture)
+
+    (fixture / "briefing.md").write_text("changed briefing\n", encoding="utf-8")
+
+    ok, reason = human_attestation.verify_attestation(fixture)
+
+    assert ok is False
+    assert reason == "stale_source_set_sha256"
+
+
+def test_verify_attestation_missing_key_does_not_create_home(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setenv("HOME", str(home))
+    fixture = _fixture(tmp_path / "workspace")
+    human_attestation.write_attestation(fixture)
+    (home / ".figure-agent" / "attest.key").unlink()
+    (home / ".figure-agent").rmdir()
+    home.rmdir()
+
+    ok, reason = human_attestation.verify_attestation(fixture)
+
+    assert ok is False
+    assert reason == "missing_attestation_key"
+    assert not home.exists()
+
+
+def test_verify_attestation_rejects_non_ascii_signature_before_key_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setenv("HOME", str(home))
+    fixture = _fixture(tmp_path / "workspace")
+    payload = {
+        "schema": human_attestation.SCHEMA,
+        "fixture": "demo_fig",
+        "source_set_sha256": human_attestation.source_set_sha256(fixture),
+        "created_at": "2026-07-02T00:00:00Z",
+        "signature": "sha256:" + "é" * 64,
+    }
+    (fixture / "human_attestation.json").write_text(
+        json.dumps(payload, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    ok, reason = human_attestation.verify_attestation(fixture)
+
+    assert ok is False
+    assert reason == "bad_hmac"
+    assert not home.exists()
 
 
 def test_verify_attestation_accepts_valid_hmac_with_tmp_home(

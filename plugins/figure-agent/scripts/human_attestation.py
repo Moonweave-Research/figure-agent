@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import hmac
 import json
+import re
 import secrets
 import sys
 from datetime import UTC, datetime
@@ -36,6 +37,16 @@ def _load_or_create_key() -> bytes:
     return path.read_bytes()
 
 
+def _load_existing_key() -> tuple[bytes | None, str | None]:
+    path = _key_path()
+    if not path.is_file():
+        return None, "missing_attestation_key"
+    try:
+        return path.read_bytes(), None
+    except OSError:
+        return None, "attestation_key_unreadable"
+
+
 def tex_sha256(example_dir: Path) -> str:
     fixture = example_dir.name
     fixture_identity.validate_fixture_name(fixture)
@@ -47,21 +58,56 @@ def tex_sha256(example_dir: Path) -> str:
     return "sha256:" + digest.hexdigest()
 
 
-def _signature(fixture: str, tex_hash: str, key: bytes) -> str:
-    message = f"{fixture}|{tex_hash}".encode()
+def source_set_paths(example_dir: Path) -> tuple[Path, ...]:
+    fixture = example_dir.name
+    fixture_identity.validate_fixture_name(fixture)
+    runtime = runtime_paths.resolve_runtime_paths()
+    candidates = (
+        example_dir / f"{fixture}.tex",
+        example_dir / "briefing.md",
+        example_dir / "spec.yaml",
+        runtime.styles_dir / "polymer-paper-preamble.sty",
+    )
+    return tuple(path for path in candidates if path.is_file())
+
+
+def source_set_sha256(example_dir: Path) -> str:
+    entries: list[dict[str, str]] = []
+    for path in sorted(source_set_paths(example_dir), key=lambda item: str(item.resolve())):
+        digest = hashlib.sha256()
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        try:
+            display_path = str(path.resolve().relative_to(example_dir.resolve()))
+        except ValueError:
+            display_path = str(path.resolve())
+        entries.append({"path": display_path, "sha256": "sha256:" + digest.hexdigest()})
+    payload = json.dumps(entries, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def _signature(fixture: str, source_hash: str, key: bytes) -> str:
+    message = f"{fixture}|{source_hash}".encode()
     return "sha256:" + hmac.new(key, message, hashlib.sha256).hexdigest()
+
+
+def _valid_signature_shape(signature: str) -> bool:
+    return re.fullmatch(r"sha256:[0-9a-f]{64}", signature, flags=re.ASCII) is not None
 
 
 def write_attestation(example_dir: Path) -> dict[str, Any]:
     fixture = example_dir.name
     fixture_identity.validate_fixture_name(fixture)
     tex_hash = tex_sha256(example_dir)
+    source_hash = source_set_sha256(example_dir)
     payload = {
         "schema": SCHEMA,
         "fixture": fixture,
         "tex_sha256": tex_hash,
+        "source_set_sha256": source_hash,
         "created_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
-        "signature": _signature(fixture, tex_hash, _load_or_create_key()),
+        "signature": _signature(fixture, source_hash, _load_or_create_key()),
     }
     output = example_dir / "human_attestation.json"
     output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -83,17 +129,20 @@ def verify_attestation(example_dir: Path) -> tuple[bool, str]:
     if payload.get("fixture") != fixture:
         return False, "fixture_mismatch"
     try:
-        current_hash = tex_sha256(example_dir)
+        current_hash = source_set_sha256(example_dir)
     except (OSError, ValueError):
-        return False, "tex_unreadable"
-    if payload.get("tex_sha256") != current_hash:
-        return False, "stale_tex_sha256"
+        return False, "source_set_unreadable"
+    if payload.get("source_set_sha256") != current_hash:
+        return False, "stale_source_set_sha256"
 
     signature = payload.get("signature")
-    if not isinstance(signature, str):
+    if not isinstance(signature, str) or not _valid_signature_shape(signature):
         return False, "bad_hmac"
-    expected = _signature(fixture, current_hash, _load_or_create_key())
-    if not hmac.compare_digest(signature, expected):
+    key, key_error = _load_existing_key()
+    if key is None:
+        return False, key_error or "attestation_key_unreadable"
+    expected = _signature(fixture, current_hash, key)
+    if not hmac.compare_digest(signature.encode("ascii"), expected.encode("ascii")):
         return False, "bad_hmac"
     return True, "ok"
 
