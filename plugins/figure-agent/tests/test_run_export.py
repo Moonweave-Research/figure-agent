@@ -70,7 +70,7 @@ def _critique_input_hash(fixture: Path, name: str) -> str:
 def _write_hashed_critique(fixture: Path, name: str, critique_input_hash: str) -> None:
     (fixture / "critique.md").write_text(
         "---\n"
-        "schema: figure-agent.critique.v1.2\n"
+        "schema: figure-agent.critique.v1.10\n"
         f"fixture: {name}\n"
         "generated_at: 2026-05-17T00:00:00Z\n"
         "generator: critique_brief.py\n"
@@ -522,7 +522,7 @@ def test_run_export_blocks_hash_fresh_but_invalid_critique(
     critique_hash = _critique_input_hash(fixture, "ref_fig")
     (fixture / "critique.md").write_text(
         "---\n"
-        "schema: figure-agent.critique.v1.7\n"
+        "schema: figure-agent.critique.v1.10\n"
         "fixture: ref_fig\n"
         "generated_at: 2026-05-17T00:00:00Z\n"
         "generator: critique_brief.py\n"

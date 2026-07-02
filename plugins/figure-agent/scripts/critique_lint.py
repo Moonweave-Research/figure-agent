@@ -65,105 +65,30 @@ from reference_contract import (  # noqa: E402
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.7"
-CROP_AUDIT_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.8"
-VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
+VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.10"
+CROP_AUDIT_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.10"
+LIVE_CRITIQUE_SCHEMAS = frozenset(
     {
-        "figure-agent.critique.v1.7",
-        "figure-agent.critique.v1.8",
-        "figure-agent.critique.v1.9",
         "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
         "figure-agent.critique.v1.17",
     }
 )
-CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.8",
-        "figure-agent.critique.v1.9",
-        "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
-        "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
-STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
-        "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
+VISUAL_CLASH_ACCOUNTING_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
+CROP_AUDIT_ACCOUNTING_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
+STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
 _VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS
 _STRUCTURED_ACCEPT_MIN_RATIONALE_CHARS = MICRO_DEFECT_ACCEPT_SIMPLIFICATION_MIN_RATIONALE_CHARS
-TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
-        "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
+TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
 AESTHETIC_LEVER_ACCOUNTING_SCHEMAS = frozenset(
     {
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
         "figure-agent.critique.v1.17",
     }
 )
-LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
-        "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
-UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.4",
-        "figure-agent.critique.v1.5",
-        "figure-agent.critique.v1.6",
-        "figure-agent.critique.v1.7",
-        "figure-agent.critique.v1.8",
-        "figure-agent.critique.v1.9",
-        "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
-        "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
+LABEL_PATH_ACCOUNTING_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
+UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
 _HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"
 _HISTORICAL_VISUAL_CLASH_EXPECTED_KINDS = {
     ("VC026", "V"): "label_glyph_overlaps_internal_drawing",

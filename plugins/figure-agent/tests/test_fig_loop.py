@@ -226,11 +226,18 @@ def _quality_axis(
             "needs_human": "human_review",
             "block": "block_release",
         }[verdict]
+    default_evidence = f"{axis_name} evidence"
+    if axis_name == "journal_polish":
+        default_evidence = "print-scale audit: print_178mm.png and print_thumbnail.png pass"
+    elif axis_name == "publication_readiness":
+        default_evidence = (
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        )
     axis = {
         "verdict": verdict,
         "confidence": "high" if verdict != "not_applicable" else "low",
         "rationale": "" if verdict == "not_applicable" else f"{axis_name} rationale",
-        "evidence": "" if verdict == "not_applicable" else f"{axis_name} evidence",
+        "evidence": "" if verdict == "not_applicable" else default_evidence,
         "blocking_items": blocking_items or [],
         "recommended_action": recommended_action,
     }
@@ -249,7 +256,7 @@ def _quality_axis(
 def _write_v1_2_critique(
     fixture: Path,
     *,
-    schema: str = "figure-agent.critique.v1.2",
+    schema: str = "figure-agent.critique.v1.10",
     axis_overrides: dict[str, dict] | None = None,
     journal_assessment: dict | None = None,
     critique_input_hash: str | None = None,
@@ -810,7 +817,7 @@ def test_loop_surfaces_v1_3_quality_axes_and_journal_grade_assessment(
     critique_hash = "sha256:" + "a" * 64
     critique = _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.3",
+        schema="figure-agent.critique.v1.10",
         critique_input_hash=critique_hash,
         axis_overrides={
             "publication_readiness": _quality_axis(
@@ -849,7 +856,7 @@ def test_loop_surfaces_v1_4_quality_axes_journal_grade_and_top_tier(
     critique_hash = "sha256:" + "a" * 64
     critique = _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.4",
+        schema="figure-agent.critique.v1.10",
         critique_input_hash=critique_hash,
         axis_overrides={
             "publication_readiness": _quality_axis(
@@ -887,7 +894,7 @@ def test_loop_surfaces_v1_3_top_tier_audit_summary(
     fixture = _make_fixture(tmp_path)
     critique = _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.3",
+        schema="figure-agent.critique.v1.10",
         top_tier_audit=_top_tier_audit(
             overrides={
                 "target_journal_fit": {
@@ -953,7 +960,7 @@ def test_loop_surfaces_v1_5_editorial_art_direction_summary(
     fixture = _make_fixture(tmp_path)
     critique = _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         top_tier_audit=_top_tier_audit(),
         editorial_art_direction=_editorial_art_direction(
             trigger_path="semantic_backport_required",
@@ -996,7 +1003,7 @@ def test_loop_surfaces_svg_polish_readiness_from_editorial_summary(
     fixture = _make_fixture(tmp_path)
     _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         top_tier_audit=_top_tier_audit(),
         editorial_art_direction=_editorial_art_direction(
             trigger_path="continue_tikz",
@@ -1088,7 +1095,7 @@ def test_loop_svg_polish_readiness_honors_top_tier_blocker(
     fixture = _make_fixture(tmp_path)
     _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         top_tier_audit=_top_tier_audit(
             overrides={
                 "aesthetic_coherence": {
@@ -1126,7 +1133,7 @@ def test_loop_surfaces_v1_8_crop_audit_uncertain_verdicts(
     fixture = _make_fixture(tmp_path)
     critique = _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.8",
+        schema="figure-agent.critique.v1.10",
         top_tier_audit=_top_tier_audit(),
         editorial_art_direction=_editorial_art_direction(),
         micro_defects=[],
@@ -1177,7 +1184,7 @@ def test_loop_surfaces_v1_11_aesthetic_lever_summary(
     fixture = _make_fixture(tmp_path)
     critique = _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.11",
+        schema="figure-agent.critique.v1.14",
         top_tier_audit=_top_tier_audit(),
         editorial_art_direction=_editorial_art_direction(),
         micro_defects=[],
@@ -1231,7 +1238,7 @@ def test_loop_surfaces_v1_12_journal_art_direction_playbook_summary(
     fixture = _make_fixture(tmp_path)
     critique = _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.12",
+        schema="figure-agent.critique.v1.14",
         top_tier_audit=_top_tier_audit(),
         editorial_art_direction=_editorial_art_direction(trigger_path="continue_tikz"),
         micro_defects=[],
@@ -1281,7 +1288,7 @@ def test_loop_does_not_create_new_stop_boundary_for_journal_playbook_summary(
     fixture = _make_fixture(tmp_path)
     critique = _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.12",
+        schema="figure-agent.critique.v1.14",
         axis_overrides={
             "journal_polish": _quality_axis("journal_polish", verdict="pass")
             | {"evidence": "print-scale audit: print_178mm.png passes"},
@@ -1617,7 +1624,7 @@ def test_loop_human_gates_v1_11_human_art_direction_lever(
     fixture = _make_fixture(tmp_path)
     critique = _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.11",
+        schema="figure-agent.critique.v1.14",
         top_tier_audit=_top_tier_audit(),
         editorial_art_direction=_editorial_art_direction(),
         micro_defects=[],
@@ -1756,7 +1763,7 @@ def test_loop_surfaces_reference_calibrated_score_metadata(
     }
     _write_v1_2_critique(
         fixture,
-        schema="figure-agent.critique.v1.9",
+        schema="figure-agent.critique.v1.10",
         axis_overrides=print_scale_axis_overrides,
         critique_input_hash=critique_hash,
         journal_assessment=assessment,
@@ -1901,7 +1908,7 @@ def test_loop_ignores_malformed_quality_axes_without_crashing(
 ) -> None:
     fixture = _make_fixture(tmp_path)
     (fixture / "critique.md").write_text(
-        "---\nschema: figure-agent.critique.v1.2\nquality_axes: [unterminated\n---\n# critique\n",
+        "---\nschema: figure-agent.critique.v1.10\nquality_axes: [unterminated\n---\n# critique\n",
         encoding="utf-8",
     )
     _patch_fresh_status(monkeypatch)

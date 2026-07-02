@@ -251,9 +251,11 @@ def _write_critique_with_findings(fig_dir: Path, fixture: str = "demo_fig") -> P
     critique = fig_dir / "critique.md"
     critique.write_text(
         "---\n"
-        "schema: figure-agent.critique.v1.1\n"
+        "schema: figure-agent.critique.v1.10\n"
         f"fixture: {fixture}\n"
         f"{_complete_v1_1_audit_yaml()}"
+        f"{_complete_v1_2_quality_axes_yaml()}"
+        f"{_complete_v1_10_yaml()}"
         "findings:\n"
         "  - id: C001\n"
         "    status: resolved\n"
@@ -464,6 +466,13 @@ def _complete_v1_3_top_tier_audit_yaml() -> str:
 
 
 def _micro_defects_yaml(*, linked_finding_id: str = "C001", status: str = "open") -> str:
+    accept_simplification_yaml = ""
+    if status == "accept_simplification":
+        accept_simplification_yaml = (
+            "    accept_simplification_reason: intentional_schematic\n"
+            "    accept_simplification_rationale: M001 preserves the scientific relationship "
+            "without source change because the crop shows a deliberate abstraction\n"
+        )
     return (
         "micro_defects:\n"
         "  - id: M001\n"
@@ -473,6 +482,7 @@ def _micro_defects_yaml(*, linked_finding_id: str = "C001", status: str = "open"
         "    observation: wire_crosses_label visible across the trap label\n"
         f'    linked_finding_id: "{linked_finding_id}"\n'
         f"    status: {status}\n"
+        f"{accept_simplification_yaml}"
     )
 
 
@@ -506,13 +516,53 @@ def _complete_v1_5_editorial_art_direction_yaml() -> str:
     return "\n".join(lines) + "\n"
 
 
+def _complete_v1_10_required_yaml() -> str:
+    return (
+        _complete_v1_3_top_tier_audit_yaml()
+        + "micro_defects: []\n"
+        + _complete_v1_5_editorial_art_direction_yaml()
+        + "crop_audit_log:\n"
+        "  - crop_id: full_q1\n"
+        "    path: build/audit_crops/full_q1.png\n"
+        "    source: full_render\n"
+        "    inspected: true\n"
+        "    verdict: no_defect\n"
+        '    linked_micro_defect_id: ""\n'
+        "    rationale: full crop inspected with no defect\n"
+    )
+
+
+def _complete_v1_10_yaml(existing_yaml: str = "") -> str:
+    result = existing_yaml
+    if "top_tier_audit:" not in result:
+        result += _complete_v1_3_top_tier_audit_yaml()
+    if "micro_defects:" not in result:
+        result += "micro_defects: []\n"
+    if "editorial_art_direction:" not in result:
+        result += _complete_v1_5_editorial_art_direction_yaml()
+    if "crop_audit_log:" not in result:
+        result += (
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            '    linked_micro_defect_id: ""\n'
+            "    rationale: full crop inspected with no defect\n"
+        )
+    return result
+
+
 def _write_v1_1_critique_with_audit(fig_dir: Path, audit_yaml: str) -> Path:
     critique = fig_dir / "critique.md"
     critique.write_text(
         "---\n"
-        "schema: figure-agent.critique.v1.1\n"
+        "schema: figure-agent.critique.v1.10\n"
         "fixture: demo_fig\n"
         f"{audit_yaml}"
+        f"{_complete_v1_2_quality_axes_yaml()}"
+        f"{_complete_v1_10_yaml()}"
         "findings:\n"
         "  - id: C001\n"
         "    status: open\n"
@@ -528,7 +578,7 @@ def _write_v1_1_critique_with_audit(fig_dir: Path, audit_yaml: str) -> Path:
 def _write_v1_2_critique_with_quality_axes(
     fig_dir: Path,
     *,
-    critique_schema: str = "figure-agent.critique.v1.2",
+    critique_schema: str = "figure-agent.critique.v1.10",
     audit_yaml: str | None = None,
     quality_axes_yaml: str | None = None,
     critique_input_hash: str | None = None,
@@ -537,6 +587,7 @@ def _write_v1_2_critique_with_quality_axes(
     journal_assessment_yaml: str | None = None,
     extra_frontmatter_yaml: str = "",
     findings_yaml: str | None = None,
+    complete_live_defaults: bool = True,
 ) -> Path:
     critique = fig_dir / "critique.md"
     findings_yaml = findings_yaml or (
@@ -553,6 +604,11 @@ def _write_v1_2_critique_with_quality_axes(
         f"generator_version: {generator_version}\n" if generator_version else ""
     )
     rubric_version_yaml = f"rubric_version: {rubric_version}\n" if rubric_version else ""
+    live_required_yaml = (
+        _complete_v1_10_yaml(extra_frontmatter_yaml)
+        if complete_live_defaults
+        else extra_frontmatter_yaml
+    )
     critique.write_text(
         "---\n"
         f"schema: {critique_schema}\n"
@@ -562,7 +618,7 @@ def _write_v1_2_critique_with_quality_axes(
         f"{rubric_version_yaml}"
         f"{audit_yaml or _complete_v1_1_audit_yaml()}"
         f"{quality_axes_yaml or _complete_v1_2_quality_axes_yaml()}"
-        f"{extra_frontmatter_yaml}"
+        f"{live_required_yaml}"
         f"{journal_assessment_yaml or ''}"
         f"{findings_yaml}"
         "---\n"
@@ -710,7 +766,7 @@ def test_build_adjudication_scaffold_accepts_v1_3_top_tier_audit(
     fig_dir.mkdir()
     critique = _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml(),
     )
 
@@ -726,7 +782,7 @@ def test_build_adjudication_scaffold_accepts_v1_4_micro_defects(
     fig_dir.mkdir()
     critique = _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + _micro_defects_yaml(),
         findings_yaml=(
             "findings:\n"
@@ -749,7 +805,7 @@ def test_build_adjudication_scaffold_accepts_v1_4_empty_micro_defects(
     fig_dir.mkdir()
     critique = _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
     )
 
@@ -765,7 +821,7 @@ def test_build_adjudication_scaffold_accepts_v1_5_editorial_art_direction(
     fig_dir.mkdir()
     critique = _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.5",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=(
             _complete_v1_3_top_tier_audit_yaml()
             + "micro_defects: []\n"
@@ -789,7 +845,7 @@ def test_build_adjudication_scaffold_rejects_v1_5_missing_polish_recommended_pat
     )
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.5",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=(
             _complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n" + editorial_yaml
         ),
@@ -806,7 +862,7 @@ def test_build_adjudication_scaffold_rejects_v1_4_missing_print_scale_evidence(
     fig_dir.mkdir()
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         quality_axes_yaml=_complete_v1_2_quality_axes_yaml(print_scale_evidence=False),
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
         findings_yaml="findings: []\n",
@@ -821,7 +877,7 @@ def test_policy_default_scaffold_remains_conservative(tmp_path: Path) -> None:
     fig_dir.mkdir()
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
         findings_yaml=(
             "panels:\n"
@@ -850,7 +906,7 @@ def test_policy_auto_dismisses_accepted_simplification_style_finding(
     fig_dir.mkdir()
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
         findings_yaml=(
             "panels:\n"
@@ -882,7 +938,7 @@ def test_policy_auto_dismisses_style_simplification_with_preserved_mechanism_rat
     fig_dir.mkdir()
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
         findings_yaml=(
             "findings:\n"
@@ -922,7 +978,7 @@ def test_policy_auto_defers_non_gateable_thumbnail_polish(tmp_path: Path) -> Non
     critique_hash = "sha256:" + "a" * 64
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         critique_input_hash=critique_hash,
         journal_assessment_yaml=(
             _journal_assessment_yaml(assessed_hash=critique_hash, gateable="false")
@@ -962,7 +1018,7 @@ def test_policy_auto_defer_wins_over_thumbnail_accept_simplification(
     critique_hash = "sha256:" + "a" * 64
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         critique_input_hash=critique_hash,
         journal_assessment_yaml=_journal_assessment_yaml(
             assessed_hash=critique_hash,
@@ -991,7 +1047,7 @@ def test_policy_preserves_target_journal_fit_as_needs_human(tmp_path: Path) -> N
     fig_dir.mkdir()
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
         findings_yaml=(
             "findings:\n"
@@ -1026,7 +1082,7 @@ def test_policy_keeps_core_findings_human(
     fig_dir.mkdir()
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
         findings_yaml=(
             "findings:\n"
@@ -1050,7 +1106,7 @@ def test_policy_auto_applies_at_most_one_safe_nit_style_patch(tmp_path: Path) ->
     fig_dir.mkdir()
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
         findings_yaml=(
             "findings:\n"
@@ -1088,8 +1144,9 @@ def test_build_adjudication_scaffold_rejects_v1_4_missing_micro_defects(
     fig_dir.mkdir()
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml(),
+        complete_live_defaults=False,
     )
 
     with pytest.raises(CritiqueAdjudicationError, match="micro_defects"):
@@ -1103,7 +1160,7 @@ def test_build_adjudication_scaffold_rejects_v1_4_invalid_micro_defect_kind(
     fig_dir.mkdir()
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=(
             _complete_v1_3_top_tier_audit_yaml()
             + _micro_defects_yaml().replace("kind: wire_crosses_label", "kind: vague")
@@ -1121,7 +1178,7 @@ def test_build_adjudication_scaffold_rejects_v1_4_major_micro_defect_without_lin
     fig_dir.mkdir()
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=(
             _complete_v1_3_top_tier_audit_yaml() + _micro_defects_yaml(linked_finding_id="")
         ),
@@ -1138,7 +1195,7 @@ def test_build_adjudication_scaffold_accepts_v1_4_major_micro_defect_simplificat
     fig_dir.mkdir()
     critique = _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=(
             _complete_v1_3_top_tier_audit_yaml()
             + _micro_defects_yaml(linked_finding_id="", status="accept_simplification")
@@ -1201,7 +1258,8 @@ def test_build_adjudication_scaffold_rejects_v1_3_missing_top_tier_audit(
     fig_dir.mkdir()
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
+        complete_live_defaults=False,
     )
 
     with pytest.raises(CritiqueAdjudicationError, match="top_tier_audit"):
@@ -1220,7 +1278,7 @@ def test_build_adjudication_scaffold_rejects_v1_3_invalid_top_tier_verdict(
     )
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=top_tier_yaml,
     )
 
@@ -1239,7 +1297,7 @@ def test_build_adjudication_scaffold_rejects_v1_3_empty_top_tier_finding(
     )
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=top_tier_yaml,
     )
 
@@ -1267,7 +1325,7 @@ def test_build_adjudication_scaffold_rejects_v1_3_blocking_top_tier_without_find
     )
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=top_tier_yaml,
         findings_yaml="findings: []\n",
     )
@@ -1292,7 +1350,7 @@ def test_build_adjudication_scaffold_rejects_v1_3_needs_human_top_tier_without_l
     )
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=top_tier_yaml,
         findings_yaml="findings: []\n",
     )
@@ -1321,7 +1379,7 @@ def test_build_adjudication_scaffold_rejects_v1_3_weak_blocker_without_link(
     )
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=top_tier_yaml,
         findings_yaml="findings: []\n",
     )
@@ -1350,7 +1408,7 @@ def test_build_adjudication_scaffold_rejects_v1_3_blocking_top_tier_with_unrelat
     )
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=top_tier_yaml,
         findings_yaml=(
             "findings:\n"
@@ -1377,7 +1435,7 @@ def test_build_adjudication_scaffold_accepts_v1_3_top_tier_linked_finding(
     )
     critique = _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=top_tier_yaml,
         findings_yaml=(
             "findings:\n"
@@ -1418,7 +1476,7 @@ def test_build_adjudication_scaffold_accepts_v1_3_top_tier_quality_axis_link(
     )
     critique = _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
         quality_axes_yaml=quality_axes_yaml,
         extra_frontmatter_yaml=top_tier_yaml,
         findings_yaml="findings: []\n",
@@ -1448,7 +1506,7 @@ def test_build_adjudication_scaffold_accepts_v1_3_accept_simplification_link_exc
     )
     critique = _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=top_tier_yaml,
         findings_yaml="findings: []\n",
     )
@@ -1471,7 +1529,7 @@ def test_build_adjudication_scaffold_rejects_v1_3_high_impact_with_weak_top_tier
     )
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.3",
+        critique_schema="figure-agent.critique.v1.10",
         critique_input_hash=critique_hash,
         extra_frontmatter_yaml=top_tier_yaml,
         journal_assessment_yaml=_journal_assessment_yaml(
@@ -2297,7 +2355,7 @@ def test_build_adjudication_scaffold_rejects_unsupported_critique_schema(
     critique = _write_v1_1_critique_with_audit(fig_dir, _complete_v1_1_audit_yaml())
     critique.write_text(
         critique.read_text(encoding="utf-8").replace(
-            "schema: figure-agent.critique.v1.1",
+            "schema: figure-agent.critique.v1.10",
             "schema: figure-agent.critique.v9",
         ),
         encoding="utf-8",
@@ -2312,9 +2370,11 @@ def test_build_adjudication_scaffold_includes_panel_findings(tmp_path: Path) -> 
     fig_dir.mkdir()
     (fig_dir / "critique.md").write_text(
         "---\n"
-        "schema: figure-agent.critique.v1.1\n"
+        "schema: figure-agent.critique.v1.10\n"
         "fixture: demo_fig\n"
         f"{_complete_v1_1_audit_yaml()}"
+        f"{_complete_v1_2_quality_axes_yaml()}"
+        f"{_complete_v1_10_yaml()}"
         "panels:\n"
         "  - id: A\n"
         "    findings:\n"
@@ -2443,9 +2503,11 @@ def test_build_adjudication_scaffold_rejects_non_list_findings(tmp_path: Path) -
     fig_dir.mkdir()
     (fig_dir / "critique.md").write_text(
         "---\n"
-        "schema: figure-agent.critique.v1.1\n"
+        "schema: figure-agent.critique.v1.10\n"
         "fixture: demo_fig\n"
         f"{_complete_v1_1_audit_yaml()}"
+        f"{_complete_v1_2_quality_axes_yaml()}"
+        f"{_complete_v1_10_yaml()}"
         "findings: C001\n"
         "---\n",
         encoding="utf-8",
@@ -2460,9 +2522,11 @@ def test_build_adjudication_scaffold_rejects_finding_without_id(tmp_path: Path) 
     fig_dir.mkdir()
     (fig_dir / "critique.md").write_text(
         "---\n"
-        "schema: figure-agent.critique.v1.1\n"
+        "schema: figure-agent.critique.v1.10\n"
         "fixture: demo_fig\n"
         f"{_complete_v1_1_audit_yaml()}"
+        f"{_complete_v1_2_quality_axes_yaml()}"
+        f"{_complete_v1_10_yaml()}"
         "findings:\n"
         "  - status: open\n"
         "    tex_lines: [1, 2]\n"
@@ -2516,7 +2580,7 @@ def test_cli_scaffold_supports_conservative_policy(
     fig_dir.mkdir(parents=True)
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
-        critique_schema="figure-agent.critique.v1.4",
+        critique_schema="figure-agent.critique.v1.10",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
         findings_yaml=(
             "findings:\n"

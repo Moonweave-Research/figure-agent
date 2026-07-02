@@ -13,89 +13,41 @@ from external_vision_review import (
 from inputs import parse_spec
 from quality_manifest import yaml_frontmatter
 
-CRITIQUE_SCHEMA_V1_2 = "figure-agent.critique.v1.2"
-CRITIQUE_SCHEMA_V1_3 = "figure-agent.critique.v1.3"
-CRITIQUE_SCHEMA_V1_4 = "figure-agent.critique.v1.4"
-CRITIQUE_SCHEMA_V1_5 = "figure-agent.critique.v1.5"
-CRITIQUE_SCHEMA_V1_6 = "figure-agent.critique.v1.6"
-CRITIQUE_SCHEMA_V1_7 = "figure-agent.critique.v1.7"
-CRITIQUE_SCHEMA_V1_8 = "figure-agent.critique.v1.8"
-CRITIQUE_SCHEMA_V1_9 = "figure-agent.critique.v1.9"
 CRITIQUE_SCHEMA_V1_10 = "figure-agent.critique.v1.10"
-CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
-CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
-CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
 CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
-CRITIQUE_SCHEMA_V1_15 = "figure-agent.critique.v1.15"
-CRITIQUE_SCHEMA_V1_16 = "figure-agent.critique.v1.16"
 CRITIQUE_SCHEMA_V1_17 = "figure-agent.critique.v1.17"
+LIVE_CRITIQUE_SCHEMAS = frozenset(
+    {
+        CRITIQUE_SCHEMA_V1_10,
+        CRITIQUE_SCHEMA_V1_14,
+        CRITIQUE_SCHEMA_V1_17,
+    }
+)
 CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
     {
-        CRITIQUE_SCHEMA_V1_2,
-        CRITIQUE_SCHEMA_V1_3,
-        CRITIQUE_SCHEMA_V1_4,
-        CRITIQUE_SCHEMA_V1_5,
-        CRITIQUE_SCHEMA_V1_6,
-        CRITIQUE_SCHEMA_V1_7,
-        CRITIQUE_SCHEMA_V1_8,
-        CRITIQUE_SCHEMA_V1_9,
         CRITIQUE_SCHEMA_V1_10,
-        CRITIQUE_SCHEMA_V1_11,
-        CRITIQUE_SCHEMA_V1_12,
-        CRITIQUE_SCHEMA_V1_13,
         CRITIQUE_SCHEMA_V1_14,
-        CRITIQUE_SCHEMA_V1_15,
-        CRITIQUE_SCHEMA_V1_16,
         CRITIQUE_SCHEMA_V1_17,
     }
 )
 CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
     {
-        CRITIQUE_SCHEMA_V1_3,
-        CRITIQUE_SCHEMA_V1_4,
-        CRITIQUE_SCHEMA_V1_5,
-        CRITIQUE_SCHEMA_V1_6,
-        CRITIQUE_SCHEMA_V1_7,
-        CRITIQUE_SCHEMA_V1_8,
-        CRITIQUE_SCHEMA_V1_9,
         CRITIQUE_SCHEMA_V1_10,
-        CRITIQUE_SCHEMA_V1_11,
-        CRITIQUE_SCHEMA_V1_12,
-        CRITIQUE_SCHEMA_V1_13,
         CRITIQUE_SCHEMA_V1_14,
-        CRITIQUE_SCHEMA_V1_15,
-        CRITIQUE_SCHEMA_V1_16,
         CRITIQUE_SCHEMA_V1_17,
     }
 )
 CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
     {
-        CRITIQUE_SCHEMA_V1_5,
-        CRITIQUE_SCHEMA_V1_6,
-        CRITIQUE_SCHEMA_V1_7,
-        CRITIQUE_SCHEMA_V1_8,
-        CRITIQUE_SCHEMA_V1_9,
         CRITIQUE_SCHEMA_V1_10,
-        CRITIQUE_SCHEMA_V1_11,
-        CRITIQUE_SCHEMA_V1_12,
-        CRITIQUE_SCHEMA_V1_13,
         CRITIQUE_SCHEMA_V1_14,
-        CRITIQUE_SCHEMA_V1_15,
-        CRITIQUE_SCHEMA_V1_16,
         CRITIQUE_SCHEMA_V1_17,
     }
 )
 CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset(
     {
-        CRITIQUE_SCHEMA_V1_8,
-        CRITIQUE_SCHEMA_V1_9,
         CRITIQUE_SCHEMA_V1_10,
-        CRITIQUE_SCHEMA_V1_11,
-        CRITIQUE_SCHEMA_V1_12,
-        CRITIQUE_SCHEMA_V1_13,
         CRITIQUE_SCHEMA_V1_14,
-        CRITIQUE_SCHEMA_V1_15,
-        CRITIQUE_SCHEMA_V1_16,
         CRITIQUE_SCHEMA_V1_17,
     }
 )
@@ -279,12 +231,9 @@ def journal_grade_assessment(
         reference_calibration_summary(record)
         if frontmatter.get("schema")
         in {
-            CRITIQUE_SCHEMA_V1_9,
             CRITIQUE_SCHEMA_V1_10,
-            CRITIQUE_SCHEMA_V1_11,
-            CRITIQUE_SCHEMA_V1_12,
-            CRITIQUE_SCHEMA_V1_13,
             CRITIQUE_SCHEMA_V1_14,
+            CRITIQUE_SCHEMA_V1_17,
         }
         else None
     )
@@ -476,15 +425,7 @@ def aesthetic_lever_summary(
     if not critique_path.is_file():
         return None
     frontmatter = yaml_frontmatter(critique_path)
-    if frontmatter.get("schema") not in {
-        CRITIQUE_SCHEMA_V1_11,
-        CRITIQUE_SCHEMA_V1_12,
-        CRITIQUE_SCHEMA_V1_13,
-        CRITIQUE_SCHEMA_V1_14,
-        CRITIQUE_SCHEMA_V1_15,
-        CRITIQUE_SCHEMA_V1_16,
-        CRITIQUE_SCHEMA_V1_17,
-    }:
+    if frontmatter.get("schema") not in {CRITIQUE_SCHEMA_V1_14, CRITIQUE_SCHEMA_V1_17}:
         return None
     if critique_state != "FRESH":
         return {
@@ -557,14 +498,7 @@ def journal_art_direction_playbook_summary(
     if not critique_path.is_file():
         return None
     frontmatter = yaml_frontmatter(critique_path)
-    if frontmatter.get("schema") not in {
-        CRITIQUE_SCHEMA_V1_12,
-        CRITIQUE_SCHEMA_V1_13,
-        CRITIQUE_SCHEMA_V1_14,
-        CRITIQUE_SCHEMA_V1_15,
-        CRITIQUE_SCHEMA_V1_16,
-        CRITIQUE_SCHEMA_V1_17,
-    }:
+    if frontmatter.get("schema") not in {CRITIQUE_SCHEMA_V1_14, CRITIQUE_SCHEMA_V1_17}:
         return None
     if critique_state != "FRESH":
         return {

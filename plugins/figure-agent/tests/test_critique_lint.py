@@ -168,6 +168,7 @@ def _editorial_yaml(*, hero_verdict: str = "pass", hero_fix: str = "accept_simpl
         )
         if key == "tikz_vs_svg_polish_trigger":
             lines.append("    recommended_path: continue_tikz")
+            lines.append("    remaining_tikz_lever: source-level label spacing remains patchable")
     return "\n".join(lines) + "\n"
 
 
@@ -182,6 +183,10 @@ def _editorial_yaml_with_route_detail(
         f"    recommended_path: {recommended_path}",
     )
     if not include_detail:
+        text = text.replace(
+            "    remaining_tikz_lever: source-level label spacing remains patchable\n",
+            "",
+        )
         return text
     detail_by_path = {
         "continue_tikz": (
@@ -269,6 +274,24 @@ def _editorial_yaml_with_aesthetic_anchors(
         )
         if key == "tikz_vs_svg_polish_trigger":
             lines.append(f"    recommended_path: {polish_trigger_path}")
+            if polish_trigger_path == "ready_for_svg_polish":
+                lines.append(
+                    "    svg_polish_candidate_reason: semantic source levers are closed "
+                    "and only optical vector cleanup remains"
+                )
+            elif polish_trigger_path == "semantic_backport_required":
+                lines.append(
+                    "    semantic_backport_reason: SVG polish would hide a semantic source mismatch"
+                )
+            elif polish_trigger_path == "needs_human_art_direction":
+                lines.append(
+                    "    human_art_direction_reason: target journal taste direction "
+                    "needs human choice"
+                )
+            else:
+                lines.append(
+                    "    remaining_tikz_lever: source-level label spacing remains patchable"
+                )
     return "\n".join(lines) + "\n"
 
 
@@ -336,6 +359,7 @@ def _editorial_yaml_with_paper_context_anchor(
         )
         if key == "tikz_vs_svg_polish_trigger":
             lines.append("    recommended_path: continue_tikz")
+            lines.append("    remaining_tikz_lever: source-level label spacing remains patchable")
     return "\n".join(lines) + "\n"
 
 
@@ -415,6 +439,7 @@ def _editorial_yaml_with_journal_playbook_anchor(
         )
         if key == "tikz_vs_svg_polish_trigger":
             lines.append("    recommended_path: continue_tikz")
+            lines.append("    remaining_tikz_lever: source-level label spacing remains patchable")
     return "\n".join(lines) + "\n"
 
 
@@ -863,20 +888,50 @@ def _write_critique(
     fig_dir: Path,
     *,
     findings_yaml: str,
-    schema: str = "figure-agent.critique.v1.3",
-    micro_defects_yaml: str = "",
-    crop_audit_log_yaml: str = "",
+    schema: str | None = None,
+    micro_defects_yaml: str | None = None,
+    crop_audit_log_yaml: str | None = None,
     top_tier_yaml: str | None = None,
-    editorial_yaml: str = "",
-    aesthetic_lever_audit_yaml: str = "",
-    journal_playbook_audit_yaml: str = "",
-    aesthetic_gate_audit_yaml: str = "",
-    journal_grade_yaml: str = "",
+    editorial_yaml: str | None = None,
+    aesthetic_lever_audit_yaml: str | None = None,
+    journal_playbook_audit_yaml: str | None = None,
+    aesthetic_gate_audit_yaml: str | None = None,
+    journal_grade_yaml: str | None = None,
     journal_polish_evidence: str | None = None,
     publication_readiness_evidence: str | None = None,
     label_target_matching_yaml: str | None = None,
+    ensure_live_support: bool = True,
 ) -> Path:
     critique = fig_dir / "critique.md"
+    schema_was_default = schema is None
+    if schema is None:
+        schema = "figure-agent.critique.v1.10"
+    if schema in {
+        "figure-agent.critique.v1.10",
+        "figure-agent.critique.v1.14",
+        "figure-agent.critique.v1.17",
+    }:
+        if micro_defects_yaml is None:
+            micro_defects_yaml = "micro_defects: []\n"
+        if crop_audit_log_yaml is None:
+            crop_audit_log_yaml = _single_crop_audit_log_yaml()
+        if editorial_yaml is None:
+            editorial_yaml = _editorial_yaml()
+        if schema_was_default and journal_polish_evidence is None:
+            journal_polish_evidence = "print-scale audit: print_178mm.png passes"
+        if schema_was_default and publication_readiness_evidence is None:
+            publication_readiness_evidence = (
+                "publication readiness includes print-scale evidence from print_178mm.png"
+            )
+        if ensure_live_support:
+            if not (fig_dir / "build" / "visual_clash.json").exists():
+                _write_visual_clash_report(fig_dir, candidate_ids=())
+            if not (fig_dir / "build" / "text_boundary_clash.json").exists():
+                _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+            if not (fig_dir / "build" / "label_path_proximity.json").exists():
+                _write_label_path_proximity_report(fig_dir, candidate_ids=())
+            if not (fig_dir / "build" / "audit_crops" / "manifest.json").exists():
+                _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     quality_axes = _quality_axes_yaml(
         journal_polish_evidence=journal_polish_evidence,
         publication_readiness_evidence=publication_readiness_evidence,
@@ -888,13 +943,13 @@ def _write_critique(
         f"{_audit_enumeration_yaml(label_target_matching_yaml=label_target_matching_yaml)}"
         f"{quality_axes}"
         f"{top_tier_yaml or _top_tier_yaml()}"
-        f"{micro_defects_yaml}"
-        f"{crop_audit_log_yaml}"
-        f"{editorial_yaml}"
-        f"{aesthetic_lever_audit_yaml}"
-        f"{journal_playbook_audit_yaml}"
-        f"{aesthetic_gate_audit_yaml}"
-        f"{journal_grade_yaml}"
+        f"{micro_defects_yaml or ''}"
+        f"{crop_audit_log_yaml or ''}"
+        f"{editorial_yaml or ''}"
+        f"{aesthetic_lever_audit_yaml or ''}"
+        f"{journal_playbook_audit_yaml or ''}"
+        f"{aesthetic_gate_audit_yaml or ''}"
+        f"{journal_grade_yaml or ''}"
         f"{findings_yaml}"
         "---\n"
         "# critique\n",
@@ -1281,7 +1336,7 @@ def test_lint_critique_accepts_reference_free_aesthetic_intent_grounding(
     _write_aesthetic_intent(fig_dir)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -1360,7 +1415,7 @@ def test_lint_critique_rejects_unaccounted_undeclared_geometry_candidate(
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.4",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png passes",
         publication_readiness_evidence="publication readiness includes print-scale evidence",
         micro_defects_yaml="micro_defects: []\n",
@@ -1385,7 +1440,7 @@ def test_lint_critique_accepts_undeclared_geometry_micro_defect_ref(
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.4",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png passes",
         publication_readiness_evidence="publication readiness includes print-scale evidence",
         micro_defects_yaml=(
@@ -1416,12 +1471,22 @@ def test_lint_critique_rejects_generic_aesthetic_slots_when_intent_exists(
     _write_aesthetic_intent(fig_dir)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
         ),
-        micro_defects_yaml="micro_defects: []\n",
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s01.png\n"
+            "    kind: label_backdrop_overflows_outline\n"
+            "    severity: MINOR\n"
+            "    observation: VC001 label backdrop candidate remains visible\n"
+            '    linked_finding_id: ""\n'
+            "    visual_clash_ref: VC001\n"
+            "    status: open\n"
+        ),
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
     )
@@ -1443,7 +1508,7 @@ def test_lint_critique_accepts_aesthetic_slots_with_exact_intent_anchors(
     _write_aesthetic_intent(fig_dir)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -1468,7 +1533,7 @@ def test_lint_critique_keeps_missing_aesthetic_intent_legacy_behavior(
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -1489,7 +1554,7 @@ def test_lint_critique_reports_malformed_aesthetic_intent_as_controlled_blocker(
     _write_aesthetic_intent(fig_dir, malformed=True)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -1513,7 +1578,7 @@ def test_lint_critique_rejects_missing_paper_context_anchors(
     _write_paper_aesthetic_context(fig_dir)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -1541,7 +1606,7 @@ def test_lint_critique_accepts_exact_paper_context_anchors(
     _write_paper_aesthetic_context(fig_dir)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -1563,7 +1628,7 @@ def test_lint_critique_rejects_paper_context_anchor_without_current_artifact_evi
     _write_paper_aesthetic_context(fig_dir)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -1597,7 +1662,7 @@ def test_lint_critique_keeps_missing_paper_context_legacy_behavior(
     (fig_dir / "spec.yaml").write_text("name: demo_fig\n", encoding="utf-8")
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -1618,7 +1683,7 @@ def test_lint_critique_reports_invalid_paper_context_as_controlled_blocker(
     _write_paper_aesthetic_context(fig_dir, malformed=True)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -1655,7 +1720,7 @@ def _write_complete_v1_12_journal_playbook_fixture(
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.12",
+        schema="figure-agent.critique.v1.14",
         top_tier_yaml=top_tier_yaml
         if top_tier_yaml is not None
         else _top_tier_yaml_with_journal_playbook_anchor("editorial_restraint"),
@@ -1912,7 +1977,7 @@ def test_lint_critique_reports_stale_external_vision_review(
 def _write_complete_v1_11_aesthetic_fixture(
     fig_dir: Path,
     *,
-    schema: str = "figure-agent.critique.v1.11",
+    schema: str = "figure-agent.critique.v1.14",
     aesthetic_lever_audit_yaml: str | None = None,
     aesthetic_gate_audit_yaml: str = "",
     editorial_yaml: str | None = None,
@@ -1974,7 +2039,7 @@ def test_lint_critique_accepts_complete_v1_16_aesthetic_lever_accounting(
     fig_dir.mkdir()
     _write_complete_v1_11_aesthetic_fixture(
         fig_dir,
-        schema="figure-agent.critique.v1.16",
+        schema="figure-agent.critique.v1.14",
         aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(),
         editorial_yaml=_editorial_yaml_with_aesthetic_anchors().replace(
             "    recommended_path: ready_for_svg_polish\n",
@@ -1998,7 +2063,7 @@ def test_lint_critique_rejects_typo_schema(tmp_path: Path) -> None:
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -2010,16 +2075,16 @@ def test_lint_critique_rejects_typo_schema(tmp_path: Path) -> None:
     critique_path = fig_dir / "critique.md"
     critique_path.write_text(
         critique_path.read_text(encoding="utf-8").replace(
-            "schema: figure-agent.critique.v1.5",
-            "schema: figureagent.critique.v1.5",
-        ),
+                "schema: figure-agent.critique.v1.10",
+                "schema: figureagent.critique.v1.10",
+            ),
         encoding="utf-8",
     )
 
     violations = critique_lint.lint_critique(fig_dir)
 
     assert [violation.category for violation in violations] == ["critique_contract"]
-    assert "figureagent.critique.v1.5" in violations[0].message
+    assert "figureagent.critique.v1.10" in violations[0].message
 
 
 def test_lint_critique_rejects_v1_10_aesthetic_lever_accounting(
@@ -2461,7 +2526,7 @@ def test_lint_critique_accepts_complete_v1_8_crop_accounting(tmp_path: Path) -> 
     _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.8",
+        schema="figure-agent.critique.v1.10",
         findings_yaml=(
             "findings:\n"
             "  - id: C001\n"
@@ -2505,7 +2570,7 @@ def test_lint_critique_reports_non_dict_visual_clash_report_as_controlled_blocke
     (fig_dir / "build" / "visual_clash.json").write_text("[1, 2, 3]\n", encoding="utf-8")
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.8",
+        schema="figure-agent.critique.v1.10",
         findings_yaml=(
             "findings:\n"
             "  - id: C001\n"
@@ -2553,7 +2618,7 @@ def test_lint_critique_rejects_v1_8_missing_crop_audit_log_with_manifest(
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.8",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         editorial_yaml=_editorial_yaml(),
@@ -2561,6 +2626,7 @@ def test_lint_critique_rejects_v1_8_missing_crop_audit_log_with_manifest(
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
         ),
+        crop_audit_log_yaml="",
     )
 
     violations = critique_lint.lint_critique(fig_dir)
@@ -2580,7 +2646,7 @@ def test_lint_critique_rejects_v1_13_missing_unintended_visible_anomaly(
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.13",
+        schema="figure-agent.critique.v1.14",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=(
@@ -2611,7 +2677,7 @@ def test_lint_critique_rejects_v1_9_missing_crop_audit_log_with_manifest(
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.9",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         editorial_yaml=_editorial_yaml(),
@@ -2619,6 +2685,7 @@ def test_lint_critique_rejects_v1_9_missing_crop_audit_log_with_manifest(
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
         ),
+        crop_audit_log_yaml="",
     )
 
     violations = critique_lint.lint_critique(fig_dir)
@@ -2635,7 +2702,7 @@ def test_lint_critique_rejects_v1_9_crop_audit_log_without_manifest(
     _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.9",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=(
@@ -2653,6 +2720,7 @@ def test_lint_critique_rejects_v1_9_crop_audit_log_without_manifest(
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
         ),
+        ensure_live_support=False,
     )
 
     violations = critique_lint.lint_critique(fig_dir)
@@ -2668,7 +2736,7 @@ def test_lint_critique_rejects_v1_8_unknown_crop_id(tmp_path: Path) -> None:
     _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.8",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=_crop_audit_log_yaml(
@@ -2701,7 +2769,7 @@ def test_lint_critique_rejects_v1_8_manifest_crop_missing_sha256(
     _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.8",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=(
@@ -2740,7 +2808,7 @@ def test_lint_critique_rejects_v1_8_manifest_crop_invalid_sha256(
     _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.8",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=(
@@ -2783,7 +2851,7 @@ def test_lint_critique_rejects_v1_8_manifest_crop_path_traversal(
     _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.8",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=(
@@ -2820,7 +2888,7 @@ def test_lint_critique_rejects_v1_8_manifest_crop_missing_file(
     _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.8",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=(
@@ -2857,7 +2925,7 @@ def test_lint_critique_rejects_v1_8_manifest_crop_hash_mismatch(
     _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.8",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=(
@@ -2891,7 +2959,7 @@ def test_lint_critique_rejects_v1_8_missing_required_crop_id(tmp_path: Path) -> 
     _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.8",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=(
@@ -2926,7 +2994,7 @@ def test_lint_critique_keeps_v1_7_legacy_parseable_without_crop_audit_log(
     _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         editorial_yaml=_editorial_yaml(),
@@ -2944,7 +3012,7 @@ def test_lint_critique_accepts_valid_v1_4_micro_defect_critique(tmp_path: Path) 
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.4",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -2976,7 +3044,7 @@ def test_lint_critique_accepts_valid_v1_5_editorial_art_direction(tmp_path: Path
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3041,7 +3109,7 @@ def test_lint_critique_rejects_v1_5_missing_editorial_art_direction_block(
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3067,7 +3135,7 @@ def test_lint_critique_rejects_unlinked_v1_6_instrument_label_micro_defect(
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.6",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3100,7 +3168,7 @@ def test_lint_critique_rejects_unaccounted_v1_7_visual_clash_candidate(
     _write_visual_clash_report(fig_dir, candidate_ids=("VC001", "VC002"))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3134,7 +3202,7 @@ def test_lint_critique_accepts_v1_7_when_all_visual_clash_candidates_are_account
     _write_visual_clash_report(fig_dir, candidate_ids=("VC001", "VC002"))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3160,6 +3228,10 @@ def test_lint_critique_accepts_v1_7_when_all_visual_clash_candidates_are_account
             '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC002\n"
             "    status: accept_simplification\n"
+            "    accept_simplification_reason: false_positive\n"
+            "    accept_simplification_rationale: >-\n"
+            "      VC002 is a false positive because the glyph is outside\n"
+            "      the instrument-box target region.\n"
         ),
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
@@ -3175,7 +3247,7 @@ def test_lint_critique_rejects_v1_7_when_visual_clash_report_is_missing(
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3183,6 +3255,7 @@ def test_lint_critique_rejects_v1_7_when_visual_clash_report_is_missing(
         micro_defects_yaml="micro_defects: []\n",
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
+        ensure_live_support=False,
     )
 
     violations = critique_lint.lint_critique(fig_dir)
@@ -3193,7 +3266,7 @@ def test_lint_critique_rejects_v1_7_when_visual_clash_report_is_missing(
 
 @pytest.mark.parametrize(
     "schema",
-    ["figure-agent.critique.v1.8", "figure-agent.critique.v1.9", "figure-agent.critique.v1.10"],
+    ["figure-agent.critique.v1.10", "figure-agent.critique.v1.10", "figure-agent.critique.v1.10"],
 )
 def test_lint_critique_rejects_current_schema_when_visual_clash_report_is_missing(
     tmp_path: Path,
@@ -3222,6 +3295,7 @@ def test_lint_critique_rejects_current_schema_when_visual_clash_report_is_missin
         ),
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\npanels: []\n",
+        ensure_live_support=False,
     )
 
     violations = critique_lint.lint_critique(fig_dir)
@@ -3238,7 +3312,7 @@ def test_lint_critique_accepts_v1_7_when_visual_clash_report_has_no_candidates(
     _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3279,6 +3353,7 @@ def test_lint_critique_rejects_missing_text_boundary_ref_when_report_has_candida
         ),
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\npanels: []\n",
+        ensure_live_support=False,
     )
 
     violations = critique_lint.lint_critique(fig_dir)
@@ -3315,6 +3390,7 @@ def test_lint_critique_rejects_current_schema_when_text_boundary_report_is_missi
         ),
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\npanels: []\n",
+        ensure_live_support=False,
     )
 
     violations = critique_lint.lint_critique(fig_dir)
@@ -3601,7 +3677,7 @@ def test_lint_critique_rejects_weak_visual_clash_accept_simplification_rationale
     _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3616,6 +3692,10 @@ def test_lint_critique_rejects_weak_visual_clash_accept_simplification_rationale
             '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
+            "    accept_simplification_reason: false_positive\n"
+            "    accept_simplification_rationale: >-\n"
+            "      false positive: the label belongs to a separate axis annotation\n"
+            "      outside the target.\n"
         ),
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
@@ -3637,7 +3717,7 @@ def test_lint_critique_accepts_concrete_visual_clash_accept_simplification_ratio
     _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3654,6 +3734,10 @@ def test_lint_critique_accepts_concrete_visual_clash_accept_simplification_ratio
             '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
+            "    accept_simplification_reason: false_positive\n"
+            "    accept_simplification_rationale: >-\n"
+            "      VC001 is a false positive because the label is a separate\n"
+            "      axis annotation outside the apparatus target.\n"
         ),
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
@@ -3670,7 +3754,7 @@ def test_lint_critique_rejects_duplicate_v1_7_visual_clash_candidate_refs(
     _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3693,6 +3777,9 @@ def test_lint_critique_rejects_duplicate_v1_7_visual_clash_candidate_refs(
             '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
+            "    accept_simplification_reason: false_positive\n"
+            "    accept_simplification_rationale: >-\n"
+            "      VC001 is a false positive duplicate used only to exercise accounting order.\n"
         ),
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
@@ -3713,7 +3800,7 @@ def test_lint_critique_rejects_unknown_v1_7_visual_clash_candidate_ref(
     _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3736,6 +3823,10 @@ def test_lint_critique_rejects_unknown_v1_7_visual_clash_candidate_ref(
             '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC999\n"
             "    status: accept_simplification\n"
+            "    accept_simplification_reason: false_positive\n"
+            "    accept_simplification_rationale: >-\n"
+            "      VC999 is a false positive typo entry used only to exercise\n"
+            "      unknown-ref accounting.\n"
         ),
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
@@ -3952,7 +4043,7 @@ def test_lint_critique_keeps_v1_9_accept_simplification_legacy_heuristic(
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.9",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -3968,6 +4059,10 @@ def test_lint_critique_keeps_v1_9_accept_simplification_legacy_heuristic(
             '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
+            "    accept_simplification_reason: false_positive\n"
+            "    accept_simplification_rationale: >-\n"
+            "      VC001 is a false positive because the decorative background\n"
+            "      contact is outside the target region.\n"
         ),
         crop_audit_log_yaml=(
             "crop_audit_log:\n"
@@ -3994,7 +4089,7 @@ def test_lint_critique_rejects_historical_hv_candidate_with_wrong_kind(
     _write_historical_visual_clash_report(fig_dir)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -4063,7 +4158,7 @@ def test_lint_critique_rejects_historical_vs_candidate_with_wrong_kind(
     _write_historical_visual_clash_report(fig_dir)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -4132,7 +4227,7 @@ def test_lint_critique_accepts_historical_visual_clash_expected_kinds(
     _write_historical_visual_clash_report(fig_dir)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -4195,7 +4290,7 @@ def test_lint_critique_does_not_apply_historical_candidate_rule_to_other_fixture
     _write_historical_visual_clash_report(fig_dir)
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -4242,12 +4337,22 @@ def test_lint_critique_keeps_v1_6_visual_clash_accounting_legacy_compatible(
     _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.6",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
         ),
-        micro_defects_yaml="micro_defects: []\n",
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s01.png\n"
+            "    kind: label_backdrop_overflows_outline\n"
+            "    severity: MINOR\n"
+            "    observation: VC001 label backdrop candidate remains visible\n"
+            '    linked_finding_id: ""\n'
+            "    visual_clash_ref: VC001\n"
+            "    status: open\n"
+        ),
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
     )
@@ -4262,7 +4367,7 @@ def test_lint_critique_keeps_v1_6_missing_visual_clash_report_legacy_compatible(
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.6",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -4282,7 +4387,7 @@ def test_lint_critique_reports_v1_5_passed_polish_without_print_scale_evidence(
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         micro_defects_yaml="micro_defects: []\n",
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
@@ -4305,7 +4410,7 @@ def test_lint_critique_reports_v1_7_passed_polish_without_print_scale_evidence(
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.7",
+        schema="figure-agent.critique.v1.10",
         micro_defects_yaml="micro_defects: []\n",
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
@@ -4329,7 +4434,7 @@ def test_lint_critique_reports_v1_9_passed_polish_without_print_scale_evidence(
     _write_crop_manifest(fig_dir, crop_ids=("full_q1", "VC001_A"))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.9",
+        schema="figure-agent.critique.v1.10",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=_crop_audit_log_yaml(
@@ -4356,7 +4461,7 @@ def test_lint_critique_reports_v1_5_needs_human_editorial_without_link(
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.5",
+        schema="figure-agent.critique.v1.10",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
             "publication readiness includes print-scale evidence from print_178mm.png"
@@ -4380,7 +4485,8 @@ def test_lint_critique_reports_missing_v1_4_micro_defects(tmp_path: Path) -> Non
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.4",
+        schema="figure-agent.critique.v1.10",
+        micro_defects_yaml="",
         findings_yaml=(
             "findings:\n"
             "  - id: C001\n"
@@ -4403,7 +4509,7 @@ def test_lint_critique_reports_passed_polish_without_print_scale_evidence(
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.4",
+        schema="figure-agent.critique.v1.10",
         micro_defects_yaml="micro_defects: []\n",
         findings_yaml="findings: []\n",
     )
@@ -4426,7 +4532,7 @@ def test_lint_critique_accepts_passed_polish_with_print_scale_evidence(
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.4",
+        schema="figure-agent.critique.v1.10",
         micro_defects_yaml="micro_defects: []\n",
         findings_yaml="findings: []\n",
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
@@ -4504,12 +4610,16 @@ def test_lint_critique_rejects_matched_entity_that_is_comment_only(
     )
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.3",
+        schema="figure-agent.critique.v1.10",
         label_target_matching_yaml=(
             "    - label: F_Maxwell\n"
             "      nearest_object: neutral gray dashed rightward arrow\n"
             "      intended_target: Maxwell force arrow\n"
             "      matches: true\n"
+        ),
+        journal_polish_evidence="print-scale audit: print_178mm.png passes",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
         ),
         findings_yaml="findings: []\n",
     )
@@ -4533,12 +4643,16 @@ def test_lint_critique_accepts_matched_entity_present_in_active_tex(
     )
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.3",
+        schema="figure-agent.critique.v1.10",
         label_target_matching_yaml=(
             "    - label: F_Maxwell\n"
             "      nearest_object: neutral gray dashed rightward arrow\n"
             "      intended_target: Maxwell force arrow\n"
             "      matches: true\n"
+        ),
+        journal_polish_evidence="print-scale audit: print_178mm.png passes",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
         ),
         findings_yaml="findings: []\n",
     )
@@ -4569,7 +4683,7 @@ def test_lint_critique_reports_latin1_tex_as_blocker(
     )
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.3",
+        schema="figure-agent.critique.v1.10",
         label_target_matching_yaml=(
             "    - label: F_Maxwell\n"
             "      nearest_object: neutral gray dashed rightward arrow\n"

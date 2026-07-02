@@ -22,19 +22,10 @@ from reference_contract import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CRITIQUE_RUBRIC_VERSION = "figure-agent.critique-rubric.v1.10"
-CRITIQUE_RUBRIC_VERSION_V1_11 = "figure-agent.critique-rubric.v1.11"
-CRITIQUE_RUBRIC_VERSION_V1_12 = "figure-agent.critique-rubric.v1.12"
-CRITIQUE_RUBRIC_VERSION_V1_13 = "figure-agent.critique-rubric.v1.13"
 CRITIQUE_RUBRIC_VERSION_V1_14 = "figure-agent.critique-rubric.v1.14"
-CRITIQUE_RUBRIC_VERSION_V1_15 = "figure-agent.critique-rubric.v1.15"
-CRITIQUE_RUBRIC_VERSION_V1_16 = "figure-agent.critique-rubric.v1.16"
 CRITIQUE_RUBRIC_VERSION_V1_17 = "figure-agent.critique-rubric.v1.17"
-CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
-CRITIQUE_SCHEMA_VERSION_V1_12 = "figure-agent.critique.v1.12"
-CRITIQUE_SCHEMA_VERSION_V1_13 = "figure-agent.critique.v1.13"
+CRITIQUE_SCHEMA_VERSION_V1_10 = "figure-agent.critique.v1.10"
 CRITIQUE_SCHEMA_VERSION_V1_14 = "figure-agent.critique.v1.14"
-CRITIQUE_SCHEMA_VERSION_V1_15 = "figure-agent.critique.v1.15"
-CRITIQUE_SCHEMA_VERSION_V1_16 = "figure-agent.critique.v1.16"
 CRITIQUE_SCHEMA_VERSION_V1_17 = "figure-agent.critique.v1.17"
 _CRITIQUE_METADATA_KEYS = ("generator_version", "rubric_version", "critique_input_hash")
 
@@ -219,27 +210,9 @@ def _critique_schema_matches_expected_rubric(
     schema = metadata.get("schema")
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_17:
         return schema == CRITIQUE_SCHEMA_VERSION_V1_17
-    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_16:
-        return schema == CRITIQUE_SCHEMA_VERSION_V1_16
-    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_15:
-        return schema == CRITIQUE_SCHEMA_VERSION_V1_15
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_14:
         return schema == CRITIQUE_SCHEMA_VERSION_V1_14
-    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_13:
-        return schema == CRITIQUE_SCHEMA_VERSION_V1_13
-    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_12:
-        return schema == CRITIQUE_SCHEMA_VERSION_V1_12
-    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_11:
-        return schema == CRITIQUE_SCHEMA_VERSION_V1_11
-    return schema not in {
-        CRITIQUE_SCHEMA_VERSION_V1_11,
-        CRITIQUE_SCHEMA_VERSION_V1_12,
-        CRITIQUE_SCHEMA_VERSION_V1_13,
-        CRITIQUE_SCHEMA_VERSION_V1_14,
-        CRITIQUE_SCHEMA_VERSION_V1_15,
-        CRITIQUE_SCHEMA_VERSION_V1_16,
-        CRITIQUE_SCHEMA_VERSION_V1_17,
-    }
+    return schema == CRITIQUE_SCHEMA_VERSION_V1_10
 
 
 def yaml_frontmatter(path: Path) -> dict:

@@ -57,7 +57,7 @@ def _write_metadata_critique(
     critique_input_hash: str,
     generator_version: str,
     rubric_version: str,
-    schema: str = "figure-agent.critique.v1",
+    schema: str = "figure-agent.critique.v1.10",
 ) -> None:
     critique_path.write_text(
         "---\n"
@@ -87,7 +87,7 @@ def test_critique_freshness_diagnostics_reports_no_mismatch_for_fresh_metadata(
         example_dir / "critique.md",
         critique_input_hash=expected_hash,
         generator_version=critique_generator_version(generator_path),
-        rubric_version=CRITIQUE_RUBRIC_VERSION,
+        rubric_version=expected_critique_rubric_version(example_dir),
     )
 
     diagnostics = critique_freshness_diagnostics(
@@ -118,7 +118,7 @@ def test_critique_freshness_diagnostics_reports_generator_mismatch(tmp_path: Pat
         example_dir / "critique.md",
         critique_input_hash=expected_hash,
         generator_version="sha256:stale",
-        rubric_version=CRITIQUE_RUBRIC_VERSION,
+        rubric_version=expected_critique_rubric_version(example_dir),
     )
 
     diagnostics = critique_freshness_diagnostics(

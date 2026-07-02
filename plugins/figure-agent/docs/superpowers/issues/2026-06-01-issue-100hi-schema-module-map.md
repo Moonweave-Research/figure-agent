@@ -35,19 +35,19 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | Schema | Main capability introduced | Primary producers | Primary validators | Primary consumers | Current policy |
 |---|---|---|---|---|---|
 | `figure-agent.critique.v1` | Legacy frontmatter + findings | historical `critique.md` | `critique_schema_validator.py` legacy path | `critique_adjudication.py`, status fallback | Parse only; do not author new critiques |
-| `v1.1` | mandatory `audit_enumeration` | `critique_brief.py` | `critique_schema_validator.py` | `critique_adjudication.py` | Legacy-compatible |
-| `v1.2` | quality axes + `journal_grade_assessment` | `critique_brief.py` | `critique_schema_validator.py`, `critique_lint.py` | `fig_loop_assessments.py`, `fig_loop_axes.py` | Advisory scores only unless explicitly gateable |
-| `v1.3` | top-tier journal audit | `critique_brief.py` | `critique_schema_validator.py`, `critique_lint.py` | `fig_loop_assessments.py` | Top-tier failure must surface as visible finding/blocker |
-| `v1.4` | high-zoom/print micro-defect accounting expansion | `critique_brief.py` | `critique_lint.py`, `audit_evidence_summary.py` | `/fig_loop`, `/fig_drive` via audit evidence | Required when audit candidate JSON exists |
-| `v1.5` | editorial art-direction audit | `critique_brief.py` | `critique_schema_validator.py`, `critique_lint.py` | `fig_driver_editorial.py`, `fig_loop_assessments.py` | Human art-direction gates stay explicit |
-| `v1.6` | SVG-polish route semantics begin | `critique_brief.py` | `critique_lint.py` | `fig_driver_editorial.py` | SVG polish remains handoff, not hidden edit |
-| `v1.7` | visual-clash candidate accounting | `check_visual_clash.py`, `critique_brief.py` | `critique_lint.py`, `audit_evidence_summary.py` | `fig_status`, `fig_loop`, `fig_drive` | Every `VC###` must be accounted |
-| `v1.8` | crop-read accountability via audit crop manifest | `critique_zoom_crops.py`, `critique_brief.py` | `critique_lint.py`, `audit_evidence_summary.py` | `fig_loop_assessments.py` | Required crop ids must appear exactly once |
-| `v1.9` | print/zoom grounded micro-defect hardening | `critique_brief.py` | `critique_lint.py` | `audit_evidence_summary.py` | Ambiguous crops route to action, not silent pass |
+| `v1.1` | mandatory `audit_enumeration` | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; re-run `/fig_critique` to emit `v1.10`, `v1.14`, or `v1.17` |
+| `v1.2` | quality axes + `journal_grade_assessment` | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.3` | top-tier journal audit | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.4` | high-zoom/print micro-defect accounting expansion | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.5` | editorial art-direction audit | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.6` | SVG-polish route semantics begin | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; SVG polish remains handoff-only route language |
+| `v1.7` | visual-clash candidate accounting | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.8` | crop-read accountability via audit crop manifest | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.9` | print/zoom grounded micro-defect hardening | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
 | `v1.10` | mature default critique contract | `critique_brief.py` | `critique_schema_validator.py`, `critique_lint.py` | `quality_manifest.py`, `fig_loop.py` | Default for non-grounded current critiques |
-| `v1.11` | aesthetic lever grammar audit | `aesthetic_intent.py`, `critique_brief.py` | `critique_lint.py` | `fig_loop_assessments.py` | Lever route must match declared route |
-| `v1.12` | journal art-direction playbook audit | `journal_art_direction_playbook.py`, `critique_brief.py` | `critique_lint.py`, `critique_schema_validator.py` | `fig_loop_assessments.py` | Generic journal prose invalid once opted in |
-| `v1.13` | reference learning accountability | `critique_reference_pack.py`, `reference_aesthetic_metrics.py` | `critique_lint.py` | `fig_loop_assessments.py` | Reference is learning anchor, not copy target |
+| `v1.11` | aesthetic lever grammar audit | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; optional audit retained in live `v1.14+` contracts |
+| `v1.12` | journal art-direction playbook audit | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; optional audit retained in live `v1.14+` contracts |
+| `v1.13` | reference learning accountability | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; crop anomaly/accountability retained in live `v1.14+` contracts |
 | `v1.14` | route-detail contract and richer aesthetic intent | `critique_brief.py` | `critique_lint.py`, `quality_manifest.py` | `fig_driver.py`, `fig_loop.py` | Route-specific rationale required |
 | `v1.15` | retired SVG polish gate/delta hardening | retired 2026-07-02 | retired 2026-07-02 | retired 2026-07-02 | Superseded by external handoff-only route labels |
 | `v1.16` | retired SVG polish delta audit | retired 2026-07-02 | retired 2026-07-02 | retired 2026-07-02 | Superseded by external handoff-only route labels |

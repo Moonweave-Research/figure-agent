@@ -1276,94 +1276,11 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
             "and ran zero validators (warn-only), so an empty critique passed. "
             "Re-run /fig_critique to emit a v1.x critique with audit_enumeration."
         )
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_1:
-        _validate_v1_1_audit(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_2:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        _validate_journal_grade_assessment(frontmatter, quality_verdicts)
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_3:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_journal_grade_assessment(frontmatter, quality_verdicts, top_tier_verdicts)
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_4:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_v1_4_micro_defects(frontmatter)
-        _validate_journal_grade_assessment(frontmatter, quality_verdicts, top_tier_verdicts)
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_5:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_v1_4_micro_defects(frontmatter)
-        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
-        _validate_journal_grade_assessment(
-            frontmatter,
-            quality_verdicts,
-            top_tier_verdicts,
-            editorial_verdicts,
+    elif critique_schema in vocab.RETIRED_CRITIQUE_SCHEMAS:
+        raise CritiqueContractError(
+            f"{critique_schema} is retired: it is no longer emitted by /fig_critique. "
+            "Re-run /fig_critique to emit a supported critique schema."
         )
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_6:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_v1_4_micro_defects(frontmatter)
-        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
-        _validate_journal_grade_assessment(
-            frontmatter,
-            quality_verdicts,
-            top_tier_verdicts,
-            editorial_verdicts,
-        )
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_7:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_v1_4_micro_defects(frontmatter)
-        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
-        _validate_journal_grade_assessment(
-            frontmatter,
-            quality_verdicts,
-            top_tier_verdicts,
-            editorial_verdicts,
-        )
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_8:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_v1_4_micro_defects(frontmatter)
-        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
-        _validate_v1_8_crop_audit_log(frontmatter)
-        _validate_journal_grade_assessment(
-            frontmatter,
-            quality_verdicts,
-            top_tier_verdicts,
-            editorial_verdicts,
-        )
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_9:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_v1_4_micro_defects(frontmatter)
-        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
-        _validate_v1_8_crop_audit_log(frontmatter)
-        _validate_journal_grade_assessment(
-            frontmatter,
-            quality_verdicts,
-            top_tier_verdicts,
-            editorial_verdicts,
-            allow_reference_calibration=True,
-        )
-        _validate_v1_2_audit_to_finding(frontmatter)
     elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_10:
         _validate_v1_1_audit(frontmatter)
         quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
@@ -1372,63 +1289,6 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         _validate_v1_10_accept_simplification(frontmatter)
         editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
         _validate_v1_8_crop_audit_log(frontmatter)
-        _validate_journal_grade_assessment(
-            frontmatter,
-            quality_verdicts,
-            top_tier_verdicts,
-            editorial_verdicts,
-            allow_reference_calibration=True,
-        )
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_11:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_v1_4_micro_defects(frontmatter)
-        _validate_v1_10_accept_simplification(frontmatter)
-        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
-        _validate_v1_8_crop_audit_log(frontmatter)
-        _validate_v1_11_aesthetic_lever_audit(frontmatter)
-        _validate_journal_grade_assessment(
-            frontmatter,
-            quality_verdicts,
-            top_tier_verdicts,
-            editorial_verdicts,
-            allow_reference_calibration=True,
-        )
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_12:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_v1_4_micro_defects(frontmatter)
-        _validate_v1_10_accept_simplification(frontmatter)
-        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
-        _validate_v1_8_crop_audit_log(frontmatter)
-        if "aesthetic_lever_audit" in frontmatter:
-            _validate_v1_11_aesthetic_lever_audit(frontmatter)
-        _validate_v1_12_journal_art_direction_playbook_audit(frontmatter)
-        _validate_journal_grade_assessment(
-            frontmatter,
-            quality_verdicts,
-            top_tier_verdicts,
-            editorial_verdicts,
-            allow_reference_calibration=True,
-        )
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_13:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_v1_4_micro_defects(frontmatter)
-        _validate_v1_10_accept_simplification(frontmatter)
-        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
-        _validate_v1_8_crop_audit_log(frontmatter)
-        _validate_v1_13_crop_anomaly_accounting(frontmatter)
-        if "aesthetic_lever_audit" in frontmatter:
-            _validate_v1_11_aesthetic_lever_audit(frontmatter)
-        if "journal_art_direction_playbook_audit" in frontmatter:
-            _validate_v1_12_journal_art_direction_playbook_audit(frontmatter)
         _validate_journal_grade_assessment(
             frontmatter,
             quality_verdicts,
@@ -1447,51 +1307,6 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         _validate_v1_14_editorial_route_detail(frontmatter)
         _validate_v1_8_crop_audit_log(frontmatter)
         _validate_v1_13_crop_anomaly_accounting(frontmatter)
-        if "aesthetic_lever_audit" in frontmatter:
-            _validate_v1_11_aesthetic_lever_audit(frontmatter)
-        if "journal_art_direction_playbook_audit" in frontmatter:
-            _validate_v1_12_journal_art_direction_playbook_audit(frontmatter)
-        _validate_journal_grade_assessment(
-            frontmatter,
-            quality_verdicts,
-            top_tier_verdicts,
-            editorial_verdicts,
-            allow_reference_calibration=True,
-        )
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_15:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_v1_4_micro_defects(frontmatter)
-        _validate_v1_10_accept_simplification(frontmatter)
-        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
-        _validate_v1_14_editorial_route_detail(frontmatter)
-        _validate_v1_8_crop_audit_log(frontmatter)
-        _validate_v1_13_crop_anomaly_accounting(frontmatter)
-        if "aesthetic_lever_audit" in frontmatter:
-            _validate_v1_11_aesthetic_lever_audit(frontmatter)
-        if "journal_art_direction_playbook_audit" in frontmatter:
-            _validate_v1_12_journal_art_direction_playbook_audit(frontmatter)
-        _validate_journal_grade_assessment(
-            frontmatter,
-            quality_verdicts,
-            top_tier_verdicts,
-            editorial_verdicts,
-            allow_reference_calibration=True,
-        )
-        _validate_v1_2_audit_to_finding(frontmatter)
-    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_16:
-        _validate_v1_1_audit(frontmatter)
-        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
-        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
-        _validate_v1_4_micro_defects(frontmatter)
-        _validate_v1_10_accept_simplification(frontmatter)
-        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
-        _validate_v1_14_editorial_route_detail(frontmatter)
-        _validate_v1_8_crop_audit_log(frontmatter)
-        _validate_v1_13_crop_anomaly_accounting(frontmatter)
-        _validate_v1_16_grounded_crop_observations(frontmatter)
         if "aesthetic_lever_audit" in frontmatter:
             _validate_v1_11_aesthetic_lever_audit(frontmatter)
         if "journal_art_direction_playbook_audit" in frontmatter:

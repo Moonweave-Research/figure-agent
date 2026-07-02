@@ -94,7 +94,7 @@ def _write_v1_4_critique_without_print_scale_evidence(example_dir: Path) -> Path
     critique = example_dir / "critique.md"
     critique.write_text(
         "---\n"
-        "schema: figure-agent.critique.v1.4\n"
+        "schema: figure-agent.critique.v1.10\n"
         f"fixture: {example_dir.name}\n"
         "audit_enumeration:\n"
         "  structural_completeness:\n"

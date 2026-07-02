@@ -14,6 +14,7 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import status as status_mod  # noqa: E402
+from critique_schema_vocab import AESTHETIC_ANTIPATTERN_IDS  # noqa: E402
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
@@ -140,12 +141,138 @@ def _write_hashed_critique(
     *,
     critique_input_hash: str | None = None,
     generator_version: str | None = None,
-    rubric_version: str = CRITIQUE_RUBRIC_VERSION,
-    schema: str = "figure-agent.critique.v1.2",
+    rubric_version: str | None = None,
+    schema: str = "figure-agent.critique.v1.17",
 ) -> None:
+    build_dir = fig_dir / "build"
+    build_dir.mkdir(exist_ok=True)
+    if not (build_dir / "visual_clash.json").exists():
+        (build_dir / "visual_clash.json").write_text(
+            json.dumps(
+                {
+                    "fixture": name,
+                    "render_pdf": f"build/{name}.pdf",
+                    "candidates": [],
+                    "total": 0,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    if not (build_dir / "text_boundary_clash.json").exists():
+        (build_dir / "text_boundary_clash.json").write_text(
+            json.dumps(
+                {
+                    "schema": "figure-agent.text-boundary-clash.v1",
+                    "candidates": [],
+                    "total": 0,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    if not (build_dir / "label_path_proximity.json").exists():
+        (build_dir / "label_path_proximity.json").write_text(
+            json.dumps(
+                {
+                    "schema": "figure-agent.label-path-proximity.v1",
+                    "candidates": [],
+                    "total": 0,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    crop_manifest = build_dir / "audit_crops" / "manifest.json"
+    if schema == "figure-agent.critique.v1.17" and not crop_manifest.exists():
+        crop_manifest.parent.mkdir(parents=True, exist_ok=True)
+        crop_path = crop_manifest.parent / "full_q1.png"
+        crop_path.write_bytes(b"crop:full_q1\n")
+        crop_manifest.write_text(
+            json.dumps(
+                {
+                    "schema": "figure-agent.audit-crop-manifest.v1",
+                    "fixture": name,
+                    "render_path": f"build/{name}.png",
+                    "required_crop_ids": ["full_q1"],
+                    "crops": [
+                        {
+                            "id": "full_q1",
+                            "kind": "zoom_crop",
+                            "path": "build/audit_crops/full_q1.png",
+                            "source": "full_render",
+                            "source_path": f"build/{name}.png",
+                            "bbox_px": [0, 0, 10, 10],
+                            "sha256": file_sha256(crop_path),
+                        }
+                    ],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    crop_audit_log_yaml = ""
+    if crop_manifest.exists():
+        crop_audit_log_yaml = (
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    observed_objects: [Panel overview, label group]\n"
+            "    local_relationship: Crop labels remain separated from nearby boundaries "
+            "and marks.\n"
+            "    candidate_refs: []\n"
+            "    rationale: full crop inspected with no defect\n"
+            "    unintended_visible_anomaly: none\n"
+            "    anomaly_rationale: no unintended artifact is visible in this crop\n"
+            "    anomaly_link: ''\n"
+        )
+    top_tier_yaml = "top_tier_audit:\n" + "".join(
+        (
+            f"  {slot}:\n"
+            "    verdict: pass\n"
+            f"    finding: {slot} is adequate\n"
+            "    concrete_fix: accept_simplification\n"
+            "    blocks_high_impact: false\n"
+        )
+        for slot in (
+            "first_glance_message",
+            "target_journal_fit",
+            "novelty_claim_support",
+            "figure_caption_coupling",
+            "visual_economy",
+            "cross_panel_semantic_grammar",
+            "reader_misinterpretation_risk",
+            "reduction_print_readability",
+            "accessibility_color_robustness",
+            "aesthetic_coherence",
+        )
+    )
+    aesthetic_antipattern_yaml = "aesthetic_antipattern_audit:\n" + "".join(
+        (
+            f"  - id: {anti_pattern_id}\n"
+            "    verdict: absent\n"
+            "    severity: NIT\n"
+            "    route: none\n"
+            f"    evidence: {anti_pattern_id} absent in current crop evidence\n"
+            f"    rationale: {anti_pattern_id} is not visible in the current artifact\n"
+            "    linked_evidence: [top_tier_audit.aesthetic_coherence]\n"
+        )
+        for anti_pattern_id in AESTHETIC_ANTIPATTERN_IDS
+    )
     generator_version = generator_version or file_sha256(
         REPO_ROOT / "scripts" / "critique_brief.py"
     )
+    if rubric_version is None:
+        if schema == "figure-agent.critique.v1.17":
+            rubric_version = CRITIQUE_RUBRIC_VERSION_V1_17
+        elif schema == "figure-agent.critique.v1.14":
+            rubric_version = CRITIQUE_RUBRIC_VERSION_V1_14
+        else:
+            rubric_version = CRITIQUE_RUBRIC_VERSION
     critique_input_hash = critique_input_hash or _critique_input_hash(fig_dir, name)
     (fig_dir / "critique.md").write_text(
         "---\n"
@@ -242,7 +369,7 @@ def _write_hashed_critique(
         "    verdict: pass\n"
         "    confidence: high\n"
         "    rationale: polish is adequate\n"
-        "    evidence: render\n"
+        "    evidence: print-scale audit from print_178mm.png\n"
         "    blocking_items: []\n"
         "    recommended_action: none\n"
         "  reference_fidelity:\n"
@@ -256,9 +383,93 @@ def _write_hashed_critique(
         "    verdict: pass\n"
         "    confidence: high\n"
         "    rationale: all applicable quality axes pass\n"
-        "    evidence: quality axis summary\n"
+        "    evidence: publication readiness includes print-scale evidence from print_178mm.png\n"
         "    blocking_items: []\n"
         "    recommended_action: none\n"
+        f"{top_tier_yaml}"
+        "micro_defects: []\n"
+        f"{crop_audit_log_yaml}"
+        f"{aesthetic_antipattern_yaml}"
+        "weakest_panel_coherence:\n"
+        "  panel_id: none\n"
+        "  subregion_id: none\n"
+        "  weakness_type: none\n"
+        "  route: none\n"
+        "  evidence: current artifact crops show no weakest panel mismatch\n"
+        "  rationale: all panels are balanced in the current artifact\n"
+        "  linked_evidence: []\n"
+        "reference_learning_accountability:\n"
+        "  learned_principle: not_applicable because no reference learning pack is declared\n"
+        "  rejected_copy_target: not_applicable because no reference topology was copied\n"
+        "  overcopying: absent\n"
+        "  underlearning: absent\n"
+        "  route: none\n"
+        "  evidence: current artifact was checked against the available briefing context\n"
+        "  rationale: no reference misuse is visible in the current artifact\n"
+        "  linked_evidence: []\n"
+        "editorial_art_direction:\n"
+        "  hero_focus:\n"
+        "    verdict: pass\n"
+        "    evidence: hero focus evidence\n"
+        "    rationale: hero focus is clear\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  narrative_choreography:\n"
+        "    verdict: pass\n"
+        "    evidence: narrative evidence\n"
+        "    rationale: narrative flow is clear\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  illustration_readiness:\n"
+        "    verdict: pass\n"
+        "    evidence: illustration evidence\n"
+        "    rationale: illustration is ready\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  abstraction_consistency:\n"
+        "    verdict: pass\n"
+        "    evidence: abstraction evidence\n"
+        "    rationale: abstraction is consistent\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  reference_class_fit:\n"
+        "    verdict: pass\n"
+        "    evidence: reference evidence\n"
+        "    rationale: reference class fits\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  visual_identity:\n"
+        "    verdict: pass\n"
+        "    evidence: visual identity evidence\n"
+        "    rationale: visual identity is coherent\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  claim_payload_fit:\n"
+        "    verdict: pass\n"
+        "    evidence: claim payload evidence\n"
+        "    rationale: claim payload fits\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  aesthetic_risk:\n"
+        "    verdict: pass\n"
+        "    evidence: aesthetic risk evidence\n"
+        "    rationale: aesthetic risk is controlled\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  tikz_vs_svg_polish_trigger:\n"
+        "    verdict: pass\n"
+        "    evidence: route evidence\n"
+        "    rationale: source-level route remains appropriate\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "    recommended_path: continue_tikz\n"
+        "    remaining_tikz_lever: source-level label spacing remains patchable\n"
+        "  human_art_direction_gate:\n"
+        "    verdict: pass\n"
+        "    evidence: human gate evidence\n"
+        "    rationale: human gate is not active\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
         "panels: []\n"
         "findings: []\n"
         "---\n"
@@ -325,7 +536,7 @@ def test_hash_fresh_critique_becomes_stale_when_visual_clash_report_changes(
         '{"fixture":"ref_fig","render_pdf":"build/ref_fig.pdf","candidates":[],"total":0}\n',
         encoding="utf-8",
     )
-    _write_hashed_critique(fig_dir, "ref_fig", schema="figure-agent.critique.v1.7")
+    _write_hashed_critique(fig_dir, "ref_fig", schema="figure-agent.critique.v1.10")
 
     assert compute_critique_state(fig_dir, "ref_fig") == status_mod.CRITIQUE_FRESH
 
@@ -806,7 +1017,7 @@ def test_hash_metadata_marks_current_v1_4_critique_fresh(
     reference = fig_dir / "reference"
     reference.mkdir()
     (reference / "golden.png").write_bytes(b"\x89PNG")
-    _write_hashed_critique(fig_dir, name, schema="figure-agent.critique.v1.4")
+    _write_hashed_critique(fig_dir, name, schema="figure-agent.critique.v1.10")
 
     assert compute_critique_state(fig_dir, name) == "FRESH"
 
@@ -925,7 +1136,7 @@ def test_hash_metadata_rejects_v1_11_schema_without_aesthetic_intent_v2(
         fig_dir,
         name,
         rubric_version=CRITIQUE_RUBRIC_VERSION,
-        schema="figure-agent.critique.v1.11",
+        schema="figure-agent.critique.v1.14",
     )
 
     assert compute_critique_state(fig_dir, name) == "STALE"
@@ -969,7 +1180,7 @@ def test_hash_metadata_rejects_v1_10_rubric_for_aesthetic_intent_v2(
         fig_dir,
         name,
         rubric_version=CRITIQUE_RUBRIC_VERSION,
-        schema="figure-agent.critique.v1.11",
+        schema="figure-agent.critique.v1.14",
     )
 
     assert compute_critique_state(fig_dir, name) == "STALE"
@@ -2551,7 +2762,7 @@ def test_infer_stage_returns_audit_evidence_summary(tmp_path: Path) -> None:
     result = infer_stage(fig_dir)
 
     assert result["audit_evidence"]["evaluation_state"] == "missing_input"
-    assert result["audit_evidence"]["blocking_items"] == ["build/visual_clash.json"]
+    assert result["audit_evidence"]["blocking_items"] == ["build/undeclared_geometry.json"]
 
 
 def test_print_single_shows_audit_evidence_line(tmp_path: Path, capsys) -> None:
@@ -2572,7 +2783,7 @@ def test_print_single_shows_audit_evidence_line(tmp_path: Path, capsys) -> None:
     captured = capsys.readouterr()
 
     assert "Audit evidence: missing_input" in captured.out
-    assert "blocking=build/visual_clash.json" in captured.out
+    assert "blocking=build/undeclared_geometry.json" in captured.out
     assert "next=/fig_compile auditfig" in captured.out
 
 
@@ -2842,7 +3053,7 @@ def test_status_explanation_separates_stale_render_and_stale_critique(
     build.mkdir()
     build_pdf = build / "ref_fig.pdf"
     build_pdf.write_bytes(b"%PDF")
-    _write_hashed_critique(fig_dir, "ref_fig", schema="figure-agent.critique.v1.8")
+    _write_hashed_critique(fig_dir, "ref_fig", schema="figure-agent.critique.v1.10")
     tex.write_text("% tikz changed after critique\n", encoding="utf-8")
 
     old_time = time.time() - 100
@@ -2868,7 +3079,7 @@ def test_status_explanation_separates_tracked_golden_and_stale_critique(
     (fig_dir / "reference").mkdir()
     (fig_dir / "reference" / "ref.png").write_bytes(b"\x89PNG")
     _make_spec(fig_dir, reference_image="reference/ref.png", accepted=True)
-    _write_hashed_critique(fig_dir, "goldenfig", schema="figure-agent.critique.v1.8")
+    _write_hashed_critique(fig_dir, "goldenfig", schema="figure-agent.critique.v1.10")
     (fig_dir / "build" / "visual_clash.json").write_text(
         '{"fixture":"goldenfig","render_pdf":"build/goldenfig.pdf",'
         '"candidates":[{"id":"VC001"}],"total":1}\n',
