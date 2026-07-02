@@ -112,6 +112,26 @@ After this cleanup, the PDF rendered-label contract has no missing labels. The
 layout-drift checker still fails strict mode on real comparable drift, which is
 the intended remaining blocker.
 
+## Re-baseline Pass
+
+The old `reference/codex_gen_overview_v1.png` target was an imagegen-era visual
+target that no longer represented the accepted fig1 TeX render. Re-aligning the
+current TeX layout back to that old reference would undo later figure polish, so
+the fixture now uses a current-render reference baseline:
+
+- `reference_image` now points to
+  `reference/current_render_baseline_2026-07-03.png`.
+- The new reference was copied from the current compiled
+  `build/fig1_overview_v2_pair_001_vault.png`; the old reference file remains
+  in `reference/` for provenance.
+- `coordinate_hints.yaml` was regenerated from the new reference. Extraction
+  produced 188 OCR text labels, 9 palette colors, and 795 shape components;
+  `structural_regions` remain unavailable.
+- Strict layout drift now exits `0`. Previously drifted labels such as
+  `localized traps`, `Debye`, `Coulomb`, and `repulsion` now report `OK`.
+- Some labels still report `uncovered_ref`; those are OCR/reference coverage
+  limitations and do not fail strict mode.
+
 ## Acceptance Status
 
 - [x] Identified the only current required-label fixture.
@@ -129,8 +149,10 @@ the intended remaining blocker.
 - [x] Normalize decorated/split token forms for layout-drift matching.
 - [x] Specialize remaining ambiguous formula/single-token labels before
       expanding strict publication-blocking policy.
-- [ ] Decide whether the remaining comparable drift requires layout edits or a
+- [x] Decide whether the remaining comparable drift requires layout edits or a
       deliberate reference re-baseline.
+- [x] Re-baseline layout drift against the current fig1 render without changing
+      accepted/golden publication state.
 
 ## Verification
 
@@ -140,8 +162,11 @@ the intended remaining blocker.
 - `rg -n "golden_contract:|required_labels:" plugins/figure-agent/examples -g spec.yaml`
   -> only `fig1_overview_v2_pair_001_vault/spec.yaml`
 - `uv run python3 scripts/checks/check_layout_drift.py fig1_overview_v2_pair_001_vault --strict`
-  -> exits `1` with real strict findings, including `localized traps`,
-     `Debye`, `g(Et)`, `Coulomb`, and `repulsion` drift warnings
+  -> exits `0` after re-baseline; comparable labels report `OK`, while OCR
+     coverage gaps remain `SKIP ... uncovered_ref`
+- `./bin/fig-agent helper reference_extract.py fig1_overview_v2_pair_001_vault --rebuild`
+  -> `OK: extracted 188 text labels, 9 palette colors (795 shape components),
+     structural_regions: unavailable`
 - `missing_pdf_labels(...)` over the rendered fig1 PDF and
   `golden_contract.required_labels`
   -> `[]`
