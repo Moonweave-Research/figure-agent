@@ -1,0 +1,76 @@
+{
+    "schema": "figure-agent.release-decision-packet.v1",
+    "packet_kind": "force_golden_decision_packet",
+    "fixture": "fig1_overview_v2_pair_001_vault",
+    "queue_run_id": "wave-c-target-selection-review-2026-06-30",
+    "source_human_decision_record": "docs/decision-records/2026-06-30-wave-c/fig1_overview_v2_pair_001_vault.json",
+    "boundary": "force_golden_required",
+    "mutation_boundary": "no_source_mutation",
+    "required_actor": "release_operator",
+    "purpose": "Prepare a current-build versus tracked-golden comparison packet before any protected golden or release-state mutation is considered.",
+    "queue_contract": {
+        "mode": "review",
+        "expected_packet_kind": "force_golden_decision_packet",
+        "expected_boundary": "force_golden_required",
+        "blocked_until": "explicit release-operator approval after visual dogfood comparison",
+        "safe_default": "defer_for_visual_dogfood"
+    },
+    "comparison_refs": {
+        "current_generated_export": "examples/fig1_overview_v2_pair_001_vault/exports/fig1_overview_v2_pair_001_vault.svg",
+        "tracked_golden_baseline": "examples/fig1_overview_v2_pair_001_vault/exports/fig1_overview_v2_pair_001_vault.pdf",
+        "review_context": [
+            "docs/milestones/2026-06-30-wave-c-dogfood-target-selection.md",
+            "docs/milestones/2026-06-30-wave12-human-gate-decision-packets.md"
+        ]
+    },
+    "human_question": "Should the release operator approve, reject, or defer the protected tracked-golden baseline change after reviewing a current-build versus tracked-golden comparison?",
+    "agent_recommendation": "Defer protected golden or release-state mutation until the comparison packet has been reviewed; do not run force-golden from this Wave C packet.",
+    "recommended_choice_id": "defer_for_visual_dogfood",
+    "choices": [
+        {
+            "id": "approve_force_golden_roll_forward",
+            "label": "Approve protected golden roll-forward",
+            "requires_explicit_authority": true,
+            "follow_up": {
+                "command": "fig-agent export fig1_overview_v2_pair_001_vault --force-golden",
+                "after_decision": "rerun /fig_queue --mode review --goal wave-c-target-selection"
+            },
+            "risk": "Mutates tracked golden export artifacts and changes the release baseline."
+        },
+        {
+            "id": "reject_and_keep_current_golden",
+            "label": "Reject and keep tracked golden baseline",
+            "requires_explicit_authority": true,
+            "follow_up": {
+                "after_decision": "record rejection rationale, then rerun /fig_queue --mode review --goal wave-c-target-selection"
+            },
+            "risk": "Leaves the current generated export divergent from the tracked golden baseline."
+        },
+        {
+            "id": "defer_for_visual_dogfood",
+            "label": "Defer for comparison dogfood",
+            "requires_explicit_authority": false,
+            "follow_up": {
+                "after_decision": "prepare or inspect the comparison view; do not mutate source, accepted state, release state, or tracked golden artifacts"
+            },
+            "risk": "Release remains blocked at the protected tracked-golden boundary."
+        }
+    ],
+    "disallowed_actions": [
+        "do not edit figure source files",
+        "do not edit accepted state",
+        "do not edit release state",
+        "do not edit generated exports or tracked golden artifacts",
+        "do not run --force-golden from this packet"
+    ],
+    "evidence_refs": [
+        "human_decision:selected_as_policy_golden_benchmark_anchor",
+        "decision_kind:defer_for_dogfood",
+        "boundary:force_golden_required",
+        "mutation_boundary:no_source_mutation"
+    ],
+    "follow_up": {
+        "implementation_slice": "Prepare a benchmark comparison packet before any force-golden or release-state mutation is considered.",
+        "after_decision": "rerun /fig_queue --mode review --goal wave-c-target-selection"
+    }
+}

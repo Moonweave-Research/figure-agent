@@ -74,6 +74,47 @@ def test_build_next_normalizes_compile_to_public_fig_agent_command(tmp_path: Pat
     assert payload["next"]["writes"] is True
 
 
+def test_build_next_suppresses_release_state_mutation_commands(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _workspace_fixture(workspace)
+    before = _tree(workspace)
+
+    def fake_infer_stage(_fixture: Path) -> dict[str, object]:
+        return {
+            "next_action_summary": {
+                "schema": "figure-agent.next-action-summary.v1",
+                "action": "closeout_accept",
+                "safe_command": (
+                    "fig-agent closeout-accept next_demo --decision accept "
+                    "--reviewer human --rationale ok --accept-golden"
+                ),
+                "reason": "release gate is ready for manual acceptance",
+                "requires_human": False,
+                "decision_boundary": {"blocks_progress": False},
+            }
+        }
+
+    monkeypatch.setattr(agent_next.status, "infer_stage", fake_infer_stage)
+
+    payload = agent_next.build_next("next_demo", plugin_root=PLUGIN_ROOT, workspace_root=workspace)
+
+    assert payload["success"] is True
+    assert payload["next"] == {
+        "command": None,
+        "reason": (
+            "accepted/golden/publication state mutation requires explicit "
+            "manual release handling; inspect status before proceeding."
+        ),
+        "action": "manual_release_state_gate",
+        "requires_human": True,
+        "writes": False,
+    }
+    assert _tree(workspace) == before
+
+
 def test_build_next_missing_fixture_returns_workspace_diagnostic(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     (workspace / "examples").mkdir(parents=True)

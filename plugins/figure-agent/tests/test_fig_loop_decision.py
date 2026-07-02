@@ -234,3 +234,49 @@ def test_loop_decision_verify_only_complete_fallthrough(tmp_path: Path) -> None:
         "active_patch_target": None,
         "human_gate_status": "not_requested",
     }
+
+
+def test_terminal_stops_superset_includes_reroutes():
+    from fig_loop_decision import PLUMBING_STOPS, TERMINAL_STOPS
+
+    assert TERMINAL_STOPS == frozenset(
+        {
+            "no_actionable_findings",
+            "verify_only_complete",
+            "human_gate_required",
+            "basin_detected",
+        }
+    )
+    assert PLUMBING_STOPS == frozenset(
+        {
+            "status_action_required",
+            "reference_input_missing",
+            "stale_adjudication",
+            "invalid_adjudication",
+            "missing_adjudication",
+            "ambiguous_patch_selection",
+            "patch_target_recommended",
+            "active_subregion_recommended",
+        }
+    )
+
+
+def test_trigger_sets_partition_all_eleven_reasons():
+    from fig_loop_decision import PLUMBING_STOPS, TERMINAL_STOPS
+
+    all_reasons = {
+        "reference_input_missing",
+        "status_action_required",
+        "stale_adjudication",
+        "invalid_adjudication",
+        "human_gate_required",
+        "ambiguous_patch_selection",
+        "patch_target_recommended",
+        "missing_adjudication",
+        "active_subregion_recommended",
+        "no_actionable_findings",
+        "verify_only_complete",
+        "basin_detected",
+    }
+    assert TERMINAL_STOPS | PLUMBING_STOPS == all_reasons
+    assert TERMINAL_STOPS.isdisjoint(PLUMBING_STOPS)

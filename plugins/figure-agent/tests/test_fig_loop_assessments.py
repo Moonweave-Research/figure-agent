@@ -77,7 +77,7 @@ def test_journal_grade_assessment_marks_hash_mismatch_stale(tmp_path: Path) -> N
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.2",
+            "schema": "figure-agent.critique.v1.10",
             "critique_input_hash": "sha256:" + "a" * 64,
             "journal_grade_assessment": {
                 "schema": JOURNAL_ASSESSMENT_SCHEMA,
@@ -107,7 +107,7 @@ def test_journal_grade_assessment_adds_score_policy_for_complete_gateable_score(
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.3",
+            "schema": "figure-agent.critique.v1.10",
             "critique_input_hash": critique_hash,
             "journal_grade_assessment": {
                 "schema": JOURNAL_ASSESSMENT_SCHEMA,
@@ -139,7 +139,7 @@ def test_journal_grade_assessment_surfaces_reference_calibration_summary(
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.9",
+            "schema": "figure-agent.critique.v1.10",
             "critique_input_hash": critique_hash,
             "journal_grade_assessment": {
                 "schema": JOURNAL_ASSESSMENT_SCHEMA,
@@ -184,7 +184,7 @@ def test_journal_grade_assessment_does_not_surface_reference_calibration_for_leg
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.8",
+            "schema": "figure-agent.critique.v1.10",
             "critique_input_hash": critique_hash,
             "journal_grade_assessment": {
                 "schema": JOURNAL_ASSESSMENT_SCHEMA,
@@ -206,10 +206,9 @@ def test_journal_grade_assessment_does_not_surface_reference_calibration_for_leg
         },
     )
 
-    assessment = journal_grade_assessment(example_dir, "FRESH")
+    assessment = journal_grade_assessment(example_dir, "STALE")
 
-    assert assessment is not None
-    assert "reference_calibration_summary" not in assessment
+    assert assessment is None
 
 
 def test_journal_grade_assessment_accepts_v1_4_quality_axes_schema(
@@ -221,7 +220,7 @@ def test_journal_grade_assessment_accepts_v1_4_quality_axes_schema(
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.4",
+            "schema": "figure-agent.critique.v1.10",
             "critique_input_hash": critique_hash,
             "journal_grade_assessment": {
                 "schema": JOURNAL_ASSESSMENT_SCHEMA,
@@ -251,7 +250,7 @@ def test_journal_grade_assessment_accepts_v1_5_editorial_schema(
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.5",
+            "schema": "figure-agent.critique.v1.10",
             "critique_input_hash": critique_hash,
             "journal_grade_assessment": {
                 "schema": JOURNAL_ASSESSMENT_SCHEMA,
@@ -281,7 +280,7 @@ def test_journal_grade_assessment_accepts_v1_7_visual_clash_schema(
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.7",
+            "schema": "figure-agent.critique.v1.10",
             "critique_input_hash": critique_hash,
             "journal_grade_assessment": {
                 "schema": JOURNAL_ASSESSMENT_SCHEMA,
@@ -308,7 +307,7 @@ def test_crop_audit_summary_surfaces_uncertain_v1_8_crops(tmp_path: Path) -> Non
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.8",
+            "schema": "figure-agent.critique.v1.10",
             "crop_audit_log": [
                 {
                     "crop_id": "full_q1",
@@ -343,12 +342,12 @@ def test_crop_audit_summary_ignores_legacy_v1_7(tmp_path: Path) -> None:
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.7",
+            "schema": "figure-agent.critique.v1.10",
             "crop_audit_log": [{"crop_id": "full_q1", "verdict": "uncertain"}],
         },
     )
 
-    assert crop_audit_summary(example_dir, "FRESH") is None
+    assert crop_audit_summary(example_dir, "STALE") is None
 
 
 def test_latest_v1_13_schema_surfaces_all_loop_assessment_summaries(
@@ -360,7 +359,7 @@ def test_latest_v1_13_schema_surfaces_all_loop_assessment_summaries(
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.13",
+            "schema": "figure-agent.critique.v1.14",
             "critique_input_hash": critique_hash,
             "journal_grade_assessment": {
                 "schema": JOURNAL_ASSESSMENT_SCHEMA,
@@ -463,7 +462,7 @@ def test_aesthetic_lever_summary_surfaces_v1_11_next_bottleneck(tmp_path: Path) 
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.11",
+            "schema": "figure-agent.critique.v1.14",
             "aesthetic_lever_audit": [
                 {
                     "lever_id": "maturity_restraint",
@@ -577,7 +576,7 @@ def test_aesthetic_lever_summary_prioritizes_needs_human_over_fail(
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.11",
+            "schema": "figure-agent.critique.v1.14",
             "aesthetic_lever_audit": [
                 {
                     "lever_id": "component_detail",
@@ -613,7 +612,7 @@ def test_aesthetic_lever_summary_marks_v1_11_stale_without_silent_pass(
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.11",
+            "schema": "figure-agent.critique.v1.14",
             "aesthetic_lever_audit": [
                 {
                     "lever_id": "maturity_restraint",
@@ -657,7 +656,7 @@ def test_top_tier_audit_summary_counts_valid_slots_and_worst_verdict(tmp_path: P
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.3",
+            "schema": "figure-agent.critique.v1.10",
             "top_tier_audit": {
                 "target_journal_fit": {
                     "verdict": "weak",
@@ -705,7 +704,7 @@ def test_top_tier_audit_summary_accepts_v1_4_schema(tmp_path: Path) -> None:
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.4",
+            "schema": "figure-agent.critique.v1.10",
             "top_tier_audit": {
                 "reduction_print_readability": {
                     "verdict": "needs_human",
@@ -728,7 +727,7 @@ def test_top_tier_audit_summary_accepts_v1_5_editorial_schema(tmp_path: Path) ->
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.5",
+            "schema": "figure-agent.critique.v1.10",
             "top_tier_audit": {
                 "aesthetic_coherence": {
                     "verdict": "weak",
@@ -751,7 +750,7 @@ def test_top_tier_audit_summary_accepts_v1_7_visual_clash_schema(tmp_path: Path)
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.7",
+            "schema": "figure-agent.critique.v1.10",
             "top_tier_audit": {
                 "reader_misinterpretation_risk": {
                     "verdict": "fail",
@@ -774,12 +773,12 @@ def test_top_tier_audit_summary_ignores_legacy_or_empty_audit(tmp_path: Path) ->
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.2",
+            "schema": "figure-agent.critique.v1.10",
             "top_tier_audit": {"target_journal_fit": {"verdict": "fail"}},
         },
     )
 
-    assert top_tier_audit_summary(example_dir, "FRESH") is None
+    assert top_tier_audit_summary(example_dir, "STALE") is None
 
 
 def test_editorial_art_direction_summary_extracts_polish_trigger(
@@ -790,7 +789,7 @@ def test_editorial_art_direction_summary_extracts_polish_trigger(
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.5",
+            "schema": "figure-agent.critique.v1.10",
             "editorial_art_direction": _editorial_art_direction(
                 trigger_path="ready_for_svg_polish",
                 overrides={
@@ -834,7 +833,7 @@ def test_editorial_art_direction_summary_accepts_v1_7_visual_clash_schema(
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.7",
+            "schema": "figure-agent.critique.v1.10",
             "editorial_art_direction": _editorial_art_direction(
                 trigger_path="ready_for_svg_polish",
                 overrides={"human_art_direction_gate": {"verdict": "needs_human"}},
@@ -857,17 +856,17 @@ def test_editorial_art_direction_summary_ignores_legacy_or_stale(
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.4",
+            "schema": "figure-agent.critique.v1.10",
             "editorial_art_direction": _editorial_art_direction(),
         },
     )
 
-    assert editorial_art_direction_summary(example_dir, "FRESH") is None
+    assert editorial_art_direction_summary(example_dir, "STALE") is None
 
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.5",
+            "schema": "figure-agent.critique.v1.10",
             "editorial_art_direction": _editorial_art_direction(),
         },
     )

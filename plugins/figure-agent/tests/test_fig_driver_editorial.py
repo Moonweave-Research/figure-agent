@@ -115,6 +115,10 @@ def test_svg_polish_readiness_allows_ready_path() -> None:
             "polish_trigger_verdict": "pass",
             "polish_recommended_path": "ready_for_svg_polish",
             "polish_route_detail": "only optical vector edge cleanup remains",
+            "positive_evidence": [
+                "polish_trigger_verdict=pass",
+                "polish_route_detail=only optical vector edge cleanup remains",
+            ],
         }
     )
 
@@ -123,7 +127,28 @@ def test_svg_polish_readiness_allows_ready_path() -> None:
     assert readiness["recommended_path"] == "ready_for_svg_polish"
     assert readiness["next_action"] == "start_svg_polish_recipe"
     assert readiness["route_detail"] == "only optical vector edge cleanup remains"
+    assert readiness["positive_evidence"] == [
+        "polish_trigger_verdict=pass",
+        "polish_route_detail=only optical vector edge cleanup remains",
+    ]
     assert readiness["blocking_items"] == []
+
+
+def test_svg_polish_readiness_blocks_ready_path_without_positive_evidence() -> None:
+    readiness = svg_polish_readiness(
+        {
+            "worst_verdict": "pass",
+            "polish_trigger_verdict": "pass",
+            "polish_recommended_path": "ready_for_svg_polish",
+            "polish_route_detail": "only optical vector edge cleanup remains",
+        }
+    )
+
+    assert readiness is not None
+    assert readiness["can_start_svg_polish"] is False
+    assert readiness["recommended_path"] == "ready_for_svg_polish"
+    assert readiness["next_action"] == "collect_svg_polish_evidence"
+    assert readiness["blocking_items"][0]["id"] == "positive_svg_polish_evidence_missing"
 
 
 def test_svg_polish_readiness_routes_semantic_backport_and_human_gate() -> None:
@@ -159,7 +184,8 @@ def test_svg_polish_readiness_ignores_malformed_or_unknown_summary() -> None:
     assert svg_polish_readiness_from_checkpoint(
         {
             "editorial_art_direction_summary": {
-                "polish_recommended_path": "ready_for_svg_polish"
+                "polish_recommended_path": "ready_for_svg_polish",
+                "positive_evidence": ["ready route verified"],
             }
         }
     )["can_start_svg_polish"] is True
@@ -300,6 +326,7 @@ def test_svg_polish_readiness_from_checkpoint_preserves_clean_loop_editorial_fal
                 "polish_trigger_verdict": "pass",
                 "polish_recommended_path": "ready_for_svg_polish",
                 "polish_route_detail": "only optical vector edge cleanup remains",
+                "positive_evidence": ["ready route verified"],
             },
         }
     )
@@ -345,6 +372,7 @@ def test_svg_polish_gate_normalizes_ready_checkpoint() -> None:
                 "polish_trigger_verdict": "pass",
                 "polish_recommended_path": "ready_for_svg_polish",
                 "polish_route_detail": "only optical vector cleanup remains",
+                "positive_evidence": ["ready route verified"],
             },
         }
     )
@@ -355,6 +383,7 @@ def test_svg_polish_gate_normalizes_ready_checkpoint() -> None:
     assert gate["can_start_svg_polish"] is True
     assert gate["next_action"] == "start_svg_polish_recipe"
     assert gate["reason"] == "only optical vector cleanup remains"
+    assert gate["positive_evidence"] == ["ready route verified"]
     assert gate["required_inputs"] == [
         "critique_fresh",
         "loop_checkpoint_current",

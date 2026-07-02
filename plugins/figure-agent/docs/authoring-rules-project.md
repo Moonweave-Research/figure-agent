@@ -32,3 +32,8 @@ figure because the convention was previously locked to the fig1 pilot catalog.
 
 Add a rule here only when a convention is genuinely cross-figure and source-anchored
 (an iteration comment, a critique adjudication, or a hand-patch commit).
+
+New fixtures must annotate each panel region with a canonical `% Panel X` comment line
+(matching `^\s*%\s*Panel\s+<id>`); the candidate loop maps a detector source_line to its
+enclosing panel via these markers, and without them defect candidates are refused as
+`unknown_panel`.

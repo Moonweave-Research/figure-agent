@@ -23,6 +23,7 @@ select = ["E", "F", "I", "UP"]
 testpaths = ["tests"]
 markers = [
     "render: requires TeX/render/OCR system tools",
+    "quarantine: covers inert-on-real-figure surfaces such as retired SVG-semantic history and the composition stack. Still runs by default; the marker only lets it be filtered.",
 ]
 
 [tool.setuptools]

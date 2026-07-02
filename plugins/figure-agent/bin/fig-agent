@@ -29,7 +29,6 @@ SCRIPT_IMPORT_DIRS = (
     SCRIPTS_DIR / "quality",
     SCRIPTS_DIR / "loop",
     SCRIPTS_DIR / "driver",
-    SCRIPTS_DIR / "svg_polish",
 )
 for script_dir in reversed(SCRIPT_IMPORT_DIRS):
     sys.path.insert(0, str(script_dir))
@@ -40,7 +39,7 @@ import runtime_paths  # noqa: E402
 
 def _missing_project_python_modules() -> list[str]:
     missing = []
-    for module_name in ("yaml", "PIL"):
+    for module_name in ("yaml", "PIL", "pdfplumber"):
         try:
             importlib.import_module(module_name)
         except ImportError:
@@ -76,7 +75,19 @@ def _maybe_reexec_with_uv_project() -> None:
 
 
 def _paths() -> runtime_paths.RuntimePaths:
-    return runtime_paths.resolve_runtime_paths(plugin_root=PLUGIN_ROOT)
+    explicit_workspace = os.environ.get("FIGURE_AGENT_WORKSPACE") or os.environ.get(
+        "CLAUDE_PROJECT_DIR"
+    )
+    workspace_root = None
+    if (
+        explicit_workspace is None
+        and runtime_paths.plugin_root_kind(PLUGIN_ROOT) == "source_tree"
+    ):
+        workspace_root = PLUGIN_ROOT
+    return runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace_root,
+    )
 
 
 def _with_runtime_env() -> dict[str, str]:
@@ -143,7 +154,7 @@ def _dependency_diagnostics() -> dict:
     tex_engine = os.environ.get("LATEX_ENGINE") or "lualatex"
     binaries = ("uv", "python3", tex_engine, "pdftocairo", "rsvg-convert")
     missing = [name for name in binaries if shutil.which(name) is None]
-    py_modules = ("yaml", "PIL")
+    py_modules = ("yaml", "PIL", "pdfplumber")
     for module_name in py_modules:
         try:
             importlib.import_module(module_name)
@@ -243,7 +254,6 @@ def _release_gate_helper(argv: list[str]) -> int:
 HELPER_SCRIPTS = {
     "check_collisions.py",
     "check_golden_artifacts.py",
-    "check_layout_drift.py",
     "check_text_boundary_clash.py",
     "check_visual_clash.py",
     "audit_evidence_graph.py",
@@ -262,10 +272,6 @@ HELPER_SCRIPTS = {
     "release_gate.py",
     "spec_bbox_helper.py",
     "subregion_iteration_log.py",
-    "svg_polish_executor.py",
-    "svg_polish_handoff.py",
-    "svg_polish_recipe.py",
-    "svg_semantic_diff.py",
     "tex_coordinate_shift.py",
     "text_boundary_spec_helper.py",
 }
@@ -287,7 +293,10 @@ def _helper(argv: list[str]) -> int:
 def _closeout(argv: list[str]) -> int:
     import fig_closeout
 
-    return fig_closeout.main(argv)
+    has_repo_root = any(arg == "--repo-root" or arg.startswith("--repo-root=") for arg in argv)
+    if has_repo_root:
+        return fig_closeout.main(argv)
+    return fig_closeout.main([*argv, "--repo-root", str(_paths().workspace_root)])
 
 
 def _text_boundary(argv: list[str]) -> int:
@@ -301,38 +310,6 @@ def _text_boundary(argv: list[str]) -> int:
     if args.write:
         command.append("--write")
     return _run(command, cwd=_paths().workspace_root)
-
-
-def _svg_polish_exec(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="fig-agent svg-polish-exec")
-    parser.add_argument("name")
-    parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--write", action="store_true")
-    args = parser.parse_args(argv)
-    name = _validated_fixture_name(parser, args.name)
-    command = [
-        sys.executable,
-        str(_script_path("svg_polish_executor.py")),
-        str(_paths().examples_dir / name),
-    ]
-    if args.dry_run:
-        command.append("--dry-run")
-    if args.write:
-        command.append("--write")
-    return _run(command, cwd=_paths().workspace_root)
-
-
-def _svg_polish_delta(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="fig-agent svg-polish-delta")
-    parser.add_argument("name")
-    args = parser.parse_args(argv)
-    name = _validated_fixture_name(parser, args.name)
-    script = (
-        "from pathlib import Path; "
-        "from svg_polish_delta import build_svg_polish_delta_pack; "
-        f"build_svg_polish_delta_pack(Path('examples') / {name!r}, base_dir=Path('.'))"
-    )
-    return _run([sys.executable, "-c", script], cwd=_paths().workspace_root)
 
 
 def _quality_map(argv: list[str]) -> int:
@@ -982,6 +959,27 @@ def _apply_candidate(argv: list[str]) -> int:
     return 0 if payload.get("status") == "applied" else 1
 
 
+def _attest(argv: list[str]) -> int:
+    import human_attestation
+
+    parser = argparse.ArgumentParser(prog="fig-agent attest")
+    parser.add_argument("name")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    return human_attestation.main(["create", name])
+
+
+def _plan_check(argv: list[str]) -> int:
+    import check_plan_consistency
+
+    normalized = list(argv)
+    if "--examples-dir" not in normalized:
+        normalized.extend(["--examples-dir", str(_paths().workspace_root / "examples")])
+    if "--map" not in normalized:
+        normalized.extend(["--map", str(_paths().plugin_root / "docs" / "paper_figure_map.yaml")])
+    return check_plan_consistency.main(normalized)
+
+
 def _evidence_sync(argv: list[str]) -> int:
     import evidence_sync
 
@@ -1110,6 +1108,225 @@ def _verify_plan(argv: list[str]) -> int:
     return 0
 
 
+def _design_dogfood(argv: list[str]) -> int:
+    import design_dogfood_packet
+    import fig_driver
+    import fig_queue
+
+    parser = argparse.ArgumentParser(prog="fig-agent design-dogfood")
+    parser.add_argument("name")
+    parser.add_argument("--mode", choices=list(fig_driver.MODES), default="review")
+    parser.add_argument("--goal", default="human-gated design dogfood")
+    parser.add_argument("--output")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    queue = fig_queue.build_queue(
+        repo_root=_paths().workspace_root,
+        mode=args.mode,
+        goal=args.goal,
+        fixtures=[name],
+    )
+    packet = design_dogfood_packet.build_design_dogfood_packet(
+        name,
+        queue=queue,
+        mode=args.mode,
+        goal=args.goal,
+    )
+    text = json.dumps(packet, indent=2, sort_keys=True) + "\n"
+    if args.output:
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(text, encoding="utf-8")
+    print(text, end="")
+    return 0
+
+
+def _bounded_tikz_refinement(argv: list[str]) -> int:
+    import bounded_tikz_refinement_packet
+    import fig_driver
+    import fig_queue
+    import style_benchmark_comparison
+    import style_benchmark_pack
+
+    parser = argparse.ArgumentParser(prog="fig-agent bounded-tikz-refinement")
+    parser.add_argument("name")
+    parser.add_argument("--mode", choices=list(fig_driver.MODES), default="review")
+    parser.add_argument("--goal", default="bounded TikZ refinement request")
+    parser.add_argument("--output")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    queue = fig_queue.build_queue(
+        repo_root=paths.workspace_root,
+        mode=args.mode,
+        goal=args.goal,
+        fixtures=[name],
+    )
+    rows = queue.get("rows")
+    queue_row = rows[0] if isinstance(rows, list) and rows else None
+    style_pack = style_benchmark_pack.load_pack(
+        name,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    try:
+        comparison = style_benchmark_comparison.load_comparison(
+            name,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+        )
+    except style_benchmark_comparison.StyleBenchmarkComparisonError as exc:
+        comparison = {"state": "missing" if str(exc) == "comparison_missing" else "invalid"}
+    packet = bounded_tikz_refinement_packet.build_bounded_tikz_refinement_packet(
+        name,
+        style_pack=style_pack,
+        comparison=comparison,
+        queue_row=queue_row,
+    )
+    text = json.dumps(packet, indent=2, sort_keys=True) + "\n"
+    if args.output:
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(text, encoding="utf-8")
+    print(text, end="")
+    return 0
+
+
+def _bounded_tikz_request_packet(
+    name: str,
+    *,
+    mode: str,
+    goal: str,
+) -> dict[str, object]:
+    import bounded_tikz_refinement_packet
+    import fig_queue
+    import style_benchmark_comparison
+    import style_benchmark_pack
+
+    paths = _paths()
+    queue = fig_queue.build_queue(
+        repo_root=paths.workspace_root,
+        mode=mode,
+        goal=goal,
+        fixtures=[name],
+    )
+    rows = queue.get("rows")
+    queue_row = rows[0] if isinstance(rows, list) and rows else None
+    style_pack = style_benchmark_pack.load_pack(
+        name,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    try:
+        comparison = style_benchmark_comparison.load_comparison(
+            name,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+        )
+    except style_benchmark_comparison.StyleBenchmarkComparisonError as exc:
+        comparison = {"state": "missing" if str(exc) == "comparison_missing" else "invalid"}
+    return bounded_tikz_refinement_packet.build_bounded_tikz_refinement_packet(
+        name,
+        style_pack=style_pack,
+        comparison=comparison,
+        queue_row=queue_row,
+    )
+
+
+def _bounded_tikz_candidate(argv: list[str]) -> int:
+    import bounded_tikz_candidate_packet
+    import fig_driver
+
+    parser = argparse.ArgumentParser(prog="fig-agent bounded-tikz-candidate")
+    parser.add_argument("name")
+    parser.add_argument("--mode", choices=list(fig_driver.MODES), default="review")
+    parser.add_argument("--goal", default="bounded TikZ candidate packet")
+    parser.add_argument("--output")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    request_packet = _bounded_tikz_request_packet(
+        name,
+        mode=args.mode,
+        goal=args.goal,
+    )
+    packet = bounded_tikz_candidate_packet.build_bounded_tikz_candidate_packet(
+        name,
+        workspace_root=_paths().workspace_root,
+        request_packet=request_packet,
+    )
+    text = json.dumps(packet, indent=2, sort_keys=True) + "\n"
+    if args.output:
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(text, encoding="utf-8")
+    print(text, end="")
+    return 0
+
+
+def _bounded_tikz_apply(argv: list[str]) -> int:
+    import bounded_tikz_candidate_apply
+    import bounded_tikz_candidate_packet
+    import fig_driver
+
+    parser = argparse.ArgumentParser(prog="fig-agent bounded-tikz-apply")
+    parser.add_argument("name")
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--dry-run", action="store_true")
+    mode.add_argument("--apply", action="store_true")
+    parser.add_argument("--authorization")
+    parser.add_argument("--mode", choices=list(fig_driver.MODES), default="review")
+    parser.add_argument("--goal", default="bounded TikZ candidate apply")
+    parser.add_argument("--output")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    request_packet = _bounded_tikz_request_packet(
+        name,
+        mode=args.mode,
+        goal=args.goal,
+    )
+    candidate_packet = bounded_tikz_candidate_packet.build_bounded_tikz_candidate_packet(
+        name,
+        workspace_root=paths.workspace_root,
+        request_packet=request_packet,
+    )
+    source_mutation_decision = None
+    if args.authorization:
+        try:
+            source_mutation_decision = json.loads(
+                Path(args.authorization).read_text(encoding="utf-8")
+            )
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"fig-agent bounded-tikz-apply: authorization_invalid:{exc}", file=sys.stderr)
+            return 1
+    try:
+        result = bounded_tikz_candidate_apply.apply_bounded_tikz_candidate(
+            name,
+            workspace_root=paths.workspace_root,
+            candidate_packet=candidate_packet,
+            source_mutation_decision=source_mutation_decision,
+            apply=args.apply,
+        )
+    except bounded_tikz_candidate_apply.BoundedTikzCandidateApplyError as exc:
+        print(f"fig-agent bounded-tikz-apply: {exc}", file=sys.stderr)
+        return 1
+    text = json.dumps(result, indent=2, sort_keys=True) + "\n"
+    if args.output:
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(text, encoding="utf-8")
+    print(text, end="")
+    return 0 if result.get("status") in {"ready", "applied"} else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         _maybe_reexec_with_uv_project()
@@ -1138,9 +1355,13 @@ def main(argv: list[str] | None = None) -> int:
     if command == "drive":
         return _script_main("fig_driver", rest)
     if command == "queue":
-        return _script_main("fig_queue", rest)
+        import fig_queue
+
+        return fig_queue.main(rest, repo_root=_paths().workspace_root)
     if command == "queue-run":
-        return _script_main("fig_queue_run", rest)
+        import fig_queue_run
+
+        return fig_queue_run.main(rest, repo_root=_paths().workspace_root)
     if command == "improve":
         return _script_main("fig_improve", rest)
     if command == "e2e-smoke":
@@ -1151,10 +1372,6 @@ def main(argv: list[str] | None = None) -> int:
         return _helper(rest)
     if command == "text-boundary":
         return _text_boundary(rest)
-    if command == "svg-polish-exec":
-        return _svg_polish_exec(rest)
-    if command == "svg-polish-delta":
-        return _svg_polish_delta(rest)
     if command == "quality-map":
         return _quality_map(rest)
     if command == "context-pack":
@@ -1207,6 +1424,10 @@ def main(argv: list[str] | None = None) -> int:
         return _accept_candidate(rest)
     if command == "apply-candidate":
         return _apply_candidate(rest)
+    if command == "attest":
+        return _attest(rest)
+    if command == "plan-check":
+        return _plan_check(rest)
     if command == "evidence-sync":
         return _evidence_sync(rest)
     if command == "closeout-ready":
@@ -1217,6 +1438,14 @@ def main(argv: list[str] | None = None) -> int:
         return _apply_plan(rest)
     if command == "verify-plan":
         return _verify_plan(rest)
+    if command == "design-dogfood":
+        return _design_dogfood(rest)
+    if command == "bounded-tikz-refinement":
+        return _bounded_tikz_refinement(rest)
+    if command == "bounded-tikz-candidate":
+        return _bounded_tikz_candidate(rest)
+    if command == "bounded-tikz-apply":
+        return _bounded_tikz_apply(rest)
     print(f"fig-agent: unknown command {command!r}", file=sys.stderr)
     return 2
 

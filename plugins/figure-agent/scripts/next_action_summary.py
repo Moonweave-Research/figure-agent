@@ -37,6 +37,7 @@ _HUMAN_BLOCKER_CODES = {
     "not_accepted",
     "publication_gate_required",
     "final_artifact_blocked",
+    "release_acceptance_decision_recorded",
 }
 _DEFAULT_FORBIDDEN_SCOPE = [
     "accepted/golden state without explicit human approval",
@@ -191,6 +192,8 @@ def _action_from_command(command: str | None) -> str | None:
         return ACTION_RUN_FIG_LOOP
     if command.startswith("/fig_export ") or "scripts/run_export.py" in command:
         return ACTION_RUN_EXPORT
+    if command.startswith("fig-agent closeout-accept "):
+        return ACTION_RELEASE_BLOCKED
     if "svg_polish" in command:
         return ACTION_POLISH_HANDOFF_STOP
     return None

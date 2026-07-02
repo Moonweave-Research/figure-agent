@@ -4,24 +4,28 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
 
 import bounded_coordinate_offset
+import bounded_text_width
 import candidate_contracts
 import candidate_families
+import critique_adjudication
+import critique_contract
 import figure_intent_model
 import fixture_identity
+import label_refit_derive
 import quality_defect_ledger
 import runtime_paths
+from check_visual_clash import extract_pdf_words_and_page
 from quality_manifest import file_sha256
 
 SCHEMA = "figure-agent.candidate-set.v1"
 ZERO_HASH = "sha256:" + "0" * 64
-COORDINATE_OFFSET_DEFECT_CLASSES = frozenset(
-    {"label_offset", "text_overlap", "whitespace_balance"}
-)
+COORDINATE_OFFSET_DEFECT_CLASSES = frozenset({"label_offset", "text_overlap", "whitespace_balance"})
 ACTIONABILITY_REFUSAL_CODES = frozenset(
     {
         "stale_detector_evidence",
@@ -104,15 +108,18 @@ def _label_offset_candidate(
     target: dict[str, str],
     source_hash: str,
     source_defect: dict[str, Any] | None = None,
+    edit_class: str = "label_offset",
+    variant_id: str = VARIANT_ID,
+    variant_dx_cm: float = 0.1,
 ) -> dict[str, Any]:
     candidate = {
         "id": candidate_id,
         "target": target,
-        "edit_class": "label_offset",
+        "edit_class": edit_class,
         "edit_family": EDIT_FAMILY,
         "family": FAMILY,
-        "variant_id": VARIANT_ID,
-        "variant": {"id": VARIANT_ID, "dx_cm": 0.1},
+        "variant_id": variant_id,
+        "variant": {"id": variant_id, "dx_cm": variant_dx_cm},
         "source_hash": source_hash,
         "affected_files": [source_rel.as_posix()],
         "selector": {
@@ -154,7 +161,7 @@ def _label_offset_candidate(
             "source_hash": source_hash,
             "source_path": source_rel.as_posix(),
             "start_line": line_number,
-            "variant_id": VARIANT_ID,
+            "variant_id": variant_id,
         }
     )
     return candidate
@@ -188,9 +195,7 @@ def _actionability_refusals(defect: dict[str, Any]) -> list[dict[str, str]]:
     )
     defect_id = str(defect.get("id") or "")
     return [
-        {"code": gap, "defect_id": defect_id}
-        for gap in gaps
-        if gap in ACTIONABILITY_REFUSAL_CODES
+        {"code": gap, "defect_id": defect_id} for gap in gaps if gap in ACTIONABILITY_REFUSAL_CODES
     ]
 
 
@@ -270,6 +275,106 @@ def _defect_sort_key(
     )
 
 
+def _defect_node_id(defect: dict[str, Any]) -> str | None:
+    evidence = defect.get("evidence")
+    if not isinstance(evidence, list):
+        return None
+    for entry in evidence:
+        if isinstance(entry, dict):
+            node_id = entry.get("node_id")
+            if isinstance(node_id, str) and node_id.strip():
+                return node_id.strip()
+    return None
+
+
+def _detector_candidate_index(example_dir: Path) -> dict[str, dict[str, Any]]:
+    report = example_dir / "build" / "undeclared_geometry.json"
+    if not report.is_file():
+        return {}
+    try:
+        data = json.loads(report.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return {}
+    candidates = data.get("candidates")
+    if not isinstance(candidates, list):
+        return {}
+    index: dict[str, dict[str, Any]] = {}
+    for candidate in candidates:
+        if isinstance(candidate, dict) and isinstance(candidate.get("id"), str):
+            index[candidate["id"]] = candidate
+    return index
+
+
+def _word_bbox_for_text(
+    words: list[dict[str, Any]],
+    nearest_text: str,
+    line_bbox_pt: list[float],
+) -> list[float] | None:
+    """Return the bbox of the word matching nearest_text closest to the line."""
+    line_cx = (line_bbox_pt[0] + line_bbox_pt[2]) / 2.0
+    line_cy = (line_bbox_pt[1] + line_bbox_pt[3]) / 2.0
+    best: list[float] | None = None
+    best_dist = float("inf")
+    for word in words:
+        if str(word.get("text", "")) != nearest_text:
+            continue
+        try:
+            bbox = [
+                float(word["xmin"]),
+                float(word["ymin"]),
+                float(word["xmax"]),
+                float(word["ymax"]),
+            ]
+        except (KeyError, TypeError, ValueError):
+            continue
+        word_cx = (bbox[0] + bbox[2]) / 2.0
+        word_cy = (bbox[1] + bbox[3]) / 2.0
+        dist = (word_cx - line_cx) ** 2 + (word_cy - line_cy) ** 2
+        if dist < best_dist:
+            best_dist = dist
+            best = bbox
+    return best
+
+
+def _geometry_aware_replacement(
+    defect: dict[str, Any],
+    line: str,
+    detector_index: dict[str, dict[str, Any]],
+    pdf_path: Path,
+) -> str | None:
+    """Offset the near-miss line away from its flagged text, axis- and sign-aware.
+
+    Falls back to None whenever the detector geometry or rendered words are not
+    available, so the caller can use the blind first-coordinate offset.
+    """
+    node_id = _defect_node_id(defect)
+    if node_id is None:
+        return None
+    detector_candidate = detector_index.get(node_id)
+    if not isinstance(detector_candidate, dict):
+        return None
+    line_bbox = detector_candidate.get("bbox_pt")
+    nearest_text = detector_candidate.get("nearest_text")
+    if not isinstance(line_bbox, list) or len(line_bbox) != 4:
+        return None
+    if not isinstance(nearest_text, str) or not nearest_text:
+        return None
+    if not pdf_path.is_file():
+        return None
+    try:
+        words, _page = extract_pdf_words_and_page(pdf_path)
+    except Exception:  # noqa: BLE001 - rendered words are best-effort
+        return None
+    word_bbox = _word_bbox_for_text(words, nearest_text, line_bbox)
+    if word_bbox is None:
+        return None
+    direction = bounded_coordinate_offset.offset_direction(line_bbox, word_bbox)
+    if direction is None:
+        return None
+    axis, dx_cm = direction
+    return bounded_coordinate_offset.offset_all_coordinates(line, axis=axis, dx_cm=dx_cm)
+
+
 def _defect_candidates(
     name: str,
     paths: runtime_paths.RuntimePaths,
@@ -285,17 +390,24 @@ def _defect_candidates(
     )
     defects = ledger.get("defects")
     if not isinstance(defects, list):
-        return [], [], {
-            "safe_candidate_defect_count": 0,
-            "candidate_supported_defect_count": 0,
-            "unsupported_safe_defect_count": 0,
-        }
+        return (
+            [],
+            [],
+            {
+                "safe_candidate_defect_count": 0,
+                "candidate_supported_defect_count": 0,
+                "unsupported_safe_defect_count": 0,
+            },
+        )
     refusals: list[dict[str, str]] = []
     sortable_candidates: list[tuple[tuple[int, str, str, int, str, str, str], dict[str, Any]]] = []
     safe_count = 0
     supported_count = 0
     unsupported_count = 0
     ledger_hash = str(ledger.get("ledger_hash") or "")
+    example_dir = paths.examples_dir / name
+    detector_index = _detector_candidate_index(example_dir)
+    pdf_path = example_dir / "build" / f"{name}.pdf"
     for defect in defects:
         if not isinstance(defect, dict):
             continue
@@ -328,7 +440,9 @@ def _defect_candidates(
             continue
         supported_count += 1
         line = lines[line_number - 1]
-        replacement = bounded_coordinate_offset.offset_first_coordinate(line)
+        replacement = _geometry_aware_replacement(defect, line, detector_index, pdf_path)
+        if replacement is None:
+            replacement = bounded_coordinate_offset.offset_first_coordinate(line)
         if replacement is None:
             _append_refusals(
                 refusals,
@@ -352,11 +466,15 @@ def _defect_candidates(
     for index, (_sort_key, candidate) in enumerate(sorted(sortable_candidates), start=1):
         candidate["id"] = f"CAND{index:03d}"
         candidates.append(candidate)
-    return candidates, refusals, {
-        "safe_candidate_defect_count": safe_count,
-        "candidate_supported_defect_count": supported_count,
-        "unsupported_safe_defect_count": unsupported_count,
-    }
+    return (
+        candidates,
+        refusals,
+        {
+            "safe_candidate_defect_count": safe_count,
+            "candidate_supported_defect_count": supported_count,
+            "unsupported_safe_defect_count": unsupported_count,
+        },
+    )
 
 
 def _candidate_metrics(
@@ -396,6 +514,213 @@ def _candidate_metrics(
             }
         ),
     }
+
+
+def _finding_refit(finding: dict[str, Any], line: str) -> tuple[str, str, str, float] | None:
+    """A `proposed_edit` (edit_class=label_refit) drives a value-preserving footprint
+    refit: set the node's text-width AND reposition it, both bounded. This is the
+    combined edit a single coordinate offset cannot author (e.g. widen a wrapped
+    caption to one line so it fits the clean gap below a crossed axis). Text is never
+    changed, so it rides the existing labels_unchanged verifier."""
+    proposed = finding.get("proposed_edit")
+    if not isinstance(proposed, dict) or proposed.get("edit_class") != "label_refit":
+        return None
+    target_cm = proposed.get("text_width_cm")
+    reposition = proposed.get("reposition")
+    if not isinstance(target_cm, (int, float)) or isinstance(target_cm, bool):
+        return None
+    if not isinstance(reposition, dict):
+        return None
+    axis = reposition.get("axis")
+    dx_cm = reposition.get("dx_cm")
+    if axis not in ("x", "y") or not isinstance(dx_cm, (int, float)) or isinstance(dx_cm, bool):
+        return None
+    widened = bounded_text_width.set_text_width(line, target_cm=float(target_cm))
+    if widened is None:
+        return None
+    replacement = bounded_coordinate_offset.reposition_coordinate(
+        widened, axis=axis, dx_cm=float(dx_cm)
+    )
+    if replacement is None:
+        return None
+    return (
+        replacement,
+        "label_refit",
+        f"refit_w{float(target_cm):.2f}cm_{axis}{float(dx_cm):+.2f}cm",
+        float(dx_cm),
+    )
+
+
+def _finding_offset(finding: dict[str, Any], line: str) -> tuple[str, str, str, float] | None:
+    """Resolve (replacement, edit_class, variant_id, variant_dx_cm) for a finding's
+    line. A structured `proposed_edit` (a value-preserving footprint refit) drives a
+    combined text-width + reposition; else a `proposed_offset` drives a verifier-gated
+    `label_reposition` past the 0.10cm nudge cap; else fall back to the bounded nudge."""
+    refit = _finding_refit(finding, line)
+    if refit is not None:
+        return refit
+    proposed = finding.get("proposed_offset")
+    if isinstance(proposed, dict):
+        axis = proposed.get("axis")
+        dx_cm = proposed.get("dx_cm")
+        if axis in ("x", "y") and isinstance(dx_cm, (int, float)) and not isinstance(dx_cm, bool):
+            replacement = bounded_coordinate_offset.reposition_coordinate(
+                line, axis=axis, dx_cm=float(dx_cm)
+            )
+            if replacement is not None:
+                return (
+                    replacement,
+                    "label_reposition",
+                    f"reposition_{axis}{float(dx_cm):+.2f}cm",
+                    float(dx_cm),
+                )
+    replacement = bounded_coordinate_offset.offset_first_coordinate(line)
+    if replacement is None:
+        return None
+    return (replacement, "label_offset", VARIANT_ID, 0.1)
+
+
+def _node_text_from_finding(finding: dict[str, Any], lines: list[str]) -> str | None:
+    """The node's `{...}` content spanning the finding's tex_lines range."""
+    tex_lines = finding.get("tex_lines")
+    if not (isinstance(tex_lines, list) and tex_lines and isinstance(tex_lines[0], int)):
+        return None
+    start = tex_lines[0]
+    end = tex_lines[-1] if isinstance(tex_lines[-1], int) else start
+    node_tex = "\n".join(lines[start - 1 : end])
+    match = re.search(r"\{(.+?)\}", node_tex, re.DOTALL)
+    return match.group(1) if match else None
+
+
+def _finding_with_derived_edit(
+    finding: dict[str, Any], lines: list[str], words: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """When a finding carries no eye-supplied proposed_edit, derive a value-preserving
+    label_refit from the figure itself: the crossed reference line from the .tex
+    draws + the wrap line-count from the rendered words. Returns the finding
+    unchanged when an edit is already present or no refit can be derived (the
+    derived edit still rides the existing fail-loud verifier)."""
+    if isinstance(finding.get("proposed_edit"), dict) or isinstance(
+        finding.get("proposed_offset"), dict
+    ):
+        return finding
+    tex_lines = finding.get("tex_lines")
+    if not (isinstance(tex_lines, list) and tex_lines and isinstance(tex_lines[0], int)):
+        return finding
+    if not 1 <= tex_lines[0] <= len(lines):
+        return finding
+    node_line = lines[tex_lines[0] - 1]
+    node_text = _node_text_from_finding(finding, lines)
+    if node_text is None:
+        return finding
+    lines_count = label_refit_derive.node_line_count(node_text, words)
+    derived = label_refit_derive.derive_refit(node_line, lines, lines_count)
+    if derived is None:
+        return finding
+    return {**finding, "proposed_edit": derived}
+
+
+def _load_build_words(name: str, paths: runtime_paths.RuntimePaths) -> list[dict[str, Any]]:
+    """Rendered pdftotext words for the figure's build PDF (best-effort, [] if absent)."""
+    pdf_path = paths.examples_dir / name / "build" / f"{name}.pdf"
+    if not pdf_path.is_file():
+        return []
+    try:
+        words, _page = extract_pdf_words_and_page(pdf_path)
+    except Exception:  # noqa: BLE001 - rendered words are best-effort
+        return []
+    return words
+
+
+def _adjudicated_apply_candidates(
+    name: str,
+    paths: runtime_paths.RuntimePaths,
+    lines: list[str],
+    source_rel: Path,
+    current_source_hash: str,
+    apply_authority: str,
+) -> list[dict[str, Any]]:
+    """Emit a candidate anchored to each adjudicated `apply` finding's tex_lines.
+
+    The ledger-driven path keys candidates off detector geometry; an `apply`
+    finding carries the host-eye diagnosis (its own tex_lines) that the detector
+    ledger does not. This wires that finding line into a bounded label offset so
+    the candidate targets the diagnosed element instead of unrelated geometry.
+    """
+    example_dir = paths.examples_dir / name
+    adjudication_path = example_dir / "critique_adjudication.yaml"
+    critique_path = example_dir / "critique.md"
+    if not adjudication_path.is_file() or not critique_path.is_file():
+        return []
+    try:
+        adjudication = critique_adjudication.load_adjudication(adjudication_path)
+        frontmatter = critique_contract.load_critique_frontmatter(critique_path)
+    except (
+        critique_adjudication.CritiqueAdjudicationError,
+        critique_contract.CritiqueContractError,
+    ):
+        return []
+    findings_by_id: dict[str, dict[str, Any]] = {}
+    for index, finding in enumerate(critique_contract.critique_findings(frontmatter)):
+        finding_id = finding.get("id")
+        if isinstance(finding_id, str) and finding_id.strip():
+            findings_by_id.setdefault(finding_id.strip(), finding)
+    candidates: list[dict[str, Any]] = []
+    words = _load_build_words(name, paths)
+    for decision in adjudication.get("decisions", []):
+        if not isinstance(decision, dict) or decision.get("decision") != "apply":
+            continue
+        finding = findings_by_id.get(str(decision.get("finding_id") or ""))
+        if finding is None:
+            continue
+        tex_lines = finding.get("tex_lines")
+        if not (isinstance(tex_lines, list) and tex_lines and isinstance(tex_lines[0], int)):
+            continue
+        line_number = tex_lines[0]
+        if line_number < 1 or line_number > len(lines):
+            continue
+        line = lines[line_number - 1]
+        # Approach 2: with no eye-supplied diagnosis, derive a label_refit from the
+        # figure's own geometry (crossed line from .tex + wrap count from the render).
+        finding = _finding_with_derived_edit(finding, lines, words)
+        offset = _finding_offset(finding, line)
+        if offset is None:
+            continue
+        replacement, edit_class, variant_id, variant_dx_cm = offset
+        finding_id = str(finding.get("id"))
+        candidates.append(
+            _label_offset_candidate(
+                name=name,
+                candidate_id="",
+                source_rel=source_rel,
+                line_number=line_number,
+                line=line,
+                replacement=replacement,
+                apply_authority=apply_authority,
+                target={
+                    "panel": str(finding.get("panel") or "unknown"),
+                    "subregion": f"adjudicated:{finding_id}",
+                },
+                source_hash=current_source_hash,
+                source_defect={
+                    "id": finding_id,
+                    "source": "adjudicated_finding",
+                    "defect_class": str(finding.get("category") or "label_offset"),
+                    "evidence": [],
+                    "source_fingerprint": "",
+                    "ledger_hash": "",
+                    "target_texts": [
+                        str(text)
+                        for text in (finding.get("target_texts") or [])
+                        if isinstance(text, str)
+                    ],
+                },
+                edit_class=edit_class,
+                variant_id=variant_id,
+                variant_dx_cm=variant_dx_cm,
+            )
+        )
+    return candidates
 
 
 def build_candidate_set(
@@ -458,6 +783,26 @@ def build_candidate_set(
         base["tex_hash"],
         apply_authority,
     )
+    covered_lines = {
+        candidate["selector"]["start_line"]
+        for candidate in candidates
+        if isinstance(candidate.get("selector"), dict)
+    }
+    for adjudicated in _adjudicated_apply_candidates(
+        name,
+        paths,
+        lines,
+        source_rel,
+        base["tex_hash"],
+        apply_authority,
+    ):
+        start_line = adjudicated["selector"]["start_line"]
+        if start_line in covered_lines:
+            continue
+        covered_lines.add(start_line)
+        candidates.append(adjudicated)
+    for index, candidate in enumerate(candidates, start=1):
+        candidate["id"] = f"CAND{index:03d}"
     if not candidates and not refusals:
         refusals = [{"code": "no_supported_candidate"}]
 

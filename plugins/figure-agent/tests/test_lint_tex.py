@@ -150,6 +150,35 @@ def test_fill_camber_modifier_no_violation(tmp_path: Path) -> None:
     assert _blockers(tex) == []
 
 
+def test_textcolor_named_non_palette_is_blocked(tmp_path: Path) -> None:
+    # M7: \textcolor{red}{...} bypassed the option-block-only scan entirely.
+    tex = _write(tmp_path, r"\textcolor{red}{label}" + "\n")
+    violations = lint(tex)
+    np_violations = [v for v in violations if v.category == "non_palette_color"]
+    assert len(np_violations) == 1
+    assert "red" in np_violations[0].message
+
+
+def test_color_command_named_non_palette_is_blocked(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"{\color{NavyBlue} label}" + "\n")
+    violations = lint(tex)
+    assert any(v.category == "non_palette_color" for v in violations)
+
+
+def test_textcolor_html_model_is_blocked(tmp_path: Path) -> None:
+    # M7: an explicit color model (HTML/RGB/rgb) carries a raw color with no '#',
+    # so the raw-hex check misses it and [HTML] just looks like an option block.
+    tex = _write(tmp_path, r"\textcolor[HTML]{FF0000}{label}" + "\n")
+    violations = lint(tex)
+    assert any(v.category == "non_palette_color" for v in violations)
+
+
+def test_textcolor_palette_color_is_allowed(tmp_path: Path) -> None:
+    # Guard: a palette color via \textcolor must NOT be flagged.
+    tex = _write(tmp_path, r"\textcolor{cAmber}{label}" + "\n")
+    assert [v for v in lint(tex) if v.category == "non_palette_color"] == []
+
+
 def test_commented_definecolor_no_violation(tmp_path: Path) -> None:
     tex = _write(tmp_path, r"% \definecolor{x}{HTML}{000000}" + "\n")
     assert _blockers(tex) == []
@@ -297,6 +326,23 @@ def test_no_flagship_macro_emits_warn(tmp_path: Path) -> None:
     flagship_warns = [v for v in violations if v.category == "flagship_macros_unused"]
     assert len(flagship_warns) == 1
     assert flagship_warns[0].severity == "warn"
+
+
+def test_extreme_local_font_size_emits_style_lock_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\node {\tiny unreadable label};" + "\n")
+
+    violations = lint(tex)
+    font_warns = [v for v in violations if v.category == "extreme_local_font_size"]
+
+    assert len(font_warns) == 1
+    assert font_warns[0].severity == "warn"
+    assert "print hierarchy" in font_warns[0].message
+
+
+def test_commented_extreme_local_font_size_avoids_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"% \node {\Huge dead draft label};" + "\n")
+
+    assert not any(v.category == "extreme_local_font_size" for v in lint(tex))
 
 
 def test_thin_stroke_below_threshold_emits_warn(tmp_path: Path) -> None:

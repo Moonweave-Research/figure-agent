@@ -4,7 +4,7 @@ description: Read-only multi-fixture driver queue. Aggregates /fig_drive decisio
 
 Inspect the driver-selected next action for multiple fixtures.
 
-**Usage**: `/fig_queue --mode <mode> --goal "<goal>" [filters] [<fixture> ...] [--json | --format json]`
+**Usage**: `/fig_queue --mode <mode> --goal "<goal>" [filters] [<fixture> ...] [--json | --format json] [--human-decision-digest]`
 
 Run from the plugin root:
 
@@ -18,6 +18,7 @@ fig-agent queue --mode review --goal "<goal>" --actor host_llm
 fig-agent queue --mode review --goal "<goal>" --action run_fig_loop
 fig-agent queue --mode review --goal "<goal>" --actor workflow_agent --command-plan --json
 fig-agent queue --mode review --goal "<goal>" --actor workflow_agent --commands
+fig-agent queue --mode release --goal "decision-dogfood" --human-decision-digest --json
 ```
 
 `/fig_queue` is an operator dashboard over `/fig_drive`. It calls the existing
@@ -82,6 +83,8 @@ Use `--command-plan` to add a read-only `command_plan` object to JSON output.
 Use `--commands` to print only executable deterministic workflow commands, one
 per line. Neither mode executes anything.
 
+Use `--human-decision-digest` to print a compact, read-only human-facing digest derived from the same live queue rows. The digest groups release/style decision packets into accept-current, bounded TikZ polish, redesign benchmark, SVG-polish evidence missing, and dirty/stale excluded buckets. With fixture arguments, explicitly targeted fixtures are not strategy-excluded by the default `fig5_actuation_mechanism` stale/dirty guard. This surface does not edit source, accepted state, golden state, final artifacts, or exports.
+
 Output is a table by default. `--json` and `--format json` both print the same
 JSON contract; `--format table` is accepted as the explicit table form.
 
@@ -101,6 +104,24 @@ Host critique, human review, release/golden approval, SVG polish handoff,
 missing commands, non-allowlisted actions, and rows with stop boundaries remain
 blocked and visible in the command plan.
 
+
+## Human decision digest
+
+With `--human-decision-digest`, output switches to `schema: figure-agent.human-decision-digest.v1`. The digest is derived from live queue rows and preserves both release decision packet and style direction packet recommendations when both are present on a row. It is intentionally an opt-in output mode, not an extra field on the default `figure-agent.fixture-driver-queue.v1` JSON payload.
+
+Top-level digest fields:
+
+| Field | Notes |
+|---|---|
+| `schema` | `figure-agent.human-decision-digest.v1` |
+| `source` | `live fig_queue rows` |
+| `mode` / `goal` | copied from the queue invocation |
+| `total_rows` | live queue row count before digest grouping |
+| `digest_rows` | number of rows included in human-facing groups |
+| `packet_schemas` | packet schemas surfaced by grouped rows |
+| `groups` | accept-current, bounded TikZ polish, redesign benchmark, SVG-polish evidence missing, and dirty/stale excluded groups |
+| `safety` | all mutation flags are false |
+
 ## Output JSON contract
 
 `schema: figure-agent.fixture-driver-queue.v1` with these top-level fields:
@@ -115,6 +136,7 @@ blocked and visible in the command plan.
 | `rows` | list | one compact row per fixture or controlled error |
 | `summary` | object | total/error counts plus grouped counts |
 | `command_plan` | object | present only with `--command-plan`, `--commands`, or API opt-in |
+| `human_decision_digest` | output mode | emitted instead of the queue contract when `--human-decision-digest` is supplied |
 
 Each row includes:
 
@@ -129,6 +151,7 @@ Each row includes:
 | `required_actor` | `workflow_agent`, `host_llm`, `human`, `release_operator`, or `svg_editor` |
 | `blocking_source` | compact source from `next_action_summary.blocking_source`, stop boundary, or driver action; mode-scoped `complete` rows use `null` so completion is not counted as a blocker |
 | `requires_human` | copied from `next_action_summary.requires_human` when available |
+| `bottleneck_category` | inferred root-cause bucket for non-complete rows: `mechanical_tool`, `host_critique`, `human_acceptance`, `reference_context`, or `template_style` |
 | `render_state` | compact status field |
 | `critique_state` | compact status field |
 | `export_state` | compact status field |
@@ -136,6 +159,16 @@ Each row includes:
 | `publication_gate_state` | compact status field |
 | `release_ready` | compact status field |
 | `operator_guidance` | copied from `/fig_drive` when present; complete rows use its `next_step` to avoid hiding mode-scoped follow-up |
+| `style_benchmark_pack_state` | non-fatal style benchmark pack state, usually `present`, `missing`, or `invalid` |
+| `style_benchmark_comparison_state` | non-fatal comparison packet state, usually `present`, `missing`, or `invalid` |
+| `design_direction_state` | read-only design-direction handoff state, for example `ready_for_human_choice`, `blocked_missing_style_pack`, or `blocked_missing_comparison` |
+| `design_direction_default` | compact agent recommendation when benchmark/comparison evidence is present |
+| `design_direction_alternatives` | bounded alternative family ids; source/SVG changes still require separate approval |
+| `design_direction_mutation_boundary` | boundary for the summary itself; design-direction queue rows do not authorize source, SVG, export, accepted, golden, final-artifact, or publication mutation |
+| `design_direction_alternative_mutation_boundaries` | per-alternative boundary map copied from benchmark/comparison evidence when present |
+| `design_direction_human_question` | concise question to ask the human instead of asking for judgment from scratch |
+| `design_direction_evidence_refs` | compact refs to style benchmark pack, comparison, benchmark contract, and aesthetic intent evidence |
+| `design_direction_blocker_reason` | first design-direction blocker, such as `style_benchmark_pack_missing`, `style_benchmark_comparison_missing`, or `svg_polish_evidence_missing` |
 | `error` | present only for controlled error rows |
 
 In `--mode polish`, rows also include SVG-polish gate fields when the underlying
@@ -149,6 +182,27 @@ driver has a current loop checkpoint or gate explanation:
 | `svg_polish_next_action` | next action from the SVG polish gate/readiness summary |
 | `svg_polish_blocking_sources` | unique blocker sources copied from `svg_polish_gate.blocking_items` and `svg_polish_readiness.blocking_items`, for example `driver_prerequisite`, `driver_blocker`, or `tikz_vs_svg_polish_trigger` |
 
+`bottleneck_report` includes a live, read-only bottleneck rollup derived from the filtered queue rows:
+
+| Field | Notes |
+|---|---|
+| `schema` | `figure-agent.queue-bottleneck-report.v1` |
+| `source` | states that the report comes from live queue/status driver state |
+| `total_rows`, `errors` | filtered row count and controlled error count |
+| `dominant_action` | top action counts, sorted by count then key |
+| `dominant_first_blocker` | top `/fig_status` first-blocker counts |
+| `dominant_required_actor` | top required actor counts |
+| `dominant_blocking_source` | top queue blocking-source counts |
+| `by_bottleneck_category` | stable counts for the five root-cause buckets: `mechanical_tool`, `host_critique`, `human_acceptance`, `reference_context`, and `template_style` |
+| `bottleneck_categories` | one entry per bucket with definition, count, example fixtures, and top signals |
+| `command_plan` | executable, blocked, and complete counts using queue command-plan rules |
+
+Use this report as the Wave 0 corpus bottleneck scan before choosing an
+execution wave. It is read-only and does not mutate accepted, golden, export, or
+figure source state. Category counts are intentionally distinct from actor
+counts: for example, `reference_context` can still require a host-critique run,
+and `template_style` can still surface through SVG-polish or human handoff rows.
+
 `summary` includes:
 
 - `total`
@@ -158,6 +212,7 @@ driver has a current loop checkpoint or gate explanation:
 - `by_first_blocker`
 - `by_required_actor`
 - `by_blocking_source`
+- `by_bottleneck_category`
 - `by_svg_polish_gate_state` when polish rows expose SVG gate state
 - `by_svg_polish_recommended_path` when polish rows expose readiness route
 - `by_svg_polish_next_action` when polish rows expose SVG next-action guidance

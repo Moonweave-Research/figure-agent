@@ -1,0 +1,10 @@
+{
+  "schema": "figure-agent.dogfood-cohort.v1",
+  "fixtures": [
+    "fig1_overview_v2_pair_001_vault",
+    "fig2_trap_design_space",
+    "fig3_resistance_mechanism"
+  ],
+  "regression_anchor": "fig1_overview_v2_pair_001_vault",
+  "note": "fig1 is the regression anchor; in Slice 3 (measure-only) its role is solely to be a recorded cohort member whose dominant cause is logged. The ceiling_distance/regression comparison is deferred to Slice 4."
+}

@@ -1,0 +1,4 @@
+schema: figure-agent.critique-adjudication.v1
+fixture: fig3_floating_clip_protocol
+source_critique_hash: sha256:6cf4f172cbee68d58af6f0234284381fe9c1be704e7f003a1e8ff6baf1bf9050
+decisions: []

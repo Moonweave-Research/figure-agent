@@ -10,12 +10,12 @@ import time
 from pathlib import Path
 
 import pytest
-import yaml
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import check_golden_artifacts as golden_checks  # noqa: E402
+import human_attestation  # noqa: E402
 from check_golden_artifacts import (  # noqa: E402
     audit_is_fresh,
     check_example,
@@ -28,12 +28,6 @@ from check_golden_artifacts import (  # noqa: E402
     source_inventory_counts,
     unresolved_visual_clash_count,
 )
-from quality_manifest import file_sha256  # noqa: E402
-from svg_polish_manifest import (  # noqa: E402
-    final_artifact_source_set_hash,
-    write_svg_polish_manifest,
-)
-from svg_semantic_diff import build_svg_semantic_diff_report  # noqa: E402
 
 _BASELINE_REQUIRED_LABELS = [
     "Experiment",
@@ -373,105 +367,10 @@ def _add_quality_audit_disclosure(fixture: Path) -> None:
         audit.read_text(encoding="utf-8") + "disclosure-needed: no\n",
         encoding="utf-8",
     )
-
-
-def _append_polished_svg_opt_in(fixture: Path) -> None:
-    spec = fixture / "spec.yaml"
-    spec.write_text(
-        spec.read_text(encoding="utf-8")
-        + "final_artifact:\n"
-        + "  kind: polished_svg\n"
-        + "  manifest: polish/svg_polish_manifest.yaml\n",
-        encoding="utf-8",
-    )
-
-
-def _append_generated_export_final_artifact(fixture: Path) -> None:
-    spec = fixture / "spec.yaml"
-    spec.write_text(
-        spec.read_text(encoding="utf-8")
-        + "final_artifact:\n"
-        + "  kind: generated_export\n"
-        + "  manifest: polish/svg_polish_manifest.yaml\n",
-        encoding="utf-8",
-    )
-
-
-def _append_manifest_only_final_artifact_block(fixture: Path) -> None:
-    spec = fixture / "spec.yaml"
-    spec.write_text(
-        spec.read_text(encoding="utf-8")
-        + "final_artifact:\n"
-        + "  manifest: polish/svg_polish_manifest.yaml\n",
-        encoding="utf-8",
-    )
-
-
-def _append_custom_manifest_polished_svg_opt_in(fixture: Path) -> None:
-    spec = fixture / "spec.yaml"
-    spec.write_text(
-        spec.read_text(encoding="utf-8")
-        + "final_artifact:\n"
-        + "  kind: polished_svg\n"
-        + "  manifest: polish/custom_manifest.yaml\n",
-        encoding="utf-8",
-    )
-
-
-def _write_valid_polish_manifest(
-    fixture: Path,
-    *,
-    semantic_change_declared: bool = False,
-    backport_required: bool = False,
-    reviewer: str = "author",
-) -> None:
-    name = fixture.name
-    polish = fixture / "polish"
-    polish.mkdir(exist_ok=True)
-    (fixture / "critique.md").write_text("# critique\n", encoding="utf-8")
-    (polish / f"{name}.polished.svg").write_text(
-        (fixture / "exports" / f"{name}.svg").read_text(encoding="utf-8"),
-        encoding="utf-8",
-    )
-    (polish / "svg_polish_audit.md").write_text(
-        "# SVG Polish Audit\n\nsemantic_change_declared: false\n",
-        encoding="utf-8",
-    )
-    manifest = {
-        "schema": "figure-agent.svg-polish-manifest.v1",
-        "fixture": name,
-        "base": {
-            "source_set_hash": final_artifact_source_set_hash(fixture, name),
-            "source_tex_hash": file_sha256(fixture / f"{name}.tex"),
-            "briefing_hash": file_sha256(fixture / "briefing.md"),
-            "spec_hash": file_sha256(fixture / "spec.yaml"),
-            "generated_svg_hash": file_sha256(fixture / "exports" / f"{name}.svg"),
-            "export_pdf_hash": file_sha256(fixture / "exports" / f"{name}.pdf"),
-            "critique_hash": file_sha256(fixture / "critique.md"),
-        },
-        "polished": {
-            "path": f"polish/{name}.polished.svg",
-            "polished_svg_hash": file_sha256(polish / f"{name}.polished.svg"),
-            "audit_hash": file_sha256(polish / "svg_polish_audit.md"),
-            "editor": "human",
-            "toolchain": [{"name": "Inkscape", "version": "1.4"}],
-            "edit_classes": ["label_micro_position"],
-            "semantic_change_declared": semantic_change_declared,
-            "backport_required": backport_required,
-        },
-        "provenance": {
-            "reviewer": reviewer,
-            "reviewed_at": "2026-05-19T00:00:00Z",
-            "notes": "visual-only polish",
-        },
-    }
-    write_svg_polish_manifest(polish / "svg_polish_manifest.yaml", manifest)
-    if not semantic_change_declared and not backport_required:
-        build_svg_semantic_diff_report(fixture)
-
-
 def _make_passing_accepted_fixture(fixture: Path, monkeypatch) -> None:
     _write_minimal_accepted_fixture(fixture)
+    monkeypatch.setenv("HOME", str(fixture.parent / "home"))
+    human_attestation.write_attestation(fixture)
     _write_passing_theory_guard(fixture)
     _mark_quality_audit_fresh(fixture)
     monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
@@ -638,6 +537,18 @@ def test_check_example_require_accepted_fails_without_contract(tmp_path: Path) -
     assert any("golden_contract block missing" in failure for failure in failures)
 
 
+def test_require_accepted_mode_requires_human_attestation(tmp_path: Path, monkeypatch) -> None:
+    fixture = tmp_path / "attestationRequired"
+    _write_minimal_accepted_fixture(fixture)
+    _write_passing_theory_guard(fixture)
+    _mark_quality_audit_fresh(fixture)
+    monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
+
+    failures = check_example(fixture, require_accepted=True)
+
+    assert "human attestation invalid: missing_human_attestation" in failures
+
+
 def test_require_accepted_mode_requires_theory_guard(tmp_path: Path, monkeypatch) -> None:
     fixture = tmp_path / "needsTheory"
     _write_minimal_accepted_fixture(fixture)
@@ -684,6 +595,27 @@ def test_require_accepted_mode_requires_publication_compliance(tmp_path: Path, m
     assert "missing Provenance and Publication Compliance section in QUALITY_AUDIT.md" in failures
     assert "QUALITY_AUDIT.md does not declare submission-safe: true" in failures
     assert "QUALITY_AUDIT.md does not declare disclosure-needed" not in failures
+
+
+def test_require_accepted_mode_requires_disclosure_for_non_generated_final_artifact(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    fixture = tmp_path / "polishedFinal"
+    _make_passing_accepted_fixture(fixture, monkeypatch)
+    spec = fixture / "spec.yaml"
+    spec.write_text(
+        spec.read_text(encoding="utf-8")
+        + "final_artifact:\n"
+        + "  kind: polished_svg\n"
+        + "  manifest: polish/svg_polish_manifest.yaml\n",
+        encoding="utf-8",
+    )
+    human_attestation.write_attestation(fixture)
+
+    failures = check_example(fixture, require_accepted=True)
+
+    assert "QUALITY_AUDIT.md does not declare disclosure-needed" in failures
 
 
 def test_publication_compliance_failures_preserve_legacy_messages(tmp_path: Path) -> None:
@@ -798,84 +730,6 @@ def test_require_accepted_mode_validates_reference_pack(tmp_path: Path, monkeypa
     assert "reference row missing Do Not Transfer boundary: reference/ref.png" in failures
 
 
-def test_require_accepted_mode_ignores_draft_polish_without_opt_in(
-    tmp_path: Path, monkeypatch
-) -> None:
-    fixture = tmp_path / "draftPolish"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    polish = fixture / "polish"
-    polish.mkdir()
-    (polish / "svg_polish_manifest.yaml").write_text("schema: [unterminated\n", encoding="utf-8")
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert not any("final artifact" in failure for failure in failures)
-
-
-def test_require_accepted_mode_ignores_draft_polish_for_generated_export_kind(
-    tmp_path: Path, monkeypatch
-) -> None:
-    fixture = tmp_path / "generatedExportFinal"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    _append_generated_export_final_artifact(fixture)
-    _mark_quality_audit_fresh(fixture)
-    polish = fixture / "polish"
-    polish.mkdir()
-    (polish / "svg_polish_manifest.yaml").write_text("schema: [unterminated\n", encoding="utf-8")
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert not any("final artifact" in failure for failure in failures)
-
-
-def test_require_accepted_mode_ignores_final_artifact_block_without_polished_kind(
-    tmp_path: Path, monkeypatch
-) -> None:
-    fixture = tmp_path / "manifestOnlyFinal"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    _append_manifest_only_final_artifact_block(fixture)
-    _mark_quality_audit_fresh(fixture)
-    polish = fixture / "polish"
-    polish.mkdir()
-    (polish / "svg_polish_manifest.yaml").write_text("schema: [unterminated\n", encoding="utf-8")
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert not any("final artifact" in failure for failure in failures)
-
-
-def test_require_accepted_mode_fails_polished_svg_missing_manifest(
-    tmp_path: Path, monkeypatch
-) -> None:
-    fixture = tmp_path / "missingFinalPolish"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    _append_polished_svg_opt_in(fixture)
-    _mark_quality_audit_fresh(fixture)
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert "final artifact missing: polish/svg_polish_manifest.yaml" in failures
-
-
-def test_require_accepted_mode_fails_polished_svg_custom_manifest_path(
-    tmp_path: Path, monkeypatch
-) -> None:
-    fixture = tmp_path / "customManifestFinal"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    _append_custom_manifest_polished_svg_opt_in(fixture)
-    _write_valid_polish_manifest(fixture)
-    _mark_quality_audit_fresh(fixture)
-    (fixture / "polish" / "svg_polish_manifest.yaml").rename(
-        fixture / "polish" / "custom_manifest.yaml"
-    )
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert (
-        "final artifact invalid: final_artifact.manifest must be polish/svg_polish_manifest.yaml"
-    ) in failures
-
-
 def test_require_accepted_mode_malformed_spec_fails_cleanly(tmp_path: Path) -> None:
     fixture = tmp_path / "badSpecFinalArtifact"
     fixture.mkdir()
@@ -973,189 +827,6 @@ def test_check_example_basic_mode_skips_semantic_spec_error(tmp_path: Path, monk
     failures = check_example(fixture, require_accepted=False)
 
     assert not any(failure.startswith("invalid spec.yaml:") for failure in failures)
-
-
-def test_require_accepted_mode_fails_polished_svg_stale_manifest(
-    tmp_path: Path, monkeypatch
-) -> None:
-    fixture = tmp_path / "staleFinalPolish"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    _append_polished_svg_opt_in(fixture)
-    _write_valid_polish_manifest(fixture)
-    _add_quality_audit_disclosure(fixture)
-    _mark_quality_audit_fresh(fixture)
-    (fixture / "polish" / "svg_polish_audit.md").write_text("# changed audit\n", encoding="utf-8")
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert "final artifact stale: refresh polish/svg_polish_manifest.yaml" in failures
-
-
-def test_require_accepted_mode_fails_polished_svg_missing_polished_file(
-    tmp_path: Path, monkeypatch
-) -> None:
-    fixture = tmp_path / "missingPolishedSvg"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    _append_polished_svg_opt_in(fixture)
-    _write_valid_polish_manifest(fixture)
-    _add_quality_audit_disclosure(fixture)
-    _mark_quality_audit_fresh(fixture)
-    (fixture / "polish" / "missingPolishedSvg.polished.svg").unlink()
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert any("final artifact missing:" in failure for failure in failures)
-    assert any("missingPolishedSvg.polished.svg" in failure for failure in failures)
-
-
-@pytest.mark.parametrize(
-    ("semantic_change_declared", "backport_required"),
-    ((True, False), (False, True)),
-)
-def test_require_accepted_mode_fails_polished_svg_semantic_backport_required(
-    tmp_path: Path,
-    monkeypatch,
-    semantic_change_declared: bool,
-    backport_required: bool,
-) -> None:
-    fixture = tmp_path / "blockedFinalPolish"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    _append_polished_svg_opt_in(fixture)
-    _write_valid_polish_manifest(
-        fixture,
-        semantic_change_declared=semantic_change_declared,
-        backport_required=backport_required,
-    )
-    _mark_quality_audit_fresh(fixture)
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert "final artifact blocked: semantic backport required before acceptance" in failures
-    assert not any("final artifact invalid:" in failure for failure in failures)
-
-
-@pytest.mark.parametrize("provenance_field", ("reviewer", "reviewed_at"))
-def test_require_accepted_mode_fails_polished_svg_without_required_provenance(
-    tmp_path: Path,
-    monkeypatch,
-    provenance_field: str,
-) -> None:
-    fixture = tmp_path / "invalidFinalPolish"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    _append_polished_svg_opt_in(fixture)
-    _write_valid_polish_manifest(fixture)
-    _mark_quality_audit_fresh(fixture)
-    manifest = fixture / "polish" / "svg_polish_manifest.yaml"
-    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
-    del data["provenance"][provenance_field]
-    manifest.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert any("final artifact invalid:" in failure for failure in failures)
-    assert any(provenance_field in failure for failure in failures)
-
-
-def test_require_accepted_mode_reports_malformed_manifest_as_invalid_when_path_says_missing(
-    tmp_path: Path, monkeypatch
-) -> None:
-    fixture = tmp_path / "invalidMissingName"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    _append_polished_svg_opt_in(fixture)
-    _mark_quality_audit_fresh(fixture)
-    polish = fixture / "polish"
-    polish.mkdir()
-    (polish / "svg_polish_manifest.yaml").write_text("schema: [unterminated\n", encoding="utf-8")
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert any("final artifact invalid:" in failure for failure in failures)
-    assert not any(
-        failure.startswith("final artifact missing: invalid YAML") for failure in failures
-    )
-
-
-def test_require_accepted_mode_accepts_fresh_polished_svg_final_artifact(
-    tmp_path: Path, monkeypatch
-) -> None:
-    fixture = tmp_path / "freshFinalPolish"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    _append_polished_svg_opt_in(fixture)
-    _write_valid_polish_manifest(fixture)
-    _add_quality_audit_disclosure(fixture)
-    _mark_quality_audit_fresh(fixture)
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert failures == []
-
-
-def test_require_accepted_mode_polished_svg_still_requires_publication_compliance(
-    tmp_path: Path, monkeypatch
-) -> None:
-    fixture = tmp_path / "polishedNeedsPublication"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    _append_polished_svg_opt_in(fixture)
-    _write_valid_polish_manifest(fixture)
-    (fixture / "QUALITY_AUDIT.md").write_text(
-        "# Quality Audit\n\n"
-        "OK: no collisions found\n"
-        "0 visual clash candidate(s)\n"
-        "0 unresolved visual clash(es)\n",
-        encoding="utf-8",
-    )
-    _mark_quality_audit_fresh(fixture)
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert "missing Provenance and Publication Compliance section in QUALITY_AUDIT.md" in failures
-    assert "QUALITY_AUDIT.md does not declare submission-safe: true" in failures
-    assert "QUALITY_AUDIT.md does not declare disclosure-needed" in failures
-
-
-def test_require_accepted_mode_does_not_mutate_spec_or_generated_exports(
-    tmp_path: Path, monkeypatch
-) -> None:
-    fixture = tmp_path / "readOnlyFinalPolish"
-    _make_passing_accepted_fixture(fixture, monkeypatch)
-    spec = fixture / "spec.yaml"
-    spec.write_text(spec.read_text(encoding="utf-8").replace("accepted: true", "accepted: false"))
-    _append_polished_svg_opt_in(fixture)
-    _write_valid_polish_manifest(fixture)
-    _mark_quality_audit_fresh(fixture)
-    exports = fixture / "exports"
-    before = {
-        "spec": spec.read_text(encoding="utf-8"),
-        "pdf": (exports / f"{fixture.name}.pdf").read_bytes(),
-        "svg": (exports / f"{fixture.name}.svg").read_text(encoding="utf-8"),
-        "tif": (exports / f"{fixture.name}.tif").read_bytes(),
-        "png": (exports / f"{fixture.name}.png").read_bytes(),
-        "manifest": (fixture / "polish" / "svg_polish_manifest.yaml").read_text(encoding="utf-8"),
-        "polished": (fixture / "polish" / f"{fixture.name}.polished.svg").read_text(
-            encoding="utf-8"
-        ),
-        "polish_audit": (fixture / "polish" / "svg_polish_audit.md").read_text(encoding="utf-8"),
-    }
-
-    failures = check_example(fixture, require_accepted=True)
-
-    assert "fixture is not marked accepted: true" in failures
-    assert spec.read_text(encoding="utf-8") == before["spec"]
-    assert (exports / f"{fixture.name}.pdf").read_bytes() == before["pdf"]
-    assert (exports / f"{fixture.name}.svg").read_text(encoding="utf-8") == before["svg"]
-    assert (exports / f"{fixture.name}.tif").read_bytes() == before["tif"]
-    assert (exports / f"{fixture.name}.png").read_bytes() == before["png"]
-    assert (fixture / "polish" / "svg_polish_manifest.yaml").read_text(encoding="utf-8") == before[
-        "manifest"
-    ]
-    assert (fixture / "polish" / f"{fixture.name}.polished.svg").read_text(
-        encoding="utf-8"
-    ) == before["polished"]
-    assert (fixture / "polish" / "svg_polish_audit.md").read_text(encoding="utf-8") == before[
-        "polish_audit"
-    ]
-
-
 def test_checker_warning_counts_reads_quality_audit() -> None:
     audit = """
     Observed:

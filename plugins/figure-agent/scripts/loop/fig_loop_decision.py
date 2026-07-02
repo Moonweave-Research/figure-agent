@@ -7,6 +7,31 @@ from typing import Any
 
 from fig_loop_subregion import active_subregion_target
 
+# Trigger superset for the stop-point diagnoser. TERMINAL_STOPS carries the
+# aesthetic-lever reroute (human_gate_required, fig_loop.py:105) and the basin
+# reroute (basin_detected, fig_loop.py:205); PLUMBING_STOPS is every
+# pipeline-state reason. Together they partition all eleven loop_decision reasons.
+TERMINAL_STOPS = frozenset(
+    {
+        "no_actionable_findings",  # :172
+        "verify_only_complete",  # :179
+        "human_gate_required",  # :91 / fig_loop.py:105
+        "basin_detected",  # fig_loop.py:205
+    }
+)
+PLUMBING_STOPS = frozenset(
+    {
+        "status_action_required",  # :57,:64,:146,:156,:164
+        "reference_input_missing",  # :47
+        "stale_adjudication",  # :74
+        "invalid_adjudication",  # :81
+        "missing_adjudication",  # :124
+        "ambiguous_patch_selection",  # :100
+        "patch_target_recommended",  # :112
+        "active_subregion_recommended",  # :133
+    }
+)
+
 
 def reference_input_missing(status_result: dict[str, Any]) -> bool:
     reference_notes = {
@@ -49,10 +74,9 @@ def loop_decision(
             "active_patch_target": None,
             "human_gate_status": "not_requested",
         }
-    if (
-        status_result.get("critique_state") in {"MISSING", "STALE"}
-        and status_result.get("render_state") in {"MISSING", "STALE"}
-    ):
+    if status_result.get("critique_state") in {"MISSING", "STALE"} and status_result.get(
+        "render_state"
+    ) in {"MISSING", "STALE"}:
         return {
             "stop_reason": "status_action_required",
             "recommended_next_action": status_result.get("next", "inspect figure state"),

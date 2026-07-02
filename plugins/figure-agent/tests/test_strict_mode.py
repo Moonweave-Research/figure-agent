@@ -26,6 +26,118 @@ GOLDEN_PDF = (
 )
 
 
+def test_compile_sh_wires_the_physics_checks() -> None:
+    compile_sh = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+    # tex-geometry assertions are STRICT-gated (a reversed arrow is a defect);
+    assert "scripts/checks/check_tex_assertions.py" in compile_sh
+    # the grounding meta-check is advisory (report-only — never fails a build).
+    assert "scripts/checks/check_physics_grounding.py" in compile_sh
+
+
+def test_check_visual_clash_known_false_positive_registry_path_exists() -> None:
+    assert check_visual_clash.KNOWN_FALSE_POSITIVES_PATH == (
+        REPO_ROOT / "_known_false_positives.yaml"
+    )
+    patterns = check_visual_clash.load_known_false_positive_patterns()
+    assert any(pattern.get("id") == "material_label_pdms_path_edge" for pattern in patterns)
+
+
+def test_check_visual_clash_false_positive_matching_requires_kind() -> None:
+    issue = check_visual_clash.VisualIssue(
+        "text_on_path",
+        "injection",
+        "dark=0.041, edge=0.006",
+        (1, 2, 3, 4),
+    )
+    pattern = {
+        "id": "schematic_label_injection",
+        "fixture": "fig3_trapping_concept",
+        "glyph": "injection",
+        "kind": "text_on_fill",
+    }
+
+    # The fixture scope matches; the sole reason it is not suppressed is the
+    # kind mismatch (text_on_path issue vs text_on_fill pattern).
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        [issue],
+        [pattern],
+        "fig3_trapping_concept",
+    )
+
+    assert filtered == [issue]
+    assert suppressed == 0
+
+
+def test_check_visual_clash_false_positive_matching_accepts_same_kind() -> None:
+    issue = check_visual_clash.VisualIssue(
+        "text_on_path",
+        "PDMS",
+        "dark=0.041, edge=0.004",
+        (1, 2, 3, 4),
+    )
+    patterns = check_visual_clash.load_known_false_positive_patterns()
+
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        [issue],
+        patterns,
+        "fig3_trapping_concept",
+    )
+
+    assert filtered == []
+    assert suppressed == 1
+
+
+def test_check_visual_clash_false_positive_not_suppressed_on_foreign_fixture() -> None:
+    """A PDMS clash validated on fig3_trapping_concept must NOT be silenced on
+    fig2_trap_design_space, which also renders the glyph 'PDMS'. Global
+    suppression would hide a real clash on the foreign figure."""
+    issue = check_visual_clash.VisualIssue(
+        "text_on_path",
+        "PDMS",
+        "dark=0.041, edge=0.004",
+        (1, 2, 3, 4),
+    )
+    patterns = check_visual_clash.load_known_false_positive_patterns()
+
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        [issue],
+        patterns,
+        "fig2_trap_design_space",
+    )
+
+    assert filtered == [issue]
+    assert suppressed == 0
+
+
+def test_check_visual_clash_unscoped_pattern_suppresses_nothing() -> None:
+    """Fail-closed default: a pattern with no fixture scope suppresses nothing,
+    even when glyph and kind match."""
+    issue = check_visual_clash.VisualIssue(
+        "text_on_fill",
+        "PDMS",
+        "luma_std=30.0",
+        (1, 2, 3, 4),
+    )
+    unscoped = {"id": "legacy_global", "glyph": "PDMS", "kind": "text_on_fill"}
+
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        [issue],
+        [unscoped],
+        "fig3_trapping_concept",
+    )
+
+    assert filtered == [issue]
+    assert suppressed == 0
+
+
+def test_check_visual_clash_registry_entries_declare_a_fixture() -> None:
+    """No shipped registry entry may be un-scoped; an entry without a fixture
+    would suppress nothing (fail-closed) and is therefore dead weight."""
+    patterns = check_visual_clash.load_known_false_positive_patterns()
+    unscoped = [pattern.get("id") for pattern in patterns if not pattern.get("fixture")]
+    assert unscoped == []
+
+
 def _require_golden_pdf() -> None:
     if not GOLDEN_PDF.exists():
         pytest.skip(f"{GOLDEN_PDF} not present; run /fig_compile golden_trap_depth_picture")
@@ -125,6 +237,7 @@ def test_compile_strict_flag_is_documented_in_script() -> None:
     compile_sh = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
     assert "FIGURE_AGENT_STRICT" in compile_sh
     assert "--strict" in compile_sh
+    assert "--ignore-known-fp" in compile_sh
     assert "--json-output" in compile_sh
     assert "visual_clash.json" in compile_sh
     assert "check_text_boundary_clash.py" in compile_sh

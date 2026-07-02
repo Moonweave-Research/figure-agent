@@ -23,7 +23,7 @@ def test_quality_axes_frontmatter_requires_fresh_supported_critique(tmp_path: Pa
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.2",
+            "schema": "figure-agent.critique.v1.10",
             "quality_axes": {"reference_fidelity": {"verdict": "pass"}},
         },
     )
@@ -65,7 +65,7 @@ def test_axis_verdicts_prefers_quality_axes_when_available(tmp_path: Path) -> No
     _write_critique(
         critique,
         {
-            "schema": "figure-agent.critique.v1.2",
+            "schema": "figure-agent.critique.v1.10",
             "quality_axes": {
                 "publication_readiness": {
                     "verdict": "needs_human",
@@ -106,7 +106,7 @@ def test_axis_verdicts_human_gate_overrides_publication_quality_axis(tmp_path: P
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.2",
+            "schema": "figure-agent.critique.v1.10",
             "quality_axes": {"publication_readiness": {"verdict": "pass"}},
         },
     )

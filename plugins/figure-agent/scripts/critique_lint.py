@@ -18,6 +18,10 @@ from aesthetic_intent import (  # noqa: E402
     AestheticIntentError,
     load_optional_aesthetic_intent,
 )
+from briefing_grounding import (  # noqa: E402
+    explicit_briefing_rule_text,
+    has_reference_free_grounding_context,
+)
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     build_adjudication_scaffold,
@@ -39,7 +43,7 @@ from external_vision_review import (  # noqa: E402
     external_vision_review_freshness,
     load_optional_external_vision_review,
 )
-from inputs import parse_spec  # noqa: E402
+from inputs import parse_briefing, parse_spec  # noqa: E402
 from inspection_trace import (  # noqa: E402
     InspectionTraceError,
     load_optional_inspection_trace,
@@ -55,119 +59,36 @@ from paper_aesthetic_context import (  # noqa: E402
     paper_context_anchors,
 )
 from quality_manifest import file_sha256  # noqa: E402
-from svg_polish_delta import (  # noqa: E402
-    SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH,
-    SvgPolishDeltaError,
-    load_svg_polish_delta_manifest,
-    svg_polish_delta_is_stale,
+from reference_contract import (  # noqa: E402
+    declared_figure_reference_path,
+    participating_panel_reference_paths,
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.7"
-CROP_AUDIT_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.8"
-SVG_POLISH_DELTA_AUDIT_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
-VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.7",
-        "figure-agent.critique.v1.8",
-        "figure-agent.critique.v1.9",
-        "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
-        "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
-CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.8",
-        "figure-agent.critique.v1.9",
-        "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
-        "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
-STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
+VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.10"
+CROP_AUDIT_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.10"
+LIVE_CRITIQUE_SCHEMAS = frozenset(
     {
         "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
         "figure-agent.critique.v1.17",
     }
 )
+VISUAL_CLASH_ACCOUNTING_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
+CROP_AUDIT_ACCOUNTING_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
+STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
 _VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS
 _STRUCTURED_ACCEPT_MIN_RATIONALE_CHARS = MICRO_DEFECT_ACCEPT_SIMPLIFICATION_MIN_RATIONALE_CHARS
-TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
-        "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
+TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
 AESTHETIC_LEVER_ACCOUNTING_SCHEMAS = frozenset(
     {
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
         "figure-agent.critique.v1.17",
     }
 )
-LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
-        "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
-UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS = frozenset(
-    {
-        "figure-agent.critique.v1.4",
-        "figure-agent.critique.v1.5",
-        "figure-agent.critique.v1.6",
-        "figure-agent.critique.v1.7",
-        "figure-agent.critique.v1.8",
-        "figure-agent.critique.v1.9",
-        "figure-agent.critique.v1.10",
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
-        "figure-agent.critique.v1.14",
-        "figure-agent.critique.v1.15",
-        "figure-agent.critique.v1.16",
-        "figure-agent.critique.v1.17",
-    }
-)
+LABEL_PATH_ACCOUNTING_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
+UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS = LIVE_CRITIQUE_SCHEMAS
 _HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"
 _HISTORICAL_VISUAL_CLASH_EXPECTED_KINDS = {
     ("VC026", "V"): "label_glyph_overlaps_internal_drawing",
@@ -624,6 +545,125 @@ def _aesthetic_intent_accounting_violations(
             ),
         )
     ]
+
+
+# Canonical detector sources a grounded_in_rule may cite (mirrors the prefixes
+# _candidate_ref_from_source recognizes). Referencing one anchors the finding to a
+# real detector rather than generic best-practice prose.
+_DETECTOR_SOURCE_ANCHORS: frozenset[str] = frozenset(
+    {"visual_clash", "text_boundary", "label_path", "undeclared_geometry"}
+)
+
+
+def _grounding_anchor_set(example_dir: Path, spec: dict[str, Any]) -> set[str]:
+    """Lowercased anchor strings a reference-free grounded_in_rule must cite one of:
+    a briefing rule section marker (§N), a panel (panel <id>), or a detector source."""
+    anchors: set[str] = set(_DETECTOR_SOURCE_ANCHORS)
+    briefing_path = example_dir / "briefing.md"
+    if briefing_path.is_file():
+        sections = parse_briefing(briefing_path.read_text(encoding="utf-8"))
+        rule_text = explicit_briefing_rule_text(sections)
+        anchors.update(
+            marker.replace(" ", "").lower() for marker in re.findall(r"§\s*\d+", rule_text)
+        )
+    panels = spec.get("panels")
+    if isinstance(panels, list):
+        for panel in panels:
+            if isinstance(panel, dict):
+                panel_id = panel.get("id")
+                if isinstance(panel_id, str) and panel_id.strip():
+                    label = panel_id.strip().lower()
+                    anchors.add(f"panel {label}")
+                    anchors.add(f"panel-{label}")
+    return anchors
+
+
+def _grounding_references_anchor(grounded_in_rule: str, anchors: set[str]) -> bool:
+    text = grounded_in_rule.lower().replace(" ", "")
+    # Compare against space-stripped anchors so "§ 3" and "panel b" match "§3"/"panelb".
+    return any(anchor.replace(" ", "") in text for anchor in anchors)
+
+
+def _reference_free_grounding_violations(
+    example_dir: Path,
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    if not has_reference_free_grounding_context(example_dir):
+        return []
+
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        spec: dict[str, Any] = {}
+    else:
+        try:
+            spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="reference_free_grounding",
+                    message=f"spec.yaml invalid for reference-free grounding check: {exc}",
+                )
+            ]
+    if declared_figure_reference_path(example_dir, spec) is not None:
+        return []
+    if participating_panel_reference_paths(example_dir, spec):
+        return []
+
+    try:
+        findings = critique_findings(frontmatter)
+    except CritiqueContractError as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="critique_contract",
+                message=str(exc),
+            )
+        ]
+    anchors = _grounding_anchor_set(example_dir, spec)
+    missing: list[str] = []
+    ungrounded: list[str] = []
+    try:
+        for index, finding in enumerate(findings):
+            label = critique_finding_id(finding, f"finding[{index}]")
+            grounded_in_rule = finding.get("grounded_in_rule")
+            if not isinstance(grounded_in_rule, str) or not grounded_in_rule.strip():
+                missing.append(label)
+            elif not _grounding_references_anchor(grounded_in_rule, anchors):
+                ungrounded.append(label)
+    except CritiqueContractError as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="critique_contract",
+                message=str(exc),
+            )
+        ]
+    violations: list[CritiqueLintViolation] = []
+    if missing:
+        violations.append(
+            CritiqueLintViolation(
+                severity="blocker",
+                category="reference_free_grounding",
+                message=(
+                    "reference-free critique findings must include grounded_in_rule "
+                    "anchored to a briefing rule, panel_goal, or detector id: " + ", ".join(missing)
+                ),
+            )
+        )
+    if ungrounded:
+        violations.append(
+            CritiqueLintViolation(
+                severity="blocker",
+                category="reference_free_grounding",
+                message=(
+                    "reference-free grounded_in_rule must reference a real briefing rule "
+                    "(§N), panel, or detector source (visual_clash / text_boundary / "
+                    "label_path / undeclared_geometry), not generic prose: " + ", ".join(ungrounded)
+                ),
+            )
+        )
+    return violations
 
 
 def _paper_context_anchor_strings(pack: dict[str, Any], fixture: str) -> set[str]:
@@ -1927,154 +1967,6 @@ def _crop_audit_accounting_violations(
     return []
 
 
-def _svg_polish_delta_accounting_violations(
-    example_dir: Path,
-    frontmatter: dict[str, Any],
-) -> list[CritiqueLintViolation]:
-    manifest_path = example_dir / SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH
-    if not manifest_path.is_file():
-        return []
-    try:
-        manifest = load_svg_polish_delta_manifest(manifest_path, example_dir=example_dir)
-        if svg_polish_delta_is_stale(manifest_path, example_dir=example_dir):
-            return [
-                CritiqueLintViolation(
-                    severity="blocker",
-                    category="svg_polish_delta_accounting",
-                    message="SVG polish delta manifest is stale; regenerate before critique",
-                )
-            ]
-    except SvgPolishDeltaError as exc:
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message=f"SVG polish delta manifest invalid: {exc}",
-            )
-        ]
-    if frontmatter.get("schema") not in SVG_POLISH_DELTA_AUDIT_SCHEMAS:
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message=(
-                    "fresh SVG polish delta requires an SVG-polish critique schema "
-                    f"({', '.join(sorted(SVG_POLISH_DELTA_AUDIT_SCHEMAS))})"
-                ),
-            )
-        ]
-    audit = frontmatter.get("svg_polish_delta_audit")
-    if not isinstance(audit, dict):
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message="missing svg_polish_delta_audit for fresh SVG polish delta",
-            )
-        ]
-    expected_paths = {
-        "before": manifest["artifacts"]["before_png"],
-        "after": manifest["artifacts"]["after_png"],
-        "diff": manifest["artifacts"]["diff_png"],
-    }
-    raw_items = audit.get("delta_image_audit_log")
-    if not isinstance(raw_items, list):
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message="svg_polish_delta_audit.delta_image_audit_log must be a list",
-            )
-        ]
-    image_ids = [
-        item.get("image_id").strip()
-        for item in raw_items
-        if isinstance(item, dict)
-        and isinstance(item.get("image_id"), str)
-        and item.get("image_id").strip()
-    ]
-    duplicate_ids = sorted({image_id for image_id in image_ids if image_ids.count(image_id) > 1})
-    if duplicate_ids:
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message=f"duplicate delta_image_audit_log ids: {', '.join(duplicate_ids)}",
-            )
-        ]
-    expected_ids = set(expected_paths)
-    unknown_ids = sorted(image_id for image_id in image_ids if image_id not in expected_ids)
-    if unknown_ids:
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message=f"unknown delta_image_audit_log ids: {', '.join(unknown_ids)}",
-            )
-        ]
-    missing_ids = sorted(expected_ids - set(image_ids))
-    if missing_ids:
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="svg_polish_delta_accounting",
-                message=f"missing delta_image_audit_log ids: {', '.join(missing_ids)}",
-            )
-        ]
-    for item in raw_items:
-        if not isinstance(item, dict):
-            continue
-        image_id = item.get("image_id")
-        path = item.get("path")
-        if isinstance(image_id, str) and path != expected_paths.get(image_id):
-            return [
-                CritiqueLintViolation(
-                    severity="blocker",
-                    category="svg_polish_delta_accounting",
-                    message=(
-                        f"delta_image_audit_log path for {image_id} must match "
-                        f"manifest path {expected_paths.get(image_id)}"
-                    ),
-                )
-            ]
-    return []
-
-
-def _aesthetic_gate_accounting_violations(
-    frontmatter: dict[str, Any],
-) -> list[CritiqueLintViolation]:
-    if frontmatter.get("schema") not in SVG_POLISH_DELTA_AUDIT_SCHEMAS:
-        return []
-    raw_items = frontmatter.get("aesthetic_gate_audit")
-    if not isinstance(raw_items, list):
-        return [
-            CritiqueLintViolation(
-                severity="blocker",
-                category="aesthetic_gate_accounting",
-                message="missing aesthetic_gate_audit for current SVG polish delta critique",
-            )
-        ]
-    for item in raw_items:
-        if not isinstance(item, dict):
-            continue
-        slot = item.get("slot")
-        evidence = _text_blob(item.get("evidence")).lower()
-        rationale = _text_blob(item.get("rationale")).lower()
-        evidence_blob = f"{evidence} {rationale}"
-        has_current_evidence = any(
-            marker in evidence_blob for marker in _CURRENT_ARTIFACT_EVIDENCE_MARKERS
-        )
-        if not has_current_evidence:
-            return [
-                CritiqueLintViolation(
-                    severity="blocker",
-                    category="aesthetic_gate_accounting",
-                    message=f"generic aesthetic_gate_audit evidence for {slot}",
-                )
-            ]
-    return []
-
-
 def _external_vision_review_violations(example_dir: Path) -> list[CritiqueLintViolation]:
     spec_path = example_dir / "spec.yaml"
     if not spec_path.is_file():
@@ -2159,6 +2051,9 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     violations.extend(_aesthetic_intent_accounting_violations(example_dir, frontmatter))
     if violations:
         return violations
+    violations.extend(_reference_free_grounding_violations(example_dir, frontmatter))
+    if violations:
+        return violations
     violations.extend(_paper_aesthetic_context_accounting_violations(example_dir, frontmatter))
     if violations:
         return violations
@@ -2167,13 +2062,6 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     )
     if violations:
         return violations
-    violations.extend(_svg_polish_delta_accounting_violations(example_dir, frontmatter))
-    if violations:
-        return violations
-    violations.extend(_aesthetic_gate_accounting_violations(frontmatter))
-    if violations:
-        return violations
-
     if frontmatter.get("schema") in STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS:
         violations.extend(_visual_clash_accept_simplification_violations(frontmatter))
     if violations:

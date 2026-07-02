@@ -39,22 +39,6 @@ def _vector(
     )
 
 
-def test_coordinate_and_final_artifact_notes_do_not_block_workflow_ready() -> None:
-    vector = _vector(
-        notes=["coordinate_hints_stale", "final_artifact_missing"],
-        final_artifact={
-            "state": "MISSING",
-            "kind": "polished_svg",
-            "path": "polish/svg_polish_manifest.yaml",
-        },
-    )
-
-    assert vector["workflow_ready"] is True
-    assert vector["golden_ready"] is True
-    assert vector["release_ready"] is False
-    assert vector["final_ready"] is False
-
-
 def test_spec_parse_note_blocks_workflow_and_release_readiness() -> None:
     vector = _vector(notes=["spec_parse_error"])
 
@@ -73,28 +57,19 @@ def test_tracked_golden_is_golden_ready_but_not_release_ready() -> None:
     assert vector["final_ready"] is False
 
 
-def test_fresh_polished_svg_is_required_for_polished_release_ready() -> None:
-    blocked = _vector(
+def test_invalid_final_artifact_blocks_release_readiness_only() -> None:
+    vector = _vector(
         final_artifact={
-            "state": "STALE",
+            "state": "INVALID",
             "kind": "polished_svg",
-            "path": "polish/demo.polished.svg",
-        }
-    )
-    fresh = _vector(
-        final_artifact={
-            "state": "FRESH",
-            "kind": "polished_svg",
-            "path": "polish/demo.polished.svg",
+            "path": "polish/demo.svg",
         }
     )
 
-    assert blocked["release_ready"] is False
-    assert blocked["final_ready"] is False
-    assert fresh["release_ready"] is True
-    assert fresh["final_ready"] is True
-
-
+    assert vector["workflow_ready"] is True
+    assert vector["golden_ready"] is True
+    assert vector["release_ready"] is False
+    assert vector["final_ready"] is False
 def test_publication_gate_fields_are_preserved_in_status_vector() -> None:
     publication_gate = {
         "publication_gate_state": "PROVENANCE_REQUIRED",

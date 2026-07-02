@@ -52,7 +52,7 @@ panels:
                         "source_line": 1,
                         "panel": "C",
                     }
-                ]
+                ],
             }
         ),
         encoding="utf-8",
@@ -90,12 +90,22 @@ def test_fig_agent_intent_and_candidates_are_read_only(tmp_path: Path) -> None:
     assert _tree(workspace) == before
 
 
+def test_fig_agent_attest_requires_interactive_terminal(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+
+    result = _run(workspace, "attest", "candidate_demo")
+
+    assert result.returncode == 1
+    assert "human attestation requires an interactive terminal" in result.stderr
+    assert not (fixture / "human_attestation.json").exists()
+
+
 def test_fig_agent_analyze_panel_is_read_only_json(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
     (fixture / "candidate_demo.tex").write_text(
-        "% Panel C\n"
-        "\\node (label-a) at (0,0) {Old Label};\n",
+        "% Panel C\n\\node (label-a) at (0,0) {Old Label};\n",
         encoding="utf-8",
     )
     before = _tree(workspace)
@@ -177,6 +187,48 @@ def test_fig_agent_candidates_accepts_panel_family_filters(tmp_path: Path) -> No
     assert payload["candidates"][0]["target"]["panel"] == "C"
     assert payload["candidates"][0]["candidate_hash"].startswith("sha256:")
     assert output.is_file()
+
+
+def test_fig_agent_candidates_accepts_design_safe_family_aliases(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "% Panel C\n"
+        "\\node[anchor=west, text width=2.0cm] at (3.0, 2.4) {mobility edge};\n"
+        "\\node[anchor=west] at (3.0, 2.0) {shallow};\n"
+        "\\draw[line width=0.50pt] (0,0) -- (1,0);\n"
+        "\\fill[cAmber!12] (0,0) rectangle (1,1);\n",
+        encoding="utf-8",
+    )
+
+    families = {
+        "label_offset": "label_offset",
+        "text_width_refit": "text_width_refit",
+        "panel_spacing_adjustment": "panel_spacing_adjust",
+        "stroke_hierarchy_adjustment": "line_weight_style",
+        "nonsemantic_background_quieting": "gradient_depth_fill",
+    }
+    for family, edit_class in families.items():
+        result = _run(
+            workspace,
+            "candidates",
+            "candidate_demo",
+            "--panel",
+            "C",
+            "--family",
+            family,
+            "--json",
+        )
+
+        assert result.returncode == 0, result.stderr
+        candidate = json.loads(result.stdout)["candidates"][0]
+        assert candidate["family"] == family
+        assert candidate["edit_class"] == edit_class
+        assert candidate["candidate_hash"].startswith("sha256:")
+        assert candidate["boundedness"]["not_svg_polish"] is True
+        assert "fig-agent compile candidate_demo --strict" in candidate["verification"][
+            "required_commands"
+        ]
 
 
 def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
@@ -473,9 +525,7 @@ def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> No
         "\\end{document}\n",
         encoding="utf-8",
     )
-    source_hash = "sha256:" + sha256(
-        (fixture / "candidate_demo.tex").read_bytes()
-    ).hexdigest()
+    source_hash = "sha256:" + sha256((fixture / "candidate_demo.tex").read_bytes()).hexdigest()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["operations"][0]["source_sha256"] = source_hash
     manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
@@ -536,10 +586,11 @@ def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> No
     assert json.loads(accept.stdout)["path"] == "build/candidates/CAND001/acceptance.json"
     apply_payload = json.loads(apply.stdout)
     assert apply_payload["schema"] == "figure-agent.candidate-apply-result.v1"
-    assert apply_payload["status"] in {"applied", "applied_with_failed_verification"}
-    assert set(apply_payload["post_apply"]) == {
+    assert apply_payload["status"] in {"applied", "applied_with_failed_verification", "rolled_back"}
+    assert set(apply_payload["post_apply"]) >= {
         "compile",
         "detector_recheck",
+        "class_verifiers",
         "export",
         "status",
     }
@@ -584,9 +635,7 @@ def test_fig_agent_apply_candidate_exits_nonzero_when_post_apply_fails(
         "\\end{document}\n",
         encoding="utf-8",
     )
-    source_hash = "sha256:" + sha256(
-        (fixture / "candidate_demo.tex").read_bytes()
-    ).hexdigest()
+    source_hash = "sha256:" + sha256((fixture / "candidate_demo.tex").read_bytes()).hexdigest()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["operations"][0]["source_sha256"] = source_hash
     manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
@@ -634,7 +683,7 @@ def test_fig_agent_apply_candidate_exits_nonzero_when_post_apply_fails(
     assert accept.returncode == 0, accept.stderr
     assert apply.returncode == 1
     payload = json.loads(apply.stdout)
-    assert payload["status"] == "applied_with_failed_verification"
+    assert payload["status"] in {"applied_with_failed_verification", "rolled_back"}
     assert payload["post_apply"]["compile"]["status"] == "failed"
 
 

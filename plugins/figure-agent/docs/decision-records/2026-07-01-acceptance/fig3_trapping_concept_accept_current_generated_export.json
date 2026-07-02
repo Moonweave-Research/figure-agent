@@ -1,0 +1,16 @@
+{
+  "schema": "figure-agent.human-decision-record.v1",
+  "fixture": "fig3_trapping_concept",
+  "packet_schema": "figure-agent.release-decision-packet.v1",
+  "packet_path": "docs/decision-packets/2026-07-01-acceptance/fig3_trapping_concept_acceptance_packet.json",
+  "packet_recommendation": "accept_current_generated_export",
+  "packet_timestamp": "2026-07-01T02:38:24Z",
+  "decision_kind": "accept_current_generated_export",
+  "agent_recommendation": "Accept current generated export for release only if the release operator explicitly chooses that option; this record captures the human decision separately from the packet recommendation.",
+  "human_decision": "accept_current_generated_export_selected_for_release_review_record",
+  "human_note": "Record the explicit release decision separately from the packet. This record does not mutate source, generated exports, golden artifacts, final-artifact declarations, publication state, or accepted state in Wave 1.",
+  "follow_up": {
+    "implementation_slice": "Wave 1 records the decision only; a later release-operation slice must perform and verify any accepted or final-artifact state mutation."
+  },
+  "mutation_boundary": "no_source_mutation"
+}

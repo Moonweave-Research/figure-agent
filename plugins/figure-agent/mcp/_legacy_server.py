@@ -553,8 +553,10 @@ def _tool_env(plugin_root: Path, workspace_root: Path) -> dict[str, str]:
     env["FIGURE_AGENT_WORKSPACE"] = str(workspace_root)
     import_paths = os.pathsep.join(str(path) for path in SCRIPT_IMPORT_DIRS)
     existing_pythonpath = env.get("PYTHONPATH")
-    env["PYTHONPATH"] = import_paths if not existing_pythonpath else os.pathsep.join(
-        (import_paths, existing_pythonpath)
+    env["PYTHONPATH"] = (
+        import_paths
+        if not existing_pythonpath
+        else os.pathsep.join((import_paths, existing_pythonpath))
     )
     return env
 
@@ -768,6 +770,21 @@ def _run_json_fig_agent_tool(
     )
     if json_error is not None:
         return json_error
+    if (
+        isinstance(payload, dict)
+        and isinstance(payload.get("candidates"), list)
+        and len(payload["candidates"]) == 0
+        and payload.get("refusals")
+    ):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            no_op=True,
+            refusals=payload["refusals"],
+            **{payload_key: payload},
+        )
     return _tool_envelope(
         schema,
         success=True,
@@ -1592,16 +1609,55 @@ def _apply_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
     success = status == "applied"
     if success:
         error = None
-    elif status == "applied_with_failed_verification":
-        # The .tex was mutated and a rollback.patch was produced, but the
-        # post-apply compile/export/status verification failed: the working tree
-        # is modified and the caller may need to roll back via apply_result.
+    elif status == "rolled_back":
+        post = payload.get("post_apply", {}) if isinstance(payload, dict) else {}
+        rollback_exports = post.get("rollback_exports", {}) if isinstance(post, dict) else {}
+        suffix = (
+            " Source and generated exports were restored."
+            if isinstance(rollback_exports, dict)
+            and rollback_exports.get("status") == "success"
+            else (
+                " Source was restored; inspect apply_result.post_apply for "
+                "generated artifact cleanup."
+            )
+        )
         error = _error(
             "unsupported_operation",
-            "apply-candidate mutated the working tree but post-apply verification "
-            "failed (status applied_with_failed_verification); roll back via "
-            "apply_result.rollback_patch.",
+            "apply-candidate post-apply verification failed (status rolled_back); "
+            f"the edit was automatically rolled back.{suffix}",
         )
+    elif status == "applied_with_failed_verification":
+        # Post-apply verification failed. The efficacy recheck and the
+        # value-preservation gate AUTO-ROLL-BACK the .tex, so when rolled_back is
+        # set the working tree is already restored; otherwise (e.g. an
+        # export/compile stage failed) the mutation persists and the caller rolls
+        # back via apply_result.rollback_patch.
+        post = payload.get("post_apply", {}) if isinstance(payload, dict) else {}
+        verifiers = post.get("class_verifiers", {}) if isinstance(post, dict) else {}
+        if isinstance(verifiers, dict) and verifiers.get("rolled_back"):
+            rollback_exports = post.get("rollback_exports", {}) if isinstance(post, dict) else {}
+            suffix = (
+                " Source and generated exports were restored."
+                if isinstance(rollback_exports, dict)
+                and rollback_exports.get("status") == "success"
+                else (
+                    " Source was restored; inspect apply_result.post_apply for "
+                    "generated artifact cleanup."
+                )
+            )
+            error = _error(
+                "unsupported_operation",
+                "apply-candidate post-apply verification failed (status "
+                "applied_with_failed_verification); the edit was automatically rolled "
+                f"back.{suffix}",
+            )
+        else:
+            error = _error(
+                "unsupported_operation",
+                "apply-candidate mutated the working tree but post-apply verification "
+                "failed (status applied_with_failed_verification); roll back via "
+                "apply_result.rollback_patch.",
+            )
     else:
         # blocked/ready and any other non-applied status: the gate refused the
         # candidate before mutating; the working tree is unchanged.

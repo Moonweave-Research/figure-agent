@@ -6,11 +6,6 @@ from collections.abc import Mapping
 
 from export_freshness import EXPORT_FRESH, EXPORT_TRACKED_GOLDEN
 from status_next_policy import critique_needs_action
-from svg_polish_manifest import (
-    FINAL_ARTIFACT_FRESH,
-    FINAL_ARTIFACT_NONE,
-    FINAL_ARTIFACT_POLISHED_SVG,
-)
 
 _NON_BLOCKING_WORKFLOW_NOTE_PREFIXES = ("coordinate_hints_", "final_artifact_")
 
@@ -49,10 +44,10 @@ def release_ready(
 ) -> bool:
     if not golden_ready or exports_substate != EXPORT_FRESH:
         return False
-    if final_artifact["state"] not in {FINAL_ARTIFACT_NONE, FINAL_ARTIFACT_FRESH}:
+    if final_artifact.get("kind") != "generated_export":
         return False
-    if final_artifact["kind"] == FINAL_ARTIFACT_POLISHED_SVG:
-        return final_artifact["state"] == FINAL_ARTIFACT_FRESH
+    if final_artifact.get("state") not in {"NONE", "FRESH"}:
+        return False
     return True
 
 

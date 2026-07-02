@@ -57,7 +57,7 @@ def _write_metadata_critique(
     critique_input_hash: str,
     generator_version: str,
     rubric_version: str,
-    schema: str = "figure-agent.critique.v1",
+    schema: str = "figure-agent.critique.v1.10",
 ) -> None:
     critique_path.write_text(
         "---\n"
@@ -87,7 +87,7 @@ def test_critique_freshness_diagnostics_reports_no_mismatch_for_fresh_metadata(
         example_dir / "critique.md",
         critique_input_hash=expected_hash,
         generator_version=critique_generator_version(generator_path),
-        rubric_version=CRITIQUE_RUBRIC_VERSION,
+        rubric_version=expected_critique_rubric_version(example_dir),
     )
 
     diagnostics = critique_freshness_diagnostics(
@@ -118,7 +118,7 @@ def test_critique_freshness_diagnostics_reports_generator_mismatch(tmp_path: Pat
         example_dir / "critique.md",
         critique_input_hash=expected_hash,
         generator_version="sha256:stale",
-        rubric_version=CRITIQUE_RUBRIC_VERSION,
+        rubric_version=expected_critique_rubric_version(example_dir),
     )
 
     diagnostics = critique_freshness_diagnostics(
@@ -585,43 +585,6 @@ def test_critique_manifest_does_not_crash_on_invalid_paper_context_id(
     assert spec_path in paths
 
 
-def test_critique_manifest_includes_svg_polish_delta_pack_when_present(
-    tmp_path: Path,
-) -> None:
-    example_dir = tmp_path / "examples" / "demo"
-    example_dir.mkdir(parents=True)
-    style_lock = tmp_path / "style-lock.yml"
-    style_lock.write_text("style\n", encoding="utf-8")
-    for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
-    delta_dir = example_dir / "polish" / "aesthetic_delta"
-    delta_dir.mkdir(parents=True)
-    delta_manifest = delta_dir / "delta_manifest.json"
-    before_png = delta_dir / "before.png"
-    after_png = delta_dir / "after.png"
-    diff_png = delta_dir / "diff.png"
-    delta_manifest.write_text('{"schema":"figure-agent.svg-polish-delta.v1"}\n')
-    before_png.write_bytes(b"before")
-    after_png.write_bytes(b"after")
-    diff_png.write_bytes(b"diff")
-
-    paths = critique_manifest_paths(
-        example_dir,
-        "demo",
-        {"name": "demo"},
-        style_lock_path=style_lock,
-    )
-    before = input_manifest_hash(paths, base_dir=tmp_path)
-    diff_png.write_bytes(b"changed diff")
-    after = input_manifest_hash(paths, base_dir=tmp_path)
-
-    assert delta_manifest in paths
-    assert before_png in paths
-    assert after_png in paths
-    assert diff_png in paths
-    assert before != after
-
-
 def test_critique_manifest_ignores_generated_export_svg_without_polish_opt_in(
     tmp_path: Path,
 ) -> None:
@@ -647,72 +610,6 @@ def test_critique_manifest_ignores_generated_export_svg_without_polish_opt_in(
 
     assert export_svg not in paths
     assert before == after
-
-
-def test_critique_manifest_includes_generated_export_svg_for_polished_svg_opt_in(
-    tmp_path: Path,
-) -> None:
-    example_dir = tmp_path / "examples" / "demo"
-    example_dir.mkdir(parents=True)
-    style_lock = tmp_path / "style-lock.yml"
-    style_lock.write_text("style\n", encoding="utf-8")
-    for name in ("demo.tex", "briefing.md"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
-    (example_dir / "spec.yaml").write_text(
-        "name: demo\nfinal_artifact:\n  kind: polished_svg\n",
-        encoding="utf-8",
-    )
-    export_svg = example_dir / "exports" / "demo.svg"
-    export_svg.parent.mkdir()
-    export_svg.write_text("<svg>generated export</svg>\n", encoding="utf-8")
-
-    paths = critique_manifest_paths(
-        example_dir,
-        "demo",
-        {"name": "demo", "final_artifact": {"kind": "polished_svg"}},
-        style_lock_path=style_lock,
-    )
-    before = input_manifest_hash(paths, base_dir=tmp_path)
-    export_svg.write_text("<svg>changed generated export</svg>\n", encoding="utf-8")
-    after = input_manifest_hash(paths, base_dir=tmp_path)
-
-    assert export_svg in paths
-    assert before != after
-
-
-def test_critique_manifest_includes_generated_export_svg_for_polish_delta_pack(
-    tmp_path: Path,
-) -> None:
-    example_dir = tmp_path / "examples" / "demo"
-    example_dir.mkdir(parents=True)
-    style_lock = tmp_path / "style-lock.yml"
-    style_lock.write_text("style\n", encoding="utf-8")
-    for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
-    export_svg = example_dir / "exports" / "demo.svg"
-    export_svg.parent.mkdir()
-    export_svg.write_text("<svg>generated export</svg>\n", encoding="utf-8")
-    delta_dir = example_dir / "polish" / "aesthetic_delta"
-    delta_dir.mkdir(parents=True)
-    (delta_dir / "delta_manifest.json").write_text(
-        '{"schema":"figure-agent.svg-polish-delta.v1"}\n',
-        encoding="utf-8",
-    )
-
-    paths = critique_manifest_paths(
-        example_dir,
-        "demo",
-        {"name": "demo"},
-        style_lock_path=style_lock,
-    )
-    before = input_manifest_hash(paths, base_dir=tmp_path)
-    export_svg.write_text("<svg>changed generated export</svg>\n", encoding="utf-8")
-    after = input_manifest_hash(paths, base_dir=tmp_path)
-
-    assert export_svg in paths
-    assert before != after
-
-
 def test_critique_manifest_ignores_external_vision_review_without_opt_in(
     tmp_path: Path,
 ) -> None:
@@ -831,20 +728,6 @@ def test_expected_critique_rubric_version_uses_v1_14_for_journal_playbook_and_in
     )
 
     assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_14
-
-
-def test_expected_critique_rubric_version_uses_v1_17_for_svg_delta(
-    tmp_path: Path,
-) -> None:
-    example_dir = tmp_path / "examples" / "demo"
-    delta_dir = example_dir / "polish" / "aesthetic_delta"
-    delta_dir.mkdir(parents=True)
-    (delta_dir / "delta_manifest.json").write_text(
-        '{"schema":"figure-agent.svg-polish-delta.v1"}\n',
-        encoding="utf-8",
-    )
-
-    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_17
 
 
 def test_expected_critique_rubric_version_uses_v1_17_for_crop_manifest(

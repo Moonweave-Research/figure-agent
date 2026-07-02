@@ -1,0 +1,400 @@
+# ruff: noqa: E402, I001
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
+
+import style_benchmark_comparison  # noqa: E402
+
+
+REAL_COMPARISON = (
+    PLUGIN_ROOT
+    / "docs"
+    / "style-benchmark-comparisons"
+    / "2026-07-01-wave-f"
+    / "fig1_overview_v2_pair_001_vault.json"
+)
+REAL_COMPARISON_DIR = REAL_COMPARISON.parent
+REQUIRED_FAMILY_EVIDENCE_KEYS = {
+    "what_can_improve",
+    "forbidden_semantic_changes",
+    "proof_criteria",
+    "human_only_question",
+}
+
+
+def _write_comparison(path: Path, payload: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def _copy_plugin_file(plugin_root: Path, relative: str) -> None:
+    source = PLUGIN_ROOT / relative
+    target = plugin_root / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+
+def _real_payload_copy(tmp_path: Path) -> tuple[Path, Path]:
+    plugin_root = tmp_path / "plugin"
+    for relative in (
+        "docs/style-benchmark-packs/2026-06-30-wave-c/fig1_overview_v2_pair_001_vault.json",
+        "docs/decision-packets/2026-06-30-wave-c/fig1_overview_v2_pair_001_vault.json",
+        "docs/decision-records/2026-06-30-wave-c/fig1_overview_v2_pair_001_vault.json",
+        (
+            "docs/decision-records/2026-07-01-wave-e/"
+            "fig1_overview_v2_pair_001_vault_keep_current_style.json"
+        ),
+        "examples/fig1_overview_v2_pair_001_vault/benchmark_contract.yaml",
+        "examples/fig1_overview_v2_pair_001_vault/aesthetic_intent.yaml",
+    ):
+        _copy_plugin_file(plugin_root, relative)
+    payload = json.loads(REAL_COMPARISON.read_text(encoding="utf-8"))
+    path = (
+        plugin_root
+        / "docs"
+        / "style-benchmark-comparisons"
+        / "2026-07-01-wave-f"
+        / "fig1_overview_v2_pair_001_vault.json"
+    )
+    _write_comparison(path, payload)
+    return plugin_root, Path(
+        "docs/style-benchmark-comparisons/2026-07-01-wave-f/"
+        "fig1_overview_v2_pair_001_vault.json"
+    )
+
+
+def test_real_wave_f_style_benchmark_comparison_loads() -> None:
+    payload = style_benchmark_comparison.load_comparison(
+        "fig1_overview_v2_pair_001_vault",
+        plugin_root=PLUGIN_ROOT,
+    )
+
+    assert payload["schema"] == style_benchmark_comparison.SCHEMA
+    assert payload["human_style_decision"] == "keep_current_style"
+    assert payload["target_style_class"] == (
+        "restrained editorial multipanel scientific schematic"
+    )
+    assert {
+        candidate["id"] for candidate in payload["candidate_family_comparisons"]
+    } == style_benchmark_comparison.REQUIRED_CANDIDATE_FAMILIES
+    winners = [
+        candidate
+        for candidate in payload["candidate_family_comparisons"]
+        if candidate["result"] == "winner_candidate"
+    ]
+    assert winners == [
+        {
+            "id": "current_style",
+            "result": "winner_candidate",
+            "mutation_boundary": "no_source_mutation",
+            "authorizes_mutation": False,
+            "semantic_change_allowed": False,
+            "comparison_basis": [
+                "human decision selected keep_current_style as policy state only",
+                (
+                    "current style remains the benchmark until a candidate beats it "
+                    "on measurable checks and human art direction"
+                ),
+            ],
+            "failure_modes": [
+                "can still be displaced by a later candidate with stronger evidence",
+                (
+                    "does not approve release, accepted-state mutation, export "
+                    "mutation, or golden mutation"
+                ),
+            ],
+            "prerequisite_evidence": [
+                "Wave E decision record keeps current style with no_source_mutation boundary",
+                "Wave C benchmark pack defines target style class and rejection rules",
+            ],
+            "what_can_improve": [
+                (
+                    "Keeps the current manuscript-ready style as the benchmark while "
+                    "future candidates prove a real gain."
+                ),
+            ],
+            "forbidden_semantic_changes": [
+                (
+                    "May not change panel roles, measured quantities, force families, "
+                    "semantic colors, required labels, or mechanism story."
+                ),
+            ],
+            "proof_criteria": [
+                (
+                    "A challenger must improve benchmark checks or named aesthetic "
+                    "levers without adding hard regressions or semantic risk."
+                ),
+            ],
+            "human_only_question": (
+                "Is staying with the current restrained overview preferable to "
+                "leaving it for a visually different candidate?"
+            ),
+        }
+    ]
+    assert all(
+        candidate["authorizes_mutation"] is False
+        for candidate in payload["candidate_family_comparisons"]
+    )
+    assert all(
+        candidate["semantic_change_allowed"] is False
+        for candidate in payload["candidate_family_comparisons"]
+    )
+
+
+def test_real_fig3_style_benchmark_comparison_loads() -> None:
+    payload = style_benchmark_comparison.load_comparison(
+        "fig3_trapping_concept",
+        plugin_root=PLUGIN_ROOT,
+    )
+
+    assert payload["schema"] == style_benchmark_comparison.SCHEMA
+    assert payload["human_style_decision"] == "keep_current_style"
+    assert payload["target_style_class"] == (
+        "restrained two-panel scientific mechanism schematic"
+    )
+    assert payload["default_recommendation"] == (
+        "keep_current_style_until_candidate_beats_benchmark"
+    )
+    assert {
+        candidate["id"] for candidate in payload["candidate_family_comparisons"]
+    } == style_benchmark_comparison.REQUIRED_CANDIDATE_FAMILIES
+    assert all(
+        candidate["authorizes_mutation"] is False
+        for candidate in payload["candidate_family_comparisons"]
+    )
+    assert all(
+        candidate["semantic_change_allowed"] is False
+        for candidate in payload["candidate_family_comparisons"]
+    )
+
+
+def test_real_wave_f_comparison_docs_encode_bounded_family_evidence() -> None:
+    for path in sorted(REAL_COMPARISON_DIR.glob("*.json")):
+        fixture = path.stem
+        payload = style_benchmark_comparison.load_comparison(
+            fixture,
+            plugin_root=PLUGIN_ROOT,
+            comparison_path=path.relative_to(PLUGIN_ROOT),
+        )
+
+        candidates = {
+            candidate["id"]: candidate
+            for candidate in payload["candidate_family_comparisons"]
+        }
+        assert set(candidates) == style_benchmark_comparison.REQUIRED_CANDIDATE_FAMILIES
+        assert candidates["current_style"]["result"] == "winner_candidate"
+        assert candidates["restrained_tikz_refinement"]["mutation_boundary"] == (
+            "source_mutation_requires_separate_approval"
+        )
+        assert candidates["editorial_redesign"]["result"] == "rejected_semantic_risk"
+        assert candidates["svg_polish_handoff"]["result"] == "blocked_missing_evidence"
+        assert "ready_for_svg_polish" in "\n".join(
+            candidates["svg_polish_handoff"]["prerequisite_evidence"]
+        )
+        assert all(
+            REQUIRED_FAMILY_EVIDENCE_KEYS <= set(candidate)
+            for candidate in candidates.values()
+        )
+        rejection_rules = "\n".join(payload["candidate_rejection_rules"])
+        assert "prettier" in rejection_rules
+        assert "semantic" in rejection_rules
+
+
+def test_candidate_family_cannot_authorize_mutation(tmp_path: Path) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["candidate_family_comparisons"][1]["authorizes_mutation"] = True
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="candidate_authorizes_mutation",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
+
+
+def test_candidate_family_requires_bounded_benchmark_contract_fields(
+    tmp_path: Path,
+) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    del payload["candidate_family_comparisons"][0]["human_only_question"]
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="human_only_question_invalid",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
+
+
+def test_comparison_summary_preserves_read_only_family_evidence() -> None:
+    payload = style_benchmark_comparison.load_comparison(
+        "fig1_overview_v2_pair_001_vault",
+        plugin_root=PLUGIN_ROOT,
+    )
+    summary = style_benchmark_comparison.summarize_comparison(payload)
+
+    current = summary["candidate_family_evidence"]["current_style"]
+    assert current["what_can_improve"][0].startswith("Keeps the current manuscript-ready")
+    assert "panel roles" in current["forbidden_semantic_changes"][0]
+    assert "hard regressions" in current["proof_criteria"][0]
+    assert current["human_only_question"].endswith("visually different candidate?")
+
+
+def test_prettier_candidate_cannot_allow_semantic_change(tmp_path: Path) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    editorial = payload["candidate_family_comparisons"][2]
+    editorial["result"] = "eligible"
+    editorial["semantic_change_allowed"] = True
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="candidate_semantic_change_allowed",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
+
+
+def test_comparison_requires_local_font_hierarchy_lint(tmp_path: Path) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["benchmark_measurable_checks"] = [
+        check
+        for check in payload["benchmark_measurable_checks"]
+        if "style_lock_typography" not in check
+    ]
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="style_lock_typography_check_missing",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
+
+
+def test_svg_polish_candidate_requires_ready_for_svg_polish_evidence(tmp_path: Path) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    svg_candidate = payload["candidate_family_comparisons"][3]
+    svg_candidate["prerequisite_evidence"] = ["separate SVG approval required"]
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="svg_polish_prerequisite_missing",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
+
+
+def test_editorial_redesign_cannot_be_winner_without_rendered_candidate_and_approval(
+    tmp_path: Path,
+) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    editorial = payload["candidate_family_comparisons"][2]
+    editorial["result"] = "winner_candidate"
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="non_current_winner_requires_real_candidate",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
+
+
+def test_comparison_requires_family_proof_criteria(tmp_path: Path) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    del payload["candidate_family_comparisons"][0]["evidence_to_prove_better"]
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="proof_criteria_invalid",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
+
+
+def test_comparison_forbidden_semantics_must_match_pack(tmp_path: Path) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["forbidden_semantic_changes"] = ["semantic drift allowed by mistake"]
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="forbidden_semantic_changes_pack_mismatch",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )
+
+
+def test_comparison_requires_visual_clash_delta_check(tmp_path: Path) -> None:
+    plugin_root, relative_path = _real_payload_copy(tmp_path)
+    path = plugin_root / relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["benchmark_measurable_checks"] = [
+        check
+        for check in payload["benchmark_measurable_checks"]
+        if "visual_clash_delta" not in check
+    ]
+    _write_comparison(path, payload)
+
+    with pytest.raises(
+        style_benchmark_comparison.StyleBenchmarkComparisonError,
+        match="visual_clash_delta_check_missing",
+    ):
+        style_benchmark_comparison.load_comparison(
+            "fig1_overview_v2_pair_001_vault",
+            plugin_root=plugin_root,
+            comparison_path=relative_path,
+        )

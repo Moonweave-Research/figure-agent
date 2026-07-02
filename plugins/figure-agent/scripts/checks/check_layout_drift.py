@@ -1,27 +1,5 @@
 #!/usr/bin/env python3
-"""check_layout_drift.py — anchor-driven layout drift gate (Layer 6).
-
-Compares the compiled PDF's text positions against the reference PNG's OCR
-positions (Layer 2.5 coordinate_hints.yaml), using the human-curated
-``golden_contract.required_labels`` from spec.yaml as anchors.
-
-Usage:
-    python3 scripts/check_layout_drift.py <fixture-name>|examples/<fixture-name> [--strict]
-    python3 scripts/check_layout_drift.py . [--strict]  # from inside compile.sh
-
-For each required label:
-  * find the phrase in the OCR text_labels (reference) → ref normalized center
-  * find the phrase in pdftotext words (build PDF) → pdf normalized center
-  * drift = Euclidean distance in [0,1]^2 normalized canvas
-  * matched_ok / drifted / uncovered_{ref,build,both}
-
-Skips silently with exit 0 when:
-  * spec.yaml has no golden_contract.required_labels (ordinary fixture), or
-  * coordinate_hints.yaml is missing (Layer 2.5 not run).
-
---strict makes drifted labels exit 1 (uncovered remains exit 0 — a different
-gate's job).
-"""
+"""Anchor-based layout drift check for fixtures with coordinate hints."""
 
 from __future__ import annotations
 
@@ -30,512 +8,254 @@ import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import yaml
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1]
-for script_dir in reversed(
-    (
-        SCRIPTS_DIR,
-        SCRIPTS_DIR / "checks",
-        SCRIPTS_DIR / "candidates",
-        SCRIPTS_DIR / "quality",
-        SCRIPTS_DIR / "loop",
-        SCRIPTS_DIR / "driver",
-        SCRIPTS_DIR / "svg_polish",
-    )
-):
-    sys.path.insert(0, str(script_dir))
+sys.path.insert(0, str(SCRIPTS_DIR))
 
-import fixture_identity  # noqa: E402
 from check_visual_clash import extract_pdf_words_and_page  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 
-DEFAULT_DRIFT_THRESHOLD = 0.05  # fraction of normalized canvas
-# Phrases consisting only of tokens ≤ this length are treated as ambiguous
-# symbols (CB, VB, n, g e t, e t, I t…) and skipped — Tesseract picks them up
-# inside other words ("converged", "interpretation"), and pdftotext fragments
-# math glyphs differently again, so a name match alone is not a position
-# claim. They get a dedicated reporting bucket rather than a measurement.
-AMBIGUOUS_TOKEN_MAX_LEN = 2
+DEFAULT_DRIFT_THRESHOLD = 0.05
 
 LabelSpec = str | list[str]
-BBox = tuple[float, float, float, float]
 
 
 @dataclass(frozen=True)
 class DriftResult:
     label: str
     matched_form: str | None
-    status: str  # matched_ok | drifted | uncovered_ref | uncovered_build
-    #            | uncovered_both | excluded_ambiguous
+    status: str
     ref_center: tuple[float, float] | None
     pdf_center: tuple[float, float] | None
     drift: float | None
 
 
-class LayoutDriftCliError(Exception):
-    """Expected user-facing CLI target validation failure."""
-
-
 def _normalize_token(text: str) -> str:
-    """Lowercase + strip surrounding punctuation. Keep inner punct (e.g. trap-depth)."""
     return text.strip(" \t\n\r.,;:()[]{}'\"!?").lower()
+
+
+def _tokens(text: str) -> list[str]:
+    return [token for token in (_normalize_token(part) for part in text.split()) if token]
 
 
 def _label_forms(label: LabelSpec) -> list[str]:
     if isinstance(label, list):
-        return [str(form) for form in label if str(form).strip()]
+        return [str(item) for item in label if str(item).strip()]
     return [str(label)]
 
 
-def _phrase_tokens(phrase: str) -> list[str]:
-    return [_normalize_token(t) for t in phrase.split() if _normalize_token(t)]
+def _center(bbox: tuple[float, float, float, float]) -> tuple[float, float]:
+    x0, y0, x1, y1 = bbox
+    return ((x0 + x1) / 2.0, (y0 + y1) / 2.0)
 
 
-def _is_ambiguous_label(label: LabelSpec) -> bool:
-    """Return True when every form's tokens are all <= AMBIGUOUS_TOKEN_MAX_LEN."""
-    forms = _label_forms(label)
-    if not forms:
-        return False
-    for form in forms:
-        tokens = _phrase_tokens(form)
-        if not tokens:
-            continue
-        if any(len(t) > AMBIGUOUS_TOKEN_MAX_LEN for t in tokens):
-            return False
-    return True
-
-
-# Spatial matching tolerance. The step distance between two phrase tokens is
-# accepted when it falls within `SPATIAL_TOL × max(any label dimension)`. A
-# single center-distance metric handles both layouts that occur in practice:
-# horizontal flow (same row, separated by a small gap) and vertical wrap
-# (line break inside a multi-word phrase, where dy ≈ 1–2 × label height).
-# OCR output ordering is not phrase-aware — noise tokens get interleaved —
-# so geometry beats list contiguity.
-SPATIAL_TOL = 2.5
-
-
-def _word_center(word: dict) -> tuple[float, float]:
+def _union_bbox(words: list[dict[str, Any]]) -> tuple[float, float, float, float]:
+    bboxes = [_word_bbox(word) for word in words]
     return (
-        0.5 * (word["xmin"] + word["xmax"]),
-        0.5 * (word["ymin"] + word["ymax"]),
+        min(bbox[0] for bbox in bboxes),
+        min(bbox[1] for bbox in bboxes),
+        max(bbox[2] for bbox in bboxes),
+        max(bbox[3] for bbox in bboxes),
     )
 
 
-def _word_max_dim(word: dict) -> float:
-    return max(
-        word["xmax"] - word["xmin"],
-        word["ymax"] - word["ymin"],
-        1.0,
+def _word_bbox(word: dict[str, Any]) -> tuple[float, float, float, float]:
+    if "bbox" in word and isinstance(word["bbox"], list | tuple) and len(word["bbox"]) == 4:
+        return tuple(float(value) for value in word["bbox"])  # type: ignore[return-value]
+    return (
+        float(word["xmin"]),
+        float(word["ymin"]),
+        float(word["xmax"]),
+        float(word["ymax"]),
     )
 
 
-def _spatial_neighbor(
-    prev: dict,
-    candidates: list[dict],
-    *,
-    tol: float = SPATIAL_TOL,
-) -> dict | None:
-    """Pick the closest candidate within ``tol × max label dimension`` of prev.
-
-    Returns the candidate with smallest center-to-center distance, or None
-    when no candidate is close enough. Using max-dim instead of separate
-    row/col bounds collapses horizontal-flow and vertical-wrap into one
-    metric — both reflect "tokens that visually belong to one phrase".
-    """
-    prev_cx, prev_cy = _word_center(prev)
-    best: dict | None = None
-    best_dist: float | None = None
-    for cand in candidates:
-        cand_cx, cand_cy = _word_center(cand)
-        dist = math.dist((prev_cx, prev_cy), (cand_cx, cand_cy))
-        budget = tol * max(_word_max_dim(prev), _word_max_dim(cand))
-        if dist > budget:
-            continue
-        if best_dist is None or dist < best_dist:
-            best = cand
-            best_dist = dist
-    return best
-
-
-def _find_phrase_in_words(phrase_tokens: list[str], words: list[dict]) -> BBox | None:
-    """Find the spatially closest chain of words matching ``phrase_tokens``.
-
-    For each candidate start, walks the phrase token-by-token, picking the
-    nearest same-row neighbor for each next token. The chain with the
-    smallest total step distance wins. Returns the union bbox, or None if
-    any token has no spatially compatible neighbor.
-
-    Single-token phrases fall back to the first match (no spatial constraint
-    available with one word).
-    """
-    if not phrase_tokens or not words:
+def _find_phrase_bbox(
+    phrase: str,
+    words: list[dict[str, Any]],
+) -> tuple[float, float, float, float] | None:
+    phrase_tokens = _tokens(phrase)
+    if not phrase_tokens:
         return None
-    norm = [_normalize_token(w["text"]) for w in words]
-    starts = [words[i] for i, tok in enumerate(norm) if tok == phrase_tokens[0]]
-    if not starts:
-        return None
-
-    if len(phrase_tokens) == 1:
-        chain = [starts[0]]
-    else:
-        best_chain: list[dict] | None = None
-        best_score: float | None = None
-        for start in starts:
-            chain = [start]
-            ok = True
-            for next_tok in phrase_tokens[1:]:
-                used_ids = {id(w) for w in chain}
-                pool = [
-                    words[i]
-                    for i, tok in enumerate(norm)
-                    if tok == next_tok and id(words[i]) not in used_ids
-                ]
-                if not pool:
-                    ok = False
-                    break
-                picked = _spatial_neighbor(chain[-1], pool)
-                if picked is None:
-                    ok = False
-                    break
-                chain.append(picked)
-            if not ok:
-                continue
-            score = sum(
-                math.dist(_word_center(chain[i]), _word_center(chain[i + 1]))
-                for i in range(len(chain) - 1)
-            )
-            if best_score is None or score < best_score:
-                best_chain = chain
-                best_score = score
-        if best_chain is None:
-            return None
-        chain = best_chain
-
-    xs0 = min(w["xmin"] for w in chain)
-    ys0 = min(w["ymin"] for w in chain)
-    xs1 = max(w["xmax"] for w in chain)
-    ys1 = max(w["ymax"] for w in chain)
-    return (xs0, ys0, xs1, ys1)
-
-
-def _find_phrase_candidates_in_words(phrase_tokens: list[str], words: list[dict]) -> list[BBox]:
-    """Return candidate bboxes for a phrase.
-
-    Single-token labels can appear multiple times in one figure. Returning all
-    single-token candidates lets evaluate_drift pair repeated labels by geometry
-    instead of blindly comparing the first OCR hit with the first PDF hit.
-    """
-    if not phrase_tokens or not words:
-        return []
+    normalized = [_normalize_token(str(word.get("text", ""))) for word in words]
+    for index in range(0, len(words) - len(phrase_tokens) + 1):
+        if normalized[index : index + len(phrase_tokens)] == phrase_tokens:
+            return _union_bbox(words[index : index + len(phrase_tokens)])
     if len(phrase_tokens) == 1:
         token = phrase_tokens[0]
-        return [
-            (word["xmin"], word["ymin"], word["xmax"], word["ymax"])
-            for word in words
-            if _normalize_token(word["text"]) == token
-        ]
-    hit = _find_phrase_in_words(phrase_tokens, words)
-    return [hit] if hit is not None else []
+        for index, normalized_token in enumerate(normalized):
+            if normalized_token == token:
+                return _word_bbox(words[index])
+    return None
 
 
-def _hints_to_word_list(hints: dict) -> list[dict]:
-    """Convert coordinate_hints.text_labels to the same shape as pdf words."""
-    out: list[dict] = []
-    for entry in hints.get("text_labels", []) or []:
-        bbox = entry.get("bbox")
-        text = entry.get("text")
-        if not bbox or not text or len(bbox) != 4:
-            continue
-        out.append(
-            {
-                "text": str(text),
-                "xmin": float(bbox[0]),
-                "ymin": float(bbox[1]),
-                "xmax": float(bbox[2]),
-                "ymax": float(bbox[3]),
-            }
-        )
-    return out
-
-
-def _center_norm(
-    bbox: tuple[float, float, float, float], canvas: tuple[float, float]
-) -> tuple[float, float]:
-    cw, ch = canvas
-    cx = 0.5 * (bbox[0] + bbox[2]) / cw if cw else 0.0
-    cy = 0.5 * (bbox[1] + bbox[3]) / ch if ch else 0.0
-    return (cx, cy)
+def _required_labels(spec: dict[str, Any]) -> list[LabelSpec]:
+    contract = spec.get("golden_contract")
+    if not isinstance(contract, dict):
+        return []
+    labels = contract.get("required_labels")
+    if not isinstance(labels, list):
+        return []
+    return [label for label in labels if isinstance(label, str | list)]
 
 
 def evaluate_drift(
     required_labels: list[LabelSpec],
-    hints: dict,
-    pdf_words: list[dict],
+    coordinate_hints: dict[str, Any],
+    pdf_words: list[dict[str, Any]],
     pdf_page_size: tuple[float, float],
 ) -> list[DriftResult]:
-    ref_words = _hints_to_word_list(hints)
-    ref_size = hints.get("reference_image_size") or [0, 0]
-    ref_canvas = (float(ref_size[0]), float(ref_size[1]))
+    reference_size = coordinate_hints.get("reference_image_size") or []
+    if not isinstance(reference_size, list | tuple) or len(reference_size) != 2:
+        return []
+    ref_width, ref_height = float(reference_size[0]), float(reference_size[1])
+    pdf_width, pdf_height = pdf_page_size
+    if min(ref_width, ref_height, pdf_width, pdf_height) <= 0:
+        return []
+
+    ref_words = coordinate_hints.get("text_labels") or []
+    if not isinstance(ref_words, list):
+        ref_words = []
 
     results: list[DriftResult] = []
     for label in required_labels:
+        best: DriftResult | None = None
+        for ref_form in _label_forms(label):
+            ref_bbox = _find_phrase_bbox(ref_form, ref_words)
+            if ref_bbox is None:
+                continue
+            ref_center_px = _center(ref_bbox)
+            ref_center = (ref_center_px[0] / ref_width, ref_center_px[1] / ref_height)
+            for pdf_form in _label_forms(label):
+                pdf_bbox = _find_phrase_bbox(pdf_form, pdf_words)
+                if pdf_bbox is None:
+                    continue
+                pdf_center_pt = _center(pdf_bbox)
+                pdf_center = (pdf_center_pt[0] / pdf_width, pdf_center_pt[1] / pdf_height)
+                drift = math.dist(ref_center, pdf_center)
+                matched_form = ref_form if ref_form == pdf_form else f"{ref_form} -> {pdf_form}"
+                candidate = DriftResult(
+                    label=str(label),
+                    matched_form=matched_form,
+                    status="matched",
+                    ref_center=ref_center,
+                    pdf_center=pdf_center,
+                    drift=drift,
+                )
+                if best is None or drift < (best.drift or math.inf):
+                    best = candidate
+        if best is not None:
+            results.append(best)
+            continue
+
         forms = _label_forms(label)
-        label_str = forms[0] if forms else str(label)
-        if _is_ambiguous_label(label):
-            results.append(DriftResult(label_str, None, "excluded_ambiguous", None, None, None))
-            continue
-        ref_hit: tuple[str, BBox] | None = None
-        pdf_hit: tuple[str, BBox] | None = None
-        best_pair: tuple[str, BBox, BBox, float] | None = None
-        for form in forms:
-            tokens = _phrase_tokens(form)
-            ref_candidates = _find_phrase_candidates_in_words(tokens, ref_words)
-            pdf_candidates = _find_phrase_candidates_in_words(tokens, pdf_words)
-            if ref_hit is None and ref_candidates:
-                ref_hit = (form, ref_candidates[0])
-            if pdf_hit is None and pdf_candidates:
-                pdf_hit = (form, pdf_candidates[0])
-            for ref_bbox in ref_candidates:
-                ref_center = _center_norm(ref_bbox, ref_canvas)
-                for pdf_bbox in pdf_candidates:
-                    pdf_center = _center_norm(pdf_bbox, pdf_page_size)
-                    drift = math.dist(ref_center, pdf_center)
-                    if best_pair is None or drift < best_pair[3]:
-                        best_pair = (form, ref_bbox, pdf_bbox, drift)
-        if ref_hit is None and pdf_hit is None:
-            results.append(DriftResult(label_str, None, "uncovered_both", None, None, None))
-            continue
-        if ref_hit is None:
-            results.append(DriftResult(label_str, pdf_hit[0], "uncovered_ref", None, None, None))
-            continue
-        if pdf_hit is None:
-            results.append(DriftResult(label_str, ref_hit[0], "uncovered_build", None, None, None))
-            continue
-        if best_pair is None:
-            ref_form, ref_bbox = ref_hit
-            pdf_form, pdf_bbox = pdf_hit
-            ref_center = _center_norm(ref_bbox, ref_canvas)
-            pdf_center = _center_norm(pdf_bbox, pdf_page_size)
-            best_pair = (
-                f"{ref_form} \u2192 {pdf_form}",
-                ref_bbox,
-                pdf_bbox,
-                math.dist(ref_center, pdf_center),
-            )
-        matched_form, ref_bbox, pdf_bbox, drift = best_pair
-        ref_center = _center_norm(ref_bbox, ref_canvas)
-        pdf_center = _center_norm(pdf_bbox, pdf_page_size)
+        has_ref = any(_find_phrase_bbox(form, ref_words) is not None for form in forms)
+        has_pdf = any(_find_phrase_bbox(form, pdf_words) is not None for form in forms)
+        if has_ref:
+            status = "uncovered_build"
+        elif has_pdf:
+            status = "uncovered_ref"
+        else:
+            status = "uncovered_both"
         results.append(
             DriftResult(
-                label_str,
-                matched_form,
-                "matched_ok",
-                ref_center,
-                pdf_center,
-                drift,
+                label=str(label),
+                matched_form=None,
+                status=status,
+                ref_center=None,
+                pdf_center=None,
+                drift=None,
             )
         )
     return results
 
 
-def _aspect_line(ref_size: list[float], page_size: tuple[float, float]) -> str:
-    if not ref_size or len(ref_size) < 2 or ref_size[1] == 0 or page_size[1] == 0:
-        return "aspect: insufficient data"
-    ref_a = ref_size[0] / ref_size[1]
-    pdf_a = page_size[0] / page_size[1]
-    delta = abs(ref_a - pdf_a) / max(ref_a, pdf_a)
-    return f"aspect: ref={ref_a:.3f} pdf={pdf_a:.3f} mismatch={delta * 100:.1f}%"
+def _resolve_fixture_dir(target: str) -> Path:
+    path = Path(target)
+    if target == ".":
+        return Path.cwd()
+    if path.is_absolute():
+        return path
+    if len(path.parts) == 1:
+        return Path("examples") / path.parts[0]
+    if len(path.parts) == 2 and path.parts[0] == "examples":
+        return path
+    raise ValueError("expected fixture name, examples/<fixture>, absolute fixture path, or .")
 
 
-def _resolve_pdf_path(example_dir: Path) -> Path | None:
-    """Prefer build/ over exports/ (drift is a compile-stage gate)."""
-    name = example_dir.name
-    candidates = [
-        example_dir / "build" / f"{name}.pdf",
-        example_dir / "exports" / f"{name}.pdf",
-    ]
-    for path in candidates:
-        if path.exists():
-            return path
-    return None
+def _fixture_name(fixture_dir: Path) -> str:
+    return fixture_dir.resolve().name
 
 
-def _validate_fixture_name_for_cli(name: str, original: str) -> None:
-    try:
-        fixture_identity.validate_fixture_name(name)
-    except ValueError as exc:
-        raise LayoutDriftCliError(f"invalid fixture path: {original}: {exc}") from exc
+def run_check(
+    fixture_dir: Path,
+    *,
+    threshold: float = DEFAULT_DRIFT_THRESHOLD,
+) -> tuple[int, list[str]]:
+    name = _fixture_name(fixture_dir)
+    spec_path = fixture_dir / "spec.yaml"
+    hints_path = fixture_dir / "coordinate_hints.yaml"
+    pdf_path = fixture_dir / "build" / f"{name}.pdf"
+    if not spec_path.is_file():
+        return 1, [f"ERROR missing spec.yaml: {spec_path}"]
+    spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+    required_labels = _required_labels(spec)
+    if not required_labels:
+        return 0, [f"SKIP layout drift: no golden_contract.required_labels in {spec_path}"]
+    if not hints_path.is_file():
+        return 0, [f"SKIP layout drift: missing coordinate_hints.yaml in {fixture_dir}"]
+    if not pdf_path.is_file():
+        return 1, [f"ERROR missing build PDF: {pdf_path}"]
+
+    hints = yaml.safe_load(hints_path.read_text(encoding="utf-8")) or {}
+    if not isinstance(hints, dict):
+        return 1, [f"ERROR invalid coordinate_hints.yaml: {hints_path}"]
+    pdf_words, page_size = extract_pdf_words_and_page(pdf_path)
+    results = evaluate_drift(required_labels, hints, pdf_words, page_size)
+
+    lines: list[str] = []
+    failures = 0
+    for result in results:
+        if result.drift is not None:
+            if result.drift > threshold:
+                failures += 1
+                lines.append(
+                    f"WARN layout drift {result.label}: {result.drift:.3f} > {threshold:.3f}"
+                )
+            else:
+                lines.append(f"OK layout drift {result.label}: {result.drift:.3f}")
+        elif result.status != "uncovered_ref":
+            failures += 1
+            lines.append(f"WARN layout drift {result.label}: {result.status}")
+        else:
+            lines.append(f"SKIP layout drift {result.label}: {result.status}")
+    if not results:
+        lines.append("SKIP layout drift: no comparable labels")
+    return failures, lines
 
 
-def _resolve_example_dir_for_cli(value: Path) -> Path:
-    """Resolve public CLI fixture targets without allowing examples/ traversal.
-
-    ``compile.sh`` invokes this gate as ``check_layout_drift.py .`` after
-    changing into the fixture directory, so a literal dot is the only accepted
-    non-examples directory form.
-    """
-    if value == Path("."):
-        return value
-
-    examples_root = Path("examples").resolve()
-    if value.is_absolute():
-        resolved = value.resolve()
-        try:
-            relative = resolved.relative_to(examples_root)
-        except ValueError as exc:
-            raise LayoutDriftCliError(
-                "invalid fixture path: expected examples/<fixture-name>"
-            ) from exc
-        if len(relative.parts) != 1 or ".." in relative.parts:
-            raise LayoutDriftCliError("invalid fixture path: expected examples/<fixture-name>")
-        _validate_fixture_name_for_cli(relative.parts[0], str(value))
-        return Path("examples") / relative.parts[0]
-    if value.parts and value.parts[0] == "examples":
-        if len(value.parts) != 2 or ".." in value.parts:
-            raise LayoutDriftCliError("invalid fixture path: expected examples/<fixture-name>")
-        _validate_fixture_name_for_cli(value.parts[1], str(value))
-        return Path("examples") / value.parts[1]
-    if len(value.parts) == 1:
-        _validate_fixture_name_for_cli(str(value), str(value))
-        examples_path = Path("examples") / value
-        if examples_path.is_dir():
-            return examples_path
-        if value.exists():
-            raise LayoutDriftCliError(
-                "invalid fixture path: relative fixture names must resolve under examples/"
-            )
-        return examples_path
-    raise LayoutDriftCliError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
-        "an absolute path under examples/, or . from inside a fixture directory"
-    )
-
-
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "fixture",
-        type=Path,
-        help="fixture name, examples/<fixture-name>, or . when run from a fixture directory",
+        help="fixture name, examples/<fixture>, absolute fixture path, or .",
     )
-    parser.add_argument(
-        "--threshold",
-        type=float,
-        default=DEFAULT_DRIFT_THRESHOLD,
-        help="drift fraction (of normalized canvas) above which a label is flagged",
-    )
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        default=False,
-        help="exit 1 when any matched label drifts beyond threshold",
-    )
-    parser.add_argument(
-        "--pdf",
-        type=Path,
-        default=None,
-        help="explicit PDF path; defaults to build/<name>.pdf then exports/<name>.pdf",
-    )
-    args = parser.parse_args()
+    parser.add_argument("--threshold", type=float, default=DEFAULT_DRIFT_THRESHOLD)
+    parser.add_argument("--strict", action="store_true")
+    args = parser.parse_args(argv)
 
     try:
-        example_arg = _resolve_example_dir_for_cli(args.fixture)
-    except LayoutDriftCliError as exc:
-        print(f"check_layout_drift.py: {exc}", file=sys.stderr)
+        failures, lines = run_check(_resolve_fixture_dir(args.fixture), threshold=args.threshold)
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        print(f"ERROR layout drift: {exc}", file=sys.stderr)
         return 1
-
-    if not example_arg.is_dir():
-        print(f"FAIL: example directory not found: {example_arg}", file=sys.stderr)
-        return 1
-
-    # Resolve so "." (compile.sh invocation) carries a real directory name for
-    # build/<name>.pdf lookup.
-    example_dir = example_arg.resolve()
-    spec_path = example_dir / "spec.yaml"
-    hints_path = example_dir / "coordinate_hints.yaml"
-
-    if not spec_path.exists():
-        print(f"SKIP: {example_dir.name} has no spec.yaml")
-        return 0
-
-    try:
-        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
-    except ValueError as exc:
-        print(f"SKIP: {example_dir.name} has invalid spec.yaml: {exc}")
-        return 0
-    contract = spec.get("golden_contract")
-    if not isinstance(contract, dict):
-        if contract is not None:
-            print(f"SKIP: {example_dir.name} golden_contract is not a mapping")
-            return 0
-        contract = {}
-    required = contract.get("required_labels") or []
-    if not required:
-        print(f"SKIP: {example_dir.name} has no golden_contract.required_labels")
-        return 0
-    if not hints_path.exists():
-        print(f"SKIP: {example_dir.name} has no coordinate_hints.yaml (run /fig_extract first)")
-        return 0
-
-    pdf_path = args.pdf if args.pdf is not None else _resolve_pdf_path(example_dir)
-    if pdf_path is None or not pdf_path.exists():
-        print(f"FAIL: no compiled PDF for {example_dir.name}", file=sys.stderr)
-        return 1
-
-    hints = (
-        _loaded
-        if isinstance(_loaded := yaml.safe_load(hints_path.read_text(encoding="utf-8")), dict)
-        else {}
-    )
-    pdf_words, page_size = extract_pdf_words_and_page(pdf_path)
-
-    results = evaluate_drift(required, hints, pdf_words, page_size)
-
-    counts = {
-        "matched_ok": 0,
-        "drifted": 0,
-        "uncovered_ref": 0,
-        "uncovered_build": 0,
-        "uncovered_both": 0,
-        "excluded_ambiguous": 0,
-    }
-    drifted_results: list[DriftResult] = []
-    for r in results:
-        if r.status == "matched_ok" and r.drift is not None and r.drift > args.threshold:
-            drifted_results.append(r)
-            counts["drifted"] += 1
-        else:
-            counts[r.status] += 1
-
-    print(f"layout drift report: {pdf_path.name} ({len(results)} required labels)")
-    print(_aspect_line(hints.get("reference_image_size") or [], page_size))
-    print(
-        f"  matched_ok={counts['matched_ok']} drifted={counts['drifted']}"
-        f" uncovered_ref={counts['uncovered_ref']}"
-        f" uncovered_build={counts['uncovered_build']}"
-        f" uncovered_both={counts['uncovered_both']}"
-        f" excluded_ambiguous={counts['excluded_ambiguous']}"
-        f" (threshold={args.threshold:.3f})"
-    )
-    for r in results:
-        if r.status == "matched_ok":
-            assert r.drift is not None and r.ref_center is not None and r.pdf_center is not None
-            tag = "DRIFT" if r.drift > args.threshold else "ok"
-            print(
-                f"  {tag:<5} {r.label!r}: drift={r.drift:.3f}"
-                f" ref=({r.ref_center[0]:.3f},{r.ref_center[1]:.3f})"
-                f" pdf=({r.pdf_center[0]:.3f},{r.pdf_center[1]:.3f})"
-            )
-        else:
-            print(f"  {r.status:<19} {r.label!r}")
-
-    if args.strict and drifted_results:
-        return 1
-    return 0
+    for line in lines:
+        print(line)
+    return 1 if args.strict and failures else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

@@ -865,6 +865,8 @@ candidates or call model APIs from plugin code.
 
 ## Implementation Slices
 
+> **Slice namespace note:** the Slice numbering below is LOCAL to this composition-search design and is NOT the same as the iteration-first spec's Slice 0–3 (`2026-06-21-iteration-first-figure-agent-spec.md`). Composition here = single-fixture scene-layout restructuring, distinct from that spec's blocked **Slice 2** (cross-figure component banking / amortization). The **#1-amortize gate** governs the banking lever in the iteration-first spec, NOT this doc's slices.
+
 ### Slice 0: State Hygiene and Panel Mapping
 
 Fix the current blockers that prevent trustworthy generation:

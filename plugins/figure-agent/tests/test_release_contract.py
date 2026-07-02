@@ -629,16 +629,6 @@ def test_skill_quick_command_list_covers_readme_core_commands() -> None:
     assert missing == []
 
 
-def test_active_docs_describe_svg_polish_handoff_as_shipped() -> None:
-    overview = (REPO_ROOT / "docs" / "architecture-overview.md").read_text()
-
-    assert "scaffolding UX in progress" not in overview
-    assert "svg_polish_recipe.py" in overview
-    assert "svg_polish_executor.py" in overview
-    assert "svg_polish_delta.py" in overview
-    assert "/fig_drive --mode polish" in overview
-
-
 def test_active_architecture_overview_uses_current_critique_loop_contract() -> None:
     overview = (REPO_ROOT / "docs" / "architecture-overview.md").read_text()
 

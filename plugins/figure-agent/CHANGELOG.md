@@ -2,6 +2,19 @@
 
 All notable changes to figure-agent are documented here.
 
+<!-- Unreleased (stage for the next version bump at release/merge time):
+     - Slice 0 defect-driven candidate generation (source_hashes + %Panel
+       line->panel fallback + geometry-aware offset); apply stays human-gated.
+     - Humanizer capture-only "Why" column in the sub-region iteration log.
+     - MCP honesty gate: propose_* report success:false + no_op:true on no-ops.
+     - Documented composition_* (architecture L3.7); refreshed drifted paths;
+       recorded the #1-amortize probe result + Slice namespace.
+     - Quarantined the inert SVG-semantic stack; removed orphaned _handlers_* shims.
+     The version bump (0.9.3 -> 0.10.0) is a coordinated release-contract change
+     across plugin.json, pyproject.toml, README, the issue-100 inventory,
+     closeout status, test_release_contract.EXPECTED_RELEASE_VERSION, and the
+     cowork zip names; do it as one deliberate step at release. -->
+
 ## [0.9.3] - 2026-06-07
 
 Patch release for Cowork plugin packaging and runtime path separation.

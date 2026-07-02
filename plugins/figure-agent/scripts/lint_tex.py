@@ -47,6 +47,11 @@ _RE_DOCUMENT_BOUNDARY = re.compile(r"\\documentclass\b|\\begin\s*\{document\}")
 _RE_OPTION_BLOCK = re.compile(r"\[([^\[\]]*)\]")
 _RE_KEY_VALUE = re.compile(r"^\s*(fill|draw|text|color)\s*=\s*\{?([!\w]+)\}?\s*$")
 _RE_BARE_TOKEN = re.compile(r"^\s*([A-Za-z][A-Za-z0-9]*)\s*$")
+# `\color{name}` / `\textcolor{name}{text}` and their `[model]{spec}` forms. These
+# apply a color OUTSIDE an option block, so the option-block scan never saw them.
+_RE_COLOR_COMMAND = re.compile(
+    r"\\(?:text)?color\s*(?:\[(?P<model>[^\]]*)\]\s*)?\{(?P<name>[^}]*)\}"
+)
 _RE_COLOR_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9]*$")
 _RE_PALETTE_TOKEN = re.compile(r"\\definecolor\{([A-Za-z][A-Za-z0-9]*)\}")
 _RE_NODE_COMMAND = re.compile(r"\\node\b")
@@ -87,6 +92,7 @@ _RE_FLAGSHIP_CALL = re.compile(
     r"|paper\s+loglog\s*="
 )
 _RE_THIN_STROKE = re.compile(r"line width\s*=\s*(\d*\.?\d+)pt\b")
+_RE_EXTREME_LOCAL_FONT_SIZE = re.compile(r"\\(tiny|scriptsize|huge|Huge)\b")
 
 
 class Violation(NamedTuple):
@@ -167,11 +173,7 @@ def _is_filled_label_line(stripped: str) -> bool:
     has_fill_option = any(
         _RE_FILL_OPTION.search(match.group(1)) for match in _RE_OPTION_BLOCK.finditer(stripped)
     )
-    return bool(
-        _RE_NODE_COMMAND.search(stripped)
-        and has_fill_option
-        and _has_label_text(stripped)
-    )
+    return bool(_RE_NODE_COMMAND.search(stripped) and has_fill_option and _has_label_text(stripped))
 
 
 def _has_later_overpaint_command(stripped_lines: list[str], line_index: int) -> bool:
@@ -261,6 +263,41 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
                             severity="blocker",
                         )
                     )
+
+        for color_match in _RE_COLOR_COMMAND.finditer(stripped):
+            if color_match.group("model"):
+                violations.append(
+                    Violation(
+                        line=line_num,
+                        category="non_palette_color",
+                        snippet=snippet,
+                        message=(
+                            "explicit color model (HTML/RGB/rgb/...) in \\color/\\textcolor "
+                            "is forbidden; use a palette macro"
+                        ),
+                        severity="blocker",
+                    )
+                )
+            else:
+                violations.extend(
+                    _check_color_segments(
+                        color_match.group("name"), line_num, snippet, allowed_colors
+                    )
+                )
+
+        for font_match in _RE_EXTREME_LOCAL_FONT_SIZE.finditer(stripped):
+            violations.append(
+                Violation(
+                    line=line_num,
+                    category="extreme_local_font_size",
+                    snippet=snippet,
+                    message=(
+                        f"local font size \\{font_match.group(1)} is outside the Style Lock "
+                        "print hierarchy; use preamble-owned sizes or a reviewed hierarchy packet"
+                    ),
+                    severity="warn",
+                )
+            )
 
         # thin_stroke WARN: per-occurrence on line width < 0.25pt (exclusive boundary).
         # 0.25pt does not warn; mm/cm units are out of scope for v0.1.

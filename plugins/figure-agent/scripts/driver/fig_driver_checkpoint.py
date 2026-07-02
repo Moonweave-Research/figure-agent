@@ -34,6 +34,9 @@ def _read_loop_checkpoint(run_dir: Path, name: str) -> dict[str, Any] | None:
         "patch_handoff": iteration.get("patch_handoff"),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
+    next_action_summary = iteration.get("next_action_summary")
+    if isinstance(next_action_summary, dict):
+        checkpoint["next_action_summary"] = next_action_summary
     top_tier_summary = iteration.get("top_tier_audit_summary")
     if isinstance(top_tier_summary, dict):
         checkpoint["top_tier_audit_summary"] = top_tier_summary

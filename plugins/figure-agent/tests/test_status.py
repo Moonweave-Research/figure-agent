@@ -9,12 +9,12 @@ import time
 from pathlib import Path
 
 import pytest
-import yaml
 from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import status as status_mod  # noqa: E402
+from critique_schema_vocab import AESTHETIC_ANTIPATTERN_IDS  # noqa: E402
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
@@ -24,12 +24,6 @@ from quality_manifest import (  # noqa: E402
 )
 from reference_aesthetic_metrics import build_reference_aesthetic_metrics  # noqa: E402
 from status import CRITIQUE_REFERENCE_MISSING, compute_critique_state, infer_stage  # noqa: E402
-from svg_polish_manifest import (  # noqa: E402
-    final_artifact_source_set_hash,
-    load_svg_polish_manifest,
-    write_svg_polish_manifest,
-)
-from svg_semantic_diff import build_svg_semantic_diff_report  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -147,12 +141,138 @@ def _write_hashed_critique(
     *,
     critique_input_hash: str | None = None,
     generator_version: str | None = None,
-    rubric_version: str = CRITIQUE_RUBRIC_VERSION,
-    schema: str = "figure-agent.critique.v1.2",
+    rubric_version: str | None = None,
+    schema: str = "figure-agent.critique.v1.17",
 ) -> None:
+    build_dir = fig_dir / "build"
+    build_dir.mkdir(exist_ok=True)
+    if not (build_dir / "visual_clash.json").exists():
+        (build_dir / "visual_clash.json").write_text(
+            json.dumps(
+                {
+                    "fixture": name,
+                    "render_pdf": f"build/{name}.pdf",
+                    "candidates": [],
+                    "total": 0,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    if not (build_dir / "text_boundary_clash.json").exists():
+        (build_dir / "text_boundary_clash.json").write_text(
+            json.dumps(
+                {
+                    "schema": "figure-agent.text-boundary-clash.v1",
+                    "candidates": [],
+                    "total": 0,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    if not (build_dir / "label_path_proximity.json").exists():
+        (build_dir / "label_path_proximity.json").write_text(
+            json.dumps(
+                {
+                    "schema": "figure-agent.label-path-proximity.v1",
+                    "candidates": [],
+                    "total": 0,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    crop_manifest = build_dir / "audit_crops" / "manifest.json"
+    if schema == "figure-agent.critique.v1.17" and not crop_manifest.exists():
+        crop_manifest.parent.mkdir(parents=True, exist_ok=True)
+        crop_path = crop_manifest.parent / "full_q1.png"
+        crop_path.write_bytes(b"crop:full_q1\n")
+        crop_manifest.write_text(
+            json.dumps(
+                {
+                    "schema": "figure-agent.audit-crop-manifest.v1",
+                    "fixture": name,
+                    "render_path": f"build/{name}.png",
+                    "required_crop_ids": ["full_q1"],
+                    "crops": [
+                        {
+                            "id": "full_q1",
+                            "kind": "zoom_crop",
+                            "path": "build/audit_crops/full_q1.png",
+                            "source": "full_render",
+                            "source_path": f"build/{name}.png",
+                            "bbox_px": [0, 0, 10, 10],
+                            "sha256": file_sha256(crop_path),
+                        }
+                    ],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    crop_audit_log_yaml = ""
+    if crop_manifest.exists():
+        crop_audit_log_yaml = (
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    observed_objects: [Panel overview, label group]\n"
+            "    local_relationship: Crop labels remain separated from nearby boundaries "
+            "and marks.\n"
+            "    candidate_refs: []\n"
+            "    rationale: full crop inspected with no defect\n"
+            "    unintended_visible_anomaly: none\n"
+            "    anomaly_rationale: no unintended artifact is visible in this crop\n"
+            "    anomaly_link: ''\n"
+        )
+    top_tier_yaml = "top_tier_audit:\n" + "".join(
+        (
+            f"  {slot}:\n"
+            "    verdict: pass\n"
+            f"    finding: {slot} is adequate\n"
+            "    concrete_fix: accept_simplification\n"
+            "    blocks_high_impact: false\n"
+        )
+        for slot in (
+            "first_glance_message",
+            "target_journal_fit",
+            "novelty_claim_support",
+            "figure_caption_coupling",
+            "visual_economy",
+            "cross_panel_semantic_grammar",
+            "reader_misinterpretation_risk",
+            "reduction_print_readability",
+            "accessibility_color_robustness",
+            "aesthetic_coherence",
+        )
+    )
+    aesthetic_antipattern_yaml = "aesthetic_antipattern_audit:\n" + "".join(
+        (
+            f"  - id: {anti_pattern_id}\n"
+            "    verdict: absent\n"
+            "    severity: NIT\n"
+            "    route: none\n"
+            f"    evidence: {anti_pattern_id} absent in current crop evidence\n"
+            f"    rationale: {anti_pattern_id} is not visible in the current artifact\n"
+            "    linked_evidence: [top_tier_audit.aesthetic_coherence]\n"
+        )
+        for anti_pattern_id in AESTHETIC_ANTIPATTERN_IDS
+    )
     generator_version = generator_version or file_sha256(
         REPO_ROOT / "scripts" / "critique_brief.py"
     )
+    if rubric_version is None:
+        if schema == "figure-agent.critique.v1.17":
+            rubric_version = CRITIQUE_RUBRIC_VERSION_V1_17
+        elif schema == "figure-agent.critique.v1.14":
+            rubric_version = CRITIQUE_RUBRIC_VERSION_V1_14
+        else:
+            rubric_version = CRITIQUE_RUBRIC_VERSION
     critique_input_hash = critique_input_hash or _critique_input_hash(fig_dir, name)
     (fig_dir / "critique.md").write_text(
         "---\n"
@@ -249,7 +369,7 @@ def _write_hashed_critique(
         "    verdict: pass\n"
         "    confidence: high\n"
         "    rationale: polish is adequate\n"
-        "    evidence: render\n"
+        "    evidence: print-scale audit from print_178mm.png\n"
         "    blocking_items: []\n"
         "    recommended_action: none\n"
         "  reference_fidelity:\n"
@@ -263,9 +383,93 @@ def _write_hashed_critique(
         "    verdict: pass\n"
         "    confidence: high\n"
         "    rationale: all applicable quality axes pass\n"
-        "    evidence: quality axis summary\n"
+        "    evidence: publication readiness includes print-scale evidence from print_178mm.png\n"
         "    blocking_items: []\n"
         "    recommended_action: none\n"
+        f"{top_tier_yaml}"
+        "micro_defects: []\n"
+        f"{crop_audit_log_yaml}"
+        f"{aesthetic_antipattern_yaml}"
+        "weakest_panel_coherence:\n"
+        "  panel_id: none\n"
+        "  subregion_id: none\n"
+        "  weakness_type: none\n"
+        "  route: none\n"
+        "  evidence: current artifact crops show no weakest panel mismatch\n"
+        "  rationale: all panels are balanced in the current artifact\n"
+        "  linked_evidence: []\n"
+        "reference_learning_accountability:\n"
+        "  learned_principle: not_applicable because no reference learning pack is declared\n"
+        "  rejected_copy_target: not_applicable because no reference topology was copied\n"
+        "  overcopying: absent\n"
+        "  underlearning: absent\n"
+        "  route: none\n"
+        "  evidence: current artifact was checked against the available briefing context\n"
+        "  rationale: no reference misuse is visible in the current artifact\n"
+        "  linked_evidence: []\n"
+        "editorial_art_direction:\n"
+        "  hero_focus:\n"
+        "    verdict: pass\n"
+        "    evidence: hero focus evidence\n"
+        "    rationale: hero focus is clear\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  narrative_choreography:\n"
+        "    verdict: pass\n"
+        "    evidence: narrative evidence\n"
+        "    rationale: narrative flow is clear\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  illustration_readiness:\n"
+        "    verdict: pass\n"
+        "    evidence: illustration evidence\n"
+        "    rationale: illustration is ready\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  abstraction_consistency:\n"
+        "    verdict: pass\n"
+        "    evidence: abstraction evidence\n"
+        "    rationale: abstraction is consistent\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  reference_class_fit:\n"
+        "    verdict: pass\n"
+        "    evidence: reference evidence\n"
+        "    rationale: reference class fits\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  visual_identity:\n"
+        "    verdict: pass\n"
+        "    evidence: visual identity evidence\n"
+        "    rationale: visual identity is coherent\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  claim_payload_fit:\n"
+        "    verdict: pass\n"
+        "    evidence: claim payload evidence\n"
+        "    rationale: claim payload fits\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  aesthetic_risk:\n"
+        "    verdict: pass\n"
+        "    evidence: aesthetic risk evidence\n"
+        "    rationale: aesthetic risk is controlled\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "  tikz_vs_svg_polish_trigger:\n"
+        "    verdict: pass\n"
+        "    evidence: route evidence\n"
+        "    rationale: source-level route remains appropriate\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
+        "    recommended_path: continue_tikz\n"
+        "    remaining_tikz_lever: source-level label spacing remains patchable\n"
+        "  human_art_direction_gate:\n"
+        "    verdict: pass\n"
+        "    evidence: human gate evidence\n"
+        "    rationale: human gate is not active\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n"
         "panels: []\n"
         "findings: []\n"
         "---\n"
@@ -332,7 +536,7 @@ def test_hash_fresh_critique_becomes_stale_when_visual_clash_report_changes(
         '{"fixture":"ref_fig","render_pdf":"build/ref_fig.pdf","candidates":[],"total":0}\n',
         encoding="utf-8",
     )
-    _write_hashed_critique(fig_dir, "ref_fig", schema="figure-agent.critique.v1.7")
+    _write_hashed_critique(fig_dir, "ref_fig", schema="figure-agent.critique.v1.10")
 
     assert compute_critique_state(fig_dir, "ref_fig") == status_mod.CRITIQUE_FRESH
 
@@ -813,7 +1017,7 @@ def test_hash_metadata_marks_current_v1_4_critique_fresh(
     reference = fig_dir / "reference"
     reference.mkdir()
     (reference / "golden.png").write_bytes(b"\x89PNG")
-    _write_hashed_critique(fig_dir, name, schema="figure-agent.critique.v1.4")
+    _write_hashed_critique(fig_dir, name, schema="figure-agent.critique.v1.10")
 
     assert compute_critique_state(fig_dir, name) == "FRESH"
 
@@ -932,7 +1136,7 @@ def test_hash_metadata_rejects_v1_11_schema_without_aesthetic_intent_v2(
         fig_dir,
         name,
         rubric_version=CRITIQUE_RUBRIC_VERSION,
-        schema="figure-agent.critique.v1.11",
+        schema="figure-agent.critique.v1.14",
     )
 
     assert compute_critique_state(fig_dir, name) == "STALE"
@@ -976,7 +1180,7 @@ def test_hash_metadata_rejects_v1_10_rubric_for_aesthetic_intent_v2(
         fig_dir,
         name,
         rubric_version=CRITIQUE_RUBRIC_VERSION,
-        schema="figure-agent.critique.v1.11",
+        schema="figure-agent.critique.v1.14",
     )
 
     assert compute_critique_state(fig_dir, name) == "STALE"
@@ -1112,79 +1316,6 @@ def _make_status_ready_fixture(fig_dir: Path, *, accepted: bool | None = None) -
     _make_fresh_exports(fig_dir, name)
 
 
-def _write_final_artifact_spec(
-    fig_dir: Path,
-    kind: str = "polished_svg",
-    *,
-    manifest: str = "polish/svg_polish_manifest.yaml",
-) -> None:
-    existing = (fig_dir / "spec.yaml").read_text(encoding="utf-8")
-    (fig_dir / "spec.yaml").write_text(
-        existing + f"final_artifact:\n  kind: {kind}\n  manifest: {manifest}\n",
-        encoding="utf-8",
-    )
-
-
-def _append_manifest_only_final_artifact_spec(fig_dir: Path) -> None:
-    existing = (fig_dir / "spec.yaml").read_text(encoding="utf-8")
-    (fig_dir / "spec.yaml").write_text(
-        existing + "final_artifact:\n  manifest: polish/svg_polish_manifest.yaml\n",
-        encoding="utf-8",
-    )
-
-
-def _write_polish_manifest(
-    fig_dir: Path,
-    *,
-    semantic_change_declared: bool = False,
-    backport_required: bool = False,
-    semantic_report: bool = True,
-) -> None:
-    name = fig_dir.name
-    polish = fig_dir / "polish"
-    polish.mkdir(exist_ok=True)
-    (polish / f"{name}.polished.svg").write_text(
-        "<svg><text>polished</text></svg>\n",
-        encoding="utf-8",
-    )
-    (polish / "svg_polish_audit.md").write_text("# Audit\n", encoding="utf-8")
-    manifest = {
-        "schema": "figure-agent.svg-polish-manifest.v1",
-        "fixture": name,
-        "base": {
-            "source_set_hash": final_artifact_source_set_hash(
-                fig_dir,
-                name,
-                style_lock_path=status_mod.STYLE_LOCK_PATH,
-            ),
-            "source_tex_hash": file_sha256(fig_dir / f"{name}.tex"),
-            "briefing_hash": file_sha256(fig_dir / "briefing.md"),
-            "spec_hash": file_sha256(fig_dir / "spec.yaml"),
-            "generated_svg_hash": file_sha256(fig_dir / "exports" / f"{name}.svg"),
-            "export_pdf_hash": file_sha256(fig_dir / "exports" / f"{name}.pdf"),
-            "critique_hash": file_sha256(fig_dir / "critique.md"),
-        },
-        "polished": {
-            "path": f"polish/{name}.polished.svg",
-            "polished_svg_hash": file_sha256(polish / f"{name}.polished.svg"),
-            "audit_hash": file_sha256(polish / "svg_polish_audit.md"),
-            "editor": "human",
-            "toolchain": [{"name": "Inkscape", "version": "1.4"}],
-            "edit_classes": ["label_micro_position"],
-            "semantic_change_declared": semantic_change_declared,
-            "backport_required": backport_required,
-        },
-        "provenance": {
-            "reviewer": "author",
-            "reviewed_at": "2026-05-19T00:00:00Z",
-            "notes": "visual polish",
-        },
-    }
-    write_svg_polish_manifest(polish / "svg_polish_manifest.yaml", manifest)
-    if semantic_report:
-        build_svg_semantic_diff_report(fig_dir)
-
-
 def _mark_sources_older_than_outputs(fig_dir: Path) -> None:
     name = fig_dir.name
     old_time = time.time() - 100
@@ -1198,6 +1329,62 @@ def _mark_sources_older_than_outputs(fig_dir: Path) -> None:
     os.utime(fig_dir / "build" / f"{name}.pdf", (fresh_time, fresh_time))
     for path in (fig_dir / "exports").iterdir():
         os.utime(path, (fresh_time, fresh_time))
+
+
+def _write_final_artifact_spec(fig_dir: Path, *, kind: str = "generated_export") -> None:
+    spec = fig_dir / "spec.yaml"
+    spec.write_text(
+        spec.read_text(encoding="utf-8")
+        + "final_artifact:\n"
+        + f"  kind: {kind}\n"
+        + "  manifest: polish/external-handoff.yaml\n",
+        encoding="utf-8",
+    )
+
+
+def _append_manifest_only_final_artifact_spec(fig_dir: Path) -> None:
+    spec = fig_dir / "spec.yaml"
+    spec.write_text(
+        spec.read_text(encoding="utf-8")
+        + "final_artifact:\n"
+        + "  manifest: polish/external-handoff.yaml\n",
+        encoding="utf-8",
+    )
+
+
+def _write_human_decision_record(
+    records_root: Path,
+    fixture: str,
+    *,
+    decision_kind: str = "accept_current_generated_export",
+) -> Path:
+    records_root.mkdir(parents=True, exist_ok=True)
+    path = records_root / f"{fixture}_{decision_kind}.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.human-decision-record.v1",
+                "fixture": fixture,
+                "packet_schema": "figure-agent.release-decision-packet.v1",
+                "packet_path": f"docs/decision-packets/{fixture}.json",
+                "packet_recommendation": "accept_current_generated_export",
+                "packet_timestamp": "2026-07-01T00:00:00Z",
+                "decision_kind": decision_kind,
+                "agent_recommendation": "Record the release decision separately.",
+                "human_decision": decision_kind,
+                "human_note": "Human decision record only; status must not mutate release state.",
+                "follow_up": {
+                    "implementation_slice": "route the next explicit operation"
+                },
+                "mutation_boundary": "no_source_mutation",
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return path
 
 
 def test_final_artifact_state_none_without_polish_opt_in(
@@ -1234,24 +1421,28 @@ def test_final_artifact_generated_export_kind_keeps_current_readiness(
     assert result["workflow_ready"] is True
 
 
-def test_stray_polish_manifest_without_opt_in_does_not_change_readiness(
+def test_declared_external_svg_handoff_blocks_release_as_unsupported(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    fig_dir = tmp_path / "stray_polish"
-    _make_status_ready_fixture(fig_dir)
-    _write_polish_manifest(fig_dir)
+    fig_dir = tmp_path / "external_svg_handoff"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _write_final_artifact_spec(fig_dir, kind="polished_svg")
     _mark_sources_older_than_outputs(fig_dir)
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
     result = infer_stage(fig_dir)
 
-    assert result["final_artifact_state"] == "NONE"
-    assert "final_artifact" not in ",".join(result["notes"])
+    assert result["final_artifact_state"] == "INVALID"
+    assert result["final_artifact_kind"] == "polished_svg"
+    assert result["final_artifact_path"] == "polish/external-handoff.yaml"
+    assert "final_artifact_invalid" in result["notes"]
     assert result["workflow_ready"] is True
+    assert result["golden_ready"] is True
+    assert result["release_ready"] is False
 
 
-def test_final_artifact_block_without_kind_keeps_generated_export_behavior(
+def test_final_artifact_block_without_kind_blocks_release_as_invalid(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1263,116 +1454,10 @@ def test_final_artifact_block_without_kind_keeps_generated_export_behavior(
 
     result = infer_stage(fig_dir)
 
-    assert result["final_artifact_state"] == "NONE"
-    assert result["final_artifact_kind"] == "generated_export"
-    assert "final_artifact" not in ",".join(result["notes"])
-
-
-@pytest.mark.parametrize(
-    "final_artifact_yaml",
-    (
-        "final_artifact: []\n",
-        "final_artifact:\n  kind: polished_svg\n",
-        "final_artifact:\n  kind: polished_svg\n  manifest: ''\n",
-    ),
-)
-def test_invalid_final_artifact_shapes_report_invalid(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    final_artifact_yaml: str,
-) -> None:
-    fig_dir = tmp_path / "invalid_final_shape"
-    _make_status_ready_fixture(fig_dir)
-    existing = (fig_dir / "spec.yaml").read_text(encoding="utf-8")
-    (fig_dir / "spec.yaml").write_text(existing + final_artifact_yaml, encoding="utf-8")
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
     assert result["final_artifact_state"] == "INVALID"
+    assert result["final_artifact_kind"] == "missing"
     assert "final_artifact_invalid" in result["notes"]
-
-
-def test_declared_polished_svg_missing_manifest_reports_missing(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "missing_polish"
-    _make_status_ready_fixture(fig_dir)
-    _write_final_artifact_spec(fig_dir)
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "MISSING"
-    assert "final_artifact_missing" in result["notes"]
-    assert result["final_artifact_path"] == "polish/svg_polish_manifest.yaml"
-    assert "final artifact is missing" in result["next"]
-    assert result["workflow_ready"] is True
-
-
-def test_declared_polished_svg_malformed_manifest_reports_invalid(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "invalid_polish"
-    _make_status_ready_fixture(fig_dir)
-    _write_final_artifact_spec(fig_dir)
-    _mark_sources_older_than_outputs(fig_dir)
-    polish = fig_dir / "polish"
-    polish.mkdir()
-    (polish / "svg_polish_manifest.yaml").write_text("schema: [unterminated\n", encoding="utf-8")
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "INVALID"
-    assert "final_artifact_invalid" in result["notes"]
-    assert "final artifact is invalid" in result["next"]
-
-
-def test_declared_polished_svg_malformed_manifest_reports_invalid_when_path_says_missing(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "invalidMissingName"
-    _make_status_ready_fixture(fig_dir)
-    _write_final_artifact_spec(fig_dir)
-    _mark_sources_older_than_outputs(fig_dir)
-    polish = fig_dir / "polish"
-    polish.mkdir()
-    (polish / "svg_polish_manifest.yaml").write_text("schema: [unterminated\n", encoding="utf-8")
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "INVALID"
-    assert "final_artifact_invalid" in result["notes"]
-    assert "final_artifact_missing" not in result["notes"]
-    assert "final artifact is invalid" in result["next"]
-
-
-def test_declared_polished_svg_rejects_noncanonical_manifest_path(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "custom_manifest_polish"
-    _make_status_ready_fixture(fig_dir)
-    _write_final_artifact_spec(fig_dir, manifest="polish/custom_manifest.yaml")
-    _write_polish_manifest(fig_dir)
-    custom_manifest = fig_dir / "polish" / "custom_manifest.yaml"
-    (fig_dir / "polish" / "svg_polish_manifest.yaml").rename(custom_manifest)
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "INVALID"
-    assert result["final_artifact_path"] == "polish/custom_manifest.yaml"
-
-
+    assert result["release_ready"] is False
 def test_malformed_spec_reports_final_artifact_invalid_without_crashing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1388,8 +1473,8 @@ def test_malformed_spec_reports_final_artifact_invalid_without_crashing(
     result = infer_stage(fig_dir)
 
     assert "spec_parse_error" in result["notes"]
-    assert result["final_artifact_state"] == "INVALID"
-    assert "final_artifact_invalid" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact_invalid" not in result["notes"]
     assert "fix malformed" in result["next"]
 
 
@@ -1416,32 +1501,6 @@ def test_unknown_style_profile_with_malformed_panels_does_not_crash(
     assert "style_profile" in result["next"]
 
 
-def test_style_profile_unknown_takes_precedence_over_final_artifact_issue(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "bad_style_missing_final"
-    _make_status_ready_fixture(fig_dir, accepted=True)
-    spec = fig_dir / "spec.yaml"
-    spec.write_text(
-        spec.read_text(encoding="utf-8")
-        + "style_profile: future-profile\n"
-        + "final_artifact:\n"
-        + "  kind: polished_svg\n"
-        + "  manifest: polish/svg_polish_manifest.yaml\n",
-        encoding="utf-8",
-    )
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert "style_profile_unknown" in result["notes"]
-    assert "final_artifact_missing" in result["notes"]
-    assert "style_profile" in result["next"]
-    assert "final artifact is missing" not in result["next"]
-
-
 def test_legacy_spec_parse_error_does_not_become_final_artifact_invalid(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1461,37 +1520,6 @@ def test_legacy_spec_parse_error_does_not_become_final_artifact_invalid(
 
     assert "spec_parse_error" in result["notes"]
     assert result["final_artifact_state"] == "NONE"
-    assert "final_artifact_invalid" not in result["notes"]
-    assert "fix malformed" in result["next"]
-
-
-def test_unrelated_semantic_spec_error_does_not_invalidate_valid_final_artifact(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "bad_bbox_with_final"
-    fig_dir.mkdir()
-    (fig_dir / "spec.yaml").write_text(
-        "name: bad_bbox_with_final\n"
-        "panels:\n"
-        "  - id: A\n"
-        "    bbox_pdf_cm: [1, 1, 0, 0]\n"
-        "final_artifact:\n"
-        "  kind: polished_svg\n"
-        "  manifest: polish/svg_polish_manifest.yaml\n",
-        encoding="utf-8",
-    )
-    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
-    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
-    _make_fresh_exports(fig_dir, fig_dir.name)
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert "spec_parse_error" in result["notes"]
-    assert result["final_artifact_state"] == "MISSING"
-    assert "final_artifact_missing" in result["notes"]
     assert "final_artifact_invalid" not in result["notes"]
     assert "fix malformed" in result["next"]
 
@@ -1531,8 +1559,8 @@ def test_malformed_yaml_with_top_level_final_artifact_reports_invalid(
     result = infer_stage(fig_dir)
 
     assert "spec_parse_error" in result["notes"]
-    assert result["final_artifact_state"] == "INVALID"
-    assert "final_artifact_invalid" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact_invalid" not in result["notes"]
     assert "fix malformed" in result["next"]
 
 
@@ -1551,8 +1579,8 @@ def test_malformed_yaml_with_quoted_top_level_final_artifact_reports_invalid(
     result = infer_stage(fig_dir)
 
     assert "spec_parse_error" in result["notes"]
-    assert result["final_artifact_state"] == "INVALID"
-    assert "final_artifact_invalid" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact_invalid" not in result["notes"]
     assert "fix malformed" in result["next"]
 
 
@@ -1571,8 +1599,8 @@ def test_malformed_yaml_with_single_quoted_top_level_final_artifact_reports_inva
     result = infer_stage(fig_dir)
 
     assert "spec_parse_error" in result["notes"]
-    assert result["final_artifact_state"] == "INVALID"
-    assert "final_artifact_invalid" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact_invalid" not in result["notes"]
     assert "fix malformed" in result["next"]
 
 
@@ -1591,32 +1619,8 @@ def test_malformed_yaml_with_indented_top_level_final_artifact_reports_invalid(
     result = infer_stage(fig_dir)
 
     assert "spec_parse_error" in result["notes"]
-    assert result["final_artifact_state"] == "INVALID"
-    assert "final_artifact_invalid" in result["notes"]
-    assert "fix malformed" in result["next"]
-
-
-def test_malformed_yaml_with_flow_style_top_level_final_artifact_reports_invalid(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "bad_yaml_flow_final_artifact"
-    fig_dir.mkdir()
-    (fig_dir / "spec.yaml").write_text(
-        "{final_artifact: {kind: polished_svg, manifest: polish/svg_polish_manifest.yaml}, "
-        "accepted: [unterminated\n",
-        encoding="utf-8",
-    )
-    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
-    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
-    _make_fresh_exports(fig_dir, fig_dir.name)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert "spec_parse_error" in result["notes"]
-    assert result["final_artifact_state"] == "INVALID"
-    assert "final_artifact_invalid" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact_invalid" not in result["notes"]
     assert "fix malformed" in result["next"]
 
 
@@ -1638,8 +1642,8 @@ def test_malformed_yaml_with_flow_style_later_top_level_final_artifact_reports_i
     result = infer_stage(fig_dir)
 
     assert "spec_parse_error" in result["notes"]
-    assert result["final_artifact_state"] == "INVALID"
-    assert "final_artifact_invalid" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact_invalid" not in result["notes"]
     assert "fix malformed" in result["next"]
 
 
@@ -1664,37 +1668,6 @@ def test_malformed_yaml_with_nested_final_artifact_does_not_become_final_artifac
     assert result["final_artifact_state"] == "NONE"
     assert "final_artifact_invalid" not in result["notes"]
     assert "fix malformed" in result["next"]
-
-
-@pytest.mark.parametrize(
-    "spec_text",
-    (
-        '{note: "mentions final_artifact only in value", accepted: [unterminated\n',
-        "{metadata: {final_artifact: {kind: polished_svg}}, accepted: [unterminated\n",
-        "{metadata:{x:1,final_artifact:{kind:polished_svg}},accepted:[unterminated\n",
-    ),
-)
-def test_malformed_flow_yaml_with_non_root_final_artifact_does_not_become_final_artifact_invalid(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    spec_text: str,
-) -> None:
-    fig_dir = tmp_path / "bad_yaml_flow_nested_final_artifact"
-    fig_dir.mkdir()
-    (fig_dir / "spec.yaml").write_text(spec_text, encoding="utf-8")
-    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
-    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
-    _make_fresh_exports(fig_dir, fig_dir.name)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert "spec_parse_error" in result["notes"]
-    assert result["final_artifact_state"] == "NONE"
-    assert "final_artifact_invalid" not in result["notes"]
-    assert "fix malformed" in result["next"]
-
-
 def test_invalid_utf8_spec_reports_spec_parse_error_without_crashing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1795,11 +1768,11 @@ def test_malformed_spec_with_fresh_build_routes_to_spec_fix_first(
     assert "fix malformed" in result["next"]
 
 
-def test_invalid_final_artifact_kind_blocks_release(
+def test_unknown_final_artifact_kind_blocks_release(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    fig_dir = tmp_path / "invalid_kind_polish"
+    fig_dir = tmp_path / "external_kind_status"
     _make_status_ready_fixture(fig_dir, accepted=True)
     _write_final_artifact_spec(fig_dir, kind="raster_polish")
     _mark_sources_older_than_outputs(fig_dir)
@@ -1808,292 +1781,13 @@ def test_invalid_final_artifact_kind_blocks_release(
     result = infer_stage(fig_dir)
 
     assert result["final_artifact_state"] == "INVALID"
+    assert result["final_artifact_kind"] == "raster_polish"
     assert "final_artifact_invalid" in result["notes"]
     assert "final artifact is invalid" in result["next"]
     assert result["workflow_ready"] is True
     assert result["golden_ready"] is True
     assert result["release_ready"] is False
     assert result["final_ready"] is False
-
-
-def test_declared_polished_svg_stale_manifest_reports_stale(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "stale_polish"
-    _make_status_ready_fixture(fig_dir)
-    _write_final_artifact_spec(fig_dir)
-    _write_polish_manifest(fig_dir)
-    _mark_sources_older_than_outputs(fig_dir)
-    (fig_dir / "briefing.md").write_text("changed briefing", encoding="utf-8")
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "STALE"
-    assert "final_artifact_stale" in result["notes"]
-    assert "final artifact is stale" in result["next"]
-
-
-def test_declared_polished_svg_with_backport_reports_blocked(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "blocked_polish"
-    _make_status_ready_fixture(fig_dir)
-    _write_final_artifact_spec(fig_dir)
-    _write_polish_manifest(fig_dir, backport_required=True)
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "BLOCKED"
-    assert "final_artifact_blocked" in result["notes"]
-    assert "semantic backport" in result["next"]
-
-
-def test_declared_polished_svg_missing_semantic_diff_reports_blocked(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "missing_semantic_diff"
-    _make_status_ready_fixture(fig_dir)
-    _write_final_artifact_spec(fig_dir)
-    _write_polish_manifest(fig_dir, semantic_report=False)
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "BLOCKED"
-    assert "final_artifact_blocked" in result["notes"]
-    assert "svg_semantic_diff" in result["next"]
-
-
-def test_declared_polished_svg_stale_semantic_diff_reports_stale(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "stale_semantic_diff"
-    _make_status_ready_fixture(fig_dir)
-    _write_final_artifact_spec(fig_dir)
-    _write_polish_manifest(fig_dir)
-    report = fig_dir / "polish" / "svg_semantic_diff.json"
-    data = yaml.safe_load(report.read_text(encoding="utf-8"))
-    data["polished_svg_hash"] = "sha256:" + "0" * 64
-    report.write_text(json.dumps(data), encoding="utf-8")
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "STALE"
-    assert "final_artifact_stale" in result["notes"]
-    assert "svg_semantic_diff" in result["next"]
-
-
-def test_declared_polished_svg_blocking_semantic_diff_reports_blocked(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "blocking_semantic_diff"
-    _make_status_ready_fixture(fig_dir)
-    _write_final_artifact_spec(fig_dir)
-    _write_polish_manifest(fig_dir)
-    report = fig_dir / "polish" / "svg_semantic_diff.json"
-    data = yaml.safe_load(report.read_text(encoding="utf-8"))
-    data["summary"] = {
-        "state": "semantic_backport_required",
-        "blocker_count": 1,
-        "warning_count": 0,
-    }
-    data["findings"] = [
-        {
-            "id": "SD001",
-            "kind": "text_identity_loss",
-            "severity": "BLOCKER",
-            "evidence": "missing text label 'A'",
-            "recommended_route": "semantic_backport_required",
-        }
-    ]
-    report.write_text(json.dumps(data), encoding="utf-8")
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "BLOCKED"
-    assert "final_artifact_blocked" in result["notes"]
-    assert "semantic_backport_required" in result["next"]
-
-
-@pytest.mark.parametrize(
-    ("state_case", "expected_next_text"),
-    (
-        ("missing", "final artifact is missing"),
-        ("invalid", "final artifact is invalid"),
-        ("stale", "final artifact is stale"),
-        ("blocked", "semantic backport"),
-    ),
-)
-def test_declared_polished_svg_issue_takes_precedence_over_not_accepted(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    state_case: str,
-    expected_next_text: str,
-) -> None:
-    fig_dir = tmp_path / f"{state_case}_not_accepted"
-    _make_status_ready_fixture(fig_dir, accepted=False)
-    _write_final_artifact_spec(fig_dir)
-    if state_case == "missing":
-        pass
-    elif state_case == "invalid":
-        polish = fig_dir / "polish"
-        polish.mkdir()
-        (polish / "svg_polish_manifest.yaml").write_text(
-            "schema: [unterminated\n",
-            encoding="utf-8",
-        )
-    elif state_case == "stale":
-        _write_polish_manifest(fig_dir)
-        (fig_dir / "polish" / "svg_polish_audit.md").write_text(
-            "# Audit changed\n",
-            encoding="utf-8",
-        )
-    else:
-        _write_polish_manifest(fig_dir, backport_required=True)
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert expected_next_text in result["next"]
-    assert "accepted: true" not in result["next"]
-
-
-@pytest.mark.parametrize(
-    "relative_path",
-    ("polish/missing_polish_input.polished.svg", "polish/svg_polish_audit.md"),
-)
-def test_declared_polished_svg_missing_polish_inputs_report_missing(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    relative_path: str,
-) -> None:
-    fig_dir = tmp_path / "missing_polish_input"
-    _make_status_ready_fixture(fig_dir)
-    _write_final_artifact_spec(fig_dir)
-    _write_polish_manifest(fig_dir)
-    _mark_sources_older_than_outputs(fig_dir)
-    (fig_dir / relative_path).unlink()
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "MISSING"
-    assert "final_artifact_missing" in result["notes"]
-    assert result["final_artifact_path"] == relative_path
-    assert "final artifact is missing" in result["next"]
-
-
-def test_declared_polished_svg_missing_provenance_reports_invalid(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "invalid_polish_provenance"
-    _make_status_ready_fixture(fig_dir)
-    _write_final_artifact_spec(fig_dir)
-    _write_polish_manifest(fig_dir)
-    _mark_sources_older_than_outputs(fig_dir)
-    manifest = fig_dir / "polish" / "svg_polish_manifest.yaml"
-    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
-    del data["provenance"]["reviewed_at"]
-    manifest.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "INVALID"
-    assert "final_artifact_invalid" in result["notes"]
-    assert "final artifact is invalid" in result["next"]
-
-
-def test_declared_polished_svg_matching_manifest_reports_fresh(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "fresh_polish"
-    _make_status_ready_fixture(fig_dir, accepted=True)
-    _write_final_artifact_spec(fig_dir)
-    _write_polish_manifest(fig_dir)
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "FRESH"
-    assert result["final_artifact_kind"] == "polished_svg"
-    assert result["final_artifact_path"] == "polish/fresh_polish.polished.svg"
-    assert result["workflow_ready"] is True
-    assert result["golden_ready"] is True
-    assert result["release_ready"] is True
-    assert result["final_ready"] is True
-
-
-def test_semantic_diff_validating_divergent_polished_path_reports_invalid(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # Canonical report validates polish/<name>.polished.svg (PASS, not stale), but the
-    # manifest declares a different file under polish/. The gate must refuse to promote
-    # an artifact the semantic diff never inspected.
-    fig_dir = tmp_path / "divergent_polish"
-    _make_status_ready_fixture(fig_dir, accepted=True)
-    _write_final_artifact_spec(fig_dir)
-    _write_polish_manifest(fig_dir)
-
-    polish = fig_dir / "polish"
-    alternate = polish / "alternate.svg"
-    alternate.write_text("<svg></svg>\n", encoding="utf-8")  # dropped 'polished' text label
-    manifest_path = polish / "svg_polish_manifest.yaml"
-    manifest = load_svg_polish_manifest(manifest_path, example_dir=fig_dir)
-    manifest["polished"]["path"] = "polish/alternate.svg"
-    manifest["polished"]["polished_svg_hash"] = file_sha256(alternate)
-    write_svg_polish_manifest(manifest_path, manifest)
-
-    _mark_sources_older_than_outputs(fig_dir)
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "INVALID"
-    assert "final_artifact_invalid" in result["notes"]
-    assert result["final_artifact_path"] == "polish/alternate.svg"
-
-
-def test_declared_polished_svg_stale_blocks_release_not_workflow(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fig_dir = tmp_path / "release_polish"
-    _make_status_ready_fixture(fig_dir, accepted=True)
-    _write_final_artifact_spec(fig_dir)
-    _write_polish_manifest(fig_dir)
-    _mark_sources_older_than_outputs(fig_dir)
-    (fig_dir / "polish" / "svg_polish_audit.md").write_text("# Audit changed\n", encoding="utf-8")
-    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
-
-    result = infer_stage(fig_dir)
-
-    assert result["final_artifact_state"] == "STALE"
-    assert "final artifact is stale" in result["next"]
-    assert result["workflow_ready"] is True
-    assert result["golden_ready"] is True
-    assert result["release_ready"] is False
-    assert result["final_ready"] is False
-
-
 def test_stage_4_export_present_critique_stale_redirects_to_fig_critique(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -3071,7 +2765,7 @@ def test_infer_stage_returns_audit_evidence_summary(tmp_path: Path) -> None:
     result = infer_stage(fig_dir)
 
     assert result["audit_evidence"]["evaluation_state"] == "missing_input"
-    assert result["audit_evidence"]["blocking_items"] == ["build/visual_clash.json"]
+    assert result["audit_evidence"]["blocking_items"] == ["build/undeclared_geometry.json"]
 
 
 def test_print_single_shows_audit_evidence_line(tmp_path: Path, capsys) -> None:
@@ -3092,7 +2786,7 @@ def test_print_single_shows_audit_evidence_line(tmp_path: Path, capsys) -> None:
     captured = capsys.readouterr()
 
     assert "Audit evidence: missing_input" in captured.out
-    assert "blocking=build/visual_clash.json" in captured.out
+    assert "blocking=build/undeclared_geometry.json" in captured.out
     assert "next=/fig_compile auditfig" in captured.out
 
 
@@ -3248,19 +2942,27 @@ def test_infer_stage_surfaces_publication_provenance_gate_when_audit_is_incomple
             "required_action": (
                 "Human reviewer must decide submission safety and write an explicit value."
             ),
-        }
+        },
+        {
+            "code": "invalid_human_attestation",
+            "category": "publication_provenance",
+            "actor": "human",
+            "message": "human attestation failed: missing_human_attestation",
+            "required_action": "run `fig-agent attest goldenfig` from an interactive terminal",
+        },
     ]
 
 
-def test_infer_stage_requires_disclosure_for_polished_svg_publication_gate(
+def test_infer_stage_submission_safe_text_still_requires_human_attestation(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    fig_dir = tmp_path / "polishedfig"
+    fig_dir = tmp_path / "goldenfig"
     _make_status_ready_fixture(fig_dir, accepted=True)
-    _write_final_artifact_spec(fig_dir)
-    _write_polish_manifest(fig_dir)
     (fig_dir / "QUALITY_AUDIT.md").write_text(
-        "# Quality Audit\n\n## Provenance and Publication Compliance\n\nsubmission-safe: true\n",
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "human-visual-acceptance: true\n"
+        "submission-safe: true\n",
         encoding="utf-8",
     )
     _mark_sources_older_than_outputs(fig_dir)
@@ -3268,18 +2970,15 @@ def test_infer_stage_requires_disclosure_for_polished_svg_publication_gate(
 
     result = infer_stage(fig_dir)
 
-    assert result["final_artifact_kind"] == "polished_svg"
-    assert result["final_artifact_state"] == "FRESH"
+    assert result["acceptance_state"] == "ACCEPTED"
     assert result["publication_gate_state"] == "PROVENANCE_REQUIRED"
     assert result["publication_gate_failures"] == [
         {
-            "code": "missing_disclosure_needed",
+            "code": "invalid_human_attestation",
             "category": "publication_provenance",
             "actor": "human",
-            "message": "QUALITY_AUDIT.md does not declare disclosure-needed",
-            "required_action": (
-                "Human reviewer must declare whether publication disclosure is needed."
-            ),
+            "message": "human attestation failed: missing_human_attestation",
+            "required_action": "run `fig-agent attest goldenfig` from an interactive terminal",
         }
     ]
 
@@ -3396,7 +3095,7 @@ def test_status_explanation_separates_stale_render_and_stale_critique(
     build.mkdir()
     build_pdf = build / "ref_fig.pdf"
     build_pdf.write_bytes(b"%PDF")
-    _write_hashed_critique(fig_dir, "ref_fig", schema="figure-agent.critique.v1.8")
+    _write_hashed_critique(fig_dir, "ref_fig", schema="figure-agent.critique.v1.10")
     tex.write_text("% tikz changed after critique\n", encoding="utf-8")
 
     old_time = time.time() - 100
@@ -3422,7 +3121,7 @@ def test_status_explanation_separates_tracked_golden_and_stale_critique(
     (fig_dir / "reference").mkdir()
     (fig_dir / "reference" / "ref.png").write_bytes(b"\x89PNG")
     _make_spec(fig_dir, reference_image="reference/ref.png", accepted=True)
-    _write_hashed_critique(fig_dir, "goldenfig", schema="figure-agent.critique.v1.8")
+    _write_hashed_critique(fig_dir, "goldenfig", schema="figure-agent.critique.v1.10")
     (fig_dir / "build" / "visual_clash.json").write_text(
         '{"fixture":"goldenfig","render_pdf":"build/goldenfig.pdf",'
         '"candidates":[{"id":"VC001"}],"total":1}\n',
@@ -3482,6 +3181,62 @@ def test_status_explanation_surfaces_acceptance_not_declared_release_gate(
     assert explanation["first_blocker"]["manual"] is True
     plugin_codes = {item["code"] for item in explanation["buckets"]["plugin_state"]}
     assert "critique_not_required" in plugin_codes
+
+
+def test_status_names_explicit_release_operation_when_accept_record_exists(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    fig_dir = workspace / "examples" / "releasefig"
+    fig_dir.parent.mkdir(parents=True)
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    records_root = workspace / "docs" / "decision-records"
+    _write_human_decision_record(records_root, fig_dir.name)
+    monkeypatch.setattr(status_mod, "DECISION_RECORDS_ROOT", records_root)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["acceptance_state"] == "NOT_DECLARED"
+    assert result["release_ready"] is False
+    assert result["release_decision"]["state"] == "acceptance_authorized"
+    assert "fig-agent closeout-accept releasefig" in result["next"]
+    blocker = result["status_explanation"]["first_blocker"]
+    assert blocker["code"] == "release_acceptance_decision_recorded"
+    assert blocker["next_command"].startswith("fig-agent closeout-accept releasefig")
+    summary = result["next_action_summary"]
+    assert summary["action"] == "release_blocked"
+    assert summary["requires_human"] is True
+
+
+def test_status_routes_defer_record_to_non_release_work(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    fig_dir = workspace / "examples" / "dogfoodfig"
+    fig_dir.parent.mkdir(parents=True)
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    records_root = workspace / "docs" / "decision-records"
+    _write_human_decision_record(
+        records_root,
+        fig_dir.name,
+        decision_kind="defer_for_dogfood",
+    )
+    monkeypatch.setattr(status_mod, "DECISION_RECORDS_ROOT", records_root)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["acceptance_state"] == "NOT_DECLARED"
+    assert result["release_ready"] is False
+    assert result["release_decision"]["state"] == "non_release_requested"
+    assert result["release_decision"]["route"] == "dogfood"
+    assert "closeout-accept" not in result["next"]
+    assert "dogfood" in result["next"]
+    blocker = result["status_explanation"]["first_blocker"]
+    assert blocker["code"] == "release_deferred_for_dogfood"
 
 
 def test_status_does_not_call_content_fresh_exports_stale_for_acceptance_gate(

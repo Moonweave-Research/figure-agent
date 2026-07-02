@@ -1,6 +1,30 @@
 name: fig2_trap_design_space
 title: "Fig 2 — Composition-tunable charge-trap design space beyond canonical dielectrics (schematic)"
 style_profile: polymer-paper
+
+# Physics invariants (briefing §6) that are label-relational in Panel B (the design
+# space, x = trap-distribution breadth n, y = retention/resistivity ρ):
+#  - "황은 conventional 유전체를 초월(분리된 영역)": the sulfur sample S85 sits at
+#    HIGHER n (right of) AND HIGHER ρ (above) the conventional cluster (PI/PDMS/PET).
+#  - "기울기·크기 순서를 뒤집지 말 것": the S60→S85 trajectory ascends right-and-up.
+semantic_assertions:
+  - id: sulfur-higher-n-than-conventional
+    relation: right_of
+    subject: S85
+    reference: PET
+  - id: sulfur-higher-rho-than-conventional
+    relation: above
+    subject: S85
+    reference: PET
+  - id: trajectory-rightward-S60-to-S85
+    relation: right_of
+    subject: S85
+    reference: S60
+  - id: trajectory-ascends-S60-to-S85
+    relation: above
+    subject: S85
+    reference: S60
+
 panels:
   - id: A
     caption: Origin of deep traps — S–S homolytic-cleavage radical + low-ε wide Coulomb well vs conventional shallow well

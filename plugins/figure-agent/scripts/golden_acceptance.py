@@ -10,6 +10,7 @@ from typing import Any
 
 import closeout_readiness
 import fixture_identity
+import human_decision_record
 import runtime_paths
 
 SCHEMA = "figure-agent.golden-acceptance.v1"
@@ -36,6 +37,31 @@ def _sha256_fixture_file(path: Path, label: str) -> str | None:
 def _canonical_hash(payload: dict[str, Any]) -> str:
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return "sha256:" + sha256(encoded).hexdigest()
+
+
+def _has_authorizing_decision_record(name: str, plugin_root: Path) -> bool:
+    records_root = plugin_root / "docs" / "decision-records"
+    if not records_root.is_dir():
+        return False
+    for path in sorted(records_root.glob("**/*.json")):
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            record = human_decision_record.validate_decision_record(raw)
+        except (
+            OSError,
+            UnicodeDecodeError,
+            json.JSONDecodeError,
+            human_decision_record.HumanDecisionRecordError,
+        ):
+            continue
+        if (
+            record.get("fixture") == name
+            and record.get("packet_schema")
+            == human_decision_record.RELEASE_DECISION_PACKET_SCHEMA
+            and record.get("decision_kind") == "accept_current_generated_export"
+        ):
+            return True
+    return False
 
 
 def _fixture_relative(example_dir: Path, path: Path) -> str:
@@ -113,6 +139,8 @@ def write_golden_acceptance(
         workspace_root=workspace_root,
     )
     example_dir = paths.examples_dir / name
+    if not _has_authorizing_decision_record(name, paths.plugin_root):
+        raise GoldenAcceptanceError("release_decision_record_required")
     readiness = closeout_readiness.build_closeout_readiness(
         name,
         workspace_root=paths.workspace_root,

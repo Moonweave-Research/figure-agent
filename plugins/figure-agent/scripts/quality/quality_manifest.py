@@ -22,19 +22,10 @@ from reference_contract import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CRITIQUE_RUBRIC_VERSION = "figure-agent.critique-rubric.v1.10"
-CRITIQUE_RUBRIC_VERSION_V1_11 = "figure-agent.critique-rubric.v1.11"
-CRITIQUE_RUBRIC_VERSION_V1_12 = "figure-agent.critique-rubric.v1.12"
-CRITIQUE_RUBRIC_VERSION_V1_13 = "figure-agent.critique-rubric.v1.13"
 CRITIQUE_RUBRIC_VERSION_V1_14 = "figure-agent.critique-rubric.v1.14"
-CRITIQUE_RUBRIC_VERSION_V1_15 = "figure-agent.critique-rubric.v1.15"
-CRITIQUE_RUBRIC_VERSION_V1_16 = "figure-agent.critique-rubric.v1.16"
 CRITIQUE_RUBRIC_VERSION_V1_17 = "figure-agent.critique-rubric.v1.17"
-CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
-CRITIQUE_SCHEMA_VERSION_V1_12 = "figure-agent.critique.v1.12"
-CRITIQUE_SCHEMA_VERSION_V1_13 = "figure-agent.critique.v1.13"
+CRITIQUE_SCHEMA_VERSION_V1_10 = "figure-agent.critique.v1.10"
 CRITIQUE_SCHEMA_VERSION_V1_14 = "figure-agent.critique.v1.14"
-CRITIQUE_SCHEMA_VERSION_V1_15 = "figure-agent.critique.v1.15"
-CRITIQUE_SCHEMA_VERSION_V1_16 = "figure-agent.critique.v1.16"
 CRITIQUE_SCHEMA_VERSION_V1_17 = "figure-agent.critique.v1.17"
 _CRITIQUE_METADATA_KEYS = ("generator_version", "rubric_version", "critique_input_hash")
 
@@ -85,11 +76,6 @@ def _authoring_context_paths(example_dir: Path) -> tuple[Path, ...]:
         example_dir / "subregion_iteration_log.md",
     )
     return tuple(path for path in candidates if path.is_file())
-
-
-def _uses_polished_svg_final_artifact(spec: dict) -> bool:
-    final_artifact = spec.get("final_artifact")
-    return isinstance(final_artifact, dict) and final_artifact.get("kind") == "polished_svg"
 
 
 def critique_manifest_paths(
@@ -149,21 +135,6 @@ def critique_manifest_paths(
         journal_playbook_path = None
     if journal_playbook_path is not None and journal_playbook_path.exists():
         paths.append(journal_playbook_path)
-    svg_polish_delta_candidates = (
-        example_dir / "polish" / "aesthetic_delta" / "delta_manifest.json",
-        example_dir / "polish" / "aesthetic_delta" / "before.png",
-        example_dir / "polish" / "aesthetic_delta" / "after.png",
-        example_dir / "polish" / "aesthetic_delta" / "diff.png",
-        example_dir / "polish" / "svg_polish_recipe.yaml",
-        example_dir / "polish" / f"{name}.polished.svg",
-    )
-    svg_polish_delta_paths = [path for path in svg_polish_delta_candidates if path.exists()]
-    paths.extend(svg_polish_delta_paths)
-    generated_export_svg_path = example_dir / "exports" / f"{name}.svg"
-    if (
-        _uses_polished_svg_final_artifact(spec) or svg_polish_delta_paths
-    ) and generated_export_svg_path.exists():
-        paths.append(generated_export_svg_path)
     paths.extend(participating_panel_reference_paths(example_dir, spec))
     paths.extend(_authoring_context_paths(example_dir))
     return tuple(dict.fromkeys(paths))
@@ -239,27 +210,9 @@ def _critique_schema_matches_expected_rubric(
     schema = metadata.get("schema")
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_17:
         return schema == CRITIQUE_SCHEMA_VERSION_V1_17
-    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_16:
-        return schema == CRITIQUE_SCHEMA_VERSION_V1_16
-    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_15:
-        return schema == CRITIQUE_SCHEMA_VERSION_V1_15
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_14:
         return schema == CRITIQUE_SCHEMA_VERSION_V1_14
-    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_13:
-        return schema == CRITIQUE_SCHEMA_VERSION_V1_13
-    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_12:
-        return schema == CRITIQUE_SCHEMA_VERSION_V1_12
-    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_11:
-        return schema == CRITIQUE_SCHEMA_VERSION_V1_11
-    return schema not in {
-        CRITIQUE_SCHEMA_VERSION_V1_11,
-        CRITIQUE_SCHEMA_VERSION_V1_12,
-        CRITIQUE_SCHEMA_VERSION_V1_13,
-        CRITIQUE_SCHEMA_VERSION_V1_14,
-        CRITIQUE_SCHEMA_VERSION_V1_15,
-        CRITIQUE_SCHEMA_VERSION_V1_16,
-        CRITIQUE_SCHEMA_VERSION_V1_17,
-    }
+    return schema == CRITIQUE_SCHEMA_VERSION_V1_10
 
 
 def yaml_frontmatter(path: Path) -> dict:

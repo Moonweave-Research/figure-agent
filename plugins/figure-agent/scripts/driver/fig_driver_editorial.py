@@ -85,6 +85,13 @@ def _blocking_item(summary: dict[str, Any], recommended_path: str) -> dict[str, 
     return item
 
 
+def _positive_evidence(summary: dict[str, Any]) -> list[str]:
+    value = summary.get("positive_evidence")
+    if not isinstance(value, list):
+        return []
+    return [item.strip() for item in value if isinstance(item, str) and item.strip()]
+
+
 def _checkpoint_recommended_path(checkpoint: dict[str, Any]) -> str | None:
     editorial_summary = checkpoint.get("editorial_art_direction_summary")
     if not isinstance(editorial_summary, dict):
@@ -259,6 +266,29 @@ def svg_polish_readiness(summary: Any) -> dict[str, Any] | None:
             if route_detail:
                 readiness["route_detail"] = route_detail
             return readiness
+        positive_evidence = _positive_evidence(summary)
+        if not positive_evidence:
+            readiness = {
+                "schema": READINESS_SCHEMA,
+                "source": "editorial_art_direction_summary",
+                "can_start_svg_polish": False,
+                "recommended_path": recommended_path,
+                "next_action": "collect_svg_polish_evidence",
+                "blocking_reason": (
+                    "ready_for_svg_polish requires positive evidence, not only "
+                    "absence of source-level blockers"
+                ),
+                "blocking_items": [
+                    {
+                        "source": "editorial_art_direction_summary",
+                        "id": "positive_svg_polish_evidence_missing",
+                        "recommended_path": recommended_path,
+                    }
+                ],
+            }
+            if route_detail:
+                readiness["route_detail"] = route_detail
+            return readiness
         readiness = {
             "schema": READINESS_SCHEMA,
             "source": "editorial_art_direction_summary",
@@ -267,6 +297,7 @@ def svg_polish_readiness(summary: Any) -> dict[str, Any] | None:
             "next_action": "start_svg_polish_recipe",
             "blocking_reason": None,
             "blocking_items": [],
+            "positive_evidence": positive_evidence,
         }
         if route_detail:
             readiness["route_detail"] = route_detail
@@ -415,4 +446,9 @@ def svg_polish_gate_from_checkpoint(
         "reason": reason,
         "required_inputs": list(REQUIRED_GATE_INPUTS),
         "blocking_items": list(readiness.get("blocking_items") or []),
+        **(
+            {"positive_evidence": list(readiness["positive_evidence"])}
+            if isinstance(readiness.get("positive_evidence"), list)
+            else {}
+        ),
     }

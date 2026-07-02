@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import sys
-import warnings
 from copy import deepcopy
 from pathlib import Path
 
@@ -14,14 +13,17 @@ from critique_contract import CritiqueContractError  # noqa: E402
 from critique_schema_validator import validate_critique_schema  # noqa: E402
 
 
-def test_validate_critique_schema_warns_for_v1_legacy() -> None:
-    with warnings.catch_warnings(record=True) as captured:
-        warnings.simplefilter("always")
+def test_validate_critique_schema_rejects_v1_legacy_fail_open() -> None:
+    # v1 predates audit_enumeration and ran zero validators (warn-only), so an
+    # empty/degenerate v1 critique passed. Rejecting it closes that fail-open gap.
+    with pytest.raises(CritiqueContractError, match="figure-agent.critique.v1 is retired"):
         validate_critique_schema({"schema": vocab.CRITIQUE_SCHEMA_V1})
 
-    assert len(captured) == 1
-    assert captured[0].category is DeprecationWarning
-    assert vocab.CRITIQUE_SCHEMA_V1 in str(captured[0].message)
+
+@pytest.mark.parametrize("schema", sorted(vocab.RETIRED_CRITIQUE_SCHEMAS))
+def test_validate_critique_schema_rejects_retired_non_emittable_schema(schema: str) -> None:
+    with pytest.raises(CritiqueContractError, match="retired"):
+        validate_critique_schema({"schema": schema})
 
 
 def test_validate_critique_schema_rejects_future_unsupported_schema() -> None:
@@ -83,13 +85,15 @@ EDITORIAL_AUDIT_KEYS = (
     "human_art_direction_gate",
 )
 
-CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
-CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
-CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
 CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
-CRITIQUE_SCHEMA_V1_15 = "figure-agent.critique.v1.15"
-CRITIQUE_SCHEMA_V1_16 = "figure-agent.critique.v1.16"
 CRITIQUE_SCHEMA_V1_17 = "figure-agent.critique.v1.17"
+LIVE_CRITIQUE_SCHEMAS = frozenset(
+    {
+        vocab.CRITIQUE_SCHEMA_V1_10,
+        CRITIQUE_SCHEMA_V1_14,
+        CRITIQUE_SCHEMA_V1_17,
+    }
+)
 
 
 def _quality_axis(axis_name: str) -> dict:
@@ -239,72 +243,7 @@ def _journal_art_direction_playbook_audit() -> dict:
     }
 
 
-def _svg_polish_delta_audit() -> dict:
-    return {
-        "evaluation_state": "improved",
-        "read_all_delta_images": True,
-        "delta_image_audit_log": [
-            {
-                "image_id": "before",
-                "path": "polish/aesthetic_delta/before.png",
-                "verdict": "inspected",
-                "observation": "before image shows the generated SVG baseline",
-                "observed_objects": ["generated label"],
-                "local_relationship": "generated label remains left of the icon group",
-                "delta_focus": "baseline before-polish label and icon geometry",
-            },
-            {
-                "image_id": "after",
-                "path": "polish/aesthetic_delta/after.png",
-                "verdict": "inspected",
-                "observation": "after image shows improved label spacing",
-                "observed_objects": ["polished label"],
-                "local_relationship": "polished label remains left of the same icon group",
-                "delta_focus": "after-polish label spacing",
-            },
-            {
-                "image_id": "diff",
-                "path": "polish/aesthetic_delta/diff.png",
-                "verdict": "inspected",
-                "observation": "diff image shows only local typography movement",
-                "observed_objects": ["label delta pixels"],
-                "local_relationship": "diff pixels stay around the label baseline",
-                "delta_focus": "localized typography movement",
-            },
-        ],
-        "compared_inputs": ["before", "after", "diff"],
-        "improvements": ["label spacing is cleaner in the current after image"],
-        "regressions": [],
-        "route_after_delta": "continue_svg_polish",
-        "rationale": "SVG delta improves optical polish without semantic drift",
-    }
-
-
-def _aesthetic_gate_audit() -> list[dict]:
-    return [
-        {
-            "slot": slot,
-            "verdict": "pass",
-            "route": "pass",
-            "evidence": f"current render evidence for {slot}",
-            "rationale": f"{slot} passes on current artifact evidence",
-            "linked_evidence": ["svg_polish_delta_audit.delta_image_audit_log"],
-        }
-        for slot in (
-            "maturity_restraint",
-            "visual_hierarchy",
-            "template_genericness",
-            "overdecorated_or_cartoonish",
-            "journal_fit",
-            "handcrafted_finish",
-            "semantic_preservation",
-            "print_scale_finish",
-            "paper_wide_coherence",
-        )
-    ]
-
-
-def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
+def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_10) -> dict:
     frontmatter = {
         "schema": schema,
         "audit_enumeration": {
@@ -336,22 +275,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
             }
         ],
     }
-    if schema in {
-        vocab.CRITIQUE_SCHEMA_V1_4,
-        "figure-agent.critique.v1.5",
-        "figure-agent.critique.v1.6",
-        "figure-agent.critique.v1.7",
-        "figure-agent.critique.v1.8",
-        "figure-agent.critique.v1.9",
-        "figure-agent.critique.v1.10",
-        CRITIQUE_SCHEMA_V1_11,
-        CRITIQUE_SCHEMA_V1_12,
-        CRITIQUE_SCHEMA_V1_13,
-        CRITIQUE_SCHEMA_V1_14,
-        CRITIQUE_SCHEMA_V1_15,
-        CRITIQUE_SCHEMA_V1_16,
-        CRITIQUE_SCHEMA_V1_17,
-    }:
+    if schema in LIVE_CRITIQUE_SCHEMAS:
         frontmatter["micro_defects"] = [
             {
                 "id": "M001",
@@ -363,36 +287,11 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
                 "status": "open",
             }
         ]
-    if schema in {
-        "figure-agent.critique.v1.5",
-        "figure-agent.critique.v1.6",
-        "figure-agent.critique.v1.7",
-        "figure-agent.critique.v1.8",
-        "figure-agent.critique.v1.9",
-        "figure-agent.critique.v1.10",
-        CRITIQUE_SCHEMA_V1_11,
-        CRITIQUE_SCHEMA_V1_12,
-        CRITIQUE_SCHEMA_V1_13,
-        CRITIQUE_SCHEMA_V1_14,
-        CRITIQUE_SCHEMA_V1_15,
-        CRITIQUE_SCHEMA_V1_16,
-        CRITIQUE_SCHEMA_V1_17,
-    }:
+    if schema in LIVE_CRITIQUE_SCHEMAS:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
         }
-    if schema in {
-        "figure-agent.critique.v1.8",
-        "figure-agent.critique.v1.9",
-        "figure-agent.critique.v1.10",
-        CRITIQUE_SCHEMA_V1_11,
-        CRITIQUE_SCHEMA_V1_12,
-        CRITIQUE_SCHEMA_V1_13,
-        CRITIQUE_SCHEMA_V1_14,
-        CRITIQUE_SCHEMA_V1_15,
-        CRITIQUE_SCHEMA_V1_16,
-        CRITIQUE_SCHEMA_V1_17,
-    }:
+    if schema in LIVE_CRITIQUE_SCHEMAS:
         frontmatter["crop_audit_log"] = [
             {
                 "crop_id": "full_q1",
@@ -425,23 +324,9 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
                 "candidate_refs": ["VC001"],
             },
         ]
-    if schema == CRITIQUE_SCHEMA_V1_11:
-        frontmatter["aesthetic_lever_audit"] = _aesthetic_lever_audit()
-    if schema == CRITIQUE_SCHEMA_V1_12:
-        frontmatter["journal_art_direction_playbook_audit"] = (
-            _journal_art_direction_playbook_audit()
-        )
-    if schema in {
-        CRITIQUE_SCHEMA_V1_14,
-        CRITIQUE_SCHEMA_V1_15,
-        CRITIQUE_SCHEMA_V1_16,
-        CRITIQUE_SCHEMA_V1_17,
-    }:
+    if schema in {CRITIQUE_SCHEMA_V1_14, CRITIQUE_SCHEMA_V1_17}:
         trigger = frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]
         trigger["remaining_tikz_lever"] = "source-level label spacing can still be repaired in TikZ"
-    if schema in {CRITIQUE_SCHEMA_V1_15, CRITIQUE_SCHEMA_V1_16, CRITIQUE_SCHEMA_V1_17}:
-        frontmatter["svg_polish_delta_audit"] = _svg_polish_delta_audit()
-        frontmatter["aesthetic_gate_audit"] = _aesthetic_gate_audit()
     if schema == CRITIQUE_SCHEMA_V1_17:
         frontmatter["aesthetic_antipattern_audit"] = _aesthetic_antipattern_audit()
         frontmatter["weakest_panel_coherence"] = _weakest_panel_coherence()
@@ -449,8 +334,26 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
     return frontmatter
 
 
+def _valid_frontmatter_with_aesthetic_lever(
+    schema: str = CRITIQUE_SCHEMA_V1_17,
+) -> dict:
+    frontmatter = _valid_frontmatter(schema)
+    frontmatter["aesthetic_lever_audit"] = _aesthetic_lever_audit()
+    return frontmatter
+
+
+def _valid_frontmatter_with_journal_playbook(
+    schema: str = CRITIQUE_SCHEMA_V1_17,
+) -> dict:
+    frontmatter = _valid_frontmatter(schema)
+    frontmatter["journal_art_direction_playbook_audit"] = (
+        _journal_art_direction_playbook_audit()
+    )
+    return frontmatter
+
+
 def test_validate_critique_schema_accepts_v1_3_without_micro_defects() -> None:
-    validate_critique_schema(_valid_frontmatter(vocab.CRITIQUE_SCHEMA_V1_3))
+    validate_critique_schema(_valid_frontmatter(vocab.CRITIQUE_SCHEMA_V1_10))
 
 
 def test_validate_critique_schema_accepts_v1_4_micro_defects() -> None:
@@ -458,11 +361,11 @@ def test_validate_critique_schema_accepts_v1_4_micro_defects() -> None:
 
 
 def test_validate_critique_schema_accepts_v1_8_crop_audit_log() -> None:
-    validate_critique_schema(_valid_frontmatter("figure-agent.critique.v1.8"))
+    validate_critique_schema(_valid_frontmatter("figure-agent.critique.v1.10"))
 
 
 def test_validate_critique_schema_accepts_v1_13_crop_anomaly_accounting() -> None:
-    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_13))
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_14))
 
 
 def test_validate_critique_schema_accepts_v1_14_route_specific_trigger_detail() -> None:
@@ -470,11 +373,11 @@ def test_validate_critique_schema_accepts_v1_14_route_specific_trigger_detail() 
 
 
 def test_validate_critique_schema_accepts_v1_15_svg_delta_audit() -> None:
-    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_15))
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_17))
 
 
 def test_validate_critique_schema_accepts_v1_16_grounded_observations() -> None:
-    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_16))
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_17))
 
 
 def test_validate_critique_schema_accepts_v1_17_aesthetic_antipattern_audit() -> None:
@@ -495,6 +398,7 @@ def test_validate_critique_schema_rejects_v1_17_unknown_antipattern_id() -> None
 
     with pytest.raises(CritiqueContractError, match="id"):
         validate_critique_schema(frontmatter)
+
 
 
 def test_validate_critique_schema_rejects_v1_17_duplicate_antipattern_id() -> None:
@@ -582,16 +486,8 @@ def test_validate_critique_schema_rejects_v1_17_reference_underlearning_route_no
         validate_critique_schema(frontmatter)
 
 
-def test_validate_critique_schema_accepts_v1_16_crop_only_grounding() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
-    frontmatter.pop("svg_polish_delta_audit")
-    frontmatter.pop("aesthetic_gate_audit")
-
-    validate_critique_schema(frontmatter)
-
-
 def test_validate_critique_schema_rejects_v1_16_missing_crop_observed_objects() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
     frontmatter["crop_audit_log"][0].pop("observed_objects")
 
     with pytest.raises(CritiqueContractError, match="observed_objects"):
@@ -599,7 +495,7 @@ def test_validate_critique_schema_rejects_v1_16_missing_crop_observed_objects() 
 
 
 def test_validate_critique_schema_rejects_v1_16_generic_crop_relationship() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
     frontmatter["crop_audit_log"][0]["local_relationship"] = "looks fine"
 
     with pytest.raises(CritiqueContractError, match="local_relationship"):
@@ -607,105 +503,11 @@ def test_validate_critique_schema_rejects_v1_16_generic_crop_relationship() -> N
 
 
 def test_validate_critique_schema_rejects_v1_16_missing_candidate_ref() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
     frontmatter["crop_audit_log"][1]["candidate_refs"] = []
 
     with pytest.raises(CritiqueContractError, match="VC001"):
         validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_16_generic_delta_observation() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
-    frontmatter["svg_polish_delta_audit"]["delta_image_audit_log"][0]["observation"] = "ok"
-
-    with pytest.raises(CritiqueContractError, match="observation"):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_missing_svg_delta_audit() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    frontmatter.pop("svg_polish_delta_audit")
-
-    with pytest.raises(CritiqueContractError, match="svg_polish_delta_audit"):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_missing_delta_image_id() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    frontmatter["svg_polish_delta_audit"]["delta_image_audit_log"].pop()
-
-    with pytest.raises(CritiqueContractError, match="missing delta_image_audit_log ids"):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_blocking_regression_without_escalation() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    audit = frontmatter["svg_polish_delta_audit"]
-    audit["evaluation_state"] = "improved"
-    audit["route_after_delta"] = "accept_svg_polish"
-    audit["regressions"] = [
-        {
-            "category": "semantic_drift",
-            "evidence": "diff image shifts a scientific arrow",
-            "severity": "MAJOR",
-            "linked_finding_id": "",
-        }
-    ]
-
-    with pytest.raises(
-        CritiqueContractError,
-        match="semantic_backport_required or needs_human_art_direction",
-    ):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_blocking_regression_valid_link_non_escalation() -> (
-    None
-):
-    # Edge case 18 (issue 90): a BLOCKER/MAJOR regression must escalate to
-    # semantic_backport_required / needs_human_art_direction. A valid linked
-    # finding does NOT rescue a non-escalation route.
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    audit = frontmatter["svg_polish_delta_audit"]
-    audit["evaluation_state"] = "improved"
-    audit["route_after_delta"] = "accept_svg_polish"
-    audit["regressions"] = [
-        {
-            "category": "semantic_drift",
-            "evidence": "diff image shifts a scientific arrow",
-            "severity": "MAJOR",
-            "linked_finding_id": "C001",
-        }
-    ]
-
-    with pytest.raises(
-        CritiqueContractError,
-        match="semantic_backport_required or needs_human_art_direction",
-    ):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_missing_aesthetic_gate() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    frontmatter.pop("aesthetic_gate_audit")
-
-    with pytest.raises(CritiqueContractError, match="aesthetic_gate_audit"):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_15_incompatible_svg_route() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
-    frontmatter["aesthetic_gate_audit"][0]["verdict"] = "weak"
-    frontmatter["aesthetic_gate_audit"][0]["route"] = "svg_polish"
-    trigger = frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]
-    trigger["recommended_path"] = "continue_tikz"
-
-    with pytest.raises(CritiqueContractError, match="route svg_polish requires"):
-        validate_critique_schema(frontmatter)
-
-
-def test_validate_critique_schema_rejects_v1_14_continue_tikz_without_remaining_lever() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_14)
     del frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]["remaining_tikz_lever"]
 
     with pytest.raises(CritiqueContractError, match="remaining_tikz_lever"):
@@ -723,12 +525,12 @@ def test_validate_critique_schema_rejects_v1_14_ready_without_candidate_reason()
 
 
 def test_validate_critique_schema_accepts_v1_13_without_route_specific_trigger_detail() -> None:
-    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_13))
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_14))
 
 
 def test_validate_critique_schema_accepts_v1_9_reference_calibrated_score() -> None:
     critique_hash = "sha256:" + "a" * 64
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.9")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["critique_input_hash"] = critique_hash
     frontmatter["journal_grade_assessment"] = {
         "schema": "figure-agent.journal-grade-assessment.v1",
@@ -782,19 +584,15 @@ def test_validate_critique_schema_accepts_v1_10_structured_accept_simplification
 
 
 def test_validate_critique_schema_accepts_v1_11_aesthetic_lever_audit() -> None:
-    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_11))
+    validate_critique_schema(_valid_frontmatter_with_aesthetic_lever())
 
 
-def test_validate_critique_schema_rejects_v1_11_missing_aesthetic_lever_audit() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
-    frontmatter.pop("aesthetic_lever_audit")
-
-    with pytest.raises(CritiqueContractError, match="aesthetic_lever_audit"):
-        validate_critique_schema(frontmatter)
+def test_validate_critique_schema_accepts_live_schema_without_optional_aesthetic_lever() -> None:
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_17))
 
 
 def test_validate_critique_schema_rejects_v1_11_duplicate_aesthetic_lever_id() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter = _valid_frontmatter_with_aesthetic_lever()
     frontmatter["aesthetic_lever_audit"][1]["lever_id"] = "maturity_restraint"
 
     with pytest.raises(CritiqueContractError, match="duplicate"):
@@ -802,7 +600,7 @@ def test_validate_critique_schema_rejects_v1_11_duplicate_aesthetic_lever_id() -
 
 
 def test_validate_critique_schema_rejects_v1_11_unknown_aesthetic_verdict() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter = _valid_frontmatter_with_aesthetic_lever()
     frontmatter["aesthetic_lever_audit"][0]["verdict"] = "beautiful"
 
     with pytest.raises(CritiqueContractError, match="verdict"):
@@ -810,7 +608,7 @@ def test_validate_critique_schema_rejects_v1_11_unknown_aesthetic_verdict() -> N
 
 
 def test_validate_critique_schema_rejects_v1_11_unknown_aesthetic_dimension() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter = _valid_frontmatter_with_aesthetic_lever()
     frontmatter["aesthetic_lever_audit"][0]["dimension"] = "vibes"
 
     with pytest.raises(CritiqueContractError, match="dimension"):
@@ -818,7 +616,7 @@ def test_validate_critique_schema_rejects_v1_11_unknown_aesthetic_dimension() ->
 
 
 def test_validate_critique_schema_rejects_v1_11_unknown_aesthetic_route() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter = _valid_frontmatter_with_aesthetic_lever()
     frontmatter["aesthetic_lever_audit"][1]["route"] = "auto_beautify"
 
     with pytest.raises(CritiqueContractError, match="route"):
@@ -826,7 +624,7 @@ def test_validate_critique_schema_rejects_v1_11_unknown_aesthetic_route() -> Non
 
 
 def test_validate_critique_schema_rejects_v1_11_pass_with_active_route() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter = _valid_frontmatter_with_aesthetic_lever()
     frontmatter["aesthetic_lever_audit"][0]["route"] = "svg_polish"
 
     with pytest.raises(CritiqueContractError, match="route"):
@@ -834,7 +632,7 @@ def test_validate_critique_schema_rejects_v1_11_pass_with_active_route() -> None
 
 
 def test_validate_critique_schema_rejects_v1_11_non_pass_with_route_none() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter = _valid_frontmatter_with_aesthetic_lever()
     frontmatter["aesthetic_lever_audit"][1]["route"] = "none"
 
     with pytest.raises(CritiqueContractError, match="route"):
@@ -842,7 +640,7 @@ def test_validate_critique_schema_rejects_v1_11_non_pass_with_route_none() -> No
 
 
 def test_validate_critique_schema_rejects_v1_11_non_pass_without_linked_evidence() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter = _valid_frontmatter_with_aesthetic_lever()
     frontmatter["aesthetic_lever_audit"][1]["linked_evidence"] = []
 
     with pytest.raises(CritiqueContractError, match="linked_evidence"):
@@ -850,7 +648,7 @@ def test_validate_critique_schema_rejects_v1_11_non_pass_without_linked_evidence
 
 
 def test_validate_critique_schema_rejects_v1_11_non_pass_without_anti_pattern() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter = _valid_frontmatter_with_aesthetic_lever()
     frontmatter["aesthetic_lever_audit"][1]["observed_anti_patterns"] = []
 
     with pytest.raises(CritiqueContractError, match="observed_anti_patterns"):
@@ -858,19 +656,15 @@ def test_validate_critique_schema_rejects_v1_11_non_pass_without_anti_pattern() 
 
 
 def test_validate_critique_schema_accepts_v1_12_journal_art_direction_playbook_audit() -> None:
-    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_12))
+    validate_critique_schema(_valid_frontmatter_with_journal_playbook())
 
 
-def test_validate_critique_schema_rejects_v1_12_missing_playbook_audit() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
-    frontmatter.pop("journal_art_direction_playbook_audit")
-
-    with pytest.raises(CritiqueContractError, match="journal_art_direction_playbook_audit"):
-        validate_critique_schema(frontmatter)
+def test_validate_critique_schema_accepts_live_schema_without_optional_playbook() -> None:
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_17))
 
 
 def test_validate_critique_schema_rejects_v1_12_duplicate_design_center_id() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    frontmatter = _valid_frontmatter_with_journal_playbook()
     audit = frontmatter["journal_art_direction_playbook_audit"]
     audit["design_center"][1]["id"] = "editorial_restraint"
 
@@ -879,7 +673,7 @@ def test_validate_critique_schema_rejects_v1_12_duplicate_design_center_id() -> 
 
 
 def test_validate_critique_schema_rejects_v1_12_unknown_design_center_verdict() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    frontmatter = _valid_frontmatter_with_journal_playbook()
     audit = frontmatter["journal_art_direction_playbook_audit"]
     audit["design_center"][0]["verdict"] = "beautiful"
 
@@ -888,7 +682,7 @@ def test_validate_critique_schema_rejects_v1_12_unknown_design_center_verdict() 
 
 
 def test_validate_critique_schema_rejects_v1_12_pass_without_positive_refs() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    frontmatter = _valid_frontmatter_with_journal_playbook()
     audit = frontmatter["journal_art_direction_playbook_audit"]
     audit["design_center"][0]["positive_signal_refs"] = []
 
@@ -897,7 +691,7 @@ def test_validate_critique_schema_rejects_v1_12_pass_without_positive_refs() -> 
 
 
 def test_validate_critique_schema_rejects_v1_12_non_pass_without_linked_evidence() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    frontmatter = _valid_frontmatter_with_journal_playbook()
     audit = frontmatter["journal_art_direction_playbook_audit"]
     audit["design_center"][1]["linked_evidence"] = []
 
@@ -906,7 +700,7 @@ def test_validate_critique_schema_rejects_v1_12_non_pass_without_linked_evidence
 
 
 def test_validate_critique_schema_rejects_v1_12_bad_route_rule_path() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    frontmatter = _valid_frontmatter_with_journal_playbook()
     audit = frontmatter["journal_art_direction_playbook_audit"]
     audit["route_rule_applied"]["recommended_path"] = "auto_beautify"
 
@@ -979,7 +773,7 @@ def test_validate_critique_schema_rejects_v1_10_missing_accept_rationale() -> No
 
 def test_validate_critique_schema_rejects_partial_v1_9_reference_calibration() -> None:
     critique_hash = "sha256:" + "a" * 64
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.9")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["critique_input_hash"] = critique_hash
     frontmatter["journal_grade_assessment"] = {
         "schema": "figure-agent.journal-grade-assessment.v1",
@@ -1008,7 +802,7 @@ def test_validate_critique_schema_rejects_partial_v1_9_reference_calibration() -
 
 def test_validate_critique_schema_keeps_v1_8_reference_calibration_legacy_compatible() -> None:
     critique_hash = "sha256:" + "a" * 64
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.8")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["critique_input_hash"] = critique_hash
     frontmatter["journal_grade_assessment"] = {
         "schema": "figure-agent.journal-grade-assessment.v1",
@@ -1028,6 +822,10 @@ def test_validate_critique_schema_keeps_v1_8_reference_calibration_legacy_compat
         "reference_calibration": {
             "reference_pack_hash": "sha256:" + "b" * 64,
             "reference_class": "mechanism_schematic",
+            "visual_ambition": "high_impact_candidate",
+            "score_basis": "current_artifact_vs_pack",
+            "limiting_reference_traits": ["T003"],
+            "rationale": "T003 is the limiting trait relative to the pack",
         },
     }
 
@@ -1035,7 +833,7 @@ def test_validate_critique_schema_keeps_v1_8_reference_calibration_legacy_compat
 
 
 def test_validate_critique_schema_rejects_v1_8_missing_crop_audit_log() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.8")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter.pop("crop_audit_log")
 
     with pytest.raises(CritiqueContractError, match="crop_audit_log"):
@@ -1043,7 +841,7 @@ def test_validate_critique_schema_rejects_v1_8_missing_crop_audit_log() -> None:
 
 
 def test_validate_critique_schema_rejects_v1_8_unknown_crop_verdict() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.8")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["crop_audit_log"][0]["verdict"] = "ignored"
 
     with pytest.raises(CritiqueContractError, match="verdict"):
@@ -1051,7 +849,7 @@ def test_validate_critique_schema_rejects_v1_8_unknown_crop_verdict() -> None:
 
 
 def test_validate_critique_schema_rejects_v1_8_defect_without_micro_defect_link() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.8")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["crop_audit_log"][1]["linked_micro_defect_id"] = ""
 
     with pytest.raises(CritiqueContractError, match="linked_micro_defect_id"):
@@ -1059,7 +857,7 @@ def test_validate_critique_schema_rejects_v1_8_defect_without_micro_defect_link(
 
 
 def test_validate_critique_schema_rejects_v1_8_defect_with_unknown_micro_defect_link() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.8")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["crop_audit_log"][1]["linked_micro_defect_id"] = "M999"
 
     with pytest.raises(CritiqueContractError, match="micro_defects"):
@@ -1067,7 +865,7 @@ def test_validate_critique_schema_rejects_v1_8_defect_with_unknown_micro_defect_
 
 
 def test_validate_critique_schema_rejects_v1_13_missing_anomaly_field() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_13)
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_14)
     frontmatter["crop_audit_log"][0].pop("unintended_visible_anomaly")
 
     with pytest.raises(CritiqueContractError, match="unintended_visible_anomaly"):
@@ -1075,7 +873,7 @@ def test_validate_critique_schema_rejects_v1_13_missing_anomaly_field() -> None:
 
 
 def test_validate_critique_schema_rejects_v1_13_present_anomaly_without_link() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_13)
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_14)
     frontmatter["crop_audit_log"][1]["unintended_visible_anomaly"] = "present"
     frontmatter["crop_audit_log"][1]["anomaly_link"] = ""
 
@@ -1084,7 +882,7 @@ def test_validate_critique_schema_rejects_v1_13_present_anomaly_without_link() -
 
 
 def test_validate_critique_schema_accepts_v1_13_uncertain_anomaly_with_rationale() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_13)
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_14)
     frontmatter["crop_audit_log"][0]["unintended_visible_anomaly"] = "uncertain"
     frontmatter["crop_audit_log"][0]["anomaly_rationale"] = (
         "crop is visually ambiguous and needs another zoom pass"
@@ -1095,7 +893,7 @@ def test_validate_critique_schema_accepts_v1_13_uncertain_anomaly_with_rationale
 
 
 def test_validate_critique_schema_accepts_v1_13_none_anomaly_with_rationale() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_13)
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_14)
     frontmatter["crop_audit_log"][0]["unintended_visible_anomaly"] = "none"
     frontmatter["crop_audit_log"][0]["anomaly_rationale"] = (
         "no unintended visible artifact is present"
@@ -1105,11 +903,11 @@ def test_validate_critique_schema_accepts_v1_13_none_anomaly_with_rationale() ->
 
 
 def test_validate_critique_schema_accepts_legacy_v1_7_without_crop_audit_log() -> None:
-    validate_critique_schema(_valid_frontmatter("figure-agent.critique.v1.7"))
+    validate_critique_schema(_valid_frontmatter("figure-agent.critique.v1.10"))
 
 
-def test_validate_critique_schema_keeps_v1_12_legacy_without_anomaly_accounting() -> None:
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+def test_validate_critique_schema_keeps_v1_10_without_anomaly_accounting() -> None:
+    frontmatter = _valid_frontmatter(vocab.CRITIQUE_SCHEMA_V1_10)
     for item in frontmatter["crop_audit_log"]:
         item.pop("unintended_visible_anomaly")
         item.pop("anomaly_rationale")
@@ -1169,6 +967,10 @@ def test_validate_critique_schema_accepts_v1_4_major_micro_defect_simplification
     frontmatter = _valid_frontmatter()
     frontmatter["micro_defects"][0]["linked_finding_id"] = ""
     frontmatter["micro_defects"][0]["status"] = "accept_simplification"
+    frontmatter["micro_defects"][0]["accept_simplification_reason"] = "false_positive"
+    frontmatter["micro_defects"][0]["accept_simplification_rationale"] = (
+        "The current crop shows a decorative background, not a real label collision."
+    )
     frontmatter["findings"] = []
 
     validate_critique_schema(frontmatter)
@@ -1190,12 +992,14 @@ def test_validate_critique_schema_accepts_v1_4_empty_micro_defect_list() -> None
     frontmatter = deepcopy(_valid_frontmatter())
     frontmatter["micro_defects"] = []
     frontmatter["findings"] = []
+    frontmatter["crop_audit_log"][1]["verdict"] = "no_defect"
+    frontmatter["crop_audit_log"][1]["linked_micro_defect_id"] = ""
 
     validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_accepts_v1_5_editorial_art_direction() -> None:
-    validate_critique_schema(_valid_frontmatter("figure-agent.critique.v1.5"))
+    validate_critique_schema(_valid_frontmatter("figure-agent.critique.v1.10"))
 
 
 def test_validate_critique_schema_accepts_v1_6_instrument_label_micro_defects() -> None:
@@ -1203,7 +1007,7 @@ def test_validate_critique_schema_accepts_v1_6_instrument_label_micro_defects() 
         "label_backdrop_overflows_outline",
         "label_glyph_overlaps_internal_drawing",
     ):
-        frontmatter = _valid_frontmatter("figure-agent.critique.v1.6")
+        frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
         frontmatter["micro_defects"][0]["kind"] = kind
         frontmatter["micro_defects"][0]["observation"] = f"{kind} is visible"
 
@@ -1211,14 +1015,14 @@ def test_validate_critique_schema_accepts_v1_6_instrument_label_micro_defects() 
 
 
 def test_validate_critique_schema_accepts_v1_7_visual_clash_ref_field() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.7")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["micro_defects"][0]["visual_clash_ref"] = "VC001"
 
     validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_rejects_v1_6_major_new_kind_without_link() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.6")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["micro_defects"][0]["kind"] = "label_backdrop_overflows_outline"
     frontmatter["micro_defects"][0]["linked_finding_id"] = ""
     frontmatter["findings"] = []
@@ -1228,7 +1032,7 @@ def test_validate_critique_schema_rejects_v1_6_major_new_kind_without_link() -> 
 
 
 def test_validate_critique_schema_rejects_v1_5_missing_editorial_art_direction() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter.pop("editorial_art_direction")
 
     with pytest.raises(CritiqueContractError, match="editorial_art_direction"):
@@ -1236,7 +1040,7 @@ def test_validate_critique_schema_rejects_v1_5_missing_editorial_art_direction()
 
 
 def test_validate_critique_schema_rejects_v1_5_invalid_editorial_verdict() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["editorial_art_direction"]["hero_focus"]["verdict"] = "excellent"
 
     with pytest.raises(CritiqueContractError, match="hero_focus.verdict"):
@@ -1244,7 +1048,7 @@ def test_validate_critique_schema_rejects_v1_5_invalid_editorial_verdict() -> No
 
 
 def test_validate_critique_schema_rejects_v1_5_empty_editorial_evidence() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["editorial_art_direction"]["hero_focus"]["evidence"] = ""
 
     with pytest.raises(CritiqueContractError, match="hero_focus.evidence"):
@@ -1252,7 +1056,7 @@ def test_validate_critique_schema_rejects_v1_5_empty_editorial_evidence() -> Non
 
 
 def test_validate_critique_schema_rejects_v1_5_non_boolean_blocks_high_impact() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["editorial_art_direction"]["hero_focus"]["blocks_high_impact"] = "false"
 
     with pytest.raises(CritiqueContractError, match="hero_focus.blocks_high_impact"):
@@ -1260,7 +1064,7 @@ def test_validate_critique_schema_rejects_v1_5_non_boolean_blocks_high_impact() 
 
 
 def test_validate_critique_schema_rejects_v1_5_invalid_polish_recommended_path() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]["recommended_path"] = (
         "guess_from_prose"
     )
@@ -1270,7 +1074,7 @@ def test_validate_critique_schema_rejects_v1_5_invalid_polish_recommended_path()
 
 
 def test_validate_critique_schema_rejects_v1_5_needs_human_accept_simplification_bypass() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["editorial_art_direction"]["hero_focus"] = {
         "verdict": "needs_human",
         "evidence": "target journal is unspecified",
@@ -1286,7 +1090,7 @@ def test_validate_critique_schema_rejects_v1_5_needs_human_accept_simplification
 
 
 def test_validate_critique_schema_accepts_v1_5_fail_with_intentional_simplification() -> None:
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["editorial_art_direction"]["visual_identity"] = {
         "verdict": "fail",
         "evidence": "visual identity is intentionally plain for this methods figure",
@@ -1296,13 +1100,15 @@ def test_validate_critique_schema_accepts_v1_5_fail_with_intentional_simplificat
     }
     frontmatter["findings"] = []
     frontmatter["micro_defects"] = []
+    frontmatter["crop_audit_log"][1]["verdict"] = "no_defect"
+    frontmatter["crop_audit_log"][1]["linked_micro_defect_id"] = ""
 
     validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_rejects_v1_5_high_impact_with_weak_editorial_slot() -> None:
     critique_hash = "sha256:" + "a" * 64
-    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["critique_input_hash"] = critique_hash
     frontmatter["editorial_art_direction"]["aesthetic_risk"]["verdict"] = "weak"
     frontmatter["journal_grade_assessment"] = {

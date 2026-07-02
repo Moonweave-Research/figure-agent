@@ -21,6 +21,12 @@ from critique_schema_vocab import (  # noqa: E402
     CRITIQUE_SCHEMA_V1_9,
     CRITIQUE_SCHEMA_V1_10,
     CRITIQUE_SCHEMA_V1_11,
+    CRITIQUE_SCHEMA_V1_12,
+    CRITIQUE_SCHEMA_V1_13,
+    CRITIQUE_SCHEMA_V1_14,
+    CRITIQUE_SCHEMA_V1_15,
+    CRITIQUE_SCHEMA_V1_16,
+    CRITIQUE_SCHEMA_V1_17,
     CROP_AUDIT_VERDICTS,
     EDITORIAL_AUDIT_KEYS,
     EDITORIAL_POLISH_PATHS,
@@ -30,6 +36,7 @@ from critique_schema_vocab import (  # noqa: E402
     MICRO_DEFECT_KINDS,
     MICRO_DEFECT_STATUSES,
     QUALITY_AXIS_NAMES,
+    RETIRED_CRITIQUE_SCHEMAS,
     TOP_TIER_AUDIT_KEYS,
 )
 
@@ -47,6 +54,30 @@ def test_critique_schema_versions_are_canonical() -> None:
     assert CRITIQUE_SCHEMA_V1_9 == "figure-agent.critique.v1.9"
     assert CRITIQUE_SCHEMA_V1_10 == "figure-agent.critique.v1.10"
     assert CRITIQUE_SCHEMA_V1_11 == "figure-agent.critique.v1.11"
+    assert CRITIQUE_SCHEMA_V1_12 == "figure-agent.critique.v1.12"
+    assert CRITIQUE_SCHEMA_V1_13 == "figure-agent.critique.v1.13"
+    assert CRITIQUE_SCHEMA_V1_14 == "figure-agent.critique.v1.14"
+    assert CRITIQUE_SCHEMA_V1_15 == "figure-agent.critique.v1.15"
+    assert CRITIQUE_SCHEMA_V1_16 == "figure-agent.critique.v1.16"
+    assert CRITIQUE_SCHEMA_V1_17 == "figure-agent.critique.v1.17"
+    assert RETIRED_CRITIQUE_SCHEMAS == frozenset(
+        {
+            CRITIQUE_SCHEMA_V1_1,
+            CRITIQUE_SCHEMA_V1_2,
+            CRITIQUE_SCHEMA_V1_3,
+            CRITIQUE_SCHEMA_V1_4,
+            CRITIQUE_SCHEMA_V1_5,
+            CRITIQUE_SCHEMA_V1_6,
+            CRITIQUE_SCHEMA_V1_7,
+            CRITIQUE_SCHEMA_V1_8,
+            CRITIQUE_SCHEMA_V1_9,
+            CRITIQUE_SCHEMA_V1_11,
+            CRITIQUE_SCHEMA_V1_12,
+            CRITIQUE_SCHEMA_V1_13,
+            CRITIQUE_SCHEMA_V1_15,
+            CRITIQUE_SCHEMA_V1_16,
+        }
+    )
 
 
 def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:

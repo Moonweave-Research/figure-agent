@@ -12,6 +12,7 @@ SAFE_CLASSES = {
     "text_overlap": "mechanical_text_overlap",
     "whitespace_balance": "mechanical_whitespace_balance",
     "line_weight_style": "mechanical_style_normalization",
+    "gradient_depth_fill": "bounded_gradient_depth_fill",
     "svg_visual_polish": "bounded_svg_visual_polish",
 }
 HUMAN_CLASSES = {"semantic_meaning", "taste_decision", "publication_gate"}

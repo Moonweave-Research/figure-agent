@@ -1,0 +1,92 @@
+{
+  "schema": "figure-agent.release-decision-packet.v1",
+  "packet_kind": "release_acceptance_decision_packet",
+  "fixture": "fig3_trapping_concept",
+  "queue_run_id": "wave-c-target-selection-release-2026-06-30",
+  "source_human_decision_record": "docs/decision-records/2026-06-30-wave-c/fig3_trapping_concept.json",
+  "boundary": "accepted_or_final_ready_required",
+  "mutation_boundary": "no_source_mutation",
+  "required_actor": "release_operator",
+  "purpose": "Record candidate acceptance evidence for a real manuscript figure while keeping actual accepted-state and release-state mutation explicit.",
+  "queue_contract": {
+    "mode": "release",
+    "expected_packet_kind": "release_acceptance_decision_packet",
+    "expected_boundary": "accepted_or_final_ready_required",
+    "blocked_until": "explicit release-operator acceptance or final-artifact decision",
+    "safe_default": "accept_current_generated_export"
+  },
+  "current_state_summary": {
+    "artifact_class": "real_manuscript_figure",
+    "render_state": "FRESH",
+    "critique_state": "FRESH",
+    "export_state": "FRESH",
+    "workflow_ready": true,
+    "critique_verdict": "ready",
+    "journal_grade": "solid_manuscript",
+    "known_blockers": []
+  },
+  "evidence": [
+    "review-mode action is complete for the current generated export",
+    "critique verdict is ready with no scientific/content blockers recorded in the Wave12 packet notes",
+    "current generated export is the candidate artifact; no source or release-state mutation is part of this packet"
+  ],
+  "human_question": "Should the release operator accept the current generated export for fig3_trapping_concept, declare a separate final artifact, reject it, or defer for another dogfood pass?",
+  "agent_recommendation": "Accept the current generated export as a real manuscript candidate only if the release operator wants solid-manuscript readiness now; otherwise defer without mutating accepted state.",
+  "recommended_choice_id": "accept_current_generated_export",
+  "choices": [
+    {
+      "id": "accept_current_generated_export",
+      "label": "Accept current generated export",
+      "requires_explicit_authority": true,
+      "follow_up": {
+        "manual_record_path": "examples/fig3_trapping_concept/QUALITY_AUDIT.md and accepted: true in spec.yaml",
+        "after_decision": "rerun /fig_queue --mode release --goal wave-c-target-selection"
+      },
+      "risk": "Accepting now may preserve optional high-impact typography polish for a later pass, but current evidence does not identify a scientific blocker."
+    },
+    {
+      "id": "declare_final_artifact",
+      "label": "Declare a separate final artifact",
+      "requires_explicit_authority": true,
+      "follow_up": {
+        "after_decision": "record the final artifact path, then rerun /fig_queue --mode release --goal wave-c-target-selection"
+      },
+      "risk": "A final-artifact declaration must point at a fresh, reviewable artifact rather than silently blessing generated output."
+    },
+    {
+      "id": "reject_current_artifact",
+      "label": "Reject current artifact",
+      "requires_explicit_authority": true,
+      "follow_up": {
+        "after_decision": "record rejection rationale before opening a bounded repair or redesign slice"
+      },
+      "risk": "Rejecting without a specific defect can reopen already-complete manuscript work."
+    },
+    {
+      "id": "defer_for_dogfood",
+      "label": "Defer for another dogfood pass",
+      "requires_explicit_authority": false,
+      "follow_up": {
+        "after_decision": "rerun the release queue before any separate acceptance-state update"
+      },
+      "risk": "Release remains blocked until an explicit acceptance or final-artifact decision is recorded."
+    }
+  ],
+  "disallowed_actions": [
+    "do not edit figure source files",
+    "do not edit accepted state from this packet",
+    "do not edit release state",
+    "do not edit generated exports or tracked golden artifacts",
+    "do not treat the recommendation as implicit human acceptance"
+  ],
+  "evidence_refs": [
+    "human_decision:selected_as_real_manuscript_accept_current_candidate",
+    "decision_kind:accept_current_generated_export",
+    "boundary:accepted_or_final_ready_required",
+    "mutation_boundary:no_source_mutation"
+  ],
+  "follow_up": {
+    "implementation_slice": "Record candidate acceptance evidence only; rerun the release queue before any separate acceptance-state update.",
+    "after_decision": "rerun /fig_queue --mode release --goal wave-c-target-selection"
+  }
+}

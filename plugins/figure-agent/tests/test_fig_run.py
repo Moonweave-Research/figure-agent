@@ -11,7 +11,6 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_driver  # noqa: E402
-import fig_driver_commands  # noqa: E402
 import fig_run  # noqa: E402
 import fig_run_records  # noqa: E402
 from next_action_summary import driver_next_action_summary  # noqa: E402
@@ -180,39 +179,6 @@ def test_runner_accepts_quoted_fixture_name_commands(
     assert commands == ["bash scripts/compile.sh 'examples/runner demo/runner demo.tex'"]
     assert payload["executed_count"] == 1
     assert payload["final_stop_reason"] == "complete"
-
-
-def test_driver_command_helpers_quote_fixture_names() -> None:
-    assert fig_driver_commands.compile_command("runner demo") == (
-        "fig-agent compile 'runner demo'"
-    )
-    assert fig_driver_commands.adjudicate_command("runner demo") == (
-        "fig-agent adjudicate 'runner demo'"
-    )
-    assert fig_driver_commands.export_command("runner demo") == (
-        "fig-agent export 'runner demo'"
-    )
-    assert fig_driver_commands.fig_loop_command("runner demo", "close loop") == (
-        "fig-agent loop 'runner demo' --goal 'close loop' --json"
-    )
-    assert fig_driver_commands.svg_polish_executor_dry_run_command("runner demo") == (
-        "fig-agent svg-polish-exec 'runner demo' --dry-run"
-    )
-    assert fig_driver_commands.svg_polish_executor_write_command("runner demo") == (
-        "fig-agent svg-polish-exec 'runner demo' --write"
-    )
-    assert fig_driver_commands.svg_polish_delta_command("runner demo") == (
-        "fig-agent svg-polish-delta 'runner demo'"
-    )
-
-
-def test_svg_polish_delta_command_quotes_python_fixture_path() -> None:
-    command = fig_driver_commands.svg_polish_delta_command("runner's demo")
-
-    parts = fig_run._command_parts(command)
-
-    assert parts is not None
-    assert parts == ["fig-agent", "svg-polish-delta", "runner's demo"]
 
 
 @pytest.mark.parametrize(

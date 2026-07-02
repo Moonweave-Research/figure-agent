@@ -1,0 +1,16 @@
+{
+  "schema": "figure-agent.human-decision-record.v1",
+  "fixture": "fig3_trapping_concept",
+  "packet_schema": "figure-agent.release-decision-packet.v1",
+  "packet_path": "docs/decision-packets/2026-07-01-acceptance/fig3_trapping_concept_acceptance_packet.json",
+  "packet_recommendation": "accept_current_generated_export",
+  "packet_timestamp": "2026-07-01T02:38:24Z",
+  "decision_kind": "defer_for_dogfood",
+  "agent_recommendation": "The source acceptance packet docs/decision-packets/2026-07-01-acceptance/fig3_trapping_concept_acceptance_packet.json recommended accept_current_generated_export, but also listed defer_for_dogfood as the safe default without an explicit human release decision.",
+  "human_decision": "defer_for_dogfood_pending_explicit_release_operator_acceptance",
+  "human_note": "Do not treat the acceptance packet or this record as release acceptance. This records a distinct defer decision only and preserves accepted, golden, final-artifact, source, export, and publication state unchanged.",
+  "follow_up": {
+    "implementation_slice": "Open a bounded dogfood or style-direction slice only; do not set accepted: true, declare a final artifact, mutate source, mutate golden artifacts, or change publication/release state from this record."
+  },
+  "mutation_boundary": "no_source_mutation"
+}

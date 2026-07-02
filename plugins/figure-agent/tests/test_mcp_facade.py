@@ -123,7 +123,7 @@ def _write_undeclared_candidate_defect(fixture: Path) -> None:
                         "source_line": 1,
                         "panel": "C",
                     }
-                ]
+                ],
             }
         ),
         encoding="utf-8",
@@ -610,6 +610,98 @@ def test_mcp_next_returns_public_command_and_write_metadata(tmp_path: Path) -> N
     assert next_payload["writes"] is True
 
 
+def test_mcp_propose_improvements_reports_no_op_on_pure_refusal(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_candidate_fixture(workspace, with_candidate_defect=False)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_propose_improvements",
+                    "arguments": {"name": "candidate_demo"},
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    propose = _tool_payload(_response_lines(result)[0])
+    assert propose["schema"] == "figure-agent.mcp.propose-improvements.v1"
+    assert propose["candidate_set"]["candidates"] == []
+    assert propose["candidate_set"]["refusals"]
+    assert propose["success"] is False
+    assert propose["no_op"] is True
+    assert propose["refusals"] == propose["candidate_set"]["refusals"]
+
+
+def _write_real_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> Path:
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / "reference").mkdir()
+    (fixture / "reference" / "panel_a.png").write_bytes(b"fake")
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / "spec.yaml").write_text(
+        f"name: {name}\npanels:\n  - id: A\n    reference_image: reference/panel_a.png\n",
+        encoding="utf-8",
+    )
+    (fixture / f"{name}.tex").write_text(
+        "\\node (label-a) at (0,0) {Old Label};\n",
+        encoding="utf-8",
+    )
+    build = fixture / "build"
+    build.mkdir()
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": 1,
+                        "panel": "A",
+                    }
+                ],
+                "source_hashes": {
+                    f"examples/{name}/{name}.tex": "sha256:"
+                    + sha256((fixture / f"{name}.tex").read_bytes()).hexdigest()
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return fixture
+
+
+def test_mcp_propose_improvements_keeps_success_on_real_candidate(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_real_candidate_fixture(workspace)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_propose_improvements",
+                    "arguments": {"name": "candidate_demo"},
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    propose = _tool_payload(_response_lines(result)[0])
+    assert propose["schema"] == "figure-agent.mcp.propose-improvements.v1"
+    assert propose["candidate_set"]["candidates"]
+    assert propose["success"] is True
+    assert "no_op" not in propose
+
+
 def test_mcp_benchmark_detectors_preview_is_read_only(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
 
@@ -1014,7 +1106,8 @@ def test_mcp_candidate_read_only_tools_and_apply_blocks_without_acceptance(
     assert analyze["success"] is True
     assert analyze["intent"]["schema"] == "figure-agent.intent-model.v1"
     assert propose["schema"] == "figure-agent.mcp.propose-improvements.v1"
-    assert propose["success"] is True
+    assert propose["success"] is False
+    assert propose["no_op"] is True
     assert propose["candidate_set"]["schema"] == "figure-agent.candidate-set.v1"
     assert apply["schema"] == "figure-agent.mcp.apply-candidate.v1"
     assert apply["success"] is False
@@ -1188,7 +1281,11 @@ def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> 
     assert accepted["success"] is True, json.dumps(accepted, indent=2, sort_keys=True)
     assert accepted["acceptance"]["path"] == "build/candidates/CAND001/acceptance.json"
     assert applied["schema"] == "figure-agent.mcp.apply-candidate.v1"
-    assert applied["status"] in {"applied", "applied_with_failed_verification"}, json.dumps(
+    assert applied["status"] in {
+        "applied",
+        "applied_with_failed_verification",
+        "rolled_back",
+    }, json.dumps(
         applied,
         indent=2,
         sort_keys=True,
@@ -1196,7 +1293,7 @@ def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> 
     assert applied["success"] is (applied["status"] == "applied")
     assert applied["apply_result"]["status"] == applied["status"]
     assert applied["apply_result"]["post_apply"]["compile"]["returncode"] == 0
-    if applied["status"] == "applied_with_failed_verification":
+    if applied["status"] in {"applied_with_failed_verification", "rolled_back"}:
         assert "post-apply verification failed" in applied["error"]["message"]
     assert tex_path.read_text(encoding="utf-8") != before
 
@@ -1682,26 +1779,43 @@ def test_mcp_apply_candidate_mutates_tex_and_honors_gate(
     )
 
     assert applied["schema"] == "figure-agent.mcp.apply-candidate.v1"
-    assert applied["status"] in {"applied", "applied_with_failed_verification"}, applied
+    assert applied["status"] in {
+        "applied",
+        "applied_with_failed_verification",
+        "rolled_back",
+    }, applied
     assert applied["success"] is (applied["status"] == "applied")
     after = tex_path.read_text(encoding="utf-8")
-    assert after != before
     apply_result = applied["apply_result"]
+    rolled_back = bool(
+        apply_result.get("post_apply", {}).get("class_verifiers", {}).get("rolled_back")
+    )
+    if rolled_back:
+        # Autonomy: a failed-verification fix is auto-rolled-back, so the working
+        # tree is restored to its pre-apply content rather than left mutated.
+        assert after == before
+    else:
+        assert after != before
     assert apply_result["status"] == applied["status"]
     if applied["status"] == "applied":
         assert applied.get("error") is None
         assert apply_result["post_apply"]["compile"]["returncode"] == 0
+    elif applied["status"] == "rolled_back":
+        assert "post-apply verification failed" in applied["error"]["message"]
+        assert "automatically rolled back" in applied["error"]["message"]
+        assert "working tree unchanged" not in applied["error"]["message"]
     else:
         assert "post-apply verification failed" in applied["error"]["message"]
-        assert any(
-            check["status"] == "failed" for check in apply_result["post_apply"].values()
-        )
+        assert any(check["status"] == "failed" for check in apply_result["post_apply"].values())
 
-    # Second apply of the same (now already-applied) candidate must be refused
-    # by the acceptance/drift/lock gate — proving the gate runs and is not bypassed.
+    # Second apply behavior depends on whether the first mutation persisted:
+    # rolled_back remains re-applicable, applied/applied_with_failed_verification is terminal.
     blocked = figure_agent_server._apply_candidate(
         {"name": "candidate_demo", "candidate_id": "CAND001"}
     )
+    if applied["status"] == "rolled_back":
+        assert blocked["status"] in {"applied", "applied_with_failed_verification", "rolled_back"}
+        return
     assert blocked["success"] is False
     # A pristine refusal must be distinguishable at the envelope top level from a
     # mutated-but-unverified apply: status is surfaced and the message says the

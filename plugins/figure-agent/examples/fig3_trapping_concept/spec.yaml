@@ -1,4 +1,18 @@
 name: fig3_trapping_concept
+
+# Physics invariants (briefing §6) that are directional in the .tex:
+#  - "Capture direction is CB to deep trap, not the reverse" → capArr points DOWN.
+#  - Thermal escape (deep → shallow) → escArr points UP (opposite of capture).
+tex_assertions:
+  - id: capture-points-down-cb-to-deep-trap
+    anchor_style: capArr
+    axis: y
+    direction: decreasing
+  - id: escape-points-up-deep-to-shallow
+    anchor_style: escArr
+    axis: y
+    direction: increasing
+
 panels:
   - id: a
     caption: PDMS — clean bandgap (no trap states)
@@ -6,6 +20,7 @@ panels:
     caption: Sulfur Polymer — deep trap states in bandgap
 style_profile: polymer-default
 visual_clash_cap: 14
+undeclared_geometry_profile: schematic
 # Original preview (chatgpt_b01.png) not present in current previews/.
 # selection_notes below preserves the historical decision record.
 selected_preview: null

@@ -107,6 +107,10 @@ def _queue_filters_from_args(args: argparse.Namespace) -> dict[str, str | None]:
         "svg_polish_recommended_path": args.svg_polish_recommended_path,
         "svg_polish_next_action": args.svg_polish_next_action,
         "svg_polish_blocking_sources": args.svg_polish_blocking_sources,
+        "polish_blocker_reason": args.polish_blocker_reason,
+        "svg_polish_evidence_state": args.svg_polish_evidence_state,
+        "style_benchmark_pack_state": args.style_benchmark_pack_state,
+        "style_benchmark_comparison_state": args.style_benchmark_comparison_state,
     }
     missing = set(QUEUE_FILTER_KEYS) - set(values)
     extra = set(values) - set(QUEUE_FILTER_KEYS)
@@ -156,6 +160,15 @@ def run_queue(
         )
         for item in planned_items
     ]
+    queue_payload = {
+        "schema": queue.get("schema"),
+        "summary": queue.get("summary"),
+        "bottleneck_report": queue.get("bottleneck_report"),
+        "unfiltered_total": queue.get("unfiltered_total"),
+        "command_plan": command_plan,
+    }
+    if "workspace_diagnostic" in queue:
+        queue_payload["workspace_diagnostic"] = queue["workspace_diagnostic"]
     return {
         "schema": SCHEMA,
         "mode": mode,
@@ -165,18 +178,13 @@ def run_queue(
         "max_fixtures": max_fixtures,
         "fixtures": list(fixtures or []),
         "filters": queue.get("filters", {}),
-        "queue": {
-            "schema": queue.get("schema"),
-            "summary": queue.get("summary"),
-            "unfiltered_total": queue.get("unfiltered_total"),
-            "command_plan": command_plan,
-        },
+        "queue": queue_payload,
         "runs": runs,
         "summary": _summary(command_plan=command_plan, runs=runs),
     }
 
 
-def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
+def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int:
     parser = argparse.ArgumentParser(prog="fig_queue_run.py")
     parser.add_argument("fixtures", nargs="*")
     parser.add_argument("--mode", choices=list(fig_driver.MODES), required=True)
@@ -197,6 +205,10 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--svg-polish-recommended-path")
     parser.add_argument("--svg-polish-next-action")
     parser.add_argument("--svg-polish-blocking-source", dest="svg_polish_blocking_sources")
+    parser.add_argument("--polish-blocker-reason")
+    parser.add_argument("--svg-polish-evidence-state")
+    parser.add_argument("--style-benchmark-pack-state")
+    parser.add_argument("--style-benchmark-comparison-state")
     args = parser.parse_args(argv)
     if args.execute and args.dry_run:
         print(
@@ -207,7 +219,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     try:
         resolved_repo_root = (
             runtime_paths.resolve_runtime_paths().workspace_root
-            if repo_root == REPO_ROOT
+            if repo_root is None
             else repo_root
         )
         payload = run_queue(
@@ -223,8 +235,10 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     except ValueError as exc:
         print(f"fig_queue_run.py: {exc}", file=sys.stderr)
         return 2
+    queue = payload.get("queue", {})
+    fig_queue._print_workspace_diagnostic(queue)
     print(json.dumps(payload, indent=2, sort_keys=True))
-    return 0
+    return fig_queue.workspace_diagnostic_exit_code(queue)
 
 
 if __name__ == "__main__":

@@ -316,6 +316,61 @@ def test_structural_regions_unavailable_when_vtracer_missing(tmp_path, monkeypat
     assert "palette_shape_clusters" in payload
 
 
+def test_structural_regions_failed_when_post_processing_raises(tmp_path, monkeypatch):
+    """An exception AFTER successful vectorization+parse (post-processing) must
+    degrade to status 'failed' per the commands/fig_extract.md contract, not
+    propagate and crash the caller."""
+    import types
+
+    import vtrace
+
+    svg_doc = (
+        '<svg xmlns="http://www.w3.org/2000/svg">'
+        '<path fill="#3A6FD8" d="M0 0 L100 0 L100 100 L0 100 Z"/>'
+        "</svg>"
+    )
+
+    def _fake_convert(src: str, dst: str, **kwargs) -> None:
+        Path(dst).write_text(svg_doc, encoding="utf-8")
+
+    monkeypatch.setitem(
+        sys.modules, "vtracer", types.SimpleNamespace(convert_image_to_svg_py=_fake_convert)
+    )
+
+    def _boom(r: int, g: int, b: int) -> str | None:
+        raise RuntimeError("post-processing boom")
+
+    monkeypatch.setattr(vtrace, "_classify_color_family", _boom)
+
+    ref_path = tmp_path / "ref.png"
+    Image.new("RGB", (100, 100), "white").save(ref_path)
+
+    result = vtrace.structural_regions_from_reference(ref_path, (100, 100))
+    assert result["status"] == "failed"
+    assert "post-processing boom" in result["error"]
+
+
+def test_structural_regions_failed_on_zero_width_image_size(tmp_path, monkeypatch):
+    """img_w == 0 (ZeroDivisionError in geometry derivation) must degrade to
+    status 'failed' instead of raising through /fig_extract."""
+    import types
+
+    import vtrace
+
+    monkeypatch.setitem(
+        sys.modules,
+        "vtracer",
+        types.SimpleNamespace(convert_image_to_svg_py=lambda *args, **kwargs: None),
+    )
+
+    ref_path = tmp_path / "ref.png"
+    Image.new("RGB", (10, 10), "white").save(ref_path)
+
+    result = vtrace.structural_regions_from_reference(ref_path, (0, 10))
+    assert result["status"] == "failed"
+    assert "error" in result
+
+
 def test_extract_degrades_when_ocr_runtime_fails(tmp_path, monkeypatch):
     """A tesseract runtime failure (non-zero rc) must degrade to ocr_status
     'failed' while palette + structural extraction still write the payload."""

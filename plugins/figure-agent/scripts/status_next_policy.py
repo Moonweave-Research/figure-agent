@@ -64,6 +64,14 @@ _NEXT_4_ACCEPTANCE_NOT_DECLARED = (
     " /fig_loop <name>, or make an explicit human acceptance/final-artifact"
     " decision before release."
 )
+_NEXT_4_ACCEPTANCE_AUTHORIZED = (
+    "valid human decision record exists; release-state mutation still requires "
+    "explicit operation: <release_operation>."
+)
+_NEXT_4_NON_RELEASE_DECISION = (
+    "valid human decision record requests <route>; keep release blocked and route "
+    "to non-release work before acceptance."
+)
 _NEXT_4_CRITIQUE_REQUIRED = (
     "run /fig_critique <name> as a final review of the current rendered candidate"
     " before treating exports as final;"
@@ -81,26 +89,14 @@ _NEXT_SPEC_PARSE_ERROR = "fix malformed examples/<name>/spec.yaml before continu
 _NEXT_STYLE_PROFILE_UNKNOWN = (
     "fix unknown style_profile in examples/<name>/spec.yaml before continuing."
 )
-_NEXT_FINAL_ARTIFACT_MISSING = (
-    "final artifact is missing — create or restore polish/<name>.polished.svg,"
-    " then run fig-agent helper svg_polish_handoff.py to scaffold"
-    " polish/svg_polish_audit.md and polish/svg_polish_manifest.yaml."
-)
+_NEXT_FINAL_ARTIFACT_MISSING = "final artifact is missing — regenerate exports before continuing."
 _NEXT_FINAL_ARTIFACT_INVALID = (
-    "final artifact is invalid — fix spec.yaml final_artifact and"
-    " polish/svg_polish_manifest.yaml, then rerun /fig_status <name>."
+    "final artifact is invalid — fix spec.yaml and rerun /fig_status <name>."
 )
-_NEXT_FINAL_ARTIFACT_STALE = (
-    "final artifact is stale — manifest must be refreshed by rerunning"
-    " fig-agent helper svg_polish_handoff.py after source/export/critique/polish/audit"
-    " changes; if polish/svg_semantic_diff.json is stale, rerun"
-    " fig-agent helper svg_semantic_diff.py, then rerun /fig_status <name>."
-)
+_NEXT_FINAL_ARTIFACT_STALE = "final artifact is stale — rerun compile/export before continuing."
 _NEXT_FINAL_ARTIFACT_BLOCKED = (
     "final artifact requires semantic backport (semantic_backport_required)"
-    " or SVG semantic diff resolution — patch TikZ/briefing/spec, rerun"
-    " compile/export/critique as needed, then rerun fig-agent helper svg_semantic_diff.py"
-    " and fig-agent helper svg_polish_handoff.py."
+    " — patch TikZ/briefing/spec, then rerun compile/export/critique as needed."
 )
 
 
@@ -142,6 +138,7 @@ def _select_stage_4_template(
     partial: bool,
     final_artifact: Mapping[str, object] | None,
     accepted: bool | None,
+    release_decision: Mapping[str, object] | None,
 ) -> str:
     is_stale = source_stale or export_content_stale
     spec_next_template = _spec_next_template(notes)
@@ -181,6 +178,18 @@ def _select_stage_4_template(
     if accepted is False:
         return _NEXT_4_NOT_ACCEPTED
     if accepted is None:
+        if release_decision is not None:
+            state = release_decision.get("state")
+            if state == "acceptance_authorized":
+                return _NEXT_4_ACCEPTANCE_AUTHORIZED.replace(
+                    "<release_operation>",
+                    str(release_decision.get("release_operation") or "inspect status"),
+                )
+            if state == "non_release_requested":
+                return _NEXT_4_NON_RELEASE_DECISION.replace(
+                    "<route>",
+                    str(release_decision.get("route") or "non-release work"),
+                )
         return _NEXT_4_ACCEPTANCE_NOT_DECLARED
     return _NEXT_4
 
@@ -198,6 +207,7 @@ def select_next_hint(
     partial: bool = False,
     final_artifact: Mapping[str, object] | None = None,
     accepted: bool | None = None,
+    release_decision: Mapping[str, object] | None = None,
 ) -> str:
     if stage == 0:
         template = _NEXT_0
@@ -233,6 +243,7 @@ def select_next_hint(
             partial=partial,
             final_artifact=final_artifact,
             accepted=accepted,
+            release_decision=release_decision,
         )
     else:
         raise ValueError(f"unsupported status stage: {stage}")

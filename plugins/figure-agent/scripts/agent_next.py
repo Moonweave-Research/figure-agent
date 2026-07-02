@@ -43,6 +43,8 @@ _WRITING_COMMANDS = {
     "run",
 }
 _WRITE_FLAGS = {"--accept", "--apply", "--execute", "--force-golden", "--write"}
+_RELEASE_STATE_COMMANDS = {"closeout-accept"}
+_RELEASE_STATE_FLAGS = {"--accept-golden", "--force-golden"}
 
 
 def _diagnostic(code: str, message: str) -> dict[str, str]:
@@ -64,6 +66,26 @@ def _command_writes(command: str | None) -> bool:
         return parts[1] in _WRITING_COMMANDS
     if parts[0].startswith("/fig_"):
         return _SLASH_COMMANDS.get(parts[0], parts[0].removeprefix("/fig_")) in _WRITING_COMMANDS
+    return False
+
+
+def _command_mutates_release_state(command: str | None) -> bool:
+    if not command:
+        return False
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return True
+    if not parts:
+        return False
+    if any(flag in parts for flag in _RELEASE_STATE_FLAGS):
+        return True
+    if parts[0] == "fig-agent" and len(parts) > 1:
+        return parts[1] in _RELEASE_STATE_COMMANDS
+    if parts[0].startswith("/fig_"):
+        return _SLASH_COMMANDS.get(parts[0], parts[0].removeprefix("/fig_")) in (
+            _RELEASE_STATE_COMMANDS
+        )
     return False
 
 
@@ -96,6 +118,17 @@ def _safe_command(summary: dict[str, Any]) -> str | None:
 
 def _next_payload(summary: dict[str, Any]) -> dict[str, Any]:
     command = _safe_command(summary)
+    if _command_mutates_release_state(command):
+        return {
+            "command": None,
+            "reason": (
+                "accepted/golden/publication state mutation requires explicit "
+                "manual release handling; inspect status before proceeding."
+            ),
+            "action": "manual_release_state_gate",
+            "requires_human": True,
+            "writes": False,
+        }
     return {
         "command": command,
         "reason": str(summary.get("reason") or "inspect figure status"),

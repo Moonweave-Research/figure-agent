@@ -27,6 +27,7 @@
   connector/.style={line width=0.5pt, cGray!55, dash pattern=on 2pt off 1.6pt},
   labelStd/.style={font=\sffamily\fontsize{7}{8.4}\selectfont},
   labelMute/.style={font=\sffamily\itshape\fontsize{7}{8.4}\selectfont, text=cGray!80!black},
+  labelBack/.style={fill=white, fill opacity=0.92, text opacity=1, inner sep=1.0pt},
   panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont, text=cGray!90!black},
 ]
 
@@ -53,19 +54,19 @@
 
 % band gap double arrow
 \draw[gapArr] (7.05,2.98) -- (7.05,7.12);
-\node[labelMute, anchor=west] at (7.18,5.05) {$E_g \approx 2$ eV};
+\node[labelMute, labelBack, anchor=east] at (6.90,5.05) {$E_g \approx 2$ eV};
 
 % shallow trap band (tail states, near Ec)
 \fill[cTeal!25, draw=cTeal!55!black, line width=0.4pt] (2.85,6.45) rectangle (6.45,7.02);
-\node[labelStd, text=cTeal!50!black, anchor=west] at (6.60,6.86) {shallow traps (tail)};
-\node[labelMute, anchor=west] at (6.60,6.55) {$\sim$0.1--0.3 eV};
+\node[labelStd, labelBack, text=cTeal!50!black, anchor=west] at (7.28,6.86) {shallow traps (tail)};
+\node[labelMute, labelBack, anchor=west] at (7.28,6.55) {$\sim$0.1--0.3 eV};
 
 % deep trap levels (S-S radical, deep in gap)
 \draw[deepLevel] (3.55,4.78) -- (5.95,4.78);
 \draw[deepLevel] (3.75,4.60) -- (6.15,4.60);
 \draw[deepLevel] (3.55,4.42) -- (5.95,4.42);
-\node[labelStd, text=cRed!70!black, anchor=west] at (6.30,4.62) {deep traps (S--S radical)};
-\node[labelMute, anchor=west] at (6.30,4.31) {$>1$ eV};
+\node[labelStd, labelBack, text=cRed!70!black, anchor=west] at (7.28,4.62) {deep traps (S--S radical)};
+\node[labelMute, labelBack, anchor=west] at (7.28,4.22) {$>1$ eV};
 
 % trapped electrons
 \node[electron] at (3.95,6.74) {};
@@ -98,8 +99,8 @@
 \node[labelStd, text=cTeal!50!black, anchor=west] at (13.80,6.80) {shallow};
 
 % connectors tying panel-a levels to panel-b peaks (same energy)
-\draw[connector] (8.90,6.74) -- (11.55,6.74);
-\draw[connector] (8.90,4.60) -- (11.55,4.60);
+\draw[connector] (9.55,6.74) -- (11.55,6.74);
+\draw[connector] (10.05,4.60) -- (11.55,4.60);
 
 \end{tikzpicture}%
 }

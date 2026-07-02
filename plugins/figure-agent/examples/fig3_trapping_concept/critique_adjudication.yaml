@@ -1,0 +1,9 @@
+schema: figure-agent.critique-adjudication.v1
+fixture: fig3_trapping_concept
+source_critique_hash: sha256:877c62203f217a77ace86fa71e07c9ed39ffcf25b7675dc3b7e8594ad5bed31b
+decisions:
+- finding_id: C001
+  decision: resolved
+  reason: Critique marks C001 as resolved.
+  patch_target: examples/fig3_trapping_concept/fig3_trapping_concept.tex
+  evidence: critique.md marks C001 status resolved.

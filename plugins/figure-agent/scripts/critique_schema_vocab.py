@@ -20,6 +20,24 @@ CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
 CRITIQUE_SCHEMA_V1_15 = "figure-agent.critique.v1.15"
 CRITIQUE_SCHEMA_V1_16 = "figure-agent.critique.v1.16"
 CRITIQUE_SCHEMA_V1_17 = "figure-agent.critique.v1.17"
+RETIRED_CRITIQUE_SCHEMAS = frozenset(
+    {
+        CRITIQUE_SCHEMA_V1_1,
+        CRITIQUE_SCHEMA_V1_2,
+        CRITIQUE_SCHEMA_V1_3,
+        CRITIQUE_SCHEMA_V1_4,
+        CRITIQUE_SCHEMA_V1_5,
+        CRITIQUE_SCHEMA_V1_6,
+        CRITIQUE_SCHEMA_V1_7,
+        CRITIQUE_SCHEMA_V1_8,
+        CRITIQUE_SCHEMA_V1_9,
+        CRITIQUE_SCHEMA_V1_11,
+        CRITIQUE_SCHEMA_V1_12,
+        CRITIQUE_SCHEMA_V1_13,
+        CRITIQUE_SCHEMA_V1_15,
+        CRITIQUE_SCHEMA_V1_16,
+    }
+)
 
 FINDING_SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 ALLOWED_CONCEPTUAL_REFERENCES = frozenset(

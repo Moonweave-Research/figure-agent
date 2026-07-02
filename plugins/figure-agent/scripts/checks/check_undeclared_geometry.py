@@ -13,7 +13,22 @@ from typing import Any
 
 import pdfplumber
 import yaml
-from check_visual_clash import extract_pdf_words_and_page
+
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+for script_dir in reversed(
+    (
+        SCRIPTS_DIR,
+        SCRIPTS_DIR / "checks",
+        SCRIPTS_DIR / "candidates",
+        SCRIPTS_DIR / "quality",
+        SCRIPTS_DIR / "loop",
+        SCRIPTS_DIR / "driver",
+    )
+):
+    sys.path.insert(0, str(script_dir))
+
+from check_visual_clash import extract_pdf_words_and_page  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
 
 SCHEMA = "figure-agent.undeclared-geometry.v1"
 CM_TO_PT = 72.0 / 2.54
@@ -164,8 +179,8 @@ def _declared_boundaries(spec: dict[str, Any]) -> list[dict[str, Any]]:
             bbox = _as_bbox_pt(check.get("bbox_pdf_cm"))
             if bbox is not None:
                 declared.append({"kind": "rect", "bbox_pt": bbox})
-        elif kind == "vertical_line" and isinstance(check.get("pdf_cm_x"), int | float):
-            y_range = check.get("pdf_cm_y_range")
+        elif kind == "vertical_line" and isinstance(check.get("x_pdf_cm"), int | float):
+            y_range = check.get("y_range_pdf_cm")
             if (
                 isinstance(y_range, list)
                 and len(y_range) == 2
@@ -174,12 +189,12 @@ def _declared_boundaries(spec: dict[str, Any]) -> list[dict[str, Any]]:
                 declared.append(
                     {
                         "kind": "vertical_line",
-                        "x": _cm_to_pt(check["pdf_cm_x"]),
+                        "x": _cm_to_pt(check["x_pdf_cm"]),
                         "y_range": sorted([_cm_to_pt(y_range[0]), _cm_to_pt(y_range[1])]),
                     }
                 )
-        elif kind == "horizontal_line" and isinstance(check.get("pdf_cm_y"), int | float):
-            x_range = check.get("pdf_cm_x_range")
+        elif kind == "horizontal_line" and isinstance(check.get("y_pdf_cm"), int | float):
+            x_range = check.get("x_range_pdf_cm")
             if (
                 isinstance(x_range, list)
                 and len(x_range) == 2
@@ -188,7 +203,7 @@ def _declared_boundaries(spec: dict[str, Any]) -> list[dict[str, Any]]:
                 declared.append(
                     {
                         "kind": "horizontal_line",
-                        "y": _cm_to_pt(check["pdf_cm_y"]),
+                        "y": _cm_to_pt(check["y_pdf_cm"]),
                         "x_range": sorted([_cm_to_pt(x_range[0]), _cm_to_pt(x_range[1])]),
                     }
                 )
@@ -592,10 +607,15 @@ def detect_undeclared_geometry(
     return candidates
 
 
-def undeclared_geometry_payload(pdf_path: Path, candidates: list[dict[str, Any]]) -> dict[str, Any]:
+def undeclared_geometry_payload(
+    pdf_path: Path,
+    candidates: list[dict[str, Any]],
+    *,
+    tex_path: Path | None = None,
+) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
-    return {
+    payload: dict[str, Any] = {
         "schema": SCHEMA,
         "fixture": fixture_name,
         "render_pdf": f"build/{pdf_path.name}",
@@ -603,6 +623,11 @@ def undeclared_geometry_payload(pdf_path: Path, candidates: list[dict[str, Any]]
         "candidates": candidates,
         "total": len(candidates),
     }
+    if tex_path is not None:
+        payload["source_hashes"] = {
+            f"examples/{fixture_name}/{tex_path.name}": file_sha256(tex_path)
+        }
+    return payload
 
 
 def _load_spec(spec_path: Path) -> dict[str, Any]:
@@ -696,7 +721,7 @@ def main(argv: list[str] | None = None) -> int:
         # `candidates`, so the critique undeclared-geometry accounting gate does not
         # require it to be hand-accounted. Non-schematic fixtures are unchanged.
         accounted = actionable if profile == "schematic" else candidates
-        payload = undeclared_geometry_payload(pdf_path, accounted)
+        payload = undeclared_geometry_payload(pdf_path, accounted, tex_path=tex_path)
         if profile == "schematic":
             payload["profile"] = "schematic"
             payload["downranked"] = downranked

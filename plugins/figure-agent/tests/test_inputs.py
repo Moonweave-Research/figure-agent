@@ -202,12 +202,28 @@ def test_parse_spec_real_fig3_fixture_pinned():
     )
     assert spec == {
         "name": "fig3_trapping_concept",
+        # §6 directional invariants encoded as tex_assertions (capture down, escape up).
+        "tex_assertions": [
+            {
+                "id": "capture-points-down-cb-to-deep-trap",
+                "anchor_style": "capArr",
+                "axis": "y",
+                "direction": "decreasing",
+            },
+            {
+                "id": "escape-points-up-deep-to-shallow",
+                "anchor_style": "escArr",
+                "axis": "y",
+                "direction": "increasing",
+            },
+        ],
         "panels": [
             {"id": "a", "caption": "PDMS — clean bandgap (no trap states)"},
             {"id": "b", "caption": "Sulfur Polymer — deep trap states in bandgap"},
         ],
         "style_profile": "polymer-default",
         "visual_clash_cap": 14,
+        "undeclared_geometry_profile": "schematic",
         # Cleared to None after the v0.1.7.2 dogfood cleanup; the original
         # preview file was moved out of previews/ but selection_notes still
         # preserves the historical decision record.

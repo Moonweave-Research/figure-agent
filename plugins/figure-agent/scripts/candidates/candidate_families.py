@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
 import bounded_coordinate_offset
+import bounded_text_width
 import candidate_contracts
 import candidate_panel_model
 import fixture_identity
+import gradient_depth_fill
+import line_weight_tier
 import runtime_paths
 from quality_manifest import file_sha256
 
@@ -20,18 +24,38 @@ ZERO_HASH = "sha256:" + "0" * 64
 ENERGY_TERMS = ("mobility edge", "{shallow}", "{deep}", "siteS", "siteD")
 CANONICAL_FAMILY_EDIT_CLASS = {
     "label-repair": "label_offset",
+    "label_offset": "label_offset",
+    "text_width_refit": "text_width_refit",
     "connector-routing": "leader_line_reroute",
     "panel-layout": "panel_spacing_adjust",
+    "panel_spacing_adjustment": "panel_spacing_adjust",
     "contrast-repair": "contrast_boost",
     "annotation-box-layout": "annotation_box_resize",
+    "line-weight-tier": "line_weight_style",
+    "stroke_hierarchy_adjustment": "line_weight_style",
+    "gradient-depth-fill": "gradient_depth_fill",
+    "nonsemantic_background_quieting": "gradient_depth_fill",
 }
 CANONICAL_EXPECTED_DELTA = {
     "label_offset": "improve label clearance",
+    "text_width_refit": "refit wrapped label footprint without changing label text",
     "leader_line_reroute": "reduce leader-line label collision risk",
     "panel_spacing_adjust": "increase panel boundary clearance",
     "contrast_boost": "increase low-contrast element legibility",
     "annotation_box_resize": "reduce annotation-box internal collision risk",
+    "line_weight_style": "tier line weights for narrative rhythm",
+    "gradient_depth_fill": "add material depth via same-hue gradient",
 }
+# Default tier when a line-weight-tier family candidate carries no explicit
+# variant: raise the targeted path to the primary narrative spine.
+_DEFAULT_LINE_WEIGHT_TIER = "primary"
+# Depth step (percent points) for the dark stop derived from a flat fill's own
+# base hue; keeps the gradient same-hue by construction.
+_GRADIENT_DEPTH_STEP_PCT = 16
+_FLAT_FILL_BASE_RE = re.compile(
+    r"^\s*\\fill\[\s*(?P<base>[A-Za-z][A-Za-z0-9]*)(?:!(?P<pct>\d+))?\b"
+)
+_TEXT_WIDTH_RE = re.compile(r"text width\s*=\s*(?P<w>-?\d+(?:\.\d+)?)\s*cm")
 
 
 def _source_path(paths: runtime_paths.RuntimePaths, name: str) -> Path:
@@ -172,10 +196,74 @@ def _candidate(
     return candidate
 
 
-def _first_offsettable_selector(selectors: list[dict[str, Any]]) -> dict[str, Any] | None:
+def _gradient_stops_for(text: str) -> tuple[str, str] | None:
+    """Derive a same-hue (light, dark) pair from a flat fill's own base token."""
+    match = _FLAT_FILL_BASE_RE.match(text)
+    if match is None:
+        return None
+    base = match.group("base")
+    light_pct = int(match.group("pct")) if match.group("pct") else 100
+    dark_pct = min(light_pct + _GRADIENT_DEPTH_STEP_PCT, 100)
+    light = f"{base}!{light_pct}" if match.group("pct") else base
+    dark = f"{base}!{dark_pct}"
+    return light, dark
+
+
+def _apply_edit_transform(edit_class: str, text: str) -> tuple[str, str] | None:
+    """Return (replacement, semantic_kind) for an edit class, or None if N/A."""
+    if edit_class == "text_width_refit":
+        match = _TEXT_WIDTH_RE.search(text)
+        if match is None:
+            return None
+        target_cm = float(match.group("w")) + 0.4
+        replacement = bounded_text_width.set_text_width(text, target_cm=target_cm)
+        return (replacement, "text_width_refit") if replacement is not None else None
+    if edit_class == "line_weight_style":
+        replacement = line_weight_tier.retier_line_width(text, tier=_DEFAULT_LINE_WEIGHT_TIER)
+        return (replacement, "line_weight_tier") if replacement is not None else None
+    if edit_class == "gradient_depth_fill":
+        stops = _gradient_stops_for(text)
+        if stops is None:
+            return None
+        light, dark = stops
+        replacement = gradient_depth_fill.shade_flat_fill(text, light=light, dark=dark)
+        return (replacement, "gradient_depth_fill") if replacement is not None else None
+    replacement = bounded_coordinate_offset.offset_first_coordinate(text)
+    return (replacement, "bounded_coordinate_offset") if replacement is not None else None
+
+
+def _semantic_risks_for(edit_class: str) -> list[str]:
+    if edit_class == "label_offset":
+        return []
+    if edit_class == "text_width_refit":
+        return [
+            "text-width refit must preserve label text and semantic binding after render review"
+        ]
+    if edit_class == "panel_spacing_adjust":
+        return [
+            "panel-spacing adjustment must not change panel identity, ordering, "
+            "or scientific claims"
+        ]
+    if edit_class == "line_weight_style":
+        return [
+            "narrative-rhythm retier is an aesthetic taste call; "
+            "human must confirm the spine/annotation/secondary hierarchy reads correctly"
+        ]
+    if edit_class == "gradient_depth_fill":
+        return [
+            "same-hue depth gradient is an aesthetic taste call; "
+            "human must confirm the added material depth improves the figure"
+        ]
+    return ["synthetic smoke candidate needs human visual review before apply"]
+
+
+def _edit_class_selector(
+    selectors: list[dict[str, Any]],
+    edit_class: str,
+) -> dict[str, Any] | None:
     for selector in selectors:
         text = str(selector.get("text", ""))
-        if bounded_coordinate_offset.offset_first_coordinate(text) is not None:
+        if _apply_edit_transform(edit_class, text) is not None:
             return selector
     return None
 
@@ -189,10 +277,11 @@ def _canonical_candidate(
 ) -> dict[str, Any] | None:
     source_rel = str(selector.get("path") or "")
     original = str(selector.get("text") or "")
-    replacement = bounded_coordinate_offset.offset_first_coordinate(original)
-    if replacement is None:
-        return None
     edit_class = CANONICAL_FAMILY_EDIT_CLASS[family]
+    transform = _apply_edit_transform(edit_class, original)
+    if transform is None:
+        return None
+    replacement, semantic_kind = transform
     stable_hash_payload = {
         "family": family,
         "target": {"panel": panel, "subregion": edit_class},
@@ -209,7 +298,7 @@ def _canonical_candidate(
         },
         "operation": {
             "kind": "replace_text",
-            "semantic_kind": "bounded_coordinate_offset",
+            "semantic_kind": semantic_kind,
             "path": source_rel,
             "original": original,
             "replacement": replacement,
@@ -235,7 +324,7 @@ def _canonical_candidate(
         "operations": [
             {
                 "kind": "replace_text",
-                "semantic_kind": "bounded_coordinate_offset",
+                "semantic_kind": semantic_kind,
                 "path": source_rel,
                 "original": original,
                 "replacement": replacement,
@@ -243,9 +332,19 @@ def _canonical_candidate(
         ],
         "risk": "medium" if edit_class != "label_offset" else "low",
         "expected_delta": [CANONICAL_EXPECTED_DELTA[edit_class]],
-        "semantic_risks": []
-        if edit_class == "label_offset"
-        else ["synthetic smoke candidate needs human visual review before apply"],
+        "semantic_risks": _semantic_risks_for(edit_class),
+        "boundedness": {
+            "changes": CANONICAL_EXPECTED_DELTA[edit_class],
+            "does_not_change": [
+                "fixture source unless separately applied",
+                "accepted state",
+                "tracked golden exports",
+                "release state",
+                "SVG artifacts",
+            ],
+            "requires_human_review": True,
+            "not_svg_polish": True,
+        },
         "rollback": {"strategy": "reverse_operations"},
         "verification": {
             "required_commands": [
@@ -268,7 +367,8 @@ def _canonical_family_candidates(
     panel_model: dict[str, Any],
 ) -> dict[str, Any]:
     selectors = [item for item in panel_model.get("selectors", []) if isinstance(item, dict)]
-    selector = _first_offsettable_selector(selectors)
+    edit_class = CANONICAL_FAMILY_EDIT_CLASS[family]
+    selector = _edit_class_selector(selectors, edit_class)
     if selector is None:
         return _refusal(name, source, "no_supported_candidate")
     candidate = _canonical_candidate(

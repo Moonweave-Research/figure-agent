@@ -35,22 +35,22 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | Schema | Main capability introduced | Primary producers | Primary validators | Primary consumers | Current policy |
 |---|---|---|---|---|---|
 | `figure-agent.critique.v1` | Legacy frontmatter + findings | historical `critique.md` | `critique_schema_validator.py` legacy path | `critique_adjudication.py`, status fallback | Parse only; do not author new critiques |
-| `v1.1` | mandatory `audit_enumeration` | `critique_brief.py` | `critique_schema_validator.py` | `critique_adjudication.py` | Legacy-compatible |
-| `v1.2` | quality axes + `journal_grade_assessment` | `critique_brief.py` | `critique_schema_validator.py`, `critique_lint.py` | `fig_loop_assessments.py`, `fig_loop_axes.py` | Advisory scores only unless explicitly gateable |
-| `v1.3` | top-tier journal audit | `critique_brief.py` | `critique_schema_validator.py`, `critique_lint.py` | `fig_loop_assessments.py` | Top-tier failure must surface as visible finding/blocker |
-| `v1.4` | high-zoom/print micro-defect accounting expansion | `critique_brief.py` | `critique_lint.py`, `audit_evidence_summary.py` | `/fig_loop`, `/fig_drive` via audit evidence | Required when audit candidate JSON exists |
-| `v1.5` | editorial art-direction audit | `critique_brief.py` | `critique_schema_validator.py`, `critique_lint.py` | `fig_driver_editorial.py`, `fig_loop_assessments.py` | Human art-direction gates stay explicit |
-| `v1.6` | SVG-polish route semantics begin | `critique_brief.py` | `critique_lint.py` | `fig_driver_editorial.py` | SVG polish remains handoff, not hidden edit |
-| `v1.7` | visual-clash candidate accounting | `check_visual_clash.py`, `critique_brief.py` | `critique_lint.py`, `audit_evidence_summary.py` | `fig_status`, `fig_loop`, `fig_drive` | Every `VC###` must be accounted |
-| `v1.8` | crop-read accountability via audit crop manifest | `critique_zoom_crops.py`, `critique_brief.py` | `critique_lint.py`, `audit_evidence_summary.py` | `fig_loop_assessments.py` | Required crop ids must appear exactly once |
-| `v1.9` | print/zoom grounded micro-defect hardening | `critique_brief.py` | `critique_lint.py` | `audit_evidence_summary.py` | Ambiguous crops route to action, not silent pass |
+| `v1.1` | mandatory `audit_enumeration` | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; re-run `/fig_critique` to emit `v1.10`, `v1.14`, or `v1.17` |
+| `v1.2` | quality axes + `journal_grade_assessment` | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.3` | top-tier journal audit | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.4` | high-zoom/print micro-defect accounting expansion | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.5` | editorial art-direction audit | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.6` | SVG-polish route semantics begin | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; SVG polish remains handoff-only route language |
+| `v1.7` | visual-clash candidate accounting | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.8` | crop-read accountability via audit crop manifest | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
+| `v1.9` | print/zoom grounded micro-defect hardening | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; capability retained in live `v1.10+` contracts |
 | `v1.10` | mature default critique contract | `critique_brief.py` | `critique_schema_validator.py`, `critique_lint.py` | `quality_manifest.py`, `fig_loop.py` | Default for non-grounded current critiques |
-| `v1.11` | aesthetic lever grammar audit | `aesthetic_intent.py`, `critique_brief.py` | `critique_lint.py` | `fig_loop_assessments.py` | Lever route must match declared route |
-| `v1.12` | journal art-direction playbook audit | `journal_art_direction_playbook.py`, `critique_brief.py` | `critique_lint.py`, `critique_schema_validator.py` | `fig_loop_assessments.py` | Generic journal prose invalid once opted in |
-| `v1.13` | reference learning accountability | `critique_reference_pack.py`, `reference_aesthetic_metrics.py` | `critique_lint.py` | `fig_loop_assessments.py` | Reference is learning anchor, not copy target |
+| `v1.11` | aesthetic lever grammar audit | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; optional audit retained in live `v1.14+` contracts |
+| `v1.12` | journal art-direction playbook audit | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; optional audit retained in live `v1.14+` contracts |
+| `v1.13` | reference learning accountability | retired 2026-07-02 | `critique_schema_validator.py` retired-schema guard | none | Retired; crop anomaly/accountability retained in live `v1.14+` contracts |
 | `v1.14` | route-detail contract and richer aesthetic intent | `critique_brief.py` | `critique_lint.py`, `quality_manifest.py` | `fig_driver.py`, `fig_loop.py` | Route-specific rationale required |
-| `v1.15` | SVG polish gate/delta hardening | `svg_polish_manifest.py`, `svg_polish_delta.py` | `critique_lint.py`, `fig_driver_editorial.py` | `fig_driver.py`, `check_golden_artifacts.py` | SVG polish cannot bypass semantic backport |
-| `v1.16` | SVG polish delta audit | `svg_polish_delta.py`, `critique_brief.py` | `critique_lint.py` | `fig_driver_editorial.py` | Before/after/diff evidence required |
+| `v1.15` | retired SVG polish gate/delta hardening | retired 2026-07-02 | retired 2026-07-02 | retired 2026-07-02 | Superseded by external handoff-only route labels |
+| `v1.16` | retired SVG polish delta audit | retired 2026-07-02 | retired 2026-07-02 | retired 2026-07-02 | Superseded by external handoff-only route labels |
 | `v1.17` | grounded observation and anomaly accountability | `critique_zoom_crops.py`, `check_undeclared_geometry.py`, `critique_brief.py` | `critique_schema_validator.py`, `critique_lint.py`, `audit_evidence_summary.py` | `fig_loop_assessments.py`, `fig_driver.py` | Current grounded schema; new grounded fields should extend this |
 
 ### Non-Critique Schemas
@@ -91,16 +91,17 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.loop-basin.v1` | loop progress detection | `fig_loop_basin.py` | `fig_loop.py`, `fig_driver.py`, `fig_run.py` | Step-out advisory/handoff, not auto-patch |
 | `figure-agent.improve.v1` | bounded improvement loop | `fig_improve.py` | operators | Runs bounded commands; stops at gates |
 | `figure-agent.ready-improvement-summary.v1` / `figure-agent.marginal-return-summary.v1` | post-ready improvement discovery | `ready_improvement.py` | `fig_driver.py`, operators | Advisory; not acceptance |
-| `figure-agent.fixture-driver-queue.v1` / `figure-agent.fixture-command-plan.v1` | batch planning | `fig_queue.py` | operators, `fig_queue_run.py` | Must preserve per-fixture gates |
+| `figure-agent.fixture-driver-queue.v1` / `figure-agent.fixture-command-plan.v1` / `figure-agent.human-decision-packet.v1` / `figure-agent.queue-bottleneck-report.v1` / `figure-agent.queue-workspace-diagnostic.v1` | batch planning | `fig_queue.py` | operators, `fig_queue_run.py` | Must preserve per-fixture gates; bottleneck report is read-only live queue/status rollup; workspace diagnostic only explains missing examples discovery |
 | `figure-agent.queue-run.v1` / `figure-agent.queue-operator-handoff.v1` | batch execution | `fig_queue_run.py`, `fig_queue.py` | operators | Must stop at human/closeout boundaries |
+| `figure-agent.human-decision-packet.v1` / `figure-agent.release-decision-packet.v1` / `figure-agent.style-direction-packet.v1` / `figure-agent.design-direction-packet.v1` / `figure-agent.svg-polish-readiness-evidence.v1` / `figure-agent.human-decision-digest.v1` | human/release/style/design decision handoff | `fig_queue.py`, `design_direction_packet.py` | operators | Read-only recommendation and digest packets; source, SVG, accepted/golden/publication mutations remain explicit separate actions |
+| `figure-agent.human-decision-record.v1` | human decision record | `human_decision_record.py`, `fig_queue.py` validation helper | operators, style comparison loader | Durable record only; style decisions stay distinct from release/golden mutation authority |
+| `figure-agent.human-attestation.v1` | publication release gate | `human_attestation.py` | `publication_gate.py`, `status.py`, operators | Human-in-terminal HMAC attestation; required for accepted publication PASS and never stored with the repo-local signing key |
+| `figure-agent.paper-figure-map.v1` | paper-plan consistency | `docs/paper_figure_map.yaml` | `check_plan_consistency.py`, operators | Machine-readable map for the canonical prose plan; does not replace the plan document |
+| `figure-agent.plan-consistency.v1` | paper-plan consistency | `check_plan_consistency.py` | operators, `fig-agent plan-check` | Report-only fixture-plan drift signal; strict mode is opt-in |
+| `figure-agent.editorial-redesign-packet.v1` | editorial redesign handoff | `editorial_redesign_packet.py` | operators, design-direction queue handoff | Read-only redesign brief; creates no source, accepted/golden, or publication mutation authority |
+| `figure-agent.style-benchmark-candidate-pack.v1` / `figure-agent.style-benchmark-comparison-packet.v1` | style benchmark decisions | `style_benchmark_pack.py`, `style_benchmark_comparison.py` | `fig_queue.py`, operators | Read-only candidate/comparison evidence; editorial redesign and SVG polish remain handoff-only until separately approved |
 | `figure-agent.e2e-smoke.v1` | deterministic smoke | `fig_e2e_smoke.py` | operators, CI | Deterministic gate only; not host-vision readiness |
-| `figure-agent.svg-polish-manifest.v1` | final artifact integrity | `svg_polish_manifest.py` | `status.py`, `check_golden_artifacts.py` | Can block final readiness |
-| `figure-agent.svg-polish-recipe.v1` | SVG edit intent | `svg_polish_recipe.py` | `svg_polish_executor.py`, `svg_polish_delta.py` | Executor input only |
-| `figure-agent.svg-polish-plan.v1` | SVG executor plan | `svg_polish_executor.py` | operators, tests | Plan evidence only until delta/manifest validate |
-| `figure-agent.svg-polish-positive-harness.v1` | SVG polish plumbing harness | `svg_polish_positive_harness.py` | tests, operators | Synthetic proof only; not real-figure readiness |
 | `figure-agent.svg-polish-readiness.v1` / `figure-agent.svg-polish-gate.v1` | SVG route/gate | `fig_driver_editorial.py` | `fig_driver.py`, `fig_loop.py` | Can route to SVG polish or semantic backport |
-| `figure-agent.svg-polish-delta.v1` | SVG before/after audit pack | `svg_polish_delta.py` | `critique_brief.py`, `critique_lint.py`, `fig_driver.py` | Can require semantic backport or human art direction |
-| `figure-agent.svg-semantic-diff.v1` | SVG semantic safety | `svg_semantic_diff.py` | `svg_polish_manifest.py` | Can block final artifact freshness |
 | `figure-agent.reference-aesthetic-metrics.v1` | numeric reference-class signal | `reference_aesthetic_metrics.py` | `critique_brief.py`, `critique_lint.py` | Advisory unless explicitly routed |
 | `figure-agent.critique-reference-pack.v1.1` / `figure-agent.reference-learning.v1` | reference learning | `critique_reference_pack.py` | `quality_manifest.py`, `critique_brief.py`, `critique_lint.py` | Freshness input; not copy target |
 | `figure-agent.aesthetic-intent.v1` / `figure-agent.aesthetic-intent.v2` | aesthetic direction | `aesthetic_intent.py` | `critique_brief.py`, `critique_lint.py`, `quality_manifest.py` | Grounding input; not acceptance |
@@ -153,6 +154,10 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.candidate-apply-readiness.v1` | candidate search | `candidate_acceptance.py` | operators | Human acceptance preflight; no source mutation |
 | `figure-agent.candidate-acceptance.v1` | candidate search | `candidate_acceptance.py` | `candidate_apply.py`, operators | Explicit human decision artifact required before apply |
 | `figure-agent.candidate-apply-result.v1` | candidate search | `candidate_apply.py` | operators | Explicit CLI apply boundary; current implementation refuses source mutation unless eligible and opted in |
+| `figure-agent.bounded-tikz-candidate-packet.v1` | bounded TikZ candidate handoff | `bounded_tikz_candidate_packet.py` | `bounded_tikz_candidate_apply.py`, operators | Read-only candidate packet; no source mutation authority |
+| `figure-agent.bounded-tikz-apply-result.v1` | bounded TikZ candidate handoff | `bounded_tikz_candidate_apply.py` | operators | Hash-gated apply boundary; refuses mutation on packet/source hash mismatch |
+| `figure-agent.bounded-tikz-refinement-packet.v1` | bounded TikZ candidate handoff | `bounded_tikz_refinement_packet.py` | operators | Read-only refinement request packet; `no_source_mutation` boundary |
+| `figure-agent.design-dogfood-packet.v1` | design dogfood handoff | `design_dogfood_packet.py` | operators | Read-only human-gated dogfood packet over live queue state; `no_source_mutation` boundary |
 | `figure-agent.evidence-index.v1` | candidate/evidence sync | `evidence_index.py` | `evidence_sync.py`, `closeout_readiness.py`, `quality_memory_events.py` | Fixture-local evidence summary; stale source checks can block acceptance |
 | `figure-agent.evidence-sync.v1` | candidate/evidence sync | `evidence_sync.py` | operators, closeout tools | Writes only fixture evidence index when explicitly requested |
 | `figure-agent.golden-acceptance.v1` | closeout acceptance | `golden_acceptance.py` | `closeout_readiness.py`, `quality_memory_events.py` | Explicit human/golden acceptance artifact; never inferred by MCP |
@@ -186,7 +191,7 @@ but should not decide host-vision verdicts.
 - `check_collisions.py`, `check_visual_clash.py`,
   `check_visual_clash_budget.py`
 - `check_text_boundary_clash.py`, `check_label_path_proximity.py`,
-  `check_undeclared_geometry.py`, `check_layout_drift.py`
+  `check_undeclared_geometry.py`
 - `perception_pack.py`, `reference_aesthetic_metrics.py`
 
 Add here when the output is a deterministic detector artifact under
@@ -287,9 +292,6 @@ approve human decisions.
 - `run_export.py`, `export_freshness.py`, `export_svg.sh`, `svg_to_png.sh`,
   `diff_pdf_content.py`, `git_tracked.py`
 - `check_golden_artifacts.py`, `publication_gate.py`, `fig_closeout.py`
-- `svg_polish_manifest.py`, `svg_polish_recipe.py`,
-  `svg_polish_executor.py`, `svg_polish_delta.py`,
-  `svg_polish_handoff.py`, `svg_semantic_diff.py`
 
 Add here when the feature changes export freshness, accepted/golden gates,
 publication compliance, SVG polish, or final-artifact readiness.

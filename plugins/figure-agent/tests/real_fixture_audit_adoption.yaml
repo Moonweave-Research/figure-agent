@@ -96,14 +96,15 @@ fixtures:
     reference_image: false
     text_boundary_check_ids: []
     label_path_check_ids: []
-    aesthetic_intent: false
+    aesthetic_intent: true
     critique_reference_pack: false
     paper_aesthetic_context:
     journal_art_direction_playbook:
     adoption_status: not_applicable_no_reference
     rationale: >
-      Critique is not required by spec and no low-noise deterministic
-      boundary/path checks are declared for the current schematic.
+      Critique carries a fixture-local aesthetic intent, but no reference image
+      and no low-noise deterministic boundary/path checks are declared for the
+      current schematic.
 
   - fixture: smoke_annotation_box_demo
     reference_image: false

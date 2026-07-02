@@ -1,8 +1,14 @@
 # Known false-positive patterns for check_visual_clash.py.
 # Used with --ignore-known-fp flag. Default mode always reports all.
 #
-# Each entry needs at minimum: id + (glyph or glyph_pattern).
+# Each entry needs at minimum: id + fixture + (glyph or glyph_pattern).
 # Optional: kind, dark_min, dark_max, edge_max, bbox_height_max.
+#
+# fixture SCOPE (required): a suppression is only valid on the figure it was
+# validated on. `fixture` is a fixture name (or a list of names) matched
+# against check_visual_clash._fixture_name(pdf). An entry WITHOUT a fixture
+# suppresses NOTHING — a global suppression would silence real clashes that
+# merely share a glyph ("PDMS", "Sulfur", "+", "−", "HOMO") on another figure.
 #
 # fig3_trapping_concept: light-gray panel backgrounds trigger luma_std >= 25
 # for all header/label text; charge symbols on colored fills trigger text_on_path.
@@ -10,42 +16,58 @@
 patterns:
   # Panel header labels — light gray background, not a fill clash
   - id: panel_label_a
+    fixture: fig3_trapping_concept
     glyph: "(a)"
     kind: text_on_fill
 
   - id: panel_label_b
+    fixture: fig3_trapping_concept
     glyph: "(b)"
     kind: text_on_fill
 
   - id: material_label_pdms
+    fixture: fig3_trapping_concept
     glyph: PDMS
     kind: text_on_fill
 
+  - id: material_label_pdms_path_edge
+    fixture: fig3_trapping_concept
+    glyph: PDMS
+    kind: text_on_path
+    dark_max: 0.06
+    edge_max: 0.01
+
   - id: material_label_sulfur
+    fixture: fig3_trapping_concept
     glyph: Sulfur
     kind: text_on_fill
 
   # Schematic domain labels on light-gray panel background
   - id: schematic_label_injection
+    fixture: fig3_trapping_concept
     glyph: injection
     kind: text_on_fill
 
   - id: schematic_label_homo
+    fixture: fig3_trapping_concept
     glyph_pattern: "HOMO"
     kind: text_on_fill
 
   - id: caption_label_fast
+    fixture: fig3_trapping_concept
     glyph: fast
     kind: text_on_fill
 
   # Charge symbols on colored fill (known pattern from prior dogfooding)
   - id: charge_symbol_minus
+    fixture: fig3_trapping_concept
     glyph: "−"
     kind: text_on_path
     dark_max: 0.35
     edge_max: 0.05
 
   - id: charge_symbol_plus
+    fixture: fig3_trapping_concept
     glyph: "+"
     kind: text_on_path
     dark_max: 0.35
@@ -53,6 +75,7 @@ patterns:
 
   # Energy axis label on schematic path
   - id: energy_axis_label_e
+    fixture: fig3_trapping_concept
     glyph: E
     kind: text_on_path
     dark_max: 0.15
@@ -62,12 +85,14 @@ patterns:
   # gray semiconductor boxes. These are not text/path clashes when the
   # dark/edge signal stays in the compact label-box range.
   - id: trap_depth_band_label_cb
+    fixture: golden_trap_depth_picture
     glyph: CB
     kind: text_on_path
     dark_max: 0.06
     edge_max: 0.02
 
   - id: trap_depth_band_label_vb
+    fixture: golden_trap_depth_picture
     glyph: VB
     kind: near_miss
     dark_max: 0.05
@@ -75,12 +100,14 @@ patterns:
 
   # Caption subscript V(t)
   - id: caption_subscript_v
+    fixture: fig3_trapping_concept
     glyph: V
     kind: text_on_path
     dark_max: 0.05
     edge_max: 0.01
 
   - id: caption_subscript_t
+    fixture: fig3_trapping_concept
     glyph: "(t)"
     kind: text_on_path
     dark_max: 0.05

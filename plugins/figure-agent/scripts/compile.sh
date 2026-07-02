@@ -30,8 +30,10 @@ echo 'Lint: Style Lock check (BLOCKER fails, WARN reports)...' >&2
 # collision/clash checkers so non-zero findings fail the compile (default
 # behavior is report-only with exit 0 to preserve dogfood ergonomics).
 STRICT_ARGS=()
+VISUAL_CLASH_ARGS=()
 if [[ "${FIGURE_AGENT_STRICT:-}" == "1" ]]; then
   STRICT_ARGS=(--strict)
+  VISUAL_CLASH_ARGS=(--strict --ignore-known-fp)
   echo 'Strict mode: collision/clash findings will fail the compile.' >&2
 fi
 
@@ -41,8 +43,30 @@ cd "$(dirname "$TEX_INPUT")"
 FILE="$(basename "$TEX_INPUT")"
 BASE="${FILE%.tex}"
 BUILD_DIR="build"
+WRAPPED_FILE="${BUILD_DIR}/.${BASE}.figure-agent-wrapper.tex"
+COMPILE_FILE="$FILE"
 
 mkdir -p "$BUILD_DIR"
+
+if ! grep -q '\\documentclass' "$FILE"; then
+  cat > "$WRAPPED_FILE" <<EOF
+\documentclass[border=8pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{90mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\textsf{\fontsize{8}{10}\selectfont}},
+]
+EOF
+  cat "$FILE" >> "$WRAPPED_FILE"
+  cat >> "$WRAPPED_FILE" <<EOF
+\end{tikzpicture}%
+}
+\end{document}
+EOF
+  COMPILE_FILE="$WRAPPED_FILE"
+fi
 
 PDF_OUT="${BUILD_DIR}/${BASE}.pdf"
 PNG_OUT="${BUILD_DIR}/${BASE}.png"
@@ -56,7 +80,7 @@ cleanup_failed_build() {
 trap cleanup_failed_build ERR
 
 rm -f "$PDF_OUT" "$PNG_OUT"
-"$ENGINE" -interaction=nonstopmode -output-directory="$BUILD_DIR" "$FILE"
+"$ENGINE" -interaction=nonstopmode -jobname="$BASE" -output-directory="$BUILD_DIR" "$COMPILE_FILE"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
 # The PDF/PNG now exist and are valid. The remaining checkers are report-only
 # unless FIGURE_AGENT_STRICT=1. In report-only mode, a best-effort checker that
@@ -67,34 +91,47 @@ if [[ ${#STRICT_ARGS[@]} -eq 0 ]]; then
   trap - ERR
   set +e
 fi
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visual_clash.py" \
-  "${STRICT_ARGS[@]}" \
+  ${VISUAL_CLASH_ARGS[@]+"${VISUAL_CLASH_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/visual_clash.json" \
   "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_text_boundary_clash.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/text_boundary_clash.json" \
   "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_path_proximity.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/label_path_proximity.json" \
   "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_undeclared_geometry.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/undeclared_geometry.json" \
   "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_hyphenation.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/label_hyphenation.json" \
   "$PDF_OUT"
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/semantic_assertions.py" \
-  "${STRICT_ARGS[@]}" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/semantic_assertions.json" \
   "$PDF_OUT"
+# Directional-physics assertions read from the .tex (a reversed force/bend arrow is
+# a defect no render detector catches). STRICT-gated like the other clash checkers.
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_tex_assertions.py" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  --json-output "${BUILD_DIR}/tex_assertions.json" \
+  "$FILE"
+# Physics-intent grounding meta-check (advisory: which figures still need assertions).
+# Always report-only — it surfaces a TODO, not a defect, so it never fails a build.
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_physics_grounding.py" \
+  --json-output "${BUILD_DIR}/physics_grounding.json" \
+  "$PWD"
 if [[ -f "coordinate_hints.yaml" ]]; then
-    "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" "${STRICT_ARGS[@]}" .
+  "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" \
+    ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+    .
 fi
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"
 # Injection receipt (spec §4 Phase 1a): surface the injected use_as_constraint

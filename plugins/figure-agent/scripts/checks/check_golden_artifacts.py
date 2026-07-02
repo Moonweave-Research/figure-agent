@@ -40,28 +40,17 @@ for script_dir in reversed(
         SCRIPTS_DIR / "quality",
         SCRIPTS_DIR / "loop",
         SCRIPTS_DIR / "driver",
-        SCRIPTS_DIR / "svg_polish",
     )
 ):
     sys.path.insert(0, str(script_dir))
 
 import fixture_identity  # noqa: E402
+import human_attestation  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 from lint_tex import strip_tex_comment  # noqa: E402
 from publication_gate import publication_compliance_failure_records  # noqa: E402
 from quality_manifest import input_manifest_hash, yaml_frontmatter  # noqa: E402
 from reference_pack import reference_pack_failures  # noqa: E402
-from svg_polish_manifest import (  # noqa: E402
-    FINAL_ARTIFACT_BLOCKED,
-    FINAL_ARTIFACT_FRESH,
-    FINAL_ARTIFACT_INVALID,
-    FINAL_ARTIFACT_MISSING,
-    FINAL_ARTIFACT_NONE,
-    FINAL_ARTIFACT_STALE,
-    SVG_POLISH_MANIFEST_RELATIVE_PATH,
-    compute_final_artifact_state,
-)
-from svg_ship_gate import render_ship_gate_failures  # noqa: E402
 
 VISIBLE_SVG_TAGS = frozenset(
     {"circle", "ellipse", "line", "path", "polygon", "polyline", "rect", "text", "use"}
@@ -234,26 +223,6 @@ def _resolve_fixture_relative_path(example_dir: Path, relative: str) -> Path | N
     except ValueError:
         return None
     return resolved
-
-
-def final_artifact_gate_failures(example_dir: Path, spec_path: Path) -> list[str]:
-    try:
-        spec = _load_spec_mapping(spec_path)
-    except ValueError as exc:
-        return [f"final artifact invalid: {exc}"]
-
-    state = compute_final_artifact_state(example_dir, example_dir.name, spec)
-    if state["state"] in {FINAL_ARTIFACT_NONE, FINAL_ARTIFACT_FRESH}:
-        return []
-    if state["state"] == FINAL_ARTIFACT_MISSING:
-        return [f"final artifact missing: {state['path']}"]
-    if state["state"] == FINAL_ARTIFACT_STALE:
-        return [f"final artifact stale: refresh {SVG_POLISH_MANIFEST_RELATIVE_PATH}"]
-    if state["state"] == FINAL_ARTIFACT_BLOCKED:
-        return ["final artifact blocked: semantic backport required before acceptance"]
-    if state["state"] == FINAL_ARTIFACT_INVALID:
-        return [f"final artifact invalid: {state['error']}"]
-    return [f"final artifact invalid: unexpected final artifact state {state['state']}"]
 
 
 def required_export_artifact_failures(exports: Path, name: str) -> list[str]:
@@ -573,12 +542,19 @@ def publication_compliance_failures(
 
 
 def _requires_final_artifact_disclosure(spec_path: Path) -> bool:
+    if not spec_path.exists():
+        return False
     try:
-        spec = _load_spec_mapping(spec_path)
+        data = _load_spec_mapping(spec_path)
     except ValueError:
         return False
-    final_artifact = spec.get("final_artifact")
-    return isinstance(final_artifact, dict) and final_artifact.get("kind") == "polished_svg"
+    final_artifact = data.get("final_artifact")
+    if not isinstance(final_artifact, dict):
+        return False
+    kind = final_artifact.get("kind")
+    if kind in {None, "", "generated_export"}:
+        return False
+    return True
 
 
 def _spec_declares_reference_inputs(spec_path: Path) -> bool:
@@ -679,6 +655,10 @@ def check_example(
         if not fixture_is_accepted(spec):
             failures.append("fixture is not marked accepted: true")
 
+        attested, attestation_reason = human_attestation.verify_attestation(example_dir)
+        if not attested:
+            failures.append(f"human attestation invalid: {attestation_reason}")
+
         required_labels = contract.get("required_labels")
         missing = missing_pdf_labels(extract_pdf_text(pdf), required_labels)
         if missing:
@@ -696,8 +676,6 @@ def check_example(
             )
         )
         failures.extend(reference_pack_gate_failures(example_dir, spec))
-        failures.extend(final_artifact_gate_failures(example_dir, spec))
-        failures.extend(render_ship_gate_failures(example_dir, spec))
         failures.extend(
             checker_budget_failures(
                 audit,

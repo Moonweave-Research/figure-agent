@@ -15,6 +15,15 @@ import candidate_acceptance  # noqa: E402
 import candidate_apply  # noqa: E402
 
 
+@pytest.fixture(autouse=True)
+def _no_real_pre_mutation_compile(monkeypatch):
+    # M3 added a best-effort pre-mutation compile when build/<name>.pdf is absent so
+    # the value-preservation gate has a baseline; neutralize the shell-out here so
+    # unit tests never invoke lualatex. Tests asserting the compile IS forced
+    # re-override this with their own spy.
+    monkeypatch.setattr(candidate_apply, "_compile_current_source", lambda *_a, **_k: None)
+
+
 def _sha256_text(text: str) -> str:
     return "sha256:" + sha256(text.encode("utf-8")).hexdigest()
 
@@ -133,6 +142,41 @@ def _write_semantic_review(fixture: Path) -> None:
         json.dumps(payload, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def test_apply_candidate_rejects_recommendation_packet_as_acceptance(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    acceptance_path = sandbox / "acceptance.json"
+    acceptance = json.loads(acceptance_path.read_text(encoding="utf-8"))
+    recommendation_packet = {
+        **acceptance,
+        "schema": "figure-agent.candidate-review-packet.v1",
+        "recommended_next_action": "human_review_required",
+        "apply_readiness": {
+            "status": "ready_for_local_acceptance",
+            "blocking_reasons": [],
+        },
+    }
+    acceptance_path.write_text(
+        json.dumps(recommendation_packet, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=False,
+    )
+
+    assert result["status"] == "blocked"
+    assert result["diagnostics"][0]["code"] == "acceptance_schema_invalid"
 
 
 def test_apply_candidate_requires_acceptance_artifact(tmp_path: Path) -> None:
@@ -322,7 +366,7 @@ def test_apply_candidate_uses_shared_mcp_mutation_lock(tmp_path: Path) -> None:
             candidate_set_path=Path("build/candidates/candidate_set.json"),
             acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
             apply=True,
-        post_apply=False,
+            post_apply=False,
         )
     finally:
         candidate_apply._candidate_apply_lock = original_lock
@@ -431,6 +475,9 @@ def test_apply_candidate_records_failed_post_apply_verification(
         }
 
     monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+    # Give the value-preservation gate a stable label baseline so the ONLY failure
+    # is the mocked export, not a missing baseline (M3).
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
 
     result = candidate_apply.apply_candidate(
         "candidate_demo",
@@ -464,6 +511,7 @@ def test_apply_candidate_runs_post_apply_verification_by_default(
         }
 
     monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
 
     result = candidate_apply.apply_candidate(
         "candidate_demo",
@@ -479,21 +527,58 @@ def test_apply_candidate_runs_post_apply_verification_by_default(
     assert result["post_apply"]["compile"]["status"] == "success"
 
 
-def test_apply_candidate_records_failed_detector_recheck(
+def _semantic_recheck_fakes(monkeypatch, pre, post):
+    # Robust pre/post ledger fake: any ledger call before _post_apply_checks runs
+    # (semantic review, the pre-mutation snapshot) returns `pre`; the post-apply
+    # recheck (after _post_apply_checks flips the flag) returns `post`.
+    state = {"applied": False}
+
+    def fake_post_apply(_name, _paths):
+        state["applied"] = True
+        return {
+            "compile": {"status": "success", "returncode": 0},
+            "export": {"status": "success", "returncode": 0},
+            "status": {"status": "success", "returncode": 0},
+        }
+
+    def fake_ledger(_name, **_kwargs):
+        return {"defects": post} if state["applied"] else {"defects": pre}
+
+    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+    monkeypatch.setitem(
+        sys.modules,
+        "quality_defect_ledger",
+        types.SimpleNamespace(build_quality_defect_ledger=fake_ledger),
+    )
+
+
+def _set_source_defect(fixture: Path, defect_id: str = "QD001") -> None:
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    stored = json.loads(manifest_path.read_text(encoding="utf-8"))
+    stored["source_defect"] = {"id": defect_id}
+    manifest_path.write_text(json.dumps(stored, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _ledger_defect(did: str, panel: str = "A", cls: str = "text_overlap", severity: str = "action"):
+    return {
+        "id": did,
+        "defect_class": cls,
+        "severity": severity,
+        "target": {"panel": panel, "subregion": f"sel:{did.lower()}"},
+    }
+
+
+def test_apply_candidate_records_failed_recheck_when_defect_persists(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    source_fingerprint = "sha256:" + "a" * 64
+    # Anti-gaming: the applied edit shifts the line (so the fingerprint AND the
+    # sel: sub-region key change), but the same (panel, defect_class, severity)
+    # defect persists. The old fingerprint-equality recheck wrongly passed this;
+    # the semantic recheck must report it unresolved.
     workspace = tmp_path / "workspace"
     fixture, manifest = _accepted_candidate_fixture(workspace)
-    sandbox = fixture / "build" / "candidates" / "CAND001"
-    manifest_path = sandbox / "candidate_manifest.json"
-    stored_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    stored_manifest["source_defect"] = {
-        "id": "QD001",
-        "source_fingerprint": source_fingerprint,
-    }
-    manifest_path.write_text(json.dumps(stored_manifest, sort_keys=True) + "\n", encoding="utf-8")
+    _set_source_defect(fixture)
     candidate_acceptance.write_acceptance(
         "candidate_demo",
         "CAND001",
@@ -503,22 +588,10 @@ def test_apply_candidate_records_failed_detector_recheck(
         rationale="Rendered evidence reviewed.",
         workspace_root=workspace,
     )
-
-    def fake_post_apply(_name, _paths):
-        return {
-            "compile": {"status": "success", "returncode": 0},
-            "export": {"status": "success", "returncode": 0},
-            "status": {"status": "success", "returncode": 0},
-        }
-
-    def fake_ledger(_name, **_kwargs):
-        return {"defects": [{"id": "QD999", "source_fingerprint": source_fingerprint}]}
-
-    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
-    monkeypatch.setitem(
-        sys.modules,
-        "quality_defect_ledger",
-        types.SimpleNamespace(build_quality_defect_ledger=fake_ledger),
+    _semantic_recheck_fakes(
+        monkeypatch,
+        pre=[_ledger_defect("QD001")],
+        post=[_ledger_defect("QD777")],  # same (A, text_overlap, action) signature
     )
 
     result = candidate_apply.apply_candidate(
@@ -531,29 +604,23 @@ def test_apply_candidate_records_failed_detector_recheck(
         post_apply=True,
     )
 
-    assert result["status"] == "applied_with_failed_verification"
-    assert result["post_apply"]["detector_recheck"] == {
-        "status": "failed",
-        "reason": "source_defect_still_detected",
-        "source_defect_id": "QD001",
-        "source_defect_fingerprint": source_fingerprint,
-    }
+    assert result["status"] == "rolled_back"
+    recheck = result["post_apply"]["detector_recheck"]
+    assert recheck["status"] == "failed"
+    assert recheck["reason"] == "source_defect_unresolved"
+    assert recheck["source_defect_id"] == "QD001"
 
 
-def test_apply_candidate_detector_recheck_ignores_colliding_source_defect_id(
+def test_apply_candidate_rolls_back_on_failed_detector_recheck(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # Autonomy safety: a fix the recheck reports as failed must be UNDONE, not
+    # left applied and merely flagged — the verifier replaces the human gate, so
+    # it must roll the .tex back so a known-ineffective fix never persists.
     workspace = tmp_path / "workspace"
     fixture, manifest = _accepted_candidate_fixture(workspace)
-    sandbox = fixture / "build" / "candidates" / "CAND001"
-    manifest_path = sandbox / "candidate_manifest.json"
-    stored_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    stored_manifest["source_defect"] = {
-        "id": "QD001",
-        "source_fingerprint": "sha256:" + "a" * 64,
-    }
-    manifest_path.write_text(json.dumps(stored_manifest, sort_keys=True) + "\n", encoding="utf-8")
+    _set_source_defect(fixture)
     candidate_acceptance.write_acceptance(
         "candidate_demo",
         "CAND001",
@@ -563,27 +630,59 @@ def test_apply_candidate_detector_recheck_ignores_colliding_source_defect_id(
         rationale="Rendered evidence reviewed.",
         workspace_root=workspace,
     )
-
-    def fake_post_apply(_name, _paths):
-        return {
-            "compile": {"status": "success", "returncode": 0},
-            "export": {"status": "success", "returncode": 0},
-            "status": {"status": "success", "returncode": 0},
-        }
-
-    def fake_ledger(_name, **_kwargs):
-        return {
-            "defects": [
-                {"id": "QD001", "source_fingerprint": "sha256:" + "b" * 64},
-            ]
-        }
-
-    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
-    monkeypatch.setitem(
-        sys.modules,
-        "quality_defect_ledger",
-        types.SimpleNamespace(build_quality_defect_ledger=fake_ledger),
+    _semantic_recheck_fakes(
+        monkeypatch,
+        pre=[_ledger_defect("QD001")],
+        post=[_ledger_defect("QD777")],  # same signature persists -> recheck failed
     )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+
+    assert result["status"] == "rolled_back"
+    assert result["post_apply"]["detector_recheck"]["status"] == "failed"
+    assert result["post_apply"]["class_verifiers"]["rolled_back"] is True
+    # The ineffective edit is reverted to the pre-apply source, not left applied.
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == "source\n"
+
+
+def test_apply_candidate_semantic_recheck_success_when_resolved(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The applied edit removes the target defect (its (panel, defect_class,
+    # severity) signature is gone from the post-apply ledger) -> recheck success.
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    _set_source_defect(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    _semantic_recheck_fakes(
+        monkeypatch,
+        pre=[_ledger_defect("QD001")],
+        post=[],  # target resolved, nothing new
+    )
+    # No build/<name>.pdf in the fixture, so M3 must force a pre-mutation compile to
+    # obtain a value-preservation baseline; spy on it and give a stable baseline.
+    compile_calls: list[str] = []
+    monkeypatch.setattr(
+        candidate_apply, "_compile_current_source", lambda name, _paths: compile_calls.append(name)
+    )
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
 
     result = candidate_apply.apply_candidate(
         "candidate_demo",
@@ -596,12 +695,260 @@ def test_apply_candidate_detector_recheck_ignores_colliding_source_defect_id(
     )
 
     assert result["status"] == "applied"
-    assert result["post_apply"]["detector_recheck"] == {
-        "status": "success",
-        "reason": "source_defect_not_detected",
-        "source_defect_id": "QD001",
-        "source_defect_fingerprint": "sha256:" + "a" * 64,
-    }
+    assert compile_calls == ["candidate_demo"]  # baseline absent -> forced compile
+    recheck = result["post_apply"]["detector_recheck"]
+    assert recheck["status"] == "success"
+    assert recheck["reason"] == "source_defect_resolved"
+    assert recheck["source_defect_id"] == "QD001"
+
+
+def test_verify_labels_unchanged_equal_passes_and_differ_fails():
+    assert candidate_apply._verify_labels_unchanged({"S": 1, "x": 2}, {"S": 1, "x": 2})[0] is True
+    ok, reason = candidate_apply._verify_labels_unchanged({"S": 1}, {"S": 1, "NEW": 1})
+    assert ok is False
+    assert reason == "labels_changed"
+
+
+def test_verify_labels_unchanged_blocks_without_baseline():
+    # No pre-mutation baseline => value-preservation is unverifiable => FAIL CLOSED.
+    # (M3: an absent baseline must not silently pass the safety gate.)
+    ok, reason = candidate_apply._verify_labels_unchanged({}, {"S": 1})
+    assert ok is False
+    assert reason == "no_label_baseline"
+
+
+def test_verify_palette_locked_flags_definecolor(tmp_path: Path):
+    clean = tmp_path / "clean.tex"
+    clean.write_text("\\node (a) at (0,0) {Label};\n", encoding="utf-8")
+    assert candidate_apply._verify_palette_locked(clean)[0] is True
+    dirty = tmp_path / "dirty.tex"
+    dirty.write_text("\\definecolor{foo}{rgb}{0.1,0.2,0.3}\n", encoding="utf-8")
+    ok, reason = candidate_apply._verify_palette_locked(dirty)
+    assert ok is False
+    assert reason.startswith("palette_violation:")
+
+
+def test_run_class_verifiers_fails_on_changed_labels(tmp_path: Path):
+    tex = tmp_path / "fig.tex"
+    tex.write_text("\\node (a) at (0,0) {Label};\n", encoding="utf-8")
+    changes = [{"path": tex, "before": "x", "after": "y", "relative": "fig.tex"}]
+    result = candidate_apply._run_class_verifiers(changes, {"S": 1}, {"S": 1, "NEW": 1})
+    assert result["status"] == "failed"
+    assert any(
+        v["verifier"] == "labels_unchanged" and v["status"] == "failed" for v in result["verifiers"]
+    )
+
+
+def test_apply_candidate_rolls_back_on_value_preservation_violation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A value-preservation verifier fails => the .tex must be auto-rolled-back to
+    # its pre-mutation content and the result recorded as a non-terminal rollback.
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    _set_source_defect(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    # Semantic recheck passes (target resolved), so the ONLY failure is the
+    # value-preservation gate, which we force to fail.
+    _semantic_recheck_fakes(monkeypatch, pre=[_ledger_defect("QD001")], post=[])
+    monkeypatch.setattr(
+        candidate_apply,
+        "_run_class_verifiers",
+        lambda *_args, **_kwargs: {
+            "status": "failed",
+            "verifiers": [
+                {"verifier": "labels_unchanged", "status": "failed", "reason": "labels_changed"}
+            ],
+        },
+    )
+    tex_path = fixture / "candidate_demo.tex"
+    before = tex_path.read_text(encoding="utf-8")
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+
+    assert result["status"] == "rolled_back"
+    cv = result["post_apply"]["class_verifiers"]
+    assert cv["status"] == "failed"
+    assert cv["rolled_back"] is True
+    # the source .tex was restored to its pre-mutation content
+    assert tex_path.read_text(encoding="utf-8") == before
+
+
+def test_apply_candidate_allows_reapply_after_rollback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    _set_source_defect(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    _semantic_recheck_fakes(
+        monkeypatch,
+        pre=[_ledger_defect("QD001")],
+        post=[_ledger_defect("QD777")],
+    )
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
+
+    rolled_back = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+    ready = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=False,
+        post_apply=True,
+    )
+
+    assert rolled_back["status"] == "rolled_back"
+    assert ready["status"] == "ready"
+    assert "source\n" == (fixture / "candidate_demo.tex").read_text(encoding="utf-8")
+
+
+def test_apply_candidate_rollback_recompiles_or_removes_stale_pdf(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    build_pdf = fixture / "build" / "candidate_demo.pdf"
+    build_pdf.parent.mkdir(parents=True, exist_ok=True)
+    build_pdf.write_bytes(b"mutated-pdf")
+    compile_calls: list[str] = []
+
+    _set_source_defect(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    _semantic_recheck_fakes(
+        monkeypatch,
+        pre=[_ledger_defect("QD001")],
+        post=[_ledger_defect("QD777")],
+    )
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
+
+    def fail_compile(name: str, _paths) -> None:
+        compile_calls.append(name)
+        raise RuntimeError("compile failed")
+
+    monkeypatch.setattr(candidate_apply, "_compile_current_source", fail_compile)
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+
+    assert result["status"] == "rolled_back"
+    assert compile_calls == ["candidate_demo"]
+    assert not build_pdf.exists()
+    assert result["post_apply"]["rollback_compile"]["status"] == "failed"
+
+
+def test_apply_candidate_rollback_restores_or_removes_generated_exports(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    exports = fixture / "exports"
+    exports.mkdir()
+    original_svg = exports / "candidate_demo.svg"
+    original_svg.write_bytes(b"original-svg")
+
+    _set_source_defect(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+
+    state = {"applied": False}
+
+    def fake_post_apply(_name, _paths):
+        state["applied"] = True
+        original_svg.write_bytes(b"mutated-svg")
+        (exports / "candidate_demo.png").write_bytes(b"new-png")
+        return {
+            "compile": {"status": "success", "returncode": 0},
+            "export": {"status": "success", "returncode": 0},
+            "status": {"status": "success", "returncode": 0},
+        }
+
+    def fake_ledger(_name, **_kwargs):
+        if state["applied"]:
+            return {"defects": [_ledger_defect("QD777")]}
+        return {"defects": [_ledger_defect("QD001")]}
+
+    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+    monkeypatch.setitem(
+        sys.modules,
+        "quality_defect_ledger",
+        types.SimpleNamespace(build_quality_defect_ledger=fake_ledger),
+    )
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+
+    assert result["status"] == "rolled_back"
+    assert original_svg.read_bytes() == b"original-svg"
+    assert not (exports / "candidate_demo.png").exists()
+    assert result["post_apply"]["rollback_exports"]["status"] == "success"
 
 
 def test_post_apply_export_does_not_force_golden_roll_forward(
@@ -622,6 +969,7 @@ def test_post_apply_export_does_not_force_golden_roll_forward(
         return Completed()
 
     monkeypatch.setattr(candidate_apply.subprocess, "run", fake_run)
+    monkeypatch.setattr(candidate_apply, "_pdf_words", lambda _p: {"L": 1})
 
     result = candidate_apply.apply_candidate(
         "candidate_demo",
@@ -649,5 +997,196 @@ def test_apply_validates_fixture_name_before_result(tmp_path: Path) -> None:
             {"candidate_id": "CAND001"},
             workspace_root=workspace,
             apply=True,
-        post_apply=False,
+            post_apply=False,
         )
+
+
+def _defect(did, panel, cls="text_overlap", severity="action", fp=None, sub="sel:aaa", anchor=None):
+    d = {
+        "id": did,
+        "defect_class": cls,
+        "severity": severity,
+        "target": {"panel": panel, "subregion": sub},
+    }
+    if fp is not None:
+        d["source_fingerprint"] = fp
+    if anchor is not None:
+        d["selector_hint"] = {"kind": "node_name", "value": anchor}
+    return d
+
+
+def test_semantic_recheck_resolved_is_success():
+    pre = [_defect("QD001", "A")]
+    post: list = []
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "success"
+    assert verdict["reason"] == "source_defect_resolved"
+
+
+def test_semantic_recheck_persisting_defect_is_failed_despite_changed_fingerprint():
+    # Anti-gaming: a coordinate nudge changes the line (so the fingerprint AND the
+    # sel: sub-region key shift), but the same (panel, defect_class, severity)
+    # defect persists. The old fingerprint-equality recheck wrongly passed this.
+    pre = [_defect("QD001", "A", fp="sha256:" + "a" * 64, sub="sel:aaa")]
+    post = [_defect("QD001", "A", fp="sha256:" + "b" * 64, sub="sel:bbb")]
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "source_defect_unresolved"
+
+
+def test_semantic_recheck_new_equal_severity_defect_is_failed():
+    pre = [_defect("QD001", "A")]
+    # target resolved, but a NEW equal-severity defect appeared in panel B
+    post = [_defect("QD050", "B", sub="sel:zzz")]
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "new_defect_introduced"
+
+
+def test_semantic_recheck_new_lower_severity_defect_is_allowed():
+    # A new LOWER-severity defect does not fail the recheck (only equal/higher).
+    pre = [_defect("QD001", "A", severity="blocker")]
+    post = [_defect("QD050", "B", severity="action")]
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "success"
+
+
+def test_semantic_recheck_source_absent_pre_is_failed():
+    verdict = candidate_apply._semantic_recheck_verdict("QD404", [], [])
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "source_defect_absent_pre_apply"
+
+
+def test_semantic_recheck_flags_resolving_the_wrong_same_signature_instance():
+    # Two same-(panel, class, severity) defects told apart by their stable anchor.
+    # The edit clears the OTHER one; the target persists -> must NOT be credited as
+    # resolved just because the (panel, class, severity) COUNT dropped (M4).
+    pre = [_defect("QD001", "A", anchor="PDMS"), _defect("QD002", "A", anchor="PET")]
+    post = [_defect("QD001", "A", anchor="PDMS")]  # target QD001/PDMS still present
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "source_defect_unresolved"
+
+
+def test_semantic_recheck_flags_severity_downgrade_as_unresolved():
+    # The target element is only downgraded (major -> action) at the same anchor,
+    # not removed -> the signature count for 'major' drops to 0 but the defect is
+    # not resolved (M4).
+    pre = [_defect("QD001", "A", severity="major", anchor="PDMS")]
+    post = [_defect("QD001", "A", severity="action", anchor="PDMS")]
+    verdict = candidate_apply._semantic_recheck_verdict("QD001", pre, post)
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "source_defect_unresolved"
+
+
+def test_finding_recheck_fails_when_a_target_text_still_crosses():
+    # The verifier ledger is undeclared_geometry-grounded and blind to the
+    # visual_clash crossings a critique finding catches, so a finding-sourced
+    # fix verifies against the post-apply crossing texts directly.
+    verdict = candidate_apply._finding_recheck_verdict(
+        ["PI,", "PDMS,", "PET"], ["PI,", "PET", "(shallow,"]
+    )
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_crossing_unresolved"
+    assert "PI," in verdict["unresolved_texts"]
+
+
+def test_finding_recheck_succeeds_when_no_target_text_crosses():
+    verdict = candidate_apply._finding_recheck_verdict(["PI,", "PDMS,", "PET"], ["Origin", "S85"])
+    assert verdict["status"] == "success"
+    assert verdict["reason"] == "finding_crossing_resolved"
+
+
+def test_finding_recheck_fails_when_fix_clears_target_but_introduces_new_crossing():
+    # Destination-unaware fix: the targets are cleared but the move pushed the
+    # label onto another element (a NEW crossing absent pre-apply).
+    verdict = candidate_apply._finding_recheck_verdict(
+        ["PI,", "PDMS,", "PET"],
+        ["S85", "(shallow,"],
+        pre_crossing_texts=["PI,", "PDMS,", "PET", "S85"],
+    )
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_new_crossing_introduced"
+    assert "(shallow," in verdict["introduced_texts"]
+
+
+def test_finding_recheck_success_ignores_stable_baseline_crossings():
+    # Baseline false-positive crossings present both pre and post must not count
+    # as newly introduced.
+    verdict = candidate_apply._finding_recheck_verdict(
+        ["PI,", "PDMS,", "PET"],
+        ["Origin", "S85"],
+        pre_crossing_texts=["PI,", "PDMS,", "PET", "Origin", "S85"],
+    )
+    assert verdict["status"] == "success"
+
+
+def test_post_apply_recheck_finding_sourced_uses_post_visual_clash(tmp_path: Path) -> None:
+    import runtime_paths
+
+    workspace = tmp_path / "workspace"
+    build = workspace / "examples" / "demo" / "build"
+    build.mkdir(parents=True)
+    (build / "visual_clash.json").write_text(
+        json.dumps({"candidates": [{"id": "VC001", "kind": "text_on_path", "text": "PI,"}]}),
+        encoding="utf-8",
+    )
+    paths = runtime_paths.resolve_runtime_paths(workspace_root=workspace)
+    manifest = {
+        "source_defect": {
+            "id": "C001",
+            "source": "adjudicated_finding",
+            "target_texts": ["PI,", "PET"],
+        }
+    }
+    verdict = candidate_apply._post_apply_semantic_recheck("demo", paths, manifest, [])
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_crossing_unresolved"
+    assert "PI," in verdict["unresolved_texts"]
+
+
+def test_post_apply_recheck_finding_sourced_without_target_texts_is_failed(tmp_path: Path) -> None:
+    import runtime_paths
+
+    workspace = tmp_path / "workspace"
+    (workspace / "examples" / "demo" / "build").mkdir(parents=True)
+    paths = runtime_paths.resolve_runtime_paths(workspace_root=workspace)
+    manifest = {"source_defect": {"id": "C001", "source": "adjudicated_finding"}}
+    verdict = candidate_apply._post_apply_semantic_recheck("demo", paths, manifest, [])
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_target_texts_missing"
+
+
+def test_post_apply_recheck_finding_sourced_flags_new_crossing(tmp_path: Path) -> None:
+    import runtime_paths
+
+    workspace = tmp_path / "workspace"
+    build = workspace / "examples" / "demo" / "build"
+    build.mkdir(parents=True)
+    # Post state: the targeted texts cleared, but the move introduced a new
+    # crossing "(shallow," that was not present pre-apply.
+    (build / "visual_clash.json").write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {"id": "VC001", "kind": "text_on_path", "text": "(shallow,"},
+                    {"id": "VC002", "kind": "text_on_fill", "text": "S85"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    paths = runtime_paths.resolve_runtime_paths(workspace_root=workspace)
+    manifest = {
+        "source_defect": {
+            "id": "C001",
+            "source": "adjudicated_finding",
+            "target_texts": ["PI,", "PET"],
+        }
+    }
+    verdict = candidate_apply._post_apply_semantic_recheck(
+        "demo", paths, manifest, [], ["PI,", "PET", "S85"]
+    )
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_new_crossing_introduced"
+    assert "(shallow," in verdict["introduced_texts"]

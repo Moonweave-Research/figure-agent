@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import fixture_identity
+import human_attestation
 
 
 class PublicationGateFailure(NamedTuple):
@@ -43,6 +44,7 @@ def publication_gate_summary(
     *,
     accepted: bool | None,
     require_disclosure: bool = False,
+    example_dir: Path | None = None,
 ) -> dict[str, object]:
     if accepted is None:
         return {
@@ -54,6 +56,21 @@ def publication_gate_summary(
         audit_path,
         require_disclosure=require_disclosure,
     )
+    if accepted is True:
+        attested, reason = human_attestation.verify_attestation(example_dir or audit_path.parent)
+        if not attested:
+            fixture = (example_dir or audit_path.parent).name
+            records.append(
+                PublicationGateFailure(
+                    code="invalid_human_attestation",
+                    category="publication_provenance",
+                    actor="human",
+                    message=f"human attestation failed: {reason}",
+                    required_action=(
+                        f"run `fig-agent attest {fixture}` from an interactive terminal"
+                    ),
+                )
+            )
     if accepted is False:
         state = PUBLICATION_GATE_HUMAN_ACCEPTANCE_REQUIRED
     elif records:

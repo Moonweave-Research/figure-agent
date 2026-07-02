@@ -107,7 +107,61 @@ def test_fig_agent_closeout_uses_public_wrapper_without_type_error(
     monkeypatch.setitem(sys.modules, "fig_closeout", types.SimpleNamespace(main=fake_main))
 
     assert module._closeout(["smoke_trap_demo", "--json"]) == 7
-    assert calls == [["smoke_trap_demo", "--json"]]
+    assert calls == [
+        ["smoke_trap_demo", "--json", "--repo-root", str(PLUGIN_ROOT)]
+    ]
+
+
+def test_public_wrapper_bootstrap_checks_pdfplumber(monkeypatch: pytest.MonkeyPatch) -> None:
+    loader = importlib.machinery.SourceFileLoader(
+        "fig_agent_bin_dependency_contract",
+        str(PLUGIN_ROOT / "bin" / "fig-agent"),
+    )
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+
+    imported: list[str] = []
+
+    def fake_import_module(module_name: str) -> object:
+        imported.append(module_name)
+        if module_name == "pdfplumber":
+            raise ImportError(module_name)
+        return object()
+
+    monkeypatch.setattr(module.importlib, "import_module", fake_import_module)
+
+    assert module._missing_project_python_modules() == ["pdfplumber"]
+    assert imported == ["yaml", "PIL", "pdfplumber"]
+
+
+def test_public_wrapper_doctor_checks_pdfplumber(monkeypatch: pytest.MonkeyPatch) -> None:
+    loader = importlib.machinery.SourceFileLoader(
+        "fig_agent_bin_doctor_dependency_contract",
+        str(PLUGIN_ROOT / "bin" / "fig-agent"),
+    )
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+
+    imported: list[str] = []
+
+    def fake_import_module(module_name: str) -> object:
+        imported.append(module_name)
+        if module_name == "pdfplumber":
+            raise ImportError(module_name)
+        return object()
+
+    monkeypatch.setattr(module.shutil, "which", lambda _name: "/bin/tool")
+    monkeypatch.setattr(module.importlib, "import_module", fake_import_module)
+
+    deps = module._dependency_diagnostics()
+
+    assert deps["state"] == "missing"
+    assert deps["missing"] == ["python:pdfplumber"]
+    assert imported == ["yaml", "PIL", "pdfplumber"]
 
 
 def test_doctor_reports_workspace_missing_without_bundle_false_positive(
@@ -297,10 +351,7 @@ def test_fig_agent_helper_allows_whitelisted_scripts_from_plugin_root(tmp_path: 
 
 @pytest.mark.parametrize(
     ("script_name", "usage"),
-    [
-        ("check_golden_artifacts.py", "usage: check_golden_artifacts.py"),
-        ("svg_semantic_diff.py", "usage: svg_semantic_diff.py"),
-    ],
+    [("check_golden_artifacts.py", "usage: check_golden_artifacts.py")],
 )
 def test_fig_agent_helper_allows_public_gate_helpers(
     tmp_path: Path,

@@ -41,7 +41,6 @@ import fixture_identity  # noqa: E402
 import ready_improvement as ready_improvement_mod  # noqa: E402
 from next_action_summary import driver_next_action_summary  # noqa: E402
 from status import infer_stage  # noqa: E402
-from svg_polish_delta import SvgPolishDeltaError, svg_polish_delta_is_stale  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.driver.v1"
@@ -80,7 +79,6 @@ STOP_CLOSEOUT = "closeout_required"
 FORBIDDEN_EDIT_SOURCE = "edit_source"
 FORBIDDEN_EDIT_SOURCE_OUTSIDE_PATCH = "edit_source_outside_patch_handoff"
 FORBIDDEN_EDIT_GENERATED_EXPORT = "edit_generated_export"
-FORBIDDEN_EDIT_POLISHED_SVG = "edit_polished_svg"
 FORBIDDEN_SET_ACCEPTED = "set_accepted"
 FORBIDDEN_FORCE_GOLDEN = "force_golden"
 FORBIDDEN_BYPASS_SEMANTIC_BACKPORT = "bypass_semantic_backport"
@@ -119,13 +117,11 @@ _FORBIDDEN_BY_MODE: dict[str, list[str]] = {
         FORBIDDEN_SET_ACCEPTED,
         FORBIDDEN_FORCE_GOLDEN,
         FORBIDDEN_EDIT_GENERATED_EXPORT,
-        FORBIDDEN_EDIT_POLISHED_SVG,
     ],
     "release": [
         FORBIDDEN_EDIT_SOURCE,
         FORBIDDEN_SET_ACCEPTED,
         FORBIDDEN_FORCE_GOLDEN,
-        FORBIDDEN_EDIT_POLISHED_SVG,
     ],
     "polish": [
         FORBIDDEN_EDIT_SOURCE,
@@ -136,7 +132,6 @@ _FORBIDDEN_BY_MODE: dict[str, list[str]] = {
     "final": [
         FORBIDDEN_EDIT_SOURCE,
         FORBIDDEN_EDIT_GENERATED_EXPORT,
-        FORBIDDEN_EDIT_POLISHED_SVG,
         FORBIDDEN_SET_ACCEPTED,
         FORBIDDEN_FORCE_GOLDEN,
         FORBIDDEN_BYPASS_SEMANTIC_BACKPORT,
@@ -155,45 +150,6 @@ def _svg_polish_prerequisite_gate(
     final_state: Any = None,
     final_kind: Any = None,
 ) -> dict[str, Any] | None:
-    if (
-        action == ACTION_POLISH_HANDOFF_STOP
-        and final_kind == "polished_svg"
-        and final_state == "STALE"
-    ):
-        # Handoff already completed but the polish manifest base drifted; the
-        # refresh is a handoff, not a /fig_loop rerun, so the gate must not fall
-        # back to the no-checkpoint "rerun_fig_loop" default.
-        return {
-            "schema": editorial_mod.GATE_SCHEMA,
-            "state": "blocked",
-            "source": "driver_prerequisite",
-            "can_start_svg_polish": False,
-            "recommended_path": None,
-            "next_action": "refresh_svg_polish_handoff",
-            "reason": reason,
-            "required_inputs": list(editorial_mod.REQUIRED_GATE_INPUTS),
-            "blocking_items": [{"source": "driver_prerequisite", "id": "final_artifact_stale"}],
-        }
-    if (
-        action == ACTION_POLISH_HANDOFF_STOP
-        and final_kind == "polished_svg"
-        and final_state == "INVALID"
-    ):
-        # The polish manifest is malformed at the manifest level; the repair is a
-        # manifest rebuild, not a /fig_loop rerun, so the gate must not fall back
-        # to the no-checkpoint "rerun_fig_loop" default and must keep SVG polish
-        # un-startable while the final artifact is INVALID.
-        return {
-            "schema": editorial_mod.GATE_SCHEMA,
-            "state": "blocked",
-            "source": "driver_prerequisite",
-            "can_start_svg_polish": False,
-            "recommended_path": None,
-            "next_action": "repair_svg_polish_manifest",
-            "reason": reason,
-            "required_inputs": list(editorial_mod.REQUIRED_GATE_INPUTS),
-            "blocking_items": [{"source": "driver_prerequisite", "id": "final_artifact_invalid"}],
-        }
     next_action_by_driver_action = {
         ACTION_RUN_COMPILE: "run_fig_compile",
         ACTION_RUN_CRITIQUE: "run_fig_critique",
@@ -535,59 +491,12 @@ def _loop_checkpoint_review_blocker(
 
 
 def _svg_polish_route_hint(example_dir: Path, name: str, *, prefix: str) -> dict[str, str | None]:
-    polish_dir = example_dir / "polish"
-    recipe_path = polish_dir / "svg_polish_recipe.yaml"
-    polished_svg_path = polish_dir / f"{name}.polished.svg"
-    delta_manifest_path = polish_dir / "aesthetic_delta" / "delta_manifest.json"
-    if not recipe_path.is_file():
-        return {
-            "safe_command": None,
-            "reason": (
-                f"{prefix} author a bounded polish/svg_polish_recipe.yaml first; "
-                "the driver will not invent visual polish operations."
-            ),
-        }
-    if not polished_svg_path.is_file():
-        return {
-            "safe_command": command_mod.svg_polish_executor_dry_run_command(name),
-            "reason": (
-                f"{prefix} polish/svg_polish_recipe.yaml exists; run the SVG polish "
-                "executor dry-run first, review the plan, then use "
-                f"`{command_mod.svg_polish_executor_write_command(name)}` only "
-                "for visual-only edits."
-            ),
-        }
-    if not delta_manifest_path.is_file():
-        return {
-            "safe_command": command_mod.svg_polish_delta_command(name),
-            "reason": (
-                f"{prefix} polished SVG exists; generate the SVG polish aesthetic "
-                "delta pack before critique or handoff review."
-            ),
-        }
-    try:
-        delta_stale = svg_polish_delta_is_stale(delta_manifest_path, example_dir=example_dir)
-    except SvgPolishDeltaError:
-        return {
-            "safe_command": command_mod.svg_polish_delta_command(name),
-            "reason": (
-                f"{prefix} SVG polish aesthetic delta pack is invalid; regenerate "
-                "before critique or handoff review."
-            ),
-        }
-    if delta_stale:
-        return {
-            "safe_command": command_mod.svg_polish_delta_command(name),
-            "reason": (
-                f"{prefix} SVG polish aesthetic delta pack is stale; regenerate "
-                "before critique or handoff review."
-            ),
-        }
     return {
         "safe_command": None,
         "reason": (
-            f"{prefix} recipe, polished SVG, and aesthetic delta pack are present; "
-            "run fig-agent helper svg_polish_handoff.py to scaffold audit and manifest."
+            f"{prefix} the built-in SVG polish executor has been retired; treat "
+            "ready_for_svg_polish as an external handoff label and continue with "
+            "human/tool review outside the quality-kernel CLI."
         ),
     }
 
@@ -699,7 +608,6 @@ def _select_action(
     critique = status.get("critique_state")
     export = status.get("export_state")
     final_state = status.get("final_artifact_state")
-    final_kind = status.get("final_artifact_kind")
     release_ready = status.get("release_ready") is True
 
     def make(
@@ -891,6 +799,23 @@ def _select_action(
                     ),
                     checkpoint=loop_checkpoint,
                 )
+            loop_next_action = loop_checkpoint.get("next_action_summary")
+            if isinstance(loop_next_action, dict):
+                boundary = loop_next_action.get("decision_boundary")
+                blocks_progress = (
+                    isinstance(boundary, dict) and boundary.get("blocks_progress") is True
+                )
+                if (
+                    loop_next_action.get("action") == ACTION_COMPLETE
+                    and not blocks_progress
+                ):
+                    return make(
+                        ACTION_COMPLETE,
+                        safe_command=None,
+                        stop_boundary=None,
+                        reason="latest /fig_loop checkpoint reports no progress blocker.",
+                        checkpoint=loop_checkpoint,
+                    )
             if loop_stop in {"no_actionable_findings", "verify_only_complete"}:
                 return make(
                     ACTION_COMPLETE,
@@ -1022,59 +947,6 @@ def _select_action(
             reason=(
                 "final artifact is BLOCKED — polish manifest declares a "
                 "semantic backport is required before promotion."
-            ),
-        )
-    if final_kind == "polished_svg" and final_state == "FRESH":
-        return make(
-            ACTION_COMPLETE,
-            safe_command=None,
-            stop_boundary=None,
-            reason="polished_svg final artifact is FRESH; polish loop is closed.",
-        )
-    if final_kind == "polished_svg" and final_state == "STALE":
-        # The SVG polish handoff already completed (manifest + polished SVG
-        # exist), but a manifest base input drifted (e.g. a critique.md edit
-        # changed base.critique_hash), so the polished artifact is STALE. The
-        # corrective action is to rebuild the manifest base hashes — /fig_loop
-        # is verify-only and can never clear this. The refresh requires reviewer
-        # and editor handoff metadata the driver cannot supply, so name the
-        # command instead of emitting a runnable safe_command.
-        return make(
-            ACTION_POLISH_HANDOFF_STOP,
-            safe_command=None,
-            stop_boundary=None,
-            reason=(
-                "polished_svg final artifact is STALE because the polish "
-                "manifest base drifted after the SVG polish handoff already "
-                f"completed; rerun fig-agent helper svg_polish_handoff.py examples/{name} "
-                "--write --force to rebuild the manifest base hashes (including "
-                "critique_hash) and clear the STALE. /fig_loop is verify-only "
-                "and cannot refresh the manifest."
-            ),
-        )
-    if final_kind == "polished_svg" and final_state == "INVALID":
-        # The SVG polish handoff produced a manifest (final_artifact_kind is
-        # polished_svg), but the manifest itself is malformed at the manifest
-        # level: wrong polished.path, bad schema or provenance, or a semantic
-        # diff that validates the wrong SVG. compute_final_artifact_state returns
-        # INVALID for these faults. /fig_loop is verify-only and can never clear
-        # an INVALID manifest, and the editorial ready_for_svg_polish route below
-        # would emit a directly contradictory can_start_svg_polish=true while the
-        # final artifact is still broken. Route to manifest repair instead. The
-        # rebuild requires reviewer and editor handoff metadata the driver cannot
-        # supply, so name the command rather than emitting a runnable safe_command.
-        return make(
-            ACTION_POLISH_HANDOFF_STOP,
-            safe_command=None,
-            stop_boundary=None,
-            reason=(
-                "polished_svg final artifact is INVALID because the polish "
-                "manifest is malformed at the manifest level (wrong polished.path, "
-                "schema, or provenance, or a semantic diff that validates the "
-                f"wrong SVG); rerun fig-agent helper svg_polish_handoff.py examples/{name} "
-                "--write --force to rebuild a well-formed manifest and clear the "
-                "INVALID. /fig_loop is verify-only and cannot clear an INVALID "
-                "manifest."
             ),
         )
     if loop_checkpoint is not None:

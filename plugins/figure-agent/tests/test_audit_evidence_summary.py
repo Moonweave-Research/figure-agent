@@ -285,7 +285,7 @@ def test_summary_reports_legacy_schema_without_current_audit_blocker(tmp_path: P
     fig_dir = tmp_path / "demo_fig"
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.3",
+        schema="figure-agent.critique.v1.5",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml="",
     )
@@ -294,7 +294,7 @@ def test_summary_reports_legacy_schema_without_current_audit_blocker(tmp_path: P
 
     assert summary["evaluation_state"] == "legacy"
     assert summary["blocking_items"] == []
-    assert summary["critique_schema"] == "figure-agent.critique.v1.3"
+    assert summary["critique_schema"] == "figure-agent.critique.v1.5"
 
 
 def test_summary_reports_missing_visual_clash_report_for_current_schema(
@@ -498,9 +498,9 @@ def test_summary_reports_missing_undeclared_geometry_report_for_v1_17(
 @pytest.mark.parametrize(
     "schema",
     (
-        "figure-agent.critique.v1.4",
-        "figure-agent.critique.v1.5",
-        "figure-agent.critique.v1.6",
+        "figure-agent.critique.v1.10",
+        "figure-agent.critique.v1.14",
+        "figure-agent.critique.v1.17",
     ),
 )
 def test_summary_surfaces_undeclared_geometry_before_visual_clash_accounting(
@@ -509,11 +509,12 @@ def test_summary_surfaces_undeclared_geometry_before_visual_clash_accounting(
 ) -> None:
     fig_dir = tmp_path / "demo_fig"
     _write_undeclared_geometry_report(fig_dir, ("UG001",))
+    _write_visual_clash_report(fig_dir, ())
+    _write_crop_manifest(fig_dir, ("full_q1",))
     _write_critique(
         fig_dir,
         schema=schema,
         micro_defects_yaml="micro_defects: []\n",
-        crop_audit_log_yaml="",
     )
 
     summary = summarize_audit_evidence(fig_dir)

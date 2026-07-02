@@ -6,9 +6,11 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import human_decision_record
 import runtime_paths
 import status_next_policy
 import status_readiness_policy
@@ -31,16 +33,15 @@ from reference_contract import (
     participating_panel_reference_paths,
 )
 from status_explanation import build_status_explanation
-from svg_polish_manifest import (
-    FINAL_ARTIFACT_POLISHED_SVG,
-    compute_final_artifact_state,
-)
 
 # Shared build/export freshness source set. /fig_critique adds panel references
 # for crop/reference comparisons, but status should not require a rebuild for
 # critique-only panel-reference edits.
 STYLE_LOCK_PATH = (
     runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
+)
+DECISION_RECORDS_ROOT = (
+    runtime_paths.resolve_runtime_paths().plugin_root / "docs" / "decision-records"
 )
 
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
@@ -254,25 +255,160 @@ def _compute_render_state(
 
 
 def _requires_publication_disclosure(spec: dict) -> bool:
-    final_artifact = spec.get("final_artifact") if spec else None
-    return (
-        isinstance(final_artifact, dict)
-        and final_artifact.get("kind") == FINAL_ARTIFACT_POLISHED_SVG
-    )
+    return False
 
 
 def _default_final_artifact(name: str) -> dict:
-    return compute_final_artifact_state(example_dir=Path("."), name=name, spec={})
+    return {
+        "state": "NONE",
+        "kind": "generated_export",
+        "path": f"exports/{name}.svg" if name else None,
+        "notes": [],
+        "error": "",
+    }
+
+
+_NON_RELEASE_DECISION_ROUTES = {
+    "defer_for_dogfood": "dogfood",
+    "reject_current_artifact": "artifact_rejection",
+    "request_full_style_redesign": "style_redesign",
+    "request_bounded_tikz_source_polish": "bounded_tikz_source_polish",
+    "request_svg_polish_handoff_evidence": "svg_polish_handoff_evidence",
+}
+
+
+def _release_operation_command(name: str, exports_substate: str) -> str:
+    command = (
+        f"fig-agent closeout-accept {name} --decision accept "
+        "--reviewer <release-operator> --rationale <recorded-human-decision>"
+    )
+    if exports_substate == "TRACKED_GOLDEN":
+        command = f"{command} --accept-golden"
+    return command
+
+
+def _decision_record_roots(example_dir: Path) -> tuple[Path, ...]:
+    roots: list[Path] = []
+    if DECISION_RECORDS_ROOT.is_dir():
+        roots.append(DECISION_RECORDS_ROOT)
+    if example_dir.parent.name == "examples":
+        local_root = example_dir.parent.parent / "docs" / "decision-records"
+        if local_root.is_dir() and local_root not in roots:
+            roots.append(local_root)
+    return tuple(roots)
+
+
+def _record_display_path(path: Path) -> str:
+    try:
+        plugin_root = runtime_paths.resolve_runtime_paths().plugin_root.resolve()
+        return path.resolve().relative_to(plugin_root).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _load_valid_decision_records(example_dir: Path, name: str) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    seen: set[Path] = set()
+    for root in _decision_record_roots(example_dir):
+        for path in sorted(root.glob("**/*.json")):
+            resolved = path.resolve()
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+                validated = human_decision_record.validate_decision_record(raw)
+            except (
+                OSError,
+                UnicodeDecodeError,
+                json.JSONDecodeError,
+                human_decision_record.HumanDecisionRecordError,
+            ):
+                continue
+            if validated.get("fixture") != name:
+                continue
+            validated["record_path"] = _record_display_path(path)
+            records.append(validated)
+    return records
+
+
+def _release_decision_summary(
+    example_dir: Path,
+    name: str,
+    *,
+    exports_substate: str,
+) -> dict[str, Any]:
+    records = _load_valid_decision_records(example_dir, name)
+    accept_records = [
+        record
+        for record in records
+        if record.get("packet_schema") == human_decision_record.RELEASE_DECISION_PACKET_SCHEMA
+        and record.get("decision_kind") == "accept_current_generated_export"
+    ]
+    if accept_records:
+        record = accept_records[-1]
+        return {
+            "schema": "figure-agent.release-decision-summary.v1",
+            "state": "acceptance_authorized",
+            "decision_kind": record["decision_kind"],
+            "record_path": record["record_path"],
+            "release_operation": _release_operation_command(name, exports_substate),
+            "message": (
+                "valid human decision record authorizes naming the explicit "
+                "release-state operation; status does not execute it"
+            ),
+        }
+    non_release_records = [
+        record
+        for record in records
+        if record.get("decision_kind") in _NON_RELEASE_DECISION_ROUTES
+    ]
+    if non_release_records:
+        record = non_release_records[-1]
+        decision_kind = str(record["decision_kind"])
+        route = _NON_RELEASE_DECISION_ROUTES[decision_kind]
+        return {
+            "schema": "figure-agent.release-decision-summary.v1",
+            "state": "non_release_requested",
+            "decision_kind": decision_kind,
+            "record_path": record["record_path"],
+            "route": route,
+            "message": (
+                "valid human decision record routes away from release-state mutation"
+            ),
+            "follow_up": record.get("follow_up"),
+        }
+    return {
+        "schema": "figure-agent.release-decision-summary.v1",
+        "state": "missing",
+        "decision_kind": None,
+        "record_path": None,
+        "message": "no valid release-authorizing human decision record found",
+    }
 
 
 def _final_artifact_state(example_dir: Path, name: str, spec: dict) -> dict:
-    return compute_final_artifact_state(
-        example_dir,
-        name,
-        spec,
-        style_lock_path=STYLE_LOCK_PATH,
-        spec_parse_error=bool(spec.get(_SPEC_PARSE_ERROR_KEY)),
-    )
+    declared = spec.get("final_artifact")
+    if declared is None:
+        return _default_final_artifact(name)
+    if not isinstance(declared, dict):
+        return {
+            "state": "INVALID",
+            "kind": "unsupported",
+            "path": None,
+            "notes": ["final_artifact_invalid"],
+            "error": "final_artifact must be a mapping",
+        }
+    kind = declared.get("kind")
+    if kind == "generated_export":
+        return _default_final_artifact(name)
+    return {
+        "state": "INVALID",
+        "kind": str(kind or "missing"),
+        "path": declared.get("manifest") if isinstance(declared.get("manifest"), str) else None,
+        "notes": ["final_artifact_invalid"],
+        "error": "unsupported final_artifact kind; only generated_export is supported",
+    }
 
 
 def _status_vector(
@@ -326,6 +462,14 @@ def _append_critique_freshness_diagnostics(result: dict, example_dir: Path) -> N
 
 
 def _finalize_status(result: dict, example_dir: Path) -> dict:
+    if "release_decision" not in result:
+        name = result.get("name")
+        if isinstance(name, str) and name:
+            result["release_decision"] = _release_decision_summary(
+                example_dir,
+                name,
+                exports_substate=str(result.get("exports_substate") or ""),
+            )
     _append_critique_freshness_diagnostics(result, example_dir)
     result["audit_evidence"] = summarize_audit_evidence(example_dir)
     metrics_summary = reference_aesthetic_metrics_summary(example_dir)
@@ -532,6 +676,7 @@ def infer_stage(example_dir: Path) -> dict:
         example_dir / "QUALITY_AUDIT.md",
         accepted=accepted,
         require_disclosure=_requires_publication_disclosure(spec),
+        example_dir=example_dir,
     )
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)
@@ -540,6 +685,11 @@ def infer_stage(example_dir: Path) -> dict:
     _append_reference_image_check(checks, notes, spec, example_dir)
     _append_panel_reference_checks(notes, spec, example_dir)
     final_artifact = _final_artifact_state(example_dir, name, spec)
+    release_decision = _release_decision_summary(
+        example_dir,
+        name,
+        exports_substate=exports_substate,
+    )
     notes.extend(final_artifact["notes"])
 
     if spec_path.exists() and not briefing_path.exists():
@@ -608,6 +758,7 @@ def infer_stage(example_dir: Path) -> dict:
             partial=partial,
             final_artifact=final_artifact,
             accepted=accepted,
+            release_decision=release_decision,
         )
         return _finalize_status(
             _add_critique_lint_summary(
@@ -619,6 +770,7 @@ def infer_stage(example_dir: Path) -> dict:
                     "notes": notes,
                     "accepted": accepted,
                     "exports_substate": exports_substate,
+                    "release_decision": release_decision,
                     **_status_vector(
                         4,
                         notes,

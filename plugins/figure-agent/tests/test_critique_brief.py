@@ -14,12 +14,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import critique_brief  # noqa: E402
 from critique_brief import generate_for, main  # noqa: E402
 from reference_aesthetic_metrics import build_reference_aesthetic_metrics  # noqa: E402
-from svg_polish_delta import build_svg_polish_delta_pack  # noqa: E402
-from svg_polish_recipe import (  # noqa: E402
-    SVG_POLISH_RECIPE_RELATIVE_PATH,
-    svg_polish_recipe_input_hash,
-    write_svg_polish_recipe,
-)
 
 QUALITY_AXIS_NAMES = (
     "message_storyline",
@@ -100,54 +94,6 @@ def _write_real_render_pair(example_dir: Path, *, size: tuple[int, int] = (200, 
 def _fake_svg_delta_renderer(source_svg: Path, output_png: Path) -> None:
     color = "red" if "exports" in source_svg.parts else "blue"
     Image.new("RGB", (4, 4), color).save(output_png)
-
-
-def _write_svg_polish_delta_fixture(example_dir: Path) -> None:
-    (example_dir / "exports").mkdir(exist_ok=True)
-    (example_dir / "polish").mkdir(exist_ok=True)
-    (example_dir / "exports" / "review_demo.svg").write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg"><text id="label-a">A</text></svg>\n',
-        encoding="utf-8",
-    )
-    (example_dir / "polish" / "review_demo.polished.svg").write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg"><text id="label-a">A</text></svg>\n',
-        encoding="utf-8",
-    )
-    recipe_path = example_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
-    write_svg_polish_recipe(
-        recipe_path,
-        {
-            "schema": "figure-agent.svg-polish-recipe.v1",
-            "fixture": "review_demo",
-            "source_svg": "exports/review_demo.svg",
-            "target_svg": "polish/review_demo.polished.svg",
-            "recipe_input_hash": svg_polish_recipe_input_hash(
-                example_dir,
-                "review_demo",
-                source_svg="exports/review_demo.svg",
-                base_dir=example_dir.parent,
-            ),
-            "operations": [
-                {
-                    "id": "R001",
-                    "class": "label_micro_position",
-                    "selector": {"kind": "element_id", "value": "label-a"},
-                    "action": {"type": "translate", "dx": 1.0, "dy": -1.5, "unit": "px"},
-                    "rationale": "visual-only polish",
-                    "semantic_guard": {
-                        "allowed": True,
-                        "reason": "same label and target",
-                    },
-                }
-            ],
-        },
-    )
-    build_svg_polish_delta_pack(
-        example_dir,
-        recipe_path=recipe_path,
-        renderer=_fake_svg_delta_renderer,
-        base_dir=example_dir.parent,
-    )
 
 
 def _sha256(path: Path) -> str:
@@ -383,6 +329,64 @@ Explain transient-current trapping in a compact mechanism schematic.
     assert "Critique is report-only" in brief
     assert "score_is_gateable: false" in brief
     assert "overall_score: 0-100" not in brief
+
+
+def test_critique_brief_reference_free_mode_keeps_aesthetic_intent_accounting(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_example(tmp_path, section6=None)
+    (example_dir / "briefing.md").write_text(
+        """## §1. Topic
+
+Explain transient-current trapping as a restrained publication mechanism schematic.
+
+## §3. Binding physics-correctness rules
+
+1. n is trap-energy breadth, not trap density.
+2. Do NOT commit to electron vs hole transport.
+""",
+        encoding="utf-8",
+    )
+    (example_dir / "aesthetic_intent.yaml").write_text(
+        """
+schema: figure-agent.aesthetic-intent.v1
+fixture: review_demo
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: avoid cartoon-like oversized labels and decorative gradients
+must_avoid:
+  - id: toy_diagram
+    pattern: rounded generic blocks and unmodulated flat color
+    severity: MAJOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: semantically correct TikZ lacks print-scale optical refinement
+    recommended_path: ready_for_svg_polish
+""".lstrip(),
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    (example_dir / "build" / "visual_clash.json").write_text(
+        '{"fixture":"review_demo","candidates":[],"total":0}\n',
+        encoding="utf-8",
+    )
+    fresh_time = os.stat(example_dir / "aesthetic_intent.yaml").st_mtime + 1
+    os.utime(png_path, (fresh_time, fresh_time))
+
+    brief = generate_for(example_dir)
+
+    assert "## Aesthetic Intent Calibration" in brief
+    assert "## Reference-free briefing-grounded critique mode" in brief
+    assert "does not waive it" in brief
+    assert "must still cite exact aesthetic intent" in brief
+    assert "anchors and current-artifact evidence" in brief
+    assert brief.index("## Aesthetic Intent Calibration") < brief.index(
+        "## Reference-free briefing-grounded critique mode"
+    )
 
 
 def test_critique_brief_errors_when_png_missing(tmp_path, capsys, monkeypatch):
@@ -1818,30 +1822,6 @@ def test_critique_brief_rejects_malformed_external_vision_review(tmp_path):
         assert "external_vision_review.yaml invalid" in str(exc)
     else:
         raise AssertionError("expected CritiqueBriefError")
-
-
-def test_critique_brief_includes_svg_polish_aesthetic_delta(tmp_path):
-    example_dir = _write_example(tmp_path, section6="- invariant")
-    _write_svg_polish_delta_fixture(example_dir)
-    png_path = example_dir / "build" / "review_demo.png"
-    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
-
-    brief = generate_for(example_dir)
-
-    assert "## SVG Polish Aesthetic Delta" in brief
-    assert "Host LLM MUST compare the before/after polish images" in brief
-    assert "`polish/aesthetic_delta/before.png`" in brief
-    assert "`polish/aesthetic_delta/after.png`" in brief
-    assert "`polish/aesthetic_delta/diff.png`" in brief
-    assert "operation_ids: R001" in brief
-    assert "Did journal polish improve?" in brief
-    assert "Did any scientific semantics change?" in brief
-    assert "schema: figure-agent.critique.v1.17" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.17" in brief
-    assert "svg_polish_delta_audit:" in brief
-    assert "delta_image_audit_log:" in brief
-    assert "aesthetic_gate_audit:" in brief
-    assert "maturity_restraint | visual_hierarchy" in brief
 
 
 def test_critique_brief_includes_paper_wide_aesthetic_context(tmp_path):

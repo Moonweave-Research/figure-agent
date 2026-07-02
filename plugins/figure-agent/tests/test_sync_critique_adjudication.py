@@ -25,6 +25,16 @@ from quality_manifest import (  # noqa: E402
 )
 
 
+@pytest.fixture(autouse=True)
+def _skip_schema_validation(monkeypatch: pytest.MonkeyPatch) -> None:
+    # These tests exercise adjudication SYNC behavior (hash refresh, finding-id
+    # diffs, policy), not critique-schema validation — that has its own suite in
+    # test_critique_schema_validator.py. The helpers write intentionally minimal
+    # frontmatter without a full audit_enumeration block, so no-op the schema
+    # gate to keep these tests decoupled from schema evolution.
+    monkeypatch.setattr(critique_adjudication, "validate_critique_schema", lambda _: None)
+
+
 def _write_repo_fixture(tmp_path: Path) -> tuple[Path, Path]:
     repo = tmp_path / "repo"
     example = repo / "examples" / "demo_fig"
@@ -53,7 +63,7 @@ def _write_fresh_critique(
     *,
     generator_version: str | None = None,
     critique_input_hash: str | None = None,
-    schema: str = "figure-agent.critique.v1",
+    schema: str = "figure-agent.critique.v1.17",
     rubric_version: str = CRITIQUE_RUBRIC_VERSION,
     finding_status: str = "open",
     finding_severity: str | None = None,
@@ -115,7 +125,7 @@ def _write_fresh_critique_with_findings(
     critique = example / "critique.md"
     critique.write_text(
         "---\n"
-        "schema: figure-agent.critique.v1\n"
+        "schema: figure-agent.critique.v1.17\n"
         "fixture: demo_fig\n"
         "generator: critique_brief.py\n"
         f"generator_version: {generator_version}\n"
@@ -208,11 +218,9 @@ def test_sync_adjudication_refreshes_hash_for_fresh_critique(tmp_path: Path) -> 
 
 def test_sync_adjudication_accepts_v1_14_rubric_for_aesthetic_intent_v2(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     repo, example = _write_repo_fixture(tmp_path)
     _write_aesthetic_intent_v2(example)
-    monkeypatch.setattr(critique_adjudication, "validate_critique_schema", lambda _: None)
     critique = _write_fresh_critique(
         repo,
         example,
