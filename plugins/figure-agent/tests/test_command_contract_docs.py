@@ -39,6 +39,20 @@ def test_fig_critique_documents_v1_17_grounded_contract_fields() -> None:
         assert required in doc
 
 
+def test_fig_critique_does_not_document_retired_svg_delta_inputs() -> None:
+    doc = _read("commands/fig_critique.md")
+
+    forbidden_strings = [
+        "optional SVG polish aesthetic delta packs",
+        "optional SVG polish aesthetic delta comparison",
+        "## SVG Polish Aesthetic Delta",
+        "SVG polish delta evidence",
+    ]
+
+    for forbidden in forbidden_strings:
+        assert forbidden not in doc
+
+
 def test_command_docs_do_not_describe_route_detail_as_v1_14_only() -> None:
     docs_by_path = {
         "commands/fig_critique.md": _read("commands/fig_critique.md"),
