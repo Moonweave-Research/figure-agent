@@ -597,6 +597,27 @@ def test_require_accepted_mode_requires_publication_compliance(tmp_path: Path, m
     assert "QUALITY_AUDIT.md does not declare disclosure-needed" not in failures
 
 
+def test_require_accepted_mode_requires_disclosure_for_non_generated_final_artifact(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    fixture = tmp_path / "polishedFinal"
+    _make_passing_accepted_fixture(fixture, monkeypatch)
+    spec = fixture / "spec.yaml"
+    spec.write_text(
+        spec.read_text(encoding="utf-8")
+        + "final_artifact:\n"
+        + "  kind: polished_svg\n"
+        + "  manifest: polish/svg_polish_manifest.yaml\n",
+        encoding="utf-8",
+    )
+    human_attestation.write_attestation(fixture)
+
+    failures = check_example(fixture, require_accepted=True)
+
+    assert "QUALITY_AUDIT.md does not declare disclosure-needed" in failures
+
+
 def test_publication_compliance_failures_preserve_legacy_messages(tmp_path: Path) -> None:
     audit = tmp_path / "QUALITY_AUDIT.md"
     audit.write_text("# Quality Audit\n\nsubmission-safe: false\n", encoding="utf-8")

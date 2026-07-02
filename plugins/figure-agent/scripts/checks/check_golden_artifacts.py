@@ -542,7 +542,19 @@ def publication_compliance_failures(
 
 
 def _requires_final_artifact_disclosure(spec_path: Path) -> bool:
-    return False
+    if not spec_path.exists():
+        return False
+    try:
+        data = _load_spec_mapping(spec_path)
+    except ValueError:
+        return False
+    final_artifact = data.get("final_artifact")
+    if not isinstance(final_artifact, dict):
+        return False
+    kind = final_artifact.get("kind")
+    if kind in {None, "", "generated_export"}:
+        return False
+    return True
 
 
 def _spec_declares_reference_inputs(spec_path: Path) -> bool:
