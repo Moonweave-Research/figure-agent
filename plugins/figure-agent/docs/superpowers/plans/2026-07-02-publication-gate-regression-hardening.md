@@ -174,3 +174,53 @@ Stop condition:
 - Static checks:
   `ruff check` on modified Python entry points passed, `bash -n scripts/compile.sh`
   passed, and `python -m compileall -q scripts mcp tests` passed.
+
+## Current State For Next Agent
+
+This plan is implemented, not pending. Do not relaunch the same OMX team or
+repeat the lane work unless a new regression appears.
+
+Current delivery position:
+
+- The branch is ready for PR/review packaging, subject to any unrelated local
+  dirty files the operator may have in the worktree.
+- Human attestation is now part of both the publication status path and the
+  deterministic golden gate path.
+- Read-only verification no longer creates `HOME` key material and malformed
+  attestation data fails closed as a verdict instead of crashing status.
+- Attestation is bound to the render-relevant source set, including
+  `spec.yaml`, `briefing.md`, style-lock inputs, and the top-level TeX file.
+- Unsupported/manual final artifacts are conservative: they cannot silently
+  make `release_ready=true`, and non-generated final artifacts require explicit
+  publication disclosure.
+- Candidate rollback restores generated exports touched by post-apply export
+  checks before claiming rollback success.
+- Text-free graphics PDFs no longer fail collision or visual-clash extraction
+  merely because `pdftotext` found zero words.
+- `fig-agent plan-check` is portable across plugin-root and external CWD usage.
+- Compile-time layout drift checking is restored for fixtures that have
+  `coordinate_hints.yaml`; it remains skipped for fixtures without reference
+  hints.
+
+Recommended next action:
+
+1. Prepare a PR with a risk-first summary: the change restores trust in
+   `release_ready`/publication signals after attestation, final-artifact,
+   rollback, extraction, plan-check, and layout-drift regressions.
+2. Ask reviewers to focus on policy boundaries rather than syntax: source-set
+   attestation coverage, final-artifact semantics, and whether the restored
+   layout-drift threshold is conservative enough for real reference fixtures.
+3. Before merge, rerun the focused regression suite and the full non-render
+   suite if any code changed after commit `0d0f9cf3`.
+
+Known follow-up candidates, not blockers for this plan:
+
+- Decide product policy for `polished_svg`: either remove it from operator
+  choices entirely or reintroduce it with a first-class provenance/disclosure
+  workflow.
+- Dogfood the restored layout-drift checker on a fixture with real
+  `coordinate_hints.yaml` and reference OCR labels; this implementation
+  restores a hard signal path but intentionally avoids reviving the deleted
+  541-line checker wholesale.
+- If render-system coverage is needed before release, run the render-marked
+  suite separately; this plan's final proof is the non-render regression suite.
