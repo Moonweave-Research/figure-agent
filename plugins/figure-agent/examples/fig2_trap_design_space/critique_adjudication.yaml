@@ -1,9 +1,11 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig2_trap_design_space
-source_critique_hash: sha256:f30e5207c46137eb9a5662bf58b8ad08940a75da6d06ac114f83666b0898146d
+source_critique_hash: sha256:d54cf1e05650059a51ebaf21ce5b8c233e864b1f13f007ab1d5ca0d86abc9105
 decisions:
 - finding_id: C001
   decision: resolved
-  reason: PI/PDMS/PET caption now sits above the conventional cluster and no longer crosses the panel-b x-axis.
+  reason: PI/PDMS/PET caption now sits above the conventional cluster and no longer
+    crosses the panel-b x-axis.
   patch_target: examples/fig2_trap_design_space/fig2_trap_design_space.tex lines 95-96
-  evidence: critique.md finding C001; fig-agent compile fig2_trap_design_space reports no collisions.
+  evidence: critique.md finding C001; fig-agent compile fig2_trap_design_space reports
+    no collisions.
