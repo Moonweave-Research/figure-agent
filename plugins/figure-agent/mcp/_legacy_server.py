@@ -1616,7 +1616,10 @@ def _apply_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
             " Source and generated exports were restored."
             if isinstance(rollback_exports, dict)
             and rollback_exports.get("status") == "success"
-            else " Source was restored; inspect apply_result.post_apply for generated artifact cleanup."
+            else (
+                " Source was restored; inspect apply_result.post_apply for "
+                "generated artifact cleanup."
+            )
         )
         error = _error(
             "unsupported_operation",
@@ -1637,7 +1640,10 @@ def _apply_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
                 " Source and generated exports were restored."
                 if isinstance(rollback_exports, dict)
                 and rollback_exports.get("status") == "success"
-                else " Source was restored; inspect apply_result.post_apply for generated artifact cleanup."
+                else (
+                    " Source was restored; inspect apply_result.post_apply for "
+                    "generated artifact cleanup."
+                )
             )
             error = _error(
                 "unsupported_operation",
