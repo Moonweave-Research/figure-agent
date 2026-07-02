@@ -1,6 +1,6 @@
 # Issue 91 - Layout Drift Gate Dogfood
 
-Status: precondition missing; fixture plan recorded
+Status: real-fixture precondition missing; synthetic CLI coverage added
 
 Type: restored compile gate dogfood, coordinate-hints fixture coverage
 
@@ -28,8 +28,9 @@ gate end to end:
   `if [[ -f "coordinate_hints.yaml" ]]`; therefore current compile runs cannot
   prove label matching, drift reporting, or false-positive behavior.
 
-This means the restored gate is wired, but not dogfooded on real OCR/reference
-hints yet.
+This means the restored gate is wired, and focused tests now prove the
+coordinate-hints path does not skip when hints are present. It is still not
+dogfooded on real OCR/reference hints.
 
 ## Minimal Fixture Plan
 
@@ -57,6 +58,8 @@ Use the smallest real-fixture path before tuning thresholds:
 - [x] Ran the direct checker and confirmed the current skip behavior.
 - [x] Documented why compile cannot prove the drift gate with current fixtures.
 - [x] Recorded the minimal next fixture plan.
+- [x] Added synthetic CLI coverage proving a fixture with `coordinate_hints.yaml`
+      reports matched labels instead of taking the missing-hints skip path.
 - [ ] Dogfood matched/drifted label behavior on real `coordinate_hints.yaml`
       data.
 
@@ -68,4 +71,6 @@ Use the smallest real-fixture path before tuning thresholds:
   -> only `fig1_overview_v2_pair_001_vault/spec.yaml`
 - `uv run python3 scripts/checks/check_layout_drift.py fig1_overview_v2_pair_001_vault --strict`
   -> skipped because `coordinate_hints.yaml` is missing
-
+- `uv run pytest -q tests/test_check_layout_drift.py`
+  -> covers skip behavior, drift warning behavior, and CLI success when a
+     fixture has `coordinate_hints.yaml`

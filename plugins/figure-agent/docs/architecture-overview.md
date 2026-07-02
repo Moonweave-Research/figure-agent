@@ -48,8 +48,8 @@ Layer 4: Compile Gates                 (compile.sh: lint -> lualatex -> checks)
 Layer 5: Export                        (PDF / SVG via dvisvgm / TIFF / PNG)
    |
    v
-Layer 5.5: Final Artifact              (polished-SVG contract;
-                                        optional, opt-in, no hidden SVG editor)
+Layer 5.5: Final Artifact              (external final-artifact handoff;
+                                        no hidden SVG editor)
    |
    v
 Layer 6: Validation Gates              (check_golden_artifacts: basic / accepted)

@@ -54,19 +54,45 @@ def test_plan_consistency_reports_unmapped_role_drift_and_non_main(
     assert ("non_main_fixture", "sandboxed") in findings
 
 
-def test_real_tree_reports_known_plan_drifts() -> None:
-    report = check_plan_consistency.build_report(
-        PLUGIN_ROOT / "examples",
-        PLUGIN_ROOT / "docs" / "paper_figure_map.yaml",
+def test_plan_consistency_reports_missing_and_sandbox_states_from_synthetic_map(
+    tmp_path: Path,
+) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "sandboxed", "sandbox fixture\n")
+    _write_fixture(examples, "superseded", "superseded fixture\n")
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    plan_map.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "figure-agent.paper-figure-map.v1",
+                "plan_doc": "docs/plan.md",
+                "figures": {
+                    "fig1": {
+                        "fixtures": [],
+                        "role": "missing figure",
+                        "status": "missing",
+                    },
+                    "fig2": {
+                        "fixtures": [],
+                        "role": "sandbox figure",
+                        "sandbox": ["sandboxed"],
+                    },
+                },
+                "non_main": {"superseded": ["superseded"]},
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
     )
+    report = check_plan_consistency.build_report(examples, plan_map)
     findings = {
         (finding["code"], finding.get("figure"), finding.get("fixture"), finding.get("state"))
         for finding in report["findings"]
     }
 
-    assert ("planned_figure_missing", "fig2", None, "missing") in findings
-    assert ("non_main_fixture", None, "fig5_actuation_mechanism", "sandbox") in findings
-    assert ("non_main_fixture", None, "fig3_trapping_concept", "superseded") in findings
+    assert ("planned_figure_missing", "fig1", None, "missing") in findings
+    assert ("non_main_fixture", None, "sandboxed", "sandbox") in findings
+    assert ("non_main_fixture", None, "superseded", "superseded") in findings
     assert report["schema"] == "figure-agent.plan-consistency.v1"
 
 
@@ -129,6 +155,5 @@ def test_fig_agent_plan_check_defaults_are_plugin_root_relative(tmp_path: Path) 
 
     assert result.returncode == 0
     assert '"schema": "figure-agent.plan-consistency.v1"' in result.stdout
-    assert '"figure": "fig2"' in result.stdout
-    assert '"fixture": "fig5_actuation_mechanism"' in result.stdout
-    assert '"fixture": "fig3_trapping_concept"' in result.stdout
+    assert str(PLUGIN_ROOT / "docs" / "paper_figure_map.yaml") in result.stdout
+    assert str(PLUGIN_ROOT / "examples") in result.stdout
