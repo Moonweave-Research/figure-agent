@@ -35,6 +35,35 @@ def test_evaluate_drift_flags_position_change() -> None:
     assert results[0].drift is not None and results[0].drift > 0.05
 
 
+def test_evaluate_drift_matches_decorated_and_split_tokens() -> None:
+    hints = {
+        "reference_image_size": [1000, 1000],
+        "text_labels": [
+            {"text": "HV+", "bbox": [100, 100, 140, 120]},
+            {"text": "V", "bbox": [200, 100, 210, 120]},
+            {"text": "active", "bbox": [212, 100, 260, 120]},
+            {"text": "q", "bbox": [300, 100, 310, 120]},
+            {"text": "tr", "bbox": [312, 100, 330, 120]},
+        ],
+    }
+    pdf_words = [
+        _word("HV", 100, 100, 140, 120),
+        _word("V", 200, 100, 210, 120),
+        _word("active", 212, 100, 260, 120),
+        _word("qtr", 300, 100, 330, 120),
+    ]
+
+    results = check_layout_drift.evaluate_drift(
+        ["HV", "Vactive", "qtr"],
+        hints,
+        pdf_words,
+        (1000.0, 1000.0),
+    )
+
+    assert [result.status for result in results] == ["matched", "matched", "matched"]
+    assert all(result.drift is not None and result.drift < 0.05 for result in results)
+
+
 def test_run_check_skips_without_coordinate_hints(tmp_path: Path) -> None:
     fixture = tmp_path / "demo"
     fixture.mkdir()
