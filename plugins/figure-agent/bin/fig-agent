@@ -969,6 +969,12 @@ def _attest(argv: list[str]) -> int:
     return human_attestation.main(["create", name])
 
 
+def _plan_check(argv: list[str]) -> int:
+    import check_plan_consistency
+
+    return check_plan_consistency.main(argv)
+
+
 def _evidence_sync(argv: list[str]) -> int:
     import evidence_sync
 
@@ -1415,6 +1421,8 @@ def main(argv: list[str] | None = None) -> int:
         return _apply_candidate(rest)
     if command == "attest":
         return _attest(rest)
+    if command == "plan-check":
+        return _plan_check(rest)
     if command == "evidence-sync":
         return _evidence_sync(rest)
     if command == "closeout-ready":

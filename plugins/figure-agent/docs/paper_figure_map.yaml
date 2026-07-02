@@ -1,0 +1,24 @@
+schema: figure-agent.paper-figure-map.v1
+plan_doc: docs/superpowers/specs/2026-06-22-sulfur-paper-figure-plan-design.md
+figures:
+  fig1:
+    fixtures: [fig1_overview_v2_pair_001_vault]
+    role: "concept structure sulfur polymer charge trapping idea"
+  fig2:
+    fixtures: []
+    role: "dielectric polarization response epsilon composition P-E loops"
+    status: missing
+  fig3:
+    fixtures: [fig3_resistance_mechanism]
+    role: "cell current trapping resistance mechanism schematic"
+  fig4:
+    fixtures: [fig4_trap_energy_diagram]
+    role: "trap energy landscape shallow deep retention"
+  fig5:
+    fixtures: []
+    role: "cantilever actuation trapped charge bending mechanism"
+    sandbox: [fig5_actuation_mechanism]
+non_main:
+  si: [fig3_floating_clip_protocol]
+  superseded: [fig3_trapping_concept]
+  rescope_pending: [fig2_trap_design_space]
