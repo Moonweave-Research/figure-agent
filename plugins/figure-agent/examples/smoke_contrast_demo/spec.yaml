@@ -1,4 +1,5 @@
 name: smoke_contrast_demo
+visual_clash_cap: 1
 panels:
   - id: A
     caption: contrast smoke fixture

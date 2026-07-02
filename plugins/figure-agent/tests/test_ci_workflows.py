@@ -33,6 +33,8 @@ def test_full_render_workflow_owns_heavy_system_dependencies() -> None:
     assert "texlive-luatex" in workflow
     assert "texlive-fonts-extra" in workflow
     assert "bash scripts/compile.sh" in workflow
+    assert "PYTHONPATH:" in workflow
+    assert "plugins/figure-agent/scripts/checks" in workflow
     assert "scripts/checks/check_visual_clash_budget.py examples" in workflow
     assert "uv run pytest -q" in workflow
 

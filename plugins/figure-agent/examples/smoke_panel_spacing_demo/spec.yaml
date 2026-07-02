@@ -1,4 +1,5 @@
 name: smoke_panel_spacing_demo
+visual_clash_cap: 1
 panels:
   - id: A
     caption: panel spacing smoke fixture

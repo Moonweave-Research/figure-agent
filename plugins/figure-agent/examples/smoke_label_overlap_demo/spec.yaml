@@ -1,4 +1,5 @@
 name: smoke_label_overlap_demo
+visual_clash_cap: 1
 panels:
   - id: A
     caption: label overlap smoke fixture

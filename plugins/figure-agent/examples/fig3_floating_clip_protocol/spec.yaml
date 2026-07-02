@@ -1,6 +1,7 @@
 name: fig3_floating_clip_protocol
 title: "Fig 3 (SI/methods) — Floating-clip protocol: polarity-dependent bending probes locked trapped charge (schematic)"
 style_profile: polymer-paper
+visual_clash_cap: 12
 
 # Physics invariant (briefing §6): polarity-dependent bending is THE novelty — the
 # +V-drive (P3) and -V-drive (P4) Coulomb forces must point in OPPOSITE x-directions

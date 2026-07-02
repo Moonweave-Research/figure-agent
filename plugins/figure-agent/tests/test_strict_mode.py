@@ -28,6 +28,12 @@ GOLDEN_PDF = (
 
 def test_compile_sh_wires_the_physics_checks() -> None:
     compile_sh = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+    # Checker imports are absolute-path stable even after compile.sh cd's into a fixture.
+    assert (
+        'SCRIPT_IMPORT_PATH="${WORKFLOW_DIR}/scripts:${WORKFLOW_DIR}/scripts/checks"'
+        in compile_sh
+    )
+    assert 'export PYTHONPATH="${SCRIPT_IMPORT_PATH}:${PYTHONPATH}"' in compile_sh
     # tex-geometry assertions are STRICT-gated (a reversed arrow is a defect);
     assert "scripts/checks/check_tex_assertions.py" in compile_sh
     # the grounding meta-check is advisory (report-only — never fails a build).

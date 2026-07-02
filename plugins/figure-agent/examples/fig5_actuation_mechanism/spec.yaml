@@ -1,6 +1,7 @@
 name: fig5_actuation_mechanism
 title: "Fig 5 — Floating-clip actuation mechanism (v0.10 validation figure; story not final)"
 style_profile: polymer-paper
+visual_clash_cap: 6
 
 # Physics intent from the research doc (detailed_figure_composition.md, Fig 5(a)
 # "Coulomb Repulsion"): the Coulomb force on the negative trapped charge points

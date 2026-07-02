@@ -30,7 +30,11 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from check_visual_clash import extract_pdf_words_and_page
+
+CHECKS_DIR = Path(__file__).resolve().parent / "checks"
+sys.path.insert(0, str(CHECKS_DIR))
+
+from check_visual_clash import extract_pdf_words_and_page  # noqa: E402
 
 SCHEMA = "figure-agent.semantic-assertions.v1"
 RELATIONS = ("above", "below", "left_of", "right_of")

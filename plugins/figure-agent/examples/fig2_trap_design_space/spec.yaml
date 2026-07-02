@@ -1,6 +1,7 @@
 name: fig2_trap_design_space
 title: "Fig 2 — Composition-tunable charge-trap design space beyond canonical dielectrics (schematic)"
 style_profile: polymer-paper
+visual_clash_cap: 10
 
 # Physics invariants (briefing §6) that are label-relational in Panel B (the design
 # space, x = trap-distribution breadth n, y = retention/resistivity ρ):

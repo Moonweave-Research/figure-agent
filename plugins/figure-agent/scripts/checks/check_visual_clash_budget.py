@@ -9,8 +9,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import fixture_identity
-from inputs import parse_spec
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(SCRIPTS_DIR))
+
+import fixture_identity  # noqa: E402
+from inputs import parse_spec  # noqa: E402
 
 SUMMARY_SCHEMA = "figure-agent.warning-budget.v1"
 

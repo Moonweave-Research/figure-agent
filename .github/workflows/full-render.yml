@@ -22,6 +22,8 @@ jobs:
     defaults:
       run:
         working-directory: plugins/figure-agent
+    env:
+      PYTHONPATH: ${{ github.workspace }}/plugins/figure-agent/scripts:${{ github.workspace }}/plugins/figure-agent/scripts/checks
     steps:
       - uses: actions/checkout@v5
 

@@ -9,6 +9,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKFLOW_DIR="$(dirname "$SCRIPT_DIR")"
 UV_RUN=(uv run --project "$WORKFLOW_DIR")
+SCRIPT_IMPORT_PATH="${WORKFLOW_DIR}/scripts:${WORKFLOW_DIR}/scripts/checks"
+if [[ -n "${PYTHONPATH:-}" ]]; then
+  export PYTHONPATH="${SCRIPT_IMPORT_PATH}:${PYTHONPATH}"
+else
+  export PYTHONPATH="$SCRIPT_IMPORT_PATH"
+fi
 export TEXINPUTS="${WORKFLOW_DIR}/styles/:${TEXINPUTS:-}"
 
 if [[ $# -lt 1 ]]; then

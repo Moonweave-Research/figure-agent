@@ -18,8 +18,11 @@ import time
 from pathlib import Path
 from typing import Any
 
-from check_visual_clash import extract_pdf_words_and_page
-from detector_log import log_detector_run
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(SCRIPTS_DIR))
+
+from check_visual_clash import extract_pdf_words_and_page  # noqa: E402
+from detector_log import log_detector_run  # noqa: E402
 
 SCHEMA = "figure-agent.label-hyphenation.v1"
 
