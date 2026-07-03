@@ -283,7 +283,7 @@ def _summary(
     patch_handoff: Mapping[str, Any] | None = None,
     release_blockers: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    payload = {
+    payload: dict[str, Any] = {
         "schema": SCHEMA,
         "action": action,
         "reason": reason,
