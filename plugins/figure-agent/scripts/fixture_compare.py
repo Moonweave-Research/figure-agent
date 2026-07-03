@@ -138,6 +138,16 @@ def _audit_counts(example_dir: Path) -> dict[str, Any]:
 
 
 def _visual_metrics(example_dir: Path) -> dict[str, Any]:
+    payload = _load_json(example_dir / "build" / "visual_quality_metrics.json")
+    if payload is not None:
+        return {
+            "state": payload.get("state", "unknown"),
+            "schema": payload.get("schema"),
+            "image": payload.get("image", {}),
+            "scaffold_load": payload.get("scaffold_load", {}),
+            "crop_audit": payload.get("crop_audit", {}),
+            "print_scale": payload.get("print_scale", {}),
+        }
     payload = _load_json(example_dir / "build" / "reference_aesthetic_metrics.json")
     if payload is None:
         return {"state": "missing"}

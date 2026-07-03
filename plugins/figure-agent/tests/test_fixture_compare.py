@@ -64,6 +64,20 @@ style_profile: polymer-default
         json.dumps({"fixture": name, "total": 0, "candidates": []}) + "\n",
         encoding="utf-8",
     )
+    (build / "visual_quality_metrics.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.fixture-visual-quality-metrics.v1",
+                "state": "measured",
+                "image": {"ink_density": 0.12, "edge_density": 0.03},
+                "scaffold_load": {"score": 4, "level": "low"},
+                "crop_audit": {"required_count": 2},
+                "print_scale": {"state": "present"},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     if with_critique:
         (fixture / "critique.md").write_text("critique\n", encoding="utf-8")
     old = time.time() - 100
@@ -113,6 +127,14 @@ def test_compare_packet_is_read_only_and_blocks_on_missing_critique(
     assert packet["fixtures"][0]["audit_counts"]["visual_clash"] == {
         "present": True,
         "candidate_count": 0,
+    }
+    assert packet["fixtures"][0]["visual_metrics"] == {
+        "state": "measured",
+        "schema": "figure-agent.fixture-visual-quality-metrics.v1",
+        "image": {"ink_density": 0.12, "edge_density": 0.03},
+        "scaffold_load": {"score": 4, "level": "low"},
+        "crop_audit": {"required_count": 2},
+        "print_scale": {"state": "present"},
     }
     assert _tree(workspace) == before
 
