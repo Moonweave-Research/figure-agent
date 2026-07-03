@@ -782,8 +782,11 @@
 % the Delta-E_t vertical caliper while staying off the deep escape curve.
 % v4 candidate: keep the label above the deep-escape polyline's bbox while the
 % mobility-edge text and red escape curve move out of the same optical lane.
+% v5d redraw slice 2: restore the shallow label to the trap-line cluster instead
+% of the far-right caliper lane. The deep escape curve is re-routed below to
+% keep the label, arrow, and Delta-E_t annotation in separate optical lanes.
       text=cBlue!80!black, anchor=west, fill=white, fill opacity=0.90,
-      text opacity=1, inner xsep=0.8pt, inner ysep=0.35pt] at (12.40, 7.58) {shallow};
+      text opacity=1, inner xsep=0.8pt, inner ysep=0.35pt] at (12.15, 7.58) {shallow};
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
 % Panel-loop iter L12: deep tone !75 → !80!black (parity).
       text=cRed!80!black, anchor=west] at (11.60, 6.02) {deep};
@@ -809,8 +812,10 @@
 % activation-energy weight-asymmetry encoding (thin = hard escape) per design.
 % v4 candidate: pull the deep escape terminus slightly left/down so it reads
 % as a difficult escape path without entering the shallow label's optical area.
+% v5d redraw slice 2: keep the hard-escape curve in the center lane, left of the
+% shallow label, so the blue label no longer has to occupy the Delta-E_t lane.
 \draw[-{Stealth[length=3.2pt,width=2.4pt]}, dashed, cRed!70!black,
-      line width=0.35pt] (11.10, 6.20) .. controls (11.08, 6.58) and (11.58, 6.78) .. (11.62, 7.74);
+      line width=0.35pt] (11.10, 6.20) .. controls (11.02, 6.60) and (11.30, 6.88) .. (11.40, 7.72);
 
 % Trap depth annotation: E_C → deep band mid (encodes depth scale, no
 % "dominate" overstatement).

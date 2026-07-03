@@ -34,7 +34,9 @@ v5d is a redraw lane, not an acceptance lane:
   `export_state=MISSING`;
 - redraw slice 1 has modified the figure composition by removing the Row 1 to
   Row 2 bracket/up-arrow connector scaffold;
-- slice 1 keeps v5c as fallback and should be treated as an incremental
+- redraw slice 2 has separated the Panel C `shallow` label, red escape curve,
+  and Delta-E_t caliper lanes;
+- these slices keep v5c as fallback and should be treated as incremental
   editorial cleanup, not a promotion-quality redraw by itself.
 
 ## Redraw Slice 1 -- Connector Typography
@@ -59,8 +61,33 @@ Interpretation:
 
 - this improves the row transition by removing a tool-like construction layer;
 - it does not yet prove v5d is visually better than v5c overall;
-- the next slice should target a larger perceptual quality lever, such as Panel
-  C label hierarchy, Row 2 apparatus density, or print-scale crop review.
+- the next slice should target a larger perceptual quality lever, such as Row 2
+  apparatus density, crop review, or global panel hierarchy.
+
+## Redraw Slice 2 -- Panel C Right-Lane Separation
+
+Change:
+
+- moved `shallow` out of the far-right Delta-E_t caliper lane and into a
+  clearer mid-right label lane;
+- re-routed the red deep-escape curve so it stays left of the blue label;
+- preserved the mobility-edge reference, shallow/deep semantics, and the
+  vertical Delta-E_t scale.
+
+Validation:
+
+- `./bin/fig-agent compile fig1_overview_v5d_redraw_001_vault` exits `0`;
+- text-boundary detector reports `0` candidates;
+- label-path detector reports `0` candidates;
+- visual metrics report `visual_clash=39`, `undeclared_geometry=91`,
+  `scaffold_load.score=130`, `ink_density=0.105884`,
+  `edge_density=0.016174`.
+
+Interpretation:
+
+- this directly addresses the prior top-right Panel C crowding concern around
+  `mobility edge`, `shallow`, and escape arrows;
+- it is a local readability improvement, not yet a full aesthetic reset.
 
 ## Comparison Requirements
 
