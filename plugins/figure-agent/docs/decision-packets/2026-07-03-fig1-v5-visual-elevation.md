@@ -104,10 +104,70 @@ grounded critique/adjudication pass is written.
 
 ## Recommended Next Step
 
-Continue from `fig1_overview_v5c_quiet_001_vault`. The next useful iteration should focus on
-formal review and art-direction choice rather than another blind micro-polish pass:
+Continue to use `fig1_overview_v5c_quiet_001_vault` as the current best v5
+fallback candidate, but do not treat it as the final Figure 1 art direction.
+The next useful iteration is a deliberate v5d redraw lane, not another blind
+micro-polish pass on v5c.
 
-- run fresh `/fig_critique fig1_overview_v5c_quiet_001_vault` before any candidate acceptance step
-- compare v5c against v5b at full render and print-scale proxy
-- decide whether the next step is minor TikZ polish or a deliberate ground-up redraw
-- if the convergence cue is judged too weak, fall back to v5b
+- keep v5c as the current fallback/current candidate;
+- open `fig1_overview_v5d_redraw_001_vault` as a non-accepted source-side lane;
+- require a fresh `/fig_critique fig1_overview_v5c_quiet_001_vault` before any
+  acceptance or release step;
+- compare any v5d redraw against v5c and v5b before promotion;
+- fall back to v5b only if the v5c convergence cue is judged too quiet.
+
+## P0 Decision Update
+
+Date: 2026-07-03
+
+Decision: start a v5d ground-up redraw candidate lane while preserving v5c as
+the current fallback. Do not accept, golden-promote, or release any v5 lane yet.
+
+Evidence:
+
+- `compare-fixtures v5b v5c --baseline v4` reports `needs_human_critique` for
+  both candidates because fresh critique is missing.
+- v5b visual metrics: ink density `0.106532`, edge density `0.016345`,
+  visual-clash candidates `39`, undeclared-geometry candidates `96`, scaffold
+  load `high` with score `240`.
+- v5c visual metrics: ink density `0.105872`, edge density `0.016187`,
+  visual-clash candidates `39`, undeclared-geometry candidates `93`, scaffold
+  load `high` with score `237`.
+- v5c is therefore measurably a little lighter than v5b, but not enough to
+  justify calling the figure final.
+- `fig-agent queue --mode review` classifies v5c's current operator bucket as
+  `human_critique_blocker`, not `hard_publication_blocker`; the immediate block
+  is critique freshness, while acceptance/release is a later protected boundary.
+
+Stop condition for this packet:
+
+- v5c remains the current non-accepted fallback;
+- v5d may be created as a source-side fork;
+- no release, golden, attestation, or accepted state is mutated by this
+  decision.
+
+## v5d Bootstrap Result
+
+Date: 2026-07-03
+
+Created fixture: `examples/fig1_overview_v5d_redraw_001_vault`.
+
+Bootstrap evidence:
+
+- created with `fig-agent fork-fixture fig1_overview_v5c_quiet_001_vault
+  fig1_overview_v5d_redraw_001_vault --reason "ground-up editorial redraw
+  candidate after v5b/v5c comparison"`;
+- stale `build/` and `exports/` artifacts were not copied;
+- reference context was explicitly relinked to the same tracked reference pack
+  used by v5b/v5c;
+- `fig-agent compile fig1_overview_v5d_redraw_001_vault` exits `0`;
+- post-compile status: `render_state=FRESH`, `critique_state=MISSING`,
+  `export_state=MISSING`, `acceptance_state=NOT_DECLARED`;
+- advisory visual metrics currently match v5c because the redraw content has
+  not been changed yet: ink density `0.105872`, edge density `0.016187`,
+  visual-clash candidates `39`, undeclared-geometry candidates `93`;
+- next safe command is `/fig_critique fig1_overview_v5d_redraw_001_vault`.
+
+Interpretation: v5d is now a working redraw lane, but not yet an improved
+redraw. The next implementation slice must change the actual figure composition
+before any comparison can claim visual improvement.

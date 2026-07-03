@@ -1,0 +1,51 @@
+{
+  "acceptance_state": "NOT_DECLARED",
+  "copied_entries": [
+    "HANDOFF_v8.7.md",
+    "aesthetic_intent.yaml",
+    "authoring_contract.md",
+    "authoring_plan.md",
+    "benchmark_contract.yaml",
+    "briefing.md",
+    "candidate_plan.md",
+    "caption.md",
+    "coordinate_hints.yaml",
+    "design.md",
+    "fig1_overview_v5d_redraw_001_vault.tex",
+    "iteration_prompt_template.md",
+    "panel_goals.md",
+    "spec.yaml",
+    "subregion_iteration_log.md",
+    "theory_guard.md"
+  ],
+  "created_at": "2026-07-03T12:29:04+00:00",
+  "dry_run": false,
+  "mutation_boundary": "source_read_only_target_source_files_only",
+  "reason": "ground-up editorial redraw candidate after v5b/v5c comparison",
+  "rewritten_files": [
+    "HANDOFF_v8.7.md",
+    "aesthetic_intent.yaml",
+    "authoring_contract.md",
+    "authoring_plan.md",
+    "benchmark_contract.yaml",
+    "briefing.md",
+    "candidate_plan.md",
+    "caption.md",
+    "fig1_overview_v5d_redraw_001_vault.tex",
+    "iteration_prompt_template.md",
+    "panel_goals.md",
+    "spec.yaml",
+    "subregion_iteration_log.md",
+    "theory_guard.md"
+  ],
+  "schema": "figure-agent.fixture-fork.v1",
+  "skipped_generated_or_state_entries": [
+    "build",
+    "exports"
+  ],
+  "skipped_symlink_entries": [
+    "reference"
+  ],
+  "source_fixture": "fig1_overview_v5c_quiet_001_vault",
+  "target_fixture": "fig1_overview_v5d_redraw_001_vault"
+}
