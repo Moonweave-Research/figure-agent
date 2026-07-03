@@ -1,9 +1,12 @@
 # figure-agent v0.10 — Convention/Context Spine
 
 Status: direction approved 2026-06-20 via `/keelplane` adversarial judgment
-(verdict STANDS). **Rev 3 (2026-06-20):** two self-review passes folded in
-(§9). Winner: **direction D (convention/context engine)** as a hybrid grafting
-A (substrate), C (demote-don't-delete), B (frozen advisory). Target: 0.10.x.
+(verdict STANDS). **Rev 4 (2026-07-03):** refreshed against current code truth:
+semantic assertion tolerance/`indeterminate` and the compile-time convention
+receipt substrate now exist; remaining v0.10 work is surfacing that evidence and
+proving any new convention-verification primitive before building it. Winner:
+**direction D (convention/context engine)** as a hybrid grafting A (substrate),
+C (demote-don't-delete), B (frozen advisory). Target: 0.10.x.
 
 ---
 
@@ -29,10 +32,11 @@ identity tracks value. The trust-boundary tenets are kept (audit 18-30% + 2026
 SOTA; B's counter-number is a missing artifact — §1, §5).
 
 **Honest scope caveat:** the *demonstrated* value of this layer so far is
-INJECTION (surfacing conventions into the author's context), not mechanical
-ENFORCEMENT. Enforcement of the real conventions (orientation, colour) is new,
-non-trivial, partly-exploratory work that does not exist yet (§3). The identity
-change is adopted **provisionally**, gated on the §5 measurement.
+INJECTION (surfacing conventions into the author's context and now into a build
+receipt), not mechanical ENFORCEMENT. Enforcement of the real catalog conventions
+(orientation, colour) is new, non-trivial, partly-exploratory work that does not
+exist yet (§3). The identity change is adopted **provisionally**, gated on the §5
+measurement.
 
 ---
 
@@ -89,16 +93,16 @@ of the existing suite (demote, prune on telemetry).
   binding). **Neither is a text-anchor relation**, so `semantic_assertions` cannot
   verify them; they need **new spine primitives** (§4 1b) that do not exist yet.
 
-**Tolerance (resolves §9 R3).** `semantic_assertions` currently uses a strict
-centre inequality with no band, so a near-tie can flip between local-native and
-Docker renders. v0.10 adds a **tolerance band + `indeterminate` verdict**: when the
-margin is below ε, report `indeterminate` instead of PASS/WARN. This is what makes
-relational enforcement genuinely env-robust (§5), and it is a small improvement to
-the already-shipped checker.
+**Tolerance (resolves §9 R3; implemented).** `semantic_assertions.py` now has a
+default tolerance band and per-assertion `tolerance_pt`: when the relation margin
+is below ε, it reports `indeterminate` instead of PASS/WARN. This keeps
+text-anchor relational enforcement from pretending a near-tie is stable across
+local-native and Docker renders (§5).
 
 **Spine components:** durable memory (catalogs); propagation/injection
-(`authoring_context_pack.py` — *the demonstrated-valuable part*); assertions
-(`semantic_assertions.py`, text-relational, gaining the tolerance band);
+(`authoring_context_pack.py` — *the demonstrated-valuable part*); compile-time
+convention receipts (`convention_receipt.py` via `compile.sh`, report-only);
+assertions (`semantic_assertions.py`, text-relational, with tolerance band);
 convention-verification primitives (NEW, §4 1b — orientation, colour).
 
 **Detectors:** demoted to supporting report-only guardrails; candidate/quality/
@@ -138,10 +142,11 @@ which fire on real figures (deletion only after that evidence).
 
 ### Phase 1 — spine slice
 
-- **1a — Injection receipt (buildable now; no new detection; does not need 0c).**
-  At compile time emit a receipt listing which `use_as_constraint` rules were
-  injected, each with its source quote — so the author sees, on every figure,
-  "cantilever = vertical (clip on top); source: …". This is the part that
+- **1a — Injection receipt (implemented; no new detection; does not need 0c).**
+  At compile time `scripts/compile.sh` invokes `convention_receipt.py --write` to
+  emit `build/convention_receipt.{json,md}` listing which `use_as_constraint`
+  rules were injected, each with its source quote — so the author sees, on every
+  figure, "cantilever = vertical (clip on top); source: …". This is the part that
   demonstrably closed the cantilever bias. Report-only.
 - **1b — Mechanical convention verification (NEW spine primitives; later; partly
   exploratory).** Orientation primitive (read the cantilever/beam path orientation
@@ -170,8 +175,9 @@ history rewrite in v0.10.
 **Verification gates:** 0a LICENSE present (own-code scope), repo stays private;
 0b main 0-behind + CI green + no WIP landed unreviewed; 0c pinned env reproduces
 the committed golden geometry + `doctor` flags drift; 0d one JSONL record per
-checker run; 1a receipt lists each injected rule + source quote; 1b paired
-hold/violate fixtures per primitive, tolerant to local-vs-Docker.
+checker run; 1a receipt lists each injected rule + source quote and is surfaced in
+operator status/queue evidence; 1b paired hold/violate fixtures per primitive,
+tolerant to local-vs-Docker.
 
 **Measurement — the direction-deciding signal (redesigned, resolves §9 R2).**
 Naïvely measuring "did figure #2's cantilever come out vertical" is confounded by
@@ -217,10 +223,10 @@ clears its gate.
 
 ## 7. Implementation plan (smallest first; honest dependencies)
 
-1. **`semantic_assertions` tolerance band + `indeterminate`** — tiny, improves the
-   shipped checker, prerequisite for env-robust enforcement (§3 R3).
-2. **1a injection receipt** — buildable now from `project_rule_catalog`; no new
-   detection; does not need 0c; the cheapest spine proof + the measurement source.
+1. **`semantic_assertions` tolerance band + `indeterminate` — DONE.** Keep it
+   covered by regression tests; do not re-open it as new substrate work.
+2. **1a injection receipt — DONE as build artifacts.** Remaining work is
+   operator surfacing/status evidence, not rebuilding receipt generation.
 3. **0a LICENSE (MIT, private-scoped)** + record the public-exposure/history-scrub
    decision as out of scope.
 4. **0d logging helper** — additive; demote/prune evidence.
@@ -228,12 +234,16 @@ clears its gate.
    Linux font nondeterminism; entails regenerating goldens — R4); golden regression
    only.
 6. **0b reviewed-by-area merge to main** — after substrate green + scrub decision.
-7. **1b orientation primitive** (then colour, exploratory) — only if 1a clears its
-   gate.
+7. **1b orientation primitive** — only after a declaration-driven feasibility
+   proof shows the geometry can be read reliably from authored source/render
+   evidence. **Colour binding remains exploratory** and falls back to
+   injection-only if the label-to-nearby-shape sampling model is fragile.
 
-Do NOT: build 1b before 1a clears its gate; conflate "add LICENSE" with "go
-public"; blanket-merge unreviewed; treat 0c "render twice" as reproducibility;
-claim `semantic_assertions` verifies the catalog conventions; cite `0.981`.
+Do NOT: rebuild the tolerance band or receipt generator as if absent; build 1b
+before receipt evidence is surfaced and feasibility-proven; conflate "add
+LICENSE" with "go public"; blanket-merge unreviewed; treat 0c "render twice" as
+reproducibility; claim `semantic_assertions` verifies the catalog conventions;
+cite `0.981`.
 
 ---
 
@@ -258,6 +268,13 @@ macOS-native goldens → known limitation, regenerate in pinned env. R5 spine-vs
 suite line was fuzzy → sharp criterion (declaration-driven + report-only + tolerant
 = spine; generic = suite, frozen). R6 colour primitive under-specified/fragile →
 marked exploratory, may be infeasible, falls back to injection-only.
+
+**Rev 3 → rev 4 (current-code refresh):** tolerance/`indeterminate` and 1a
+convention receipt are no longer future tasks. `compile.sh` writes the receipt
+opportunistically during compile, and tests cover the receipt payload plus
+semantic near-tie behavior. Remaining work is evidence surfacing in status/queue
+outputs and feasibility-gated convention primitives, not generic detector growth
+or autonomous taste/mutation.
 
 **Residual known limitations (accepted):** R4 golden migration cost; R6 colour
 primitive feasibility; the throughput thesis remains N-small until K≥2-3 figures.
