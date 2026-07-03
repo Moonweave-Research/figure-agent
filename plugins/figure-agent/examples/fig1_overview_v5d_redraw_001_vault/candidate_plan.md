@@ -140,6 +140,48 @@ Interpretation:
   reading path;
 - it is still a local polish pass, not enough by itself to promote v5d.
 
+## Redraw Slice 5 -- Panel F qtr Notation Probe
+
+Attempted but not landed:
+
+- tested replacing the Panel F `$q_{tr}$` label with longer roman-subscript
+  forms to improve print-scale readability;
+- the longer label did not improve the crop-level read and triggered a layout
+  drift warning for the `qtr` reference lane;
+- the attempted source edit was reverted, and no commit was made for this
+  probe.
+
+Interpretation:
+
+- Panel F notation readability remains a candidate concern, but a longer inline
+  math label is not the safe next lever;
+- any future Panel F work should first decide whether to keep `q_{tr}`, change
+  the semantic notation globally, or move the label into a dedicated legend
+  lane rather than stretching the current local label.
+
+## Current Gate -- Host Vision Critique Required
+
+Current status after Slice 4:
+
+- `render_state=FRESH`;
+- `critique_state=MISSING`;
+- `export_state=MISSING`;
+- first blocker is `critique_missing`;
+- safe next command from status is
+  `/fig_critique fig1_overview_v5d_redraw_001_vault`.
+
+The generated critique brief for the current render is schema
+`figure-agent.critique.v1.17` with critique input hash
+`sha256:7887edcc6606fa885befabc9532a0407f87d377a75556640cecf949840ff6700`.
+It requires full-render review, high-zoom crop review, print-scale review, and
+complete accounting of 38 visual-clash candidates plus 91 undeclared-geometry
+candidates before `critique.md` can be treated as valid.
+
+Do not hand-write a shortcut critique or promote/export this fixture before
+that host vision critique exists. The local polish pass has reached the point
+where further edits should be driven by grounded critique findings, not by
+one-off taste adjustments.
+
 ## Comparison Requirements
 
 Before promotion, v5d must be compared against:
