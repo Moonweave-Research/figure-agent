@@ -9,6 +9,7 @@ Implementation update:
 - 2026-07-03: P2 initial `critique-scaffold` CLI shipped in commit `b6c4b661`.
 - 2026-07-03: P3 initial `fork-fixture` CLI shipped in commit `20bf44fe`.
 - 2026-07-03: P4 initial `visual-metrics` CLI shipped in commit `b01f12c3`.
+- 2026-07-03: P5 initial queue operator-report buckets shipped in commit `41080dd2`.
 
 ## Purpose
 
@@ -271,6 +272,36 @@ Verification:
 - `fig-agent queue --json` keeps existing blockers stable;
 - new fields are additive;
 - no existing release gate silently weakens.
+
+Initial shipped behavior:
+
+- each queue row may now include `operator_report_bucket`;
+- queue `summary` includes `by_operator_report_bucket`;
+- `bottleneck_report` includes `by_operator_report_bucket` and
+  `operator_report_buckets`;
+- command-plan item shapes stay unchanged so executable/blocked automation
+  contracts remain stable.
+
+Buckets:
+
+- `hard_publication_blocker`;
+- `human_critique_blocker`;
+- `reproducibility_blocker`;
+- `visual_quality_improvement_opportunity`;
+- `optional_editorial_polish`;
+- `deferred_redraw_decision`.
+
+Current v5c smoke result:
+
+```bash
+./bin/fig-agent queue --mode review --goal "P5 operator report smoke" \
+  fig1_overview_v5c_quiet_001_vault --json
+```
+
+The row reports `operator_report_bucket: human_critique_blocker`. This is
+intentional: the row also carries release-blocker context, but the current
+operator action is a missing/freshness critique boundary, so it should not be
+misreported as the publication blocker that comes later.
 
 ## Execution Order
 
