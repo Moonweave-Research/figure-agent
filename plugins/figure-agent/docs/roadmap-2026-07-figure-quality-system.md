@@ -8,6 +8,7 @@ Implementation update:
 - 2026-07-03: P1 initial `compare-fixtures` CLI shipped in commit `757acc2d`.
 - 2026-07-03: P2 initial `critique-scaffold` CLI shipped in commit `b6c4b661`.
 - 2026-07-03: P3 initial `fork-fixture` CLI shipped in commit `20bf44fe`.
+- 2026-07-03: P4 initial `visual-metrics` CLI shipped in commit `b01f12c3`.
 
 ## Purpose
 
@@ -407,6 +408,35 @@ Deliverable:
 Stop:
 
 - metrics are stable, explainable, and advisory.
+
+Initial shipped interface:
+
+```bash
+./bin/fig-agent visual-metrics <fixture> --json
+./bin/fig-agent visual-metrics <fixture> --no-write --json
+```
+
+The command reads `build/<fixture>.png`, existing detector outputs, and
+`build/audit_crops/manifest.json`, then reports image density, edge density,
+quantized color count, detector candidate counts, required crop counts, and
+print-scale crop evidence. It writes only
+`build/visual_quality_metrics.json` unless `--no-write` is supplied and reports
+`policy: advisory_only`; it never changes acceptance, publication readiness, or
+golden state.
+
+Current v5c smoke result:
+
+- fixture: `fig1_overview_v5c_quiet_001_vault`;
+- image: `4272 x 2897`, ink density `0.105872`, edge density `0.016187`;
+- detectors: `39` visual-clash candidates, `93` undeclared-geometry candidates,
+  `0` text-boundary candidates, `0` label-path candidates;
+- crops: `105` required crop ids with `print_178mm` and `print_thumbnail`
+  present;
+- scaffold load: `high` with score `237`.
+
+Interpretation: v5c has useful print-scale evidence and no current text/path
+proximity findings, but the detector/crop burden is still high enough that
+human critique and editorial simplification remain live concerns.
 
 ## Risks
 
