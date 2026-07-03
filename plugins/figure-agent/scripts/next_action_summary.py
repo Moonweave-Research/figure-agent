@@ -346,7 +346,9 @@ def _release_blocker_from_entry(entry: Mapping[str, Any]) -> dict[str, Any] | No
         "blocks_release": True,
         "reason": _string(entry.get("message"), "release requires explicit human closure"),
         "safe_command": None,
-        "suggested_command": entry.get("next_command") if isinstance(entry.get("next_command"), str) else None,
+        "suggested_command": (
+            entry.get("next_command") if isinstance(entry.get("next_command"), str) else None
+        ),
     }
 
 

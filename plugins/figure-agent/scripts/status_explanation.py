@@ -157,7 +157,10 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
         adjudication in {"MISSING", "STALE", "INVALID"},
         code=f"adjudication_{str(adjudication).lower()}",
         category=FIXTURE_FRESHNESS,
-        message="critique_adjudication.yaml is missing, stale, or invalid; scaffold adjudication before review closure.",
+        message=(
+            "critique_adjudication.yaml is missing, stale, or invalid; "
+            "scaffold adjudication before review closure."
+        ),
         next_command=_command(name, "/fig_adjudicate"),
     )
     _append_if(
