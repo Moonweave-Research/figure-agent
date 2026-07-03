@@ -3,6 +3,11 @@
 Date: 2026-07-03
 Status: execution roadmap after fig1 v5 visual dogfood
 
+Implementation update:
+
+- 2026-07-03: P1 initial `compare-fixtures` CLI shipped in commit `757acc2d`.
+- 2026-07-03: P2 initial `critique-scaffold` CLI shipped in commit `b6c4b661`.
+
 ## Purpose
 
 This document turns the current Figure 1 quality problem into a system roadmap.
@@ -327,6 +332,16 @@ Stop:
 
 - no mutation; stale evidence blocks recommendation; tests pass.
 
+Initial shipped interface:
+
+```bash
+./bin/fig-agent compare-fixtures <candidate-a> <candidate-b> --baseline <baseline> --json
+```
+
+The command is read-only, aggregates status/artifact hashes/audit counts, and
+returns `blocked_stale_evidence`, `needs_human_critique`, or `candidate_tie`
+without declaring an automated aesthetic winner.
+
 ### Work Packet C: critique-scaffold
 
 Owner: implementation agent.
@@ -340,6 +355,17 @@ Deliverable:
 Stop:
 
 - host/human still owns critique decisions.
+
+Initial shipped interface:
+
+```bash
+./bin/fig-agent critique-scaffold <fixture> --json
+./bin/fig-agent critique-scaffold <fixture> --no-write --json
+```
+
+The command requires fresh render state, writes only
+`build/critique_scaffold.md` unless `--no-write` is supplied, and explicitly
+forbids `critique.md`, human attestation, or accepted/golden-state mutation.
 
 ### Work Packet D: fork-fixture
 
