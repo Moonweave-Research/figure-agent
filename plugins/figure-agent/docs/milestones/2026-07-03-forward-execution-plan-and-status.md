@@ -13,12 +13,14 @@ but `.omx/` is intentionally not tracked by git.
 
 ## Current Result
 
-P0 and P1 are complete.
+P0, P1, and the first P2 candidate-lane slice are complete.
 
 - P0 unified the executable next-action surface for `status`, `drive`, and
   `queue`.
 - P1 refreshed operator-facing docs so implemented v0.10 substrate is not
   described as future work.
+- P2 created `fig1_overview_v3_pair_001_vault` as a non-golden candidate lane
+  with a restrained Panel C readability patch and explicit human boundary.
 - The fig1 accepted/golden fixture now reports `run_adjudicate` as the
   executable workflow step while preserving the human-only release blockers
   separately.
@@ -54,13 +56,36 @@ Expected smoke result:
 - fig1 queue row `release_blocking_source == "export_tracked_golden"`
 - queue has 13 rows and 0 errors at the current baseline
 
+## Current P2 Evidence
+
+The v3 candidate lane is intentionally not accepted and not golden.
+
+From `plugins/figure-agent`:
+
+```bash
+./bin/fig-agent compile fig1_overview_v3_pair_001_vault
+./bin/fig-agent status fig1_overview_v3_pair_001_vault --json
+./bin/fig-agent drive fig1_overview_v3_pair_001_vault --mode review --goal fig1-v3-candidate --dry-run --json
+./bin/fig-agent queue --mode review --goal fig1-v3-candidate --json
+uv run pytest tests/test_style_benchmark_pack_loader.py tests/test_style_benchmark_comparison.py tests/test_human_decision_record_examples.py tests/test_fig_queue.py
+```
+
+Expected smoke result:
+
+- v3 render is fresh after compile
+- v3 next executable action is `run_critique`
+- v3 style benchmark pack and comparison are present
+- v3 design direction state is ready for human choice
+- label-path proximity and text-boundary checks report 0 candidates after
+  compile
+
 ## Remaining Plan
 
 ### P2 - Fig1 Overview v3 Candidate Lane
 
-Create a non-golden candidate fixture, likely
-`examples/fig1_overview_v3_pair_001_vault/`, and keep the accepted v2 fixture as
-the benchmark/reference.
+First slice complete: `examples/fig1_overview_v3_pair_001_vault/` exists as a
+non-golden candidate fixture, and the accepted v2 fixture remains the
+benchmark/reference.
 
 Allowed directions:
 
@@ -72,11 +97,16 @@ Allowed directions:
 
 Required outputs:
 
-- compile success
-- status/drive smoke
-- style benchmark packet
-- design decision packet
-- explicit human choice boundary before acceptance or golden roll-forward
+- compile success: complete
+- status/drive smoke: complete
+- style benchmark packet: complete
+- design decision packet: complete
+- explicit human choice boundary before acceptance or golden roll-forward:
+  complete
+
+Remaining P2 work is visual review and comparison, not protected state mutation.
+Do not accept v3, copy v3 over v2, export it as golden, or hand-edit generated
+artifacts without explicit human approval.
 
 ### P3 - Mechanical Queue Execution
 

@@ -1,0 +1,125 @@
+{
+  "schema": "figure-agent.style-benchmark-comparison-packet.v1",
+  "fixture": "fig1_overview_v3_pair_001_vault",
+  "source_style_benchmark_pack": "docs/style-benchmark-packs/2026-06-30-wave-c/fig1_overview_v3_pair_001_vault.json",
+  "source_human_decision_record": "docs/decision-records/2026-07-03-fig1-v3/fig1_overview_v3_pair_001_vault_prepare_candidate.json",
+  "purpose": "Compare the overview v3 restrained TikZ candidate before any accepted-state, release-state, export, or golden mutation is authorized.",
+  "forbidden_semantic_changes": [
+    "change A/B/C/D/E/F panel roles or move evidence between columns",
+    "rename symbols, measured quantities, force families, or apparatus labels",
+    "swap shallow/deep trap color semantics or force-direction meaning",
+    "remove required labels, spokes, apparatus elements, or theory-guarded mechanisms",
+    "use SVG polish to repair scientific, semantic, or label-target errors that belong in TikZ/source review"
+  ],
+  "benchmark_measurable_checks": [
+    "benchmark_contract_hard_regressions must remain absent",
+    "text_boundary.blocker_count should decrease_or_equal",
+    "style_lock_typography must not add local tiny/scriptsize/huge overrides",
+    "visual_clash_delta should decrease_or_equal when rendered artifacts exist"
+  ],
+  "human_only_questions": [
+    "Does the candidate improve journal fit enough to justify leaving the current restrained manuscript style?",
+    "Does the candidate feel editorial rather than generic template polish?",
+    "Is this figure being promoted toward a flagship visual, or should it remain a restrained main-text overview?"
+  ],
+  "candidate_rejection_rules": [
+    "reject a prettier candidate if it changes semantic meaning, panel roles, labels, or color meaning",
+    "reject SVG polish if it is being used to fix source-level semantic defects",
+    "reject broad redesign if the only improvement is non-measurable taste language",
+    "reject any route that implies accepted-state, release-state, final-artifact, export, or golden mutation without a separate explicit gate"
+  ],
+  "candidate_family_comparisons": [
+    {
+      "id": "current_style",
+      "result": "winner_candidate",
+      "mutation_boundary": "no_source_mutation",
+      "authorizes_mutation": false,
+      "semantic_change_allowed": false,
+      "comparison_basis": [
+        "human decision selected keep_current_style as policy state only",
+        "current style remains the benchmark until a candidate beats it on measurable checks and human art direction"
+      ],
+      "failure_modes": [
+        "can still be displaced by a later candidate with stronger evidence",
+        "does not approve release, accepted-state mutation, export mutation, or golden mutation"
+      ],
+      "prerequisite_evidence": [
+        "Wave E decision record keeps current style with no_source_mutation boundary",
+        "Wave C benchmark pack defines target style class and rejection rules"
+      ],
+      "can_improve": "Keeps the current manuscript-ready style as the benchmark while future candidates prove a real gain.",
+      "semantic_changes_forbidden": "May not change panel roles, measured quantities, force families, semantic colors, required labels, or mechanism story.",
+      "evidence_to_prove_better": "A challenger must improve benchmark checks or named aesthetic levers without adding hard regressions or semantic risk.",
+      "human_only_question": "Is staying with the current restrained overview preferable to leaving it for a visually different candidate?"
+    },
+    {
+      "id": "restrained_tikz_refinement",
+      "result": "eligible",
+      "mutation_boundary": "source_mutation_requires_separate_approval",
+      "authorizes_mutation": false,
+      "semantic_change_allowed": false,
+      "comparison_basis": [
+        "v3 candidate source exists as a separate non-golden fixture",
+        "candidate applies a bounded Panel C readability patch without changing panel roles, labels, semantic colors, or mechanism story"
+      ],
+      "failure_modes": [
+        "reject if it changes mechanism meaning while looking cleaner",
+        "reject if it only changes taste language without measurable or named aesthetic benefit"
+      ],
+      "prerequisite_evidence": [
+        "candidate fixture: examples/fig1_overview_v3_pair_001_vault",
+        "candidate_plan.md documents the human boundary before acceptance or golden roll-forward"
+      ],
+      "can_improve": "Can improve typography, whitespace, stroke rhythm, component fidelity, and row-level readability.",
+      "semantic_changes_forbidden": "May not move evidence between panels, rename symbols, alter force directions, swap trap colors, or remove required apparatus details.",
+      "evidence_to_prove_better": "Must improve at least one measurable check or named aesthetic lever while benchmark hard regressions remain absent.",
+      "human_only_question": "Is the improvement worth a separate bounded TikZ source-change approval?"
+    },
+    {
+      "id": "editorial_redesign",
+      "result": "rejected_semantic_risk",
+      "mutation_boundary": "source_mutation_requires_separate_approval",
+      "authorizes_mutation": false,
+      "semantic_change_allowed": false,
+      "comparison_basis": [
+        "candidate could be visually stronger but must beat current style without increasing semantic or release risk",
+        "human must explicitly ask for broader visual-language alternatives after seeing benchmark tradeoffs"
+      ],
+      "failure_modes": [
+        "reject a prettier candidate if it changes semantic meaning",
+        "reject if it weakens panel roles, label targets, semantic colors, or mechanism story"
+      ],
+      "prerequisite_evidence": [
+        "human request for editorial redesign benchmark",
+        "semantic preservation evidence against all forbidden changes"
+      ],
+      "can_improve": "Can explore stronger journal-fit, visual hierarchy, and editorial narrative beyond bounded polish.",
+      "semantic_changes_forbidden": "May not trade scientific panel roles, label targets, semantic colors, or mechanism story for prettier composition.",
+      "evidence_to_prove_better": "Must beat current style on journal-fit/readability and pass semantic preservation evidence for every forbidden change.",
+      "human_only_question": "Does the figure need a broader editorial alternative or should it remain a restrained main-text overview?"
+    },
+    {
+      "id": "svg_polish_handoff",
+      "result": "blocked_missing_evidence",
+      "mutation_boundary": "svg_artifact_mutation_requires_separate_approval",
+      "authorizes_mutation": false,
+      "semantic_change_allowed": false,
+      "comparison_basis": [
+        "SVG polish is only an optical finish route after TikZ/source semantics are locked",
+        "semantic or label-target defects must return to TikZ/source review"
+      ],
+      "failure_modes": [
+        "reject if SVG polish is used to repair scientific, semantic, or label-target defects",
+        "reject if no positive ready_for_svg_polish evidence exists"
+      ],
+      "prerequisite_evidence": [
+        "ready_for_svg_polish evidence required before SVG artifact handoff",
+        "separate SVG artifact mutation approval required even after positive evidence"
+      ],
+      "can_improve": "Can improve only optical spacing, stroke finish, texture nuance, and final presentation finish after source semantics are locked.",
+      "semantic_changes_forbidden": "May not repair scientific meaning, label targeting, panel roles, or source-level defects in SVG space.",
+      "evidence_to_prove_better": "Requires positive ready_for_svg_polish evidence plus separate SVG artifact mutation approval before any artifact handoff.",
+      "human_only_question": "Should SVG polish stay blocked until source semantics and readiness evidence are explicitly positive?"
+    }
+  ]
+}

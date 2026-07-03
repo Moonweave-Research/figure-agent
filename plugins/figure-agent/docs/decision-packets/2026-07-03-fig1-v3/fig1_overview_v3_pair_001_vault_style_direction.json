@@ -1,0 +1,50 @@
+{
+  "schema": "figure-agent.style-direction-packet.v1",
+  "fixture": "fig1_overview_v3_pair_001_vault",
+  "state": "candidate_lane_prepared",
+  "agent_recommendation": "review_restrained_tikz_refinement_against_v2_benchmark",
+  "current_style_assessment": "The accepted v2 overview remains the protected benchmark. The v3 lane is a separate candidate focused on Panel C label readability and escape-curve breathing room.",
+  "human_question": "Should the overview v3 restrained TikZ candidate be compared visually against accepted v2, refined further, or rejected while keeping v2 as the benchmark?",
+  "recommended_choice_id": "compare_v3_against_v2",
+  "choices": [
+    {
+      "id": "compare_v3_against_v2",
+      "label": "Compare v3 against v2",
+      "next_slice": "compile v3, inspect Panel C crop, and prepare a visual comparison packet",
+      "risk": "does not approve acceptance, export, release, or golden mutation",
+      "scope_change": false
+    },
+    {
+      "id": "refine_v3_panel_c",
+      "label": "Refine v3 Panel C",
+      "next_slice": "open one additional bounded Panel C typography or line-routing pass",
+      "risk": "can improve readability but should stay inside source-only candidate scope",
+      "scope_change": false
+    },
+    {
+      "id": "reject_v3_keep_v2",
+      "label": "Reject v3, keep v2",
+      "next_slice": "record rejection rationale and leave accepted v2 unchanged",
+      "risk": "figure quality remains at the current accepted benchmark",
+      "scope_change": false
+    },
+    {
+      "id": "request_editorial_redesign_benchmark",
+      "label": "Request editorial redesign benchmark",
+      "next_slice": "create broader visual alternatives as separate candidates before any source or release mutation",
+      "risk": "larger visual-language change requires stricter semantic comparison",
+      "scope_change": true
+    }
+  ],
+  "does_not_block_release": true,
+  "mutation_boundary": "no_source_mutation",
+  "evidence_refs": [
+    "source_fixture:fig1_overview_v2_pair_001_vault",
+    "candidate_fixture:fig1_overview_v3_pair_001_vault",
+    "candidate_scope:panel_c_readability",
+    "boundary:no_accepted_release_export_or_golden_mutation"
+  ],
+  "follow_up": {
+    "implementation_slice": "Compile v3 and compare the rendered Panel C crop against the accepted v2 benchmark before any protected state change."
+  }
+}
