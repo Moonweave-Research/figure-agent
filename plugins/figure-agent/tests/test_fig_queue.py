@@ -380,6 +380,10 @@ def test_build_queue_json_rows_and_summaries(
         "host_critique": 1,
         "human_acceptance": 1,
     }
+    assert queue["summary"]["by_operator_report_bucket"] == {
+        "hard_publication_blocker": 1,
+        "human_critique_blocker": 1,
+    }
     report = queue["bottleneck_report"]
     assert report["schema"] == "figure-agent.queue-bottleneck-report.v1"
     assert report["source"] == "fig-agent queue over live fig-agent status/driver state"
@@ -408,6 +412,22 @@ def test_build_queue_json_rows_and_summaries(
         "reference_context": 0,
         "template_style": 0,
     }
+    assert report["by_operator_report_bucket"] == {
+        "hard_publication_blocker": 1,
+        "human_critique_blocker": 1,
+        "reproducibility_blocker": 0,
+        "visual_quality_improvement_opportunity": 0,
+        "optional_editorial_polish": 0,
+        "deferred_redraw_decision": 0,
+    }
+    assert [item["bucket"] for item in report["operator_report_buckets"]] == [
+        "hard_publication_blocker",
+        "human_critique_blocker",
+        "reproducibility_blocker",
+        "visual_quality_improvement_opportunity",
+        "optional_editorial_polish",
+        "deferred_redraw_decision",
+    ]
     assert [item["category"] for item in report["bottleneck_categories"]] == [
         "mechanical_tool",
         "host_critique",
@@ -416,6 +436,91 @@ def test_build_queue_json_rows_and_summaries(
         "template_style",
     ]
     assert report["command_plan"] == {"executable": 0, "blocked": 2, "complete": 0}
+
+
+def test_operator_report_buckets_separate_release_critique_repro_and_visual_work() -> None:
+    rows = [
+        {
+            "fixture": "needs_publication_gate",
+            "action": "release_blocked",
+            "required_actor": "release_operator",
+            "requires_human": True,
+            "stop_boundary": "accepted_or_final_ready_required",
+            "first_blocker": "publication_gate_required",
+            "blocking_source": "accepted_or_final_ready_required",
+        },
+        {
+            "fixture": "needs_critique",
+            "action": "run_critique",
+            "required_actor": "host_llm",
+            "requires_human": False,
+            "stop_boundary": "host_llm_critique_required",
+            "first_blocker": "critique_stale",
+            "blocking_source": "host_llm_critique_required",
+            "release_blocking_source": "acceptance_not_declared",
+            "release_stop_boundary": "accepted_or_final_ready_required",
+        },
+        {
+            "fixture": "needs_render",
+            "action": "run_compile",
+            "required_actor": "workflow_agent",
+            "requires_human": False,
+            "stop_boundary": None,
+            "first_blocker": "render_missing",
+            "blocking_source": "driver.action",
+        },
+        {
+            "fixture": "needs_style_evidence",
+            "action": "polish_handoff_stop",
+            "required_actor": "svg_editor",
+            "requires_human": False,
+            "stop_boundary": "mode_forbidden_action",
+            "first_blocker": "svg_polish_not_ready",
+            "blocking_source": "svg_polish_manifest",
+            "svg_polish_evidence_state": "not_qualified",
+        },
+        {
+            "fixture": "optional_style",
+            "action": "complete",
+            "required_actor": "workflow_agent",
+            "requires_human": False,
+            "stop_boundary": None,
+            "first_blocker": "none",
+            "blocking_source": None,
+            "style_direction_packet": {"schema": "figure-agent.style-direction-packet.v1"},
+        },
+        {
+            "fixture": "needs_redraw_call",
+            "action": "complete",
+            "required_actor": "workflow_agent",
+            "requires_human": False,
+            "stop_boundary": None,
+            "first_blocker": "none",
+            "blocking_source": None,
+            "design_direction_state": "blocked_missing_comparison",
+        },
+    ]
+
+    report = fig_queue.build_bottleneck_report(rows)
+
+    assert report["by_operator_report_bucket"] == {
+        "hard_publication_blocker": 1,
+        "human_critique_blocker": 1,
+        "reproducibility_blocker": 1,
+        "visual_quality_improvement_opportunity": 1,
+        "optional_editorial_polish": 1,
+        "deferred_redraw_decision": 1,
+    }
+    rollup = {entry["bucket"]: entry for entry in report["operator_report_buckets"]}
+    assert rollup["hard_publication_blocker"]["example_fixtures"] == [
+        "needs_publication_gate"
+    ]
+    assert rollup["visual_quality_improvement_opportunity"]["example_fixtures"] == [
+        "needs_style_evidence"
+    ]
+    assert rollup["optional_editorial_polish"]["example_fixtures"] == [
+        "optional_style"
+    ]
 
 
 def test_release_row_preserves_closeout_complete_without_treating_it_as_acceptance(
@@ -1796,6 +1901,7 @@ def test_main_warns_when_implicit_workspace_has_no_examples(
         "by_required_actor": {},
         "by_blocking_source": {},
         "by_bottleneck_category": {},
+        "by_operator_report_bucket": {},
     }
     assert payload["workspace_diagnostic"] == {
         "schema": "figure-agent.queue-workspace-diagnostic.v1",
