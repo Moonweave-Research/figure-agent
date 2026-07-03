@@ -1,0 +1,43 @@
+schema: figure-agent.critique-adjudication.v1
+fixture: fig1_overview_v4_pair_001_vault
+source_critique_hash: sha256:a62feab3c6fe1c9864507174b1fb83798129c62695235984ba92b608d38a1d21
+decisions:
+- finding_id: P001
+  decision: dismiss
+  reason: Accepted simplification. The critique links P001 to briefing 3.2 iconic-cartoon intent for Row 2 evidence panels.
+  patch_target: examples/fig1_overview_v4_pair_001_vault/fig1_overview_v4_pair_001_vault.tex
+    lines 820-980
+  evidence: critique.md finding P001.
+- finding_id: P002
+  decision: dismiss
+  reason: Accepted simplification. The critique links P002 to briefing 3.2 iconic abstraction and the correct induction-probe convention.
+  patch_target: examples/fig1_overview_v4_pair_001_vault/fig1_overview_v4_pair_001_vault.tex
+    lines 1207-1460
+  evidence: critique.md finding P002.
+- finding_id: P003
+  decision: dismiss
+  reason: Accepted simplification. The critique links P003 to the TG-G-001 guard against actuator framing transfer.
+  patch_target: examples/fig1_overview_v4_pair_001_vault/fig1_overview_v4_pair_001_vault.tex
+    lines 1146-1320
+  evidence: critique.md finding P003.
+- finding_id: C001
+  decision: resolved
+  reason: Critique marks C001 as resolved.
+  patch_target: examples/fig1_overview_v4_pair_001_vault/fig1_overview_v4_pair_001_vault.tex
+  evidence: critique.md marks C001 status resolved.
+- finding_id: C002
+  decision: resolved
+  reason: Critique marks C002 as resolved.
+  patch_target: examples/fig1_overview_v4_pair_001_vault/fig1_overview_v4_pair_001_vault.tex
+  evidence: critique.md marks C002 status resolved.
+- finding_id: C003
+  decision: resolved
+  reason: Critique marks C003 as resolved.
+  patch_target: examples/fig1_overview_v4_pair_001_vault/fig1_overview_v4_pair_001_vault.tex
+  evidence: critique.md marks C003 status resolved.
+- finding_id: C004
+  decision: resolved
+  reason: Critique marks C004 as resolved.
+  patch_target: examples/fig1_overview_v4_pair_001_vault/fig1_overview_v4_pair_001_vault.tex
+    lines 491-492
+  evidence: critique.md marks C004 status resolved.

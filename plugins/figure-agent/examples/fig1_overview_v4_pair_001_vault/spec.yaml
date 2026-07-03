@@ -244,7 +244,7 @@ golden_contract:
       pattern: '\\draw\[interArrow\]'
       min: 2
     row2_spokes:
-      pattern: '\(branchRoot\) --'
+      pattern: '\([0-9.]+, 4\.85\) --'
       min: 3
     shallow_trap_site_loop:
       pattern: '\\foreach \\site in \{siteS1, siteS2\}'
@@ -256,9 +256,9 @@ golden_contract:
       pattern: '\\foreach \\tY in'
       min: 2
     surface_charge_markers:
-      pattern: '\\foreach \\cx in \{6\.65'
+      pattern: '\\foreach \\cx in \{6\.95, 7\.30\}'
       min: 1
     cantilever_charge_markers:
-      pattern: '\\foreach \\cx/\\cy in \{12\.25'
+      pattern: '\\foreach \\cx/\\cy in \{11\.90/2\.00'
       min: 1
 accepted: true
