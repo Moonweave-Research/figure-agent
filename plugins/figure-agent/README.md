@@ -168,6 +168,7 @@ and closeout rows stay visible as blocked operator handoffs.
 | **Reference learning** | Optional `critique_reference_pack.yaml.reference_learning` lets references teach editorial principles without becoming copy targets. Start a v1.1 pack with `fig-agent helper critique_reference_pack.py --template <fixture>`; validation requires concrete allowed-transfer axes and anti-copy guards before `/fig_critique` can use the pack. Legacy v1 packs remain parseable. `reference_aesthetic_metrics.py` adds non-model aesthetic-class divergence signals for palette, density, silhouette, and line density; severe divergence routes to review, not release bypass. |
 | **Paper-wide context** | Optional `spec.yaml.paper_aesthetic_context` grounds a figure against explicit paper-series style anchors. Start a pack with `fig-agent helper paper_aesthetic_context.py --template <paper_id> --fixture <name> --write-template`, then opt fixtures in deliberately through `spec.yaml`. |
 | **Authoring context pack** | `fig-agent context-pack <name> [--json | --format json]` compiles design philosophy, Style Lock tokens, the project rule catalog, any source-anchored paper/series rule catalog explicitly selected by `spec.yaml`, paper-local briefing/spec context, and opt-in `authoring_context_pack.enabled`, `panels[].semantic_claims`, and `panels[].locked_invariants`. This is durable paper-specific knowledge compilation, not LLM prompt plumbing: it is read-only and does not call a model, execute generation, or act as automatic physics detection. |
+| **Convention receipt + semantic assertions** | Compile writes report-only `build/convention_receipt.{json,md}` from injected `use_as_constraint` rules via `convention_receipt.py`, including source quotes. `semantic_assertions.py` checks declared text-anchor relations with a tolerance band and reports near ties as `indeterminate` instead of pretending local/Docker geometry is decisive. These are convention-spine evidence surfaces, not taste scoring, generic detection, or source mutation. |
 | **Narrative context / humanizer layer** | `narrative_context` is a read-only human-perspective compiler surfaced through context packs, critique briefs, candidate review packets, and verify-only loop checkpoints. It records reader path, panel-story inputs, and human review questions while explicitly forbidding model calls, prompt loops, source mutation, rank scoring, and autonomous patch selection. See `docs/humanizer-layer-v1.md`. |
 | **Sub-region iteration log** | Optional `subregion_iteration_log.md` evidence narrows critique and loop handoff to the current one-line patch unit. Start a canonical log with `fig-agent helper subregion_iteration_log.py --template examples/<name> --write-template`, then append one row per patch with `--append examples/<name> ...`. The helper records evidence only; it does not infer regions or edit source. |
 
@@ -180,7 +181,7 @@ and closeout rows stay visible as blocked operator handoffs.
   prepared images/evidence and writes structured critique; lint and loop
   contracts verify the result.
 - **Opt-in:** authoring context packs, semantic claims/locked invariants,
-  paper-wide context, aesthetic intent, journal style-pack catalog,
+  convention receipts, paper-wide context, aesthetic intent, journal style-pack catalog,
   reference-calibrated packs, reference-learning aesthetic metrics,
   SVG-polish handoff evidence labels, and external vision review evidence.
 - **Manual:** source drawing, semantic patch choices, human art direction,
@@ -198,6 +199,12 @@ Filed as promotion-policy gaps; no production workflow depends on them yet. Each
 has a decision gate that blocks broad automation until empirical data exists.
 This is a deliberate response to v0.3/v0.4 specs being rejected for lack of data.
 
+- **Convention-spine surfacing and primitives** — receipt generation and
+  semantic assertion tolerance already exist. Remaining v0.10 work is to surface
+  receipt evidence consistently through status/drive/queue outputs, then attempt
+  a declaration-driven shape-orientation primitive only after feasibility is
+  proven. Color binding remains exploratory and may stay receipt-only if reliable
+  rendered-shape sampling cannot be proven.
 - **Real-fixture SVG polish promotion policy** — `ready_for_svg_polish` remains an external handoff label only. The built-in recipe/executor/delta/manifest/semantic-diff pipeline is retired; any future SVG finalization path needs a new first-class provenance/disclosure workflow before it can become production release policy.
 
 Falsified directions kept on record in `docs/historical/` and the relevant `architecture-v0.X-*.md` files: Python+SVG-from-scratch, LLM-as-quality-judge, perception auto-detection.

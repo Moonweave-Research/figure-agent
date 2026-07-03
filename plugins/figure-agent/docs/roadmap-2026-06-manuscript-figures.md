@@ -7,18 +7,22 @@ Ship the remaining 4-5 manuscript figures at fig1's Nature-tier quality, consist
 via the validated **human-led element-iteration loop**. Tool work ONLY where it removes
 friction for that. No tool-as-product building.
 
-## Where we are (verified 2026-06-06)
-- figure-agent v0.9.2, branch `goal1/fig1-overnight-2026-06-04` (5 commits ahead of main).
+## Where we are (refreshed 2026-07-03)
+- figure-agent v0.9.3. The active command surface is the quality kernel:
+  status/drive/queue share next-action summaries; safe runners stop at
+  host/human/accepted/golden/release boundaries.
 - **fig1**: visual quality DONE (Nature-tier, accepted, audit 108/108 clean, critique FRESH v1.17).
   Pipeline TAIL open: exports STALE (golden 05-31 predates 06-04 source), no loop checkpoint,
   no final-artifact. `QUALITY_AUDIT.md` exists, `submission-safe: true`.
 - **4-5 more figures** to make for this one manuscript.
-- Tool already has SCATTERED design-philosophy assets (aesthetic_antipattern 13 ids;
-  mature_restraint / toy_diagram / preset_macro_feel / restrained_hero / whitespace_breathing;
-  `2026-05-27-journal-art-direction-playbook-design.md`; paper-wide aesthetic context) — not consolidated.
+- Tool has consolidated design-philosophy anchors plus style-pack and
+  paper/context-pack surfaces. Treat these as convention references, not a taste
+  oracle.
+- v0.10 substrate now includes semantic assertion tolerance/`indeterminate` and
+  compile-time convention receipts. Do not rebuild those as future work; the next
+  v0.10 task is surfacing receipt evidence in operator status/queue outputs.
 - Publication gate (provenance / AI-disclosure / source hash) already BUILT + shipped.
   paper-figure-vault exists (connectable, not wired). SVG-polish plumbing proven on synthetic; FALSIFIED on real (0/8).
-- Tests: 1964 pass + 4 local-OCR fail (known tesseract/leptonica host artifact, NOT a regression).
 
 ## Fences (always on)
 - User-as-master for TASTE; LLM/tool for CONVENTIONS + mechanics only. (LLM taste-judge falsified ~18%.)
@@ -52,6 +56,15 @@ friction for that. No tool-as-product building.
       line-weight TIER system (fix the 25-inlined-weights / no-tier problem),
       shared named styles (interArrow, label tiers, panel letters) + reusable macros
       (dibRingAt, zigSChain, band-diagram, ...) -> a shared `.sty` / macro lib that fig2-figN import.
+- [x] 1.3 v0.10 substrate already exists: semantic assertion tolerance/`indeterminate`
+      and `build/convention_receipt.{json,md}` generation during compile.
+- [ ] 1.4 current v0.10 task: expose convention receipt status/evidence in
+      operator-facing status/drive/queue surfaces. This is docs/read-only evidence
+      routing, not a new detector and not auto-mutation.
+- [ ] 1.5 only after 1.4: consider a declaration-driven shape-orientation
+      primitive if feasibility is proven on authored/render evidence. Color binding
+      remains exploratory; if reliable label-to-shape sampling cannot be proven,
+      keep it injection/receipt-only.
 
 ## Phase 2 — Make the figures (the DELIVERABLE)
 For each remaining figure, in reuse-maximizing order:
@@ -76,3 +89,7 @@ For each remaining figure, in reuse-maximizing order:
 - "Prove SVG polish once on a real fixture" (falsified; the exact state was made + discarded 48h ago in 1da4810; satisfying it would corrupt the gate).
 - Re-architect the command surface (contract-pinned; cheap README slice only).
 - New ML sidecars: crop-second-opinion (= falsified vision critique) or draft-alternatives (= off-identity generation).
+- Rebuilding v0.10 tolerance or convention receipt generation; those are already
+  implemented substrate.
+- Adding generic detectors, taste scoring, or autonomous source mutation under
+  the convention-spine banner.

@@ -9,6 +9,10 @@ the published canon. **Lean by design — grow it per-figure, do not front-load.
   **NOT TASTE**. Autonomous taste judgment is falsified (reference-free LLM critique ~18% vs author).
 - It is a reference + checklist for **you (user-as-master)** and the **deterministic linter** —
   NOT an LLM auto-judge or a release gate. Taste calls stay human.
+- Current deterministic convention-spine evidence includes Style Lock,
+  text-anchor `semantic_assertions` with tolerance/`indeterminate`, and
+  compile-time `convention_receipt` files for injected project rules. These
+  surface convention evidence; they do not score aesthetics or mutate source.
 - Test every line you add against: *"would this have changed a call we actually made?"*
   If it is taste guidance dressed as a rule, delete it.
 - Its ONE job is **cross-figure CONSISTENCY**. fig1 reached Nature-tier through 20+ human-judged
