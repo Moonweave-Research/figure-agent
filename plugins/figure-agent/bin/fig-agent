@@ -890,6 +890,16 @@ def _critique_scaffold(argv: list[str]) -> int:
     )
 
 
+def _fork_fixture(argv: list[str]) -> int:
+    import fixture_fork
+
+    return fixture_fork.main(
+        argv,
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+
+
 def _apply_candidate_ready(argv: list[str]) -> int:
     import candidate_acceptance
 
@@ -1442,6 +1452,8 @@ def main(argv: list[str] | None = None) -> int:
         return _compare_fixtures(rest)
     if command == "critique-scaffold":
         return _critique_scaffold(rest)
+    if command == "fork-fixture":
+        return _fork_fixture(rest)
     if command == "apply-candidate-ready":
         return _apply_candidate_ready(rest)
     if command == "accept-candidate":
