@@ -646,6 +646,7 @@ def compute_closeout(
             "final_artifact_path": status_result.get("final_artifact_path"),
             "publication_gate_state": status_result.get("publication_gate_state"),
             "publication_gate_failures": status_result.get("publication_gate_failures", []),
+            "spine_evidence": status_result.get("spine_evidence"),
             "next": status_result.get("next"),
             "release_decision": status_result.get("release_decision"),
         },

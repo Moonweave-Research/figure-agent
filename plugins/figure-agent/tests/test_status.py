@@ -678,6 +678,62 @@ def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     assert result["stage"] == 3
 
 
+def test_status_surfaces_spine_evidence_from_build_reports(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "spinefig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    tex = fig_dir / "spinefig.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    pdf = build_dir / "spinefig.pdf"
+    pdf.write_bytes(b"%PDF")
+    (build_dir / "tex_assertions.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.tex-assertions.v1",
+                "total": 2,
+                "checked": 2,
+                "issues": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (build_dir / "convention_receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.convention-receipt.v1",
+                "counts": {"project": 2, "fixture": 1, "total": 3},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (build_dir / "physics_grounding.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.physics-grounding.v1",
+                "status": "grounded",
+            }
+        ),
+        encoding="utf-8",
+    )
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    for path in (tex, fig_dir / "briefing.md", fig_dir / "spec.yaml"):
+        os.utime(path, (old_time, old_time))
+    os.utime(pdf, (fresh_time, fresh_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["spine_evidence"]["state"] == "present"
+    assert result["spine_evidence"]["tex_assertions"]["state"] == "passed"
+    assert result["spine_evidence"]["tex_assertions"]["checked"] == 2
+    assert result["spine_evidence"]["convention_receipt"]["state"] == "present"
+    assert result["spine_evidence"]["convention_receipt"]["total"] == 3
+    assert result["spine_evidence"]["physics_grounding"]["status"] == "grounded"
+    assert result["spine_evidence"]["semantic_assertions"]["state"] == "missing"
+
+
 def test_stage_3_missing_briefing_does_not_suggest_export(tmp_path: Path) -> None:
     fig_dir = tmp_path / "legacy_built"
     fig_dir.mkdir()

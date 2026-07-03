@@ -82,6 +82,10 @@ _FILTER_KEYS = (
     "svg_polish_evidence_state",
     "style_benchmark_pack_state",
     "style_benchmark_comparison_state",
+    "spine_evidence_state",
+    "tex_assertions_state",
+    "convention_receipt_state",
+    "physics_grounding_status",
 )
 _ACTORS = (
     "workflow_agent",
@@ -108,6 +112,8 @@ _MECHANICAL_ACTIONS = frozenset(
         fig_driver.ACTION_RUN_FIG_LOOP,
     }
 )
+STOP_ADJUDICATION_MANUAL_REVIEW = "adjudication_manual_review_required"
+BLOCK_ADJUDICATION_EXISTING_FILE = "adjudication_existing_file"
 
 
 def _fixture_names(repo_root: Path, fixtures: list[str] | None) -> list[str]:
@@ -249,6 +255,8 @@ def _row_from_summary(
     row.update(_svg_polish_fields(summary, mode=mode))
     fixture = row.get("fixture")
     if isinstance(fixture, str) and fixture:
+        _apply_adjudication_manual_review_boundary(row, workspace_root=repo_root)
+        row.update(_spine_evidence_fields(status))
         row.update(_style_benchmark_pack_fields(fixture, workspace_root=repo_root))
         row.update(_style_benchmark_comparison_fields(fixture, workspace_root=repo_root))
     polish_blocker = _polish_blocker_detail(row, mode=mode)
@@ -271,6 +279,47 @@ def _row_from_summary(
     if category is not None:
         row["bottleneck_category"] = category
     return row
+
+
+def _apply_adjudication_manual_review_boundary(
+    row: dict[str, Any], *, workspace_root: Path
+) -> None:
+    if row.get("action") != fig_driver.ACTION_RUN_ADJUDICATE:
+        return
+    fixture = row.get("fixture")
+    if not isinstance(fixture, str) or not fixture:
+        return
+    adjudication_path = (
+        workspace_root / "examples" / fixture / "critique_adjudication.yaml"
+    )
+    if not adjudication_path.exists():
+        return
+    row["adjudication_execution_state"] = "existing_file_requires_manual_review"
+    row["adjudication_path"] = str(adjudication_path.relative_to(workspace_root))
+    row["stop_boundary"] = STOP_ADJUDICATION_MANUAL_REVIEW
+    row["blocking_source"] = BLOCK_ADJUDICATION_EXISTING_FILE
+    row["safe_command"] = None
+
+
+def _spine_evidence_fields(status: dict[str, Any]) -> dict[str, Any]:
+    spine = status.get("spine_evidence")
+    if not isinstance(spine, dict):
+        return {}
+    fields: dict[str, Any] = {"spine_evidence_state": spine.get("state")}
+    tex = spine.get("tex_assertions")
+    if isinstance(tex, dict):
+        fields["tex_assertions_state"] = tex.get("state")
+        fields["tex_assertions_checked"] = tex.get("checked")
+        fields["tex_assertions_issue_count"] = tex.get("issue_count")
+    conventions = spine.get("convention_receipt")
+    if isinstance(conventions, dict):
+        fields["convention_receipt_state"] = conventions.get("state")
+        fields["convention_receipt_total"] = conventions.get("total")
+    physics = spine.get("physics_grounding")
+    if isinstance(physics, dict):
+        fields["physics_grounding_state"] = physics.get("state")
+        fields["physics_grounding_status"] = physics.get("status")
+    return {key: value for key, value in fields.items() if value is not None}
 
 
 def validate_human_decision_record(record: dict[str, Any]) -> list[str]:
@@ -603,6 +652,9 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     by_design_direction = _count(rows, "design_direction_state")
     if by_design_direction:
         summary["by_design_direction_state"] = by_design_direction
+    by_spine_evidence = _count(rows, "spine_evidence_state")
+    if by_spine_evidence:
+        summary["by_spine_evidence_state"] = by_spine_evidence
     return summary
 
 
@@ -1347,6 +1399,31 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
                 "read JSON output even when exit code is 1",
                 "follow closeout.next_action",
                 "rerun /fig_queue after resolving the blocked row",
+            ],
+        }
+    if reason == f"stop_boundary:{STOP_ADJUDICATION_MANUAL_REVIEW}":
+        return {
+            "schema": OPERATOR_HANDOFF_SCHEMA,
+            "fixture": fixture,
+            "required_actor": actor,
+            "next_step": (
+                "Inspect existing critique_adjudication.yaml before refreshing or "
+                "overwriting adjudication state."
+            ),
+            "command": f"fig-agent adjudicate sync {shlex.quote(fixture)} --preview",
+            "reason": reason,
+            "allowed_scope": [
+                f"examples/{fixture}/critique.md",
+                f"examples/{fixture}/critique_adjudication.yaml",
+            ],
+            "forbidden_scope": common_forbidden
+            + [
+                "implicit adjudication overwrite",
+                "source edits while reviewing adjudication state",
+            ],
+            "closeout_checks": [
+                "review the preview diff before any sync or force operation",
+                "rerun /fig_queue after resolving the adjudication row",
             ],
         }
     return {
