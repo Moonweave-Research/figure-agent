@@ -66,20 +66,48 @@ Validation:
 Judgment:
 
 Stronger direction. Removing the enclosing Row 2 box reduces the tool/UI impression and makes
-D/E/F read more like manuscript evidence panels. It is the better branch for the next iteration.
+D/E/F read more like manuscript evidence panels. It became the source branch for v5c.
+
+### v5c quiet editorial
+
+Fixture: `examples/fig1_overview_v5c_quiet_001_vault`
+
+Scope:
+
+- preserve v5b's unboxed Row 2
+- keep the convergence cue, but reduce the bridge bracket/up-arrow/caption/modality tier
+- keep the scientific panel roles and v4 Panel C readability fix unchanged
+
+Validation:
+
+- compile: pass
+- collisions: 0
+- text-boundary clashes: 0
+- label-path proximity candidates: 0
+- tex assertions: pass
+- physics grounding: grounded
+- critique brief generation: pass
+- build PNG SHA-256: `76835d132f70db41d008829ef1c06a18ffc07d44c06e10eeea05871814f83b82`
+- export SVG SHA-256: `a208379611507eec68a0353799b6ff5b9e678fc7253996d8f7d6fe1e880a3b6c`
+
+Judgment:
+
+Current best branch, but only by a modest margin. v5c is slightly less scaffolded than v5b and
+therefore closer to the desired manuscript-panel feel. It is not a full visual reset and should
+not be described as final without fresh grounded critique.
 
 ## Boundary
 
-Both v5 lanes are non-golden and `acceptance=NOT_DECLARED`. Exports were generated with
+All v5 lanes are non-golden and `acceptance=NOT_DECLARED`. Exports were generated with
 `--skip-critique` for comparison only. Neither lane should be treated as final until a fresh
 grounded critique/adjudication pass is written.
 
 ## Recommended Next Step
 
-Continue from `fig1_overview_v5b_editorial_001_vault`. The next useful iteration should focus on
-editorial authority rather than defect repair:
+Continue from `fig1_overview_v5c_quiet_001_vault`. The next useful iteration should focus on
+formal review and art-direction choice rather than another blind micro-polish pass:
 
-- reduce residual explanatory feel in the bridge tier
-- tune Row 2 column spacing now that the enclosing box is gone
-- check whether Panel C can carry slightly more visual dominance without crowding A/B
-- run fresh `/fig_critique fig1_overview_v5b_editorial_001_vault` before any candidate acceptance step
+- run fresh `/fig_critique fig1_overview_v5c_quiet_001_vault` before any candidate acceptance step
+- compare v5c against v5b at full render and print-scale proxy
+- decide whether the next step is minor TikZ polish or a deliberate ground-up redraw
+- if the convergence cue is judged too weak, fall back to v5b
