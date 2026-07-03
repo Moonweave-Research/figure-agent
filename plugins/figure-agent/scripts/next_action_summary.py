@@ -7,7 +7,7 @@ from typing import Any
 
 SCHEMA = "figure-agent.next-action-summary.v1"
 DECISION_BOUNDARY_SCHEMA = "figure-agent.decision-boundary.v1"
-RELEASE_BLOCKER_SCHEMA = "figure-agent.release-blocker.v1"
+RELEASE_BLOCKER_CONTRACT = "figure-agent.release-blocker.v1"
 
 ACTION_CREATE_OR_FIX_SOURCE = "create_or_fix_source"
 ACTION_RUN_COMPILE = "run_compile"
@@ -338,7 +338,7 @@ def _release_blocker_from_entry(entry: Mapping[str, Any]) -> dict[str, Any] | No
     else:
         return None
     return {
-        "schema": RELEASE_BLOCKER_SCHEMA,
+        "schema": RELEASE_BLOCKER_CONTRACT,
         "blocking_source": blocking_source,
         "stop_boundary": stop_boundary,
         "required_actor": required_actor,
