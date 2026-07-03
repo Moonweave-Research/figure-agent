@@ -13,7 +13,8 @@ but `.omx/` is intentionally not tracked by git.
 
 ## Current Result
 
-P0, P1, and the first P2 candidate-lane slice are complete.
+P0, P1, and the first P2 candidate-lane/comparison-handoff slices are
+complete.
 
 - P0 unified the executable next-action surface for `status`, `drive`, and
   `queue`.
@@ -21,6 +22,9 @@ P0, P1, and the first P2 candidate-lane slice are complete.
   described as future work.
 - P2 created `fig1_overview_v3_pair_001_vault` as a non-golden candidate lane
   with a restrained Panel C readability patch and explicit human boundary.
+- P2 also created a v2-versus-v3 visual comparison packet for the host critique
+  boundary; this packet is intentionally non-authorizing and does not approve
+  accepted-state, export, publication, or golden mutation.
 - The fig1 accepted/golden fixture now reports `run_adjudicate` as the
   executable workflow step while preserving the human-only release blockers
   separately.
@@ -76,8 +80,12 @@ Expected smoke result:
 - v3 next executable action is `run_critique`
 - v3 style benchmark pack and comparison are present
 - v3 design direction state is ready for human choice
+- v3 visual comparison packet exists at
+  `docs/decision-packets/2026-07-03-fig1-v3/fig1_overview_v3_pair_001_vault_visual_comparison.json`
 - label-path proximity and text-boundary checks report 0 candidates after
   compile
+- the next boundary remains `/fig_critique fig1_overview_v3_pair_001_vault`
+  with required actor `host_llm`
 
 ## Remaining Plan
 
@@ -101,12 +109,13 @@ Required outputs:
 - status/drive smoke: complete
 - style benchmark packet: complete
 - design decision packet: complete
+- visual comparison packet for host critique: complete
 - explicit human choice boundary before acceptance or golden roll-forward:
   complete
 
-Remaining P2 work is visual review and comparison, not protected state mutation.
-Do not accept v3, copy v3 over v2, export it as golden, or hand-edit generated
-artifacts without explicit human approval.
+Remaining P2 work is host visual critique and, only after that, a human choice.
+Do not accept v3, copy v3 over v2, export it as golden, attest it, publish it,
+or hand-edit generated artifacts without explicit human approval.
 
 ### P3 - Mechanical Queue Execution
 
