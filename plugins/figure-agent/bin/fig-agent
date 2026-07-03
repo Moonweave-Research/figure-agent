@@ -870,6 +870,16 @@ def _compare_candidate(argv: list[str]) -> int:
     return _review_candidate(argv)
 
 
+def _compare_fixtures(argv: list[str]) -> int:
+    import fixture_compare
+
+    return fixture_compare.main(
+        argv,
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+
+
 def _apply_candidate_ready(argv: list[str]) -> int:
     import candidate_acceptance
 
@@ -1418,6 +1428,8 @@ def main(argv: list[str] | None = None) -> int:
         return _review_candidate(rest)
     if command == "compare-candidate":
         return _compare_candidate(rest)
+    if command == "compare-fixtures":
+        return _compare_fixtures(rest)
     if command == "apply-candidate-ready":
         return _apply_candidate_ready(rest)
     if command == "accept-candidate":
