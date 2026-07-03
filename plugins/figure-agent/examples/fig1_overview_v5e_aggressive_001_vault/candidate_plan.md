@@ -88,6 +88,37 @@ Current next gate:
 - `status` reports `critique_missing`; run a fresh reference-grounded critique
   before export or any comparison/promotion decision.
 
+## Slice 2 Result -- Fresh Critique, Adjudication, and Export Gate Closure
+
+Completed gate closure for the v5e candidate:
+
+- Generated fresh audit crops and a fresh `critique.md` for the v5e artifact.
+- `critique_lint.py fig1_overview_v5e_aggressive_001_vault` passes.
+- `fig-agent adjudicate fig1_overview_v5e_aggressive_001_vault` generated fresh
+  `critique_adjudication.yaml`.
+- `fig-agent export fig1_overview_v5e_aggressive_001_vault` generated local
+  fixture exports.
+- Final `fig-agent status ... --json` reports:
+  - `render_state=FRESH`
+  - `critique_state=FRESH`
+  - `adjudication_state=FRESH`
+  - `export_state=FRESH`
+  - `workflow_ready=true`
+  - `release_ready=false`
+
+The remaining blocker is intentionally human-owned:
+
+- `acceptance_not_declared`
+- v5e is not accepted, not golden, and not a replacement for v5d until explicit
+  human comparison/acceptance.
+
+Critique conclusion:
+
+- v5e fixes the v5d C001/C002 local typography weaknesses.
+- The new open C001 is not a detector/source failure; it is an art-direction
+  comparison gate: Panel F is clearer but denser, so v5e should be compared
+  against v5d at full render and print-thumbnail scale before promotion.
+
 ## Human Boundary
 
 This lane is not accepted and not golden. Creating, compiling, or exporting v5e
