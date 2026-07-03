@@ -1200,10 +1200,13 @@
 % offset so weight + clearance carry the distinction; matches "low n" tier.
 % Panel-loop iter L10: high n / low n tone parity. cRed!90 / cBlue!60 → both
 % !80!black for cross-line consistency (matching Coulomb iter L8 + Panel C trap).
-\path[draw=none] (0.65, 2.30) -- (3.85, 0.55)
-  node[pos=0.55, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
-       text=cRed!80!black, sloped, below=5pt, inner sep=1pt]
-  {high $n$};
+% v5d redraw slice 3: keep the high-n label in a right-hand lane.  The
+% previous path-centered placement let the rotated word extend back onto the
+% Debye cliff at print scale.  A horizontal right-lane label is less decorative
+% but reads more cleanly beside the dashed reference and red trace.
+\node[font=\sffamily\bfseries\itshape\fontsize{6.2}{7.4}\selectfont,
+      text=cRed!80!black, anchor=west, inner sep=1pt]
+  at (3.22, 0.68) {high $n$};
 % Goal-1 overnight elem-iter (2026-06-04): pos=0.40 → 0.60. 2026-05-27 Debye
 % cliff rewrite (1169-1186) raised the dash plateau-then-cliff into this
 % pre-existing label (pos=0.40 at curve point (1.93,1.98)); cliff at x=1.93 is

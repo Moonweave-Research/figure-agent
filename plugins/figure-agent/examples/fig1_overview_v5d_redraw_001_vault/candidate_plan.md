@@ -89,6 +89,32 @@ Interpretation:
   `mobility edge`, `shallow`, and escape arrows;
 - it is a local readability improvement, not yet a full aesthetic reset.
 
+## Redraw Slice 3 -- Panel D High-n Label Lane
+
+Change:
+
+- replaced the path-attached `high n` label with a smaller fixed right-lane
+  label;
+- moved the label away from the Debye dashed cliff so the reference curve and
+  red power-law label do not read as one mark at print scale;
+- preserved the red/blue power-law geometry and the Debye reference geometry.
+
+Validation:
+
+- `./bin/fig-agent compile fig1_overview_v5d_redraw_001_vault` exits `0`;
+- text-boundary detector reports `0` candidates;
+- label-path detector reports `0` candidates;
+- visual metrics report `visual_clash=38`, `undeclared_geometry=91`,
+  `scaffold_load.score=234`, `ink_density=0.105806`,
+  `edge_density=0.016141`.
+
+Interpretation:
+
+- this is a targeted print-scale readability fix for Panel D, not a global
+  redesign;
+- the crop and 178 mm print-scale evidence now separate `high n` from the
+  Debye reference well enough to keep iterating elsewhere.
+
 ## Comparison Requirements
 
 Before promotion, v5d must be compared against:
