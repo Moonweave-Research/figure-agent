@@ -1722,6 +1722,58 @@ def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsy
     assert payload["rows"][0]["fixture"] == "alpha"
 
 
+def test_main_accepts_spine_evidence_filters(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    _write_fixture(tmp_path, "beta")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+        if name == "alpha":
+            summary["status"]["spine_evidence"] = {
+                "schema": "figure-agent.spine-evidence-summary.v1",
+                "state": "present",
+                "tex_assertions": {"state": "passed", "checked": 2, "issue_count": 0},
+                "convention_receipt": {"state": "present", "total": 3},
+                "physics_grounding": {"state": "present", "status": "grounded"},
+            }
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    assert (
+        fig_queue.main(
+            [
+                "--mode",
+                "review",
+                "--goal",
+                "triage",
+                "--spine-evidence-state",
+                "present",
+                "--tex-assertions-state",
+                "passed",
+                "--convention-receipt-state",
+                "present",
+                "--physics-grounding-status",
+                "grounded",
+                "--json",
+            ],
+            repo_root=tmp_path,
+        )
+        == 0
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["filters"] == {
+        "spine_evidence_state": "present",
+        "tex_assertions_state": "passed",
+        "convention_receipt_state": "present",
+        "physics_grounding_status": "grounded",
+    }
+    assert [row["fixture"] for row in payload["rows"]] == ["alpha"]
+
+
 def test_main_warns_when_implicit_workspace_has_no_examples(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

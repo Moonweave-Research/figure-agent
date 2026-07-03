@@ -391,6 +391,10 @@ def test_main_passes_svg_polish_filters_to_queue(
         "svg_polish_evidence_state": None,
         "style_benchmark_pack_state": None,
         "style_benchmark_comparison_state": None,
+        "spine_evidence_state": None,
+        "tex_assertions_state": None,
+        "convention_receipt_state": None,
+        "physics_grounding_status": None,
     }
     payload = json.loads(capsys.readouterr().out)
     assert payload["filters"] == {
@@ -399,6 +403,53 @@ def test_main_passes_svg_polish_filters_to_queue(
         "svg_polish_recommended_path": "continue_tikz",
         "svg_polish_next_action": "run_fig_critique",
         "svg_polish_blocking_sources": "driver_prerequisite",
+    }
+
+
+def test_main_passes_spine_evidence_filters_to_queue(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    seen_filters: dict[str, str | None] = {}
+
+    def fake_build_queue(**kwargs):
+        nonlocal seen_filters
+        seen_filters = dict(kwargs["filters"])
+        queue = _queue()
+        queue["filters"] = {
+            key: value for key, value in seen_filters.items() if value is not None
+        }
+        return queue
+
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", fake_build_queue)
+
+    assert fig_queue_run.main(
+        [
+            "--mode",
+            "review",
+            "--goal",
+            "spine evidence readiness",
+            "--spine-evidence-state",
+            "present",
+            "--tex-assertions-state",
+            "passed",
+            "--convention-receipt-state",
+            "present",
+            "--physics-grounding-status",
+            "grounded",
+        ],
+        repo_root=tmp_path,
+    ) == 0
+
+    assert seen_filters["spine_evidence_state"] == "present"
+    assert seen_filters["tex_assertions_state"] == "passed"
+    assert seen_filters["convention_receipt_state"] == "present"
+    assert seen_filters["physics_grounding_status"] == "grounded"
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["filters"] == {
+        "spine_evidence_state": "present",
+        "tex_assertions_state": "passed",
+        "convention_receipt_state": "present",
+        "physics_grounding_status": "grounded",
     }
 
 
