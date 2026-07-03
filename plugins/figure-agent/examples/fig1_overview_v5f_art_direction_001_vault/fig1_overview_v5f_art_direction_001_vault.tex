@@ -2028,23 +2028,26 @@
 \fill[white] (9.52, 0.18) rectangle (13.92, 4.34);
 \draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
 
-% Compact bias source, demoted to support role.
-\fill[cGray!6, rounded corners=1pt] (12.72, 3.62) rectangle (13.48, 4.12);
-\draw[cGray!58!black, line width=0.28pt, rounded corners=1pt]
-  (12.72, 3.62) rectangle (13.48, 4.12);
-\draw[cGray!35!black, line width=0.16pt, rounded corners=0.8pt]
-  (12.78, 3.68) rectangle (13.42, 4.06);
-\fill[cGray!72!black, rounded corners=0.6pt] (12.86, 3.91) rectangle (13.34, 4.02);
-\draw[cGray!85!black, line width=0.12pt, rounded corners=0.6pt]
-  (12.86, 3.91) rectangle (13.34, 4.02);
-\draw[cGray!12, line width=0.42pt]
-  (12.90, 3.94) -- (12.99, 3.94) -- (12.99, 4.00)
-              -- (13.16, 4.00) -- (13.16, 3.94) -- (13.30, 3.94);
-\node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cGray!78!black]
-  at (13.10, 3.76) {$V_{\mathrm{active}}$};
-\fill[cGray!80!black] (13.48, 3.82) circle (0.020);
-\draw[cGray!70!black, line width=0.25pt]
-  (13.48, 3.82) -- (13.62, 3.82) -- (13.62, 2.82) -- (13.40, 2.82);
+% Compact bias source, demoted to support role but redrawn as a real faceplate.
+\fill[cGray!35!black, opacity=0.16, rounded corners=1.4pt]
+  (12.61, 3.53) rectangle (13.59, 4.14);
+\fill[cGray!7, rounded corners=1.4pt] (12.55, 3.58) rectangle (13.53, 4.18);
+\draw[cGray!62!black, line width=0.36pt, rounded corners=1.4pt]
+  (12.55, 3.58) rectangle (13.53, 4.18);
+\draw[cGray!35!black, line width=0.18pt, rounded corners=0.9pt]
+  (12.62, 3.65) rectangle (13.46, 4.11);
+\fill[cGray!72!black, rounded corners=0.7pt] (12.72, 3.93) rectangle (13.36, 4.06);
+\draw[cGray!88!black, line width=0.14pt, rounded corners=0.7pt]
+  (12.72, 3.93) rectangle (13.36, 4.06);
+\draw[cGray!12, line width=0.46pt]
+  (12.78, 3.97) -- (12.89, 3.97) -- (12.89, 4.03)
+              -- (13.09, 4.03) -- (13.09, 3.97) -- (13.30, 3.97);
+\node[font=\sffamily\bfseries\fontsize{5.6}{6.7}\selectfont, text=cGray!78!black]
+  at (13.04, 3.77) {$V_{\mathrm{active}}$};
+\fill[cGray!85!black] (13.53, 3.84) circle (0.022);
+\fill[cGray!45!black] (13.53, 3.84) circle (0.010);
+\draw[cGray!70!black, line width=0.30pt]
+  (13.53, 3.84) -- (13.70, 3.84) -- (13.70, 2.82) -- (13.40, 2.82);
 
 % Fixed clip and charge-trapping cantilever.
 \fill[cGray!10] (11.55, 2.84) rectangle (12.10, 2.96);
@@ -2070,22 +2073,24 @@
   (11.88, 2.72) .. controls (11.98, 2.02) and (11.45, 1.12) .. (10.68, 0.68);
 
 % Right electrode and explicit gap field.
-\fill[cGray!25] (13.18, 0.46) rectangle (13.40, 2.82);
-\draw[cGray!85!black, line width=0.50pt] (13.18, 0.46) rectangle (13.40, 2.82);
+\shade[left color=cGray!34, right color=cGray!18] (13.18, 0.46) rectangle (13.42, 2.82);
+\draw[cGray!86!black, line width=0.56pt] (13.18, 0.46) rectangle (13.42, 2.82);
+\draw[cGray!45!black, line width=0.20pt] (13.23, 0.50) -- (13.23, 2.78);
 \foreach \hy in {0.58,0.74,0.90,1.06,1.22,1.38,1.54,1.70,1.86,2.02,2.18,2.34,2.50,2.66} {
-  \draw[cGray!60!black, line width=0.20pt] (13.40, \hy) -- (13.18, {\hy-0.06});
+  \draw[cGray!60!black, line width=0.20pt] (13.42, \hy) -- (13.18, {\hy-0.06});
 }
 \foreach \yy in {0.92,1.22,1.52,1.82,2.12,2.42} {
   \draw[cGray!25, line width=0.24pt, dash pattern=on 1.2pt off 1.5pt]
     (11.08,\yy) -- (13.18,\yy);
 }
-\node[labelMute, anchor=south, rotate=270,
-      font=\sffamily\fontsize{6.2}{7.4}\selectfont, text=cGray!78!black]
-  at (13.62, 1.62) {electrode};
+\node[labelMute, anchor=south, rotate=270, fill=white, fill opacity=0.95, text opacity=1,
+      inner xsep=1.1pt, inner ysep=0.7pt,
+      font=\sffamily\fontsize{5.8}{7.0}\selectfont, text=cGray!78!black]
+  at (13.64, 1.62) {electrode};
 \draw[cGray!70!black, fill=cGray!50!black, line width=0.34pt]
-  (13.22, 0.40) -- (13.36, 0.40) -- (13.29, 0.24) -- cycle;
-\draw[cGray!70!black, line width=0.26pt] (13.23, 0.21) -- (13.35, 0.21);
-\draw[cGray!70!black, line width=0.26pt] (13.26, 0.17) -- (13.32, 0.17);
+  (13.23, 0.40) -- (13.37, 0.40) -- (13.30, 0.24) -- cycle;
+\draw[cGray!70!black, line width=0.26pt] (13.24, 0.21) -- (13.36, 0.21);
+\draw[cGray!70!black, line width=0.26pt] (13.27, 0.17) -- (13.33, 0.17);
 
 % Charge family and label: geometry is the message, label is secondary.
 \foreach \cx/\cy/\rr in {11.62/2.28/0.075,11.43/1.86/0.082,11.10/1.36/0.088,10.72/0.94/0.082} {
@@ -2093,28 +2098,35 @@
   \shade[ball color=cRed!72!black] (\cx,\cy) circle (\rr);
   \draw[cRed!95!black, line width=0.24pt] (\cx,\cy) circle (\rr);
 }
-\draw[cRed!50!black, line width=0.28pt]
-  (11.62,2.28) .. controls (11.92,2.30) and (12.08,2.38) .. (12.24,2.46);
+\draw[cRed!50!black, line width=0.25pt]
+  (11.62,2.28) .. controls (11.84,2.40) and (12.00,2.56) .. (12.18,2.66);
 \draw[cRed!45!black, line width=0.24pt]
-  (11.10,1.36) .. controls (11.54,1.70) and (11.84,2.04) .. (12.24,2.34);
-\node[anchor=west, align=left, fill=white, fill opacity=0.94, text opacity=1,
-      inner xsep=1.1pt, inner ysep=0.55pt,
-      font=\sffamily\bfseries\fontsize{5.7}{7.1}\selectfont, text=cRed!76!black]
-  at (12.18, 2.42) {trapped\\[0.1pt]charge\\[0.1pt]$q_{\mathrm{tr}}$};
+  (11.10,1.36) .. controls (11.52,1.78) and (11.80,2.24) .. (12.18,2.51);
+\node[anchor=west, align=left, fill=white, fill opacity=0.97, text opacity=1,
+      inner xsep=1.3pt, inner ysep=0.7pt,
+      font=\sffamily\bfseries\fontsize{5.5}{6.8}\selectfont, text=cRed!76!black]
+  at (12.16, 2.74) {trapped\\[-0.2pt]charge};
+\node[anchor=west, fill=white, fill opacity=0.97, text opacity=1,
+      inner xsep=1.0pt, inner ysep=0.5pt,
+      font=\sffamily\itshape\fontsize{5.3}{6.4}\selectfont, text=cRed!76!black]
+  at (12.25, 2.50) {$q_{\mathrm{tr}}$};
 
 % Coulomb-only response, intentionally stronger than the apparatus.
 \draw[panelFCoulombRepulsionArrow, -{Stealth[length=7pt,width=5pt]}, cRed!82!black, line width=0.82pt]
-  (11.42, 1.34) -- (10.25, 1.34);
+  (10.95, 1.18) -- (9.74, 1.18);
 \node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!82!black,
-      anchor=south west] at (10.55, 1.42) {Coulomb};
-\node[labelMute, anchor=north west, font=\sffamily\fontsize{6.4}{7.7}\selectfont,
-      text=cRed!82!black] at (10.55, 1.30) {repulsion};
+      anchor=south west] at (9.68, 1.55) {Coulomb};
+\node[labelMute, anchor=north west, fill=white, fill opacity=0.94, text opacity=1,
+      inner xsep=1.2pt, inner ysep=0.6pt,
+      font=\sffamily\fontsize{6.4}{7.7}\selectfont,
+      text=cRed!82!black] at (9.70, 1.46) {repulsion};
 
 \draw[<->, cGray!55!black, line width=0.30pt]
-  (10.58, 0.50) -- (13.18, 0.50);
-\node[labelMute, anchor=north, inner sep=1pt,
-      font=\sffamily\fontsize{6.4}{7.7}\selectfont, text=cGray!75!black]
-  at (11.88, 0.45) {air gap};
+  (10.58, 0.54) -- (13.18, 0.54);
+\node[labelMute, anchor=north, fill=white, fill opacity=0.94, text opacity=1,
+      inner xsep=1.4pt, inner ysep=0.9pt,
+      font=\sffamily\fontsize{6.0}{7.2}\selectfont, text=cGray!75!black]
+  at (11.88, 0.31) {air gap};
 
 % Restore the row label layer after the Panel F redraw mask.
 \node[panelLetter, anchor=north west] at (9.55, 4.55) {f};

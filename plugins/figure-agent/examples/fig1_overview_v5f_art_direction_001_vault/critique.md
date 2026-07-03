@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig1_overview_v5f_art_direction_001_vault
-generated_at: '2026-07-03T14:32:36Z'
+generated_at: '2026-07-03T14:53:56Z'
 generator: critique_brief.py
 generator_version: sha256:51345bad8b6bdef113dcd48ad8b73a3a99b7cf99af028b5d3b3ea4c348690946
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:790a518daf7ef54c0423599f9c62ed4b0755da3fa30064b58f535d3d49d90293
+critique_input_hash: sha256:6c75713596ee86eb64458c54473a712a3d9123360933e400221bef8fc9c5f468
 verdict: revise
 audit_enumeration:
   structural_completeness:
@@ -345,7 +345,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:790a518daf7ef54c0423599f9c62ed4b0755da3fa30064b58f535d3d49d90293
+  assessed_artifact_hash: sha256:6c75713596ee86eb64458c54473a712a3d9123360933e400221bef8fc9c5f468
   benchmark_level: needs_human_art_direction
   confidence: medium
   blockers: []
@@ -658,9 +658,9 @@ micro_defects:
   crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/panel_F_s11.png
   kind: print_scale_unreadable
   severity: MINOR
-  observation: Panel F is now mechanism-first and readable, but the larger trapped-charge callout, Coulomb arrow, field lines,
-    and electrode stack create the densest part of v5f; this is an art-direction comparison risk rather than an automatic
-    defect.
+  observation: Panel F is now mechanism-first and readable after the Vactive faceplate, electrode, Coulomb arrow, and trapped-charge
+    labels were retuned; detector counts still flag OCR/text-on-path candidates in this dense area, but the crop review treats
+    the remaining issue as art-direction density rather than an automatic geometry defect.
   linked_finding_id: C001
   visual_clash_ref: ''
   text_boundary_ref: ''
@@ -3198,38 +3198,6 @@ micro_defects:
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
   accept_simplification_rationale: 'UG116 is not a release-blocking defect: source line 2113 is within 3.43 pt of text ''real'';
-    in the current v5f render the flagged geometry is convention acceptable, visually distinct, and does not change the scientific
-    reading.'
-- id: M_UG117
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/full_q1.png
-  kind: label_path_near_miss
-  severity: NIT
-  observation: UG117 flags label_endpoint_near_miss near 'space'; current v5f crop/render review treats this as declared schematic
-    structure, panel framing, or intentional label-path adjacency unless separately escalated.
-  linked_finding_id: ''
-  visual_clash_ref: ''
-  text_boundary_ref: ''
-  label_path_ref: ''
-  undeclared_geometry_ref: UG117
-  status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'UG117 is not a release-blocking defect: source line 2113 is within 0.19 pt of text ''space'';
-    in the current v5f render the flagged geometry is convention acceptable, visually distinct, and does not change the scientific
-    reading.'
-- id: M_UG118
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/full_q1.png
-  kind: line_crosses_label
-  severity: NIT
-  observation: UG118 flags undeclared_horizontal_rule near ''; current v5f crop/render review treats this as declared schematic
-    structure, panel framing, or intentional label-path adjacency unless separately escalated.
-  linked_finding_id: ''
-  visual_clash_ref: ''
-  text_boundary_ref: ''
-  label_path_ref: ''
-  undeclared_geometry_ref: UG118
-  status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'UG118 is not a release-blocking defect: source line 2113 line lacks text_boundary_check;
     in the current v5f render the flagged geometry is convention acceptable, visually distinct, and does not change the scientific
     reading.'
 crop_audit_log:
