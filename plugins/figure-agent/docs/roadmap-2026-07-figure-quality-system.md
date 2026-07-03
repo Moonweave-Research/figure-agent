@@ -7,6 +7,7 @@ Implementation update:
 
 - 2026-07-03: P1 initial `compare-fixtures` CLI shipped in commit `757acc2d`.
 - 2026-07-03: P2 initial `critique-scaffold` CLI shipped in commit `b6c4b661`.
+- 2026-07-03: P3 initial `fork-fixture` CLI shipped in commit `20bf44fe`.
 
 ## Purpose
 
@@ -380,6 +381,18 @@ Deliverable:
 Stop:
 
 - new fixture is internally coherent and starts non-accepted.
+
+Initial shipped interface:
+
+```bash
+./bin/fig-agent fork-fixture <source> <target> --reason "<why>" --json
+./bin/fig-agent fork-fixture <source> <target> --reason "<why>" --dry-run --json
+```
+
+The command copies source-side entries only, rewrites fixture-local identity,
+renames `<source>.tex` to `<target>.tex`, records `fork_receipt.json`, skips
+generated/state entries, and skips source symlinks rather than copying link
+targets into the new lane.
 
 ### Work Packet E: Visual Metrics v1
 
