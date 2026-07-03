@@ -14,9 +14,10 @@ candidate_lane:
   default_human_decision: compare_against_v5c_v5b_and_v4_before_acceptance_or_golden_roll_forward
 tex_assertions:
 - id: panelF-coulomb-repulsion-points-away-from-electrode
+  anchor_style: panelFCoulombRepulsionArrow
   near:
-  - 11.55
-  - 1.3
+  - 11.42
+  - 1.34
   axis: x
   direction: decreasing
 panels:

@@ -53,6 +53,7 @@
   % + Nature/Nat Comm "8 pt bold, upright" convention. Previously 9pt was 1pt over.
   panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
                       text=cGray!90!black},
+  panelFCoulombRepulsionArrow/.style={},
 ]
 
 % 2026-05-22 NC-Fig-1 redirect: figure-wide cLGray!8 wash + Row 1 cAmber!4
@@ -631,6 +632,12 @@
 % chosen so the LONGEST label ('mobility edge' at 1.15 cm width) lands its tail
 % exactly at the Row 2 outer-box right edge (x=13.30), so Panel C and Panel F
 % share the same right column.
+% v5f art-direction pass: add two very quiet semantic energy bands behind the
+% right lane so Panel C reads as one composed trap landscape rather than a stack
+% of labels. The fills are intentionally low-opacity and color-bound to the
+% shallow/deep grammar; they are semantic grouping, not decorative background.
+\fill[cBlue!12, opacity=0.20, rounded corners=1pt] (10.38, 7.18) rectangle (13.55, 7.82);
+\fill[cRed!12, opacity=0.18, rounded corners=1pt] (10.38, 5.55) rectangle (13.55, 6.55);
 \draw[cGray!45!black, densely dashed, line width=0.30pt] (10.55, 8.55) -- (12.10, 8.55);
 % Panel C iter 7 [Panel C 15-loop, 2026-05-26]: 'vacuum' italic -> upright to
 % match 'mobility edge'. Both are aux dashed reference levels; auxiliary tier
@@ -881,8 +888,8 @@
 % hierarchy relative to companion sub-labels ('real space' / 'energy diagram'
 % at 6pt italic). Stays below panel-letter 8pt cap so no letter-tier conflict.
 \node[anchor=south,
-      font=\sffamily\fontsize{6}{7.2}\selectfont,
-      text=cGray!70!black] at (10.40, 8.92) {localized traps};
+      font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont,
+      text=cGray!78!black] at (10.40, 8.92) {localized trap model};
 
 % ============================================================
 % Row 2 — NC main-text Fig 1 clean white background.
@@ -945,8 +952,6 @@
 % v5d redraw slice 1: remove the bracket/up-arrow connector scaffold.
 % Convergence is now carried by row-level typography and cross-panel color
 % binding, not by a diagrammatic construction layer in the inter-row gap.
-\node[font=\sffamily\itshape\fontsize{5.4}{6.4}\selectfont, text=cGray!55!black,
-      anchor=south, inner sep=0pt] at (6.975, 5.00) {convergent evidence};
 \node[font=\sffamily\fontsize{5.3}{6.3}\selectfont, text=cGray!50!black,
       anchor=north] at (2.275, 4.56) {kinetic};
 \node[font=\sffamily\fontsize{5.3}{6.3}\selectfont, text=cGray!50!black,
@@ -2013,6 +2018,108 @@
 \node[labelMute, anchor=north, inner sep=1pt,
       font=\sffamily\fontsize{6.5}{7.8}\selectfont]
   at (12.365, 0.5) {air gap};
+
+% ============================================================
+% v5f Panel F art-direction redraw overlay.
+% Covers the v5e apparatus-heavy mechanical panel and redraws it as a single
+% result-first mechanism scene: electrode, air gap, trapped-charge family, and
+% Coulomb repulsion are read before the compact bias source.
+% ============================================================
+\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);
+\draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
+
+% Compact bias source, demoted to support role.
+\fill[cGray!6, rounded corners=1pt] (12.72, 3.62) rectangle (13.48, 4.12);
+\draw[cGray!58!black, line width=0.28pt, rounded corners=1pt]
+  (12.72, 3.62) rectangle (13.48, 4.12);
+\draw[cGray!35!black, line width=0.16pt, rounded corners=0.8pt]
+  (12.78, 3.68) rectangle (13.42, 4.06);
+\fill[cGray!72!black, rounded corners=0.6pt] (12.86, 3.91) rectangle (13.34, 4.02);
+\draw[cGray!85!black, line width=0.12pt, rounded corners=0.6pt]
+  (12.86, 3.91) rectangle (13.34, 4.02);
+\draw[cGray!12, line width=0.42pt]
+  (12.90, 3.94) -- (12.99, 3.94) -- (12.99, 4.00)
+              -- (13.16, 4.00) -- (13.16, 3.94) -- (13.30, 3.94);
+\node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cGray!78!black]
+  at (13.10, 3.76) {$V_{\mathrm{active}}$};
+\fill[cGray!80!black] (13.48, 3.82) circle (0.020);
+\draw[cGray!70!black, line width=0.25pt]
+  (13.48, 3.82) -- (13.62, 3.82) -- (13.62, 2.82) -- (13.40, 2.82);
+
+% Fixed clip and charge-trapping cantilever.
+\fill[cGray!10] (11.55, 2.84) rectangle (12.10, 2.96);
+\draw[cGray!75!black, line width=0.38pt] (11.55, 2.84) rectangle (12.10, 2.96);
+\draw[cGray!55!black, line width=0.38pt] (11.42, 3.10) -- (12.22, 3.10);
+\foreach \dx in {0,0.11,0.22,0.33,0.44,0.55,0.66} {
+  \draw[cGray!55!black, line width=0.24pt]
+    ({11.42+\dx}, 3.10) -- ({11.36+\dx}, 3.18);
+}
+\draw[cGray!75!black, line width=0.35pt] (11.82, 2.96) -- (11.82, 3.10);
+
+\shade[top color=cAmber!18, bottom color=cAmber!46, rounded corners=0.5mm]
+  (11.70, 2.84) .. controls (11.82, 2.10) and (11.35, 1.30) ..
+  (10.47, 0.80) -- (10.62, 0.64) .. controls (11.56, 1.12) and
+  (12.08, 2.06) .. (11.98, 2.84) -- cycle;
+\draw[cAmber!82!black, line width=0.62pt, rounded corners=0.5mm]
+  (11.70, 2.84) .. controls (11.82, 2.10) and (11.35, 1.30) ..
+  (10.47, 0.80) -- (10.62, 0.64) .. controls (11.56, 1.12) and
+  (12.08, 2.06) .. (11.98, 2.84) -- cycle;
+\draw[cAmber!60!black, line width=0.28pt, opacity=0.42]
+  (11.78, 2.68) .. controls (11.82, 2.08) and (11.28, 1.30) .. (10.55, 0.78);
+\draw[cAmber!60!black, line width=0.28pt, opacity=0.35]
+  (11.88, 2.72) .. controls (11.98, 2.02) and (11.45, 1.12) .. (10.68, 0.68);
+
+% Right electrode and explicit gap field.
+\fill[cGray!25] (13.18, 0.46) rectangle (13.40, 2.82);
+\draw[cGray!85!black, line width=0.50pt] (13.18, 0.46) rectangle (13.40, 2.82);
+\foreach \hy in {0.58,0.74,0.90,1.06,1.22,1.38,1.54,1.70,1.86,2.02,2.18,2.34,2.50,2.66} {
+  \draw[cGray!60!black, line width=0.20pt] (13.40, \hy) -- (13.18, {\hy-0.06});
+}
+\foreach \yy in {0.92,1.22,1.52,1.82,2.12,2.42} {
+  \draw[cGray!25, line width=0.24pt, dash pattern=on 1.2pt off 1.5pt]
+    (11.08,\yy) -- (13.18,\yy);
+}
+\node[labelMute, anchor=south, rotate=270,
+      font=\sffamily\fontsize{6.2}{7.4}\selectfont, text=cGray!78!black]
+  at (13.62, 1.62) {electrode};
+\draw[cGray!70!black, fill=cGray!50!black, line width=0.34pt]
+  (13.22, 0.40) -- (13.36, 0.40) -- (13.29, 0.24) -- cycle;
+\draw[cGray!70!black, line width=0.26pt] (13.23, 0.21) -- (13.35, 0.21);
+\draw[cGray!70!black, line width=0.26pt] (13.26, 0.17) -- (13.32, 0.17);
+
+% Charge family and label: geometry is the message, label is secondary.
+\foreach \cx/\cy/\rr in {11.62/2.28/0.075,11.43/1.86/0.082,11.10/1.36/0.088,10.72/0.94/0.082} {
+  \draw[cRed!35!white, line width=0.24pt, opacity=0.42] (\cx,\cy) circle ({1.45*\rr});
+  \shade[ball color=cRed!72!black] (\cx,\cy) circle (\rr);
+  \draw[cRed!95!black, line width=0.24pt] (\cx,\cy) circle (\rr);
+}
+\draw[cRed!50!black, line width=0.28pt]
+  (11.62,2.28) .. controls (11.92,2.30) and (12.08,2.38) .. (12.24,2.46);
+\draw[cRed!45!black, line width=0.24pt]
+  (11.10,1.36) .. controls (11.54,1.70) and (11.84,2.04) .. (12.24,2.34);
+\node[anchor=west, align=left, fill=white, fill opacity=0.94, text opacity=1,
+      inner xsep=1.1pt, inner ysep=0.55pt,
+      font=\sffamily\bfseries\fontsize{5.7}{7.1}\selectfont, text=cRed!76!black]
+  at (12.18, 2.42) {trapped\\[0.1pt]charge\\[0.1pt]$q_{\mathrm{tr}}$};
+
+% Coulomb-only response, intentionally stronger than the apparatus.
+\draw[panelFCoulombRepulsionArrow, -{Stealth[length=7pt,width=5pt]}, cRed!82!black, line width=0.82pt]
+  (11.42, 1.34) -- (10.25, 1.34);
+\node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!82!black,
+      anchor=south west] at (10.55, 1.42) {Coulomb};
+\node[labelMute, anchor=north west, font=\sffamily\fontsize{6.4}{7.7}\selectfont,
+      text=cRed!82!black] at (10.55, 1.30) {repulsion};
+
+\draw[<->, cGray!55!black, line width=0.30pt]
+  (10.58, 0.50) -- (13.18, 0.50);
+\node[labelMute, anchor=north, inner sep=1pt,
+      font=\sffamily\fontsize{6.4}{7.7}\selectfont, text=cGray!75!black]
+  at (11.88, 0.45) {air gap};
+
+% Restore the row label layer after the Panel F redraw mask.
+\node[panelLetter, anchor=north west] at (9.55, 4.55) {f};
+\node[font=\sffamily\fontsize{5.3}{6.3}\selectfont, text=cGray!50!black,
+      anchor=north] at (11.70, 4.56) {mechanical};
 
 % ============================================================
 % v8.6 ROW 2 END — legacy 4-panel D/E/F/G content removed in v8.6 restructure.
