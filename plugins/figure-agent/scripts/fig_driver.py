@@ -101,6 +101,7 @@ _STATUS_COMPACT_KEYS = (
     "publication_gate_state",
     "publication_gate_failures",
     "critique_lint_summary",
+    "spine_evidence",
 )
 
 _FORBIDDEN_BY_MODE: dict[str, list[str]] = {
@@ -225,6 +226,9 @@ def _summary(
         summary["critique_freshness"] = critique_freshness
     if isinstance(audit_evidence, dict):
         summary["audit_evidence"] = audit_evidence
+    spine_evidence = status.get("spine_evidence")
+    if isinstance(spine_evidence, dict):
+        summary["spine_evidence"] = spine_evidence
     if loop_checkpoint is not None:
         summary["loop_checkpoint"] = loop_checkpoint
         svg_polish_readiness = editorial_mod.svg_polish_readiness_from_checkpoint(loop_checkpoint)

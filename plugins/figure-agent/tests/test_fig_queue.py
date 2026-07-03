@@ -237,6 +237,85 @@ def test_queue_preserves_executable_action_while_surfacing_release_blocker(
     assert row["bottleneck_category"] == "human_acceptance"
 
 
+def test_queue_blocks_adjudicate_when_existing_file_requires_manual_review(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    adjudication = tmp_path / "examples" / "alpha" / "critique_adjudication.yaml"
+    adjudication.write_text("schema: figure-agent.critique-adjudication.v1\n", encoding="utf-8")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="run_adjudicate",
+            stop_boundary=None,
+            first_blocker="adjudication_stale",
+            safe_command="fig-agent adjudicate alpha",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    row = queue["rows"][0]
+    assert row["action"] == "run_adjudicate"
+    assert row["safe_command"] is None
+    assert row["stop_boundary"] == "adjudication_manual_review_required"
+    assert row["blocking_source"] == "adjudication_existing_file"
+    assert row["adjudication_execution_state"] == "existing_file_requires_manual_review"
+    assert queue["command_plan"]["executable_count"] == 0
+    assert queue["command_plan"]["blocked_count"] == 1
+    blocked = queue["command_plan"]["blocked"][0]
+    assert blocked["reason"] == "stop_boundary:adjudication_manual_review_required"
+    assert blocked["operator_handoff"]["command"] == "fig-agent adjudicate sync alpha --preview"
+
+
+def test_queue_surfaces_spine_evidence_summary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(
+            name,
+            action="complete",
+            stop_boundary=None,
+            first_blocker="none",
+        )
+        summary["status"]["spine_evidence"] = {
+            "schema": "figure-agent.spine-evidence-summary.v1",
+            "state": "present",
+            "tex_assertions": {"state": "passed", "checked": 2, "issue_count": 0},
+            "convention_receipt": {"state": "present", "total": 3},
+            "physics_grounding": {"state": "present", "status": "grounded"},
+        }
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["spine_evidence_state"] == "present"
+    assert row["tex_assertions_state"] == "passed"
+    assert row["tex_assertions_checked"] == 2
+    assert row["convention_receipt_state"] == "present"
+    assert row["convention_receipt_total"] == 3
+    assert row["physics_grounding_status"] == "grounded"
+    assert queue["summary"]["by_spine_evidence_state"] == {"present": 1}
+
+
 def test_build_queue_json_rows_and_summaries(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1641,6 +1720,58 @@ def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsy
     payload = json.loads(capsys.readouterr().out)
     assert payload["schema"] == "figure-agent.fixture-driver-queue.v1"
     assert payload["rows"][0]["fixture"] == "alpha"
+
+
+def test_main_accepts_spine_evidence_filters(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    _write_fixture(tmp_path, "beta")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+        if name == "alpha":
+            summary["status"]["spine_evidence"] = {
+                "schema": "figure-agent.spine-evidence-summary.v1",
+                "state": "present",
+                "tex_assertions": {"state": "passed", "checked": 2, "issue_count": 0},
+                "convention_receipt": {"state": "present", "total": 3},
+                "physics_grounding": {"state": "present", "status": "grounded"},
+            }
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    assert (
+        fig_queue.main(
+            [
+                "--mode",
+                "review",
+                "--goal",
+                "triage",
+                "--spine-evidence-state",
+                "present",
+                "--tex-assertions-state",
+                "passed",
+                "--convention-receipt-state",
+                "present",
+                "--physics-grounding-status",
+                "grounded",
+                "--json",
+            ],
+            repo_root=tmp_path,
+        )
+        == 0
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["filters"] == {
+        "spine_evidence_state": "present",
+        "tex_assertions_state": "passed",
+        "convention_receipt_state": "present",
+        "physics_grounding_status": "grounded",
+    }
+    assert [row["fixture"] for row in payload["rows"]] == ["alpha"]
 
 
 def test_main_warns_when_implicit_workspace_has_no_examples(

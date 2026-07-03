@@ -581,6 +581,28 @@ def test_driver_summary_includes_actionable_audit_evidence(
     assert summary["action"] == "run_fig_loop"
 
 
+def test_driver_summary_includes_spine_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    synthetic_status = _release_ready_status()
+    synthetic_status["spine_evidence"] = {
+        "schema": "figure-agent.spine-evidence-summary.v1",
+        "state": "present",
+        "tex_assertions": {"state": "passed", "checked": 2, "issue_count": 0},
+        "convention_receipt": {"state": "present", "total": 3},
+        "physics_grounding": {"state": "present", "status": "grounded"},
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["status"]["spine_evidence"]["state"] == "present"
+    assert summary["spine_evidence"]["tex_assertions"]["state"] == "passed"
+
+
 def test_authoring_mode_explains_source_before_export_for_un_authored_fixture(
     tmp_path: Path,
 ) -> None:

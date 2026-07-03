@@ -59,6 +59,7 @@ RENDER_STALE = "STALE"
 RENDER_FRESH = "FRESH"
 
 _SPEC_PARSE_ERROR_KEY = "__spec_parse_error__"
+SPINE_EVIDENCE_SCHEMA = "figure-agent.spine-evidence-summary.v1"
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -481,6 +482,97 @@ def _adjudication_state(example_dir: Path, result: dict) -> str:
     return "STALE" if adjudication_is_stale(adjudication_path, critique_path) else "FRESH"
 
 
+def _load_build_json_mapping(path: Path) -> tuple[dict[str, Any] | None, str | None]:
+    if not path.is_file():
+        return None, "missing"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None, "invalid"
+    if not isinstance(payload, dict):
+        return None, "invalid"
+    return payload, None
+
+
+def _assertion_evidence_summary(path: Path) -> dict[str, Any]:
+    payload, error = _load_build_json_mapping(path)
+    if error is not None:
+        return {"state": error, "path": f"build/{path.name}"}
+    assert payload is not None
+    issues = payload.get("issues")
+    issue_count = len(issues) if isinstance(issues, list) else 0
+    summary = {
+        "state": "needs_action" if issue_count else "passed",
+        "path": f"build/{path.name}",
+        "schema": payload.get("schema"),
+        "total": payload.get("total"),
+        "checked": payload.get("checked"),
+        "issue_count": issue_count,
+    }
+    return {key: value for key, value in summary.items() if value is not None}
+
+
+def _convention_receipt_summary(path: Path) -> dict[str, Any]:
+    payload, error = _load_build_json_mapping(path)
+    if error is not None:
+        return {"state": error, "path": f"build/{path.name}"}
+    assert payload is not None
+    counts = payload.get("counts")
+    total = counts.get("total") if isinstance(counts, dict) else None
+    summary = {
+        "state": "present",
+        "path": f"build/{path.name}",
+        "schema": payload.get("schema"),
+        "total": total,
+        "counts": counts if isinstance(counts, dict) else None,
+    }
+    return {key: value for key, value in summary.items() if value is not None}
+
+
+def _physics_grounding_summary(path: Path) -> dict[str, Any]:
+    payload, error = _load_build_json_mapping(path)
+    if error is not None:
+        return {"state": error, "path": f"build/{path.name}"}
+    assert payload is not None
+    summary = {
+        "state": "present",
+        "path": f"build/{path.name}",
+        "schema": payload.get("schema"),
+        "status": payload.get("status"),
+    }
+    return {key: value for key, value in summary.items() if value is not None}
+
+
+def _spine_evidence_summary(example_dir: Path) -> dict[str, Any]:
+    build_dir = example_dir / "build"
+    sources = {
+        "tex_assertions": _assertion_evidence_summary(build_dir / "tex_assertions.json"),
+        "semantic_assertions": _assertion_evidence_summary(
+            build_dir / "semantic_assertions.json"
+        ),
+        "convention_receipt": _convention_receipt_summary(
+            build_dir / "convention_receipt.json"
+        ),
+        "physics_grounding": _physics_grounding_summary(build_dir / "physics_grounding.json"),
+    }
+    states = [str(item.get("state")) for item in sources.values()]
+    present_states = {"passed", "present", "needs_action"}
+    if "invalid" in states:
+        state = "invalid"
+    elif "needs_action" in states:
+        state = "needs_action"
+    elif any(item in present_states for item in states):
+        state = "present"
+    else:
+        state = "missing"
+    return {
+        "schema": SPINE_EVIDENCE_SCHEMA,
+        "fixture": example_dir.name,
+        "state": state,
+        **sources,
+    }
+
+
 def _finalize_status(result: dict, example_dir: Path) -> dict:
     if "release_decision" not in result:
         name = result.get("name")
@@ -493,6 +585,7 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
     _append_critique_freshness_diagnostics(result, example_dir)
     result["adjudication_state"] = _adjudication_state(example_dir, result)
     result["audit_evidence"] = summarize_audit_evidence(example_dir)
+    result["spine_evidence"] = _spine_evidence_summary(example_dir)
     metrics_summary = reference_aesthetic_metrics_summary(example_dir)
     if metrics_summary is not None:
         state = metrics_summary.get("evaluation_state", "invalid")
@@ -974,6 +1067,30 @@ def _print_single(result: dict) -> None:
             f"{audit_evidence.get('evaluation_state', '?')} — "
             f"{audit_evidence.get('reason', '?')}"
             f"{blocking_text}{next_text}"
+        )
+    spine_evidence = result.get("spine_evidence")
+    if isinstance(spine_evidence, dict):
+        tex_assertions = spine_evidence.get("tex_assertions")
+        conventions = spine_evidence.get("convention_receipt")
+        physics = spine_evidence.get("physics_grounding")
+        tex_state = (
+            tex_assertions.get("state")
+            if isinstance(tex_assertions, dict)
+            else "?"
+        )
+        convention_state = (
+            conventions.get("state") if isinstance(conventions, dict) else "?"
+        )
+        convention_total = (
+            conventions.get("total") if isinstance(conventions, dict) else "?"
+        )
+        physics_status = physics.get("status") if isinstance(physics, dict) else "?"
+        print(
+            "  Spine evidence: "
+            f"{spine_evidence.get('state', '?')} "
+            f"tex={tex_state} "
+            f"conventions={convention_state}/{convention_total} "
+            f"physics={physics_status}"
         )
     final_ready = str(bool(result.get("final_ready"))).lower()
     print(

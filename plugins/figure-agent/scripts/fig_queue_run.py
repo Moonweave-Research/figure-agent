@@ -111,6 +111,10 @@ def _queue_filters_from_args(args: argparse.Namespace) -> dict[str, str | None]:
         "svg_polish_evidence_state": args.svg_polish_evidence_state,
         "style_benchmark_pack_state": args.style_benchmark_pack_state,
         "style_benchmark_comparison_state": args.style_benchmark_comparison_state,
+        "spine_evidence_state": args.spine_evidence_state,
+        "tex_assertions_state": args.tex_assertions_state,
+        "convention_receipt_state": args.convention_receipt_state,
+        "physics_grounding_status": args.physics_grounding_status,
     }
     missing = set(QUEUE_FILTER_KEYS) - set(values)
     extra = set(values) - set(QUEUE_FILTER_KEYS)
@@ -209,6 +213,10 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
     parser.add_argument("--svg-polish-evidence-state")
     parser.add_argument("--style-benchmark-pack-state")
     parser.add_argument("--style-benchmark-comparison-state")
+    parser.add_argument("--spine-evidence-state")
+    parser.add_argument("--tex-assertions-state")
+    parser.add_argument("--convention-receipt-state")
+    parser.add_argument("--physics-grounding-status")
     args = parser.parse_args(argv)
     if args.execute and args.dry_run:
         print(
