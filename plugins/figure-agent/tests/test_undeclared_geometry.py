@@ -249,6 +249,52 @@ def test_label_crossing_ignores_non_frame_like_geometry() -> None:
     assert not any(candidate["kind"].startswith("label_crosses") for candidate in candidates)
 
 
+def test_label_crossing_semantic_arrow_is_reported_even_when_not_frame_like() -> None:
+    tex = (
+        r"\draw[-{Stealth[length=3pt,width=2pt]}, cRed!75!black, "
+        r"line width=0.50pt] (2.0,1.0) -- (2.0,3.0);"
+    )
+    # Vertical semantic arrow at x ~= 56.693 pt crosses the rendered glyph bbox.
+    words = [_word("shallow", 45.0, 40.0, 70.0, 48.0)]
+
+    candidates = detect_undeclared_geometry(tex, words, {})
+
+    assert [candidate["kind"] for candidate in candidates] == [
+        "undeclared_column_rule",
+        "label_crosses_semantic_path",
+    ]
+    assert candidates[1]["nearest_text"] == "shallow"
+    assert candidates[1]["distance_pt"] == 0.0
+    assert candidates[1]["recommended_action"] == "add_micro_defect"
+
+
+def test_label_crossing_semantic_arrow_is_reported_when_source_crossings_disabled() -> None:
+    tex = (
+        r"\draw[-{Stealth[length=3pt,width=2pt]}, cRed!75!black, "
+        r"line width=0.50pt] (2.0,1.0) -- (2.0,3.0);"
+    )
+    words = [_word("shallow", 45.0, 40.0, 70.0, 48.0)]
+
+    candidates = detect_undeclared_geometry(tex, words, {}, source_crossings=False)
+
+    assert [candidate["kind"] for candidate in candidates] == [
+        "undeclared_column_rule",
+        "label_crosses_semantic_path",
+    ]
+
+
+def test_label_crossing_semantic_arrow_ignores_single_character_ocr_fragments() -> None:
+    tex = (
+        r"\draw[-{Stealth[length=3pt,width=2pt]}, cGray!70!black, "
+        r"line width=0.70pt] (2.0,1.0) -- (2.0,3.0);"
+    )
+    words = [_word("a", 55.0, 40.0, 58.0, 48.0)]
+
+    candidates = detect_undeclared_geometry(tex, words, {}, source_crossings=False)
+
+    assert [candidate["kind"] for candidate in candidates] == ["undeclared_column_rule"]
+
+
 def test_label_crossing_rect_boundary_is_reported() -> None:
     tex = r"\draw[cGray!22, line width=0.30pt] (1.0,1.0) rectangle (5.5,4.2);"
     # Bottom side of the rectangle is at y ~= 28.346 pt and crosses the label.

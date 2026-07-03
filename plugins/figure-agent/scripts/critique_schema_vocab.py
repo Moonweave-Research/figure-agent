@@ -172,6 +172,7 @@ MICRO_DEFECT_KINDS = frozenset(
         "label_glyph_overlaps_internal_drawing",
         "label_crosses_panel_boundary",
         "label_crosses_column_rule",
+        "label_crosses_semantic_path",
         "label_overflows_row_box",
         "label_stacked_on_reference_line",
         "label_curve_near_label",

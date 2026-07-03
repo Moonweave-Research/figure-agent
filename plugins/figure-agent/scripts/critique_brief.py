@@ -79,13 +79,14 @@ _HIGH_ZOOM_MICRO_DEFECT_CHECKS = (
     "label_stacked_on_reference_line",
     "label_curve_near_label",
     "label_path_near_miss",
+    "label_crosses_semantic_path",
 )
 _MICRO_DEFECT_KIND_SCHEMA = (
     "line_crosses_label | wire_crosses_label | arrow_tip_fused | "
     "label_target_detached | floating_semantic_cue | drawing_order_suspect | "
     "print_scale_unreadable | label_backdrop_overflows_outline | "
     "label_glyph_overlaps_internal_drawing | label_crosses_panel_boundary | "
-    "label_crosses_column_rule | label_overflows_row_box | "
+    "label_crosses_column_rule | label_crosses_semantic_path | label_overflows_row_box | "
     "label_stacked_on_reference_line | label_curve_near_label | "
     "label_path_near_miss"
 )
@@ -1308,7 +1309,10 @@ def _undeclared_geometry_candidates_section(example_dir: Path) -> str:
         "link to a new/existing `micro_defects` entry via `undeclared_geometry_ref` "
         "or explicitly justify `status: accept_simplification`.",
         "Use `label_crosses_column_rule`, `label_crosses_panel_boundary`, "
-        "`label_overflows_row_box`, or `label_path_near_miss` as appropriate.",
+        "`label_crosses_semantic_path`, `label_overflows_row_box`, or "
+        "`label_path_near_miss` as appropriate.",
+        "For `label_crosses_semantic_path` candidates, use "
+        "`micro_defects.kind: label_crosses_semantic_path`.",
         "For `label_crosses_horizontal_rule` or `label_crosses_rect_boundary` "
         "candidates, normally use `micro_defects.kind: label_crosses_panel_boundary`.",
         f"- Source JSON: `{_example_relative_path(example_dir, report_path)}`",

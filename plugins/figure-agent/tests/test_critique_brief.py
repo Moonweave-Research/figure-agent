@@ -946,7 +946,7 @@ def test_critique_brief_includes_undeclared_geometry_candidates(tmp_path):
                 "candidates": [
                     {
                         "id": "UG002",
-                        "kind": "label_crosses_horizontal_rule",
+                        "kind": "label_crosses_semantic_path",
                         "evidence": "line crosses mobility label",
                         "bbox_pt": [10.0, 20.0, 40.0, 20.0],
                         "source_line": 42,
@@ -978,7 +978,8 @@ def test_critique_brief_includes_undeclared_geometry_candidates(tmp_path):
     assert "`UG001`" in brief
     assert "`UG002`" in brief
     assert "kind=`undeclared_column_rule`" in brief
-    assert "kind=`label_crosses_horizontal_rule`" in brief
+    assert "kind=`label_crosses_semantic_path`" in brief
+    assert "micro_defects.kind: label_crosses_semantic_path" in brief
     assert "micro_defects.kind: label_crosses_panel_boundary" in brief
     assert "nearest_text=`mobility`" in brief
     assert "distance_pt=0.0" in brief

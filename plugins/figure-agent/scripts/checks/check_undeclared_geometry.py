@@ -335,6 +335,20 @@ def _is_frame_like_geometry(geometry: dict[str, Any]) -> bool:
     return abs(float(x1) - float(x0)) >= FRAME_LINE_MIN_LENGTH_PT - 1e-3
 
 
+def _is_semantic_path_like_geometry(geometry: dict[str, Any]) -> bool:
+    if geometry.get("command") != "draw" or geometry["kind"] not in {
+        "vertical_line",
+        "horizontal_line",
+    }:
+        return False
+    options = str(geometry.get("options") or "")
+    return "Stealth" in options or "->" in options or "<-" in options
+
+
+def _semantic_path_label_candidate(word: dict[str, Any]) -> bool:
+    return len(str(word.get("text", "")).strip()) > 1
+
+
 def _base_candidate(
     *,
     kind: str,
@@ -547,17 +561,36 @@ def detect_undeclared_geometry(
             )
         )
         for word in words:
-            if (
-                source_crossings
-                and _is_frame_like_geometry(geometry)
+            semantic_path_like = _is_semantic_path_like_geometry(geometry)
+            line_crosses_word = (
+                (source_crossings or semantic_path_like)
                 and _line_crosses_word(line, word)
-            ):
+            )
+            if line_crosses_word and _is_frame_like_geometry(geometry):
                 candidates.append(
                     _base_candidate(
                         kind=crossing_kind,
                         evidence=(
                             f"source line {geometry['source_line']} line crosses "
                             f"text {word.get('text', '')!r}"
+                        ),
+                        bbox_pt=_line_bbox(line),
+                        source_line=geometry["source_line"],
+                        nearest_text=str(word.get("text", "")),
+                        distance_pt=0.0,
+                        recommended_action="add_micro_defect",
+                    )
+                )
+                continue
+            if line_crosses_word and semantic_path_like:
+                if not _semantic_path_label_candidate(word):
+                    continue
+                candidates.append(
+                    _base_candidate(
+                        kind="label_crosses_semantic_path",
+                        evidence=(
+                            f"source line {geometry['source_line']} semantic path "
+                            f"crosses text {word.get('text', '')!r}"
                         ),
                         bbox_pt=_line_bbox(line),
                         source_line=geometry["source_line"],
@@ -591,6 +624,7 @@ def detect_undeclared_geometry(
         "label_crosses_rect_boundary": 1,
         "label_crosses_column_rule": 1,
         "label_crosses_horizontal_rule": 1,
+        "label_crosses_semantic_path": 1,
         "undeclared_path_near_label": 1,
         "low_clearance_inside_boundary": 1,
     }
