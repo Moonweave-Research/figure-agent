@@ -1566,6 +1566,57 @@ def test_review_mode_ignores_loop_checkpoint_older_than_adjudication(
     assert "loop_checkpoint" not in summary
 
 
+
+
+def test_review_mode_surfaces_adjudication_and_release_blockers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "FRESH",
+        "adjudication_state": "MISSING",
+        "export_state": "TRACKED_GOLDEN",
+        "acceptance_state": "ACCEPTED",
+        "final_artifact_state": "NONE",
+        "final_artifact_kind": "generated_export",
+        "final_artifact_path": None,
+        "workflow_ready": True,
+        "golden_ready": True,
+        "release_ready": False,
+        "final_ready": False,
+        "publication_gate_state": "PROVENANCE_REQUIRED",
+        "publication_gate_failures": [
+            {
+                "code": "missing_submission_safe_true",
+                "category": "publication_provenance",
+                "actor": "human",
+                "message": "QUALITY_AUDIT.md does not declare submission-safe: true",
+                "required_action": "Human reviewer must decide submission safety.",
+            }
+        ],
+    }
+    from status_explanation import build_status_explanation
+
+    synthetic_status["status_explanation"] = build_status_explanation(synthetic_status)
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: True)
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "run_adjudicate"
+    assert summary["safe_command"] == "fig-agent adjudicate driver_demo"
+    next_action = summary["next_action_summary"]
+    assert next_action["action"] == "run_adjudicate"
+    assert next_action["release_blockers"][0]["blocking_source"] == "export_tracked_golden"
+    assert next_action["release_blockers"][0]["stop_boundary"] == "force_golden_required"
+    assert next_action["release_blockers"][1]["blocking_source"] == "publication_gate_required"
+    assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
+
 # --- release mode ------------------------------------------------------------
 
 

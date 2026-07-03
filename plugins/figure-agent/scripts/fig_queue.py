@@ -188,6 +188,16 @@ def _row_from_summary(
         blocks_progress = isinstance(boundary, dict) and boundary.get("blocks_progress") is True
         if not blocks_progress:
             action = fig_driver.ACTION_COMPLETE
+    release_blockers = []
+    if isinstance(next_action, dict):
+        raw_release_blockers = next_action.get("release_blockers")
+        if isinstance(raw_release_blockers, list):
+            release_blockers = [
+                blocker for blocker in raw_release_blockers if isinstance(blocker, dict)
+            ]
+        elif isinstance(next_action.get("release_blocker"), dict):
+            release_blockers = [next_action["release_blocker"]]
+    release_blocker = release_blockers[0] if release_blockers else None
     row = {
         "fixture": summary.get("fixture"),
         "mode": mode,
@@ -212,6 +222,13 @@ def _row_from_summary(
         "blocking_source": blocking_source_for_driver_summary(summary),
         "requires_human": requires_human_for_driver_summary(summary),
     }
+    if release_blocker is not None:
+        row["release_blocker"] = release_blocker
+        row["release_blockers"] = release_blockers
+        row["release_blocking_source"] = release_blocker.get("blocking_source")
+        row["release_stop_boundary"] = release_blocker.get("stop_boundary")
+        row["release_required_actor"] = release_blocker.get("required_actor")
+        row["release_blocker_reason"] = release_blocker.get("reason")
     guidance = summary.get("operator_guidance")
     if isinstance(guidance, dict):
         row["operator_guidance"] = guidance
@@ -1785,7 +1802,14 @@ def _bottleneck_category_for_row(row: dict[str, Any]) -> str | None:
     if _row_fields_mention(
         row,
         ("acceptance", "accepted", "force_golden", "golden", "publication", "provenance"),
-        ("action", "stop_boundary", "blocking_source", "publication_gate_state"),
+        (
+            "action",
+            "stop_boundary",
+            "blocking_source",
+            "publication_gate_state",
+            "release_blocking_source",
+            "release_stop_boundary",
+        ),
     ):
         return "human_acceptance"
     if row.get("required_actor") == "host_llm":

@@ -63,6 +63,7 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     export = status.get("export_state")
     acceptance = status.get("acceptance_state")
     final_artifact = status.get("final_artifact_state")
+    adjudication = status.get("adjudication_state")
     publication_gate = status.get("publication_gate_state")
     stage = status.get("stage")
     release_ready = status.get("release_ready")
@@ -150,6 +151,14 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
         code="critique_not_required",
         category=PLUGIN_STATE,
         message="no reference-grounded critique is required for this fixture.",
+    )
+    _append_if(
+        fixture_freshness,
+        adjudication in {"MISSING", "STALE", "INVALID"},
+        code=f"adjudication_{str(adjudication).lower()}",
+        category=FIXTURE_FRESHNESS,
+        message="critique_adjudication.yaml is missing, stale, or invalid; scaffold adjudication before review closure.",
+        next_command=_command(name, "/fig_adjudicate"),
     )
     _append_if(
         fixture_freshness,

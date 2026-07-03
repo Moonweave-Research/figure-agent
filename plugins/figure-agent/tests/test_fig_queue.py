@@ -25,6 +25,7 @@ def _summary(
     svg_polish_gate: dict[str, Any] | None = None,
     svg_polish_readiness: dict[str, Any] | None = None,
     closeout: dict[str, Any] | None = None,
+    release_blockers: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     summary = {
         "fixture": name,
@@ -51,10 +52,15 @@ def _summary(
             }
         },
         "next_action_summary": {
+            "action": action,
             "blocking_source": blocking_source or stop_boundary or "driver.action",
             "requires_human": action in {"human_gate_stop", "release_blocked"},
         },
     }
+    if release_blockers is not None:
+        summary["next_action_summary"]["release_blockers"] = release_blockers
+        if release_blockers:
+            summary["next_action_summary"]["release_blocker"] = release_blockers[0]
     if svg_polish_gate is not None:
         summary["svg_polish_gate"] = svg_polish_gate
     if svg_polish_readiness is not None:
@@ -183,6 +189,52 @@ def test_queue_marks_malformed_style_benchmark_pack_invalid_not_recommended(
     assert "style_benchmark_pack" not in row
     assert queue["summary"]["errors"] == 0
     assert queue["summary"]["by_style_benchmark_pack_state"] == {"invalid": 1}
+
+
+
+
+def test_queue_preserves_executable_action_while_surfacing_release_blocker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    release_blocker = {
+        "schema": "figure-agent.release-blocker.v1",
+        "blocking_source": "export_tracked_golden",
+        "stop_boundary": "force_golden_required",
+        "required_actor": "release_operator",
+        "requires_human": True,
+        "blocks_release": True,
+        "reason": "tracked golden exports require deliberate roll-forward approval.",
+        "safe_command": None,
+        "suggested_command": "/fig_export alpha --force-golden",
+    }
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="run_adjudicate",
+            stop_boundary=None,
+            first_blocker="adjudication_missing",
+            safe_command="fig-agent adjudicate alpha",
+            release_blockers=[release_blocker],
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["action"] == "run_adjudicate"
+    assert row["required_actor"] == "workflow_agent"
+    assert row["release_blocking_source"] == "export_tracked_golden"
+    assert row["release_stop_boundary"] == "force_golden_required"
+    assert row["release_required_actor"] == "release_operator"
+    assert row["bottleneck_category"] == "human_acceptance"
 
 
 def test_build_queue_json_rows_and_summaries(

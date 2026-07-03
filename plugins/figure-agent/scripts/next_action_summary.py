@@ -7,6 +7,7 @@ from typing import Any
 
 SCHEMA = "figure-agent.next-action-summary.v1"
 DECISION_BOUNDARY_SCHEMA = "figure-agent.decision-boundary.v1"
+RELEASE_BLOCKER_SCHEMA = "figure-agent.release-blocker.v1"
 
 ACTION_CREATE_OR_FIX_SOURCE = "create_or_fix_source"
 ACTION_RUN_COMPILE = "run_compile"
@@ -202,6 +203,7 @@ def _action_from_command(command: str | None) -> str | None:
 def _action_from_status(status: Mapping[str, Any]) -> str:
     render = status.get("render_state")
     critique = status.get("critique_state")
+    adjudication = status.get("adjudication_state")
     export = status.get("export_state")
     final_artifact = status.get("final_artifact_state")
     if render in {"NOT_SCAFFOLDED", "NOT_AUTHORED"}:
@@ -210,6 +212,8 @@ def _action_from_status(status: Mapping[str, Any]) -> str:
         return ACTION_RUN_COMPILE
     if critique in {"REFERENCE_MISSING", "MISSING", "STALE"}:
         return ACTION_RUN_CRITIQUE
+    if adjudication in {"MISSING", "STALE", "INVALID"}:
+        return ACTION_RUN_ADJUDICATE
     if export in {"MISSING", "STALE"}:
         return ACTION_RUN_EXPORT
     if export == "TRACKED_GOLDEN":
@@ -277,8 +281,9 @@ def _summary(
     requires_human: bool,
     evidence_refs: list[str],
     patch_handoff: Mapping[str, Any] | None = None,
+    release_blockers: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    return {
+    payload = {
         "schema": SCHEMA,
         "action": action,
         "reason": reason,
@@ -294,6 +299,70 @@ def _summary(
         "forbidden_scope": _forbidden_scope(action, patch_handoff),
         "evidence_refs": evidence_refs,
     }
+    normalized_release_blockers = list(release_blockers or [])
+    if normalized_release_blockers:
+        payload["release_blockers"] = normalized_release_blockers
+        payload["release_blocker"] = normalized_release_blockers[0]
+    return payload
+
+
+def _human_blocker_entries(payload: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    explanation = payload.get("status_explanation")
+    if not isinstance(explanation, Mapping):
+        return []
+    buckets = explanation.get("buckets")
+    if not isinstance(buckets, Mapping):
+        return []
+    blockers = buckets.get("human_blockers")
+    if not isinstance(blockers, list):
+        return []
+    return [blocker for blocker in blockers if isinstance(blocker, Mapping)]
+
+
+def _release_blocker_from_entry(entry: Mapping[str, Any]) -> dict[str, Any] | None:
+    code = _string(entry.get("code"))
+    if not code:
+        return None
+    if code == "export_tracked_golden":
+        stop_boundary = "force_golden_required"
+        required_actor = "release_operator"
+        blocking_source = code
+    elif code == "publication_gate_required":
+        stop_boundary = "accepted_or_final_ready_required"
+        required_actor = "release_operator"
+        blocking_source = code
+    elif code in {"not_accepted", "acceptance_not_declared"} or code.startswith("release_"):
+        stop_boundary = "accepted_or_final_ready_required"
+        required_actor = "human"
+        blocking_source = code
+    else:
+        return None
+    return {
+        "schema": RELEASE_BLOCKER_SCHEMA,
+        "blocking_source": blocking_source,
+        "stop_boundary": stop_boundary,
+        "required_actor": required_actor,
+        "requires_human": True,
+        "blocks_release": True,
+        "reason": _string(entry.get("message"), "release requires explicit human closure"),
+        "safe_command": None,
+        "suggested_command": entry.get("next_command") if isinstance(entry.get("next_command"), str) else None,
+    }
+
+
+def _release_blockers(payload: Mapping[str, Any]) -> list[dict[str, Any]]:
+    blockers: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for entry in _human_blocker_entries(payload):
+        blocker = _release_blocker_from_entry(entry)
+        if blocker is None:
+            continue
+        key = (blocker["blocking_source"], blocker["stop_boundary"])
+        if key in seen:
+            continue
+        seen.add(key)
+        blockers.append(blocker)
+    return blockers
 
 
 def status_next_action_summary(status: Mapping[str, Any]) -> dict[str, Any]:
@@ -323,6 +392,7 @@ def status_next_action_summary(status: Mapping[str, Any]) -> dict[str, Any]:
         safe_command=safe_command,
         requires_human=manual and blocking_source in _HUMAN_BLOCKER_CODES,
         evidence_refs=evidence_refs,
+        release_blockers=_release_blockers(status),
     )
 
 
@@ -376,6 +446,7 @@ def driver_next_action_summary(driver_summary: Mapping[str, Any]) -> dict[str, A
         safe_command=safe_command,
         requires_human=action in _HUMAN_ACTIONS or blocking_source in _HUMAN_STOP_BOUNDARIES,
         evidence_refs=evidence_refs,
+        release_blockers=_release_blockers(driver_summary),
     )
     if isinstance(ready_improvement, Mapping):
         summary["ready_improvement_state"] = _string(

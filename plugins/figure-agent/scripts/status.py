@@ -461,6 +461,26 @@ def _append_critique_freshness_diagnostics(result: dict, example_dir: Path) -> N
     )
 
 
+def _adjudication_state(example_dir: Path, result: dict) -> str:
+    if result.get("critique_state") != "FRESH":
+        return "NOT_APPLICABLE"
+    adjudication_path = example_dir / "critique_adjudication.yaml"
+    critique_path = example_dir / "critique.md"
+    if not adjudication_path.is_file():
+        return "MISSING"
+    try:
+        from critique_adjudication import (  # noqa: PLC0415
+            CritiqueAdjudicationError,
+            adjudication_is_stale,
+            load_adjudication,
+        )
+
+        load_adjudication(adjudication_path)
+    except (CritiqueAdjudicationError, OSError):
+        return "INVALID"
+    return "STALE" if adjudication_is_stale(adjudication_path, critique_path) else "FRESH"
+
+
 def _finalize_status(result: dict, example_dir: Path) -> dict:
     if "release_decision" not in result:
         name = result.get("name")
@@ -471,6 +491,7 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
                 exports_substate=str(result.get("exports_substate") or ""),
             )
     _append_critique_freshness_diagnostics(result, example_dir)
+    result["adjudication_state"] = _adjudication_state(example_dir, result)
     result["audit_evidence"] = summarize_audit_evidence(example_dir)
     metrics_summary = reference_aesthetic_metrics_summary(example_dir)
     if metrics_summary is not None:
