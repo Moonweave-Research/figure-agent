@@ -1,0 +1,263 @@
+name: fig1_overview_v5a_polish_001_vault
+paper_id: pair001
+title: "Fig 1 — Charge trapping in sulfur-rich polymer (pair_001 vault arm, overview v5a polish candidate)"
+reference_image: reference/current_render_baseline_2026-07-03.png
+
+candidate_lane:
+  source_fixture: fig1_overview_v4_pair_001_vault
+  purpose: "Non-golden v5a polish candidate: preserve v4 structure while reducing boxiness, visual weight, and explanatory scaffolding."
+  mutation_boundary: "candidate_source_only; does not mutate accepted, release, export, or golden state"
+  default_human_decision: "compare_against_v3_and_accepted_v2_before_acceptance_or_golden_roll_forward"
+
+# Physics invariant (briefing §8.5): Column F cantilever bends LEFT, away from the
+# electrode = the Coulomb-repulsion signature. The F-7 Coulomb arrow is inline-styled
+# (no named style) so it is anchored by `near` its tail; it must point in -x.
+tex_assertions:
+  - id: panelF-coulomb-repulsion-points-away-from-electrode
+    near: [11.55, 1.3]
+    axis: x
+    direction: decreasing
+panels:
+  - id: A
+    caption: poly(S-r-DIB) primary microstructure
+    bbox_pdf_cm: [0.141, 0.141, 4.591, 5.227]
+    # No positive reference yet; sulfur_polymer_panelA_ref.png is an
+    # anti-reference (network topology forbidden). See reference/audit_table.md.
+  - id: B
+    caption: Sulfur composition variation — 3 representative chains (S60/S75/S85) of paper's 5-sample range (S60/S70/S75/S80/S85)
+    bbox_pdf_cm: [4.655, 0.141, 8.850, 5.227]
+    # Concept-figure scaffold (post-iter1 2026-05-17 restructure 4→3). Full
+    # 5-sample dataset belongs to Fig 2~ quantitative panels. See
+    # reference/audit_table.md.
+  - id: C
+    caption: Localized traps (HERO #1) — real-space + energy diagram split
+    bbox_pdf_cm: [8.914, 0.141, 17.878, 5.227]
+    # No reference; figure-research recommended (highest-priority gap).
+  - id: D
+    caption: Column D — Kinetic evidence (SMU+MIM apparatus + I(t)~t^-n result)
+    bbox_pdf_cm: [0.205, 5.926, 5.883, 11.070]
+    reference_image: reference/row2_apparatus/apparatus1_ref04_NatComm2022_tribo_p3-03.png
+    # PRIMARY: Wang NatComm 2022 Fig 1 (HANDOFF-adopted). 3-axis audit: theoretical
+    # PARTIAL (triboelectric not CvS), structural PASS, storyline PARTIAL.
+    # Transfer: equivalent-circuit symbols, side-by-side condition compare,
+    # polymer-stack cross-section. Do-not-transfer: triboelectric mechanism,
+    # breakdown narrative. Full audit: reference/audit_table.md.
+  - id: E
+    caption: Column E — ISPD-paired evidence (corona+probe apparatus + V_s decay + g(E_t) derived)
+    bbox_pdf_cm: [6.074, 5.926, 12.008, 11.070]
+    reference_image: reference/row2_apparatus/apparatus2_ref01_NatComm2024_surfacecharge_p2-02.png
+    # PRIMARY (iter 15 reverted to He NatComm 2024, 2026-05-18): paper-grounded
+    # side-view apparatus. Reverted from codex_style_03 (isometric) after user
+    # direction "원래 대로 측면에서 본 그림이 나을거 같다" — side-view
+    # structurally better for this apparatus. 3-axis audit: theoretical PASS,
+    # structural PASS, storyline PASS. Transfer: probe-above-sample geometry,
+    # motion-stage labeling, sample-on-grounded-substrate cross-section,
+    # concept-apparatus-result row layout. Do-not-transfer: photo-aesthetic
+    # mixing (Fig 1b), TENG-specific labels.
+    #
+    # SECONDARY (style benchmark, retained for detail-tier reference):
+    #   reference/panel_E_topref/style_variations/codex_style_03_14h35.png
+    # Codex imagegen ref03 — isometric paradigm. Used iter 9-14 as visual
+    # benchmark for detail quality (cylinder shaft, metallic disk, V_s meter
+    # inset screen, etc.) — those details preserved in iter 15 side-view.
+    # Style mismatch (isometric vs side-view) means not suitable as PRIMARY.
+  - id: F
+    caption: Column F — Mechanical evidence (PSU+fixture apparatus + Maxwell baseline + Coulomb result)
+    bbox_pdf_cm: [12.199, 5.926, 17.878, 11.070]
+    reference_image: reference/row2_apparatus/apparatus3_ref01_NatComm2016_microactuator-2.png
+    # PRIMARY: Conrad NatComm 2016 Fig 1 (HANDOFF-adopted, structural anchor).
+    # 3-axis audit: theoretical PARTIAL (MEMS not polymer), structural PASS,
+    # storyline PARTIAL. Transfer: cross-section line convention (electrode
+    # hatching 45°+135° + insulator stipple); parameter labels (d, L, U);
+    # deflection arrow notation. Do-not-transfer: MEMS-scale labels,
+    # no-external-source convention. Secondary candidate (Wang NatComm 2024
+    # dropletelectret) deferred until F's Maxwell-stress visualization needs
+    # reinforcement (v8.8+).
+style_profile: polymer-paper
+visual_clash_cap: 59
+text_boundary_layout:
+  clearance_pt: 0.5
+  row_boxes:
+    - id: row2
+      bbox_pdf_cm: [0.205, 5.863, 17.750, 11.457]
+      clearance_pt: 0.0
+      text_allowlist:
+        - ISPD
+        - kinetic
+        - mechanical
+        - HV+
+        - probe
+        - MIM
+        - stack
+        - SMU
+        - V/A
+        - meter
+        - Coulomb
+        - Maxwell
+        - repulsion
+  column_rules:
+    - id: row2_de
+      x_pdf_cm: 6.015
+      y_range_pdf_cm: [6.244, 11.457]
+    - id: row2_ef
+      x_pdf_cm: 12.182
+      y_range_pdf_cm: [6.244, 11.457]
+  forbidden_rects:
+    - id: panel_e_hv_display
+      bbox_pdf_cm: [7.515, 6.015, 8.342, 6.219]
+      role: instrument_internal_drawing
+    - id: panel_e_vs_meter_display
+      bbox_pdf_cm: [9.957, 6.498, 11.025, 6.778]
+      role: instrument_internal_drawing
+    - id: panel_f_psu_display
+      bbox_pdf_cm: [15.271, 6.778, 16.098, 7.070]
+      role: instrument_internal_drawing
+text_boundary_checks:
+  - id: row2_contain_text
+    kind: rect
+    role: row_box
+    bbox_pdf_cm: [0.205, 5.863, 17.750, 11.457]
+    mode: contain_text
+    clearance_pt: 0.0
+    text_allowlist:
+      - ISPD
+      - kinetic
+      - mechanical
+      - HV+
+      - probe
+      - MIM
+      - stack
+      - SMU
+      - V/A
+      - meter
+      - Coulomb
+      - Maxwell
+      - repulsion
+  - id: row2_de_column_rule
+    kind: vertical_line
+    role: column_rule
+    x_pdf_cm: 6.015
+    y_range_pdf_cm: [6.244, 11.457]
+    clearance_pt: 0.5
+  - id: row2_ef_column_rule
+    kind: vertical_line
+    role: column_rule
+    x_pdf_cm: 12.182
+    y_range_pdf_cm: [6.244, 11.457]
+    clearance_pt: 0.5
+  - id: panel_e_hv_display_avoid_inside
+    kind: rect
+    role: instrument_internal_drawing
+    bbox_pdf_cm: [7.515, 6.015, 8.342, 6.219]
+    mode: avoid_inside
+    clearance_pt: 0.5
+  - id: panel_e_vs_meter_display_avoid_inside
+    kind: rect
+    role: instrument_internal_drawing
+    bbox_pdf_cm: [9.957, 6.498, 11.025, 6.778]
+    mode: avoid_inside
+    clearance_pt: 0.5
+  - id: panel_f_psu_display_avoid_inside
+    kind: rect
+    role: instrument_internal_drawing
+    bbox_pdf_cm: [15.271, 6.778, 16.098, 7.070]
+    mode: avoid_inside
+    clearance_pt: 0.5
+label_path_proximity_checks:
+  - id: panel_c_mobility_edge_reference
+    kind: horizontal_line
+    role: reference_line
+    y_pdf_cm: 2.11
+    x_range_pdf_cm: [15.10, 17.70]
+    clearance_pt: 4.0
+    text_phrases:
+      - id: mobility_edge
+        words: [mobility, edge]
+  - id: panel_c_deep_escape_curve
+    kind: polyline
+    role: semantic_curve
+    points_pdf_cm:
+      - [14.90, 2.72]
+      - [15.18, 2.75]
+      - [15.78, 2.86]
+    clearance_pt: 5.0
+    text_allowlist: [shallow]
+  - id: panel_c_delta_et_caliper
+    kind: vertical_line
+    role: semantic_caliper
+    x_pdf_cm: 17.10
+    y_range_pdf_cm: [1.20, 5.20]
+    clearance_pt: 4.0
+    text_allowlist: [shallow]
+    text_phrases:
+      - id: mobility_edge
+        words: [mobility, edge]
+notes: |
+  pair_001 vault arm. v8.6 6-panel structure (A..F): Row 1 = A/B/C, Row 2 =
+  D/E/F (3 columns, each split apparatus zone top + result zone bottom).
+  Pre-v8.6 G panel removed (merged into v8.6 Column F).
+
+  Authored using approved-only tikz-vault references from query_id 966e2e89
+  as grammar/style anchors (metadata only — source paths masked). Same
+  design.md snapshot SHA as no_vault arm
+  (fa7a6d9ff7890a440ca3471995acf8145c47001a996dbd8bf2c428b363d8f7b7).
+  degraded_mode=true preserved because chroma_v2 indexes still absent.
+
+  Per-panel reference_image: D/E/F adopted per HANDOFF v8.7. Row 1 (A/B/C)
+  references are gaps tracked in reference/audit_table.md — figure-research
+  recommended before deep iteration on Panel C (HERO, highest priority).
+golden_contract:
+  required_labels:
+    - "Sulfur-rich polymer"
+    - "poly(S-r-DIB) linear copolymer"
+    - "Sulfur content"
+    - "localized traps"
+    - "real space"
+    - "energy diagram"
+    - "poly(S-r-DIB) thin film"
+    - "convergent evidence"
+    - "kinetic"
+    - "ISPD"
+    - "mechanical"
+    - "MIM stack"
+    - "polymer film"
+    - "SMU"
+    - "HV"
+    - "Vs probe"
+    - "Vs meter"
+    - "Vactive"
+    - "I(t)"
+    - ["high n", "hig h n", "hig hn"]
+    - "low n"
+    - "Debye"
+    - "g(Et)"
+    - "Coulomb"
+    - "repulsion"
+    - "electrode"
+    - "air gap"
+    - "qtr"
+  source_inventory:
+    panel_letters:
+      pattern: '\\node\[panelLetter\b'
+      min: 6
+    inter_panel_arrows:
+      pattern: '\\draw\[interArrow\]'
+      min: 2
+    row2_spokes:
+      pattern: '\([0-9.]+, 4\.85\) --'
+      min: 3
+    shallow_trap_site_loop:
+      pattern: '\\foreach \\site in \{siteS1, siteS2\}'
+      min: 1
+    deep_trap_site_loop:
+      pattern: '\\foreach \\site in \{siteD1, siteD2\}'
+      min: 1
+    energy_trap_lines:
+      pattern: '\\foreach \\tY in'
+      min: 2
+    surface_charge_markers:
+      pattern: '\\foreach \\cx in \{6\.95, 7\.30\}'
+      min: 1
+    cantilever_charge_markers:
+      pattern: '\\foreach \\cx/\\cy in \{11\.90/2\.00'
+      min: 1
