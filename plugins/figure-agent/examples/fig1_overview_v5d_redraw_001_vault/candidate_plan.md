@@ -32,11 +32,35 @@ v5d is a redraw lane, not an acceptance lane:
 - `./bin/fig-agent compile fig1_overview_v5d_redraw_001_vault` exits `0`;
 - post-compile state is `render_state=FRESH`, `critique_state=MISSING`,
   `export_state=MISSING`;
-- current visual metrics still match v5c because no redraw content has been
-  changed yet.
+- redraw slice 1 has modified the figure composition by removing the Row 1 to
+  Row 2 bracket/up-arrow connector scaffold;
+- slice 1 keeps v5c as fallback and should be treated as an incremental
+  editorial cleanup, not a promotion-quality redraw by itself.
 
-The next implementation slice must modify the figure composition itself before
-claiming v5d is visually better than v5c.
+## Redraw Slice 1 -- Connector Typography
+
+Change:
+
+- removed the faint bracket, vertical tick marks, and center up-arrow between
+  Row 1 and Row 2;
+- kept `convergent evidence` as a typographic row-level cue;
+- kept `kinetic`, `ISPD`, and `mechanical` labels inside the existing Row 2
+  text-boundary contract.
+
+Validation:
+
+- `./bin/fig-agent compile fig1_overview_v5d_redraw_001_vault` exits `0`;
+- text-boundary detector reports `0` candidates;
+- label-path detector reports `0` candidates;
+- visual metrics report `visual_clash=39`, `undeclared_geometry=91`,
+  `scaffold_load.score=130`, `ink_density=0.1059`, `edge_density=0.016184`.
+
+Interpretation:
+
+- this improves the row transition by removing a tool-like construction layer;
+- it does not yet prove v5d is visually better than v5c overall;
+- the next slice should target a larger perceptual quality lever, such as Panel
+  C label hierarchy, Row 2 apparatus density, or print-scale crop review.
 
 ## Comparison Requirements
 
