@@ -115,6 +115,31 @@ Interpretation:
 - the crop and 178 mm print-scale evidence now separate `high n` from the
   Debye reference well enough to keep iterating elsewhere.
 
+## Redraw Slice 4 -- Panel E Derive Label Demotion
+
+Change:
+
+- reduced the `derive` transformation label size in Panel E;
+- moved the label slightly right/up so it reads as a small inter-plot cue
+  rather than a dominant annotation over the Deep peak;
+- preserved the vertical derive arrow, V_s(t) trace, g(E_t) distribution, and
+  tau_d interval.
+
+Validation:
+
+- `./bin/fig-agent compile fig1_overview_v5d_redraw_001_vault` exits `0`;
+- text-boundary detector reports `0` candidates;
+- label-path detector reports `0` candidates;
+- visual metrics report `visual_clash=38`, `undeclared_geometry=91`,
+  `scaffold_load.score=234`, `ink_density=0.105714`,
+  `edge_density=0.01612`.
+
+Interpretation:
+
+- this reduces Panel E's annotation weight without changing the scientific
+  reading path;
+- it is still a local polish pass, not enough by itself to promote v5d.
+
 ## Comparison Requirements
 
 Before promotion, v5d must be compared against:
