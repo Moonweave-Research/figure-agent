@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,7 @@ import quality_memory_index
 import runtime_paths
 
 SCHEMA = "figure-agent.quality-search-plan.v0"
+EXECUTE_SCHEMA = "figure-agent.quality-search-execute.v0"
 
 PROGRESS_ACTIONS = {
     "create_or_fix_source",
@@ -29,6 +31,31 @@ PROGRESS_ACTIONS = {
     "run_fig_loop",
     "run_export",
 }
+
+
+def _utc_stamp() -> str:
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _run_id(name: str) -> str:
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    return f"{stamp}-{name}"
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    if path.is_symlink():
+        raise ValueError(f"refusing to write through symlink: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.parent.is_symlink():
+        raise ValueError(f"refusing to write inside symlink directory: {path.parent}")
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _workspace_relative(paths: runtime_paths.RuntimePaths, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(paths.workspace_root.resolve()).as_posix()
+    except ValueError as exc:
+        raise ValueError(f"quality-search evidence escaped workspace: {path}") from exc
 
 
 def _compact_status(status: dict[str, Any]) -> dict[str, Any]:
@@ -521,6 +548,269 @@ def build_quality_search_plan(
     }
 
 
+def _candidate_specs_from_plan(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    specs: list[dict[str, Any]] = []
+    for index, hypothesis in enumerate(plan.get("patch_hypotheses", []), start=1):
+        if not isinstance(hypothesis, dict):
+            continue
+        family = str(hypothesis.get("family") or "unknown")
+        specs.append(
+            {
+                "id": f"QS{index:03d}",
+                "fixture": plan.get("fixture"),
+                "family": family,
+                "source": hypothesis.get("source"),
+                "target_scope": hypothesis.get("target_scope"),
+                "target_hint": hypothesis.get("target_hint", {}),
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search execute v0 is dry witness mode",
+                "expected_detector_movement": hypothesis.get("expected_detector_movement"),
+                "expected_visual_movement": hypothesis.get("expected_visual_movement"),
+                "rollback_condition": hypothesis.get("rollback_condition"),
+                "witness": {
+                    "state": "spec_only",
+                    "evidence_inputs": ["quality_search_plan", "driver", "quality_defect_ledger"],
+                },
+            }
+        )
+    specs.append(
+        {
+            "id": "QSNULL",
+            "fixture": plan.get("fixture"),
+            "family": "null_baseline",
+            "source": "current_source",
+            "target_scope": "fixture",
+            "target_hint": {"reason": "baseline comparison for candidate batch"},
+            "mutation_allowed": False,
+            "mutation_block_reason": "null baseline never mutates source",
+            "expected_detector_movement": "none",
+            "expected_visual_movement": "none",
+            "rollback_condition": "not applicable",
+            "witness": {
+                "state": "baseline",
+                "evidence_inputs": ["current_plan_state"],
+            },
+        }
+    )
+    return specs
+
+
+def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
+    next_operation = plan.get("next_recommended_operation")
+    operation_kind = (
+        next_operation.get("kind") if isinstance(next_operation, dict) else "unknown"
+    )
+    if family == "null_baseline":
+        return 0.0
+    if operation_kind == "step_out_experiment":
+        weights = {
+            "hierarchy_rebalance": 0.82,
+            "apparatus_strengthen": 0.78,
+            "density_reduce": 0.72,
+            "layout_macro_shift": 0.68,
+        }
+        return weights.get(family, 0.60)
+    if operation_kind == "render_candidate_batch":
+        return 0.64
+    return 0.30
+
+
+def _candidate_scores(
+    candidate_specs: list[dict[str, Any]],
+    plan: dict[str, Any],
+) -> list[dict[str, Any]]:
+    classifications = plan.get("classifications")
+    release_blocker_only = any(
+        isinstance(item, dict)
+        and item.get("kind") == "release_blocker"
+        and item.get("blocks_search") is False
+        for item in classifications or []
+    )
+    scores: list[dict[str, Any]] = []
+    for spec in candidate_specs:
+        family = str(spec.get("family") or "unknown")
+        score = _family_evidence_weight(family, plan)
+        if release_blocker_only and family != "null_baseline":
+            score += 0.03
+        score = round(min(score, 1.0), 4)
+        scores.append(
+            {
+                "candidate_id": spec.get("id"),
+                "family": family,
+                "evidence_score": score,
+                "witness": {
+                    "state": "dry_scored",
+                    "basis": [
+                        "plan_next_operation",
+                        "classification_blocks_search",
+                        "candidate_family_priority",
+                    ],
+                },
+                "render_status": "not_rendered",
+                "apply_authority": "review_only",
+            }
+        )
+    return scores
+
+
+def _execution_decision(
+    plan: dict[str, Any],
+    candidate_scores: list[dict[str, Any]],
+) -> dict[str, Any]:
+    blocking = [
+        item
+        for item in plan.get("classifications", [])
+        if isinstance(item, dict) and item.get("blocks_search") is True
+    ]
+    if blocking:
+        return {
+            "kind": "prerequisite_required",
+            "reason": "progress blocker prevents candidate search",
+            "blocking_classifications": blocking,
+            "selected_candidate_id": None,
+            "evidence_score": 0.0,
+        }
+    ranked = sorted(
+        candidate_scores,
+        key=lambda item: float(item.get("evidence_score") or 0.0),
+        reverse=True,
+    )
+    selected = ranked[0] if ranked and float(ranked[0].get("evidence_score") or 0.0) > 0 else None
+    if selected is None:
+        return {
+            "kind": "no_actionable_candidate",
+            "reason": "no non-baseline candidate received supporting evidence",
+            "selected_candidate_id": None,
+            "evidence_score": 0.0,
+        }
+    return {
+        "kind": "candidate_batch_ready",
+        "reason": "dry executor selected the strongest evidence-backed candidate family",
+        "selected_candidate_id": selected.get("candidate_id"),
+        "selected_family": selected.get("family"),
+        "evidence_score": selected.get("evidence_score"),
+        "source_mutation": "not_performed",
+        "next_action": "render selected candidate batch in sandbox",
+    }
+
+
+def build_quality_search_execution(
+    name: str,
+    *,
+    goal: str,
+    max_iterations: int,
+    plugin_root: Path | None = None,
+    workspace_root: Path | None = None,
+) -> dict[str, Any]:
+    if max_iterations < 1:
+        raise ValueError("max_iterations must be >= 1")
+    plan = build_quality_search_plan(
+        name,
+        goal=goal,
+        plugin_root=plugin_root,
+        workspace_root=workspace_root,
+    )
+    paths = runtime_paths.resolve_runtime_paths(
+        plugin_root=plugin_root,
+        workspace_root=workspace_root,
+    )
+    run_dir = paths.workspace_root / ".scratch" / "quality-search-runs" / _run_id(name)
+    if run_dir.is_symlink():
+        raise ValueError(f"refusing to write quality-search run through symlink: {run_dir}")
+
+    candidate_specs = _candidate_specs_from_plan(plan)
+    scores = _candidate_scores(candidate_specs, plan)
+    decision = _execution_decision(plan, scores)
+    tool_defects = {
+        "schema": "figure-agent.quality-search-tool-defects.v0",
+        "fixture": name,
+        "tool_defect_candidates": plan.get("tool_defect_candidates", []),
+    }
+    memory_events = {
+        "schema": "figure-agent.quality-search-memory-events.v0",
+        "fixture": name,
+        "events": [],
+        "reason": (
+            "dry witness executor records no learned outcome until render/apply "
+            "evidence exists"
+        ),
+    }
+    policy = {
+        "schema": "figure-agent.quality-search-policy.v0",
+        "fixture": name,
+        "kind": (plan.get("next_recommended_operation") or {}).get("kind"),
+        "max_iterations": max_iterations,
+        "source_mutation": "forbidden",
+        "release_mutation": "forbidden",
+    }
+    manifest = {
+        "schema": EXECUTE_SCHEMA,
+        "fixture": name,
+        "goal": goal,
+        "created_at": _utc_stamp(),
+        "mode": "execute_dry_witness",
+        "status": "dry_run_complete",
+        "max_iterations": max_iterations,
+        "executed_iterations": 1,
+        "artifacts": [
+            "state_000.json",
+            "classification_000.json",
+            "policy_000.json",
+            "candidate_specs_000.json",
+            "candidate_scores_000.json",
+            "decision_000.json",
+            "tool_defect_candidates_000.json",
+            "memory_events_000.json",
+        ],
+    }
+    artifacts = {
+        "run_manifest.json": manifest,
+        "state_000.json": plan.get("state", {}),
+        "classification_000.json": {
+            "schema": "figure-agent.quality-search-classification.v0",
+            "classifications": plan.get("classifications", []),
+        },
+        "policy_000.json": policy,
+        "candidate_specs_000.json": {
+            "schema": "figure-agent.quality-search-candidate-specs.v0",
+            "candidates": candidate_specs,
+        },
+        "candidate_scores_000.json": {
+            "schema": "figure-agent.quality-search-candidate-scores.v0",
+            "scores": scores,
+        },
+        "decision_000.json": decision,
+        "tool_defect_candidates_000.json": tool_defects,
+        "memory_events_000.json": memory_events,
+    }
+    writes: list[str] = []
+    for filename, artifact in artifacts.items():
+        path = run_dir / filename
+        _write_json(path, artifact if isinstance(artifact, dict) else {"value": artifact})
+        writes.append(_workspace_relative(paths, path))
+
+    return {
+        "schema": EXECUTE_SCHEMA,
+        "fixture": name,
+        "goal": goal,
+        "status": "dry_run_complete",
+        "mode": "execute_dry_witness",
+        "run_dir": _workspace_relative(paths, run_dir),
+        "max_iterations": max_iterations,
+        "executed_iterations": 1,
+        "plan": plan,
+        "candidate_specs": candidate_specs,
+        "candidate_scores": scores,
+        "decision": decision,
+        "tool_defect_candidates": plan.get("tool_defect_candidates", []),
+        "writes": writes,
+        "safety": {
+            "source_mutation": "forbidden_in_dry_executor",
+            "accepted_golden_release_mutation": "forbidden_without_explicit_human_approval",
+        },
+    }
+
+
 def main(
     argv: list[str] | None = None,
     *,
@@ -539,17 +829,15 @@ def main(
     fixture_identity.validate_fixture_name(args.name)
     name = args.name
     if args.execute:
-        payload = {
-            "schema": "figure-agent.quality-search-execute.v0",
-            "fixture": name,
-            "goal": args.goal,
-            "status": "blocked",
-            "reason": "execute_not_implemented",
-            "max_iterations": args.max_iterations,
-            "writes": [],
-        }
+        payload = build_quality_search_execution(
+            name,
+            goal=args.goal,
+            max_iterations=args.max_iterations,
+            plugin_root=plugin_root,
+            workspace_root=workspace_root,
+        )
         print(json.dumps(payload, indent=2, sort_keys=True))
-        return 1
+        return 0
     payload = build_quality_search_plan(
         name,
         goal=args.goal,

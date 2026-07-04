@@ -210,3 +210,102 @@ def test_fig_agent_quality_search_plan_cli_is_read_only(tmp_path: Path) -> None:
     assert payload["read_only"] is True
     assert payload["safety"]["writes"] == []
     assert _tree(workspace) == before
+
+
+def test_quality_search_execute_writes_dry_run_witness_evidence(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_with_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="dry witness executor",
+        max_iterations=3,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    assert payload["schema"] == "figure-agent.quality-search-execute.v0"
+    assert payload["status"] == "dry_run_complete"
+    assert payload["executed_iterations"] == 1
+    assert payload["safety"]["source_mutation"] == "forbidden_in_dry_executor"
+    assert payload["decision"]["kind"] == "candidate_batch_ready"
+    assert payload["decision"]["selected_candidate_id"] != "QSNULL"
+    assert payload["decision"]["evidence_score"] > 0
+    assert len(payload["candidate_specs"]) == 4
+    assert {item["family"] for item in payload["candidate_specs"]} >= {
+        "hierarchy_rebalance",
+        "apparatus_strengthen",
+        "density_reduce",
+        "null_baseline",
+    }
+    assert all("witness" in item for item in payload["candidate_scores"])
+    assert all(path.startswith(".scratch/quality-search-runs/") for path in payload["writes"])
+
+    run_dir = tmp_path / payload["run_dir"]
+    assert (run_dir / "run_manifest.json").is_file()
+    assert (run_dir / "candidate_specs_000.json").is_file()
+    assert (run_dir / "candidate_scores_000.json").is_file()
+    assert (run_dir / "decision_000.json").is_file()
+    decision = json.loads((run_dir / "decision_000.json").read_text(encoding="utf-8"))
+    assert decision == payload["decision"]
+
+
+def test_fig_agent_quality_search_execute_cli_writes_only_scratch(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace)
+    before = _tree(workspace)
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(FIG_AGENT),
+            "quality-search",
+            "quality_demo",
+            "--goal",
+            "execute dry witness loop",
+            "--execute",
+            "--max-iterations",
+            "2",
+            "--json",
+        ],
+        cwd=workspace,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=10,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["schema"] == "figure-agent.quality-search-execute.v0"
+    assert payload["status"] == "dry_run_complete"
+    assert payload["safety"]["source_mutation"] == "forbidden_in_dry_executor"
+    assert payload["writes"]
+    after = _tree(workspace)
+    changed = sorted(set(after) - set(before))
+    assert changed
+    assert all(
+        path == ".scratch"
+        or path == ".scratch/quality-search-runs"
+        or path.startswith(".scratch/quality-search-runs/")
+        for path in changed
+    )
