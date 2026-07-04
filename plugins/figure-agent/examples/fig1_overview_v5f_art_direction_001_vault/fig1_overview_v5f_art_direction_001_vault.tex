@@ -2045,8 +2045,8 @@
   at (12.99, 3.84) {bias};
 \fill[cRed!68!black] (13.30, 3.82) circle (0.020);
 \fill[cGray!55!black] (13.30, 2.82) circle (0.020);
-\draw[cGray!62!black, line width=0.34pt, rounded corners=0.8pt]
-  (13.30, 3.78) -- (13.30, 2.82);
+\draw[cGray!58!black, line width=0.26pt, rounded corners=1.0pt]
+  (13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16) -- (13.18, 3.02) -- (13.30, 2.82);
 
 % Fixed clip and charge-trapping cantilever.
 \fill[cGray!10] (11.55, 2.84) rectangle (12.10, 2.96);
@@ -2097,24 +2097,24 @@
 
 % Charge family and label: geometry is the message, label is secondary.
 \foreach \cx/\cy/\rr in {11.62/2.28/0.075,11.43/1.86/0.082,11.10/1.36/0.088,10.72/0.94/0.082} {
-  \draw[cRed!35!white, line width=0.25pt, opacity=0.36] (\cx,\cy) circle ({1.90*\rr});
+  \draw[cRed!35!white, line width=0.25pt, opacity=0.36] (\cx,\cy) circle ({2.35*\rr});
   \shade[ball color=cRed!82!black] (\cx,\cy) circle (\rr);
   \draw[cRed!95!black, line width=0.25pt] (\cx,\cy) circle (\rr);
 }
 \draw[cRed!55!black, line width=0.32pt]
-  (11.50,2.38) .. controls (11.10,2.78) and (10.32,3.00) .. (9.62,3.00);
+  (11.48,2.40) .. controls (10.78,3.02) and (9.92,3.36) .. (9.05,3.36);
 \node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,
       inner xsep=0.9pt, inner ysep=0.45pt,
-      font=\sffamily\bfseries\fontsize{4.0}{4.8}\selectfont, text=cRed!76!black]
-  at (9.56, 2.84) {$q_{\mathrm{tr}}$};
+      font=\sffamily\bfseries\fontsize{4.8}{5.8}\selectfont, text=cRed!76!black]
+  at (9.05, 3.12) {$q_{\mathrm{tr}}$};
 \node[anchor=west, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=1.0pt, inner ysep=0.45pt,
-      font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!76!black]
-  at (9.56, 3.04) {trapped charge};
+      font=\sffamily\bfseries\fontsize{4.4}{5.3}\selectfont, text=cRed!76!black]
+  at (9.05, 3.36) {trapped charge};
 
 % Coulomb-only response, intentionally stronger than the apparatus.
-\draw[panelFCoulombRepulsionArrow, -{Stealth[length=8.6pt,width=6.2pt]}, cRed!82!black, line width=1.08pt]
-  (11.02, 1.18) -- (9.60, 1.18);
+\draw[panelFCoulombRepulsionArrow, -{Stealth[length=9.6pt,width=6.8pt]}, cRed!82!black, line width=1.24pt]
+  (11.18, 1.18) -- (9.18, 1.18);
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont, text=cRed!82!black,
       anchor=south west] at (9.72, 1.54) {Coulomb};
 \node[labelMute, anchor=north west, fill=white, fill opacity=0.94, text opacity=1,
@@ -2122,8 +2122,8 @@
       font=\sffamily\fontsize{6.0}{7.2}\selectfont,
       text=cRed!82!black] at (9.73, 1.45) {repulsion};
 
-\draw[<->, cGray!62!black, line width=0.50pt]
-  (10.42, 0.54) -- (13.18, 0.54);
+\draw[<->, cGray!64!black, line width=0.70pt]
+  (9.92, 0.54) -- (13.18, 0.54);
 \node[labelMute, anchor=north, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=1.4pt, inner ysep=0.9pt,
       font=\sffamily\fontsize{6.0}{7.2}\selectfont, text=cGray!75!black]
