@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig1_overview_v5f_art_direction_001_vault
-generated_at: '2026-07-04T14:43:14Z'
+generated_at: '2026-07-04T23:32:35Z'
 generator: critique_brief.py
 generator_version: sha256:51345bad8b6bdef113dcd48ad8b73a3a99b7cf99af028b5d3b3ea4c348690946
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:067b4a768970a2db922e37d3a4282165d886fd943b37f3f76cd68360007bd72d
+critique_input_hash: sha256:4f1516a3d593ed51e6547c1d420f387139af43882b0602c2db62c24707706707
 verdict: revise
 audit_enumeration:
   structural_completeness:
@@ -35,7 +35,8 @@ audit_enumeration:
     - component: Panel F Vactive PSU, cantilever, qtr charges, electrode, air gap, and Coulomb arrow
       mount_support: 'true'
       rationale: Panel F is materially redrawn around trapped charge, Coulomb repulsion, electrode, and air gap; the applied
-        QS002 revision moves the trapped-charge callout left and keeps density as the remaining human comparison question.
+        QS002 revision moves the trapped-charge callout left, while latest review keeps boundary/density polish as the remaining
+        human comparison question.
       connections: Vactive wiring now routes through a stepped lead toward the electrode; charge markers, field-gap lines,
         Coulomb arrow, and air-gap caliper form the mechanical evidence chain.
     missing_from_reference:
@@ -345,7 +346,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:6847b6e6feb84942817f68c540e07d7b775705fdec71d94fce44aade1eab2068
+  assessed_artifact_hash: sha256:4f1516a3d593ed51e6547c1d420f387139af43882b0602c2db62c24707706707
   benchmark_level: needs_human_art_direction
   confidence: medium
   blockers: []
@@ -636,7 +637,8 @@ weakest_panel_coherence:
   route: human_art_direction
   evidence: Panel F trapped-charge callout is clear in panel_F_s11 and print_thumbnail but denser than the v5d fallback; linked
     to finding C001.
-  rationale: Panel F is now readable, but it is the most changed subregion and should be compared against v5d before promotion.
+  rationale: Panel F is now readable, but the trapped-charge callout sits close to the left panel boundary and should be compared
+    against v5d/v5e before promotion.
   linked_evidence:
   - quality_axes.journal_polish
   - editorial_art_direction.human_art_direction_gate
@@ -659,9 +661,9 @@ micro_defects:
   kind: print_scale_unreadable
   severity: MINOR
   observation: Panel F is now mechanism-first and readable after QS002 moved the qtr/trapped-charge callout to the left,
-    strengthened the Coulomb arrow and air-gap caliper, and rerouted the Vactive-to-electrode lead; detector counts still flag
-    OCR/text-on-path candidates in this dense area, but the crop review treats the remaining issue as art-direction density
-    rather than an automatic geometry defect.
+    strengthened the Coulomb arrow and air-gap caliper, and rerouted the Vactive-to-electrode lead; latest crop review confirms
+    the label remains near the left boundary and detector counts still flag OCR/text-on-path candidates in this dense area, but
+    the remaining issue is art-direction density/boundary polish rather than an automatic geometry defect.
   linked_finding_id: C001
   visual_clash_ref: ''
   text_boundary_ref: ''
@@ -5271,14 +5273,15 @@ findings:
   grounded_in_rule: top_tier_audit.aesthetic_coherence; editorial_art_direction.aesthetic_risk; editorial_art_direction.tikz_vs_svg_polish_trigger;
     editorial_art_direction.human_art_direction_gate; candidate_plan.md large-change gate; v5d/v5e/v5f contact sheets; aesthetic_intent
     panel_c_hero_hierarchy and mature_restraint
-  observation: v5f clears the large art-direction threshold and the applied QS002 revision improves Panel F label routing,
-    Coulomb response, air-gap emphasis, and Vactive lead routing, but the denser charge/force/electrode composition still needs
-    human comparison against v5d/v5e before promotion.
-  suggested_fix: Review the full render, print thumbnail, Panel C crop, and Panel F crop contact sheets; accept v5f only if
-    the stronger mechanism hierarchy outweighs the added Panel F density.
+  observation: v5f clears the large art-direction threshold; the applied QS002 revision improves Panel F label routing,
+    Coulomb response, air-gap emphasis, and Vactive lead routing, and QS003 reduces Panel E equipment-box/charge-marker density
+    without changing labels. Panel F still needs comparison against v5d/v5e because the trapped-charge label is close to the
+    left boundary and the charge/force/electrode composition remains visually dense.
+  suggested_fix: Review the full render, print thumbnail, Panel E crop, and Panel F crop contact sheets; accept v5f only if
+    the stronger mechanism hierarchy outweighs the remaining Panel F density/boundary polish concern.
   status: open
 ---
 
 # Vision Critique — fig1_overview_v5f_art_direction_001_vault
 
-The current v5f render is a tool-driven art-direction candidate, not an accepted replacement for v5d or v5e. It clears the large-change gate versus v5d and now includes the applied QS002 Panel F revision: the qtr/trapped-charge callout moves left, the Coulomb response and air-gap relation are stronger, and the Vactive lead is less box-like. The remaining decision is human art-direction acceptance: compare the full render, print thumbnail, and Panel C/F crops before any accepted, golden, or release state.
+The current v5f render is a tool-driven art-direction candidate, not an accepted replacement for v5d or v5e. It clears the large-change gate versus v5d and now includes the applied QS002 Panel F revision plus QS003 Panel E density reduction: the qtr/trapped-charge callout moves left, the Coulomb response and air-gap relation are stronger, the Vactive lead is less box-like, and Panel E equipment marks are less dominant. The remaining decision is human art-direction acceptance because Panel F is still the densest/boundary-sensitive zone; compare the full render, print thumbnail, and Panel E/F crops before any accepted, golden, or release state.
