@@ -12,6 +12,7 @@ import fixture_identity
 import runtime_paths
 
 SCHEMA = "figure-agent.loop-metrics.v1"
+LOOP_RUN_SCHEMA = "figure-agent.fig-loop-run.v1"
 
 
 class QualityLoopMetricsError(ValueError):
@@ -77,11 +78,14 @@ def _load_json_object(path: Path, *, root: Path, code: str) -> dict[str, Any]:
 
 def _candidate_key(record: dict[str, Any]) -> str | None:
     fixture = record.get("fixture")
-    action = record.get("action") if isinstance(record.get("action"), dict) else {}
-    candidate_id = action.get("candidate_id")
-    if not isinstance(fixture, str) or not isinstance(candidate_id, str):
+    if not isinstance(fixture, str) or not fixture:
         return None
-    if not fixture or not candidate_id:
+    action = record.get("action") if isinstance(record.get("action"), dict) else {}
+    candidate_hash = action.get("candidate_hash")
+    if isinstance(candidate_hash, str) and candidate_hash:
+        return f"{fixture}:{candidate_hash}"
+    candidate_id = action.get("candidate_id")
+    if not isinstance(candidate_id, str) or not candidate_id:
         return None
     return f"{fixture}:{candidate_id}"
 
@@ -229,17 +233,25 @@ def _loop_run_manifests(workspace_root: Path) -> list[tuple[Path, dict[str, Any]
         raise QualityLoopMetricsError("loop_run_symlink")
     if not scratch.is_dir():
         return []
+    runs_root = scratch / "fig-loop-runs"
+    if runs_root.is_symlink():
+        raise QualityLoopMetricsError("loop_run_symlink")
+    if not runs_root.is_dir():
+        return []
     manifests: list[tuple[Path, dict[str, Any]]] = []
-    for manifest_path in sorted(scratch.rglob("run_manifest.json")):
+    for manifest_path in sorted(runs_root.glob("*/run_manifest.json")):
         _assert_not_symlink(manifest_path, root=scratch, code="loop_run_symlink")
+        manifest = _load_json_object(
+            manifest_path,
+            root=scratch,
+            code="loop_run_manifest",
+        )
+        if manifest.get("schema") != LOOP_RUN_SCHEMA:
+            continue
         manifests.append(
             (
                 manifest_path,
-                _load_json_object(
-                    manifest_path,
-                    root=scratch,
-                    code="loop_run_manifest",
-                ),
+                manifest,
             )
         )
     return manifests

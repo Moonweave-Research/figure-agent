@@ -42,6 +42,10 @@ def _record(
     }
 
 
+def _candidate_key(fixture: str, candidate_id: str) -> str:
+    return f"{fixture}:sha256:{candidate_id.lower()}"
+
+
 def _write_log(plugin_root: Path, fixture: str, rows: list[dict]) -> None:
     path = plugin_root / "docs" / "experience-log" / f"{fixture}.jsonl"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -88,7 +92,43 @@ def test_loop_metrics_measures_auto_accept_precision_from_later_reverts(
     assert precision["reverted_count"] == 1
     assert precision["precision"] == 0.5
     assert precision["state"] == "measured"
-    assert precision["reverted_candidates"] == ["fig_demo:CAND001"]
+    assert precision["reverted_candidates"] == [_candidate_key("fig_demo", "CAND001")]
+
+
+def test_loop_metrics_does_not_conflate_reused_candidate_ids(
+    tmp_path: Path,
+) -> None:
+    plugin_root = tmp_path / "plugin"
+    first_hash = "sha256:" + "a" * 64
+    unrelated_hash = "sha256:" + "b" * 64
+    _write_log(
+        plugin_root,
+        "fig_demo",
+        [
+            _record(
+                "fig_demo",
+                "CAND001",
+                human_decision_kind="auto_accept",
+                human_label="accept",
+                candidate_hash=first_hash,
+            ),
+            _record(
+                "fig_demo",
+                "CAND001",
+                human_label="reject",
+                quality_movement="regressed",
+                candidate_hash=unrelated_hash,
+            ),
+        ],
+    )
+
+    payload = quality_loop_metrics.build_loop_metrics(plugin_root=plugin_root)
+
+    precision = payload["metrics"]["auto_accept_precision"]
+    assert precision["auto_accepted_count"] == 1
+    assert precision["reverted_count"] == 0
+    assert precision["precision"] == 1.0
+    assert precision["reverted_candidates"] == []
 
 
 def test_loop_metrics_reports_unmeasured_without_auto_accepts(tmp_path: Path) -> None:
@@ -129,7 +169,10 @@ def test_loop_metrics_measures_wasted_iteration_rate_from_repeats_and_noops(
     assert wasted["iteration_count"] == 4
     assert wasted["wasted_count"] == 2
     assert wasted["rate"] == 0.5
-    assert wasted["wasted_candidates"] == ["fig_demo:CAND002", "fig_demo:CAND003"]
+    assert wasted["wasted_candidates"] == [
+        f"fig_demo:{repeated_hash}",
+        _candidate_key("fig_demo", "CAND003"),
+    ]
 
 
 def _write_loop_run(
@@ -147,7 +190,7 @@ def _write_loop_run(
     (run_dir / "run_manifest.json").write_text(
         json.dumps(
             {
-                "schema": "figure-agent.loop-run.v1",
+                "schema": "figure-agent.fig-loop-run.v1",
                 "created_at": created_at,
                 "started_at": created_at,
                 "completed_at": completed_at or created_at,
@@ -220,6 +263,48 @@ def test_loop_metrics_reports_stop_cause_histogram_and_auto_remedy_fraction(
         "decision_weak": 2,
         "lever_exhausted": 1,
     }
+
+
+def test_loop_metrics_ignores_non_loop_run_manifests(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    other_run_dir = workspace / ".scratch" / "other-workflow" / "RUNX"
+    other_run_dir.mkdir(parents=True)
+    (other_run_dir / "run_manifest.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.fig-run-journal.v1",
+                "created_at": "2026-07-04T00:00:00Z",
+                "fixture": "fig_demo",
+                "run_id": "RUNX",
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    wrong_schema_dir = workspace / ".scratch" / "fig-loop-runs" / "RUNY"
+    wrong_schema_dir.mkdir(parents=True)
+    (wrong_schema_dir / "run_manifest.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.fig-run-journal.v1",
+                "created_at": "2026-07-04T00:00:00Z",
+                "fixture": "fig_demo",
+                "run_id": "RUNY",
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    payload = quality_loop_metrics.build_loop_metrics(
+        plugin_root=tmp_path / "plugin",
+        workspace_root=workspace,
+    )
+
+    assert payload["metrics"]["stop_cause_histogram"]["state"] == "unmeasured"
+    assert payload["metrics"]["experience_log_growth"]["state"] == "unmeasured"
 
 
 def test_loop_metrics_reports_experience_log_growth_per_run(
