@@ -2028,33 +2028,35 @@
 \fill[white] (9.52, 0.18) rectangle (13.92, 4.34);
 \draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
 
-% Compact bias source, demoted to support role but redrawn as a real faceplate.
-\fill[cGray!35!black, opacity=0.16, rounded corners=1.4pt]
-  (12.61, 3.53) rectangle (13.59, 4.14);
-\fill[cGray!7, rounded corners=1.4pt] (12.55, 3.58) rectangle (13.53, 4.18);
-\draw[cGray!62!black, line width=0.36pt, rounded corners=1.4pt]
-  (12.55, 3.58) rectangle (13.53, 4.18);
-\draw[cGray!35!black, line width=0.18pt, rounded corners=0.9pt]
-  (12.62, 3.65) rectangle (13.46, 4.11);
-\fill[cGray!72!black, rounded corners=0.7pt] (12.72, 3.93) rectangle (13.36, 4.06);
-\draw[cGray!88!black, line width=0.14pt, rounded corners=0.7pt]
-  (12.72, 3.93) rectangle (13.36, 4.06);
-\draw[cGray!12, line width=0.46pt]
-  (12.78, 3.97) -- (12.89, 3.97) -- (12.89, 4.03)
-              -- (13.09, 4.03) -- (13.09, 3.97) -- (13.30, 3.97);
-\node[font=\sffamily\bfseries\fontsize{5.6}{6.7}\selectfont, text=cGray!78!black]
-  at (13.04, 3.77) {$V_{\mathrm{active}}$};
-\fill[cGray!85!black] (13.53, 3.84) circle (0.022);
-\fill[cGray!45!black] (13.53, 3.84) circle (0.010);
-\draw[cGray!70!black, line width=0.30pt]
-  (13.53, 3.84) -- (13.70, 3.84) -- (13.70, 2.82) -- (13.40, 2.82);
+% Compact bias source: small but instrument-like, with the mechanism still dominant.
+\fill[cGray!35!black, opacity=0.13, rounded corners=1.2pt]
+  (12.58, 3.54) rectangle (13.62, 4.14);
+\fill[cGray!6, rounded corners=1.2pt] (12.52, 3.59) rectangle (13.56, 4.19);
+\draw[cGray!64!black, line width=0.34pt, rounded corners=1.2pt]
+  (12.52, 3.59) rectangle (13.56, 4.19);
+\draw[cGray!28!black, line width=0.25pt] (12.59, 3.69) -- (13.49, 3.69);
+\fill[cGray!78!black, rounded corners=0.7pt] (12.68, 3.94) rectangle (13.16, 4.06);
+\draw[cGray!88!black, line width=0.25pt, rounded corners=0.7pt]
+  (12.68, 3.94) rectangle (13.16, 4.06);
+\draw[cGray!12, line width=0.38pt]
+  (12.73, 3.99) -- (12.83, 3.99) -- (12.83, 4.03)
+              -- (12.98, 4.03) -- (12.98, 3.99) -- (13.10, 3.99);
+\fill[cRed!70!black] (13.31, 3.99) circle (0.025);
+\fill[cGray!55!black] (13.43, 3.99) circle (0.025);
+\draw[cGray!55!black, line width=0.25pt] (12.64, 3.76) -- (13.45, 3.76);
+\node[font=\sffamily\bfseries\fontsize{4.8}{5.8}\selectfont, text=cGray!78!black]
+  at (13.04, 3.82) {$V_{\mathrm{active}}$};
+\node[font=\sffamily\fontsize{3.6}{4.3}\selectfont, text=cGray!58!black]
+  at (12.91, 3.64) {DC bias};
+\draw[cGray!68!black, line width=0.28pt]
+  (13.31, 3.99) -- (13.70, 3.99) -- (13.70, 2.82) -- (13.40, 2.82);
 
 % Fixed clip and charge-trapping cantilever.
 \fill[cGray!10] (11.55, 2.84) rectangle (12.10, 2.96);
 \draw[cGray!75!black, line width=0.38pt] (11.55, 2.84) rectangle (12.10, 2.96);
 \draw[cGray!55!black, line width=0.38pt] (11.42, 3.10) -- (12.22, 3.10);
 \foreach \dx in {0,0.11,0.22,0.33,0.44,0.55,0.66} {
-  \draw[cGray!55!black, line width=0.24pt]
+  \draw[cGray!55!black, line width=0.25pt]
     ({11.42+\dx}, 3.10) -- ({11.36+\dx}, 3.18);
 }
 \draw[cGray!75!black, line width=0.35pt] (11.82, 2.96) -- (11.82, 3.10);
@@ -2075,14 +2077,18 @@
 % Right electrode and explicit gap field.
 \shade[left color=cGray!34, right color=cGray!18] (13.18, 0.46) rectangle (13.42, 2.82);
 \draw[cGray!86!black, line width=0.56pt] (13.18, 0.46) rectangle (13.42, 2.82);
-\draw[cGray!45!black, line width=0.20pt] (13.23, 0.50) -- (13.23, 2.78);
+\draw[cGray!45!black, line width=0.25pt] (13.23, 0.50) -- (13.23, 2.78);
 \foreach \hy in {0.58,0.74,0.90,1.06,1.22,1.38,1.54,1.70,1.86,2.02,2.18,2.34,2.50,2.66} {
-  \draw[cGray!60!black, line width=0.20pt] (13.42, \hy) -- (13.18, {\hy-0.06});
+  \draw[cGray!60!black, line width=0.25pt] (13.42, \hy) -- (13.18, {\hy-0.06});
 }
-\foreach \yy in {0.92,1.22,1.52,1.82,2.12,2.42} {
-  \draw[cGray!25, line width=0.24pt, dash pattern=on 1.2pt off 1.5pt]
+\foreach \yy in {0.92,1.22,1.52,1.82,2.12} {
+  \draw[cGray!25, line width=0.25pt, dash pattern=on 1.2pt off 1.5pt]
     (11.08,\yy) -- (13.18,\yy);
 }
+\draw[cGray!25, line width=0.25pt, dash pattern=on 1.2pt off 1.5pt]
+  (11.08,2.42) -- (11.88,2.42);
+\draw[cGray!25, line width=0.25pt, dash pattern=on 1.2pt off 1.5pt]
+  (12.92,2.42) -- (13.18,2.42);
 \node[labelMute, anchor=south, rotate=270, fill=white, fill opacity=0.95, text opacity=1,
       inner xsep=1.1pt, inner ysep=0.7pt,
       font=\sffamily\fontsize{5.8}{7.0}\selectfont, text=cGray!78!black]
@@ -2094,22 +2100,18 @@
 
 % Charge family and label: geometry is the message, label is secondary.
 \foreach \cx/\cy/\rr in {11.62/2.28/0.075,11.43/1.86/0.082,11.10/1.36/0.088,10.72/0.94/0.082} {
-  \draw[cRed!35!white, line width=0.24pt, opacity=0.42] (\cx,\cy) circle ({1.45*\rr});
+  \draw[cRed!35!white, line width=0.25pt, opacity=0.42] (\cx,\cy) circle ({1.45*\rr});
   \shade[ball color=cRed!72!black] (\cx,\cy) circle (\rr);
-  \draw[cRed!95!black, line width=0.24pt] (\cx,\cy) circle (\rr);
+  \draw[cRed!95!black, line width=0.25pt] (\cx,\cy) circle (\rr);
 }
-\draw[cRed!50!black, line width=0.25pt]
-  (11.62,2.28) .. controls (11.84,2.40) and (12.00,2.56) .. (12.18,2.66);
-\draw[cRed!45!black, line width=0.24pt]
-  (11.10,1.36) .. controls (11.52,1.78) and (11.80,2.24) .. (12.18,2.51);
-\node[anchor=west, align=left, fill=white, fill opacity=0.97, text opacity=1,
-      inner xsep=1.3pt, inner ysep=0.7pt,
-      font=\sffamily\bfseries\fontsize{5.5}{6.8}\selectfont, text=cRed!76!black]
-  at (12.16, 2.74) {trapped\\[-0.2pt]charge};
+\draw[cRed!48!black, line width=0.25pt]
+  (11.62,2.28) .. controls (11.78,2.58) and (11.94,2.88) .. (12.15,3.05);
+\draw[cRed!42!black, line width=0.25pt]
+  (11.10,1.36) .. controls (11.46,1.90) and (11.78,2.55) .. (12.15,2.96);
 \node[anchor=west, fill=white, fill opacity=0.97, text opacity=1,
-      inner xsep=1.0pt, inner ysep=0.5pt,
-      font=\sffamily\itshape\fontsize{5.3}{6.4}\selectfont, text=cRed!76!black]
-  at (12.25, 2.50) {$q_{\mathrm{tr}}$};
+      inner xsep=1.1pt, inner ysep=0.55pt,
+      font=\sffamily\bfseries\fontsize{4.2}{5.1}\selectfont, text=cRed!76!black]
+  at (12.13, 3.08) {$q_{\mathrm{tr}}$ trapped charge};
 
 % Coulomb-only response, intentionally stronger than the apparatus.
 \draw[panelFCoulombRepulsionArrow, -{Stealth[length=7pt,width=5pt]}, cRed!82!black, line width=0.82pt]

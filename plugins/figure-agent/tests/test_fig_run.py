@@ -413,9 +413,10 @@ def test_export_with_stop_boundary_is_not_executed(
     )
 
 
-def test_closeout_boundary_uses_closeout_command_even_when_action_is_fig_loop(
+def test_closeout_boundary_executes_verify_only_fig_loop(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    commands: list[str] = []
     _install_driver_sequence(
         monkeypatch,
         [
@@ -428,6 +429,12 @@ def test_closeout_boundary_uses_closeout_command_even_when_action_is_fig_loop(
             )
         ],
     )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command)
+        or fig_run.CommandResult(returncode=0, stdout="", stderr=""),
+    )
 
     payload = fig_run.run_workflow(
         "runner_demo",
@@ -437,12 +444,11 @@ def test_closeout_boundary_uses_closeout_command_even_when_action_is_fig_loop(
         repo_root=tmp_path,
     )
 
-    assert payload["executed_count"] == 0
+    assert commands == ["uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"]
+    assert payload["executed_count"] == 1
     assert payload["final_action"] == fig_driver.ACTION_RUN_FIG_LOOP
     assert payload["final_stop_boundary"] == fig_driver.STOP_CLOSEOUT
-    assert payload["boundary_handoff"]["closeout_checks"][0] == (
-            "run fig-agent closeout runner_demo --json"
-    )
+    assert payload["final_stop_reason"] == "repeated_executable_action"
 
 
 @pytest.mark.parametrize(

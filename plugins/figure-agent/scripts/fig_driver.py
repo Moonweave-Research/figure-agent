@@ -386,10 +386,16 @@ def _aesthetic_lever_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str
         return None
     bottleneck = summary.get("next_aesthetic_bottleneck")
     lever_id = None
+    route = None
     if isinstance(bottleneck, dict):
         raw_lever_id = bottleneck.get("lever_id")
         if isinstance(raw_lever_id, str) and raw_lever_id.strip():
             lever_id = raw_lever_id.strip()
+        raw_route = bottleneck.get("route")
+        if isinstance(raw_route, str) and raw_route.strip():
+            route = raw_route.strip()
+    if route != "human_art_direction":
+        return None
     return {
         "action": ACTION_HUMAN_GATE_STOP,
         "safe_command": None,
@@ -423,9 +429,9 @@ def _loop_checkpoint_review_blocker(
         history_count = basin.get("history_count")
         count_text = f"{history_count} times" if isinstance(history_count, int) else "repeatedly"
         return {
-            "action": ACTION_HUMAN_GATE_STOP,
+            "action": ACTION_COMPLETE,
             "safe_command": None,
-            "stop_boundary": STOP_HUMAN_GATE,
+            "stop_boundary": "basin_detected",
             "reason": (
                 "latest /fig_loop checkpoint reports repeated loop basin: "
                 f"{signal_text} appeared {count_text}; step out before another "

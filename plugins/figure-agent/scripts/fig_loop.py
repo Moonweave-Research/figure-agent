@@ -98,6 +98,9 @@ def _apply_aesthetic_lever_stop(
     if aesthetic_lever_summary.get("evaluation_state") != "needs_human":
         return loop_decision
     bottleneck = aesthetic_lever_summary.get("next_aesthetic_bottleneck") or {}
+    route = bottleneck.get("route")
+    if route != "human_art_direction":
+        return loop_decision
     lever_id = bottleneck.get("lever_id", "aesthetic lever")
     updated = dict(loop_decision)
     updated.update(
@@ -205,7 +208,7 @@ def _apply_basin_stop(loop_decision: dict, basin_summary: dict | None) -> dict:
             "stop_reason": "basin_detected",
             "recommended_next_action": basin_summary["next_action"],
             "active_patch_target": None,
-            "human_gate_status": "required",
+            "human_gate_status": "not_requested",
         }
     )
     return updated

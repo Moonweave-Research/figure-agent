@@ -427,7 +427,7 @@ def test_human_gate_driver_result_does_not_offer_optional_improvement_candidates
     _write_loop_run(
         tmp_path,
         stop_reason="human_gate_required",
-        escalation_level="human_review_required",
+        escalation_level="basin_detected",
         recommended_next_action="review art direction",
         editorial_art_direction_summary={
             "polish_recommended_path": "continue_tikz",
@@ -1297,15 +1297,15 @@ def test_review_mode_surfaces_latest_basin_checkpoint_as_step_out_handoff(
     _write_loop_run(
         tmp_path,
         stop_reason="basin_detected",
-        escalation_level="human_review_required",
+        escalation_level="basin_detected",
         recommended_next_action="step out of the local polish loop",
         basin_summary=basin_summary,
     )
 
     summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
 
-    assert summary["action"] == "human_gate_stop"
-    assert summary["stop_boundary"] == "human_gate_required"
+    assert summary["action"] == "complete"
+    assert summary["stop_boundary"] == "basin_detected"
     assert summary["safe_command"] is None
     assert summary["loop_checkpoint"]["basin_summary"] == basin_summary
     assert "repeated loop basin" in summary["reason"]

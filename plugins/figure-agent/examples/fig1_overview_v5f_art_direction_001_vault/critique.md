@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig1_overview_v5f_art_direction_001_vault
-generated_at: '2026-07-03T14:53:56Z'
+generated_at: '2026-07-03T22:15:00Z'
 generator: critique_brief.py
 generator_version: sha256:51345bad8b6bdef113dcd48ad8b73a3a99b7cf99af028b5d3b3ea4c348690946
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:6c75713596ee86eb64458c54473a712a3d9123360933e400221bef8fc9c5f468
+critique_input_hash: sha256:68805af9932bb362b36a8b4752c8245dc57118bf9f51d44925697556ae641e01
 verdict: revise
 audit_enumeration:
   structural_completeness:
@@ -835,7 +835,7 @@ micro_defects:
   accept_simplification_rationale: 'VC011 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC012
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC012_S.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC012_Energy.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC012 flags detector proximity for text/glyph 'S' in the current v5f render; crop review treats it as an intentional
@@ -850,7 +850,7 @@ micro_defects:
   accept_simplification_rationale: 'VC012 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC013
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC013_Energy.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC013_poly_S-r-DIB.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC013 flags detector proximity for text/glyph 'Energy' in the current v5f render; crop review treats it as
@@ -865,7 +865,7 @@ micro_defects:
   accept_simplification_rationale: 'VC013 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC014
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC014_S.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC014_film.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC014 flags detector proximity for text/glyph 'S' in the current v5f render; crop review treats it as an intentional
@@ -940,7 +940,7 @@ micro_defects:
   accept_simplification_rationale: 'VC018 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC019
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC019_ISPD.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC019_MIM.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC019 flags detector proximity for text/glyph 'ISPD' in the current v5f render; crop review treats it as an
@@ -1000,7 +1000,7 @@ micro_defects:
   accept_simplification_rationale: 'VC022 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC023
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC023_V.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC023_film.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC023 flags detector proximity for text/glyph 'V' in the current v5f render; crop review treats it as an intentional
@@ -1015,7 +1015,7 @@ micro_defects:
   accept_simplification_rationale: 'VC023 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC024
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC024_crop.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC024_V.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC024 flags detector proximity for text/glyph '+' in the current v5f render; crop review treats it as an intentional
@@ -1030,7 +1030,7 @@ micro_defects:
   accept_simplification_rationale: 'VC024 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC025
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC025_crop.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC025_active.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC025 flags detector proximity for text/glyph '+' in the current v5f render; crop review treats it as an intentional
@@ -1075,7 +1075,7 @@ micro_defects:
   accept_simplification_rationale: 'VC027 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC028
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC028_V.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC028_crop.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC028 flags detector proximity for text/glyph 'V' in the current v5f render; crop review treats it as an intentional
@@ -1090,7 +1090,7 @@ micro_defects:
   accept_simplification_rationale: 'VC028 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC029
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC029_t.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC029_crop.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC029 flags detector proximity for text/glyph '(t)' in the current v5f render; crop review treats it as an
@@ -1105,7 +1105,7 @@ micro_defects:
   accept_simplification_rationale: 'VC029 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC030
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC030_I_t.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC030_DC.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC030 flags detector proximity for text/glyph 'I(t)' in the current v5f render; crop review treats it as an
@@ -1120,7 +1120,7 @@ micro_defects:
   accept_simplification_rationale: 'VC030 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC031
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC031_low.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC031_bias.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC031 flags detector proximity for text/glyph 'low' in the current v5f render; crop review treats it as an
@@ -1135,7 +1135,7 @@ micro_defects:
   accept_simplification_rationale: 'VC031 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC032
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC032_trapped.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC032_q.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC032 flags detector proximity for text/glyph 'trapped' in the current v5f render; crop review treats it as
@@ -1150,7 +1150,7 @@ micro_defects:
   accept_simplification_rationale: 'VC032 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC033
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC033_q.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC033_V.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC033 flags detector proximity for text/glyph 'q' in the current v5f render; crop review treats it as an intentional
@@ -1165,7 +1165,7 @@ micro_defects:
   accept_simplification_rationale: 'VC033 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC034
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC034_crop.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC034_t.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC034 flags detector proximity for text/glyph ')' in the current v5f render; crop review treats it as an intentional
@@ -1180,7 +1180,7 @@ micro_defects:
   accept_simplification_rationale: 'VC034 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC035
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC035_d.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC035_I_t.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC035 flags detector proximity for text/glyph 'd' in the current v5f render; crop review treats it as an intentional
@@ -1195,7 +1195,7 @@ micro_defects:
   accept_simplification_rationale: 'VC035 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC036
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC036_Coulomb.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC036_t.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC036 flags detector proximity for text/glyph 'Coulomb' in the current v5f render; crop review treats it as
@@ -1210,7 +1210,7 @@ micro_defects:
   accept_simplification_rationale: 'VC036 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC037
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC037_Coulomb.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC037_crop.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC037 flags detector proximity for text/glyph 'Coulomb' in the current v5f render; crop review treats it as
@@ -1225,7 +1225,7 @@ micro_defects:
   accept_simplification_rationale: 'VC037 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC038
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC038_repulsion.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC038_low.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC038 flags detector proximity for text/glyph 'repulsion' in the current v5f render; crop review treats it
@@ -1240,7 +1240,7 @@ micro_defects:
   accept_simplification_rationale: 'VC038 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC039
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC039_repulsion.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC039_d.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC039 flags detector proximity for text/glyph 'repulsion' in the current v5f render; crop review treats it
@@ -1255,7 +1255,7 @@ micro_defects:
   accept_simplification_rationale: 'VC039 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC040
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC040_air.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC040_repulsion.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC040 flags detector proximity for text/glyph 'air' in the current v5f render; crop review treats it as an
@@ -1270,7 +1270,7 @@ micro_defects:
   accept_simplification_rationale: 'VC040 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC041
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC041_electrode.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC041_air.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC041 flags detector proximity for text/glyph 'electrode' in the current v5f render; crop review treats it
@@ -1285,7 +1285,7 @@ micro_defects:
   accept_simplification_rationale: 'VC041 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC042
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC042_log.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC042_Shallow.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC042 flags detector proximity for text/glyph 'log' in the current v5f render; crop review treats it as an
@@ -1300,7 +1300,7 @@ micro_defects:
   accept_simplification_rationale: 'VC042 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC043
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC043_I.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC043_electrode.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC043 flags detector proximity for text/glyph 'I' in the current v5f render; crop review treats it as an intentional
@@ -1315,7 +1315,7 @@ micro_defects:
   accept_simplification_rationale: 'VC043 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC044
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC044_f.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC044_log.png
   kind: label_glyph_overlaps_internal_drawing
   severity: NIT
   observation: VC044 flags detector proximity for text/glyph 'f' in the current v5f render; crop review treats it as an intentional
@@ -1330,7 +1330,7 @@ micro_defects:
   accept_simplification_rationale: 'VC044 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
 - id: M_VC045
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC045_HV.png
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC045_I.png
   kind: drawing_order_suspect
   severity: NIT
   observation: VC045 flags detector proximity for text/glyph 'HV+' in the current v5f render; crop review treats it as an
@@ -1344,6 +1344,36 @@ micro_defects:
   accept_simplification_reason: intentional_schematic
   accept_simplification_rationale: 'VC045 is not a defect: it is an intentional schematic/glyph adjacency in the current v5f
     render, remains visually distinct in its audit crop, and does not obscure the panel story or mechanism reading.'
+- id: M_VC046
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC046_f.png
+  kind: drawing_order_suspect
+  severity: NIT
+  observation: VC046 flags detector proximity for the panel-letter glyph 'f' in the current v5f render; crop review treats
+    it as an intentional panel marker adjacency rather than a mechanism or label defect.
+  linked_finding_id: ''
+  visual_clash_ref: VC046
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'VC046 is not a defect: the panel letter remains isolated from the Panel F mechanism and
+    does not reduce print-scale interpretation.'
+- id: M_VC047
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC047_Vs.png
+  kind: drawing_order_suspect
+  severity: NIT
+  observation: VC047 flags detector proximity for the existing Vs label in the Row 2 apparatus region; crop review treats
+    it as an intentional instrument-label adjacency outside the Panel F patch target.
+  linked_finding_id: ''
+  visual_clash_ref: VC047
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'VC047 is not a defect: the Vs label remains readable and belongs to the existing instrument
+    schematic, not to a newly introduced Panel F clash.'
 - id: M_UG001
   crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/full_q1.png
   kind: line_crosses_label
@@ -3200,6 +3230,51 @@ micro_defects:
   accept_simplification_rationale: 'UG116 is not a release-blocking defect: source line 2113 is within 3.43 pt of text ''real'';
     in the current v5f render the flagged geometry is convention acceptable, visually distinct, and does not change the scientific
     reading.'
+- id: M_UG117
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_semantic_path
+  severity: NIT
+  observation: UG117 flags the Panel F air-gap caliper line near the legacy word 'trap'; visual review treats this as a detector
+    overreach from the full-figure geometry map, not an actual Panel F text overlap.
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG117
+  status: accept_simplification
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'UG117 is not a release-blocking defect: source line 2127 is the Panel F air-gap caliper,
+    while the detected text is from a separate existing trap label; the current render remains readable.'
+- id: M_UG118
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/full_q1.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: UG118 flags the Panel F air-gap caliper endpoint near the legacy word 'real'; visual review treats this as
+    a full-figure detector near-miss, not a visible label collision.
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG118
+  status: accept_simplification
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'UG118 is not a release-blocking defect: the air-gap caliper remains inside Panel F and
+    the detected text belongs to a separate existing trap-model label.'
+- id: M_UG119
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/full_q1.png
+  kind: line_crosses_label
+  severity: NIT
+  observation: UG119 flags the Panel F air-gap caliper as an undeclared horizontal rule; the line is an intentional dimension
+    marker with its own air-gap label.
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG119
+  status: accept_simplification
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'UG119 is not a release-blocking defect: source line 2127 is the intentional air-gap dimension
+    marker and does not need a source change beyond the existing Panel F semantics.'
 crop_audit_log:
 - crop_id: VC001_S
   path: build/audit_crops/visual_clash/VC001_S.png
@@ -3410,8 +3485,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC012_S
-  path: build/audit_crops/visual_clash/VC012_S.png
+- crop_id: VC012_Energy
+  path: build/audit_crops/visual_clash/VC012_Energy.png
   source: visual_clash:VC012
   inspected: true
   verdict: no_defect
@@ -3429,8 +3504,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC013_Energy
-  path: build/audit_crops/visual_clash/VC013_Energy.png
+- crop_id: VC013_poly_S-r-DIB
+  path: build/audit_crops/visual_clash/VC013_poly_S-r-DIB.png
   source: visual_clash:VC013
   inspected: true
   verdict: no_defect
@@ -3448,8 +3523,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC014_S
-  path: build/audit_crops/visual_clash/VC014_S.png
+- crop_id: VC014_film
+  path: build/audit_crops/visual_clash/VC014_film.png
   source: visual_clash:VC014
   inspected: true
   verdict: no_defect
@@ -3543,8 +3618,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC019_ISPD
-  path: build/audit_crops/visual_clash/VC019_ISPD.png
+- crop_id: VC019_MIM
+  path: build/audit_crops/visual_clash/VC019_MIM.png
   source: visual_clash:VC019
   inspected: true
   verdict: no_defect
@@ -3619,8 +3694,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC023_V
-  path: build/audit_crops/visual_clash/VC023_V.png
+- crop_id: VC023_film
+  path: build/audit_crops/visual_clash/VC023_film.png
   source: visual_clash:VC023
   inspected: true
   verdict: no_defect
@@ -3638,8 +3713,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC024_crop
-  path: build/audit_crops/visual_clash/VC024_crop.png
+- crop_id: VC024_V
+  path: build/audit_crops/visual_clash/VC024_V.png
   source: visual_clash:VC024
   inspected: true
   verdict: no_defect
@@ -3657,8 +3732,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC025_crop
-  path: build/audit_crops/visual_clash/VC025_crop.png
+- crop_id: VC025_active
+  path: build/audit_crops/visual_clash/VC025_active.png
   source: visual_clash:VC025
   inspected: true
   verdict: no_defect
@@ -3714,8 +3789,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC028_V
-  path: build/audit_crops/visual_clash/VC028_V.png
+- crop_id: VC028_crop
+  path: build/audit_crops/visual_clash/VC028_crop.png
   source: visual_clash:VC028
   inspected: true
   verdict: no_defect
@@ -3733,8 +3808,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC029_t
-  path: build/audit_crops/visual_clash/VC029_t.png
+- crop_id: VC029_crop
+  path: build/audit_crops/visual_clash/VC029_crop.png
   source: visual_clash:VC029
   inspected: true
   verdict: no_defect
@@ -3752,8 +3827,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC030_I_t
-  path: build/audit_crops/visual_clash/VC030_I_t.png
+- crop_id: VC030_DC
+  path: build/audit_crops/visual_clash/VC030_DC.png
   source: visual_clash:VC030
   inspected: true
   verdict: no_defect
@@ -3771,8 +3846,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC031_low
-  path: build/audit_crops/visual_clash/VC031_low.png
+- crop_id: VC031_bias
+  path: build/audit_crops/visual_clash/VC031_bias.png
   source: visual_clash:VC031
   inspected: true
   verdict: no_defect
@@ -3790,8 +3865,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC032_trapped
-  path: build/audit_crops/visual_clash/VC032_trapped.png
+- crop_id: VC032_q
+  path: build/audit_crops/visual_clash/VC032_q.png
   source: visual_clash:VC032
   inspected: true
   verdict: no_defect
@@ -3809,8 +3884,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC033_q
-  path: build/audit_crops/visual_clash/VC033_q.png
+- crop_id: VC033_V
+  path: build/audit_crops/visual_clash/VC033_V.png
   source: visual_clash:VC033
   inspected: true
   verdict: no_defect
@@ -3828,8 +3903,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC034_crop
-  path: build/audit_crops/visual_clash/VC034_crop.png
+- crop_id: VC034_t
+  path: build/audit_crops/visual_clash/VC034_t.png
   source: visual_clash:VC034
   inspected: true
   verdict: no_defect
@@ -3847,8 +3922,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC035_d
-  path: build/audit_crops/visual_clash/VC035_d.png
+- crop_id: VC035_I_t
+  path: build/audit_crops/visual_clash/VC035_I_t.png
   source: visual_clash:VC035
   inspected: true
   verdict: no_defect
@@ -3866,8 +3941,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC036_Coulomb
-  path: build/audit_crops/visual_clash/VC036_Coulomb.png
+- crop_id: VC036_t
+  path: build/audit_crops/visual_clash/VC036_t.png
   source: visual_clash:VC036
   inspected: true
   verdict: no_defect
@@ -3885,8 +3960,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC037_Coulomb
-  path: build/audit_crops/visual_clash/VC037_Coulomb.png
+- crop_id: VC037_crop
+  path: build/audit_crops/visual_clash/VC037_crop.png
   source: visual_clash:VC037
   inspected: true
   verdict: no_defect
@@ -3904,8 +3979,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC038_repulsion
-  path: build/audit_crops/visual_clash/VC038_repulsion.png
+- crop_id: VC038_low
+  path: build/audit_crops/visual_clash/VC038_low.png
   source: visual_clash:VC038
   inspected: true
   verdict: no_defect
@@ -3923,8 +3998,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC039_repulsion
-  path: build/audit_crops/visual_clash/VC039_repulsion.png
+- crop_id: VC039_d
+  path: build/audit_crops/visual_clash/VC039_d.png
   source: visual_clash:VC039
   inspected: true
   verdict: no_defect
@@ -3942,8 +4017,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC040_air
-  path: build/audit_crops/visual_clash/VC040_air.png
+- crop_id: VC040_repulsion
+  path: build/audit_crops/visual_clash/VC040_repulsion.png
   source: visual_clash:VC040
   inspected: true
   verdict: no_defect
@@ -3961,8 +4036,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC041_electrode
-  path: build/audit_crops/visual_clash/VC041_electrode.png
+- crop_id: VC041_air
+  path: build/audit_crops/visual_clash/VC041_air.png
   source: visual_clash:VC041
   inspected: true
   verdict: no_defect
@@ -3980,8 +4055,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC042_log
-  path: build/audit_crops/visual_clash/VC042_log.png
+- crop_id: VC042_Shallow
+  path: build/audit_crops/visual_clash/VC042_Shallow.png
   source: visual_clash:VC042
   inspected: true
   verdict: no_defect
@@ -3999,8 +4074,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC043_I
-  path: build/audit_crops/visual_clash/VC043_I.png
+- crop_id: VC043_electrode
+  path: build/audit_crops/visual_clash/VC043_electrode.png
   source: visual_clash:VC043
   inspected: true
   verdict: no_defect
@@ -4018,8 +4093,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC044_f
-  path: build/audit_crops/visual_clash/VC044_f.png
+- crop_id: VC044_log
+  path: build/audit_crops/visual_clash/VC044_log.png
   source: visual_clash:VC044
   inspected: true
   verdict: no_defect
@@ -4037,8 +4112,8 @@ crop_audit_log:
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
   anomaly_link: ''
-- crop_id: VC045_HV
-  path: build/audit_crops/visual_clash/VC045_HV.png
+- crop_id: VC045_I
+  path: build/audit_crops/visual_clash/VC045_I.png
   source: visual_clash:VC045
   inspected: true
   verdict: no_defect
@@ -4055,6 +4130,39 @@ crop_audit_log:
   unintended_visible_anomaly: none
   anomaly_rationale: No unintended visible artifact is present in this v5f audit crop; remaining risk is the explicit human
     art-direction comparison gate.
+  anomaly_link: ''
+- crop_id: VC046_f
+  path: build/audit_crops/visual_clash/VC046_f.png
+  source: visual_clash:VC046
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: Direct crop review shows the panel-letter glyph remains intentional and does not obscure the Panel F mechanism.
+  observed_objects:
+  - current v5f render
+  - visual_clash_crop
+  local_relationship: The panel letter remains a panel marker, not a mechanism label.
+  candidate_refs:
+  - VC046
+  unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible artifact is present in this v5f audit crop.
+  anomaly_link: ''
+- crop_id: VC047_Vs
+  path: build/audit_crops/visual_clash/VC047_Vs.png
+  source: visual_clash:VC047
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: Direct crop review treats the Vs detector hit as an intentional instrument-label adjacency outside the Panel F
+    patch target.
+  observed_objects:
+  - current v5f render
+  - visual_clash_crop
+  local_relationship: The Vs label remains readable and belongs to the existing Row 2 instrument schematic.
+  candidate_refs:
+  - VC047
+  unintended_visible_anomaly: none
+  anomaly_rationale: No unintended visible artifact is present in this v5f audit crop.
   anomaly_link: ''
 - crop_id: full_q1
   path: build/audit_crops/full_q1.png
