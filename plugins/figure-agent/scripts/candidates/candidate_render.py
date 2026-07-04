@@ -178,18 +178,31 @@ def _candidate_source_text(
             line_start = 0
             line_end = 0
         if line_start > 0:
-            if line_end != line_start:
-                raise CandidateRenderError("line-scoped operation must target one line")
             lines = text.splitlines(keepends=True)
-            if line_start > len(lines) or original not in lines[line_start - 1]:
+            if line_end < line_start or line_start > len(lines) or line_end > len(lines):
                 raise CandidateRenderError(
-                    f"operation original not found at line {line_start}: {source_path.name}"
+                    f"operation original not found at lines {line_start}-{line_end}: "
+                    f"{source_path.name}"
                 )
-            lines[line_start - 1] = lines[line_start - 1].replace(
-                original,
-                replacement,
-                1,
-            )
+            if line_end == line_start:
+                if original not in lines[line_start - 1]:
+                    raise CandidateRenderError(
+                        f"operation original not found at line {line_start}: "
+                        f"{source_path.name}"
+                    )
+                lines[line_start - 1] = lines[line_start - 1].replace(
+                    original,
+                    replacement,
+                    1,
+                )
+            else:
+                selected = "".join(lines[line_start - 1 : line_end])
+                if selected != original:
+                    raise CandidateRenderError(
+                        f"operation original not found at lines {line_start}-{line_end}: "
+                        f"{source_path.name}"
+                    )
+                lines[line_start - 1 : line_end] = [replacement]
             sources[source_path] = "".join(lines)
             continue
         if original not in text:

@@ -200,6 +200,97 @@ def test_render_source_copy_respects_line_scoped_replace_text(tmp_path: Path) ->
     )
 
 
+def test_render_source_copy_respects_exact_multiline_replace_text(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = "\n".join(
+        [
+            "% Panel F -- mechanical",
+            "\\begin{scope}[shift={(9.5,0)}]",
+            "\\draw[cGray!64!black, line width=0.34pt] (0,0) rectangle (1,1);",
+            "\\node at (0.5,0.5) {Coulomb repulsion};",
+            "\\end{scope}",
+        ]
+    ) + "\n"
+    replacement = source.replace("line width=0.34pt", "line width=0.92pt").replace(
+        "{Coulomb repulsion}",
+        "{Coulomb repulsion strengthened}",
+    )
+    (fixture / "candidate_demo.tex").write_text(source, encoding="utf-8")
+    candidate_set = {
+        **_minimal_candidate_set(),
+        "candidates": [
+            {
+                "id": "CAND001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "target": {"panel": "F"},
+                "selectors": [{"kind": "tex_selector.v1", "line_start": 2, "line_end": 5}],
+                "operations": [
+                    {
+                        "kind": "replace_text",
+                        "path": "examples/candidate_demo/candidate_demo.tex",
+                        "line_start": 2,
+                        "line_end": 5,
+                        "original": "".join(source.splitlines(keepends=True)[1:5]),
+                        "replacement": "".join(replacement.splitlines(keepends=True)[1:5]),
+                    }
+                ],
+                "apply_authority": "review_only",
+            }
+        ],
+    }
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+    )
+
+    sandbox_source = fixture / "build" / "candidates" / "CAND001" / "candidate_demo.tex"
+    assert sandbox_source.read_text(encoding="utf-8") == replacement
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == source
+
+
+def test_render_rejects_multiline_replace_text_when_range_does_not_match(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = "alpha\nbeta\ngamma\n"
+    (fixture / "candidate_demo.tex").write_text(source, encoding="utf-8")
+    candidate_set = {
+        **_minimal_candidate_set(),
+        "candidates": [
+            {
+                "id": "CAND001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "target": {"panel": "F"},
+                "selectors": [{"kind": "tex_selector.v1", "line_start": 1, "line_end": 3}],
+                "operations": [
+                    {
+                        "kind": "replace_text",
+                        "path": "examples/candidate_demo/candidate_demo.tex",
+                        "line_start": 1,
+                        "line_end": 2,
+                        "original": "alpha\nbeta\ngamma\n",
+                        "replacement": "ALPHA\nBETA\nGAMMA\n",
+                    }
+                ],
+                "apply_authority": "review_only",
+            }
+        ],
+    }
+
+    with pytest.raises(candidate_render.CandidateRenderError, match="original not found"):
+        candidate_render.render_candidate_set(
+            "candidate_demo",
+            candidate_set,
+            workspace_root=workspace,
+        )
+
+
 def test_render_compile_request_writes_render_manifest_dependency_diagnostic(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

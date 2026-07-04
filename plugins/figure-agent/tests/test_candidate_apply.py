@@ -115,6 +115,61 @@ def _accepted_candidate_fixture(workspace: Path) -> tuple[Path, dict]:
     return fixture, manifest
 
 
+def _accepted_multiline_candidate_fixture(workspace: Path) -> tuple[Path, dict, str, str]:
+    fixture, manifest = _rendered_candidate_fixture(workspace)
+    source = "\n".join(
+        [
+            "% Panel F -- mechanical",
+            "\\begin{scope}[shift={(9.5,0)}]",
+            "\\draw[cGray!64!black, line width=0.34pt] (0,0) rectangle (1,1);",
+            "\\node at (0.5,0.5) {Coulomb repulsion};",
+            "\\end{scope}",
+        ]
+    ) + "\n"
+    replacement = source.replace("line width=0.34pt", "line width=0.92pt").replace(
+        "{Coulomb repulsion}",
+        "{Coulomb repulsion strengthened}",
+    )
+    tex_path = fixture / "candidate_demo.tex"
+    tex_path.write_text(source, encoding="utf-8")
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest_path = sandbox / "candidate_manifest.json"
+    operation_path = "examples/candidate_demo/candidate_demo.tex"
+    stored = json.loads(manifest_path.read_text(encoding="utf-8"))
+    stored["operations"] = [
+        {
+            "kind": "replace_text",
+            "path": operation_path,
+            "source_sha256": _sha256_text(source),
+            "line_start": 2,
+            "line_end": 5,
+            "original": "".join(source.splitlines(keepends=True)[1:5]),
+            "replacement": "".join(replacement.splitlines(keepends=True)[1:5]),
+        }
+    ]
+    stored["selectors"] = [
+        {
+            "kind": "tex_selector.v1",
+            "path": operation_path,
+            "source_hash": _sha256_text(source),
+            "line_start": 2,
+            "line_end": 5,
+        }
+    ]
+    manifest_path.write_text(json.dumps(stored, sort_keys=True) + "\n", encoding="utf-8")
+    _write_semantic_review(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    return fixture, stored, source, replacement
+
+
 def _write_semantic_review(fixture: Path) -> None:
     sandbox = fixture / "build" / "candidates" / "CAND001"
     manifest = json.loads((sandbox / "candidate_manifest.json").read_text(encoding="utf-8"))
@@ -267,6 +322,63 @@ def test_apply_candidate_exact_replace_writes_source_and_result(tmp_path: Path) 
     ]
     assert (fixture / "build" / "candidates" / "CAND001" / "rollback.patch").is_file()
     assert (fixture / "build" / "candidates" / "CAND001" / "apply_result.json").is_file()
+
+
+def test_apply_candidate_multiline_exact_replace_writes_source_and_result(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest, _source, replacement = _accepted_multiline_candidate_fixture(workspace)
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=False,
+    )
+
+    assert result["status"] == "applied_unverified"
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == replacement
+    assert result["changed_files"][0]["path"] == "candidate_demo.tex"
+
+
+def test_apply_candidate_blocks_multiline_replace_when_range_does_not_match(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest, source, _replacement = _accepted_multiline_candidate_fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest_path = sandbox / "candidate_manifest.json"
+    stored = json.loads(manifest_path.read_text(encoding="utf-8"))
+    stored["operations"][0]["line_end"] = 4
+    manifest_path.write_text(json.dumps(stored, sort_keys=True) + "\n", encoding="utf-8")
+    _write_semantic_review(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=False,
+    )
+
+    assert result["status"] == "blocked"
+    assert result["diagnostics"][0]["code"] == "original_text_line_mismatch"
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == source
 
 
 def test_apply_candidate_refuses_already_applied_result(tmp_path: Path) -> None:

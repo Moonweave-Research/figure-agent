@@ -276,19 +276,36 @@ def _build_changes(
         line_scoped = line_start > 0
         if line_scoped:
             lines = text.splitlines(keepends=True)
-            if (
-                line_end != line_start
-                or line_start > len(lines)
-                or original not in lines[line_start - 1]
-            ):
+            if line_end < line_start or line_start > len(lines) or line_end > len(lines):
                 diagnostics.append(
                     _diagnostic(
                         "original_text_line_mismatch",
-                        "original text must appear at the declared source line",
+                        "original text must match the declared source line range",
                         relative,
                     )
                 )
                 continue
+            if line_end == line_start:
+                if original not in lines[line_start - 1]:
+                    diagnostics.append(
+                        _diagnostic(
+                            "original_text_line_mismatch",
+                            "original text must appear at the declared source line",
+                            relative,
+                        )
+                    )
+                    continue
+            else:
+                selected = "".join(lines[line_start - 1 : line_end])
+                if selected != original:
+                    diagnostics.append(
+                        _diagnostic(
+                            "original_text_line_mismatch",
+                            "original text must match the declared source line range",
+                            relative,
+                        )
+                    )
+                    continue
         elif text.count(original) != 1:
             diagnostics.append(
                 _diagnostic(
@@ -309,11 +326,14 @@ def _build_changes(
         )
         if line_scoped:
             lines = str(entry["after"]).splitlines(keepends=True)
-            lines[line_start - 1] = lines[line_start - 1].replace(
-                original,
-                replacement,
-                1,
-            )
+            if line_end == line_start:
+                lines[line_start - 1] = lines[line_start - 1].replace(
+                    original,
+                    replacement,
+                    1,
+                )
+            else:
+                lines[line_start - 1 : line_end] = [replacement]
             entry["after"] = "".join(lines)
         else:
             entry["after"] = str(entry["after"]).replace(original, replacement, 1)
