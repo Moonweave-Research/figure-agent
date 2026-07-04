@@ -11,7 +11,6 @@ from statistics import median
 from typing import Any
 
 import fixture_identity
-import quality_memory_events
 import runtime_paths
 
 SCHEMA = "figure-agent.quality-memory-index.v1"
@@ -78,6 +77,74 @@ def _rank_score(event: dict[str, Any]) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any]]:
+    path = plugin_root / "docs" / "experience-log" / f"{name}.jsonl"
+    for label, item in (
+        ("docs", plugin_root / "docs"),
+        ("experience_log", plugin_root / "docs" / "experience-log"),
+        ("experience_log", path),
+    ):
+        if item.is_symlink():
+            raise QualityMemoryIndexError(f"{label}_symlink")
+    if not path.is_file():
+        return []
+    records: list[dict[str, Any]] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise QualityMemoryIndexError(f"experience_record_invalid:{line_number}") from exc
+        if not isinstance(payload, dict):
+            raise QualityMemoryIndexError(f"experience_record_invalid:{line_number}")
+        records.append(payload)
+    return records
+
+
+def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
+    state = record.get("state") if isinstance(record.get("state"), dict) else {}
+    action = record.get("action") if isinstance(record.get("action"), dict) else {}
+    outcome = record.get("outcome") if isinstance(record.get("outcome"), dict) else {}
+    target = state.get("target") if isinstance(state.get("target"), dict) else {}
+    apply_status = str(outcome.get("apply_status") or "unknown")
+    quality_movement = outcome.get("quality_movement")
+    outcome_state = (
+        str(quality_movement)
+        if quality_movement in ELIGIBLE_OUTCOMES
+        else apply_status
+    )
+    rank_score = action.get("rank_score")
+    return {
+        "schema": "figure-agent.quality-memory-event.v1",
+        "fixture": record.get("fixture"),
+        "event_id": record.get("record_id"),
+        "event_type": "candidate_unchosen"
+        if apply_status == "unchosen"
+        else "candidate_applied",
+        "created_at": record.get("created_at"),
+        "source_artifact": f"docs/experience-log/{record.get('fixture')}.jsonl",
+        "candidate_id": action.get("candidate_id"),
+        "edit_family": action.get("edit_family"),
+        "target": {
+            "panel": target.get("panel"),
+            "subregion": target.get("subregion_key"),
+        },
+        "pre_state": state,
+        "post_state": {},
+        "outcome": {
+            "state": outcome_state,
+            "pipeline_ok": outcome.get("pipeline_ok"),
+            "quality_movement": quality_movement,
+            "reason": apply_status,
+            "evidence_paths": [f"docs/experience-log/{record.get('fixture')}.jsonl"],
+        },
+        "metrics": {"candidate_rank_score": rank_score}
+        if rank_score is not None
+        else {},
+    }
 
 
 def _is_unknown(value: str) -> bool:
@@ -316,18 +383,18 @@ def build_fixture_index(
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
 ) -> dict[str, Any]:
-    log = quality_memory_events.build_memory_log(
-        name,
+    paths = runtime_paths.resolve_runtime_paths(
         workspace_root=workspace_root,
         plugin_root=plugin_root,
     )
-    events = [event for event in log.get("events", []) if isinstance(event, dict)]
+    records = _load_experience_records(paths.plugin_root, name)
+    events = [_event_from_experience_record(record) for record in records]
     if write:
         return write_fixture_index(
             name,
             events,
-            workspace_root=workspace_root,
-            plugin_root=plugin_root,
+            workspace_root=paths.workspace_root,
+            plugin_root=paths.plugin_root,
         )
     index = build_memory_index(events, scope={"kind": "fixture", "fixture": name})
     index["writes"] = []
@@ -358,12 +425,8 @@ def build_suite_index(
                 {"fixture": fixture, "status": "skipped", "reason": "missing_fixture"}
             )
             continue
-        log = quality_memory_events.build_memory_log(
-            fixture,
-            workspace_root=paths.workspace_root,
-            plugin_root=paths.plugin_root,
-        )
-        events.extend(event for event in log.get("events", []) if isinstance(event, dict))
+        records = _load_experience_records(paths.plugin_root, fixture)
+        events.extend(_event_from_experience_record(record) for record in records)
         diagnostics.append({"fixture": fixture, "status": "included", "reason": ""})
     index = build_memory_index(events, scope={"kind": "suite", "suite": suite})
     index["suite_diagnostics"] = diagnostics

@@ -326,6 +326,9 @@ def test_apply_candidate_exact_replace_writes_source_and_result(tmp_path: Path) 
     assert (fixture / "build" / "candidates" / "CAND001" / "rollback.patch").is_file()
     assert (fixture / "build" / "candidates" / "CAND001" / "apply_result.json").is_file()
     assert result["experience_log"] == ["docs/experience-log/candidate_demo.jsonl"]
+    assert result["memory_index"] == ["build/memory/quality_memory_index.json"]
+    memory_index = fixture / "build" / "memory" / "quality_memory_index.json"
+    assert memory_index.is_file()
     rows = [
         json.loads(line)
         for line in (plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl")

@@ -62,6 +62,74 @@ def test_fewer_than_three_eligible_events_yields_no_prior() -> None:
     assert index["families"]["label_offset"]["recommended_prior"] == 0.0
 
 
+def _experience_record(
+    candidate_id: str,
+    *,
+    quality_movement: str | None,
+    apply_status: str = "applied",
+) -> dict:
+    return {
+        "schema": "figure-agent.experience-record.v1",
+        "record_id": f"sha256:{candidate_id.lower():0<64}"[:71],
+        "fixture": "candidate_demo",
+        "created_at": "2026-06-08T00:00:00Z",
+        "state": {
+            "base_tex_hash": "sha256:" + "0" * 64,
+            "target": {"panel": "C", "subregion_key": "sha256:" + "a" * 64},
+            "pre_apply_defects": [],
+            "critique_finding_id": None,
+        },
+        "action": {
+            "candidate_id": candidate_id,
+            "edit_family": "label_offset",
+            "params": {"operations": []},
+            "candidate_hash": "sha256:" + "1" * 64,
+            "rank_score": 0.7,
+            "rank": 1,
+            "n_candidates": 1,
+        },
+        "outcome": {
+            "pipeline_ok": quality_movement is not None,
+            "apply_status": apply_status,
+            "quality_movement": quality_movement,
+            "verifiers": {},
+            "detector_recheck": {},
+            "pixel_delta": {"changed_pixel_ratio": 0.01},
+            "human_label": None,
+            "human_decision_kind": None,
+        },
+    }
+
+
+def test_build_fixture_index_reads_experience_log_not_build_artifacts(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    fixture = workspace / "examples" / "candidate_demo"
+    fixture.mkdir(parents=True)
+    (fixture / "candidate_demo.tex").write_text("source\n", encoding="utf-8")
+    log_path = plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
+    log_path.parent.mkdir(parents=True)
+    log_path.write_text(
+        "\n".join(
+            json.dumps(_experience_record(f"CAND{index:03d}", quality_movement="improved"))
+            for index in range(1, 4)
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    index = quality_memory_index.build_fixture_index(
+        "candidate_demo",
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+
+    assert index["scope"] == {"kind": "fixture", "fixture": "candidate_demo"}
+    assert index["event_count"] == 3
+    assert index["eligible_prior_count"] == 3
+    assert index["families"]["label_offset"]["recommended_prior"] == 0.25
+
+
 def test_legacy_outcome_state_is_not_reward_without_quality_movement() -> None:
     events = [
         _event("candidate_applied", "label_offset", "improved", "CAND001"),

@@ -1121,6 +1121,24 @@ def test_mcp_candidate_read_only_tools_and_apply_blocks_without_acceptance(
 def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _write_candidate_fixture(workspace)
+    memory_dir = fixture / "build" / "memory"
+    memory_dir.mkdir(parents=True)
+    (memory_dir / "quality_memory_index.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.quality-memory-index.v1",
+                "families": {
+                    "bounded_coordinate_offset": {
+                        "attempts": 3,
+                        "recommended_prior": 0.2,
+                    }
+                },
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
     result = _run_mcp_server(
         [
@@ -1178,6 +1196,7 @@ def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
     assert rank["success"] is True
     assert rank["rank_result"]["schema"] == "figure-agent.candidate-rank-result.v1"
     assert rank["rank_result"]["scores"][0]["render_status"] != "not_rendered"
+    assert rank["rank_result"]["scores"][0]["scores"]["memory_prior"] == 0.2
     assert review["schema"] == "figure-agent.mcp.prepare-human-review.v1"
     assert review["success"] is True
     assert review["review_packet"]["schema"] == "figure-agent.candidate-review-packet.v1"

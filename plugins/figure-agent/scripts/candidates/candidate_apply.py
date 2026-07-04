@@ -17,6 +17,7 @@ from typing import Any
 import candidate_contracts
 import experience_log
 import fixture_identity
+import quality_memory_index
 import runtime_paths
 import semantic_candidate_review
 
@@ -1045,4 +1046,11 @@ def apply_candidate(
             plugin_root=paths.plugin_root,
         )
         result["experience_log"] = experience["writes"]
+        memory = quality_memory_index.build_fixture_index(
+            name,
+            write=True,
+            workspace_root=paths.workspace_root,
+            plugin_root=paths.plugin_root,
+        )
+        result["memory_index"] = memory["writes"]
         return result

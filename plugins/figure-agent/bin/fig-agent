@@ -779,13 +779,17 @@ def _rank_candidates(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="fig-agent rank-candidates")
     parser.add_argument("name")
     parser.add_argument("--candidate-set", required=True)
-    parser.add_argument("--use-memory", action="store_true")
+    parser.add_argument(
+        "--use-memory",
+        action="store_true",
+        help="compatibility no-op; persisted fixture memory is used when present",
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
     try:
         candidate_set = _load_fixture_json(name, args.candidate_set)
-        memory_index = _load_memory_index(name) if args.use_memory else None
+        memory_index = _load_memory_index(name)
         scores = []
         for candidate in candidate_set.get("candidates", []):
             if not isinstance(candidate, dict):

@@ -48,6 +48,58 @@ def _source_hash(source: Path) -> str:
     return file_sha256(source) if source.is_file() else ZERO_HASH
 
 
+def _load_history_suppressions(
+    paths: runtime_paths.RuntimePaths,
+    name: str,
+) -> dict[tuple[str, str], str]:
+    path = paths.plugin_root / "docs" / "experience-log" / f"{name}.jsonl"
+    for label, item in (
+        ("docs", paths.plugin_root / "docs"),
+        ("experience_log", paths.plugin_root / "docs" / "experience-log"),
+        ("experience_log", path),
+    ):
+        if item.is_symlink():
+            raise CandidateGeneratorError(f"{label}_symlink")
+    if not path.is_file():
+        return {}
+    suppressions: dict[tuple[str, str], str] = {}
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise CandidateGeneratorError("experience_log_unreadable") from exc
+    for line_number, line in enumerate(lines, start=1):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise CandidateGeneratorError(f"experience_record_invalid:{line_number}") from exc
+        if not isinstance(record, dict):
+            raise CandidateGeneratorError(f"experience_record_invalid:{line_number}")
+        state = record.get("state") if isinstance(record.get("state"), dict) else {}
+        target = state.get("target") if isinstance(state.get("target"), dict) else {}
+        action = record.get("action") if isinstance(record.get("action"), dict) else {}
+        outcome = record.get("outcome") if isinstance(record.get("outcome"), dict) else {}
+        family = action.get("edit_family")
+        subregion_key = target.get("subregion_key")
+        if not isinstance(family, str) or not isinstance(subregion_key, str):
+            continue
+        reason = _suppression_reason(outcome)
+        if reason is not None:
+            suppressions[(family, subregion_key)] = reason
+    return suppressions
+
+
+def _suppression_reason(outcome: dict[str, Any]) -> str | None:
+    if outcome.get("quality_movement") == "regressed":
+        return "regressed"
+    for key in ("human_label", "human_decision_kind", "apply_status"):
+        value = outcome.get(key)
+        if isinstance(value, str) and value.lower() in {"reject", "rejected"}:
+            return "rejected"
+    return None
+
+
 def _validate_output_path(
     *,
     paths: runtime_paths.RuntimePaths,
@@ -111,7 +163,18 @@ def _label_offset_candidate(
     edit_class: str = "label_offset",
     variant_id: str = VARIANT_ID,
     variant_dx_cm: float = 0.1,
+    selector_text_hash: str | None = None,
 ) -> dict[str, Any]:
+    selector = {
+        "kind": "line_range_with_hash",
+        "path": source_rel.as_posix(),
+        "start_line": line_number,
+        "end_line": line_number,
+        "original_hash": candidate_contracts.canonical_hash(line),
+        "source_hash": source_hash,
+    }
+    if selector_text_hash is not None:
+        selector["selector_text_hash"] = selector_text_hash
     candidate = {
         "id": candidate_id,
         "target": target,
@@ -122,14 +185,7 @@ def _label_offset_candidate(
         "variant": {"id": variant_id, "dx_cm": variant_dx_cm},
         "source_hash": source_hash,
         "affected_files": [source_rel.as_posix()],
-        "selector": {
-            "kind": "line_range_with_hash",
-            "path": source_rel.as_posix(),
-            "start_line": line_number,
-            "end_line": line_number,
-            "original_hash": candidate_contracts.canonical_hash(line),
-            "source_hash": source_hash,
-        },
+        "selector": selector,
         "operations": [
             {
                 "kind": "replace_text",
@@ -408,6 +464,7 @@ def _defect_candidates(
     example_dir = paths.examples_dir / name
     detector_index = _detector_candidate_index(example_dir)
     pdf_path = example_dir / "build" / f"{name}.pdf"
+    history_suppressions = _load_history_suppressions(paths, name)
     for defect in defects:
         if not isinstance(defect, dict):
             continue
@@ -435,6 +492,26 @@ def _defect_candidates(
         if source_hash_refusals:
             _append_refusals(refusals, source_hash_refusals)
             continue
+        selector = defect.get("selector_hint")
+        selector_hash = (
+            selector.get("selector_text_hash") if isinstance(selector, dict) else None
+        )
+        if isinstance(selector_hash, str):
+            suppressed_outcome = history_suppressions.get((EDIT_FAMILY, selector_hash))
+            if suppressed_outcome is not None:
+                _append_refusals(
+                    refusals,
+                    [
+                        {
+                            "code": "suppressed_by_history",
+                            "defect_id": str(defect.get("id") or ""),
+                            "edit_family": EDIT_FAMILY,
+                            "subregion_key": selector_hash,
+                            "outcome": suppressed_outcome,
+                        }
+                    ],
+                )
+                continue
         line_number = _selector_start_line(defect, len(lines))
         if line_number is None:
             continue
@@ -460,6 +537,7 @@ def _defect_candidates(
             target=_candidate_target(defect),
             source_hash=current_source_hash,
             source_defect=_source_defect(defect, ledger_hash),
+            selector_text_hash=selector_hash if isinstance(selector_hash, str) else None,
         )
         sortable_candidates.append((_defect_sort_key(defect, source_rel, line_number), candidate))
     candidates: list[dict[str, Any]] = []

@@ -338,7 +338,62 @@ def test_fig_agent_rank_use_memory_missing_index_matches_default(tmp_path: Path)
     assert json.loads(with_memory.stdout) == json.loads(base.stdout)
 
 
-def test_fig_agent_rank_use_memory_applies_fixture_index_prior(tmp_path: Path) -> None:
+def test_fig_agent_rank_applies_fixture_index_prior_by_default(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+
+    candidates = _run(
+        workspace,
+        "candidates",
+        "candidate_demo",
+        "--json",
+        "--output",
+        "build/candidates/candidate_set.json",
+    )
+    render = _run(
+        workspace,
+        "render-candidates",
+        "candidate_demo",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+    )
+    memory_dir = fixture / "build" / "memory"
+    memory_dir.mkdir(parents=True)
+    (memory_dir / "quality_memory_index.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.quality-memory-index.v1",
+                "families": {
+                    "bounded_coordinate_offset": {
+                        "attempts": 3,
+                        "recommended_prior": 0.2,
+                    }
+                },
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    result = _run(
+        workspace,
+        "rank-candidates",
+        "candidate_demo",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--json",
+    )
+
+    assert candidates.returncode == 0, candidates.stderr
+    assert render.returncode == 0, render.stderr
+    assert result.returncode == 0, result.stderr
+    score = json.loads(result.stdout)["scores"][0]
+    assert score["scores"]["memory_prior"] == 0.2
+    assert "memory_prior:bounded_coordinate_offset:+0.2000" in score["evidence"]["positive"]
+    assert score["effective_apply_authority"] == "review_only"
+
+
+def test_fig_agent_rank_use_memory_flag_remains_compatible(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
 
@@ -390,8 +445,6 @@ def test_fig_agent_rank_use_memory_applies_fixture_index_prior(tmp_path: Path) -
     assert result.returncode == 0, result.stderr
     score = json.loads(result.stdout)["scores"][0]
     assert score["scores"]["memory_prior"] == 0.2
-    assert "memory_prior:bounded_coordinate_offset:+0.2000" in score["evidence"]["positive"]
-    assert score["effective_apply_authority"] == "review_only"
 
 
 def test_fig_agent_rank_use_memory_rejects_memory_dir_symlink(tmp_path: Path) -> None:
