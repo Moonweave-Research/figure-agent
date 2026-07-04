@@ -30,7 +30,9 @@ def _record(
         "action": {
             "candidate_id": candidate_id,
             "edit_family": "apparatus_strengthen",
-            "candidate_hash": candidate_hash or f"sha256:{candidate_id.lower()}",
+            "candidate_hash": (
+                f"sha256:{candidate_id.lower()}" if candidate_hash is None else candidate_hash
+            ),
         },
         "outcome": {
             "apply_status": apply_status,
@@ -131,6 +133,40 @@ def test_loop_metrics_does_not_conflate_reused_candidate_ids(
     assert precision["reverted_candidates"] == []
 
 
+def test_loop_metrics_skips_identityless_auto_accept_records(
+    tmp_path: Path,
+) -> None:
+    plugin_root = tmp_path / "plugin"
+    _write_log(
+        plugin_root,
+        "fig_demo",
+        [
+            _record(
+                "fig_demo",
+                "CAND001",
+                human_decision_kind="auto_accept",
+                human_label="accept",
+                candidate_hash="",
+            ),
+            _record(
+                "fig_demo",
+                "CAND001",
+                human_label="reject",
+                quality_movement="regressed",
+                candidate_hash="",
+            ),
+        ],
+    )
+
+    payload = quality_loop_metrics.build_loop_metrics(plugin_root=plugin_root)
+
+    precision = payload["metrics"]["auto_accept_precision"]
+    assert precision["state"] == "unmeasured"
+    assert precision["auto_accepted_count"] == 0
+    assert precision["reverted_count"] == 0
+    assert precision["skipped_missing_candidate_hash_count"] == 2
+
+
 def test_loop_metrics_reports_unmeasured_without_auto_accepts(tmp_path: Path) -> None:
     plugin_root = tmp_path / "plugin"
     _write_log(
@@ -173,6 +209,52 @@ def test_loop_metrics_measures_wasted_iteration_rate_from_repeats_and_noops(
         f"fig_demo:{repeated_hash}",
         _candidate_key("fig_demo", "CAND003"),
     ]
+
+
+def test_loop_metrics_counts_repeated_hashes_as_wasted_iterations(
+    tmp_path: Path,
+) -> None:
+    plugin_root = tmp_path / "plugin"
+    repeated_hash = "sha256:" + "a" * 64
+    _write_log(
+        plugin_root,
+        "fig_demo",
+        [
+            _record("fig_demo", "CAND001", candidate_hash=repeated_hash),
+            _record("fig_demo", "CAND002", candidate_hash=repeated_hash),
+            _record("fig_demo", "CAND003", candidate_hash=repeated_hash),
+        ],
+    )
+
+    payload = quality_loop_metrics.build_loop_metrics(plugin_root=plugin_root)
+
+    wasted = payload["metrics"]["wasted_iteration_rate"]
+    assert wasted["iteration_count"] == 3
+    assert wasted["wasted_count"] == 2
+    assert wasted["rate"] == 0.6667
+    assert wasted["wasted_candidates"] == [f"fig_demo:{repeated_hash}"]
+    assert wasted["reasons_by_candidate"][f"fig_demo:{repeated_hash}"] == [
+        "historical_repeat"
+    ]
+
+
+def test_loop_metrics_skips_identityless_wasted_iteration_records(
+    tmp_path: Path,
+) -> None:
+    plugin_root = tmp_path / "plugin"
+    _write_log(
+        plugin_root,
+        "fig_demo",
+        [_record("fig_demo", "CAND001", candidate_hash="", changed_pixel_ratio=0.0)],
+    )
+
+    payload = quality_loop_metrics.build_loop_metrics(plugin_root=plugin_root)
+
+    wasted = payload["metrics"]["wasted_iteration_rate"]
+    assert wasted["state"] == "unmeasured"
+    assert wasted["iteration_count"] == 0
+    assert wasted["wasted_count"] == 0
+    assert wasted["skipped_missing_candidate_hash_count"] == 1
 
 
 def _write_loop_run(

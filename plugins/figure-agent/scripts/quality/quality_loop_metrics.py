@@ -84,10 +84,7 @@ def _candidate_key(record: dict[str, Any]) -> str | None:
     candidate_hash = action.get("candidate_hash")
     if isinstance(candidate_hash, str) and candidate_hash:
         return f"{fixture}:{candidate_hash}"
-    candidate_id = action.get("candidate_id")
-    if not isinstance(candidate_id, str) or not candidate_id:
-        return None
-    return f"{fixture}:{candidate_id}"
+    return None
 
 
 def _outcome(record: dict[str, Any]) -> dict[str, Any]:
@@ -146,9 +143,12 @@ def _auto_accept_precision(records: list[dict[str, Any]]) -> dict[str, Any]:
     auto_accepted: set[str] = set()
     reverted: set[str] = set()
     seen_auto_accept: set[str] = set()
+    skipped_missing_candidate_hash_count = 0
     for record in records:
         key = _candidate_key(record)
         if key is None:
+            if _is_auto_accept(record) or _is_revert(record):
+                skipped_missing_candidate_hash_count += 1
             continue
         if _is_auto_accept(record):
             auto_accepted.add(key)
@@ -165,6 +165,7 @@ def _auto_accept_precision(records: list[dict[str, Any]]) -> dict[str, Any]:
         "reverted_count": reverted_count,
         "precision": precision,
         "reverted_candidates": sorted(reverted),
+        "skipped_missing_candidate_hash_count": skipped_missing_candidate_hash_count,
     }
 
 
@@ -172,9 +173,14 @@ def _wasted_iteration_rate(records: list[dict[str, Any]]) -> dict[str, Any]:
     seen_hashes: set[str] = set()
     wasted: dict[str, list[str]] = {}
     iteration_count = 0
+    wasted_count = 0
+    skipped_missing_candidate_hash_count = 0
     for record in records:
         key = _candidate_key(record)
-        if key is None or not _is_iteration_record(record):
+        if not _is_iteration_record(record):
+            continue
+        if key is None:
+            skipped_missing_candidate_hash_count += 1
             continue
         iteration_count += 1
         reasons: list[str] = []
@@ -187,8 +193,8 @@ def _wasted_iteration_rate(records: list[dict[str, Any]]) -> dict[str, Any]:
         if changed_pixel_ratio is not None and changed_pixel_ratio <= 0.0:
             reasons.append("no_op_nudge")
         if reasons:
-            wasted[key] = reasons
-    wasted_count = len(wasted)
+            wasted_count += 1
+            wasted[key] = sorted(set([*wasted.get(key, []), *reasons]))
     return {
         "state": "measured" if iteration_count else "unmeasured",
         "iteration_count": iteration_count,
@@ -196,6 +202,7 @@ def _wasted_iteration_rate(records: list[dict[str, Any]]) -> dict[str, Any]:
         "rate": None if iteration_count == 0 else round(wasted_count / iteration_count, 4),
         "wasted_candidates": sorted(wasted),
         "reasons_by_candidate": dict(sorted(wasted.items())),
+        "skipped_missing_candidate_hash_count": skipped_missing_candidate_hash_count,
     }
 
 
