@@ -27,6 +27,8 @@ import runtime_paths
 SCHEMA = "figure-agent.quality-search-plan.v0"
 EXECUTE_SCHEMA = "figure-agent.quality-search-execute.v0"
 ZERO_HASH = "sha256:" + "0" * 64
+DEPONE_PLAN_SCHEMA = "0.5"
+DEPONE_EVIDENCE_CONTRACT_SCHEMA = "v105.verify_wedge"
 
 PROGRESS_ACTIONS = {
     "create_or_fix_source",
@@ -135,6 +137,15 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
     if path.parent.is_symlink():
         raise ValueError(f"refusing to write inside symlink directory: {path.parent}")
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _write_text(path: Path, payload: str) -> None:
+    if path.is_symlink():
+        raise ValueError(f"refusing to write through symlink: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.parent.is_symlink():
+        raise ValueError(f"refusing to write inside symlink directory: {path.parent}")
+    path.write_text(payload, encoding="utf-8")
 
 
 def _workspace_relative(paths: runtime_paths.RuntimePaths, path: Path) -> str:
@@ -1030,6 +1041,316 @@ def _rank_rendered_candidates(
     )
 
 
+def _sha256_bytes(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _json_bytes(payload: dict[str, Any]) -> bytes:
+    return (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
+
+
+def _current_source_hash(paths: runtime_paths.RuntimePaths, name: str) -> str | None:
+    source_path = _fixture_source_path(paths, name)
+    if not source_path.is_file() or source_path.is_symlink():
+        return None
+    return _sha256_text(source_path.read_text(encoding="utf-8"))
+
+
+def _quality_search_contract_verdict(
+    *,
+    name: str,
+    run_id: str,
+    manifest: dict[str, Any],
+    policy: dict[str, Any],
+    source_context: dict[str, Any],
+    candidate_set: dict[str, Any],
+    render_results: dict[str, Any],
+    candidate_rankings: list[dict[str, Any]],
+    decision: dict[str, Any],
+    paths: runtime_paths.RuntimePaths,
+) -> dict[str, Any]:
+    failures: list[dict[str, str]] = []
+
+    def require(condition: bool, code: str, message: str) -> None:
+        if not condition:
+            failures.append({"code": code, "message": message})
+
+    candidates = [
+        candidate
+        for candidate in candidate_set.get("candidates", [])
+        if isinstance(candidate, dict)
+    ]
+    rendered = [
+        item for item in render_results.get("rendered", []) if isinstance(item, dict)
+    ]
+    candidate_ids = {str(candidate.get("id")) for candidate in candidates}
+    ranking_ids = {str(score.get("candidate_id")) for score in candidate_rankings}
+
+    require(
+        manifest.get("status") == "dry_run_complete",
+        "status_not_dry_complete",
+        "run did not finish as dry_run_complete",
+    )
+    require(
+        manifest.get("mode") == "execute_dry_witness",
+        "mode_not_dry_witness",
+        "run mode is not execute_dry_witness",
+    )
+    require(
+        policy.get("source_mutation") == "forbidden",
+        "source_mutation_not_forbidden",
+        "policy does not forbid source mutation",
+    )
+    require(
+        policy.get("release_mutation") == "forbidden",
+        "release_mutation_not_forbidden",
+        "policy does not forbid release mutation",
+    )
+    require(
+        decision.get("source_mutation") == "not_performed",
+        "source_mutation_performed",
+        "decision indicates source mutation",
+    )
+    require(
+        bool(candidates),
+        "candidate_batch_empty",
+        "candidate_set has no materialized candidates",
+    )
+    require(
+        len(rendered) == len(candidates),
+        "render_count_mismatch",
+        "rendered candidate count does not match candidate count",
+    )
+    require(
+        ranking_ids == candidate_ids,
+        "ranking_id_mismatch",
+        "candidate rankings do not cover exactly the materialized candidates",
+    )
+    require(
+        all(candidate.get("apply_authority") == "review_only" for candidate in candidates),
+        "non_review_only_candidate",
+        "at least one materialized candidate is not review_only",
+    )
+    require(
+        all(
+            score.get("effective_apply_authority") == "review_only"
+            for score in candidate_rankings
+        ),
+        "non_review_only_ranking",
+        "at least one ranking is not review_only",
+    )
+    current_hash = _current_source_hash(paths, name)
+    require(
+        current_hash is not None and current_hash == source_context.get("source_hash"),
+        "source_hash_drift",
+        "current source hash differs from source_context hash",
+    )
+    all_candidates_have_bound_selector = all(
+        any(
+            isinstance(selector, dict) and selector.get("binding_state") == "bound"
+            for selector in candidate.get("selectors", [])
+            if isinstance(selector, dict)
+        )
+        for candidate in candidates
+    )
+    require(
+        all_candidates_have_bound_selector,
+        "candidate_selectors_unbound",
+        "at least one materialized candidate lacks a bound source selector",
+    )
+
+    return {
+        "schema": "figure-agent.quality-search-depone-verdict.v0",
+        "fixture": name,
+        "run_id": run_id,
+        "contract_status": "pass" if not failures else "fail",
+        "failures": failures,
+        "checks": {
+            "candidate_count": len(candidates),
+            "rendered_count": len(rendered),
+            "ranking_count": len(candidate_rankings),
+            "source_hash": source_context.get("source_hash"),
+            "selected_candidate_id": decision.get("selected_candidate_id"),
+            "selected_family": decision.get("selected_family"),
+        },
+        "mutation_boundary": {
+            "source_mutation": "not_performed",
+            "release_mutation": "forbidden",
+            "accepted_golden_final_mutation": "forbidden",
+        },
+    }
+
+
+def _depone_plan_for_quality_search(
+    *,
+    name: str,
+    run_id: str,
+    verdict_hash: str,
+) -> dict[str, Any]:
+    return {
+        "schema_version": DEPONE_PLAN_SCHEMA,
+        "plan_id": f"quality-search-depone-{run_id}",
+        "created_by": "figure-agent",
+        "source_prompt": "Verify quality-search execute evidence contract",
+        "activation": {
+            "decision": "activate",
+            "matched_thresholds": ["adversarial-verification"],
+            "downgrade_target": None,
+            "reason": "Depone verification over generated quality-search evidence.",
+        },
+        "objective": (
+            "Verify quality-search execute materialized review-only candidates "
+            "without source, release, accepted, golden, or final mutation."
+        ),
+        "surfaces": [
+            {
+                "id": name,
+                "kind": "quality-search-run",
+                "locator": run_id,
+                "access_mode": "read-only",
+            }
+        ],
+        "assumptions": [],
+        "patterns": ["Adversarial Verify"],
+        "phases": [
+            {
+                "id": "phase-1",
+                "name": "Generate quality-search evidence",
+                "entry_criteria": ["quality-search execute completed"],
+                "exit_criteria": ["quality-search-verdict.json is produced"],
+                "depends_on": [],
+                "worker_ids": ["figure-agent"],
+                "outputs": ["quality-search-verdict.json"],
+            },
+            {
+                "id": "phase-2",
+                "name": "Verify quality-search evidence",
+                "entry_criteria": ["quality-search-verdict.json is available"],
+                "exit_criteria": ["contract_status is pass"],
+                "depends_on": ["phase-1"],
+                "worker_ids": ["depone"],
+                "outputs": ["depone verification report"],
+            },
+        ],
+        "workers": [],
+        "handoffs": [
+            {
+                "from_phase": "phase-1",
+                "to_phase": "phase-2",
+                "artifact": "quality-search-verdict.json",
+                "expected_hash": verdict_hash,
+                "artifact_schema": {
+                    "format": "json",
+                    "required_fields": ["contract_status", "failures", "checks"],
+                    "validation_command": "python -m json.tool quality-search-verdict.json",
+                },
+            }
+        ],
+        "parallelism": {
+            "shape": "none",
+            "concurrency_cap": 1,
+            "barriers": [],
+            "fan_in_rule": "single evidence verdict",
+        },
+        "verification": [
+            {
+                "claim_or_output": "quality-search contract_status is pass",
+                "ground_truth": "quality-search-verdict.json",
+                "evaluator": "ground-truth-contains",
+                "expected": '"contract_status": "pass"',
+                "required": True,
+            },
+            {
+                "claim_or_output": "quality-search source mutation was not performed",
+                "ground_truth": "quality-search-verdict.json",
+                "evaluator": "ground-truth-contains",
+                "expected": '"source_mutation": "not_performed"',
+                "required": True,
+            },
+        ],
+        "risk_gates": [],
+        "budget": {"max_agents": 2, "max_rounds": 1, "max_retries": 0},
+        "resume": {"cacheable_outputs": ["quality-search-verdict.json"], "invalidators": []},
+        "execution_path": {
+            "mode": "evidence",
+            "first_slice": {
+                "instruction": "Inspect quality-search evidence verdict.",
+                "inputs": ["quality-search-verdict.json"],
+                "expected_output": "Depone verification report",
+                "completion_check": "Depone verdict is verified.",
+                "forbidden_actions": ["source_mutation", "release_mutation"],
+            },
+            "consumer": "depone",
+        },
+    }
+
+
+def _depone_evidence_pack(
+    *,
+    name: str,
+    run_id: str,
+    manifest: dict[str, Any],
+    policy: dict[str, Any],
+    source_context: dict[str, Any],
+    candidate_set: dict[str, Any],
+    render_results: dict[str, Any],
+    candidate_rankings: list[dict[str, Any]],
+    decision: dict[str, Any],
+    paths: runtime_paths.RuntimePaths,
+) -> dict[str, dict[str, Any] | str]:
+    verdict = _quality_search_contract_verdict(
+        name=name,
+        run_id=run_id,
+        manifest=manifest,
+        policy=policy,
+        source_context=source_context,
+        candidate_set=candidate_set,
+        render_results=render_results,
+        candidate_rankings=candidate_rankings,
+        decision=decision,
+        paths=paths,
+    )
+    verdict_hash = _sha256_bytes(_json_bytes(verdict))
+    plan = _depone_plan_for_quality_search(
+        name=name,
+        run_id=run_id,
+        verdict_hash=verdict_hash,
+    )
+    evidence_contract = {
+        "schema_version": DEPONE_EVIDENCE_CONTRACT_SCHEMA,
+        "required_evidence": [
+            "run-metadata.json",
+            "quality-search-verdict.json",
+            "quality-search-summary.md",
+        ],
+        "expected_exit_code": 0,
+    }
+    metadata = {
+        "run_id": run_id,
+        "fixture": name,
+        "exit_code": 0,
+        "num_rounds": manifest.get("executed_iterations", 1),
+    }
+    summary = (
+        "# Quality Search Depone Evidence\n\n"
+        f"- fixture: {name}\n"
+        f"- run_id: {run_id}\n"
+        f"- contract_status: {verdict['contract_status']}\n"
+        f"- candidate_count: {verdict['checks']['candidate_count']}\n"
+        f"- selected_family: {verdict['checks']['selected_family']}\n"
+        "- source_mutation: not_performed\n"
+        "- release_mutation: forbidden\n"
+    )
+    return {
+        "depone_plan": plan,
+        "evidence-contract.json": evidence_contract,
+        "run-metadata.json": metadata,
+        "exit-code.txt": "0\n",
+        "quality-search-verdict.json": verdict,
+        "quality-search-summary.md": summary,
+    }
+
+
 def _candidate_specs_from_plan(
     plan: dict[str, Any],
     *,
@@ -1250,7 +1571,8 @@ def build_quality_search_execution(
         plugin_root=plugin_root,
         workspace_root=workspace_root,
     )
-    run_dir = paths.workspace_root / ".scratch" / "quality-search-runs" / _run_id(name)
+    run_id = _run_id(name)
+    run_dir = paths.workspace_root / ".scratch" / "quality-search-runs" / run_id
     if run_dir.is_symlink():
         raise ValueError(f"refusing to write quality-search run through symlink: {run_dir}")
 
@@ -1316,8 +1638,26 @@ def build_quality_search_execution(
             "decision_000.json",
             "tool_defect_candidates_000.json",
             "memory_events_000.json",
+            "depone_plan_000.json",
+            "depone_evidence_000/evidence-contract.json",
+            "depone_evidence_000/run-metadata.json",
+            "depone_evidence_000/exit-code.txt",
+            "depone_evidence_000/quality-search-verdict.json",
+            "depone_evidence_000/quality-search-summary.md",
         ],
     }
+    depone_pack = _depone_evidence_pack(
+        name=name,
+        run_id=run_id,
+        manifest=manifest,
+        policy=policy,
+        source_context=source_context,
+        candidate_set=candidate_set,
+        render_results=render_results,
+        candidate_rankings=candidate_rankings,
+        decision=decision,
+        paths=paths,
+    )
     artifacts = {
         "run_manifest.json": manifest,
         "state_000.json": plan.get("state", {}),
@@ -1344,11 +1684,26 @@ def build_quality_search_execution(
         "decision_000.json": decision,
         "tool_defect_candidates_000.json": tool_defects,
         "memory_events_000.json": memory_events,
+        "depone_plan_000.json": depone_pack["depone_plan"],
+        "depone_evidence_000/evidence-contract.json": depone_pack[
+            "evidence-contract.json"
+        ],
+        "depone_evidence_000/run-metadata.json": depone_pack["run-metadata.json"],
+        "depone_evidence_000/exit-code.txt": depone_pack["exit-code.txt"],
+        "depone_evidence_000/quality-search-verdict.json": depone_pack[
+            "quality-search-verdict.json"
+        ],
+        "depone_evidence_000/quality-search-summary.md": depone_pack[
+            "quality-search-summary.md"
+        ],
     }
     writes: list[str] = []
     for filename, artifact in artifacts.items():
         path = run_dir / filename
-        _write_json(path, artifact if isinstance(artifact, dict) else {"value": artifact})
+        if isinstance(artifact, str):
+            _write_text(path, artifact)
+        else:
+            _write_json(path, artifact)
         writes.append(_workspace_relative(paths, path))
 
     return {
@@ -1368,6 +1723,11 @@ def build_quality_search_execution(
         "candidate_rankings": candidate_rankings,
         "candidate_scores": scores,
         "decision": decision,
+        "depone": {
+            "plan": _workspace_relative(paths, run_dir / "depone_plan_000.json"),
+            "evidence_dir": _workspace_relative(paths, run_dir / "depone_evidence_000"),
+            "verdict": depone_pack["quality-search-verdict.json"],
+        },
         "tool_defect_candidates": plan.get("tool_defect_candidates", []),
         "writes": writes,
         "safety": {

@@ -351,6 +351,8 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     assert "line width=0.9pt" in first_candidate["operations"][0]["replacement"]
     assert len(payload["render_results"]["rendered"]) == 3
     assert payload["candidate_rankings"][0]["candidate_id"] == "QS001"
+    assert payload["depone"]["verdict"]["contract_status"] == "pass"
+    assert payload["depone"]["verdict"]["checks"]["candidate_count"] == 3
     sandbox_source = (
         tmp_path
         / "examples"
@@ -362,6 +364,22 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     )
     assert sandbox_source.is_file()
     assert "line width=0.9pt" in sandbox_source.read_text(encoding="utf-8")
+    depone_plan = tmp_path / payload["depone"]["plan"]
+    depone_evidence = tmp_path / payload["depone"]["evidence_dir"]
+    assert depone_plan.is_file()
+    assert (depone_evidence / "evidence-contract.json").is_file()
+    assert (depone_evidence / "run-metadata.json").is_file()
+    assert (depone_evidence / "exit-code.txt").read_text(encoding="utf-8") == "0\n"
+    assert (depone_evidence / "quality-search-summary.md").is_file()
+    depone_verdict = json.loads(
+        (depone_evidence / "quality-search-verdict.json").read_text(encoding="utf-8")
+    )
+    assert depone_verdict["contract_status"] == "pass"
+    depone_contract = json.loads(
+        (depone_evidence / "evidence-contract.json").read_text(encoding="utf-8")
+    )
+    assert depone_contract["schema_version"] == "v105.verify_wedge"
+    assert "quality-search-verdict.json" in depone_contract["required_evidence"]
 
 
 def test_fig_agent_quality_search_execute_cli_writes_only_scratch(tmp_path: Path) -> None:

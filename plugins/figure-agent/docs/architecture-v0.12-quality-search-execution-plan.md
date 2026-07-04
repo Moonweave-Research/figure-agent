@@ -215,15 +215,24 @@ Required files:
 - `state_000.json`
 - `classification_000.json`
 - `policy_000.json`
+- `family_registry_000.json`
+- `candidate_set_000.json`
 - `candidate_specs_000.json`
 - `render_results_000.json`
 - `candidate_scores_000.json`
+- `candidate_rankings_000.json`
 - `decision_000.json`
+- `depone_plan_000.json`
+- `depone_evidence_000/evidence-contract.json`
+- `depone_evidence_000/quality-search-verdict.json`
 - `tool_defect_candidates_000.json`
 - `memory_events_000.json`
 
 These files are evidence, not authority. They do not replace source files,
 fixture metadata, critique files, adjudication files, or acceptance files.
+The Depone evidence pack is a verifier bridge for the run folder: it must prove
+the run stayed review-only, materialized candidates, preserved source/release
+mutation boundaries, and produced rankable sandbox evidence.
 
 ## Implementation Slices
 
@@ -426,4 +435,3 @@ Stop and report, rather than patching blindly, when:
   art-direction improvement;
 - tool behavior prevents a valid search decision;
 - release readiness is the only remaining blocker.
-
