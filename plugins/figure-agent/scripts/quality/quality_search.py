@@ -30,7 +30,10 @@ EXECUTE_SCHEMA = "figure-agent.quality-search-execute.v0"
 ZERO_HASH = "sha256:" + "0" * 64
 DEPONE_PLAN_SCHEMA = "0.5"
 DEPONE_EVIDENCE_CONTRACT_SCHEMA = "v105.verify_wedge"
-SEARCH_POLICY_SCHEMA = "figure-agent.quality-search-bandit-policy.v0"
+SEARCH_POLICY_SCHEMA = "figure-agent.quality-search-bandit-policy.v1"
+BANDIT_POLICY_KIND = "epsilon_greedy_family_bandit_v1"
+BANDIT_EPSILON = 0.15
+BANDIT_SELECTED_ARM_BONUS = 0.07
 
 PROGRESS_ACTIONS = {
     "create_or_fix_source",
@@ -616,24 +619,145 @@ def _memory_summary(memory: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
-def _search_policy_descriptor(next_operation: dict[str, Any]) -> dict[str, Any]:
+def _bandit_unit_interval(seed: str) -> float:
+    digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()
+    return int(digest[:16], 16) / float(16**16)
+
+
+def _unique_families(families: list[Any]) -> list[str]:
+    ordered: list[str] = []
+    for family in families:
+        value = str(family or "")
+        if not value or value == "null_baseline" or value in ordered:
+            continue
+        ordered.append(value)
+    return ordered
+
+
+def _arm_statistics(plan: dict[str, Any], families: list[str]) -> dict[str, dict[str, Any]]:
+    arms: dict[str, dict[str, Any]] = {}
+    for family in families:
+        memory = _family_memory(plan, family)
+        attempts = _bounded_int(memory.get("attempts"), default=0)
+        improved = _bounded_int(memory.get("improved"), default=0)
+        neutral = _bounded_int(memory.get("neutral"), default=0)
+        regressed = _bounded_int(memory.get("regressed"), default=0)
+        empirical_reward = (
+            (improved + 0.5 * neutral) / attempts if attempts > 0 else 0.5
+        )
+        arms[family] = {
+            "attempts": attempts,
+            "improved": improved,
+            "neutral": neutral,
+            "regressed": regressed,
+            "empirical_reward": round(
+                _bounded_float(empirical_reward, default=0.5, lower=0.0, upper=1.0),
+                4,
+            ),
+            "recommended_prior": _memory_prior(plan, family),
+            "base_evidence_weight": _family_evidence_weight(family, plan),
+        }
+    return arms
+
+
+def _best_exploit_arm(arms: dict[str, dict[str, Any]]) -> str | None:
+    if not arms:
+        return None
+    return max(
+        arms,
+        key=lambda family: (
+            float(arms[family].get("empirical_reward") or 0.0),
+            float(arms[family].get("recommended_prior") or 0.0),
+            float(arms[family].get("base_evidence_weight") or 0.0),
+            family,
+        ),
+    )
+
+
+def _best_explore_arm(arms: dict[str, dict[str, Any]]) -> str | None:
+    if not arms:
+        return None
+    return min(
+        arms,
+        key=lambda family: (
+            int(arms[family].get("attempts") or 0),
+            -float(arms[family].get("base_evidence_weight") or 0.0),
+            family,
+        ),
+    )
+
+
+def _epsilon_greedy_bandit_decision(
+    plan: dict[str, Any],
+    families: list[Any],
+    *,
+    epsilon: float = BANDIT_EPSILON,
+) -> dict[str, Any]:
+    epsilon = _bounded_float(epsilon, default=BANDIT_EPSILON, lower=0.0, upper=1.0)
+    arms = _arm_statistics(plan, _unique_families(families))
+    seed = json.dumps(
+        {
+            "operation": (plan.get("next_recommended_operation") or {}).get("kind"),
+            "families": sorted(arms),
+            "eligible_prior_count": (
+                (plan.get("state") or {}).get("memory", {}).get("eligible_prior_count")
+                if isinstance((plan.get("state") or {}).get("memory"), dict)
+                else None
+            ),
+        },
+        sort_keys=True,
+    )
+    draw = _bandit_unit_interval(seed) if arms else 1.0
+    selection_mode = "explore" if arms and draw < epsilon else "exploit"
+    selected_family = (
+        _best_explore_arm(arms) if selection_mode == "explore" else _best_exploit_arm(arms)
+    )
     return {
         "schema": SEARCH_POLICY_SCHEMA,
-        "kind": "contextual_bandit_beam_v0",
+        "kind": BANDIT_POLICY_KIND,
+        "algorithm": "deterministic_epsilon_greedy",
+        "epsilon": epsilon,
+        "draw": round(draw, 6),
+        "selection_mode": selection_mode,
+        "selected_family": selected_family,
+        "arm_statistics": arms,
+        "statistics_source": "experience_log_via_quality_memory_index",
+        "opaque_model_dependency": False,
+    }
+
+
+def _search_policy_descriptor(
+    next_operation: dict[str, Any],
+    memory: dict[str, Any] | None,
+) -> dict[str, Any]:
+    candidate_families = next_operation.get("candidate_families")
+    if not isinstance(candidate_families, list):
+        candidate_families = []
+    plan = {
+        "state": {"memory": _memory_summary(memory)},
+        "next_recommended_operation": next_operation,
+    }
+    bandit_decision = _epsilon_greedy_bandit_decision(plan, candidate_families)
+    return {
+        "schema": SEARCH_POLICY_SCHEMA,
+        "kind": BANDIT_POLICY_KIND,
         "operation_kind": next_operation.get("kind"),
         "selection_score": (
-            "base_evidence_score + memory_prior + exploration_bonus "
+            "base_evidence_score + memory_prior + bandit_bonus "
             "+ render_adjustment + render_penalty"
         ),
         "exploitation_inputs": [
             "candidate_family_priority",
             "fixture_quality_memory_prior",
+            "experience_log_arm_empirical_reward",
             "candidate_render_rank_score",
         ],
         "exploration_inputs": [
-            "low_attempt_family_bonus",
-            "step_out_experiment_family_width",
+            "epsilon_greedy_draw",
+            "low_attempt_arm_selection",
         ],
+        "epsilon": BANDIT_EPSILON,
+        "bandit_decision": bandit_decision,
         "mutation_boundary": "review_only_until_explicit_apply_gate",
     }
 
@@ -722,7 +846,7 @@ def build_quality_search_plan(
         "patch_hypotheses": hypotheses,
         "tool_defect_candidates": _tool_defect_candidates(driver, ledger),
         "next_recommended_operation": next_operation,
-        "search_policy": _search_policy_descriptor(next_operation),
+        "search_policy": _search_policy_descriptor(next_operation, memory),
         "safety": {
             "source_mutation": "forbidden_in_plan_mode",
             "accepted_golden_release_mutation": "forbidden_without_explicit_human_approval",
@@ -1776,6 +1900,7 @@ def _quality_search_memory_events(
                 },
                 "outcome": {
                     "state": outcome_state,
+                    "quality_movement": "neutral" if render_positive else None,
                     "reason": outcome_reason,
                     "evidence_paths": evidence_paths,
                 },
@@ -2397,19 +2522,6 @@ def _memory_prior(plan: dict[str, Any], family: str) -> float:
     )
 
 
-def _exploration_bonus(plan: dict[str, Any], family: str) -> float:
-    if family == "null_baseline":
-        return 0.0
-    attempts = _bounded_int(_family_memory(plan, family).get("attempts"), default=0)
-    if attempts == 0:
-        return 0.06
-    if attempts <= 2:
-        return 0.04
-    if attempts <= 5:
-        return 0.02
-    return 0.0
-
-
 def _ranking_evidence(ranking: dict[str, Any] | None, polarity: str) -> list[str]:
     if not isinstance(ranking, dict):
         return []
@@ -2454,6 +2566,22 @@ def _operation_scale_policy_bonus(
     return 0.0
 
 
+def _bandit_selected_arm_bonus(family: str, bandit_decision: dict[str, Any]) -> float:
+    if family != bandit_decision.get("selected_family"):
+        return 0.0
+    arms = bandit_decision.get("arm_statistics")
+    if not isinstance(arms, dict):
+        return 0.0
+    has_attempted_arm = any(
+        _bounded_int(row.get("attempts"), default=0) > 0
+        for row in arms.values()
+        if isinstance(row, dict)
+    )
+    if not has_attempted_arm:
+        return 0.0
+    return BANDIT_SELECTED_ARM_BONUS
+
+
 def _candidate_policy_score(
     *,
     family: str,
@@ -2461,17 +2589,18 @@ def _candidate_policy_score(
     base_evidence_score: float,
     plan: dict[str, Any],
     ranking: dict[str, Any] | None,
+    bandit_decision: dict[str, Any],
 ) -> dict[str, Any]:
     prior = _memory_prior(plan, family)
-    exploration = _exploration_bonus(plan, family)
     render_adjustment, render_penalty = _render_policy_adjustment(ranking)
     operation_scale_bonus = _operation_scale_policy_bonus(operation_scale, ranking)
+    bandit_bonus = _bandit_selected_arm_bonus(family, bandit_decision)
     score = round(
         min(
             max(
                 base_evidence_score
                 + prior
-                + exploration
+                + bandit_bonus
                 + render_adjustment
                 + render_penalty
                 + operation_scale_bonus,
@@ -2483,10 +2612,11 @@ def _candidate_policy_score(
     )
     return {
         "schema": SEARCH_POLICY_SCHEMA,
-        "kind": "contextual_bandit_beam_v0",
+        "kind": BANDIT_POLICY_KIND,
         "base_evidence_score": base_evidence_score,
         "memory_prior": prior,
-        "exploration_bonus": exploration,
+        "bandit_bonus": bandit_bonus,
+        "bandit_decision": bandit_decision,
         "render_adjustment": render_adjustment,
         "render_penalty": render_penalty,
         "operation_scale_bonus": operation_scale_bonus,
@@ -2515,6 +2645,10 @@ def _candidate_scores(
     full_ratios_by_id, panel_ratios_by_id = _visual_change_ratios_by_candidate(
         visual_evidence
     )
+    bandit_decision = _epsilon_greedy_bandit_decision(
+        plan,
+        [spec.get("family") for spec in candidate_specs if isinstance(spec, dict)],
+    )
     scores: list[dict[str, Any]] = []
     for spec in candidate_specs:
         candidate_id = str(spec.get("id"))
@@ -2531,6 +2665,7 @@ def _candidate_scores(
             base_evidence_score=score,
             plan=plan,
             ranking=ranking,
+            bandit_decision=bandit_decision,
         )
         render_status = (
             str(ranking.get("render_status"))

@@ -149,8 +149,13 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
 
     assert payload["schema"] == "figure-agent.quality-search-plan.v0"
     assert payload["next_recommended_operation"]["kind"] == "step_out_experiment"
-    assert payload["search_policy"]["schema"] == "figure-agent.quality-search-bandit-policy.v0"
-    assert payload["search_policy"]["kind"] == "contextual_bandit_beam_v0"
+    assert payload["search_policy"]["schema"] == "figure-agent.quality-search-bandit-policy.v1"
+    assert payload["search_policy"]["kind"] == "epsilon_greedy_family_bandit_v1"
+    assert payload["search_policy"]["bandit_decision"]["selected_family"] in {
+        "hierarchy_rebalance",
+        "apparatus_strengthen",
+        "density_reduce",
+    }
     assert payload["next_recommended_operation"]["candidate_families"][:2] == [
         "hierarchy_rebalance",
         "apparatus_strengthen",
@@ -633,7 +638,45 @@ def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_bloc
     assert "\\draw[<->, cGray!62!black, line width=0.50pt]" in operation["replacement"]
 
 
-def test_quality_search_policy_uses_memory_prior_and_exploration_bonus() -> None:
+def test_quality_search_policy_uses_epsilon_greedy_bandit_from_memory() -> None:
+    decision = quality_search._epsilon_greedy_bandit_decision(
+        {
+            "state": {
+                "memory": {
+                    "state": "loaded",
+                    "families": {
+                        "hierarchy_rebalance": {
+                            "attempts": 4,
+                            "improved": 4,
+                            "neutral": 0,
+                            "regressed": 0,
+                            "recommended_prior": 0.25,
+                        },
+                        "apparatus_strengthen": {
+                            "attempts": 4,
+                            "improved": 0,
+                            "neutral": 0,
+                            "regressed": 4,
+                            "recommended_prior": -0.25,
+                        },
+                    },
+                }
+            },
+            "next_recommended_operation": {"kind": "step_out_experiment"},
+        },
+        ["hierarchy_rebalance", "apparatus_strengthen"],
+        epsilon=0.0,
+    )
+
+    assert decision["schema"] == "figure-agent.quality-search-bandit-policy.v1"
+    assert decision["kind"] == "epsilon_greedy_family_bandit_v1"
+    assert decision["selection_mode"] == "exploit"
+    assert decision["selected_family"] == "hierarchy_rebalance"
+    assert decision["arm_statistics"]["hierarchy_rebalance"]["attempts"] == 4
+    assert decision["arm_statistics"]["hierarchy_rebalance"]["empirical_reward"] == 1.0
+
+
+def test_quality_search_policy_uses_memory_prior_and_bandit_bonus() -> None:
     plan = {
         "state": {
             "memory": {
@@ -689,13 +732,15 @@ def test_quality_search_policy_uses_memory_prior_and_exploration_bonus() -> None
     hierarchy = by_family["hierarchy_rebalance"]
     apparatus = by_family["apparatus_strengthen"]
     assert hierarchy["policy"]["memory_prior"] == -0.1
-    assert hierarchy["policy"]["exploration_bonus"] == 0.0
+    assert hierarchy["policy"]["bandit_bonus"] == 0.0
     assert apparatus["policy"]["memory_prior"] == 0.0
-    assert apparatus["policy"]["exploration_bonus"] == 0.06
+    assert apparatus["policy"]["bandit_decision"]["selected_family"] == "apparatus_strengthen"
+    assert apparatus["policy"]["bandit_bonus"] > 0
     assert apparatus["policy_score"] > hierarchy["policy_score"]
     assert decision["selected_candidate_id"] == "QS002"
     assert decision["selected_family"] == "apparatus_strengthen"
-    assert decision["policy"]["schema"] == "figure-agent.quality-search-bandit-policy.v0"
+    assert decision["policy"]["schema"] == "figure-agent.quality-search-bandit-policy.v1"
+    assert decision["policy"]["kind"] == "epsilon_greedy_family_bandit_v1"
 
 
 def test_quality_search_policy_prefers_panel_block_with_stronger_render_rank() -> None:
