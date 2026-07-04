@@ -1326,22 +1326,59 @@ def _strengthened_panel_f_overlay(block: str) -> str | None:
     return replacement
 
 
+def _panel_f_overlay_template_applied(block: str) -> bool:
+    required_fragments = (
+        "(13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16) -- (13.18, 3.02) -- (13.30, 2.82);",
+        "(11.48,2.40) .. controls (10.78,3.02) and (10.12,3.36) .. (9.60,3.36);",
+        "at (9.60, 3.12) {$q_{\\mathrm{tr}}$};",
+        "at (9.60, 3.36) {trapped charge};",
+        "Stealth[length=9.6pt,width=6.8pt]",
+        "line width=1.24pt",
+        "\\draw[<->, cGray!64!black, line width=0.70pt]",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _apparatus_panel_block_status(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> dict[str, Any]:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return {"state": "not_found"}
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return {"state": "protected_labels_missing", "line_start": line_start, "line_end": line_end}
+    if _panel_f_overlay_template_applied(original):
+        return {"state": "already_applied", "line_start": line_start, "line_end": line_end}
+    replacement = _strengthened_panel_f_overlay(original)
+    if replacement is None:
+        return {"state": "no_template_movement", "line_start": line_start, "line_end": line_end}
+    return {
+        "state": "replaceable",
+        "original": original,
+        "replacement": replacement,
+        "line_start": line_start,
+        "line_end": line_end,
+    }
+
+
 def _apparatus_panel_block_replacement(
     *,
     lines: list[str],
     selector: dict[str, Any],
 ) -> tuple[str, str, int, int] | None:
-    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
-    if line_range is None:
+    status = _apparatus_panel_block_status(lines=lines, selector=selector)
+    if status.get("state") != "replaceable":
         return None
-    line_start, line_end = line_range
-    original = "".join(lines[line_start - 1 : line_end])
-    if not _panel_f_overlay_has_protected_labels(original):
-        return None
-    replacement = _strengthened_panel_f_overlay(original)
-    if replacement is None:
-        return None
-    return original, replacement, line_start, line_end
+    return (
+        str(status["original"]),
+        str(status["replacement"]),
+        int(status["line_start"]),
+        int(status["line_end"]),
+    )
 
 
 def _candidate_operation_for_spec(
@@ -1371,9 +1408,12 @@ def _candidate_operation_for_spec(
         bound_selectors[0],
     )
     if family == "apparatus_strengthen":
-        panel_block = _apparatus_panel_block_replacement(lines=lines, selector=selector)
-        if panel_block is not None:
-            original, new_text, line_start, line_end = panel_block
+        panel_block = _apparatus_panel_block_status(lines=lines, selector=selector)
+        if panel_block.get("state") == "replaceable":
+            original = str(panel_block["original"])
+            new_text = str(panel_block["replacement"])
+            line_start = int(panel_block["line_start"])
+            line_end = int(panel_block["line_end"])
             operation = {
                 "kind": "replace_text",
                 "semantic_kind": "quality_search_apparatus_strengthen_panel_block",
@@ -1386,6 +1426,15 @@ def _candidate_operation_for_spec(
                 "replacement": new_text,
             }
             return operation, None
+        if panel_block.get("state") == "already_applied":
+            return None, {
+                "code": "template_already_applied",
+                "candidate_id": str(spec.get("id")),
+                "family": family,
+                "operation_scale": "panel_block",
+                "template_id": APPARATUS_PANEL_F_TEMPLATE_ID,
+                "panel": "F",
+            }
     minimum_pt = {
         "hierarchy_rebalance": 0.9,
         "apparatus_strengthen": 0.8,
@@ -2755,6 +2804,7 @@ def _candidate_scores(
     plan: dict[str, Any],
     candidate_rankings: list[dict[str, Any]] | None = None,
     visual_evidence: dict[str, Any] | None = None,
+    materialized_candidate_ids: set[str] | None = None,
 ) -> list[dict[str, Any]]:
     classifications = plan.get("classifications")
     release_blocker_only = any(
@@ -2778,6 +2828,12 @@ def _candidate_scores(
     scores: list[dict[str, Any]] = []
     for spec in candidate_specs:
         candidate_id = str(spec.get("id"))
+        if (
+            materialized_candidate_ids is not None
+            and candidate_id != "QSNULL"
+            and candidate_id not in materialized_candidate_ids
+        ):
+            continue
         family = str(spec.get("family") or "unknown")
         score = _family_evidence_weight(family, plan)
         if release_blocker_only and family != "null_baseline":
@@ -2846,6 +2902,14 @@ def _candidate_scores(
             }
         )
     return scores
+
+
+def _materialized_candidate_ids(candidate_set: dict[str, Any]) -> set[str]:
+    return {
+        str(candidate.get("id"))
+        for candidate in candidate_set.get("candidates", [])
+        if isinstance(candidate, dict) and candidate.get("id")
+    }
 
 
 def _execution_decision(
@@ -2974,7 +3038,14 @@ def build_quality_search_execution(
         run_dir=run_dir,
         paths=paths,
     )
-    scores = _candidate_scores(candidate_specs, plan, candidate_rankings, visual_evidence)
+    materialized_ids = _materialized_candidate_ids(candidate_set)
+    scores = _candidate_scores(
+        candidate_specs,
+        plan,
+        candidate_rankings,
+        visual_evidence,
+        materialized_candidate_ids=materialized_ids or None,
+    )
     decision = _execution_decision(plan, scores)
     tool_defects = {
         "schema": "figure-agent.quality-search-tool-defects.v0",
