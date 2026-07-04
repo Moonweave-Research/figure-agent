@@ -485,8 +485,15 @@ def test_mcp_quality_next_experiment_is_read_only(tmp_path: Path) -> None:
     payload = _tool_payload(_response_lines(result)[0])
     assert payload["schema"] == "figure-agent.mcp.quality-next-experiment.v1"
     assert payload["success"] is True
-    command = payload["next_experiment"]["recommendation"]["command"]
-    assert command == "fig-agent benchmark-run --suite smoke --json"
+    recommendation = payload["next_experiment"]["recommendation"]
+    command = recommendation["command"]
+    assert recommendation["kind"] in {
+        "fixture_family_uncertainty_probe",
+        "benchmark_preview",
+    }
+    assert recommendation["allowed"] is True
+    for forbidden in ("--write", "--apply", "--accept", "--overwrite", "--force"):
+        assert forbidden not in command
     assert not (workspace / ".scratch").exists()
 
 
