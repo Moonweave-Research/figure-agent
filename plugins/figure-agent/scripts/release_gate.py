@@ -64,6 +64,7 @@ TARGETED_TESTS = [
     "tests/test_evidence_sync.py",
     "tests/test_closeout_readiness.py",
     "tests/test_golden_acceptance.py",
+    "tests/test_human_attestation.py",
     "tests/test_candidate_cli_contract.py",
     "tests/test_benchmark_contracts.py",
     "tests/test_benchmark_detector_reports.py",

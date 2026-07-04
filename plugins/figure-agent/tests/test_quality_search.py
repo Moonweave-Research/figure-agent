@@ -163,6 +163,8 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
     release = [item for item in payload["classifications"] if item["kind"] == "release_blocker"][0]
     assert release["id"] == "acceptance_not_declared"
     assert release["blocks_search"] is False
+    assert release["blocks_release"] is True
+    assert release["required_actor"] == "human"
     assert any(item["kind"] == "quality_basin" for item in payload["classifications"])
     assert "human_gate" not in json.dumps(payload["next_recommended_operation"])
     assert {item["family"] for item in payload["patch_hypotheses"]} >= {
