@@ -2246,6 +2246,7 @@ def test_loop_marks_label_spacing_patch_as_auto_patch_candidate(tmp_path: Path) 
                 "decision": "apply",
                 "reason": "label overlaps arrow; adjust label offset and spacing",
                 "patch_target": "panel A label cluster",
+                "patch_classes": ["label_offset", "text_overlap"],
                 "evidence": "critique.md C001",
             }
         ],
@@ -2266,7 +2267,7 @@ def test_loop_marks_label_spacing_patch_as_auto_patch_candidate(tmp_path: Path) 
         "level": "auto_patch_candidate",
         "target_type": "finding",
         "target_id": "C001",
-        "allowed_reasons": ["label offset", "text overlap"],
+        "allowed_reasons": ["label_offset", "text_overlap"],
         "blocked_reasons": [],
         "required_evidence": [
             "before compile/export evidence",
@@ -2480,6 +2481,7 @@ def test_loop_marks_mechanism_patch_as_human_review_required(tmp_path: Path) -> 
                 "decision": "apply",
                 "reason": "causal arrow semantics change the physical mechanism",
                 "patch_target": "panel B mechanism arrow",
+                "patch_classes": ["causal_arrow_semantics", "physical_mechanism"],
                 "evidence": "critique.md C002",
             }
         ],
@@ -2500,8 +2502,8 @@ def test_loop_marks_mechanism_patch_as_human_review_required(tmp_path: Path) -> 
     assert iteration["auto_patch_eligibility"]["level"] == "human_review_required"
     assert iteration["auto_patch_eligibility"]["may_edit"] is False
     assert iteration["auto_patch_eligibility"]["blocked_reasons"] == [
-        "physical mechanism",
-        "causal arrow semantics",
+        "causal_arrow_semantics",
+        "physical_mechanism",
     ]
 
 
@@ -2518,6 +2520,10 @@ def test_loop_marks_publication_safety_patch_as_human_review_required(tmp_path: 
                 "decision": "apply",
                 "reason": "publication safety depends on accepted golden state",
                 "patch_target": "accepted publication-safety metadata",
+                "patch_classes": [
+                    "accepted_golden_export_build_state",
+                    "publication_safety",
+                ],
                 "evidence": "critique.md C003",
             }
         ],
@@ -2534,8 +2540,8 @@ def test_loop_marks_publication_safety_patch_as_human_review_required(tmp_path: 
     assert iteration["auto_patch_eligibility"]["level"] == "human_review_required"
     assert iteration["auto_patch_eligibility"]["may_edit"] is False
     assert iteration["auto_patch_eligibility"]["blocked_reasons"] == [
-        "accepted/golden/export/build state",
-        "publication safety",
+        "accepted_golden_export_build_state",
+        "publication_safety",
     ]
 
 

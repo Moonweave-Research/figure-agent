@@ -62,6 +62,19 @@ def decisions_with_value(adjudication: dict[str, Any], decision: str) -> list[di
     return [item for item in adjudication.get("decisions", []) if item.get("decision") == decision]
 
 
+def _patch_class_fields(decision: dict[str, Any]) -> dict[str, Any]:
+    fields: dict[str, Any] = {}
+    patch_class = decision.get("patch_class")
+    if isinstance(patch_class, str) and patch_class:
+        fields["patch_class"] = patch_class
+    patch_classes = decision.get("patch_classes")
+    if isinstance(patch_classes, list):
+        values = [value for value in patch_classes if isinstance(value, str) and value]
+        if values:
+            fields["patch_classes"] = values
+    return fields
+
+
 def loop_decision(
     status_result: dict[str, Any],
     adjudication: dict[str, Any],
@@ -139,6 +152,7 @@ def loop_decision(
                 "finding_id": finding_id,
                 "patch_target": patch_target,
                 "reason": apply_decision["reason"],
+                **_patch_class_fields(apply_decision),
             },
             "human_gate_status": "not_requested",
         }

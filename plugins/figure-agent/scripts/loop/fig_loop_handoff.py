@@ -15,7 +15,7 @@ def patch_handoff(name: str, loop_decision: dict[str, Any]) -> dict[str, Any] | 
     target_type = "finding" if finding_id else "subregion"
     target_id = finding_id if finding_id else patch_target
     example_prefix = f"examples/{name}"
-    return {
+    handoff: dict[str, Any] = {
         "target_type": target_type,
         "target_id": target_id,
         "patch_target": patch_target,
@@ -47,3 +47,12 @@ def patch_handoff(name: str, loop_decision: dict[str, Any]) -> dict[str, Any] | 
             " selected target decision in critique_adjudication.yaml."
         ),
     }
+    patch_class = active_patch_target.get("patch_class")
+    if isinstance(patch_class, str) and patch_class:
+        handoff["patch_class"] = patch_class
+    patch_classes = active_patch_target.get("patch_classes")
+    if isinstance(patch_classes, list):
+        values = [value for value in patch_classes if isinstance(value, str) and value]
+        if values:
+            handoff["patch_classes"] = values
+    return handoff
