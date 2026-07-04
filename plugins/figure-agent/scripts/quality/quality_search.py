@@ -1295,15 +1295,15 @@ def _strengthened_panel_f_overlay(block: str) -> str | None:
         ),
         (
             "(11.50,2.38) .. controls (11.10,2.78) and (10.32,3.00) .. (9.62,3.00);",
-            "(11.48,2.40) .. controls (10.78,3.02) and (9.92,3.36) .. (9.05,3.36);",
+            "(11.48,2.40) .. controls (10.78,3.02) and (10.12,3.36) .. (9.60,3.36);",
         ),
         (
             "at (9.56, 2.84) {$q_{\\mathrm{tr}}$};",
-            "at (9.05, 3.12) {$q_{\\mathrm{tr}}$};",
+            "at (9.60, 3.12) {$q_{\\mathrm{tr}}$};",
         ),
         (
             "at (9.56, 3.04) {trapped charge};",
-            "at (9.05, 3.36) {trapped charge};",
+            "at (9.60, 3.36) {trapped charge};",
         ),
         (
             "\\node at (12.13, 3.08) {$q_{\\mathrm{tr}}$ trapped charge};",

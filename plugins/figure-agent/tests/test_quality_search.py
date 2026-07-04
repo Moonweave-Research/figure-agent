@@ -661,8 +661,8 @@ def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_bloc
     ) in operation["replacement"]
     assert "circle ({2.35*\\rr})" in operation["replacement"]
     assert "ball color=cRed!82!black" in operation["replacement"]
-    assert "at (9.05, 3.12) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
-    assert "at (9.05, 3.36) {trapped charge};" in operation["replacement"]
+    assert "at (9.60, 3.12) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
+    assert "at (9.60, 3.36) {trapped charge};" in operation["replacement"]
     assert "Stealth[length=9.6pt,width=6.8pt]" in operation["replacement"]
     assert "line width=1.24pt" in operation["replacement"]
     assert "\\draw[<->, cGray!64!black, line width=0.70pt]" in operation["replacement"]
@@ -695,8 +695,8 @@ def test_quality_search_apparatus_strengthen_progresses_already_redrawn_panel_f(
     replacement = quality_search._strengthened_panel_f_overlay(f"{block}\n")
 
     assert replacement is not None
-    assert "at (9.05, 3.12) {$q_{\\mathrm{tr}}$};" in replacement
-    assert "at (9.05, 3.36) {trapped charge};" in replacement
+    assert "at (9.60, 3.12) {$q_{\\mathrm{tr}}$};" in replacement
+    assert "at (9.60, 3.36) {trapped charge};" in replacement
     assert (
         "(13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16)"
         " -- (13.18, 3.02) -- (13.30, 2.82);"
