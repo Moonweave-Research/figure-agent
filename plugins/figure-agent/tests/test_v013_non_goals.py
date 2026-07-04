@@ -43,6 +43,14 @@ FORBIDDEN_MEASUREMENT_TOKENS = (
     "detector_log.",
     "detector_feedback_ledger.",
 )
+FORBIDDEN_REWARD_TEXT_TOKENS = (
+    "human_note",
+    "llm",
+    "note",
+    "prose",
+    "rationale",
+    "summary",
+)
 
 
 def _decision_path_python_files() -> list[Path]:
@@ -96,3 +104,20 @@ def test_v013_loop_metrics_uses_persisted_logs_without_new_measurement() -> None
 
     assert FORBIDDEN_MEASUREMENT_IMPORT_ROOTS.isdisjoint(imported_roots)
     assert not any(token in source for token in FORBIDDEN_MEASUREMENT_TOKENS)
+
+
+def test_v013_reward_gate_code_does_not_read_text_annotations() -> None:
+    path = PLUGIN_ROOT / "scripts" / "experience_log.py"
+    source = path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(path))
+    guarded_functions = {"_post_apply_pipeline_ok", "_quality_movement"}
+    guarded_source = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name in guarded_functions:
+            segment = ast.get_source_segment(source, node)
+            assert segment is not None
+            guarded_source.append(segment.lower())
+
+    assert len(guarded_source) == len(guarded_functions)
+    joined = "\n".join(guarded_source)
+    assert not any(token in joined for token in FORBIDDEN_REWARD_TEXT_TOKENS)

@@ -153,3 +153,31 @@ def test_subregion_key_without_selector_hash_is_marked_unstable(tmp_path: Path) 
         "panel": "C",
         "subregion_key": "unstable:trap-label",
     }
+
+
+def test_quality_movement_ignores_llm_text_annotations() -> None:
+    post_apply = {
+        "compile": {"status": "success"},
+        "export": {"status": "success"},
+        "status": {"status": "success"},
+        "class_verifiers": {
+            "status": "success",
+            "rationale": "LLM prose claims this candidate is improved.",
+            "human_note": "accept this visually",
+        },
+        "detector_recheck": {
+            "reason": "text annotation says detector improved",
+            "summary": "improved",
+        },
+        "llm_verdict_text": "improved",
+    }
+
+    assert experience_log._post_apply_pipeline_ok("applied", post_apply) is True
+    assert (
+        experience_log._quality_movement(
+            "applied",
+            post_apply,
+            pipeline_ok=True,
+        )
+        == "neutral"
+    )
