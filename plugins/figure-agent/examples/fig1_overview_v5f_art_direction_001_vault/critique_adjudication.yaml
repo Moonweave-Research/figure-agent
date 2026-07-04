@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v5f_art_direction_001_vault
-source_critique_hash: sha256:46b5b4c947e1662473b0a3ae83ac1b2153f84e1174eddeea179dcc1f64cb49ef
+source_critique_hash: sha256:472da23f41fd0853ec755b3587a27ecc12ec2f576414866f76a182c58d4a1148
 decisions:
 - finding_id: C001
   decision: resolved

@@ -2045,8 +2045,8 @@
   at (13.06, 3.70) {bias};
 \fill[cRed!68!black] (13.31, 4.01) circle (0.020);
 \fill[cGray!55!black] (13.42, 4.01) circle (0.020);
-\draw[cGray!60!black, line width=0.24pt]
-  (13.31, 4.01) -- (13.69, 4.01) -- (13.69, 2.86) -- (13.40, 2.86);
+\draw[cGray!60!black, line width=0.24pt, rounded corners=1.1pt]
+  (13.42, 4.01) -- (13.62, 4.01) -- (13.62, 2.82) -- (13.42, 2.82);
 
 % Fixed clip and charge-trapping cantilever.
 \fill[cGray!10] (11.55, 2.84) rectangle (12.10, 2.96);
@@ -2102,15 +2102,15 @@
   \draw[cRed!95!black, line width=0.25pt] (\cx,\cy) circle (\rr);
 }
 \draw[cRed!45!black, line width=0.22pt]
-  (11.66,2.35) .. controls (11.70,2.43) and (11.73,2.50) .. (11.79,2.55);
+  (11.58,2.35) .. controls (11.28,2.56) and (10.90,2.64) .. (10.48,2.62);
 \node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,
       inner xsep=0.9pt, inner ysep=0.45pt,
       font=\sffamily\bfseries\fontsize{4.0}{4.8}\selectfont, text=cRed!76!black]
-  at (11.79, 2.56) {$q_{\mathrm{tr}}$};
+  at (9.80, 2.60) {$q_{\mathrm{tr}}$};
 \node[anchor=west, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=1.0pt, inner ysep=0.45pt,
       font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!76!black]
-  at (12.06, 2.56) {trapped charge};
+  at (10.08, 2.60) {trapped charge};
 
 % Coulomb-only response, intentionally stronger than the apparatus.
 \draw[panelFCoulombRepulsionArrow, -{Stealth[length=7.6pt,width=5.6pt]}, cRed!82!black, line width=0.94pt]
