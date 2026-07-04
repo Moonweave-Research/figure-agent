@@ -160,6 +160,46 @@ def test_render_writes_manifest_without_touching_exports(tmp_path: Path) -> None
     assert after_exports == before_exports
 
 
+def test_render_source_copy_respects_line_scoped_replace_text(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    repeated = "\\draw[cGray!55!black, line width=0.30pt] (0,0) -- (1,0);\n"
+    (fixture / "candidate_demo.tex").write_text(repeated + repeated, encoding="utf-8")
+    candidate_set = {
+        **_minimal_candidate_set(),
+        "candidates": [
+            {
+                "id": "CAND001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "target": {"panel": "F"},
+                "selectors": [{"kind": "tex_selector.v1", "line_start": 2, "line_end": 2}],
+                "operations": [
+                    {
+                        "kind": "replace_text",
+                        "path": "examples/candidate_demo/candidate_demo.tex",
+                        "line_start": 2,
+                        "line_end": 2,
+                        "original": repeated.rstrip("\n"),
+                        "replacement": repeated.replace("0.30pt", "0.80pt").rstrip("\n"),
+                    }
+                ],
+                "apply_authority": "review_only",
+            }
+        ],
+    }
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+    )
+
+    sandbox_source = fixture / "build" / "candidates" / "CAND001" / "candidate_demo.tex"
+    assert sandbox_source.read_text(encoding="utf-8") == (
+        repeated + repeated.replace("0.30pt", "0.80pt")
+    )
+
+
 def test_render_compile_request_writes_render_manifest_dependency_diagnostic(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

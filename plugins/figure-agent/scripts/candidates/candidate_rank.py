@@ -34,8 +34,19 @@ def _render_evidence(
         if status in {"failed", "dependency_missing", "blocked"}:
             evidence["negative"].append(f"{stage}:{status}")
     if render_status == "rendered_needs_human_review":
-        evidence["positive"].append("rendered_before_after_available")
-        bonus = 0.25
+        visual_deltas = render_manifest.get("visual_deltas")
+        changed_pixel_ratio = None
+        if isinstance(visual_deltas, dict) and "changed_pixel_ratio" in visual_deltas:
+            try:
+                changed_pixel_ratio = float(visual_deltas.get("changed_pixel_ratio"))
+            except (TypeError, ValueError):
+                changed_pixel_ratio = None
+        if changed_pixel_ratio is not None and changed_pixel_ratio <= 0.0:
+            evidence["negative"].append("rendered_no_pixel_change")
+            bonus = -0.15
+        else:
+            evidence["positive"].append("rendered_before_after_available")
+            bonus = 0.25
     elif render_status in {"failed", "dependency_missing", "blocked"}:
         evidence["negative"].append(f"evaluate:{render_status}")
         bonus = -0.35

@@ -807,7 +807,7 @@ def _line_width_replacement(
     lines: list[str],
     selector: dict[str, Any],
     minimum_pt: float,
-) -> tuple[str, str] | None:
+) -> tuple[str, str, int] | None:
     try:
         start = int(selector["line_start"])
         end = int(selector["line_end"])
@@ -815,7 +815,8 @@ def _line_width_replacement(
         return None
     if start < 1 or end < start or end > len(lines):
         return None
-    for line in lines[start - 1 : end]:
+    replacement: tuple[str, str, int] | None = None
+    for offset, line in enumerate(lines[start - 1 : end], start=start):
         match = re.search(r"line width=(?P<value>\d+(?:\.\d+)?)pt", line)
         if match is None:
             continue
@@ -828,8 +829,8 @@ def _line_width_replacement(
             + f"line width={replacement_value}pt"
             + line[match.end() :]
         )
-        return line, replacement_line
-    return None
+        replacement = (line, replacement_line, offset)
+    return replacement
 
 
 def _candidate_operation_for_spec(
@@ -874,11 +875,13 @@ def _candidate_operation_for_spec(
             "candidate_id": str(spec.get("id")),
             "panel": str(selector.get("panel") or ""),
         }
-    original, new_text = replacement
+    original, new_text, line_number = replacement
     operation = {
         "kind": "replace_text",
         "semantic_kind": f"quality_search_{family}",
         "path": source_ref,
+        "line_start": line_number,
+        "line_end": line_number,
         "original": original,
         "replacement": new_text,
     }
@@ -985,21 +988,62 @@ def _render_candidate_batch(
     *,
     paths: runtime_paths.RuntimePaths,
 ) -> dict[str, Any]:
-    if not candidate_set.get("candidates"):
+    candidates = [
+        candidate
+        for candidate in candidate_set.get("candidates", [])
+        if isinstance(candidate, dict)
+    ]
+    if not candidates:
         return {
             "schema": "figure-agent.candidate-render-result.v1",
             "fixture": name,
+            "render_mode": "none",
             "rendered": [],
         }
-    return candidate_render.render_candidate_set(
-        name,
-        candidate_set,
-        workspace_root=paths.workspace_root,
-        plugin_root=paths.plugin_root,
-        compile=False,
-        export=False,
-        evaluate=False,
+    source_text = _fixture_source_path(paths, name).read_text(encoding="utf-8")
+    compile_eligible = (
+        "\\documentclass" in source_text
+        and "\\begin{document}" in source_text
+        and (paths.examples_dir / name / "build" / f"{name}.png").is_file()
     )
+    if not compile_eligible:
+        result = candidate_render.render_candidate_set(
+            name,
+            candidate_set,
+            workspace_root=paths.workspace_root,
+            plugin_root=paths.plugin_root,
+            compile=False,
+            export=False,
+            evaluate=False,
+        )
+        result["render_mode"] = "prepare_only"
+        return result
+
+    rendered: list[dict[str, Any]] = []
+    for candidate in candidates:
+        candidate_id = str(candidate.get("id") or "")
+        target = candidate.get("target") if isinstance(candidate.get("target"), dict) else {}
+        crop_panel = str(target.get("panel") or "") or None
+        result = candidate_render.render_candidate_set(
+            name,
+            candidate_set,
+            workspace_root=paths.workspace_root,
+            plugin_root=paths.plugin_root,
+            candidate_id=candidate_id,
+            compile=True,
+            export=True,
+            crop_panel=crop_panel,
+            evaluate=True,
+        )
+        rendered.extend(
+            item for item in result.get("rendered", []) if isinstance(item, dict)
+        )
+    return {
+        "schema": "figure-agent.candidate-render-result.v1",
+        "fixture": name,
+        "render_mode": "compile_export_crop_evaluate",
+        "rendered": rendered,
+    }
 
 
 def _candidate_manifest_path(
@@ -1014,6 +1058,17 @@ def _candidate_manifest_path(
         / "candidates"
         / candidate_id
         / "candidate_manifest.json"
+    )
+
+
+def _render_manifest_path(paths: runtime_paths.RuntimePaths, name: str, candidate_id: str) -> Path:
+    return (
+        paths.examples_dir
+        / name
+        / "build"
+        / "candidates"
+        / candidate_id
+        / "render_manifest.json"
     )
 
 
@@ -1034,7 +1089,19 @@ def _rank_rendered_candidates(
         if not manifest_path.is_file():
             continue
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        scores.append(candidate_rank.score_manifest(manifest, candidate=candidate))
+        render_manifest_path = _render_manifest_path(paths, name, candidate_id)
+        render_manifest = (
+            json.loads(render_manifest_path.read_text(encoding="utf-8"))
+            if render_manifest_path.is_file()
+            else None
+        )
+        scores.append(
+            candidate_rank.score_manifest(
+                manifest,
+                render_manifest=render_manifest,
+                candidate=candidate,
+            )
+        )
     return sorted(
         scores,
         key=lambda score: (-float(score.get("rank_score") or 0.0), str(score.get("candidate_id"))),
@@ -1054,6 +1121,35 @@ def _current_source_hash(paths: runtime_paths.RuntimePaths, name: str) -> str | 
     if not source_path.is_file() or source_path.is_symlink():
         return None
     return _sha256_text(source_path.read_text(encoding="utf-8"))
+
+
+def _render_stage_status(render_manifest: dict[str, Any], stage: str) -> str:
+    stages = render_manifest.get("stages")
+    if not isinstance(stages, dict):
+        return "missing"
+    value = stages.get(stage)
+    if not isinstance(value, dict):
+        return "missing"
+    return str(value.get("status") or "missing")
+
+
+def _load_candidate_render_manifest(
+    paths: runtime_paths.RuntimePaths,
+    name: str,
+    rendered_item: dict[str, Any],
+) -> tuple[dict[str, Any] | None, str | None]:
+    relative = rendered_item.get("render_manifest")
+    if not isinstance(relative, str) or not relative:
+        return None, "render_manifest_missing"
+    example_dir = paths.examples_dir / name
+    manifest_path = (example_dir / relative).resolve()
+    try:
+        manifest_path.relative_to(example_dir.resolve())
+    except ValueError:
+        return None, "render_manifest_escaped_fixture"
+    if not manifest_path.is_file():
+        return None, "render_manifest_file_missing"
+    return json.loads(manifest_path.read_text(encoding="utf-8")), None
 
 
 def _quality_search_contract_verdict(
@@ -1083,8 +1179,11 @@ def _quality_search_contract_verdict(
     rendered = [
         item for item in render_results.get("rendered", []) if isinstance(item, dict)
     ]
+    render_mode = str(render_results.get("render_mode") or "unknown")
     candidate_ids = {str(candidate.get("id")) for candidate in candidates}
     ranking_ids = {str(score.get("candidate_id")) for score in candidate_rankings}
+    evaluated_count = 0
+    changed_pixel_ratios: list[float] = []
 
     require(
         manifest.get("status") == "dry_run_complete",
@@ -1120,6 +1219,11 @@ def _quality_search_contract_verdict(
         len(rendered) == len(candidates),
         "render_count_mismatch",
         "rendered candidate count does not match candidate count",
+    )
+    require(
+        render_mode in {"none", "prepare_only", "compile_export_crop_evaluate"},
+        "render_mode_unknown",
+        "render_results does not declare a known render_mode",
     )
     require(
         ranking_ids == candidate_ids,
@@ -1158,6 +1262,60 @@ def _quality_search_contract_verdict(
         "candidate_selectors_unbound",
         "at least one materialized candidate lacks a bound source selector",
     )
+    if render_mode == "compile_export_crop_evaluate":
+        for rendered_item in rendered:
+            candidate_id = str(rendered_item.get("candidate_id") or "unknown")
+            render_manifest, error = _load_candidate_render_manifest(
+                paths,
+                name,
+                rendered_item,
+            )
+            if render_manifest is None:
+                require(
+                    False,
+                    f"{error}:{candidate_id}",
+                    f"{candidate_id} render manifest is unavailable",
+                )
+                continue
+            require(
+                _render_stage_status(render_manifest, "compile") == "success",
+                f"compile_not_success:{candidate_id}",
+                f"{candidate_id} compile stage did not succeed",
+            )
+            require(
+                _render_stage_status(render_manifest, "export") == "success",
+                f"export_not_success:{candidate_id}",
+                f"{candidate_id} export stage did not succeed",
+            )
+            crop_was_requested = bool(render_manifest.get("panel"))
+            if crop_was_requested:
+                require(
+                    _render_stage_status(render_manifest, "crop") == "success",
+                    f"crop_not_success:{candidate_id}",
+                    f"{candidate_id} crop stage did not succeed",
+                )
+            evaluate_status = _render_stage_status(render_manifest, "evaluate")
+            require(
+                evaluate_status == "rendered_needs_human_review",
+                f"evaluate_not_rendered:{candidate_id}",
+                f"{candidate_id} evaluate stage did not produce reviewable render evidence",
+            )
+            if evaluate_status == "rendered_needs_human_review":
+                evaluated_count += 1
+            visual_deltas = render_manifest.get("visual_deltas")
+            ratio = None
+            if isinstance(visual_deltas, dict):
+                try:
+                    ratio = float(visual_deltas.get("changed_pixel_ratio"))
+                except (TypeError, ValueError):
+                    ratio = None
+            require(
+                ratio is not None and ratio > 0.0,
+                f"changed_pixel_ratio_not_positive:{candidate_id}",
+                f"{candidate_id} render comparison did not record positive pixel change",
+            )
+            if ratio is not None:
+                changed_pixel_ratios.append(ratio)
 
     return {
         "schema": "figure-agent.quality-search-depone-verdict.v0",
@@ -1168,6 +1326,11 @@ def _quality_search_contract_verdict(
         "checks": {
             "candidate_count": len(candidates),
             "rendered_count": len(rendered),
+            "render_mode": render_mode,
+            "evaluated_count": evaluated_count,
+            "min_changed_pixel_ratio": (
+                min(changed_pixel_ratios) if changed_pixel_ratios else None
+            ),
             "ranking_count": len(candidate_rankings),
             "source_hash": source_context.get("source_hash"),
             "selected_candidate_id": decision.get("selected_candidate_id"),

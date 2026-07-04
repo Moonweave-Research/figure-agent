@@ -171,6 +171,27 @@ def _candidate_source_text(
             text = source_path.read_text(encoding="utf-8")
         original = str(operation.get("original", ""))
         replacement = str(operation.get("replacement", ""))
+        try:
+            line_start = int(operation["line_start"])
+            line_end = int(operation.get("line_end", line_start))
+        except (KeyError, TypeError, ValueError):
+            line_start = 0
+            line_end = 0
+        if line_start > 0:
+            if line_end != line_start:
+                raise CandidateRenderError("line-scoped operation must target one line")
+            lines = text.splitlines(keepends=True)
+            if line_start > len(lines) or original not in lines[line_start - 1]:
+                raise CandidateRenderError(
+                    f"operation original not found at line {line_start}: {source_path.name}"
+                )
+            lines[line_start - 1] = lines[line_start - 1].replace(
+                original,
+                replacement,
+                1,
+            )
+            sources[source_path] = "".join(lines)
+            continue
         if original not in text:
             raise CandidateRenderError(f"operation original not found: {source_path.name}")
         sources[source_path] = text.replace(original, replacement, 1)
@@ -373,6 +394,7 @@ def _render_manifest(
     visual_deltas: dict[str, Any] = {
         "pixel_diff_mean": None,
         "pixel_diff_max": None,
+        "changed_pixel_ratio": None,
         "changed_bbox": None,
     }
     if evaluate_requested:

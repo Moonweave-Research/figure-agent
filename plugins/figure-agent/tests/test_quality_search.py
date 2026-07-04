@@ -253,6 +253,7 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert payload["decision"]["selected_candidate_id"] != "QSNULL"
     assert payload["decision"]["evidence_score"] > 0
     assert payload["candidate_set"]["candidates"] == []
+    assert payload["render_results"]["render_mode"] == "none"
     assert payload["render_results"]["rendered"] == []
     assert len(payload["candidate_specs"]) == 4
     assert {item["family"] for item in payload["candidate_specs"]} >= {
@@ -350,9 +351,12 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     assert first_candidate["operations"][0]["kind"] == "replace_text"
     assert "line width=0.9pt" in first_candidate["operations"][0]["replacement"]
     assert len(payload["render_results"]["rendered"]) == 3
+    assert payload["render_results"]["render_mode"] == "prepare_only"
     assert payload["candidate_rankings"][0]["candidate_id"] == "QS001"
     assert payload["depone"]["verdict"]["contract_status"] == "pass"
     assert payload["depone"]["verdict"]["checks"]["candidate_count"] == 3
+    assert payload["depone"]["verdict"]["checks"]["render_mode"] == "prepare_only"
+    assert payload["depone"]["verdict"]["checks"]["evaluated_count"] == 0
     sandbox_source = (
         tmp_path
         / "examples"
@@ -380,6 +384,58 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     )
     assert depone_contract["schema_version"] == "v105.verify_wedge"
     assert "quality-search-verdict.json" in depone_contract["required_evidence"]
+
+
+def test_quality_search_prefers_later_visible_panel_style_token(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_with_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column E -- ISPD-paired =================",
+            "\\draw[cAmber!70!black, line width=0.25pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "\\draw[cGray!60!black, line width=0.25pt] (0,0) rectangle (1,1);",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\draw[cGray!64!black, line width=0.34pt] (0,0) rectangle (1,1);",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="visible overlay token selection",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    apparatus = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "apparatus_strengthen"
+    ][0]
+    operation = apparatus["operations"][0]
+    assert operation["line_start"] == 8
+    assert operation["line_end"] == 8
+    assert "line width=0.34pt" in operation["original"]
+    assert "line width=0.8pt" in operation["replacement"]
 
 
 def test_fig_agent_quality_search_execute_cli_writes_only_scratch(tmp_path: Path) -> None:

@@ -267,7 +267,29 @@ def _build_changes(
         text = target.read_text(encoding="utf-8")
         original = str(operation.get("original", ""))
         replacement = str(operation.get("replacement", ""))
-        if text.count(original) != 1:
+        try:
+            line_start = int(operation["line_start"])
+            line_end = int(operation.get("line_end", line_start))
+        except (KeyError, TypeError, ValueError):
+            line_start = 0
+            line_end = 0
+        line_scoped = line_start > 0
+        if line_scoped:
+            lines = text.splitlines(keepends=True)
+            if (
+                line_end != line_start
+                or line_start > len(lines)
+                or original not in lines[line_start - 1]
+            ):
+                diagnostics.append(
+                    _diagnostic(
+                        "original_text_line_mismatch",
+                        "original text must appear at the declared source line",
+                        relative,
+                    )
+                )
+                continue
+        elif text.count(original) != 1:
             diagnostics.append(
                 _diagnostic(
                     "original_text_count",
@@ -285,7 +307,16 @@ def _build_changes(
                 "after": text,
             },
         )
-        entry["after"] = str(entry["after"]).replace(original, replacement, 1)
+        if line_scoped:
+            lines = str(entry["after"]).splitlines(keepends=True)
+            lines[line_start - 1] = lines[line_start - 1].replace(
+                original,
+                replacement,
+                1,
+            )
+            entry["after"] = "".join(lines)
+        else:
+            entry["after"] = str(entry["after"]).replace(original, replacement, 1)
     return list(by_path.values()), diagnostics
 
 

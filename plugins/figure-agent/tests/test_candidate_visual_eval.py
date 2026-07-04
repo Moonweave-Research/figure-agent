@@ -27,6 +27,7 @@ def test_compare_image_pair_records_dimensions_hashes_and_pixel_delta(tmp_path: 
     assert payload["before"]["sha256"].startswith("sha256:")
     assert payload["after"]["sha256"].startswith("sha256:")
     assert payload["visual_deltas"]["pixel_diff_max"] == 255
+    assert payload["visual_deltas"]["changed_pixel_ratio"] == 0.25
     assert payload["visual_deltas"]["changed_bbox"] == [1, 1, 1, 1]
 
 

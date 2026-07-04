@@ -69,7 +69,12 @@ def _diff_pixels(
         if diff:
             changed.append((index % width, index // width))
     if not diffs:
-        return {"pixel_diff_mean": 0.0, "pixel_diff_max": 0, "changed_bbox": None}
+        return {
+            "pixel_diff_mean": 0.0,
+            "pixel_diff_max": 0,
+            "changed_pixel_ratio": 0.0,
+            "changed_bbox": None,
+        }
     bbox = None
     if changed:
         xs = [item[0] for item in changed]
@@ -78,6 +83,7 @@ def _diff_pixels(
     return {
         "pixel_diff_mean": sum(diffs) / len(diffs),
         "pixel_diff_max": max(diffs),
+        "changed_pixel_ratio": len(changed) / len(diffs),
         "changed_bbox": bbox,
     }
 
