@@ -142,12 +142,17 @@ def test_wave_one_style_decision_ids_validate_without_release_acceptance(
             "record style policy only with ready_for_svg_polish evidence if SVG handoff is chosen"
         )
     }
+    packet_recommendation = (
+        "request_svg_polish_handoff_evidence"
+        if decision_kind == "request_svg_polish_handoff_evidence"
+        else "keep_current_style"
+    )
 
     validated = validate_decision_record(
         _record(
             packet_schema=STYLE_DIRECTION_PACKET_SCHEMA,
             packet_path="docs/decision-packets/example-style-packet.json",
-            packet_recommendation="keep_current_style",
+            packet_recommendation=packet_recommendation,
             packet_timestamp="2026-07-01T00:00:00Z",
             queue_run_id=None,
             decision_kind=decision_kind,
@@ -237,6 +242,11 @@ def test_style_choice_decision_ids_validate_without_mutation(decision_kind: str)
             "any SVG handoff"
         )
     }
+    packet_recommendation = (
+        "request_svg_polish_handoff_evidence"
+        if decision_kind == "request_svg_polish_handoff_evidence"
+        else decision_kind
+    )
 
     validated = validate_decision_record(
         _record(
@@ -244,6 +254,7 @@ def test_style_choice_decision_ids_validate_without_mutation(decision_kind: str)
             packet_timestamp="2026-07-01T00:00:00Z",
             queue_run_id=None,
             decision_kind=decision_kind,
+            packet_recommendation=packet_recommendation,
             agent_recommendation="Record the style choice without mutating artifacts.",
             human_decision=decision_kind,
             human_note="Human selected this style route as policy state only.",
@@ -256,21 +267,41 @@ def test_style_choice_decision_ids_validate_without_mutation(decision_kind: str)
     assert validated["mutation_boundary"] == "no_source_mutation"
 
 
-def test_svg_polish_handoff_choice_requires_evidence_language() -> None:
+def test_svg_polish_handoff_accepts_structured_packet_recommendation_not_prose() -> None:
+    validated = validate_decision_record(
+        _record(
+            packet_schema=STYLE_DIRECTION_PACKET_SCHEMA,
+            packet_timestamp="2026-07-01T00:00:00Z",
+            queue_run_id=None,
+            packet_recommendation="request_svg_polish_handoff_evidence",
+            decision_kind="request_svg_polish_handoff_evidence",
+            agent_recommendation="Try SVG polish next.",
+            human_decision="request SVG polish",
+            human_note="Looks like a polish task.",
+            follow_up={"implementation_slice": "prepare an SVG handoff"},
+            mutation_boundary="no_source_mutation",
+        )
+    )
+
+    assert validated["decision_kind"] == "request_svg_polish_handoff_evidence"
+
+
+def test_svg_polish_handoff_rejects_prose_substring_without_packet_recommendation() -> None:
     with pytest.raises(
         HumanDecisionRecordError,
-        match="svg_polish_handoff_requires_evidence",
+        match="svg_polish_handoff_requires_packet_recommendation",
     ):
         validate_decision_record(
             _record(
                 packet_schema=STYLE_DIRECTION_PACKET_SCHEMA,
                 packet_timestamp="2026-07-01T00:00:00Z",
                 queue_run_id=None,
+                packet_recommendation="keep_current_style",
                 decision_kind="request_svg_polish_handoff_evidence",
-                agent_recommendation="Try SVG polish next.",
+                agent_recommendation="Try SVG polish next with evidence.",
                 human_decision="request SVG polish",
-                human_note="Looks like a polish task.",
-                follow_up={"implementation_slice": "prepare an SVG handoff"},
+                human_note="This sentence includes evidence but is not structured proof.",
+                follow_up={"implementation_slice": "prepare an SVG handoff with evidence"},
                 mutation_boundary="no_source_mutation",
             )
         )

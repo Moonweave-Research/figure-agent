@@ -124,6 +124,35 @@ def test_closeout_accept_writes_golden_acceptance_for_tracked_golden(
     assert payload["exports"]["pdf"].startswith("sha256:")
 
 
+def test_closeout_reject_writes_non_accept_decision_without_release_authority(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "critique.md").write_text("critique\n", encoding="utf-8")
+    (fixture / "exports").mkdir()
+    (fixture / "exports" / "candidate_demo.pdf").write_bytes(b"pdf")
+
+    result = golden_acceptance.write_golden_acceptance(
+        "candidate_demo",
+        decision="reject",
+        reviewer="local-user",
+        rationale="Do not promote this generated export.",
+        accept_golden=False,
+        workspace_root=workspace,
+        plugin_root=workspace,
+    )
+
+    path = fixture / "build" / "closeout" / "golden_acceptance.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert result["path"] == "build/closeout/golden_acceptance.json"
+    assert payload["schema"] == "figure-agent.golden-acceptance.v1"
+    assert payload["decision"] == "reject"
+    assert payload["accept_golden"] is False
+    assert payload["source_sha256"].startswith("sha256:")
+    assert payload["exports"]["pdf"].startswith("sha256:")
+
+
 def test_closeout_accept_requires_human_release_decision_record(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

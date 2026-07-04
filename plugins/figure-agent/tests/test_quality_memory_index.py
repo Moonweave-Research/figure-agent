@@ -17,6 +17,7 @@ def _event(
     outcome: str,
     candidate_id: str,
     target: dict | None = None,
+    quality_movement: str | None = None,
 ) -> dict:
     return {
         "schema": "figure-agent.quality-memory-event.v1",
@@ -30,14 +31,28 @@ def _event(
         "target": target if target is not None else {"panel": "C", "subregion": "energy"},
         "pre_state": {},
         "post_state": {},
-        "outcome": {"state": outcome, "reason": "", "evidence_paths": []},
+        "outcome": {
+            "state": outcome,
+            "pipeline_ok": None,
+            "quality_movement": quality_movement,
+            "reason": "",
+            "evidence_paths": [],
+        },
         "metrics": {"candidate_rank_score": 0.5},
     }
 
 
 def test_fewer_than_three_eligible_events_yields_no_prior() -> None:
     index = quality_memory_index.build_memory_index(
-        [_event("candidate_applied", "label_offset", "improved", "CAND001")]
+        [
+            _event(
+                "candidate_applied",
+                "label_offset",
+                "improved",
+                "CAND001",
+                quality_movement="improved",
+            )
+        ]
     )
 
     assert index["schema"] == "figure-agent.quality-memory-index.v1"
@@ -47,11 +62,135 @@ def test_fewer_than_three_eligible_events_yields_no_prior() -> None:
     assert index["families"]["label_offset"]["recommended_prior"] == 0.0
 
 
-def test_three_improved_family_outcomes_produce_bounded_positive_prior() -> None:
+def test_legacy_outcome_state_is_not_reward_without_quality_movement() -> None:
     events = [
         _event("candidate_applied", "label_offset", "improved", "CAND001"),
         _event("candidate_applied", "label_offset", "improved", "CAND002"),
         _event("candidate_applied", "label_offset", "improved", "CAND003"),
+    ]
+
+    index = quality_memory_index.build_memory_index(events)
+
+    family = index["families"]["label_offset"]
+    assert index["eligible_prior_count"] == 0
+    assert family["attempts"] == 0
+    assert family["improved"] == 0
+    assert family["unknown"] == 3
+    assert family["recommended_prior"] == 0.0
+
+
+def test_free_text_and_rank_score_cannot_create_reward() -> None:
+    events = [
+        {
+            **_event("candidate_applied", "label_offset", "unknown", "CAND001"),
+            "outcome": {
+                "state": "unknown",
+                "pipeline_ok": True,
+                "quality_movement": None,
+                "reason": "human_note says this is improved",
+                "rationale": "prose should not be a reward signal",
+                "human_note": "accept because evidence looks good",
+                "evidence_paths": [],
+            },
+            "metrics": {"candidate_rank_score": 1.0},
+        },
+        {
+            **_event("candidate_applied", "label_offset", "unknown", "CAND002"),
+            "outcome": {
+                "state": "unknown",
+                "pipeline_ok": True,
+                "quality_movement": None,
+                "reason": "human_note says this is improved",
+                "rationale": "prose should not be a reward signal",
+                "human_note": "accept because evidence looks good",
+                "evidence_paths": [],
+            },
+            "metrics": {"candidate_rank_score": 1.0},
+        },
+        {
+            **_event("candidate_applied", "label_offset", "unknown", "CAND003"),
+            "outcome": {
+                "state": "unknown",
+                "pipeline_ok": True,
+                "quality_movement": None,
+                "reason": "human_note says this is improved",
+                "rationale": "prose should not be a reward signal",
+                "human_note": "accept because evidence looks good",
+                "evidence_paths": [],
+            },
+            "metrics": {"candidate_rank_score": 1.0},
+        },
+    ]
+
+    index = quality_memory_index.build_memory_index(events)
+
+    family = index["families"]["label_offset"]
+    assert index["eligible_prior_count"] == 0
+    assert family["attempts"] == 0
+    assert family["improved"] == 0
+    assert family["recommended_prior"] == 0.0
+    assert family["median_rank_delta"] == 1.0
+
+
+def test_quality_movement_overrides_legacy_outcome_state_for_reward() -> None:
+    events = [
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND001",
+            quality_movement="neutral",
+        ),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND002",
+            quality_movement="neutral",
+        ),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND003",
+            quality_movement="regressed",
+        ),
+    ]
+
+    index = quality_memory_index.build_memory_index(events)
+
+    family = index["families"]["label_offset"]
+    assert index["eligible_prior_count"] == 3
+    assert family["attempts"] == 3
+    assert family["improved"] == 0
+    assert family["neutral"] == 2
+    assert family["regressed"] == 1
+    assert family["recommended_prior"] == 0.0
+
+
+def test_three_improved_family_outcomes_produce_bounded_positive_prior() -> None:
+    events = [
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND001",
+            quality_movement="improved",
+        ),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND002",
+            quality_movement="improved",
+        ),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND003",
+            quality_movement="improved",
+        ),
     ]
 
     index = quality_memory_index.build_memory_index(events)
@@ -65,13 +204,20 @@ def test_three_improved_family_outcomes_produce_bounded_positive_prior() -> None
 
 def test_unknown_family_panel_and_outcome_are_measured_and_excluded_from_priors() -> None:
     events = [
-        _event("candidate_applied", "unknown", "improved", "CAND001"),
+        _event(
+            "candidate_applied",
+            "unknown",
+            "improved",
+            "CAND001",
+            quality_movement="improved",
+        ),
         _event(
             "candidate_applied",
             "label_offset",
             "improved",
             "CAND002",
             target={"panel": "unknown", "subregion": "energy"},
+            quality_movement="improved",
         ),
         _event("candidate_applied", "label_offset", "unknown", "CAND003"),
     ]
@@ -91,14 +237,27 @@ def test_unknown_family_panel_and_outcome_are_measured_and_excluded_from_priors(
 
 def test_unknown_metadata_does_not_activate_family_prior() -> None:
     events = [
-        _event("candidate_applied", "label_offset", "improved", "CAND001"),
-        _event("candidate_applied", "label_offset", "improved", "CAND002"),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND001",
+            quality_movement="improved",
+        ),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND002",
+            quality_movement="improved",
+        ),
         _event(
             "candidate_applied",
             "label_offset",
             "improved",
             "CAND003",
             target={"panel": "unknown", "subregion": "energy"},
+            quality_movement="improved",
         ),
     ]
 
@@ -111,7 +270,13 @@ def test_unknown_metadata_does_not_activate_family_prior() -> None:
 
 def test_synthetic_smoke_memory_unknown_event_rate_stays_below_gate() -> None:
     events = [
-        _event("candidate_applied", "label_offset", "improved", f"CAND{index:03d}")
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            f"CAND{index:03d}",
+            quality_movement="improved",
+        )
         for index in range(1, 10)
     ]
     events.append(_event("candidate_applied", "label_offset", "unknown", "CAND010"))
@@ -125,9 +290,27 @@ def test_synthetic_smoke_memory_unknown_event_rate_stays_below_gate() -> None:
 
 def test_regressed_event_reduces_prior() -> None:
     events = [
-        _event("candidate_applied", "label_offset", "improved", "CAND001"),
-        _event("candidate_applied", "label_offset", "improved", "CAND002"),
-        _event("candidate_applied", "label_offset", "regressed", "CAND003"),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND001",
+            quality_movement="improved",
+        ),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND002",
+            quality_movement="improved",
+        ),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "regressed",
+            "CAND003",
+            quality_movement="regressed",
+        ),
     ]
 
     index = quality_memory_index.build_memory_index(events)
@@ -141,9 +324,27 @@ def test_regressed_event_reduces_prior() -> None:
 
 def test_mostly_regressed_events_can_make_prior_negative() -> None:
     events = [
-        _event("candidate_applied", "label_offset", "improved", "CAND001"),
-        _event("candidate_applied", "label_offset", "regressed", "CAND002"),
-        _event("candidate_applied", "label_offset", "regressed", "CAND003"),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND001",
+            quality_movement="improved",
+        ),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "regressed",
+            "CAND002",
+            quality_movement="regressed",
+        ),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "regressed",
+            "CAND003",
+            quality_movement="regressed",
+        ),
     ]
 
     index = quality_memory_index.build_memory_index(events)
@@ -153,8 +354,20 @@ def test_mostly_regressed_events_can_make_prior_negative() -> None:
 
 def test_unknown_outcomes_do_not_affect_prior() -> None:
     events = [
-        _event("candidate_applied", "label_offset", "improved", "CAND001"),
-        _event("candidate_applied", "label_offset", "improved", "CAND002"),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND001",
+            quality_movement="improved",
+        ),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND002",
+            quality_movement="improved",
+        ),
         _event("candidate_applied", "label_offset", "unknown", "CAND003"),
     ]
 

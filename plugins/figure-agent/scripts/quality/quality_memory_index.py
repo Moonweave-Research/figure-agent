@@ -59,6 +59,16 @@ def _outcome_state(event: dict[str, Any]) -> str:
     return "unknown"
 
 
+def _reward_state(event: dict[str, Any]) -> str:
+    outcome = event.get("outcome")
+    if not isinstance(outcome, dict):
+        return "unknown"
+    quality_movement = outcome.get("quality_movement")
+    if quality_movement in ELIGIBLE_OUTCOMES:
+        return str(quality_movement)
+    return "unknown"
+
+
 def _rank_score(event: dict[str, Any]) -> float | None:
     metrics = event.get("metrics")
     if not isinstance(metrics, dict):
@@ -108,11 +118,16 @@ def build_memory_index(
         subregion = str(target.get("subregion") or "unknown")
         pattern_key = f"{panel}:{subregion}:{family}"
         state = _outcome_state(event)
+        reward_state = _reward_state(event)
         event_type = str(event.get("event_type") or "")
         is_attempt = event_type in ATTEMPT_EVENT_TYPES
         family_known = not _is_unknown(family)
         target_known = not _is_unknown(panel) and not _is_unknown(subregion)
-        unknown_outcome = is_attempt and state == "unknown"
+        unknown_outcome = (
+            is_attempt
+            and reward_state == "unknown"
+            and (state in ELIGIBLE_OUTCOMES or state == "unknown")
+        )
         if not family_known or not target_known or unknown_outcome:
             unknown_event_count += 1
         buckets = []
@@ -121,17 +136,20 @@ def build_memory_index(
         if family_known and target_known:
             buckets.append(panel_patterns[pattern_key])
         eligible_attempt = (
-            is_attempt and family_known and target_known and state in ELIGIBLE_OUTCOMES
+            is_attempt
+            and family_known
+            and target_known
+            and reward_state in ELIGIBLE_OUTCOMES
         )
         for bucket in buckets:
             bucket["event_count"] += 1
             if eligible_attempt:
                 bucket["attempts"] += 1
-            if eligible_attempt and state == "improved":
+            if eligible_attempt and reward_state == "improved":
                 bucket["improved"] += 1
-            elif eligible_attempt and state == "neutral":
+            elif eligible_attempt and reward_state == "neutral":
                 bucket["neutral"] += 1
-            elif eligible_attempt and state == "regressed":
+            elif eligible_attempt and reward_state == "regressed":
                 bucket["regressed"] += 1
             elif state.startswith("blocked"):
                 bucket["blocked"] += 1

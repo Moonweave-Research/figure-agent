@@ -203,6 +203,31 @@ def test_write_acceptance_artifact_records_manifest_hashes(tmp_path: Path) -> No
     assert data["render_manifest_sha256"].startswith("sha256:")
 
 
+def test_write_acceptance_persists_reject_without_apply_readiness(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+
+    payload = candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="reject",
+        reviewer="local-user",
+        rationale="Rendered evidence regressed labels.",
+        workspace_root=workspace,
+    )
+
+    path = fixture / "build" / "candidates" / "CAND001" / "acceptance.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["path"] == "build/candidates/CAND001/acceptance.json"
+    assert data["schema"] == "figure-agent.candidate-acceptance.v1"
+    assert data["decision"] == "reject"
+    assert data["candidate_id"] == "CAND001"
+    assert data["candidate_hash"] == "sha256:" + "1" * 64
+    assert data["candidate_manifest_sha256"].startswith("sha256:")
+    assert data["render_manifest_sha256"].startswith("sha256:")
+
+
 def test_acceptance_rejects_sandbox_symlink(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)

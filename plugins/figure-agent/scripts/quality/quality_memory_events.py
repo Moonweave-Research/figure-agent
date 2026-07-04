@@ -154,6 +154,8 @@ def _event(
     pre_state: dict[str, Any] | None = None,
     post_state: dict[str, Any] | None = None,
     outcome_state: str = "unknown",
+    pipeline_ok: bool | None = None,
+    quality_movement: str | None = None,
     reason: str = "",
     evidence_paths: list[str] | None = None,
     metrics: dict[str, Any] | None = None,
@@ -167,6 +169,8 @@ def _event(
         "target": target or {"panel": "unknown", "subregion": "unknown"},
         "outcome": {
             "state": outcome_state,
+            "pipeline_ok": pipeline_ok,
+            "quality_movement": quality_movement,
             "reason": reason,
             "evidence_paths": evidence_paths or [source_artifact],
         },
@@ -185,11 +189,42 @@ def _event(
         "post_state": post_state or {},
         "outcome": {
             "state": outcome_state,
+            "pipeline_ok": pipeline_ok,
+            "quality_movement": quality_movement,
             "reason": reason,
             "evidence_paths": evidence_paths or [source_artifact],
         },
         "metrics": metrics or {},
     }
+
+
+def _post_apply_pipeline_ok(apply_status: str | None, post_state: dict[str, str]) -> bool:
+    return apply_status == "applied" and all(
+        post_state.get(stage) == "success" for stage in ("compile", "export", "status")
+    )
+
+
+def _quality_movement_from_apply(
+    apply_status: str | None,
+    post_apply: dict[str, Any],
+    *,
+    pipeline_ok: bool,
+) -> str | None:
+    class_verifiers = post_apply.get("class_verifiers")
+    if apply_status == "rolled_back":
+        return "regressed"
+    if isinstance(class_verifiers, dict) and (
+        class_verifiers.get("rolled_back") is True or class_verifiers.get("status") == "failed"
+    ):
+        return "regressed"
+    detector_recheck = post_apply.get("detector_recheck")
+    if isinstance(detector_recheck, dict) and detector_recheck.get("status") == "failed":
+        return "regressed"
+    if not pipeline_ok:
+        return None
+    if isinstance(detector_recheck, dict) and detector_recheck.get("status") == "success":
+        return "improved"
+    return "neutral"
 
 
 def _candidate_events(name: str, example_dir: Path, sandbox: Path) -> list[dict[str, Any]]:
@@ -273,11 +308,19 @@ def _candidate_events(name: str, example_dir: Path, sandbox: Path) -> list[dict[
             diagnostics=diagnostics,
         )
         post_state = evidence_index._post_apply_summary(apply_result)  # type: ignore[attr-defined]
-        success = apply_status == "applied" and all(
-            post_state.get(stage) == "success" for stage in ("compile", "export", "status")
+        pipeline_ok = _post_apply_pipeline_ok(apply_status, post_state)
+        post_apply = apply_result.get("post_apply")
+        quality_movement = _quality_movement_from_apply(
+            apply_status,
+            post_apply if isinstance(post_apply, dict) else {},
+            pipeline_ok=pipeline_ok,
         )
-        outcome_state = "improved" if success else "blocked_by_hard_gate"
-        reason = "post_apply_success" if success else ",".join(diagnostics) or str(apply_status)
+        outcome_state = quality_movement or "blocked_by_hard_gate"
+        reason = (
+            "post_apply_success"
+            if pipeline_ok
+            else ",".join(diagnostics) or str(apply_status)
+        )
         events.append(
             _event(
                 fixture=name,
@@ -290,6 +333,8 @@ def _candidate_events(name: str, example_dir: Path, sandbox: Path) -> list[dict[
                 target=target,
                 post_state=post_state,
                 outcome_state=outcome_state,
+                pipeline_ok=pipeline_ok,
+                quality_movement=quality_movement,
                 reason=reason,
                 evidence_paths=[manifest_rel, _fixture_relative(example_dir, apply_path)],
             )

@@ -15,6 +15,7 @@ import semantic_candidate_review
 
 READINESS_SCHEMA = "figure-agent.candidate-apply-readiness.v1"
 ACCEPTANCE_SCHEMA = "figure-agent.candidate-acceptance.v1"
+ACCEPTANCE_DECISIONS = {"accept", "reject", "defer"}
 TERMINAL_APPLY_STATUSES = {
     "applied",
     "applied_unverified",
@@ -296,8 +297,8 @@ def write_acceptance(
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
 ) -> dict[str, Any]:
-    if decision != "accept":
-        raise CandidateAcceptanceError("decision must be accept")
+    if decision not in ACCEPTANCE_DECISIONS:
+        raise CandidateAcceptanceError("decision must be accept, reject, or defer")
     if not reviewer.strip() or not rationale.strip():
         raise CandidateAcceptanceError("reviewer and rationale are required")
     (
@@ -315,15 +316,16 @@ def write_acceptance(
         workspace_root=workspace_root,
         plugin_root=plugin_root,
     )
-    readiness = build_apply_readiness(
-        name,
-        candidate_id,
-        candidate_set_path=candidate_set_path,
-        workspace_root=workspace_root,
-        plugin_root=plugin_root,
-    )
-    if readiness["status"] != "ready_for_local_acceptance":
-        raise CandidateAcceptanceError("candidate is not ready for local acceptance")
+    if decision == "accept":
+        readiness = build_apply_readiness(
+            name,
+            candidate_id,
+            candidate_set_path=candidate_set_path,
+            workspace_root=workspace_root,
+            plugin_root=plugin_root,
+        )
+        if readiness["status"] != "ready_for_local_acceptance":
+            raise CandidateAcceptanceError("candidate is not ready for local acceptance")
     acceptance_path = manifest_path.parent / "acceptance.json"
     if acceptance_path.is_symlink():
         raise CandidateAcceptanceError("sandbox_symlink_forbidden: acceptance.json")
