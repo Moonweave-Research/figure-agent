@@ -484,6 +484,16 @@ def _quality_next_experiment(argv: list[str]) -> int:
     return 0
 
 
+def _quality_search(argv: list[str]) -> int:
+    import quality_search
+
+    return quality_search.main(
+        argv,
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+
+
 def _next(argv: list[str]) -> int:
     import agent_next
 
@@ -1428,6 +1438,8 @@ def main(argv: list[str] | None = None) -> int:
         return _benchmark_compare(rest)
     if command == "quality-next-experiment":
         return _quality_next_experiment(rest)
+    if command == "quality-search":
+        return _quality_search(rest)
     if command == "next":
         return _next(rest)
     if command == "benchmark-detectors":
