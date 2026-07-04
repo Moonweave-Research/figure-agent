@@ -8,7 +8,9 @@ targets, release blockers, and likely tool defects.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import re
 from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
@@ -30,6 +32,87 @@ PROGRESS_ACTIONS = {
     "run_adjudicate",
     "run_fig_loop",
     "run_export",
+}
+FAMILY_REGISTRY_SCHEMA = "figure-agent.quality-search-family-registry.v0"
+PANEL_MARKER_RE = re.compile(
+    r"^\s*%\s*(?:=+\s*)?(?:Panel|Column)\s+([A-Za-z0-9_-]+)\b"
+)
+QUALITY_SEARCH_FAMILY_REGISTRY = {
+    "hierarchy_rebalance": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "localized trap model",
+            "mobility edge",
+            "shallow",
+            "deep",
+            "real space",
+            "energy diagram",
+            "Debye",
+            "Coulomb",
+            "repulsion",
+        ],
+        "design_moves": [
+            "make Panel C the first-read hero",
+            "separate Row 2 into kinetic, ISPD, and mechanical evidence modes",
+            "foreground result/mechanism before apparatus details",
+        ],
+        "render_targets": [
+            "full",
+            "print_thumbnail",
+            "panel_C",
+            "panel_D",
+            "panel_E",
+            "panel_F",
+        ],
+    },
+    "apparatus_strengthen": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "$V_{\\mathrm{active}}$",
+            "DC bias",
+            "$q_{\\mathrm{tr}}$ trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+        ],
+        "design_moves": [
+            "redraw charge, force, electrode, and air-gap relation as one mechanism",
+            "keep the Coulomb response visually stronger than the bias source",
+            "make apparatus read as deliberate instrument geometry, not boxes",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "density_reduce": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "mobility edge",
+            "shallow",
+            "deep",
+            "$I(t)\\!\\sim\\!t^{-n}$",
+            "Debye",
+            "$g(E_t)$",
+            "trapped charge",
+            "Coulomb",
+            "air gap",
+        ],
+        "design_moves": [
+            "merge or remove repeated micro-labels",
+            "reduce secondary decoration before changing science labels",
+            "preserve print-scale labels that carry the manuscript claim",
+        ],
+        "render_targets": [
+            "full",
+            "print_thumbnail",
+            "panel_C",
+            "panel_E",
+            "panel_F",
+        ],
+    },
 }
 
 
@@ -548,20 +631,196 @@ def build_quality_search_plan(
     }
 
 
-def _candidate_specs_from_plan(plan: dict[str, Any]) -> list[dict[str, Any]]:
+def _sha256_text(text: str) -> str:
+    return f"sha256:{hashlib.sha256(text.encode('utf-8')).hexdigest()}"
+
+
+def _fixture_source_path(paths: runtime_paths.RuntimePaths, name: str) -> Path:
+    return paths.workspace_root / "examples" / name / f"{name}.tex"
+
+
+def _source_reference(name: str) -> str:
+    return f"examples/{name}/{name}.tex"
+
+
+def _is_structural_panel_marker(line: str) -> bool:
+    match = PANEL_MARKER_RE.match(line)
+    if match is None:
+        return False
+    marker = line.strip()
+    lowered = marker.lower()
+    if " iter " in lowered or " bbox" in lowered:
+        return False
+    return "===" in marker or "—" in marker or " - " in marker or " -- " in marker
+
+
+def _panel_region_context(name: str, paths: runtime_paths.RuntimePaths) -> dict[str, Any]:
+    source_path = _fixture_source_path(paths, name)
+    source_ref = _source_reference(name)
+    base = {
+        "schema": FAMILY_REGISTRY_SCHEMA,
+        "fixture": name,
+        "source": source_ref,
+        "selectors_by_panel": {},
+    }
+    if not source_path.exists():
+        return {**base, "source_state": "missing", "source_hash": None}
+    if source_path.is_symlink():
+        return {**base, "source_state": "source_symlink_refused", "source_hash": None}
+    resolved = source_path.resolve()
+    fixture_dir = (paths.workspace_root / "examples" / name).resolve()
+    try:
+        resolved.relative_to(fixture_dir)
+    except ValueError:
+        return {**base, "source_state": "source_escaped_fixture", "source_hash": None}
+
+    source_text = source_path.read_text(encoding="utf-8")
+    lines = source_text.splitlines()
+    source_hash = _sha256_text(source_text)
+    markers: list[tuple[str, int, str]] = []
+    for index, line in enumerate(lines):
+        if not _is_structural_panel_marker(line):
+            continue
+        match = PANEL_MARKER_RE.match(line)
+        if match is None:
+            continue
+        panel = match.group(1).upper()
+        if not panel or panel == "LETTER":
+            continue
+        markers.append((panel, index, line.strip()))
+
+    selectors: dict[str, dict[str, Any]] = {}
+    for marker_index, (panel, start_index, marker) in enumerate(markers):
+        next_start = (
+            markers[marker_index + 1][1]
+            if marker_index + 1 < len(markers)
+            else len(lines)
+        )
+        selected_text = "\n".join(lines[start_index:next_start])
+        selectors.setdefault(
+            panel,
+            {
+                "kind": "quality_search_panel_region.v0",
+                "path": source_ref,
+                "panel": panel,
+                "line_start": start_index + 1,
+                "line_end": next_start,
+                "marker": marker,
+                "source_hash": source_hash,
+                "selector_text_hash": _sha256_text(selected_text),
+                "binding_state": "bound",
+            },
+        )
+    return {
+        **base,
+        "source_state": "loaded",
+        "source_hash": source_hash,
+        "selector_count": len(selectors),
+        "selectors_by_panel": selectors,
+    }
+
+
+def _target_panels_from_hint(hypothesis: dict[str, Any]) -> list[str]:
+    target_hint = hypothesis.get("target_hint")
+    panels: list[str] = []
+    if isinstance(target_hint, dict):
+        raw_panels = target_hint.get("panels")
+        if isinstance(raw_panels, list):
+            panels.extend(str(panel).upper() for panel in raw_panels if panel)
+        targets = target_hint.get("representative_targets")
+        if isinstance(targets, list):
+            for target in targets:
+                if isinstance(target, dict) and target.get("panel"):
+                    panels.append(str(target["panel"]).upper())
+    return sorted({panel for panel in panels if panel and panel != "UNKNOWN"})
+
+
+def _family_registry_entry(family: str) -> dict[str, Any]:
+    return QUALITY_SEARCH_FAMILY_REGISTRY.get(
+        family,
+        {
+            "builder": "unregistered_family",
+            "apply_authority": "review_only",
+            "protected_labels": [],
+            "design_moves": [],
+            "render_targets": ["full", "print_thumbnail"],
+        },
+    )
+
+
+def _source_selectors_for_panels(
+    source_context: dict[str, Any],
+    panels: list[str],
+) -> list[dict[str, Any]]:
+    selectors_by_panel = source_context.get("selectors_by_panel")
+    if not isinstance(selectors_by_panel, dict):
+        selectors_by_panel = {}
+    selectors: list[dict[str, Any]] = []
+    for panel in panels:
+        selector = selectors_by_panel.get(panel)
+        if isinstance(selector, dict):
+            selectors.append(selector)
+            continue
+        selectors.append(
+            {
+                "kind": "quality_search_panel_region.v0",
+                "panel": panel,
+                "binding_state": "unbound",
+                "reason": source_context.get("source_state") or "panel_region_not_found",
+            }
+        )
+    return selectors
+
+
+def _selector_binding_state(selectors: list[dict[str, Any]]) -> str:
+    if not selectors:
+        return "unbound"
+    bound_count = sum(1 for selector in selectors if selector.get("binding_state") == "bound")
+    if bound_count == len(selectors):
+        return "bound"
+    if bound_count:
+        return "partial"
+    return "unbound"
+
+
+def _candidate_specs_from_plan(
+    plan: dict[str, Any],
+    *,
+    source_context: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     specs: list[dict[str, Any]] = []
+    source_context = source_context or {
+        "source_state": "not_loaded",
+        "selectors_by_panel": {},
+    }
     for index, hypothesis in enumerate(plan.get("patch_hypotheses", []), start=1):
         if not isinstance(hypothesis, dict):
             continue
         family = str(hypothesis.get("family") or "unknown")
+        registry = _family_registry_entry(family)
+        target_panels = _target_panels_from_hint(hypothesis)
+        source_selectors = _source_selectors_for_panels(source_context, target_panels)
         specs.append(
             {
                 "id": f"QS{index:03d}",
                 "fixture": plan.get("fixture"),
                 "family": family,
+                "registry_schema": FAMILY_REGISTRY_SCHEMA,
+                "builder": registry["builder"],
                 "source": hypothesis.get("source"),
                 "target_scope": hypothesis.get("target_scope"),
                 "target_hint": hypothesis.get("target_hint", {}),
+                "target_panels": target_panels,
+                "source_selectors": source_selectors,
+                "protected_labels": registry["protected_labels"],
+                "design_moves": registry["design_moves"],
+                "render_targets": registry["render_targets"],
+                "apply_authority": registry["apply_authority"],
+                "operations": [],
+                "operation_state": "not_generated",
+                "operation_block_reason": (
+                    "family registry slice emits review-only specs, not source mutations"
+                ),
                 "mutation_allowed": False,
                 "mutation_block_reason": "quality-search execute v0 is dry witness mode",
                 "expected_detector_movement": hypothesis.get("expected_detector_movement"),
@@ -570,6 +829,7 @@ def _candidate_specs_from_plan(plan: dict[str, Any]) -> list[dict[str, Any]]:
                 "witness": {
                     "state": "spec_only",
                     "evidence_inputs": ["quality_search_plan", "driver", "quality_defect_ledger"],
+                    "source_binding_state": _selector_binding_state(source_selectors),
                 },
             }
         )
@@ -578,9 +838,19 @@ def _candidate_specs_from_plan(plan: dict[str, Any]) -> list[dict[str, Any]]:
             "id": "QSNULL",
             "fixture": plan.get("fixture"),
             "family": "null_baseline",
+            "registry_schema": FAMILY_REGISTRY_SCHEMA,
+            "builder": "baseline",
             "source": "current_source",
             "target_scope": "fixture",
             "target_hint": {"reason": "baseline comparison for candidate batch"},
+            "target_panels": [],
+            "source_selectors": [],
+            "protected_labels": [],
+            "design_moves": [],
+            "render_targets": ["full"],
+            "apply_authority": "review_only",
+            "operations": [],
+            "operation_state": "not_applicable",
             "mutation_allowed": False,
             "mutation_block_reason": "null baseline never mutates source",
             "expected_detector_movement": "none",
@@ -718,7 +988,14 @@ def build_quality_search_execution(
     if run_dir.is_symlink():
         raise ValueError(f"refusing to write quality-search run through symlink: {run_dir}")
 
-    candidate_specs = _candidate_specs_from_plan(plan)
+    source_context = _panel_region_context(name, paths)
+    family_registry = {
+        "schema": FAMILY_REGISTRY_SCHEMA,
+        "fixture": name,
+        "source_context": source_context,
+        "families": QUALITY_SEARCH_FAMILY_REGISTRY,
+    }
+    candidate_specs = _candidate_specs_from_plan(plan, source_context=source_context)
     scores = _candidate_scores(candidate_specs, plan)
     decision = _execution_decision(plan, scores)
     tool_defects = {
@@ -756,6 +1033,7 @@ def build_quality_search_execution(
             "state_000.json",
             "classification_000.json",
             "policy_000.json",
+            "family_registry_000.json",
             "candidate_specs_000.json",
             "candidate_scores_000.json",
             "decision_000.json",
@@ -771,6 +1049,7 @@ def build_quality_search_execution(
             "classifications": plan.get("classifications", []),
         },
         "policy_000.json": policy,
+        "family_registry_000.json": family_registry,
         "candidate_specs_000.json": {
             "schema": "figure-agent.quality-search-candidate-specs.v0",
             "candidates": candidate_specs,
@@ -799,6 +1078,7 @@ def build_quality_search_execution(
         "max_iterations": max_iterations,
         "executed_iterations": 1,
         "plan": plan,
+        "source_context": source_context,
         "candidate_specs": candidate_specs,
         "candidate_scores": scores,
         "decision": decision,

@@ -164,12 +164,17 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
     assert "unlinked micro defects" in symptoms
 
 
-def _write_minimal_fixture(workspace: Path, name: str = "quality_demo") -> Path:
+def _write_minimal_fixture(
+    workspace: Path,
+    name: str = "quality_demo",
+    *,
+    tex_source: str = "\\node at (0,0) {demo};\n",
+) -> Path:
     fixture = workspace / "examples" / name
     fixture.mkdir(parents=True)
     (fixture / "spec.yaml").write_text(f"name: {name}\n", encoding="utf-8")
     (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
-    (fixture / f"{name}.tex").write_text("\\node at (0,0) {demo};\n", encoding="utf-8")
+    (fixture / f"{name}.tex").write_text(tex_source, encoding="utf-8")
     return fixture
 
 
@@ -253,16 +258,84 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
         "density_reduce",
         "null_baseline",
     }
+    hierarchy = [
+        item for item in payload["candidate_specs"] if item["family"] == "hierarchy_rebalance"
+    ][0]
+    assert hierarchy["builder"] == "panel_region_spec"
+    assert hierarchy["apply_authority"] == "review_only"
+    assert hierarchy["protected_labels"]
+    assert hierarchy["design_moves"]
+    assert hierarchy["operation_state"] == "not_generated"
+    assert hierarchy["witness"]["source_binding_state"] == "unbound"
+    assert all(
+        selector["binding_state"] == "unbound"
+        for selector in hierarchy["source_selectors"]
+    )
     assert all("witness" in item for item in payload["candidate_scores"])
     assert all(path.startswith(".scratch/quality-search-runs/") for path in payload["writes"])
 
     run_dir = tmp_path / payload["run_dir"]
     assert (run_dir / "run_manifest.json").is_file()
+    assert (run_dir / "family_registry_000.json").is_file()
     assert (run_dir / "candidate_specs_000.json").is_file()
     assert (run_dir / "candidate_scores_000.json").is_file()
     assert (run_dir / "decision_000.json").is_file()
     decision = json.loads((run_dir / "decision_000.json").read_text(encoding="utf-8"))
     assert decision == payload["decision"]
+
+
+def test_quality_search_execute_binds_family_specs_to_panel_regions(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_with_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\node at (0,0) {mobility edge};",
+            "% =============== Column F -- Mechanical =================",
+            "\\node at (1,1) {Coulomb repulsion};",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="dry witness executor with source bindings",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    assert payload["source_context"]["source_state"] == "loaded"
+    assert payload["source_context"]["selector_count"] == 2
+    hierarchy = [
+        item for item in payload["candidate_specs"] if item["family"] == "hierarchy_rebalance"
+    ][0]
+    apparatus = [
+        item for item in payload["candidate_specs"] if item["family"] == "apparatus_strengthen"
+    ][0]
+    hierarchy_selectors = {item["panel"]: item for item in hierarchy["source_selectors"]}
+    apparatus_selectors = {item["panel"]: item for item in apparatus["source_selectors"]}
+    assert hierarchy_selectors["C"]["binding_state"] == "bound"
+    assert hierarchy_selectors["C"]["line_start"] == 1
+    assert hierarchy_selectors["C"]["line_end"] == 2
+    assert hierarchy_selectors["F"]["binding_state"] == "bound"
+    assert apparatus_selectors["F"]["binding_state"] == "bound"
+    assert apparatus["witness"]["source_binding_state"] == "bound"
 
 
 def test_fig_agent_quality_search_execute_cli_writes_only_scratch(tmp_path: Path) -> None:
