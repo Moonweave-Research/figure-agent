@@ -1044,6 +1044,7 @@ def apply_candidate(
             candidate_id,
             workspace_root=paths.workspace_root,
             plugin_root=paths.plugin_root,
+            candidate_set_path=candidate_set_path,
         )
         result["experience_log"] = experience["writes"]
         memory = quality_memory_index.build_fixture_index(
@@ -1053,4 +1054,8 @@ def apply_candidate(
             plugin_root=paths.plugin_root,
         )
         result["memory_index"] = memory["writes"]
+        apply_result_path.write_text(
+            json.dumps(result, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         return result

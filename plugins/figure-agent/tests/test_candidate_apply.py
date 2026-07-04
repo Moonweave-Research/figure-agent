@@ -340,6 +340,55 @@ def test_apply_candidate_exact_replace_writes_source_and_result(tmp_path: Path) 
     assert rows[0]["outcome"]["apply_status"] == "applied_unverified"
 
 
+def test_apply_candidate_uses_explicit_candidate_set_for_experience_log(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = Path(os.environ["FIGURE_AGENT_PLUGIN_ROOT"])
+    fixture, manifest = _rendered_candidate_fixture(workspace)
+    default_candidate_set = fixture / "build" / "candidates" / "candidate_set.json"
+    alternate_candidate_set = fixture / "build" / "candidates" / "quality_search_candidate_set.json"
+    default_candidate_set.rename(alternate_candidate_set)
+    _write_semantic_review(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/quality_search_candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered quality-search evidence reviewed.",
+        workspace_root=workspace,
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/quality_search_candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=False,
+    )
+
+    assert result["status"] == "applied_unverified"
+    assert result["experience_log"] == ["docs/experience-log/candidate_demo.jsonl"]
+    assert result["memory_index"] == ["build/memory/quality_memory_index.json"]
+    apply_result = json.loads(
+        (fixture / "build" / "candidates" / "CAND001" / "apply_result.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert apply_result["experience_log"] == ["docs/experience-log/candidate_demo.jsonl"]
+    assert apply_result["memory_index"] == ["build/memory/quality_memory_index.json"]
+    rows = [
+        json.loads(line)
+        for line in (plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
+    assert rows[0]["source_artifacts"][0] == "build/candidates/quality_search_candidate_set.json"
+
+
 def test_apply_candidate_multiline_exact_replace_writes_source_and_result(
     tmp_path: Path,
 ) -> None:

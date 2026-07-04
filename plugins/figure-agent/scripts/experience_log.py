@@ -75,8 +75,16 @@ def _candidate_sandbox(example_dir: Path, candidate_id: str) -> Path:
     return sandbox
 
 
-def _candidate_set_file(example_dir: Path, manifest: dict[str, Any]) -> Path:
-    raw = manifest.get("candidate_set_path")
+def _candidate_set_file(
+    example_dir: Path,
+    manifest: dict[str, Any],
+    candidate_set_path: Path | None = None,
+) -> Path:
+    raw = (
+        candidate_set_path.as_posix()
+        if candidate_set_path is not None
+        else manifest.get("candidate_set_path")
+    )
     if not isinstance(raw, str) or not raw:
         raise ExperienceLogError("candidate_set_path_missing")
     try:
@@ -294,12 +302,14 @@ def build_apply_record(
     *,
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
+    candidate_set_path: Path | None = None,
 ) -> dict[str, Any]:
     return build_apply_records(
         name,
         candidate_id,
         workspace_root=workspace_root,
         plugin_root=plugin_root,
+        candidate_set_path=candidate_set_path,
     )[0]
 
 
@@ -309,6 +319,7 @@ def build_apply_records(
     *,
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
+    candidate_set_path: Path | None = None,
 ) -> list[dict[str, Any]]:
     fixture_identity.validate_fixture_name(name)
     fixture_identity.validate_fixture_name(candidate_id)
@@ -319,8 +330,12 @@ def build_apply_records(
     example_dir = paths.examples_dir / name
     sandbox = _candidate_sandbox(example_dir, candidate_id)
     manifest = _load_json(sandbox / "candidate_manifest.json", "candidate_manifest")
-    candidate_set_path = _candidate_set_file(example_dir, manifest)
-    candidate_set = _load_json(candidate_set_path, "candidate_set")
+    resolved_candidate_set_path = _candidate_set_file(
+        example_dir,
+        manifest,
+        candidate_set_path,
+    )
+    candidate_set = _load_json(resolved_candidate_set_path, "candidate_set")
     candidate = _candidate_from_set(candidate_set, candidate_id)
     render_manifest = _load_json(sandbox / "render_manifest.json", "render_manifest")
     apply_path = sandbox / "apply_result.json"
@@ -382,7 +397,7 @@ def build_apply_records(
             else None,
         },
         "source_artifacts": [
-            _fixture_relative(example_dir, candidate_set_path),
+            _fixture_relative(example_dir, resolved_candidate_set_path),
             _fixture_relative(example_dir, sandbox / "candidate_manifest.json"),
             _fixture_relative(example_dir, sandbox / "render_manifest.json"),
             _fixture_relative(example_dir, apply_path),
@@ -403,7 +418,7 @@ def build_apply_records(
                     candidate=item,
                     n_candidates=len(candidates),
                     manifest=manifest,
-                    candidate_set_path=candidate_set_path,
+                    candidate_set_path=resolved_candidate_set_path,
                     example_dir=example_dir,
                 )
             )
@@ -429,12 +444,14 @@ def append_apply_record(
     *,
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
+    candidate_set_path: Path | None = None,
 ) -> dict[str, Any]:
     records = build_apply_records(
         name,
         candidate_id,
         workspace_root=workspace_root,
         plugin_root=plugin_root,
+        candidate_set_path=candidate_set_path,
     )
     paths = runtime_paths.resolve_runtime_paths(
         workspace_root=workspace_root,

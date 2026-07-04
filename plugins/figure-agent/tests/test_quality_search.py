@@ -92,6 +92,30 @@ def _driver_with_basin() -> dict[str, object]:
     }
 
 
+def _driver_ready_without_basin() -> dict[str, object]:
+    return {
+        "action": "complete",
+        "reason": "fixture is ready for quality search",
+        "safe_command": None,
+        "stop_boundary": "quality_search_ready",
+        "status": {
+            "render_state": "FRESH",
+            "critique_state": "FRESH",
+            "export_state": "FRESH",
+            "acceptance_state": "NOT_DECLARED",
+            "workflow_ready": True,
+            "release_ready": False,
+            "final_ready": False,
+        },
+        "next_action_summary": {"release_blockers": []},
+        "loop_checkpoint": {
+            "final_stop_reason": "human_gate_required",
+            "recommended_next_action": "run quality search",
+        },
+        "audit_evidence": {"detector_feedback": {}},
+    }
+
+
 def _ledger_with_actionable_and_unbound_defects() -> dict[str, object]:
     return {
         "actionability_metrics": {
@@ -631,13 +655,142 @@ def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_bloc
     assert operation["operation_scale"] == "panel_block"
     assert "opacity=0.018" in operation["replacement"]
     assert "rounded corners=1.0pt" in operation["replacement"]
-    assert "(13.30, 3.78) -- (13.30, 2.82);" in operation["replacement"]
-    assert "circle ({1.90*\\rr})" in operation["replacement"]
+    assert (
+        "(13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16)"
+        " -- (13.18, 3.02) -- (13.30, 2.82);"
+    ) in operation["replacement"]
+    assert "circle ({2.35*\\rr})" in operation["replacement"]
     assert "ball color=cRed!82!black" in operation["replacement"]
-    assert "at (9.56, 2.84) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
-    assert "at (9.56, 3.04) {trapped charge};" in operation["replacement"]
-    assert "Stealth[length=8.6pt,width=6.2pt]" in operation["replacement"]
-    assert "\\draw[<->, cGray!62!black, line width=0.50pt]" in operation["replacement"]
+    assert "at (9.05, 3.12) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
+    assert "at (9.05, 3.36) {trapped charge};" in operation["replacement"]
+    assert "Stealth[length=9.6pt,width=6.8pt]" in operation["replacement"]
+    assert "line width=1.24pt" in operation["replacement"]
+    assert "\\draw[<->, cGray!64!black, line width=0.70pt]" in operation["replacement"]
+
+
+def test_quality_search_apparatus_strengthen_progresses_already_redrawn_panel_f() -> None:
+    block = "\n".join(
+        [
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[cGray!30!black, opacity=0.018]",
+            "  (12.58, 3.78) rectangle (13.48, 4.14);",
+            "\\draw[cGray!62!black, line width=0.34pt, rounded corners=0.8pt]",
+            "  (13.30, 3.78) -- (13.30, 2.82);",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\draw[cRed!55!black, line width=0.32pt]",
+            "  (11.50,2.38) .. controls (11.10,2.78) and (10.32,3.00) .. (9.62,3.00);",
+            "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1]",
+            "  at (9.56, 2.84) {$q_{\\mathrm{tr}}$};",
+            "\\node[anchor=west, fill=white, fill opacity=0.94, text opacity=1]",
+            "  at (9.56, 3.04) {trapped charge};",
+            "\\node at (9.72, 1.54) {Coulomb};",
+            "\\node at (9.73, 1.45) {repulsion};",
+            "\\draw[<->, cGray!62!black, line width=0.50pt]",
+            "  (10.42, 0.54) -- (13.18, 0.54);",
+            "\\node at (11.88, 0.31) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+        ]
+    )
+
+    replacement = quality_search._strengthened_panel_f_overlay(f"{block}\n")
+
+    assert replacement is not None
+    assert "at (9.05, 3.12) {$q_{\\mathrm{tr}}$};" in replacement
+    assert "at (9.05, 3.36) {trapped charge};" in replacement
+    assert (
+        "(13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16)"
+        " -- (13.18, 3.02) -- (13.30, 2.82);"
+    ) in replacement
+    assert "\\draw[<->, cGray!64!black, line width=0.70pt]" in replacement
+
+
+def test_quality_search_goal_promotes_panel_f_apparatus_without_basin(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% =============== Column B -- Results =================",
+            "\\draw[cGray!60, line width=0.30pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[cGray!30!black, opacity=0.045]",
+            "  (12.65, 3.55) rectangle (13.58, 4.12);",
+            "\\draw[cGray!58!black, line width=0.26pt]",
+            "  (12.60, 3.62) rectangle (13.52, 4.17);",
+            "\\node at (13.06, 3.82) {$V_{\\mathrm{active}}$};",
+            "\\node at (13.06, 3.70) {bias};",
+            "\\draw[cGray!60!black, line width=0.24pt, rounded corners=1.1pt]",
+            "  (13.42, 4.01) -- (13.62, 4.01) -- (13.62, 2.82) -- (13.42, 2.82);",
+            "\\draw[cGray!86!black, line width=0.66pt] (13.18, 0.46) rectangle (13.42, 2.82);",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\foreach \\cx/\\cy/\\rr in {11.62/2.28/0.075,11.43/1.86/0.082} {",
+            (
+                "  \\draw[cRed!35!white, line width=0.25pt, opacity=0.36] "
+                "(\\cx,\\cy) circle ({1.65*\\rr});"
+            ),
+            "  \\shade[ball color=cRed!76!black] (\\cx,\\cy) circle (\\rr);",
+            "}",
+            "\\draw[cRed!45!black, line width=0.22pt]",
+            "  (11.58,2.35) .. controls (11.28,2.56) and (10.90,2.64) .. (10.48,2.62);",
+            "\\node at (9.80, 2.60) {$q_{\\mathrm{tr}}$};",
+            "\\node at (10.08, 2.60) {trapped charge};",
+            (
+                "\\draw[panelFCoulombRepulsionArrow, "
+                "-{Stealth[length=7.6pt,width=5.6pt]}, "
+                "cRed!82!black, line width=0.94pt]"
+            ),
+            "  (11.02, 1.18) -- (9.60, 1.18);",
+            "\\node at (9.72, 1.54) {Coulomb};",
+            "\\node at (9.73, 1.45) {repulsion};",
+            "\\draw[<->, cGray!62!black, line width=0.38pt]",
+            "  (10.42, 0.54) -- (13.18, 0.54);",
+            "\\node at (11.88, 0.31) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="Panel F apparatus charge force electrode air gap strengthen",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    families = [item["family"] for item in payload["candidate_specs"]]
+    assert families[0] == "apparatus_strengthen"
+    apparatus = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "apparatus_strengthen"
+    ][0]
+    operation = apparatus["operations"][0]
+    assert apparatus["operation_scale"] == "panel_block"
+    assert apparatus["template_id"] == "v5f_panel_f_redraw_overlay_v1"
+    assert operation["operation_scale"] == "panel_block"
+    assert "trapped charge" in operation["replacement"]
+    assert "air gap" in operation["replacement"]
+    by_family = {item["family"]: item for item in payload["candidate_scores"]}
+    assert by_family["apparatus_strengthen"]["policy_score"] > by_family[
+        "label_reflow"
+    ]["policy_score"]
 
 
 def test_quality_search_policy_uses_epsilon_greedy_bandit_from_memory() -> None:

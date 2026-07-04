@@ -459,16 +459,90 @@ def _detector_hypotheses(name: str, ledger: dict[str, Any]) -> list[dict[str, An
     ]
 
 
+def _goal_requests_panel_f_apparatus(goal: str) -> bool:
+    normalized = " ".join(goal.lower().replace("_", " ").replace("-", " ").split())
+    panel_f = "panel f" in normalized or "column f" in normalized
+    apparatus_terms = {
+        "apparatus",
+        "charge",
+        "force",
+        "electrode",
+        "air gap",
+        "coulomb",
+        "mechanical",
+    }
+    return panel_f and any(term in normalized for term in apparatus_terms)
+
+
+def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
+    if not _goal_requests_panel_f_apparatus(goal):
+        return []
+    return [
+        {
+            "fixture": name,
+            "family": "apparatus_strengthen",
+            "source": "goal_directive",
+            "mutation_allowed": False,
+            "mutation_block_reason": "quality-search v0 is planner-only",
+            "target_scope": "panel",
+            "target_hint": {
+                "panels": ["F"],
+                "reason": (
+                    "goal explicitly requests Panel F apparatus/charge/electrode/air-gap "
+                    "movement"
+                ),
+            },
+            "expected_detector_movement": (
+                "convert apparatus-local feedback into a bounded Panel F mechanism redraw"
+            ),
+            "expected_visual_movement": (
+                "Panel F apparatus reads as deliberate mechanism evidence"
+            ),
+            "rollback_condition": (
+                "candidate worsens compile, semantics, or print-legibility evidence"
+            ),
+        }
+    ]
+
+
+def _merge_hypotheses(
+    primary: list[dict[str, Any]],
+    fallback: list[dict[str, Any]],
+    *,
+    limit: int = 3,
+) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in [*primary, *fallback]:
+        family = str(item.get("family") or "")
+        if not family or family in seen:
+            continue
+        seen.add(family)
+        merged.append(item)
+        if len(merged) >= limit:
+            break
+    return merged
+
+
 def _patch_hypotheses(
     name: str,
     driver: dict[str, Any],
     ledger: dict[str, Any],
+    *,
+    goal: str = "",
 ) -> list[dict[str, Any]]:
     if str(driver.get("action") or "") in PROGRESS_ACTIONS:
         return []
     basin_hypotheses = _step_out_hypotheses(name, driver, ledger)
     if basin_hypotheses:
         return basin_hypotheses[:3]
+    goal_hypotheses = _goal_hypotheses(name, goal)
+    if goal_hypotheses:
+        return _merge_hypotheses(
+            goal_hypotheses,
+            _detector_hypotheses(name, ledger),
+            limit=3,
+        )
     return _detector_hypotheses(name, ledger)[:3]
 
 
@@ -794,7 +868,7 @@ def build_quality_search_plan(
         )
     except (OSError, ValueError, quality_memory_index.QualityMemoryIndexError) as exc:
         memory = {"state": "unavailable", "reason": str(exc)}
-    hypotheses = _patch_hypotheses(name, driver, ledger)
+    hypotheses = _patch_hypotheses(name, driver, ledger, goal=goal)
     basin = _loop_basin(
         driver.get("loop_checkpoint") if isinstance(driver.get("loop_checkpoint"), dict) else None
     )
@@ -1120,6 +1194,7 @@ def _strengthened_panel_f_overlay(block: str) -> str | None:
             "(13.42, 4.01) -- (13.66, 4.01) -- (13.66, 2.82) -- (13.42, 2.82);",
         ),
         ("circle ({1.65*\\rr})", "circle ({1.90*\\rr})"),
+        ("circle ({1.90*\\rr})", "circle ({2.35*\\rr})"),
         ("ball color=cRed!76!black", "ball color=cRed!82!black"),
         (
             "(11.58,2.35) .. controls (11.28,2.56) and (10.90,2.64) .. (10.48,2.62);",
@@ -1128,10 +1203,16 @@ def _strengthened_panel_f_overlay(block: str) -> str | None:
         ("at (9.80, 2.60) {$q_{\\mathrm{tr}}$};", "at (9.58, 2.63) {$q_{\\mathrm{tr}}$};"),
         ("at (10.08, 2.60) {trapped charge};", "at (9.86, 2.63) {trapped charge};"),
         ("Stealth[length=7.6pt,width=5.6pt]", "Stealth[length=8.6pt,width=6.2pt]"),
+        ("Stealth[length=8.6pt,width=6.2pt]", "Stealth[length=9.6pt,width=6.8pt]"),
         ("line width=0.94pt", "line width=1.08pt"),
+        ("line width=1.08pt", "line width=1.24pt"),
         (
             "\\draw[<->, cGray!62!black, line width=0.38pt]",
+            "\\draw[<->, cGray!64!black, line width=0.70pt]",
+        ),
+        (
             "\\draw[<->, cGray!62!black, line width=0.50pt]",
+            "\\draw[<->, cGray!64!black, line width=0.70pt]",
         ),
         ("opacity=0.13", "opacity=0.08"),
         ("line width=0.34pt, rounded corners=1.2pt", "line width=0.28pt, rounded corners=1.2pt"),
@@ -1139,14 +1220,18 @@ def _strengthened_panel_f_overlay(block: str) -> str | None:
         ("Stealth[length=7pt,width=5pt]", "Stealth[length=8.5pt,width=6.2pt]"),
         ("line width=0.82pt", "line width=1.08pt"),
         ("(10.95, 1.18) -- (9.74, 1.18);", "(11.08, 1.18) -- (9.54, 1.18);"),
+        ("(11.02, 1.18) -- (9.60, 1.18);", "(11.18, 1.18) -- (9.18, 1.18);"),
         ("fontsize{4.2}{5.1}", "fontsize{4.8}{5.8}"),
+        ("fontsize{4.0}{4.8}", "fontsize{4.8}{5.8}"),
+        ("fontsize{3.8}{4.6}", "fontsize{4.4}{5.3}"),
         ("ball color=cRed!72!black", "ball color=cRed!78!black"),
         ("circle ({1.45*\\rr})", "circle ({1.85*\\rr})"),
         (
             "\\draw[<->, cGray!55!black, line width=0.30pt]",
-            "\\draw[<->, cGray!62!black, line width=0.46pt]",
+            "\\draw[<->, cGray!64!black, line width=0.70pt]",
         ),
-        ("(10.58, 0.54) -- (13.18, 0.54);", "(10.42, 0.54) -- (13.18, 0.54);"),
+        ("(10.58, 0.54) -- (13.18, 0.54);", "(9.92, 0.54) -- (13.18, 0.54);"),
+        ("(10.42, 0.54) -- (13.18, 0.54);", "(9.92, 0.54) -- (13.18, 0.54);"),
         ("opacity=0.03", "opacity=0.018"),
         (
             "(12.65, 3.55) rectangle (13.58, 4.12);",
@@ -1200,6 +1285,25 @@ def _strengthened_panel_f_overlay(block: str) -> str | None:
         (
             "at (9.86, 2.63) {trapped charge};",
             "at (9.56, 3.04) {trapped charge};",
+        ),
+        (
+            "\\draw[cGray!62!black, line width=0.34pt, rounded corners=0.8pt]\n"
+            "  (13.30, 3.78) -- (13.30, 2.82);",
+            "\\draw[cGray!58!black, line width=0.26pt, rounded corners=1.0pt]\n"
+            "  (13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16)"
+            " -- (13.18, 3.02) -- (13.30, 2.82);",
+        ),
+        (
+            "(11.50,2.38) .. controls (11.10,2.78) and (10.32,3.00) .. (9.62,3.00);",
+            "(11.48,2.40) .. controls (10.78,3.02) and (9.92,3.36) .. (9.05,3.36);",
+        ),
+        (
+            "at (9.56, 2.84) {$q_{\\mathrm{tr}}$};",
+            "at (9.05, 3.12) {$q_{\\mathrm{tr}}$};",
+        ),
+        (
+            "at (9.56, 3.04) {trapped charge};",
+            "at (9.05, 3.36) {trapped charge};",
         ),
         (
             "\\node at (12.13, 3.08) {$q_{\\mathrm{tr}}$ trapped charge};",
@@ -2566,6 +2670,21 @@ def _operation_scale_policy_bonus(
     return 0.0
 
 
+def _goal_directive_policy_bonus(
+    *,
+    family: str,
+    operation_scale: str,
+    plan: dict[str, Any],
+) -> float:
+    if (
+        family == "apparatus_strengthen"
+        and operation_scale == "panel_block"
+        and _goal_requests_panel_f_apparatus(str(plan.get("goal") or ""))
+    ):
+        return 0.05
+    return 0.0
+
+
 def _bandit_selected_arm_bonus(family: str, bandit_decision: dict[str, Any]) -> float:
     if family != bandit_decision.get("selected_family"):
         return 0.0
@@ -2594,6 +2713,11 @@ def _candidate_policy_score(
     prior = _memory_prior(plan, family)
     render_adjustment, render_penalty = _render_policy_adjustment(ranking)
     operation_scale_bonus = _operation_scale_policy_bonus(operation_scale, ranking)
+    goal_directive_bonus = _goal_directive_policy_bonus(
+        family=family,
+        operation_scale=operation_scale,
+        plan=plan,
+    )
     bandit_bonus = _bandit_selected_arm_bonus(family, bandit_decision)
     score = round(
         min(
@@ -2603,7 +2727,8 @@ def _candidate_policy_score(
                 + bandit_bonus
                 + render_adjustment
                 + render_penalty
-                + operation_scale_bonus,
+                + operation_scale_bonus
+                + goal_directive_bonus,
                 0.0,
             ),
             1.0,
@@ -2620,6 +2745,7 @@ def _candidate_policy_score(
         "render_adjustment": render_adjustment,
         "render_penalty": render_penalty,
         "operation_scale_bonus": operation_scale_bonus,
+        "goal_directive_bonus": goal_directive_bonus,
         "score": score,
     }
 
