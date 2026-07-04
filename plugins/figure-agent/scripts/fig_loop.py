@@ -328,10 +328,21 @@ def _existing_auto_remedy_for_cause(run_dir: Path, cause: str) -> dict[str, Any]
     for iteration_path in sorted(run_dir.glob("iteration_*.json")):
         try:
             payload = json.loads(iteration_path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-            continue
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            return {
+                "cause": cause,
+                "status": "history_unreadable",
+                "reason": "auto_remedy_history_unreadable",
+                "path": str(iteration_path),
+                "error": str(exc),
+            }
         if not isinstance(payload, dict):
-            continue
+            return {
+                "cause": cause,
+                "status": "history_unreadable",
+                "reason": "auto_remedy_history_invalid",
+                "path": str(iteration_path),
+            }
         auto_remedy = payload.get("auto_remedy")
         if isinstance(auto_remedy, dict) and auto_remedy.get("cause") == cause:
             return auto_remedy
@@ -358,7 +369,7 @@ def _apply_auto_remedy(
             {
                 "cause": plan["cause"],
                 "status": "remedy_ineffective",
-                "reason": "auto_remedy_already_attempted_for_cause",
+                "reason": previous.get("reason") or "auto_remedy_already_attempted_for_cause",
                 "previous_status": previous.get("status"),
                 "command_results": [],
             },
