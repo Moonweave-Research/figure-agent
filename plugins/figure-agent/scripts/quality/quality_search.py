@@ -44,6 +44,8 @@ FAMILY_REGISTRY_SCHEMA = "figure-agent.quality-search-family-registry.v0"
 APPARATUS_PANEL_F_TEMPLATE_ID = "v5f_panel_f_redraw_overlay_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
 APPARATUS_PANEL_F_OVERLAY_MARKER = "v5f Panel F art-direction redraw overlay"
+NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO = 0.002
+NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO = 0.02
 PANEL_MARKER_RE = re.compile(
     r"^\s*%\s*(?:=+\s*)?(?:Panel|Column)\s+([A-Za-z0-9_-]+)\b"
 )
@@ -1495,6 +1497,53 @@ def _ratio_from_deltas(payload: Any) -> float | None:
         return None
 
 
+def _visual_change_ratios_by_candidate(
+    visual_evidence: dict[str, Any] | None,
+) -> tuple[dict[str, float], dict[str, float]]:
+    if not isinstance(visual_evidence, dict):
+        return ({}, {})
+
+    def collect(key: str) -> dict[str, float]:
+        values: dict[str, float] = {}
+        comparisons = visual_evidence.get(key)
+        if not isinstance(comparisons, list):
+            return values
+        for item in comparisons:
+            if not isinstance(item, dict):
+                continue
+            candidate_id = item.get("candidate_id")
+            ratio = _ratio_from_deltas(item.get("visual_deltas"))
+            if candidate_id is not None and ratio is not None:
+                values[str(candidate_id)] = ratio
+        return values
+
+    return (collect("full_comparisons"), collect("panel_comparisons"))
+
+
+def _ranking_changed_pixel_ratio(ranking: dict[str, Any] | None) -> float | None:
+    if not isinstance(ranking, dict):
+        return None
+    scores = ranking.get("scores")
+    ratio = _ratio_from_deltas(scores)
+    if ratio is not None:
+        return ratio
+    return _ratio_from_deltas(ranking)
+
+
+def _non_marginal_visual_change(
+    *,
+    full_changed_pixel_ratio: float | None,
+    panel_changed_pixel_ratio: float | None,
+) -> bool:
+    return (
+        full_changed_pixel_ratio is not None
+        and full_changed_pixel_ratio >= NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO
+    ) or (
+        panel_changed_pixel_ratio is not None
+        and panel_changed_pixel_ratio >= NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO
+    )
+
+
 def _quality_search_memory_events(
     *,
     name: str,
@@ -2333,6 +2382,7 @@ def _candidate_scores(
     candidate_specs: list[dict[str, Any]],
     plan: dict[str, Any],
     candidate_rankings: list[dict[str, Any]] | None = None,
+    visual_evidence: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     classifications = plan.get("classifications")
     release_blocker_only = any(
@@ -2346,14 +2396,18 @@ def _candidate_scores(
         for score in candidate_rankings or []
         if isinstance(score, dict)
     }
+    full_ratios_by_id, panel_ratios_by_id = _visual_change_ratios_by_candidate(
+        visual_evidence
+    )
     scores: list[dict[str, Any]] = []
     for spec in candidate_specs:
+        candidate_id = str(spec.get("id"))
         family = str(spec.get("family") or "unknown")
         score = _family_evidence_weight(family, plan)
         if release_blocker_only and family != "null_baseline":
             score += 0.03
         score = round(min(score, 1.0), 4)
-        ranking = rankings_by_id.get(str(spec.get("id")))
+        ranking = rankings_by_id.get(candidate_id)
         operation_scale = str(spec.get("operation_scale") or "unknown")
         policy = _candidate_policy_score(
             family=family,
@@ -2367,6 +2421,14 @@ def _candidate_scores(
             if isinstance(ranking, dict)
             else "not_rendered"
         )
+        full_changed_pixel_ratio = full_ratios_by_id.get(candidate_id)
+        if full_changed_pixel_ratio is None:
+            full_changed_pixel_ratio = _ranking_changed_pixel_ratio(ranking)
+        panel_changed_pixel_ratio = panel_ratios_by_id.get(candidate_id)
+        non_marginal_visual_change = _non_marginal_visual_change(
+            full_changed_pixel_ratio=full_changed_pixel_ratio,
+            panel_changed_pixel_ratio=panel_changed_pixel_ratio,
+        )
         scores.append(
             {
                 "candidate_id": spec.get("id"),
@@ -2377,6 +2439,13 @@ def _candidate_scores(
                 "evidence_score": score,
                 "policy_score": policy["score"],
                 "rank_score": ranking.get("rank_score") if isinstance(ranking, dict) else None,
+                "full_changed_pixel_ratio": full_changed_pixel_ratio,
+                "panel_changed_pixel_ratio": panel_changed_pixel_ratio,
+                "non_marginal_visual_change": non_marginal_visual_change,
+                "non_marginal_thresholds": {
+                    "full_changed_pixel_ratio": NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO,
+                    "panel_changed_pixel_ratio": NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO,
+                },
                 "policy": policy,
                 "witness": {
                     "state": "dry_scored",
@@ -2387,6 +2456,7 @@ def _candidate_scores(
                         "candidate_sandbox_manifest",
                         "quality_memory_prior",
                         "candidate_render_policy_adjustment",
+                        "non_marginal_visual_change_gate",
                     ],
                 },
                 "render_status": render_status,
@@ -2427,19 +2497,45 @@ def _execution_decision(
         ),
         reverse=True,
     )
+    eligible = [
+        item
+        for item in ranked
+        if item.get("family") != "null_baseline"
+        and item.get("non_marginal_visual_change") is True
+    ]
     selected = (
-        ranked[0]
-        if ranked
-        and float(ranked[0].get("policy_score") or ranked[0].get("evidence_score") or 0.0) > 0
+        eligible[0]
+        if eligible
+        and float(eligible[0].get("policy_score") or eligible[0].get("evidence_score") or 0.0)
+        > 0
         else None
     )
     if selected is None:
+        top = ranked[0] if ranked else {}
         return {
-            "kind": "no_actionable_candidate",
-            "reason": "no non-baseline candidate received supporting evidence",
+            "kind": "no_non_marginal_candidate",
+            "reason": (
+                "rendered candidates did not clear the non-marginal visual "
+                "movement threshold"
+            ),
             "selected_candidate_id": None,
             "evidence_score": 0.0,
             "policy_score": 0.0,
+            "source_mutation": "not_performed",
+            "top_candidate_id": top.get("candidate_id"),
+            "top_candidate_family": top.get("family"),
+            "top_candidate_operation_scale": top.get("operation_scale"),
+            "top_candidate_policy_score": top.get("policy_score"),
+            "top_candidate_full_changed_pixel_ratio": top.get(
+                "full_changed_pixel_ratio"
+            ),
+            "top_candidate_panel_changed_pixel_ratio": top.get(
+                "panel_changed_pixel_ratio"
+            ),
+            "non_marginal_thresholds": {
+                "full_changed_pixel_ratio": NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO,
+                "panel_changed_pixel_ratio": NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO,
+            },
         }
     return {
         "kind": "candidate_batch_ready",
@@ -2501,7 +2597,7 @@ def build_quality_search_execution(
         run_dir=run_dir,
         paths=paths,
     )
-    scores = _candidate_scores(candidate_specs, plan, candidate_rankings)
+    scores = _candidate_scores(candidate_specs, plan, candidate_rankings, visual_evidence)
     decision = _execution_decision(plan, scores)
     tool_defects = {
         "schema": "figure-agent.quality-search-tool-defects.v0",

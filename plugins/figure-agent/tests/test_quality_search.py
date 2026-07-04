@@ -259,10 +259,14 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert payload["status"] == "dry_run_complete"
     assert payload["executed_iterations"] == 1
     assert payload["safety"]["source_mutation"] == "forbidden_in_dry_executor"
-    assert payload["decision"]["kind"] == "candidate_batch_ready"
-    assert payload["decision"]["selected_candidate_id"] != "QSNULL"
-    assert payload["decision"]["evidence_score"] > 0
-    assert payload["decision"]["policy_score"] > payload["decision"]["evidence_score"]
+    assert payload["decision"]["kind"] == "no_non_marginal_candidate"
+    assert payload["decision"]["selected_candidate_id"] is None
+    assert payload["decision"]["source_mutation"] == "not_performed"
+    assert payload["decision"]["top_candidate_id"] != "QSNULL"
+    assert payload["decision"]["non_marginal_thresholds"] == {
+        "full_changed_pixel_ratio": 0.002,
+        "panel_changed_pixel_ratio": 0.02,
+    }
     assert payload["candidate_set"]["candidates"] == []
     assert payload["render_results"]["render_mode"] == "none"
     assert payload["render_results"]["rendered"] == []
@@ -296,6 +300,7 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert all("operation_scale" in item for item in payload["candidate_scores"])
     assert all("template_id" in item for item in payload["candidate_scores"])
     assert all("expected_visual_movement" in item for item in payload["candidate_scores"])
+    assert all("non_marginal_visual_change" in item for item in payload["candidate_scores"])
     assert all(path.startswith(".scratch/quality-search-runs/") for path in payload["writes"])
 
     run_dir = tmp_path / payload["run_dir"]
@@ -615,11 +620,35 @@ def test_quality_search_policy_uses_memory_prior_and_exploration_bonus() -> None
         "next_recommended_operation": {"kind": "step_out_experiment"},
     }
     candidate_specs = [
-        {"id": "QS001", "family": "hierarchy_rebalance"},
-        {"id": "QS002", "family": "apparatus_strengthen"},
+        {
+            "id": "QS001",
+            "family": "hierarchy_rebalance",
+            "operation_scale": "local_style_token",
+        },
+        {
+            "id": "QS002",
+            "family": "apparatus_strengthen",
+            "operation_scale": "panel_block",
+        },
+    ]
+    rankings = [
+        {
+            "candidate_id": "QS001",
+            "rank_score": 0.65,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.002},
+        },
+        {
+            "candidate_id": "QS002",
+            "rank_score": 0.75,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.003},
+        },
     ]
 
-    scores = quality_search._candidate_scores(candidate_specs, plan)
+    scores = quality_search._candidate_scores(candidate_specs, plan, rankings)
     decision = quality_search._execution_decision(plan, scores)
 
     by_family = {item["family"]: item for item in scores}
@@ -668,12 +697,14 @@ def test_quality_search_policy_prefers_panel_block_with_stronger_render_rank() -
             "rank_score": 0.65,
             "render_status": "rendered_needs_human_review",
             "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.0008},
         },
         {
             "candidate_id": "QS002",
             "rank_score": 0.75,
             "render_status": "rendered_needs_human_review",
             "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.003},
         },
     ]
 
@@ -684,6 +715,129 @@ def test_quality_search_policy_prefers_panel_block_with_stronger_render_rank() -
     assert by_family["apparatus_strengthen"]["policy_score"] > by_family[
         "hierarchy_rebalance"
     ]["policy_score"]
+    assert decision["selected_candidate_id"] == "QS002"
+    assert decision["selected_family"] == "apparatus_strengthen"
+
+
+def test_quality_search_decision_rejects_only_marginal_rendered_candidates() -> None:
+    plan = {
+        "state": {"memory": {"state": "loaded", "families": {}}},
+        "classifications": [],
+        "next_recommended_operation": {"kind": "step_out_experiment"},
+    }
+    candidate_specs = [
+        {
+            "id": "QS001",
+            "family": "hierarchy_rebalance",
+            "operation_scale": "local_style_token",
+            "template_id": "line_width_minimum_v1",
+            "expected_visual_movement": "local line-width change",
+        },
+        {
+            "id": "QS002",
+            "family": "apparatus_strengthen",
+            "operation_scale": "local_style_token",
+            "template_id": "line_width_minimum_v1",
+            "expected_visual_movement": "local line-width change",
+        },
+    ]
+    rankings = [
+        {
+            "candidate_id": "QS001",
+            "rank_score": 0.65,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.000816},
+        },
+        {
+            "candidate_id": "QS002",
+            "rank_score": 0.55,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.000486},
+        },
+    ]
+
+    scores = quality_search._candidate_scores(candidate_specs, plan, rankings)
+    decision = quality_search._execution_decision(plan, scores)
+
+    assert all(item["non_marginal_visual_change"] is False for item in scores)
+    assert decision["kind"] == "no_non_marginal_candidate"
+    assert decision["selected_candidate_id"] is None
+    assert decision["source_mutation"] == "not_performed"
+    assert decision["top_candidate_id"] == "QS001"
+    assert decision["top_candidate_full_changed_pixel_ratio"] == 0.000816
+    assert decision["non_marginal_thresholds"] == {
+        "full_changed_pixel_ratio": 0.002,
+        "panel_changed_pixel_ratio": 0.02,
+    }
+
+
+def test_quality_search_decision_accepts_panel_crop_non_marginal_candidate() -> None:
+    plan = {
+        "state": {"memory": {"state": "loaded", "families": {}}},
+        "classifications": [],
+        "next_recommended_operation": {"kind": "step_out_experiment"},
+    }
+    candidate_specs = [
+        {
+            "id": "QS001",
+            "family": "hierarchy_rebalance",
+            "operation_scale": "local_style_token",
+        },
+        {
+            "id": "QS002",
+            "family": "apparatus_strengthen",
+            "operation_scale": "panel_block",
+        },
+    ]
+    rankings = [
+        {
+            "candidate_id": "QS001",
+            "rank_score": 0.65,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.0009},
+        },
+        {
+            "candidate_id": "QS002",
+            "rank_score": 0.75,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.001},
+        },
+    ]
+    visual_evidence = {
+        "full_comparisons": [
+            {
+                "candidate_id": "QS001",
+                "visual_deltas": {"changed_pixel_ratio": 0.0009},
+            },
+            {
+                "candidate_id": "QS002",
+                "visual_deltas": {"changed_pixel_ratio": 0.001},
+            },
+        ],
+        "panel_comparisons": [
+            {
+                "candidate_id": "QS002",
+                "visual_deltas": {"changed_pixel_ratio": 0.021},
+            }
+        ],
+    }
+
+    scores = quality_search._candidate_scores(
+        candidate_specs,
+        plan,
+        rankings,
+        visual_evidence,
+    )
+    decision = quality_search._execution_decision(plan, scores)
+
+    by_id = {item["candidate_id"]: item for item in scores}
+    assert by_id["QS001"]["non_marginal_visual_change"] is False
+    assert by_id["QS002"]["non_marginal_visual_change"] is True
+    assert by_id["QS002"]["panel_changed_pixel_ratio"] == 0.021
     assert decision["selected_candidate_id"] == "QS002"
     assert decision["selected_family"] == "apparatus_strengthen"
 
