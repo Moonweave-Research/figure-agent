@@ -2029,24 +2029,24 @@
 \draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
 
 % Compact bias module: a restrained instrument cue, not the visual subject.
-\fill[cGray!30!black, opacity=0.03]
-  (12.65, 3.55) rectangle (13.58, 4.12);
-\fill[cGray!3] (12.60, 3.62) rectangle (13.52, 4.17);
+\fill[cGray!30!black, opacity=0.018]
+  (12.58, 3.78) rectangle (13.48, 4.14);
+\fill[cGray!3] (12.56, 3.82) rectangle (13.46, 4.16);
 \draw[cGray!58!black, line width=0.22pt, rounded corners=1.0pt]
-  (12.60, 3.62) rectangle (13.52, 4.17);
+  (12.56, 3.82) rectangle (13.46, 4.16);
 \draw[cGray!78!black, line width=0.24pt]
-  (12.73, 4.00) rectangle (13.14, 4.09);
+  (12.66, 4.01) rectangle (13.12, 4.10);
 \draw[cGray!48!black, line width=0.24pt]
-  (12.78, 4.045) -- (12.89, 4.045) -- (12.89, 4.075)
-               -- (13.01, 4.075) -- (13.01, 4.045) -- (13.10, 4.045);
+  (12.70, 4.045) -- (12.83, 4.045) -- (12.83, 4.075)
+               -- (12.98, 4.075) -- (12.98, 4.045) -- (13.08, 4.045);
 \node[font=\sffamily\bfseries\fontsize{3.9}{4.7}\selectfont, text=cGray!74!black]
-  at (13.06, 3.82) {$V_{\mathrm{active}}$};
+  at (12.99, 3.94) {$V_{\mathrm{active}}$};
 \node[font=\sffamily\fontsize{3.0}{3.6}\selectfont, text=cGray!54!black]
-  at (13.06, 3.70) {bias};
-\fill[cRed!68!black] (13.31, 4.01) circle (0.020);
-\fill[cGray!55!black] (13.42, 4.01) circle (0.020);
-\draw[cGray!62!black, line width=0.30pt, rounded corners=1.0pt]
-  (13.42, 4.01) -- (13.66, 4.01) -- (13.66, 2.82) -- (13.42, 2.82);
+  at (12.99, 3.84) {bias};
+\fill[cRed!68!black] (13.30, 3.82) circle (0.020);
+\fill[cGray!55!black] (13.30, 2.82) circle (0.020);
+\draw[cGray!62!black, line width=0.34pt, rounded corners=0.8pt]
+  (13.30, 3.78) -- (13.30, 2.82);
 
 % Fixed clip and charge-trapping cantilever.
 \fill[cGray!10] (11.55, 2.84) rectangle (12.10, 2.96);
@@ -2101,16 +2101,16 @@
   \shade[ball color=cRed!82!black] (\cx,\cy) circle (\rr);
   \draw[cRed!95!black, line width=0.25pt] (\cx,\cy) circle (\rr);
 }
-\draw[cRed!45!black, line width=0.22pt]
-  (11.58,2.35) .. controls (11.20,2.58) and (10.42,2.67) .. (9.78,2.63);
+\draw[cRed!55!black, line width=0.32pt]
+  (11.50,2.38) .. controls (11.10,2.78) and (10.32,3.00) .. (9.62,3.00);
 \node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,
       inner xsep=0.9pt, inner ysep=0.45pt,
       font=\sffamily\bfseries\fontsize{4.0}{4.8}\selectfont, text=cRed!76!black]
-  at (9.58, 2.63) {$q_{\mathrm{tr}}$};
+  at (9.56, 2.84) {$q_{\mathrm{tr}}$};
 \node[anchor=west, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=1.0pt, inner ysep=0.45pt,
       font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!76!black]
-  at (9.86, 2.63) {trapped charge};
+  at (9.56, 3.04) {trapped charge};
 
 % Coulomb-only response, intentionally stronger than the apparatus.
 \draw[panelFCoulombRepulsionArrow, -{Stealth[length=8.6pt,width=6.2pt]}, cRed!82!black, line width=1.08pt]

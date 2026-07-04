@@ -972,6 +972,71 @@ def _strengthened_panel_f_overlay(block: str) -> str | None:
             "\\draw[<->, cGray!62!black, line width=0.46pt]",
         ),
         ("(10.58, 0.54) -- (13.18, 0.54);", "(10.42, 0.54) -- (13.18, 0.54);"),
+        ("opacity=0.03", "opacity=0.018"),
+        (
+            "(12.65, 3.55) rectangle (13.58, 4.12);",
+            "(12.58, 3.78) rectangle (13.48, 4.14);",
+        ),
+        (
+            "\\fill[cGray!3] (12.60, 3.62) rectangle (13.52, 4.17);",
+            "\\fill[cGray!3] (12.56, 3.82) rectangle (13.46, 4.16);",
+        ),
+        (
+            "(12.60, 3.62) rectangle (13.52, 4.17);",
+            "(12.56, 3.82) rectangle (13.46, 4.16);",
+        ),
+        (
+            "(12.73, 4.00) rectangle (13.14, 4.09);",
+            "(12.66, 4.01) rectangle (13.12, 4.10);",
+        ),
+        (
+            "(12.78, 4.045) -- (12.89, 4.045) -- (12.89, 4.075)\n"
+            "               -- (13.01, 4.075) -- (13.01, 4.045) -- (13.10, 4.045);",
+            "(12.70, 4.045) -- (12.83, 4.045) -- (12.83, 4.075)\n"
+            "               -- (12.98, 4.075) -- (12.98, 4.045) -- (13.08, 4.045);",
+        ),
+        (
+            "at (13.06, 3.82) {$V_{\\mathrm{active}}$};",
+            "at (12.99, 3.94) {$V_{\\mathrm{active}}$};",
+        ),
+        ("at (13.06, 3.70) {bias};", "at (12.99, 3.84) {bias};"),
+        ("(13.31, 4.01) circle (0.020)", "(13.30, 3.82) circle (0.020)"),
+        ("(13.42, 4.01) circle (0.020)", "(13.30, 2.82) circle (0.020)"),
+        (
+            "\\draw[cGray!62!black, line width=0.30pt, rounded corners=1.0pt]",
+            "\\draw[cGray!62!black, line width=0.34pt, rounded corners=0.8pt]",
+        ),
+        (
+            "(13.42, 4.01) -- (13.66, 4.01) -- (13.66, 2.82) -- (13.42, 2.82);",
+            "(13.30, 3.78) -- (13.30, 2.82);",
+        ),
+        (
+            "\\draw[cRed!45!black, line width=0.22pt]",
+            "\\draw[cRed!55!black, line width=0.32pt]",
+        ),
+        (
+            "(11.58,2.35) .. controls (11.20,2.58) and (10.42,2.67) .. (9.78,2.63);",
+            "(11.50,2.38) .. controls (11.10,2.78) and (10.32,3.00) .. (9.62,3.00);",
+        ),
+        (
+            "at (9.58, 2.63) {$q_{\\mathrm{tr}}$};",
+            "at (9.56, 2.84) {$q_{\\mathrm{tr}}$};",
+        ),
+        (
+            "at (9.86, 2.63) {trapped charge};",
+            "at (9.56, 3.04) {trapped charge};",
+        ),
+        (
+            "\\node at (12.13, 3.08) {$q_{\\mathrm{tr}}$ trapped charge};",
+            "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,\n"
+            "      inner xsep=0.9pt, inner ysep=0.45pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{4.0}{4.8}\\selectfont, text=cRed!76!black]\n"
+            "  at (9.56, 2.84) {$q_{\\mathrm{tr}}$};\n"
+            "\\node[anchor=west, fill=white, fill opacity=0.94, text opacity=1,\n"
+            "      inner xsep=1.0pt, inner ysep=0.45pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}\\selectfont, text=cRed!76!black]\n"
+            "  at (9.56, 3.04) {trapped charge};",
+        ),
     )
     for old, new in replacements:
         replacement = replacement.replace(old, new)

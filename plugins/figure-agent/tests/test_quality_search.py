@@ -589,12 +589,13 @@ def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_bloc
     assert apparatus["operation_scale"] == "panel_block"
     assert apparatus["template_id"] == "v5f_panel_f_redraw_overlay_v1"
     assert operation["operation_scale"] == "panel_block"
-    assert "opacity=0.03" in operation["replacement"]
+    assert "opacity=0.018" in operation["replacement"]
     assert "rounded corners=1.0pt" in operation["replacement"]
-    assert "(13.66, 2.82)" in operation["replacement"]
+    assert "(13.30, 3.78) -- (13.30, 2.82);" in operation["replacement"]
     assert "circle ({1.90*\\rr})" in operation["replacement"]
     assert "ball color=cRed!82!black" in operation["replacement"]
-    assert "at (9.58, 2.63) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
+    assert "at (9.56, 2.84) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
+    assert "at (9.56, 3.04) {trapped charge};" in operation["replacement"]
     assert "Stealth[length=8.6pt,width=6.2pt]" in operation["replacement"]
     assert "\\draw[<->, cGray!62!black, line width=0.50pt]" in operation["replacement"]
 
