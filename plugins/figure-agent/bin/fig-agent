@@ -260,6 +260,7 @@ HELPER_SCRIPTS = {
     "critique_brief.py",
     "critique_lint.py",
     "critique_reference_pack.py",
+    "detector_demotion.py",
     "detector_feedback_ledger.py",
     "diagnostic_artifact_provenance.py",
     "external_vision_review.py",

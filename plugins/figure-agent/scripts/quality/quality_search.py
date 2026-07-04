@@ -499,6 +499,57 @@ def _tool_defect_candidates(driver: dict[str, Any], ledger: dict[str, Any]) -> l
                 ),
             }
         )
+    stop_routes = loop.get("stop_routes")
+    if isinstance(stop_routes, list):
+        exhausted = [
+            route
+            for route in stop_routes
+            if isinstance(route, dict) and route.get("stop_cause") == "lever_exhausted"
+        ]
+        if exhausted:
+            candidates.append(
+                {
+                    "id": f"TD{len(candidates) + 1:03d}",
+                    "symptom": "candidate family is exhausted for a loop subregion",
+                    "expected_behavior": (
+                        "lever_exhausted stop routes should become explicit tool work "
+                        "instead of silent no-op loop termination"
+                    ),
+                    "actual_behavior": {"stop_routes": exhausted},
+                    "minimal_reproduction": "fig-agent loop <fixture> --goal <goal> --json",
+                    "recommended_fix": (
+                        "add or widen the missing candidate family named by the stop route "
+                        "payload, then rerun quality-search"
+                    ),
+                }
+            )
+    diagnosis = loop.get("stop_diagnosis")
+    histogram = diagnosis.get("cause_histogram") if isinstance(diagnosis, dict) else {}
+    decision_weak_count = (
+        int(histogram.get("decision_weak") or 0) if isinstance(histogram, dict) else 0
+    )
+    auto_remedy = loop.get("auto_remedy") if isinstance(loop.get("auto_remedy"), dict) else {}
+    remedy_ineffective = auto_remedy.get("status") == "remedy_ineffective"
+    if decision_weak_count >= 2 or remedy_ineffective:
+        candidates.append(
+            {
+                "id": f"TD{len(candidates) + 1:03d}",
+                "symptom": "decision_weak stop recurred after the loop had diagnostic evidence",
+                "expected_behavior": (
+                    "repeated decision_weak or ineffective plumbing remedies should be "
+                    "tracked as tool defects"
+                ),
+                "actual_behavior": {
+                    "decision_weak_count": decision_weak_count,
+                    "auto_remedy": auto_remedy,
+                },
+                "minimal_reproduction": "fig-agent loop <fixture> --goal <goal> --json",
+                "recommended_fix": (
+                    "repair detector evidence routing or the auto-remedy path before "
+                    "spending more iterations on candidate scoring"
+                ),
+            }
+        )
     metrics = ledger.get("actionability_metrics")
     if isinstance(metrics, dict):
         unknown = int(metrics.get("unknown_panel_defect_count") or 0)

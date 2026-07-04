@@ -175,6 +175,39 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
     assert "unlinked micro defects" in symptoms
 
 
+def test_tool_defect_candidates_include_loop_stop_attribution() -> None:
+    candidates = quality_search._tool_defect_candidates(
+        {
+            "loop_checkpoint": {
+                "final_stop_reason": "remedy_ineffective",
+                "stop_routes": [
+                    {
+                        "subregion_id": "sel:abc",
+                        "stop_cause": "lever_exhausted",
+                        "payload": "no_bounded_operation",
+                    }
+                ],
+                "stop_diagnosis": {
+                    "cause_histogram": {
+                        "decision_weak": 2,
+                        "lever_exhausted": 1,
+                    }
+                },
+                "auto_remedy": {
+                    "cause": "stale_detector_evidence",
+                    "status": "remedy_ineffective",
+                },
+            }
+        },
+        {},
+    )
+
+    symptoms = " ".join(item["symptom"] for item in candidates)
+    assert "candidate family is exhausted" in symptoms
+    assert "decision_weak stop recurred" in symptoms
+    assert "stale_detector_evidence" in json.dumps(candidates)
+
+
 def _write_minimal_fixture(
     workspace: Path,
     name: str = "quality_demo",
