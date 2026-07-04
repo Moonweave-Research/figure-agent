@@ -16,6 +16,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import candidate_rank
+import candidate_render
 import fig_driver
 import fixture_identity
 import quality_defect_ledger
@@ -24,6 +26,7 @@ import runtime_paths
 
 SCHEMA = "figure-agent.quality-search-plan.v0"
 EXECUTE_SCHEMA = "figure-agent.quality-search-execute.v0"
+ZERO_HASH = "sha256:" + "0" * 64
 
 PROGRESS_ACTIONS = {
     "create_or_fix_source",
@@ -783,6 +786,250 @@ def _selector_binding_state(selectors: list[dict[str, Any]]) -> str:
     return "unbound"
 
 
+def _candidate_hash(payload: dict[str, Any]) -> str:
+    stable = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return _sha256_text(stable)
+
+
+def _line_width_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+    minimum_pt: float,
+) -> tuple[str, str] | None:
+    try:
+        start = int(selector["line_start"])
+        end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if start < 1 or end < start or end > len(lines):
+        return None
+    for line in lines[start - 1 : end]:
+        match = re.search(r"line width=(?P<value>\d+(?:\.\d+)?)pt", line)
+        if match is None:
+            continue
+        value = float(match.group("value"))
+        if value >= minimum_pt:
+            continue
+        replacement_value = f"{minimum_pt:.2f}".rstrip("0").rstrip(".")
+        replacement_line = (
+            line[: match.start()]
+            + f"line width={replacement_value}pt"
+            + line[match.end() :]
+        )
+        return line, replacement_line
+    return None
+
+
+def _candidate_operation_for_spec(
+    spec: dict[str, Any],
+    *,
+    lines: list[str],
+    source_ref: str,
+) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
+    family = str(spec.get("family") or "")
+    selectors = spec.get("source_selectors")
+    if not isinstance(selectors, list):
+        return None, {"code": "missing_source_selectors", "candidate_id": str(spec.get("id"))}
+    bound_selectors = [
+        selector
+        for selector in selectors
+        if isinstance(selector, dict) and selector.get("binding_state") == "bound"
+    ]
+    if not bound_selectors:
+        return None, {"code": "no_bound_source_selector", "candidate_id": str(spec.get("id"))}
+    preferred_panel = {
+        "hierarchy_rebalance": "C",
+        "apparatus_strengthen": "F",
+        "density_reduce": "E",
+    }.get(family)
+    selector = next(
+        (item for item in bound_selectors if item.get("panel") == preferred_panel),
+        bound_selectors[0],
+    )
+    minimum_pt = {
+        "hierarchy_rebalance": 0.9,
+        "apparatus_strengthen": 0.8,
+        "density_reduce": 0.65,
+    }.get(family, 0.65)
+    replacement = _line_width_replacement(
+        lines=lines,
+        selector=selector,
+        minimum_pt=minimum_pt,
+    )
+    if replacement is None:
+        return None, {
+            "code": "no_supported_style_token",
+            "candidate_id": str(spec.get("id")),
+            "panel": str(selector.get("panel") or ""),
+        }
+    original, new_text = replacement
+    operation = {
+        "kind": "replace_text",
+        "semantic_kind": f"quality_search_{family}",
+        "path": source_ref,
+        "original": original,
+        "replacement": new_text,
+    }
+    return operation, None
+
+
+def _candidate_set_from_specs(
+    name: str,
+    specs: list[dict[str, Any]],
+    *,
+    source_context: dict[str, Any],
+    paths: runtime_paths.RuntimePaths,
+) -> dict[str, Any]:
+    source_path = _fixture_source_path(paths, name)
+    source_ref = _source_reference(name)
+    base = {
+        "tex_hash": source_context.get("source_hash") or ZERO_HASH,
+        "status_hash": ZERO_HASH,
+        "intent_model_hash": ZERO_HASH,
+    }
+    if not source_path.is_file() or source_path.is_symlink():
+        return {
+            "schema": "figure-agent.candidate-set.v1",
+            "fixture": name,
+            "base": base,
+            "candidates": [],
+            "refusals": [{"code": str(source_context.get("source_state") or "source_missing")}],
+        }
+    lines = source_path.read_text(encoding="utf-8").splitlines()
+    candidates: list[dict[str, Any]] = []
+    refusals: list[dict[str, str]] = []
+    for spec in specs:
+        if spec.get("family") == "null_baseline":
+            continue
+        operation, refusal = _candidate_operation_for_spec(spec, lines=lines, source_ref=source_ref)
+        if operation is None:
+            if refusal is not None:
+                refusals.append(refusal)
+            continue
+        candidate_id = str(spec.get("id") or f"QS{len(candidates) + 1:03d}")
+        target_panels = (
+            spec.get("target_panels")
+            if isinstance(spec.get("target_panels"), list)
+            else []
+        )
+        target_panel = target_panels[0] if target_panels else None
+        stable_hash_payload = {
+            "candidate_id": candidate_id,
+            "family": spec.get("family"),
+            "source_hash": source_context.get("source_hash"),
+            "operation": operation,
+        }
+        candidates.append(
+            {
+                "id": candidate_id,
+                "family": spec.get("family"),
+                "edit_class": "quality_search_style_token",
+                "edit_family": spec.get("family"),
+                "target": {
+                    "panel": target_panel,
+                    "subregion": str(spec.get("target_scope") or "quality_search"),
+                },
+                "selectors": spec.get("source_selectors", []),
+                "operations": [operation],
+                "risk": "medium",
+                "expected_delta": [str(spec.get("expected_visual_movement") or "")],
+                "semantic_risks": [
+                    "review-only art-direction candidate; scientific labels are protected"
+                ],
+                "boundedness": {
+                    "changes": "one style token inside a bound panel region",
+                    "does_not_change": [
+                        "fixture source unless separately applied",
+                        "accepted state",
+                        "tracked golden exports",
+                        "release state",
+                    ],
+                    "requires_human_review": True,
+                },
+                "rollback": {"strategy": "reverse_operations"},
+                "verification": {
+                    "required_commands": [
+                        f"fig-agent compile {name} --strict",
+                        f"fig-agent status {name} --json",
+                    ]
+                },
+                "apply_authority": "review_only",
+                "blocked_if": ["semantic_invariant_failed", "render_failed", "human_rejected"],
+                "candidate_hash": _candidate_hash(stable_hash_payload),
+            }
+        )
+    return {
+        "schema": "figure-agent.candidate-set.v1",
+        "fixture": name,
+        "base": base,
+        "candidates": candidates,
+        "refusals": refusals,
+    }
+
+
+def _render_candidate_batch(
+    name: str,
+    candidate_set: dict[str, Any],
+    *,
+    paths: runtime_paths.RuntimePaths,
+) -> dict[str, Any]:
+    if not candidate_set.get("candidates"):
+        return {
+            "schema": "figure-agent.candidate-render-result.v1",
+            "fixture": name,
+            "rendered": [],
+        }
+    return candidate_render.render_candidate_set(
+        name,
+        candidate_set,
+        workspace_root=paths.workspace_root,
+        plugin_root=paths.plugin_root,
+        compile=False,
+        export=False,
+        evaluate=False,
+    )
+
+
+def _candidate_manifest_path(
+    paths: runtime_paths.RuntimePaths,
+    name: str,
+    candidate_id: str,
+) -> Path:
+    return (
+        paths.examples_dir
+        / name
+        / "build"
+        / "candidates"
+        / candidate_id
+        / "candidate_manifest.json"
+    )
+
+
+def _rank_rendered_candidates(
+    name: str,
+    candidate_set: dict[str, Any],
+    *,
+    paths: runtime_paths.RuntimePaths,
+) -> list[dict[str, Any]]:
+    scores: list[dict[str, Any]] = []
+    candidates_by_id = {
+        str(candidate.get("id")): candidate
+        for candidate in candidate_set.get("candidates", [])
+        if isinstance(candidate, dict)
+    }
+    for candidate_id, candidate in candidates_by_id.items():
+        manifest_path = _candidate_manifest_path(paths, name, candidate_id)
+        if not manifest_path.is_file():
+            continue
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        scores.append(candidate_rank.score_manifest(manifest, candidate=candidate))
+    return sorted(
+        scores,
+        key=lambda score: (-float(score.get("rank_score") or 0.0), str(score.get("candidate_id"))),
+    )
+
+
 def _candidate_specs_from_plan(
     plan: dict[str, Any],
     *,
@@ -888,6 +1135,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
 def _candidate_scores(
     candidate_specs: list[dict[str, Any]],
     plan: dict[str, Any],
+    candidate_rankings: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     classifications = plan.get("classifications")
     release_blocker_only = any(
@@ -896,6 +1144,11 @@ def _candidate_scores(
         and item.get("blocks_search") is False
         for item in classifications or []
     )
+    rankings_by_id = {
+        str(score.get("candidate_id")): score
+        for score in candidate_rankings or []
+        if isinstance(score, dict)
+    }
     scores: list[dict[str, Any]] = []
     for spec in candidate_specs:
         family = str(spec.get("family") or "unknown")
@@ -903,21 +1156,34 @@ def _candidate_scores(
         if release_blocker_only and family != "null_baseline":
             score += 0.03
         score = round(min(score, 1.0), 4)
+        ranking = rankings_by_id.get(str(spec.get("id")))
+        render_status = (
+            str(ranking.get("render_status"))
+            if isinstance(ranking, dict)
+            else "not_rendered"
+        )
         scores.append(
             {
                 "candidate_id": spec.get("id"),
                 "family": family,
                 "evidence_score": score,
+                "rank_score": ranking.get("rank_score") if isinstance(ranking, dict) else None,
                 "witness": {
                     "state": "dry_scored",
                     "basis": [
                         "plan_next_operation",
                         "classification_blocks_search",
                         "candidate_family_priority",
+                        "candidate_sandbox_manifest",
                     ],
                 },
-                "render_status": "not_rendered",
+                "render_status": render_status,
                 "apply_authority": "review_only",
+                "effective_apply_authority": (
+                    ranking.get("effective_apply_authority")
+                    if isinstance(ranking, dict)
+                    else "review_only"
+                ),
             }
         )
     return scores
@@ -996,7 +1262,15 @@ def build_quality_search_execution(
         "families": QUALITY_SEARCH_FAMILY_REGISTRY,
     }
     candidate_specs = _candidate_specs_from_plan(plan, source_context=source_context)
-    scores = _candidate_scores(candidate_specs, plan)
+    candidate_set = _candidate_set_from_specs(
+        name,
+        candidate_specs,
+        source_context=source_context,
+        paths=paths,
+    )
+    render_results = _render_candidate_batch(name, candidate_set, paths=paths)
+    candidate_rankings = _rank_rendered_candidates(name, candidate_set, paths=paths)
+    scores = _candidate_scores(candidate_specs, plan, candidate_rankings)
     decision = _execution_decision(plan, scores)
     tool_defects = {
         "schema": "figure-agent.quality-search-tool-defects.v0",
@@ -1034,8 +1308,11 @@ def build_quality_search_execution(
             "classification_000.json",
             "policy_000.json",
             "family_registry_000.json",
+            "candidate_set_000.json",
+            "render_results_000.json",
             "candidate_specs_000.json",
             "candidate_scores_000.json",
+            "candidate_rankings_000.json",
             "decision_000.json",
             "tool_defect_candidates_000.json",
             "memory_events_000.json",
@@ -1050,6 +1327,8 @@ def build_quality_search_execution(
         },
         "policy_000.json": policy,
         "family_registry_000.json": family_registry,
+        "candidate_set_000.json": candidate_set,
+        "render_results_000.json": render_results,
         "candidate_specs_000.json": {
             "schema": "figure-agent.quality-search-candidate-specs.v0",
             "candidates": candidate_specs,
@@ -1057,6 +1336,10 @@ def build_quality_search_execution(
         "candidate_scores_000.json": {
             "schema": "figure-agent.quality-search-candidate-scores.v0",
             "scores": scores,
+        },
+        "candidate_rankings_000.json": {
+            "schema": "figure-agent.quality-search-candidate-rankings.v0",
+            "scores": candidate_rankings,
         },
         "decision_000.json": decision,
         "tool_defect_candidates_000.json": tool_defects,
@@ -1080,6 +1363,9 @@ def build_quality_search_execution(
         "plan": plan,
         "source_context": source_context,
         "candidate_specs": candidate_specs,
+        "candidate_set": candidate_set,
+        "render_results": render_results,
+        "candidate_rankings": candidate_rankings,
         "candidate_scores": scores,
         "decision": decision,
         "tool_defect_candidates": plan.get("tool_defect_candidates", []),

@@ -9,6 +9,7 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 for path in (
     PLUGIN_ROOT / "scripts",
+    PLUGIN_ROOT / "scripts" / "candidates",
     PLUGIN_ROOT / "scripts" / "driver",
     PLUGIN_ROOT / "scripts" / "quality",
 ):
@@ -251,6 +252,8 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert payload["decision"]["kind"] == "candidate_batch_ready"
     assert payload["decision"]["selected_candidate_id"] != "QSNULL"
     assert payload["decision"]["evidence_score"] > 0
+    assert payload["candidate_set"]["candidates"] == []
+    assert payload["render_results"]["rendered"] == []
     assert len(payload["candidate_specs"]) == 4
     assert {item["family"] for item in payload["candidate_specs"]} >= {
         "hierarchy_rebalance",
@@ -277,8 +280,11 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     run_dir = tmp_path / payload["run_dir"]
     assert (run_dir / "run_manifest.json").is_file()
     assert (run_dir / "family_registry_000.json").is_file()
+    assert (run_dir / "candidate_set_000.json").is_file()
+    assert (run_dir / "render_results_000.json").is_file()
     assert (run_dir / "candidate_specs_000.json").is_file()
     assert (run_dir / "candidate_scores_000.json").is_file()
+    assert (run_dir / "candidate_rankings_000.json").is_file()
     assert (run_dir / "decision_000.json").is_file()
     decision = json.loads((run_dir / "decision_000.json").read_text(encoding="utf-8"))
     assert decision == payload["decision"]
@@ -305,8 +311,10 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     tex_source = "\n".join(
         [
             "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
             "\\node at (0,0) {mobility edge};",
             "% =============== Column F -- Mechanical =================",
+            "\\draw[cRed!75!black, line width=0.50pt] (0,0) -- (1,0);",
             "\\node at (1,1) {Coulomb repulsion};",
         ]
     )
@@ -332,10 +340,28 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     apparatus_selectors = {item["panel"]: item for item in apparatus["source_selectors"]}
     assert hierarchy_selectors["C"]["binding_state"] == "bound"
     assert hierarchy_selectors["C"]["line_start"] == 1
-    assert hierarchy_selectors["C"]["line_end"] == 2
+    assert hierarchy_selectors["C"]["line_end"] == 3
     assert hierarchy_selectors["F"]["binding_state"] == "bound"
     assert apparatus_selectors["F"]["binding_state"] == "bound"
     assert apparatus["witness"]["source_binding_state"] == "bound"
+    assert len(payload["candidate_set"]["candidates"]) == 3
+    first_candidate = payload["candidate_set"]["candidates"][0]
+    assert first_candidate["id"] == "QS001"
+    assert first_candidate["operations"][0]["kind"] == "replace_text"
+    assert "line width=0.9pt" in first_candidate["operations"][0]["replacement"]
+    assert len(payload["render_results"]["rendered"]) == 3
+    assert payload["candidate_rankings"][0]["candidate_id"] == "QS001"
+    sandbox_source = (
+        tmp_path
+        / "examples"
+        / "fig_demo"
+        / "build"
+        / "candidates"
+        / "QS001"
+        / "fig_demo.tex"
+    )
+    assert sandbox_source.is_file()
+    assert "line width=0.9pt" in sandbox_source.read_text(encoding="utf-8")
 
 
 def test_fig_agent_quality_search_execute_cli_writes_only_scratch(tmp_path: Path) -> None:
