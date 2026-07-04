@@ -144,6 +144,47 @@ def test_auto_remedy_executes_critique_scaffold_and_fails_loud_when_unchanged(
     assert remedy["status"] == "remedy_ineffective"
 
 
+def test_auto_remedy_does_not_repeat_same_cause_in_one_run(tmp_path: Path) -> None:
+    commands: list[list[str]] = []
+    (tmp_path / "iteration_001.json").write_text(
+        json.dumps(
+            {
+                "auto_remedy": {
+                    "cause": "critique_missing",
+                    "status": "remedy_ineffective",
+                }
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    def runner(command: list[str], *, repo_root: Path) -> fig_loop.CommandResult:
+        commands.append(command)
+        return fig_loop.CommandResult(returncode=0, stdout="ok", stderr="")
+
+    remedy, _report = fig_loop._apply_auto_remedy(
+        "fig2_trap_design_space",
+        tmp_path,
+        repo_root=tmp_path,
+        status_result={"critique_state": "MISSING"},
+        stop_report={"subregions": []},
+        runner=runner,
+        diagnose=lambda *_args, **_kwargs: {},
+        status_reader=lambda _example_dir: {"critique_state": "MISSING"},
+    )
+
+    assert commands == []
+    assert remedy == {
+        "cause": "critique_missing",
+        "status": "remedy_ineffective",
+        "reason": "auto_remedy_already_attempted_for_cause",
+        "previous_status": "remedy_ineffective",
+        "command_results": [],
+    }
+
+
 def test_auto_remedy_reruns_compile_for_stale_detector_evidence(tmp_path: Path) -> None:
     commands: list[list[str]] = []
 

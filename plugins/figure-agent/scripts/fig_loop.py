@@ -324,6 +324,20 @@ def _remedy_ineffective(
     return False
 
 
+def _existing_auto_remedy_for_cause(run_dir: Path, cause: str) -> dict[str, Any] | None:
+    for iteration_path in sorted(run_dir.glob("iteration_*.json")):
+        try:
+            payload = json.loads(iteration_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        auto_remedy = payload.get("auto_remedy")
+        if isinstance(auto_remedy, dict) and auto_remedy.get("cause") == cause:
+            return auto_remedy
+    return None
+
+
 def _apply_auto_remedy(
     name: str,
     run_dir: Path,
@@ -338,6 +352,18 @@ def _apply_auto_remedy(
     plan = _auto_remedy_plan(name, status_result, stop_report)
     if plan is None:
         return None, stop_report
+    previous = _existing_auto_remedy_for_cause(run_dir, str(plan["cause"]))
+    if previous is not None:
+        return (
+            {
+                "cause": plan["cause"],
+                "status": "remedy_ineffective",
+                "reason": "auto_remedy_already_attempted_for_cause",
+                "previous_status": previous.get("status"),
+                "command_results": [],
+            },
+            stop_report,
+        )
     command_results: list[dict[str, Any]] = []
     for command in plan["commands"]:
         result = runner(command, repo_root=repo_root)
