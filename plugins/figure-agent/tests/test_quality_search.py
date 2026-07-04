@@ -672,6 +672,8 @@ def test_quality_search_policy_uses_epsilon_greedy_bandit_from_memory() -> None:
     assert decision["kind"] == "epsilon_greedy_family_bandit_v1"
     assert decision["selection_mode"] == "exploit"
     assert decision["selected_family"] == "hierarchy_rebalance"
+    assert decision["opaque_model_dependency"] is False
+    assert decision["statistics_source"] == "experience_log_via_quality_memory_index"
     assert decision["arm_statistics"]["hierarchy_rebalance"]["attempts"] == 4
     assert decision["arm_statistics"]["hierarchy_rebalance"]["empirical_reward"] == 1.0
 
