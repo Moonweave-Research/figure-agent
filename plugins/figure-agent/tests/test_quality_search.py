@@ -507,6 +507,93 @@ def test_quality_search_apparatus_strengthen_emits_panel_block_candidate(
     assert "Panel F apparatus reads" in score["expected_visual_movement"]
 
 
+def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_block(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_with_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[cGray!30!black, opacity=0.045]",
+            "  (12.65, 3.55) rectangle (13.58, 4.12);",
+            "\\draw[cGray!58!black, line width=0.26pt]",
+            "  (12.60, 3.62) rectangle (13.52, 4.17);",
+            "\\node at (13.06, 3.82) {$V_{\\mathrm{active}}$};",
+            "\\node at (13.06, 3.70) {bias};",
+            "\\draw[cGray!60!black, line width=0.24pt, rounded corners=1.1pt]",
+            "  (13.42, 4.01) -- (13.62, 4.01) -- (13.62, 2.82) -- (13.42, 2.82);",
+            "\\draw[cGray!86!black, line width=0.66pt] (13.18, 0.46) rectangle (13.42, 2.82);",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\foreach \\cx/\\cy/\\rr in {11.62/2.28/0.075,11.43/1.86/0.082} {",
+            (
+                "  \\draw[cRed!35!white, line width=0.25pt, opacity=0.36] "
+                "(\\cx,\\cy) circle ({1.65*\\rr});"
+            ),
+            "  \\shade[ball color=cRed!76!black] (\\cx,\\cy) circle (\\rr);",
+            "}",
+            "\\draw[cRed!45!black, line width=0.22pt]",
+            "  (11.58,2.35) .. controls (11.28,2.56) and (10.90,2.64) .. (10.48,2.62);",
+            "\\node at (9.80, 2.60) {$q_{\\mathrm{tr}}$};",
+            "\\node at (10.08, 2.60) {trapped charge};",
+            (
+                "\\draw[panelFCoulombRepulsionArrow, "
+                "-{Stealth[length=7.6pt,width=5.6pt]}, "
+                "cRed!82!black, line width=0.94pt]"
+            ),
+            "  (11.02, 1.18) -- (9.60, 1.18);",
+            "\\node at (9.72, 1.54) {Coulomb};",
+            "\\node at (9.73, 1.45) {repulsion};",
+            "\\draw[<->, cGray!62!black, line width=0.38pt]",
+            "  (10.42, 0.54) -- (13.18, 0.54);",
+            "\\node at (11.88, 0.31) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="apparatus panel block current v5f",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    apparatus = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "apparatus_strengthen"
+    ][0]
+    operation = apparatus["operations"][0]
+    assert apparatus["operation_scale"] == "panel_block"
+    assert apparatus["template_id"] == "v5f_panel_f_redraw_overlay_v1"
+    assert operation["operation_scale"] == "panel_block"
+    assert "opacity=0.03" in operation["replacement"]
+    assert "rounded corners=1.0pt" in operation["replacement"]
+    assert "(13.66, 2.82)" in operation["replacement"]
+    assert "circle ({1.90*\\rr})" in operation["replacement"]
+    assert "ball color=cRed!82!black" in operation["replacement"]
+    assert "at (9.58, 2.63) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
+    assert "Stealth[length=8.6pt,width=6.2pt]" in operation["replacement"]
+    assert "\\draw[<->, cGray!62!black, line width=0.50pt]" in operation["replacement"]
+
+
 def test_quality_search_policy_uses_memory_prior_and_exploration_bonus() -> None:
     plan = {
         "state": {

@@ -929,6 +929,33 @@ def _panel_f_overlay_has_protected_labels(block: str) -> bool:
 def _strengthened_panel_f_overlay(block: str) -> str | None:
     replacement = block
     replacements = (
+        ("opacity=0.045", "opacity=0.03"),
+        (
+            "\\draw[cGray!58!black, line width=0.26pt]",
+            "\\draw[cGray!58!black, line width=0.22pt, rounded corners=1.0pt]",
+        ),
+        (
+            "\\draw[cGray!60!black, line width=0.24pt, rounded corners=1.1pt]",
+            "\\draw[cGray!62!black, line width=0.30pt, rounded corners=1.0pt]",
+        ),
+        (
+            "(13.42, 4.01) -- (13.62, 4.01) -- (13.62, 2.82) -- (13.42, 2.82);",
+            "(13.42, 4.01) -- (13.66, 4.01) -- (13.66, 2.82) -- (13.42, 2.82);",
+        ),
+        ("circle ({1.65*\\rr})", "circle ({1.90*\\rr})"),
+        ("ball color=cRed!76!black", "ball color=cRed!82!black"),
+        (
+            "(11.58,2.35) .. controls (11.28,2.56) and (10.90,2.64) .. (10.48,2.62);",
+            "(11.58,2.35) .. controls (11.20,2.58) and (10.42,2.67) .. (9.78,2.63);",
+        ),
+        ("at (9.80, 2.60) {$q_{\\mathrm{tr}}$};", "at (9.58, 2.63) {$q_{\\mathrm{tr}}$};"),
+        ("at (10.08, 2.60) {trapped charge};", "at (9.86, 2.63) {trapped charge};"),
+        ("Stealth[length=7.6pt,width=5.6pt]", "Stealth[length=8.6pt,width=6.2pt]"),
+        ("line width=0.94pt", "line width=1.08pt"),
+        (
+            "\\draw[<->, cGray!62!black, line width=0.38pt]",
+            "\\draw[<->, cGray!62!black, line width=0.50pt]",
+        ),
         ("opacity=0.13", "opacity=0.08"),
         ("line width=0.34pt, rounded corners=1.2pt", "line width=0.28pt, rounded corners=1.2pt"),
         ("line width=0.56pt", "line width=0.72pt"),

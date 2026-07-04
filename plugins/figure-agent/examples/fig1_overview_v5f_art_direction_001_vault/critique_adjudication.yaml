@@ -1,10 +1,10 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v5f_art_direction_001_vault
-source_critique_hash: sha256:472da23f41fd0853ec755b3587a27ecc12ec2f576414866f76a182c58d4a1148
+source_critique_hash: sha256:9be0cd412f7a3e2015e9cd75f2745f153e0eceb11db8df45980af61e969a2dfe
 decisions:
 - finding_id: C001
-  decision: resolved
-  reason: "User-directed Panel F quality iteration applied: equipment faceplate was strengthened, q_tr/trapped-charge labeling was compacted, and fresh critique accounting covers the new detector candidates; promotion remains a separate acceptance gate."
+  decision: needs_human
+  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
   patch_target: examples/fig1_overview_v5f_art_direction_001_vault/fig1_overview_v5f_art_direction_001_vault.tex
     lines 2060-2128
-  evidence: fig1_overview_v5f_art_direction_001_vault.tex Panel F patch plus critique.md fresh detector accounting.
+  evidence: critique.md finding C001.
