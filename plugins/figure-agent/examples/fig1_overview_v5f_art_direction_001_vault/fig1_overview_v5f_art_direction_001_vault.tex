@@ -1338,8 +1338,8 @@
 % Visual hierarchy: HV+ = compact source / V_s meter = larger read-out instrument.
 % Output terminal at (6.155, 4.13) stays inside; corona needle at x=6.155 stays
 % under box center (need slight shift: x 6.15 -> 6.155).
-\fill[cGray!6, rounded corners=1.2pt] (5.83, 4.12) rectangle (6.48, 4.37);
-\draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]
+\fill[cGray!6, opacity=0.70, rounded corners=1.2pt] (5.83, 4.12) rectangle (6.48, 4.37);
+\draw[cGray!48!black, line width=0.22pt, rounded corners=1.2pt]
   (5.83, 4.12) rectangle (6.48, 4.37);
 % Display — iter 50: enlarged vertically 0.07→0.16cm (was squashed 9:1 flat
 % per user "신호 찌그러짐"). New extent 4.22..4.38.
@@ -1350,12 +1350,12 @@
 % room for a status LED dot at right side (x=6.41, y=4.26) — small cRed!85
 % dot at 0.018cm radius signaling "HV ON". Subtle but adds active state
 % identity to PRIMARY tier instrument.
-\fill[cGray!70!black, rounded corners=1pt] (5.90, 4.20) rectangle (6.36, 4.33);
+\fill[cGray!55!black, opacity=0.78, rounded corners=1pt] (5.90, 4.20) rectangle (6.36, 4.33);
 \draw[cGray!85!black, line width=0.15pt, rounded corners=1pt]
   (5.90, 4.20) rectangle (6.36, 4.33);
 % Instrument-substance pass (2026-06-01): glass-sheen highlight so the dark
 % display reads as a powered screen, consistent with the SMU upgrade.
-\fill[cGray!45!black, opacity=0.5] (5.92, 4.318) rectangle (6.34, 4.324);
+\fill[cGray!45!black, opacity=0.20] (5.92, 4.318) rectangle (6.34, 4.324);
 % iter 32: HV+ status LED — cRed dot indicating active discharge state.
 % iter E16 (M1 Panel E critical review): square-wave pulse trace read as
 % "pulse generator". Corona discharge is DC HV. Replaced with the standard
@@ -1469,7 +1469,7 @@
   \fill[cRed!55!black] (\cx, 3.62) circle (0.034);
   \draw[cRed!75!black, line width=0.16pt] (\cx, 3.62) circle (0.034);
   \node[font=\sffamily\bfseries\fontsize{4}{4.8}\selectfont, text=white,
-        inner sep=0pt] at (\cx, 3.62) {$+$};
+        opacity=0.72, inner sep=0pt] at (\cx, 3.62) {$+$};
 }
 
 % ----- Surface voltmeter probe (RIGHT, V_s readout) — iter 6 disk-on-shaft -----
@@ -1572,8 +1572,8 @@
 % iter 16 follow-up: V_s meter cool metallic to match HV+ box.
 % Layout fix (2026-06-01, user): box raised +0.12 to fill top space and sit
 % above the slab/probe; internal display re-centered + shrunk so the label fits.
-\fill[cGray!6, rounded corners=1.2pt] (7.68, 3.70) rectangle (8.68, 4.22);
-\draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]
+\fill[cGray!6, opacity=0.70, rounded corners=1.2pt] (7.68, 3.70) rectangle (8.68, 4.22);
+\draw[cGray!48!black, line width=0.22pt, rounded corners=1.2pt]
   (7.68, 3.70) rectangle (8.68, 4.22);
 % Goal-1 elem-iter (2026-06-04): inner faceplate bezel — the 2026-06-01 substance
 % pass gave V_s-meter the glass-sheen but NOT the bezel that SMU/V_active carry.
@@ -1584,11 +1584,11 @@
 % iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
 % smaller (2pt→1.5pt), decay curve single-bezier (no kink).
 % Display — iter 50: enlarged vertically 0.15→0.22cm (decay curve room).
-\fill[cGray!70!black, rounded corners=1pt] (7.80, 4.05) rectangle (8.56, 4.17);
+\fill[cGray!55!black, opacity=0.78, rounded corners=1pt] (7.80, 4.05) rectangle (8.56, 4.17);
 \draw[cGray!85!black, line width=0.15pt, rounded corners=1pt]
   (7.80, 4.05) rectangle (8.56, 4.17);
 % Instrument-substance pass (2026-06-01): glass-sheen highlight (matches SMU/HV+).
-\fill[cGray!45!black, opacity=0.5] (7.82, 4.158) rectangle (8.54, 4.165);
+\fill[cGray!45!black, opacity=0.20] (7.82, 4.158) rectangle (8.54, 4.165);
 % Panel E iter 12 [Panel E full-loop, 2026-05-27]: V_s meter display readout.
 % Removed empty x-y axes (left a vacant "scope ready" feel — schematic).
 % Added digital readout matching ESVM real instrument convention.

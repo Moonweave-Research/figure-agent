@@ -821,7 +821,8 @@ def test_quality_search_density_reduce_emits_panel_e_block_candidate(
             "\\fill[cGray!45!black, opacity=0.5] (5.92, 4.318) rectangle (6.34, 4.324);",
             "\\node at (5.80, 4.10) {HV+};",
             "\\foreach \\cx in {6.95, 7.30} {",
-            "  \\node at (\\cx, 3.62) {$+$};",
+            "  \\node[font=\\sffamily\\bfseries\\fontsize{4}{4.8}\\selectfont, text=white,",
+            "        inner sep=0pt] at (\\cx, 3.62) {$+$};",
             "}",
             "\\node[font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cGray!55!black,",
             "      anchor=south] at (7.1, 4.10) {$V_s$ probe};",
@@ -870,7 +871,22 @@ def test_quality_search_density_reduce_emits_panel_e_block_candidate(
     assert operation["panel"] == "E"
     assert operation["operation_scale"] == "panel_block"
     assert operation["template_id"] == "row2_panel_e_density_reduce_v1"
-    assert "\\foreach \\cx in {7.12} {" in operation["replacement"]
+    assert "\\foreach \\cx in {6.95, 7.30} {" in operation["replacement"]
+    assert (
+        "  \\node[font=\\sffamily\\bfseries\\fontsize{4}{4.8}\\selectfont, text=white,\n"
+        "        opacity=0.72, inner sep=0pt] at (\\cx, 3.62) {$+$};"
+        in operation["replacement"]
+    )
+    assert (
+        "\\node[font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cGray!55!black,\n"
+        "      anchor=south] at (7.1, 4.10) {$V_s$ probe};"
+        in operation["replacement"]
+    )
+    assert (
+        "\\node[font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cGray!55!black]\n"
+        "  at (8.18, 3.86) {$V_s$ meter};"
+        in operation["replacement"]
+    )
     score = [
         item
         for item in payload["candidate_scores"]
@@ -878,6 +894,36 @@ def test_quality_search_density_reduce_emits_panel_e_block_candidate(
     ][0]
     assert score["operation_scale"] == "panel_block"
     assert score["template_id"] == "row2_panel_e_density_reduce_v1"
+    applied_lines = operation["replacement"].splitlines(keepends=True)
+    applied_selector = {
+        "kind": "tex_selector.v1",
+        "binding_state": "bound",
+        "panel": "E",
+        "line_start": 1,
+        "line_end": len(applied_lines),
+    }
+    assert quality_search._density_panel_e_template_applied(
+        lines=applied_lines,
+        selector=applied_selector,
+    )
+    blocked_operation, refusal = quality_search._candidate_operation_for_spec(
+        {
+            "id": "QS003",
+            "family": "density_reduce",
+            "source_selectors": [applied_selector],
+        },
+        lines=applied_lines,
+        source_ref="fig_demo.tex",
+    )
+    assert blocked_operation is None
+    assert refusal == {
+        "code": "template_already_applied",
+        "candidate_id": "QS003",
+        "family": "density_reduce",
+        "operation_scale": "panel_block",
+        "template_id": "row2_panel_e_density_reduce_v1",
+        "panel": "E",
+    }
 
 
 def test_quality_search_goal_promotes_panel_f_apparatus_without_basin(

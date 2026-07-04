@@ -1456,20 +1456,10 @@ def _density_panel_e_block_replacement(
             "\\fill[cGray!45!black, opacity=0.20] (7.82, 4.158) rectangle (8.54, 4.165);",
         ),
         (
-            "\\foreach \\cx in {6.95, 7.30} {",
-            "\\foreach \\cx in {7.12} {",
-        ),
-        (
-            "\\node[font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cGray!55!black,\n"
-            "      anchor=south] at (7.1, 4.10) {$V_s$ probe};",
-            "\\node[font=\\sffamily\\fontsize{5.0}{6.0}\\selectfont, text=cGray!45!black,\n"
-            "      anchor=south] at (7.1, 4.10) {$V_s$ probe};",
-        ),
-        (
-            "\\node[font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cGray!55!black]\n"
-            "  at (8.18, 3.86) {$V_s$ meter};",
-            "\\node[font=\\sffamily\\fontsize{5.0}{6.0}\\selectfont, text=cGray!45!black]\n"
-            "  at (8.18, 3.86) {$V_s$ meter};",
+            "  \\node[font=\\sffamily\\bfseries\\fontsize{4}{4.8}\\selectfont, text=white,\n"
+            "        inner sep=0pt] at (\\cx, 3.62) {$+$};",
+            "  \\node[font=\\sffamily\\bfseries\\fontsize{4}{4.8}\\selectfont, text=white,\n"
+            "        opacity=0.72, inner sep=0pt] at (\\cx, 3.62) {$+$};",
         ),
     )
     for old, new in replacements:
@@ -1479,6 +1469,45 @@ def _density_panel_e_block_replacement(
     if not all(label in replacement for label in required):
         return None
     return original, replacement, line_start, line_end
+
+
+def _density_panel_e_template_applied(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> bool:
+    if str(selector.get("panel") or "").upper() != "E":
+        return False
+    try:
+        line_start = int(selector["line_start"])
+        line_end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return False
+    if line_start < 1 or line_end < line_start or line_end > len(lines):
+        return False
+    original = "".join(lines[line_start - 1 : line_end])
+    required = (
+        "$V_s(t)$",
+        "$g(E_t)$",
+        "Shallow",
+        "Deep",
+        "polymer",
+        "HV+",
+        "$V_s$ probe",
+        "$V_s$ meter",
+    )
+    applied_fragments = (
+        "\\fill[cGray!6, opacity=0.70, rounded corners=1.2pt] (5.83, 4.12) rectangle (6.48, 4.37);",
+        "\\draw[cGray!48!black, line width=0.22pt, rounded corners=1.2pt]\n"
+        "  (5.83, 4.12) rectangle (6.48, 4.37);",
+        "\\fill[cGray!6, opacity=0.70, rounded corners=1.2pt] (7.68, 3.70) rectangle (8.68, 4.22);",
+        "\\draw[cGray!48!black, line width=0.22pt, rounded corners=1.2pt]\n"
+        "  (7.68, 3.70) rectangle (8.68, 4.22);",
+        "        opacity=0.72, inner sep=0pt] at (\\cx, 3.62) {$+$};",
+    )
+    return all(label in original for label in required) and all(
+        fragment in original for fragment in applied_fragments
+    )
 
 
 def _candidate_operation_for_spec(
@@ -1537,6 +1566,15 @@ def _candidate_operation_for_spec(
                 "panel": "F",
             }
     if family == "density_reduce":
+        if _density_panel_e_template_applied(lines=lines, selector=selector):
+            return None, {
+                "code": "template_already_applied",
+                "candidate_id": str(spec.get("id")),
+                "family": family,
+                "operation_scale": "panel_block",
+                "template_id": DENSITY_PANEL_E_TEMPLATE_ID,
+                "panel": "E",
+            }
         density_block = _density_panel_e_block_replacement(lines=lines, selector=selector)
         if density_block is not None:
             original, new_text, line_start, line_end = density_block
