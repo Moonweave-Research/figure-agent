@@ -60,6 +60,58 @@ def test_fewer_than_three_eligible_events_yields_no_prior() -> None:
     assert index["eligible_prior_count"] == 0
     assert index["families"]["label_offset"]["attempts"] == 1
     assert index["families"]["label_offset"]["recommended_prior"] == 0.0
+    assert index["reward_sparsity"] == {
+        "state": "sparse",
+        "eligible_attempt_count": 1,
+        "prior_floor": 3,
+        "counterfactual_unchosen_count": 0,
+        "mitigations": [
+            "counterfactual_unchosen_rows",
+            "cross_fixture_transfer",
+        ],
+    }
+
+
+def test_sparse_reward_state_surfaces_counterfactual_mitigation() -> None:
+    index = quality_memory_index.build_memory_index(
+        [
+            _event(
+                "candidate_applied",
+                "label_offset",
+                "neutral",
+                "CAND001",
+                quality_movement="neutral",
+            ),
+            _event(
+                "candidate_rejected",
+                "label_offset",
+                "regressed",
+                "CAND002",
+                quality_movement="regressed",
+            ),
+            _event(
+                "candidate_unchosen",
+                "label_offset",
+                "unchosen",
+                "CAND003",
+                quality_movement=None,
+            ),
+        ]
+    )
+
+    assert index["eligible_prior_count"] == 0
+    assert index["families"]["label_offset"]["attempts"] == 2
+    assert index["families"]["label_offset"]["recommended_prior"] == 0.0
+    assert index["reward_sparsity"] == {
+        "state": "sparse",
+        "eligible_attempt_count": 2,
+        "prior_floor": 3,
+        "counterfactual_unchosen_count": 1,
+        "mitigations": [
+            "counterfactual_unchosen_rows",
+            "cross_fixture_transfer",
+        ],
+    }
 
 
 def _experience_record(

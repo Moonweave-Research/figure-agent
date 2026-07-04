@@ -179,6 +179,29 @@ def _recommended_prior(bucket: dict[str, Any]) -> float:
     return round(_clamp(raw * 0.25, -0.25, 0.25), 4)
 
 
+def _reward_sparsity(
+    *,
+    eligible_attempt_count: int,
+    counterfactual_count: int,
+    prior_floor: int = 3,
+) -> dict[str, Any]:
+    state = "sparse" if 0 < eligible_attempt_count < prior_floor else "sufficient"
+    if eligible_attempt_count == 0:
+        state = "empty"
+    return {
+        "state": state,
+        "eligible_attempt_count": eligible_attempt_count,
+        "prior_floor": prior_floor,
+        "counterfactual_unchosen_count": counterfactual_count,
+        "mitigations": [
+            "counterfactual_unchosen_rows",
+            "cross_fixture_transfer",
+        ]
+        if state == "sparse"
+        else [],
+    }
+
+
 def build_memory_index(
     events: list[dict[str, Any]],
     *,
@@ -191,6 +214,7 @@ def build_memory_index(
     eligible_prior_count = 0
     candidate_event_count = 0
     unknown_event_count = 0
+    counterfactual_unchosen_count = 0
 
     for event in events:
         if not event.get("candidate_id"):
@@ -204,6 +228,8 @@ def build_memory_index(
         state = _outcome_state(event)
         reward_state = _reward_state(event)
         event_type = str(event.get("event_type") or "")
+        if event_type == "candidate_unchosen":
+            counterfactual_unchosen_count += 1
         is_attempt = event_type in ATTEMPT_EVENT_TYPES
         family_known = not _is_unknown(family)
         target_known = not _is_unknown(panel) and not _is_unknown(subregion)
@@ -270,6 +296,10 @@ def build_memory_index(
         if candidate_event_count
         else 0.0,
         "eligible_prior_count": eligible_prior_count if eligible_prior_count >= 3 else 0,
+        "reward_sparsity": _reward_sparsity(
+            eligible_attempt_count=eligible_prior_count,
+            counterfactual_count=counterfactual_unchosen_count,
+        ),
         "families": dict(sorted(families.items())),
         "panel_patterns": dict(sorted(panel_patterns.items())),
         "disallowed_priors": [
