@@ -1,16 +1,17 @@
 ---
-description: Loop-centered one-fixture improvement orchestrator. Runs safe mechanical steps through /fig_run and stops at host, human, patch, SVG, release, or optional-improvement boundaries.
+description: Loop-centered one-fixture improvement orchestrator. Runs safe mechanical steps through /fig_run and can optionally launch rendered quality-search candidates at human or basin boundaries.
 ---
 
 Run a bounded improvement loop for one figure.
 
-**Usage**: `/fig_improve <name> --goal "<goal>" [--execute] [--max-loops N] [--json | --format json]`
+**Usage**: `/fig_improve <name> --goal "<goal>" [--execute] [--max-loops N] [--aggressive-candidates] [--candidate-iterations N] [--json | --format json]`
 
 Run from the plugin root:
 
 ```bash
 fig-agent improve <name> --goal "<goal>"
 fig-agent improve <name> --goal "<goal>" --execute --max-loops 10
+fig-agent improve <name> --goal "<goal>" --execute --aggressive-candidates
 fig-agent improve <name> --goal "<goal>" --format json
 ```
 
@@ -20,10 +21,20 @@ existing bounded `/fig_run` workflow and summarizes where the loop stopped.
 Output is JSON by default; `--json` and `--format json` are accepted as
 compatibility no-ops.
 
+With `--aggressive-candidates`, `/fig_improve` launches a dry witness
+`quality-search --execute` run when the loop reaches a human art-direction
+boundary, repeated boundary, or `basin_detected` local-polish basin. This
+generates, renders, crops, evaluates, and ranks bounded candidates under
+`.scratch/quality-search-runs/...`, then reports `aggressive_candidate_run`
+with the selected candidate and competitive candidates. Source mutation remains
+forbidden until an explicit apply decision.
+
 This command is boundary-stopped. It may run more than one internal cycle only
 when safe mechanical work hits the per-cycle step cap. It stops immediately at
 host critique, human, patch, SVG polish, release, or optional-improvement
-boundaries. After the required actor acts, rerun `/fig_improve`.
+boundaries unless `--aggressive-candidates` can safely produce rendered
+review-only candidates for the boundary. After the required actor acts, rerun
+`/fig_improve`.
 
 ## What It Can Do
 
@@ -48,6 +59,8 @@ The JSON result uses `schema: figure-agent.improve.v1` and includes:
 - `final_required_actor` — who must act next;
 - `next_operator_instruction` — one concrete next step;
 - `ready_improvement_summary` — optional Issue 94 candidates, when present.
+- `aggressive_candidate_run` — dry rendered candidate-search summary, when
+  `--aggressive-candidates` is enabled and a candidate boundary is reached.
 
 Common final stop reasons:
 
@@ -64,7 +77,7 @@ Use this when the user asks to loop repeatedly:
 
 ```text
 Run /fig_improve <name> --goal "close structural, visual, design, and journal-polish issues" --execute --max-loops 10.
-Stop at host critique, human gate, patch handoff, SVG polish, release, or optional-improvement boundaries.
+Use --aggressive-candidates when a human gate or basin would otherwise stop local drawing without rendered alternatives.
 Do not auto-patch source or mutate accepted/golden state.
 ```
 
