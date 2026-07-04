@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from PIL import Image
+
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 for path in (
     PLUGIN_ROOT / "scripts",
@@ -18,6 +20,11 @@ for path in (
 import quality_search  # noqa: E402
 
 FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
+
+
+def _write_png(path: Path, color: tuple[int, int, int]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (4, 4), color).save(path)
 
 
 def _driver_with_basin() -> dict[str, object]:
@@ -255,6 +262,7 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert payload["candidate_set"]["candidates"] == []
     assert payload["render_results"]["render_mode"] == "none"
     assert payload["render_results"]["rendered"] == []
+    assert payload["visual_evidence"]["state"] == "not_applicable"
     assert len(payload["candidate_specs"]) == 4
     assert {item["family"] for item in payload["candidate_specs"]} >= {
         "hierarchy_rebalance",
@@ -352,6 +360,7 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     assert "line width=0.9pt" in first_candidate["operations"][0]["replacement"]
     assert len(payload["render_results"]["rendered"]) == 3
     assert payload["render_results"]["render_mode"] == "prepare_only"
+    assert payload["visual_evidence"]["state"] == "not_applicable"
     assert payload["candidate_rankings"][0]["candidate_id"] == "QS001"
     assert payload["depone"]["verdict"]["contract_status"] == "pass"
     assert payload["depone"]["verdict"]["checks"]["candidate_count"] == 3
@@ -384,6 +393,68 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     )
     assert depone_contract["schema_version"] == "v105.verify_wedge"
     assert "quality-search-verdict.json" in depone_contract["required_evidence"]
+
+
+def test_quality_search_visual_evidence_writes_full_and_panel_contact_sheets(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_minimal_fixture(tmp_path, name="fig_demo")
+    _write_png(fixture / "build" / "fig_demo.png", (255, 255, 255))
+    candidate_dir = fixture / "build" / "candidates" / "QS001"
+    _write_png(candidate_dir / "render" / "candidate.png", (0, 0, 0))
+    _write_png(candidate_dir / "crops" / "original_panel_C.png", (255, 255, 255))
+    _write_png(candidate_dir / "crops" / "candidate_panel_C.png", (0, 0, 0))
+    render_manifest = {
+        "schema": "figure-agent.candidate-render-manifest.v1",
+        "candidate_id": "QS001",
+        "panel": "C",
+        "artifacts": {
+            "png": "build/candidates/QS001/render/candidate.png",
+            "before_crop": "build/candidates/QS001/crops/original_panel_C.png",
+            "after_crop": "build/candidates/QS001/crops/candidate_panel_C.png",
+        },
+        "stages": {
+            "compile": {"status": "success"},
+            "export": {"status": "success"},
+            "crop": {"status": "success"},
+            "evaluate": {"status": "rendered_needs_human_review"},
+        },
+        "visual_deltas": {"changed_pixel_ratio": 1.0},
+    }
+    (candidate_dir / "render_manifest.json").write_text(
+        json.dumps(render_manifest, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    paths = quality_search.runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+    run_dir = tmp_path / ".scratch" / "quality-search-runs" / "run-001"
+
+    evidence = quality_search._quality_search_visual_evidence(
+        "fig_demo",
+        {
+            "schema": "figure-agent.candidate-render-result.v1",
+            "fixture": "fig_demo",
+            "render_mode": "compile_export_crop_evaluate",
+            "rendered": [
+                {
+                    "candidate_id": "QS001",
+                    "render_manifest": "build/candidates/QS001/render_manifest.json",
+                }
+            ],
+        },
+        run_dir=run_dir,
+        paths=paths,
+    )
+
+    assert evidence["state"] == "complete"
+    assert evidence["min_full_changed_pixel_ratio"] == 1.0
+    assert evidence["full_comparisons"][0]["visual_deltas"]["changed_pixel_ratio"] == 1.0
+    full_sheet = tmp_path / evidence["contact_sheets"][0]["path"]
+    panel_sheet = tmp_path / evidence["panel_comparisons"][0]["contact_sheet"]
+    assert full_sheet.is_file()
+    assert panel_sheet.is_file()
 
 
 def test_quality_search_prefers_later_visible_panel_style_token(

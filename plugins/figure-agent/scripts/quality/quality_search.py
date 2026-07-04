@@ -18,6 +18,7 @@ from typing import Any
 
 import candidate_rank
 import candidate_render
+import candidate_visual_eval
 import fig_driver
 import fixture_identity
 import quality_defect_ledger
@@ -146,6 +147,12 @@ def _write_text(path: Path, payload: str) -> None:
     if path.parent.is_symlink():
         raise ValueError(f"refusing to write inside symlink directory: {path.parent}")
     path.write_text(payload, encoding="utf-8")
+
+
+def _ensure_output_dir(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    if path.is_symlink():
+        raise ValueError(f"refusing to write inside symlink directory: {path}")
 
 
 def _workspace_relative(paths: runtime_paths.RuntimePaths, path: Path) -> str:
@@ -1108,6 +1115,187 @@ def _rank_rendered_candidates(
     )
 
 
+def _fixture_artifact_path(
+    paths: runtime_paths.RuntimePaths,
+    name: str,
+    relative: Any,
+) -> Path | None:
+    if not isinstance(relative, str) or not relative:
+        return None
+    example_dir = paths.examples_dir / name
+    resolved = (example_dir / relative).resolve()
+    try:
+        resolved.relative_to(example_dir.resolve())
+    except ValueError:
+        return None
+    return resolved
+
+
+def _write_contact_sheet(
+    *,
+    entries: list[tuple[str, Path]],
+    out_path: Path,
+    max_width: int = 520,
+) -> None:
+    if not entries:
+        return
+    if out_path.is_symlink():
+        raise ValueError(f"refusing to write through symlink: {out_path}")
+    _ensure_output_dir(out_path.parent)
+    from PIL import Image, ImageDraw
+
+    tiles: list[tuple[str, Image.Image]] = []
+    label_height = 30
+    padding = 12
+    for label, path in entries:
+        with Image.open(path) as image:
+            tile = image.convert("RGB")
+        if tile.width > max_width:
+            height = max(1, round(tile.height * (max_width / tile.width)))
+            tile = tile.resize((max_width, height))
+        tiles.append((label, tile))
+    tile_width = max(tile.width for _label, tile in tiles)
+    tile_height = max(tile.height for _label, tile in tiles)
+    sheet_width = padding + len(tiles) * (tile_width + padding)
+    sheet_height = padding + label_height + tile_height + padding
+    sheet = Image.new("RGB", (sheet_width, sheet_height), "white")
+    draw = ImageDraw.Draw(sheet)
+    for index, (label, tile) in enumerate(tiles):
+        x = padding + index * (tile_width + padding)
+        y = padding + label_height
+        draw.text((x, padding), label, fill=(20, 20, 20))
+        sheet.paste(tile, (x, y))
+        draw.rectangle(
+            [x, y, x + tile.width - 1, y + tile.height - 1],
+            outline=(190, 190, 190),
+        )
+    sheet.save(out_path)
+
+
+def _quality_search_visual_evidence(
+    name: str,
+    render_results: dict[str, Any],
+    *,
+    run_dir: Path,
+    paths: runtime_paths.RuntimePaths,
+) -> dict[str, Any]:
+    render_mode = str(render_results.get("render_mode") or "unknown")
+    out_dir = run_dir / "visual_evidence"
+    original_full = paths.examples_dir / name / "build" / f"{name}.png"
+    manifest: dict[str, Any] = {
+        "schema": "figure-agent.quality-search-visual-evidence.v0",
+        "fixture": name,
+        "render_mode": render_mode,
+        "state": "not_applicable",
+        "full_comparisons": [],
+        "panel_comparisons": [],
+        "contact_sheets": [],
+        "min_full_changed_pixel_ratio": None,
+    }
+    rendered = [
+        item for item in render_results.get("rendered", []) if isinstance(item, dict)
+    ]
+    if render_mode != "compile_export_crop_evaluate" or not rendered:
+        return manifest
+    if not original_full.is_file():
+        manifest["state"] = "blocked"
+        manifest["diagnostics"] = [
+            {
+                "stage": "visual_evidence",
+                "category": "missing_original_full_render",
+                "message": f"build/{name}.png not found",
+            }
+        ]
+        return manifest
+
+    _ensure_output_dir(out_dir)
+    full_entries: list[tuple[str, Path]] = [("current", original_full)]
+    full_ratios: list[float] = []
+    for rendered_item in rendered:
+        candidate_id = str(rendered_item.get("candidate_id") or "unknown")
+        render_manifest, error = _load_candidate_render_manifest(paths, name, rendered_item)
+        if render_manifest is None:
+            manifest.setdefault("diagnostics", []).append(
+                {
+                    "stage": "visual_evidence",
+                    "category": str(error or "render_manifest_missing"),
+                    "candidate_id": candidate_id,
+                }
+            )
+            continue
+        artifacts = render_manifest.get("artifacts")
+        artifacts = artifacts if isinstance(artifacts, dict) else {}
+        candidate_png = _fixture_artifact_path(paths, name, artifacts.get("png"))
+        if candidate_png is None or not candidate_png.is_file():
+            manifest.setdefault("diagnostics", []).append(
+                {
+                    "stage": "visual_evidence",
+                    "category": "candidate_full_render_missing",
+                    "candidate_id": candidate_id,
+                }
+            )
+            continue
+        full_entries.append((candidate_id, candidate_png))
+        comparison = candidate_visual_eval.compare_image_pair(original_full, candidate_png)
+        visual_deltas = (
+            comparison.get("visual_deltas")
+            if isinstance(comparison.get("visual_deltas"), dict)
+            else {}
+        )
+        ratio = None
+        try:
+            ratio = float(visual_deltas.get("changed_pixel_ratio"))
+        except (TypeError, ValueError):
+            ratio = None
+        if ratio is not None:
+            full_ratios.append(ratio)
+        manifest["full_comparisons"].append(
+            {
+                "candidate_id": candidate_id,
+                "status": comparison.get("status"),
+                "visual_deltas": visual_deltas,
+                "candidate_png": _workspace_relative(paths, candidate_png),
+            }
+        )
+
+        before_crop = _fixture_artifact_path(paths, name, artifacts.get("before_crop"))
+        after_crop = _fixture_artifact_path(paths, name, artifacts.get("after_crop"))
+        if before_crop is not None and after_crop is not None:
+            panel = str(render_manifest.get("panel") or "unknown")
+            panel_sheet = out_dir / f"{candidate_id}_panel_{panel}_contact_sheet.png"
+            _write_contact_sheet(
+                entries=[
+                    (f"{candidate_id} before", before_crop),
+                    (f"{candidate_id} after", after_crop),
+                ],
+                out_path=panel_sheet,
+            )
+            manifest["panel_comparisons"].append(
+                {
+                    "candidate_id": candidate_id,
+                    "panel": panel,
+                    "before_crop": _workspace_relative(paths, before_crop),
+                    "after_crop": _workspace_relative(paths, after_crop),
+                    "contact_sheet": _workspace_relative(paths, panel_sheet),
+                    "visual_deltas": render_manifest.get("visual_deltas")
+                    if isinstance(render_manifest.get("visual_deltas"), dict)
+                    else {},
+                }
+            )
+
+    full_sheet = out_dir / "candidate_full_contact_sheet.png"
+    _write_contact_sheet(entries=full_entries, out_path=full_sheet)
+    manifest["contact_sheets"].append(
+        {
+            "kind": "candidate_full_contact_sheet",
+            "path": _workspace_relative(paths, full_sheet),
+        }
+    )
+    manifest["state"] = "complete"
+    manifest["min_full_changed_pixel_ratio"] = min(full_ratios) if full_ratios else None
+    return manifest
+
+
 def _sha256_bytes(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
@@ -1161,6 +1349,7 @@ def _quality_search_contract_verdict(
     source_context: dict[str, Any],
     candidate_set: dict[str, Any],
     render_results: dict[str, Any],
+    visual_evidence: dict[str, Any],
     candidate_rankings: list[dict[str, Any]],
     decision: dict[str, Any],
     paths: runtime_paths.RuntimePaths,
@@ -1184,6 +1373,7 @@ def _quality_search_contract_verdict(
     ranking_ids = {str(score.get("candidate_id")) for score in candidate_rankings}
     evaluated_count = 0
     changed_pixel_ratios: list[float] = []
+    full_changed_pixel_ratios: list[float] = []
 
     require(
         manifest.get("status") == "dry_run_complete",
@@ -1263,6 +1453,36 @@ def _quality_search_contract_verdict(
         "at least one materialized candidate lacks a bound source selector",
     )
     if render_mode == "compile_export_crop_evaluate":
+        require(
+            visual_evidence.get("state") == "complete",
+            "visual_evidence_not_complete",
+            "visual evidence did not complete for rendered candidate batch",
+        )
+        full_comparisons = visual_evidence.get("full_comparisons")
+        full_comparisons = full_comparisons if isinstance(full_comparisons, list) else []
+        require(
+            len(full_comparisons) == len(candidates),
+            "full_comparison_count_mismatch",
+            "full-render comparisons do not cover every materialized candidate",
+        )
+        for comparison in full_comparisons:
+            if not isinstance(comparison, dict):
+                continue
+            candidate_id = str(comparison.get("candidate_id") or "unknown")
+            visual_deltas = comparison.get("visual_deltas")
+            ratio = None
+            if isinstance(visual_deltas, dict):
+                try:
+                    ratio = float(visual_deltas.get("changed_pixel_ratio"))
+                except (TypeError, ValueError):
+                    ratio = None
+            require(
+                ratio is not None and ratio > 0.0,
+                f"full_changed_pixel_ratio_not_positive:{candidate_id}",
+                f"{candidate_id} full-render comparison did not record positive pixel change",
+            )
+            if ratio is not None:
+                full_changed_pixel_ratios.append(ratio)
         for rendered_item in rendered:
             candidate_id = str(rendered_item.get("candidate_id") or "unknown")
             render_manifest, error = _load_candidate_render_manifest(
@@ -1330,6 +1550,13 @@ def _quality_search_contract_verdict(
             "evaluated_count": evaluated_count,
             "min_changed_pixel_ratio": (
                 min(changed_pixel_ratios) if changed_pixel_ratios else None
+            ),
+            "visual_evidence_state": visual_evidence.get("state"),
+            "full_comparison_count": len(visual_evidence.get("full_comparisons", []))
+            if isinstance(visual_evidence.get("full_comparisons"), list)
+            else 0,
+            "min_full_changed_pixel_ratio": (
+                min(full_changed_pixel_ratios) if full_changed_pixel_ratios else None
             ),
             "ranking_count": len(candidate_rankings),
             "source_hash": source_context.get("source_hash"),
@@ -1457,6 +1684,7 @@ def _depone_evidence_pack(
     source_context: dict[str, Any],
     candidate_set: dict[str, Any],
     render_results: dict[str, Any],
+    visual_evidence: dict[str, Any],
     candidate_rankings: list[dict[str, Any]],
     decision: dict[str, Any],
     paths: runtime_paths.RuntimePaths,
@@ -1469,6 +1697,7 @@ def _depone_evidence_pack(
         source_context=source_context,
         candidate_set=candidate_set,
         render_results=render_results,
+        visual_evidence=visual_evidence,
         candidate_rankings=candidate_rankings,
         decision=decision,
         paths=paths,
@@ -1755,6 +1984,12 @@ def build_quality_search_execution(
     )
     render_results = _render_candidate_batch(name, candidate_set, paths=paths)
     candidate_rankings = _rank_rendered_candidates(name, candidate_set, paths=paths)
+    visual_evidence = _quality_search_visual_evidence(
+        name,
+        render_results,
+        run_dir=run_dir,
+        paths=paths,
+    )
     scores = _candidate_scores(candidate_specs, plan, candidate_rankings)
     decision = _execution_decision(plan, scores)
     tool_defects = {
@@ -1795,6 +2030,7 @@ def build_quality_search_execution(
             "family_registry_000.json",
             "candidate_set_000.json",
             "render_results_000.json",
+            "visual_evidence_000.json",
             "candidate_specs_000.json",
             "candidate_scores_000.json",
             "candidate_rankings_000.json",
@@ -1817,6 +2053,7 @@ def build_quality_search_execution(
         source_context=source_context,
         candidate_set=candidate_set,
         render_results=render_results,
+        visual_evidence=visual_evidence,
         candidate_rankings=candidate_rankings,
         decision=decision,
         paths=paths,
@@ -1832,6 +2069,7 @@ def build_quality_search_execution(
         "family_registry_000.json": family_registry,
         "candidate_set_000.json": candidate_set,
         "render_results_000.json": render_results,
+        "visual_evidence_000.json": visual_evidence,
         "candidate_specs_000.json": {
             "schema": "figure-agent.quality-search-candidate-specs.v0",
             "candidates": candidate_specs,
@@ -1883,6 +2121,7 @@ def build_quality_search_execution(
         "candidate_specs": candidate_specs,
         "candidate_set": candidate_set,
         "render_results": render_results,
+        "visual_evidence": visual_evidence,
         "candidate_rankings": candidate_rankings,
         "candidate_scores": scores,
         "decision": decision,
