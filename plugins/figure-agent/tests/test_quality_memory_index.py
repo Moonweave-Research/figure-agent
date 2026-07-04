@@ -128,6 +128,11 @@ def test_build_fixture_index_reads_experience_log_not_build_artifacts(tmp_path: 
     assert index["event_count"] == 3
     assert index["eligible_prior_count"] == 3
     assert index["families"]["label_offset"]["recommended_prior"] == 0.25
+    assert index["families"]["label_offset"]["prior_provenance"] == {
+        "locality": "fixture_local",
+        "scope": {"kind": "fixture", "fixture": "candidate_demo"},
+        "source_fixtures": ["candidate_demo"],
+    }
 
 
 def test_legacy_outcome_state_is_not_reward_without_quality_movement() -> None:
@@ -601,3 +606,62 @@ def test_build_suite_index_skips_missing_fixtures_and_writes_scratch(tmp_path: P
     assert (
         workspace / ".scratch" / "figure-agent-memory" / "smoke" / "quality_memory_index.json"
     ).is_file()
+
+
+def test_build_suite_index_aggregates_all_experience_logs_with_transfer_provenance(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    (plugin_root / "benchmarks").mkdir(parents=True)
+    (plugin_root / "benchmarks" / "quality_suites.yaml").write_text(
+        "\n".join(
+            [
+                "schema: figure-agent.quality-benchmark-suites.v1",
+                "suites:",
+                "  smoke:",
+                "    description: Test suite.",
+                "    fixtures:",
+                "      - suite_demo",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (workspace / "examples" / "suite_demo").mkdir(parents=True)
+    log_path = plugin_root / "docs" / "experience-log" / "outside_demo.jsonl"
+    log_path.parent.mkdir(parents=True)
+    log_path.write_text(
+        json.dumps(
+            _experience_record(
+                "OUTSIDE001",
+                quality_movement="improved",
+            )
+            | {
+                "fixture": "outside_demo",
+                "record_id": "sha256:outside",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    index = quality_memory_index.build_suite_index(
+        "smoke",
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+
+    assert index["scope"] == {"kind": "suite", "suite": "smoke"}
+    assert index["event_count"] == 1
+    assert index["families"]["label_offset"]["attempts"] == 1
+    assert index["families"]["label_offset"]["prior_provenance"] == {
+        "locality": "cross_fixture_transfer",
+        "scope": {"kind": "suite", "suite": "smoke"},
+        "source_fixtures": ["outside_demo"],
+    }
+    assert {
+        "fixture": "outside_demo",
+        "status": "included",
+        "reason": "out_of_suite_experience_log",
+    } in index["suite_diagnostics"]

@@ -104,6 +104,22 @@ def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any
     return records
 
 
+def _experience_log_fixture_names(plugin_root: Path) -> list[str]:
+    log_dir = plugin_root / "docs" / "experience-log"
+    if log_dir.is_symlink():
+        raise QualityMemoryIndexError("experience_log_symlink")
+    if not log_dir.is_dir():
+        return []
+    fixtures: list[str] = []
+    for path in sorted(log_dir.glob("*.jsonl")):
+        if path.is_symlink():
+            raise QualityMemoryIndexError("experience_log_symlink")
+        fixture = path.stem
+        fixture_identity.validate_fixture_name(fixture)
+        fixtures.append(fixture)
+    return fixtures
+
+
 def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
     state = record.get("state") if isinstance(record.get("state"), dict) else {}
     action = record.get("action") if isinstance(record.get("action"), dict) else {}
@@ -170,6 +186,7 @@ def build_memory_index(
 ) -> dict[str, Any]:
     families: dict[str, dict[str, Any]] = defaultdict(_safe_count_bucket)
     panel_patterns: dict[str, dict[str, Any]] = defaultdict(_safe_count_bucket)
+    family_source_fixtures: dict[str, set[str]] = defaultdict(set)
     rank_scores: dict[str, list[float]] = defaultdict(list)
     eligible_prior_count = 0
     candidate_event_count = 0
@@ -200,6 +217,9 @@ def build_memory_index(
         buckets = []
         if family_known:
             buckets.append(families[family])
+            fixture = event.get("fixture")
+            if isinstance(fixture, str) and fixture:
+                family_source_fixtures[family].add(fixture)
         if family_known and target_known:
             buckets.append(panel_patterns[pattern_key])
         eligible_attempt = (
@@ -230,6 +250,10 @@ def build_memory_index(
 
     for family, bucket in families.items():
         bucket["recommended_prior"] = _recommended_prior(bucket)
+        bucket["prior_provenance"] = _prior_provenance(
+            scope or {"kind": "events"},
+            family_source_fixtures[family],
+        )
         if rank_scores[family]:
             bucket["median_rank_delta"] = round(median(rank_scores[family]), 4)
     for bucket in panel_patterns.values():
@@ -254,6 +278,20 @@ def build_memory_index(
                 "reason": "semantic edit families cannot receive apply priors",
             }
         ],
+    }
+
+
+def _prior_provenance(scope: dict[str, Any], source_fixtures: set[str]) -> dict[str, Any]:
+    kind = scope.get("kind") if isinstance(scope, dict) else None
+    locality = "event_scope"
+    if kind == "fixture":
+        locality = "fixture_local"
+    elif kind == "suite":
+        locality = "cross_fixture_transfer"
+    return {
+        "locality": locality,
+        "scope": scope,
+        "source_fixtures": sorted(source_fixtures),
     }
 
 
@@ -418,16 +456,23 @@ def build_suite_index(
         raise QualityMemoryIndexError(f"unknown_suite: {suite}")
     events: list[dict[str, Any]] = []
     diagnostics: list[dict[str, str]] = []
-    for fixture in suites[suite]:
+    suite_fixtures = list(suites[suite])
+    log_fixtures = _experience_log_fixture_names(paths.plugin_root)
+    for fixture in sorted(dict.fromkeys([*suite_fixtures, *log_fixtures])):
         example_dir = paths.examples_dir / fixture
-        if not example_dir.is_dir():
+        records = _load_experience_records(paths.plugin_root, fixture)
+        if not example_dir.is_dir() and not records:
             diagnostics.append(
                 {"fixture": fixture, "status": "skipped", "reason": "missing_fixture"}
             )
             continue
-        records = _load_experience_records(paths.plugin_root, fixture)
         events.extend(_event_from_experience_record(record) for record in records)
-        diagnostics.append({"fixture": fixture, "status": "included", "reason": ""})
+        reason = ""
+        if fixture not in suite_fixtures:
+            reason = "out_of_suite_experience_log"
+        elif not example_dir.is_dir():
+            reason = "missing_fixture_with_experience_log"
+        diagnostics.append({"fixture": fixture, "status": "included", "reason": reason})
     index = build_memory_index(events, scope={"kind": "suite", "suite": suite})
     index["suite_diagnostics"] = diagnostics
     if write:
