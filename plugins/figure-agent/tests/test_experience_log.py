@@ -1,0 +1,155 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
+import experience_log  # noqa: E402
+from test_evidence_index import _fixture  # noqa: E402
+
+
+def test_append_apply_experience_record_joins_existing_artifacts(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    fixture = _fixture(workspace)
+    candidate_set_path = fixture / "build" / "candidates" / "candidate_set.json"
+    candidate_set = json.loads(candidate_set_path.read_text(encoding="utf-8"))
+    candidate_set["candidates"][0].update(
+        {
+            "edit_family": "label_offset",
+            "target": {"panel": "C", "subregion": "trap-label"},
+            "selector": {"selector_text_hash": "sha256:" + "a" * 64},
+            "operations": [{"kind": "replace_text", "path": "candidate_demo.tex"}],
+            "rank_score": 0.72,
+            "rank": 1,
+        }
+    )
+    candidate_set["candidates"].append(
+        {
+            "id": "CAND002",
+            "candidate_hash": "sha256:" + "2" * 64,
+            "edit_family": "apparatus_strengthen",
+            "target": {"panel": "F", "subregion": "air-gap"},
+            "selector": {"selector_text_hash": "sha256:" + "b" * 64},
+            "operations": [{"kind": "replace_text", "path": "candidate_demo.tex"}],
+            "rank_score": 0.61,
+            "rank": 2,
+        }
+    )
+    candidate_set_path.write_text(
+        json.dumps(candidate_set, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    result = experience_log.append_apply_record(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+
+    output = plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
+    assert result["writes"] == ["docs/experience-log/candidate_demo.jsonl"]
+    rows = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
+    assert len(rows) == 2
+    row = rows[0]
+    assert row["schema"] == "figure-agent.experience-record.v1"
+    assert row["fixture"] == "candidate_demo"
+    assert row["state"]["base_tex_hash"] == "sha256:" + "0" * 64
+    assert row["state"]["target"] == {
+        "panel": "C",
+        "subregion_key": "sha256:" + "a" * 64,
+    }
+    assert row["action"]["candidate_id"] == "CAND001"
+    assert row["action"]["edit_family"] == "label_offset"
+    assert row["action"]["candidate_hash"] == "sha256:" + "1" * 64
+    assert row["action"]["rank_score"] == 0.72
+    assert row["action"]["rank"] == 1
+    assert row["action"]["n_candidates"] == 2
+    assert row["outcome"]["pipeline_ok"] is True
+    assert row["outcome"]["apply_status"] == "applied"
+    assert row["outcome"]["quality_movement"] == "neutral"
+    assert row["outcome"]["human_label"] is None
+    unchosen = rows[1]
+    assert unchosen["action"]["candidate_id"] == "CAND002"
+    assert unchosen["action"]["rank_score"] == 0.61
+    assert unchosen["action"]["rank"] == 2
+    assert unchosen["state"]["target"] == {
+        "panel": "F",
+        "subregion_key": "sha256:" + "b" * 64,
+    }
+    assert unchosen["outcome"]["apply_status"] == "unchosen"
+    assert unchosen["outcome"]["pipeline_ok"] is None
+    assert unchosen["outcome"]["quality_movement"] is None
+
+
+def test_append_apply_record_refuses_symlinked_experience_log(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    _fixture(workspace)
+    log_dir = plugin_root / "docs" / "experience-log"
+    log_dir.mkdir(parents=True)
+    outside = tmp_path / "outside.jsonl"
+    outside.write_text("", encoding="utf-8")
+    (log_dir / "candidate_demo.jsonl").symlink_to(outside)
+
+    with pytest.raises(experience_log.ExperienceLogError, match="experience_log_symlink"):
+        experience_log.append_apply_record(
+            "candidate_demo",
+            "CAND001",
+            workspace_root=workspace,
+            plugin_root=plugin_root,
+        )
+
+
+def test_experience_log_is_append_only(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    _fixture(workspace)
+
+    first = experience_log.append_apply_record(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+    second = experience_log.append_apply_record(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+
+    output = plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
+    rows = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
+    assert len(rows) == 2
+    assert rows[0] == first["record"]
+    assert rows[1] == second["record"]
+
+
+def test_subregion_key_without_selector_hash_is_marked_unstable(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set_path = fixture / "build" / "candidates" / "candidate_set.json"
+    candidate_set = json.loads(candidate_set_path.read_text(encoding="utf-8"))
+    candidate_set["candidates"][0]["target"] = {"panel": "C", "subregion": "trap-label"}
+    candidate_set_path.write_text(
+        json.dumps(candidate_set, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    row = experience_log.build_apply_record(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+        plugin_root=tmp_path / "plugin",
+    )
+
+    assert row["state"]["target"] == {
+        "panel": "C",
+        "subregion_key": "unstable:trap-label",
+    }

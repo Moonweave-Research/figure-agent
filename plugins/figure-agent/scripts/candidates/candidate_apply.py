@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 import candidate_contracts
+import experience_log
 import fixture_identity
 import runtime_paths
 import semantic_candidate_review
@@ -1037,4 +1038,11 @@ def apply_candidate(
             json.dumps(result, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+        experience = experience_log.append_apply_record(
+            name,
+            candidate_id,
+            workspace_root=paths.workspace_root,
+            plugin_root=paths.plugin_root,
+        )
+        result["experience_log"] = experience["writes"]
         return result

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import types
 from contextlib import contextmanager
@@ -16,12 +17,13 @@ import candidate_apply  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
-def _no_real_pre_mutation_compile(monkeypatch):
+def _no_real_pre_mutation_compile(monkeypatch, tmp_path: Path):
     # M3 added a best-effort pre-mutation compile when build/<name>.pdf is absent so
     # the value-preservation gate has a baseline; neutralize the shell-out here so
     # unit tests never invoke lualatex. Tests asserting the compile IS forced
     # re-override this with their own spy.
     monkeypatch.setattr(candidate_apply, "_compile_current_source", lambda *_a, **_k: None)
+    monkeypatch.setenv("FIGURE_AGENT_PLUGIN_ROOT", str(tmp_path / "plugin"))
 
 
 def _sha256_text(text: str) -> str:
@@ -299,6 +301,7 @@ def test_apply_candidate_blocks_required_missing_semantic_review(tmp_path: Path)
 
 def test_apply_candidate_exact_replace_writes_source_and_result(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
+    plugin_root = Path(os.environ["FIGURE_AGENT_PLUGIN_ROOT"])
     fixture, manifest = _accepted_candidate_fixture(workspace)
 
     result = candidate_apply.apply_candidate(
@@ -322,6 +325,16 @@ def test_apply_candidate_exact_replace_writes_source_and_result(tmp_path: Path) 
     ]
     assert (fixture / "build" / "candidates" / "CAND001" / "rollback.patch").is_file()
     assert (fixture / "build" / "candidates" / "CAND001" / "apply_result.json").is_file()
+    assert result["experience_log"] == ["docs/experience-log/candidate_demo.jsonl"]
+    rows = [
+        json.loads(line)
+        for line in (plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
+    assert rows[0]["schema"] == "figure-agent.experience-record.v1"
+    assert rows[0]["action"]["candidate_id"] == "CAND001"
+    assert rows[0]["outcome"]["apply_status"] == "applied_unverified"
 
 
 def test_apply_candidate_multiline_exact_replace_writes_source_and_result(
