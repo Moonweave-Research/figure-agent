@@ -22,6 +22,27 @@ FORBIDDEN_MODEL_IMPORT_ROOTS = {
     "torch",
     "xgboost",
 }
+FORBIDDEN_MEASUREMENT_IMPORT_ROOTS = {
+    "PIL",
+    "candidate_render",
+    "candidate_visual_eval",
+    "detector_feedback_ledger",
+    "detector_log",
+    "numpy",
+    "pdfplumber",
+    "quality_benchmark",
+    "scipy",
+    "subprocess",
+}
+FORBIDDEN_MEASUREMENT_TOKENS = (
+    "subprocess.",
+    "os.system(",
+    "candidate_render.",
+    "candidate_visual_eval.",
+    "quality_benchmark.",
+    "detector_log.",
+    "detector_feedback_ledger.",
+)
 
 
 def _decision_path_python_files() -> list[Path]:
@@ -32,6 +53,18 @@ def _decision_path_python_files() -> list[Path]:
         else:
             paths.extend(sorted(path.rglob("*.py")))
     return paths
+
+
+def _import_roots(path: Path) -> set[str]:
+    source = path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(path))
+    roots: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            roots.update(alias.name.split(".", maxsplit=1)[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            roots.add((node.module or "").split(".", maxsplit=1)[0])
+    return roots
 
 
 def test_v013_decision_path_does_not_revive_ml_advisory_or_opaque_models() -> None:
@@ -54,3 +87,12 @@ def test_v013_decision_path_does_not_revive_ml_advisory_or_opaque_models() -> No
             offenders.append(f"{path.relative_to(PLUGIN_ROOT)}: ml_advisory")
 
     assert offenders == []
+
+
+def test_v013_loop_metrics_uses_persisted_logs_without_new_measurement() -> None:
+    path = PLUGIN_ROOT / "scripts" / "quality" / "quality_loop_metrics.py"
+    imported_roots = _import_roots(path)
+    source = path.read_text(encoding="utf-8")
+
+    assert FORBIDDEN_MEASUREMENT_IMPORT_ROOTS.isdisjoint(imported_roots)
+    assert not any(token in source for token in FORBIDDEN_MEASUREMENT_TOKENS)
