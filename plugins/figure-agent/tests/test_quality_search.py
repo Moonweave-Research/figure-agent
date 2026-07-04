@@ -548,6 +548,59 @@ def test_quality_search_policy_uses_memory_prior_and_exploration_bonus() -> None
     assert decision["policy"]["schema"] == "figure-agent.quality-search-bandit-policy.v0"
 
 
+def test_quality_search_policy_prefers_panel_block_with_stronger_render_rank() -> None:
+    plan = {
+        "state": {"memory": {"state": "loaded", "families": {}}},
+        "classifications": [
+            {
+                "kind": "release_blocker",
+                "blocks_search": False,
+            }
+        ],
+        "next_recommended_operation": {"kind": "step_out_experiment"},
+    }
+    candidate_specs = [
+        {
+            "id": "QS001",
+            "family": "hierarchy_rebalance",
+            "operation_scale": "local_style_token",
+            "template_id": "line_width_minimum_v1",
+            "expected_visual_movement": "local line-width change",
+        },
+        {
+            "id": "QS002",
+            "family": "apparatus_strengthen",
+            "operation_scale": "panel_block",
+            "template_id": "v5f_panel_f_redraw_overlay_v1",
+            "expected_visual_movement": "Panel F apparatus reads as deliberate mechanism evidence",
+        },
+    ]
+    rankings = [
+        {
+            "candidate_id": "QS001",
+            "rank_score": 0.65,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+        },
+        {
+            "candidate_id": "QS002",
+            "rank_score": 0.75,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+        },
+    ]
+
+    scores = quality_search._candidate_scores(candidate_specs, plan, rankings)
+    decision = quality_search._execution_decision(plan, scores)
+
+    by_family = {item["family"]: item for item in scores}
+    assert by_family["apparatus_strengthen"]["policy_score"] > by_family[
+        "hierarchy_rebalance"
+    ]["policy_score"]
+    assert decision["selected_candidate_id"] == "QS002"
+    assert decision["selected_family"] == "apparatus_strengthen"
+
+
 def test_quality_search_visual_evidence_writes_full_and_panel_contact_sheets(
     tmp_path: Path,
 ) -> None:

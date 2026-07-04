@@ -2248,9 +2248,24 @@ def _render_policy_adjustment(ranking: dict[str, Any] | None) -> tuple[float, fl
     return (round(adjustment, 4), round(penalty, 4))
 
 
+def _operation_scale_policy_bonus(
+    operation_scale: str,
+    ranking: dict[str, Any] | None,
+) -> float:
+    if operation_scale != "panel_block" or not isinstance(ranking, dict):
+        return 0.0
+    rank_score = _bounded_float(ranking.get("rank_score"), default=0.0, lower=0.0, upper=1.0)
+    if rank_score >= 0.75:
+        return 0.06
+    if rank_score >= 0.65:
+        return 0.03
+    return 0.0
+
+
 def _candidate_policy_score(
     *,
     family: str,
+    operation_scale: str,
     base_evidence_score: float,
     plan: dict[str, Any],
     ranking: dict[str, Any] | None,
@@ -2258,6 +2273,7 @@ def _candidate_policy_score(
     prior = _memory_prior(plan, family)
     exploration = _exploration_bonus(plan, family)
     render_adjustment, render_penalty = _render_policy_adjustment(ranking)
+    operation_scale_bonus = _operation_scale_policy_bonus(operation_scale, ranking)
     score = round(
         min(
             max(
@@ -2265,7 +2281,8 @@ def _candidate_policy_score(
                 + prior
                 + exploration
                 + render_adjustment
-                + render_penalty,
+                + render_penalty
+                + operation_scale_bonus,
                 0.0,
             ),
             1.0,
@@ -2280,6 +2297,7 @@ def _candidate_policy_score(
         "exploration_bonus": exploration,
         "render_adjustment": render_adjustment,
         "render_penalty": render_penalty,
+        "operation_scale_bonus": operation_scale_bonus,
         "score": score,
     }
 
@@ -2309,8 +2327,10 @@ def _candidate_scores(
             score += 0.03
         score = round(min(score, 1.0), 4)
         ranking = rankings_by_id.get(str(spec.get("id")))
+        operation_scale = str(spec.get("operation_scale") or "unknown")
         policy = _candidate_policy_score(
             family=family,
+            operation_scale=operation_scale,
             base_evidence_score=score,
             plan=plan,
             ranking=ranking,
@@ -2324,7 +2344,7 @@ def _candidate_scores(
             {
                 "candidate_id": spec.get("id"),
                 "family": family,
-                "operation_scale": spec.get("operation_scale"),
+                "operation_scale": operation_scale,
                 "template_id": spec.get("template_id"),
                 "expected_visual_movement": spec.get("expected_visual_movement"),
                 "evidence_score": score,
