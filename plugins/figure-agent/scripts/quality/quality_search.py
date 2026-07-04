@@ -30,6 +30,7 @@ EXECUTE_SCHEMA = "figure-agent.quality-search-execute.v0"
 ZERO_HASH = "sha256:" + "0" * 64
 DEPONE_PLAN_SCHEMA = "0.5"
 DEPONE_EVIDENCE_CONTRACT_SCHEMA = "v105.verify_wedge"
+SEARCH_POLICY_SCHEMA = "figure-agent.quality-search-bandit-policy.v0"
 
 PROGRESS_ACTIONS = {
     "create_or_fix_source",
@@ -560,6 +561,28 @@ def _memory_summary(memory: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
+def _search_policy_descriptor(next_operation: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema": SEARCH_POLICY_SCHEMA,
+        "kind": "contextual_bandit_beam_v0",
+        "operation_kind": next_operation.get("kind"),
+        "selection_score": (
+            "base_evidence_score + memory_prior + exploration_bonus "
+            "+ render_adjustment + render_penalty"
+        ),
+        "exploitation_inputs": [
+            "candidate_family_priority",
+            "fixture_quality_memory_prior",
+            "candidate_render_rank_score",
+        ],
+        "exploration_inputs": [
+            "low_attempt_family_bonus",
+            "step_out_experiment_family_width",
+        ],
+        "mutation_boundary": "review_only_until_explicit_apply_gate",
+    }
+
+
 def build_quality_search_plan(
     name: str,
     *,
@@ -644,6 +667,7 @@ def build_quality_search_plan(
         "patch_hypotheses": hypotheses,
         "tool_defect_candidates": _tool_defect_candidates(driver, ledger),
         "next_recommended_operation": next_operation,
+        "search_policy": _search_policy_descriptor(next_operation),
         "safety": {
             "source_mutation": "forbidden_in_plan_mode",
             "accepted_golden_release_mutation": "forbidden_without_explicit_human_approval",
@@ -1991,6 +2015,130 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
     return 0.30
 
 
+def _family_memory(plan: dict[str, Any], family: str) -> dict[str, Any]:
+    state = plan.get("state")
+    memory = state.get("memory") if isinstance(state, dict) else None
+    families = memory.get("families") if isinstance(memory, dict) else None
+    entry = families.get(family) if isinstance(families, dict) else None
+    return entry if isinstance(entry, dict) else {}
+
+
+def _bounded_float(
+    value: Any,
+    *,
+    default: float = 0.0,
+    lower: float = -1.0,
+    upper: float = 1.0,
+) -> float:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return default
+    return min(max(parsed, lower), upper)
+
+
+def _bounded_int(value: Any, *, default: int = 0, lower: int = 0) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    return max(parsed, lower)
+
+
+def _memory_prior(plan: dict[str, Any], family: str) -> float:
+    if family == "null_baseline":
+        return 0.0
+    entry = _family_memory(plan, family)
+    return round(
+        _bounded_float(
+            entry.get("recommended_prior"),
+            default=0.0,
+            lower=-0.25,
+            upper=0.25,
+        ),
+        4,
+    )
+
+
+def _exploration_bonus(plan: dict[str, Any], family: str) -> float:
+    if family == "null_baseline":
+        return 0.0
+    attempts = _bounded_int(_family_memory(plan, family).get("attempts"), default=0)
+    if attempts == 0:
+        return 0.06
+    if attempts <= 2:
+        return 0.04
+    if attempts <= 5:
+        return 0.02
+    return 0.0
+
+
+def _ranking_evidence(ranking: dict[str, Any] | None, polarity: str) -> list[str]:
+    if not isinstance(ranking, dict):
+        return []
+    evidence = ranking.get("evidence")
+    values = evidence.get(polarity) if isinstance(evidence, dict) else None
+    if not isinstance(values, list):
+        return []
+    return [str(item) for item in values]
+
+
+def _render_policy_adjustment(ranking: dict[str, Any] | None) -> tuple[float, float]:
+    if not isinstance(ranking, dict):
+        return (0.0, 0.0)
+    rank_score = ranking.get("rank_score")
+    if rank_score is None:
+        return (0.0, 0.0)
+    adjustment = (_bounded_float(rank_score, default=0.5) - 0.5) * 0.16
+    negative = set(_ranking_evidence(ranking, "negative"))
+    render_status = str(ranking.get("render_status") or "")
+    penalty = 0.0
+    if "rendered_no_pixel_change" in negative:
+        penalty -= 0.08
+    elif render_status and render_status not in {
+        "not_rendered",
+        "rendered_needs_human_review",
+    }:
+        penalty -= 0.04
+    return (round(adjustment, 4), round(penalty, 4))
+
+
+def _candidate_policy_score(
+    *,
+    family: str,
+    base_evidence_score: float,
+    plan: dict[str, Any],
+    ranking: dict[str, Any] | None,
+) -> dict[str, Any]:
+    prior = _memory_prior(plan, family)
+    exploration = _exploration_bonus(plan, family)
+    render_adjustment, render_penalty = _render_policy_adjustment(ranking)
+    score = round(
+        min(
+            max(
+                base_evidence_score
+                + prior
+                + exploration
+                + render_adjustment
+                + render_penalty,
+                0.0,
+            ),
+            1.0,
+        ),
+        4,
+    )
+    return {
+        "schema": SEARCH_POLICY_SCHEMA,
+        "kind": "contextual_bandit_beam_v0",
+        "base_evidence_score": base_evidence_score,
+        "memory_prior": prior,
+        "exploration_bonus": exploration,
+        "render_adjustment": render_adjustment,
+        "render_penalty": render_penalty,
+        "score": score,
+    }
+
+
 def _candidate_scores(
     candidate_specs: list[dict[str, Any]],
     plan: dict[str, Any],
@@ -2016,6 +2164,12 @@ def _candidate_scores(
             score += 0.03
         score = round(min(score, 1.0), 4)
         ranking = rankings_by_id.get(str(spec.get("id")))
+        policy = _candidate_policy_score(
+            family=family,
+            base_evidence_score=score,
+            plan=plan,
+            ranking=ranking,
+        )
         render_status = (
             str(ranking.get("render_status"))
             if isinstance(ranking, dict)
@@ -2026,7 +2180,9 @@ def _candidate_scores(
                 "candidate_id": spec.get("id"),
                 "family": family,
                 "evidence_score": score,
+                "policy_score": policy["score"],
                 "rank_score": ranking.get("rank_score") if isinstance(ranking, dict) else None,
+                "policy": policy,
                 "witness": {
                     "state": "dry_scored",
                     "basis": [
@@ -2034,6 +2190,8 @@ def _candidate_scores(
                         "classification_blocks_search",
                         "candidate_family_priority",
                         "candidate_sandbox_manifest",
+                        "quality_memory_prior",
+                        "candidate_render_policy_adjustment",
                     ],
                 },
                 "render_status": render_status,
@@ -2064,26 +2222,38 @@ def _execution_decision(
             "blocking_classifications": blocking,
             "selected_candidate_id": None,
             "evidence_score": 0.0,
+            "policy_score": 0.0,
         }
     ranked = sorted(
         candidate_scores,
-        key=lambda item: float(item.get("evidence_score") or 0.0),
+        key=lambda item: (
+            float(item.get("policy_score") or item.get("evidence_score") or 0.0),
+            float(item.get("evidence_score") or 0.0),
+        ),
         reverse=True,
     )
-    selected = ranked[0] if ranked and float(ranked[0].get("evidence_score") or 0.0) > 0 else None
+    selected = (
+        ranked[0]
+        if ranked
+        and float(ranked[0].get("policy_score") or ranked[0].get("evidence_score") or 0.0) > 0
+        else None
+    )
     if selected is None:
         return {
             "kind": "no_actionable_candidate",
             "reason": "no non-baseline candidate received supporting evidence",
             "selected_candidate_id": None,
             "evidence_score": 0.0,
+            "policy_score": 0.0,
         }
     return {
         "kind": "candidate_batch_ready",
-        "reason": "dry executor selected the strongest evidence-backed candidate family",
+        "reason": "dry executor selected the strongest policy-backed candidate family",
         "selected_candidate_id": selected.get("candidate_id"),
         "selected_family": selected.get("family"),
         "evidence_score": selected.get("evidence_score"),
+        "policy_score": selected.get("policy_score"),
+        "policy": selected.get("policy"),
         "source_mutation": "not_performed",
         "next_action": "render selected candidate batch in sandbox",
     }
@@ -2156,6 +2326,7 @@ def build_quality_search_execution(
         "schema": "figure-agent.quality-search-policy.v0",
         "fixture": name,
         "kind": (plan.get("next_recommended_operation") or {}).get("kind"),
+        "selection_policy": plan.get("search_policy"),
         "max_iterations": max_iterations,
         "source_mutation": "forbidden",
         "release_mutation": "forbidden",

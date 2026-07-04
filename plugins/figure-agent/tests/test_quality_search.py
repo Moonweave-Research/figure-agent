@@ -149,6 +149,8 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
 
     assert payload["schema"] == "figure-agent.quality-search-plan.v0"
     assert payload["next_recommended_operation"]["kind"] == "step_out_experiment"
+    assert payload["search_policy"]["schema"] == "figure-agent.quality-search-bandit-policy.v0"
+    assert payload["search_policy"]["kind"] == "contextual_bandit_beam_v0"
     assert payload["next_recommended_operation"]["candidate_families"][:2] == [
         "hierarchy_rebalance",
         "apparatus_strengthen",
@@ -260,6 +262,7 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert payload["decision"]["kind"] == "candidate_batch_ready"
     assert payload["decision"]["selected_candidate_id"] != "QSNULL"
     assert payload["decision"]["evidence_score"] > 0
+    assert payload["decision"]["policy_score"] > payload["decision"]["evidence_score"]
     assert payload["candidate_set"]["candidates"] == []
     assert payload["render_results"]["render_mode"] == "none"
     assert payload["render_results"]["rendered"] == []
@@ -286,6 +289,8 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
         for selector in hierarchy["source_selectors"]
     )
     assert all("witness" in item for item in payload["candidate_scores"])
+    assert all("policy" in item for item in payload["candidate_scores"])
+    assert all("policy_score" in item for item in payload["candidate_scores"])
     assert all(path.startswith(".scratch/quality-search-runs/") for path in payload["writes"])
 
     run_dir = tmp_path / payload["run_dir"]
@@ -396,6 +401,47 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     )
     assert depone_contract["schema_version"] == "v105.verify_wedge"
     assert "quality-search-verdict.json" in depone_contract["required_evidence"]
+
+
+def test_quality_search_policy_uses_memory_prior_and_exploration_bonus() -> None:
+    plan = {
+        "state": {
+            "memory": {
+                "state": "loaded",
+                "families": {
+                    "hierarchy_rebalance": {
+                        "attempts": 8,
+                        "recommended_prior": -0.1,
+                    },
+                    "apparatus_strengthen": {
+                        "attempts": 0,
+                        "recommended_prior": 0.0,
+                    },
+                },
+            }
+        },
+        "classifications": [],
+        "next_recommended_operation": {"kind": "step_out_experiment"},
+    }
+    candidate_specs = [
+        {"id": "QS001", "family": "hierarchy_rebalance"},
+        {"id": "QS002", "family": "apparatus_strengthen"},
+    ]
+
+    scores = quality_search._candidate_scores(candidate_specs, plan)
+    decision = quality_search._execution_decision(plan, scores)
+
+    by_family = {item["family"]: item for item in scores}
+    hierarchy = by_family["hierarchy_rebalance"]
+    apparatus = by_family["apparatus_strengthen"]
+    assert hierarchy["policy"]["memory_prior"] == -0.1
+    assert hierarchy["policy"]["exploration_bonus"] == 0.0
+    assert apparatus["policy"]["memory_prior"] == 0.0
+    assert apparatus["policy"]["exploration_bonus"] == 0.06
+    assert apparatus["policy_score"] > hierarchy["policy_score"]
+    assert decision["selected_candidate_id"] == "QS002"
+    assert decision["selected_family"] == "apparatus_strengthen"
+    assert decision["policy"]["schema"] == "figure-agent.quality-search-bandit-policy.v0"
 
 
 def test_quality_search_visual_evidence_writes_full_and_panel_contact_sheets(
