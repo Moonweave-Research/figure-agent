@@ -4,26 +4,26 @@ from __future__ import annotations
 
 from typing import Any
 
-ALLOWED_TERMS = {
-    "label offset": ("label offset", "offset label", "move the label", "move label"),
-    "text overlap": ("overlap", "crowding", "crowded", "collision"),
-    "clipping": ("clip",),
-    "whitespace balance": ("whitespace",),
-    "palette/style": ("palette violation", "style violation"),
-    "line weight/style": ("line weight", "stroke weight"),
+AUTO_PATCH_CLASSES = {
+    "label_offset",
+    "text_overlap",
+    "clipping",
+    "whitespace_balance",
+    "palette_style",
+    "line_weight_style",
 }
 
-BLOCKED_TERMS = {
-    "aesthetic direction": ("aesthetic", "art direction", "visual taste"),
-    "chemistry topology": ("chemistry", "topology", "molecule", "bond"),
-    "physical mechanism": ("mechanism", "causal", "physics"),
-    "causal arrow semantics": ("arrow semantics", "causal arrow"),
-    "theory guard evidence": ("theory", "guard"),
-    "reference interpretation": ("reference", "interpretation"),
-    "accepted/golden/export/build state": ("accepted", "golden", "export", "build"),
-    "publication safety": ("publication", "safety"),
-    "critique mutation": ("critique.md", "critique mutation"),
-    "broad refactor": ("refactor", "rewrite"),
+HUMAN_REVIEW_CLASSES = {
+    "aesthetic_direction",
+    "chemistry_topology",
+    "physical_mechanism",
+    "causal_arrow_semantics",
+    "theory_guard_evidence",
+    "reference_interpretation",
+    "accepted_golden_export_build_state",
+    "publication_safety",
+    "critique_mutation",
+    "broad_refactor",
 }
 
 REQUIRED_EVIDENCE = [
@@ -33,6 +33,32 @@ REQUIRED_EVIDENCE = [
 ]
 
 
+def _structured_patch_classes(
+    loop_decision: dict[str, Any],
+    patch_handoff: dict[str, Any],
+) -> list[str]:
+    values: list[Any] = [
+        patch_handoff.get("patch_class"),
+        patch_handoff.get("patch_classes"),
+    ]
+    active_patch_target = loop_decision.get("active_patch_target")
+    if isinstance(active_patch_target, dict):
+        values.extend(
+            [
+                active_patch_target.get("patch_class"),
+                active_patch_target.get("patch_classes"),
+            ]
+        )
+
+    classes: list[str] = []
+    for value in values:
+        if isinstance(value, str) and value:
+            classes.append(value)
+        elif isinstance(value, list):
+            classes.extend(item for item in value if isinstance(item, str) and item)
+    return sorted(dict.fromkeys(classes))
+
+
 def auto_patch_eligibility(
     loop_decision: dict[str, Any],
     patch_handoff: dict[str, Any] | None,
@@ -40,26 +66,9 @@ def auto_patch_eligibility(
     if not patch_handoff:
         return None
 
-    haystack = " ".join(
-        str(value)
-        for value in (
-            patch_handoff.get("target_id"),
-            patch_handoff.get("patch_target"),
-            patch_handoff.get("reason"),
-            loop_decision.get("recommended_next_action"),
-        )
-        if value
-    ).lower()
-    allowed = [
-        name
-        for name, terms in ALLOWED_TERMS.items()
-        if any(term in haystack for term in terms)
-    ]
-    blocked = [
-        name
-        for name, terms in BLOCKED_TERMS.items()
-        if any(term in haystack for term in terms)
-    ]
+    patch_classes = _structured_patch_classes(loop_decision, patch_handoff)
+    allowed = [value for value in patch_classes if value in AUTO_PATCH_CLASSES]
+    blocked = [value for value in patch_classes if value in HUMAN_REVIEW_CLASSES]
 
     if blocked:
         level = "human_review_required"

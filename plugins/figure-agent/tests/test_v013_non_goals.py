@@ -51,6 +51,10 @@ FORBIDDEN_REWARD_TEXT_TOKENS = (
     "rationale",
     "summary",
 )
+FORBIDDEN_GATE_TEXT_FIELDS = (
+    "reason",
+    "recommended_next_action",
+)
 
 
 def _decision_path_python_files() -> list[Path]:
@@ -121,3 +125,33 @@ def test_v013_reward_gate_code_does_not_read_text_annotations() -> None:
     assert len(guarded_source) == len(guarded_functions)
     joined = "\n".join(guarded_source)
     assert not any(token in joined for token in FORBIDDEN_REWARD_TEXT_TOKENS)
+
+
+def test_v013_auto_patch_gate_does_not_read_prose_fields() -> None:
+    path = PLUGIN_ROOT / "scripts" / "loop" / "fig_loop_auto_patch.py"
+    source = path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(path))
+    guarded_functions = []
+    forbidden_accesses: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "auto_patch_eligibility":
+            guarded_functions.append(node)
+            for child in ast.walk(node):
+                if (
+                    isinstance(child, ast.Call)
+                    and isinstance(child.func, ast.Attribute)
+                    and child.func.attr == "get"
+                    and child.args
+                    and isinstance(child.args[0], ast.Constant)
+                    and child.args[0].value in FORBIDDEN_GATE_TEXT_FIELDS
+                ):
+                    forbidden_accesses.append(str(child.args[0].value))
+                if (
+                    isinstance(child, ast.Subscript)
+                    and isinstance(child.slice, ast.Constant)
+                    and child.slice.value in FORBIDDEN_GATE_TEXT_FIELDS
+                ):
+                    forbidden_accesses.append(str(child.slice.value))
+
+    assert len(guarded_functions) == 1
+    assert forbidden_accesses == []
