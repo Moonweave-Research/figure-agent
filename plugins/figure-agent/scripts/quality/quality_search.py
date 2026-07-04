@@ -1296,6 +1296,152 @@ def _quality_search_visual_evidence(
     return manifest
 
 
+def _ratio_from_deltas(payload: Any) -> float | None:
+    if not isinstance(payload, dict):
+        return None
+    try:
+        return float(payload.get("changed_pixel_ratio"))
+    except (TypeError, ValueError):
+        return None
+
+
+def _quality_search_memory_events(
+    *,
+    name: str,
+    run_id: str,
+    candidate_set: dict[str, Any],
+    candidate_rankings: list[dict[str, Any]],
+    visual_evidence: dict[str, Any],
+    paths: runtime_paths.RuntimePaths,
+    run_dir: Path,
+) -> dict[str, Any]:
+    base = {
+        "schema": "figure-agent.quality-search-memory-events.v0",
+        "fixture": name,
+        "run_id": run_id,
+        "events": [],
+        "event_count": 0,
+    }
+    if visual_evidence.get("state") != "complete":
+        return {
+            **base,
+            "reason": "visual evidence is not complete; no learnable render outcome recorded",
+        }
+    candidates = [
+        candidate
+        for candidate in candidate_set.get("candidates", [])
+        if isinstance(candidate, dict)
+    ]
+    rankings_by_id = {
+        str(ranking.get("candidate_id")): ranking
+        for ranking in candidate_rankings
+        if isinstance(ranking, dict)
+    }
+    full_by_id = {
+        str(item.get("candidate_id")): item
+        for item in visual_evidence.get("full_comparisons", [])
+        if isinstance(item, dict)
+    }
+    panel_by_id = {
+        str(item.get("candidate_id")): item
+        for item in visual_evidence.get("panel_comparisons", [])
+        if isinstance(item, dict)
+    }
+    events: list[dict[str, Any]] = []
+    source_artifact = _workspace_relative(paths, run_dir / "visual_evidence_000.json")
+    created_at = _utc_stamp()
+    for candidate in candidates:
+        candidate_id = str(candidate.get("id") or "")
+        ranking = rankings_by_id.get(candidate_id)
+        if not isinstance(ranking, dict):
+            continue
+        full = full_by_id.get(candidate_id, {})
+        panel = panel_by_id.get(candidate_id, {})
+        full_ratio = _ratio_from_deltas(
+            full.get("visual_deltas") if isinstance(full, dict) else None
+        )
+        panel_ratio = _ratio_from_deltas(
+            panel.get("visual_deltas") if isinstance(panel, dict) else None
+        )
+        render_positive = (
+            ranking.get("render_status") == "rendered_needs_human_review"
+            and full_ratio is not None
+            and full_ratio > 0.0
+            and (panel_ratio is None or panel_ratio > 0.0)
+        )
+        outcome_state = "neutral" if render_positive else "blocked_by_render_evidence"
+        outcome_reason = (
+            "render_positive_human_unreviewed"
+            if render_positive
+            else "render_or_pixel_evidence_failed"
+        )
+        target = candidate.get("target") if isinstance(candidate.get("target"), dict) else {}
+        payload = {
+            "fixture": name,
+            "run_id": run_id,
+            "event_type": "candidate_ranked",
+            "candidate_id": candidate_id,
+            "edit_family": candidate.get("edit_family") or candidate.get("family"),
+            "target": target,
+            "outcome_state": outcome_state,
+        }
+        evidence_paths = [source_artifact]
+        if isinstance(panel, dict) and isinstance(panel.get("contact_sheet"), str):
+            evidence_paths.append(str(panel["contact_sheet"]))
+        if visual_evidence.get("contact_sheets"):
+            contact_sheets = visual_evidence.get("contact_sheets")
+            if isinstance(contact_sheets, list) and isinstance(contact_sheets[0], dict):
+                path = contact_sheets[0].get("path")
+                if isinstance(path, str):
+                    evidence_paths.append(path)
+        events.append(
+            {
+                "schema": "figure-agent.quality-memory-event.v1",
+                "fixture": name,
+                "event_id": _sha256_text(
+                    json.dumps(payload, sort_keys=True, separators=(",", ":"))
+                ),
+                "event_type": "candidate_ranked",
+                "created_at": created_at,
+                "source_artifact": source_artifact,
+                "candidate_id": candidate_id,
+                "edit_family": str(
+                    candidate.get("edit_family") or candidate.get("family") or "unknown"
+                ),
+                "target": {
+                    "panel": str(target.get("panel") or "unknown"),
+                    "subregion": str(target.get("subregion") or "unknown"),
+                },
+                "pre_state": {},
+                "post_state": {
+                    "render_status": str(ranking.get("render_status") or "unknown"),
+                    "effective_apply_authority": str(
+                        ranking.get("effective_apply_authority") or "unknown"
+                    ),
+                },
+                "outcome": {
+                    "state": outcome_state,
+                    "reason": outcome_reason,
+                    "evidence_paths": evidence_paths,
+                },
+                "metrics": {
+                    "candidate_rank_score": ranking.get("rank_score"),
+                    "full_changed_pixel_ratio": full_ratio,
+                    "panel_changed_pixel_ratio": panel_ratio,
+                },
+            }
+        )
+    return {
+        **base,
+        "events": events,
+        "event_count": len(events),
+        "reason": (
+            "render-positive outcomes are recorded as neutral until human acceptance "
+            "or post-apply evidence upgrades them"
+        ),
+    }
+
+
 def _sha256_bytes(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
@@ -1997,15 +2143,15 @@ def build_quality_search_execution(
         "fixture": name,
         "tool_defect_candidates": plan.get("tool_defect_candidates", []),
     }
-    memory_events = {
-        "schema": "figure-agent.quality-search-memory-events.v0",
-        "fixture": name,
-        "events": [],
-        "reason": (
-            "dry witness executor records no learned outcome until render/apply "
-            "evidence exists"
-        ),
-    }
+    memory_events = _quality_search_memory_events(
+        name=name,
+        run_id=run_id,
+        candidate_set=candidate_set,
+        candidate_rankings=candidate_rankings,
+        visual_evidence=visual_evidence,
+        paths=paths,
+        run_dir=run_dir,
+    )
     policy = {
         "schema": "figure-agent.quality-search-policy.v0",
         "fixture": name,
@@ -2125,6 +2271,7 @@ def build_quality_search_execution(
         "candidate_rankings": candidate_rankings,
         "candidate_scores": scores,
         "decision": decision,
+        "memory_events": memory_events,
         "depone": {
             "plan": _workspace_relative(paths, run_dir / "depone_plan_000.json"),
             "evidence_dir": _workspace_relative(paths, run_dir / "depone_evidence_000"),

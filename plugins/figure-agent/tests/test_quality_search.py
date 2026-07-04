@@ -17,6 +17,7 @@ for path in (
 ):
     sys.path.insert(0, str(path))
 
+import quality_memory_index  # noqa: E402
 import quality_search  # noqa: E402
 
 FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
@@ -263,6 +264,7 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert payload["render_results"]["render_mode"] == "none"
     assert payload["render_results"]["rendered"] == []
     assert payload["visual_evidence"]["state"] == "not_applicable"
+    assert payload["memory_events"]["event_count"] == 0
     assert len(payload["candidate_specs"]) == 4
     assert {item["family"] for item in payload["candidate_specs"]} >= {
         "hierarchy_rebalance",
@@ -361,6 +363,7 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     assert len(payload["render_results"]["rendered"]) == 3
     assert payload["render_results"]["render_mode"] == "prepare_only"
     assert payload["visual_evidence"]["state"] == "not_applicable"
+    assert payload["memory_events"]["event_count"] == 0
     assert payload["candidate_rankings"][0]["candidate_id"] == "QS001"
     assert payload["depone"]["verdict"]["contract_status"] == "pass"
     assert payload["depone"]["verdict"]["checks"]["candidate_count"] == 3
@@ -455,6 +458,78 @@ def test_quality_search_visual_evidence_writes_full_and_panel_contact_sheets(
     panel_sheet = tmp_path / evidence["panel_comparisons"][0]["contact_sheet"]
     assert full_sheet.is_file()
     assert panel_sheet.is_file()
+
+
+def test_quality_search_memory_events_record_render_positive_neutral_outcomes(
+    tmp_path: Path,
+) -> None:
+    candidate_set = {
+        "schema": "figure-agent.candidate-set.v1",
+        "fixture": "fig_demo",
+        "candidates": [
+            {
+                "id": "QS001",
+                "edit_family": "hierarchy_rebalance",
+                "family": "hierarchy_rebalance",
+                "target": {"panel": "C", "subregion": "panel"},
+            }
+        ],
+    }
+    visual_evidence = {
+        "schema": "figure-agent.quality-search-visual-evidence.v0",
+        "fixture": "fig_demo",
+        "state": "complete",
+        "full_comparisons": [
+            {
+                "candidate_id": "QS001",
+                "visual_deltas": {"changed_pixel_ratio": 0.03},
+            }
+        ],
+        "panel_comparisons": [
+            {
+                "candidate_id": "QS001",
+                "contact_sheet": ".scratch/run/QS001_panel_C_contact_sheet.png",
+                "visual_deltas": {"changed_pixel_ratio": 0.02},
+            }
+        ],
+        "contact_sheets": [
+            {
+                "kind": "candidate_full_contact_sheet",
+                "path": ".scratch/run/candidate_full_contact_sheet.png",
+            }
+        ],
+    }
+    paths = quality_search.runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    payload = quality_search._quality_search_memory_events(
+        name="fig_demo",
+        run_id="run-001",
+        candidate_set=candidate_set,
+        candidate_rankings=[
+            {
+                "candidate_id": "QS001",
+                "rank_score": 0.75,
+                "render_status": "rendered_needs_human_review",
+                "effective_apply_authority": "review_only",
+            }
+        ],
+        visual_evidence=visual_evidence,
+        paths=paths,
+        run_dir=tmp_path / ".scratch" / "run-001",
+    )
+
+    assert payload["event_count"] == 1
+    event = payload["events"][0]
+    assert event["event_type"] == "candidate_ranked"
+    assert event["outcome"]["state"] == "neutral"
+    assert event["metrics"]["candidate_rank_score"] == 0.75
+    assert event["metrics"]["full_changed_pixel_ratio"] == 0.03
+    index = quality_memory_index.build_memory_index(payload["events"])
+    assert index["families"]["hierarchy_rebalance"]["attempts"] == 1
+    assert index["families"]["hierarchy_rebalance"]["neutral"] == 1
 
 
 def test_quality_search_prefers_later_visible_panel_style_token(
