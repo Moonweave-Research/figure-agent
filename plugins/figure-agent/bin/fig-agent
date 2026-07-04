@@ -485,6 +485,20 @@ def _quality_next_experiment(argv: list[str]) -> int:
     return 0
 
 
+def _loop_metrics(argv: list[str]) -> int:
+    import quality_loop_metrics
+
+    parser = argparse.ArgumentParser(prog="fig-agent loop-metrics")
+    parser.add_argument("--json", action="store_true")
+    parser.parse_args(argv)
+    payload = quality_loop_metrics.build_loop_metrics(
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _quality_search(argv: list[str]) -> int:
     import quality_search
 
@@ -1443,6 +1457,8 @@ def main(argv: list[str] | None = None) -> int:
         return _benchmark_compare(rest)
     if command == "quality-next-experiment":
         return _quality_next_experiment(rest)
+    if command == "loop-metrics":
+        return _loop_metrics(rest)
     if command == "quality-search":
         return _quality_search(rest)
     if command == "next":
