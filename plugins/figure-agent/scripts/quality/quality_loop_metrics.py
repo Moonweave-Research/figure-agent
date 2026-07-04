@@ -411,13 +411,13 @@ def _stop_cause_histogram(workspace_root: Path) -> dict[str, Any]:
             or manifest.get("started_at")
         )
         weekly_histogram = histogram_by_week.setdefault(week, {})
-        run_auto_remedied = False
         for iteration_path in sorted(manifest_path.parent.glob("iteration_*.json")):
             iteration = _load_json_object(
                 iteration_path,
                 root=scratch,
                 code="loop_run_iteration",
             )
+            iteration_route_count = 0
             routes = iteration.get("stop_routes")
             if isinstance(routes, list):
                 for route in routes:
@@ -427,13 +427,12 @@ def _stop_cause_histogram(workspace_root: Path) -> dict[str, Any]:
                     if not isinstance(stop_cause, str) or not stop_cause:
                         continue
                     route_count += 1
+                    iteration_route_count += 1
                     _increment(total_histogram, stop_cause)
                     _increment(weekly_histogram, stop_cause)
             auto_remedy = iteration.get("auto_remedy")
             if isinstance(auto_remedy, dict) and auto_remedy.get("status") == "remedied":
-                run_auto_remedied = True
-        if run_auto_remedied:
-            auto_remedied_count += 1
+                auto_remedied_count += iteration_route_count
 
     return {
         "state": "measured" if run_count else "unmeasured",
@@ -446,7 +445,7 @@ def _stop_cause_histogram(workspace_root: Path) -> dict[str, Any]:
         },
         "auto_remedied_count": auto_remedied_count,
         "auto_remedied_fraction": (
-            None if run_count == 0 else round(auto_remedied_count / run_count, 4)
+            None if route_count == 0 else round(auto_remedied_count / route_count, 4)
         ),
     }
 

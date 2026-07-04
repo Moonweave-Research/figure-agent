@@ -339,8 +339,8 @@ def test_loop_metrics_reports_stop_cause_histogram_and_auto_remedy_fraction(
         "decision_weak": 2,
         "lever_exhausted": 1,
     }
-    assert stop_metrics["auto_remedied_count"] == 1
-    assert stop_metrics["auto_remedied_fraction"] == 0.5
+    assert stop_metrics["auto_remedied_count"] == 2
+    assert stop_metrics["auto_remedied_fraction"] == 0.6667
     assert stop_metrics["histogram_by_week"]["2026-W27"] == {
         "decision_weak": 2,
         "lever_exhausted": 1,
