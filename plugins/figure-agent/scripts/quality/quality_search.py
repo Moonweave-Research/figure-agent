@@ -45,6 +45,7 @@ PROGRESS_ACTIONS = {
 }
 FAMILY_REGISTRY_SCHEMA = "figure-agent.quality-search-family-registry.v0"
 APPARATUS_PANEL_F_TEMPLATE_ID = "v5f_panel_f_redraw_overlay_v1"
+DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
 APPARATUS_PANEL_F_OVERLAY_MARKER = "v5f Panel F art-direction redraw overlay"
 NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO = 0.002
@@ -1089,6 +1090,8 @@ def _candidate_hash(payload: dict[str, Any]) -> str:
 def _preferred_operation_scale(family: str) -> str:
     if family == "apparatus_strengthen":
         return "panel_block"
+    if family == "density_reduce":
+        return "panel_block"
     if family == "null_baseline":
         return "baseline"
     return "local_style_token"
@@ -1097,6 +1100,8 @@ def _preferred_operation_scale(family: str) -> str:
 def _preferred_template_id(family: str) -> str:
     if family == "apparatus_strengthen":
         return APPARATUS_PANEL_F_TEMPLATE_ID
+    if family == "density_reduce":
+        return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
         return "null_baseline_v1"
     return LINE_WIDTH_TEMPLATE_ID
@@ -1381,6 +1386,101 @@ def _apparatus_panel_block_replacement(
     )
 
 
+def _density_panel_e_block_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    if str(selector.get("panel") or "").upper() != "E":
+        return None
+    try:
+        line_start = int(selector["line_start"])
+        line_end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if line_start < 1 or line_end < line_start or line_end > len(lines):
+        return None
+    original = "".join(lines[line_start - 1 : line_end])
+    required = (
+        "$V_s(t)$",
+        "$g(E_t)$",
+        "Shallow",
+        "Deep",
+        "polymer",
+        "HV+",
+        "$V_s$ probe",
+        "$V_s$ meter",
+    )
+    if not all(label in original for label in required):
+        return None
+    replacement = original
+    replacements = (
+        (
+            "\\fill[cGray!6, rounded corners=1.2pt] (5.83, 4.12) rectangle (6.48, 4.37);",
+            "\\fill[cGray!6, opacity=0.70, rounded corners=1.2pt] "
+            "(5.83, 4.12) rectangle (6.48, 4.37);",
+        ),
+        (
+            "\\draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]\n"
+            "  (5.83, 4.12) rectangle (6.48, 4.37);",
+            "\\draw[cGray!48!black, line width=0.22pt, rounded corners=1.2pt]\n"
+            "  (5.83, 4.12) rectangle (6.48, 4.37);",
+        ),
+        (
+            "\\fill[cGray!70!black, rounded corners=1pt] (5.90, 4.20) rectangle (6.36, 4.33);",
+            "\\fill[cGray!55!black, opacity=0.78, rounded corners=1pt] "
+            "(5.90, 4.20) rectangle (6.36, 4.33);",
+        ),
+        (
+            "\\fill[cGray!45!black, opacity=0.5] (5.92, 4.318) rectangle (6.34, 4.324);",
+            "\\fill[cGray!45!black, opacity=0.20] (5.92, 4.318) rectangle (6.34, 4.324);",
+        ),
+        (
+            "\\fill[cGray!6, rounded corners=1.2pt] (7.68, 3.70) rectangle (8.68, 4.22);",
+            "\\fill[cGray!6, opacity=0.70, rounded corners=1.2pt] "
+            "(7.68, 3.70) rectangle (8.68, 4.22);",
+        ),
+        (
+            "\\draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]\n"
+            "  (7.68, 3.70) rectangle (8.68, 4.22);",
+            "\\draw[cGray!48!black, line width=0.22pt, rounded corners=1.2pt]\n"
+            "  (7.68, 3.70) rectangle (8.68, 4.22);",
+        ),
+        (
+            "\\fill[cGray!70!black, rounded corners=1pt] (7.80, 4.05) rectangle (8.56, 4.17);",
+            "\\fill[cGray!55!black, opacity=0.78, rounded corners=1pt] "
+            "(7.80, 4.05) rectangle (8.56, 4.17);",
+        ),
+        (
+            "\\fill[cGray!45!black, opacity=0.5] (7.82, 4.158) rectangle (8.54, 4.165);",
+            "\\fill[cGray!45!black, opacity=0.20] (7.82, 4.158) rectangle (8.54, 4.165);",
+        ),
+        (
+            "\\foreach \\cx in {6.95, 7.30} {",
+            "\\foreach \\cx in {7.12} {",
+        ),
+        (
+            "\\node[font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cGray!55!black,\n"
+            "      anchor=south] at (7.1, 4.10) {$V_s$ probe};",
+            "\\node[font=\\sffamily\\fontsize{5.0}{6.0}\\selectfont, text=cGray!45!black,\n"
+            "      anchor=south] at (7.1, 4.10) {$V_s$ probe};",
+        ),
+        (
+            "\\node[font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cGray!55!black]\n"
+            "  at (8.18, 3.86) {$V_s$ meter};",
+            "\\node[font=\\sffamily\\fontsize{5.0}{6.0}\\selectfont, text=cGray!45!black]\n"
+            "  at (8.18, 3.86) {$V_s$ meter};",
+        ),
+    )
+    for old, new in replacements:
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    if not all(label in replacement for label in required):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _candidate_operation_for_spec(
     spec: dict[str, Any],
     *,
@@ -1419,6 +1519,7 @@ def _candidate_operation_for_spec(
                 "semantic_kind": "quality_search_apparatus_strengthen_panel_block",
                 "operation_scale": "panel_block",
                 "template_id": APPARATUS_PANEL_F_TEMPLATE_ID,
+                "panel": "F",
                 "path": source_ref,
                 "line_start": line_start,
                 "line_end": line_end,
@@ -1435,6 +1536,23 @@ def _candidate_operation_for_spec(
                 "template_id": APPARATUS_PANEL_F_TEMPLATE_ID,
                 "panel": "F",
             }
+    if family == "density_reduce":
+        density_block = _density_panel_e_block_replacement(lines=lines, selector=selector)
+        if density_block is not None:
+            original, new_text, line_start, line_end = density_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_density_reduce_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": DENSITY_PANEL_E_TEMPLATE_ID,
+                "panel": "E",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
     minimum_pt = {
         "hierarchy_rebalance": 0.9,
         "apparatus_strengthen": 0.8,
@@ -1457,6 +1575,7 @@ def _candidate_operation_for_spec(
         "semantic_kind": f"quality_search_{family}",
         "operation_scale": "local_style_token",
         "template_id": LINE_WIDTH_TEMPLATE_ID,
+        "panel": str(selector.get("panel") or ""),
         "path": source_ref,
         "line_start": line_number,
         "line_end": line_number,
@@ -1505,9 +1624,11 @@ def _candidate_set_from_specs(
             if isinstance(spec.get("target_panels"), list)
             else []
         )
-        target_panel = target_panels[0] if target_panels else None
         operation_scale = str(operation.get("operation_scale") or "local_style_token")
         template_id = str(operation.get("template_id") or LINE_WIDTH_TEMPLATE_ID)
+        target_panel = str(operation.get("panel") or "") or (
+            target_panels[0] if target_panels else None
+        )
         stable_hash_payload = {
             "candidate_id": candidate_id,
             "family": spec.get("family"),
@@ -2805,6 +2926,7 @@ def _candidate_scores(
     candidate_rankings: list[dict[str, Any]] | None = None,
     visual_evidence: dict[str, Any] | None = None,
     materialized_candidate_ids: set[str] | None = None,
+    candidate_metadata_by_id: dict[str, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     classifications = plan.get("classifications")
     release_blocker_only = any(
@@ -2834,13 +2956,21 @@ def _candidate_scores(
             and candidate_id not in materialized_candidate_ids
         ):
             continue
+        metadata = (
+            candidate_metadata_by_id.get(candidate_id)
+            if isinstance(candidate_metadata_by_id, dict)
+            else None
+        )
+        metadata = metadata if isinstance(metadata, dict) else {}
         family = str(spec.get("family") or "unknown")
         score = _family_evidence_weight(family, plan)
         if release_blocker_only and family != "null_baseline":
             score += 0.03
         score = round(min(score, 1.0), 4)
         ranking = rankings_by_id.get(candidate_id)
-        operation_scale = str(spec.get("operation_scale") or "unknown")
+        operation_scale = str(
+            metadata.get("operation_scale") or spec.get("operation_scale") or "unknown"
+        )
         policy = _candidate_policy_score(
             family=family,
             operation_scale=operation_scale,
@@ -2867,8 +2997,11 @@ def _candidate_scores(
                 "candidate_id": spec.get("id"),
                 "family": family,
                 "operation_scale": operation_scale,
-                "template_id": spec.get("template_id"),
-                "expected_visual_movement": spec.get("expected_visual_movement"),
+                "template_id": metadata.get("template_id") or spec.get("template_id"),
+                "expected_visual_movement": (
+                    metadata.get("expected_visual_movement")
+                    or spec.get("expected_visual_movement")
+                ),
                 "evidence_score": score,
                 "policy_score": policy["score"],
                 "rank_score": ranking.get("rank_score") if isinstance(ranking, dict) else None,
@@ -2910,6 +3043,19 @@ def _materialized_candidate_ids(candidate_set: dict[str, Any]) -> set[str]:
         for candidate in candidate_set.get("candidates", [])
         if isinstance(candidate, dict) and candidate.get("id")
     }
+
+
+def _candidate_metadata_by_id(candidate_set: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    metadata: dict[str, dict[str, Any]] = {}
+    for candidate in candidate_set.get("candidates", []):
+        if not isinstance(candidate, dict) or not candidate.get("id"):
+            continue
+        metadata[str(candidate["id"])] = {
+            "operation_scale": candidate.get("operation_scale"),
+            "template_id": candidate.get("template_id"),
+            "expected_visual_movement": candidate.get("expected_visual_movement"),
+        }
+    return metadata
 
 
 def _execution_decision(
@@ -3045,6 +3191,7 @@ def build_quality_search_execution(
         candidate_rankings,
         visual_evidence,
         materialized_candidate_ids=materialized_ids or None,
+        candidate_metadata_by_id=_candidate_metadata_by_id(candidate_set),
     )
     decision = _execution_decision(plan, scores)
     tool_defects = {

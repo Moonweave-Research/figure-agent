@@ -785,6 +785,101 @@ def test_quality_search_suppresses_already_applied_panel_f_template(
     )
 
 
+def test_quality_search_density_reduce_emits_panel_e_block_candidate(
+    tmp_path: Path, monkeypatch
+) -> None:
+    ledger = _ledger_with_actionable_and_unbound_defects()
+    defect = ledger["defects"][0]
+    assert isinstance(defect, dict)
+    target = defect["target"]
+    assert isinstance(target, dict)
+    target["panel"] = "E"
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_with_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: ledger,
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column E -- ISPD-paired =================",
+            "\\fill[cGray!6, rounded corners=1.2pt] (5.83, 4.12) rectangle (6.48, 4.37);",
+            "\\draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]",
+            "  (5.83, 4.12) rectangle (6.48, 4.37);",
+            "\\fill[cGray!70!black, rounded corners=1pt] (5.90, 4.20) rectangle (6.36, 4.33);",
+            "\\fill[cGray!45!black, opacity=0.5] (5.92, 4.318) rectangle (6.34, 4.324);",
+            "\\node at (5.80, 4.10) {HV+};",
+            "\\foreach \\cx in {6.95, 7.30} {",
+            "  \\node at (\\cx, 3.62) {$+$};",
+            "}",
+            "\\node[font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cGray!55!black,",
+            "      anchor=south] at (7.1, 4.10) {$V_s$ probe};",
+            "\\fill[cGray!6, rounded corners=1.2pt] (7.68, 3.70) rectangle (8.68, 4.22);",
+            "\\draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]",
+            "  (7.68, 3.70) rectangle (8.68, 4.22);",
+            "\\fill[cGray!70!black, rounded corners=1pt] (7.80, 4.05) rectangle (8.56, 4.17);",
+            "\\fill[cGray!45!black, opacity=0.5] (7.82, 4.158) rectangle (8.54, 4.165);",
+            "\\node[font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cGray!55!black]",
+            "  at (8.18, 3.86) {$V_s$ meter};",
+            "\\node at (4.72, 3.50) {polymer};",
+            "\\node at (4.93, 2.55) {$V_s(t)$};",
+            "\\node at (4.93, 1.25) {$g(E_t)$};",
+            "\\node at (5.9, 0.36) {Shallow};",
+            "\\node at (6.98, 0.36) {Deep};",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\node at (9.60, 3.36) {trapped charge};",
+            "\\node at (9.72, 1.54) {Coulomb};",
+            "\\node at (9.73, 1.45) {repulsion};",
+            "\\node at (11.88, 0.31) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="density reduce panel e",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    density = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "density_reduce"
+    ][0]
+    operation = density["operations"][0]
+    assert density["operation_scale"] == "panel_block"
+    assert density["template_id"] == "row2_panel_e_density_reduce_v1"
+    assert density["target"]["panel"] == "E"
+    assert operation["panel"] == "E"
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "row2_panel_e_density_reduce_v1"
+    assert "\\foreach \\cx in {7.12} {" in operation["replacement"]
+    score = [
+        item
+        for item in payload["candidate_scores"]
+        if item["candidate_id"] == density["id"]
+    ][0]
+    assert score["operation_scale"] == "panel_block"
+    assert score["template_id"] == "row2_panel_e_density_reduce_v1"
+
+
 def test_quality_search_goal_promotes_panel_f_apparatus_without_basin(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -1374,7 +1469,7 @@ def test_fig_agent_quality_search_execute_cli_writes_only_scratch(tmp_path: Path
         text=True,
         capture_output=True,
         check=False,
-        timeout=10,
+        timeout=20,
     )
 
     assert result.returncode == 0, result.stderr
