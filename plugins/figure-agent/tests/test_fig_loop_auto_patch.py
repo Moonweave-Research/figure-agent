@@ -55,6 +55,19 @@ def test_auto_patch_eligibility_human_review_wins_over_allowed_terms() -> None:
     assert result["may_edit"] is False
 
 
+def test_auto_patch_eligibility_blocks_aesthetic_direction_terms() -> None:
+    result = auto_patch_eligibility(
+        {"recommended_next_action": "patch C001: move label for art direction"},
+        _handoff("label offset improves aesthetic balance"),
+    )
+
+    assert result is not None
+    assert result["level"] == "human_review_required"
+    assert result["allowed_reasons"] == ["label offset"]
+    assert result["blocked_reasons"] == ["aesthetic direction"]
+    assert result["may_edit"] is False
+
+
 def test_auto_patch_eligibility_defaults_to_patch_assisted_only() -> None:
     result = auto_patch_eligibility(
         {"recommended_next_action": "patch C001"},

@@ -15,7 +15,13 @@ SAFE_CLASSES = {
     "gradient_depth_fill": "bounded_gradient_depth_fill",
     "svg_visual_polish": "bounded_svg_visual_polish",
 }
-HUMAN_CLASSES = {"semantic_meaning", "taste_decision", "publication_gate"}
+HUMAN_CLASSES = {
+    "aesthetic_direction",
+    "reference_balance",
+    "semantic_meaning",
+    "taste_decision",
+    "publication_gate",
+}
 
 
 def _safe_fixture_relative_path(value: str) -> bool:

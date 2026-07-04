@@ -14,6 +14,7 @@ ALLOWED_TERMS = {
 }
 
 BLOCKED_TERMS = {
+    "aesthetic direction": ("aesthetic", "art direction", "visual taste"),
     "chemistry topology": ("chemistry", "topology", "molecule", "bond"),
     "physical mechanism": ("mechanism", "causal", "physics"),
     "causal arrow semantics": ("arrow semantics", "causal arrow"),
