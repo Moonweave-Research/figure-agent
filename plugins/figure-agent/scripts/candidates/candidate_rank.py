@@ -81,6 +81,15 @@ def _candidate_family(manifest: dict[str, Any], candidate: dict[str, Any] | None
     return str(value) if value else "unknown"
 
 
+def _candidate_metadata(
+    manifest: dict[str, Any],
+    candidate: dict[str, Any] | None,
+    key: str,
+) -> Any:
+    candidate = candidate if isinstance(candidate, dict) else {}
+    return manifest.get(key) or candidate.get(key)
+
+
 def _memory_prior(
     *,
     family: str,
@@ -192,6 +201,13 @@ def score_manifest(
     return {
         "schema": SCHEMA,
         "candidate_id": str(manifest.get("candidate_id")),
+        "operation_scale": _candidate_metadata(manifest, candidate, "operation_scale"),
+        "template_id": _candidate_metadata(manifest, candidate, "template_id"),
+        "expected_visual_movement": _candidate_metadata(
+            manifest,
+            candidate,
+            "expected_visual_movement",
+        ),
         "hard_gate_state": hard_gate_state,
         "hard_gate_failures": [] if hard_gate_state == "pass" else [hard_gate_state],
         "render_status": render_status,

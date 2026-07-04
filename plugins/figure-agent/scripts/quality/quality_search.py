@@ -41,6 +41,9 @@ PROGRESS_ACTIONS = {
     "run_export",
 }
 FAMILY_REGISTRY_SCHEMA = "figure-agent.quality-search-family-registry.v0"
+APPARATUS_PANEL_F_TEMPLATE_ID = "v5f_panel_f_redraw_overlay_v1"
+LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
+APPARATUS_PANEL_F_OVERLAY_MARKER = "v5f Panel F art-direction redraw overlay"
 PANEL_MARKER_RE = re.compile(
     r"^\s*%\s*(?:=+\s*)?(?:Panel|Column)\s+([A-Za-z0-9_-]+)\b"
 )
@@ -77,9 +80,8 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
         "builder": "panel_region_spec",
         "apply_authority": "review_only",
         "protected_labels": [
-            "$V_{\\mathrm{active}}$",
-            "DC bias",
-            "$q_{\\mathrm{tr}}$ trapped charge",
+            "q_tr",
+            "trapped charge",
             "Coulomb",
             "repulsion",
             "electrode",
@@ -833,6 +835,22 @@ def _candidate_hash(payload: dict[str, Any]) -> str:
     return _sha256_text(stable)
 
 
+def _preferred_operation_scale(family: str) -> str:
+    if family == "apparatus_strengthen":
+        return "panel_block"
+    if family == "null_baseline":
+        return "baseline"
+    return "local_style_token"
+
+
+def _preferred_template_id(family: str) -> str:
+    if family == "apparatus_strengthen":
+        return APPARATUS_PANEL_F_TEMPLATE_ID
+    if family == "null_baseline":
+        return "null_baseline_v1"
+    return LINE_WIDTH_TEMPLATE_ID
+
+
 def _line_width_replacement(
     *,
     lines: list[str],
@@ -864,6 +882,95 @@ def _line_width_replacement(
     return replacement
 
 
+def _panel_f_overlay_range(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[int, int] | None:
+    if str(selector.get("panel") or "").upper() != "F":
+        return None
+    try:
+        start = int(selector["line_start"])
+        end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if start < 1 or end < start or end > len(lines):
+        return None
+    marker_index = None
+    for index in range(start - 1, end):
+        if APPARATUS_PANEL_F_OVERLAY_MARKER in lines[index]:
+            marker_index = index
+            break
+    if marker_index is None:
+        return None
+    line_end = end
+    for index in range(marker_index + 1, end):
+        if "v8.6 ROW 2 END" in lines[index]:
+            line_end = index + 1
+            break
+    return marker_index + 1, line_end
+
+
+def _panel_f_overlay_has_protected_labels(block: str) -> bool:
+    lowered = block.lower()
+    return all(
+        (
+            "q_{\\mathrm{tr}}" in block or "q_tr" in lowered,
+            "trapped charge" in lowered,
+            "coulomb" in lowered,
+            "repulsion" in lowered,
+            "electrode" in lowered,
+            "air gap" in lowered,
+            "mechanical" in lowered,
+        )
+    )
+
+
+def _strengthened_panel_f_overlay(block: str) -> str | None:
+    replacement = block
+    replacements = (
+        ("opacity=0.13", "opacity=0.08"),
+        ("line width=0.34pt, rounded corners=1.2pt", "line width=0.28pt, rounded corners=1.2pt"),
+        ("line width=0.56pt", "line width=0.72pt"),
+        ("Stealth[length=7pt,width=5pt]", "Stealth[length=8.5pt,width=6.2pt]"),
+        ("line width=0.82pt", "line width=1.08pt"),
+        ("(10.95, 1.18) -- (9.74, 1.18);", "(11.08, 1.18) -- (9.54, 1.18);"),
+        ("fontsize{4.2}{5.1}", "fontsize{4.8}{5.8}"),
+        ("ball color=cRed!72!black", "ball color=cRed!78!black"),
+        ("circle ({1.45*\\rr})", "circle ({1.85*\\rr})"),
+        (
+            "\\draw[<->, cGray!55!black, line width=0.30pt]",
+            "\\draw[<->, cGray!62!black, line width=0.46pt]",
+        ),
+        ("(10.58, 0.54) -- (13.18, 0.54);", "(10.42, 0.54) -- (13.18, 0.54);"),
+    )
+    for old, new in replacements:
+        replacement = replacement.replace(old, new)
+    if replacement == block:
+        return None
+    if not _panel_f_overlay_has_protected_labels(replacement):
+        return None
+    return replacement
+
+
+def _apparatus_panel_block_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    replacement = _strengthened_panel_f_overlay(original)
+    if replacement is None:
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _candidate_operation_for_spec(
     spec: dict[str, Any],
     *,
@@ -890,6 +997,22 @@ def _candidate_operation_for_spec(
         (item for item in bound_selectors if item.get("panel") == preferred_panel),
         bound_selectors[0],
     )
+    if family == "apparatus_strengthen":
+        panel_block = _apparatus_panel_block_replacement(lines=lines, selector=selector)
+        if panel_block is not None:
+            original, new_text, line_start, line_end = panel_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_apparatus_strengthen_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": APPARATUS_PANEL_F_TEMPLATE_ID,
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
     minimum_pt = {
         "hierarchy_rebalance": 0.9,
         "apparatus_strengthen": 0.8,
@@ -910,6 +1033,8 @@ def _candidate_operation_for_spec(
     operation = {
         "kind": "replace_text",
         "semantic_kind": f"quality_search_{family}",
+        "operation_scale": "local_style_token",
+        "template_id": LINE_WIDTH_TEMPLATE_ID,
         "path": source_ref,
         "line_start": line_number,
         "line_end": line_number,
@@ -941,7 +1066,7 @@ def _candidate_set_from_specs(
             "candidates": [],
             "refusals": [{"code": str(source_context.get("source_state") or "source_missing")}],
         }
-    lines = source_path.read_text(encoding="utf-8").splitlines()
+    lines = source_path.read_text(encoding="utf-8").splitlines(keepends=True)
     candidates: list[dict[str, Any]] = []
     refusals: list[dict[str, str]] = []
     for spec in specs:
@@ -959,18 +1084,28 @@ def _candidate_set_from_specs(
             else []
         )
         target_panel = target_panels[0] if target_panels else None
+        operation_scale = str(operation.get("operation_scale") or "local_style_token")
+        template_id = str(operation.get("template_id") or LINE_WIDTH_TEMPLATE_ID)
         stable_hash_payload = {
             "candidate_id": candidate_id,
             "family": spec.get("family"),
             "source_hash": source_context.get("source_hash"),
             "operation": operation,
         }
+        edit_class = (
+            "quality_search_panel_block"
+            if operation_scale == "panel_block"
+            else "quality_search_style_token"
+        )
         candidates.append(
             {
                 "id": candidate_id,
                 "family": spec.get("family"),
-                "edit_class": "quality_search_style_token",
+                "edit_class": edit_class,
                 "edit_family": spec.get("family"),
+                "operation_scale": operation_scale,
+                "template_id": template_id,
+                "expected_visual_movement": str(spec.get("expected_visual_movement") or ""),
                 "target": {
                     "panel": target_panel,
                     "subregion": str(spec.get("target_scope") or "quality_search"),
@@ -983,7 +1118,11 @@ def _candidate_set_from_specs(
                     "review-only art-direction candidate; scientific labels are protected"
                 ],
                 "boundedness": {
-                    "changes": "one style token inside a bound panel region",
+                    "changes": (
+                        "one bounded panel block inside a bound panel region"
+                        if operation_scale == "panel_block"
+                        else "one style token inside a bound panel region"
+                    ),
                     "does_not_change": [
                         "fixture source unless separately applied",
                         "accepted state",
@@ -1930,6 +2069,8 @@ def _candidate_specs_from_plan(
         registry = _family_registry_entry(family)
         target_panels = _target_panels_from_hint(hypothesis)
         source_selectors = _source_selectors_for_panels(source_context, target_panels)
+        operation_scale = _preferred_operation_scale(family)
+        template_id = _preferred_template_id(family)
         specs.append(
             {
                 "id": f"QS{index:03d}",
@@ -1946,6 +2087,8 @@ def _candidate_specs_from_plan(
                 "design_moves": registry["design_moves"],
                 "render_targets": registry["render_targets"],
                 "apply_authority": registry["apply_authority"],
+                "operation_scale": operation_scale,
+                "template_id": template_id,
                 "operations": [],
                 "operation_state": "not_generated",
                 "operation_block_reason": (
@@ -1979,6 +2122,8 @@ def _candidate_specs_from_plan(
             "design_moves": [],
             "render_targets": ["full"],
             "apply_authority": "review_only",
+            "operation_scale": "baseline",
+            "template_id": "null_baseline_v1",
             "operations": [],
             "operation_state": "not_applicable",
             "mutation_allowed": False,
@@ -2179,6 +2324,9 @@ def _candidate_scores(
             {
                 "candidate_id": spec.get("id"),
                 "family": family,
+                "operation_scale": spec.get("operation_scale"),
+                "template_id": spec.get("template_id"),
+                "expected_visual_movement": spec.get("expected_visual_movement"),
                 "evidence_score": score,
                 "policy_score": policy["score"],
                 "rank_score": ranking.get("rank_score") if isinstance(ranking, dict) else None,

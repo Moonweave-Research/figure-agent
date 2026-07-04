@@ -280,6 +280,8 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     ][0]
     assert hierarchy["builder"] == "panel_region_spec"
     assert hierarchy["apply_authority"] == "review_only"
+    assert hierarchy["operation_scale"] == "local_style_token"
+    assert hierarchy["template_id"] == "line_width_minimum_v1"
     assert hierarchy["protected_labels"]
     assert hierarchy["design_moves"]
     assert hierarchy["operation_state"] == "not_generated"
@@ -291,6 +293,9 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert all("witness" in item for item in payload["candidate_scores"])
     assert all("policy" in item for item in payload["candidate_scores"])
     assert all("policy_score" in item for item in payload["candidate_scores"])
+    assert all("operation_scale" in item for item in payload["candidate_scores"])
+    assert all("template_id" in item for item in payload["candidate_scores"])
+    assert all("expected_visual_movement" in item for item in payload["candidate_scores"])
     assert all(path.startswith(".scratch/quality-search-runs/") for path in payload["writes"])
 
     run_dir = tmp_path / payload["run_dir"]
@@ -363,7 +368,10 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     assert len(payload["candidate_set"]["candidates"]) == 3
     first_candidate = payload["candidate_set"]["candidates"][0]
     assert first_candidate["id"] == "QS001"
+    assert first_candidate["operation_scale"] == "local_style_token"
+    assert first_candidate["template_id"] == "line_width_minimum_v1"
     assert first_candidate["operations"][0]["kind"] == "replace_text"
+    assert first_candidate["operations"][0]["operation_scale"] == "local_style_token"
     assert "line width=0.9pt" in first_candidate["operations"][0]["replacement"]
     assert len(payload["render_results"]["rendered"]) == 3
     assert payload["render_results"]["render_mode"] == "prepare_only"
@@ -401,6 +409,102 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     )
     assert depone_contract["schema_version"] == "v105.verify_wedge"
     assert "quality-search-verdict.json" in depone_contract["required_evidence"]
+
+
+def test_quality_search_apparatus_strengthen_emits_panel_block_candidate(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_with_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[cGray!35!black, opacity=0.13, rounded corners=1.2pt]",
+            "  (12.58, 3.54) rectangle (13.62, 4.14);",
+            "\\draw[cGray!64!black, line width=0.34pt, rounded corners=1.2pt]",
+            "  (12.52, 3.59) rectangle (13.56, 4.19);",
+            "\\node at (13.04, 3.82) {$V_{\\mathrm{active}}$};",
+            "\\node at (12.91, 3.64) {DC bias};",
+            "\\draw[cGray!86!black, line width=0.56pt] (13.18, 0.46) rectangle (13.42, 2.82);",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\node at (12.13, 3.08) {$q_{\\mathrm{tr}}$ trapped charge};",
+            (
+                "\\draw[panelFCoulombRepulsionArrow, -{Stealth[length=7pt,width=5pt]}, "
+                "cRed!82!black, line width=0.82pt]"
+            ),
+            "  (10.95, 1.18) -- (9.74, 1.18);",
+            "\\node at (9.68, 1.55) {Coulomb};",
+            "\\node at (9.70, 1.46) {repulsion};",
+            "\\draw[<->, cGray!55!black, line width=0.30pt]",
+            "  (10.58, 0.54) -- (13.18, 0.54);",
+            "\\node at (11.88, 0.31) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% ============================================================",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="apparatus panel block",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    specs_by_family = {item["family"]: item for item in payload["candidate_specs"]}
+    apparatus_spec = specs_by_family["apparatus_strengthen"]
+    assert apparatus_spec["operation_scale"] == "panel_block"
+    assert apparatus_spec["template_id"] == "v5f_panel_f_redraw_overlay_v1"
+
+    apparatus = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "apparatus_strengthen"
+    ][0]
+    operation = apparatus["operations"][0]
+    assert apparatus["edit_class"] == "quality_search_panel_block"
+    assert apparatus["operation_scale"] == "panel_block"
+    assert apparatus["template_id"] == "v5f_panel_f_redraw_overlay_v1"
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "v5f_panel_f_redraw_overlay_v1"
+    assert operation["line_start"] == 4
+    assert operation["line_end"] == 23
+    assert "v5f Panel F art-direction redraw overlay" in operation["original"]
+    assert "Stealth[length=8.5pt,width=6.2pt]" in operation["replacement"]
+    assert "line width=1.08pt" in operation["replacement"]
+    for protected in (
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "mechanical",
+    ):
+        assert protected in operation["replacement"]
+
+    by_id = {item["candidate_id"]: item for item in payload["candidate_scores"]}
+    score = by_id[apparatus["id"]]
+    assert score["operation_scale"] == "panel_block"
+    assert score["template_id"] == "v5f_panel_f_redraw_overlay_v1"
+    assert "Panel F apparatus reads" in score["expected_visual_movement"]
 
 
 def test_quality_search_policy_uses_memory_prior_and_exploration_bonus() -> None:
@@ -624,8 +728,11 @@ def test_quality_search_prefers_later_visible_panel_style_token(
         if item["family"] == "apparatus_strengthen"
     ][0]
     operation = apparatus["operations"][0]
+    assert apparatus["operation_scale"] == "local_style_token"
+    assert apparatus["template_id"] == "line_width_minimum_v1"
     assert operation["line_start"] == 8
     assert operation["line_end"] == 8
+    assert operation["operation_scale"] == "local_style_token"
     assert "line width=0.34pt" in operation["original"]
     assert "line width=0.8pt" in operation["replacement"]
 

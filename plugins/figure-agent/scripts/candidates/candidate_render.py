@@ -558,6 +558,9 @@ def render_candidate_set(
             "edit_class": candidate.get("edit_class"),
             "edit_family": candidate.get("edit_family"),
             "family": candidate.get("family"),
+            "operation_scale": candidate.get("operation_scale"),
+            "template_id": candidate.get("template_id"),
+            "expected_visual_movement": candidate.get("expected_visual_movement"),
             "variant_id": candidate.get("variant_id"),
             "variant": candidate.get("variant"),
             "panel": (
