@@ -747,7 +747,7 @@ reference_policy:
     assert payload["results"][1]["status"] == "skipped"
 
 
-def test_benchmark_run_write_writes_only_run_manifest(tmp_path: Path) -> None:
+def test_benchmark_run_write_appends_trend_row(tmp_path: Path) -> None:
     plugin_root = _plugin_root(tmp_path)
     workspace = tmp_path / "workspace"
     _fixture(workspace)
@@ -761,15 +761,64 @@ def test_benchmark_run_write_writes_only_run_manifest(tmp_path: Path) -> None:
     )
 
     output = workspace / ".scratch" / "figure-agent-benchmarks" / "RUN001" / "run.json"
-    assert payload["writes"] == [".scratch/figure-agent-benchmarks/RUN001/run.json"]
+    trend = workspace / ".scratch" / "figure-agent-benchmarks" / "trends" / "smoke.jsonl"
+    assert payload["writes"] == [
+        ".scratch/figure-agent-benchmarks/RUN001/run.json",
+        ".scratch/figure-agent-benchmarks/trends/smoke.jsonl",
+    ]
     assert output.is_file()
+    assert trend.is_file()
+    trend_rows = [json.loads(line) for line in trend.read_text(encoding="utf-8").splitlines()]
+    assert trend_rows[0]["run_id"] == "RUN001"
+    assert trend_rows[0]["capability_metrics"]["completed_rate"] == 0.5
     files = [
         path.relative_to(workspace).as_posix()
         for path in workspace.rglob("*")
         if path.is_file()
     ]
     assert ".scratch/figure-agent-benchmarks/RUN001/run.json" in files
+    assert ".scratch/figure-agent-benchmarks/trends/smoke.jsonl" in files
     assert "examples/candidate_demo/build/candidates/candidate_set.json" not in files
+
+
+def test_benchmark_run_trend_regression_emits_tool_defect(tmp_path: Path) -> None:
+    plugin_root = _plugin_root(tmp_path)
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+    trend = workspace / ".scratch" / "figure-agent-benchmarks" / "trends" / "smoke.jsonl"
+    trend.parent.mkdir(parents=True)
+    trend.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.quality-benchmark-trend.v1",
+                "run_id": "BASELINE",
+                "suite": "smoke",
+                "capability_metrics": {
+                    "completed_rate": 0.5,
+                    "candidate_specific_rank_rate": 1.0,
+                },
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    payload = quality_benchmark.run_benchmark_suite(
+        "smoke",
+        plugin_root=plugin_root,
+        workspace_root=workspace,
+        write=True,
+        run_id="RUN002",
+    )
+
+    defects = payload["tool_defect_candidates"]
+    assert defects
+    assert defects[0]["symptom"] == "benchmark loop capability regressed"
+    assert defects[0]["actual_behavior"]["metric"] == "candidate_specific_rank_rate"
+    assert defects[0]["actual_behavior"]["previous"] == 1.0
+    assert defects[0]["actual_behavior"]["current"] == 0.0
+    assert len(trend.read_text(encoding="utf-8").splitlines()) == 2
 
 
 def test_benchmark_run_write_refuses_symlinked_run_dir(tmp_path: Path) -> None:
