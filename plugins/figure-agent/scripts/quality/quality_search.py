@@ -18,6 +18,7 @@ from typing import Any
 
 import candidate_rank
 import candidate_render
+import candidate_review_packet
 import candidate_visual_eval
 import fig_driver
 import fixture_identity
@@ -4393,6 +4394,37 @@ def _execution_decision(
     }
 
 
+def _selected_review_packet(
+    name: str,
+    decision: dict[str, Any],
+    *,
+    paths: runtime_paths.RuntimePaths,
+) -> dict[str, Any] | None:
+    candidate_id = decision.get("selected_candidate_id")
+    if (
+        decision.get("candidate_state") != NON_MARGINAL_REVIEW_CANDIDATE_STATE
+        or not isinstance(candidate_id, str)
+        or not candidate_id.strip()
+    ):
+        return None
+    try:
+        packet = candidate_review_packet.build_review_packet(
+            name,
+            candidate_id,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+        )
+    except (ValueError, candidate_review_packet.CandidateReviewPacketError) as exc:
+        return {
+            "schema": "figure-agent.selected-candidate-review-packet.v0",
+            "status": "error",
+            "candidate_id": candidate_id,
+            "error": str(exc),
+        }
+    packet["status"] = "ready"
+    return packet
+
+
 def build_quality_search_execution(
     name: str,
     *,
@@ -4456,6 +4488,8 @@ def build_quality_search_execution(
         candidate_metadata_by_id=_candidate_metadata_by_id(candidate_set),
     )
     decision = _execution_decision(plan, scores, fixture_name=name)
+    _write_json(run_dir / "candidate_set_000.json", candidate_set)
+    selected_review_packet = _selected_review_packet(name, decision, paths=paths)
     tool_defects = {
         "schema": "figure-agent.quality-search-tool-defects.v0",
         "fixture": name,
@@ -4500,6 +4534,11 @@ def build_quality_search_execution(
             "candidate_scores_000.json",
             "candidate_rankings_000.json",
             "decision_000.json",
+            *(
+                ["selected_review_packet_000.json"]
+                if selected_review_packet is not None
+                else []
+            ),
             "tool_defect_candidates_000.json",
             "memory_events_000.json",
             "depone_plan_000.json",
@@ -4548,6 +4587,11 @@ def build_quality_search_execution(
             "scores": candidate_rankings,
         },
         "decision_000.json": decision,
+        **(
+            {"selected_review_packet_000.json": selected_review_packet}
+            if selected_review_packet is not None
+            else {}
+        ),
         "tool_defect_candidates_000.json": tool_defects,
         "memory_events_000.json": memory_events,
         "depone_plan_000.json": depone_pack["depone_plan"],
@@ -4590,6 +4634,7 @@ def build_quality_search_execution(
         "candidate_rankings": candidate_rankings,
         "candidate_scores": scores,
         "decision": decision,
+        "selected_review_packet": selected_review_packet,
         "memory_events": memory_events,
         "depone": {
             "plan": _workspace_relative(paths, run_dir / "depone_plan_000.json"),

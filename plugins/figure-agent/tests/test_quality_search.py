@@ -1998,6 +1998,51 @@ def test_quality_search_decision_accepts_panel_crop_non_marginal_candidate() -> 
     assert decision["next_action"] == "review selected candidate evidence"
 
 
+def test_quality_search_builds_selected_review_packet_for_ready_candidate(
+    tmp_path: Path, monkeypatch
+) -> None:
+    paths = quality_search.runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+    decision = {
+        "candidate_state": "non_marginal_review_candidate_ready",
+        "selected_candidate_id": "QS002",
+    }
+
+    def fake_review_packet(
+        name: str,
+        candidate_id: str,
+        *,
+        plugin_root: Path,
+        workspace_root: Path,
+    ) -> dict[str, object]:
+        assert name == "fig_demo"
+        assert candidate_id == "QS002"
+        assert plugin_root == PLUGIN_ROOT
+        assert workspace_root == tmp_path
+        return {
+            "schema": "figure-agent.candidate-review-packet.v1",
+            "candidate_id": candidate_id,
+            "render_status": "rendered_needs_human_review",
+        }
+
+    monkeypatch.setattr(
+        quality_search.candidate_review_packet,
+        "build_review_packet",
+        fake_review_packet,
+    )
+
+    packet = quality_search._selected_review_packet("fig_demo", decision, paths=paths)
+
+    assert packet == {
+        "schema": "figure-agent.candidate-review-packet.v1",
+        "candidate_id": "QS002",
+        "render_status": "rendered_needs_human_review",
+        "status": "ready",
+    }
+
+
 def test_quality_search_visual_evidence_writes_full_and_panel_contact_sheets(
     tmp_path: Path,
 ) -> None:
