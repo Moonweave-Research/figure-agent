@@ -19,6 +19,7 @@ DEFAULT_FAMILIES = (
     "panel_c_hero_finish",
     "apparatus_strengthen",
     "panel_f_final_finish",
+    "panel_f_label_route_finish",
     "panel_f_boundary_polish",
     "density_reduce",
 )

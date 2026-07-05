@@ -180,6 +180,7 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
         "panel_c_hero_finish",
         "apparatus_strengthen",
         "panel_f_final_finish",
+        "panel_f_label_route_finish",
         "panel_f_boundary_polish",
         "density_reduce",
     }
@@ -341,12 +342,13 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert payload["render_results"]["rendered"] == []
     assert payload["visual_evidence"]["state"] == "not_applicable"
     assert payload["memory_events"]["event_count"] == 0
-    assert len(payload["candidate_specs"]) == 7
+    assert len(payload["candidate_specs"]) == 8
     assert {item["family"] for item in payload["candidate_specs"]} >= {
         "hierarchy_rebalance",
         "panel_c_hero_finish",
         "apparatus_strengthen",
         "panel_f_final_finish",
+        "panel_f_label_route_finish",
         "panel_f_boundary_polish",
         "density_reduce",
         "null_baseline",
@@ -996,6 +998,107 @@ def test_quality_search_panel_f_final_finish_emits_post_boundary_panel_block(
     assert "(11.38,2.58) .. controls (10.84,3.42)" in operation["replacement"]
     assert "at (9.62, 3.32) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
     assert "at (9.62, 3.58) {trapped charge};" in operation["replacement"]
+
+
+def test_quality_search_panel_f_label_route_finish_emits_panel_block_candidate(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_with_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column E -- ISPD-paired =================",
+            "\\draw[cAmber!70!black, line width=0.25pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);",
+            "\\fill[cGray!30!black, opacity=0.010]",
+            "  (12.58, 3.78) rectangle (13.48, 4.14);",
+            "\\fill[cGray!2] (12.60, 3.86) rectangle (13.40, 4.12);",
+            "\\draw[cGray!46!black, line width=0.18pt, rounded corners=1.0pt]",
+            "  (12.60, 3.86) rectangle (13.40, 4.12);",
+            "\\node at (13.00, 3.96) {$V_{\\mathrm{active}}$};",
+            "\\node at (13.00, 3.86) {bias};",
+            (
+                "\\draw[cGray!52!black, line width=0.22pt, "
+                "dash pattern=on 1.2pt off 0.9pt, rounded corners=1.0pt]"
+            ),
+            "  (13.24, 3.72) -- (13.18, 3.30) -- (13.18, 2.82);",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\foreach \\cx/\\cy/\\rr in {11.62/2.28/0.075,11.43/1.86/0.082} {",
+            (
+                "  \\draw[cRed!35!white, line width=0.25pt, opacity=0.36] "
+                "(\\cx,\\cy) circle ({2.35*\\rr});"
+            ),
+            "  \\shade[ball color=cRed!82!black] (\\cx,\\cy) circle (\\rr);",
+            "}",
+            "\\draw[cRed!58!black, line width=0.36pt]",
+            "  (11.38,2.58) .. controls (10.84,3.42) and (10.14,3.76) .. (9.62,3.64);",
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,\n"
+                "      inner xsep=0.9pt, inner ysep=0.45pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{4.2}{5.0}\\selectfont, "
+                "text=cRed!76!black]\n"
+                "  at (9.62, 3.32) {$q_{\\mathrm{tr}}$};"
+            ),
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.94, text opacity=1,\n"
+                "      inner xsep=1.0pt, inner ysep=0.45pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{4.0}{4.8}\\selectfont, "
+                "text=cRed!76!black]\n"
+                "  at (9.62, 3.58) {trapped charge};"
+            ),
+            "\\node at (9.58, 1.54) {Coulomb};",
+            "\\node at (9.59, 1.45) {repulsion};",
+            "\\draw[<->, cGray!62!black, line width=0.62pt]",
+            "  (10.36, 0.54) -- (13.18, 0.54);",
+            "\\node at (11.88, 0.31) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="Panel F label routing finish",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    label_route = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_label_route_finish"
+    ][0]
+    operation = label_route["operations"][0]
+    assert label_route["operation_scale"] == "panel_block"
+    assert label_route["template_id"] == "v5f_panel_f_label_route_finish_v1"
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "v5f_panel_f_label_route_finish_v1"
+    assert "circle ({2.05*\\rr})" in operation["replacement"]
+    assert "(11.50,2.48) .. controls (11.16,3.04)" in operation["replacement"]
+    assert "at (9.74, 3.52) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
+    assert "at (9.74, 3.80) {trapped charge};" in operation["replacement"]
+    assert "(13.30, 3.72) -- (13.30, 3.28) -- (13.30, 2.82);" in operation[
+        "replacement"
+    ]
 
 
 def test_quality_search_panel_c_hero_finish_emits_panel_block_candidate(
