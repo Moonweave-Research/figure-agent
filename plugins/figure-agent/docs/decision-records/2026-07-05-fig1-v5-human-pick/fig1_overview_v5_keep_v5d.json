@@ -1,0 +1,16 @@
+{
+  "schema": "figure-agent.human-decision-record.v1",
+  "fixture": "fig1_overview_v5f_art_direction_001_vault",
+  "packet_schema": "figure-agent.design-direction-packet.v1",
+  "packet_path": "docs/decision-packets/2026-07-05-fig1-v5-human-pick/fig1_overview_v5_visual_direction.json",
+  "packet_recommendation": "keep_current_style",
+  "packet_timestamp": "2026-07-05T16:05:00+09:00",
+  "decision_kind": "keep_current_style",
+  "agent_recommendation": "Record v5d as the human-selected finished visual direction and stop treating v5f as a promotion candidate.",
+  "human_decision": "keep_current_style",
+  "human_note": "Human selected v5d: 'v5d 이건 내 픽이다, 완성도가 됐고.' Human rejected/deferred v5f because its completion quality feels wrong and it reads like the loop keeps stopping mid-drawing.",
+  "follow_up": {
+    "implementation_slice": "Use fig1_overview_v5d_redraw_001_vault as the selected visual direction. Freeze v5f as a rejected/deferred comparison lane unless explicitly reopened."
+  },
+  "mutation_boundary": "no_source_mutation"
+}
