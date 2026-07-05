@@ -776,6 +776,21 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
         in operation["replacement"]
     )
     assert "rounded corners=1.1pt" in operation["replacement"]
+    qtr_label = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_qtr_label_lane"
+    ][0]
+    label_operation = qtr_label["operations"][0]
+    assert qtr_label["operation_scale"] == "panel_block"
+    assert qtr_label["template_id"] == "v5d_panel_f_qtr_label_lane_v1"
+    assert qtr_label["protected_labels"] == ["q_tr", "trapped charge"]
+    assert "(9.50, 2.72) rectangle (10.72, 3.25);" in label_operation["replacement"]
+    assert "line width=0.48pt" in label_operation["replacement"]
+    assert "circle (0.185);" in label_operation["replacement"]
+    assert "circle (0.155);" in label_operation["replacement"]
+    assert "at (9.58, 2.84) {$q_{tr}$};" in label_operation["replacement"]
+    assert "at (9.58, 3.12) {trapped charge};" in label_operation["replacement"]
     by_family = {item["family"]: item for item in payload["candidate_scores"]}
     assert by_family["panel_f_qtr_apparatus_lane"]["operation_scale"] == "panel_block"
 

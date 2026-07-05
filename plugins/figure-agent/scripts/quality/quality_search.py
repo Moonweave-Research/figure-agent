@@ -218,11 +218,6 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
         "protected_labels": [
             "q_tr",
             "trapped charge",
-            "Coulomb",
-            "repulsion",
-            "electrode",
-            "air gap",
-            "mechanical",
         ],
         "design_moves": [
             "give q_tr a dedicated label lane instead of enlarging the inline mark",
@@ -1871,9 +1866,10 @@ def _apparatus_panel_block_replacement(
 def _panel_f_qtr_label_lane_template_applied(block: str) -> bool:
     required_fragments = (
         "quality-search C001 q_tr label lane",
-        "at (9.72, 2.86) {$q_{tr}$};",
-        "at (9.72, 3.08) {trapped charge};",
-        "(11.90, 2.00) .. controls (11.36, 2.66) and (10.34, 2.88) .. (9.98, 2.88);",
+        "at (9.58, 2.84) {$q_{tr}$};",
+        "at (9.58, 3.12) {trapped charge};",
+        "circle (0.155);",
+        "(11.90, 2.00) .. controls (11.20, 2.76) and (10.18, 2.92) .. (9.88, 2.92);",
     )
     return all(fragment in block for fragment in required_fragments)
 
@@ -1903,17 +1899,26 @@ def _panel_f_qtr_label_lane_replacement(
     )
     replacement = (
         "% quality-search C001 q_tr label lane -- review-only candidate\n"
-        "\\draw[cRed!58!black, line width=0.34pt]\n"
-        "  (11.90, 2.00) .. controls (11.36, 2.66) and (10.34, 2.88) .. (9.98, 2.88);\n"
+        "\\fill[white, opacity=0.96, rounded corners=1.0pt]\n"
+        "  (9.50, 2.72) rectangle (10.72, 3.25);\n"
+        "\\draw[cRed!32!white, line width=0.22pt, rounded corners=1.0pt]\n"
+        "  (9.50, 2.72) rectangle (10.72, 3.25);\n"
+        "\\draw[cRed!62!black, line width=0.48pt]\n"
+        "  (11.90, 2.00) .. controls (11.20, 2.76) and (10.18, 2.92) .. (9.88, 2.92);\n"
+        "\\fill[cRed!68!black] (9.88, 2.92) circle (0.024);\n"
+        "\\foreach \\cx/\\cy in {11.90/2.00, 11.66/1.48, 11.34/1.07} {\n"
+        "  \\fill[cRed!72!black, opacity=0.10] (\\cx, \\cy) circle (0.185);\n"
+        "  \\draw[cRed!80!black, line width=0.56pt, opacity=0.86] (\\cx, \\cy) circle (0.155);\n"
+        "}\n"
         "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,\n"
-        "      inner xsep=1.4pt, inner ysep=0.7pt,\n"
-        "      font=\\sffamily\\bfseries\\fontsize{7.2}{8.6}\\selectfont,\n"
-        "      text=cRed!82!black]\n"
-        "  at (9.72, 2.86) {$q_{tr}$};\n"
+        "      inner xsep=1.8pt, inner ysep=0.9pt,\n"
+        "      font=\\sffamily\\bfseries\\fontsize{8.2}{9.8}\\selectfont,\n"
+        "      text=cRed!86!black]\n"
+        "  at (9.58, 2.84) {$q_{tr}$};\n"
         "\\node[labelMute, anchor=west, fill=white, fill opacity=0.94, text opacity=1,\n"
-        "      inner xsep=1.3pt, inner ysep=0.5pt,\n"
-        "      font=\\sffamily\\fontsize{5.6}{6.7}\\selectfont, text=cRed!70!black]\n"
-        "  at (9.72, 3.08) {trapped charge};\n"
+        "      inner xsep=1.6pt, inner ysep=0.7pt,\n"
+        "      font=\\sffamily\\fontsize{6.3}{7.5}\\selectfont, text=cRed!74!black]\n"
+        "  at (9.58, 3.12) {trapped charge};\n"
     )
     offset = block.find(original)
     if offset < 0:
