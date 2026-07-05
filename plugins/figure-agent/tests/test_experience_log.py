@@ -130,7 +130,14 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
                 "edit_family": "panel_f_qtr_apparatus_lane",
                 "target": {"panel": "F", "subregion": "qtr_apparatus"},
                 "operations": [{"kind": "replace_text", "path": "candidate_demo.tex"}],
-            }
+            },
+            {
+                "id": "QS002",
+                "candidate_hash": "sha256:" + "2" * 64,
+                "edit_family": "panel_f_qtr_label_lane",
+                "target": {"panel": "F", "subregion": "qtr_label"},
+                "operations": [{"kind": "replace_text", "path": "candidate_demo.tex"}],
+            },
         ]
     }
 
@@ -138,7 +145,10 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
         "candidate_demo",
         "QS001",
         candidate_set=candidate_set,
-        ranking={"rank_score": 0.81, "rank": 1},
+        candidate_rankings=[
+            {"candidate_id": "QS001", "rank_score": 0.81},
+            {"candidate_id": "QS002", "rank_score": 0.52},
+        ],
         decision={"source_context": {"source_hash": "sha256:" + "0" * 64}},
         recommendation={
             "status": "auto_accept_recommended",
@@ -157,12 +167,13 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
     output = plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
     rows = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
     assert result["writes"] == ["docs/experience-log/candidate_demo.jsonl"]
-    assert len(rows) == 1
+    assert len(rows) == 2
     row = rows[0]
     assert row["schema"] == "figure-agent.experience-record.v1"
     assert row["action"]["candidate_id"] == "QS001"
     assert row["action"]["edit_family"] == "panel_f_qtr_apparatus_lane"
     assert row["action"]["rank_score"] == 0.81
+    assert row["action"]["rank"] == 1
     assert row["outcome"]["apply_status"] == "blocked"
     assert row["outcome"]["quality_movement"] == "neutral"
     assert row["outcome"]["human_label"] is None
@@ -175,6 +186,14 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
         "semantic_precheck": "pass",
     }
     assert row["outcome"]["pixel_delta"]["changed_pixel_ratio"] == 0.005
+    unchosen = rows[1]
+    assert unchosen["action"]["candidate_id"] == "QS002"
+    assert unchosen["action"]["edit_family"] == "panel_f_qtr_label_lane"
+    assert unchosen["action"]["rank_score"] == 0.52
+    assert unchosen["action"]["rank"] == 2
+    assert unchosen["outcome"]["apply_status"] == "unchosen"
+    assert unchosen["outcome"]["quality_movement"] is None
+    assert unchosen["outcome"]["human_decision_kind"] == "counterfactual_unchosen"
 
 
 def test_experience_log_is_append_only(tmp_path: Path) -> None:

@@ -4863,16 +4863,6 @@ def _selected_acceptance_recommendation(
     }
 
 
-def _ranking_for_candidate(
-    candidate_rankings: list[dict[str, Any]],
-    candidate_id: str,
-) -> dict[str, Any]:
-    for ranking in candidate_rankings:
-        if isinstance(ranking, dict) and ranking.get("candidate_id") == candidate_id:
-            return ranking
-    return {}
-
-
 def build_quality_search_execution(
     name: str,
     *,
@@ -4961,7 +4951,7 @@ def build_quality_search_execution(
             name,
             selected_candidate_id,
             candidate_set=candidate_set,
-            ranking=_ranking_for_candidate(candidate_rankings, selected_candidate_id),
+            candidate_rankings=candidate_rankings,
             decision={**decision, "source_context": source_context},
             recommendation=selected_acceptance_recommendation,
             run_dir=run_dir,
@@ -5147,6 +5137,22 @@ def build_quality_search_execution(
         "experience_log": recommendation_experience["writes"]
         if isinstance(recommendation_experience, dict)
         else [],
+        "recommendation_experience_record_count": len(
+            recommendation_experience.get("records", [])
+        )
+        if isinstance(recommendation_experience, dict)
+        and isinstance(recommendation_experience.get("records"), list)
+        else 0,
+        "recommendation_counterfactual_unchosen_count": sum(
+            1
+            for record in recommendation_experience.get("records", [])
+            if isinstance(record, dict)
+            and isinstance(record.get("outcome"), dict)
+            and record["outcome"].get("apply_status") == "unchosen"
+        )
+        if isinstance(recommendation_experience, dict)
+        and isinstance(recommendation_experience.get("records"), list)
+        else 0,
         "recommendation_experience_record": recommendation_experience.get("record")
         if isinstance(recommendation_experience, dict)
         else None,

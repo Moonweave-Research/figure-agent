@@ -325,7 +325,7 @@ def build_recommendation_record(
     candidate_id: str,
     *,
     candidate_set: dict[str, Any],
-    ranking: dict[str, Any],
+    candidate_rankings: list[dict[str, Any]],
     decision: dict[str, Any],
     recommendation: dict[str, Any],
     run_dir: Path,
@@ -340,6 +340,17 @@ def build_recommendation_record(
     )
     example_dir = paths.examples_dir / name
     candidate = _candidate_from_set(candidate_set, candidate_id)
+    rankings_by_id = {
+        str(ranking.get("candidate_id") or ""): ranking
+        for ranking in candidate_rankings
+        if isinstance(ranking, dict)
+    }
+    ranking = rankings_by_id.get(candidate_id, {})
+    ordered_ids = [
+        str(ranking.get("candidate_id") or "")
+        for ranking in candidate_rankings
+        if isinstance(ranking, dict) and ranking.get("candidate_id")
+    ]
     source_context = decision.get("source_context")
     evidence = recommendation.get("evidence") if isinstance(recommendation, dict) else {}
     evidence = evidence if isinstance(evidence, dict) else {}
@@ -367,7 +378,8 @@ def build_recommendation_record(
             "params": {"operations": candidate.get("operations") or []},
             "candidate_hash": str(candidate.get("candidate_hash") or ""),
             "rank_score": _float_or_none(ranking.get("rank_score")),
-            "rank": _int_or_none(ranking.get("rank")),
+            "rank": _int_or_none(ranking.get("rank"))
+            or (ordered_ids.index(candidate_id) + 1 if candidate_id in ordered_ids else None),
             "n_candidates": len(
                 candidate_set.get("candidates")
                 if isinstance(candidate_set.get("candidates"), list)
@@ -415,6 +427,129 @@ def build_recommendation_record(
         ],
     }
     return _record_with_id(record)
+
+
+def _recommendation_unchosen_record(
+    *,
+    name: str,
+    created_at: str,
+    base_tex_hash: str,
+    candidate: dict[str, Any],
+    ranking: dict[str, Any],
+    rank: int | None,
+    n_candidates: int,
+    run_dir: Path,
+    example_dir: Path,
+) -> dict[str, Any]:
+    candidate_id = str(candidate.get("id") or "")
+    fixture_identity.validate_fixture_name(candidate_id)
+    record = {
+        "schema": SCHEMA,
+        "fixture": name,
+        "created_at": created_at,
+        "state": {
+            "base_tex_hash": base_tex_hash,
+            "target": _target({}, candidate),
+            "pre_apply_defects": [],
+            "critique_finding_id": None,
+        },
+        "action": {
+            "candidate_id": candidate_id,
+            "edit_family": _candidate_family({}, candidate),
+            "params": {"operations": candidate.get("operations") or []},
+            "candidate_hash": str(candidate.get("candidate_hash") or ""),
+            "rank_score": _float_or_none(ranking.get("rank_score")),
+            "rank": _int_or_none(ranking.get("rank")) or rank,
+            "n_candidates": n_candidates,
+        },
+        "outcome": {
+            "pipeline_ok": None,
+            "apply_status": "unchosen",
+            "quality_movement": None,
+            "verifiers": {},
+            "detector_recheck": {},
+            "pixel_delta": {"changed_pixel_ratio": None},
+            "human_label": None,
+            "human_decision_kind": "counterfactual_unchosen",
+            "automation_boundary": "recommendation_only",
+        },
+        "source_artifacts": [
+            _fixture_relative(example_dir, run_dir / "candidate_set_000.json"),
+            _fixture_relative(example_dir, run_dir / "candidate_rankings_000.json"),
+            _fixture_relative(
+                example_dir,
+                run_dir / "selected_acceptance_recommendation_000.json",
+            ),
+        ],
+    }
+    return _record_with_id(record)
+
+
+def build_recommendation_records(
+    name: str,
+    candidate_id: str,
+    *,
+    candidate_set: dict[str, Any],
+    candidate_rankings: list[dict[str, Any]],
+    decision: dict[str, Any],
+    recommendation: dict[str, Any],
+    run_dir: Path,
+    workspace_root: Path | None = None,
+    plugin_root: Path | None = None,
+) -> list[dict[str, Any]]:
+    selected = build_recommendation_record(
+        name,
+        candidate_id,
+        candidate_set=candidate_set,
+        candidate_rankings=candidate_rankings,
+        decision=decision,
+        recommendation=recommendation,
+        run_dir=run_dir,
+        workspace_root=workspace_root,
+        plugin_root=plugin_root,
+    )
+    paths = runtime_paths.resolve_runtime_paths(
+        workspace_root=workspace_root,
+        plugin_root=plugin_root,
+    )
+    example_dir = paths.examples_dir / name
+    candidates = (
+        candidate_set.get("candidates")
+        if isinstance(candidate_set.get("candidates"), list)
+        else []
+    )
+    rankings_by_id = {
+        str(ranking.get("candidate_id") or ""): ranking
+        for ranking in candidate_rankings
+        if isinstance(ranking, dict)
+    }
+    ordered_ids = [
+        str(ranking.get("candidate_id") or "")
+        for ranking in candidate_rankings
+        if isinstance(ranking, dict) and ranking.get("candidate_id")
+    ]
+    records = [selected]
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        other_id = str(candidate.get("id") or "")
+        if other_id == candidate_id or other_id not in rankings_by_id:
+            continue
+        rank = ordered_ids.index(other_id) + 1 if other_id in ordered_ids else None
+        records.append(
+            _recommendation_unchosen_record(
+                name=name,
+                created_at=str(selected["created_at"]),
+                base_tex_hash=str(selected["state"]["base_tex_hash"]),
+                candidate=candidate,
+                ranking=rankings_by_id[other_id],
+                rank=rank,
+                n_candidates=len(candidates),
+                run_dir=run_dir,
+                example_dir=example_dir,
+            )
+        )
+    return records
 
 
 def build_apply_records(
@@ -579,7 +714,7 @@ def append_recommendation_record(
     candidate_id: str,
     *,
     candidate_set: dict[str, Any],
-    ranking: dict[str, Any],
+    candidate_rankings: list[dict[str, Any]],
     decision: dict[str, Any],
     recommendation: dict[str, Any],
     run_dir: Path,
@@ -590,11 +725,11 @@ def append_recommendation_record(
         workspace_root=workspace_root,
         plugin_root=plugin_root,
     )
-    record = build_recommendation_record(
+    records = build_recommendation_records(
         name,
         candidate_id,
         candidate_set=candidate_set,
-        ranking=ranking,
+        candidate_rankings=candidate_rankings,
         decision=decision,
         recommendation=recommendation,
         run_dir=run_dir,
@@ -603,11 +738,12 @@ def append_recommendation_record(
     )
     output = _experience_log_path(name, paths.plugin_root)
     with output.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(record, sort_keys=True) + "\n")
+        for record in records:
+            handle.write(json.dumps(record, sort_keys=True) + "\n")
     return {
         "schema": "figure-agent.experience-log-write.v1",
         "fixture": name,
-        "record": record,
-        "records": [record],
+        "record": records[0],
+        "records": records,
         "writes": [f"docs/experience-log/{name}.jsonl"],
     }
