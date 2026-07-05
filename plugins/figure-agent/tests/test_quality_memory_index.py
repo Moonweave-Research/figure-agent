@@ -209,6 +209,43 @@ def test_recommendation_experience_records_are_candidate_recommended_attempts() 
     ] == 1
 
 
+def test_duplicate_recommendation_experience_rows_do_not_inflate_attempts() -> None:
+    first = _experience_record(
+        "CAND001",
+        quality_movement="neutral",
+        apply_status="blocked",
+    )
+    first["outcome"]["human_decision_kind"] = "auto_accept_recommended"
+    duplicate = json.loads(json.dumps(first))
+    duplicate["record_id"] = "sha256:" + "d" * 64
+    duplicate["created_at"] = "2026-06-08T00:01:00Z"
+    duplicate["source_artifacts"] = ["different-run-artifact.json"]
+    unchosen = _experience_record(
+        "CAND002",
+        quality_movement=None,
+        apply_status="unchosen",
+    )
+    unchosen["action"]["candidate_hash"] = "sha256:" + "2" * 64
+    unchosen["outcome"]["human_decision_kind"] = "counterfactual_unchosen"
+    duplicate_unchosen = json.loads(json.dumps(unchosen))
+    duplicate_unchosen["record_id"] = "sha256:" + "e" * 64
+    duplicate_unchosen["created_at"] = "2026-06-08T00:01:00Z"
+    duplicate_unchosen["source_artifacts"] = ["different-run-artifact.json"]
+
+    events = [
+        quality_memory_index._event_from_experience_record(record)  # type: ignore[attr-defined]
+        for record in (first, duplicate, unchosen, duplicate_unchosen)
+    ]
+    index = quality_memory_index.build_memory_index(events)
+
+    assert index["event_count"] == 4
+    assert index["candidate_event_count"] == 4
+    assert index["families"]["label_offset"]["event_count"] == 4
+    assert index["families"]["label_offset"]["attempts"] == 1
+    assert index["families"]["label_offset"]["neutral"] == 1
+    assert index["reward_sparsity"]["counterfactual_unchosen_count"] == 1
+
+
 def test_legacy_outcome_state_is_not_reward_without_quality_movement() -> None:
     events = [
         _event("candidate_applied", "label_offset", "improved", "CAND001"),

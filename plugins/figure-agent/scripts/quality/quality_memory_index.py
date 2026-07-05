@@ -154,7 +154,10 @@ def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
             "subregion": target.get("subregion_key"),
         },
         "pre_state": state,
-        "post_state": {},
+        "post_state": {
+            "candidate_hash": action.get("candidate_hash"),
+            "human_decision_kind": human_decision_kind,
+        },
         "outcome": {
             "state": outcome_state,
             "pipeline_ok": outcome.get("pipeline_ok"),
@@ -220,6 +223,7 @@ def build_memory_index(
     candidate_event_count = 0
     unknown_event_count = 0
     counterfactual_unchosen_count = 0
+    seen_experience_attempt_keys: set[tuple[str, str, str, str, str, str, str]] = set()
 
     for event in events:
         if not event.get("candidate_id"):
@@ -233,7 +237,25 @@ def build_memory_index(
         state = _outcome_state(event)
         reward_state = _reward_state(event)
         event_type = str(event.get("event_type") or "")
-        if event_type == "candidate_unchosen":
+        pre_state = event.get("pre_state") if isinstance(event.get("pre_state"), dict) else {}
+        post_state = event.get("post_state") if isinstance(event.get("post_state"), dict) else {}
+        fixture = str(event.get("fixture") or "")
+        stable_experience_key = (
+            fixture,
+            event_type,
+            family,
+            panel,
+            subregion,
+            str(pre_state.get("base_tex_hash") or ""),
+            str(post_state.get("candidate_hash") or event.get("candidate_id") or ""),
+        )
+        duplicate_experience_attempt = (
+            event_type in {"candidate_recommended", "candidate_unchosen"}
+            and stable_experience_key in seen_experience_attempt_keys
+        )
+        if event_type in {"candidate_recommended", "candidate_unchosen"}:
+            seen_experience_attempt_keys.add(stable_experience_key)
+        if event_type == "candidate_unchosen" and not duplicate_experience_attempt:
             counterfactual_unchosen_count += 1
         is_attempt = event_type in ATTEMPT_EVENT_TYPES
         family_known = not _is_unknown(family)
@@ -258,6 +280,7 @@ def build_memory_index(
             and family_known
             and target_known
             and reward_state in ELIGIBLE_OUTCOMES
+            and not duplicate_experience_attempt
         )
         for bucket in buckets:
             bucket["event_count"] += 1
@@ -269,14 +292,14 @@ def build_memory_index(
                 bucket["neutral"] += 1
             elif eligible_attempt and reward_state == "regressed":
                 bucket["regressed"] += 1
-            elif state.startswith("blocked"):
+            elif state.startswith("blocked") and not duplicate_experience_attempt:
                 bucket["blocked"] += 1
-            else:
+            elif not duplicate_experience_attempt:
                 bucket["unknown"] += 1
         if eligible_attempt:
             eligible_prior_count += 1
         rank_score = _rank_score(event)
-        if rank_score is not None and family_known:
+        if rank_score is not None and family_known and not duplicate_experience_attempt:
             rank_scores[family].append(rank_score)
 
     for family, bucket in families.items():
