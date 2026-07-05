@@ -57,6 +57,8 @@ LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
 APPARATUS_PANEL_F_OVERLAY_MARKER = "v5f Panel F art-direction redraw overlay"
 NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO = 0.002
 NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO = 0.02
+NON_MARGINAL_REVIEW_CANDIDATE_STATE = "non_marginal_review_candidate_ready"
+NON_MARGINAL_REVIEW_NEXT_ACTION = "review selected candidate evidence"
 PANEL_MARKER_RE = re.compile(
     r"^\s*%\s*(?:=+\s*)?(?:Panel|Column)\s+([A-Za-z0-9_-]+)\b"
 )
@@ -4296,6 +4298,8 @@ def _candidate_metadata_by_id(candidate_set: dict[str, Any]) -> dict[str, dict[s
 def _execution_decision(
     plan: dict[str, Any],
     candidate_scores: list[dict[str, Any]],
+    *,
+    fixture_name: str = "<fixture>",
 ) -> dict[str, Any]:
     blocking = [
         item
@@ -4361,14 +4365,31 @@ def _execution_decision(
         }
     return {
         "kind": "candidate_batch_ready",
-        "reason": "dry executor selected the strongest policy-backed candidate family",
+        "candidate_state": NON_MARGINAL_REVIEW_CANDIDATE_STATE,
+        "reason": (
+            "dry executor selected a rendered non-marginal review-only candidate"
+        ),
         "selected_candidate_id": selected.get("candidate_id"),
         "selected_family": selected.get("family"),
+        "selected_operation_scale": selected.get("operation_scale"),
+        "selected_template_id": selected.get("template_id"),
         "evidence_score": selected.get("evidence_score"),
         "policy_score": selected.get("policy_score"),
         "policy": selected.get("policy"),
+        "full_changed_pixel_ratio": selected.get("full_changed_pixel_ratio"),
+        "panel_changed_pixel_ratio": selected.get("panel_changed_pixel_ratio"),
+        "non_marginal_visual_change": True,
+        "non_marginal_thresholds": {
+            "full_changed_pixel_ratio": NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO,
+            "panel_changed_pixel_ratio": NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO,
+        },
+        "automation_boundary": "review_only_candidate_ready",
+        "review_command": (
+            "fig-agent review-candidate "
+            f"{fixture_name} {selected.get('candidate_id')}"
+        ),
         "source_mutation": "not_performed",
-        "next_action": "render selected candidate batch in sandbox",
+        "next_action": NON_MARGINAL_REVIEW_NEXT_ACTION,
     }
 
 
@@ -4434,7 +4455,7 @@ def build_quality_search_execution(
         materialized_candidate_ids=materialized_ids or None,
         candidate_metadata_by_id=_candidate_metadata_by_id(candidate_set),
     )
-    decision = _execution_decision(plan, scores)
+    decision = _execution_decision(plan, scores, fixture_name=name)
     tool_defects = {
         "schema": "figure-agent.quality-search-tool-defects.v0",
         "fixture": name,

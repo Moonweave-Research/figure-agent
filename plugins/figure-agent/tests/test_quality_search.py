@@ -1796,6 +1796,10 @@ def test_quality_search_policy_uses_memory_prior_and_bandit_bonus() -> None:
     assert apparatus["policy_score"] > hierarchy["policy_score"]
     assert decision["selected_candidate_id"] == "QS002"
     assert decision["selected_family"] == "apparatus_strengthen"
+    assert decision["candidate_state"] == "non_marginal_review_candidate_ready"
+    assert decision["automation_boundary"] == "review_only_candidate_ready"
+    assert decision["next_action"] == "review selected candidate evidence"
+    assert decision["review_command"] == "fig-agent review-candidate <fixture> QS002"
     assert decision["policy"]["schema"] == "figure-agent.quality-search-bandit-policy.v1"
     assert decision["policy"]["kind"] == "epsilon_greedy_family_bandit_v1"
 
@@ -1853,6 +1857,12 @@ def test_quality_search_policy_prefers_panel_block_with_stronger_render_rank() -
     ]["policy_score"]
     assert decision["selected_candidate_id"] == "QS002"
     assert decision["selected_family"] == "apparatus_strengthen"
+    assert decision["candidate_state"] == "non_marginal_review_candidate_ready"
+    assert decision["selected_operation_scale"] == "panel_block"
+    assert decision["selected_template_id"] == "v5f_panel_f_redraw_overlay_v1"
+    assert decision["non_marginal_visual_change"] is True
+    assert decision["full_changed_pixel_ratio"] == 0.003
+    assert decision["next_action"] == "review selected candidate evidence"
 
 
 def test_quality_search_decision_rejects_only_marginal_rendered_candidates() -> None:
@@ -1976,6 +1986,16 @@ def test_quality_search_decision_accepts_panel_crop_non_marginal_candidate() -> 
     assert by_id["QS002"]["panel_changed_pixel_ratio"] == 0.021
     assert decision["selected_candidate_id"] == "QS002"
     assert decision["selected_family"] == "apparatus_strengthen"
+    assert decision["candidate_state"] == "non_marginal_review_candidate_ready"
+    assert decision["selected_operation_scale"] == "panel_block"
+    assert decision["non_marginal_visual_change"] is True
+    assert decision["full_changed_pixel_ratio"] == 0.001
+    assert decision["panel_changed_pixel_ratio"] == 0.021
+    assert decision["non_marginal_thresholds"] == {
+        "full_changed_pixel_ratio": 0.002,
+        "panel_changed_pixel_ratio": 0.02,
+    }
+    assert decision["next_action"] == "review selected candidate evidence"
 
 
 def test_quality_search_visual_evidence_writes_full_and_panel_contact_sheets(

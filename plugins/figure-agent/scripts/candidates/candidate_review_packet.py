@@ -256,6 +256,42 @@ def _manifest_summary(manifest: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _summary_with_render_evidence(
+    summary: dict[str, Any],
+    render_evidence: dict[str, Any],
+) -> dict[str, Any]:
+    render_status = str(render_evidence.get("render_status") or "not_rendered")
+    if render_status == "not_rendered":
+        return summary
+    hard_gates = (
+        render_evidence.get("hard_gates")
+        if isinstance(render_evidence.get("hard_gates"), dict)
+        else {}
+    )
+    stages = dict(summary.get("stages") if isinstance(summary.get("stages"), dict) else {})
+    for stage in ("compile", "export", "crop"):
+        status = hard_gates.get(stage)
+        if isinstance(status, str) and status:
+            stages[stage] = status
+    stages["evaluate"] = render_status
+    visual_deltas = (
+        render_evidence.get("visual_deltas")
+        if isinstance(render_evidence.get("visual_deltas"), dict)
+        else {}
+    )
+    visual_review = {
+        "status": render_status,
+        "source": "render_manifest",
+    }
+    changed_pixel_ratio = visual_deltas.get("changed_pixel_ratio")
+    if changed_pixel_ratio is not None:
+        visual_review["changed_pixel_ratio"] = changed_pixel_ratio
+    updated = dict(summary)
+    updated["stages"] = stages
+    updated["visual_review"] = visual_review
+    return updated
+
+
 def _narrative_review_context(
     example_dir: Path,
     workspace_root: Path,
@@ -405,6 +441,10 @@ def build_review_packet(
             "human_review_required": True,
         }
     )
+    manifest_summary = _summary_with_render_evidence(
+        _manifest_summary(manifest),
+        render_evidence,
+    )
     packet = {
         "schema": SCHEMA,
         "fixture": name,
@@ -414,10 +454,10 @@ def build_review_packet(
         "selectors": (
             manifest.get("selectors") if isinstance(manifest.get("selectors"), list) else []
         ),
-        "visual_review": manifest.get("visual_review")
-        if isinstance(manifest.get("visual_review"), dict)
+        "visual_review": manifest_summary.get("visual_review")
+        if isinstance(manifest_summary.get("visual_review"), dict)
         else {"status": "missing_render"},
-        "manifest_summary": _manifest_summary(manifest),
+        "manifest_summary": manifest_summary,
         "artifacts": _artifact_descriptors(manifest_path, manifest.get("artifacts")),
         "source_changes": _source_change_summary(manifest),
         "score_report": {

@@ -224,7 +224,10 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
     assert packet["candidate_hash"] == "sha256:" + "3" * 64
     assert packet["panel"] == "C"
     assert packet["selectors"] == [{"kind": "tex_selector.v1", "line_start": 10, "line_end": 11}]
-    assert packet["visual_review"] == {"status": "missing_render"}
+    assert packet["visual_review"] == {
+        "status": "rendered_needs_human_review",
+        "source": "render_manifest",
+    }
     assert packet["manifest_summary"] == {
         "schema": "figure-agent.candidate-manifest.v1",
         "candidate_hash": "sha256:" + "3" * 64,
@@ -238,11 +241,15 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
         "risk": "low",
         "stages": {
             "prepare": "passed",
-            "compile": "not_run",
-            "export": "not_run",
-            "crop": "not_run",
+            "compile": "success",
+            "export": "success",
+            "crop": "success",
+            "evaluate": "rendered_needs_human_review",
         },
-        "visual_review": {"status": "missing_render"},
+        "visual_review": {
+            "status": "rendered_needs_human_review",
+            "source": "render_manifest",
+        },
         "expected_delta": ["increase panel boundary clearance"],
         "semantic_risks": ["panel spacing must preserve panel semantics"],
         "boundedness": {
