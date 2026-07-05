@@ -794,6 +794,7 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     assert "panel_f_mechanical_anchor_lane" in families
     assert "panel_f_leader_left_lane" in families
     assert "panel_f_electrode_lead_lane" in families
+    assert "panel_f_auto_composite_lane" in families
     qtr_apparatus = [
         item
         for item in payload["candidate_set"]["candidates"]
@@ -900,6 +901,29 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
         "replacement"
     ]
     assert "at (12.35, 1.82) {trapped charge};" in electrode_operation[
+        "replacement"
+    ]
+    auto_composite = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_auto_composite_lane"
+    ][0]
+    composite_operation = auto_composite["operations"][0]
+    assert auto_composite["operation_scale"] == "panel_block"
+    assert (
+        auto_composite["template_id"]
+        == "v5d_panel_f_auto_composite_force_anchor_v1"
+    )
+    assert "quality-search C002 Coulomb/electrode/air-gap lane" in composite_operation[
+        "replacement"
+    ]
+    assert "quality-search C003 mechanical anchor lane" in composite_operation[
+        "replacement"
+    ]
+    assert "(11.62, 1.30) -- (10.42, 1.30);" in composite_operation[
+        "replacement"
+    ]
+    assert "(11.72, 2.36) rectangle (12.28, 2.58);" in composite_operation[
         "replacement"
     ]
     by_family = {item["family"]: item for item in payload["candidate_scores"]}

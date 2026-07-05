@@ -58,6 +58,7 @@ PANEL_F_FORCE_GAP_LANE_TEMPLATE_ID = "v5d_panel_f_force_gap_lane_v1"
 PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID = "v5d_panel_f_mechanical_anchor_lane_v1"
 PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID = "v5d_panel_f_leader_left_lane_v1"
 PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID = "v5d_panel_f_electrode_lead_lane_v1"
+PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID = "v5d_panel_f_auto_composite_force_anchor_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -326,6 +327,25 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "make the source-to-electrode lead read as one intentional connection",
             "add a clear electrode contact landing instead of a box-wire collision",
             "keep the bottom electrode visually distinct from the source apparatus",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_auto_composite_lane": {
+        "builder": "panel_region_composite_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+        ],
+        "design_moves": [
+            "compose previously verified Panel F transforms into a fresh bounded candidate",
+            "move force-gap and mechanical-anchor evidence together instead of one lane at a time",
+            "keep source mutation blocked while exploring larger visual movement",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -999,6 +1019,37 @@ def _micro_defect_hypotheses(name: str, driver: dict[str, Any]) -> list[dict[str
                 ),
             }
         )
+        hypotheses.append(
+            {
+                "fixture": name,
+                "family": "panel_f_auto_composite_lane",
+                "source": "unlinked_micro_defect",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "micro_defect_ids": ids,
+                    "reason": (
+                        "Panel F single-lane candidates are stale; compose force-gap "
+                        "and mechanical-anchor transforms into a fresh bounded candidate"
+                    ),
+                    "composite_sequence": [
+                        "panel_f_force_gap_lane",
+                        "panel_f_mechanical_anchor_lane",
+                    ],
+                },
+                "expected_detector_movement": (
+                    "step out from stale single-lane families into a bounded composite candidate"
+                ),
+                "expected_visual_movement": (
+                    "Coulomb/electrode/air-gap relation and fixed mechanical support move together"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, or composite Panel F semantics"
+                ),
+            }
+        )
     return hypotheses
 
 
@@ -1044,7 +1095,7 @@ def _patch_hypotheses(
                 _detector_hypotheses(name, ledger),
                 limit=4,
             ),
-            limit=6,
+            limit=7,
         )
     goal_hypotheses = _goal_hypotheses(name, goal)
     if goal_hypotheses:
@@ -1628,6 +1679,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_electrode_lead_lane":
         return "panel_block"
+    if family == "panel_f_auto_composite_lane":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -1660,6 +1713,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID
     if family == "panel_f_electrode_lead_lane":
         return PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID
+    if family == "panel_f_auto_composite_lane":
+        return PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -2409,6 +2464,7 @@ def _panel_f_mechanical_anchor_lane_replacement(
     *,
     lines: list[str],
     selector: dict[str, Any],
+    include_qtr_label: bool = True,
 ) -> tuple[str, str, int, int] | None:
     if str(selector.get("panel") or "").upper() != "F":
         return None
@@ -2433,7 +2489,7 @@ def _panel_f_mechanical_anchor_lane_replacement(
     if _panel_f_mechanical_anchor_lane_template_applied(original):
         return None
     replacement = original
-    replacements = (
+    replacements = [
         (
             "\\fill[cGray!10] (11.785, 2.42) rectangle (12.185, 2.52);",
             "% quality-search C003 mechanical anchor lane -- review-only candidate\n"
@@ -2484,7 +2540,10 @@ def _panel_f_mechanical_anchor_lane_replacement(
             "  (11.08, 0.93) -- (11.19, 0.82) .. controls (11.76, 1.16) and\n"
             "  (12.10, 1.82) .. (12.10, 2.42) -- cycle;",
         ),
-        (
+    ]
+    if include_qtr_label:
+        replacements.append(
+            (
             "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
             "\\node[labelMute, anchor=west, inner sep=1pt,\n"
             "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
@@ -2500,8 +2559,8 @@ def _panel_f_mechanical_anchor_lane_replacement(
             "      inner xsep=1.2pt, inner ysep=0.5pt,\n"
             "      font=\\sffamily\\fontsize{5.8}{7.0}\\selectfont, text=cRed!72!black]\n"
             "  at (9.76, 3.10) {trapped charge};",
-        ),
-    )
+            )
+        )
     for old, new in replacements:
         if old not in replacement:
             return None
@@ -2699,6 +2758,87 @@ def _panel_f_electrode_lead_lane_replacement(
     if not all(label in replacement for label in protected):
         return None
     return original, replacement, line_start, line_end
+
+
+def _panel_f_auto_composite_lane_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search C002 Coulomb/electrode/air-gap lane",
+        "quality-search C003 mechanical anchor lane",
+        "(11.62, 1.30) -- (10.42, 1.30);",
+        "(11.72, 2.36) rectangle (12.28, 2.58);",
+        "at (9.68, 3.04) {trapped charge};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _replace_lines_with_block(
+    lines: list[str],
+    *,
+    line_start: int,
+    line_end: int,
+    replacement: str,
+) -> list[str]:
+    next_lines = list(lines)
+    next_lines[line_start - 1 : line_end] = replacement.splitlines(keepends=True)
+    return next_lines
+
+
+def _panel_f_auto_composite_lane_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    if str(selector.get("panel") or "").upper() != "F":
+        return None
+    try:
+        line_start = int(selector["line_start"])
+        line_end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if line_start < 1 or line_end < line_start or line_end > len(lines):
+        return None
+    original = "".join(lines[line_start - 1 : line_end])
+    if _panel_f_auto_composite_lane_template_applied(original):
+        return None
+
+    force_gap = _panel_f_force_gap_lane_replacement(lines=lines, selector=selector)
+    if force_gap is None:
+        return None
+    _, force_replacement, force_start, force_end = force_gap
+    if force_start != line_start or force_end != line_end:
+        return None
+
+    force_lines = _replace_lines_with_block(
+        lines,
+        line_start=line_start,
+        line_end=line_end,
+        replacement=force_replacement,
+    )
+    force_selector = dict(selector)
+    force_selector["line_end"] = line_start + len(force_replacement.splitlines()) - 1
+    mechanical_anchor = _panel_f_mechanical_anchor_lane_replacement(
+        lines=force_lines, selector=force_selector, include_qtr_label=False
+    )
+    if mechanical_anchor is None:
+        return None
+    _, final_replacement, anchor_start, anchor_end = mechanical_anchor
+    if anchor_start != line_start or anchor_end != int(force_selector["line_end"]):
+        return None
+    if final_replacement == original:
+        return None
+    protected = (
+        "q_{tr}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+    )
+    if not all(label in final_replacement for label in protected):
+        return None
+    if not _panel_f_auto_composite_lane_template_applied(final_replacement):
+        return None
+    return original, final_replacement, line_start, line_end
 
 
 def _panel_f_boundary_polish_template_applied(block: str) -> bool:
@@ -3197,6 +3337,7 @@ def _candidate_operation_for_spec(
         "panel_f_mechanical_anchor_lane": "F",
         "panel_f_leader_left_lane": "F",
         "panel_f_electrode_lead_lane": "F",
+        "panel_f_auto_composite_lane": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -3496,6 +3637,33 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_auto_composite_lane":
+        composite_block = _panel_f_auto_composite_lane_replacement(
+            lines=lines, selector=selector
+        )
+        if composite_block is not None:
+            original, new_text, line_start, line_end = composite_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_auto_composite_lane_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_auto_composite_lane_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -3558,6 +3726,7 @@ def _candidate_operation_for_spec(
         "panel_f_mechanical_anchor_lane": 0.8,
         "panel_f_leader_left_lane": 0.8,
         "panel_f_electrode_lead_lane": 0.8,
+        "panel_f_auto_composite_lane": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -4941,6 +5110,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_mechanical_anchor_lane": 0.9,
             "panel_f_leader_left_lane": 0.9,
             "panel_f_electrode_lead_lane": 0.9,
+            "panel_f_auto_composite_lane": 0.93,
             "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
