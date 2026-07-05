@@ -126,6 +126,10 @@ def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
     action = record.get("action") if isinstance(record.get("action"), dict) else {}
     outcome = record.get("outcome") if isinstance(record.get("outcome"), dict) else {}
     target = state.get("target") if isinstance(state.get("target"), dict) else {}
+    params = action.get("params") if isinstance(action.get("params"), dict) else {}
+    operations = params.get("operations") if isinstance(params.get("operations"), list) else []
+    first_operation = operations[0] if operations and isinstance(operations[0], dict) else {}
+    template_id = action.get("template_id") or first_operation.get("template_id")
     apply_status = str(outcome.get("apply_status") or "unknown")
     human_decision_kind = outcome.get("human_decision_kind")
     quality_movement = outcome.get("quality_movement")
@@ -156,6 +160,7 @@ def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
         "pre_state": state,
         "post_state": {
             "candidate_hash": action.get("candidate_hash"),
+            "template_id": template_id,
             "human_decision_kind": human_decision_kind,
         },
         "outcome": {
@@ -216,9 +221,11 @@ def build_memory_index(
     scope: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     families: dict[str, dict[str, Any]] = defaultdict(_safe_count_bucket)
+    family_templates: dict[str, dict[str, Any]] = defaultdict(_safe_count_bucket)
     panel_patterns: dict[str, dict[str, Any]] = defaultdict(_safe_count_bucket)
     family_source_fixtures: dict[str, set[str]] = defaultdict(set)
     rank_scores: dict[str, list[float]] = defaultdict(list)
+    template_rank_scores: dict[str, list[float]] = defaultdict(list)
     eligible_prior_count = 0
     candidate_event_count = 0
     unknown_event_count = 0
@@ -240,6 +247,9 @@ def build_memory_index(
         event_type = str(event.get("event_type") or "")
         pre_state = event.get("pre_state") if isinstance(event.get("pre_state"), dict) else {}
         post_state = event.get("post_state") if isinstance(event.get("post_state"), dict) else {}
+        template_id = str(post_state.get("template_id") or "unknown")
+        template_known = not _is_unknown(template_id)
+        family_template_key = f"{family}::{template_id}"
         fixture = str(event.get("fixture") or "")
         stable_experience_key = (
             fixture,
@@ -276,6 +286,8 @@ def build_memory_index(
             fixture = event.get("fixture")
             if isinstance(fixture, str) and fixture:
                 family_source_fixtures[family].add(fixture)
+        if family_known and template_known:
+            buckets.append(family_templates[family_template_key])
         if family_known and target_known:
             buckets.append(panel_patterns[pattern_key])
         eligible_attempt = (
@@ -304,6 +316,13 @@ def build_memory_index(
         rank_score = _rank_score(event)
         if rank_score is not None and family_known and not duplicate_experience_attempt:
             rank_scores[family].append(rank_score)
+        if (
+            rank_score is not None
+            and family_known
+            and template_known
+            and not duplicate_experience_attempt
+        ):
+            template_rank_scores[family_template_key].append(rank_score)
 
     for family, bucket in families.items():
         bucket["recommended_prior"] = _recommended_prior(bucket)
@@ -315,6 +334,10 @@ def build_memory_index(
             bucket["median_rank_delta"] = round(median(rank_scores[family]), 4)
     for bucket in panel_patterns.values():
         bucket["recommended_prior"] = _recommended_prior(bucket)
+    for key, bucket in family_templates.items():
+        bucket["recommended_prior"] = _recommended_prior(bucket)
+        if template_rank_scores[key]:
+            bucket["median_rank_delta"] = round(median(template_rank_scores[key]), 4)
 
     return {
         "schema": SCHEMA,
@@ -339,6 +362,7 @@ def build_memory_index(
             counterfactual_count=counterfactual_unchosen_count,
         ),
         "families": dict(sorted(families.items())),
+        "family_templates": dict(sorted(family_templates.items())),
         "panel_patterns": dict(sorted(panel_patterns.items())),
         "disallowed_priors": [
             {

@@ -18,6 +18,7 @@ def _event(
     candidate_id: str,
     target: dict | None = None,
     quality_movement: str | None = None,
+    template_id: str | None = None,
 ) -> dict:
     return {
         "schema": "figure-agent.quality-memory-event.v1",
@@ -30,7 +31,7 @@ def _event(
         "edit_family": family,
         "target": target if target is not None else {"panel": "C", "subregion": "energy"},
         "pre_state": {},
-        "post_state": {},
+        "post_state": {"template_id": template_id} if template_id is not None else {},
         "outcome": {
             "state": outcome,
             "pipeline_ok": None,
@@ -119,6 +120,7 @@ def _experience_record(
     *,
     quality_movement: str | None,
     apply_status: str = "applied",
+    template_id: str | None = None,
 ) -> dict:
     return {
         "schema": "figure-agent.experience-record.v1",
@@ -134,7 +136,13 @@ def _experience_record(
         "action": {
             "candidate_id": candidate_id,
             "edit_family": "label_offset",
-            "params": {"operations": []},
+            "params": {
+                "operations": [
+                    {"template_id": template_id}
+                ]
+                if template_id is not None
+                else []
+            },
             "candidate_hash": "sha256:" + "1" * 64,
             "rank_score": 0.7,
             "rank": 1,
@@ -192,11 +200,13 @@ def test_recommendation_experience_records_are_candidate_recommended_attempts() 
         "CAND001",
         quality_movement="neutral",
         apply_status="blocked",
+        template_id="template_a",
     )
     record["outcome"]["human_decision_kind"] = "auto_accept_recommended"
 
     event = quality_memory_index._event_from_experience_record(record)  # type: ignore[attr-defined]
     assert event["event_type"] == "candidate_recommended"
+    assert event["post_state"]["template_id"] == "template_a"
 
     index = quality_memory_index.build_memory_index([event])
 
@@ -204,9 +214,48 @@ def test_recommendation_experience_records_are_candidate_recommended_attempts() 
     assert index["candidate_event_count"] == 1
     assert index["families"]["label_offset"]["attempts"] == 1
     assert index["families"]["label_offset"]["neutral"] == 1
+    assert index["family_templates"]["label_offset::template_a"]["attempts"] == 1
+    assert index["family_templates"]["label_offset::template_a"]["neutral"] == 1
     assert index["panel_patterns"]["C:sha256:" + "a" * 64 + ":label_offset"][
         "attempts"
     ] == 1
+
+
+def test_memory_index_tracks_family_template_attempts_separately() -> None:
+    index = quality_memory_index.build_memory_index(
+        [
+            _event(
+                "candidate_recommended",
+                "panel_f_auto_composite_lane",
+                "neutral",
+                "CAND001",
+                quality_movement="neutral",
+                template_id="variant_a",
+            ),
+            _event(
+                "candidate_recommended",
+                "panel_f_auto_composite_lane",
+                "neutral",
+                "CAND002",
+                quality_movement="neutral",
+                template_id="variant_b",
+            ),
+        ]
+    )
+
+    assert index["families"]["panel_f_auto_composite_lane"]["attempts"] == 2
+    assert (
+        index["family_templates"]["panel_f_auto_composite_lane::variant_a"][
+            "attempts"
+        ]
+        == 1
+    )
+    assert (
+        index["family_templates"]["panel_f_auto_composite_lane::variant_b"][
+            "attempts"
+        ]
+        == 1
+    )
 
 
 def test_duplicate_recommendation_experience_rows_do_not_inflate_attempts() -> None:

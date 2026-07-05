@@ -1258,6 +1258,7 @@ def _memory_summary(memory: dict[str, Any] | None) -> dict[str, Any]:
             "duplicate_experience_attempt_rate"
         ),
         "families": memory.get("families", {}),
+        "family_templates": memory.get("family_templates", {}),
     }
 
 
@@ -5129,6 +5130,24 @@ def _family_memory(plan: dict[str, Any], family: str) -> dict[str, Any]:
     return entry if isinstance(entry, dict) else {}
 
 
+def _family_template_memory(
+    plan: dict[str, Any],
+    family: str,
+    template_id: str | None,
+) -> dict[str, Any] | None:
+    if not template_id:
+        return None
+    state = plan.get("state")
+    memory = state.get("memory") if isinstance(state, dict) else None
+    family_templates = (
+        memory.get("family_templates") if isinstance(memory, dict) else None
+    )
+    if not isinstance(family_templates, dict):
+        return None
+    entry = family_templates.get(f"{family}::{template_id}")
+    return entry if isinstance(entry, dict) else {}
+
+
 def _bounded_float(
     value: Any,
     *,
@@ -5241,7 +5260,11 @@ def _bandit_selected_arm_bonus(family: str, bandit_decision: dict[str, Any]) -> 
     return BANDIT_SELECTED_ARM_BONUS
 
 
-def _duplicate_experience_penalty(plan: dict[str, Any], family: str) -> float:
+def _duplicate_experience_penalty(
+    plan: dict[str, Any],
+    family: str,
+    template_id: str | None = None,
+) -> float:
     memory = (plan.get("state") or {}).get("memory")
     if not isinstance(memory, dict):
         return 0.0
@@ -5253,19 +5276,29 @@ def _duplicate_experience_penalty(plan: dict[str, Any], family: str) -> float:
     )
     if duplicate_rate < 0.5:
         return 0.0
+    template_memory = _family_template_memory(plan, family, template_id)
+    if template_memory is not None:
+        if _bounded_int(template_memory.get("attempts"), default=0) <= 0:
+            return 0.0
+        return -0.05
     family_memory = _family_memory(plan, family)
     if _bounded_int(family_memory.get("attempts"), default=0) <= 0:
         return 0.0
     return -0.05
 
 
-def _stale_duplicate_experience_family(plan: dict[str, Any], family: str) -> bool:
-    return _duplicate_experience_penalty(plan, family) < 0
+def _stale_duplicate_experience_family(
+    plan: dict[str, Any],
+    family: str,
+    template_id: str | None = None,
+) -> bool:
+    return _duplicate_experience_penalty(plan, family, template_id) < 0
 
 
 def _candidate_policy_score(
     *,
     family: str,
+    template_id: str | None,
     operation_scale: str,
     base_evidence_score: float,
     plan: dict[str, Any],
@@ -5281,7 +5314,7 @@ def _candidate_policy_score(
         plan=plan,
     )
     bandit_bonus = _bandit_selected_arm_bonus(family, bandit_decision)
-    duplicate_penalty = _duplicate_experience_penalty(plan, family)
+    duplicate_penalty = _duplicate_experience_penalty(plan, family, template_id)
     score = round(
         min(
             max(
@@ -5311,6 +5344,10 @@ def _candidate_policy_score(
         "operation_scale_bonus": operation_scale_bonus,
         "goal_directive_bonus": goal_directive_bonus,
         "duplicate_experience_penalty": duplicate_penalty,
+        "duplicate_experience_scope": (
+            "family_template" if _family_template_memory(plan, family, template_id) is not None
+            else "family"
+        ),
         "score": score,
     }
 
@@ -5366,8 +5403,10 @@ def _candidate_scores(
         operation_scale = str(
             metadata.get("operation_scale") or spec.get("operation_scale") or "unknown"
         )
+        template_id = str(metadata.get("template_id") or spec.get("template_id") or "")
         policy = _candidate_policy_score(
             family=family,
+            template_id=template_id,
             operation_scale=operation_scale,
             base_evidence_score=score,
             plan=plan,
@@ -5393,7 +5432,7 @@ def _candidate_scores(
                 "family": family,
                 "candidate_hash": metadata.get("candidate_hash"),
                 "operation_scale": operation_scale,
-                "template_id": metadata.get("template_id") or spec.get("template_id"),
+                "template_id": template_id,
                 "expected_visual_movement": (
                     metadata.get("expected_visual_movement")
                     or spec.get("expected_visual_movement")
@@ -5405,7 +5444,7 @@ def _candidate_scores(
                 "panel_changed_pixel_ratio": panel_changed_pixel_ratio,
                 "non_marginal_visual_change": non_marginal_visual_change,
                 "stale_duplicate_experience_family": (
-                    _stale_duplicate_experience_family(plan, family)
+                    _stale_duplicate_experience_family(plan, family, template_id)
                 ),
                 "non_marginal_thresholds": {
                     "full_changed_pixel_ratio": NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO,

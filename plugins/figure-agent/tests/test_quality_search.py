@@ -1964,12 +1964,21 @@ def test_quality_search_memory_summary_preserves_duplicate_diagnostics() -> None
             "duplicate_experience_attempt_count": 10,
             "duplicate_experience_attempt_rate": 0.7143,
             "families": {"panel_f_qtr_apparatus_lane": {"attempts": 1}},
+            "family_templates": {
+                "panel_f_auto_composite_lane::variant_a": {"attempts": 1}
+            },
         }
     )
 
     assert summary["counterfactual_unchosen_count"] == 3
     assert summary["duplicate_experience_attempt_count"] == 10
     assert summary["duplicate_experience_attempt_rate"] == 0.7143
+    assert (
+        summary["family_templates"]["panel_f_auto_composite_lane::variant_a"][
+            "attempts"
+        ]
+        == 1
+    )
 
 
 def test_quality_search_policy_penalizes_duplicate_experience_family() -> None:
@@ -2034,6 +2043,75 @@ def test_quality_search_policy_penalizes_duplicate_experience_family() -> None:
     assert by_family["panel_f_qtr_label_lane"]["policy_score"] > by_family[
         "panel_f_qtr_apparatus_lane"
     ]["policy_score"]
+
+
+def test_quality_search_stale_gate_is_template_variant_aware() -> None:
+    plan = {
+        "state": {
+            "memory": {
+                "state": "loaded",
+                "duplicate_experience_attempt_rate": 0.7143,
+                "families": {
+                    "panel_f_auto_composite_lane": {
+                        "attempts": 1,
+                        "recommended_prior": 0.0,
+                    },
+                },
+                "family_templates": {
+                    "panel_f_auto_composite_lane::variant_a": {
+                        "attempts": 1,
+                        "recommended_prior": 0.0,
+                    },
+                    "panel_f_auto_composite_lane::variant_b": {
+                        "attempts": 0,
+                        "recommended_prior": 0.0,
+                    },
+                },
+            }
+        },
+        "classifications": [],
+        "next_recommended_operation": {"kind": "step_out_experiment"},
+    }
+    candidate_specs = [
+        {
+            "id": "QS001",
+            "family": "panel_f_auto_composite_lane",
+            "operation_scale": "panel_block",
+            "template_id": "variant_a",
+        },
+        {
+            "id": "QS002",
+            "family": "panel_f_auto_composite_lane",
+            "operation_scale": "panel_block",
+            "template_id": "variant_b",
+        },
+    ]
+    rankings = [
+        {
+            "candidate_id": "QS001",
+            "rank_score": 0.75,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.003},
+        },
+        {
+            "candidate_id": "QS002",
+            "rank_score": 0.75,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.003},
+        },
+    ]
+
+    scores = quality_search._candidate_scores(candidate_specs, plan, rankings)
+    by_id = {item["candidate_id"]: item for item in scores}
+
+    assert by_id["QS001"]["stale_duplicate_experience_family"] is True
+    assert by_id["QS001"]["policy"]["duplicate_experience_penalty"] == -0.05
+    assert by_id["QS001"]["policy"]["duplicate_experience_scope"] == "family_template"
+    assert by_id["QS002"]["stale_duplicate_experience_family"] is False
+    assert by_id["QS002"]["policy"]["duplicate_experience_penalty"] == 0.0
+    assert by_id["QS002"]["policy"]["duplicate_experience_scope"] == "family_template"
 
 
 def test_quality_search_execution_skips_stale_duplicate_family() -> None:
