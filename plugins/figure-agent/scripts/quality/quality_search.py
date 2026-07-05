@@ -50,6 +50,7 @@ PANEL_F_FINAL_FINISH_TEMPLATE_ID = "v5f_panel_f_final_finish_v1"
 PANEL_F_LABEL_ROUTE_FINISH_TEMPLATE_ID = "v5f_panel_f_label_route_finish_v1"
 PANEL_F_DENSITY_RELIEF_TEMPLATE_ID = "v5f_panel_f_density_relief_v1"
 PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID = "v5d_panel_f_qtr_label_lane_v1"
+PANEL_F_QTR_APPARATUS_LANE_TEMPLATE_ID = "v5d_panel_f_qtr_apparatus_lane_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -222,6 +223,26 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "give q_tr a dedicated label lane instead of enlarging the inline mark",
             "add trapped-charge wording without renaming the charge quantity",
             "keep the leader short and outside the cantilever body",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_qtr_apparatus_lane": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+            "$V_{\\mathrm{active}}$",
+        ],
+        "design_moves": [
+            "move q_tr and trapped-charge text into a left label lane",
+            "quiet the PSU box so Coulomb response remains the first read",
+            "route the PSU lead into the electrode as an instrument connection",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -725,6 +746,36 @@ def _micro_defect_hypotheses(name: str, driver: dict[str, Any]) -> list[dict[str
     normalized = {item.upper() for item in ids}
     hypotheses: list[dict[str, Any]] = []
     if any("QTR" in item for item in normalized):
+        hypotheses.append(
+            {
+                "fixture": name,
+                "family": "panel_f_qtr_apparatus_lane",
+                "source": "unlinked_micro_defect",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "micro_defect_ids": ids,
+                    "reason": (
+                        "Panel F q_tr typography and apparatus lead geometry should "
+                        "move together so the charge-force-electrode relation reads "
+                        "before the equipment box"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert unlinked q_tr micro-defect plus apparatus awkwardness "
+                    "into a bounded Panel F block candidate"
+                ),
+                "expected_visual_movement": (
+                    "Panel F reads as trapped charge driving Coulomb response into "
+                    "the electrode/air-gap apparatus"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, or Panel F print-legibility"
+                ),
+            }
+        )
         hypotheses.append(
             {
                 "fixture": name,
@@ -1366,6 +1417,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_qtr_label_lane":
         return "panel_block"
+    if family == "panel_f_qtr_apparatus_lane":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -1388,6 +1441,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_DENSITY_RELIEF_TEMPLATE_ID
     if family == "panel_f_qtr_label_lane":
         return PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID
+    if family == "panel_f_qtr_apparatus_lane":
+        return PANEL_F_QTR_APPARATUS_LANE_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -1855,6 +1910,135 @@ def _panel_f_qtr_label_lane_replacement(
         return None
     line_start = start + block[:offset].count("\n")
     line_end = line_start + original.count("\n") - 1
+    return original, replacement, line_start, line_end
+
+
+def _panel_f_qtr_apparatus_lane_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search C001 q_tr + apparatus lane",
+        "(11.90, 2.00) .. controls (11.30, 2.72) and (10.30, 2.96) .. (9.96, 2.96);",
+        "at (9.70, 2.94) {$q_{tr}$};",
+        "at (9.70, 3.18) {trapped charge};",
+        "(12.65, 3.50) -- (12.92, 3.50) -- (13.08, 3.10) -- (13.08, 2.68) -- (13.23, 2.58);",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_qtr_apparatus_lane_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    if str(selector.get("panel") or "").upper() != "F":
+        return None
+    try:
+        line_start = int(selector["line_start"])
+        line_end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if line_start < 1 or line_end < line_start or line_end > len(lines):
+        return None
+    original = "".join(lines[line_start - 1 : line_end])
+    required = (
+        "$V_{\\mathrm{active}}$",
+        "q_{tr}",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "Mechanical",
+    )
+    if not all(label in original for label in required):
+        return None
+    if _panel_f_qtr_apparatus_lane_template_applied(original):
+        return None
+    replacement = original
+    replacements = (
+        (
+            "\\fill[cGray!6] (11.8, 3.2) rectangle (12.65, 3.85);",
+            "\\fill[cGray!4, opacity=0.74, rounded corners=1.1pt] "
+            "(11.86, 3.25) rectangle (12.61, 3.82);",
+        ),
+        (
+            "\\draw[cGray!60!black, line width=0.25pt]\n"
+            "  (11.8, 3.2) rectangle (12.65, 3.85);",
+            "\\draw[cGray!50!black, line width=0.20pt, rounded corners=1.1pt]\n"
+            "  (11.86, 3.25) rectangle (12.61, 3.82);",
+        ),
+        (
+            "\\draw[cGray!35!black, line width=0.18pt] (11.85, 3.25) rectangle (12.60, 3.81);",
+            "\\draw[cGray!30!black, line width=0.14pt, rounded corners=0.8pt] "
+            "(11.91, 3.31) rectangle (12.56, 3.76);",
+        ),
+        (
+            "\\fill[cGray!18] (11.9, 3.55) rectangle (12.55, 3.78);",
+            "\\fill[cGray!14, opacity=0.82, rounded corners=0.7pt] "
+            "(11.95, 3.57) rectangle (12.52, 3.75);",
+        ),
+        (
+            "\\draw[cGray!55!black, line width=0.18pt]\n"
+            "  (11.9, 3.55) rectangle (12.55, 3.78);",
+            "\\draw[cGray!45!black, line width=0.14pt, rounded corners=0.7pt]\n"
+            "  (11.95, 3.57) rectangle (12.52, 3.75);",
+        ),
+        (
+            "\\draw[cGray!80!black, line width=0.55pt]\n"
+            "  (11.95, 3.58) -- (12.08, 3.58) -- (12.08, 3.73)\n"
+            "              -- (12.3, 3.73) -- (12.3, 3.58) -- (12.5, 3.58);",
+            "\\draw[cGray!70!black, line width=0.42pt]\n"
+            "  (12.00, 3.60) -- (12.10, 3.60) -- (12.10, 3.71)\n"
+            "              -- (12.28, 3.71) -- (12.28, 3.60) -- (12.46, 3.60);",
+        ),
+        (
+            "\\node[font=\\sffamily\\bfseries\\fontsize{6}{7.2}\\selectfont, text=cGray!88!black]\n"
+            "  at (12.225, 3.36) {$V_{\\mathrm{active}}$};",
+            "\\node[font=\\sffamily\\bfseries\\fontsize{5.5}{6.6}\\selectfont, "
+            "text=cGray!72!black]\n"
+            "  at (12.235, 3.39) {$V_{\\mathrm{active}}$};",
+        ),
+        (
+            "\\draw[cGray!75!black, line width=0.28pt]\n"
+            "  (12.65, 3.5) -- (13.23, 3.5) -- (13.23, 2.6);",
+            "\\draw[cGray!62!black, line width=0.26pt, rounded corners=1.2pt]\n"
+            "  (12.65, 3.50) -- (12.92, 3.50) -- (13.08, 3.10) -- (13.08, 2.68) -- (13.23, 2.58);\n"
+            "\\fill[cGray!68!black] (13.23, 2.58) circle (0.020);",
+        ),
+        (
+            "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
+            "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+            "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
+            "  at (12.35, 2) {$q_{tr}$};",
+            "% quality-search C001 q_tr + apparatus lane -- review-only candidate\n"
+            "\\draw[cRed!60!black, line width=0.36pt]\n"
+            "  (11.90, 2.00) .. controls (11.30, 2.72) and (10.30, 2.96) .. (9.96, 2.96);\n"
+            "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,\n"
+            "      inner xsep=1.4pt, inner ysep=0.7pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{7.4}{8.8}\\selectfont,\n"
+            "      text=cRed!84!black]\n"
+            "  at (9.70, 2.94) {$q_{tr}$};\n"
+            "\\node[labelMute, anchor=west, fill=white, fill opacity=0.94, text opacity=1,\n"
+            "      inner xsep=1.3pt, inner ysep=0.5pt,\n"
+            "      font=\\sffamily\\fontsize{5.8}{7.0}\\selectfont, text=cRed!72!black]\n"
+            "  at (9.70, 3.18) {trapped charge};",
+        ),
+    )
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    protected = (
+        "$V_{\\mathrm{active}}$",
+        "q_{tr}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+    )
+    if not all(label in replacement for label in protected):
+        return None
     return original, replacement, line_start, line_end
 
 
@@ -2349,6 +2533,7 @@ def _candidate_operation_for_spec(
         "panel_f_label_route_finish": "F",
         "panel_f_density_relief": "F",
         "panel_f_qtr_label_lane": "F",
+        "panel_f_qtr_apparatus_lane": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -2511,6 +2696,33 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_qtr_apparatus_lane":
+        qtr_apparatus_block = _panel_f_qtr_apparatus_lane_replacement(
+            lines=lines, selector=selector
+        )
+        if qtr_apparatus_block is not None:
+            original, new_text, line_start, line_end = qtr_apparatus_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_qtr_apparatus_lane_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_QTR_APPARATUS_LANE_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_qtr_apparatus_lane_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_QTR_APPARATUS_LANE_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -2568,6 +2780,7 @@ def _candidate_operation_for_spec(
         "hierarchy_rebalance": 0.9,
         "apparatus_strengthen": 0.8,
         "panel_f_qtr_label_lane": 0.8,
+        "panel_f_qtr_apparatus_lane": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -3762,6 +3975,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_label_route_finish": 0.9,
             "panel_f_density_relief": 0.89,
             "panel_f_qtr_label_lane": 0.9,
+            "panel_f_qtr_apparatus_lane": 0.92,
             "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,

@@ -690,7 +690,7 @@ def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_bloc
     assert "\\draw[<->, cGray!64!black, line width=0.70pt]" in operation["replacement"]
 
 
-def test_quality_search_qtr_micro_defect_emits_panel_f_label_lane_candidate(
+def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     tmp_path: Path, monkeypatch
 ) -> None:
     monkeypatch.setattr(
@@ -713,7 +713,22 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_label_lane_candidate(
             "% Panel C -- Localized traps",
             "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
             "% =============== Column F -- Mechanical =================",
-            "% q_tr leader candidate fixture",
+            "\\fill[cGray!6] (11.8, 3.2) rectangle (12.65, 3.85);",
+            "\\draw[cGray!60!black, line width=0.25pt]",
+            "  (11.8, 3.2) rectangle (12.65, 3.85);",
+            "\\draw[cGray!35!black, line width=0.18pt] (11.85, 3.25) rectangle (12.60, 3.81);",
+            "\\fill[cGray!18] (11.9, 3.55) rectangle (12.55, 3.78);",
+            "\\draw[cGray!55!black, line width=0.18pt]",
+            "  (11.9, 3.55) rectangle (12.55, 3.78);",
+            "\\draw[cGray!80!black, line width=0.55pt]",
+            "  (11.95, 3.58) -- (12.08, 3.58) -- (12.08, 3.73)",
+            "              -- (12.3, 3.73) -- (12.3, 3.58) -- (12.5, 3.58);",
+            "\\node[font=\\sffamily\\bfseries\\fontsize{6}{7.2}\\selectfont, text=cGray!88!black]",
+            "  at (12.225, 3.36) {$V_{\\mathrm{active}}$};",
+            "\\fill[cGray!85!black] (12.65, 3.5) circle (0.028);",
+            "\\fill[cGray!50!black] (12.65, 3.5) circle (0.014);",
+            "\\draw[cGray!75!black, line width=0.28pt]",
+            "  (12.65, 3.5) -- (13.23, 3.5) -- (13.23, 2.6);",
             "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);",
             "\\node[labelMute, anchor=west, inner sep=1pt,",
             "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]",
@@ -737,29 +752,32 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_label_lane_candidate(
     )
 
     families = [item["family"] for item in payload["candidate_specs"]]
-    assert families[0] == "panel_f_qtr_label_lane"
-    qtr = [
+    assert families[:2] == [
+        "panel_f_qtr_apparatus_lane",
+        "panel_f_qtr_label_lane",
+    ]
+    qtr_apparatus = [
         item
         for item in payload["candidate_set"]["candidates"]
-        if item["family"] == "panel_f_qtr_label_lane"
+        if item["family"] == "panel_f_qtr_apparatus_lane"
     ][0]
-    operation = qtr["operations"][0]
-    assert qtr["edit_class"] == "quality_search_panel_block"
-    assert qtr["operation_scale"] == "panel_block"
-    assert qtr["template_id"] == "v5d_panel_f_qtr_label_lane_v1"
+    operation = qtr_apparatus["operations"][0]
+    assert qtr_apparatus["edit_class"] == "quality_search_panel_block"
+    assert qtr_apparatus["operation_scale"] == "panel_block"
+    assert qtr_apparatus["template_id"] == "v5d_panel_f_qtr_apparatus_lane_v1"
     assert operation["operation_scale"] == "panel_block"
-    assert operation["template_id"] == "v5d_panel_f_qtr_label_lane_v1"
-    assert operation["line_start"] == 5
-    assert operation["line_end"] == 8
-    assert "quality-search C001 q_tr label lane" in operation["replacement"]
-    assert "at (9.72, 2.86) {$q_{tr}$};" in operation["replacement"]
-    assert "at (9.72, 3.08) {trapped charge};" in operation["replacement"]
+    assert operation["template_id"] == "v5d_panel_f_qtr_apparatus_lane_v1"
+    assert operation["line_start"] == 3
+    assert "quality-search C001 q_tr + apparatus lane" in operation["replacement"]
+    assert "at (9.70, 2.94) {$q_{tr}$};" in operation["replacement"]
+    assert "at (9.70, 3.18) {trapped charge};" in operation["replacement"]
     assert (
-        "(11.90, 2.00) .. controls (11.36, 2.66) and (10.34, 2.88)"
+        "(12.65, 3.50) -- (12.92, 3.50) -- (13.08, 3.10)"
         in operation["replacement"]
     )
+    assert "rounded corners=1.1pt" in operation["replacement"]
     by_family = {item["family"]: item for item in payload["candidate_scores"]}
-    assert by_family["panel_f_qtr_label_lane"]["operation_scale"] == "panel_block"
+    assert by_family["panel_f_qtr_apparatus_lane"]["operation_scale"] == "panel_block"
 
 
 def test_quality_search_apparatus_strengthen_progresses_already_redrawn_panel_f() -> None:
