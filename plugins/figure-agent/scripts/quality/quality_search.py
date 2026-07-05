@@ -48,6 +48,7 @@ PROGRESS_ACTIONS = {
 }
 FAMILY_REGISTRY_SCHEMA = "figure-agent.quality-search-family-registry.v0"
 APPARATUS_PANEL_F_TEMPLATE_ID = "v5f_panel_f_redraw_overlay_v1"
+APPARATUS_PANEL_F_REFRESH_TEMPLATE_ID = "v5f_panel_f_redraw_overlay_refresh_v1"
 PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID = "v5f_panel_f_boundary_polish_v1"
 PANEL_F_FINAL_FINISH_TEMPLATE_ID = "v5f_panel_f_final_finish_v1"
 PANEL_F_LABEL_ROUTE_FINISH_TEMPLATE_ID = "v5f_panel_f_label_route_finish_v1"
@@ -2131,6 +2132,144 @@ def _panel_f_overlay_template_applied(block: str) -> bool:
     return all(fragment in block for fragment in required_fragments)
 
 
+def _panel_f_overlay_refresh_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search F refresh: left-margin trap label + electrode relation",
+        "(11.46,2.50) .. controls (10.82,3.08) and (10.12,3.32) .. (9.54,3.32);",
+        "at (9.54, 3.18) {$q_{\\mathrm{tr}}$};",
+        "at (9.54, 3.42) {trapped charge};",
+        "(10.96, 1.18) -- (9.28, 1.18);",
+        "at (9.44, 1.58) {Coulomb};",
+        "(9.70, 0.54) -- (13.18, 0.54);",
+        "at (11.58, 0.28) {air gap};",
+        "(13.30, 3.82) -- (13.06, 3.50) -- (13.06, 3.12) -- (13.18, 2.82);",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _refreshed_panel_f_overlay(block: str) -> str | None:
+    tracked_overlay_replacements = (
+        (
+            "\\draw[cGray!48!black, line width=0.20pt, "
+            "dash pattern=on 1.0pt off 1.0pt, rounded corners=0.7pt]\n"
+            "  (13.30, 3.72) -- (13.30, 3.28) -- (13.30, 2.82);",
+            "% quality-search F refresh: left-margin trap label + electrode relation\n"
+            "\\draw[cGray!56!black, line width=0.30pt, rounded corners=0.9pt]\n"
+            "  (13.30, 3.82) -- (13.06, 3.50) -- (13.06, 3.12) -- (13.18, 2.82);",
+        ),
+        (
+            "\\draw[cRed!56!black, line width=0.34pt]\n"
+            "  (11.50,2.48) .. controls (11.16,3.04) and (10.48,3.42) .. (10.12,3.60);",
+            "\\draw[cRed!62!black, line width=0.46pt]\n"
+            "  (11.46,2.50) .. controls (10.82,3.08) and (10.12,3.32) .. (9.54,3.32);",
+        ),
+        (
+            "at (9.74, 3.52) {$q_{\\mathrm{tr}}$};",
+            "at (9.54, 3.18) {$q_{\\mathrm{tr}}$};",
+        ),
+        (
+            "at (9.74, 3.80) {trapped charge};",
+            "at (9.54, 3.42) {trapped charge};",
+        ),
+        (
+            "\\draw[panelFCoulombRepulsionArrow, "
+            "-{Stealth[length=8.2pt,width=5.8pt]}, "
+            "cRed!78!black, line width=1.05pt]\n"
+            "  (10.86, 1.18) -- (9.48, 1.18);",
+            "\\draw[panelFCoulombRepulsionArrow, "
+            "-{Stealth[length=9.2pt,width=6.4pt]}, "
+            "cRed!82!black, line width=1.18pt]\n"
+            "  (10.96, 1.18) -- (9.28, 1.18);",
+        ),
+        (
+            "anchor=south west] at (9.60, 1.50) {Coulomb};",
+            "anchor=south west] at (9.44, 1.58) {Coulomb};",
+        ),
+        (
+            "text=cRed!76!black] at (9.60, 1.40) {repulsion};",
+            "text=cRed!80!black] at (9.44, 1.45) {repulsion};",
+        ),
+        (
+            "\\draw[<->, cGray!62!black, line width=0.62pt]\n"
+            "  (10.36, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!66!black, line width=0.78pt]\n"
+            "  (9.70, 0.54) -- (13.18, 0.54);",
+        ),
+        (
+            "at (11.88, 0.31) {air gap};",
+            "at (11.58, 0.28) {air gap};",
+        ),
+        (
+            "\\foreach \\yy in {0.96,1.34,1.72,2.10} {\n"
+            "  \\draw[cGray!19, line width=0.22pt, dash pattern=on 1.2pt off 1.5pt]\n"
+            "    (11.08,\\yy) -- (13.18,\\yy);\n"
+            "}",
+            "\\foreach \\yy in {0.96,1.34,1.72,2.10} {\n"
+            "  \\draw[cGray!23, line width=0.30pt, dash pattern=on 1.3pt off 1.2pt]\n"
+            "    (10.62,\\yy) -- (13.18,\\yy);\n"
+            "}",
+        ),
+    )
+    v1_template_replacements = (
+        (
+            "\\draw[cGray!58!black, line width=0.26pt, rounded corners=1.0pt]\n"
+            "  (13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16)"
+            " -- (13.18, 3.02) -- (13.30, 2.82);",
+            "% quality-search F refresh: left-margin trap label + electrode relation\n"
+            "\\draw[cGray!56!black, line width=0.30pt, rounded corners=0.9pt]\n"
+            "  (13.30, 3.82) -- (13.06, 3.50) -- (13.06, 3.12) -- (13.18, 2.82);",
+        ),
+        (
+            "\\draw[cRed!55!black, line width=0.32pt]\n"
+            "  (11.48,2.40) .. controls (10.78,3.02)"
+            " and (10.12,3.36) .. (9.60,3.36);",
+            "\\draw[cRed!62!black, line width=0.46pt]\n"
+            "  (11.46,2.50) .. controls (10.82,3.08) and (10.12,3.32) .. (9.54,3.32);",
+        ),
+        (
+            "at (9.60, 3.12) {$q_{\\mathrm{tr}}$};",
+            "at (9.54, 3.18) {$q_{\\mathrm{tr}}$};",
+        ),
+        (
+            "at (9.60, 3.36) {trapped charge};",
+            "at (9.54, 3.42) {trapped charge};",
+        ),
+        (
+            "\\draw[panelFCoulombRepulsionArrow, "
+            "-{Stealth[length=9.6pt,width=6.8pt]}, "
+            "cRed!82!black, line width=1.24pt]\n"
+            "  (11.18, 1.18) -- (9.18, 1.18);",
+            "\\draw[panelFCoulombRepulsionArrow, "
+            "-{Stealth[length=9.2pt,width=6.4pt]}, "
+            "cRed!82!black, line width=1.18pt]\n"
+            "  (10.96, 1.18) -- (9.28, 1.18);",
+        ),
+        (
+            "\\draw[<->, cGray!64!black, line width=0.70pt]\n"
+            "  (9.92, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!66!black, line width=0.78pt]\n"
+            "  (9.70, 0.54) -- (13.18, 0.54);",
+        ),
+        (
+            "at (11.88, 0.31) {air gap};",
+            "at (11.58, 0.28) {air gap};",
+        ),
+    )
+
+    for replacements in (tracked_overlay_replacements, v1_template_replacements):
+        replacement = block
+        for old, new in replacements:
+            if old not in replacement:
+                break
+            replacement = replacement.replace(old, new)
+        else:
+            if replacement != block and _panel_f_overlay_has_protected_labels(
+                replacement
+            ):
+                return replacement
+    return None
+
+
 def _apparatus_panel_block_status(
     *,
     lines: list[str],
@@ -2143,9 +2282,15 @@ def _apparatus_panel_block_status(
     original = "".join(lines[line_start - 1 : line_end])
     if not _panel_f_overlay_has_protected_labels(original):
         return {"state": "protected_labels_missing", "line_start": line_start, "line_end": line_end}
-    if _panel_f_overlay_template_applied(original):
+    if _panel_f_overlay_refresh_template_applied(original):
         return {"state": "already_applied", "line_start": line_start, "line_end": line_end}
-    replacement = _strengthened_panel_f_overlay(original)
+    refresh_replacement = _refreshed_panel_f_overlay(original)
+    if refresh_replacement is not None:
+        replacement = refresh_replacement
+        template_id = APPARATUS_PANEL_F_REFRESH_TEMPLATE_ID
+    else:
+        replacement = _strengthened_panel_f_overlay(original)
+        template_id = APPARATUS_PANEL_F_TEMPLATE_ID
     if replacement is None:
         return {"state": "no_template_movement", "line_start": line_start, "line_end": line_end}
     return {
@@ -2154,6 +2299,7 @@ def _apparatus_panel_block_status(
         "replacement": replacement,
         "line_start": line_start,
         "line_end": line_end,
+        "template_id": template_id,
     }
 
 
@@ -3450,11 +3596,12 @@ def _candidate_operation_for_spec(
             new_text = str(panel_block["replacement"])
             line_start = int(panel_block["line_start"])
             line_end = int(panel_block["line_end"])
+            template_id = str(panel_block.get("template_id") or APPARATUS_PANEL_F_TEMPLATE_ID)
             operation = {
                 "kind": "replace_text",
                 "semantic_kind": "quality_search_apparatus_strengthen_panel_block",
                 "operation_scale": "panel_block",
-                "template_id": APPARATUS_PANEL_F_TEMPLATE_ID,
+                "template_id": template_id,
                 "panel": "F",
                 "path": source_ref,
                 "line_start": line_start,

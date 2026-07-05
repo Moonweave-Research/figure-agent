@@ -683,6 +683,19 @@ def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_bloc
     ) in operation["replacement"]
     assert "circle ({2.35*\\rr})" in operation["replacement"]
     assert "ball color=cRed!82!black" in operation["replacement"]
+
+    refresh_lines = f"{operation['replacement']}\n".splitlines(keepends=True)
+    refresh_status = quality_search._apparatus_panel_block_status(  # type: ignore[attr-defined]
+        lines=refresh_lines,
+        selector={"panel": "F", "line_start": 1, "line_end": len(refresh_lines)},
+    )
+    assert refresh_status["state"] == "replaceable"
+    assert refresh_status["template_id"] == "v5f_panel_f_redraw_overlay_refresh_v1"
+    assert (
+        "quality-search F refresh: left-margin trap label + electrode relation"
+        in refresh_status["replacement"]
+    )
+    assert "at (9.54, 3.42) {trapped charge};" in refresh_status["replacement"]
     assert "at (9.60, 3.12) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
     assert "at (9.60, 3.36) {trapped charge};" in operation["replacement"]
     assert "Stealth[length=9.6pt,width=6.8pt]" in operation["replacement"]
@@ -1043,20 +1056,21 @@ def test_quality_search_suppresses_already_applied_panel_f_template(
         workspace_root=tmp_path,
     )
 
-    candidate_families = {
-        item["family"] for item in payload["candidate_set"]["candidates"]
+    candidates_by_family = {
+        item["family"]: item for item in payload["candidate_set"]["candidates"]
     }
+    candidate_families = set(candidates_by_family)
     score_families = {item["family"] for item in payload["candidate_scores"]}
-    assert "apparatus_strengthen" not in candidate_families
-    assert "apparatus_strengthen" not in score_families
+    assert "apparatus_strengthen" in candidate_families
+    assert "apparatus_strengthen" in score_families
+    apparatus = candidates_by_family["apparatus_strengthen"]
+    assert apparatus["template_id"] == "v5f_panel_f_redraw_overlay_refresh_v1"
+    assert (
+        "quality-search F refresh: left-margin trap label + electrode relation"
+        in apparatus["operations"][0]["replacement"]
+    )
     assert "panel_f_boundary_polish" in candidate_families
     assert {"hierarchy_rebalance", "density_reduce"} <= candidate_families
-    assert any(
-        item["code"] == "template_already_applied"
-        and item["family"] == "apparatus_strengthen"
-        and item["template_id"] == "v5f_panel_f_redraw_overlay_v1"
-        for item in payload["candidate_set"]["refusals"]
-    )
 
 
 def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
