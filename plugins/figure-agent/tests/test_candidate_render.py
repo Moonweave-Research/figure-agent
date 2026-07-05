@@ -200,6 +200,54 @@ def test_render_source_copy_respects_line_scoped_replace_text(tmp_path: Path) ->
     )
 
 
+def test_render_source_copy_wraps_tikz_fragment_for_compile(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = "\\node (label-a) at (0,0) {Old Label};\n"
+    replacement = "\\node (label-a) at (0.10,0) {Old Label};\n"
+    (fixture / "candidate_demo.tex").write_text(source, encoding="utf-8")
+    candidate_set = {
+        **_minimal_candidate_set(),
+        "candidates": [
+            {
+                "id": "CAND001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "target": {"panel": "A"},
+                "operations": [
+                    {
+                        "kind": "replace_text",
+                        "path": "examples/candidate_demo/candidate_demo.tex",
+                        "line_start": 1,
+                        "line_end": 1,
+                        "original": source.rstrip("\n"),
+                        "replacement": replacement.rstrip("\n"),
+                    }
+                ],
+                "apply_authority": "review_only",
+            }
+        ],
+    }
+    monkeypatch.setattr(candidate_render, "_which", lambda _name: None)
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+        compile=True,
+    )
+
+    sandbox_source = fixture / "build" / "candidates" / "CAND001" / "candidate_demo.tex"
+    render_source = fixture / "build" / "candidates" / "CAND001" / "source" / "candidate.tex"
+    assert sandbox_source.read_text(encoding="utf-8") == replacement
+    wrapped = render_source.read_text(encoding="utf-8")
+    assert "\\documentclass[tikz,border=2pt]{standalone}" in wrapped
+    assert "\\begin{tikzpicture}" in wrapped
+    assert replacement.rstrip("\n") in wrapped
+
+
 def test_render_source_copy_respects_exact_multiline_replace_text(
     tmp_path: Path,
 ) -> None:

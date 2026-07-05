@@ -77,6 +77,44 @@ def _write_experience(plugin_root: Path, fixture: str, records: list[dict]) -> N
     )
 
 
+def _write_benchmark_contract(workspace_root: Path, fixture: str) -> None:
+    fixture_dir = workspace_root / "examples" / fixture
+    fixture_dir.mkdir(parents=True, exist_ok=True)
+    (fixture_dir / "spec.yaml").write_text(
+        f"""
+name: {fixture}
+panels:
+  - id: A
+    caption: Demo panel
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (fixture_dir / f"{fixture}.tex").write_text(
+        "\\node (label-a) at (0,0) {Old Label};\n",
+        encoding="utf-8",
+    )
+    (fixture_dir / "benchmark_contract.yaml").write_text(
+        f"""
+schema: figure-agent.benchmark-contract.v1
+fixture: {fixture}
+defect_class: label_overlap
+candidate_families:
+  - label-repair
+candidate_edit_classes:
+  - label_offset
+required_detectors: []
+expected_movement: {{}}
+hard_regressions:
+  - source_compile_failure
+reference_policy:
+  kind: repo_authored_synthetic
+  external_images_allowed: false
+  golden_target_allowed: true
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+
 def test_quality_next_experiment_selects_highest_uncertainty_fixture_family(
     tmp_path: Path,
 ) -> None:
@@ -118,6 +156,29 @@ def test_quality_next_experiment_selects_highest_uncertainty_fixture_family(
     assert payload["recommendation"]["reason_codes"] == [
         "highest_fixture_family_arm_uncertainty",
         "read_only_quality_search_preview",
+    ]
+
+
+def test_quality_next_experiment_routes_contract_fixture_to_benchmark_run(
+    tmp_path: Path,
+) -> None:
+    plugin_root = tmp_path / "plugin"
+    workspace_root = tmp_path / "workspace"
+    _write_suite(plugin_root, ["contract_demo"])
+    _write_benchmark_contract(workspace_root, "contract_demo")
+    _write_experience(plugin_root, "contract_demo", [])
+
+    payload = quality_next_experiment.build_next_experiment(
+        plugin_root=plugin_root,
+        workspace_root=workspace_root,
+    )
+
+    assert payload["recommendation"]["kind"] == "contract_backed_benchmark_probe"
+    assert payload["recommendation"]["command"] == "fig-agent benchmark-run --suite smoke --json"
+    assert payload["recommendation"]["allowed"] is True
+    assert payload["recommendation"]["reason_codes"] == [
+        "highest_fixture_family_arm_uncertainty",
+        "contract_backed_fixture_uses_benchmark_run",
     ]
 
 

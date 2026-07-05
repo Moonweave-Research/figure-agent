@@ -16,6 +16,7 @@ import candidate_render
 import fixture_identity
 import quality_memory_index
 import runtime_paths
+import yaml
 
 LIST_SCHEMA = "figure-agent.quality-benchmark-list.v1"
 RUN_SCHEMA = "figure-agent.quality-benchmark-run.v1"
@@ -131,6 +132,65 @@ def _fixture_artifact_path(example_dir: Path, relative: str) -> Path:
     if path.is_symlink():
         raise QualityBenchmarkError(f"sandbox_symlink_forbidden: {relative}")
     return path
+
+
+def _first_panel_id(example_dir: Path) -> str | None:
+    spec_path = _fixture_artifact_path(example_dir, "spec.yaml")
+    if not spec_path.is_file():
+        return None
+    payload = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        return None
+    panels = payload.get("panels")
+    if not isinstance(panels, list):
+        return None
+    for panel in panels:
+        if not isinstance(panel, dict):
+            continue
+        panel_id = panel.get("id")
+        if isinstance(panel_id, str) and panel_id:
+            return panel_id
+    return None
+
+
+def _contract_candidate_family(contract: dict[str, Any]) -> str | None:
+    if contract.get("state") != "present":
+        return None
+    families = contract.get("candidate_families")
+    if not isinstance(families, list):
+        return None
+    for family in families:
+        if isinstance(family, str) and family:
+            return family
+    return None
+
+
+def _build_contract_candidate_set(
+    fixture: str,
+    *,
+    example_dir: Path,
+    contract: dict[str, Any],
+    paths: runtime_paths.RuntimePaths,
+) -> dict[str, Any]:
+    default_set = candidate_generator.build_candidate_set(
+        fixture,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    default_candidates = default_set.get("candidates")
+    if isinstance(default_candidates, list) and default_candidates:
+        return default_set
+    family = _contract_candidate_family(contract)
+    panel = _first_panel_id(example_dir) if family is not None else None
+    if family is None or panel is None:
+        return default_set
+    return candidate_generator.build_candidate_set(
+        fixture,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+        panel=panel,
+        family=family,
+    )
 
 
 def _load_fixture_json(example_dir: Path, relative: str | None) -> dict[str, Any] | None:
@@ -432,10 +492,11 @@ def _run_fixture(
     status_payload = _status_summary(example_dir)
     try:
         detector_evaluation = _detector_evaluation(example_dir, contract)
-        candidate_set = candidate_generator.build_candidate_set(
+        candidate_set = _build_contract_candidate_set(
             fixture,
-            plugin_root=paths.plugin_root,
-            workspace_root=paths.workspace_root,
+            example_dir=example_dir,
+            contract=contract,
+            paths=paths,
         )
         candidates = [
             candidate

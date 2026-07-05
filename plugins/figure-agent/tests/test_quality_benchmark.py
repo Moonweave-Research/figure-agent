@@ -382,6 +382,16 @@ def test_installed_smoke_suite_all_fixtures_have_passing_detector_contracts() ->
         "smoke_contrast_demo": "passed",
         "smoke_annotation_box_demo": "passed",
     }
+    assert {
+        result["fixture"]: result["candidate_count"]
+        for result in payload["results"]
+    } == {
+        "smoke_label_overlap_demo": 1,
+        "smoke_leader_line_demo": 1,
+        "smoke_panel_spacing_demo": 1,
+        "smoke_contrast_demo": 1,
+        "smoke_annotation_box_demo": 1,
+    }
 
 
 def test_benchmark_run_preview_is_read_only_and_skips_missing_fixture(tmp_path: Path) -> None:

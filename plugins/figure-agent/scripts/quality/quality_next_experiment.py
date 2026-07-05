@@ -8,6 +8,7 @@ import shlex
 from pathlib import Path
 from typing import Any
 
+import benchmark_contracts
 import quality_benchmark
 import quality_memory_index
 import runtime_paths
@@ -142,6 +143,21 @@ def _quality_search_command(fixture: str, family: str) -> str:
     )
 
 
+def _contract_backed_fixture(fixture: str, *, paths: runtime_paths.RuntimePaths) -> bool:
+    try:
+        contract = benchmark_contracts.load_contract(
+            fixture,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+        )
+    except benchmark_contracts.BenchmarkContractError:
+        return False
+    if contract.get("state") != "present":
+        return False
+    families = contract.get("candidate_families")
+    return isinstance(families, list) and any(isinstance(item, str) for item in families)
+
+
 def build_next_experiment(
     *,
     plugin_root: Path | None = None,
@@ -161,19 +177,38 @@ def build_next_experiment(
     )
     candidates = _experiment_candidates(fixtures, paths=paths)
     selected = candidates[0] if candidates else None
-    command = (
-        _quality_search_command(str(selected["fixture"]), str(selected["family"]))
+    contract_backed = (
+        _contract_backed_fixture(str(selected["fixture"]), paths=paths)
         if isinstance(selected, dict)
-        else "fig-agent benchmark-run --suite smoke --json"
+        else False
     )
+    if contract_backed:
+        command = "fig-agent benchmark-run --suite smoke --json"
+        kind = "contract_backed_benchmark_probe"
+        reason_codes = [
+            "highest_fixture_family_arm_uncertainty",
+            "contract_backed_fixture_uses_benchmark_run",
+        ]
+    elif isinstance(selected, dict):
+        command = _quality_search_command(str(selected["fixture"]), str(selected["family"]))
+        kind = "fixture_family_uncertainty_probe"
+        reason_codes = [
+            "highest_fixture_family_arm_uncertainty",
+            "read_only_quality_search_preview",
+        ]
+    else:
+        command = "fig-agent benchmark-run --suite smoke --json"
+        kind = "benchmark_preview"
+        reason_codes = [
+            "highest_fixture_family_arm_uncertainty",
+            "read_only_quality_search_preview",
+        ]
     return {
         "schema": SCHEMA,
         "suite": "smoke",
         "fixture_count": len(fixtures),
         "recommendation": {
-            "kind": "fixture_family_uncertainty_probe"
-            if isinstance(selected, dict)
-            else "benchmark_preview",
+            "kind": kind,
             "command": command,
             "allowed": _safe_command(command),
             "fixture": selected.get("fixture") if isinstance(selected, dict) else None,
@@ -188,10 +223,7 @@ def build_next_experiment(
             if isinstance(selected, dict)
             else None,
             "arm_statistics": selected if isinstance(selected, dict) else None,
-            "reason_codes": [
-                "highest_fixture_family_arm_uncertainty",
-                "read_only_quality_search_preview",
-            ],
+            "reason_codes": reason_codes,
         },
         "candidate_count": len(candidates),
         "top_candidates": candidates[:10],

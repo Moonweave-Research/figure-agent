@@ -262,6 +262,23 @@ def _write_candidate_source_copy(
     return [{"kind": "candidate_source", "path": destination.name}]
 
 
+def _renderable_tex_source(text: str) -> str:
+    if "\\documentclass" in text or "\\begin{document}" in text:
+        return text
+    body = (
+        text
+        if "\\begin{tikzpicture}" in text
+        else f"\\begin{{tikzpicture}}\n{text}\\end{{tikzpicture}}\n"
+    )
+    return (
+        "\\documentclass[tikz,border=2pt]{standalone}\n"
+        "\\usepackage{tikz}\n"
+        "\\begin{document}\n"
+        f"{body}"
+        "\\end{document}\n"
+    )
+
+
 def _write_render_source_copy(
     *,
     example_dir: Path,
@@ -275,7 +292,7 @@ def _write_render_source_copy(
     _filename, text = source_copy
     source_dir = _sandbox_child_dir(out_dir, "source")
     destination = source_dir / "candidate.tex"
-    _write_sandbox_file(destination, text)
+    _write_sandbox_file(destination, _renderable_tex_source(text))
     return _fixture_relative(example_dir, destination)
 
 
