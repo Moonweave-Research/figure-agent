@@ -746,6 +746,10 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
             "  (11.92, 2.42) .. controls (11.94, 1.80) and (11.55, 1.22) ..",
             "  (11.11, 0.93) -- (11.21, 0.84) .. controls (11.74, 1.16) and",
             "  (12.07, 1.80) .. (12.05, 2.42) -- cycle;",
+            "\\foreach \\cx/\\cy in {11.90/2.00, 11.66/1.48, 11.34/1.07} {",
+            "  \\shade[ball color=cRed!70!black] (\\cx, \\cy) circle (0.07);",
+            "  \\draw[cRed!95!black, line width=0.22pt] (\\cx, \\cy) circle (0.07);",
+            "}",
             "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);",
             "\\node[labelMute, anchor=west, inner sep=1pt,",
             "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]",
@@ -788,6 +792,7 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     ]
     assert "panel_f_force_gap_lane" in families
     assert "panel_f_mechanical_anchor_lane" in families
+    assert "panel_f_leader_left_lane" in families
     qtr_apparatus = [
         item
         for item in payload["candidate_set"]["candidates"]
@@ -854,6 +859,27 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     ]
     assert "(11.72, 2.68) -- (12.38, 2.68);" in anchor_operation["replacement"]
     assert "at (9.76, 3.10) {trapped charge};" in anchor_operation["replacement"]
+    leader_left = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_leader_left_lane"
+    ][0]
+    leader_operation = leader_left["operations"][0]
+    assert leader_left["operation_scale"] == "panel_block"
+    assert leader_left["template_id"] == "v5d_panel_f_leader_left_lane_v1"
+    assert "quality-search C004 q_tr leader-left lane" in leader_operation[
+        "replacement"
+    ]
+    assert "(9.52, 2.34) rectangle (10.90, 2.94);" in leader_operation[
+        "replacement"
+    ]
+    assert "circle (0.092);" in leader_operation["replacement"]
+    assert "(11.90, 2.00) .. controls (11.42, 2.36)" in leader_operation[
+        "replacement"
+    ]
+    assert "at (9.72, 2.76) {trapped charge};" in leader_operation[
+        "replacement"
+    ]
     by_family = {item["family"]: item for item in payload["candidate_scores"]}
     assert by_family["panel_f_qtr_apparatus_lane"]["operation_scale"] == "panel_block"
 

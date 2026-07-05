@@ -56,6 +56,7 @@ PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID = "v5d_panel_f_qtr_label_lane_v1"
 PANEL_F_QTR_APPARATUS_LANE_TEMPLATE_ID = "v5d_panel_f_qtr_apparatus_lane_v1"
 PANEL_F_FORCE_GAP_LANE_TEMPLATE_ID = "v5d_panel_f_force_gap_lane_v1"
 PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID = "v5d_panel_f_mechanical_anchor_lane_v1"
+PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID = "v5d_panel_f_leader_left_lane_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -286,6 +287,25 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "make the clamp/root geometry read as the fixed mechanical anchor",
             "separate the cantilever root from the apparatus box and electrode",
             "keep trapped-charge and force labels visible while strengthening the support",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_leader_left_lane": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+        ],
+        "design_moves": [
+            "move the trapped-charge label into the left reading lane",
+            "route the q_tr leader above the cantilever instead of across its body",
+            "keep Coulomb, electrode, and air-gap labels stable while fixing label flow",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -901,6 +921,34 @@ def _micro_defect_hypotheses(name: str, driver: dict[str, Any]) -> list[dict[str
                 ),
                 "rollback_condition": (
                     "candidate worsens compile, protected labels, or mechanical support semantics"
+                ),
+            }
+        )
+        hypotheses.append(
+            {
+                "fixture": name,
+                "family": "panel_f_leader_left_lane",
+                "source": "unlinked_micro_defect",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "micro_defect_ids": ids,
+                    "reason": (
+                        "Panel F needs a fresh trapped-charge leader candidate after "
+                        "apparatus, label, force-gap, and mechanical-anchor lanes are stale"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert stale Panel F q_tr evidence into a bounded leader-routing candidate"
+                ),
+                "expected_visual_movement": (
+                    "trapped-charge label sits in the left reading lane with a shorter "
+                    "leader that avoids the cantilever body"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, or charge-leader semantics"
                 ),
             }
         )
@@ -1529,6 +1577,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_mechanical_anchor_lane":
         return "panel_block"
+    if family == "panel_f_leader_left_lane":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -1557,6 +1607,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_FORCE_GAP_LANE_TEMPLATE_ID
     if family == "panel_f_mechanical_anchor_lane":
         return PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID
+    if family == "panel_f_leader_left_lane":
+        return PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -2418,6 +2470,94 @@ def _panel_f_mechanical_anchor_lane_replacement(
     return original, replacement, line_start, line_end
 
 
+def _panel_f_leader_left_lane_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search C004 q_tr leader-left lane",
+        "(9.52, 2.34) rectangle (10.90, 2.94);",
+        "circle (0.092);",
+        "(11.90, 2.00) .. controls (11.42, 2.36)",
+        "at (9.72, 2.54) {$q_{tr}$};",
+        "at (9.72, 2.76) {trapped charge};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_leader_left_lane_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    if str(selector.get("panel") or "").upper() != "F":
+        return None
+    try:
+        line_start = int(selector["line_start"])
+        line_end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if line_start < 1 or line_end < line_start or line_end > len(lines):
+        return None
+    original = "".join(lines[line_start - 1 : line_end])
+    required = (
+        "q_{tr}",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "Mechanical",
+    )
+    if not all(label in original for label in required):
+        return None
+    if _panel_f_leader_left_lane_template_applied(original):
+        return None
+    marker_old = (
+        "\\foreach \\cx/\\cy in {11.90/2.00, 11.66/1.48, 11.34/1.07} {\n"
+        "  \\shade[ball color=cRed!70!black] (\\cx, \\cy) circle (0.07);\n"
+        "  \\draw[cRed!95!black, line width=0.22pt] (\\cx, \\cy) circle (0.07);\n"
+        "}"
+    )
+    marker_new = (
+        "\\foreach \\cx/\\cy in {11.90/2.00, 11.66/1.48, 11.34/1.07} {\n"
+        "  \\fill[cRed!72!black, opacity=0.16] (\\cx, \\cy) circle (0.145);\n"
+        "  \\shade[ball color=cRed!74!black] (\\cx, \\cy) circle (0.092);\n"
+        "  \\draw[cRed!95!black, line width=0.26pt] (\\cx, \\cy) circle (0.092);\n"
+        "}"
+    )
+    label_old = (
+        "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
+        "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+        "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
+        "  at (12.35, 2) {$q_{tr}$};"
+    )
+    label_new = (
+        "% quality-search C004 q_tr leader-left lane -- review-only candidate\n"
+        "\\fill[white, opacity=0.97] (9.52, 2.34) rectangle (10.90, 2.94);\n"
+        "\\draw[cRed!38!black, line width=0.22pt, rounded corners=0.9pt]\n"
+        "  (9.52, 2.34) rectangle (10.90, 2.94);\n"
+        "\\draw[cRed!60!black, line width=0.40pt]\n"
+        "  (11.90, 2.00) .. controls (11.42, 2.36) and (10.50, 2.54) .. (9.96, 2.54);\n"
+        "\\node[anchor=west, inner sep=1pt,\n"
+        "      font=\\sffamily\\bfseries\\fontsize{6.6}{7.9}\\selectfont, text=cRed!82!black]\n"
+        "  at (9.72, 2.54) {$q_{tr}$};\n"
+        "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+        "      font=\\sffamily\\fontsize{5.8}{7.0}\\selectfont, text=cRed!72!black]\n"
+        "  at (9.72, 2.76) {trapped charge};"
+    )
+    if marker_old not in original or label_old not in original:
+        return None
+    replacement = original.replace(marker_old, marker_new).replace(label_old, label_new)
+    protected = (
+        "q_{tr}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+    )
+    if not all(label in replacement for label in protected):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _panel_f_boundary_polish_template_applied(block: str) -> bool:
     required_fragments = (
         "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
@@ -2912,6 +3052,7 @@ def _candidate_operation_for_spec(
         "panel_f_qtr_apparatus_lane": "F",
         "panel_f_force_gap_lane": "F",
         "panel_f_mechanical_anchor_lane": "F",
+        "panel_f_leader_left_lane": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -3157,6 +3298,33 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_leader_left_lane":
+        leader_left_block = _panel_f_leader_left_lane_replacement(
+            lines=lines, selector=selector
+        )
+        if leader_left_block is not None:
+            original, new_text, line_start, line_end = leader_left_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_leader_left_lane_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_leader_left_lane_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -3217,6 +3385,7 @@ def _candidate_operation_for_spec(
         "panel_f_qtr_apparatus_lane": 0.8,
         "panel_f_force_gap_lane": 0.8,
         "panel_f_mechanical_anchor_lane": 0.8,
+        "panel_f_leader_left_lane": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -4598,6 +4767,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_qtr_apparatus_lane": 0.92,
             "panel_f_force_gap_lane": 0.91,
             "panel_f_mechanical_anchor_lane": 0.9,
+            "panel_f_leader_left_lane": 0.9,
             "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
