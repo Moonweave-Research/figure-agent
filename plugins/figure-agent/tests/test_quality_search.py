@@ -92,6 +92,17 @@ def _driver_with_basin() -> dict[str, object]:
     }
 
 
+def _driver_with_qtr_micro_defect() -> dict[str, object]:
+    driver = _driver_with_basin()
+    driver["audit_evidence"] = {
+        "detector_feedback": {
+            "unlinked_micro_defect_count": 1,
+            "unlinked_micro_defect_ids": ["M_PRINT_QTR"],
+        }
+    }
+    return driver
+
+
 def _driver_ready_without_basin() -> dict[str, object]:
     return {
         "action": "complete",
@@ -677,6 +688,78 @@ def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_bloc
     assert "Stealth[length=9.6pt,width=6.8pt]" in operation["replacement"]
     assert "line width=1.24pt" in operation["replacement"]
     assert "\\draw[<->, cGray!64!black, line width=0.70pt]" in operation["replacement"]
+
+
+def test_quality_search_qtr_micro_defect_emits_panel_f_label_lane_candidate(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_with_qtr_micro_defect(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "% q_tr leader candidate fixture",
+            "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);",
+            "\\node[labelMute, anchor=west, inner sep=1pt,",
+            "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]",
+            "  at (12.35, 2) {$q_{tr}$};",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\node at (10.85, 1.35) {Coulomb};",
+            "\\node at (10.85, 1.27) {repulsion};",
+            "\\node at (11.88, 0.31) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="aggressive C001 qtr typography automation",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    families = [item["family"] for item in payload["candidate_specs"]]
+    assert families[0] == "panel_f_qtr_label_lane"
+    qtr = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_qtr_label_lane"
+    ][0]
+    operation = qtr["operations"][0]
+    assert qtr["edit_class"] == "quality_search_panel_block"
+    assert qtr["operation_scale"] == "panel_block"
+    assert qtr["template_id"] == "v5d_panel_f_qtr_label_lane_v1"
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "v5d_panel_f_qtr_label_lane_v1"
+    assert operation["line_start"] == 5
+    assert operation["line_end"] == 8
+    assert "quality-search C001 q_tr label lane" in operation["replacement"]
+    assert "at (9.72, 2.86) {$q_{tr}$};" in operation["replacement"]
+    assert "at (9.72, 3.08) {trapped charge};" in operation["replacement"]
+    assert (
+        "(11.90, 2.00) .. controls (11.36, 2.66) and (10.34, 2.88)"
+        in operation["replacement"]
+    )
+    by_family = {item["family"]: item for item in payload["candidate_scores"]}
+    assert by_family["panel_f_qtr_label_lane"]["operation_scale"] == "panel_block"
 
 
 def test_quality_search_apparatus_strengthen_progresses_already_redrawn_panel_f() -> None:

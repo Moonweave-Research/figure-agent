@@ -49,6 +49,7 @@ PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID = "v5f_panel_f_boundary_polish_v1"
 PANEL_F_FINAL_FINISH_TEMPLATE_ID = "v5f_panel_f_final_finish_v1"
 PANEL_F_LABEL_ROUTE_FINISH_TEMPLATE_ID = "v5f_panel_f_label_route_finish_v1"
 PANEL_F_DENSITY_RELIEF_TEMPLATE_ID = "v5f_panel_f_density_relief_v1"
+PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID = "v5d_panel_f_qtr_label_lane_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -202,6 +203,25 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "thin the Panel F field-line and electrode-hatch density without deleting semantics",
             "make Coulomb/repulsion typography secondary to the charge trajectory",
             "preserve the air-gap and electrode relation while reducing print-scale crowding",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_qtr_label_lane": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+        ],
+        "design_moves": [
+            "give q_tr a dedicated label lane instead of enlarging the inline mark",
+            "add trapped-charge wording without renaming the charge quantity",
+            "keep the leader short and outside the cantilever body",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -385,7 +405,18 @@ def _unlinked_micro_defect_panels(driver: dict[str, Any]) -> list[str]:
                 panel = parts[index + 1]
                 if panel not in panels:
                     panels.append(panel)
+        if "QTR" in parts and "F" not in panels:
+            panels.append("F")
     return panels
+
+
+def _unlinked_micro_defect_ids(driver: dict[str, Any]) -> list[str]:
+    audit = driver.get("audit_evidence")
+    feedback = audit.get("detector_feedback") if isinstance(audit, dict) else None
+    ids = feedback.get("unlinked_micro_defect_ids") if isinstance(feedback, dict) else None
+    if not isinstance(ids, list):
+        return []
+    return [item for item in ids if isinstance(item, str) and item.strip()]
 
 
 def _classifications(
@@ -689,6 +720,43 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
     ]
 
 
+def _micro_defect_hypotheses(name: str, driver: dict[str, Any]) -> list[dict[str, Any]]:
+    ids = _unlinked_micro_defect_ids(driver)
+    normalized = {item.upper() for item in ids}
+    hypotheses: list[dict[str, Any]] = []
+    if any("QTR" in item for item in normalized):
+        hypotheses.append(
+            {
+                "fixture": name,
+                "family": "panel_f_qtr_label_lane",
+                "source": "unlinked_micro_defect",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "micro_defect_ids": ids,
+                    "reason": (
+                        "Panel F q_tr typography is weak at print scale; make a "
+                        "dedicated trapped-charge label lane before asking for "
+                        "human art-direction review"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert unlinked q_tr micro-defect into a bounded Panel F candidate"
+                ),
+                "expected_visual_movement": (
+                    "q_tr reads as an authoritative trapped-charge notation at "
+                    "thumbnail scale"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, or Panel F print-legibility"
+                ),
+            }
+        )
+    return hypotheses
+
+
 def _merge_hypotheses(
     primary: list[dict[str, Any]],
     fallback: list[dict[str, Any]],
@@ -718,8 +786,21 @@ def _patch_hypotheses(
     if str(driver.get("action") or "") in PROGRESS_ACTIONS:
         return []
     basin_hypotheses = _step_out_hypotheses(name, driver, ledger)
+    micro_hypotheses = _micro_defect_hypotheses(name, driver)
     if basin_hypotheses:
+        if micro_hypotheses:
+            return _merge_hypotheses(micro_hypotheses, basin_hypotheses, limit=8)
         return basin_hypotheses[:8]
+    if micro_hypotheses:
+        return _merge_hypotheses(
+            micro_hypotheses,
+            _merge_hypotheses(
+                _goal_hypotheses(name, goal),
+                _detector_hypotheses(name, ledger),
+                limit=4,
+            ),
+            limit=5,
+        )
     goal_hypotheses = _goal_hypotheses(name, goal)
     if goal_hypotheses:
         return _merge_hypotheses(
@@ -1283,6 +1364,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_density_relief":
         return "panel_block"
+    if family == "panel_f_qtr_label_lane":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -1303,6 +1386,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_LABEL_ROUTE_FINISH_TEMPLATE_ID
     if family == "panel_f_density_relief":
         return PANEL_F_DENSITY_RELIEF_TEMPLATE_ID
+    if family == "panel_f_qtr_label_lane":
+        return PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -1714,6 +1799,63 @@ def _apparatus_panel_block_replacement(
         int(status["line_start"]),
         int(status["line_end"]),
     )
+
+
+def _panel_f_qtr_label_lane_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search C001 q_tr label lane",
+        "at (9.72, 2.86) {$q_{tr}$};",
+        "at (9.72, 3.08) {trapped charge};",
+        "(11.90, 2.00) .. controls (11.36, 2.66) and (10.34, 2.88) .. (9.98, 2.88);",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_qtr_label_lane_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    if str(selector.get("panel") or "").upper() != "F":
+        return None
+    try:
+        start = int(selector["line_start"])
+        end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if start < 1 or end < start or end > len(lines):
+        return None
+    block = "".join(lines[start - 1 : end])
+    if _panel_f_qtr_label_lane_template_applied(block):
+        return None
+    original = (
+        "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
+        "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+        "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
+        "  at (12.35, 2) {$q_{tr}$};\n"
+    )
+    replacement = (
+        "% quality-search C001 q_tr label lane -- review-only candidate\n"
+        "\\draw[cRed!58!black, line width=0.34pt]\n"
+        "  (11.90, 2.00) .. controls (11.36, 2.66) and (10.34, 2.88) .. (9.98, 2.88);\n"
+        "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,\n"
+        "      inner xsep=1.4pt, inner ysep=0.7pt,\n"
+        "      font=\\sffamily\\bfseries\\fontsize{7.2}{8.6}\\selectfont,\n"
+        "      text=cRed!82!black]\n"
+        "  at (9.72, 2.86) {$q_{tr}$};\n"
+        "\\node[labelMute, anchor=west, fill=white, fill opacity=0.94, text opacity=1,\n"
+        "      inner xsep=1.3pt, inner ysep=0.5pt,\n"
+        "      font=\\sffamily\\fontsize{5.6}{6.7}\\selectfont, text=cRed!70!black]\n"
+        "  at (9.72, 3.08) {trapped charge};\n"
+    )
+    offset = block.find(original)
+    if offset < 0:
+        return None
+    if "q_{tr}" not in replacement or "trapped charge" not in replacement:
+        return None
+    line_start = start + block[:offset].count("\n")
+    line_end = line_start + original.count("\n") - 1
+    return original, replacement, line_start, line_end
 
 
 def _panel_f_boundary_polish_template_applied(block: str) -> bool:
@@ -2206,6 +2348,7 @@ def _candidate_operation_for_spec(
         "panel_f_final_finish": "F",
         "panel_f_label_route_finish": "F",
         "panel_f_density_relief": "F",
+        "panel_f_qtr_label_lane": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -2343,6 +2486,31 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_LABEL_ROUTE_FINISH_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_qtr_label_lane":
+        qtr_block = _panel_f_qtr_label_lane_replacement(lines=lines, selector=selector)
+        if qtr_block is not None:
+            original, new_text, line_start, line_end = qtr_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_qtr_label_lane_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_qtr_label_lane_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -2399,6 +2567,7 @@ def _candidate_operation_for_spec(
     minimum_pt = {
         "hierarchy_rebalance": 0.9,
         "apparatus_strengthen": 0.8,
+        "panel_f_qtr_label_lane": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -3592,6 +3761,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_final_finish": 0.86,
             "panel_f_label_route_finish": 0.9,
             "panel_f_density_relief": 0.89,
+            "panel_f_qtr_label_lane": 0.9,
             "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
