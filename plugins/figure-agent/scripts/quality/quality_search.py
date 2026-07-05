@@ -1010,6 +1010,13 @@ def _memory_summary(memory: dict[str, Any] | None) -> dict[str, Any]:
         "event_count": memory.get("event_count"),
         "candidate_event_count": memory.get("candidate_event_count"),
         "eligible_prior_count": memory.get("eligible_prior_count"),
+        "counterfactual_unchosen_count": memory.get("counterfactual_unchosen_count"),
+        "duplicate_experience_attempt_count": memory.get(
+            "duplicate_experience_attempt_count"
+        ),
+        "duplicate_experience_attempt_rate": memory.get(
+            "duplicate_experience_attempt_rate"
+        ),
         "families": memory.get("families", {}),
     }
 
@@ -4295,6 +4302,28 @@ def _bandit_selected_arm_bonus(family: str, bandit_decision: dict[str, Any]) -> 
     return BANDIT_SELECTED_ARM_BONUS
 
 
+def _duplicate_experience_penalty(plan: dict[str, Any], family: str) -> float:
+    memory = (plan.get("state") or {}).get("memory")
+    if not isinstance(memory, dict):
+        return 0.0
+    duplicate_rate = _bounded_float(
+        memory.get("duplicate_experience_attempt_rate"),
+        default=0.0,
+        lower=0.0,
+        upper=1.0,
+    )
+    if duplicate_rate < 0.5:
+        return 0.0
+    family_memory = _family_memory(plan, family)
+    if _bounded_int(family_memory.get("attempts"), default=0) <= 0:
+        return 0.0
+    return -0.05
+
+
+def _stale_duplicate_experience_family(plan: dict[str, Any], family: str) -> bool:
+    return _duplicate_experience_penalty(plan, family) < 0
+
+
 def _candidate_policy_score(
     *,
     family: str,
@@ -4313,6 +4342,7 @@ def _candidate_policy_score(
         plan=plan,
     )
     bandit_bonus = _bandit_selected_arm_bonus(family, bandit_decision)
+    duplicate_penalty = _duplicate_experience_penalty(plan, family)
     score = round(
         min(
             max(
@@ -4322,7 +4352,8 @@ def _candidate_policy_score(
                 + render_adjustment
                 + render_penalty
                 + operation_scale_bonus
-                + goal_directive_bonus,
+                + goal_directive_bonus
+                + duplicate_penalty,
                 0.0,
             ),
             1.0,
@@ -4340,6 +4371,7 @@ def _candidate_policy_score(
         "render_penalty": render_penalty,
         "operation_scale_bonus": operation_scale_bonus,
         "goal_directive_bonus": goal_directive_bonus,
+        "duplicate_experience_penalty": duplicate_penalty,
         "score": score,
     }
 
@@ -4420,6 +4452,7 @@ def _candidate_scores(
             {
                 "candidate_id": spec.get("id"),
                 "family": family,
+                "candidate_hash": metadata.get("candidate_hash"),
                 "operation_scale": operation_scale,
                 "template_id": metadata.get("template_id") or spec.get("template_id"),
                 "expected_visual_movement": (
@@ -4432,6 +4465,9 @@ def _candidate_scores(
                 "full_changed_pixel_ratio": full_changed_pixel_ratio,
                 "panel_changed_pixel_ratio": panel_changed_pixel_ratio,
                 "non_marginal_visual_change": non_marginal_visual_change,
+                "stale_duplicate_experience_family": (
+                    _stale_duplicate_experience_family(plan, family)
+                ),
                 "non_marginal_thresholds": {
                     "full_changed_pixel_ratio": NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO,
                     "panel_changed_pixel_ratio": NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO,
@@ -4447,6 +4483,7 @@ def _candidate_scores(
                         "quality_memory_prior",
                         "candidate_render_policy_adjustment",
                         "non_marginal_visual_change_gate",
+                        "stale_duplicate_experience_family_gate",
                     ],
                 },
                 "render_status": render_status,
@@ -4475,6 +4512,7 @@ def _candidate_metadata_by_id(candidate_set: dict[str, Any]) -> dict[str, dict[s
         if not isinstance(candidate, dict) or not candidate.get("id"):
             continue
         metadata[str(candidate["id"])] = {
+            "candidate_hash": candidate.get("candidate_hash"),
             "operation_scale": candidate.get("operation_scale"),
             "template_id": candidate.get("template_id"),
             "expected_visual_movement": candidate.get("expected_visual_movement"),
@@ -4515,6 +4553,7 @@ def _execution_decision(
         for item in ranked
         if item.get("family") != "null_baseline"
         and item.get("non_marginal_visual_change") is True
+        and item.get("stale_duplicate_experience_family") is not True
     ]
     selected = (
         eligible[0]
@@ -4525,16 +4564,31 @@ def _execution_decision(
     )
     if selected is None:
         top = ranked[0] if ranked else {}
-        return {
-            "kind": "no_non_marginal_candidate",
-            "reason": (
+        stale_non_marginal = [
+            item
+            for item in ranked
+            if item.get("family") != "null_baseline"
+            and item.get("non_marginal_visual_change") is True
+            and item.get("stale_duplicate_experience_family") is True
+        ]
+        reason = (
+            "non-marginal candidates were excluded as stale duplicate "
+            "experience families; generator must produce a fresh non-marginal "
+            "candidate"
+            if stale_non_marginal
+            else (
                 "rendered candidates did not clear the non-marginal visual "
                 "movement threshold"
-            ),
+            )
+        )
+        return {
+            "kind": "no_non_marginal_candidate",
+            "reason": reason,
             "selected_candidate_id": None,
             "evidence_score": 0.0,
             "policy_score": 0.0,
             "source_mutation": "not_performed",
+            "stale_duplicate_non_marginal_candidate_count": len(stale_non_marginal),
             "top_candidate_id": top.get("candidate_id"),
             "top_candidate_family": top.get("family"),
             "top_candidate_operation_scale": top.get("operation_scale"),

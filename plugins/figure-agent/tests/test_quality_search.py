@@ -1804,6 +1804,167 @@ def test_quality_search_policy_uses_memory_prior_and_bandit_bonus() -> None:
     assert decision["policy"]["kind"] == "epsilon_greedy_family_bandit_v1"
 
 
+def test_quality_search_memory_summary_preserves_duplicate_diagnostics() -> None:
+    summary = quality_search._memory_summary(
+        {
+            "event_count": 14,
+            "candidate_event_count": 14,
+            "eligible_prior_count": 0,
+            "counterfactual_unchosen_count": 3,
+            "duplicate_experience_attempt_count": 10,
+            "duplicate_experience_attempt_rate": 0.7143,
+            "families": {"panel_f_qtr_apparatus_lane": {"attempts": 1}},
+        }
+    )
+
+    assert summary["counterfactual_unchosen_count"] == 3
+    assert summary["duplicate_experience_attempt_count"] == 10
+    assert summary["duplicate_experience_attempt_rate"] == 0.7143
+
+
+def test_quality_search_policy_penalizes_duplicate_experience_family() -> None:
+    plan = {
+        "state": {
+            "memory": {
+                "state": "loaded",
+                "duplicate_experience_attempt_rate": 0.7143,
+                "families": {
+                    "panel_f_qtr_apparatus_lane": {
+                        "attempts": 1,
+                        "recommended_prior": 0.0,
+                    },
+                    "panel_f_qtr_label_lane": {
+                        "attempts": 0,
+                        "recommended_prior": 0.0,
+                    },
+                },
+            }
+        },
+        "classifications": [],
+        "next_recommended_operation": {"kind": "step_out_experiment"},
+    }
+    candidate_specs = [
+        {
+            "id": "QS001",
+            "family": "panel_f_qtr_apparatus_lane",
+            "operation_scale": "panel_block",
+        },
+        {
+            "id": "QS002",
+            "family": "panel_f_qtr_label_lane",
+            "operation_scale": "panel_block",
+        },
+    ]
+    rankings = [
+        {
+            "candidate_id": "QS001",
+            "rank_score": 0.75,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.003},
+        },
+        {
+            "candidate_id": "QS002",
+            "rank_score": 0.75,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.003},
+        },
+    ]
+
+    scores = quality_search._candidate_scores(candidate_specs, plan, rankings)
+    by_family = {item["family"]: item for item in scores}
+
+    assert by_family["panel_f_qtr_apparatus_lane"]["policy"][
+        "duplicate_experience_penalty"
+    ] == -0.05
+    assert by_family["panel_f_qtr_label_lane"]["policy"][
+        "duplicate_experience_penalty"
+    ] == 0.0
+    assert by_family["panel_f_qtr_label_lane"]["policy_score"] > by_family[
+        "panel_f_qtr_apparatus_lane"
+    ]["policy_score"]
+
+
+def test_quality_search_execution_skips_stale_duplicate_family() -> None:
+    decision = quality_search._execution_decision(
+        {"classifications": []},
+        [
+            {
+                "candidate_id": "QS001",
+                "family": "panel_f_qtr_apparatus_lane",
+                "operation_scale": "panel_block",
+                "template_id": "v5d_panel_f_qtr_apparatus_lane_v1",
+                "evidence_score": 0.67,
+                "policy_score": 0.95,
+                "full_changed_pixel_ratio": 0.005,
+                "panel_changed_pixel_ratio": 0.005,
+                "non_marginal_visual_change": True,
+                "stale_duplicate_experience_family": True,
+                "policy": {"duplicate_experience_penalty": -0.05},
+            },
+            {
+                "candidate_id": "QS002",
+                "family": "panel_f_qtr_label_lane",
+                "operation_scale": "panel_block",
+                "template_id": "v5d_panel_f_qtr_label_lane_v1",
+                "evidence_score": 0.67,
+                "policy_score": 0.72,
+                "full_changed_pixel_ratio": 0.004,
+                "panel_changed_pixel_ratio": 0.004,
+                "non_marginal_visual_change": True,
+                "stale_duplicate_experience_family": False,
+                "policy": {"duplicate_experience_penalty": 0.0},
+            },
+        ],
+        fixture_name="fig1_overview_v5d_redraw_001_vault",
+    )
+
+    assert decision["kind"] == "candidate_batch_ready"
+    assert decision["selected_candidate_id"] == "QS002"
+    assert decision["selected_family"] == "panel_f_qtr_label_lane"
+
+
+def test_quality_search_execution_reports_stale_duplicate_when_no_fresh_candidate() -> None:
+    decision = quality_search._execution_decision(
+        {"classifications": []},
+        [
+            {
+                "candidate_id": "QS001",
+                "family": "panel_f_qtr_apparatus_lane",
+                "operation_scale": "panel_block",
+                "template_id": "v5d_panel_f_qtr_apparatus_lane_v1",
+                "evidence_score": 0.67,
+                "policy_score": 0.72,
+                "full_changed_pixel_ratio": 0.005,
+                "panel_changed_pixel_ratio": 0.005,
+                "non_marginal_visual_change": True,
+                "stale_duplicate_experience_family": True,
+                "policy": {"duplicate_experience_penalty": -0.05},
+            },
+            {
+                "candidate_id": "QS002",
+                "family": "panel_f_qtr_label_lane",
+                "operation_scale": "panel_block",
+                "template_id": "v5d_panel_f_qtr_label_lane_v1",
+                "evidence_score": 0.67,
+                "policy_score": 0.724,
+                "full_changed_pixel_ratio": 0.001,
+                "panel_changed_pixel_ratio": 0.001,
+                "non_marginal_visual_change": False,
+                "stale_duplicate_experience_family": False,
+                "policy": {"duplicate_experience_penalty": 0.0},
+            },
+        ],
+        fixture_name="fig1_overview_v5d_redraw_001_vault",
+    )
+
+    assert decision["kind"] == "no_non_marginal_candidate"
+    assert decision["selected_candidate_id"] is None
+    assert decision["stale_duplicate_non_marginal_candidate_count"] == 1
+    assert "fresh non-marginal candidate" in decision["reason"]
+
+
 def test_quality_search_policy_prefers_panel_block_with_stronger_render_rank() -> None:
     plan = {
         "state": {"memory": {"state": "loaded", "families": {}}},
