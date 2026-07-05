@@ -729,6 +729,23 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
             "\\fill[cGray!50!black] (12.65, 3.5) circle (0.014);",
             "\\draw[cGray!75!black, line width=0.28pt]",
             "  (12.65, 3.5) -- (13.23, 3.5) -- (13.23, 2.6);",
+            "\\fill[cGray!10] (11.785, 2.42) rectangle (12.185, 2.52);",
+            "\\draw[cGray!75!black, line width=0.40pt]",
+            "  (11.785, 2.42) rectangle (12.185, 2.52);",
+            "\\draw[cGray!50!black, line width=0.40pt] (11.685, 2.65) -- (12.285, 2.65);",
+            "\\foreach \\dx in {0,0.10,0.20,0.30,0.40,0.50} {",
+            "  \\draw[cGray!50!black, line width=0.25pt]",
+            "    ({11.685+\\dx}, 2.65) -- ({11.635+\\dx}, 2.72);",
+            "}",
+            "\\draw[cGray!75!black, line width=0.40pt] (11.985, 2.52) -- (11.985, 2.65);",
+            "\\shade[top color=cAmber!22, bottom color=cAmber!42, rounded corners=0.3mm]",
+            "  (11.92, 2.42) .. controls (11.94, 1.80) and (11.55, 1.22) ..",
+            "  (11.11, 0.93) -- (11.21, 0.84) .. controls (11.74, 1.16) and",
+            "  (12.07, 1.80) .. (12.05, 2.42) -- cycle;",
+            "\\draw[cAmber!80!black, line width=0.55pt, rounded corners=0.3mm]",
+            "  (11.92, 2.42) .. controls (11.94, 1.80) and (11.55, 1.22) ..",
+            "  (11.11, 0.93) -- (11.21, 0.84) .. controls (11.74, 1.16) and",
+            "  (12.07, 1.80) .. (12.05, 2.42) -- cycle;",
             "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);",
             "\\node[labelMute, anchor=west, inner sep=1pt,",
             "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]",
@@ -769,6 +786,8 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
         "panel_f_qtr_apparatus_lane",
         "panel_f_qtr_label_lane",
     ]
+    assert "panel_f_force_gap_lane" in families
+    assert "panel_f_mechanical_anchor_lane" in families
     qtr_apparatus = [
         item
         for item in payload["candidate_set"]["candidates"]
@@ -819,6 +838,22 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     assert "at (10.42, 1.40) {Coulomb};" in force_operation["replacement"]
     assert "at (10.42, 1.20) {repulsion};" in force_operation["replacement"]
     assert "(11.14, 0.68) -- (13.23, 0.68);" in force_operation["replacement"]
+    mechanical_anchor = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_mechanical_anchor_lane"
+    ][0]
+    anchor_operation = mechanical_anchor["operations"][0]
+    assert mechanical_anchor["operation_scale"] == "panel_block"
+    assert mechanical_anchor["template_id"] == "v5d_panel_f_mechanical_anchor_lane_v1"
+    assert "quality-search C003 mechanical anchor lane" in anchor_operation[
+        "replacement"
+    ]
+    assert "(11.72, 2.36) rectangle (12.28, 2.58);" in anchor_operation[
+        "replacement"
+    ]
+    assert "(11.72, 2.68) -- (12.38, 2.68);" in anchor_operation["replacement"]
+    assert "at (9.76, 3.10) {trapped charge};" in anchor_operation["replacement"]
     by_family = {item["family"]: item for item in payload["candidate_scores"]}
     assert by_family["panel_f_qtr_apparatus_lane"]["operation_scale"] == "panel_block"
 

@@ -55,6 +55,7 @@ PANEL_F_DENSITY_RELIEF_TEMPLATE_ID = "v5f_panel_f_density_relief_v1"
 PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID = "v5d_panel_f_qtr_label_lane_v1"
 PANEL_F_QTR_APPARATUS_LANE_TEMPLATE_ID = "v5d_panel_f_qtr_apparatus_lane_v1"
 PANEL_F_FORCE_GAP_LANE_TEMPLATE_ID = "v5d_panel_f_force_gap_lane_v1"
+PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID = "v5d_panel_f_mechanical_anchor_lane_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -266,6 +267,25 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
                 "raise the air-gap bracket into the force/electrode relation "
                 "instead of leaving it as a baseline ruler"
             ),
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_mechanical_anchor_lane": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+        ],
+        "design_moves": [
+            "make the clamp/root geometry read as the fixed mechanical anchor",
+            "separate the cantilever root from the apparatus box and electrode",
+            "keep trapped-charge and force labels visible while strengthening the support",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -853,6 +873,34 @@ def _micro_defect_hypotheses(name: str, driver: dict[str, Any]) -> list[dict[str
                 "rollback_condition": (
                     "candidate worsens compile, protected labels, or Panel F "
                     "force/electrode semantics"
+                ),
+            }
+        )
+        hypotheses.append(
+            {
+                "fixture": name,
+                "family": "panel_f_mechanical_anchor_lane",
+                "source": "unlinked_micro_defect",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "micro_defect_ids": ids,
+                    "reason": (
+                        "Panel F still needs a fresh mechanical anchor/root candidate "
+                        "after charge label, apparatus, and force-gap lanes are exhausted"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert stale Panel F mechanism evidence into a bounded "
+                    "mechanical-anchor candidate"
+                ),
+                "expected_visual_movement": (
+                    "cantilever root reads as fixed mechanical support before the bend"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, or mechanical support semantics"
                 ),
             }
         )
@@ -1479,6 +1527,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_force_gap_lane":
         return "panel_block"
+    if family == "panel_f_mechanical_anchor_lane":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -1505,6 +1555,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_QTR_APPARATUS_LANE_TEMPLATE_ID
     if family == "panel_f_force_gap_lane":
         return PANEL_F_FORCE_GAP_LANE_TEMPLATE_ID
+    if family == "panel_f_mechanical_anchor_lane":
+        return PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -2239,6 +2291,133 @@ def _panel_f_force_gap_lane_replacement(
     return original, replacement, line_start, line_end
 
 
+def _panel_f_mechanical_anchor_lane_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search C003 mechanical anchor lane",
+        "(11.72, 2.36) rectangle (12.28, 2.58);",
+        "(11.72, 2.68) -- (12.38, 2.68);",
+        "(11.86, 2.42) .. controls (11.88, 1.82)",
+        "at (9.76, 3.10) {trapped charge};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_mechanical_anchor_lane_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    if str(selector.get("panel") or "").upper() != "F":
+        return None
+    try:
+        line_start = int(selector["line_start"])
+        line_end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if line_start < 1 or line_end < line_start or line_end > len(lines):
+        return None
+    original = "".join(lines[line_start - 1 : line_end])
+    required = (
+        "q_{tr}",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "Mechanical",
+    )
+    if not all(label in original for label in required):
+        return None
+    if _panel_f_mechanical_anchor_lane_template_applied(original):
+        return None
+    replacement = original
+    replacements = (
+        (
+            "\\fill[cGray!10] (11.785, 2.42) rectangle (12.185, 2.52);",
+            "% quality-search C003 mechanical anchor lane -- review-only candidate\n"
+            "\\fill[cGray!12] (11.72, 2.36) rectangle (12.28, 2.58);\n"
+            "\\fill[cGray!45!black, opacity=0.16] (11.72, 2.34) rectangle (12.28, 2.39);",
+        ),
+        (
+            "\\draw[cGray!75!black, line width=0.40pt]\n"
+            "  (11.785, 2.42) rectangle (12.185, 2.52);",
+            "\\draw[cGray!78!black, line width=0.46pt]\n"
+            "  (11.72, 2.36) rectangle (12.28, 2.58);",
+        ),
+        (
+            "\\draw[cGray!50!black, line width=0.40pt] (11.685, 2.65) -- (12.285, 2.65);",
+            "\\draw[cGray!58!black, line width=0.48pt] (11.72, 2.68) -- (12.38, 2.68);",
+        ),
+        (
+            "\\foreach \\dx in {0,0.10,0.20,0.30,0.40,0.50} {\n"
+            "  \\draw[cGray!50!black, line width=0.25pt]\n"
+            "    ({11.685+\\dx}, 2.65) -- ({11.635+\\dx}, 2.72);\n"
+            "}",
+            "\\foreach \\dx in {0,0.11,0.22,0.33,0.44,0.55} {\n"
+            "  \\draw[cGray!54!black, line width=0.28pt]\n"
+            "    ({11.74+\\dx}, 2.68) -- ({11.68+\\dx}, 2.78);\n"
+            "}",
+        ),
+        (
+            "\\draw[cGray!75!black, line width=0.40pt] (11.985, 2.52) -- (11.985, 2.65);",
+            "\\draw[cGray!78!black, line width=0.48pt] (11.99, 2.58) -- (11.99, 2.68);",
+        ),
+        (
+            "\\shade[top color=cAmber!22, bottom color=cAmber!42, rounded corners=0.3mm]\n"
+            "  (11.92, 2.42) .. controls (11.94, 1.80) and (11.55, 1.22) ..\n"
+            "  (11.11, 0.93) -- (11.21, 0.84) .. controls (11.74, 1.16) and\n"
+            "  (12.07, 1.80) .. (12.05, 2.42) -- cycle;",
+            "\\shade[top color=cAmber!20, bottom color=cAmber!44, rounded corners=0.35mm]\n"
+            "  (11.86, 2.42) .. controls (11.88, 1.82) and (11.52, 1.24) ..\n"
+            "  (11.08, 0.93) -- (11.19, 0.82) .. controls (11.76, 1.16) and\n"
+            "  (12.10, 1.82) .. (12.10, 2.42) -- cycle;",
+        ),
+        (
+            "\\draw[cAmber!80!black, line width=0.55pt, rounded corners=0.3mm]\n"
+            "  (11.92, 2.42) .. controls (11.94, 1.80) and (11.55, 1.22) ..\n"
+            "  (11.11, 0.93) -- (11.21, 0.84) .. controls (11.74, 1.16) and\n"
+            "  (12.07, 1.80) .. (12.05, 2.42) -- cycle;",
+            "\\draw[cAmber!82!black, line width=0.62pt, rounded corners=0.35mm]\n"
+            "  (11.86, 2.42) .. controls (11.88, 1.82) and (11.52, 1.24) ..\n"
+            "  (11.08, 0.93) -- (11.19, 0.82) .. controls (11.76, 1.16) and\n"
+            "  (12.10, 1.82) .. (12.10, 2.42) -- cycle;",
+        ),
+        (
+            "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
+            "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+            "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
+            "  at (12.35, 2) {$q_{tr}$};",
+            "\\draw[cRed!58!black, line width=0.34pt]\n"
+            "  (11.90, 2.00) .. controls (11.36, 2.66) and (10.34, 2.88) .. (9.98, 2.88);\n"
+            "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,\n"
+            "      inner xsep=1.3pt, inner ysep=0.6pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{7.0}{8.4}\\selectfont,\n"
+            "      text=cRed!82!black]\n"
+            "  at (9.76, 2.88) {$q_{tr}$};\n"
+            "\\node[labelMute, anchor=west, fill=white, fill opacity=0.94, text opacity=1,\n"
+            "      inner xsep=1.2pt, inner ysep=0.5pt,\n"
+            "      font=\\sffamily\\fontsize{5.8}{7.0}\\selectfont, text=cRed!72!black]\n"
+            "  at (9.76, 3.10) {trapped charge};",
+        ),
+    )
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    protected = (
+        "q_{tr}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+    )
+    if not all(label in replacement for label in protected):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _panel_f_boundary_polish_template_applied(block: str) -> bool:
     required_fragments = (
         "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
@@ -2732,6 +2911,7 @@ def _candidate_operation_for_spec(
         "panel_f_qtr_label_lane": "F",
         "panel_f_qtr_apparatus_lane": "F",
         "panel_f_force_gap_lane": "F",
+        "panel_f_mechanical_anchor_lane": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -2948,6 +3128,35 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_FORCE_GAP_LANE_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_mechanical_anchor_lane":
+        mechanical_anchor_block = _panel_f_mechanical_anchor_lane_replacement(
+            lines=lines, selector=selector
+        )
+        if mechanical_anchor_block is not None:
+            original, new_text, line_start, line_end = mechanical_anchor_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": (
+                    "quality_search_panel_f_mechanical_anchor_lane_panel_block"
+                ),
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_mechanical_anchor_lane_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -3007,6 +3216,7 @@ def _candidate_operation_for_spec(
         "panel_f_qtr_label_lane": 0.8,
         "panel_f_qtr_apparatus_lane": 0.8,
         "panel_f_force_gap_lane": 0.8,
+        "panel_f_mechanical_anchor_lane": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -4387,6 +4597,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_qtr_label_lane": 0.9,
             "panel_f_qtr_apparatus_lane": 0.92,
             "panel_f_force_gap_lane": 0.91,
+            "panel_f_mechanical_anchor_lane": 0.9,
             "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
