@@ -320,6 +320,103 @@ def build_apply_record(
     )[0]
 
 
+def build_recommendation_record(
+    name: str,
+    candidate_id: str,
+    *,
+    candidate_set: dict[str, Any],
+    ranking: dict[str, Any],
+    decision: dict[str, Any],
+    recommendation: dict[str, Any],
+    run_dir: Path,
+    workspace_root: Path | None = None,
+    plugin_root: Path | None = None,
+) -> dict[str, Any]:
+    fixture_identity.validate_fixture_name(name)
+    fixture_identity.validate_fixture_name(candidate_id)
+    paths = runtime_paths.resolve_runtime_paths(
+        workspace_root=workspace_root,
+        plugin_root=plugin_root,
+    )
+    example_dir = paths.examples_dir / name
+    candidate = _candidate_from_set(candidate_set, candidate_id)
+    source_context = decision.get("source_context")
+    evidence = recommendation.get("evidence") if isinstance(recommendation, dict) else {}
+    evidence = evidence if isinstance(evidence, dict) else {}
+    if recommendation.get("status") != "auto_accept_recommended":
+        raise ExperienceLogError("recommendation_not_ready")
+    record = {
+        "schema": SCHEMA,
+        "fixture": name,
+        "created_at": _artifact_time(run_dir / "selected_acceptance_recommendation_000.json")
+        if (run_dir / "selected_acceptance_recommendation_000.json").is_file()
+        else datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "state": {
+            "base_tex_hash": str(
+                source_context.get("source_hash")
+                if isinstance(source_context, dict)
+                else decision.get("source_hash") or ""
+            ),
+            "target": _target({}, candidate),
+            "pre_apply_defects": [],
+            "critique_finding_id": None,
+        },
+        "action": {
+            "candidate_id": candidate_id,
+            "edit_family": _candidate_family({}, candidate),
+            "params": {"operations": candidate.get("operations") or []},
+            "candidate_hash": str(candidate.get("candidate_hash") or ""),
+            "rank_score": _float_or_none(ranking.get("rank_score")),
+            "rank": _int_or_none(ranking.get("rank")),
+            "n_candidates": len(
+                candidate_set.get("candidates")
+                if isinstance(candidate_set.get("candidates"), list)
+                else []
+            ),
+        },
+        "outcome": {
+            "pipeline_ok": True,
+            "apply_status": "blocked",
+            "quality_movement": "neutral",
+            "verifiers": {
+                "semantic_precheck": "pass"
+                if evidence.get("semantic_precheck_status") == "pass"
+                else "fail",
+                "review_packet": "pass"
+                if evidence.get("review_packet_status") == "ready"
+                else "fail",
+                "apply_readiness": "pass"
+                if evidence.get("apply_readiness_status") == "ready_for_local_acceptance"
+                else "fail",
+                "acceptance_recommendation": "pass",
+            },
+            "detector_recheck": {},
+            "pixel_delta": {
+                "changed_pixel_ratio": _float_or_none(
+                    evidence.get("full_changed_pixel_ratio")
+                )
+            },
+            "human_label": None,
+            "human_decision_kind": "auto_accept_recommended",
+            "automation_boundary": "recommendation_only",
+        },
+        "source_artifacts": [
+            _fixture_relative(example_dir, run_dir / "candidate_set_000.json"),
+            _fixture_relative(example_dir, run_dir / "candidate_rankings_000.json"),
+            _fixture_relative(
+                example_dir,
+                run_dir / "selected_semantic_precheck_000.json",
+            ),
+            _fixture_relative(example_dir, run_dir / "selected_review_packet_000.json"),
+            _fixture_relative(
+                example_dir,
+                run_dir / "selected_acceptance_recommendation_000.json",
+            ),
+        ],
+    }
+    return _record_with_id(record)
+
+
 def build_apply_records(
     name: str,
     candidate_id: str,
@@ -473,5 +570,44 @@ def append_apply_record(
         "fixture": name,
         "record": records[0],
         "records": records,
+        "writes": [f"docs/experience-log/{name}.jsonl"],
+    }
+
+
+def append_recommendation_record(
+    name: str,
+    candidate_id: str,
+    *,
+    candidate_set: dict[str, Any],
+    ranking: dict[str, Any],
+    decision: dict[str, Any],
+    recommendation: dict[str, Any],
+    run_dir: Path,
+    workspace_root: Path | None = None,
+    plugin_root: Path | None = None,
+) -> dict[str, Any]:
+    paths = runtime_paths.resolve_runtime_paths(
+        workspace_root=workspace_root,
+        plugin_root=plugin_root,
+    )
+    record = build_recommendation_record(
+        name,
+        candidate_id,
+        candidate_set=candidate_set,
+        ranking=ranking,
+        decision=decision,
+        recommendation=recommendation,
+        run_dir=run_dir,
+        workspace_root=paths.workspace_root,
+        plugin_root=paths.plugin_root,
+    )
+    output = _experience_log_path(name, paths.plugin_root)
+    with output.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, sort_keys=True) + "\n")
+    return {
+        "schema": "figure-agent.experience-log-write.v1",
+        "fixture": name,
+        "record": record,
+        "records": [record],
         "writes": [f"docs/experience-log/{name}.jsonl"],
     }

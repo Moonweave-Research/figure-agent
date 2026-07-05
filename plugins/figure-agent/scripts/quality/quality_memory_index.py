@@ -18,6 +18,7 @@ ELIGIBLE_OUTCOMES = {"improved", "neutral", "regressed"}
 ATTEMPT_EVENT_TYPES = {
     "candidate_rendered",
     "candidate_ranked",
+    "candidate_recommended",
     "candidate_accepted",
     "candidate_applied",
     "candidate_rejected",
@@ -126,6 +127,7 @@ def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
     outcome = record.get("outcome") if isinstance(record.get("outcome"), dict) else {}
     target = state.get("target") if isinstance(state.get("target"), dict) else {}
     apply_status = str(outcome.get("apply_status") or "unknown")
+    human_decision_kind = outcome.get("human_decision_kind")
     quality_movement = outcome.get("quality_movement")
     outcome_state = (
         str(quality_movement)
@@ -133,13 +135,16 @@ def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
         else apply_status
     )
     rank_score = action.get("rank_score")
+    event_type = "candidate_applied"
+    if apply_status == "unchosen":
+        event_type = "candidate_unchosen"
+    elif human_decision_kind == "auto_accept_recommended":
+        event_type = "candidate_recommended"
     return {
         "schema": "figure-agent.quality-memory-event.v1",
         "fixture": record.get("fixture"),
         "event_id": record.get("record_id"),
-        "event_type": "candidate_unchosen"
-        if apply_status == "unchosen"
-        else "candidate_applied",
+        "event_type": event_type,
         "created_at": record.get("created_at"),
         "source_artifact": f"docs/experience-log/{record.get('fixture')}.jsonl",
         "candidate_id": action.get("candidate_id"),

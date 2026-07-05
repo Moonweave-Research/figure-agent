@@ -106,6 +106,77 @@ def test_append_apply_record_refuses_symlinked_experience_log(tmp_path: Path) ->
         )
 
 
+def test_append_recommendation_record_writes_auto_accept_recommendation(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = workspace
+    _fixture(workspace)
+    run_dir = plugin_root / ".scratch" / "quality-search-runs" / "run-001"
+    run_dir.mkdir(parents=True)
+    for filename in (
+        "candidate_set_000.json",
+        "candidate_rankings_000.json",
+        "selected_semantic_precheck_000.json",
+        "selected_review_packet_000.json",
+        "selected_acceptance_recommendation_000.json",
+    ):
+        (run_dir / filename).write_text("{}\n", encoding="utf-8")
+    candidate_set = {
+        "candidates": [
+            {
+                "id": "QS001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "edit_family": "panel_f_qtr_apparatus_lane",
+                "target": {"panel": "F", "subregion": "qtr_apparatus"},
+                "operations": [{"kind": "replace_text", "path": "candidate_demo.tex"}],
+            }
+        ]
+    }
+
+    result = experience_log.append_recommendation_record(
+        "candidate_demo",
+        "QS001",
+        candidate_set=candidate_set,
+        ranking={"rank_score": 0.81, "rank": 1},
+        decision={"source_context": {"source_hash": "sha256:" + "0" * 64}},
+        recommendation={
+            "status": "auto_accept_recommended",
+            "evidence": {
+                "semantic_precheck_status": "pass",
+                "review_packet_status": "ready",
+                "apply_readiness_status": "ready_for_local_acceptance",
+                "full_changed_pixel_ratio": 0.005,
+            },
+        },
+        run_dir=run_dir,
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+
+    output = plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
+    rows = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
+    assert result["writes"] == ["docs/experience-log/candidate_demo.jsonl"]
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["schema"] == "figure-agent.experience-record.v1"
+    assert row["action"]["candidate_id"] == "QS001"
+    assert row["action"]["edit_family"] == "panel_f_qtr_apparatus_lane"
+    assert row["action"]["rank_score"] == 0.81
+    assert row["outcome"]["apply_status"] == "blocked"
+    assert row["outcome"]["quality_movement"] == "neutral"
+    assert row["outcome"]["human_label"] is None
+    assert row["outcome"]["human_decision_kind"] == "auto_accept_recommended"
+    assert row["outcome"]["automation_boundary"] == "recommendation_only"
+    assert row["outcome"]["verifiers"] == {
+        "acceptance_recommendation": "pass",
+        "apply_readiness": "pass",
+        "review_packet": "pass",
+        "semantic_precheck": "pass",
+    }
+    assert row["outcome"]["pixel_delta"]["changed_pixel_ratio"] == 0.005
+
+
 def test_experience_log_is_append_only(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     plugin_root = tmp_path / "plugin"

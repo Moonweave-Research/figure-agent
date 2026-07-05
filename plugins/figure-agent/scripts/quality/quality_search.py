@@ -20,6 +20,7 @@ import candidate_rank
 import candidate_render
 import candidate_review_packet
 import candidate_visual_eval
+import experience_log
 import fig_driver
 import fixture_identity
 import quality_defect_ledger
@@ -3558,6 +3559,7 @@ def _quality_search_contract_verdict(
     selected_semantic_precheck: dict[str, Any] | None = None,
     selected_review_packet: dict[str, Any] | None = None,
     selected_acceptance_recommendation: dict[str, Any] | None = None,
+    recommendation_experience: dict[str, Any] | None = None,
     paths: runtime_paths.RuntimePaths,
 ) -> dict[str, Any]:
     failures: list[dict[str, str]] = []
@@ -3684,6 +3686,35 @@ def _quality_search_contract_verdict(
             and selected_acceptance_recommendation.get("is_acceptance_artifact") is False,
             "selected_acceptance_recommendation_is_authoritative",
             "selected acceptance recommendation must not masquerade as acceptance",
+        )
+        require(
+            isinstance(recommendation_experience, dict)
+            and recommendation_experience.get("writes")
+            == [f"docs/experience-log/{name}.jsonl"],
+            "selected_recommendation_experience_log_missing",
+            "selected automatic recommendation was not persisted to durable experience log",
+        )
+        experience_record = (
+            recommendation_experience.get("record")
+            if isinstance(recommendation_experience, dict)
+            and isinstance(recommendation_experience.get("record"), dict)
+            else {}
+        )
+        experience_outcome = (
+            experience_record.get("outcome")
+            if isinstance(experience_record.get("outcome"), dict)
+            else {}
+        )
+        require(
+            experience_outcome.get("human_decision_kind")
+            == "auto_accept_recommended",
+            "selected_recommendation_experience_kind_missing",
+            "selected durable experience row does not mark auto_accept_recommended",
+        )
+        require(
+            experience_outcome.get("apply_status") == "blocked",
+            "selected_recommendation_experience_apply_status_invalid",
+            "selected durable experience row must remain blocked until explicit apply",
         )
     all_candidates_have_bound_selector = all(
         any(
@@ -3825,6 +3856,13 @@ def _quality_search_contract_verdict(
                 if isinstance(selected_acceptance_recommendation, dict)
                 else None
             ),
+            "selected_recommendation_experience_log_status": (
+                "written"
+                if isinstance(recommendation_experience, dict)
+                and recommendation_experience.get("writes")
+                == [f"docs/experience-log/{name}.jsonl"]
+                else None
+            ),
         },
         "mutation_boundary": {
             "source_mutation": "not_performed",
@@ -3953,6 +3991,7 @@ def _depone_evidence_pack(
     selected_semantic_precheck: dict[str, Any] | None = None,
     selected_review_packet: dict[str, Any] | None = None,
     selected_acceptance_recommendation: dict[str, Any] | None = None,
+    recommendation_experience: dict[str, Any] | None = None,
     paths: runtime_paths.RuntimePaths,
 ) -> dict[str, dict[str, Any] | str]:
     verdict = _quality_search_contract_verdict(
@@ -3969,6 +4008,7 @@ def _depone_evidence_pack(
         selected_semantic_precheck=selected_semantic_precheck,
         selected_review_packet=selected_review_packet,
         selected_acceptance_recommendation=selected_acceptance_recommendation,
+        recommendation_experience=recommendation_experience,
         paths=paths,
     )
     verdict_hash = _sha256_bytes(_json_bytes(verdict))
@@ -4005,6 +4045,8 @@ def _depone_evidence_pack(
         f"{verdict['checks']['selected_apply_readiness_status']}\n"
         f"- selected_acceptance_recommendation_status: "
         f"{verdict['checks']['selected_acceptance_recommendation_status']}\n"
+        f"- selected_recommendation_experience_log_status: "
+        f"{verdict['checks']['selected_recommendation_experience_log_status']}\n"
         "- source_mutation: not_performed\n"
         "- release_mutation: forbidden\n"
     )
@@ -4821,6 +4863,16 @@ def _selected_acceptance_recommendation(
     }
 
 
+def _ranking_for_candidate(
+    candidate_rankings: list[dict[str, Any]],
+    candidate_id: str,
+) -> dict[str, Any]:
+    for ranking in candidate_rankings:
+        if isinstance(ranking, dict) and ranking.get("candidate_id") == candidate_id:
+            return ranking
+    return {}
+
+
 def build_quality_search_execution(
     name: str,
     *,
@@ -4897,6 +4949,25 @@ def build_quality_search_execution(
         selected_semantic_precheck,
         selected_review_packet,
     )
+    recommendation_experience = None
+    if (
+        isinstance(selected_acceptance_recommendation, dict)
+        and selected_acceptance_recommendation.get("status")
+        == "auto_accept_recommended"
+        and isinstance(selected_acceptance_recommendation.get("candidate_id"), str)
+    ):
+        selected_candidate_id = selected_acceptance_recommendation["candidate_id"]
+        recommendation_experience = experience_log.append_recommendation_record(
+            name,
+            selected_candidate_id,
+            candidate_set=candidate_set,
+            ranking=_ranking_for_candidate(candidate_rankings, selected_candidate_id),
+            decision={**decision, "source_context": source_context},
+            recommendation=selected_acceptance_recommendation,
+            run_dir=run_dir,
+            workspace_root=paths.workspace_root,
+            plugin_root=paths.plugin_root,
+        )
     tool_defects = {
         "schema": "figure-agent.quality-search-tool-defects.v0",
         "fixture": name,
@@ -4981,6 +5052,7 @@ def build_quality_search_execution(
         selected_semantic_precheck=selected_semantic_precheck,
         selected_review_packet=selected_review_packet,
         selected_acceptance_recommendation=selected_acceptance_recommendation,
+        recommendation_experience=recommendation_experience,
         paths=paths,
     )
     artifacts = {
@@ -5072,6 +5144,12 @@ def build_quality_search_execution(
         "selected_semantic_precheck": selected_semantic_precheck,
         "selected_review_packet": selected_review_packet,
         "selected_acceptance_recommendation": selected_acceptance_recommendation,
+        "experience_log": recommendation_experience["writes"]
+        if isinstance(recommendation_experience, dict)
+        else [],
+        "recommendation_experience_record": recommendation_experience.get("record")
+        if isinstance(recommendation_experience, dict)
+        else None,
         "memory_events": memory_events,
         "depone": {
             "plan": _workspace_relative(paths, run_dir / "depone_plan_000.json"),

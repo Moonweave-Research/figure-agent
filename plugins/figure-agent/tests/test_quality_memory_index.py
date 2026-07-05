@@ -187,6 +187,28 @@ def test_build_fixture_index_reads_experience_log_not_build_artifacts(tmp_path: 
     }
 
 
+def test_recommendation_experience_records_are_candidate_recommended_attempts() -> None:
+    record = _experience_record(
+        "CAND001",
+        quality_movement="neutral",
+        apply_status="blocked",
+    )
+    record["outcome"]["human_decision_kind"] = "auto_accept_recommended"
+
+    event = quality_memory_index._event_from_experience_record(record)  # type: ignore[attr-defined]
+    assert event["event_type"] == "candidate_recommended"
+
+    index = quality_memory_index.build_memory_index([event])
+
+    assert index["event_count"] == 1
+    assert index["candidate_event_count"] == 1
+    assert index["families"]["label_offset"]["attempts"] == 1
+    assert index["families"]["label_offset"]["neutral"] == 1
+    assert index["panel_patterns"]["C:sha256:" + "a" * 64 + ":label_offset"][
+        "attempts"
+    ] == 1
+
+
 def test_legacy_outcome_state_is_not_reward_without_quality_movement() -> None:
     events = [
         _event("candidate_applied", "label_offset", "improved", "CAND001"),
