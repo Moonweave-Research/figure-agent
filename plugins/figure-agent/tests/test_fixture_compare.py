@@ -102,6 +102,15 @@ def _fresh_status(path: Path) -> dict[str, object]:
     }
 
 
+def _fresh_critiqued_status(path: Path) -> dict[str, object]:
+    return {
+        **_fresh_status(path),
+        "critique_state": "FRESH",
+        "next": f"record human decision for {path.name}",
+        "notes": [],
+    }
+
+
 def test_compare_packet_is_read_only_and_blocks_on_missing_critique(
     tmp_path: Path,
     monkeypatch,
@@ -137,6 +146,82 @@ def test_compare_packet_is_read_only_and_blocks_on_missing_critique(
         "print_scale": {"state": "present"},
     }
     assert _tree(workspace) == before
+
+
+def test_compare_packet_reports_human_comparison_evidence(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    monkeypatch.setattr(fixture_compare.status, "infer_stage", _fresh_critiqued_status)
+    candidate_a = _write_fixture(workspace, "candidate_a", with_critique=True)
+    _write_fixture(workspace, "candidate_b", with_critique=True)
+    comparison_dir = candidate_a / "build" / "v5f_comparison"
+    comparison_dir.mkdir()
+    (candidate_a / "visual_comparison.md").write_text(
+        "# Visual comparison\n",
+        encoding="utf-8",
+    )
+    (comparison_dir / "v5d_v5e_v5f_full_contact_sheet.png").write_bytes(b"full sheet\n")
+    (comparison_dir / "v5d_v5e_v5f_panel_F_contact_sheet.png").write_bytes(
+        b"panel sheet\n"
+    )
+    before = _tree(workspace)
+
+    packet = fixture_compare.build_fixture_compare_packet(
+        ["candidate_a", "candidate_b"],
+        workspace_root=workspace,
+        plugin_root=PLUGIN_ROOT,
+    )
+
+    evidence = packet["fixtures"][0]["comparison_evidence"]
+    assert evidence["state"] == "complete"
+    assert evidence["visual_comparison"]["path"] == "visual_comparison.md"
+    assert evidence["visual_comparison"]["sha256"].startswith("sha256:")
+    assert evidence["contact_sheet_count"] == 2
+    assert [item["path"] for item in evidence["contact_sheets"]] == [
+        "build/v5f_comparison/v5d_v5e_v5f_full_contact_sheet.png",
+        "build/v5f_comparison/v5d_v5e_v5f_panel_F_contact_sheet.png",
+    ]
+    assert packet["fixtures"][1]["comparison_evidence"]["state"] == "missing"
+    assert packet["recommendation"]["bucket"] == "candidate_tie"
+    assert packet["recommendation"]["comparison_evidence_state"] == {
+        "candidate_a": "complete",
+        "candidate_b": "missing",
+    }
+    assert packet["recommendation"]["next_agent_action"] == "record_human_visual_choice"
+    assert _tree(workspace) == before
+
+
+def test_compare_packet_rejects_symlinked_comparison_artifact(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    monkeypatch.setattr(fixture_compare.status, "infer_stage", _fresh_critiqued_status)
+    candidate_a = _write_fixture(workspace, "candidate_a", with_critique=True)
+    _write_fixture(workspace, "candidate_b", with_critique=True)
+    comparison_dir = candidate_a / "build" / "v5f_comparison"
+    comparison_dir.mkdir()
+    (candidate_a / "visual_comparison.md").write_text(
+        "# Visual comparison\n",
+        encoding="utf-8",
+    )
+    (workspace / "outside.png").write_bytes(b"not a fixture artifact\n")
+    (comparison_dir / "v5d_v5e_v5f_full_contact_sheet.png").symlink_to(
+        workspace / "outside.png"
+    )
+
+    try:
+        fixture_compare.build_fixture_compare_packet(
+            ["candidate_a", "candidate_b"],
+            workspace_root=workspace,
+            plugin_root=PLUGIN_ROOT,
+        )
+    except fixture_compare.FixtureCompareError as exc:
+        assert "artifact_symlink_forbidden" in str(exc)
+    else:
+        raise AssertionError("expected symlinked comparison artifact to fail closed")
 
 
 def test_compare_packet_blocks_stale_or_incomplete_candidate(tmp_path: Path, monkeypatch) -> None:

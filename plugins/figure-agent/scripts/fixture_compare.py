@@ -65,6 +65,16 @@ def _artifact(path: Path, example_dir: Path, *, kind: str) -> dict[str, Any]:
     return payload
 
 
+def _safe_artifact(path: Path, example_dir: Path, *, kind: str) -> dict[str, Any]:
+    if path.is_symlink():
+        raise FixtureCompareError(f"artifact_symlink_forbidden: {_relative(example_dir, path)}")
+    try:
+        path.resolve().relative_to(example_dir.resolve())
+    except ValueError as exc:
+        raise FixtureCompareError("artifact path_escape") from exc
+    return _artifact(path, example_dir, kind=kind)
+
+
 def _artifact_set(example_dir: Path, name: str) -> dict[str, list[dict[str, Any]]]:
     source_files = [
         (example_dir / "spec.yaml", "spec"),
@@ -92,6 +102,37 @@ def _artifact_set(example_dir: Path, name: str) -> dict[str, list[dict[str, Any]
         ],
         "build": [_artifact(path, example_dir, kind=kind) for path, kind in build_files],
         "exports": [_artifact(path, example_dir, kind=kind) for path, kind in export_files],
+    }
+
+
+def _comparison_evidence(example_dir: Path) -> dict[str, Any]:
+    visual_comparison = example_dir / "visual_comparison.md"
+    comparison_root = example_dir / "build"
+    contact_sheets = sorted(
+        path
+        for path in comparison_root.glob("*comparison*/*.png")
+        if path.is_file() or path.is_symlink()
+    )
+    document = (
+        _safe_artifact(visual_comparison, example_dir, kind="visual_comparison_md")
+        if visual_comparison.exists() or visual_comparison.is_symlink()
+        else _artifact(visual_comparison, example_dir, kind="visual_comparison_md")
+    )
+    sheets = [
+        _safe_artifact(path, example_dir, kind="comparison_contact_sheet")
+        for path in contact_sheets
+    ]
+    if document["exists"] and sheets:
+        state = "complete"
+    elif document["exists"] or sheets:
+        state = "partial"
+    else:
+        state = "missing"
+    return {
+        "state": state,
+        "visual_comparison": document,
+        "contact_sheets": sheets,
+        "contact_sheet_count": len(sheets),
     }
 
 
@@ -184,6 +225,7 @@ def _fixture_summary(workspace_root: Path, name: str, *, role: str) -> dict[str,
         "artifacts": _artifact_set(example_dir, name),
         "audit_counts": _audit_counts(example_dir),
         "visual_metrics": _visual_metrics(example_dir),
+        "comparison_evidence": _comparison_evidence(example_dir),
     }
 
 
@@ -227,11 +269,27 @@ def _recommendation(candidates: list[dict[str, Any]]) -> dict[str, Any]:
             "fixtures": missing_critique,
             "next_agent_action": "run_fig_critique",
         }
+    evidence_states = {
+        item["name"]: item["comparison_evidence"].get("state", "missing")
+        for item in candidates
+    }
+    complete_evidence = [
+        name for name, state in evidence_states.items() if state == "complete"
+    ]
+    next_action = (
+        "record_human_visual_choice"
+        if complete_evidence
+        else "prepare_human_comparison_evidence_or_record_human_visual_choice"
+    )
     return {
         "bucket": "candidate_tie",
-        "reason": "No deterministic winner is declared by the available evidence.",
+        "reason": (
+            "No deterministic winner is declared by the available evidence; "
+            "human comparison evidence is advisory, not acceptance."
+        ),
         "fixtures": [item["name"] for item in candidates],
-        "next_agent_action": "record_human_visual_choice_or_prepare_bounded_candidate",
+        "comparison_evidence_state": evidence_states,
+        "next_agent_action": next_action,
     }
 
 
