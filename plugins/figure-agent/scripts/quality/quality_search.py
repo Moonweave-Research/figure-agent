@@ -3488,6 +3488,7 @@ def _quality_search_contract_verdict(
     decision: dict[str, Any],
     selected_semantic_precheck: dict[str, Any] | None = None,
     selected_review_packet: dict[str, Any] | None = None,
+    selected_acceptance_recommendation: dict[str, Any] | None = None,
     paths: runtime_paths.RuntimePaths,
 ) -> dict[str, Any]:
     failures: list[dict[str, str]] = []
@@ -3601,6 +3602,19 @@ def _quality_search_contract_verdict(
             selected_apply_readiness.get("status") == "ready_for_local_acceptance",
             "selected_apply_readiness_not_ready",
             "selected non-marginal candidate is not ready for local acceptance",
+        )
+        require(
+            isinstance(selected_acceptance_recommendation, dict)
+            and selected_acceptance_recommendation.get("status")
+            == "auto_accept_recommended",
+            "selected_acceptance_recommendation_not_ready",
+            "selected non-marginal candidate lacks automatic acceptance recommendation",
+        )
+        require(
+            isinstance(selected_acceptance_recommendation, dict)
+            and selected_acceptance_recommendation.get("is_acceptance_artifact") is False,
+            "selected_acceptance_recommendation_is_authoritative",
+            "selected acceptance recommendation must not masquerade as acceptance",
         )
     all_candidates_have_bound_selector = all(
         any(
@@ -3737,6 +3751,11 @@ def _quality_search_contract_verdict(
                 else None
             ),
             "selected_apply_readiness_status": selected_apply_readiness.get("status"),
+            "selected_acceptance_recommendation_status": (
+                selected_acceptance_recommendation.get("status")
+                if isinstance(selected_acceptance_recommendation, dict)
+                else None
+            ),
         },
         "mutation_boundary": {
             "source_mutation": "not_performed",
@@ -3864,6 +3883,7 @@ def _depone_evidence_pack(
     decision: dict[str, Any],
     selected_semantic_precheck: dict[str, Any] | None = None,
     selected_review_packet: dict[str, Any] | None = None,
+    selected_acceptance_recommendation: dict[str, Any] | None = None,
     paths: runtime_paths.RuntimePaths,
 ) -> dict[str, dict[str, Any] | str]:
     verdict = _quality_search_contract_verdict(
@@ -3879,6 +3899,7 @@ def _depone_evidence_pack(
         decision=decision,
         selected_semantic_precheck=selected_semantic_precheck,
         selected_review_packet=selected_review_packet,
+        selected_acceptance_recommendation=selected_acceptance_recommendation,
         paths=paths,
     )
     verdict_hash = _sha256_bytes(_json_bytes(verdict))
@@ -3913,6 +3934,8 @@ def _depone_evidence_pack(
         f"{verdict['checks']['selected_semantic_precheck_status']}\n"
         f"- selected_apply_readiness_status: "
         f"{verdict['checks']['selected_apply_readiness_status']}\n"
+        f"- selected_acceptance_recommendation_status: "
+        f"{verdict['checks']['selected_acceptance_recommendation_status']}\n"
         "- source_mutation: not_performed\n"
         "- release_mutation: forbidden\n"
     )
@@ -4660,6 +4683,75 @@ def _write_selected_semantic_precheck(
     }
 
 
+def _selected_acceptance_recommendation(
+    decision: dict[str, Any],
+    selected_semantic_precheck: dict[str, Any] | None,
+    selected_review_packet: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    candidate_id = decision.get("selected_candidate_id")
+    if (
+        decision.get("candidate_state") != NON_MARGINAL_REVIEW_CANDIDATE_STATE
+        or not isinstance(candidate_id, str)
+        or not candidate_id.strip()
+    ):
+        return None
+    apply_readiness = (
+        selected_review_packet.get("apply_readiness")
+        if isinstance(selected_review_packet, dict)
+        and isinstance(selected_review_packet.get("apply_readiness"), dict)
+        else {}
+    )
+    precheck_status = (
+        selected_semantic_precheck.get("status")
+        if isinstance(selected_semantic_precheck, dict)
+        else None
+    )
+    ready = (
+        precheck_status == "pass"
+        and isinstance(selected_review_packet, dict)
+        and selected_review_packet.get("status") == "ready"
+        and apply_readiness.get("status") == "ready_for_local_acceptance"
+    )
+    required_commands = (
+        apply_readiness.get("required_commands")
+        if isinstance(apply_readiness.get("required_commands"), list)
+        else []
+    )
+    return {
+        "schema": "figure-agent.selected-acceptance-recommendation.v0",
+        "status": "auto_accept_recommended" if ready else "blocked",
+        "candidate_id": candidate_id,
+        "recommendation": "accept" if ready else "defer",
+        "authority": "recommendation_only",
+        "is_acceptance_artifact": False,
+        "source_mutation": "not_performed",
+        "acceptance_gate": "explicit acceptance artifact still required",
+        "rationale": (
+            "selected candidate is non-marginal, render-complete, semantic-prechecked, "
+            "and ready for local acceptance"
+            if ready
+            else "selected candidate has not cleared all automatic readiness checks"
+        ),
+        "evidence": {
+            "semantic_precheck_status": precheck_status,
+            "review_packet_status": (
+                selected_review_packet.get("status")
+                if isinstance(selected_review_packet, dict)
+                else None
+            ),
+            "apply_readiness_status": apply_readiness.get("status"),
+            "full_changed_pixel_ratio": decision.get("full_changed_pixel_ratio"),
+            "panel_changed_pixel_ratio": decision.get("panel_changed_pixel_ratio"),
+            "protected_labels": (
+                selected_semantic_precheck.get("protected_labels")
+                if isinstance(selected_semantic_precheck, dict)
+                else []
+            ),
+        },
+        "required_commands": required_commands if ready else [],
+    }
+
+
 def build_quality_search_execution(
     name: str,
     *,
@@ -4731,6 +4823,11 @@ def build_quality_search_execution(
         paths=paths,
     )
     selected_review_packet = _selected_review_packet(name, decision, paths=paths)
+    selected_acceptance_recommendation = _selected_acceptance_recommendation(
+        decision,
+        selected_semantic_precheck,
+        selected_review_packet,
+    )
     tool_defects = {
         "schema": "figure-agent.quality-search-tool-defects.v0",
         "fixture": name,
@@ -4785,6 +4882,11 @@ def build_quality_search_execution(
                 if selected_review_packet is not None
                 else []
             ),
+            *(
+                ["selected_acceptance_recommendation_000.json"]
+                if selected_acceptance_recommendation is not None
+                else []
+            ),
             "tool_defect_candidates_000.json",
             "memory_events_000.json",
             "depone_plan_000.json",
@@ -4808,6 +4910,7 @@ def build_quality_search_execution(
         decision=decision,
         selected_semantic_precheck=selected_semantic_precheck,
         selected_review_packet=selected_review_packet,
+        selected_acceptance_recommendation=selected_acceptance_recommendation,
         paths=paths,
     )
     artifacts = {
@@ -4843,6 +4946,15 @@ def build_quality_search_execution(
         **(
             {"selected_review_packet_000.json": selected_review_packet}
             if selected_review_packet is not None
+            else {}
+        ),
+        **(
+            {
+                "selected_acceptance_recommendation_000.json": (
+                    selected_acceptance_recommendation
+                )
+            }
+            if selected_acceptance_recommendation is not None
             else {}
         ),
         "tool_defect_candidates_000.json": tool_defects,
@@ -4889,6 +5001,7 @@ def build_quality_search_execution(
         "decision": decision,
         "selected_semantic_precheck": selected_semantic_precheck,
         "selected_review_packet": selected_review_packet,
+        "selected_acceptance_recommendation": selected_acceptance_recommendation,
         "memory_events": memory_events,
         "depone": {
             "plan": _workspace_relative(paths, run_dir / "depone_plan_000.json"),

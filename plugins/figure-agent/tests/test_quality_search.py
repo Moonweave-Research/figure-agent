@@ -2132,6 +2132,59 @@ def test_quality_search_writes_selected_semantic_precheck_for_protected_panel_bl
     )
 
 
+def test_quality_search_recommends_acceptance_without_authorizing_apply() -> None:
+    decision = {
+        "candidate_state": "non_marginal_review_candidate_ready",
+        "selected_candidate_id": "QS002",
+        "full_changed_pixel_ratio": 0.004,
+        "panel_changed_pixel_ratio": 0.03,
+    }
+    semantic_precheck = {
+        "status": "pass",
+        "protected_labels": ["q_tr", "Coulomb"],
+    }
+    review_packet = {
+        "status": "ready",
+        "apply_readiness": {
+            "status": "ready_for_local_acceptance",
+            "required_commands": [
+                (
+                    "fig-agent accept-candidate fig_demo QS002 --candidate-set "
+                    ".scratch/run/candidate_set_000.json --decision accept "
+                    "--reviewer <name> --rationale <text> --json"
+                ),
+                (
+                    "fig-agent apply-candidate fig_demo QS002 --candidate-set "
+                    ".scratch/run/candidate_set_000.json --acceptance "
+                    "build/candidates/QS002/acceptance.json --json"
+                ),
+            ],
+        },
+    }
+
+    recommendation = quality_search._selected_acceptance_recommendation(
+        decision,
+        semantic_precheck,
+        review_packet,
+    )
+
+    assert recommendation["schema"] == (
+        "figure-agent.selected-acceptance-recommendation.v0"
+    )
+    assert recommendation["status"] == "auto_accept_recommended"
+    assert recommendation["recommendation"] == "accept"
+    assert recommendation["authority"] == "recommendation_only"
+    assert recommendation["is_acceptance_artifact"] is False
+    assert recommendation["source_mutation"] == "not_performed"
+    assert recommendation["evidence"]["semantic_precheck_status"] == "pass"
+    assert recommendation["evidence"]["apply_readiness_status"] == (
+        "ready_for_local_acceptance"
+    )
+    assert recommendation["required_commands"] == review_packet["apply_readiness"][
+        "required_commands"
+    ]
+
+
 def test_quality_search_visual_evidence_writes_full_and_panel_contact_sheets(
     tmp_path: Path,
 ) -> None:
