@@ -451,7 +451,13 @@ def test_apply_candidate_refuses_already_applied_result(tmp_path: Path) -> None:
     fixture, manifest = _accepted_candidate_fixture(workspace)
     apply_result = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
     apply_result.write_text(
-        json.dumps({"schema": "figure-agent.candidate-apply-result.v1", "status": "applied"})
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-apply-result.v1",
+                "candidate_hash": manifest["candidate_hash"],
+                "status": "applied",
+            }
+        )
         + "\n",
         encoding="utf-8",
     )
@@ -478,6 +484,7 @@ def test_apply_candidate_refuses_unverified_apply_result(tmp_path: Path) -> None
         json.dumps(
             {
                 "schema": "figure-agent.candidate-apply-result.v1",
+                "candidate_hash": manifest["candidate_hash"],
                 "status": "applied_unverified",
             }
         )
@@ -497,6 +504,37 @@ def test_apply_candidate_refuses_unverified_apply_result(tmp_path: Path) -> None
 
     assert result["status"] == "blocked"
     assert result["diagnostics"][0]["code"] == "already_applied"
+
+
+def test_apply_candidate_ignores_stale_apply_result_for_reused_candidate_id(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    apply_result = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
+    apply_result.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-apply-result.v1",
+                "candidate_hash": "sha256:" + "2" * 64,
+                "status": "applied_unverified",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=False,
+        post_apply=False,
+    )
+
+    assert result["status"] == "ready"
 
 
 def test_apply_candidate_refuses_existing_mcp_or_quality_lock(tmp_path: Path) -> None:

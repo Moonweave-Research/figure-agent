@@ -178,11 +178,13 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
     assert payload["search_policy"]["bandit_decision"]["selected_family"] in {
         "hierarchy_rebalance",
         "apparatus_strengthen",
+        "panel_f_boundary_polish",
         "density_reduce",
     }
-    assert payload["next_recommended_operation"]["candidate_families"][:2] == [
+    assert payload["next_recommended_operation"]["candidate_families"][:3] == [
         "hierarchy_rebalance",
         "apparatus_strengthen",
+        "panel_f_boundary_polish",
     ]
     release = [item for item in payload["classifications"] if item["kind"] == "release_blocker"][0]
     assert release["id"] == "acceptance_not_declared"
@@ -336,10 +338,11 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert payload["render_results"]["rendered"] == []
     assert payload["visual_evidence"]["state"] == "not_applicable"
     assert payload["memory_events"]["event_count"] == 0
-    assert len(payload["candidate_specs"]) == 4
+    assert len(payload["candidate_specs"]) == 5
     assert {item["family"] for item in payload["candidate_specs"]} >= {
         "hierarchy_rebalance",
         "apparatus_strengthen",
+        "panel_f_boundary_polish",
         "density_reduce",
         "null_baseline",
     }
@@ -776,6 +779,7 @@ def test_quality_search_suppresses_already_applied_panel_f_template(
     score_families = {item["family"] for item in payload["candidate_scores"]}
     assert "apparatus_strengthen" not in candidate_families
     assert "apparatus_strengthen" not in score_families
+    assert "panel_f_boundary_polish" in candidate_families
     assert {"hierarchy_rebalance", "density_reduce"} <= candidate_families
     assert any(
         item["code"] == "template_already_applied"
@@ -783,6 +787,107 @@ def test_quality_search_suppresses_already_applied_panel_f_template(
         and item["template_id"] == "v5f_panel_f_redraw_overlay_v1"
         for item in payload["candidate_set"]["refusals"]
     )
+
+
+def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_with_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column E -- ISPD-paired =================",
+            "\\draw[cAmber!70!black, line width=0.25pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);",
+            "\\draw[cGray!58!black, line width=0.26pt, rounded corners=1.0pt]",
+            (
+                "  (13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16)"
+                " -- (13.18, 3.02) -- (13.30, 2.82);"
+            ),
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\draw[cRed!55!black, line width=0.32pt]",
+            (
+                "  (11.48,2.40) .. controls (10.78,3.02)"
+                " and (10.12,3.36) .. (9.60,3.36);"
+            ),
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,\n"
+                "      inner xsep=0.9pt, inner ysep=0.45pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{4.8}{5.8}\\selectfont, "
+                "text=cRed!76!black]\n"
+                "  at (9.60, 3.12) {$q_{\\mathrm{tr}}$};"
+            ),
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.94, text opacity=1,\n"
+                "      inner xsep=1.0pt, inner ysep=0.45pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{4.4}{5.3}\\selectfont, "
+                "text=cRed!76!black]\n"
+                "  at (9.60, 3.36) {trapped charge};"
+            ),
+            (
+                "\\draw[panelFCoulombRepulsionArrow, "
+                "-{Stealth[length=9.6pt,width=6.8pt]}, "
+                "cRed!82!black, line width=1.24pt]"
+            ),
+            "  (11.18, 1.18) -- (9.18, 1.18);",
+            "\\node[font=\\sffamily\\bfseries\\fontsize{6.5}{7.8}\\selectfont, text=cRed!82!black,",
+            "      anchor=south west] at (9.72, 1.54) {Coulomb};",
+            (
+                "\\node[labelMute, anchor=north west, fill=white, fill opacity=0.94, "
+                "text opacity=1,\n"
+                "      inner xsep=1.2pt, inner ysep=0.6pt,\n"
+                "      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont,\n"
+                "      text=cRed!82!black] at (9.73, 1.45) {repulsion};"
+            ),
+            "\\draw[<->, cGray!64!black, line width=0.70pt]",
+            "  (9.92, 0.54) -- (13.18, 0.54);",
+            "\\node at (11.88, 0.31) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="Panel F trapped charge boundary polish",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    boundary = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_boundary_polish"
+    ][0]
+    operation = boundary["operations"][0]
+    assert boundary["operation_scale"] == "panel_block"
+    assert boundary["template_id"] == "v5f_panel_f_boundary_polish_v1"
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "v5f_panel_f_boundary_polish_v1"
+    assert "(9.72,3.46)" in operation["replacement"]
+    assert "at (9.72, 3.20) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
+    assert "at (9.72, 3.46) {trapped charge};" in operation["replacement"]
+    assert "(11.06, 1.18) -- (9.34, 1.18);" in operation["replacement"]
+    assert "(10.18, 0.54) -- (13.18, 0.54);" in operation["replacement"]
 
 
 def test_quality_search_density_reduce_emits_panel_e_block_candidate(

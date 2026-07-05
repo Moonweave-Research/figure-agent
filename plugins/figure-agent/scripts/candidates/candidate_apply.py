@@ -166,6 +166,14 @@ def _active_mutation_lock(example_dir: Path) -> Path | None:
     return None
 
 
+def _is_same_candidate_apply_result(
+    apply_result: dict[str, Any],
+    manifest: dict[str, Any],
+) -> bool:
+    candidate_hash = apply_result.get("candidate_hash")
+    return isinstance(candidate_hash, str) and candidate_hash == manifest.get("candidate_hash")
+
+
 @contextmanager
 def _candidate_apply_lock(example_dir: Path) -> Iterator[Path | None]:
     lock_dir = example_dir / "build" / ".mcp-locks"
@@ -848,7 +856,7 @@ def apply_candidate(
     candidate_set_path = candidate_set_path or Path(str(manifest.get("candidate_set_path", "")))
     acceptance_path = acceptance_path or Path(f"build/candidates/{candidate_id}/acceptance.json")
 
-    candidate_set_file = candidate_contracts.fixture_local_output_path(
+    candidate_set_file = candidate_contracts.candidate_set_input_path(
         paths.workspace_root,
         name,
         candidate_set_path.as_posix(),
@@ -895,7 +903,10 @@ def apply_candidate(
     apply_result_path = sandbox / "apply_result.json"
     if apply_result_path.is_file():
         apply_result = _load_json(apply_result_path, "apply_result")
-        if apply_result.get("status") in TERMINAL_APPLY_STATUSES:
+        if (
+            apply_result.get("status") in TERMINAL_APPLY_STATUSES
+            and _is_same_candidate_apply_result(apply_result, manifest)
+        ):
             diagnostics.append(_diagnostic("already_applied", "candidate is already applied"))
 
     active_lock = _active_mutation_lock(example_dir)
@@ -1026,6 +1037,7 @@ def apply_candidate(
             "schema": SCHEMA,
             "figure_name": name,
             "candidate_id": candidate_id,
+            "candidate_hash": manifest.get("candidate_hash"),
             "status": result_status,
             "changed_files": changed_files,
             "rollback_patch": _fixture_relative(example_dir, rollback_path),

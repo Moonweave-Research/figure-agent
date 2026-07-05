@@ -160,7 +160,7 @@ def _load_gate_inputs(
     )
     example_dir = paths.examples_dir / name
     sandbox = _candidate_sandbox(example_dir, safe_candidate_id)
-    candidate_set_file = candidate_contracts.fixture_local_output_path(
+    candidate_set_file = candidate_contracts.candidate_set_input_path(
         paths.workspace_root,
         name,
         candidate_set_path.as_posix(),
@@ -204,6 +204,14 @@ def _source_drift_blocks(
         elif _sha256_file(target) != drift_hash:
             blocking.append(f"source_drift_hash_mismatch:{relative}")
     return blocking
+
+
+def _is_same_candidate_apply_result(
+    apply_result: dict[str, Any],
+    manifest: dict[str, Any],
+) -> bool:
+    candidate_hash = apply_result.get("candidate_hash")
+    return isinstance(candidate_hash, str) and candidate_hash == manifest.get("candidate_hash")
 
 
 def build_apply_readiness(
@@ -258,9 +266,16 @@ def build_apply_readiness(
     )
     if apply_result_path.is_file():
         apply_result = _load_json(apply_result_path, "apply_result")
-        if apply_result.get("status") in TERMINAL_APPLY_STATUSES:
+        if (
+            apply_result.get("status") in TERMINAL_APPLY_STATUSES
+            and _is_same_candidate_apply_result(apply_result, manifest)
+        ):
             blocking.append("already_applied")
-    candidate_set_relative = _fixture_relative(example_dir, candidate_set_file)
+    candidate_set_relative = candidate_contracts.candidate_set_path_label(
+        example_dir.parent.parent,
+        name,
+        candidate_set_file,
+    )
     status = "ready_for_local_acceptance" if not blocking else "blocked"
     return {
         "schema": READINESS_SCHEMA,
@@ -334,7 +349,11 @@ def write_acceptance(
         "figure_name": name,
         "candidate_id": candidate_id,
         "candidate_hash": manifest.get("candidate_hash"),
-        "candidate_set_path": _fixture_relative(example_dir, candidate_set_file),
+        "candidate_set_path": candidate_contracts.candidate_set_path_label(
+            example_dir.parent.parent,
+            name,
+            candidate_set_file,
+        ),
         "candidate_manifest_path": _fixture_relative(example_dir, manifest_path),
         "candidate_manifest_sha256": _sha256_file(manifest_path),
         "render_manifest_path": _fixture_relative(example_dir, render_manifest_path),

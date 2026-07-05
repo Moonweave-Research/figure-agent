@@ -45,6 +45,7 @@ PROGRESS_ACTIONS = {
 }
 FAMILY_REGISTRY_SCHEMA = "figure-agent.quality-search-family-registry.v0"
 APPARATUS_PANEL_F_TEMPLATE_ID = "v5f_panel_f_redraw_overlay_v1"
+PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID = "v5f_panel_f_boundary_polish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
 APPARATUS_PANEL_F_OVERLAY_MARKER = "v5f Panel F art-direction redraw overlay"
@@ -98,6 +99,25 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "redraw charge, force, electrode, and air-gap relation as one mechanism",
             "keep the Coulomb response visually stronger than the bias source",
             "make apparatus read as deliberate instrument geometry, not boxes",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_boundary_polish": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+        ],
+        "design_moves": [
+            "keep the trapped-charge label in the left reading lane without clipping",
+            "route the trapped-charge leader around the cantilever instead of through it",
+            "reduce Panel F boundary density while preserving Coulomb/electrode/air-gap semantics",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -410,6 +430,21 @@ def _step_out_hypotheses(
             },
             {
                 **common,
+                "family": "panel_f_boundary_polish",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "move the trapped-charge callout off the left boundary and "
+                        "route the leader around the cantilever"
+                    ),
+                },
+                "expected_visual_movement": (
+                    "Panel F trapped-charge callout has breathing room and a cleaner leader"
+                ),
+            },
+            {
+                **common,
                 "family": "density_reduce",
                 "target_scope": "panel",
                 "target_hint": {
@@ -536,7 +571,7 @@ def _patch_hypotheses(
         return []
     basin_hypotheses = _step_out_hypotheses(name, driver, ledger)
     if basin_hypotheses:
-        return basin_hypotheses[:3]
+        return basin_hypotheses[:4]
     goal_hypotheses = _goal_hypotheses(name, goal)
     if goal_hypotheses:
         return _merge_hypotheses(
@@ -1090,6 +1125,8 @@ def _candidate_hash(payload: dict[str, Any]) -> str:
 def _preferred_operation_scale(family: str) -> str:
     if family == "apparatus_strengthen":
         return "panel_block"
+    if family == "panel_f_boundary_polish":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -1100,6 +1137,8 @@ def _preferred_operation_scale(family: str) -> str:
 def _preferred_template_id(family: str) -> str:
     if family == "apparatus_strengthen":
         return APPARATUS_PANEL_F_TEMPLATE_ID
+    if family == "panel_f_boundary_polish":
+        return PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -1386,6 +1425,79 @@ def _apparatus_panel_block_replacement(
     )
 
 
+def _panel_f_boundary_polish_template_applied(block: str) -> bool:
+    required_fragments = (
+        "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
+        "at (9.72, 3.20) {$q_{\\mathrm{tr}}$};",
+        "at (9.72, 3.46) {trapped charge};",
+        "(11.06, 1.18) -- (9.34, 1.18);",
+        "anchor=south west] at (9.58, 1.54) {Coulomb};",
+        "text=cRed!82!black] at (9.59, 1.45) {repulsion};",
+        "(10.18, 0.54) -- (13.18, 0.54);",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_boundary_polish_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if not _panel_f_overlay_template_applied(original):
+        return None
+    if _panel_f_boundary_polish_template_applied(original):
+        return None
+    replacement = original
+    replacements = (
+        (
+            "(11.48,2.40) .. controls (10.78,3.02) and (10.12,3.36) .. (9.60,3.36);",
+            "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
+        ),
+        (
+            "font=\\sffamily\\bfseries\\fontsize{4.8}{5.8}\\selectfont, text=cRed!76!black]\n"
+            "  at (9.60, 3.12) {$q_{\\mathrm{tr}}$};",
+            "font=\\sffamily\\bfseries\\fontsize{4.4}{5.3}\\selectfont, text=cRed!76!black]\n"
+            "  at (9.72, 3.20) {$q_{\\mathrm{tr}}$};",
+        ),
+        (
+            "font=\\sffamily\\bfseries\\fontsize{4.4}{5.3}\\selectfont, text=cRed!76!black]\n"
+            "  at (9.60, 3.36) {trapped charge};",
+            "font=\\sffamily\\bfseries\\fontsize{4.1}{5.0}\\selectfont, text=cRed!76!black]\n"
+            "  at (9.72, 3.46) {trapped charge};",
+        ),
+        (
+            "(11.18, 1.18) -- (9.18, 1.18);",
+            "(11.06, 1.18) -- (9.34, 1.18);",
+        ),
+        (
+            "anchor=south west] at (9.72, 1.54) {Coulomb};",
+            "anchor=south west] at (9.58, 1.54) {Coulomb};",
+        ),
+        (
+            "text=cRed!82!black] at (9.73, 1.45) {repulsion};",
+            "text=cRed!82!black] at (9.59, 1.45) {repulsion};",
+        ),
+        (
+            "(9.92, 0.54) -- (13.18, 0.54);",
+            "(10.18, 0.54) -- (13.18, 0.54);",
+        ),
+    )
+    for old, new in replacements:
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    if not _panel_f_overlay_has_protected_labels(replacement):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _density_panel_e_block_replacement(
     *,
     lines: list[str],
@@ -1530,6 +1642,7 @@ def _candidate_operation_for_spec(
     preferred_panel = {
         "hierarchy_rebalance": "C",
         "apparatus_strengthen": "F",
+        "panel_f_boundary_polish": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -1565,6 +1678,31 @@ def _candidate_operation_for_spec(
                 "template_id": APPARATUS_PANEL_F_TEMPLATE_ID,
                 "panel": "F",
             }
+    if family == "panel_f_boundary_polish":
+        boundary_block = _panel_f_boundary_polish_replacement(lines=lines, selector=selector)
+        if boundary_block is not None:
+            original, new_text, line_start, line_end = boundary_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_boundary_polish_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_boundary_polish_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "density_reduce":
         if _density_panel_e_template_applied(lines=lines, selector=selector):
             return None, {
@@ -1738,6 +1876,7 @@ def _render_candidate_batch(
     candidate_set: dict[str, Any],
     *,
     paths: runtime_paths.RuntimePaths,
+    candidate_set_path: Path,
 ) -> dict[str, Any]:
     candidates = [
         candidate
@@ -1763,6 +1902,7 @@ def _render_candidate_batch(
             candidate_set,
             workspace_root=paths.workspace_root,
             plugin_root=paths.plugin_root,
+            candidate_set_path=candidate_set_path,
             compile=False,
             export=False,
             evaluate=False,
@@ -1780,6 +1920,7 @@ def _render_candidate_batch(
             candidate_set,
             workspace_root=paths.workspace_root,
             plugin_root=paths.plugin_root,
+            candidate_set_path=candidate_set_path,
             candidate_id=candidate_id,
             compile=True,
             export=True,
@@ -2780,6 +2921,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
         weights = {
             "hierarchy_rebalance": 0.82,
             "apparatus_strengthen": 0.78,
+            "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
         }
@@ -3214,7 +3356,13 @@ def build_quality_search_execution(
         source_context=source_context,
         paths=paths,
     )
-    render_results = _render_candidate_batch(name, candidate_set, paths=paths)
+    candidate_set_path = run_dir.relative_to(paths.workspace_root) / "candidate_set_000.json"
+    render_results = _render_candidate_batch(
+        name,
+        candidate_set,
+        paths=paths,
+        candidate_set_path=candidate_set_path,
+    )
     candidate_rankings = _rank_rendered_candidates(name, candidate_set, paths=paths)
     visual_evidence = _quality_search_visual_evidence(
         name,

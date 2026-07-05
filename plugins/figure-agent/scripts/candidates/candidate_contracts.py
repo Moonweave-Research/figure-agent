@@ -37,6 +37,37 @@ def fixture_local_output_path(workspace_root: Path, fixture_name: str, value: st
     return fixture_relative_path(example_dir, value)
 
 
+def candidate_set_input_path(workspace_root: Path, fixture_name: str, value: str) -> Path:
+    fixture_identity.validate_fixture_name(fixture_name)
+    raw_path = Path(value)
+    if raw_path.is_absolute():
+        resolved = raw_path.resolve()
+    elif raw_path.parts[:2] == (".scratch", "quality-search-runs"):
+        resolved = (workspace_root / raw_path).resolve()
+    else:
+        return fixture_local_output_path(workspace_root, fixture_name, value)
+    scratch_root = (workspace_root / ".scratch" / "quality-search-runs").resolve()
+    try:
+        resolved.relative_to(scratch_root)
+    except ValueError as exc:
+        raise CandidateContractError("path_escape") from exc
+    return resolved
+
+
+def candidate_set_path_label(
+    workspace_root: Path,
+    fixture_name: str,
+    candidate_set_path: Path,
+) -> str:
+    fixture_identity.validate_fixture_name(fixture_name)
+    example_dir = workspace_root / "examples" / fixture_name
+    resolved = candidate_set_path.resolve()
+    try:
+        return resolved.relative_to(example_dir.resolve()).as_posix()
+    except ValueError:
+        return resolved.relative_to(workspace_root.resolve()).as_posix()
+
+
 def effective_apply_authority(apply_authority: str, hard_gate_state: str) -> str:
     if apply_authority not in APPLY_AUTHORITIES:
         raise CandidateContractError(f"invalid apply_authority: {apply_authority}")

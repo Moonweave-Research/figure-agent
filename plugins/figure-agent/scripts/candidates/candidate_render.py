@@ -138,18 +138,26 @@ def _fixture_path(example_dir: Path, fixture_name: str, value: Any) -> Path:
 
 def _candidate_set_path_value(
     example_dir: Path,
+    workspace_root: Path,
     candidate_set_path: Path | None,
 ) -> str:
     if candidate_set_path is None:
         return "build/candidates/candidate_set.json"
     if candidate_set_path.is_absolute():
         resolved = candidate_set_path.resolve()
+    elif candidate_set_path.parts[:2] == (".scratch", "quality-search-runs"):
+        resolved = (workspace_root / candidate_set_path).resolve()
     else:
         resolved = (example_dir / candidate_set_path).resolve()
     try:
         return resolved.relative_to(example_dir.resolve()).as_posix()
-    except ValueError as exc:
-        raise CandidateRenderError("candidate_set path_escape") from exc
+    except ValueError:
+        scratch_root = (workspace_root / ".scratch" / "quality-search-runs").resolve()
+        try:
+            resolved.relative_to(scratch_root)
+        except ValueError as exc:
+            raise CandidateRenderError("candidate_set path_escape") from exc
+        return resolved.relative_to(workspace_root.resolve()).as_posix()
 
 
 def _candidate_source_text(
@@ -518,7 +526,11 @@ def render_candidate_set(
         workspace_root=workspace_root,
     )
     example_dir = paths.examples_dir / name
-    source_candidate_set_path = _candidate_set_path_value(example_dir, candidate_set_path)
+    source_candidate_set_path = _candidate_set_path_value(
+        example_dir,
+        paths.workspace_root,
+        candidate_set_path,
+    )
     rendered: list[dict[str, Any]] = []
     for candidate in candidate_set.get("candidates", []):
         if not isinstance(candidate, dict):

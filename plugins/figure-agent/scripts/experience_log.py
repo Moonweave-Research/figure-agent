@@ -53,8 +53,11 @@ def _load_json(path: Path, label: str) -> dict[str, Any]:
 def _fixture_relative(example_dir: Path, path: Path) -> str:
     try:
         return path.resolve().relative_to(example_dir.resolve()).as_posix()
-    except ValueError as exc:
-        raise ExperienceLogError("path_escape") from exc
+    except ValueError:
+        try:
+            return path.resolve().relative_to(example_dir.parent.parent.resolve()).as_posix()
+        except ValueError as exc:
+            raise ExperienceLogError("path_escape") from exc
 
 
 def _candidate_sandbox(example_dir: Path, candidate_id: str) -> Path:
@@ -88,7 +91,11 @@ def _candidate_set_file(
     if not isinstance(raw, str) or not raw:
         raise ExperienceLogError("candidate_set_path_missing")
     try:
-        path = candidate_contracts.fixture_relative_path(example_dir, raw)
+        path = candidate_contracts.candidate_set_input_path(
+            example_dir.parent.parent,
+            example_dir.name,
+            raw,
+        )
     except candidate_contracts.CandidateContractError as exc:
         raise ExperienceLogError("candidate_set_path_escape") from exc
     if path.is_symlink():
