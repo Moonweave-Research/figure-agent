@@ -223,6 +223,7 @@ def build_memory_index(
     candidate_event_count = 0
     unknown_event_count = 0
     counterfactual_unchosen_count = 0
+    duplicate_experience_attempt_count = 0
     seen_experience_attempt_keys: set[tuple[str, str, str, str, str, str, str]] = set()
 
     for event in events:
@@ -255,6 +256,8 @@ def build_memory_index(
         )
         if event_type in {"candidate_recommended", "candidate_unchosen"}:
             seen_experience_attempt_keys.add(stable_experience_key)
+        if duplicate_experience_attempt:
+            duplicate_experience_attempt_count += 1
         if event_type == "candidate_unchosen" and not duplicate_experience_attempt:
             counterfactual_unchosen_count += 1
         is_attempt = event_type in ATTEMPT_EVENT_TYPES
@@ -321,6 +324,13 @@ def build_memory_index(
         "candidate_event_count": candidate_event_count,
         "unknown_event_count": unknown_event_count,
         "unknown_event_rate": round(unknown_event_count / candidate_event_count, 4)
+        if candidate_event_count
+        else 0.0,
+        "duplicate_experience_attempt_count": duplicate_experience_attempt_count,
+        "duplicate_experience_attempt_rate": round(
+            duplicate_experience_attempt_count / candidate_event_count,
+            4,
+        )
         if candidate_event_count
         else 0.0,
         "eligible_prior_count": eligible_prior_count if eligible_prior_count >= 3 else 0,

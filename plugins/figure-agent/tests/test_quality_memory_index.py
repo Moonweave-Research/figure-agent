@@ -244,6 +244,8 @@ def test_duplicate_recommendation_experience_rows_do_not_inflate_attempts() -> N
     assert index["families"]["label_offset"]["attempts"] == 1
     assert index["families"]["label_offset"]["neutral"] == 1
     assert index["reward_sparsity"]["counterfactual_unchosen_count"] == 1
+    assert index["duplicate_experience_attempt_count"] == 2
+    assert index["duplicate_experience_attempt_rate"] == 0.5
 
 
 def test_legacy_outcome_state_is_not_reward_without_quality_movement() -> None:
