@@ -342,13 +342,14 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert payload["render_results"]["rendered"] == []
     assert payload["visual_evidence"]["state"] == "not_applicable"
     assert payload["memory_events"]["event_count"] == 0
-    assert len(payload["candidate_specs"]) == 8
+    assert len(payload["candidate_specs"]) == 9
     assert {item["family"] for item in payload["candidate_specs"]} >= {
         "hierarchy_rebalance",
         "panel_c_hero_finish",
         "apparatus_strengthen",
         "panel_f_final_finish",
         "panel_f_label_route_finish",
+        "panel_f_density_relief",
         "panel_f_boundary_polish",
         "density_reduce",
         "null_baseline",
@@ -965,11 +966,30 @@ def test_quality_search_panel_f_final_finish_emits_post_boundary_panel_block(
                 "cRed!82!black, line width=1.24pt]"
             ),
             "  (11.06, 1.18) -- (9.34, 1.18);",
-            "\\node at (9.58, 1.54) {Coulomb};",
-            "\\node at (9.59, 1.45) {repulsion};",
+            (
+                "\\node[font=\\sffamily\\bfseries\\fontsize{6.5}{7.8}\\selectfont, "
+                "text=cRed!82!black,"
+            ),
+            "      anchor=south west] at (9.58, 1.54) {Coulomb};",
+            (
+                "\\node[labelMute, anchor=north west, fill=white, "
+                "fill opacity=0.94, text opacity=1,"
+            ),
+            "      inner xsep=1.2pt, inner ysep=0.6pt,",
+            "      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont,",
+            "      text=cRed!82!black] at (9.59, 1.45) {repulsion};",
             "\\draw[<->, cGray!64!black, line width=0.70pt]",
             "  (10.18, 0.54) -- (13.18, 0.54);",
-            "\\node at (11.88, 0.31) {air gap};",
+            (
+                "\\node[labelMute, anchor=north, fill=white, "
+                "fill opacity=0.94, text opacity=1,"
+            ),
+            "      inner xsep=1.4pt, inner ysep=0.9pt,",
+            (
+                "      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont, "
+                "text=cGray!75!black]"
+            ),
+            "  at (11.88, 0.31) {air gap};",
             "\\node at (11.70, 4.56) {mechanical};",
             "% v8.6 ROW 2 END",
         ]
@@ -1099,6 +1119,141 @@ def test_quality_search_panel_f_label_route_finish_emits_panel_block_candidate(
     assert "(13.30, 3.72) -- (13.30, 3.28) -- (13.30, 2.82);" in operation[
         "replacement"
     ]
+
+
+def test_quality_search_panel_f_density_relief_emits_panel_block_candidate(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_with_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column E -- ISPD-paired =================",
+            "\\draw[cAmber!70!black, line width=0.25pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);",
+            "\\node at (13.02, 4.03) {$V_{\\mathrm{active}}$};",
+            "\\node at (13.02, 3.91) {bias};",
+            (
+                "\\draw[cGray!48!black, line width=0.20pt, "
+                "dash pattern=on 1.0pt off 1.0pt, rounded corners=0.7pt]"
+            ),
+            "  (13.30, 3.72) -- (13.30, 3.28) -- (13.30, 2.82);",
+            (
+                "\\shade[left color=cGray!34, right color=cGray!18] "
+                "(13.18, 0.46) rectangle (13.42, 2.82);"
+            ),
+            "\\draw[cGray!86!black, line width=0.66pt] (13.18, 0.46) rectangle (13.42, 2.82);",
+            (
+                "\\foreach \\hy in {0.58,0.74,0.90,1.06,1.22,1.38,"
+                "1.54,1.70,1.86,2.02,2.18,2.34,2.50,2.66} {"
+            ),
+            "  \\draw[cGray!60!black, line width=0.25pt] (13.42, \\hy) -- (13.18, {\\hy-0.06});",
+            "}",
+            "\\foreach \\yy in {0.92,1.22,1.52,1.82,2.12} {",
+            "  \\draw[cGray!25, line width=0.25pt, dash pattern=on 1.2pt off 1.5pt]",
+            "    (11.08,\\yy) -- (13.18,\\yy);",
+            "}",
+            "\\draw[cGray!25, line width=0.25pt, dash pattern=on 1.2pt off 1.5pt]",
+            "  (11.08,2.42) -- (11.88,2.42);",
+            "\\draw[cGray!25, line width=0.25pt, dash pattern=on 1.2pt off 1.5pt]",
+            "  (12.92,2.42) -- (13.18,2.42);",
+            (
+                "\\node[labelMute, anchor=south, rotate=270, fill=white, "
+                "fill opacity=0.95, text opacity=1,"
+            ),
+            "      inner xsep=1.1pt, inner ysep=0.7pt,",
+            (
+                "      font=\\sffamily\\fontsize{5.8}{7.0}\\selectfont, "
+                "text=cGray!78!black]"
+            ),
+            "  at (13.64, 1.62) {electrode};",
+            "\\foreach \\cx/\\cy/\\rr in {11.62/2.28/0.075,11.43/1.86/0.082} {",
+            (
+                "  \\draw[cRed!35!white, line width=0.25pt, opacity=0.26] "
+                "(\\cx,\\cy) circle ({2.05*\\rr});"
+            ),
+            "  \\shade[ball color=cRed!82!black] (\\cx,\\cy) circle (\\rr);",
+            "}",
+            "\\draw[cRed!56!black, line width=0.34pt]",
+            "  (11.50,2.48) .. controls (11.16,3.04) and (10.48,3.42) .. (10.12,3.60);",
+            "\\node at (9.74, 3.52) {$q_{\\mathrm{tr}}$};",
+            "\\node at (9.74, 3.80) {trapped charge};",
+            (
+                "\\draw[panelFCoulombRepulsionArrow, "
+                "-{Stealth[length=9.6pt,width=6.8pt]}, "
+                "cRed!82!black, line width=1.24pt]"
+            ),
+            "  (11.06, 1.18) -- (9.34, 1.18);",
+            (
+                "\\node[font=\\sffamily\\bfseries\\fontsize{6.5}{7.8}\\selectfont, "
+                "text=cRed!82!black,"
+            ),
+            "      anchor=south west] at (9.58, 1.54) {Coulomb};",
+            (
+                "\\node[labelMute, anchor=north west, fill=white, "
+                "fill opacity=0.94, text opacity=1,"
+            ),
+            "      inner xsep=1.2pt, inner ysep=0.6pt,",
+            "      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont,",
+            "      text=cRed!82!black] at (9.59, 1.45) {repulsion};",
+            "\\draw[<->, cGray!62!black, line width=0.62pt]",
+            "  (10.36, 0.54) -- (13.18, 0.54);",
+            (
+                "\\node[labelMute, anchor=north, fill=white, "
+                "fill opacity=0.94, text opacity=1,"
+            ),
+            "      inner xsep=1.4pt, inner ysep=0.9pt,",
+            (
+                "      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont, "
+                "text=cGray!75!black]"
+            ),
+            "  at (11.88, 0.31) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="Panel F density relief",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    density = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_density_relief"
+    ][0]
+    operation = density["operations"][0]
+    assert density["operation_scale"] == "panel_block"
+    assert density["template_id"] == "v5f_panel_f_density_relief_v1"
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "v5f_panel_f_density_relief_v1"
+    assert "\\foreach \\yy in {0.96,1.34,1.72,2.10}" in operation["replacement"]
+    assert "-{Stealth[length=8.2pt,width=5.8pt]}" in operation["replacement"]
+    assert "(10.86, 1.18) -- (9.48, 1.18);" in operation["replacement"]
+    assert "fontsize{5.8}{7.0}" in operation["replacement"]
+    assert "text=cGray!70!black" in operation["replacement"]
 
 
 def test_quality_search_panel_c_hero_finish_emits_panel_block_candidate(

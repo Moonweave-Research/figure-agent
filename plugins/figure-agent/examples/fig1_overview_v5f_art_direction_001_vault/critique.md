@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig1_overview_v5f_art_direction_001_vault
-generated_at: '2026-07-05T02:27:29Z'
+generated_at: '2026-07-05T06:28:21Z'
 generator: critique_brief.py
 generator_version: sha256:51345bad8b6bdef113dcd48ad8b73a3a99b7cf99af028b5d3b3ea4c348690946
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:1196936304f28ebe91c156c5499c0d942ee18614d505e08bb6802d76afa55073
+critique_input_hash: sha256:45e0d87f7eac59640cd41f52777de0a03aad506e3a053536455e6f419ab123d6
 verdict: revise
 audit_enumeration:
   structural_completeness:
@@ -35,9 +35,9 @@ audit_enumeration:
     - component: Panel F Vactive PSU, cantilever, qtr charges, electrode, air gap, and Coulomb arrow
       mount_support: 'true'
       rationale: Panel F is materially redrawn around trapped charge, Coulomb repulsion, electrode, and air gap; the applied
-        apparatus redraw, boundary-polish revision, final-finish pass, and label-route finish move the trapped-charge callout
-        into the left label rail, shorten the leader above the cantilever, and quiet the bias module while keeping final
-        acceptance as the human comparison question.
+        apparatus redraw, boundary-polish revision, final-finish pass, label-route finish, and density-relief pass move the
+        trapped-charge callout into the left label rail, shorten the leader above the cantilever, reduce field/electrode hatch
+        density, and quiet the bias module while keeping final acceptance as the human comparison question.
       connections: Vactive wiring now routes through a quieter vertical dashed lead into the electrode; charge markers,
         field-gap lines, Coulomb arrow, and air-gap caliper form the mechanical evidence chain.
     missing_from_reference:
@@ -1380,6 +1380,21 @@ micro_defects:
   accept_simplification_reason: intentional_schematic
   accept_simplification_rationale: 'VC047 is not a defect: the Vs label remains readable inside the Panel E instrument
     schematic and is unrelated to the Panel C hero-finish edit.'
+- id: M_VC048
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC048_Vs.png
+  kind: drawing_order_suspect
+  severity: NIT
+  observation: VC048 flags the existing Panel E Vs label on its instrument fill after the Panel F density-relief apply; crop
+    review treats it as readable instrument labeling rather than a new semantic or release-blocking clash.
+  linked_finding_id: ''
+  visual_clash_ref: VC048
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'VC048 is not a defect: the Vs label remains readable inside the Panel E instrument
+    schematic and is unrelated to the Panel F density-relief edit.'
 - id: M_LP001
   crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/print_178mm.png
   kind: label_curve_near_label
@@ -3215,38 +3230,6 @@ micro_defects:
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
   accept_simplification_rationale: 'UG113 is not a release-blocking defect: source line 2106 line lacks text_boundary_check;
-    in the current v5f render the flagged geometry is convention acceptable, visually distinct, and does not change the scientific
-    reading.'
-- id: M_UG114
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/full_q1.png
-  kind: label_crosses_semantic_path
-  severity: NIT
-  observation: UG114 flags label_crosses_semantic_path near 'localized'; current v5f crop/render review treats this as declared
-    schematic structure, panel framing, or intentional label-path adjacency unless separately escalated.
-  linked_finding_id: ''
-  visual_clash_ref: ''
-  text_boundary_ref: ''
-  label_path_ref: ''
-  undeclared_geometry_ref: UG114
-  status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'UG114 is not a release-blocking defect: source line 2113 semantic path crosses text ''localized'';
-    in the current v5f render the flagged geometry is convention acceptable, visually distinct, and does not change the scientific
-    reading.'
-- id: M_UG115
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/full_q1.png
-  kind: floating_semantic_cue
-  severity: NIT
-  observation: UG115 flags the Panel F air-gap caliper as an undeclared horizontal rule; current v5f crop/render review treats
-    this as intentional mechanism annotation rather than an automatic geometry defect.
-  linked_finding_id: ''
-  visual_clash_ref: ''
-  text_boundary_ref: ''
-  label_path_ref: ''
-  undeclared_geometry_ref: UG115
-  status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'UG115 is not a release-blocking defect: source line 2126 air-gap caliper line lacks text_boundary_check;
     in the current v5f render the flagged geometry is convention acceptable, visually distinct, and does not change the scientific
     reading.'
 crop_audit_log:
@@ -5321,10 +5304,10 @@ findings:
     editorial_art_direction.human_art_direction_gate; candidate_plan.md large-change gate; v5d/v5e/v5f contact sheets; aesthetic_intent
     panel_c_hero_hierarchy and mature_restraint
   observation: v5f clears the large art-direction threshold; the applied Panel F apparatus redraw, boundary-polish revision,
-    final-finish pass, and label-route finish improve label routing, Coulomb response, air-gap emphasis, bias-module restraint,
-    and Vactive lead routing, and the Panel E density reduction reduces equipment-box/charge-marker dominance without changing
-    labels. Panel F still needs human comparison against v5d/v5e because the charge/force/electrode composition remains the
-    densest art-direction zone.
+    final-finish pass, label-route finish, and density-relief pass improve label routing, Coulomb response, air-gap emphasis,
+    bias-module restraint, Vactive lead routing, and field/electrode hatch density, and the Panel E density reduction reduces
+    equipment-box/charge-marker dominance without changing labels. Panel F still needs human comparison against v5d/v5e because
+    the charge/force/electrode composition remains the densest art-direction zone.
   suggested_fix: Review the full render, print thumbnail, Panel E crop, and Panel F crop contact sheets; accept v5f only if
     the stronger mechanism hierarchy outweighs the remaining Panel F density/final-acceptance tradeoff.
   status: open
@@ -5332,4 +5315,4 @@ findings:
 
 # Vision Critique — fig1_overview_v5f_art_direction_001_vault
 
-The current v5f render is a tool-driven art-direction candidate, not an accepted replacement for v5d or v5e. It clears the large-change gate versus v5d and now includes the applied Panel F apparatus redraw, Panel F boundary-polish pass, Panel F final-finish pass, Panel F label-route finish, and Panel E density reduction: the qtr/trapped-charge callout sits inside the left label rail, its leader is shorter and avoids cutting through the cantilever, the Coulomb response and air-gap relation are stronger, the Vactive lead is quieter and less box-like, and Panel E equipment marks are less dominant. The remaining decision is human art-direction acceptance because Panel F is still the densest mechanism zone; compare the full render, print thumbnail, and Panel E/F crops before any accepted, golden, or release state.
+The current v5f render is a tool-driven art-direction candidate, not an accepted replacement for v5d or v5e. It clears the large-change gate versus v5d and now includes the applied Panel F apparatus redraw, Panel F boundary-polish pass, Panel F final-finish pass, Panel F label-route finish, Panel F density-relief pass, and Panel E density reduction: the qtr/trapped-charge callout sits inside the left label rail, its leader is shorter and avoids cutting through the cantilever, the Coulomb response and air-gap relation are stronger, the Vactive lead is quieter and less box-like, Panel F field/electrode hatch density is lower, and Panel E equipment marks are less dominant. The remaining decision is human art-direction acceptance because Panel F is still the densest mechanism zone; compare the full render, print thumbnail, and Panel E/F crops before any accepted, golden, or release state.

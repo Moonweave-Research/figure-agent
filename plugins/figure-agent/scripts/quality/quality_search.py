@@ -48,6 +48,7 @@ APPARATUS_PANEL_F_TEMPLATE_ID = "v5f_panel_f_redraw_overlay_v1"
 PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID = "v5f_panel_f_boundary_polish_v1"
 PANEL_F_FINAL_FINISH_TEMPLATE_ID = "v5f_panel_f_final_finish_v1"
 PANEL_F_LABEL_ROUTE_FINISH_TEMPLATE_ID = "v5f_panel_f_label_route_finish_v1"
+PANEL_F_DENSITY_RELIEF_TEMPLATE_ID = "v5f_panel_f_density_relief_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -182,6 +183,25 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "pull the trapped-charge label into a left label rail without crop clipping",
             "shorten the trapped-charge leader so it does not sweep across the cantilever",
             "make the bias-source lead a restrained vertical connection into the electrode",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_density_relief": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+        ],
+        "design_moves": [
+            "thin the Panel F field-line and electrode-hatch density without deleting semantics",
+            "make Coulomb/repulsion typography secondary to the charge trajectory",
+            "preserve the air-gap and electrode relation while reducing print-scale crowding",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -542,6 +562,22 @@ def _step_out_hypotheses(
             },
             {
                 **common,
+                "family": "panel_f_density_relief",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "Panel F remains the densest mechanism zone after label-route "
+                        "finish; reduce field-line, hatch, and force-label dominance"
+                    ),
+                },
+                "expected_visual_movement": (
+                    "Panel F keeps charge/force/electrode semantics but reads less crowded "
+                    "at print scale"
+                ),
+            },
+            {
+                **common,
                 "family": "panel_f_boundary_polish",
                 "target_scope": "panel",
                 "target_hint": {
@@ -683,7 +719,7 @@ def _patch_hypotheses(
         return []
     basin_hypotheses = _step_out_hypotheses(name, driver, ledger)
     if basin_hypotheses:
-        return basin_hypotheses[:7]
+        return basin_hypotheses[:8]
     goal_hypotheses = _goal_hypotheses(name, goal)
     if goal_hypotheses:
         return _merge_hypotheses(
@@ -1245,6 +1281,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_label_route_finish":
         return "panel_block"
+    if family == "panel_f_density_relief":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -1263,6 +1301,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_FINAL_FINISH_TEMPLATE_ID
     if family == "panel_f_label_route_finish":
         return PANEL_F_LABEL_ROUTE_FINISH_TEMPLATE_ID
+    if family == "panel_f_density_relief":
+        return PANEL_F_DENSITY_RELIEF_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -1926,6 +1966,97 @@ def _panel_f_label_route_finish_replacement(
     return original, replacement, line_start, line_end
 
 
+def _panel_f_density_relief_template_applied(block: str) -> bool:
+    required_fragments = (
+        "\\foreach \\yy in {0.96,1.34,1.72,2.10}",
+        "-{Stealth[length=8.2pt,width=5.8pt]}",
+        "(10.86, 1.18) -- (9.48, 1.18);",
+        "fontsize{5.8}{7.0}",
+        "text=cGray!70!black",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_density_relief_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if not _panel_f_label_route_finish_template_applied(original):
+        return None
+    if _panel_f_density_relief_template_applied(original):
+        return None
+    replacement = original
+    replacements = (
+        (
+            "\\foreach \\hy in {0.58,0.74,0.90,1.06,1.22,1.38,1.54,1.70,"
+            "1.86,2.02,2.18,2.34,2.50,2.66} {",
+            "\\foreach \\hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {",
+        ),
+        (
+            "\\draw[cGray!60!black, line width=0.25pt] (13.42, \\hy) -- "
+            "(13.18, {\\hy-0.06});",
+            "\\draw[cGray!54!black, line width=0.22pt] (13.42, \\hy) -- "
+            "(13.18, {\\hy-0.05});",
+        ),
+        (
+            "\\foreach \\yy in {0.92,1.22,1.52,1.82,2.12} {",
+            "\\foreach \\yy in {0.96,1.34,1.72,2.10} {",
+        ),
+        ("\\draw[cGray!25, line width=0.25pt,", "\\draw[cGray!19, line width=0.22pt,"),
+        (
+            "\\draw[cGray!25, line width=0.25pt, dash pattern=on 1.2pt off 1.5pt]\n"
+            "  (11.08,2.42) -- (11.88,2.42);",
+            "\\draw[cGray!17, line width=0.20pt, dash pattern=on 1.0pt off 1.7pt]\n"
+            "  (11.18,2.42) -- (11.82,2.42);",
+        ),
+        (
+            "\\draw[cGray!25, line width=0.25pt, dash pattern=on 1.2pt off 1.5pt]\n"
+            "  (12.92,2.42) -- (13.18,2.42);",
+            "\\draw[cGray!17, line width=0.20pt, dash pattern=on 1.0pt off 1.7pt]\n"
+            "  (12.98,2.42) -- (13.18,2.42);",
+        ),
+        ("text=cGray!78!black]", "text=cGray!70!black]"),
+        ("fontsize{5.8}{7.0}", "fontsize{5.4}{6.5}"),
+        (
+            "\\draw[cRed!35!white, line width=0.25pt, opacity=0.26] "
+            "(\\cx,\\cy) circle ({2.05*\\rr});",
+            "\\draw[cRed!35!white, line width=0.22pt, opacity=0.18] "
+            "(\\cx,\\cy) circle ({1.82*\\rr});",
+        ),
+        (
+            "\\draw[panelFCoulombRepulsionArrow, -{Stealth[length=9.6pt,width=6.8pt]}, "
+            "cRed!82!black, line width=1.24pt]\n"
+            "  (11.06, 1.18) -- (9.34, 1.18);",
+            "\\draw[panelFCoulombRepulsionArrow, -{Stealth[length=8.2pt,width=5.8pt]}, "
+            "cRed!78!black, line width=1.05pt]\n"
+            "  (10.86, 1.18) -- (9.48, 1.18);",
+        ),
+        ("fontsize{6.5}{7.8}", "fontsize{5.8}{7.0}"),
+        ("fontsize{6.0}{7.2}", "fontsize{5.4}{6.5}"),
+        ("text=cRed!82!black", "text=cRed!78!black"),
+        ("at (9.58, 1.54) {Coulomb};", "at (9.60, 1.50) {Coulomb};"),
+        (
+            "text=cRed!78!black] at (9.59, 1.45) {repulsion};",
+            "text=cRed!76!black] at (9.60, 1.40) {repulsion};",
+        ),
+    )
+    for old, new in replacements:
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    if not _panel_f_overlay_has_protected_labels(replacement):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _density_panel_e_block_replacement(
     *,
     lines: list[str],
@@ -2074,6 +2205,7 @@ def _candidate_operation_for_spec(
         "panel_f_boundary_polish": "F",
         "panel_f_final_finish": "F",
         "panel_f_label_route_finish": "F",
+        "panel_f_density_relief": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -2209,6 +2341,33 @@ def _candidate_operation_for_spec(
             "family": family,
             "operation_scale": "panel_block",
             "template_id": PANEL_F_LABEL_ROUTE_FINISH_TEMPLATE_ID,
+            "panel": "F",
+        }
+    if family == "panel_f_density_relief":
+        density_relief_block = _panel_f_density_relief_replacement(
+            lines=lines, selector=selector
+        )
+        if density_relief_block is not None:
+            original, new_text, line_start, line_end = density_relief_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_density_relief_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_DENSITY_RELIEF_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_density_relief_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_DENSITY_RELIEF_TEMPLATE_ID,
             "panel": "F",
         }
     if family == "density_reduce":
@@ -3432,6 +3591,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "apparatus_strengthen": 0.78,
             "panel_f_final_finish": 0.86,
             "panel_f_label_route_finish": 0.9,
+            "panel_f_density_relief": 0.89,
             "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
