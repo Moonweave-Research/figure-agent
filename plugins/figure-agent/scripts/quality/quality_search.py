@@ -25,6 +25,7 @@ import fixture_identity
 import quality_defect_ledger
 import quality_memory_index
 import runtime_paths
+import semantic_candidate_review
 
 SCHEMA = "figure-agent.quality-search-plan.v0"
 EXECUTE_SCHEMA = "figure-agent.quality-search-execute.v0"
@@ -2877,6 +2878,8 @@ def _candidate_set_from_specs(
                 "operation_scale": operation_scale,
                 "template_id": template_id,
                 "expected_visual_movement": str(spec.get("expected_visual_movement") or ""),
+                "protected_labels": spec.get("protected_labels", []),
+                "design_moves": spec.get("design_moves", []),
                 "target": {
                     "panel": target_panel,
                     "subregion": str(spec.get("target_scope") or "quality_search"),
@@ -4425,6 +4428,189 @@ def _selected_review_packet(
     return packet
 
 
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
+
+
+def _semantic_label_present(text: str, label: str) -> bool:
+    lowered = text.lower()
+    normalized_label = label.lower()
+    aliases = {
+        "q_tr": ("q_tr", "q_{tr}", "q_{\\mathrm{tr}}"),
+        "$v_{\\mathrm{active}}$": (
+            "$v_{\\mathrm{active}}$",
+            "v_{\\mathrm{active}}",
+        ),
+    }
+    for alias in aliases.get(normalized_label, (normalized_label,)):
+        if alias in lowered:
+            return True
+    return False
+
+
+def _render_manifest_success(render_manifest: dict[str, Any]) -> bool:
+    stages = (
+        render_manifest.get("stages")
+        if isinstance(render_manifest.get("stages"), dict)
+        else {}
+    )
+    expected = {
+        "compile": "success",
+        "export": "success",
+        "crop": "success",
+        "evaluate": "rendered_needs_human_review",
+    }
+    for stage, expected_status in expected.items():
+        value = stages.get(stage)
+        status = value.get("status") if isinstance(value, dict) else None
+        if status != expected_status:
+            return False
+    return True
+
+
+def _selected_candidate(candidate_set: dict[str, Any], candidate_id: str) -> dict[str, Any] | None:
+    candidates = candidate_set.get("candidates")
+    if not isinstance(candidates, list):
+        return None
+    for candidate in candidates:
+        if isinstance(candidate, dict) and candidate.get("id") == candidate_id:
+            return candidate
+    return None
+
+
+def _write_selected_semantic_precheck(
+    name: str,
+    decision: dict[str, Any],
+    candidate_set: dict[str, Any],
+    *,
+    paths: runtime_paths.RuntimePaths,
+) -> dict[str, Any] | None:
+    candidate_id = decision.get("selected_candidate_id")
+    if (
+        decision.get("candidate_state") != NON_MARGINAL_REVIEW_CANDIDATE_STATE
+        or not isinstance(candidate_id, str)
+        or not candidate_id.strip()
+    ):
+        return None
+    candidate = _selected_candidate(candidate_set, candidate_id)
+    if candidate is None:
+        return {
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "blocked",
+            "candidate_id": candidate_id,
+            "blocking_reasons": ["candidate_set_missing_candidate"],
+        }
+    if candidate.get("apply_authority") != "review_only":
+        return {
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "blocked",
+            "candidate_id": candidate_id,
+            "blocking_reasons": ["apply_authority_not_review_only"],
+        }
+    protected_labels = [
+        str(label)
+        for label in candidate.get("protected_labels", [])
+        if isinstance(label, str) and label.strip()
+    ]
+    if not protected_labels:
+        return {
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "blocked",
+            "candidate_id": candidate_id,
+            "blocking_reasons": ["protected_labels_missing"],
+        }
+    example_dir = paths.examples_dir / name
+    sandbox = example_dir / "build" / "candidates" / candidate_id
+    manifest_path = sandbox / "candidate_manifest.json"
+    render_manifest_path = sandbox / "render_manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        render_manifest = json.loads(render_manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return {
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "blocked",
+            "candidate_id": candidate_id,
+            "blocking_reasons": ["manifest_unreadable"],
+        }
+    if not isinstance(manifest, dict) or not isinstance(render_manifest, dict):
+        return {
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "blocked",
+            "candidate_id": candidate_id,
+            "blocking_reasons": ["manifest_invalid"],
+        }
+    if not _render_manifest_success(render_manifest):
+        return {
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "blocked",
+            "candidate_id": candidate_id,
+            "blocking_reasons": ["render_gates_not_passed"],
+        }
+    operation_text = "\n".join(
+        str(operation.get("replacement") or "")
+        for operation in manifest.get("operations", [])
+        if isinstance(operation, dict)
+    )
+    missing_labels = [
+        label for label in protected_labels if not _semantic_label_present(operation_text, label)
+    ]
+    if missing_labels:
+        return {
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "blocked",
+            "candidate_id": candidate_id,
+            "blocking_reasons": ["protected_label_missing"],
+            "missing_labels": missing_labels,
+        }
+    review = {
+        "schema": semantic_candidate_review.SCHEMA,
+        "fixture": name,
+        "candidate_id": candidate_id,
+        "candidate_hash": manifest.get("candidate_hash"),
+        "reviewed_artifacts": [
+            {
+                "path": render_manifest_path.relative_to(example_dir).as_posix(),
+                "sha256": _file_sha256(render_manifest_path),
+            }
+        ],
+        "semantic_invariants": [
+            {"kind": "protected_label_present", "label": label}
+            for label in protected_labels
+        ],
+        "findings": [
+            {
+                "kind": "deterministic_semantic_precheck",
+                "status": "pass",
+                "basis": [
+                    "render_manifest_gates_passed",
+                    "protected_labels_present_in_replacement",
+                    "review_only_source_mutation_boundary",
+                ],
+            }
+        ],
+        "conflicts": [],
+        "verdict": "pass",
+        "human_required": False,
+        "reviewed_at": _utc_stamp(),
+        "reviewer": "fig-agent-auto-semantic-precheck",
+    }
+    review_path = sandbox / "semantic_review.json"
+    _write_json(review_path, review)
+    return {
+        "schema": "figure-agent.selected-semantic-precheck.v0",
+        "status": "pass",
+        "candidate_id": candidate_id,
+        "review_path": _workspace_relative(paths, review_path),
+        "protected_labels": protected_labels,
+        "reviewed_artifacts": review["reviewed_artifacts"],
+    }
+
+
 def build_quality_search_execution(
     name: str,
     *,
@@ -4489,6 +4675,12 @@ def build_quality_search_execution(
     )
     decision = _execution_decision(plan, scores, fixture_name=name)
     _write_json(run_dir / "candidate_set_000.json", candidate_set)
+    selected_semantic_precheck = _write_selected_semantic_precheck(
+        name,
+        decision,
+        candidate_set,
+        paths=paths,
+    )
     selected_review_packet = _selected_review_packet(name, decision, paths=paths)
     tool_defects = {
         "schema": "figure-agent.quality-search-tool-defects.v0",
@@ -4534,6 +4726,11 @@ def build_quality_search_execution(
             "candidate_scores_000.json",
             "candidate_rankings_000.json",
             "decision_000.json",
+            *(
+                ["selected_semantic_precheck_000.json"]
+                if selected_semantic_precheck is not None
+                else []
+            ),
             *(
                 ["selected_review_packet_000.json"]
                 if selected_review_packet is not None
@@ -4588,6 +4785,11 @@ def build_quality_search_execution(
         },
         "decision_000.json": decision,
         **(
+            {"selected_semantic_precheck_000.json": selected_semantic_precheck}
+            if selected_semantic_precheck is not None
+            else {}
+        ),
+        **(
             {"selected_review_packet_000.json": selected_review_packet}
             if selected_review_packet is not None
             else {}
@@ -4634,6 +4836,7 @@ def build_quality_search_execution(
         "candidate_rankings": candidate_rankings,
         "candidate_scores": scores,
         "decision": decision,
+        "selected_semantic_precheck": selected_semantic_precheck,
         "selected_review_packet": selected_review_packet,
         "memory_events": memory_events,
         "depone": {

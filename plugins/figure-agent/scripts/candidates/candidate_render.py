@@ -635,6 +635,8 @@ def render_candidate_set(
             "effective_apply_authority": effective,
             "risk": candidate.get("risk"),
             "expected_delta": candidate.get("expected_delta", []),
+            "protected_labels": candidate.get("protected_labels", []),
+            "design_moves": candidate.get("design_moves", []),
             "semantic_risks": candidate.get("semantic_risks", []),
             "boundedness": candidate.get("boundedness", {}),
             "rollback": candidate.get("rollback"),

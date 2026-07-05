@@ -2043,6 +2043,95 @@ def test_quality_search_builds_selected_review_packet_for_ready_candidate(
     }
 
 
+def test_quality_search_writes_selected_semantic_precheck_for_protected_panel_block(
+    tmp_path: Path,
+) -> None:
+    name = "fig_demo"
+    candidate_id = "QS002"
+    paths = quality_search.runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+    sandbox = paths.examples_dir / name / "build" / "candidates" / candidate_id
+    sandbox.mkdir(parents=True)
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "fixture": name,
+        "candidate_id": candidate_id,
+        "candidate_hash": "sha256:" + "3" * 64,
+        "operations": [
+            {
+                "kind": "replace_text",
+                "replacement": (
+                    "$q_{tr}$ trapped charge Coulomb repulsion electrode "
+                    "air gap Mechanical $V_{\\mathrm{active}}$"
+                ),
+            }
+        ],
+    }
+    render_manifest = {
+        "schema": "figure-agent.candidate-render-manifest.v1",
+        "candidate_id": candidate_id,
+        "candidate_hash": manifest["candidate_hash"],
+        "stages": {
+            "compile": {"status": "success"},
+            "export": {"status": "success"},
+            "crop": {"status": "success"},
+            "evaluate": {"status": "rendered_needs_human_review"},
+        },
+    }
+    (sandbox / "candidate_manifest.json").write_text(
+        json.dumps(manifest, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (sandbox / "render_manifest.json").write_text(
+        json.dumps(render_manifest, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    decision = {
+        "candidate_state": "non_marginal_review_candidate_ready",
+        "selected_candidate_id": candidate_id,
+    }
+    candidate_set = {
+        "candidates": [
+            {
+                "id": candidate_id,
+                "apply_authority": "review_only",
+                "protected_labels": [
+                    "q_tr",
+                    "trapped charge",
+                    "Coulomb",
+                    "repulsion",
+                    "electrode",
+                    "air gap",
+                    "mechanical",
+                    "$V_{\\mathrm{active}}$",
+                ],
+            }
+        ]
+    }
+
+    precheck = quality_search._write_selected_semantic_precheck(
+        name,
+        decision,
+        candidate_set,
+        paths=paths,
+    )
+
+    review_path = sandbox / "semantic_review.json"
+    review = json.loads(review_path.read_text(encoding="utf-8"))
+    assert precheck["status"] == "pass"
+    assert precheck["review_path"] == (
+        "examples/fig_demo/build/candidates/QS002/semantic_review.json"
+    )
+    assert review["verdict"] == "pass"
+    assert review["human_required"] is False
+    assert review["reviewer"] == "fig-agent-auto-semantic-precheck"
+    assert {item["label"] for item in review["semantic_invariants"]} == set(
+        candidate_set["candidates"][0]["protected_labels"]
+    )
+
+
 def test_quality_search_visual_evidence_writes_full_and_panel_contact_sheets(
     tmp_path: Path,
 ) -> None:
