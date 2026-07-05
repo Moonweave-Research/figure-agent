@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig1_overview_v5f_art_direction_001_vault
-generated_at: '2026-07-05T00:38:44Z'
+generated_at: '2026-07-05T01:38:05Z'
 generator: critique_brief.py
 generator_version: sha256:51345bad8b6bdef113dcd48ad8b73a3a99b7cf99af028b5d3b3ea4c348690946
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:7c0e325d24618844e880cbfe4aafd85de160e799b36722e919eb5d6982425726
+critique_input_hash: sha256:40ea197593e3dff34365ecb1a84d0e5b375ba2d9b6171d29e5bbd32fa99195f5
 verdict: revise
 audit_enumeration:
   structural_completeness:
@@ -35,9 +35,9 @@ audit_enumeration:
     - component: Panel F Vactive PSU, cantilever, qtr charges, electrode, air gap, and Coulomb arrow
       mount_support: 'true'
       rationale: Panel F is materially redrawn around trapped charge, Coulomb repulsion, electrode, and air gap; the applied
-        apparatus redraw plus boundary-polish revision moves the trapped-charge callout left and routes the leader around
-        the cantilever, while latest review keeps final art-direction acceptance as the remaining human comparison question.
-      connections: Vactive wiring now routes through a stepped lead toward the electrode; charge markers, field-gap lines,
+        apparatus redraw, boundary-polish revision, and final-finish pass move the trapped-charge callout left, route the
+        leader above the cantilever, and quiet the bias module while keeping final acceptance as the human comparison question.
+      connections: Vactive wiring now routes through a quieter dashed lead toward the electrode; charge markers, field-gap lines,
         Coulomb arrow, and air-gap caliper form the mechanical evidence chain.
     missing_from_reference:
     - element: cover-scene background wash
@@ -346,7 +346,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:7c0e325d24618844e880cbfe4aafd85de160e799b36722e919eb5d6982425726
+  assessed_artifact_hash: sha256:40ea197593e3dff34365ecb1a84d0e5b375ba2d9b6171d29e5bbd32fa99195f5
   benchmark_level: needs_human_art_direction
   confidence: medium
   blockers: []
@@ -660,10 +660,10 @@ micro_defects:
   crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/panel_F_s11.png
   kind: print_scale_unreadable
   severity: MINOR
-  observation: Panel F is now mechanism-first and readable after the apparatus redraw and boundary-polish pass moved the
-    qtr/trapped-charge callout left, routed its leader around the cantilever, strengthened the Coulomb arrow and air-gap caliper,
-    and rerouted the Vactive-to-electrode lead; latest crop review confirms the remaining issue is human art-direction
-    comparison rather than an automatic geometry defect.
+  observation: Panel F is now mechanism-first and readable after the apparatus redraw, boundary-polish pass, and final-finish
+    pass moved the qtr/trapped-charge callout left, routed its leader above the cantilever, quieted the bias module, strengthened
+    the Coulomb arrow and air-gap caliper, and clarified the Vactive-to-electrode lead; latest crop review confirms the remaining
+    issue is human art-direction comparison rather than an automatic geometry defect.
   linked_finding_id: C001
   visual_clash_ref: ''
   text_boundary_ref: ''
@@ -5273,15 +5273,16 @@ findings:
   grounded_in_rule: top_tier_audit.aesthetic_coherence; editorial_art_direction.aesthetic_risk; editorial_art_direction.tikz_vs_svg_polish_trigger;
     editorial_art_direction.human_art_direction_gate; candidate_plan.md large-change gate; v5d/v5e/v5f contact sheets; aesthetic_intent
     panel_c_hero_hierarchy and mature_restraint
-  observation: v5f clears the large art-direction threshold; the applied Panel F apparatus redraw and boundary-polish revisions
-    improve label routing, Coulomb response, air-gap emphasis, and Vactive lead routing, and the Panel E density reduction
-    reduces equipment-box/charge-marker dominance without changing labels. Panel F still needs human comparison against
-    v5d/v5e because the charge/force/electrode composition remains the densest art-direction zone.
+  observation: v5f clears the large art-direction threshold; the applied Panel F apparatus redraw, boundary-polish revision,
+    and final-finish pass improve label routing, Coulomb response, air-gap emphasis, bias-module restraint, and Vactive lead
+    routing, and the Panel E density reduction reduces equipment-box/charge-marker dominance without changing labels. Panel F
+    still needs human comparison against v5d/v5e because the charge/force/electrode composition remains the densest
+    art-direction zone.
   suggested_fix: Review the full render, print thumbnail, Panel E crop, and Panel F crop contact sheets; accept v5f only if
-    the stronger mechanism hierarchy outweighs the remaining Panel F density/final-finish tradeoff.
+    the stronger mechanism hierarchy outweighs the remaining Panel F density/final-acceptance tradeoff.
   status: open
 ---
 
 # Vision Critique — fig1_overview_v5f_art_direction_001_vault
 
-The current v5f render is a tool-driven art-direction candidate, not an accepted replacement for v5d or v5e. It clears the large-change gate versus v5d and now includes the applied Panel F apparatus redraw, Panel F boundary-polish pass, and Panel E density reduction: the qtr/trapped-charge callout moves left, its leader avoids cutting through the cantilever, the Coulomb response and air-gap relation are stronger, the Vactive lead is less box-like, and Panel E equipment marks are less dominant. The remaining decision is human art-direction acceptance because Panel F is still the densest mechanism zone; compare the full render, print thumbnail, and Panel E/F crops before any accepted, golden, or release state.
+The current v5f render is a tool-driven art-direction candidate, not an accepted replacement for v5d or v5e. It clears the large-change gate versus v5d and now includes the applied Panel F apparatus redraw, Panel F boundary-polish pass, Panel F final-finish pass, and Panel E density reduction: the qtr/trapped-charge callout moves left, its leader avoids cutting through the cantilever, the Coulomb response and air-gap relation are stronger, the Vactive lead is quieter and less box-like, and Panel E equipment marks are less dominant. The remaining decision is human art-direction acceptance because Panel F is still the densest mechanism zone; compare the full render, print thumbnail, and Panel E/F crops before any accepted, golden, or release state.

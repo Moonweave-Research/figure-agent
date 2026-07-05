@@ -46,6 +46,7 @@ PROGRESS_ACTIONS = {
 FAMILY_REGISTRY_SCHEMA = "figure-agent.quality-search-family-registry.v0"
 APPARATUS_PANEL_F_TEMPLATE_ID = "v5f_panel_f_redraw_overlay_v1"
 PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID = "v5f_panel_f_boundary_polish_v1"
+PANEL_F_FINAL_FINISH_TEMPLATE_ID = "v5f_panel_f_final_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
 APPARATUS_PANEL_F_OVERLAY_MARKER = "v5f Panel F art-direction redraw overlay"
@@ -118,6 +119,28 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "keep the trapped-charge label in the left reading lane without clipping",
             "route the trapped-charge leader around the cantilever instead of through it",
             "reduce Panel F boundary density while preserving Coulomb/electrode/air-gap semantics",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_final_finish": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+        ],
+        "design_moves": [
+            "make the bias module a quiet circuit cue instead of a boxy subject",
+            "route the apparatus lead as an intentional connection into the electrode",
+            (
+                "keep trapped-charge typography in the left reading lane with a leader "
+                "above the cantilever"
+            ),
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -430,6 +453,22 @@ def _step_out_hypotheses(
             },
             {
                 **common,
+                "family": "panel_f_final_finish",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "post-redraw Panel F still has typography-authority and "
+                        "apparatus-lead finish defects"
+                    ),
+                },
+                "expected_visual_movement": (
+                    "Panel F bias module, lead routing, and trapped-charge typography "
+                    "read as a finished mechanism composition"
+                ),
+            },
+            {
+                **common,
                 "family": "panel_f_boundary_polish",
                 "target_scope": "panel",
                 "target_hint": {
@@ -545,7 +584,7 @@ def _merge_hypotheses(
     primary: list[dict[str, Any]],
     fallback: list[dict[str, Any]],
     *,
-    limit: int = 3,
+    limit: int = 5,
 ) -> list[dict[str, Any]]:
     merged: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -571,7 +610,7 @@ def _patch_hypotheses(
         return []
     basin_hypotheses = _step_out_hypotheses(name, driver, ledger)
     if basin_hypotheses:
-        return basin_hypotheses[:4]
+        return basin_hypotheses[:5]
     goal_hypotheses = _goal_hypotheses(name, goal)
     if goal_hypotheses:
         return _merge_hypotheses(
@@ -1127,6 +1166,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_boundary_polish":
         return "panel_block"
+    if family == "panel_f_final_finish":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -1139,6 +1180,8 @@ def _preferred_template_id(family: str) -> str:
         return APPARATUS_PANEL_F_TEMPLATE_ID
     if family == "panel_f_boundary_polish":
         return PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID
+    if family == "panel_f_final_finish":
+        return PANEL_F_FINAL_FINISH_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -1438,6 +1481,17 @@ def _panel_f_boundary_polish_template_applied(block: str) -> bool:
     return all(fragment in block for fragment in required_fragments)
 
 
+def _panel_f_boundary_polish_geometry_applied(block: str) -> bool:
+    required_fragments = (
+        "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
+        "at (9.72, 3.20) {$q_{\\mathrm{tr}}$};",
+        "at (9.72, 3.46) {trapped charge};",
+        "(11.06, 1.18) -- (9.34, 1.18);",
+        "(10.18, 0.54) -- (13.18, 0.54);",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
 def _panel_f_boundary_polish_replacement(
     *,
     lines: list[str],
@@ -1487,6 +1541,87 @@ def _panel_f_boundary_polish_replacement(
         (
             "(9.92, 0.54) -- (13.18, 0.54);",
             "(10.18, 0.54) -- (13.18, 0.54);",
+        ),
+    )
+    for old, new in replacements:
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    if not _panel_f_overlay_has_protected_labels(replacement):
+        return None
+    return original, replacement, line_start, line_end
+
+
+def _panel_f_final_finish_template_applied(block: str) -> bool:
+    required_fragments = (
+        "line width=0.22pt, dash pattern=on 1.2pt off 0.9pt",
+        "(11.38,2.58) .. controls (10.84,3.42)",
+        "at (9.62, 3.32) {$q_{\\mathrm{tr}}$};",
+        "at (9.62, 3.58) {trapped charge};",
+        "\\fill[cGray!30!black, opacity=0.010]",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_final_finish_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if not _panel_f_boundary_polish_geometry_applied(original):
+        return None
+    if _panel_f_final_finish_template_applied(original):
+        return None
+    replacement = original
+    replacements = (
+        ("\\fill[cGray!30!black, opacity=0.018]", "\\fill[cGray!30!black, opacity=0.010]"),
+        (
+            "\\fill[cGray!3] (12.56, 3.82) rectangle (13.46, 4.16);",
+            "\\fill[cGray!2] (12.60, 3.86) rectangle (13.40, 4.12);",
+        ),
+        (
+            "\\draw[cGray!58!black, line width=0.22pt, rounded corners=1.0pt]\n"
+            "  (12.56, 3.82) rectangle (13.46, 4.16);",
+            "\\draw[cGray!46!black, line width=0.18pt, rounded corners=1.0pt]\n"
+            "  (12.60, 3.86) rectangle (13.40, 4.12);",
+        ),
+        (
+            "text=cGray!74!black]\n  at (12.99, 3.94) {$V_{\\mathrm{active}}$};",
+            "text=cGray!60!black]\n  at (13.00, 3.96) {$V_{\\mathrm{active}}$};",
+        ),
+        (
+            "text=cGray!54!black]\n  at (12.99, 3.84) {bias};",
+            "text=cGray!42!black]\n  at (13.00, 3.86) {bias};",
+        ),
+        (
+            "\\draw[cGray!58!black, line width=0.26pt, rounded corners=1.0pt]\n"
+            "  (13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16) -- (13.18, 3.02) -- (13.30, 2.82);",
+            "\\draw[cGray!52!black, line width=0.22pt, "
+            "dash pattern=on 1.2pt off 0.9pt, rounded corners=1.0pt]\n"
+            "  (13.24, 3.72) -- (13.18, 3.30) -- (13.18, 2.82);",
+        ),
+        (
+            "\\draw[cRed!55!black, line width=0.32pt]\n"
+            "  (11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
+            "\\draw[cRed!58!black, line width=0.36pt]\n"
+            "  (11.38,2.58) .. controls (10.84,3.42) and (10.14,3.76) .. (9.62,3.64);",
+        ),
+        ("fontsize{4.4}{5.3}", "fontsize{4.2}{5.0}"),
+        ("fontsize{4.1}{5.0}", "fontsize{4.0}{4.8}"),
+        ("at (9.72, 3.20) {$q_{\\mathrm{tr}}$};", "at (9.62, 3.32) {$q_{\\mathrm{tr}}$};"),
+        ("at (9.72, 3.46) {trapped charge};", "at (9.62, 3.58) {trapped charge};"),
+        (
+            "\\draw[<->, cGray!64!black, line width=0.70pt]\n"
+            "  (10.18, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!62!black, line width=0.62pt]\n"
+            "  (10.36, 0.54) -- (13.18, 0.54);",
         ),
     )
     for old, new in replacements:
@@ -1643,6 +1778,7 @@ def _candidate_operation_for_spec(
         "hierarchy_rebalance": "C",
         "apparatus_strengthen": "F",
         "panel_f_boundary_polish": "F",
+        "panel_f_final_finish": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -1701,6 +1837,31 @@ def _candidate_operation_for_spec(
             "family": family,
             "operation_scale": "panel_block",
             "template_id": PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID,
+            "panel": "F",
+        }
+    if family == "panel_f_final_finish":
+        finish_block = _panel_f_final_finish_replacement(lines=lines, selector=selector)
+        if finish_block is not None:
+            original, new_text, line_start, line_end = finish_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_final_finish_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_FINAL_FINISH_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_final_finish_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_FINAL_FINISH_TEMPLATE_ID,
             "panel": "F",
         }
     if family == "density_reduce":
@@ -2921,6 +3082,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
         weights = {
             "hierarchy_rebalance": 0.82,
             "apparatus_strengthen": 0.78,
+            "panel_f_final_finish": 0.86,
             "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
