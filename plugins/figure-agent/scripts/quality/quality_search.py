@@ -4772,6 +4772,7 @@ def _quality_search_contract_verdict(
     evaluated_count = 0
     changed_pixel_ratios: list[float] = []
     full_changed_pixel_ratios: list[float] = []
+    prerequisite_required = decision.get("kind") == "prerequisite_required"
 
     require(
         manifest.get("status") == "dry_run_complete",
@@ -4798,26 +4799,28 @@ def _quality_search_contract_verdict(
         "source_mutation_performed",
         "decision indicates source mutation",
     )
-    require(
-        bool(candidates),
-        "candidate_batch_empty",
-        "candidate_set has no materialized candidates",
-    )
-    require(
-        len(rendered) == len(candidates),
-        "render_count_mismatch",
-        "rendered candidate count does not match candidate count",
-    )
+    if not prerequisite_required:
+        require(
+            bool(candidates),
+            "candidate_batch_empty",
+            "candidate_set has no materialized candidates",
+        )
+        require(
+            len(rendered) == len(candidates),
+            "render_count_mismatch",
+            "rendered candidate count does not match candidate count",
+        )
     require(
         render_mode in {"none", "prepare_only", "compile_export_crop_evaluate"},
         "render_mode_unknown",
         "render_results does not declare a known render_mode",
     )
-    require(
-        ranking_ids == candidate_ids,
-        "ranking_id_mismatch",
-        "candidate rankings do not cover exactly the materialized candidates",
-    )
+    if not prerequisite_required:
+        require(
+            ranking_ids == candidate_ids,
+            "ranking_id_mismatch",
+            "candidate rankings do not cover exactly the materialized candidates",
+        )
     require(
         all(candidate.get("apply_authority") == "review_only" for candidate in candidates),
         "non_review_only_candidate",
@@ -4914,11 +4917,12 @@ def _quality_search_contract_verdict(
         )
         for candidate in candidates
     )
-    require(
-        all_candidates_have_bound_selector,
-        "candidate_selectors_unbound",
-        "at least one materialized candidate lacks a bound source selector",
-    )
+    if not prerequisite_required:
+        require(
+            all_candidates_have_bound_selector,
+            "candidate_selectors_unbound",
+            "at least one materialized candidate lacks a bound source selector",
+        )
     if render_mode == "compile_export_crop_evaluate":
         require(
             visual_evidence.get("state") == "complete",
@@ -5011,6 +5015,8 @@ def _quality_search_contract_verdict(
         "contract_status": "pass" if not failures else "fail",
         "failures": failures,
         "checks": {
+            "decision_kind": decision.get("kind"),
+            "prerequisite_required": prerequisite_required,
             "candidate_count": len(candidates),
             "rendered_count": len(rendered),
             "render_mode": render_mode,
@@ -5763,6 +5769,7 @@ def _execution_decision(
             "reason": "progress blocker prevents candidate search",
             "blocking_classifications": blocking,
             "selected_candidate_id": None,
+            "source_mutation": "not_performed",
             "evidence_score": 0.0,
             "policy_score": 0.0,
         }

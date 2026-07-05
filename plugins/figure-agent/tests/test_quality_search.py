@@ -402,6 +402,54 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert decision == payload["decision"]
 
 
+def test_quality_search_prerequisite_stop_is_depone_pass(
+    tmp_path: Path, monkeypatch
+) -> None:
+    driver = _driver_with_basin()
+    driver["action"] = "run_critique"
+    driver["reason"] = "grounded critique is stale"
+    driver["safe_command"] = "/fig_critique fig_demo"
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: driver,
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    _write_minimal_fixture(
+        tmp_path,
+        name="fig_demo",
+        tex_source="% =============== Column F -- Mechanical =================\n"
+        "\\node at (0,0) {Coulomb repulsion electrode air gap mechanical};\n",
+    )
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="blocked prerequisite smoke",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    assert payload["decision"]["kind"] == "prerequisite_required"
+    assert payload["decision"]["source_mutation"] == "not_performed"
+    assert payload["candidate_set"]["candidates"] == []
+    verdict = payload["depone"]["verdict"]
+    assert verdict["contract_status"] == "pass"
+    assert verdict["failures"] == []
+    assert verdict["checks"]["decision_kind"] == "prerequisite_required"
+    assert verdict["checks"]["prerequisite_required"] is True
+    assert verdict["checks"]["candidate_count"] == 0
+
+
 def test_quality_search_execute_binds_family_specs_to_panel_regions(
     tmp_path: Path, monkeypatch
 ) -> None:
