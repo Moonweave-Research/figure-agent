@@ -1,0 +1,16 @@
+{
+  "schema": "figure-agent.human-decision-record.v1",
+  "fixture": "fig1_overview_v5d_redraw_001_vault",
+  "packet_schema": "figure-agent.design-direction-packet.v1",
+  "packet_path": "docs/decision-packets/2026-07-05-fig1-v5-human-pick/fig1_overview_v5d_visual_direction.json",
+  "packet_recommendation": "keep_current_style",
+  "packet_timestamp": "2026-07-05T16:20:00+09:00",
+  "decision_kind": "keep_current_style",
+  "agent_recommendation": "Record v5d as the selected finished visual direction and stop routing it back into open-ended iteration.",
+  "human_decision": "keep_current_style",
+  "human_note": "Human selected v5d as the finished-quality visual direction and said v5f still feels unfinished.",
+  "follow_up": {
+    "implementation_slice": "Use fig1_overview_v5d_redraw_001_vault as the selected visual direction. Keep source, accepted, golden, final, and release state unchanged until a separate explicit operation authorizes them."
+  },
+  "mutation_boundary": "no_source_mutation"
+}

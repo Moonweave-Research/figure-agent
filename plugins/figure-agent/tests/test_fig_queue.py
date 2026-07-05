@@ -237,6 +237,43 @@ def test_queue_preserves_executable_action_while_surfacing_release_blocker(
     assert row["bottleneck_category"] == "human_acceptance"
 
 
+def test_queue_preserves_release_decision_from_driver_status(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    release_decision = {
+        "schema": "figure-agent.release-decision-summary.v1",
+        "state": "non_release_requested",
+        "decision_kind": "keep_current_style",
+        "route": "selected_visual_direction",
+        "record_path": "docs/decision-records/alpha.json",
+    }
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(
+            name,
+            action=fig_queue.fig_driver.ACTION_COMPLETE,
+            stop_boundary=None,
+            first_blocker="release_deferred_for_selected_visual_direction",
+        )
+        summary["status"]["release_decision"] = release_decision
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["action"] == fig_queue.fig_driver.ACTION_COMPLETE
+    assert row["release_decision"]["state"] == "non_release_requested"
+    assert row["release_decision"]["route"] == "selected_visual_direction"
+
+
 def test_queue_blocks_adjudicate_when_existing_file_requires_manual_review(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

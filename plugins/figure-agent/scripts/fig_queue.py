@@ -251,6 +251,9 @@ def _row_from_summary(
         "blocking_source": blocking_source_for_driver_summary(summary),
         "requires_human": requires_human_for_driver_summary(summary),
     }
+    release_decision = status.get("release_decision")
+    if isinstance(release_decision, dict):
+        row["release_decision"] = release_decision
     if release_blocker is not None:
         row["release_blocker"] = release_blocker
         row["release_blockers"] = release_blockers

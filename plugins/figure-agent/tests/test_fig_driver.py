@@ -992,6 +992,68 @@ def test_review_mode_runs_fig_loop_when_prerequisites_closed(
     assert summary["stop_boundary"] is None
 
 
+def test_review_mode_completes_when_human_selected_visual_direction(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_basic_fixture(tmp_path)
+    synthetic_status = _release_ready_status()
+    synthetic_status.update(
+        {
+            "acceptance_state": "NOT_DECLARED",
+            "release_ready": False,
+            "final_ready": False,
+            "release_decision": {
+                "state": "non_release_requested",
+                "decision_kind": "keep_current_style",
+                "route": "selected_visual_direction",
+                "record_path": "docs/decision-records/demo.json",
+            },
+            "status_explanation": {
+                "summary": "valid human decision record routes this fixture.",
+                "first_blocker": {
+                    "code": "release_deferred_for_selected_visual_direction",
+                    "category": "human_blocker",
+                    "message": "valid human decision record routes this fixture.",
+                    "next_command": None,
+                    "manual": True,
+                },
+                "buckets": {
+                    "plugin_state": [],
+                    "fixture_freshness": [],
+                    "human_blockers": [],
+                },
+            },
+        }
+    )
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    monkeypatch.setattr(
+        fig_driver.closeout_mod,
+        "closeout_report",
+        lambda _name, repo_root: {
+            "closeout_complete": False,
+            "next_action": '/fig_loop driver_demo --goal "<goal>"',
+            "blocking_step_ids": ["loop_rerun"],
+            "steps": [
+                {
+                    "id": "loop_rerun",
+                    "state": "needs_action",
+                    "command": '/fig_loop driver_demo --goal "<goal>"',
+                }
+            ],
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "complete"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] is None
+    assert "release_deferred_for_selected_visual_direction" in summary["reason"]
+    assert summary["status"]["release_decision"]["route"] == "selected_visual_direction"
+    assert "closeout" not in summary
+
+
 def test_review_mode_uses_closeout_next_action_before_rerunning_loop(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

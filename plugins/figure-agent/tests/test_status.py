@@ -1413,17 +1413,20 @@ def _write_human_decision_record(
     fixture: str,
     *,
     decision_kind: str = "accept_current_generated_export",
+    packet_schema: str = "figure-agent.release-decision-packet.v1",
+    packet_recommendation: str | None = None,
 ) -> Path:
     records_root.mkdir(parents=True, exist_ok=True)
     path = records_root / f"{fixture}_{decision_kind}.json"
+    recommendation = packet_recommendation or decision_kind
     path.write_text(
         json.dumps(
             {
                 "schema": "figure-agent.human-decision-record.v1",
                 "fixture": fixture,
-                "packet_schema": "figure-agent.release-decision-packet.v1",
+                "packet_schema": packet_schema,
                 "packet_path": f"docs/decision-packets/{fixture}.json",
-                "packet_recommendation": "accept_current_generated_export",
+                "packet_recommendation": recommendation,
                 "packet_timestamp": "2026-07-01T00:00:00Z",
                 "decision_kind": decision_kind,
                 "agent_recommendation": "Record the release decision separately.",
@@ -3293,6 +3296,38 @@ def test_status_routes_defer_record_to_non_release_work(
     assert "dogfood" in result["next"]
     blocker = result["status_explanation"]["first_blocker"]
     assert blocker["code"] == "release_deferred_for_dogfood"
+
+
+def test_status_routes_design_direction_record_to_selected_visual_direction(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    fig_dir = workspace / "examples" / "selectedfig"
+    fig_dir.parent.mkdir(parents=True)
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    records_root = workspace / "docs" / "decision-records"
+    _write_human_decision_record(
+        records_root,
+        fig_dir.name,
+        decision_kind="keep_current_style",
+        packet_schema="figure-agent.design-direction-packet.v1",
+        packet_recommendation="keep_current_style",
+    )
+    monkeypatch.setattr(status_mod, "DECISION_RECORDS_ROOT", records_root)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["acceptance_state"] == "NOT_DECLARED"
+    assert result["release_ready"] is False
+    assert result["release_decision"]["state"] == "non_release_requested"
+    assert result["release_decision"]["decision_kind"] == "keep_current_style"
+    assert result["release_decision"]["route"] == "selected_visual_direction"
+    assert "selected_visual_direction" in result["next"]
+    assert "closeout-accept" not in result["next"]
+    blocker = result["status_explanation"]["first_blocker"]
+    assert blocker["code"] == "release_deferred_for_selected_visual_direction"
 
 
 def test_status_does_not_call_content_fresh_exports_stale_for_acceptance_gate(

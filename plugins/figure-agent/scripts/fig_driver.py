@@ -98,11 +98,13 @@ _STATUS_COMPACT_KEYS = (
     "golden_ready",
     "release_ready",
     "final_ready",
+    "release_decision",
     "publication_gate_state",
     "publication_gate_failures",
     "critique_lint_summary",
     "spine_evidence",
 )
+_SELECTED_VISUAL_DIRECTION_BLOCKER = "release_deferred_for_selected_visual_direction"
 
 _FORBIDDEN_BY_MODE: dict[str, list[str]] = {
     "authoring": [
@@ -274,6 +276,22 @@ def _summary(
 def _status_for(example_dir: Path) -> dict[str, Any]:
     """Thin wrapper to keep tests monkeypatch-friendly."""
     return infer_stage(example_dir)
+
+
+def _first_status_blocker_code(status: dict[str, Any]) -> str | None:
+    status_explanation = status.get("status_explanation")
+    if not isinstance(status_explanation, dict):
+        return None
+    first_blocker = status_explanation.get("first_blocker")
+    if not isinstance(first_blocker, dict):
+        return None
+    code = first_blocker.get("code")
+    if not isinstance(code, str):
+        return None
+    stripped = code.strip()
+    if not stripped or stripped == "none":
+        return None
+    return stripped
 
 
 is_safe_fixture_name = fixture_identity.is_safe_fixture_name
@@ -749,6 +767,16 @@ def _select_action(
                 reason=(
                     "critique.md is fresh but critique_adjudication.yaml is "
                     "missing or stale; scaffold adjudication next."
+                ),
+            )
+        if _first_status_blocker_code(status) == _SELECTED_VISUAL_DIRECTION_BLOCKER:
+            return make(
+                ACTION_COMPLETE,
+                safe_command=None,
+                stop_boundary=None,
+                reason=(
+                    "human design-direction record selected this visual direction; "
+                    "review mode does not rerun fig_loop for release-state closure."
                 ),
             )
         if loop_checkpoint is not None:
