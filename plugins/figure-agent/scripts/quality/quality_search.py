@@ -3486,6 +3486,8 @@ def _quality_search_contract_verdict(
     visual_evidence: dict[str, Any],
     candidate_rankings: list[dict[str, Any]],
     decision: dict[str, Any],
+    selected_semantic_precheck: dict[str, Any] | None = None,
+    selected_review_packet: dict[str, Any] | None = None,
     paths: runtime_paths.RuntimePaths,
 ) -> dict[str, Any]:
     failures: list[dict[str, str]] = []
@@ -3573,6 +3575,33 @@ def _quality_search_contract_verdict(
         "source_hash_drift",
         "current source hash differs from source_context hash",
     )
+    selected_candidate_ready = (
+        decision.get("candidate_state") == NON_MARGINAL_REVIEW_CANDIDATE_STATE
+    )
+    selected_apply_readiness = (
+        selected_review_packet.get("apply_readiness")
+        if isinstance(selected_review_packet, dict)
+        and isinstance(selected_review_packet.get("apply_readiness"), dict)
+        else {}
+    )
+    if selected_candidate_ready:
+        require(
+            isinstance(selected_semantic_precheck, dict)
+            and selected_semantic_precheck.get("status") == "pass",
+            "selected_semantic_precheck_not_passed",
+            "selected non-marginal candidate lacks passing semantic precheck",
+        )
+        require(
+            isinstance(selected_review_packet, dict)
+            and selected_review_packet.get("status") == "ready",
+            "selected_review_packet_not_ready",
+            "selected non-marginal candidate lacks ready review packet",
+        )
+        require(
+            selected_apply_readiness.get("status") == "ready_for_local_acceptance",
+            "selected_apply_readiness_not_ready",
+            "selected non-marginal candidate is not ready for local acceptance",
+        )
     all_candidates_have_bound_selector = all(
         any(
             isinstance(selector, dict) and selector.get("binding_state") == "bound"
@@ -3696,6 +3725,18 @@ def _quality_search_contract_verdict(
             "source_hash": source_context.get("source_hash"),
             "selected_candidate_id": decision.get("selected_candidate_id"),
             "selected_family": decision.get("selected_family"),
+            "selected_candidate_state": decision.get("candidate_state"),
+            "selected_semantic_precheck_status": (
+                selected_semantic_precheck.get("status")
+                if isinstance(selected_semantic_precheck, dict)
+                else None
+            ),
+            "selected_review_packet_status": (
+                selected_review_packet.get("status")
+                if isinstance(selected_review_packet, dict)
+                else None
+            ),
+            "selected_apply_readiness_status": selected_apply_readiness.get("status"),
         },
         "mutation_boundary": {
             "source_mutation": "not_performed",
@@ -3821,6 +3862,8 @@ def _depone_evidence_pack(
     visual_evidence: dict[str, Any],
     candidate_rankings: list[dict[str, Any]],
     decision: dict[str, Any],
+    selected_semantic_precheck: dict[str, Any] | None = None,
+    selected_review_packet: dict[str, Any] | None = None,
     paths: runtime_paths.RuntimePaths,
 ) -> dict[str, dict[str, Any] | str]:
     verdict = _quality_search_contract_verdict(
@@ -3834,6 +3877,8 @@ def _depone_evidence_pack(
         visual_evidence=visual_evidence,
         candidate_rankings=candidate_rankings,
         decision=decision,
+        selected_semantic_precheck=selected_semantic_precheck,
+        selected_review_packet=selected_review_packet,
         paths=paths,
     )
     verdict_hash = _sha256_bytes(_json_bytes(verdict))
@@ -3864,6 +3909,10 @@ def _depone_evidence_pack(
         f"- contract_status: {verdict['contract_status']}\n"
         f"- candidate_count: {verdict['checks']['candidate_count']}\n"
         f"- selected_family: {verdict['checks']['selected_family']}\n"
+        f"- selected_semantic_precheck_status: "
+        f"{verdict['checks']['selected_semantic_precheck_status']}\n"
+        f"- selected_apply_readiness_status: "
+        f"{verdict['checks']['selected_apply_readiness_status']}\n"
         "- source_mutation: not_performed\n"
         "- release_mutation: forbidden\n"
     )
@@ -4757,6 +4806,8 @@ def build_quality_search_execution(
         visual_evidence=visual_evidence,
         candidate_rankings=candidate_rankings,
         decision=decision,
+        selected_semantic_precheck=selected_semantic_precheck,
+        selected_review_packet=selected_review_packet,
         paths=paths,
     )
     artifacts = {
