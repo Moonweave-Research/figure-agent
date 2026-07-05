@@ -926,6 +926,17 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     assert "(11.72, 2.36) rectangle (12.28, 2.58);" in composite_operation[
         "replacement"
     ]
+    v2_composite = quality_search._panel_f_auto_composite_lane_replacement(  # type: ignore[attr-defined]
+        lines=f"{tex_source}\n".splitlines(keepends=True),
+        selector={"panel": "F", "line_start": 3, "line_end": len(tex_source.splitlines())},
+        template_id="v5d_panel_f_auto_composite_force_anchor_electrode_v1",
+    )
+    assert v2_composite is not None
+    _, v2_replacement, _, _ = v2_composite
+    assert "quality-search C002 Coulomb/electrode/air-gap lane" in v2_replacement
+    assert "quality-search C003 mechanical anchor lane" in v2_replacement
+    assert "quality-search C005 electrode lead lane" in v2_replacement
+    assert "(13.13, 2.56) circle (0.046);" in v2_replacement
     by_family = {item["family"]: item for item in payload["candidate_scores"]}
     assert by_family["panel_f_qtr_apparatus_lane"]["operation_scale"] == "panel_block"
 
@@ -2112,6 +2123,32 @@ def test_quality_search_stale_gate_is_template_variant_aware() -> None:
     assert by_id["QS002"]["stale_duplicate_experience_family"] is False
     assert by_id["QS002"]["policy"]["duplicate_experience_penalty"] == 0.0
     assert by_id["QS002"]["policy"]["duplicate_experience_scope"] == "family_template"
+
+
+def test_quality_search_auto_composite_prefers_fresh_electrode_variant() -> None:
+    plan = {
+        "state": {
+            "memory": {
+                "family_templates": {
+                    (
+                        "panel_f_auto_composite_lane::"
+                        "v5d_panel_f_auto_composite_force_anchor_v1"
+                    ): {"attempts": 1},
+                    (
+                        "panel_f_auto_composite_lane::"
+                        "v5d_panel_f_auto_composite_force_anchor_electrode_v1"
+                    ): {"attempts": 0},
+                }
+            }
+        }
+    }
+
+    assert (
+        quality_search._preferred_template_id_for_plan(  # type: ignore[attr-defined]
+            "panel_f_auto_composite_lane", plan
+        )
+        == "v5d_panel_f_auto_composite_force_anchor_electrode_v1"
+    )
 
 
 def test_quality_search_execution_skips_stale_duplicate_family() -> None:

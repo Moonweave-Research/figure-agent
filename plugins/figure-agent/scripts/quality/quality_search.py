@@ -59,6 +59,9 @@ PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID = "v5d_panel_f_mechanical_anchor_lane
 PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID = "v5d_panel_f_leader_left_lane_v1"
 PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID = "v5d_panel_f_electrode_lead_lane_v1"
 PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID = "v5d_panel_f_auto_composite_force_anchor_v1"
+PANEL_F_AUTO_COMPOSITE_ELECTRODE_TEMPLATE_ID = (
+    "v5d_panel_f_auto_composite_force_anchor_electrode_v1"
+)
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -1723,6 +1726,47 @@ def _preferred_template_id(family: str) -> str:
     return LINE_WIDTH_TEMPLATE_ID
 
 
+def _memory_template_attempts(
+    plan: dict[str, Any],
+    *,
+    family: str,
+    template_id: str,
+) -> int:
+    state = plan.get("state") if isinstance(plan.get("state"), dict) else {}
+    memory = state.get("memory") if isinstance(state.get("memory"), dict) else {}
+    family_templates = (
+        memory.get("family_templates")
+        if isinstance(memory.get("family_templates"), dict)
+        else {}
+    )
+    entry = family_templates.get(f"{family}::{template_id}")
+    if not isinstance(entry, dict):
+        return 0
+    return _bounded_int(entry.get("attempts"), default=0)
+
+
+def _preferred_template_id_for_plan(family: str, plan: dict[str, Any]) -> str:
+    preferred = _preferred_template_id(family)
+    if family != "panel_f_auto_composite_lane":
+        return preferred
+    if (
+        _memory_template_attempts(
+            plan,
+            family=family,
+            template_id=PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID,
+        )
+        > 0
+        and _memory_template_attempts(
+            plan,
+            family=family,
+            template_id=PANEL_F_AUTO_COMPOSITE_ELECTRODE_TEMPLATE_ID,
+        )
+        <= 0
+    ):
+        return PANEL_F_AUTO_COMPOSITE_ELECTRODE_TEMPLATE_ID
+    return preferred
+
+
 def _line_width_replacement(
     *,
     lines: list[str],
@@ -2680,10 +2724,21 @@ def _panel_f_electrode_lead_lane_template_applied(block: str) -> bool:
     return all(fragment in block for fragment in required_fragments)
 
 
+def _panel_f_electrode_lead_connection_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search C005 electrode lead lane",
+        "(12.65, 3.50) -- (12.96, 3.50)",
+        "(13.13, 2.56) circle (0.046);",
+        "(13.18, 0.4) rectangle (13.43, 2.6);",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
 def _panel_f_electrode_lead_lane_replacement(
     *,
     lines: list[str],
     selector: dict[str, Any],
+    include_qtr_label: bool = True,
 ) -> tuple[str, str, int, int] | None:
     if str(selector.get("panel") or "").upper() != "F":
         return None
@@ -2705,9 +2760,14 @@ def _panel_f_electrode_lead_lane_replacement(
     )
     if not all(label in original for label in required):
         return None
-    if _panel_f_electrode_lead_lane_template_applied(original):
+    if include_qtr_label and _panel_f_electrode_lead_lane_template_applied(original):
         return None
-    replacements = (
+    if (
+        not include_qtr_label
+        and _panel_f_electrode_lead_connection_template_applied(original)
+    ):
+        return None
+    replacements = [
         (
             "\\draw[cGray!75!black, line width=0.28pt]\n"
             "  (12.65, 3.5) -- (13.23, 3.5) -- (13.23, 2.6);",
@@ -2717,19 +2777,6 @@ def _panel_f_electrode_lead_lane_replacement(
             "\\fill[cGray!82!black] (13.13, 2.56) circle (0.046);\n"
             "\\draw[cGray!58!black, line width=0.26pt]\n"
             "  (13.13, 2.56) -- (13.23, 2.44);",
-        ),
-        (
-            "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
-            "\\node[labelMute, anchor=west, inner sep=1pt,\n"
-            "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
-            "  at (12.35, 2) {$q_{tr}$};",
-            "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
-            "\\node[labelMute, anchor=west, inner sep=1pt,\n"
-            "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
-            "  at (12.35, 2) {$q_{tr}$};\n"
-            "\\node[labelMute, anchor=west, inner sep=1pt,\n"
-            "      font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cRed!62!black]\n"
-            "  at (12.35, 1.82) {trapped charge};",
         ),
         (
             "\\fill[cGray!25] (13.23, 0.4) rectangle (13.4, 2.6);",
@@ -2742,7 +2789,24 @@ def _panel_f_electrode_lead_lane_replacement(
             "\\draw[cGray!82!black, line width=0.54pt]\n"
             "  (13.18, 0.4) rectangle (13.43, 2.6);",
         ),
-    )
+    ]
+    if include_qtr_label:
+        replacements.insert(
+            1,
+            (
+                "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
+                "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+                "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
+                "  at (12.35, 2) {$q_{tr}$};",
+                "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
+                "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+                "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
+                "  at (12.35, 2) {$q_{tr}$};\n"
+                "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+                "      font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cRed!62!black]\n"
+                "  at (12.35, 1.82) {trapped charge};",
+            ),
+        )
     replacement = original
     for old, new in replacements:
         if old not in replacement:
@@ -2772,6 +2836,12 @@ def _panel_f_auto_composite_lane_template_applied(block: str) -> bool:
     return all(fragment in block for fragment in required_fragments)
 
 
+def _panel_f_auto_composite_electrode_template_applied(block: str) -> bool:
+    return _panel_f_auto_composite_lane_template_applied(
+        block
+    ) and _panel_f_electrode_lead_connection_template_applied(block)
+
+
 def _replace_lines_with_block(
     lines: list[str],
     *,
@@ -2788,6 +2858,7 @@ def _panel_f_auto_composite_lane_replacement(
     *,
     lines: list[str],
     selector: dict[str, Any],
+    template_id: str = PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID,
 ) -> tuple[str, str, int, int] | None:
     if str(selector.get("panel") or "").upper() != "F":
         return None
@@ -2799,7 +2870,10 @@ def _panel_f_auto_composite_lane_replacement(
     if line_start < 1 or line_end < line_start or line_end > len(lines):
         return None
     original = "".join(lines[line_start - 1 : line_end])
-    if _panel_f_auto_composite_lane_template_applied(original):
+    if template_id == PANEL_F_AUTO_COMPOSITE_ELECTRODE_TEMPLATE_ID:
+        if _panel_f_auto_composite_electrode_template_applied(original):
+            return None
+    elif _panel_f_auto_composite_lane_template_applied(original):
         return None
 
     force_gap = _panel_f_force_gap_lane_replacement(lines=lines, selector=selector)
@@ -2827,6 +2901,27 @@ def _panel_f_auto_composite_lane_replacement(
         return None
     if final_replacement == original:
         return None
+    if template_id == PANEL_F_AUTO_COMPOSITE_ELECTRODE_TEMPLATE_ID:
+        anchor_lines = _replace_lines_with_block(
+            force_lines,
+            line_start=line_start,
+            line_end=anchor_end,
+            replacement=final_replacement,
+        )
+        electrode_selector = dict(selector)
+        electrode_selector["line_end"] = (
+            line_start + len(final_replacement.splitlines()) - 1
+        )
+        electrode_lead = _panel_f_electrode_lead_lane_replacement(
+            lines=anchor_lines, selector=electrode_selector, include_qtr_label=False
+        )
+        if electrode_lead is None:
+            return None
+        _, final_replacement, electrode_start, electrode_end = electrode_lead
+        if electrode_start != line_start or electrode_end != int(
+            electrode_selector["line_end"]
+        ):
+            return None
     protected = (
         "q_{tr}",
         "trapped charge",
@@ -2837,7 +2932,10 @@ def _panel_f_auto_composite_lane_replacement(
     )
     if not all(label in final_replacement for label in protected):
         return None
-    if not _panel_f_auto_composite_lane_template_applied(final_replacement):
+    if template_id == PANEL_F_AUTO_COMPOSITE_ELECTRODE_TEMPLATE_ID:
+        if not _panel_f_auto_composite_electrode_template_applied(final_replacement):
+            return None
+    elif not _panel_f_auto_composite_lane_template_applied(final_replacement):
         return None
     return original, final_replacement, line_start, line_end
 
@@ -3639,8 +3737,11 @@ def _candidate_operation_for_spec(
             "panel": "F",
         }
     if family == "panel_f_auto_composite_lane":
+        template_id = str(
+            spec.get("template_id") or PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID
+        )
         composite_block = _panel_f_auto_composite_lane_replacement(
-            lines=lines, selector=selector
+            lines=lines, selector=selector, template_id=template_id
         )
         if composite_block is not None:
             original, new_text, line_start, line_end = composite_block
@@ -3648,7 +3749,7 @@ def _candidate_operation_for_spec(
                 "kind": "replace_text",
                 "semantic_kind": "quality_search_panel_f_auto_composite_lane_panel_block",
                 "operation_scale": "panel_block",
-                "template_id": PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID,
+                "template_id": template_id,
                 "panel": "F",
                 "path": source_ref,
                 "line_start": line_start,
@@ -3662,7 +3763,7 @@ def _candidate_operation_for_spec(
             "candidate_id": str(spec.get("id")),
             "family": family,
             "operation_scale": "panel_block",
-            "template_id": PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID,
+            "template_id": template_id,
             "panel": "F",
         }
     if family == "panel_f_density_relief":
@@ -5020,7 +5121,7 @@ def _candidate_specs_from_plan(
         target_panels = _target_panels_from_hint(hypothesis)
         source_selectors = _source_selectors_for_panels(source_context, target_panels)
         operation_scale = _preferred_operation_scale(family)
-        template_id = _preferred_template_id(family)
+        template_id = _preferred_template_id_for_plan(family, plan)
         specs.append(
             {
                 "id": f"QS{index:03d}",
