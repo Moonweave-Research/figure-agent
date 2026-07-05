@@ -57,6 +57,7 @@ PANEL_F_QTR_APPARATUS_LANE_TEMPLATE_ID = "v5d_panel_f_qtr_apparatus_lane_v1"
 PANEL_F_FORCE_GAP_LANE_TEMPLATE_ID = "v5d_panel_f_force_gap_lane_v1"
 PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID = "v5d_panel_f_mechanical_anchor_lane_v1"
 PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID = "v5d_panel_f_leader_left_lane_v1"
+PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID = "v5d_panel_f_electrode_lead_lane_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -306,6 +307,25 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "move the trapped-charge label into the left reading lane",
             "route the q_tr leader above the cantilever instead of across its body",
             "keep Coulomb, electrode, and air-gap labels stable while fixing label flow",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_electrode_lead_lane": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+        ],
+        "design_moves": [
+            "make the source-to-electrode lead read as one intentional connection",
+            "add a clear electrode contact landing instead of a box-wire collision",
+            "keep the bottom electrode visually distinct from the source apparatus",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -952,6 +972,33 @@ def _micro_defect_hypotheses(name: str, driver: dict[str, Any]) -> list[dict[str
                 ),
             }
         )
+        hypotheses.append(
+            {
+                "fixture": name,
+                "family": "panel_f_electrode_lead_lane",
+                "source": "unlinked_micro_defect",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "micro_defect_ids": ids,
+                    "reason": (
+                        "Panel F needs a fresh source-to-electrode lead candidate after "
+                        "charge, force, anchor, and leader lanes are stale"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert stale Panel F apparatus evidence into a bounded lead-routing candidate"
+                ),
+                "expected_visual_movement": (
+                    "bias source connects to the electrode through a clear contact landing"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, or electrode-lead semantics"
+                ),
+            }
+        )
     return hypotheses
 
 
@@ -997,7 +1044,7 @@ def _patch_hypotheses(
                 _detector_hypotheses(name, ledger),
                 limit=4,
             ),
-            limit=5,
+            limit=6,
         )
     goal_hypotheses = _goal_hypotheses(name, goal)
     if goal_hypotheses:
@@ -1579,6 +1626,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_leader_left_lane":
         return "panel_block"
+    if family == "panel_f_electrode_lead_lane":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -1609,6 +1658,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID
     if family == "panel_f_leader_left_lane":
         return PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID
+    if family == "panel_f_electrode_lead_lane":
+        return PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -2558,6 +2609,98 @@ def _panel_f_leader_left_lane_replacement(
     return original, replacement, line_start, line_end
 
 
+def _panel_f_electrode_lead_lane_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search C005 electrode lead lane",
+        "(12.65, 3.50) -- (12.96, 3.50)",
+        "(13.13, 2.56) circle (0.046);",
+        "(13.18, 0.4) rectangle (13.43, 2.6);",
+        "at (12.35, 1.82) {trapped charge};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_electrode_lead_lane_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    if str(selector.get("panel") or "").upper() != "F":
+        return None
+    try:
+        line_start = int(selector["line_start"])
+        line_end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if line_start < 1 or line_end < line_start or line_end > len(lines):
+        return None
+    original = "".join(lines[line_start - 1 : line_end])
+    required = (
+        "q_{tr}",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "Mechanical",
+    )
+    if not all(label in original for label in required):
+        return None
+    if _panel_f_electrode_lead_lane_template_applied(original):
+        return None
+    replacements = (
+        (
+            "\\draw[cGray!75!black, line width=0.28pt]\n"
+            "  (12.65, 3.5) -- (13.23, 3.5) -- (13.23, 2.6);",
+            "% quality-search C005 electrode lead lane -- review-only candidate\n"
+            "\\draw[cGray!62!black, line width=0.36pt, rounded corners=1.0pt]\n"
+            "  (12.65, 3.50) -- (12.96, 3.50) -- (13.13, 3.06) -- (13.13, 2.56);\n"
+            "\\fill[cGray!82!black] (13.13, 2.56) circle (0.046);\n"
+            "\\draw[cGray!58!black, line width=0.26pt]\n"
+            "  (13.13, 2.56) -- (13.23, 2.44);",
+        ),
+        (
+            "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
+            "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+            "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
+            "  at (12.35, 2) {$q_{tr}$};",
+            "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
+            "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+            "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
+            "  at (12.35, 2) {$q_{tr}$};\n"
+            "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+            "      font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cRed!62!black]\n"
+            "  at (12.35, 1.82) {trapped charge};",
+        ),
+        (
+            "\\fill[cGray!25] (13.23, 0.4) rectangle (13.4, 2.6);",
+            "\\fill[cGray!22] (13.18, 0.4) rectangle (13.43, 2.6);\n"
+            "\\fill[cGray!45!black, opacity=0.18] (13.18, 2.40) rectangle (13.43, 2.62);",
+        ),
+        (
+            "\\draw[cGray!85!black, line width=0.50pt]\n"
+            "  (13.23, 0.4) rectangle (13.4, 2.6);",
+            "\\draw[cGray!82!black, line width=0.54pt]\n"
+            "  (13.18, 0.4) rectangle (13.43, 2.6);",
+        ),
+    )
+    replacement = original
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    protected = (
+        "q_{tr}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+    )
+    if not all(label in replacement for label in protected):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _panel_f_boundary_polish_template_applied(block: str) -> bool:
     required_fragments = (
         "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
@@ -3053,6 +3196,7 @@ def _candidate_operation_for_spec(
         "panel_f_force_gap_lane": "F",
         "panel_f_mechanical_anchor_lane": "F",
         "panel_f_leader_left_lane": "F",
+        "panel_f_electrode_lead_lane": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -3325,6 +3469,33 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_electrode_lead_lane":
+        electrode_lead_block = _panel_f_electrode_lead_lane_replacement(
+            lines=lines, selector=selector
+        )
+        if electrode_lead_block is not None:
+            original, new_text, line_start, line_end = electrode_lead_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_electrode_lead_lane_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_electrode_lead_lane_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -3386,6 +3557,7 @@ def _candidate_operation_for_spec(
         "panel_f_force_gap_lane": 0.8,
         "panel_f_mechanical_anchor_lane": 0.8,
         "panel_f_leader_left_lane": 0.8,
+        "panel_f_electrode_lead_lane": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -4768,6 +4940,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_force_gap_lane": 0.91,
             "panel_f_mechanical_anchor_lane": 0.9,
             "panel_f_leader_left_lane": 0.9,
+            "panel_f_electrode_lead_lane": 0.9,
             "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,

@@ -793,6 +793,7 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     assert "panel_f_force_gap_lane" in families
     assert "panel_f_mechanical_anchor_lane" in families
     assert "panel_f_leader_left_lane" in families
+    assert "panel_f_electrode_lead_lane" in families
     qtr_apparatus = [
         item
         for item in payload["candidate_set"]["candidates"]
@@ -878,6 +879,27 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
         "replacement"
     ]
     assert "at (9.72, 2.76) {trapped charge};" in leader_operation[
+        "replacement"
+    ]
+    electrode_lead = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_electrode_lead_lane"
+    ][0]
+    electrode_operation = electrode_lead["operations"][0]
+    assert electrode_lead["operation_scale"] == "panel_block"
+    assert electrode_lead["template_id"] == "v5d_panel_f_electrode_lead_lane_v1"
+    assert "quality-search C005 electrode lead lane" in electrode_operation[
+        "replacement"
+    ]
+    assert "(12.65, 3.50) -- (12.96, 3.50)" in electrode_operation[
+        "replacement"
+    ]
+    assert "(13.13, 2.56) circle (0.046);" in electrode_operation["replacement"]
+    assert "(13.18, 0.4) rectangle (13.43, 2.6);" in electrode_operation[
+        "replacement"
+    ]
+    assert "at (12.35, 1.82) {trapped charge};" in electrode_operation[
         "replacement"
     ]
     by_family = {item["family"]: item for item in payload["candidate_scores"]}
