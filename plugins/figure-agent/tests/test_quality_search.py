@@ -733,10 +733,23 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
             "\\node[labelMute, anchor=west, inner sep=1pt,",
             "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]",
             "  at (12.35, 2) {$q_{tr}$};",
-            "\\node at (13.64, 1.62) {electrode};",
-            "\\node at (10.85, 1.35) {Coulomb};",
-            "\\node at (10.85, 1.27) {repulsion};",
-            "\\node at (11.88, 0.31) {air gap};",
+            "\\fill[cGray!25] (13.23, 0.4) rectangle (13.4, 2.6);",
+            "\\draw[cGray!85!black, line width=0.50pt]",
+            "  (13.23, 0.4) rectangle (13.4, 2.6);",
+            "\\node[labelMute, anchor=south, rotate=270,",
+            "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont,",
+            "      text=cGray!85!black] at (13.58, 1.5) {electrode};",
+            "\\draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt]",
+            "  (11.55, 1.3) -- (10.85, 1.3);",
+            "\\node[font=\\sffamily\\bfseries\\fontsize{7}{8.4}\\selectfont, text=cRed!80!black,",
+            "      anchor=south east] at (10.85, 1.35) {Coulomb};",
+            "\\node[labelMute, anchor=north east, font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont,",
+            "      text=cRed!80!black] at (10.85, 1.27) {repulsion};",
+            "\\draw[<->, cGray!55!black, line width=0.30pt]",
+            "  (11.5, 0.55) -- (13.23, 0.55);",
+            "\\node[labelMute, anchor=north, inner sep=1pt,",
+            "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont]",
+            "  at (12.365, 0.5) {air gap};",
             "\\node at (11.70, 4.56) {mechanical};",
             "% v8.6 ROW 2 END",
         ]
@@ -791,6 +804,21 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     assert "circle (0.155);" in label_operation["replacement"]
     assert "at (9.58, 2.84) {$q_{tr}$};" in label_operation["replacement"]
     assert "at (9.58, 3.12) {trapped charge};" in label_operation["replacement"]
+    force_gap = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_force_gap_lane"
+    ][0]
+    force_operation = force_gap["operations"][0]
+    assert force_gap["operation_scale"] == "panel_block"
+    assert force_gap["template_id"] == "v5d_panel_f_force_gap_lane_v1"
+    assert "quality-search C002 Coulomb/electrode/air-gap lane" in force_operation[
+        "replacement"
+    ]
+    assert "(11.62, 1.30) -- (10.42, 1.30);" in force_operation["replacement"]
+    assert "at (10.42, 1.40) {Coulomb};" in force_operation["replacement"]
+    assert "at (10.42, 1.20) {repulsion};" in force_operation["replacement"]
+    assert "(11.14, 0.68) -- (13.23, 0.68);" in force_operation["replacement"]
     by_family = {item["family"]: item for item in payload["candidate_scores"]}
     assert by_family["panel_f_qtr_apparatus_lane"]["operation_scale"] == "panel_block"
 
