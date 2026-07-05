@@ -2319,6 +2319,98 @@ def test_quality_search_memory_events_record_render_positive_neutral_outcomes(
     assert index["families"]["hierarchy_rebalance"]["neutral"] == 1
 
 
+def test_quality_search_memory_events_attach_selected_acceptance_recommendation(
+    tmp_path: Path,
+) -> None:
+    candidate_set = {
+        "candidates": [
+            {
+                "id": "QS001",
+                "edit_family": "panel_f_qtr_apparatus_lane",
+                "target": {"panel": "F", "subregion": "qtr_apparatus"},
+            }
+        ]
+    }
+    visual_evidence = {
+        "state": "complete",
+        "full_comparisons": [
+            {
+                "candidate_id": "QS001",
+                "visual_deltas": {"changed_pixel_ratio": 0.005},
+            }
+        ],
+        "panel_comparisons": [
+            {
+                "candidate_id": "QS001",
+                "contact_sheet": ".scratch/run/QS001_panel_F_contact_sheet.png",
+                "visual_deltas": {"changed_pixel_ratio": 0.03},
+            }
+        ],
+    }
+    recommendation = {
+        "status": "auto_accept_recommended",
+        "candidate_id": "QS001",
+        "recommendation": "accept",
+        "authority": "recommendation_only",
+        "is_acceptance_artifact": False,
+        "source_mutation": "not_performed",
+        "evidence": {
+            "semantic_precheck_status": "pass",
+            "review_packet_status": "ready",
+            "apply_readiness_status": "ready_for_local_acceptance",
+        },
+    }
+    paths = quality_search.runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    payload = quality_search._quality_search_memory_events(
+        name="fig_demo",
+        run_id="run-001",
+        candidate_set=candidate_set,
+        candidate_rankings=[
+            {
+                "candidate_id": "QS001",
+                "rank_score": 0.81,
+                "render_status": "rendered_needs_human_review",
+                "effective_apply_authority": "review_only",
+            }
+        ],
+        visual_evidence=visual_evidence,
+        paths=paths,
+        run_dir=tmp_path / ".scratch" / "run-001",
+        selected_acceptance_recommendation=recommendation,
+    )
+
+    assert payload["event_count"] == 1
+    event = payload["events"][0]
+    assert event["event_type"] == "candidate_ranked"
+    assert event["outcome"]["state"] == "neutral"
+    assert event["outcome"]["reason"] == "auto_accept_recommended_not_applied"
+    assert event["post_state"]["acceptance_recommendation_status"] == (
+        "auto_accept_recommended"
+    )
+    assert event["post_state"]["acceptance_recommendation"] == "accept"
+    assert event["post_state"]["acceptance_recommendation_authority"] == (
+        "recommendation_only"
+    )
+    assert event["post_state"]["semantic_precheck_status"] == "pass"
+    assert event["post_state"]["review_packet_status"] == "ready"
+    assert event["post_state"]["apply_readiness_status"] == (
+        "ready_for_local_acceptance"
+    )
+    assert event["metrics"]["acceptance_recommendation_status"] == (
+        "auto_accept_recommended"
+    )
+    assert event["metrics"]["semantic_precheck_status"] == "pass"
+    assert event["metrics"]["apply_readiness_status"] == "ready_for_local_acceptance"
+    assert (
+        ".scratch/run-001/selected_acceptance_recommendation_000.json"
+        in event["outcome"]["evidence_paths"]
+    )
+
+
 def test_quality_search_prefers_later_visible_panel_style_token(
     tmp_path: Path, monkeypatch
 ) -> None:

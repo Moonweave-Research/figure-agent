@@ -3301,6 +3301,7 @@ def _quality_search_memory_events(
     visual_evidence: dict[str, Any],
     paths: runtime_paths.RuntimePaths,
     run_dir: Path,
+    selected_acceptance_recommendation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     base = {
         "schema": "figure-agent.quality-search-memory-events.v0",
@@ -3336,6 +3337,11 @@ def _quality_search_memory_events(
     }
     events: list[dict[str, Any]] = []
     source_artifact = _workspace_relative(paths, run_dir / "visual_evidence_000.json")
+    recommendation_candidate_id = (
+        str(selected_acceptance_recommendation.get("candidate_id") or "")
+        if isinstance(selected_acceptance_recommendation, dict)
+        else ""
+    )
     created_at = _utc_stamp()
     for candidate in candidates:
         candidate_id = str(candidate.get("id") or "")
@@ -3362,6 +3368,12 @@ def _quality_search_memory_events(
             if render_positive
             else "render_or_pixel_evidence_failed"
         )
+        post_state = {
+            "render_status": str(ranking.get("render_status") or "unknown"),
+            "effective_apply_authority": str(
+                ranking.get("effective_apply_authority") or "unknown"
+            ),
+        }
         target = candidate.get("target") if isinstance(candidate.get("target"), dict) else {}
         payload = {
             "fixture": name,
@@ -3381,6 +3393,56 @@ def _quality_search_memory_events(
                 path = contact_sheets[0].get("path")
                 if isinstance(path, str):
                     evidence_paths.append(path)
+        recommendation_evidence = {}
+        if (
+            isinstance(selected_acceptance_recommendation, dict)
+            and candidate_id == recommendation_candidate_id
+        ):
+            recommendation_evidence = (
+                selected_acceptance_recommendation.get("evidence")
+                if isinstance(selected_acceptance_recommendation.get("evidence"), dict)
+                else {}
+            )
+            post_state.update(
+                {
+                    "acceptance_recommendation_status": str(
+                        selected_acceptance_recommendation.get("status") or "unknown"
+                    ),
+                    "acceptance_recommendation": str(
+                        selected_acceptance_recommendation.get("recommendation")
+                        or "unknown"
+                    ),
+                    "acceptance_recommendation_authority": str(
+                        selected_acceptance_recommendation.get("authority") or "unknown"
+                    ),
+                    "semantic_precheck_status": str(
+                        recommendation_evidence.get("semantic_precheck_status")
+                        or "unknown"
+                    ),
+                    "review_packet_status": str(
+                        recommendation_evidence.get("review_packet_status")
+                        or "unknown"
+                    ),
+                    "apply_readiness_status": str(
+                        recommendation_evidence.get("apply_readiness_status")
+                        or "unknown"
+                    ),
+                }
+            )
+            if selected_acceptance_recommendation.get("status") == "auto_accept_recommended":
+                outcome_reason = "auto_accept_recommended_not_applied"
+            evidence_paths.extend(
+                [
+                    _workspace_relative(
+                        paths, run_dir / "selected_semantic_precheck_000.json"
+                    ),
+                    _workspace_relative(paths, run_dir / "selected_review_packet_000.json"),
+                    _workspace_relative(
+                        paths,
+                        run_dir / "selected_acceptance_recommendation_000.json",
+                    ),
+                ]
+            )
         events.append(
             {
                 "schema": "figure-agent.quality-memory-event.v1",
@@ -3400,12 +3462,7 @@ def _quality_search_memory_events(
                     "subregion": str(target.get("subregion") or "unknown"),
                 },
                 "pre_state": {},
-                "post_state": {
-                    "render_status": str(ranking.get("render_status") or "unknown"),
-                    "effective_apply_authority": str(
-                        ranking.get("effective_apply_authority") or "unknown"
-                    ),
-                },
+                "post_state": post_state,
                 "outcome": {
                     "state": outcome_state,
                     "quality_movement": "neutral" if render_positive else None,
@@ -3416,6 +3473,18 @@ def _quality_search_memory_events(
                     "candidate_rank_score": ranking.get("rank_score"),
                     "full_changed_pixel_ratio": full_ratio,
                     "panel_changed_pixel_ratio": panel_ratio,
+                    "semantic_precheck_status": recommendation_evidence.get(
+                        "semantic_precheck_status"
+                    ),
+                    "apply_readiness_status": recommendation_evidence.get(
+                        "apply_readiness_status"
+                    ),
+                    "acceptance_recommendation_status": (
+                        selected_acceptance_recommendation.get("status")
+                        if isinstance(selected_acceptance_recommendation, dict)
+                        and candidate_id == recommendation_candidate_id
+                        else None
+                    ),
                 },
             }
         )
@@ -4841,6 +4910,7 @@ def build_quality_search_execution(
         visual_evidence=visual_evidence,
         paths=paths,
         run_dir=run_dir,
+        selected_acceptance_recommendation=selected_acceptance_recommendation,
     )
     policy = {
         "schema": "figure-agent.quality-search-policy.v0",
