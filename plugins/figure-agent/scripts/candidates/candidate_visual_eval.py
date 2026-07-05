@@ -88,6 +88,25 @@ def _diff_pixels(
     }
 
 
+def _pixels_on_canvas(
+    pixels: list[tuple[int, int, int]],
+    *,
+    source_width: int,
+    source_height: int,
+    canvas_width: int,
+    canvas_height: int,
+) -> list[tuple[int, int, int]]:
+    background = (255, 255, 255)
+    canvas = [background] * (canvas_width * canvas_height)
+    for y in range(source_height):
+        source_offset = y * source_width
+        canvas_offset = y * canvas_width
+        canvas[canvas_offset : canvas_offset + source_width] = pixels[
+            source_offset : source_offset + source_width
+        ]
+    return canvas
+
+
 def compare_image_pair(before_path: Path, after_path: Path) -> dict[str, Any]:
     before_width, before_height, before_pixels = _read_image(before_path)
     after_width, after_height, after_pixels = _read_image(after_path)
@@ -102,11 +121,27 @@ def compare_image_pair(before_path: Path, after_path: Path) -> dict[str, Any]:
         "sha256": _sha256_file(after_path),
     }
     if (before_width, before_height) != (after_width, after_height):
+        canvas_width = max(before_width, after_width)
+        canvas_height = max(before_height, after_height)
+        before_pixels = _pixels_on_canvas(
+            before_pixels,
+            source_width=before_width,
+            source_height=before_height,
+            canvas_width=canvas_width,
+            canvas_height=canvas_height,
+        )
+        after_pixels = _pixels_on_canvas(
+            after_pixels,
+            source_width=after_width,
+            source_height=after_height,
+            canvas_width=canvas_width,
+            canvas_height=canvas_height,
+        )
         return {
             "status": "rendered_needs_human_review",
             "before": before,
             "after": after,
-            "visual_deltas": {},
+            "visual_deltas": _diff_pixels(before_pixels, after_pixels, canvas_width),
             "diagnostics": [
                 {
                     "stage": "evaluate",

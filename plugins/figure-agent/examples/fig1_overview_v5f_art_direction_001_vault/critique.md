@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig1_overview_v5f_art_direction_001_vault
-generated_at: '2026-07-05T01:38:05Z'
+generated_at: '2026-07-05T01:57:07Z'
 generator: critique_brief.py
 generator_version: sha256:51345bad8b6bdef113dcd48ad8b73a3a99b7cf99af028b5d3b3ea4c348690946
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:40ea197593e3dff34365ecb1a84d0e5b375ba2d9b6171d29e5bbd32fa99195f5
+critique_input_hash: sha256:2e169bf69eef0e420312139c08dbe42766d985fb7f8ee29136268ddcb1f2068e
 verdict: revise
 audit_enumeration:
   structural_completeness:
@@ -346,7 +346,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:40ea197593e3dff34365ecb1a84d0e5b375ba2d9b6171d29e5bbd32fa99195f5
+  assessed_artifact_hash: sha256:2e169bf69eef0e420312139c08dbe42766d985fb7f8ee29136268ddcb1f2068e
   benchmark_level: needs_human_art_direction
   confidence: medium
   blockers: []
@@ -1362,6 +1362,50 @@ micro_defects:
   accept_simplification_reason: intentional_schematic
   accept_simplification_rationale: 'VC046 is not a defect: the Vs label remains readable and belongs to the existing instrument
     schematic, not to a newly introduced Panel F clash.'
+- id: M_VC047
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/visual_clash/VC047_Vs.png
+  kind: drawing_order_suspect
+  severity: NIT
+  observation: VC047 flags the existing Panel E Vs label on its instrument fill after the Panel C hero-finish apply; crop
+    review treats it as readable instrument labeling rather than a new semantic or release-blocking clash.
+  linked_finding_id: ''
+  visual_clash_ref: VC047
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'VC047 is not a defect: the Vs label remains readable inside the Panel E instrument
+    schematic and is unrelated to the Panel C hero-finish edit.'
+- id: M_LP001
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/print_178mm.png
+  kind: label_curve_near_label
+  severity: NIT
+  observation: LP001 flags the shallow label near the Panel C deep-escape curve after the hero-finish candidate. The label
+    remains readable, but this is kept under C001 for human comparison of the stronger Panel C hierarchy.
+  linked_finding_id: C001
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: LP001
+  undeclared_geometry_ref: ''
+  status: open
+  accept_simplification_reason: ''
+  accept_simplification_rationale: ''
+- id: M_LP002
+  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/print_178mm.png
+  kind: label_stacked_on_reference_line
+  severity: NIT
+  observation: LP002 flags the mobility-edge label near its reference line after the Panel C hero-finish candidate. The
+    mobility-edge label remains semantically correct, but clearance should be considered during the human art-direction
+    comparison before promotion.
+  linked_finding_id: C001
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: LP002
+  undeclared_geometry_ref: ''
+  status: open
+  accept_simplification_reason: ''
+  accept_simplification_rationale: ''
 - id: M_UG001
   crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/full_q1.png
   kind: line_crosses_label
@@ -3186,22 +3230,6 @@ micro_defects:
   accept_simplification_rationale: 'UG114 is not a release-blocking defect: source line 2113 semantic path crosses text ''localized'';
     in the current v5f render the flagged geometry is convention acceptable, visually distinct, and does not change the scientific
     reading.'
-- id: M_UG115
-  crop: examples/fig1_overview_v5f_art_direction_001_vault/build/audit_crops/full_q1.png
-  kind: label_crosses_semantic_path
-  severity: NIT
-  observation: UG115 flags label_crosses_semantic_path near 'trap'; current v5f crop/render review treats this as the intentional
-    left-margin trapped-charge leader unless separately escalated.
-  linked_finding_id: ''
-  visual_clash_ref: ''
-  text_boundary_ref: ''
-  label_path_ref: ''
-  undeclared_geometry_ref: UG115
-  status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'UG115 is not a release-blocking defect: source line 2126 semantic path crosses text ''trap'';
-    in the current v5f render the flagged geometry is an intentional trapped-charge callout leader, visually distinct, and
-    does not change the scientific reading.'
 crop_audit_log:
 - crop_id: VC001_S
   path: build/audit_crops/visual_clash/VC001_S.png

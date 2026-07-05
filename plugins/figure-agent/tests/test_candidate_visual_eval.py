@@ -35,14 +35,16 @@ def test_compare_image_pair_dimension_mismatch_needs_human_review(tmp_path: Path
     before = tmp_path / "before.ppm"
     after = tmp_path / "after.ppm"
     _write_ppm(before, 2, 2, [(255, 255, 255)] * 4)
-    _write_ppm(after, 3, 2, [(255, 255, 255)] * 6)
+    _write_ppm(after, 3, 2, [(255, 255, 255)] * 5 + [(0, 0, 0)])
 
     payload = candidate_visual_eval.compare_image_pair(before, after)
 
     assert payload["status"] == "rendered_needs_human_review"
     assert payload["before"]["dimensions"] == [2, 2]
     assert payload["after"]["dimensions"] == [3, 2]
-    assert payload["visual_deltas"] == {}
+    assert payload["visual_deltas"]["pixel_diff_max"] == 255
+    assert payload["visual_deltas"]["changed_pixel_ratio"] == 1 / 6
+    assert payload["visual_deltas"]["changed_bbox"] == [2, 1, 2, 1]
     assert payload["diagnostics"] == [
         {
             "stage": "evaluate",

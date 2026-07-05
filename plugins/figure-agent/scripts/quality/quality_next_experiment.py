@@ -16,6 +16,7 @@ SCHEMA = "figure-agent.quality-next-experiment.v1"
 FORBIDDEN_TOKENS = ("--write", "--apply", "--accept", "--overwrite", "--force")
 DEFAULT_FAMILIES = (
     "hierarchy_rebalance",
+    "panel_c_hero_finish",
     "apparatus_strengthen",
     "panel_f_final_finish",
     "panel_f_boundary_polish",

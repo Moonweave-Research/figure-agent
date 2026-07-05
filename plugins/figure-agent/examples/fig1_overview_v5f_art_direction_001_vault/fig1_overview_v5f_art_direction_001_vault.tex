@@ -636,8 +636,8 @@
 % right lane so Panel C reads as one composed trap landscape rather than a stack
 % of labels. The fills are intentionally low-opacity and color-bound to the
 % shallow/deep grammar; they are semantic grouping, not decorative background.
-\fill[cBlue!12, opacity=0.20, rounded corners=1pt] (10.38, 7.18) rectangle (13.55, 7.82);
-\fill[cRed!12, opacity=0.18, rounded corners=1pt] (10.38, 5.55) rectangle (13.55, 6.55);
+\fill[cBlue!16, opacity=0.26, rounded corners=1pt] (10.38, 7.18) rectangle (13.55, 7.82);
+\fill[cRed!16, opacity=0.24, rounded corners=1pt] (10.38, 5.55) rectangle (13.55, 6.55);
 \draw[cGray!45!black, densely dashed, line width=0.30pt] (10.55, 8.55) -- (12.10, 8.55);
 % Panel C iter 7 [Panel C 15-loop, 2026-05-26]: 'vacuum' italic -> upright to
 % match 'mobility edge'. Both are aux dashed reference levels; auxiliary tier
@@ -695,18 +695,18 @@
 % saturation gives the distribution visible body without crossing into solid-
 % color territory. Strokes unchanged at 0.60/0.65 — bell silhouette stays
 % clean over the higher-saturation fill.
-\fill[cBlue!52, opacity=0.85]
+\fill[cBlue!56, opacity=0.90]
   plot[domain=7.20:7.80, samples=25, smooth]
     ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x)
   -- (10.55, 7.80) -- (10.55, 7.20) -- cycle;
-\draw[cBlue!80!black, line width=0.60pt]
+\draw[cBlue!84!black, line width=0.68pt]
   plot[domain=7.20:7.80, samples=25, smooth]
     ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x);
-\fill[cRed!52, opacity=0.80]
+\fill[cRed!56, opacity=0.86]
   plot[domain=5.40:6.70, samples=30, smooth]
     ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
   -- (10.55, 6.70) -- (10.55, 5.40) -- cycle;
-\draw[cRed!80!black, line width=0.65pt]
+\draw[cRed!84!black, line width=0.72pt]
   plot[domain=5.40:6.70, samples=30, smooth]
     ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x);
 % C-R2/C-R3 v8.6 [briefing relax R2, 2026-05-26]: REMOVED — v8.5 1.1mm
@@ -754,10 +754,10 @@
 % separates from Gaussian (which fills to x ~11.05 peak). Trap dots remain
 % ball-shaded spheres ON the line; line endpoints no longer compete.
 \foreach \tY in {7.55, 7.35} {
-  \draw[cBlue!80!black, line width=1.15pt, line cap=butt] (10.95, \tY) -- (11.55, \tY);
+  \draw[cBlue!80!black, line width=1.24pt, line cap=butt] (10.95, \tY) -- (11.55, \tY);
 }
 \foreach \tY in {6.20, 5.85} {
-  \draw[cRed!80!black, line width=1.15pt, line cap=butt] (10.95, \tY) -- (11.55, \tY);
+  \draw[cRed!80!black, line width=1.24pt, line cap=butt] (10.95, \tY) -- (11.55, \tY);
 }
 % ⊖ markers on each trap line (1 per level, color-matched)
 % v8: ⊖ → ● on energy levels (same rationale as C-L3 sites)
@@ -876,10 +876,10 @@
 % companion typography reads as a clean L/R pair.
 \node[labelMute, anchor=south,
       font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
-      text=cGray!65!black] at (8.35, 8.78) {real space};
+      text=cGray!58!black] at (8.35, 8.78) {real space};
 \node[labelMute, anchor=south,
       font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
-      text=cGray!65!black] at (12.20, 8.78) {energy diagram};
+      text=cGray!58!black] at (12.20, 8.78) {energy diagram};
 % Cycle 3 / C415 (2026-05-22): hero panel-subtitle bumped 6.5pt italic →
 % 7pt semibold upright so the trap-landscape headline carries the Panel C
 % hero identity at thumbnail. Companion sub-labels ("real space" / "energy
@@ -888,8 +888,8 @@
 % hierarchy relative to companion sub-labels ('real space' / 'energy diagram'
 % at 6pt italic). Stays below panel-letter 8pt cap so no letter-tier conflict.
 \node[anchor=south,
-      font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont,
-      text=cGray!78!black] at (10.40, 8.92) {localized trap model};
+      font=\sffamily\bfseries\fontsize{7.4}{8.8}\selectfont,
+      text=cGray!84!black] at (10.40, 8.95) {localized trap model};
 
 % ============================================================
 % Row 2 — NC main-text Fig 1 clean white background.

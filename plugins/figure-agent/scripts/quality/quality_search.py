@@ -47,6 +47,7 @@ FAMILY_REGISTRY_SCHEMA = "figure-agent.quality-search-family-registry.v0"
 APPARATUS_PANEL_F_TEMPLATE_ID = "v5f_panel_f_redraw_overlay_v1"
 PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID = "v5f_panel_f_boundary_polish_v1"
 PANEL_F_FINAL_FINISH_TEMPLATE_ID = "v5f_panel_f_final_finish_v1"
+PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
 APPARATUS_PANEL_F_OVERLAY_MARKER = "v5f Panel F art-direction redraw overlay"
@@ -83,6 +84,26 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "panel_E",
             "panel_F",
         ],
+    },
+    "panel_c_hero_finish": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "localized trap model",
+            "mobility edge",
+            "shallow",
+            "deep",
+            "real space",
+            "energy diagram",
+            "poly(S-r-DIB) thin film",
+            "$\\Delta E_t$",
+        ],
+        "design_moves": [
+            "make Panel C the first-read hero without changing labels",
+            "strengthen DOS and trap-level evidence before row-2 apparatus detail",
+            "quiet companion labels while preserving the real-space/energy-diagram split",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_C"],
     },
     "apparatus_strengthen": {
         "builder": "panel_region_spec",
@@ -441,6 +462,22 @@ def _step_out_hypotheses(
             },
             {
                 **common,
+                "family": "panel_c_hero_finish",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["C"],
+                    "reason": (
+                        "make the localized trap model the Row 2 first-read "
+                        "mechanism before smaller apparatus evidence"
+                    ),
+                },
+                "expected_visual_movement": (
+                    "Panel C reads as the Row 2 hero with stronger trap-landscape "
+                    "DOS and level evidence"
+                ),
+            },
+            {
+                **common,
                 "family": "apparatus_strengthen",
                 "target_scope": "panel",
                 "target_hint": {
@@ -610,7 +647,7 @@ def _patch_hypotheses(
         return []
     basin_hypotheses = _step_out_hypotheses(name, driver, ledger)
     if basin_hypotheses:
-        return basin_hypotheses[:5]
+        return basin_hypotheses[:6]
     goal_hypotheses = _goal_hypotheses(name, goal)
     if goal_hypotheses:
         return _merge_hypotheses(
@@ -1164,6 +1201,8 @@ def _candidate_hash(payload: dict[str, Any]) -> str:
 def _preferred_operation_scale(family: str) -> str:
     if family == "apparatus_strengthen":
         return "panel_block"
+    if family == "panel_c_hero_finish":
+        return "panel_block"
     if family == "panel_f_boundary_polish":
         return "panel_block"
     if family == "panel_f_final_finish":
@@ -1178,6 +1217,8 @@ def _preferred_operation_scale(family: str) -> str:
 def _preferred_template_id(family: str) -> str:
     if family == "apparatus_strengthen":
         return APPARATUS_PANEL_F_TEMPLATE_ID
+    if family == "panel_c_hero_finish":
+        return PANEL_C_HERO_FINISH_TEMPLATE_ID
     if family == "panel_f_boundary_polish":
         return PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID
     if family == "panel_f_final_finish":
@@ -1218,6 +1259,133 @@ def _line_width_replacement(
         )
         replacement = (line, replacement_line, offset)
     return replacement
+
+
+def _panel_c_block_range(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[int, int] | None:
+    if str(selector.get("panel") or "").upper() != "C":
+        return None
+    try:
+        start = int(selector["line_start"])
+        end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if start < 1 or end < start or end > len(lines):
+        return None
+    marker_index = None
+    for index in range(start - 1, end):
+        line = lines[index]
+        if "Panel C" in line and "Localized traps" in line:
+            marker_index = index
+            break
+    if marker_index is None:
+        return None
+    line_end = end
+    for index in range(marker_index + 1, end):
+        line = lines[index]
+        if ("Row 2" in line and "NC main-text" in line) or (
+            "Column F" in line and "Mechanical" in line
+        ):
+            line_end = index
+            break
+    return marker_index + 1, line_end
+
+
+def _panel_c_hero_has_protected_labels(block: str) -> bool:
+    lowered = block.lower()
+    return all(
+        (
+            "localized trap model" in lowered,
+            "mobility edge" in lowered,
+            "shallow" in lowered,
+            "deep" in lowered,
+            "real space" in lowered,
+            "energy diagram" in lowered,
+            "poly(s-r-dib) thin film" in lowered,
+            "$\\Delta E_t$" in block,
+        )
+    )
+
+
+def _panel_c_hero_finish_template_applied(block: str) -> bool:
+    required_fragments = (
+        "\\fill[cBlue!16, opacity=0.26, rounded corners=1pt]",
+        "\\fill[cRed!16, opacity=0.24, rounded corners=1pt]",
+        "\\draw[cBlue!84!black, line width=0.68pt]",
+        "\\draw[cRed!84!black, line width=0.72pt]",
+        "line width=1.24pt, line cap=butt",
+        "fontsize{7.4}{8.8}",
+        "text=cGray!84!black] at (10.40, 8.95) {localized trap model};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_c_hero_finish_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_c_block_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_c_hero_has_protected_labels(original):
+        return None
+    if _panel_c_hero_finish_template_applied(original):
+        return None
+    replacement = original
+    replacements = (
+        (
+            "\\fill[cBlue!12, opacity=0.20, rounded corners=1pt] "
+            "(10.38, 7.18) rectangle (13.55, 7.82);",
+            "\\fill[cBlue!16, opacity=0.26, rounded corners=1pt] "
+            "(10.38, 7.18) rectangle (13.55, 7.82);",
+        ),
+        (
+            "\\fill[cRed!12, opacity=0.18, rounded corners=1pt] "
+            "(10.38, 5.55) rectangle (13.55, 6.55);",
+            "\\fill[cRed!16, opacity=0.24, rounded corners=1pt] "
+            "(10.38, 5.55) rectangle (13.55, 6.55);",
+        ),
+        ("\\fill[cBlue!52, opacity=0.85]", "\\fill[cBlue!56, opacity=0.90]"),
+        (
+            "\\draw[cBlue!80!black, line width=0.60pt]",
+            "\\draw[cBlue!84!black, line width=0.68pt]",
+        ),
+        ("\\fill[cRed!52, opacity=0.80]", "\\fill[cRed!56, opacity=0.86]"),
+        (
+            "\\draw[cRed!80!black, line width=0.65pt]",
+            "\\draw[cRed!84!black, line width=0.72pt]",
+        ),
+        (
+            "line width=1.15pt, line cap=butt",
+            "line width=1.24pt, line cap=butt",
+        ),
+        (
+            "text=cGray!65!black] at (8.35, 8.78) {real space};",
+            "text=cGray!58!black] at (8.35, 8.78) {real space};",
+        ),
+        (
+            "text=cGray!65!black] at (12.20, 8.78) {energy diagram};",
+            "text=cGray!58!black] at (12.20, 8.78) {energy diagram};",
+        ),
+        ("fontsize{7}{8.4}", "fontsize{7.4}{8.8}"),
+        (
+            "text=cGray!78!black] at (10.40, 8.92) {localized trap model};",
+            "text=cGray!84!black] at (10.40, 8.95) {localized trap model};",
+        ),
+    )
+    for old, new in replacements:
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    if not _panel_c_hero_has_protected_labels(replacement):
+        return None
+    return original, replacement, line_start, line_end
 
 
 def _panel_f_overlay_range(
@@ -1776,6 +1944,7 @@ def _candidate_operation_for_spec(
         return None, {"code": "no_bound_source_selector", "candidate_id": str(spec.get("id"))}
     preferred_panel = {
         "hierarchy_rebalance": "C",
+        "panel_c_hero_finish": "C",
         "apparatus_strengthen": "F",
         "panel_f_boundary_polish": "F",
         "panel_f_final_finish": "F",
@@ -1838,6 +2007,31 @@ def _candidate_operation_for_spec(
             "operation_scale": "panel_block",
             "template_id": PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID,
             "panel": "F",
+        }
+    if family == "panel_c_hero_finish":
+        panel_c_block = _panel_c_hero_finish_replacement(lines=lines, selector=selector)
+        if panel_c_block is not None:
+            original, new_text, line_start, line_end = panel_c_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_c_hero_finish_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_C_HERO_FINISH_TEMPLATE_ID,
+                "panel": "C",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_c_hero_finish_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_C_HERO_FINISH_TEMPLATE_ID,
+            "panel": "C",
         }
     if family == "panel_f_final_finish":
         finish_block = _panel_f_final_finish_replacement(lines=lines, selector=selector)
@@ -3081,6 +3275,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
     if operation_kind == "step_out_experiment":
         weights = {
             "hierarchy_rebalance": 0.82,
+            "panel_c_hero_finish": 0.88,
             "apparatus_strengthen": 0.78,
             "panel_f_final_finish": 0.86,
             "panel_f_boundary_polish": 0.84,

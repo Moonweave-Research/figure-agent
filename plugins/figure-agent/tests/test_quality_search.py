@@ -177,6 +177,7 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
     assert payload["search_policy"]["kind"] == "epsilon_greedy_family_bandit_v1"
     assert payload["search_policy"]["bandit_decision"]["selected_family"] in {
         "hierarchy_rebalance",
+        "panel_c_hero_finish",
         "apparatus_strengthen",
         "panel_f_final_finish",
         "panel_f_boundary_polish",
@@ -184,8 +185,8 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
     }
     assert payload["next_recommended_operation"]["candidate_families"][:3] == [
         "hierarchy_rebalance",
+        "panel_c_hero_finish",
         "apparatus_strengthen",
-        "panel_f_final_finish",
     ]
     release = [item for item in payload["classifications"] if item["kind"] == "release_blocker"][0]
     assert release["id"] == "acceptance_not_declared"
@@ -196,6 +197,7 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
     assert "human_gate" not in json.dumps(payload["next_recommended_operation"])
     assert {item["family"] for item in payload["patch_hypotheses"]} >= {
         "hierarchy_rebalance",
+        "panel_c_hero_finish",
         "apparatus_strengthen",
     }
     density = [item for item in payload["patch_hypotheses"] if item["family"] == "density_reduce"][
@@ -339,9 +341,10 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert payload["render_results"]["rendered"] == []
     assert payload["visual_evidence"]["state"] == "not_applicable"
     assert payload["memory_events"]["event_count"] == 0
-    assert len(payload["candidate_specs"]) == 6
+    assert len(payload["candidate_specs"]) == 7
     assert {item["family"] for item in payload["candidate_specs"]} >= {
         "hierarchy_rebalance",
+        "panel_c_hero_finish",
         "apparatus_strengthen",
         "panel_f_final_finish",
         "panel_f_boundary_polish",
@@ -993,6 +996,112 @@ def test_quality_search_panel_f_final_finish_emits_post_boundary_panel_block(
     assert "(11.38,2.58) .. controls (10.84,3.42)" in operation["replacement"]
     assert "at (9.62, 3.32) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
     assert "at (9.62, 3.58) {trapped charge};" in operation["replacement"]
+
+
+def test_quality_search_panel_c_hero_finish_emits_panel_block_candidate(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_with_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\node at (8.70, 6.03) {poly(S-r-DIB) thin film};",
+            "\\fill[cBlue!12, opacity=0.20, rounded corners=1pt] "
+            "(10.38, 7.18) rectangle (13.55, 7.82);",
+            "\\fill[cRed!12, opacity=0.18, rounded corners=1pt] "
+            "(10.38, 5.55) rectangle (13.55, 6.55);",
+            "\\node at (12.08, 8.06) {mobility edge};",
+            "\\fill[cBlue!52, opacity=0.85]",
+            "  plot[domain=7.20:7.80, samples=25, smooth]",
+            "    ({10.55 + 0.45*exp(-(\\x-7.49)*(\\x-7.49)/0.01445)}, \\x)",
+            "  -- (10.55, 7.80) -- (10.55, 7.20) -- cycle;",
+            "\\draw[cBlue!80!black, line width=0.60pt]",
+            "  plot[domain=7.20:7.80, samples=25, smooth]",
+            "    ({10.55 + 0.45*exp(-(\\x-7.49)*(\\x-7.49)/0.01445)}, \\x);",
+            "\\fill[cRed!52, opacity=0.80]",
+            "  plot[domain=5.40:6.70, samples=30, smooth]",
+            "    ({10.55 + 0.55*exp(-(\\x-6.05)*(\\x-6.05)/0.0648)}, \\x)",
+            "  -- (10.55, 6.70) -- (10.55, 5.40) -- cycle;",
+            "\\draw[cRed!80!black, line width=0.65pt]",
+            "  plot[domain=5.40:6.70, samples=30, smooth]",
+            "    ({10.55 + 0.55*exp(-(\\x-6.05)*(\\x-6.05)/0.0648)}, \\x);",
+            "\\foreach \\tY in {7.55, 7.35} {",
+            "  \\draw[cBlue!80!black, line width=1.15pt, line cap=butt] "
+            "(10.95, \\tY) -- (11.55, \\tY);",
+            "}",
+            "\\foreach \\tY in {6.20, 5.85} {",
+            "  \\draw[cRed!80!black, line width=1.15pt, line cap=butt] "
+            "(10.95, \\tY) -- (11.55, \\tY);",
+            "}",
+            "\\node at (12.15, 7.58) {shallow};",
+            "\\node at (11.60, 6.02) {deep};",
+            "\\node at (13.42, 7.00) {$\\Delta E_t$};",
+            "\\node[labelMute, anchor=south,",
+            "      font=\\sffamily\\itshape\\fontsize{6}{7.2}\\selectfont,",
+            "      text=cGray!65!black] at (8.35, 8.78) {real space};",
+            "\\node[labelMute, anchor=south,",
+            "      font=\\sffamily\\itshape\\fontsize{6}{7.2}\\selectfont,",
+            "      text=cGray!65!black] at (12.20, 8.78) {energy diagram};",
+            "\\node[anchor=south,",
+            "      font=\\sffamily\\bfseries\\fontsize{7}{8.4}\\selectfont,",
+            "      text=cGray!78!black] at (10.40, 8.92) {localized trap model};",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\node at (9.60, 3.36) {trapped charge};",
+            "\\node at (9.72, 1.54) {Coulomb};",
+            "\\node at (9.73, 1.45) {repulsion};",
+            "\\node at (11.88, 0.31) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="Panel C hero finish typography authority",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    panel_c = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_c_hero_finish"
+    ][0]
+    operation = panel_c["operations"][0]
+    assert panel_c["operation_scale"] == "panel_block"
+    assert panel_c["template_id"] == "v5f_panel_c_hero_finish_v1"
+    assert panel_c["target"]["panel"] == "C"
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "v5f_panel_c_hero_finish_v1"
+    assert operation["panel"] == "C"
+    assert "\\fill[cBlue!16, opacity=0.26, rounded corners=1pt]" in operation["replacement"]
+    assert "\\fill[cRed!16, opacity=0.24, rounded corners=1pt]" in operation["replacement"]
+    assert "\\draw[cBlue!84!black, line width=0.68pt]" in operation["replacement"]
+    assert "\\draw[cRed!84!black, line width=0.72pt]" in operation["replacement"]
+    assert "line width=1.24pt, line cap=butt" in operation["replacement"]
+    assert "fontsize{7.4}{8.8}" in operation["replacement"]
+    assert "text=cGray!58!black] at (8.35, 8.78) {real space};" in operation["replacement"]
+    assert "text=cGray!58!black] at (12.20, 8.78) {energy diagram};" in operation[
+        "replacement"
+    ]
 
 
 def test_quality_search_density_reduce_emits_panel_e_block_candidate(
