@@ -547,20 +547,53 @@ def _unlinked_micro_defect_ids(driver: dict[str, Any]) -> list[str]:
     return [item for item in ids if isinstance(item, str) and item.strip()]
 
 
+def _allows_stale_critique_search(
+    driver: dict[str, Any],
+    *,
+    allow_stale_critique_search: bool,
+) -> bool:
+    if not allow_stale_critique_search:
+        return False
+    if str(driver.get("action") or "") != "run_critique":
+        return False
+    status = driver.get("status")
+    critique_state = (
+        str(status.get("critique_state") or "").upper()
+        if isinstance(status, dict)
+        else ""
+    )
+    return critique_state == "STALE"
+
+
 def _classifications(
     driver: dict[str, Any],
     ledger: dict[str, Any],
+    *,
+    allow_stale_critique_search: bool = False,
 ) -> list[dict[str, Any]]:
     classifications: list[dict[str, Any]] = []
     action = str(driver.get("action") or "")
     if action in PROGRESS_ACTIONS:
+        bypass_search_block = _allows_stale_critique_search(
+            driver,
+            allow_stale_critique_search=allow_stale_critique_search,
+        )
         classifications.append(
             {
                 "kind": "progress_blocker",
                 "id": action,
-                "blocks_search": True,
+                "blocks_search": not bypass_search_block,
+                "blocks_release": True,
                 "safe_command": driver.get("safe_command"),
                 "reason": driver.get("reason"),
+                **(
+                    {
+                        "diagnostic_bypass": "stale_critique_search",
+                        "bypass_scope": "candidate_generation_only_no_release_authority",
+                    }
+                    if bypass_search_block
+                    else {}
+                ),
             }
         )
 
@@ -1082,8 +1115,12 @@ def _patch_hypotheses(
     ledger: dict[str, Any],
     *,
     goal: str = "",
+    allow_stale_critique_search: bool = False,
 ) -> list[dict[str, Any]]:
-    if str(driver.get("action") or "") in PROGRESS_ACTIONS:
+    if str(driver.get("action") or "") in PROGRESS_ACTIONS and not _allows_stale_critique_search(
+        driver,
+        allow_stale_critique_search=allow_stale_critique_search,
+    ):
         return []
     basin_hypotheses = _step_out_hypotheses(name, driver, ledger)
     micro_hypotheses = _micro_defect_hypotheses(name, driver)
@@ -1413,6 +1450,7 @@ def build_quality_search_plan(
     name: str,
     *,
     goal: str,
+    allow_stale_critique_search: bool = False,
     plugin_root: Path | None = None,
     workspace_root: Path | None = None,
 ) -> dict[str, Any]:
@@ -1441,11 +1479,23 @@ def build_quality_search_plan(
         )
     except (OSError, ValueError, quality_memory_index.QualityMemoryIndexError) as exc:
         memory = {"state": "unavailable", "reason": str(exc)}
-    hypotheses = _patch_hypotheses(name, driver, ledger, goal=goal)
+    hypotheses = _patch_hypotheses(
+        name,
+        driver,
+        ledger,
+        goal=goal,
+        allow_stale_critique_search=allow_stale_critique_search,
+    )
     basin = _loop_basin(
         driver.get("loop_checkpoint") if isinstance(driver.get("loop_checkpoint"), dict) else None
     )
-    if str(driver.get("action") or "") in PROGRESS_ACTIONS:
+    prerequisite_blocks_search = str(
+        driver.get("action") or ""
+    ) in PROGRESS_ACTIONS and not _allows_stale_critique_search(
+        driver,
+        allow_stale_critique_search=allow_stale_critique_search,
+    )
+    if prerequisite_blocks_search:
         next_operation = {
             "kind": "run_prerequisite",
             "command": driver.get("safe_command"),
@@ -1489,7 +1539,11 @@ def build_quality_search_plan(
             "ledger_actionability_metrics": ledger.get("actionability_metrics", {}),
             "memory": _memory_summary(memory),
         },
-        "classifications": _classifications(driver, ledger),
+        "classifications": _classifications(
+            driver,
+            ledger,
+            allow_stale_critique_search=allow_stale_critique_search,
+        ),
         "patch_hypotheses": hypotheses,
         "tool_defect_candidates": _tool_defect_candidates(driver, ledger),
         "next_recommended_operation": next_operation,
@@ -1497,6 +1551,11 @@ def build_quality_search_plan(
         "safety": {
             "source_mutation": "forbidden_in_plan_mode",
             "accepted_golden_release_mutation": "forbidden_without_explicit_human_approval",
+            "stale_critique_search_bypass": (
+                "enabled_candidate_generation_only"
+                if allow_stale_critique_search
+                else "disabled"
+            ),
             "writes": [],
         },
     }
@@ -4739,6 +4798,7 @@ def _quality_search_contract_verdict(
     name: str,
     run_id: str,
     manifest: dict[str, Any],
+    plan: dict[str, Any],
     policy: dict[str, Any],
     source_context: dict[str, Any],
     candidate_set: dict[str, Any],
@@ -4773,6 +4833,14 @@ def _quality_search_contract_verdict(
     changed_pixel_ratios: list[float] = []
     full_changed_pixel_ratios: list[float] = []
     prerequisite_required = decision.get("kind") == "prerequisite_required"
+    classifications = plan.get("classifications")
+    classifications = classifications if isinstance(classifications, list) else []
+    diagnostic_search_bypass = any(
+        isinstance(item, dict)
+        and item.get("diagnostic_bypass") == "stale_critique_search"
+        and item.get("blocks_search") is False
+        for item in classifications
+    )
 
     require(
         manifest.get("status") == "dry_run_complete",
@@ -4863,52 +4931,61 @@ def _quality_search_contract_verdict(
             "selected non-marginal candidate lacks ready review packet",
         )
         require(
-            selected_apply_readiness.get("status") == "ready_for_local_acceptance",
-            "selected_apply_readiness_not_ready",
-            "selected non-marginal candidate is not ready for local acceptance",
-        )
-        require(
-            isinstance(selected_acceptance_recommendation, dict)
-            and selected_acceptance_recommendation.get("status")
-            == "auto_accept_recommended",
-            "selected_acceptance_recommendation_not_ready",
-            "selected non-marginal candidate lacks automatic acceptance recommendation",
-        )
-        require(
             isinstance(selected_acceptance_recommendation, dict)
             and selected_acceptance_recommendation.get("is_acceptance_artifact") is False,
             "selected_acceptance_recommendation_is_authoritative",
             "selected acceptance recommendation must not masquerade as acceptance",
         )
-        require(
-            isinstance(recommendation_experience, dict)
-            and recommendation_experience.get("writes")
-            == [f"docs/experience-log/{name}.jsonl"],
-            "selected_recommendation_experience_log_missing",
-            "selected automatic recommendation was not persisted to durable experience log",
-        )
-        experience_record = (
-            recommendation_experience.get("record")
-            if isinstance(recommendation_experience, dict)
-            and isinstance(recommendation_experience.get("record"), dict)
-            else {}
-        )
-        experience_outcome = (
-            experience_record.get("outcome")
-            if isinstance(experience_record.get("outcome"), dict)
-            else {}
-        )
-        require(
-            experience_outcome.get("human_decision_kind")
-            == "auto_accept_recommended",
-            "selected_recommendation_experience_kind_missing",
-            "selected durable experience row does not mark auto_accept_recommended",
-        )
-        require(
-            experience_outcome.get("apply_status") == "blocked",
-            "selected_recommendation_experience_apply_status_invalid",
-            "selected durable experience row must remain blocked until explicit apply",
-        )
+        if diagnostic_search_bypass:
+            require(
+                isinstance(selected_acceptance_recommendation, dict)
+                and selected_acceptance_recommendation.get("status") == "blocked"
+                and selected_acceptance_recommendation.get("recommendation") == "defer",
+                "diagnostic_bypass_acceptance_not_blocked",
+                "stale-critique diagnostic search must defer acceptance",
+            )
+        else:
+            require(
+                selected_apply_readiness.get("status") == "ready_for_local_acceptance",
+                "selected_apply_readiness_not_ready",
+                "selected non-marginal candidate is not ready for local acceptance",
+            )
+            require(
+                isinstance(selected_acceptance_recommendation, dict)
+                and selected_acceptance_recommendation.get("status")
+                == "auto_accept_recommended",
+                "selected_acceptance_recommendation_not_ready",
+                "selected non-marginal candidate lacks automatic acceptance recommendation",
+            )
+            require(
+                isinstance(recommendation_experience, dict)
+                and recommendation_experience.get("writes")
+                == [f"docs/experience-log/{name}.jsonl"],
+                "selected_recommendation_experience_log_missing",
+                "selected automatic recommendation was not persisted to durable experience log",
+            )
+            experience_record = (
+                recommendation_experience.get("record")
+                if isinstance(recommendation_experience, dict)
+                and isinstance(recommendation_experience.get("record"), dict)
+                else {}
+            )
+            experience_outcome = (
+                experience_record.get("outcome")
+                if isinstance(experience_record.get("outcome"), dict)
+                else {}
+            )
+            require(
+                experience_outcome.get("human_decision_kind")
+                == "auto_accept_recommended",
+                "selected_recommendation_experience_kind_missing",
+                "selected durable experience row does not mark auto_accept_recommended",
+            )
+            require(
+                experience_outcome.get("apply_status") == "blocked",
+                "selected_recommendation_experience_apply_status_invalid",
+                "selected durable experience row must remain blocked until explicit apply",
+            )
     all_candidates_have_bound_selector = all(
         any(
             isinstance(selector, dict) and selector.get("binding_state") == "bound"
@@ -5017,6 +5094,7 @@ def _quality_search_contract_verdict(
         "checks": {
             "decision_kind": decision.get("kind"),
             "prerequisite_required": prerequisite_required,
+            "diagnostic_search_bypass": diagnostic_search_bypass,
             "candidate_count": len(candidates),
             "rendered_count": len(rendered),
             "render_mode": render_mode,
@@ -5177,6 +5255,7 @@ def _depone_evidence_pack(
     name: str,
     run_id: str,
     manifest: dict[str, Any],
+    plan: dict[str, Any],
     policy: dict[str, Any],
     source_context: dict[str, Any],
     candidate_set: dict[str, Any],
@@ -5194,6 +5273,7 @@ def _depone_evidence_pack(
         name=name,
         run_id=run_id,
         manifest=manifest,
+        plan=plan,
         policy=policy,
         source_context=source_context,
         candidate_set=candidate_set,
@@ -6155,6 +6235,7 @@ def build_quality_search_execution(
     *,
     goal: str,
     max_iterations: int,
+    allow_stale_critique_search: bool = False,
     plugin_root: Path | None = None,
     workspace_root: Path | None = None,
 ) -> dict[str, Any]:
@@ -6163,6 +6244,7 @@ def build_quality_search_execution(
     plan = build_quality_search_plan(
         name,
         goal=goal,
+        allow_stale_critique_search=allow_stale_critique_search,
         plugin_root=plugin_root,
         workspace_root=workspace_root,
     )
@@ -6319,6 +6401,7 @@ def build_quality_search_execution(
         name=name,
         run_id=run_id,
         manifest=manifest,
+        plan=plan,
         policy=policy,
         source_context=source_context,
         candidate_set=candidate_set,
@@ -6471,6 +6554,14 @@ def main(
     mode.add_argument("--plan", action="store_true")
     mode.add_argument("--execute", action="store_true")
     parser.add_argument("--max-iterations", type=int, default=1)
+    parser.add_argument(
+        "--allow-stale-critique-search",
+        action="store_true",
+        help=(
+            "allow candidate-generation diagnostics when the only progress blocker "
+            "is a stale critique; release/acceptance authority remains forbidden"
+        ),
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     fixture_identity.validate_fixture_name(args.name)
@@ -6480,6 +6571,7 @@ def main(
             name,
             goal=args.goal,
             max_iterations=args.max_iterations,
+            allow_stale_critique_search=args.allow_stale_critique_search,
             plugin_root=plugin_root,
             workspace_root=workspace_root,
         )
@@ -6488,6 +6580,7 @@ def main(
     payload = build_quality_search_plan(
         name,
         goal=args.goal,
+        allow_stale_critique_search=args.allow_stale_critique_search,
         plugin_root=plugin_root,
         workspace_root=workspace_root,
     )

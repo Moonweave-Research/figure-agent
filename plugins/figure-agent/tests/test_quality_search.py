@@ -450,6 +450,58 @@ def test_quality_search_prerequisite_stop_is_depone_pass(
     assert verdict["checks"]["candidate_count"] == 0
 
 
+def test_quality_search_can_bypass_stale_critique_for_diagnostic_candidate_search(
+    tmp_path: Path, monkeypatch
+) -> None:
+    driver = _driver_with_basin()
+    driver["action"] = "run_critique"
+    driver["reason"] = "grounded critique is stale"
+    driver["safe_command"] = "/fig_critique fig_demo"
+    assert isinstance(driver["status"], dict)
+    driver["status"]["critique_state"] = "STALE"
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: driver,
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    _write_minimal_fixture(
+        tmp_path,
+        name="fig_demo",
+        tex_source="% =============== Column F -- Mechanical =================\n"
+        "\\node at (0,0) {Coulomb repulsion electrode air gap mechanical};\n",
+    )
+
+    payload = quality_search.build_quality_search_plan(
+        "fig_demo",
+        goal="Panel F apparatus charge electrode air gap",
+        allow_stale_critique_search=True,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    progress_blocker = next(
+        item for item in payload["classifications"] if item["kind"] == "progress_blocker"
+    )
+    assert progress_blocker["blocks_search"] is False
+    assert progress_blocker["blocks_release"] is True
+    assert progress_blocker["diagnostic_bypass"] == "stale_critique_search"
+    assert payload["next_recommended_operation"]["kind"] == "step_out_experiment"
+    assert "apparatus_strengthen" in payload["next_recommended_operation"]["candidate_families"]
+    assert payload["safety"]["stale_critique_search_bypass"] == (
+        "enabled_candidate_generation_only"
+    )
+
+
 def test_quality_search_execute_binds_family_specs_to_panel_regions(
     tmp_path: Path, monkeypatch
 ) -> None:
