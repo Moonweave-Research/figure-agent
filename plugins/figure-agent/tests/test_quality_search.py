@@ -1481,6 +1481,63 @@ def test_quality_search_panel_f_bias_label_cleanup_emits_panel_block_candidate()
     assert "air gap" in operation["replacement"]
 
 
+def test_quality_search_panel_f_source_cue_readability_emits_panel_block_candidate() -> None:
+    tex_source = "\n".join(
+        [
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\node at (11.58, 0.28) {air gap};",
+            "\\node at (9.44, 1.58) {Coulomb};",
+            "\\node at (9.44, 1.45) {repulsion};",
+            "\\node at (9.22, 3.28) {$q_{\\mathrm{tr}}$};",
+            "\\node at (9.22, 3.84) {trapped charge};",
+            "\\draw[cGray!78!black, line width=0.24pt]",
+            "  (12.66, 4.01) rectangle (13.12, 4.10);",
+            "\\draw[cGray!48!black, line width=0.24pt]",
+            "  (12.70, 4.045) -- (12.83, 4.045) -- (12.83, 4.075)",
+            "               -- (12.98, 4.075) -- (12.98, 4.045) -- (13.08, 4.045);",
+            "% quality-search F bias-label cleanup: separate source labels",
+            "\\node[font=\\sffamily\\bfseries\\fontsize{3.4}{4.1}\\selectfont, "
+            "text=cGray!58!black]",
+            "  at (13.03, 4.03) {$V_{\\mathrm{active}}$};",
+            "\\node[anchor=north, font=\\sffamily\\fontsize{2.8}{3.3}\\selectfont, "
+            "text=cGray!42!black]",
+            "  at (13.03, 3.76) {bias};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    lines = f"{tex_source}\n".splitlines(keepends=True)
+
+    operation, refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS008",
+            "family": "panel_f_source_cue_readability",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=lines,
+        source_ref="figures/example.tex",
+    )
+
+    assert refusal is None
+    assert operation is not None
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "v5f_panel_f_source_cue_readability_v1"
+    assert "quality-search F source-cue readability" in operation["replacement"]
+    assert "at (13.03, 4.20) {$V_{\\mathrm{active}}$};" in operation["replacement"]
+    assert "at (13.03, 3.74) {bias};" in operation["replacement"]
+    assert "trapped charge" in operation["replacement"]
+    assert "air gap" in operation["replacement"]
+
+
 def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:
