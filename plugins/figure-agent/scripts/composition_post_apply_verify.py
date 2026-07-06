@@ -100,6 +100,18 @@ def _strict_compile_summary(
     render: dict[str, Any],
     detector_reports: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
+    # A detector report that could not be read leaves the strict blocker
+    # unevaluated: fail closed rather than treat an absent report as "no clash".
+    missing_reports = sorted(
+        report_name
+        for report_name, summary in detector_reports.items()
+        if summary.get("status") != "present"
+    )
+    if missing_reports:
+        return {
+            "status": "blocked_missing_detector_report",
+            "missing_detector_reports": missing_reports,
+        }
     visual_total = detector_reports["visual_clash"].get("total")
     if isinstance(visual_total, int) and visual_total > 0:
         return {
@@ -116,10 +128,13 @@ def _receipt_status(
     export: dict[str, Any],
     strict_compile: dict[str, Any],
 ) -> str:
+    strict_status = strict_compile.get("status")
+    if strict_status == "blocked_missing_detector_report":
+        return "blocked_missing_detector_report"
     if (
         render.get("status") == "present"
         and export.get("status") == "present"
-        and strict_compile.get("status") == "blocked_by_visual_clash"
+        and strict_status == "blocked_by_visual_clash"
     ):
         return "rendered_exported_with_strict_visual_warnings"
     if render.get("status") == "present" and export.get("status") == "present":
@@ -173,8 +188,7 @@ def write_post_apply_visual_receipt(
     render = _render_summary(fixture, name)
     export = _export_summary(fixture, name)
     detector_reports = {
-        report_name: _detector_summary(fixture, report_name)
-        for report_name in DETECTOR_REPORTS
+        report_name: _detector_summary(fixture, report_name) for report_name in DETECTOR_REPORTS
     }
     strict_compile = _strict_compile_summary(render, detector_reports)
     required_next_actions = []
