@@ -851,6 +851,30 @@ def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_bloc
     assert qtr_operation_v2["template_id"] == "v5f_panel_f_qtr_label_lane_v2"
     assert "quality-search F qtr-left label lane v2" in qtr_operation_v2["replacement"]
     assert "at (9.30, 3.74) {trapped charge};" in qtr_operation_v2["replacement"]
+    electrode_operation, electrode_refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS005",
+            "family": "panel_f_electrode_lead_lane",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(refresh_lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=refresh_lines,
+        source_ref="figures/example.tex",
+    )
+    assert electrode_refusal is None
+    assert electrode_operation is not None
+    assert electrode_operation["template_id"] == "v5f_panel_f_electrode_connector_v1"
+    assert (
+        "quality-search F connector: source-to-electrode lead"
+        in electrode_operation["replacement"]
+    )
+    assert "(13.18, 2.82) circle (0.038);" in electrode_operation["replacement"]
 
 
 def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(

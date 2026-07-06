@@ -3263,31 +3263,45 @@ def _panel_f_v5f_electrode_connector_replacement(block: str) -> str | None:
         if refreshed is None:
             return None
         connector_base = refreshed
-    replacements = (
-        (
+    optional_replacements = (
+        ((
+            "\\fill[cGray!30!black, opacity=0.010]\n"
+            "  (12.58, 3.78) rectangle (13.48, 4.14);",
             "\\fill[cGray!30!black, opacity=0.018]\n"
             "  (12.58, 3.78) rectangle (13.48, 4.14);",
+        ),
             "\\fill[cGray!26!black, opacity=0.014]\n"
             "  (12.70, 3.86) rectangle (13.36, 4.12);",
         ),
-        (
+        ((
+            "\\fill[cGray!2] (12.62, 3.82) rectangle (13.42, 4.16);",
             "\\fill[cGray!3] (12.56, 3.82) rectangle (13.46, 4.16);",
+        ),
             "\\fill[cGray!3] (12.68, 3.88) rectangle (13.38, 4.14);",
         ),
-        (
+        ((
+            "\\draw[cGray!44!black, line width=0.17pt, rounded corners=1.0pt]\n"
+            "  (12.62, 3.82) rectangle (13.42, 4.16);",
             "\\draw[cGray!58!black, line width=0.22pt, rounded corners=1.0pt]\n"
             "  (12.56, 3.82) rectangle (13.46, 4.16);",
+        ),
             "\\draw[cGray!48!black, line width=0.18pt, rounded corners=1.0pt]\n"
             "  (12.68, 3.88) rectangle (13.38, 4.14);",
         ),
-        (
+        ((
+            "at (13.02, 4.03) {$V_{\\mathrm{active}}$};",
             "at (12.99, 3.94) {$V_{\\mathrm{active}}$};",
+        ),
             "at (13.03, 3.98) {$V_{\\mathrm{active}}$};",
         ),
-        (
+        ((
+            "at (13.02, 3.91) {bias};",
             "at (12.99, 3.84) {bias};",
+        ),
             "at (13.03, 3.88) {bias};",
         ),
+    )
+    required_replacements = (
         (
             "% quality-search F refresh: left-margin trap label + electrode relation\n"
             "\\draw[cGray!56!black, line width=0.30pt, rounded corners=0.9pt]\n"
@@ -3303,7 +3317,12 @@ def _panel_f_v5f_electrode_connector_replacement(block: str) -> str | None:
         ),
     )
     replacement = connector_base
-    for old, new in replacements:
+    for old_variants, new in optional_replacements:
+        for old in old_variants:
+            if old in replacement:
+                replacement = replacement.replace(old, new)
+                break
+    for old, new in required_replacements:
         if old not in replacement:
             return None
         replacement = replacement.replace(old, new)
