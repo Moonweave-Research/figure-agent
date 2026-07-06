@@ -74,6 +74,7 @@ PANEL_F_AUTO_COMPOSITE_ELECTRODE_TEMPLATE_ID = (
 PANEL_F_V5F_AUTO_COMPOSITE_TEMPLATE_ID = (
     "v5f_panel_f_auto_composite_leader_electrode_v1"
 )
+PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID = "v5f_panel_f_bias_label_cleanup_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -81,6 +82,7 @@ APPARATUS_PANEL_F_OVERLAY_MARKER = "v5f Panel F art-direction redraw overlay"
 NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO = 0.002
 NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO = 0.02
 NON_MARGINAL_REVIEW_CANDIDATE_STATE = "non_marginal_review_candidate_ready"
+TARGETED_CLEANUP_REVIEW_CANDIDATE_STATE = "targeted_cleanup_review_candidate_ready"
 NON_MARGINAL_REVIEW_NEXT_ACTION = "review selected candidate evidence"
 PANEL_MARKER_RE = re.compile(
     r"^\s*%\s*(?:=+\s*)?(?:Panel|Column)\s+([A-Za-z0-9_-]+)\b"
@@ -361,6 +363,26 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "compose previously verified Panel F transforms into a fresh bounded candidate",
             "move force-gap and mechanical-anchor evidence together instead of one lane at a time",
             "keep source mutation blocked while exploring larger visual movement",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_bias_label_cleanup": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+            "$V_{\\mathrm{active}}$",
+        ],
+        "design_moves": [
+            "separate the V_active and bias labels so the source cue remains readable",
+            "keep the compact source box subordinate to the Coulomb response",
+            "preserve the accepted trap-left and electrode/air-gap relation",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -851,12 +873,16 @@ def _goal_requests_panel_f_apparatus(goal: str) -> bool:
     panel_f = "panel f" in normalized or "column f" in normalized
     apparatus_terms = {
         "apparatus",
+        "bias",
         "charge",
+        "cleanup",
+        "crowding",
         "force",
         "electrode",
         "air gap",
         "coulomb",
         "mechanical",
+        "overlap",
     }
     return panel_f and any(term in normalized for term in apparatus_terms)
 
@@ -919,6 +945,36 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                     "candidate worsens compile, protected labels, or electrode/air-gap semantics"
                 ),
             }
+        )
+    if any(term in normalized for term in ("bias", "overlap", "crowding", "cleanup")):
+        hypotheses.insert(
+            0,
+            {
+                "fixture": name,
+                "family": "panel_f_bias_label_cleanup",
+                "source": "goal_directive",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "goal explicitly requests Panel F post-apply cleanup for "
+                        "bias label overlap or local crowding"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert bias-label overlap feedback into a bounded Panel F "
+                    "typography cleanup candidate"
+                ),
+                "expected_visual_movement": (
+                    "Panel F source cue remains compact while V_active and bias labels "
+                    "no longer collide"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, or electrode/air-gap semantics"
+                ),
+            },
         )
     return hypotheses
 
@@ -1920,6 +1976,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_auto_composite_lane":
         return "panel_block"
+    if family == "panel_f_bias_label_cleanup":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -1954,6 +2012,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID
     if family == "panel_f_auto_composite_lane":
         return PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID
+    if family == "panel_f_bias_label_cleanup":
+        return PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -3671,6 +3731,71 @@ def _panel_f_auto_composite_lane_replacement(
     return original, final_replacement, line_start, line_end
 
 
+def _panel_f_bias_label_cleanup_template_applied(block: str) -> bool:
+    required_fragments = (
+        "% quality-search F bias-label cleanup: separate source labels",
+        "at (13.03, 4.03) {$V_{\\mathrm{active}}$};",
+        "anchor=north",
+        "at (13.03, 3.76) {bias};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_bias_label_cleanup_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if not _panel_f_v5f_auto_composite_template_applied(original):
+        return None
+    if _panel_f_bias_label_cleanup_template_applied(original):
+        return None
+    replacement = original
+    replacements = (
+        (
+            "\\node[font=\\sffamily\\bfseries\\fontsize{3.9}{4.7}\\selectfont, "
+            "text=cGray!58!black]\n"
+            "  at (13.03, 3.98) {$V_{\\mathrm{active}}$};\n"
+            "\\node[font=\\sffamily\\fontsize{3.0}{3.6}\\selectfont, "
+            "text=cGray!40!black]\n"
+            "  at (13.03, 3.88) {bias};",
+            "% quality-search F bias-label cleanup: separate source labels\n"
+            "\\node[font=\\sffamily\\bfseries\\fontsize{3.4}{4.1}\\selectfont, "
+            "text=cGray!58!black]\n"
+            "  at (13.03, 4.03) {$V_{\\mathrm{active}}$};\n"
+            "\\node[anchor=north, font=\\sffamily\\fontsize{2.8}{3.3}\\selectfont, "
+            "text=cGray!42!black]\n"
+            "  at (13.03, 3.76) {bias};",
+        ),
+    )
+    for old, new in replacements:
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    protected = (
+        "q_{\\mathrm{tr}}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "mechanical",
+        "$V_{\\mathrm{active}}$",
+    )
+    if not all(label in replacement for label in protected):
+        return None
+    if not _panel_f_bias_label_cleanup_template_applied(replacement):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _panel_f_boundary_polish_template_applied(block: str) -> bool:
     required_fragments = (
         "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
@@ -4168,6 +4293,7 @@ def _candidate_operation_for_spec(
         "panel_f_leader_left_lane": "F",
         "panel_f_electrode_lead_lane": "F",
         "panel_f_auto_composite_lane": "F",
+        "panel_f_bias_label_cleanup": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -4518,6 +4644,34 @@ def _candidate_operation_for_spec(
             "template_id": template_id,
             "panel": "F",
         }
+    if family == "panel_f_bias_label_cleanup":
+        bias_cleanup_block = _panel_f_bias_label_cleanup_replacement(
+            lines=lines,
+            selector=selector,
+        )
+        if bias_cleanup_block is not None:
+            original, new_text, line_start, line_end = bias_cleanup_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_bias_label_cleanup_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_bias_label_cleanup_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -4581,6 +4735,7 @@ def _candidate_operation_for_spec(
         "panel_f_leader_left_lane": 0.8,
         "panel_f_electrode_lead_lane": 0.8,
         "panel_f_auto_composite_lane": 0.8,
+        "panel_f_bias_label_cleanup": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -5456,9 +5611,7 @@ def _quality_search_contract_verdict(
         "source_hash_drift",
         "current source hash differs from source_context hash",
     )
-    selected_candidate_ready = (
-        decision.get("candidate_state") == NON_MARGINAL_REVIEW_CANDIDATE_STATE
-    )
+    selected_candidate_ready = _selected_candidate_state_is_review_ready(decision)
     selected_apply_readiness = (
         selected_review_packet.get("apply_readiness")
         if isinstance(selected_review_packet, dict)
@@ -6107,6 +6260,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_leader_left_lane": 0.9,
             "panel_f_electrode_lead_lane": 0.9,
             "panel_f_auto_composite_lane": 0.93,
+            "panel_f_bias_label_cleanup": 0.88,
             "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
@@ -6208,6 +6362,27 @@ def _render_policy_adjustment(ranking: dict[str, Any] | None) -> tuple[float, fl
     }:
         penalty -= 0.04
     return (round(adjustment, 4), round(penalty, 4))
+
+
+def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
+    if score.get("family") != "panel_f_bias_label_cleanup":
+        return False
+    if score.get("template_id") != PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID:
+        return False
+    for key in ("panel_changed_pixel_ratio", "full_changed_pixel_ratio"):
+        try:
+            if float(score.get(key) or 0.0) > 0.0:
+                return True
+        except (TypeError, ValueError):
+            continue
+    return False
+
+
+def _selected_candidate_state_is_review_ready(decision: dict[str, Any]) -> bool:
+    return decision.get("candidate_state") in {
+        NON_MARGINAL_REVIEW_CANDIDATE_STATE,
+        TARGETED_CLEANUP_REVIEW_CANDIDATE_STATE,
+    }
 
 
 def _operation_scale_policy_bonus(
@@ -6551,7 +6726,10 @@ def _execution_decision(
         item
         for item in ranked
         if item.get("family") != "null_baseline"
-        and item.get("non_marginal_visual_change") is True
+        and (
+            item.get("non_marginal_visual_change") is True
+            or _is_targeted_cleanup_candidate(item)
+        )
         and item.get("stale_duplicate_experience_family") is not True
     ]
     selected = (
@@ -6580,6 +6758,13 @@ def _execution_decision(
                 "movement threshold"
             )
         )
+        targeted_cleanup_candidates = [
+            item
+            for item in ranked
+            if item.get("family") != "null_baseline"
+            and _is_targeted_cleanup_candidate(item)
+            and item.get("stale_duplicate_experience_family") is True
+        ]
         return {
             "kind": "no_non_marginal_candidate",
             "reason": reason,
@@ -6589,6 +6774,9 @@ def _execution_decision(
             "source_mutation": "not_performed",
             "diagnostic_search_bypass": diagnostic_search_bypass,
             "stale_duplicate_non_marginal_candidate_count": len(stale_non_marginal),
+            "stale_duplicate_targeted_cleanup_candidate_count": len(
+                targeted_cleanup_candidates
+            ),
             "top_candidate_id": top.get("candidate_id"),
             "top_candidate_family": top.get("family"),
             "top_candidate_operation_scale": top.get("operation_scale"),
@@ -6604,11 +6792,19 @@ def _execution_decision(
                 "panel_changed_pixel_ratio": NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO,
             },
         }
+    targeted_cleanup_selected = _is_targeted_cleanup_candidate(selected)
+    candidate_state = (
+        TARGETED_CLEANUP_REVIEW_CANDIDATE_STATE
+        if targeted_cleanup_selected
+        else NON_MARGINAL_REVIEW_CANDIDATE_STATE
+    )
     return {
         "kind": "candidate_batch_ready",
-        "candidate_state": NON_MARGINAL_REVIEW_CANDIDATE_STATE,
+        "candidate_state": candidate_state,
         "reason": (
-            "dry executor selected a rendered non-marginal review-only candidate"
+            "dry executor selected a rendered targeted cleanup review-only candidate"
+            if targeted_cleanup_selected
+            else "dry executor selected a rendered non-marginal review-only candidate"
         ),
         "selected_candidate_id": selected.get("candidate_id"),
         "selected_family": selected.get("family"),
@@ -6619,7 +6815,8 @@ def _execution_decision(
         "policy": selected.get("policy"),
         "full_changed_pixel_ratio": selected.get("full_changed_pixel_ratio"),
         "panel_changed_pixel_ratio": selected.get("panel_changed_pixel_ratio"),
-        "non_marginal_visual_change": True,
+        "non_marginal_visual_change": selected.get("non_marginal_visual_change") is True,
+        "targeted_cleanup_visual_change": targeted_cleanup_selected,
         "non_marginal_thresholds": {
             "full_changed_pixel_ratio": NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO,
             "panel_changed_pixel_ratio": NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO,
@@ -6643,7 +6840,7 @@ def _selected_review_packet(
 ) -> dict[str, Any] | None:
     candidate_id = decision.get("selected_candidate_id")
     if (
-        decision.get("candidate_state") != NON_MARGINAL_REVIEW_CANDIDATE_STATE
+        not _selected_candidate_state_is_review_ready(decision)
         or not isinstance(candidate_id, str)
         or not candidate_id.strip()
     ):
@@ -6729,7 +6926,7 @@ def _write_selected_semantic_precheck(
 ) -> dict[str, Any] | None:
     candidate_id = decision.get("selected_candidate_id")
     if (
-        decision.get("candidate_state") != NON_MARGINAL_REVIEW_CANDIDATE_STATE
+        not _selected_candidate_state_is_review_ready(decision)
         or not isinstance(candidate_id, str)
         or not candidate_id.strip()
     ):
@@ -6875,7 +7072,7 @@ def _selected_acceptance_recommendation(
 ) -> dict[str, Any] | None:
     candidate_id = decision.get("selected_candidate_id")
     if (
-        decision.get("candidate_state") != NON_MARGINAL_REVIEW_CANDIDATE_STATE
+        not _selected_candidate_state_is_review_ready(decision)
         or not isinstance(candidate_id, str)
         or not candidate_id.strip()
     ):
@@ -7109,7 +7306,7 @@ def _selected_figure_attempt(
 ) -> dict[str, Any] | None:
     candidate_id = decision.get("selected_candidate_id")
     if (
-        decision.get("candidate_state") != NON_MARGINAL_REVIEW_CANDIDATE_STATE
+        not _selected_candidate_state_is_review_ready(decision)
         or not isinstance(candidate_id, str)
         or not candidate_id.strip()
     ):
@@ -7284,9 +7481,8 @@ def build_quality_search_execution(
     )
     selected_review_packet = _selected_review_packet(name, decision, paths=paths)
     selected_attempt = None
-    if (
-        decision.get("candidate_state") == NON_MARGINAL_REVIEW_CANDIDATE_STATE
-        and isinstance(decision.get("selected_candidate_id"), str)
+    if _selected_candidate_state_is_review_ready(decision) and isinstance(
+        decision.get("selected_candidate_id"), str
     ):
         journal_guide_payload = journal_guide.build_journal_guide(
             name,

@@ -1423,6 +1423,64 @@ def test_panel_f_auto_composite_gets_attempt_aesthetic_alignment_bonus() -> None
     assert composite_scores["visual_hierarchy"] > qtr_scores["visual_hierarchy"]
 
 
+def test_quality_search_panel_f_bias_label_cleanup_emits_panel_block_candidate() -> None:
+    tex_source = "\n".join(
+        [
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\node at (11.58, 0.28) {air gap};",
+            "\\node at (9.44, 1.58) {Coulomb};",
+            "\\node at (9.44, 1.45) {repulsion};",
+            "% quality-search F leader-left lane -- review-only candidate",
+            "\\draw[cRed!64!black, line width=0.50pt]",
+            "  (11.42,2.46) .. controls (10.54,3.14) and (9.74,3.48) .. (9.22,3.48);",
+            "\\node at (9.22, 3.28) {$q_{\\mathrm{tr}}$};",
+            "\\node at (9.22, 3.84) {trapped charge};",
+            "% quality-search F connector: source-to-electrode lead",
+            "\\draw[cGray!64!black, line width=0.46pt, rounded corners=1.2pt]",
+            "  (13.28, 3.78) -- (13.08, 3.58) -- (13.08, 2.96) -- (13.18, 2.82);",
+            "\\fill[cGray!82!black] (13.18, 2.82) circle (0.038);",
+            "\\node[font=\\sffamily\\bfseries\\fontsize{3.9}{4.7}\\selectfont, "
+            "text=cGray!58!black]",
+            "  at (13.03, 3.98) {$V_{\\mathrm{active}}$};",
+            "\\node[font=\\sffamily\\fontsize{3.0}{3.6}\\selectfont, "
+            "text=cGray!40!black]",
+            "  at (13.03, 3.88) {bias};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    lines = f"{tex_source}\n".splitlines(keepends=True)
+
+    operation, refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS007",
+            "family": "panel_f_bias_label_cleanup",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=lines,
+        source_ref="figures/example.tex",
+    )
+
+    assert refusal is None
+    assert operation is not None
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "v5f_panel_f_bias_label_cleanup_v1"
+    assert "quality-search F bias-label cleanup" in operation["replacement"]
+    assert "at (13.03, 4.03) {$V_{\\mathrm{active}}$};" in operation["replacement"]
+    assert "at (13.03, 3.76) {bias};" in operation["replacement"]
+    assert "trapped charge" in operation["replacement"]
+    assert "air gap" in operation["replacement"]
+
+
 def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -2823,6 +2881,43 @@ def test_quality_search_decision_rejects_only_marginal_rendered_candidates() -> 
         "full_changed_pixel_ratio": 0.002,
         "panel_changed_pixel_ratio": 0.02,
     }
+
+
+def test_quality_search_decision_accepts_targeted_cleanup_below_non_marginal_threshold() -> None:
+    plan = {
+        "state": {"memory": {"state": "loaded", "families": {}}},
+        "classifications": [],
+        "next_recommended_operation": {"kind": "step_out_experiment"},
+    }
+    candidate_specs = [
+        {
+            "id": "QS001",
+            "family": "panel_f_bias_label_cleanup",
+            "operation_scale": "panel_block",
+            "template_id": "v5f_panel_f_bias_label_cleanup_v1",
+            "expected_visual_movement": "separate V_active and bias labels",
+        },
+    ]
+    rankings = [
+        {
+            "candidate_id": "QS001",
+            "rank_score": 0.55,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.00025},
+        },
+    ]
+
+    scores = quality_search._candidate_scores(candidate_specs, plan, rankings)
+    decision = quality_search._execution_decision(plan, scores)
+
+    assert scores[0]["non_marginal_visual_change"] is False
+    assert decision["kind"] == "candidate_batch_ready"
+    assert decision["candidate_state"] == "targeted_cleanup_review_candidate_ready"
+    assert decision["selected_candidate_id"] == "QS001"
+    assert decision["selected_template_id"] == "v5f_panel_f_bias_label_cleanup_v1"
+    assert decision["targeted_cleanup_visual_change"] is True
+    assert decision["non_marginal_visual_change"] is False
 
 
 def test_quality_search_decision_accepts_panel_crop_non_marginal_candidate() -> None:
