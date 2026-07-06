@@ -6837,12 +6837,23 @@ def build_quality_search_execution(
         convergence_decision,
     )
     recommendation_experience = None
-    if (
+    recommendation_ready_for_experience = (
         isinstance(selected_acceptance_recommendation, dict)
-        and selected_acceptance_recommendation.get("status")
-        == "auto_accept_recommended"
         and isinstance(selected_acceptance_recommendation.get("candidate_id"), str)
-    ):
+        and (
+            selected_acceptance_recommendation.get("status")
+            == "auto_accept_recommended"
+            or (
+                isinstance(convergence_decision, dict)
+                and convergence_decision.get("decision") != "accept"
+                and selected_acceptance_recommendation.get("status") == "blocked"
+                and selected_acceptance_recommendation.get("recommendation") == "defer"
+                and "convergence controller did not accept"
+                in str(selected_acceptance_recommendation.get("rationale") or "")
+            )
+        )
+    )
+    if recommendation_ready_for_experience:
         selected_candidate_id = selected_acceptance_recommendation["candidate_id"]
         recommendation_experience = experience_log.append_recommendation_record(
             name,

@@ -238,6 +238,99 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
     assert unchosen["outcome"]["human_decision_kind"] == "counterfactual_unchosen"
 
 
+def test_append_recommendation_record_writes_convergence_deferred_recommendation(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = workspace
+    _fixture(workspace)
+    run_dir = plugin_root / ".scratch" / "quality-search-runs" / "run-002"
+    run_dir.mkdir(parents=True)
+    for filename in (
+        "candidate_set_000.json",
+        "candidate_rankings_000.json",
+        "selected_semantic_precheck_000.json",
+        "selected_review_packet_000.json",
+        "selected_acceptance_recommendation_000.json",
+        "selected_attempt_000.json",
+        "convergence_decision_000.json",
+    ):
+        (run_dir / filename).write_text("{}\n", encoding="utf-8")
+    candidate_set = {
+        "candidates": [
+            {
+                "id": "QS001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "edit_family": "panel_f_qtr_apparatus_lane",
+                "target": {"panel": "F", "subregion": "qtr_apparatus"},
+                "operations": [
+                    {
+                        "kind": "replace_text",
+                        "path": "candidate_demo.tex",
+                        "template_id": "panel_f_qtr_apparatus_lane_v1",
+                    }
+                ],
+            }
+        ]
+    }
+
+    result = experience_log.append_recommendation_record(
+        "candidate_demo",
+        "QS001",
+        candidate_set=candidate_set,
+        candidate_rankings=[{"candidate_id": "QS001", "rank_score": 0.81}],
+        decision={"source_context": {"source_hash": "sha256:" + "0" * 64}},
+        recommendation={
+            "status": "blocked",
+            "recommendation": "defer",
+            "rationale": "convergence controller did not accept the selected attempt",
+            "evidence": {
+                "semantic_precheck_status": "pass",
+                "review_packet_status": "ready",
+                "apply_readiness_status": "ready_for_local_acceptance",
+                "full_changed_pixel_ratio": 0.005,
+            },
+        },
+        run_dir=run_dir,
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+        selected_attempt={
+            "attempt_id": "run-002:QS001",
+            "journal_guide_hash": "sha256:" + "1" * 64,
+            "journal_constraints": {"passed": True},
+            "semantic_score": {"complete": True},
+            "aesthetic_score": {"overall": 0.8073},
+            "outputs": {"editable": "candidate_demo.tex", "svg": "render/candidate.svg"},
+        },
+        convergence_decision={
+            "decision": "stop",
+            "attempt_id": "run-002:QS001",
+            "selected_attempt_id": "run-002:QS001",
+            "current_aesthetic_score": 0.8073,
+            "selected_aesthetic_score": 0.8073,
+        },
+    )
+
+    rows = [
+        json.loads(line)
+        for line in (
+            plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
+        ).read_text(encoding="utf-8").splitlines()
+    ]
+    assert result["record"]["outcome"]["human_decision_kind"] == "convergence_deferred"
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["outcome"]["apply_status"] == "blocked"
+    assert row["outcome"]["quality_movement"] == "neutral"
+    assert row["outcome"]["human_decision_kind"] == "convergence_deferred"
+    assert row["outcome"]["convergence"]["decision"] == "stop"
+    assert row["outcome"]["verifiers"]["convergence_decision"] == "defer"
+    assert row["source_artifacts"][-2:] == [
+        ".scratch/quality-search-runs/run-002/selected_attempt_000.json",
+        ".scratch/quality-search-runs/run-002/convergence_decision_000.json",
+    ]
+
+
 def test_experience_log_is_append_only(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     plugin_root = tmp_path / "plugin"

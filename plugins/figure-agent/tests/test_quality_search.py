@@ -3020,6 +3020,144 @@ def test_quality_search_recommendation_defers_when_convergence_does_not_accept()
     assert "convergence controller did not accept" in recommendation["rationale"]
 
 
+def test_quality_search_execution_persists_convergence_deferred_experience(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    name = "fig_demo"
+    _write_minimal_fixture(
+        tmp_path,
+        name=name,
+        tex_source=(
+            "\\node at (0,0) {q_tr trapped charge Coulomb repulsion "
+            "electrode air gap mechanical};\n"
+        ),
+    )
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_render_candidate_batch",
+        lambda *_args, **_kwargs: {
+            "schema": "figure-agent.candidate-render-batch.v1",
+            "render_mode": "compile_export_crop_evaluate",
+            "rendered": [{"candidate_id": "QS002"}],
+        },
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_rank_rendered_candidates",
+        lambda *_args, **_kwargs: [
+            {
+                "candidate_id": "QS002",
+                "rank_score": 0.8,
+                "render_status": "rendered_needs_human_review",
+                "effective_apply_authority": "review_only",
+                "scores": {"changed_pixel_ratio": 0.003},
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_quality_search_visual_evidence",
+        lambda *_args, **_kwargs: {"schema": "figure-agent.quality-search-visual-evidence.v0"},
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_execution_decision",
+        lambda *_args, **_kwargs: {
+            "kind": "candidate_batch_ready",
+            "candidate_state": quality_search.NON_MARGINAL_REVIEW_CANDIDATE_STATE,
+            "selected_candidate_id": "QS002",
+            "selected_family": "apparatus_strengthen",
+            "policy_score": 0.8,
+            "full_changed_pixel_ratio": 0.003,
+            "panel_changed_pixel_ratio": None,
+            "source_mutation": "not_performed",
+        },
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_write_selected_semantic_precheck",
+        lambda *_args, **_kwargs: {
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "pass",
+            "candidate_id": "QS002",
+            "protected_labels": ["q_tr", "trapped charge"],
+        },
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_selected_review_packet",
+        lambda *_args, **_kwargs: {
+            "schema": "figure-agent.candidate-review-packet.v1",
+            "status": "ready",
+            "candidate_id": "QS002",
+            "apply_readiness": {"status": "ready_for_local_acceptance"},
+        },
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_selected_convergence_decision",
+        lambda _decision, attempt, **_kwargs: {
+            "schema": "figure-agent.convergence-decision.v1",
+            "decision": "stop",
+            "attempt_id": attempt["attempt_id"],
+            "selected_attempt_id": attempt["attempt_id"],
+            "reasons": ["marginal_improvement_below_threshold"],
+            "current_aesthetic_score": 0.8073,
+            "selected_aesthetic_score": 0.8073,
+        },
+    )
+    writes: list[dict[str, object]] = []
+
+    def _append_recommendation_record(*_args: object, **kwargs: object) -> dict[str, object]:
+        writes.append(kwargs)
+        return {
+            "schema": "figure-agent.experience-log-write.v1",
+            "fixture": name,
+            "record": {"outcome": {"human_decision_kind": "convergence_deferred"}},
+            "records": [{"outcome": {"human_decision_kind": "convergence_deferred"}}],
+            "writes": [f"docs/experience-log/{name}.jsonl"],
+        }
+
+    monkeypatch.setattr(
+        quality_search.experience_log,
+        "append_recommendation_record",
+        _append_recommendation_record,
+    )
+
+    payload = quality_search.build_quality_search_execution(
+        name,
+        goal="persist convergence stop",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    assert payload["selected_acceptance_recommendation"]["status"] == "blocked"
+    assert payload["selected_acceptance_recommendation"]["recommendation"] == "defer"
+    assert payload["recommendation_experience_record"]["outcome"][
+        "human_decision_kind"
+    ] == "convergence_deferred"
+    assert payload["recommendation_experience_record_count"] == 1
+    assert len(writes) == 1
+    assert writes[0]["convergence_decision"]["decision"] == "stop"
+
+
 def test_quality_search_execution_writes_selected_attempt_and_convergence_decision(
     tmp_path: Path,
     monkeypatch,

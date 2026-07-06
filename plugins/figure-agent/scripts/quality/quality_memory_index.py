@@ -142,7 +142,7 @@ def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
     event_type = "candidate_applied"
     if apply_status == "unchosen":
         event_type = "candidate_unchosen"
-    elif human_decision_kind == "auto_accept_recommended":
+    elif human_decision_kind in {"auto_accept_recommended", "convergence_deferred"}:
         event_type = "candidate_recommended"
     return {
         "schema": "figure-agent.quality-memory-event.v1",

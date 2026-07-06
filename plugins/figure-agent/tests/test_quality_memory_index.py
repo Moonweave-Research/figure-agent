@@ -221,6 +221,29 @@ def test_recommendation_experience_records_are_candidate_recommended_attempts() 
     ] == 1
 
 
+def test_convergence_deferred_experience_records_are_candidate_recommended_attempts() -> None:
+    record = _experience_record(
+        "CAND001",
+        quality_movement="neutral",
+        apply_status="blocked",
+        template_id="template_a",
+    )
+    record["outcome"]["human_decision_kind"] = "convergence_deferred"
+    record["outcome"]["convergence"] = {"decision": "stop"}
+
+    event = quality_memory_index._event_from_experience_record(record)  # type: ignore[attr-defined]
+    assert event["event_type"] == "candidate_recommended"
+    assert event["post_state"]["human_decision_kind"] == "convergence_deferred"
+
+    index = quality_memory_index.build_memory_index([event])
+
+    assert index["event_count"] == 1
+    assert index["candidate_event_count"] == 1
+    assert index["families"]["label_offset"]["attempts"] == 1
+    assert index["families"]["label_offset"]["neutral"] == 1
+    assert index["family_templates"]["label_offset::template_a"]["attempts"] == 1
+
+
 def test_memory_index_tracks_family_template_attempts_separately() -> None:
     index = quality_memory_index.build_memory_index(
         [

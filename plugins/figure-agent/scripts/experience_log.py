@@ -321,12 +321,17 @@ def _convergence_summary(
 def _convergence_verifiers(convergence: dict[str, Any] | None) -> dict[str, str]:
     if not isinstance(convergence, dict):
         return {}
+    decision = convergence.get("decision")
     return {
         "journal_constraints": (
             "pass" if convergence.get("journal_constraints_passed") is True else "fail"
         ),
         "convergence_decision": (
-            "pass" if convergence.get("decision") == "accept" else "fail"
+            "pass"
+            if decision == "accept"
+            else "defer"
+            if decision in {"stop", "rollback", "human_review"}
+            else "fail"
         ),
     }
 
@@ -510,9 +515,19 @@ def build_recommendation_record(
     source_context = decision.get("source_context")
     evidence = recommendation.get("evidence") if isinstance(recommendation, dict) else {}
     evidence = evidence if isinstance(evidence, dict) else {}
-    if recommendation.get("status") != "auto_accept_recommended":
-        raise ExperienceLogError("recommendation_not_ready")
+    auto_accept_recommended = recommendation.get("status") == "auto_accept_recommended"
     convergence = _convergence_summary(selected_attempt, convergence_decision)
+    convergence_deferred = (
+        isinstance(convergence, dict)
+        and convergence.get("decision") in {"stop", "rollback", "human_review"}
+        and recommendation.get("status") == "blocked"
+        and recommendation.get("recommendation") == "defer"
+    )
+    if not auto_accept_recommended and not convergence_deferred:
+        raise ExperienceLogError("recommendation_not_ready")
+    human_decision_kind = (
+        "auto_accept_recommended" if auto_accept_recommended else "convergence_deferred"
+    )
     record = {
         "schema": SCHEMA,
         "fixture": name,
@@ -567,8 +582,18 @@ def build_recommendation_record(
                 )
             },
             "human_label": None,
-            "human_decision_kind": "auto_accept_recommended",
+            "human_decision_kind": human_decision_kind,
             "automation_boundary": "recommendation_only",
+            **(
+                {
+                    "deferral_reason": str(
+                        recommendation.get("rationale")
+                        or "convergence controller did not accept the selected attempt"
+                    )
+                }
+                if convergence_deferred
+                else {}
+            ),
             **({"convergence": convergence} if convergence is not None else {}),
         },
         "source_artifacts": [
