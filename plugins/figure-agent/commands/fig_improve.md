@@ -85,3 +85,10 @@ If the result stops at `host_boundary`, run `/fig_critique <name>` and then
 rerun `/fig_improve`. If it stops at `optional_improvement_available`, choose
 at most one candidate from `ready_improvement_summary.candidates` before
 continuing.
+
+## Authoring a new panel edit
+
+A new element iteration on an existing panel is a **data entry** in
+`scripts/quality/panel_block_edits.yaml`, never a new Python family. A new
+Python family is justified only by a new *edit mechanic*, not new coordinates.
+See `docs/superpowers/specs/2026-07-06-panel-block-edit-stop-rule.md`.
