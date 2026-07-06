@@ -2104,27 +2104,27 @@
   \shade[ball color=cRed!82!black] (\cx,\cy) circle (\rr);
   \draw[cRed!95!black, line width=0.25pt] (\cx,\cy) circle (\rr);
 }
-% quality-search F leader-left lane -- review-only candidate
-\draw[cRed!64!black, line width=0.50pt]
-  (11.42,2.46) .. controls (10.54,3.14) and (9.74,3.48) .. (9.22,3.48);
-\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,
-      inner xsep=0.9pt, inner ysep=0.45pt,
-      font=\sffamily\bfseries\fontsize{4.0}{4.8}\selectfont, text=cRed!74!black]
-  at (9.22, 3.28) {$q_{\mathrm{tr}}$};
-\node[anchor=west, fill=white, fill opacity=0.94, text opacity=1,
-      inner xsep=1.0pt, inner ysep=0.45pt,
-      font=\sffamily\bfseries\fontsize{3.9}{4.7}\selectfont, text=cRed!74!black]
-  at (9.22, 3.84) {trapped charge};
+% quality-search F current-label sanitize: shorten trap leader and separate force labels
+\draw[cRed!62!black, line width=0.42pt]
+  (11.35,2.52) .. controls (10.76,3.10) and (10.14,3.38) .. (9.64,3.38);
+\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,
+      inner xsep=0.75pt, inner ysep=0.35pt,
+      font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!72!black]
+  at (9.60, 3.18) {$q_{\mathrm{tr}}$};
+\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,
+      inner xsep=0.8pt, inner ysep=0.35pt,
+      font=\sffamily\bfseries\fontsize{3.7}{4.5}\selectfont, text=cRed!72!black]
+  at (9.60, 3.62) {trapped charge};
 
 % Coulomb-only response, intentionally stronger than the apparatus.
-\draw[panelFCoulombRepulsionArrow, -{Stealth[length=9.2pt,width=6.4pt]}, cRed!82!black, line width=1.18pt]
-  (10.96, 1.18) -- (9.28, 1.18);
-\node[font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont, text=cRed!78!black,
-      anchor=south west] at (9.44, 1.58) {Coulomb};
-\node[labelMute, anchor=north west, fill=white, fill opacity=0.94, text opacity=1,
-      inner xsep=1.2pt, inner ysep=0.6pt,
-      font=\sffamily\fontsize{5.4}{6.5}\selectfont,
-      text=cRed!80!black] at (9.44, 1.45) {repulsion};
+\draw[panelFCoulombRepulsionArrow, -{Stealth[length=8.4pt,width=5.8pt]}, cRed!82!black, line width=1.06pt]
+  (10.84, 1.08) -- (9.36, 1.08);
+\node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cRed!76!black,
+      anchor=south west] at (9.54, 1.68) {Coulomb};
+\node[labelMute, anchor=north west, fill=white, fill opacity=0.90, text opacity=1,
+      inner xsep=0.95pt, inner ysep=0.45pt,
+      font=\sffamily\fontsize{5.0}{6.0}\selectfont,
+      text=cRed!76!black] at (9.54, 1.50) {repulsion};
 
 \draw[<->, cGray!66!black, line width=0.78pt]
   (9.70, 0.54) -- (13.18, 0.54);

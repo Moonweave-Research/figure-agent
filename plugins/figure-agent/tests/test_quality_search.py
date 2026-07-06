@@ -1671,6 +1671,75 @@ def test_quality_search_panel_f_source_cue_demote_emits_panel_block_candidate() 
     assert "air gap" in operation["replacement"]
 
 
+def test_quality_search_panel_f_current_label_sanitize_emits_panel_block_candidate() -> None:
+    tex_source = "\n".join(
+        [
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\node at (11.58, 0.28) {air gap};",
+            "% quality-search F source-cue demote: subordinate source label hierarchy",
+            "\\node at (13.02, 4.125) {$V_{\\mathrm{active}}$};",
+            "\\node at (13.02, 3.75) {bias};",
+            "\\foreach \\cx/\\cy/\\rr in {11.62/2.28/0.075} {",
+            "  \\draw (\\cx,\\cy) circle (\\rr);",
+            "}",
+            "% quality-search F leader-left lane -- review-only candidate",
+            "\\draw[cRed!64!black, line width=0.50pt]",
+            "  (11.42,2.46) .. controls (10.54,3.14) and (9.74,3.48) .. (9.22,3.48);",
+            "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,",
+            "      inner xsep=0.9pt, inner ysep=0.45pt,",
+            "      font=\\sffamily\\bfseries\\fontsize{4.0}{4.8}\\selectfont, text=cRed!74!black]",
+            "  at (9.22, 3.28) {$q_{\\mathrm{tr}}$};",
+            "\\node[anchor=west, fill=white, fill opacity=0.94, text opacity=1,",
+            "      inner xsep=1.0pt, inner ysep=0.45pt,",
+            "      font=\\sffamily\\bfseries\\fontsize{3.9}{4.7}\\selectfont, text=cRed!74!black]",
+            "  at (9.22, 3.84) {trapped charge};",
+            "% Coulomb-only response, intentionally stronger than the apparatus.",
+            "\\draw[panelFCoulombRepulsionArrow, "
+            "-{Stealth[length=9.2pt,width=6.4pt]}, "
+            "cRed!82!black, line width=1.18pt]",
+            "  (10.96, 1.18) -- (9.28, 1.18);",
+            "\\node[font=\\sffamily\\bfseries\\fontsize{5.8}{7.0}\\selectfont, text=cRed!78!black,",
+            "      anchor=south west] at (9.44, 1.58) {Coulomb};",
+            "\\node[labelMute, anchor=north west, fill=white, fill opacity=0.94, text opacity=1,",
+            "      inner xsep=1.2pt, inner ysep=0.6pt,",
+            "      font=\\sffamily\\fontsize{5.4}{6.5}\\selectfont,",
+            "      text=cRed!80!black] at (9.44, 1.45) {repulsion};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    lines = f"{tex_source}\n".splitlines(keepends=True)
+
+    operation, refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS011",
+            "family": "panel_f_current_label_sanitize",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=lines,
+        source_ref="figures/example.tex",
+    )
+
+    assert refusal is None
+    assert operation is not None
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "v5f_panel_f_current_label_sanitize_v2"
+    assert "quality-search F current-label sanitize" in operation["replacement"]
+    assert "at (9.60, 3.18) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
+    assert "at (9.60, 3.62) {trapped charge};" in operation["replacement"]
+    assert "at (9.54, 1.68) {Coulomb};" in operation["replacement"]
+    assert "at (9.54, 1.50) {repulsion};" in operation["replacement"]
+
+
 def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:

@@ -924,6 +924,18 @@ def test_verify_labels_unchanged_equal_passes_and_differ_fails():
     assert reason == "labels_changed"
 
 
+def test_pdf_token_normalization_merges_split_power_law_exponent():
+    tokens = candidate_apply._normalized_pdf_tokens(["I(t)", "∼", "t", "−n", "Debye"])
+
+    assert tokens == ["I(t)", "∼", "t−n", "Debye"]
+
+    counter = candidate_apply._normalized_pdf_word_counter(
+        ["I(t)", "∼", "−n", "low", "n", "derive", "t"]
+    )
+    assert counter["t−n"] == 1
+    assert "−n" not in counter
+
+
 def test_verify_labels_unchanged_blocks_without_baseline():
     # No pre-mutation baseline => value-preservation is unverifiable => FAIL CLOSED.
     # (M3: an absent baseline must not silently pass the safety gate.)

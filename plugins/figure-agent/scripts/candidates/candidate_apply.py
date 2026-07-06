@@ -671,7 +671,38 @@ def _pdf_words(pdf_path: Path) -> Counter:
     )
     if completed.returncode != 0:
         return Counter()
-    return Counter(completed.stdout.split())
+    return _normalized_pdf_word_counter(completed.stdout.split())
+
+
+def _normalized_pdf_tokens(tokens: list[str]) -> list[str]:
+    normalized: list[str] = []
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        next_token = tokens[index + 1] if index + 1 < len(tokens) else ""
+        if token == "t" and next_token in {"−n", "-n"}:
+            normalized.append(f"t{next_token}")
+            index += 2
+            continue
+        normalized.append(token)
+        index += 1
+    return normalized
+
+
+def _normalized_pdf_word_counter(tokens: list[str]) -> Counter:
+    counter = Counter(_normalized_pdf_tokens(tokens))
+    for exponent_token in ("−n", "-n"):
+        split_count = min(counter.get("t", 0), counter.get(exponent_token, 0))
+        if split_count <= 0:
+            continue
+        counter["t"] -= split_count
+        counter[exponent_token] -= split_count
+        counter[f"t{exponent_token}"] += split_count
+        if counter["t"] == 0:
+            del counter["t"]
+        if counter[exponent_token] == 0:
+            del counter[exponent_token]
+    return counter
 
 
 def _compile_current_source(
