@@ -85,6 +85,7 @@ PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID = (
 PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID = (
     "v5f_panel_f_post_force_source_connector_v1"
 )
+PANEL_F_POST_SOURCE_LABEL_SCALE_TEMPLATE_ID = "v5f_panel_f_post_source_label_scale_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -519,6 +520,27 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "make the compact source cue read like a restrained instrument tag",
             "route the source-to-electrode connector as one intentional lead",
             "preserve the post-force Coulomb/repulsion and air-gap composition",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_post_source_label_scale": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+            "$V_{\\mathrm{active}}$",
+            "bias",
+        ],
+        "design_moves": [
+            "make q_tr and trapped-charge text slightly more legible after connector polish",
+            "keep the left label rail inside Panel F without covering the cantilever",
+            "preserve the post-force source connector and Coulomb/air-gap balance",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -1227,6 +1249,40 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 "rollback_condition": (
                     "candidate worsens compile, protected labels, source attachment, "
                     "or electrode/air-gap semantics"
+                ),
+            },
+        )
+    if any(term in normalized for term in ("after source", "post source", "final")) and any(
+        term in normalized
+        for term in ("trapped charge", "q_tr", "label", "background", "scale", "polish")
+    ):
+        hypotheses.insert(
+            0,
+            {
+                "fixture": name,
+                "family": "panel_f_post_source_label_scale",
+                "source": "goal_directive",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "goal explicitly requests post-source Panel F trapped-charge "
+                        "label scale and background polish"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert latest trapped-charge label scale/background defects "
+                    "into a fresh source-bound Panel F candidate"
+                ),
+                "expected_visual_movement": (
+                    "q_tr and trapped charge become slightly more legible while "
+                    "remaining in the left label rail"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, source attachment, "
+                    "or charge/cantilever semantics"
                 ),
             },
         )
@@ -2375,6 +2431,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_post_force_source_connector":
         return "panel_block"
+    if family == "panel_f_post_source_label_scale":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -2423,6 +2481,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID
     if family == "panel_f_post_force_source_connector":
         return PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID
+    if family == "panel_f_post_source_label_scale":
+        return PANEL_F_POST_SOURCE_LABEL_SCALE_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -4857,6 +4917,87 @@ def _panel_f_post_force_source_connector_replacement(
     return original, replacement, line_start, line_end
 
 
+def _panel_f_post_source_label_scale_template_applied(block: str) -> bool:
+    required_fragments = (
+        "% quality-search F post-source label scale: lift trapped-charge legibility",
+        "(11.35,2.52) .. controls (10.88,3.20) and (10.28,3.46) .. (9.76,3.44);",
+        "at (9.70, 3.22) {$q_{\\mathrm{tr}}$};",
+        "at (9.70, 3.52) {trapped charge};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_post_source_label_scale_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if not _panel_f_post_force_source_connector_template_applied(original):
+        return None
+    if _panel_f_post_source_label_scale_template_applied(original):
+        return None
+    replacements = (
+        (
+            "% quality-search F boundary polish: pull callouts off panel edge\n"
+            "\\draw[cRed!58!black, line width=0.36pt]\n"
+            "  (11.35,2.52) .. controls (10.86,3.18) and (10.30,3.42) .. (9.84,3.42);",
+            "% quality-search F post-source label scale: lift trapped-charge legibility\n"
+            "\\draw[cRed!58!black, line width=0.36pt]\n"
+            "  (11.35,2.52) .. controls (10.88,3.20) and (10.28,3.46) .. (9.76,3.44);",
+        ),
+        (
+            "inner xsep=0.65pt, inner ysep=0.30pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.6}{4.3}\\selectfont, "
+            "text=cRed!70!black]\n"
+            "  at (9.78, 3.22) {$q_{\\mathrm{tr}}$};",
+            "inner xsep=0.72pt, inner ysep=0.32pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.9}{4.7}\\selectfont, "
+            "text=cRed!72!black]\n"
+            "  at (9.70, 3.22) {$q_{\\mathrm{tr}}$};",
+        ),
+        (
+            "inner xsep=0.7pt, inner ysep=0.30pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.5}{4.2}\\selectfont, "
+            "text=cRed!70!black]\n"
+            "  at (9.78, 3.48) {trapped charge};",
+            "inner xsep=0.78pt, inner ysep=0.32pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}\\selectfont, "
+            "text=cRed!72!black]\n"
+            "  at (9.70, 3.52) {trapped charge};",
+        ),
+    )
+    replacement = original
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    protected = (
+        "q_{\\mathrm{tr}}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "mechanical",
+        "$V_{\\mathrm{active}}$",
+        "bias",
+    )
+    if not all(label in replacement for label in protected):
+        return None
+    if not _panel_f_post_source_label_scale_template_applied(replacement):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _panel_f_final_finish_template_applied(block: str) -> bool:
     required_fragments = (
         "line width=0.22pt, dash pattern=on 1.2pt off 0.9pt",
@@ -5277,6 +5418,7 @@ def _candidate_operation_for_spec(
         "panel_f_current_label_sanitize": "F",
         "panel_f_post_boundary_force_balance": "F",
         "panel_f_post_force_source_connector": "F",
+        "panel_f_post_source_label_scale": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -5827,6 +5969,34 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_post_source_label_scale":
+        label_scale_block = _panel_f_post_source_label_scale_replacement(
+            lines=lines,
+            selector=selector,
+        )
+        if label_scale_block is not None:
+            original, new_text, line_start, line_end = label_scale_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_post_source_label_scale_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_POST_SOURCE_LABEL_SCALE_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_post_source_label_scale_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_POST_SOURCE_LABEL_SCALE_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -5897,6 +6067,7 @@ def _candidate_operation_for_spec(
         "panel_f_current_label_sanitize": 0.8,
         "panel_f_post_boundary_force_balance": 0.8,
         "panel_f_post_force_source_connector": 0.8,
+        "panel_f_post_source_label_scale": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -7377,6 +7548,7 @@ def _candidate_structural_impact(
         "panel_f_current_label_sanitize",
         "panel_f_post_boundary_force_balance",
         "panel_f_post_force_source_connector",
+        "panel_f_post_source_label_scale",
     }:
         possible_ripples.append(
             {
@@ -7543,6 +7715,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_boundary_polish": 0.84,
             "panel_f_post_boundary_force_balance": 0.9,
             "panel_f_post_force_source_connector": 0.88,
+            "panel_f_post_source_label_scale": 0.88,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
         }
@@ -7658,6 +7831,7 @@ def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
         "panel_f_post_force_source_connector": (
             PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID
         ),
+        "panel_f_post_source_label_scale": PANEL_F_POST_SOURCE_LABEL_SCALE_TEMPLATE_ID,
     }
     if score.get("template_id") != targeted_templates.get(str(score.get("family"))):
         return False

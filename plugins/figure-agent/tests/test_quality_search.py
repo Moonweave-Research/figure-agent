@@ -2045,6 +2045,113 @@ def test_quality_search_panel_f_post_force_source_connector_emits_panel_block(
     ]
 
 
+def test_quality_search_panel_f_post_source_label_scale_emits_panel_block(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column E -- ISPD-paired =================",
+            "\\draw[cAmber!70!black, line width=0.25pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);",
+            "\\fill[cGray!26!black, opacity=0.010]",
+            "  (12.74, 3.88) rectangle (13.34, 4.12);",
+            "\\fill[cGray!3] (12.72, 3.90) rectangle (13.36, 4.14);",
+            "\\draw[cGray!44!black, line width=0.16pt, rounded corners=1.0pt]",
+            "  (12.72, 3.90) rectangle (13.36, 4.14);",
+            (
+                "\\node[anchor=south, font=\\sffamily\\bfseries"
+                "\\fontsize{3.0}{3.6}\\selectfont, text=cGray!46!black]"
+            ),
+            "  at (13.02, 4.105) {$V_{\\mathrm{active}}$};",
+            (
+                "\\node[anchor=north, font=\\sffamily\\fontsize{2.7}{3.2}"
+                "\\selectfont, text=cGray!38!black]"
+            ),
+            "  at (13.02, 3.80) {bias};",
+            "\\fill[cRed!62!black] (13.24, 3.82) circle (0.018);",
+            "% quality-search F post-force source connector: simplify source lead",
+            "\\draw[cGray!58!black, line width=0.36pt, rounded corners=1.8pt]",
+            "  (13.24, 3.78) -- (13.18, 3.42) -- (13.18, 2.82);",
+            "\\node at (13.64, 1.62) {electrode};",
+            "% quality-search F boundary polish: pull callouts off panel edge",
+            "\\draw[cRed!58!black, line width=0.36pt]",
+            (
+                "  (11.35,2.52) .. controls (10.86,3.18)"
+                " and (10.30,3.42) .. (9.84,3.42);"
+            ),
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,\n"
+                "      inner xsep=0.65pt, inner ysep=0.30pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{3.6}{4.3}\\selectfont, "
+                "text=cRed!70!black]\n"
+                "  at (9.78, 3.22) {$q_{\\mathrm{tr}}$};"
+            ),
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,\n"
+                "      inner xsep=0.7pt, inner ysep=0.30pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{3.5}{4.2}\\selectfont, "
+                "text=cRed!70!black]\n"
+                "  at (9.78, 3.48) {trapped charge};"
+            ),
+            "\\node[anchor=south west] at (9.62, 1.66) {Coulomb};",
+            "\\node[text=cRed!72!black] at (9.63, 1.44) {repulsion};",
+            "\\draw[<->, cGray!66!black, line width=0.78pt]",
+            "  (10.18, 0.54) -- (13.18, 0.54);",
+            "\\node at (11.58, 0.28) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal=(
+            "Panel F after source connector trapped charge label scale "
+            "background final polish"
+        ),
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    label_scale = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_post_source_label_scale"
+    ][0]
+    operation = label_scale["operations"][0]
+    assert label_scale["operation_scale"] == "panel_block"
+    assert label_scale["template_id"] == "v5f_panel_f_post_source_label_scale_v1"
+    assert operation["template_id"] == "v5f_panel_f_post_source_label_scale_v1"
+    assert "quality-search F post-source label scale" in operation["replacement"]
+    assert (
+        "(11.35,2.52) .. controls (10.88,3.20) and (10.28,3.46) .. (9.76,3.44);"
+        in operation["replacement"]
+    )
+    assert "at (9.70, 3.22) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
+    assert "at (9.70, 3.52) {trapped charge};" in operation["replacement"]
+
+
 def test_quality_search_panel_f_final_finish_emits_post_boundary_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:
