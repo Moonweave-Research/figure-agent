@@ -76,6 +76,7 @@ PANEL_F_V5F_AUTO_COMPOSITE_TEMPLATE_ID = (
 )
 PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID = "v5f_panel_f_bias_label_cleanup_v1"
 PANEL_F_SOURCE_CUE_READABILITY_TEMPLATE_ID = "v5f_panel_f_source_cue_readability_v1"
+PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID = "v5f_panel_f_source_title_settle_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -404,6 +405,27 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
         "design_moves": [
             "lift V_active out of the tiny source glyph so it reads at print scale",
             "keep the source cue restrained and subordinate to the force/electrode relation",
+            "preserve the accepted trap-left, Coulomb, electrode, and air-gap composition",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_source_title_settle": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+            "$V_{\\mathrm{active}}$",
+            "bias",
+        ],
+        "design_moves": [
+            "settle V_active below the panel title lane so it stays attached to the source cue",
+            "keep the bias label near the source lead without crossing the connector",
             "preserve the accepted trap-left, Coulomb, electrode, and air-gap composition",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
@@ -909,6 +931,8 @@ def _goal_requests_panel_f_apparatus(goal: str) -> bool:
         "readability",
         "source",
         "styling",
+        "settle",
+        "title",
     }
     return panel_f and any(term in normalized for term in apparatus_terms)
 
@@ -1004,7 +1028,14 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
         )
     if any(
         term in normalized
-        for term in ("source", "readable", "readability", "style", "styling", "box")
+        for term in (
+            "source",
+            "readable",
+            "readability",
+            "style",
+            "styling",
+            "box",
+        )
     ):
         hypotheses.insert(
             0,
@@ -1031,6 +1062,35 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 ),
                 "rollback_condition": (
                     "candidate worsens compile, protected labels, or electrode/air-gap semantics"
+                ),
+            },
+        )
+    if any(term in normalized for term in ("settle", "title", "compete", "competition")):
+        hypotheses.insert(
+            0,
+            {
+                "fixture": name,
+                "family": "panel_f_source_title_settle",
+                "source": "goal_directive",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "goal explicitly requests Panel F source cue/title hierarchy settling"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert title/source competition feedback into a bounded Panel F "
+                    "label-position candidate"
+                ),
+                "expected_visual_movement": (
+                    "V_active remains readable but no longer competes with the mechanical title"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, source attachment, "
+                    "or electrode/air-gap semantics"
                 ),
             },
         )
@@ -2038,6 +2098,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_source_cue_readability":
         return "panel_block"
+    if family == "panel_f_source_title_settle":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -2076,6 +2138,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID
     if family == "panel_f_source_cue_readability":
         return PANEL_F_SOURCE_CUE_READABILITY_TEMPLATE_ID
+    if family == "panel_f_source_title_settle":
+        return PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -3932,6 +3996,80 @@ def _panel_f_source_cue_readability_replacement(
     return original, replacement, line_start, line_end
 
 
+def _panel_f_source_title_settle_template_applied(block: str) -> bool:
+    required_fragments = (
+        "% quality-search F source-title settle: keep source label below title lane",
+        "at (13.03, 4.15) {$V_{\\mathrm{active}}$};",
+        "at (13.03, 3.73) {bias};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_source_title_settle_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if not _panel_f_source_cue_readability_template_applied(original):
+        return None
+    if _panel_f_source_title_settle_template_applied(original):
+        return None
+    old = (
+        "% quality-search F source-cue readability: lift active-voltage label\n"
+        "\\draw[cGray!76!black, line width=0.22pt]\n"
+        "  (12.72, 4.00) rectangle (13.12, 4.10);\n"
+        "\\draw[cGray!46!black, line width=0.22pt]\n"
+        "  (12.76, 4.045) -- (12.88, 4.045) -- (12.88, 4.074)\n"
+        "               -- (12.99, 4.074) -- (12.99, 4.045) -- (13.08, 4.045);\n"
+        "\\node[anchor=south, font=\\sffamily\\bfseries\\fontsize{3.5}{4.2}\\selectfont, "
+        "text=cGray!58!black]\n"
+        "  at (13.03, 4.20) {$V_{\\mathrm{active}}$};\n"
+        "\\node[anchor=north, font=\\sffamily\\fontsize{2.8}{3.3}\\selectfont, "
+        "text=cGray!42!black]\n"
+        "  at (13.03, 3.74) {bias};"
+    )
+    new = (
+        "% quality-search F source-title settle: keep source label below title lane\n"
+        "\\draw[cGray!76!black, line width=0.22pt]\n"
+        "  (12.72, 4.00) rectangle (13.12, 4.10);\n"
+        "\\draw[cGray!46!black, line width=0.22pt]\n"
+        "  (12.76, 4.045) -- (12.88, 4.045) -- (12.88, 4.074)\n"
+        "               -- (12.99, 4.074) -- (12.99, 4.045) -- (13.08, 4.045);\n"
+        "\\node[anchor=south, font=\\sffamily\\bfseries\\fontsize{3.1}{3.8}\\selectfont, "
+        "text=cGray!54!black]\n"
+        "  at (13.03, 4.15) {$V_{\\mathrm{active}}$};\n"
+        "\\node[anchor=north, font=\\sffamily\\fontsize{2.7}{3.2}\\selectfont, "
+        "text=cGray!42!black]\n"
+        "  at (13.03, 3.73) {bias};"
+    )
+    replacement = original.replace(old, new)
+    if replacement == original:
+        return None
+    protected = (
+        "q_{\\mathrm{tr}}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "mechanical",
+        "$V_{\\mathrm{active}}$",
+        "bias",
+    )
+    if not all(label in replacement for label in protected):
+        return None
+    if not _panel_f_source_title_settle_template_applied(replacement):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _panel_f_boundary_polish_template_applied(block: str) -> bool:
     required_fragments = (
         "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
@@ -4431,6 +4569,7 @@ def _candidate_operation_for_spec(
         "panel_f_auto_composite_lane": "F",
         "panel_f_bias_label_cleanup": "F",
         "panel_f_source_cue_readability": "F",
+        "panel_f_source_title_settle": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -4837,6 +4976,34 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_SOURCE_CUE_READABILITY_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_source_title_settle":
+        source_title_block = _panel_f_source_title_settle_replacement(
+            lines=lines,
+            selector=selector,
+        )
+        if source_title_block is not None:
+            original, new_text, line_start, line_end = source_title_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_source_title_settle_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_source_title_settle_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -4902,6 +5069,7 @@ def _candidate_operation_for_spec(
         "panel_f_auto_composite_lane": 0.8,
         "panel_f_bias_label_cleanup": 0.8,
         "panel_f_source_cue_readability": 0.8,
+        "panel_f_source_title_settle": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -6316,6 +6484,102 @@ def _depone_evidence_pack(
     }
 
 
+def _candidate_structural_impact(
+    *,
+    family: str,
+    operation_scale: str,
+    target_panels: list[str],
+) -> dict[str, Any]:
+    panel_scope = sorted({panel for panel in target_panels if panel})
+    direct_targets = [
+        {
+            "kind": "panel_region",
+            "panel": panel,
+            "reason": "candidate operation is bound to this panel selector",
+        }
+        for panel in panel_scope
+    ]
+    possible_ripples: list[dict[str, Any]] = []
+    guard_checks = [
+        "compile_export_crop_evaluate",
+        "protected_labels_present",
+        "semantic_precheck",
+    ]
+    if operation_scale == "panel_block":
+        possible_ripples.extend(
+            [
+                {
+                    "kind": "intra_panel_layout",
+                    "risk": "moving one label or cue can change local reading order",
+                },
+                {
+                    "kind": "semantic_relation",
+                    "risk": "changing arrows or connectors can alter perceived cause/effect",
+                },
+            ]
+        )
+        guard_checks.extend(["panel_crop_changed_pixel_ratio", "candidate_rank"])
+    if "F" in panel_scope:
+        possible_ripples.extend(
+            [
+                {
+                    "kind": "adjacent_panel_boundary",
+                    "panels": ["E", "F"],
+                    "risk": "leftward Panel F labels can crowd Panel E at the column boundary",
+                },
+                {
+                    "kind": "panel_f_semantic_stack",
+                    "risk": (
+                        "trap labels, Coulomb arrow, electrode, air gap, and source cue "
+                        "compete for first-read hierarchy"
+                    ),
+                },
+            ]
+        )
+        guard_checks.extend(
+            [
+                "trap_label_route_does_not_cross_cantilever",
+                "electrode_air_gap_relation_preserved",
+            ]
+        )
+    if family in {
+        "panel_f_bias_label_cleanup",
+        "panel_f_source_cue_readability",
+        "panel_f_source_title_settle",
+    }:
+        possible_ripples.append(
+            {
+                "kind": "title_and_source_label_competition",
+                "risk": (
+                    "lifting V_active can compete with the mechanical title or "
+                    "detach from bias lead"
+                ),
+            }
+        )
+        guard_checks.extend(["source_cue_readability", "bias_lead_still_attached"])
+    if family == "apparatus_strengthen":
+        possible_ripples.append(
+            {
+                "kind": "apparatus_overemphasis",
+                "risk": "stronger equipment can overpower the Coulomb response",
+            }
+        )
+        guard_checks.append("coulomb_response_remains_first_read")
+    risk_level = "none"
+    if operation_scale == "panel_block":
+        risk_level = "medium"
+    elif operation_scale != "baseline":
+        risk_level = "low"
+    return {
+        "schema": "figure-agent.candidate-structural-impact.v0",
+        "scope": operation_scale,
+        "risk_level": risk_level,
+        "direct_targets": direct_targets,
+        "possible_ripples": possible_ripples,
+        "guard_checks": sorted(set(guard_checks)),
+    }
+
+
 def _candidate_specs_from_plan(
     plan: dict[str, Any],
     *,
@@ -6335,6 +6599,11 @@ def _candidate_specs_from_plan(
         source_selectors = _source_selectors_for_panels(source_context, target_panels)
         operation_scale = _preferred_operation_scale(family)
         template_id = _preferred_template_id_for_plan(family, plan)
+        structural_impact = _candidate_structural_impact(
+            family=family,
+            operation_scale=operation_scale,
+            target_panels=target_panels,
+        )
         specs.append(
             {
                 "id": f"QS{index:03d}",
@@ -6353,6 +6622,7 @@ def _candidate_specs_from_plan(
                 "apply_authority": registry["apply_authority"],
                 "operation_scale": operation_scale,
                 "template_id": template_id,
+                "structural_impact": structural_impact,
                 "operations": [],
                 "operation_state": "not_generated",
                 "operation_block_reason": (
@@ -6388,6 +6658,14 @@ def _candidate_specs_from_plan(
             "apply_authority": "review_only",
             "operation_scale": "baseline",
             "template_id": "null_baseline_v1",
+            "structural_impact": {
+                "schema": "figure-agent.candidate-structural-impact.v0",
+                "scope": "none",
+                "risk_level": "none",
+                "direct_targets": [],
+                "possible_ripples": [],
+                "guard_checks": [],
+            },
             "operations": [],
             "operation_state": "not_applicable",
             "mutation_allowed": False,
@@ -6428,6 +6706,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_auto_composite_lane": 0.93,
             "panel_f_bias_label_cleanup": 0.88,
             "panel_f_source_cue_readability": 0.88,
+            "panel_f_source_title_settle": 0.88,
             "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
@@ -6535,6 +6814,7 @@ def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
     targeted_templates = {
         "panel_f_bias_label_cleanup": PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID,
         "panel_f_source_cue_readability": PANEL_F_SOURCE_CUE_READABILITY_TEMPLATE_ID,
+        "panel_f_source_title_settle": PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID,
     }
     if score.get("template_id") != targeted_templates.get(str(score.get("family"))):
         return False
@@ -6794,6 +7074,7 @@ def _candidate_scores(
                     metadata.get("expected_visual_movement")
                     or spec.get("expected_visual_movement")
                 ),
+                "structural_impact": spec.get("structural_impact", {}),
                 "evidence_score": score,
                 "policy_score": policy["score"],
                 "rank_score": ranking.get("rank_score") if isinstance(ranking, dict) else None,
@@ -7490,6 +7771,12 @@ def _selected_figure_attempt(
         outputs=outputs,
     )
     semantic_score = _semantic_score_from_precheck(selected_semantic_precheck)
+    structural_impact = (
+        candidate_score.get("structural_impact")
+        if isinstance(candidate_score, dict)
+        and isinstance(candidate_score.get("structural_impact"), dict)
+        else {}
+    )
     attempt = {
         "schema": convergence_models.FIGURE_ATTEMPT_SCHEMA,
         "attempt_id": f"{run_id}:{candidate_id}",
@@ -7518,7 +7805,18 @@ def _selected_figure_attempt(
                 for item in semantic_score.get("missing_elements", [])
             ],
         ],
-        "edit_plan": [],
+        "edit_plan": [
+            {
+                "kind": "targeted_edit",
+                "candidate_id": candidate_id,
+                "expected_visual_movement": (
+                    candidate_score.get("expected_visual_movement")
+                    if isinstance(candidate_score, dict)
+                    else None
+                ),
+                "structural_impact": structural_impact,
+            }
+        ],
     }
     return convergence_models.validate_figure_attempt(attempt)
 

@@ -386,6 +386,7 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert all("operation_scale" in item for item in payload["candidate_scores"])
     assert all("template_id" in item for item in payload["candidate_scores"])
     assert all("expected_visual_movement" in item for item in payload["candidate_scores"])
+    assert all("structural_impact" in item for item in payload["candidate_scores"])
     assert all("non_marginal_visual_change" in item for item in payload["candidate_scores"])
     assert all(path.startswith(".scratch/quality-search-runs/") for path in payload["writes"])
 
@@ -1534,6 +1535,87 @@ def test_quality_search_panel_f_source_cue_readability_emits_panel_block_candida
     assert "quality-search F source-cue readability" in operation["replacement"]
     assert "at (13.03, 4.20) {$V_{\\mathrm{active}}$};" in operation["replacement"]
     assert "at (13.03, 3.74) {bias};" in operation["replacement"]
+    assert "trapped charge" in operation["replacement"]
+    assert "air gap" in operation["replacement"]
+
+
+def test_quality_search_structural_impact_tracks_panel_f_ripples() -> None:
+    impact = quality_search._candidate_structural_impact(  # type: ignore[attr-defined]
+        family="panel_f_source_cue_readability",
+        operation_scale="panel_block",
+        target_panels=["F"],
+    )
+
+    assert impact["schema"] == "figure-agent.candidate-structural-impact.v0"
+    assert impact["risk_level"] == "medium"
+    assert impact["direct_targets"] == [
+        {
+            "kind": "panel_region",
+            "panel": "F",
+            "reason": "candidate operation is bound to this panel selector",
+        }
+    ]
+    ripple_kinds = {item["kind"] for item in impact["possible_ripples"]}
+    assert "adjacent_panel_boundary" in ripple_kinds
+    assert "panel_f_semantic_stack" in ripple_kinds
+    assert "title_and_source_label_competition" in ripple_kinds
+    assert "electrode_air_gap_relation_preserved" in impact["guard_checks"]
+    assert "bias_lead_still_attached" in impact["guard_checks"]
+
+
+def test_quality_search_panel_f_source_title_settle_emits_panel_block_candidate() -> None:
+    tex_source = "\n".join(
+        [
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\node at (11.58, 0.28) {air gap};",
+            "\\node at (9.44, 1.58) {Coulomb};",
+            "\\node at (9.44, 1.45) {repulsion};",
+            "\\node at (9.22, 3.28) {$q_{\\mathrm{tr}}$};",
+            "\\node at (9.22, 3.84) {trapped charge};",
+            "% quality-search F source-cue readability: lift active-voltage label",
+            "\\draw[cGray!76!black, line width=0.22pt]",
+            "  (12.72, 4.00) rectangle (13.12, 4.10);",
+            "\\draw[cGray!46!black, line width=0.22pt]",
+            "  (12.76, 4.045) -- (12.88, 4.045) -- (12.88, 4.074)",
+            "               -- (12.99, 4.074) -- (12.99, 4.045) -- (13.08, 4.045);",
+            "\\node[anchor=south, font=\\sffamily\\bfseries\\fontsize{3.5}{4.2}\\selectfont, "
+            "text=cGray!58!black]",
+            "  at (13.03, 4.20) {$V_{\\mathrm{active}}$};",
+            "\\node[anchor=north, font=\\sffamily\\fontsize{2.8}{3.3}\\selectfont, "
+            "text=cGray!42!black]",
+            "  at (13.03, 3.74) {bias};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    lines = f"{tex_source}\n".splitlines(keepends=True)
+
+    operation, refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS009",
+            "family": "panel_f_source_title_settle",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=lines,
+        source_ref="figures/example.tex",
+    )
+
+    assert refusal is None
+    assert operation is not None
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "v5f_panel_f_source_title_settle_v1"
+    assert "quality-search F source-title settle" in operation["replacement"]
+    assert "at (13.03, 4.15) {$V_{\\mathrm{active}}$};" in operation["replacement"]
+    assert "at (13.03, 3.73) {bias};" in operation["replacement"]
     assert "trapped charge" in operation["replacement"]
     assert "air gap" in operation["replacement"]
 
@@ -3302,6 +3384,18 @@ def test_quality_search_selected_attempt_is_constraint_first_contract(
             "full_changed_pixel_ratio": 0.003,
             "panel_changed_pixel_ratio": 0.031,
             "non_marginal_visual_change": True,
+            "expected_visual_movement": "Panel F apparatus reads as mechanism evidence",
+            "structural_impact": {
+                "schema": "figure-agent.candidate-structural-impact.v0",
+                "risk_level": "medium",
+                "possible_ripples": [
+                    {
+                        "kind": "apparatus_overemphasis",
+                        "risk": "stronger equipment can overpower the Coulomb response",
+                    }
+                ],
+                "guard_checks": ["coulomb_response_remains_first_read"],
+            },
         }
     ]
 
@@ -3332,6 +3426,11 @@ def test_quality_search_selected_attempt_is_constraint_first_contract(
     assert attempt["journal_constraints"]["passed"] is True
     assert attempt["semantic_score"]["complete"] is True
     assert attempt["aesthetic_score"]["overall"] > 0
+    assert attempt["edit_plan"][0]["structural_impact"]["risk_level"] == "medium"
+    assert (
+        attempt["edit_plan"][0]["expected_visual_movement"]
+        == "Panel F apparatus reads as mechanism evidence"
+    )
     assert convergence_decision["schema"] == "figure-agent.convergence-decision.v1"
     assert convergence_decision["decision"] == "accept"
 
