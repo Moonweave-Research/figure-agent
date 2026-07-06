@@ -373,7 +373,7 @@ def _render_manifest(
                 }
             )
         else:
-            result = _run_process(
+            png_result = _run_process(
                 [
                     "pdftocairo",
                     "-png",
@@ -386,14 +386,37 @@ def _render_manifest(
                 cwd=out_dir,
                 env=os.environ.copy(),
             )
-            export_status = "success" if result.returncode == 0 else "failed"
-            if result.returncode != 0:
+            svg_result = _run_process(
+                [
+                    "pdftocairo",
+                    "-svg",
+                    "render/candidate.pdf",
+                    "render/candidate.svg",
+                ],
+                cwd=out_dir,
+                env=os.environ.copy(),
+            )
+            export_status = (
+                "success"
+                if png_result.returncode == 0 and svg_result.returncode == 0
+                else "failed"
+            )
+            if png_result.returncode != 0:
                 diagnostics.append(
                     {
                         "stage": "export",
                         "category": "failed",
                         "dependency": "pdftocairo",
                         "message": "candidate PNG export failed",
+                    }
+                )
+            if svg_result.returncode != 0:
+                diagnostics.append(
+                    {
+                        "stage": "export",
+                        "category": "failed",
+                        "dependency": "pdftocairo",
+                        "message": "candidate SVG export failed",
                     }
                 )
     if crop_panel and export_status == "success":
@@ -485,6 +508,9 @@ def _render_manifest(
         else None,
         "png": _fixture_relative(example_dir, render_dir / "candidate.png")
         if (render_dir / "candidate.png").is_file()
+        else None,
+        "svg": _fixture_relative(example_dir, render_dir / "candidate.svg")
+        if (render_dir / "candidate.svg").is_file()
         else None,
         "before_crop": _fixture_relative(example_dir, before_crop_path)
         if before_crop_path is not None and before_crop_path.is_file()

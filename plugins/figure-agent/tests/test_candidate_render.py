@@ -405,7 +405,10 @@ def test_render_compile_export_success_writes_sandbox_artifacts(
         if command[0] == "lualatex":
             (cwd / "render" / "candidate.pdf").write_bytes(b"%PDF-1.7\n")
         if command[0] == "pdftocairo":
-            (cwd / "render" / "candidate.png").write_bytes(b"png")
+            if "-svg" in command:
+                (cwd / "render" / "candidate.svg").write_text("<svg />\n", encoding="utf-8")
+            else:
+                (cwd / "render" / "candidate.png").write_bytes(b"png")
         return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
 
     monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
@@ -424,11 +427,13 @@ def test_render_compile_export_success_writes_sandbox_artifacts(
     data = json.loads(render_manifest.read_text(encoding="utf-8"))
     assert calls[0][:3] == ["lualatex", "-interaction=nonstopmode", "-halt-on-error"]
     assert calls[1][0] == "pdftocairo"
+    assert calls[2][0] == "pdftocairo"
     assert data["stages"]["compile"]["status"] == "success"
     assert data["stages"]["export"]["status"] == "success"
     assert data["stages"]["evaluate"]["status"] == "rendered_needs_human_review"
     assert data["artifacts"]["pdf"] == "build/candidates/CAND001/render/candidate.pdf"
     assert data["artifacts"]["png"] == "build/candidates/CAND001/render/candidate.png"
+    assert data["artifacts"]["svg"] == "build/candidates/CAND001/render/candidate.svg"
     assert not (fixture / "build" / "candidate_demo.pdf").exists()
 
 
