@@ -53,7 +53,7 @@ PROGRESS_ACTIONS = {
 FAMILY_REGISTRY_SCHEMA = "figure-agent.quality-search-family-registry.v0"
 APPARATUS_PANEL_F_TEMPLATE_ID = "v5f_panel_f_redraw_overlay_v1"
 APPARATUS_PANEL_F_REFRESH_TEMPLATE_ID = "v5f_panel_f_redraw_overlay_refresh_v1"
-PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID = "v5f_panel_f_boundary_polish_v1"
+PANEL_F_BOUNDARY_POLISH_TEMPLATE_ID = "v5f_panel_f_boundary_polish_v2"
 PANEL_F_FINAL_FINISH_TEMPLATE_ID = "v5f_panel_f_final_finish_v1"
 PANEL_F_LABEL_ROUTE_FINISH_TEMPLATE_ID = "v5f_panel_f_label_route_finish_v1"
 PANEL_F_DENSITY_RELIEF_TEMPLATE_ID = "v5f_panel_f_density_relief_v1"
@@ -1056,6 +1056,36 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 ),
             },
         )
+        hypotheses.insert(
+            0,
+            {
+                "fixture": name,
+                "family": "panel_f_boundary_polish",
+                "source": "goal_directive",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "goal explicitly requests Panel F label-boundary, arrow, "
+                        "and background-overlap polish"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert remaining label-boundary and arrow-spacing defects "
+                    "into a post-sanitize Panel F polish candidate"
+                ),
+                "expected_visual_movement": (
+                    "trap labels move off the boundary, the leader stays clear of "
+                    "the cantilever, and force labels no longer sit on the arrow lane"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, source attachment, "
+                    "or electrode/air-gap semantics"
+                ),
+            },
+        )
     if any(term in normalized for term in ("electrode", "lead", "connector", "wire")):
         hypotheses.append(
             {
@@ -1606,7 +1636,7 @@ def _patch_hypotheses(
         return _merge_hypotheses(
             goal_hypotheses,
             _detector_hypotheses(name, ledger),
-            limit=3,
+            limit=6,
         )
     return _detector_hypotheses(name, ledger)[:3]
 
@@ -4379,26 +4409,36 @@ def _panel_f_current_label_sanitize_replacement(
 
 def _panel_f_boundary_polish_template_applied(block: str) -> bool:
     required_fragments = (
-        "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
-        "at (9.72, 3.20) {$q_{\\mathrm{tr}}$};",
-        "at (9.72, 3.46) {trapped charge};",
-        "(11.06, 1.18) -- (9.34, 1.18);",
-        "anchor=south west] at (9.58, 1.54) {Coulomb};",
-        "text=cRed!82!black] at (9.59, 1.45) {repulsion};",
-        "(10.18, 0.54) -- (13.18, 0.54);",
+        "% quality-search F boundary polish: pull callouts off panel edge",
+        "(11.35,2.52) .. controls (10.86,3.18) and (10.30,3.42) .. (9.84,3.42);",
+        "at (9.78, 3.22) {$q_{\\mathrm{tr}}$};",
+        "at (9.78, 3.48) {trapped charge};",
+        "(10.72, 1.12) -- (9.62, 1.12);",
+        "anchor=south west] at (9.66, 1.58) {Coulomb};",
+        "text=cRed!74!black] at (9.67, 1.41) {repulsion};",
+        "(10.08, 0.54) -- (13.18, 0.54);",
     )
     return all(fragment in block for fragment in required_fragments)
 
 
 def _panel_f_boundary_polish_geometry_applied(block: str) -> bool:
-    required_fragments = (
+    v2_fragments = (
+        "(11.35,2.52) .. controls (10.86,3.18) and (10.30,3.42) .. (9.84,3.42);",
+        "at (9.78, 3.22) {$q_{\\mathrm{tr}}$};",
+        "at (9.78, 3.48) {trapped charge};",
+        "(10.72, 1.12) -- (9.62, 1.12);",
+        "(10.08, 0.54) -- (13.18, 0.54);",
+    )
+    v1_fragments = (
         "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
         "at (9.72, 3.20) {$q_{\\mathrm{tr}}$};",
         "at (9.72, 3.46) {trapped charge};",
         "(11.06, 1.18) -- (9.34, 1.18);",
         "(10.18, 0.54) -- (13.18, 0.54);",
     )
-    return all(fragment in block for fragment in required_fragments)
+    return all(fragment in block for fragment in v2_fragments) or all(
+        fragment in block for fragment in v1_fragments
+    )
 
 
 def _panel_f_boundary_polish_replacement(
@@ -4413,43 +4453,98 @@ def _panel_f_boundary_polish_replacement(
     original = "".join(lines[line_start - 1 : line_end])
     if not _panel_f_overlay_has_protected_labels(original):
         return None
-    if not _panel_f_overlay_template_applied(original):
+    if not (
+        _panel_f_overlay_template_applied(original)
+        or _panel_f_current_label_sanitize_template_applied(original)
+    ):
         return None
     if _panel_f_boundary_polish_template_applied(original):
         return None
     replacement = original
     replacements = (
         (
-            "(11.48,2.40) .. controls (10.78,3.02) and (10.12,3.36) .. (9.60,3.36);",
-            "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
+            "\\draw[cRed!55!black, line width=0.32pt]\n"
+            "  (11.48,2.40) .. controls (10.78,3.02) and (10.12,3.36) .. (9.60,3.36);",
+            "% quality-search F boundary polish: pull callouts off panel edge\n"
+            "\\draw[cRed!58!black, line width=0.36pt]\n"
+            "  (11.35,2.52) .. controls (10.86,3.18) and (10.30,3.42) .. (9.84,3.42);",
         ),
         (
-            "font=\\sffamily\\bfseries\\fontsize{4.8}{5.8}\\selectfont, text=cRed!76!black]\n"
+            "% quality-search F current-label sanitize: shorten trap leader "
+            "and separate force labels\n"
+            "\\draw[cRed!62!black, line width=0.42pt]\n"
+            "  (11.35,2.52) .. controls (10.76,3.10) and (10.14,3.38) .. (9.64,3.38);",
+            "% quality-search F boundary polish: pull callouts off panel edge\n"
+            "\\draw[cRed!58!black, line width=0.36pt]\n"
+            "  (11.35,2.52) .. controls (10.86,3.18) and (10.30,3.42) .. (9.84,3.42);",
+        ),
+        (
+            "inner xsep=0.9pt, inner ysep=0.45pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{4.8}{5.8}\\selectfont, text=cRed!76!black]\n"
             "  at (9.60, 3.12) {$q_{\\mathrm{tr}}$};",
-            "font=\\sffamily\\bfseries\\fontsize{4.4}{5.3}\\selectfont, text=cRed!76!black]\n"
-            "  at (9.72, 3.20) {$q_{\\mathrm{tr}}$};",
+            "inner xsep=0.65pt, inner ysep=0.30pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.6}{4.3}\\selectfont, text=cRed!70!black]\n"
+            "  at (9.78, 3.22) {$q_{\\mathrm{tr}}$};",
         ),
         (
-            "font=\\sffamily\\bfseries\\fontsize{4.4}{5.3}\\selectfont, text=cRed!76!black]\n"
+            "inner xsep=0.75pt, inner ysep=0.35pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}\\selectfont, text=cRed!72!black]\n"
+            "  at (9.60, 3.18) {$q_{\\mathrm{tr}}$};",
+            "inner xsep=0.65pt, inner ysep=0.30pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.6}{4.3}\\selectfont, text=cRed!70!black]\n"
+            "  at (9.78, 3.22) {$q_{\\mathrm{tr}}$};",
+        ),
+        (
+            "inner xsep=1.0pt, inner ysep=0.45pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{4.4}{5.3}\\selectfont, text=cRed!76!black]\n"
             "  at (9.60, 3.36) {trapped charge};",
-            "font=\\sffamily\\bfseries\\fontsize{4.1}{5.0}\\selectfont, text=cRed!76!black]\n"
-            "  at (9.72, 3.46) {trapped charge};",
+            "inner xsep=0.7pt, inner ysep=0.30pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.5}{4.2}\\selectfont, text=cRed!70!black]\n"
+            "  at (9.78, 3.48) {trapped charge};",
         ),
         (
-            "(11.18, 1.18) -- (9.18, 1.18);",
-            "(11.06, 1.18) -- (9.34, 1.18);",
+            "inner xsep=0.8pt, inner ysep=0.35pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.7}{4.5}\\selectfont, text=cRed!72!black]\n"
+            "  at (9.60, 3.62) {trapped charge};",
+            "inner xsep=0.7pt, inner ysep=0.30pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.5}{4.2}\\selectfont, text=cRed!70!black]\n"
+            "  at (9.78, 3.48) {trapped charge};",
+        ),
+        (
+            "-{Stealth[length=9.6pt,width=6.8pt]}, cRed!82!black, line width=1.24pt]\n"
+            "  (11.18, 1.18) -- (9.18, 1.18);",
+            "-{Stealth[length=7.2pt,width=5.0pt]}, cRed!80!black, line width=0.92pt]\n"
+            "  (10.72, 1.12) -- (9.62, 1.12);",
+        ),
+        (
+            "-{Stealth[length=8.4pt,width=5.8pt]}, cRed!82!black, line width=1.06pt]\n"
+            "  (10.84, 1.08) -- (9.36, 1.08);",
+            "-{Stealth[length=7.2pt,width=5.0pt]}, cRed!80!black, line width=0.92pt]\n"
+            "  (10.72, 1.12) -- (9.62, 1.12);",
         ),
         (
             "anchor=south west] at (9.72, 1.54) {Coulomb};",
-            "anchor=south west] at (9.58, 1.54) {Coulomb};",
+            "anchor=south west] at (9.66, 1.58) {Coulomb};",
+        ),
+        (
+            "anchor=south west] at (9.54, 1.68) {Coulomb};",
+            "anchor=south west] at (9.66, 1.58) {Coulomb};",
         ),
         (
             "text=cRed!82!black] at (9.73, 1.45) {repulsion};",
-            "text=cRed!82!black] at (9.59, 1.45) {repulsion};",
+            "text=cRed!74!black] at (9.67, 1.41) {repulsion};",
+        ),
+        (
+            "text=cRed!76!black] at (9.54, 1.50) {repulsion};",
+            "text=cRed!74!black] at (9.67, 1.41) {repulsion};",
         ),
         (
             "(9.92, 0.54) -- (13.18, 0.54);",
-            "(10.18, 0.54) -- (13.18, 0.54);",
+            "(10.08, 0.54) -- (13.18, 0.54);",
+        ),
+        (
+            "(9.70, 0.54) -- (13.18, 0.54);",
+            "(10.08, 0.54) -- (13.18, 0.54);",
         ),
     )
     for old, new in replacements:

@@ -1773,42 +1773,46 @@ def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
                 " -- (13.18, 3.02) -- (13.30, 2.82);"
             ),
             "\\node at (13.64, 1.62) {electrode};",
-            "\\draw[cRed!55!black, line width=0.32pt]",
             (
-                "  (11.48,2.40) .. controls (10.78,3.02)"
-                " and (10.12,3.36) .. (9.60,3.36);"
+                "% quality-search F current-label sanitize: shorten trap leader "
+                "and separate force labels"
+            ),
+            "\\draw[cRed!62!black, line width=0.42pt]",
+            (
+                "  (11.35,2.52) .. controls (10.76,3.10)"
+                " and (10.14,3.38) .. (9.64,3.38);"
             ),
             (
-                "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,\n"
-                "      inner xsep=0.9pt, inner ysep=0.45pt,\n"
-                "      font=\\sffamily\\bfseries\\fontsize{4.8}{5.8}\\selectfont, "
-                "text=cRed!76!black]\n"
-                "  at (9.60, 3.12) {$q_{\\mathrm{tr}}$};"
+                "\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,\n"
+                "      inner xsep=0.75pt, inner ysep=0.35pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}\\selectfont, "
+                "text=cRed!72!black]\n"
+                "  at (9.60, 3.18) {$q_{\\mathrm{tr}}$};"
             ),
             (
-                "\\node[anchor=west, fill=white, fill opacity=0.94, text opacity=1,\n"
-                "      inner xsep=1.0pt, inner ysep=0.45pt,\n"
-                "      font=\\sffamily\\bfseries\\fontsize{4.4}{5.3}\\selectfont, "
-                "text=cRed!76!black]\n"
-                "  at (9.60, 3.36) {trapped charge};"
+                "\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,\n"
+                "      inner xsep=0.8pt, inner ysep=0.35pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{3.7}{4.5}\\selectfont, "
+                "text=cRed!72!black]\n"
+                "  at (9.60, 3.62) {trapped charge};"
             ),
             (
                 "\\draw[panelFCoulombRepulsionArrow, "
-                "-{Stealth[length=9.6pt,width=6.8pt]}, "
-                "cRed!82!black, line width=1.24pt]"
+                "-{Stealth[length=8.4pt,width=5.8pt]}, "
+                "cRed!82!black, line width=1.06pt]"
             ),
-            "  (11.18, 1.18) -- (9.18, 1.18);",
-            "\\node[font=\\sffamily\\bfseries\\fontsize{6.5}{7.8}\\selectfont, text=cRed!82!black,",
-            "      anchor=south west] at (9.72, 1.54) {Coulomb};",
+            "  (10.84, 1.08) -- (9.36, 1.08);",
+            "\\node[font=\\sffamily\\bfseries\\fontsize{5.5}{6.6}\\selectfont, text=cRed!76!black,",
+            "      anchor=south west] at (9.54, 1.68) {Coulomb};",
             (
                 "\\node[labelMute, anchor=north west, fill=white, fill opacity=0.94, "
                 "text opacity=1,\n"
-                "      inner xsep=1.2pt, inner ysep=0.6pt,\n"
-                "      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont,\n"
-                "      text=cRed!82!black] at (9.73, 1.45) {repulsion};"
+                "      inner xsep=0.95pt, inner ysep=0.45pt,\n"
+                "      font=\\sffamily\\fontsize{5.0}{6.0}\\selectfont,\n"
+                "      text=cRed!76!black] at (9.54, 1.50) {repulsion};"
             ),
             "\\draw[<->, cGray!64!black, line width=0.70pt]",
-            "  (9.92, 0.54) -- (13.18, 0.54);",
+            "  (9.70, 0.54) -- (13.18, 0.54);",
             "\\node at (11.88, 0.31) {air gap};",
             "\\node at (11.70, 4.56) {mechanical};",
             "% v8.6 ROW 2 END",
@@ -1831,14 +1835,16 @@ def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
     ][0]
     operation = boundary["operations"][0]
     assert boundary["operation_scale"] == "panel_block"
-    assert boundary["template_id"] == "v5f_panel_f_boundary_polish_v1"
+    assert boundary["template_id"] == "v5f_panel_f_boundary_polish_v2"
     assert operation["operation_scale"] == "panel_block"
-    assert operation["template_id"] == "v5f_panel_f_boundary_polish_v1"
-    assert "(9.72,3.46)" in operation["replacement"]
-    assert "at (9.72, 3.20) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
-    assert "at (9.72, 3.46) {trapped charge};" in operation["replacement"]
-    assert "(11.06, 1.18) -- (9.34, 1.18);" in operation["replacement"]
-    assert "(10.18, 0.54) -- (13.18, 0.54);" in operation["replacement"]
+    assert operation["template_id"] == "v5f_panel_f_boundary_polish_v2"
+    assert "quality-search F boundary polish: pull callouts off panel edge" in operation[
+        "replacement"
+    ]
+    assert "at (9.78, 3.22) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
+    assert "at (9.78, 3.48) {trapped charge};" in operation["replacement"]
+    assert "(10.72, 1.12) -- (9.62, 1.12);" in operation["replacement"]
+    assert "(10.08, 0.54) -- (13.18, 0.54);" in operation["replacement"]
 
 
 def test_quality_search_panel_f_final_finish_emits_post_boundary_panel_block(
