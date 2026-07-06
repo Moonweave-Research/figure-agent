@@ -15,6 +15,8 @@ import candidate_contracts
 import candidate_visual_eval
 import fixture_identity
 import runtime_paths
+import yaml
+from PIL import Image
 
 SCHEMA = "figure-agent.candidate-manifest.v1"
 RESULT_SCHEMA = "figure-agent.candidate-render-result.v1"
@@ -117,6 +119,68 @@ def _sandbox_child_dir(out_dir: Path, name: str) -> Path:
         raise CandidateRenderError(f"sandbox path_escape: {name}") from exc
     child.mkdir(parents=True, exist_ok=True)
     return child
+
+
+def _panel_bbox_pdf_cm(example_dir: Path, panel_id: str) -> list[float] | None:
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        return None
+    raw = yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}
+    if not isinstance(raw, dict):
+        return None
+    panels = raw.get("panels")
+    if not isinstance(panels, list):
+        return None
+    for panel in panels:
+        if not isinstance(panel, dict):
+            continue
+        if str(panel.get("id") or "").upper() != panel_id.upper():
+            continue
+        bbox = panel.get("bbox_pdf_cm")
+        if (
+            isinstance(bbox, list)
+            and len(bbox) == 4
+            and all(isinstance(value, int | float) for value in bbox)
+        ):
+            return [float(value) for value in bbox]
+    return None
+
+
+def _pdf_page_size_cm(pdf_path: Path) -> tuple[float, float]:
+    try:
+        import pdfplumber
+    except ImportError as exc:
+        raise CandidateRenderError("pdfplumber required for panel bbox cropping") from exc
+    with pdfplumber.open(pdf_path) as pdf:
+        if not pdf.pages:
+            raise CandidateRenderError(f"empty PDF: {pdf_path}")
+        page = pdf.pages[0]
+        return float(page.width) * 2.54 / 72.0, float(page.height) * 2.54 / 72.0
+
+
+def _crop_panel_png(
+    *,
+    png_path: Path,
+    pdf_path: Path,
+    bbox_pdf_cm: list[float],
+    output_path: Path,
+) -> None:
+    page_width_cm, page_height_cm = _pdf_page_size_cm(pdf_path)
+    x0, y0, x1, y1 = bbox_pdf_cm
+    if x1 <= x0 or y1 <= y0:
+        raise CandidateRenderError("bbox_pdf_cm must satisfy x1>x0 and y1>y0")
+    if x0 < 0 or y0 < 0 or x1 > page_width_cm or y1 > page_height_cm:
+        raise CandidateRenderError("bbox_pdf_cm outside PDF page bounds")
+    with Image.open(png_path) as image:
+        width_px, height_px = image.size
+        crop_box = (
+            round(x0 / page_width_cm * width_px),
+            round(y0 / page_height_cm * height_px),
+            round(x1 / page_width_cm * width_px),
+            round(y1 / page_height_cm * height_px),
+        )
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        image.crop(crop_box).save(output_path)
 
 
 def _fixture_relative(example_dir: Path, path: Path) -> str:
@@ -449,9 +513,43 @@ def _render_manifest(
         elif before_crop.is_symlink() or after_crop.is_symlink():
             raise CandidateRenderError("sandbox_symlink_forbidden: crop")
         else:
-            shutil.copyfile(original_png, before_crop)
-            shutil.copyfile(candidate_png, after_crop)
-            crop_status = "success"
+            bbox_pdf_cm = _panel_bbox_pdf_cm(example_dir, crop_panel)
+            if bbox_pdf_cm is None:
+                crop_status = "blocked"
+                diagnostics.append(
+                    {
+                        "stage": "crop",
+                        "category": "missing_panel_bbox",
+                        "dependency": "spec.yaml",
+                        "message": f"panel {crop_panel} lacks bbox_pdf_cm",
+                    }
+                )
+            else:
+                try:
+                    _crop_panel_png(
+                        png_path=original_png,
+                        pdf_path=example_dir / "build" / f"{fixture_name}.pdf",
+                        bbox_pdf_cm=bbox_pdf_cm,
+                        output_path=before_crop,
+                    )
+                    _crop_panel_png(
+                        png_path=candidate_png,
+                        pdf_path=render_dir / "candidate.pdf",
+                        bbox_pdf_cm=bbox_pdf_cm,
+                        output_path=after_crop,
+                    )
+                except CandidateRenderError as exc:
+                    crop_status = "blocked"
+                    diagnostics.append(
+                        {
+                            "stage": "crop",
+                            "category": "failed",
+                            "dependency": "panel_bbox",
+                            "message": str(exc),
+                        }
+                    )
+                else:
+                    crop_status = "success"
     visual_deltas: dict[str, Any] = {
         "pixel_diff_mean": None,
         "pixel_diff_max": None,

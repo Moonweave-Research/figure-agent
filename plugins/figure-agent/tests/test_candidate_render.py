@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -68,6 +69,7 @@ def _candidate_set(workspace: Path, fixture: Path) -> dict:
     return candidate_generator.build_candidate_set(
         "candidate_demo",
         workspace_root=workspace,
+        plugin_root=workspace / "plugin-root",
     )
 
 
@@ -443,9 +445,32 @@ def test_render_crop_panel_writes_before_after_sandbox_artifacts(
 ) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
+    (fixture / "spec.yaml").write_text(
+        """
+name: candidate_demo
+panels:
+  - id: C
+    bbox_pdf_cm: [1.0, 1.0, 3.0, 3.0]
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
     (fixture / "build").mkdir()
-    (fixture / "build" / "candidate_demo.png").write_bytes(b"original-png")
-    candidate_set = _candidate_set(workspace, fixture)
+    (fixture / "build" / "candidate_demo.pdf").write_bytes(b"%PDF-1.7\n")
+    (fixture / "build" / "candidate_demo.png").write_bytes(
+        _ppm(
+            4,
+            4,
+            [
+                (255, 255, 255),
+                (255, 255, 255),
+                (255, 255, 255),
+                (255, 255, 255),
+            ]
+            * 4,
+        )
+    )
+    candidate_set = _minimal_candidate_set()
 
     def fake_run(
         command: list[str],
@@ -456,11 +481,24 @@ def test_render_crop_panel_writes_before_after_sandbox_artifacts(
         if command[0] == "lualatex":
             (cwd / "render" / "candidate.pdf").write_bytes(b"%PDF-1.7\n")
         if command[0] == "pdftocairo":
-            (cwd / "render" / "candidate.png").write_bytes(b"candidate-png")
+            (cwd / "render" / "candidate.png").write_bytes(
+                _ppm(
+                    4,
+                    4,
+                    [
+                        (0, 0, 0),
+                        (0, 0, 0),
+                        (0, 0, 0),
+                        (0, 0, 0),
+                    ]
+                    * 4,
+                )
+            )
         return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
 
     monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
     monkeypatch.setattr(candidate_render, "_run_process", fake_run)
+    monkeypatch.setattr(candidate_render, "_pdf_page_size_cm", lambda _path: (4.0, 4.0))
 
     candidate_render.render_candidate_set(
         "candidate_demo",
@@ -480,12 +518,14 @@ def test_render_crop_panel_writes_before_after_sandbox_artifacts(
     assert data["artifacts"]["after_crop"] == (
         "build/candidates/CAND001/crops/candidate_panel_C.png"
     )
-    assert (
+    before_crop = (
         fixture / "build" / "candidates" / "CAND001" / "crops" / "original_panel_C.png"
-    ).read_bytes() == b"original-png"
-    assert (
+    )
+    after_crop = (
         fixture / "build" / "candidates" / "CAND001" / "crops" / "candidate_panel_C.png"
-    ).read_bytes() == b"candidate-png"
+    )
+    assert Image.open(before_crop).size == (2, 2)
+    assert Image.open(after_crop).size == (2, 2)
 
 
 def test_render_evaluate_records_visual_delta_when_crops_are_comparable(
@@ -494,11 +534,22 @@ def test_render_evaluate_records_visual_delta_when_crops_are_comparable(
 ) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
+    (fixture / "spec.yaml").write_text(
+        """
+name: candidate_demo
+panels:
+  - id: C
+    bbox_pdf_cm: [0.0, 0.0, 2.0, 1.0]
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
     (fixture / "build").mkdir()
+    (fixture / "build" / "candidate_demo.pdf").write_bytes(b"%PDF-1.7\n")
     (fixture / "build" / "candidate_demo.png").write_bytes(
         _ppm(2, 1, [(255, 255, 255), (255, 255, 255)])
     )
-    candidate_set = _candidate_set(workspace, fixture)
+    candidate_set = _minimal_candidate_set()
 
     def fake_run(
         command: list[str],
@@ -514,6 +565,7 @@ def test_render_evaluate_records_visual_delta_when_crops_are_comparable(
 
     monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
     monkeypatch.setattr(candidate_render, "_run_process", fake_run)
+    monkeypatch.setattr(candidate_render, "_pdf_page_size_cm", lambda _path: (2.0, 1.0))
 
     candidate_render.render_candidate_set(
         "candidate_demo",
