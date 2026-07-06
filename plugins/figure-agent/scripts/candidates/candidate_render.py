@@ -259,8 +259,7 @@ def _candidate_source_text(
             if line_end == line_start:
                 if original not in lines[line_start - 1]:
                     raise CandidateRenderError(
-                        f"operation original not found at line {line_start}: "
-                        f"{source_path.name}"
+                        f"operation original not found at line {line_start}: {source_path.name}"
                     )
                 lines[line_start - 1] = lines[line_start - 1].replace(
                     original,
@@ -461,9 +460,7 @@ def _render_manifest(
                 env=os.environ.copy(),
             )
             export_status = (
-                "success"
-                if png_result.returncode == 0 and svg_result.returncode == 0
-                else "failed"
+                "success" if png_result.returncode == 0 and svg_result.returncode == 0 else "failed"
             )
             if png_result.returncode != 0:
                 diagnostics.append(
@@ -584,20 +581,14 @@ def _render_manifest(
                     visual_deltas = comparison["visual_deltas"]
                 for diagnostic in comparison.get("diagnostics", []):
                     if isinstance(diagnostic, dict):
-                        diagnostics.append(
-                            {key: str(value) for key, value in diagnostic.items()}
-                        )
+                        diagnostics.append({key: str(value) for key, value in diagnostic.items()})
         else:
             evaluate_status = "rendered_needs_human_review"
     before_crop_path = (
-        out_dir / "crops" / f"original_panel_{crop_panel}.png"
-        if crop_panel
-        else None
+        out_dir / "crops" / f"original_panel_{crop_panel}.png" if crop_panel else None
     )
     after_crop_path = (
-        out_dir / "crops" / f"candidate_panel_{crop_panel}.png"
-        if crop_panel
-        else None
+        out_dir / "crops" / f"candidate_panel_{crop_panel}.png" if crop_panel else None
     )
     artifacts = {
         "source_copy": source_copy,
@@ -801,4 +792,15 @@ def render_candidate_set(
                 render_manifest_path,
             )
         rendered.append(rendered_item)
+    if candidate_id is not None and not rendered:
+        raise CandidateRenderError(
+            f"candidate_id {candidate_id!r} matched no candidate in set for fixture {name!r}"
+        )
+    for item in rendered:
+        manifest_path = example_dir / item["manifest"]
+        if not manifest_path.is_file():
+            raise CandidateRenderError(
+                f"render reported success for {item['candidate_id']} "
+                f"but manifest missing: {manifest_path}"
+            )
     return {"schema": RESULT_SCHEMA, "fixture": name, "rendered": rendered}

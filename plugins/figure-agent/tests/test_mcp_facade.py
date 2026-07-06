@@ -490,6 +490,7 @@ def test_mcp_quality_next_experiment_is_read_only(tmp_path: Path) -> None:
     assert recommendation["kind"] in {
         "fixture_family_uncertainty_probe",
         "benchmark_preview",
+        "contract_backed_benchmark_probe",
     }
     assert recommendation["allowed"] is True
     for forbidden in ("--write", "--apply", "--accept", "--overwrite", "--force"):

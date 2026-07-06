@@ -57,7 +57,7 @@ def _write_undeclared_candidate_defect(fixture: Path) -> None:
                         "source_line": 1,
                         "panel": "A",
                     }
-                ]
+                ],
             }
         ),
         encoding="utf-8",
@@ -255,15 +255,18 @@ def test_render_source_copy_respects_exact_multiline_replace_text(
 ) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
-    source = "\n".join(
-        [
-            "% Panel F -- mechanical",
-            "\\begin{scope}[shift={(9.5,0)}]",
-            "\\draw[cGray!64!black, line width=0.34pt] (0,0) rectangle (1,1);",
-            "\\node at (0.5,0.5) {Coulomb repulsion};",
-            "\\end{scope}",
-        ]
-    ) + "\n"
+    source = (
+        "\n".join(
+            [
+                "% Panel F -- mechanical",
+                "\\begin{scope}[shift={(9.5,0)}]",
+                "\\draw[cGray!64!black, line width=0.34pt] (0,0) rectangle (1,1);",
+                "\\node at (0.5,0.5) {Coulomb repulsion};",
+                "\\end{scope}",
+            ]
+        )
+        + "\n"
+    )
     replacement = source.replace("line width=0.34pt", "line width=0.92pt").replace(
         "{Coulomb repulsion}",
         "{Coulomb repulsion strengthened}",
@@ -518,12 +521,8 @@ panels:
     assert data["artifacts"]["after_crop"] == (
         "build/candidates/CAND001/crops/candidate_panel_C.png"
     )
-    before_crop = (
-        fixture / "build" / "candidates" / "CAND001" / "crops" / "original_panel_C.png"
-    )
-    after_crop = (
-        fixture / "build" / "candidates" / "CAND001" / "crops" / "candidate_panel_C.png"
-    )
+    before_crop = fixture / "build" / "candidates" / "CAND001" / "crops" / "original_panel_C.png"
+    after_crop = fixture / "build" / "candidates" / "CAND001" / "crops" / "candidate_panel_C.png"
     assert Image.open(before_crop).size == (2, 2)
     assert Image.open(after_crop).size == (2, 2)
 
@@ -881,3 +880,51 @@ def test_render_rejects_build_dir_symlink_to_exports(tmp_path: Path) -> None:
         )
 
     assert list(exports.rglob("*")) == []
+
+
+def test_render_candidate_set_missing_manifest_is_an_error(tmp_path: Path) -> None:
+    """A specific candidate_id that matches nothing must fail, not report empty success.
+
+    This is the live fail-open: render_candidate_set filters by candidate_id and,
+    when no candidate matches, silently returns rendered=[] with no manifest on disk.
+    The CLI then reports exit 0, and downstream manifest reads hit FileNotFoundError.
+    """
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = _minimal_candidate_set()
+
+    with pytest.raises(candidate_render.CandidateRenderError, match="matched no candidate"):
+        candidate_render.render_candidate_set(
+            "candidate_demo",
+            candidate_set,
+            workspace_root=workspace,
+            candidate_id="MISSING999",
+        )
+
+    assert not (fixture / "build" / "candidates" / "MISSING999").exists()
+
+
+def test_render_candidate_set_manifest_write_skipped_is_an_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """success report must imply the manifest exists on disk, even if the write is lost."""
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+    candidate_set = _minimal_candidate_set()
+
+    original_write = candidate_render._write_sandbox_file
+
+    def _skip_manifest_write(path: Path, text: str) -> None:
+        if path.name == "candidate_manifest.json":
+            return
+        original_write(path, text)
+
+    monkeypatch.setattr(candidate_render, "_write_sandbox_file", _skip_manifest_write)
+
+    with pytest.raises(candidate_render.CandidateRenderError, match="manifest missing"):
+        candidate_render.render_candidate_set(
+            "candidate_demo",
+            candidate_set,
+            workspace_root=workspace,
+            candidate_id="CAND001",
+        )
