@@ -1575,42 +1575,6 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 ),
             },
         )
-    if any(
-        term in normalized for term in ("after source finish", "post source finish", "final")
-    ) and any(
-        term in normalized
-        for term in ("trapped charge", "q_tr", "trap", "label", "hierarchy", "rail")
-    ):
-        hypotheses.insert(
-            0,
-            {
-                "fixture": name,
-                "family": "panel_f_post_source_trap_hierarchy",
-                "source": "goal_directive",
-                "mutation_allowed": False,
-                "mutation_block_reason": "quality-search v0 is planner-only",
-                "target_scope": "panel",
-                "target_hint": {
-                    "panels": ["F"],
-                    "reason": (
-                        "goal explicitly requests Panel F trapped-charge label "
-                        "hierarchy after source finish"
-                    ),
-                },
-                "expected_detector_movement": (
-                    "convert post-source-finish trap-label hierarchy defects into "
-                    "a fresh source-bound Panel F candidate"
-                ),
-                "expected_visual_movement": (
-                    "trapped charge heading and q_tr separate more clearly while "
-                    "the leader remains off the cantilever"
-                ),
-                "rollback_condition": (
-                    "candidate worsens compile, protected labels, source finish, "
-                    "force direction, or electrode/air-gap semantics"
-                ),
-            },
-        )
     for _edit in panel_block_edits.load_bundled_panel_block_edits():
         if all(any(term in normalized for term in group) for group in _edit.goal_trigger):
             hypotheses.insert(
@@ -5615,91 +5579,6 @@ def _panel_f_post_spacing_source_finish_replacement(
     return original, replacement, line_start, line_end
 
 
-def _panel_f_post_source_trap_hierarchy_template_applied(block: str) -> bool:
-    required_fragments = (
-        "% quality-search F post-source trap hierarchy: separate trap labels",
-        "(11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);",
-        "at (9.64, 3.20) {$q_{\\mathrm{tr}}$};",
-        "at (9.64, 3.56) {trapped charge};",
-    )
-    return all(fragment in block for fragment in required_fragments)
-
-
-def _panel_f_post_source_trap_hierarchy_replacement(
-    *,
-    lines: list[str],
-    selector: dict[str, Any],
-) -> tuple[str, str, int, int] | None:
-    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
-    if line_range is None:
-        return None
-    line_start, line_end = line_range
-    original = "".join(lines[line_start - 1 : line_end])
-    if not _panel_f_overlay_has_protected_labels(original):
-        return None
-    if not _panel_f_post_spacing_source_finish_template_applied(original):
-        return None
-    if not _panel_f_post_force_spacing_finish_template_applied(original):
-        return None
-    if _panel_f_post_source_trap_hierarchy_template_applied(original):
-        return None
-    replacements = (
-        (
-            "% quality-search F post-source label scale: lift trapped-charge legibility\n"
-            "\\draw[cRed!58!black, line width=0.36pt]\n"
-            "  (11.35,2.52) .. controls (10.88,3.20) and (10.28,3.46) .. (9.76,3.44);",
-            "% quality-search F post-source trap hierarchy: separate trap labels\n"
-            "\\draw[cRed!56!black, line width=0.34pt]\n"
-            "  (11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);",
-        ),
-        (
-            "inner xsep=0.72pt, inner ysep=0.32pt,\n"
-            "      font=\\sffamily\\bfseries\\fontsize{3.9}{4.7}\\selectfont, "
-            "text=cRed!72!black]\n"
-            "  at (9.70, 3.22) {$q_{\\mathrm{tr}}$};",
-            "inner xsep=0.70pt, inner ysep=0.31pt,\n"
-            "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}\\selectfont, "
-            "text=cRed!70!black]\n"
-            "  at (9.64, 3.20) {$q_{\\mathrm{tr}}$};",
-        ),
-        (
-            "inner xsep=0.78pt, inner ysep=0.32pt,\n"
-            "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}\\selectfont, "
-            "text=cRed!72!black]\n"
-            "  at (9.70, 3.52) {trapped charge};",
-            "inner xsep=0.82pt, inner ysep=0.34pt,\n"
-            "      font=\\sffamily\\bfseries\\fontsize{3.9}{4.7}\\selectfont, "
-            "text=cRed!72!black]\n"
-            "  at (9.64, 3.56) {trapped charge};",
-        ),
-    )
-    replacement = original
-    for old, new in replacements:
-        if old not in replacement:
-            return None
-        replacement = replacement.replace(old, new)
-    if replacement == original:
-        return None
-    protected = (
-        "q_{\\mathrm{tr}}",
-        "trapped charge",
-        "Coulomb",
-        "repulsion",
-        "electrode",
-        "air gap",
-        "mechanical",
-        "$V_{\\mathrm{active}}$",
-        "bias",
-    )
-    if not all(label in replacement for label in protected):
-        return None
-    if not _panel_f_post_source_trap_hierarchy_template_applied(replacement):
-        return None
-    if not _panel_f_post_spacing_source_finish_template_applied(replacement):
-        return None
-    return original, replacement, line_start, line_end
-
-
 def _panel_f_trap_label_left_rail_template_applied(block: str) -> bool:
     required_fragments = (
         "% quality-search F trap label left rail: park trap labels in margin",
@@ -6918,34 +6797,6 @@ def _candidate_operation_for_spec(
             "family": family,
             "operation_scale": "panel_block",
             "template_id": PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID,
-            "panel": "F",
-        }
-    if family == "panel_f_post_source_trap_hierarchy":
-        trap_hierarchy_block = _panel_f_post_source_trap_hierarchy_replacement(
-            lines=lines,
-            selector=selector,
-        )
-        if trap_hierarchy_block is not None:
-            original, new_text, line_start, line_end = trap_hierarchy_block
-            operation = {
-                "kind": "replace_text",
-                "semantic_kind": "quality_search_panel_f_post_source_trap_hierarchy_panel_block",
-                "operation_scale": "panel_block",
-                "template_id": PANEL_F_POST_SOURCE_TRAP_HIERARCHY_TEMPLATE_ID,
-                "panel": "F",
-                "path": source_ref,
-                "line_start": line_start,
-                "line_end": line_end,
-                "original": original,
-                "replacement": new_text,
-            }
-            return operation, None
-        return None, {
-            "code": "no_panel_f_post_source_trap_hierarchy_block",
-            "candidate_id": str(spec.get("id")),
-            "family": family,
-            "operation_scale": "panel_block",
-            "template_id": PANEL_F_POST_SOURCE_TRAP_HIERARCHY_TEMPLATE_ID,
             "panel": "F",
         }
     if family == "panel_f_trap_label_left_rail":

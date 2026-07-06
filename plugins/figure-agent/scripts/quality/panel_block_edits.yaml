@@ -1,3 +1,76 @@
+- family_id: panel_f_post_source_trap_hierarchy
+  template_id: v5f_panel_f_post_source_trap_hierarchy_v1
+  panel: F
+  requires:
+  - '% quality-search F post-spacing source finish: soften source lead'
+  - (13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);
+  - \fill[cRed!58!black] (13.24, 3.82) circle (0.016);
+  - \fill[cGray!78!black] (13.18, 2.82) circle (0.034);
+  - '% quality-search F post-force spacing finish: align force label rail'
+  - -{Stealth[length=6.6pt,width=4.5pt]}, cRed!74!black, line width=0.68pt
+  - (10.58, 1.08) -- (9.66, 1.08);
+  - at (9.58, 1.70) {Coulomb};
+  - at (9.58, 1.42) {repulsion};
+  applied_signature:
+  - '% quality-search F post-source trap hierarchy: separate trap labels'
+  - (11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);
+  - at (9.64, 3.20) {$q_{\mathrm{tr}}$};
+  - at (9.64, 3.56) {trapped charge};
+  preserve_after:
+  - '% quality-search F post-spacing source finish: soften source lead'
+  - (13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);
+  - \fill[cRed!58!black] (13.24, 3.82) circle (0.016);
+  - \fill[cGray!78!black] (13.18, 2.82) circle (0.034);
+  replacements:
+  - old: |-
+      % quality-search F post-source label scale: lift trapped-charge legibility
+      \draw[cRed!58!black, line width=0.36pt]
+        (11.35,2.52) .. controls (10.88,3.20) and (10.28,3.46) .. (9.76,3.44);
+    new: |-
+      % quality-search F post-source trap hierarchy: separate trap labels
+      \draw[cRed!56!black, line width=0.34pt]
+        (11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);
+  - old: |-
+      inner xsep=0.72pt, inner ysep=0.32pt,
+            font=\sffamily\bfseries\fontsize{3.9}{4.7}\selectfont, text=cRed!72!black]
+        at (9.70, 3.22) {$q_{\mathrm{tr}}$};
+    new: |-
+      inner xsep=0.70pt, inner ysep=0.31pt,
+            font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!70!black]
+        at (9.64, 3.20) {$q_{\mathrm{tr}}$};
+  - old: |-
+      inner xsep=0.78pt, inner ysep=0.32pt,
+            font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!72!black]
+        at (9.70, 3.52) {trapped charge};
+    new: |-
+      inner xsep=0.82pt, inner ysep=0.34pt,
+            font=\sffamily\bfseries\fontsize{3.9}{4.7}\selectfont, text=cRed!72!black]
+        at (9.64, 3.56) {trapped charge};
+  protected_labels:
+  - q_{\mathrm{tr}}
+  - trapped charge
+  - Coulomb
+  - repulsion
+  - electrode
+  - air gap
+  - mechanical
+  - $V_{\mathrm{active}}$
+  - bias
+  goal_trigger:
+  - - after source finish
+    - post source finish
+    - final
+  - - trapped charge
+    - q_tr
+    - trap
+    - label
+    - hierarchy
+    - rail
+  goal_hypothesis:
+    reason: goal explicitly requests Panel F trapped-charge label hierarchy after source finish
+    expected_detector_movement: convert post-source-finish trap-label hierarchy defects into a fresh source-bound Panel F candidate
+    expected_visual_movement: trapped charge heading and q_tr separate more clearly while the leader remains off the cantilever
+    rollback_condition: candidate worsens compile, protected labels, source finish, force direction, or electrode/air-gap semantics
 - family_id: panel_f_post_trap_gap_readability
   template_id: v5f_panel_f_post_trap_gap_readability_v1
   panel: F
