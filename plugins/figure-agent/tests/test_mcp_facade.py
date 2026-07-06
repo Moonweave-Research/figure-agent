@@ -383,7 +383,7 @@ def test_mcp_candidate_apply_readiness_schema_is_read_only(tmp_path: Path) -> No
         "reviewer",
         "rationale",
     ]
-    assert accept_schema["properties"]["decision"]["enum"] == ["accept"]
+    assert accept_schema["properties"]["decision"]["enum"] == ["accept", "reject"]
 
 
 def test_mcp_evidence_and_closeout_schemas_are_read_only(tmp_path: Path) -> None:

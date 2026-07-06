@@ -971,7 +971,7 @@ def _accept_candidate(argv: list[str]) -> int:
     parser.add_argument("name")
     parser.add_argument("candidate_id")
     parser.add_argument("--candidate-set", required=True)
-    parser.add_argument("--decision", choices=("accept",), required=True)
+    parser.add_argument("--decision", choices=("accept", "reject"), required=True)
     parser.add_argument("--reviewer", required=True)
     parser.add_argument("--rationale", required=True)
     parser.add_argument("--json", action="store_true")

@@ -11,7 +11,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import candidate_generator  # noqa: E402
 import experience_log  # noqa: E402
 import quality_defect_ledger  # noqa: E402
+import runtime_paths  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
+from test_evidence_index import _fixture as _sandbox_fixture  # noqa: E402
 
 
 def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
@@ -788,6 +790,56 @@ def test_candidate_generator_suppresses_bad_family_on_same_subregion_key(
     ]
     assert payload["metrics"]["candidate_count"] == 0
     assert payload["metrics"]["refusal_count"] == 1
+
+
+def test_reject_verdict_written_through_pipeline_reaches_suppression(
+    tmp_path: Path,
+) -> None:
+    # End-to-end: a human "reject" recorded via acceptance.json must flow through
+    # append_apply_record into a (family, subregion_key) suppression the generator
+    # loader honors, with no hand-authored human_label anywhere in the chain.
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    fixture = _sandbox_fixture(workspace)
+    selector_hash = "sha256:" + "7" * 64
+
+    candidate_set_path = fixture / "build" / "candidates" / "candidate_set.json"
+    candidate_set = json.loads(candidate_set_path.read_text(encoding="utf-8"))
+    candidate_set["candidates"][0].update(
+        {
+            "edit_family": "bounded_coordinate_offset",
+            "target": {"panel": "A", "subregion": "label-a"},
+            "selector": {"selector_text_hash": selector_hash},
+            "operations": [{"kind": "replace_text", "path": "candidate_demo.tex"}],
+        }
+    )
+    candidate_set_path.write_text(
+        json.dumps(candidate_set, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    (sandbox / "acceptance.json").write_text(
+        json.dumps(
+            {"schema": "figure-agent.candidate-acceptance.v1", "decision": "reject"},
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    experience_log.append_apply_record(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+
+    paths = runtime_paths.resolve_runtime_paths(
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+    suppressions = candidate_generator._load_history_suppressions(paths, "candidate_demo")
+    assert suppressions[("bounded_coordinate_offset", selector_hash)] == "rejected"
 
 
 def _write_apply_finding(

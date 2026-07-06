@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -478,3 +479,67 @@ def test_quality_movement_ignores_llm_text_annotations() -> None:
         )
         == "neutral"
     )
+
+
+def _build_record_with_acceptance(
+    tmp_path: Path, *, decision: str, decision_kind: str | None = None
+) -> dict[str, Any]:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    fixture = _fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    acceptance: dict[str, Any] = {
+        "schema": "figure-agent.candidate-acceptance.v1",
+        "decision": decision,
+    }
+    if decision_kind is not None:
+        acceptance["decision_kind"] = decision_kind
+    (sandbox / "acceptance.json").write_text(
+        json.dumps(acceptance, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    experience_log.append_apply_record(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+    output = experience_log.experience_log_dir(plugin_root) / "candidate_demo.jsonl"
+    rows = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
+    return rows[0]
+
+
+def test_reject_decision_flows_to_human_label(tmp_path: Path) -> None:
+    record = _build_record_with_acceptance(tmp_path, decision="reject")
+    assert record["outcome"]["human_label"] == "reject"
+
+
+def test_accept_decision_still_flows_to_human_label(tmp_path: Path) -> None:
+    record = _build_record_with_acceptance(tmp_path, decision="accept")
+    assert record["outcome"]["human_label"] == "accept"
+
+
+def test_unknown_decision_does_not_masquerade_as_human_label(tmp_path: Path) -> None:
+    record = _build_record_with_acceptance(tmp_path, decision="defer")
+    assert record["outcome"]["human_label"] is None
+
+
+def test_decision_kind_threads_from_acceptance_payload(tmp_path: Path) -> None:
+    record = _build_record_with_acceptance(
+        tmp_path, decision="reject", decision_kind="human_visual_reject"
+    )
+    assert record["outcome"]["human_label"] == "reject"
+    assert record["outcome"]["human_decision_kind"] == "human_visual_reject"
+
+
+def test_experience_log_write_path_refuses_symlinked_docs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("FIG_AGENT_EXPERIENCE_LOG_DIR", raising=False)
+    plugin_root = tmp_path / "plugin"
+    plugin_root.mkdir()
+    real_docs = tmp_path / "real-docs"
+    real_docs.mkdir()
+    (plugin_root / "docs").symlink_to(real_docs, target_is_directory=True)
+    with pytest.raises(experience_log.ExperienceLogError, match="docs_symlink"):
+        experience_log._experience_log_path("candidate_demo", plugin_root)

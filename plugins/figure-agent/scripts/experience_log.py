@@ -272,6 +272,18 @@ def _acceptance_payload(sandbox: Path) -> dict[str, Any] | None:
     return _load_json(path, "acceptance")
 
 
+def _human_review_labels(acceptance: dict[str, Any] | None) -> tuple[str | None, str | None]:
+    # Only accept/reject are real human training signals; any other decision
+    # string (defer, unknown) must not silently masquerade as one.
+    if not isinstance(acceptance, dict):
+        return None, None
+    decision = acceptance.get("decision")
+    human_label = decision if decision in {"accept", "reject"} else None
+    decision_kind = acceptance.get("decision_kind")
+    human_decision_kind = decision_kind if isinstance(decision_kind, str) else None
+    return human_label, human_decision_kind
+
+
 def _record_with_id(record: dict[str, Any]) -> dict[str, Any]:
     record["record_id"] = candidate_contracts.canonical_hash(record)
     return record
@@ -779,6 +791,7 @@ def build_apply_records(
         pipeline_ok=pipeline_ok,
     )
     acceptance = _acceptance_payload(sandbox)
+    human_label, human_decision_kind = _human_review_labels(acceptance)
     candidates = (
         candidate_set.get("candidates") if isinstance(candidate_set.get("candidates"), list) else []
     )
@@ -816,10 +829,8 @@ def build_apply_records(
             if isinstance(post_apply.get("detector_recheck"), dict)
             else {},
             "pixel_delta": _pixel_delta(render_manifest),
-            "human_label": acceptance.get("decision") if isinstance(acceptance, dict) else None,
-            "human_decision_kind": acceptance.get("decision_kind")
-            if isinstance(acceptance, dict)
-            else None,
+            "human_label": human_label,
+            "human_decision_kind": human_decision_kind,
         },
         "source_artifacts": [
             _fixture_relative(example_dir, resolved_candidate_set_path),
