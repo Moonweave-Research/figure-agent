@@ -576,6 +576,44 @@ def test_quality_movement_ignores_llm_text_annotations() -> None:
     )
 
 
+def test_quality_movement_improved_when_recheck_succeeds() -> None:
+    # The positive reward pole: a clean pipeline plus a detector recheck that names
+    # the originating detector and reports the source finding resolved -> improved.
+    post_apply = {
+        "compile": {"status": "success"},
+        "export": {"status": "success"},
+        "status": {"status": "success"},
+        "class_verifiers": {"status": "success"},
+        "detector_recheck": {
+            "status": "success",
+            "detector": "check_collisions",
+            "finding_id": "QD001",
+        },
+    }
+
+    assert experience_log._post_apply_pipeline_ok("applied", post_apply) is True
+    assert experience_log._quality_movement("applied", post_apply, pipeline_ok=True) == "improved"
+
+
+def test_quality_movement_error_recheck_never_improved() -> None:
+    # Fail-closed reward rule: a recheck that could not establish evidence (status
+    # other than a literal "success", e.g. "error") must never read as improved,
+    # even with an otherwise clean pipeline. Missing evidence != success.
+    post_apply = {
+        "compile": {"status": "success"},
+        "export": {"status": "success"},
+        "status": {"status": "success"},
+        "class_verifiers": {"status": "success"},
+        "detector_recheck": {
+            "status": "error",
+            "detector": "check_collisions",
+            "finding_id": "QD001",
+        },
+    }
+
+    assert experience_log._quality_movement("applied", post_apply, pipeline_ok=True) != "improved"
+
+
 def _build_record_with_acceptance(
     tmp_path: Path, *, decision: str, decision_kind: str | None = None
 ) -> dict[str, Any]:

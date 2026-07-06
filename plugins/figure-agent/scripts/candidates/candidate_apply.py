@@ -599,6 +599,28 @@ def _post_crossing_texts(example_dir: Path) -> list[str]:
     ]
 
 
+# Best-effort map from a source defect to the allowlisted detector that originated
+# it, so the recheck record names WHICH detector re-ran (auditability). Grounded in
+# the defect's own evidence uri, not a guess: finding-sourced defects are visual_clash
+# crossings; ledger-sourced defects carry an audit uri that traces to one detector. An
+# unmapped defect falls back to the aggregate ledger name (the actual re-run unit),
+# never a fabricated detector.
+def _source_detector(source_defect: dict[str, Any]) -> str:
+    if source_defect.get("source") == "adjudicated_finding":
+        return "check_visual_clash"
+    evidence = source_defect.get("evidence")
+    if isinstance(evidence, list):
+        for item in evidence:
+            uri = str(item.get("uri") or "") if isinstance(item, dict) else ""
+            if "visual-clash" in uri or "visual_clash" in uri:
+                return "check_visual_clash"
+            if "text-boundary" in uri or "text_boundary" in uri:
+                return "check_text_boundary_clash"
+            if "undeclared-geometry" in uri or "undeclared_geometry" in uri:
+                return "check_collisions"
+    return "quality_defect_ledger"
+
+
 def _post_apply_semantic_recheck(
     name: str,
     paths: runtime_paths.RuntimePaths,
@@ -612,6 +634,24 @@ def _post_apply_semantic_recheck(
     source_defect_id = source_defect.get("id")
     if not isinstance(source_defect_id, str) or not source_defect_id.strip():
         return None
+    verdict = _recheck_verdict(
+        name, paths, source_defect, source_defect_id, pre_defects, pre_crossing_texts
+    )
+    # Stamp the originating detector + finding id onto EVERY verdict path so the
+    # experience record names what re-ran (and never claims success without it).
+    verdict.setdefault("detector", _source_detector(source_defect))
+    verdict.setdefault("finding_id", source_defect_id)
+    return verdict
+
+
+def _recheck_verdict(
+    name: str,
+    paths: runtime_paths.RuntimePaths,
+    source_defect: dict[str, Any],
+    source_defect_id: str,
+    pre_defects: list[dict[str, Any]],
+    pre_crossing_texts: list[str] | None,
+) -> dict[str, Any]:
     if source_defect.get("source") == "adjudicated_finding":
         # Finding-sourced fixes are visual_clash-grounded; the ledger (and the
         # ledger-based recheck) is blind to them. Verify against the post-apply
@@ -621,6 +661,15 @@ def _post_apply_semantic_recheck(
             return {
                 "status": "failed",
                 "reason": "finding_target_texts_missing",
+                "source_defect_id": source_defect_id,
+            }
+        report = paths.examples_dir / name / "build" / "visual_clash.json"
+        if not report.is_file():
+            # Fail-closed: an absent detector report is missing evidence, not a
+            # resolved crossing. Never let empty post-crossings read as success.
+            return {
+                "status": "failed",
+                "reason": "finding_evidence_missing",
                 "source_defect_id": source_defect_id,
             }
         return _finding_recheck_verdict(
@@ -934,10 +983,9 @@ def apply_candidate(
     apply_result_path = sandbox / "apply_result.json"
     if apply_result_path.is_file():
         apply_result = _load_json(apply_result_path, "apply_result")
-        if (
-            apply_result.get("status") in TERMINAL_APPLY_STATUSES
-            and _is_same_candidate_apply_result(apply_result, manifest)
-        ):
+        if apply_result.get(
+            "status"
+        ) in TERMINAL_APPLY_STATUSES and _is_same_candidate_apply_result(apply_result, manifest):
             diagnostics.append(_diagnostic("already_applied", "candidate is already applied"))
 
     active_lock = _active_mutation_lock(example_dir)
@@ -1005,9 +1053,7 @@ def apply_candidate(
         if post_apply and not build_pdf.is_file():
             _compile_current_source(name, paths)
         pre_words = _pdf_words(build_pdf) if post_apply else Counter()
-        export_snapshot = (
-            _snapshot_export_artifacts(example_dir, name) if post_apply else {}
-        )
+        export_snapshot = _snapshot_export_artifacts(example_dir, name) if post_apply else {}
         changed_files: list[dict[str, str]] = []
         for change in changes:
             target = change["path"]
@@ -1049,9 +1095,7 @@ def apply_candidate(
                     paths,
                     build_pdf,
                 )
-                post_apply_result["rollback_exports"] = _restore_export_artifacts(
-                    export_snapshot
-                )
+                post_apply_result["rollback_exports"] = _restore_export_artifacts(export_snapshot)
             class_verifiers["rolled_back"] = rolled_back
             post_apply_result["class_verifiers"] = class_verifiers
             if rolled_back:

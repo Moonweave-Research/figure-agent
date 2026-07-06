@@ -919,6 +919,36 @@ def test_apply_candidate_semantic_recheck_success_when_resolved(
     assert recheck["status"] == "success"
     assert recheck["reason"] == "source_defect_resolved"
     assert recheck["source_defect_id"] == "QD001"
+    # The recheck record names the originating detector + finding so the learning
+    # loop's positive reward pole is auditable (not a bare status).
+    assert recheck["finding_id"] == "QD001"
+    assert recheck["detector"] == "quality_defect_ledger"
+
+
+def test_source_detector_names_allowlisted_detector_from_evidence() -> None:
+    # Ledger-sourced defects trace to an allowlisted detector via their audit uri;
+    # finding-sourced defects are visual_clash; an unmapped defect falls back to the
+    # aggregate ledger re-run unit, never a fabricated detector name.
+    def _with_uri(uri: str) -> dict[str, object]:
+        return {"id": "QD001", "evidence": [{"uri": uri}]}
+
+    assert (
+        candidate_apply._source_detector(_with_uri("figure://demo/audit/undeclared-geometry"))
+        == "check_collisions"
+    )
+    assert (
+        candidate_apply._source_detector(_with_uri("figure://demo/audit/visual-clash"))
+        == "check_visual_clash"
+    )
+    assert (
+        candidate_apply._source_detector(_with_uri("figure://demo/audit/text-boundary"))
+        == "check_text_boundary_clash"
+    )
+    assert (
+        candidate_apply._source_detector({"id": "C001", "source": "adjudicated_finding"})
+        == "check_visual_clash"
+    )
+    assert candidate_apply._source_detector({"id": "QD001"}) == "quality_defect_ledger"
 
 
 def test_verify_labels_unchanged_equal_passes_and_differ_fails():
@@ -1386,6 +1416,29 @@ def test_post_apply_recheck_finding_sourced_without_target_texts_is_failed(tmp_p
     verdict = candidate_apply._post_apply_semantic_recheck("demo", paths, manifest, [])
     assert verdict["status"] == "failed"
     assert verdict["reason"] == "finding_target_texts_missing"
+
+
+def test_post_apply_recheck_finding_sourced_missing_report_is_failed(tmp_path: Path) -> None:
+    # Fail-closed: with target_texts present but the visual_clash report absent, the
+    # empty post-crossings must NOT read as a resolved finding. Missing evidence is
+    # an error condition, never success.
+    import runtime_paths
+
+    workspace = tmp_path / "workspace"
+    (workspace / "examples" / "demo" / "build").mkdir(parents=True)
+    paths = runtime_paths.resolve_runtime_paths(workspace_root=workspace)
+    manifest = {
+        "source_defect": {
+            "id": "C001",
+            "source": "adjudicated_finding",
+            "target_texts": ["PI,", "PET"],
+        }
+    }
+    verdict = candidate_apply._post_apply_semantic_recheck("demo", paths, manifest, [])
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_evidence_missing"
+    assert verdict["detector"] == "check_visual_clash"
+    assert verdict["finding_id"] == "C001"
 
 
 def test_post_apply_recheck_finding_sourced_flags_new_crossing(tmp_path: Path) -> None:
