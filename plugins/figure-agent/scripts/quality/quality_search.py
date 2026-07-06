@@ -77,6 +77,7 @@ PANEL_F_V5F_AUTO_COMPOSITE_TEMPLATE_ID = (
 PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID = "v5f_panel_f_bias_label_cleanup_v1"
 PANEL_F_SOURCE_CUE_READABILITY_TEMPLATE_ID = "v5f_panel_f_source_cue_readability_v1"
 PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID = "v5f_panel_f_source_title_settle_v1"
+PANEL_F_SOURCE_CUE_DEMOTE_TEMPLATE_ID = "v5f_panel_f_source_cue_demote_v2"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -427,6 +428,27 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "settle V_active below the panel title lane so it stays attached to the source cue",
             "keep the bias label near the source lead without crossing the connector",
             "preserve the accepted trap-left, Coulomb, electrode, and air-gap composition",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_source_cue_demote": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+            "$V_{\\mathrm{active}}$",
+            "bias",
+        ],
+        "design_moves": [
+            "demote the compact source cue so the Coulomb/electrode relation stays first-read",
+            "keep V_active attached to the tiny source without competing with the panel title",
+            "preserve the accepted trap-left label lane and source-to-electrode connector",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -1087,6 +1109,39 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 ),
                 "expected_visual_movement": (
                     "V_active remains readable but no longer competes with the mechanical title"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, source attachment, "
+                    "or electrode/air-gap semantics"
+                ),
+            },
+        )
+    if any(
+        term in normalized
+        for term in ("demote", "dominance", "subordinate", "hierarchy", "lower")
+    ):
+        hypotheses.insert(
+            0,
+            {
+                "fixture": name,
+                "family": "panel_f_source_cue_demote",
+                "source": "goal_directive",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "goal explicitly requests Panel F source cue hierarchy demotion"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert source-cue dominance feedback into a bounded Panel F "
+                    "hierarchy candidate"
+                ),
+                "expected_visual_movement": (
+                    "V_active and bias stay attached to the source cue but recede below "
+                    "Coulomb/electrode/air-gap evidence"
                 ),
                 "rollback_condition": (
                     "candidate worsens compile, protected labels, source attachment, "
@@ -2100,6 +2155,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_source_title_settle":
         return "panel_block"
+    if family == "panel_f_source_cue_demote":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -2140,6 +2197,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_SOURCE_CUE_READABILITY_TEMPLATE_ID
     if family == "panel_f_source_title_settle":
         return PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID
+    if family == "panel_f_source_cue_demote":
+        return PANEL_F_SOURCE_CUE_DEMOTE_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -4070,6 +4129,80 @@ def _panel_f_source_title_settle_replacement(
     return original, replacement, line_start, line_end
 
 
+def _panel_f_source_cue_demote_template_applied(block: str) -> bool:
+    required_fragments = (
+        "% quality-search F source-cue demote: subordinate source label hierarchy",
+        "at (13.02, 4.125) {$V_{\\mathrm{active}}$};",
+        "at (13.02, 3.75) {bias};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_source_cue_demote_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if not _panel_f_source_title_settle_template_applied(original):
+        return None
+    if _panel_f_source_cue_demote_template_applied(original):
+        return None
+    old = (
+        "% quality-search F source-title settle: keep source label below title lane\n"
+        "\\draw[cGray!76!black, line width=0.22pt]\n"
+        "  (12.72, 4.00) rectangle (13.12, 4.10);\n"
+        "\\draw[cGray!46!black, line width=0.22pt]\n"
+        "  (12.76, 4.045) -- (12.88, 4.045) -- (12.88, 4.074)\n"
+        "               -- (12.99, 4.074) -- (12.99, 4.045) -- (13.08, 4.045);\n"
+        "\\node[anchor=south, font=\\sffamily\\bfseries\\fontsize{3.1}{3.8}\\selectfont, "
+        "text=cGray!54!black]\n"
+        "  at (13.03, 4.15) {$V_{\\mathrm{active}}$};\n"
+        "\\node[anchor=north, font=\\sffamily\\fontsize{2.7}{3.2}\\selectfont, "
+        "text=cGray!42!black]\n"
+        "  at (13.03, 3.73) {bias};"
+    )
+    new = (
+        "% quality-search F source-cue demote: subordinate source label hierarchy\n"
+        "\\draw[cGray!70!black, line width=0.18pt]\n"
+        "  (12.74, 4.01) rectangle (13.10, 4.09);\n"
+        "\\draw[cGray!38!black, line width=0.18pt]\n"
+        "  (12.78, 4.045) -- (12.88, 4.045) -- (12.88, 4.068)\n"
+        "               -- (12.98, 4.068) -- (12.98, 4.045) -- (13.06, 4.045);\n"
+        "\\node[anchor=south, font=\\sffamily\\bfseries\\fontsize{3.1}{3.8}\\selectfont, "
+        "text=cGray!48!black]\n"
+        "  at (13.02, 4.125) {$V_{\\mathrm{active}}$};\n"
+        "\\node[anchor=north, font=\\sffamily\\fontsize{2.7}{3.2}\\selectfont, "
+        "text=cGray!38!black]\n"
+        "  at (13.02, 3.75) {bias};"
+    )
+    replacement = original.replace(old, new)
+    if replacement == original:
+        return None
+    protected = (
+        "q_{\\mathrm{tr}}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "mechanical",
+        "$V_{\\mathrm{active}}$",
+        "bias",
+    )
+    if not all(label in replacement for label in protected):
+        return None
+    if not _panel_f_source_cue_demote_template_applied(replacement):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _panel_f_boundary_polish_template_applied(block: str) -> bool:
     required_fragments = (
         "(11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);",
@@ -4570,6 +4703,7 @@ def _candidate_operation_for_spec(
         "panel_f_bias_label_cleanup": "F",
         "panel_f_source_cue_readability": "F",
         "panel_f_source_title_settle": "F",
+        "panel_f_source_cue_demote": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -5004,6 +5138,34 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_source_cue_demote":
+        source_demote_block = _panel_f_source_cue_demote_replacement(
+            lines=lines,
+            selector=selector,
+        )
+        if source_demote_block is not None:
+            original, new_text, line_start, line_end = source_demote_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_source_cue_demote_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_SOURCE_CUE_DEMOTE_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_source_cue_demote_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_SOURCE_CUE_DEMOTE_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -5070,6 +5232,7 @@ def _candidate_operation_for_spec(
         "panel_f_bias_label_cleanup": 0.8,
         "panel_f_source_cue_readability": 0.8,
         "panel_f_source_title_settle": 0.8,
+        "panel_f_source_cue_demote": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -6546,6 +6709,7 @@ def _candidate_structural_impact(
         "panel_f_bias_label_cleanup",
         "panel_f_source_cue_readability",
         "panel_f_source_title_settle",
+        "panel_f_source_cue_demote",
     }:
         possible_ripples.append(
             {
@@ -6707,6 +6871,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_bias_label_cleanup": 0.88,
             "panel_f_source_cue_readability": 0.88,
             "panel_f_source_title_settle": 0.88,
+            "panel_f_source_cue_demote": 0.88,
             "panel_f_boundary_polish": 0.84,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
@@ -6815,6 +6980,7 @@ def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
         "panel_f_bias_label_cleanup": PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID,
         "panel_f_source_cue_readability": PANEL_F_SOURCE_CUE_READABILITY_TEMPLATE_ID,
         "panel_f_source_title_settle": PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID,
+        "panel_f_source_cue_demote": PANEL_F_SOURCE_CUE_DEMOTE_TEMPLATE_ID,
     }
     if score.get("template_id") != targeted_templates.get(str(score.get("family"))):
         return False

@@ -2034,16 +2034,16 @@
 \fill[cGray!3] (12.68, 3.88) rectangle (13.38, 4.14);
 \draw[cGray!48!black, line width=0.18pt, rounded corners=1.0pt]
   (12.68, 3.88) rectangle (13.38, 4.14);
-% quality-search F source-title settle: keep source label below title lane
-\draw[cGray!76!black, line width=0.22pt]
-  (12.72, 4.00) rectangle (13.12, 4.10);
-\draw[cGray!46!black, line width=0.22pt]
-  (12.76, 4.045) -- (12.88, 4.045) -- (12.88, 4.074)
-               -- (12.99, 4.074) -- (12.99, 4.045) -- (13.08, 4.045);
-\node[anchor=south, font=\sffamily\bfseries\fontsize{3.1}{3.8}\selectfont, text=cGray!54!black]
-  at (13.03, 4.15) {$V_{\mathrm{active}}$};
-\node[anchor=north, font=\sffamily\fontsize{2.7}{3.2}\selectfont, text=cGray!42!black]
-  at (13.03, 3.73) {bias};
+% quality-search F source-cue demote: subordinate source label hierarchy
+\draw[cGray!70!black, line width=0.18pt]
+  (12.74, 4.01) rectangle (13.10, 4.09);
+\draw[cGray!38!black, line width=0.18pt]
+  (12.78, 4.045) -- (12.88, 4.045) -- (12.88, 4.068)
+               -- (12.98, 4.068) -- (12.98, 4.045) -- (13.06, 4.045);
+\node[anchor=south, font=\sffamily\bfseries\fontsize{3.1}{3.8}\selectfont, text=cGray!48!black]
+  at (13.02, 4.125) {$V_{\mathrm{active}}$};
+\node[anchor=north, font=\sffamily\fontsize{2.7}{3.2}\selectfont, text=cGray!38!black]
+  at (13.02, 3.75) {bias};
 \fill[cRed!68!black] (13.30, 3.82) circle (0.020);
 \fill[cGray!55!black] (13.30, 2.82) circle (0.020);
 % quality-search F connector: source-to-electrode lead

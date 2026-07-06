@@ -1614,6 +1614,63 @@ def test_quality_search_panel_f_source_title_settle_emits_panel_block_candidate(
     assert "air gap" in operation["replacement"]
 
 
+def test_quality_search_panel_f_source_cue_demote_emits_panel_block_candidate() -> None:
+    tex_source = "\n".join(
+        [
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\node at (11.58, 0.28) {air gap};",
+            "\\node at (9.44, 1.58) {Coulomb};",
+            "\\node at (9.44, 1.45) {repulsion};",
+            "\\node at (9.22, 3.28) {$q_{\\mathrm{tr}}$};",
+            "\\node at (9.22, 3.84) {trapped charge};",
+            "% quality-search F source-title settle: keep source label below title lane",
+            "\\draw[cGray!76!black, line width=0.22pt]",
+            "  (12.72, 4.00) rectangle (13.12, 4.10);",
+            "\\draw[cGray!46!black, line width=0.22pt]",
+            "  (12.76, 4.045) -- (12.88, 4.045) -- (12.88, 4.074)",
+            "               -- (12.99, 4.074) -- (12.99, 4.045) -- (13.08, 4.045);",
+            "\\node[anchor=south, font=\\sffamily\\bfseries\\fontsize{3.1}{3.8}\\selectfont, "
+            "text=cGray!54!black]",
+            "  at (13.03, 4.15) {$V_{\\mathrm{active}}$};",
+            "\\node[anchor=north, font=\\sffamily\\fontsize{2.7}{3.2}\\selectfont, "
+            "text=cGray!42!black]",
+            "  at (13.03, 3.73) {bias};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    lines = f"{tex_source}\n".splitlines(keepends=True)
+
+    operation, refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS010",
+            "family": "panel_f_source_cue_demote",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=lines,
+        source_ref="figures/example.tex",
+    )
+
+    assert refusal is None
+    assert operation is not None
+    assert operation["operation_scale"] == "panel_block"
+    assert operation["template_id"] == "v5f_panel_f_source_cue_demote_v2"
+    assert "quality-search F source-cue demote" in operation["replacement"]
+    assert "at (13.02, 4.125) {$V_{\\mathrm{active}}$};" in operation["replacement"]
+    assert "at (13.02, 3.75) {bias};" in operation["replacement"]
+    assert "trapped charge" in operation["replacement"]
+    assert "air gap" in operation["replacement"]
+
+
 def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:
