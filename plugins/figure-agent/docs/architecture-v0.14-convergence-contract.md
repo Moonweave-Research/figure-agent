@@ -67,14 +67,17 @@ The first slice is intentionally pure and deterministic:
 - typed validation and canonical hashing;
 - pure convergence decision logic;
 - append-only attempt storage;
-- README identity guard tests.
+- README identity guard tests;
+- deterministic `JournalGuide` hard-constraint adapter;
+- deterministic `AestheticObjective` scoring envelope.
 
 It does not call an LLM, run a renderer, fetch journal rules, mutate source, set
-accepted/golden/final state, or replace existing experience logs.
+accepted/golden/final state, or replace existing experience logs. Missing
+external journal rules are represented as explicit defaults or unknowns, never
+invented claims.
 
 ## Follow-up
 
 Next slices should adapt existing `quality-search --execute` artifacts into
-`figure-attempt.v1`, then add deterministic `JournalGuide` and
-`AestheticObjective` adapters over the already-existing style lock, critique,
-visual metric, and journal-art-direction evidence surfaces.
+`figure-attempt.v1` and `convergence-decision.v1` using the new hard-constraint
+and aesthetic objective adapters.
