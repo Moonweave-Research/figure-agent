@@ -14,9 +14,9 @@ from typing import Any
 import candidate_contracts
 import candidate_visual_eval
 import fixture_identity
+import pdf_geometry
 import runtime_paths
 import yaml
-from PIL import Image
 
 SCHEMA = "figure-agent.candidate-manifest.v1"
 RESULT_SCHEMA = "figure-agent.candidate-render-result.v1"
@@ -273,15 +273,7 @@ def _panel_bbox_pdf_cm(example_dir: Path, panel_id: str) -> list[float] | None:
 
 
 def _pdf_page_size_cm(pdf_path: Path) -> tuple[float, float]:
-    try:
-        import pdfplumber
-    except ImportError as exc:
-        raise CandidateRenderError("pdfplumber required for panel bbox cropping") from exc
-    with pdfplumber.open(pdf_path) as pdf:
-        if not pdf.pages:
-            raise CandidateRenderError(f"empty PDF: {pdf_path}")
-        page = pdf.pages[0]
-        return float(page.width) * 2.54 / 72.0, float(page.height) * 2.54 / 72.0
+    return pdf_geometry.pdf_page_size_cm(pdf_path, error_cls=CandidateRenderError)
 
 
 def _crop_panel_png(
@@ -292,21 +284,14 @@ def _crop_panel_png(
     output_path: Path,
 ) -> None:
     page_width_cm, page_height_cm = _pdf_page_size_cm(pdf_path)
-    x0, y0, x1, y1 = bbox_pdf_cm
-    if x1 <= x0 or y1 <= y0:
-        raise CandidateRenderError("bbox_pdf_cm must satisfy x1>x0 and y1>y0")
-    if x0 < 0 or y0 < 0 or x1 > page_width_cm or y1 > page_height_cm:
-        raise CandidateRenderError("bbox_pdf_cm outside PDF page bounds")
-    with Image.open(png_path) as image:
-        width_px, height_px = image.size
-        crop_box = (
-            round(x0 / page_width_cm * width_px),
-            round(y0 / page_height_cm * height_px),
-            round(x1 / page_width_cm * width_px),
-            round(y1 / page_height_cm * height_px),
-        )
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        image.crop(crop_box).save(output_path)
+    pdf_geometry.crop_panel_png(
+        png_path=png_path,
+        bbox_pdf_cm=bbox_pdf_cm,
+        output_path=output_path,
+        page_width_cm=page_width_cm,
+        page_height_cm=page_height_cm,
+        error_cls=CandidateRenderError,
+    )
 
 
 def _fixture_relative(example_dir: Path, path: Path) -> str:

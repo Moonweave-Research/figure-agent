@@ -21,6 +21,7 @@ from pathlib import Path
 import critique_brief_sections as brief_sections
 import fixture_identity
 import narrative_context
+import pdf_geometry
 import runtime_paths
 from aesthetic_intent import (
     AESTHETIC_INTENT_SCHEMA_V2,
@@ -46,7 +47,6 @@ from paper_aesthetic_context import (
     matching_figure_role,
     paper_context_anchors,
 )
-from PIL import Image
 from quality_manifest import (
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
@@ -366,16 +366,7 @@ def _subregion_active_context(example_dir: Path) -> str:
 def _pdf_page_size_cm(pdf_path: Path) -> tuple[float, float]:
     if not pdf_path.is_file():
         raise CritiqueBriefError(f"missing {pdf_path}; run /fig_compile first")
-    try:
-        import pdfplumber
-    except ImportError as exc:
-        raise CritiqueBriefError("pdfplumber required for panel bbox cropping") from exc
-
-    with pdfplumber.open(pdf_path) as pdf:
-        if not pdf.pages:
-            raise CritiqueBriefError(f"empty PDF {pdf_path}")
-        page = pdf.pages[0]
-        return (float(page.width) * 2.54 / 72.0, float(page.height) * 2.54 / 72.0)
+    return pdf_geometry.pdf_page_size_cm(pdf_path, error_cls=CritiqueBriefError)
 
 
 def _crop_panel_png(
@@ -385,24 +376,14 @@ def _crop_panel_png(
     output_path: Path,
 ) -> Path:
     page_width_cm, page_height_cm = _pdf_page_size_cm(pdf_path)
-    x0, y0, x1, y1 = bbox_pdf_cm
-    if x1 <= x0 or y1 <= y0:
-        raise CritiqueBriefError("bbox_pdf_cm must satisfy x1>x0 and y1>y0")
-    if x0 < 0 or y0 < 0 or x1 > page_width_cm or y1 > page_height_cm:
-        raise CritiqueBriefError(
-            f"bbox_pdf_cm outside PDF page bounds [0, 0, {page_width_cm:.3f}, {page_height_cm:.3f}]"
-        )
-
-    with Image.open(png_path) as image:
-        width_px, height_px = image.size
-        crop_box = (
-            round(x0 / page_width_cm * width_px),
-            round(y0 / page_height_cm * height_px),
-            round(x1 / page_width_cm * width_px),
-            round(y1 / page_height_cm * height_px),
-        )
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        image.crop(crop_box).save(output_path)
+    pdf_geometry.crop_panel_png(
+        png_path=png_path,
+        bbox_pdf_cm=bbox_pdf_cm,
+        output_path=output_path,
+        page_width_cm=page_width_cm,
+        page_height_cm=page_height_cm,
+        error_cls=CritiqueBriefError,
+    )
     return output_path
 
 
@@ -1519,9 +1500,8 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         or uses_aesthetic_lever_schema
     )
     uses_grounded_observation_schema = (
-        (example_dir / "build" / "audit_crops" / "manifest.json").is_file()
-        or (example_dir / "build" / "undeclared_geometry.json").is_file()
-    )
+        example_dir / "build" / "audit_crops" / "manifest.json"
+    ).is_file() or (example_dir / "build" / "undeclared_geometry.json").is_file()
     uses_route_detail_contract = uses_v1_14_contract or uses_grounded_observation_schema
     if uses_grounded_observation_schema:
         critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_17
