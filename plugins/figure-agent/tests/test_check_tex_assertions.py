@@ -256,8 +256,21 @@ def test_read_blocking_issues_filters_to_blocking_statuses(tmp_path):
     assert {i["id"] for i in cta.read_blocking_issues(p)} == {"a", "c", "d"}
 
 
-def test_read_blocking_issues_empty_when_no_file(tmp_path):
-    assert cta.read_blocking_issues(tmp_path / "nope.json") == []
+def test_read_blocking_issues_missing_artifact_blocks(tmp_path):
+    issues = cta.read_blocking_issues(tmp_path / "tex_assertions.json")
+    assert issues, "missing evidence must block export, not pass it"
+
+
+def test_read_blocking_issues_corrupt_artifact_blocks(tmp_path):
+    p = tmp_path / "tex_assertions.json"
+    p.write_text("{truncated", encoding="utf-8")
+    assert cta.read_blocking_issues(p)
+
+
+def test_read_blocking_issues_old_schema_blocks(tmp_path):
+    p = tmp_path / "tex_assertions.json"
+    p.write_text(json.dumps({"no_issues_key": True}), encoding="utf-8")
+    assert cta.read_blocking_issues(p)
 
 
 def test_read_blocking_issues_empty_when_all_pass(tmp_path):

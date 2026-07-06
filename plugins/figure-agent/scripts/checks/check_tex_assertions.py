@@ -280,15 +280,30 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
 BLOCKING_STATUSES = ("violated", "anchor_missing", "anchor_ambiguous")
 
 
+def _gate_failure_issue(status: str, json_path, *, detail: str | None = None) -> dict:
+    message = f"tex_assertions evidence {status} at {json_path}"
+    if detail:
+        message += f": {detail}"
+    return {"id": "tex-assertions-evidence", "status": status, "message": message}
+
+
 def read_blocking_issues(json_path) -> list[dict]:
-    """Blocking issues from a build/tex_assertions.json (missing/unreadable => [])."""
+    """Blocking issues from a build/tex_assertions.json.
+
+    Missing, unreadable, or schema-invalid evidence cannot be treated as "no
+    issues" — a gate that trusts an absent/corrupt artifact fails open on the
+    exact reversed-arrow physics this checker exists to catch. Callers must
+    treat any non-empty result as blocking.
+    """
     try:
         data = json.loads(Path(json_path).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
-        return []
+    except FileNotFoundError:
+        return [_gate_failure_issue("artifact_missing", json_path)]
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+        return [_gate_failure_issue("artifact_unreadable", json_path, detail=str(exc))]
     issues = data.get("issues")
     if not isinstance(issues, list):
-        return []
+        return [_gate_failure_issue("artifact_schema_invalid", json_path)]
     return [
         issue
         for issue in issues
