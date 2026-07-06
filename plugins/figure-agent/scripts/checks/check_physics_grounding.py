@@ -13,6 +13,8 @@ Status per figure:
   - declared_unenforced : declares invariants but no tex_assertions  (WARN — the
                           agent should read §6/§7 and author directional assertions)
   - undeclared          : no Physics-invariants section (general-physics fallback)
+  - briefing_missing    : briefing.md is absent, so intent cannot be read at all
+                          (WARN — this is a gap, not the benign "undeclared" case)
 """
 
 from __future__ import annotations
@@ -57,9 +59,13 @@ SCHEMA = "figure-agent.physics-grounding.v1"
 
 def grounding_status(figure_dir) -> dict:
     briefing = figure_dir / "briefing.md"
-    briefing_text = briefing.read_text(encoding="utf-8") if briefing.is_file() else ""
     spec_path = figure_dir / "spec.yaml"
     spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) if spec_path.is_file() else {}
+    if not briefing.is_file():
+        # A missing briefing is a real gap: physics intent cannot be read, so it
+        # must not collapse into the benign "undeclared" (no-invariants) bucket.
+        return {"figure": figure_dir.name, "status": "briefing_missing"}
+    briefing_text = briefing.read_text(encoding="utf-8")
     return {
         "figure": figure_dir.name,
         "status": classify_grounding(briefing_text, spec or {}),
@@ -88,14 +94,20 @@ def main() -> int:
     result = grounding_status(args.figure_dir)
     if args.json_output:
         write_grounding_json(result["figure"], result["status"], args.json_output)
+    non_benign = {"declared_unenforced", "briefing_missing"}
     if result["status"] == "declared_unenforced":
         print(
             f"WARN physics_grounding: {result['figure']} declares physics invariants but has "
             "no tex_assertions or semantic_assertions (read the briefing §6/§7 and author them)"
         )
+    elif result["status"] == "briefing_missing":
+        print(
+            f"WARN physics_grounding: {result['figure']} has no briefing.md, so physics intent "
+            "cannot be read (author a briefing with a Physics-invariants section)"
+        )
     else:
         print(f"physics grounding: {result['figure']} = {result['status']}")
-    return 1 if (args.strict and result["status"] == "declared_unenforced") else 0
+    return 1 if (args.strict and result["status"] in non_benign) else 0
 
 
 if __name__ == "__main__":
