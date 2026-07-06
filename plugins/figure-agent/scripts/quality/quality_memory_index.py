@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -83,29 +82,9 @@ def _rank_score(event: dict[str, Any]) -> float | None:
 
 
 def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any]]:
-    override = os.environ.get("FIG_AGENT_EXPERIENCE_LOG_DIR")
-    log_dir = experience_log.experience_log_dir(plugin_root)
-    path = log_dir / f"{name}.jsonl"
-    checks = (("experience_log", log_dir), ("experience_log", path))
-    if not override:
-        checks = (("docs", plugin_root / "docs"), *checks)
-    for label, item in checks:
-        if item.is_symlink():
-            raise QualityMemoryIndexError(f"{label}_symlink")
-    if not path.is_file():
-        return []
-    records: list[dict[str, Any]] = []
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        if not line.strip():
-            continue
-        try:
-            payload = json.loads(line)
-        except json.JSONDecodeError as exc:
-            raise QualityMemoryIndexError(f"experience_record_invalid:{line_number}") from exc
-        if not isinstance(payload, dict):
-            raise QualityMemoryIndexError(f"experience_record_invalid:{line_number}")
-        records.append(payload)
-    return records
+    return experience_log.load_experience_records(
+        plugin_root, name, error_cls=QualityMemoryIndexError
+    )
 
 
 def _experience_log_fixture_names(plugin_root: Path) -> list[str]:

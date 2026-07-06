@@ -52,7 +52,17 @@ def _load_json(path: Path, label: str) -> dict[str, Any]:
     return payload
 
 
-def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any]]:
+def load_experience_records(
+    plugin_root: Path,
+    name: str,
+    *,
+    error_cls: type[Exception] = ExperienceLogError,
+) -> list[dict[str, Any]]:
+    """Single source for loading one fixture's experience JSONL.
+
+    ``error_cls`` lets callers preserve their module-specific error class while sharing
+    the symlink/path/parse logic.
+    """
     fixture_identity.validate_fixture_name(name)
     override = os.environ.get("FIG_AGENT_EXPERIENCE_LOG_DIR")
     log_dir = experience_log_dir(plugin_root)
@@ -62,7 +72,7 @@ def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any
         checks = (("docs", plugin_root / "docs"), *checks)
     for label, item in checks:
         if item.is_symlink():
-            raise ExperienceLogError(f"{label}_symlink")
+            raise error_cls(f"{label}_symlink")
     if not path.is_file():
         return []
     records: list[dict[str, Any]] = []
@@ -72,9 +82,9 @@ def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any
         try:
             payload = json.loads(line)
         except json.JSONDecodeError as exc:
-            raise ExperienceLogError(f"experience_record_invalid:{line_number}") from exc
+            raise error_cls(f"experience_record_invalid:{line_number}") from exc
         if not isinstance(payload, dict):
-            raise ExperienceLogError(f"experience_record_invalid:{line_number}")
+            raise error_cls(f"experience_record_invalid:{line_number}")
         records.append(payload)
     return records
 
@@ -440,7 +450,7 @@ def convergence_attempt_history(
         plugin_root=plugin_root,
     )
     history: list[dict[str, Any]] = []
-    for record in _load_experience_records(paths.plugin_root, name):
+    for record in load_experience_records(paths.plugin_root, name):
         attempt = _attempt_from_experience_record(record)
         if attempt is not None:
             history.append(attempt)
