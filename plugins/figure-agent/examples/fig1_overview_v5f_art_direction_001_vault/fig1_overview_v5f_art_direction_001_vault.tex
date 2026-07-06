@@ -2029,24 +2029,27 @@
 \draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
 
 % Compact bias module: a restrained instrument cue, not the visual subject.
-\fill[cGray!30!black, opacity=0.010]
-  (12.58, 3.78) rectangle (13.48, 4.14);
-\fill[cGray!2] (12.62, 3.82) rectangle (13.42, 4.16);
-\draw[cGray!44!black, line width=0.17pt, rounded corners=1.0pt]
-  (12.62, 3.82) rectangle (13.42, 4.16);
+\fill[cGray!26!black, opacity=0.014]
+  (12.70, 3.86) rectangle (13.36, 4.12);
+\fill[cGray!3] (12.68, 3.88) rectangle (13.38, 4.14);
+\draw[cGray!48!black, line width=0.18pt, rounded corners=1.0pt]
+  (12.68, 3.88) rectangle (13.38, 4.14);
 \draw[cGray!78!black, line width=0.24pt]
   (12.66, 4.01) rectangle (13.12, 4.10);
 \draw[cGray!48!black, line width=0.24pt]
   (12.70, 4.045) -- (12.83, 4.045) -- (12.83, 4.075)
                -- (12.98, 4.075) -- (12.98, 4.045) -- (13.08, 4.045);
-\node[font=\sffamily\bfseries\fontsize{3.9}{4.7}\selectfont, text=cGray!58!black]
-  at (13.02, 4.03) {$V_{\mathrm{active}}$};
-\node[font=\sffamily\fontsize{3.0}{3.6}\selectfont, text=cGray!40!black]
-  at (13.02, 3.91) {bias};
+% quality-search F bias-label cleanup: separate source labels
+\node[font=\sffamily\bfseries\fontsize{3.4}{4.1}\selectfont, text=cGray!58!black]
+  at (13.03, 4.03) {$V_{\mathrm{active}}$};
+\node[anchor=north, font=\sffamily\fontsize{2.8}{3.3}\selectfont, text=cGray!42!black]
+  at (13.03, 3.76) {bias};
 \fill[cRed!68!black] (13.30, 3.82) circle (0.020);
 \fill[cGray!55!black] (13.30, 2.82) circle (0.020);
-\draw[cGray!48!black, line width=0.20pt, dash pattern=on 1.0pt off 1.0pt, rounded corners=0.7pt]
-  (13.30, 3.72) -- (13.30, 3.28) -- (13.30, 2.82);
+% quality-search F connector: source-to-electrode lead
+\draw[cGray!64!black, line width=0.46pt, rounded corners=1.2pt]
+  (13.28, 3.78) -- (13.08, 3.58) -- (13.08, 2.96) -- (13.18, 2.82);
+\fill[cGray!82!black] (13.18, 2.82) circle (0.038);
 
 % Fixed clip and charge-trapping cantilever.
 \fill[cGray!10] (11.55, 2.84) rectangle (12.10, 2.96);
@@ -2073,14 +2076,14 @@
 
 % Right electrode and explicit gap field.
 \shade[left color=cGray!34, right color=cGray!18] (13.18, 0.46) rectangle (13.42, 2.82);
-\draw[cGray!86!black, line width=0.66pt] (13.18, 0.46) rectangle (13.42, 2.82);
+\draw[cGray!88!black, line width=0.72pt] (13.18, 0.46) rectangle (13.42, 2.82);
 \draw[cGray!45!black, line width=0.25pt] (13.23, 0.50) -- (13.23, 2.78);
 \foreach \hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {
   \draw[cGray!54!black, line width=0.22pt] (13.42, \hy) -- (13.18, {\hy-0.05});
 }
 \foreach \yy in {0.96,1.34,1.72,2.10} {
-  \draw[cGray!19, line width=0.22pt, dash pattern=on 1.2pt off 1.5pt]
-    (11.08,\yy) -- (13.18,\yy);
+  \draw[cGray!23, line width=0.30pt, dash pattern=on 1.3pt off 1.2pt]
+    (10.62,\yy) -- (13.18,\yy);
 }
 \draw[cGray!19, line width=0.22pt, dash pattern=on 1.2pt off 1.5pt]
   (11.08,2.42) -- (11.88,2.42);
@@ -2101,33 +2104,34 @@
   \shade[ball color=cRed!82!black] (\cx,\cy) circle (\rr);
   \draw[cRed!95!black, line width=0.25pt] (\cx,\cy) circle (\rr);
 }
-\draw[cRed!56!black, line width=0.34pt]
-  (11.50,2.48) .. controls (11.16,3.04) and (10.48,3.42) .. (10.12,3.60);
+% quality-search F leader-left lane -- review-only candidate
+\draw[cRed!64!black, line width=0.50pt]
+  (11.42,2.46) .. controls (10.54,3.14) and (9.74,3.48) .. (9.22,3.48);
 \node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,
       inner xsep=0.9pt, inner ysep=0.45pt,
       font=\sffamily\bfseries\fontsize{4.0}{4.8}\selectfont, text=cRed!74!black]
-  at (9.74, 3.52) {$q_{\mathrm{tr}}$};
+  at (9.22, 3.28) {$q_{\mathrm{tr}}$};
 \node[anchor=west, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=1.0pt, inner ysep=0.45pt,
       font=\sffamily\bfseries\fontsize{3.9}{4.7}\selectfont, text=cRed!74!black]
-  at (9.74, 3.80) {trapped charge};
+  at (9.22, 3.84) {trapped charge};
 
 % Coulomb-only response, intentionally stronger than the apparatus.
-\draw[panelFCoulombRepulsionArrow, -{Stealth[length=8.2pt,width=5.8pt]}, cRed!78!black, line width=1.05pt]
-  (10.86, 1.18) -- (9.48, 1.18);
+\draw[panelFCoulombRepulsionArrow, -{Stealth[length=9.2pt,width=6.4pt]}, cRed!82!black, line width=1.18pt]
+  (10.96, 1.18) -- (9.28, 1.18);
 \node[font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont, text=cRed!78!black,
-      anchor=south west] at (9.60, 1.50) {Coulomb};
+      anchor=south west] at (9.44, 1.58) {Coulomb};
 \node[labelMute, anchor=north west, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=1.2pt, inner ysep=0.6pt,
       font=\sffamily\fontsize{5.4}{6.5}\selectfont,
-      text=cRed!76!black] at (9.60, 1.40) {repulsion};
+      text=cRed!80!black] at (9.44, 1.45) {repulsion};
 
-\draw[<->, cGray!62!black, line width=0.62pt]
-  (10.36, 0.54) -- (13.18, 0.54);
+\draw[<->, cGray!66!black, line width=0.78pt]
+  (9.70, 0.54) -- (13.18, 0.54);
 \node[labelMute, anchor=north, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=1.4pt, inner ysep=0.9pt,
       font=\sffamily\fontsize{5.4}{6.5}\selectfont, text=cGray!75!black]
-  at (11.88, 0.31) {air gap};
+  at (11.58, 0.28) {air gap};
 
 % Restore the row label layer after the Panel F redraw mask.
 \node[panelLetter, anchor=north west] at (9.55, 4.55) {f};
