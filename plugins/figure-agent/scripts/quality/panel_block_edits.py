@@ -10,9 +10,11 @@ existing panel is a new entry here, never a new Python family.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from types import MappingProxyType
 from typing import IO, Any
 
 import yaml
@@ -37,7 +39,7 @@ class PanelBlockEdit:
     replacements: tuple[BlockReplacement, ...]
     protected_labels: tuple[str, ...]
     goal_trigger: tuple[tuple[str, ...], ...]
-    goal_hypothesis: dict[str, str]
+    goal_hypothesis: Mapping[str, str]
 
 
 def _require(condition: bool, message: str) -> None:
@@ -101,7 +103,9 @@ def _parse_entry(raw: Any, index: int) -> PanelBlockEdit:
             raw.get("protected_labels") or [], field="protected_labels", family=family
         ),
         goal_trigger=goal_trigger,
-        goal_hypothesis={str(key): str(value) for key, value in hypothesis.items()},
+        goal_hypothesis=MappingProxyType(
+            {str(key): str(value) for key, value in hypothesis.items()}
+        ),
     )
 
 

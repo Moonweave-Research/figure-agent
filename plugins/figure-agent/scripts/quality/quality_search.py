@@ -5794,6 +5794,44 @@ def _panel_block_edit_by_family(family: str) -> panel_block_edits.PanelBlockEdit
     return None
 
 
+# Panel preference for legacy (non-YAML) families only. Bundled YAML families derive
+# their preferred panel from ``entry.panel`` so a pure-YAML append needs no edit here.
+_LEGACY_PREFERRED_PANEL = {
+    "hierarchy_rebalance": "C",
+    "panel_c_hero_finish": "C",
+    "apparatus_strengthen": "F",
+    "panel_f_boundary_polish": "F",
+    "panel_f_final_finish": "F",
+    "panel_f_label_route_finish": "F",
+    "panel_f_density_relief": "F",
+    "panel_f_qtr_label_lane": "F",
+    "panel_f_qtr_apparatus_lane": "F",
+    "panel_f_force_gap_lane": "F",
+    "panel_f_mechanical_anchor_lane": "F",
+    "panel_f_leader_left_lane": "F",
+    "panel_f_electrode_lead_lane": "F",
+    "panel_f_auto_composite_lane": "F",
+    "panel_f_bias_label_cleanup": "F",
+    "panel_f_source_cue_readability": "F",
+    "panel_f_source_title_settle": "F",
+    "panel_f_source_cue_demote": "F",
+    "panel_f_current_label_sanitize": "F",
+    "panel_f_post_boundary_force_balance": "F",
+    "panel_f_post_force_source_connector": "F",
+    "panel_f_post_source_label_scale": "F",
+    "panel_f_post_label_force_cleanup": "F",
+    "panel_f_trap_label_left_rail": "F",
+    "density_reduce": "E",
+}
+
+
+def _preferred_panel_for_family(family: str) -> str | None:
+    data_family = _panel_block_edit_by_family(family)
+    if data_family is not None:
+        return data_family.panel
+    return _LEGACY_PREFERRED_PANEL.get(family)
+
+
 def _panel_block_edit_applied(block: str, entry: panel_block_edits.PanelBlockEdit) -> bool:
     return all(fragment in block for fragment in entry.applied_signature)
 
@@ -5848,39 +5886,7 @@ def _candidate_operation_for_spec(
     ]
     if not bound_selectors:
         return None, {"code": "no_bound_source_selector", "candidate_id": str(spec.get("id"))}
-    preferred_panel = {
-        "hierarchy_rebalance": "C",
-        "panel_c_hero_finish": "C",
-        "apparatus_strengthen": "F",
-        "panel_f_boundary_polish": "F",
-        "panel_f_final_finish": "F",
-        "panel_f_label_route_finish": "F",
-        "panel_f_density_relief": "F",
-        "panel_f_qtr_label_lane": "F",
-        "panel_f_qtr_apparatus_lane": "F",
-        "panel_f_force_gap_lane": "F",
-        "panel_f_mechanical_anchor_lane": "F",
-        "panel_f_leader_left_lane": "F",
-        "panel_f_electrode_lead_lane": "F",
-        "panel_f_auto_composite_lane": "F",
-        "panel_f_bias_label_cleanup": "F",
-        "panel_f_source_cue_readability": "F",
-        "panel_f_source_title_settle": "F",
-        "panel_f_source_cue_demote": "F",
-        "panel_f_current_label_sanitize": "F",
-        "panel_f_post_boundary_force_balance": "F",
-        "panel_f_post_force_source_connector": "F",
-        "panel_f_post_source_label_scale": "F",
-        "panel_f_post_label_force_cleanup": "F",
-        "panel_f_post_force_spacing_finish": "F",
-        "panel_f_post_spacing_source_finish": "F",
-        "panel_f_post_source_trap_hierarchy": "F",
-        "panel_f_post_trap_gap_readability": "F",
-        "panel_f_post_gap_label_relief": "F",
-        "panel_f_post_label_relief_source_settle": "F",
-        "panel_f_trap_label_left_rail": "F",
-        "density_reduce": "E",
-    }.get(family)
+    preferred_panel = _preferred_panel_for_family(family)
     selector = next(
         (item for item in bound_selectors if item.get("panel") == preferred_panel),
         bound_selectors[0],

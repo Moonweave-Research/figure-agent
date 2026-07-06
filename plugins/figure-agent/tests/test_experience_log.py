@@ -586,7 +586,7 @@ def test_quality_movement_improved_when_recheck_succeeds() -> None:
         "class_verifiers": {"status": "success"},
         "detector_recheck": {
             "status": "success",
-            "detector": "check_collisions",
+            "detector": "check_undeclared_geometry",
             "finding_id": "QD001",
         },
     }
@@ -606,7 +606,7 @@ def test_quality_movement_error_recheck_never_improved() -> None:
         "class_verifiers": {"status": "success"},
         "detector_recheck": {
             "status": "error",
-            "detector": "check_collisions",
+            "detector": "check_undeclared_geometry",
             "finding_id": "QD001",
         },
     }

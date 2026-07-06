@@ -178,7 +178,7 @@ def _normalize_anchor_text(text: str) -> str:
     return "\n".join(lines)
 
 
-def _operation_anchor_hash(candidate: dict[str, Any], manifest: dict[str, Any]) -> str | None:
+def _operation_anchor_hash(manifest: dict[str, Any], candidate: dict[str, Any]) -> str | None:
     for payload in (candidate, manifest):
         operations = payload.get("operations")
         if not isinstance(operations, list):
@@ -210,7 +210,7 @@ def _target(manifest: dict[str, Any], candidate: dict[str, Any]) -> dict[str, st
         target = manifest["target"]
     target = target or {}
     selector_hash = _selector_text_hash(manifest, candidate) or _operation_anchor_hash(
-        candidate, manifest
+        manifest, candidate
     )
     subregion = str(target.get("subregion") or "unknown")
     return {

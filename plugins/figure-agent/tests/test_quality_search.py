@@ -377,10 +377,7 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert hierarchy["design_moves"]
     assert hierarchy["operation_state"] == "not_generated"
     assert hierarchy["witness"]["source_binding_state"] == "unbound"
-    assert all(
-        selector["binding_state"] == "unbound"
-        for selector in hierarchy["source_selectors"]
-    )
+    assert all(selector["binding_state"] == "unbound" for selector in hierarchy["source_selectors"])
     assert payload["candidate_scores"] == []
     assert all(path.startswith(".scratch/quality-search-runs/") for path in payload["writes"])
 
@@ -397,9 +394,7 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert decision == payload["decision"]
 
 
-def test_quality_search_prerequisite_stop_is_depone_pass(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_quality_search_prerequisite_stop_is_depone_pass(tmp_path: Path, monkeypatch) -> None:
     driver = _driver_with_basin()
     driver["action"] = "run_critique"
     driver["reason"] = "grounded critique is stale"
@@ -569,13 +564,7 @@ def test_quality_search_execute_binds_family_specs_to_panel_regions(
     assert payload["depone"]["verdict"]["checks"]["render_mode"] == "prepare_only"
     assert payload["depone"]["verdict"]["checks"]["evaluated_count"] == 0
     sandbox_source = (
-        tmp_path
-        / "examples"
-        / "fig_demo"
-        / "build"
-        / "candidates"
-        / "QS001"
-        / "fig_demo.tex"
+        tmp_path / "examples" / "fig_demo" / "build" / "candidates" / "QS001" / "fig_demo.tex"
     )
     assert sandbox_source.is_file()
     assert "line width=0.9pt" in sandbox_source.read_text(encoding="utf-8")
@@ -773,8 +762,7 @@ def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_bloc
     assert "opacity=0.018" in operation["replacement"]
     assert "rounded corners=1.0pt" in operation["replacement"]
     assert (
-        "(13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16)"
-        " -- (13.18, 3.02) -- (13.30, 2.82);"
+        "(13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16) -- (13.18, 3.02) -- (13.30, 2.82);"
     ) in operation["replacement"]
     assert "circle ({2.35*\\rr})" in operation["replacement"]
     assert "ball color=cRed!82!black" in operation["replacement"]
@@ -866,8 +854,7 @@ def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_bloc
     assert electrode_operation is not None
     assert electrode_operation["template_id"] == "v5f_panel_f_electrode_connector_v1"
     assert (
-        "quality-search F connector: source-to-electrode lead"
-        in electrode_operation["replacement"]
+        "quality-search F connector: source-to-electrode lead" in electrode_operation["replacement"]
     )
     assert "(13.18, 2.82) circle (0.038);" in electrode_operation["replacement"]
 
@@ -992,10 +979,7 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     assert "quality-search C001 q_tr + apparatus lane" in operation["replacement"]
     assert "at (9.70, 2.94) {$q_{tr}$};" in operation["replacement"]
     assert "at (9.70, 3.18) {trapped charge};" in operation["replacement"]
-    assert (
-        "(12.65, 3.50) -- (12.92, 3.50) -- (13.08, 3.10)"
-        in operation["replacement"]
-    )
+    assert "(12.65, 3.50) -- (12.92, 3.50) -- (13.08, 3.10)" in operation["replacement"]
     assert "rounded corners=1.1pt" in operation["replacement"]
     qtr_label = [
         item
@@ -1020,9 +1004,7 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     force_operation = force_gap["operations"][0]
     assert force_gap["operation_scale"] == "panel_block"
     assert force_gap["template_id"] == "v5d_panel_f_force_gap_lane_v1"
-    assert "quality-search C002 Coulomb/electrode/air-gap lane" in force_operation[
-        "replacement"
-    ]
+    assert "quality-search C002 Coulomb/electrode/air-gap lane" in force_operation["replacement"]
     assert "(11.62, 1.30) -- (10.42, 1.30);" in force_operation["replacement"]
     assert "at (10.42, 1.40) {Coulomb};" in force_operation["replacement"]
     assert "at (10.42, 1.20) {repulsion};" in force_operation["replacement"]
@@ -1035,12 +1017,8 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     anchor_operation = mechanical_anchor["operations"][0]
     assert mechanical_anchor["operation_scale"] == "panel_block"
     assert mechanical_anchor["template_id"] == "v5d_panel_f_mechanical_anchor_lane_v1"
-    assert "quality-search C003 mechanical anchor lane" in anchor_operation[
-        "replacement"
-    ]
-    assert "(11.72, 2.36) rectangle (12.28, 2.58);" in anchor_operation[
-        "replacement"
-    ]
+    assert "quality-search C003 mechanical anchor lane" in anchor_operation["replacement"]
+    assert "(11.72, 2.36) rectangle (12.28, 2.58);" in anchor_operation["replacement"]
     assert "(11.72, 2.68) -- (12.38, 2.68);" in anchor_operation["replacement"]
     assert "at (9.76, 3.10) {trapped charge};" in anchor_operation["replacement"]
     leader_left = [
@@ -1051,19 +1029,11 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     leader_operation = leader_left["operations"][0]
     assert leader_left["operation_scale"] == "panel_block"
     assert leader_left["template_id"] == "v5d_panel_f_leader_left_lane_v1"
-    assert "quality-search C004 q_tr leader-left lane" in leader_operation[
-        "replacement"
-    ]
-    assert "(9.52, 2.34) rectangle (10.90, 2.94);" in leader_operation[
-        "replacement"
-    ]
+    assert "quality-search C004 q_tr leader-left lane" in leader_operation["replacement"]
+    assert "(9.52, 2.34) rectangle (10.90, 2.94);" in leader_operation["replacement"]
     assert "circle (0.092);" in leader_operation["replacement"]
-    assert "(11.90, 2.00) .. controls (11.42, 2.36)" in leader_operation[
-        "replacement"
-    ]
-    assert "at (9.72, 2.76) {trapped charge};" in leader_operation[
-        "replacement"
-    ]
+    assert "(11.90, 2.00) .. controls (11.42, 2.36)" in leader_operation["replacement"]
+    assert "at (9.72, 2.76) {trapped charge};" in leader_operation["replacement"]
     electrode_lead = [
         item
         for item in payload["candidate_set"]["candidates"]
@@ -1072,19 +1042,11 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     electrode_operation = electrode_lead["operations"][0]
     assert electrode_lead["operation_scale"] == "panel_block"
     assert electrode_lead["template_id"] == "v5d_panel_f_electrode_lead_lane_v1"
-    assert "quality-search C005 electrode lead lane" in electrode_operation[
-        "replacement"
-    ]
-    assert "(12.65, 3.50) -- (12.96, 3.50)" in electrode_operation[
-        "replacement"
-    ]
+    assert "quality-search C005 electrode lead lane" in electrode_operation["replacement"]
+    assert "(12.65, 3.50) -- (12.96, 3.50)" in electrode_operation["replacement"]
     assert "(13.13, 2.56) circle (0.046);" in electrode_operation["replacement"]
-    assert "(13.18, 0.4) rectangle (13.43, 2.6);" in electrode_operation[
-        "replacement"
-    ]
-    assert "at (12.35, 1.82) {trapped charge};" in electrode_operation[
-        "replacement"
-    ]
+    assert "(13.18, 0.4) rectangle (13.43, 2.6);" in electrode_operation["replacement"]
+    assert "at (12.35, 1.82) {trapped charge};" in electrode_operation["replacement"]
     auto_composite = [
         item
         for item in payload["candidate_set"]["candidates"]
@@ -1092,22 +1054,13 @@ def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
     ][0]
     composite_operation = auto_composite["operations"][0]
     assert auto_composite["operation_scale"] == "panel_block"
+    assert auto_composite["template_id"] == "v5d_panel_f_auto_composite_force_anchor_v1"
     assert (
-        auto_composite["template_id"]
-        == "v5d_panel_f_auto_composite_force_anchor_v1"
+        "quality-search C002 Coulomb/electrode/air-gap lane" in composite_operation["replacement"]
     )
-    assert "quality-search C002 Coulomb/electrode/air-gap lane" in composite_operation[
-        "replacement"
-    ]
-    assert "quality-search C003 mechanical anchor lane" in composite_operation[
-        "replacement"
-    ]
-    assert "(11.62, 1.30) -- (10.42, 1.30);" in composite_operation[
-        "replacement"
-    ]
-    assert "(11.72, 2.36) rectangle (12.28, 2.58);" in composite_operation[
-        "replacement"
-    ]
+    assert "quality-search C003 mechanical anchor lane" in composite_operation["replacement"]
+    assert "(11.62, 1.30) -- (10.42, 1.30);" in composite_operation["replacement"]
+    assert "(11.72, 2.36) rectangle (12.28, 2.58);" in composite_operation["replacement"]
     v2_composite = quality_search._panel_f_auto_composite_lane_replacement(  # type: ignore[attr-defined]
         lines=f"{tex_source}\n".splitlines(keepends=True),
         selector={"panel": "F", "line_start": 3, "line_end": len(tex_source.splitlines())},
@@ -1153,8 +1106,7 @@ def test_quality_search_apparatus_strengthen_progresses_already_redrawn_panel_f(
     assert "at (9.60, 3.12) {$q_{\\mathrm{tr}}$};" in replacement
     assert "at (9.60, 3.36) {trapped charge};" in replacement
     assert (
-        "(13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16)"
-        " -- (13.18, 3.02) -- (13.30, 2.82);"
+        "(13.30, 3.78) -- (13.04, 3.52) -- (13.04, 3.16) -- (13.18, 3.02) -- (13.30, 2.82);"
     ) in replacement
     assert "\\draw[<->, cGray!64!black, line width=0.70pt]" in replacement
 
@@ -1192,10 +1144,7 @@ def test_quality_search_suppresses_already_applied_panel_f_template(
             ),
             "\\node at (13.64, 1.62) {electrode};",
             "\\draw[cRed!55!black, line width=0.32pt]",
-            (
-                "  (11.48,2.40) .. controls (10.78,3.02)"
-                " and (10.12,3.36) .. (9.60,3.36);"
-            ),
+            ("  (11.48,2.40) .. controls (10.78,3.02) and (10.12,3.36) .. (9.60,3.36);"),
             "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1]",
             "  at (9.60, 3.12) {$q_{\\mathrm{tr}}$};",
             "\\node[anchor=west, fill=white, fill opacity=0.94, text opacity=1]",
@@ -1225,9 +1174,7 @@ def test_quality_search_suppresses_already_applied_panel_f_template(
         workspace_root=tmp_path,
     )
 
-    candidates_by_family = {
-        item["family"]: item for item in payload["candidate_set"]["candidates"]
-    }
+    candidates_by_family = {item["family"]: item for item in payload["candidate_set"]["candidates"]}
     candidate_families = set(candidates_by_family)
     score_families = {item["family"] for item in payload["candidate_scores"]}
     assert "apparatus_strengthen" in candidate_families
@@ -1312,9 +1259,7 @@ def test_quality_search_v5f_refresh_emits_electrode_lead_candidate(
         workspace_root=tmp_path,
     )
 
-    candidates_by_family = {
-        item["family"]: item for item in payload["candidate_set"]["candidates"]
-    }
+    candidates_by_family = {item["family"]: item for item in payload["candidate_set"]["candidates"]}
     electrode = candidates_by_family["panel_f_electrode_lead_lane"]
     operation = electrode["operations"][0]
     assert electrode["operation_scale"] == "panel_block"
@@ -1371,14 +1316,10 @@ def test_quality_search_v5f_refresh_emits_electrode_lead_candidate(
     )
     assert composite_refusal is None
     assert composite_operation is not None
-    assert (
-        composite_operation["template_id"]
-        == "v5f_panel_f_auto_composite_leader_electrode_v1"
-    )
+    assert composite_operation["template_id"] == "v5f_panel_f_auto_composite_leader_electrode_v1"
     assert "quality-search F leader-left lane" in composite_operation["replacement"]
     assert (
-        "quality-search F connector: source-to-electrode lead"
-        in composite_operation["replacement"]
+        "quality-search F connector: source-to-electrode lead" in composite_operation["replacement"]
     )
 
 
@@ -1440,8 +1381,7 @@ def test_quality_search_panel_f_bias_label_cleanup_emits_panel_block_candidate()
             "\\node[font=\\sffamily\\bfseries\\fontsize{3.9}{4.7}\\selectfont, "
             "text=cGray!58!black]",
             "  at (13.03, 3.98) {$V_{\\mathrm{active}}$};",
-            "\\node[font=\\sffamily\\fontsize{3.0}{3.6}\\selectfont, "
-            "text=cGray!40!black]",
+            "\\node[font=\\sffamily\\fontsize{3.0}{3.6}\\selectfont, text=cGray!40!black]",
             "  at (13.03, 3.88) {bias};",
             "% v8.6 ROW 2 END",
         ]
@@ -1474,6 +1414,24 @@ def test_quality_search_panel_f_bias_label_cleanup_emits_panel_block_candidate()
     assert "at (13.03, 3.76) {bias};" in operation["replacement"]
     assert "trapped charge" in operation["replacement"]
     assert "air gap" in operation["replacement"]
+
+
+def test_preferred_panel_derives_from_yaml_entry_without_dict_entry(monkeypatch) -> None:
+    # A pure-YAML append: a new family absent from _LEGACY_PREFERRED_PANEL must still
+    # get its panel preference from entry.panel, so no hardcoded dict edit is required.
+    new_family = "panel_f_hypothetical_new_lane"
+    assert new_family not in quality_search._LEGACY_PREFERRED_PANEL  # type: ignore[attr-defined]
+
+    yaml_entry = type("_StubEntry", (), {"panel": "F"})()
+    monkeypatch.setattr(
+        quality_search,
+        "_panel_block_edit_by_family",
+        lambda family: yaml_entry if family == new_family else None,
+    )
+
+    assert quality_search._preferred_panel_for_family(new_family) == "F"  # type: ignore[attr-defined]
+    # A family that is neither YAML-backed nor in the legacy dict has no preference.
+    assert quality_search._preferred_panel_for_family("totally_unknown") is None  # type: ignore[attr-defined]
 
 
 def test_quality_search_panel_f_source_cue_readability_emits_panel_block_candidate() -> None:
@@ -1778,10 +1736,7 @@ def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
                 "and separate force labels"
             ),
             "\\draw[cRed!62!black, line width=0.42pt]",
-            (
-                "  (11.35,2.52) .. controls (10.76,3.10)"
-                " and (10.14,3.38) .. (9.64,3.38);"
-            ),
+            ("  (11.35,2.52) .. controls (10.76,3.10) and (10.14,3.38) .. (9.64,3.38);"),
             (
                 "\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,\n"
                 "      inner xsep=0.75pt, inner ysep=0.35pt,\n"
@@ -1838,9 +1793,9 @@ def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
     assert boundary["template_id"] == "v5f_panel_f_boundary_polish_v2"
     assert operation["operation_scale"] == "panel_block"
     assert operation["template_id"] == "v5f_panel_f_boundary_polish_v2"
-    assert "quality-search F boundary polish: pull callouts off panel edge" in operation[
-        "replacement"
-    ]
+    assert (
+        "quality-search F boundary polish: pull callouts off panel edge" in operation["replacement"]
+    )
     assert "at (9.78, 3.22) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
     assert "at (9.78, 3.48) {trapped charge};" in operation["replacement"]
     assert "(10.72, 1.12) -- (9.62, 1.12);" in operation["replacement"]
@@ -1879,10 +1834,7 @@ def test_quality_search_panel_f_post_boundary_force_balance_emits_panel_block(
             "\\node at (13.64, 1.62) {electrode};",
             "% quality-search F boundary polish: pull callouts off panel edge",
             "\\draw[cRed!58!black, line width=0.36pt]",
-            (
-                "  (11.35,2.52) .. controls (10.86,3.18)"
-                " and (10.30,3.42) .. (9.84,3.42);"
-            ),
+            ("  (11.35,2.52) .. controls (10.86,3.18) and (10.30,3.42) .. (9.84,3.42);"),
             (
                 "\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,\n"
                 "      inner xsep=0.65pt, inner ysep=0.30pt,\n"
@@ -1908,10 +1860,7 @@ def test_quality_search_panel_f_post_boundary_force_balance_emits_panel_block(
                 "text=cRed!76!black,"
             ),
             "      anchor=south west] at (9.66, 1.58) {Coulomb};",
-            (
-                "\\node[labelMute, anchor=north west, fill=white, fill opacity=0.90, "
-                "text opacity=1,"
-            ),
+            ("\\node[labelMute, anchor=north west, fill=white, fill opacity=0.90, text opacity=1,"),
             "      inner xsep=0.95pt, inner ysep=0.45pt,",
             "      font=\\sffamily\\fontsize{5.0}{6.0}\\selectfont,",
             "      text=cRed!74!black] at (9.67, 1.41) {repulsion};",
@@ -2032,17 +1981,12 @@ def test_quality_search_panel_f_post_force_source_connector_emits_panel_block(
     ][0]
     operation = source_connector["operations"][0]
     assert source_connector["operation_scale"] == "panel_block"
-    assert (
-        source_connector["template_id"]
-        == "v5f_panel_f_post_force_source_connector_v1"
-    )
+    assert source_connector["template_id"] == "v5f_panel_f_post_force_source_connector_v1"
     assert operation["template_id"] == "v5f_panel_f_post_force_source_connector_v1"
     assert "quality-search F post-force source connector" in operation["replacement"]
     assert "at (13.02, 4.105) {$V_{\\mathrm{active}}$};" in operation["replacement"]
     assert "at (13.02, 3.80) {bias};" in operation["replacement"]
-    assert "(13.24, 3.78) -- (13.18, 3.42) -- (13.18, 2.82);" in operation[
-        "replacement"
-    ]
+    assert "(13.24, 3.78) -- (13.18, 3.42) -- (13.18, 2.82);" in operation["replacement"]
 
 
 def test_quality_search_panel_f_post_source_label_scale_emits_panel_block(
@@ -2094,10 +2038,7 @@ def test_quality_search_panel_f_post_source_label_scale_emits_panel_block(
             "\\node at (13.64, 1.62) {electrode};",
             "% quality-search F boundary polish: pull callouts off panel edge",
             "\\draw[cRed!58!black, line width=0.36pt]",
-            (
-                "  (11.35,2.52) .. controls (10.86,3.18)"
-                " and (10.30,3.42) .. (9.84,3.42);"
-            ),
+            ("  (11.35,2.52) .. controls (10.86,3.18) and (10.30,3.42) .. (9.84,3.42);"),
             (
                 "\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,\n"
                 "      inner xsep=0.65pt, inner ysep=0.30pt,\n"
@@ -2125,10 +2066,7 @@ def test_quality_search_panel_f_post_source_label_scale_emits_panel_block(
 
     payload = quality_search.build_quality_search_execution(
         "fig_demo",
-        goal=(
-            "Panel F after source connector trapped charge label scale "
-            "background final polish"
-        ),
+        goal=("Panel F after source connector trapped charge label scale background final polish"),
         max_iterations=1,
         plugin_root=PLUGIN_ROOT,
         workspace_root=tmp_path,
@@ -2187,10 +2125,7 @@ def test_quality_search_panel_f_post_label_force_cleanup_emits_panel_block(
             "\\node at (13.64, 1.62) {electrode};",
             "% quality-search F post-source label scale: lift trapped-charge legibility",
             "\\draw[cRed!58!black, line width=0.36pt]",
-            (
-                "  (11.35,2.52) .. controls (10.88,3.20)"
-                " and (10.28,3.46) .. (9.76,3.44);"
-            ),
+            ("  (11.35,2.52) .. controls (10.88,3.20) and (10.28,3.46) .. (9.76,3.44);"),
             "\\node at (9.70, 3.22) {$q_{\\mathrm{tr}}$};",
             "\\node at (9.70, 3.52) {trapped charge};",
             "% Coulomb-only response, intentionally stronger than the apparatus.",
@@ -2206,10 +2141,7 @@ def test_quality_search_panel_f_post_label_force_cleanup_emits_panel_block(
                 "\\selectfont, text=cRed!74!black,"
             ),
             "      anchor=south west] at (9.62, 1.66) {Coulomb};",
-            (
-                "\\node[labelMute, anchor=north west, fill=white, "
-                "fill opacity=0.90, text opacity=1,"
-            ),
+            ("\\node[labelMute, anchor=north west, fill=white, fill opacity=0.90, text opacity=1,"),
             "      inner xsep=0.95pt, inner ysep=0.45pt,",
             "      font=\\sffamily\\fontsize{4.8}{5.8}\\selectfont,",
             "      text=cRed!72!black] at (9.63, 1.44) {repulsion};",
@@ -2292,20 +2224,14 @@ def test_quality_search_panel_f_post_force_spacing_finish_emits_panel_block(
                 "cRed!76!black, line width=0.74pt]"
             ),
             "  (10.66, 1.06) -- (9.58, 1.06);",
-            (
-                "\\node[anchor=south west, fill=white, fill opacity=0.92, "
-                "text opacity=1,"
-            ),
+            ("\\node[anchor=south west, fill=white, fill opacity=0.92, text opacity=1,"),
             "      inner xsep=0.90pt, inner ysep=0.42pt,",
             (
                 "      font=\\sffamily\\bfseries\\fontsize{5.0}{6.0}"
                 "\\selectfont, text=cRed!74!black]"
             ),
             "  at (9.66, 1.62) {Coulomb};",
-            (
-                "\\node[labelMute, anchor=north west, fill=white, "
-                "fill opacity=0.94, text opacity=1,"
-            ),
+            ("\\node[labelMute, anchor=north west, fill=white, fill opacity=0.94, text opacity=1,"),
             "      inner xsep=1.0pt, inner ysep=0.48pt,",
             "      font=\\sffamily\\fontsize{4.7}{5.7}\\selectfont,",
             "      text=cRed!72!black] at (9.66, 1.36) {repulsion};",
@@ -2336,9 +2262,7 @@ def test_quality_search_panel_f_post_force_spacing_finish_emits_panel_block(
     ][0]
     operation = spacing_finish["operations"][0]
     assert spacing_finish["operation_scale"] == "panel_block"
-    assert (
-        spacing_finish["template_id"] == "v5f_panel_f_post_force_spacing_finish_v1"
-    )
+    assert spacing_finish["template_id"] == "v5f_panel_f_post_force_spacing_finish_v1"
     assert operation["template_id"] == "v5f_panel_f_post_force_spacing_finish_v1"
     assert "quality-search F post-force spacing finish" in operation["replacement"]
     assert "(10.58, 1.08) -- (9.66, 1.08);" in operation["replacement"]
@@ -2424,15 +2348,9 @@ def test_quality_search_panel_f_post_spacing_source_finish_emits_panel_block(
     assert source_finish["template_id"] == "v5f_panel_f_post_spacing_source_finish_v1"
     assert operation["template_id"] == "v5f_panel_f_post_spacing_source_finish_v1"
     assert "quality-search F post-spacing source finish" in operation["replacement"]
-    assert "(13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);" in operation[
-        "replacement"
-    ]
-    assert "\\fill[cRed!58!black] (13.24, 3.82) circle (0.016);" in operation[
-        "replacement"
-    ]
-    assert "\\fill[cGray!78!black] (13.18, 2.82) circle (0.034);" in operation[
-        "replacement"
-    ]
+    assert "(13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);" in operation["replacement"]
+    assert "\\fill[cRed!58!black] (13.24, 3.82) circle (0.016);" in operation["replacement"]
+    assert "\\fill[cGray!78!black] (13.18, 2.82) circle (0.034);" in operation["replacement"]
 
 
 def test_quality_search_panel_f_post_source_trap_hierarchy_emits_panel_block(
@@ -2472,24 +2390,15 @@ def test_quality_search_panel_f_post_source_trap_hierarchy_emits_panel_block(
             "\\node at (13.64, 1.62) {electrode};",
             "% quality-search F post-source label scale: lift trapped-charge legibility",
             "\\draw[cRed!58!black, line width=0.36pt]",
-            (
-                "  (11.35,2.52) .. controls (10.88,3.20)"
-                " and (10.28,3.46) .. (9.76,3.44);"
-            ),
-            (
-                "\\node[anchor=west, fill=white, fill opacity=0.90, "
-                "text opacity=1,"
-            ),
+            ("  (11.35,2.52) .. controls (10.88,3.20) and (10.28,3.46) .. (9.76,3.44);"),
+            ("\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,"),
             "      inner xsep=0.72pt, inner ysep=0.32pt,",
             (
                 "      font=\\sffamily\\bfseries\\fontsize{3.9}{4.7}"
                 "\\selectfont, text=cRed!72!black]"
             ),
             "  at (9.70, 3.22) {$q_{\\mathrm{tr}}$};",
-            (
-                "\\node[anchor=west, fill=white, fill opacity=0.90, "
-                "text opacity=1,"
-            ),
+            ("\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,"),
             "      inner xsep=0.78pt, inner ysep=0.32pt,",
             (
                 "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}"
@@ -2533,9 +2442,7 @@ def test_quality_search_panel_f_post_source_trap_hierarchy_emits_panel_block(
     ][0]
     operation = trap_hierarchy["operations"][0]
     assert trap_hierarchy["operation_scale"] == "panel_block"
-    assert (
-        trap_hierarchy["template_id"] == "v5f_panel_f_post_source_trap_hierarchy_v1"
-    )
+    assert trap_hierarchy["template_id"] == "v5f_panel_f_post_source_trap_hierarchy_v1"
     assert operation["template_id"] == "v5f_panel_f_post_source_trap_hierarchy_v1"
     assert "quality-search F post-source trap hierarchy" in operation["replacement"]
     assert "at (9.64, 3.20) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
@@ -2585,32 +2492,20 @@ def test_quality_search_panel_f_post_trap_gap_readability_emits_panel_block(
                 "\\shade[left color=cGray!34, right color=cGray!18] "
                 "(13.18, 0.46) rectangle (13.42, 2.82);"
             ),
-            (
-                "\\draw[cGray!88!black, line width=0.72pt] "
-                "(13.18, 0.46) rectangle (13.42, 2.82);"
-            ),
+            ("\\draw[cGray!88!black, line width=0.72pt] (13.18, 0.46) rectangle (13.42, 2.82);"),
             "\\foreach \\hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {",
-            (
-                "  \\draw[cGray!54!black, line width=0.22pt] "
-                "(13.42, \\hy) -- (13.18, {\\hy-0.05});"
-            ),
+            ("  \\draw[cGray!54!black, line width=0.22pt] (13.42, \\hy) -- (13.18, {\\hy-0.05});"),
             "}",
             (
                 "\\node[labelMute, anchor=south, rotate=270, fill=white, "
                 "fill opacity=0.95, text opacity=1,"
             ),
             "      inner xsep=1.1pt, inner ysep=0.7pt,",
-            (
-                "      font=\\sffamily\\fontsize{5.4}{6.5}\\selectfont, "
-                "text=cGray!70!black]"
-            ),
+            ("      font=\\sffamily\\fontsize{5.4}{6.5}\\selectfont, text=cGray!70!black]"),
             "  at (13.64, 1.62) {electrode};",
             "% quality-search F post-source trap hierarchy: separate trap labels",
             "\\draw[cRed!56!black, line width=0.34pt]",
-            (
-                "  (11.35,2.52) .. controls (10.86,3.24) "
-                "and (10.22,3.50) .. (9.70,3.48);"
-            ),
+            ("  (11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);"),
             "\\node at (9.64, 3.20) {$q_{\\mathrm{tr}}$};",
             "\\node at (9.64, 3.56) {trapped charge};",
             "% Coulomb-only response, intentionally stronger than the apparatus.",
@@ -2621,10 +2516,7 @@ def test_quality_search_panel_f_post_trap_gap_readability_emits_panel_block(
             "  (10.18, 0.54) -- (13.18, 0.54);",
             "\\node[labelMute, anchor=north, fill=white, fill opacity=0.94, text opacity=1,",
             "      inner xsep=1.4pt, inner ysep=0.9pt,",
-            (
-                "      font=\\sffamily\\fontsize{5.4}{6.5}\\selectfont, "
-                "text=cGray!75!black]"
-            ),
+            ("      font=\\sffamily\\fontsize{5.4}{6.5}\\selectfont, text=cGray!75!black]"),
             "  at (11.58, 0.28) {air gap};",
             "\\node at (11.70, 4.56) {mechanical};",
             "% v8.6 ROW 2 END",
@@ -2634,10 +2526,7 @@ def test_quality_search_panel_f_post_trap_gap_readability_emits_panel_block(
 
     payload = quality_search.build_quality_search_execution(
         "fig_demo",
-        goal=(
-            "Panel F after trap hierarchy electrode air gap readability "
-            "balance polish"
-        ),
+        goal=("Panel F after trap hierarchy electrode air gap readability balance polish"),
         max_iterations=1,
         plugin_root=PLUGIN_ROOT,
         workspace_root=tmp_path,
@@ -2650,15 +2539,11 @@ def test_quality_search_panel_f_post_trap_gap_readability_emits_panel_block(
     ][0]
     operation = gap_readability["operations"][0]
     assert gap_readability["operation_scale"] == "panel_block"
-    assert (
-        gap_readability["template_id"] == "v5f_panel_f_post_trap_gap_readability_v1"
-    )
+    assert gap_readability["template_id"] == "v5f_panel_f_post_trap_gap_readability_v1"
     assert operation["template_id"] == "v5f_panel_f_post_trap_gap_readability_v1"
     assert "quality-search F post-trap gap readability" in operation["replacement"]
     assert "line width=0.62pt] (13.18, 0.46) rectangle" in operation["replacement"]
-    assert "\\draw[<->, cGray!62!black, line width=0.68pt]" in operation[
-        "replacement"
-    ]
+    assert "\\draw[<->, cGray!62!black, line width=0.68pt]" in operation["replacement"]
     assert "at (11.60, 0.29) {air gap};" in operation["replacement"]
 
 
@@ -2702,46 +2587,28 @@ def test_quality_search_panel_f_post_gap_label_relief_emits_panel_block(
                 "\\shade[left color=cGray!30, right color=cGray!16] "
                 "(13.18, 0.46) rectangle (13.42, 2.82);"
             ),
-            (
-                "\\draw[cGray!82!black, line width=0.62pt] "
-                "(13.18, 0.46) rectangle (13.42, 2.82);"
-            ),
+            ("\\draw[cGray!82!black, line width=0.62pt] (13.18, 0.46) rectangle (13.42, 2.82);"),
             "\\foreach \\hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {",
-            (
-                "  \\draw[cGray!48!black, line width=0.20pt] "
-                "(13.42, \\hy) -- (13.18, {\\hy-0.05});"
-            ),
+            ("  \\draw[cGray!48!black, line width=0.20pt] (13.42, \\hy) -- (13.18, {\\hy-0.05});"),
             "}",
             (
                 "\\node[labelMute, anchor=south, rotate=270, fill=white, "
                 "fill opacity=0.96, text opacity=1,"
             ),
             "      inner xsep=1.0pt, inner ysep=0.66pt,",
-            (
-                "      font=\\sffamily\\fontsize{5.2}{6.3}\\selectfont, "
-                "text=cGray!68!black]"
-            ),
+            ("      font=\\sffamily\\fontsize{5.2}{6.3}\\selectfont, text=cGray!68!black]"),
             "  at (13.62, 1.62) {electrode};",
             "% quality-search F post-source trap hierarchy: separate trap labels",
             "\\draw[cRed!56!black, line width=0.34pt]",
-            (
-                "  (11.35,2.52) .. controls (10.86,3.24) "
-                "and (10.22,3.50) .. (9.70,3.48);"
-            ),
-            (
-                "\\node[anchor=west, fill=white, fill opacity=0.90, "
-                "text opacity=1,"
-            ),
+            ("  (11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);"),
+            ("\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,"),
             "      inner xsep=0.70pt, inner ysep=0.31pt,",
             (
                 "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}"
                 "\\selectfont, text=cRed!70!black]"
             ),
             "  at (9.64, 3.20) {$q_{\\mathrm{tr}}$};",
-            (
-                "\\node[anchor=west, fill=white, fill opacity=0.90, "
-                "text opacity=1,"
-            ),
+            ("\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,"),
             "      inner xsep=0.82pt, inner ysep=0.34pt,",
             (
                 "      font=\\sffamily\\bfseries\\fontsize{3.9}{4.7}"
@@ -2756,34 +2623,22 @@ def test_quality_search_panel_f_post_gap_label_relief_emits_panel_block(
                 "cRed!74!black, line width=0.68pt]"
             ),
             "  (10.58, 1.08) -- (9.66, 1.08);",
-            (
-                "\\node[anchor=south west, fill=white, fill opacity=0.94, "
-                "text opacity=1,"
-            ),
+            ("\\node[anchor=south west, fill=white, fill opacity=0.94, text opacity=1,"),
             "      inner xsep=0.92pt, inner ysep=0.44pt,",
             (
                 "      font=\\sffamily\\bfseries\\fontsize{4.9}{5.9}"
                 "\\selectfont, text=cRed!74!black]"
             ),
             "  at (9.58, 1.70) {Coulomb};",
-            (
-                "\\node[labelMute, anchor=north west, fill=white, "
-                "fill opacity=0.95, text opacity=1,"
-            ),
+            ("\\node[labelMute, anchor=north west, fill=white, fill opacity=0.95, text opacity=1,"),
             "      inner xsep=1.02pt, inner ysep=0.50pt,",
             "      font=\\sffamily\\fontsize{4.6}{5.6}\\selectfont,",
             "      text=cRed!72!black] at (9.58, 1.42) {repulsion};",
             "\\draw[<->, cGray!62!black, line width=0.68pt]",
             "  (10.20, 0.54) -- (13.18, 0.54);",
-            (
-                "\\node[labelMute, anchor=north, fill=white, fill opacity=0.94, "
-                "text opacity=1,"
-            ),
+            ("\\node[labelMute, anchor=north, fill=white, fill opacity=0.94, text opacity=1,"),
             "      inner xsep=1.4pt, inner ysep=0.9pt,",
-            (
-                "      font=\\sffamily\\fontsize{5.3}{6.4}\\selectfont, "
-                "text=cGray!70!black]"
-            ),
+            ("      font=\\sffamily\\fontsize{5.3}{6.4}\\selectfont, text=cGray!70!black]"),
             "  at (11.60, 0.29) {air gap};",
             "\\node at (11.70, 4.56) {mechanical};",
             "% v8.6 ROW 2 END",
@@ -2854,22 +2709,13 @@ def test_quality_search_panel_f_post_label_relief_source_settle_emits_panel_bloc
             "% quality-search F post-trap gap readability: quiet electrode and gap",
             "\\draw[cGray!82!black, line width=0.62pt] (13.18, 0.46) rectangle (13.42, 2.82);",
             "\\foreach \\hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {",
-            (
-                "  \\draw[cGray!48!black, line width=0.20pt] "
-                "(13.42, \\hy) -- (13.18, {\\hy-0.05});"
-            ),
+            ("  \\draw[cGray!48!black, line width=0.20pt] (13.42, \\hy) -- (13.18, {\\hy-0.05});"),
             "}",
             "\\node at (13.62, 1.62) {electrode};",
             "% quality-search F post-source trap hierarchy: separate trap labels",
             "\\draw[cRed!52!black, line width=0.28pt]",
-            (
-                "  (11.28,2.50) .. controls (10.78,3.08) "
-                "and (10.22,3.36) .. (9.82,3.40);"
-            ),
-            (
-                "\\node[anchor=west, fill=white, fill opacity=0.82, "
-                "text opacity=1,"
-            ),
+            ("  (11.28,2.50) .. controls (10.78,3.08) and (10.22,3.36) .. (9.82,3.40);"),
+            ("\\node[anchor=west, fill=white, fill opacity=0.82, text opacity=1,"),
             "      inner xsep=0.62pt, inner ysep=0.24pt,",
             (
                 "      font=\\sffamily\\bfseries\\fontsize{3.7}{4.5}"
@@ -2912,16 +2758,9 @@ def test_quality_search_panel_f_post_label_relief_source_settle_emits_panel_bloc
     ][0]
     operation = source_settle["operations"][0]
     assert source_settle["operation_scale"] == "panel_block"
-    assert (
-        source_settle["template_id"]
-        == "v5f_panel_f_post_label_relief_source_settle_v1"
-    )
-    assert operation["template_id"] == (
-        "v5f_panel_f_post_label_relief_source_settle_v1"
-    )
-    assert "quality-search F post-label relief source settle" in operation[
-        "replacement"
-    ]
+    assert source_settle["template_id"] == "v5f_panel_f_post_label_relief_source_settle_v1"
+    assert operation["template_id"] == ("v5f_panel_f_post_label_relief_source_settle_v1")
+    assert "quality-search F post-label relief source settle" in operation["replacement"]
     assert "at (9.62, 3.24) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
 
 
@@ -2964,32 +2803,20 @@ def test_quality_search_panel_f_trap_label_left_rail_emits_panel_block(
             "% quality-search F post-trap gap readability: quiet electrode and gap",
             "\\draw[cGray!82!black, line width=0.62pt] (13.18, 0.46) rectangle (13.42, 2.82);",
             "\\foreach \\hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {",
-            (
-                "  \\draw[cGray!48!black, line width=0.20pt] "
-                "(13.42, \\hy) -- (13.18, {\\hy-0.05});"
-            ),
+            ("  \\draw[cGray!48!black, line width=0.20pt] (13.42, \\hy) -- (13.18, {\\hy-0.05});"),
             "}",
             "\\node at (13.62, 1.62) {electrode};",
             "% quality-search F post-source trap hierarchy: separate trap labels",
             "\\draw[cRed!50!black, line width=0.26pt]",
-            (
-                "  (11.24,2.50) .. controls (10.72,3.02) "
-                "and (10.18,3.30) .. (9.84,3.36);"
-            ),
-            (
-                "\\node[anchor=west, fill=white, fill opacity=0.80, "
-                "text opacity=1,"
-            ),
+            ("  (11.24,2.50) .. controls (10.72,3.02) and (10.18,3.30) .. (9.84,3.36);"),
+            ("\\node[anchor=west, fill=white, fill opacity=0.80, text opacity=1,"),
             "      inner xsep=0.58pt, inner ysep=0.22pt,",
             (
                 "      font=\\sffamily\\bfseries\\fontsize{3.6}{4.4}"
                 "\\selectfont, text=cRed!66!black]"
             ),
             "  at (9.62, 3.24) {$q_{\\mathrm{tr}}$};",
-            (
-                "\\node[anchor=west, fill=white, fill opacity=0.84, "
-                "text opacity=1,"
-            ),
+            ("\\node[anchor=west, fill=white, fill opacity=0.84, text opacity=1,"),
             "      inner xsep=0.66pt, inner ysep=0.24pt,",
             (
                 "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}"
@@ -3081,10 +2908,7 @@ def test_quality_search_panel_f_final_finish_emits_post_boundary_panel_block(
             "  \\shade[ball color=cRed!82!black] (\\cx,\\cy) circle (\\rr);",
             "}",
             "\\draw[cRed!55!black, line width=0.32pt]",
-            (
-                "  (11.42,2.50) .. controls (10.94,3.24)"
-                " and (10.34,3.58) .. (9.72,3.46);"
-            ),
+            ("  (11.42,2.50) .. controls (10.94,3.24) and (10.34,3.58) .. (9.72,3.46);"),
             (
                 "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,\n"
                 "      inner xsep=0.9pt, inner ysep=0.45pt,\n"
@@ -3110,24 +2934,15 @@ def test_quality_search_panel_f_final_finish_emits_post_boundary_panel_block(
                 "text=cRed!82!black,"
             ),
             "      anchor=south west] at (9.58, 1.54) {Coulomb};",
-            (
-                "\\node[labelMute, anchor=north west, fill=white, "
-                "fill opacity=0.94, text opacity=1,"
-            ),
+            ("\\node[labelMute, anchor=north west, fill=white, fill opacity=0.94, text opacity=1,"),
             "      inner xsep=1.2pt, inner ysep=0.6pt,",
             "      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont,",
             "      text=cRed!82!black] at (9.59, 1.45) {repulsion};",
             "\\draw[<->, cGray!64!black, line width=0.70pt]",
             "  (10.18, 0.54) -- (13.18, 0.54);",
-            (
-                "\\node[labelMute, anchor=north, fill=white, "
-                "fill opacity=0.94, text opacity=1,"
-            ),
+            ("\\node[labelMute, anchor=north, fill=white, fill opacity=0.94, text opacity=1,"),
             "      inner xsep=1.4pt, inner ysep=0.9pt,",
-            (
-                "      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont, "
-                "text=cGray!75!black]"
-            ),
+            ("      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont, text=cGray!75!black]"),
             "  at (11.88, 0.31) {air gap};",
             "\\node at (11.70, 4.56) {mechanical};",
             "% v8.6 ROW 2 END",
@@ -3255,9 +3070,7 @@ def test_quality_search_panel_f_label_route_finish_emits_panel_block_candidate(
     assert "(11.50,2.48) .. controls (11.16,3.04)" in operation["replacement"]
     assert "at (9.74, 3.52) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
     assert "at (9.74, 3.80) {trapped charge};" in operation["replacement"]
-    assert "(13.30, 3.72) -- (13.30, 3.28) -- (13.30, 2.82);" in operation[
-        "replacement"
-    ]
+    assert "(13.30, 3.72) -- (13.30, 3.28) -- (13.30, 2.82);" in operation["replacement"]
 
 
 def test_quality_search_panel_f_density_relief_emits_panel_block_candidate(
@@ -3318,10 +3131,7 @@ def test_quality_search_panel_f_density_relief_emits_panel_block_candidate(
                 "fill opacity=0.95, text opacity=1,"
             ),
             "      inner xsep=1.1pt, inner ysep=0.7pt,",
-            (
-                "      font=\\sffamily\\fontsize{5.8}{7.0}\\selectfont, "
-                "text=cGray!78!black]"
-            ),
+            ("      font=\\sffamily\\fontsize{5.8}{7.0}\\selectfont, text=cGray!78!black]"),
             "  at (13.64, 1.62) {electrode};",
             "\\foreach \\cx/\\cy/\\rr in {11.62/2.28/0.075,11.43/1.86/0.082} {",
             (
@@ -3345,24 +3155,15 @@ def test_quality_search_panel_f_density_relief_emits_panel_block_candidate(
                 "text=cRed!82!black,"
             ),
             "      anchor=south west] at (9.58, 1.54) {Coulomb};",
-            (
-                "\\node[labelMute, anchor=north west, fill=white, "
-                "fill opacity=0.94, text opacity=1,"
-            ),
+            ("\\node[labelMute, anchor=north west, fill=white, fill opacity=0.94, text opacity=1,"),
             "      inner xsep=1.2pt, inner ysep=0.6pt,",
             "      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont,",
             "      text=cRed!82!black] at (9.59, 1.45) {repulsion};",
             "\\draw[<->, cGray!62!black, line width=0.62pt]",
             "  (10.36, 0.54) -- (13.18, 0.54);",
-            (
-                "\\node[labelMute, anchor=north, fill=white, "
-                "fill opacity=0.94, text opacity=1,"
-            ),
+            ("\\node[labelMute, anchor=north, fill=white, fill opacity=0.94, text opacity=1,"),
             "      inner xsep=1.4pt, inner ysep=0.9pt,",
-            (
-                "      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont, "
-                "text=cGray!75!black]"
-            ),
+            ("      font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont, text=cGray!75!black]"),
             "  at (11.88, 0.31) {air gap};",
             "\\node at (11.70, 4.56) {mechanical};",
             "% v8.6 ROW 2 END",
@@ -3496,9 +3297,7 @@ def test_quality_search_panel_c_hero_finish_emits_panel_block_candidate(
     assert "line width=1.24pt, line cap=butt" in operation["replacement"]
     assert "fontsize{7.4}{8.8}" in operation["replacement"]
     assert "text=cGray!58!black] at (8.35, 8.78) {real space};" in operation["replacement"]
-    assert "text=cGray!58!black] at (12.20, 8.78) {energy diagram};" in operation[
-        "replacement"
-    ]
+    assert "text=cGray!58!black] at (12.20, 8.78) {energy diagram};" in operation["replacement"]
 
 
 def test_quality_search_density_reduce_emits_panel_e_block_candidate(
@@ -3590,24 +3389,19 @@ def test_quality_search_density_reduce_emits_panel_e_block_candidate(
     assert "\\foreach \\cx in {6.95, 7.30} {" in operation["replacement"]
     assert (
         "  \\node[font=\\sffamily\\bfseries\\fontsize{4}{4.8}\\selectfont, text=white,\n"
-        "        opacity=0.72, inner sep=0pt] at (\\cx, 3.62) {$+$};"
-        in operation["replacement"]
+        "        opacity=0.72, inner sep=0pt] at (\\cx, 3.62) {$+$};" in operation["replacement"]
     )
     assert (
         "\\node[font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cGray!55!black,\n"
-        "      anchor=south] at (7.1, 4.10) {$V_s$ probe};"
-        in operation["replacement"]
+        "      anchor=south] at (7.1, 4.10) {$V_s$ probe};" in operation["replacement"]
     )
     assert (
         "\\node[font=\\sffamily\\fontsize{5.5}{6.6}\\selectfont, text=cGray!55!black]\n"
-        "  at (8.18, 3.86) {$V_s$ meter};"
-        in operation["replacement"]
+        "  at (8.18, 3.86) {$V_s$ meter};" in operation["replacement"]
     )
-    score = [
-        item
-        for item in payload["candidate_scores"]
-        if item["candidate_id"] == density["id"]
-    ][0]
+    score = [item for item in payload["candidate_scores"] if item["candidate_id"] == density["id"]][
+        0
+    ]
     assert score["operation_scale"] == "panel_block"
     assert score["template_id"] == "row2_panel_e_density_reduce_v1"
     applied_lines = operation["replacement"].splitlines(keepends=True)
@@ -3726,9 +3520,10 @@ def test_quality_search_goal_promotes_panel_f_apparatus_without_basin(
     assert "trapped charge" in operation["replacement"]
     assert "air gap" in operation["replacement"]
     by_family = {item["family"]: item for item in payload["candidate_scores"]}
-    assert by_family["apparatus_strengthen"]["policy_score"] > by_family[
-        "label_reflow"
-    ]["policy_score"]
+    assert (
+        by_family["apparatus_strengthen"]["policy_score"]
+        > by_family["label_reflow"]["policy_score"]
+    )
 
 
 def test_quality_search_policy_uses_epsilon_greedy_bandit_from_memory() -> None:
@@ -3875,21 +3670,14 @@ def test_quality_search_memory_summary_preserves_duplicate_diagnostics() -> None
             "duplicate_experience_attempt_count": 10,
             "duplicate_experience_attempt_rate": 0.7143,
             "families": {"panel_f_qtr_apparatus_lane": {"attempts": 1}},
-            "family_templates": {
-                "panel_f_auto_composite_lane::variant_a": {"attempts": 1}
-            },
+            "family_templates": {"panel_f_auto_composite_lane::variant_a": {"attempts": 1}},
         }
     )
 
     assert summary["counterfactual_unchosen_count"] == 3
     assert summary["duplicate_experience_attempt_count"] == 10
     assert summary["duplicate_experience_attempt_rate"] == 0.7143
-    assert (
-        summary["family_templates"]["panel_f_auto_composite_lane::variant_a"][
-            "attempts"
-        ]
-        == 1
-    )
+    assert summary["family_templates"]["panel_f_auto_composite_lane::variant_a"]["attempts"] == 1
 
 
 def test_quality_search_plan_escalates_stale_panel_f_apparatus_goal(
@@ -4006,15 +3794,14 @@ def test_quality_search_policy_penalizes_duplicate_experience_family() -> None:
     scores = quality_search._candidate_scores(candidate_specs, plan, rankings)
     by_family = {item["family"]: item for item in scores}
 
-    assert by_family["panel_f_qtr_apparatus_lane"]["policy"][
-        "duplicate_experience_penalty"
-    ] == -0.05
-    assert by_family["panel_f_qtr_label_lane"]["policy"][
-        "duplicate_experience_penalty"
-    ] == 0.0
-    assert by_family["panel_f_qtr_label_lane"]["policy_score"] > by_family[
-        "panel_f_qtr_apparatus_lane"
-    ]["policy_score"]
+    assert (
+        by_family["panel_f_qtr_apparatus_lane"]["policy"]["duplicate_experience_penalty"] == -0.05
+    )
+    assert by_family["panel_f_qtr_label_lane"]["policy"]["duplicate_experience_penalty"] == 0.0
+    assert (
+        by_family["panel_f_qtr_label_lane"]["policy_score"]
+        > by_family["panel_f_qtr_apparatus_lane"]["policy_score"]
+    )
 
 
 def test_quality_search_stale_gate_is_template_variant_aware() -> None:
@@ -4091,10 +3878,9 @@ def test_quality_search_auto_composite_prefers_fresh_electrode_variant() -> None
         "state": {
             "memory": {
                 "family_templates": {
-                    (
-                        "panel_f_auto_composite_lane::"
-                        "v5d_panel_f_auto_composite_force_anchor_v1"
-                    ): {"attempts": 1},
+                    ("panel_f_auto_composite_lane::v5d_panel_f_auto_composite_force_anchor_v1"): {
+                        "attempts": 1
+                    },
                     (
                         "panel_f_auto_composite_lane::"
                         "v5d_panel_f_auto_composite_force_anchor_electrode_v1"
@@ -4146,14 +3932,8 @@ def test_quality_search_qtr_label_prefers_fresh_v5f_variant() -> None:
         "state": {
             "memory": {
                 "family_templates": {
-                    (
-                        "panel_f_qtr_label_lane::"
-                        "v5f_panel_f_qtr_label_lane_v1"
-                    ): {"attempts": 1},
-                    (
-                        "panel_f_qtr_label_lane::"
-                        "v5f_panel_f_qtr_label_lane_v2"
-                    ): {"attempts": 0},
+                    ("panel_f_qtr_label_lane::v5f_panel_f_qtr_label_lane_v1"): {"attempts": 1},
+                    ("panel_f_qtr_label_lane::v5f_panel_f_qtr_label_lane_v2"): {"attempts": 0},
                 }
             }
         }
@@ -4294,9 +4074,10 @@ def test_quality_search_policy_prefers_panel_block_with_stronger_render_rank() -
     decision = quality_search._execution_decision(plan, scores)
 
     by_family = {item["family"]: item for item in scores}
-    assert by_family["apparatus_strengthen"]["policy_score"] > by_family[
-        "hierarchy_rebalance"
-    ]["policy_score"]
+    assert (
+        by_family["apparatus_strengthen"]["policy_score"]
+        > by_family["hierarchy_rebalance"]["policy_score"]
+    )
     assert decision["selected_candidate_id"] == "QS002"
     assert decision["selected_family"] == "apparatus_strengthen"
     assert decision["candidate_state"] == "non_marginal_review_candidate_ready"
@@ -4693,21 +4474,17 @@ def test_quality_search_recommends_acceptance_without_authorizing_apply() -> Non
         review_packet,
     )
 
-    assert recommendation["schema"] == (
-        "figure-agent.selected-acceptance-recommendation.v0"
-    )
+    assert recommendation["schema"] == ("figure-agent.selected-acceptance-recommendation.v0")
     assert recommendation["status"] == "auto_accept_recommended"
     assert recommendation["recommendation"] == "accept"
     assert recommendation["authority"] == "recommendation_only"
     assert recommendation["is_acceptance_artifact"] is False
     assert recommendation["source_mutation"] == "not_performed"
     assert recommendation["evidence"]["semantic_precheck_status"] == "pass"
-    assert recommendation["evidence"]["apply_readiness_status"] == (
-        "ready_for_local_acceptance"
+    assert recommendation["evidence"]["apply_readiness_status"] == ("ready_for_local_acceptance")
+    assert (
+        recommendation["required_commands"] == review_packet["apply_readiness"]["required_commands"]
     )
-    assert recommendation["required_commands"] == review_packet["apply_readiness"][
-        "required_commands"
-    ]
 
 
 def test_quality_search_selected_attempt_is_constraint_first_contract(
@@ -4716,8 +4493,7 @@ def test_quality_search_selected_attempt_is_constraint_first_contract(
     name = "fig_demo"
     candidate_id = "QS002"
     tex_source = (
-        "\\node at (0,0) {q_tr trapped charge Coulomb repulsion "
-        "electrode air gap mechanical};\n"
+        "\\node at (0,0) {q_tr trapped charge Coulomb repulsion electrode air gap mechanical};\n"
     )
     fixture = _write_minimal_fixture(
         tmp_path,
@@ -5095,9 +4871,10 @@ def test_quality_search_execution_persists_convergence_deferred_experience(
 
     assert payload["selected_acceptance_recommendation"]["status"] == "blocked"
     assert payload["selected_acceptance_recommendation"]["recommendation"] == "defer"
-    assert payload["recommendation_experience_record"]["outcome"][
-        "human_decision_kind"
-    ] == "convergence_deferred"
+    assert (
+        payload["recommendation_experience_record"]["outcome"]["human_decision_kind"]
+        == "convergence_deferred"
+    )
     assert payload["recommendation_experience_record_count"] == 1
     assert len(writes) == 1
     assert writes[0]["convergence_decision"]["decision"] == "stop"
@@ -5109,8 +4886,7 @@ def test_quality_search_execution_writes_selected_attempt_and_convergence_decisi
 ) -> None:
     name = "fig_demo"
     tex_source = (
-        "\\node at (0,0) {q_tr trapped charge Coulomb repulsion "
-        "electrode air gap mechanical};\n"
+        "\\node at (0,0) {q_tr trapped charge Coulomb repulsion electrode air gap mechanical};\n"
     )
     _write_minimal_fixture(
         tmp_path,
@@ -5282,9 +5058,7 @@ def test_quality_search_depone_verdict_requires_convergence_accept_for_auto_acce
         },
         render_results={"render_mode": "prepare_only", "rendered": [{"candidate_id": "QS001"}]},
         visual_evidence={},
-        candidate_rankings=[
-            {"candidate_id": "QS001", "effective_apply_authority": "review_only"}
-        ],
+        candidate_rankings=[{"candidate_id": "QS001", "effective_apply_authority": "review_only"}],
         decision={
             "source_mutation": "not_performed",
             "candidate_state": quality_search.NON_MARGINAL_REVIEW_CANDIDATE_STATE,
@@ -5350,9 +5124,7 @@ def test_quality_search_depone_verdict_rejects_auto_accept_without_convergence_a
         },
         render_results={"render_mode": "prepare_only", "rendered": [{"candidate_id": "QS001"}]},
         visual_evidence={},
-        candidate_rankings=[
-            {"candidate_id": "QS001", "effective_apply_authority": "review_only"}
-        ],
+        candidate_rankings=[{"candidate_id": "QS001", "effective_apply_authority": "review_only"}],
         decision={
             "source_mutation": "not_performed",
             "candidate_state": quality_search.NON_MARGINAL_REVIEW_CANDIDATE_STATE,
@@ -5390,9 +5162,7 @@ def test_quality_search_depone_verdict_rejects_auto_accept_without_convergence_a
     )
 
     assert verdict["contract_status"] == "fail"
-    assert {
-        failure["code"] for failure in verdict["failures"]
-    } >= {
+    assert {failure["code"] for failure in verdict["failures"]} >= {
         "convergence_non_accept_not_deferred",
         "selected_attempt_missing",
     }
@@ -5445,9 +5215,7 @@ def test_quality_search_depone_verdict_allows_convergence_stop_defer(
         },
         render_results={"render_mode": "prepare_only", "rendered": [{"candidate_id": "QS001"}]},
         visual_evidence={},
-        candidate_rankings=[
-            {"candidate_id": "QS001", "effective_apply_authority": "review_only"}
-        ],
+        candidate_rankings=[{"candidate_id": "QS001", "effective_apply_authority": "review_only"}],
         decision={
             "source_mutation": "not_performed",
             "candidate_state": quality_search.NON_MARGINAL_REVIEW_CANDIDATE_STATE,
@@ -5537,9 +5305,7 @@ def test_quality_search_depone_verdict_accepts_converged_current_stop(
         },
         render_results={"render_mode": "prepare_only", "rendered": [{"candidate_id": "QS001"}]},
         visual_evidence={},
-        candidate_rankings=[
-            {"candidate_id": "QS001", "effective_apply_authority": "review_only"}
-        ],
+        candidate_rankings=[{"candidate_id": "QS001", "effective_apply_authority": "review_only"}],
         decision={
             "source_mutation": "not_performed",
             "candidate_state": quality_search.NON_MARGINAL_REVIEW_CANDIDATE_STATE,
@@ -5580,8 +5346,7 @@ def test_quality_search_depone_verdict_accepts_converged_current_stop(
     assert verdict["contract_status"] == "pass"
     assert verdict["checks"]["selected_convergence_decision"] == "stop"
     assert (
-        verdict["checks"]["selected_acceptance_recommendation_status"]
-        == "auto_accept_recommended"
+        verdict["checks"]["selected_acceptance_recommendation_status"] == "auto_accept_recommended"
     )
 
 
@@ -5788,21 +5553,13 @@ def test_quality_search_memory_events_attach_selected_acceptance_recommendation(
     assert event["event_type"] == "candidate_ranked"
     assert event["outcome"]["state"] == "neutral"
     assert event["outcome"]["reason"] == "auto_accept_recommended_not_applied"
-    assert event["post_state"]["acceptance_recommendation_status"] == (
-        "auto_accept_recommended"
-    )
+    assert event["post_state"]["acceptance_recommendation_status"] == ("auto_accept_recommended")
     assert event["post_state"]["acceptance_recommendation"] == "accept"
-    assert event["post_state"]["acceptance_recommendation_authority"] == (
-        "recommendation_only"
-    )
+    assert event["post_state"]["acceptance_recommendation_authority"] == ("recommendation_only")
     assert event["post_state"]["semantic_precheck_status"] == "pass"
     assert event["post_state"]["review_packet_status"] == "ready"
-    assert event["post_state"]["apply_readiness_status"] == (
-        "ready_for_local_acceptance"
-    )
-    assert event["metrics"]["acceptance_recommendation_status"] == (
-        "auto_accept_recommended"
-    )
+    assert event["post_state"]["apply_readiness_status"] == ("ready_for_local_acceptance")
+    assert event["metrics"]["acceptance_recommendation_status"] == ("auto_accept_recommended")
     assert event["metrics"]["semantic_precheck_status"] == "pass"
     assert event["metrics"]["apply_readiness_status"] == "ready_for_local_acceptance"
     assert (
