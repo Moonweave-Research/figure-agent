@@ -27,6 +27,7 @@ import experience_log
 import fig_driver
 import fixture_identity
 import journal_guide
+import panel_block_edits
 import quality_defect_ledger
 import quality_memory_index
 import runtime_paths
@@ -71,39 +72,21 @@ PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID = "v5d_panel_f_auto_composite_force_anch
 PANEL_F_AUTO_COMPOSITE_ELECTRODE_TEMPLATE_ID = (
     "v5d_panel_f_auto_composite_force_anchor_electrode_v1"
 )
-PANEL_F_V5F_AUTO_COMPOSITE_TEMPLATE_ID = (
-    "v5f_panel_f_auto_composite_leader_electrode_v1"
-)
+PANEL_F_V5F_AUTO_COMPOSITE_TEMPLATE_ID = "v5f_panel_f_auto_composite_leader_electrode_v1"
 PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID = "v5f_panel_f_bias_label_cleanup_v1"
 PANEL_F_SOURCE_CUE_READABILITY_TEMPLATE_ID = "v5f_panel_f_source_cue_readability_v1"
 PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID = "v5f_panel_f_source_title_settle_v1"
 PANEL_F_SOURCE_CUE_DEMOTE_TEMPLATE_ID = "v5f_panel_f_source_cue_demote_v2"
 PANEL_F_CURRENT_LABEL_SANITIZE_TEMPLATE_ID = "v5f_panel_f_current_label_sanitize_v2"
-PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID = (
-    "v5f_panel_f_post_boundary_force_balance_v1"
-)
-PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID = (
-    "v5f_panel_f_post_force_source_connector_v1"
-)
+PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID = "v5f_panel_f_post_boundary_force_balance_v1"
+PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID = "v5f_panel_f_post_force_source_connector_v1"
 PANEL_F_POST_SOURCE_LABEL_SCALE_TEMPLATE_ID = "v5f_panel_f_post_source_label_scale_v1"
-PANEL_F_POST_LABEL_FORCE_CLEANUP_TEMPLATE_ID = (
-    "v5f_panel_f_post_label_force_cleanup_v1"
-)
-PANEL_F_POST_FORCE_SPACING_FINISH_TEMPLATE_ID = (
-    "v5f_panel_f_post_force_spacing_finish_v1"
-)
-PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID = (
-    "v5f_panel_f_post_spacing_source_finish_v1"
-)
-PANEL_F_POST_SOURCE_TRAP_HIERARCHY_TEMPLATE_ID = (
-    "v5f_panel_f_post_source_trap_hierarchy_v1"
-)
-PANEL_F_POST_TRAP_GAP_READABILITY_TEMPLATE_ID = (
-    "v5f_panel_f_post_trap_gap_readability_v1"
-)
-PANEL_F_POST_GAP_LABEL_RELIEF_TEMPLATE_ID = (
-    "v5f_panel_f_post_gap_label_relief_v1"
-)
+PANEL_F_POST_LABEL_FORCE_CLEANUP_TEMPLATE_ID = "v5f_panel_f_post_label_force_cleanup_v1"
+PANEL_F_POST_FORCE_SPACING_FINISH_TEMPLATE_ID = "v5f_panel_f_post_force_spacing_finish_v1"
+PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID = "v5f_panel_f_post_spacing_source_finish_v1"
+PANEL_F_POST_SOURCE_TRAP_HIERARCHY_TEMPLATE_ID = "v5f_panel_f_post_source_trap_hierarchy_v1"
+PANEL_F_POST_TRAP_GAP_READABILITY_TEMPLATE_ID = "v5f_panel_f_post_trap_gap_readability_v1"
+PANEL_F_POST_GAP_LABEL_RELIEF_TEMPLATE_ID = "v5f_panel_f_post_gap_label_relief_v1"
 PANEL_F_POST_LABEL_RELIEF_SOURCE_SETTLE_TEMPLATE_ID = (
     "v5f_panel_f_post_label_relief_source_settle_v1"
 )
@@ -117,9 +100,7 @@ NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO = 0.02
 NON_MARGINAL_REVIEW_CANDIDATE_STATE = "non_marginal_review_candidate_ready"
 TARGETED_CLEANUP_REVIEW_CANDIDATE_STATE = "targeted_cleanup_review_candidate_ready"
 NON_MARGINAL_REVIEW_NEXT_ACTION = "review selected candidate evidence"
-PANEL_MARKER_RE = re.compile(
-    r"^\s*%\s*(?:=+\s*)?(?:Panel|Column)\s+([A-Za-z0-9_-]+)\b"
-)
+PANEL_MARKER_RE = re.compile(r"^\s*%\s*(?:=+\s*)?(?:Panel|Column)\s+([A-Za-z0-9_-]+)\b")
 QUALITY_SEARCH_FAMILY_REGISTRY = {
     "hierarchy_rebalance": {
         "builder": "panel_region_spec",
@@ -939,9 +920,7 @@ def _allows_stale_critique_search(
         return False
     status = driver.get("status")
     critique_state = (
-        str(status.get("critique_state") or "").upper()
-        if isinstance(status, dict)
-        else ""
+        str(status.get("critique_state") or "").upper() if isinstance(status, dict) else ""
     )
     return critique_state == "STALE"
 
@@ -1255,8 +1234,7 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
             "target_hint": {
                 "panels": ["F"],
                 "reason": (
-                    "goal explicitly requests Panel F apparatus/charge/electrode/air-gap "
-                    "movement"
+                    "goal explicitly requests Panel F apparatus/charge/electrode/air-gap movement"
                 ),
             },
             "expected_detector_movement": (
@@ -1511,8 +1489,7 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
             },
         )
     if any(
-        term in normalized
-        for term in ("after force cleanup", "post force cleanup", "final")
+        term in normalized for term in ("after force cleanup", "post force cleanup", "final")
     ) and any(
         term in normalized
         for term in (
@@ -1556,8 +1533,7 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
             },
         )
     if any(
-        term in normalized
-        for term in ("after spacing finish", "post spacing", "final")
+        term in normalized for term in ("after spacing finish", "post spacing", "final")
     ) and any(
         term in normalized
         for term in (
@@ -1591,8 +1567,7 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                     "a fresh source-bound Panel F finish candidate"
                 ),
                 "expected_visual_movement": (
-                    "source lead becomes quieter while the electrode and air gap "
-                    "remain readable"
+                    "source lead becomes quieter while the electrode and air gap remain readable"
                 ),
                 "rollback_condition": (
                     "candidate worsens compile, protected labels, source attachment, "
@@ -1636,9 +1611,7 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 ),
             },
         )
-    if any(
-        term in normalized for term in ("after trap hierarchy", "post trap hierarchy")
-    ) and any(
+    if any(term in normalized for term in ("after trap hierarchy", "post trap hierarchy")) and any(
         term in normalized
         for term in ("electrode", "air gap", "gap", "readability", "balance", "polish")
     ):
@@ -1721,54 +1694,28 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 ),
             },
         )
-    if any(
-        term in normalized
-        for term in (
-            "after label relief",
-            "post label relief",
-            "source lead still",
-        )
-    ) and any(
-        term in normalized
-        for term in (
-            "source lead",
-            "equipment wire",
-            "q_tr",
-            "trapped charge",
-            "hierarchy",
-            "polish",
-        )
-    ):
-        hypotheses.insert(
-            0,
-            {
-                "fixture": name,
-                "family": "panel_f_post_label_relief_source_settle",
-                "source": "goal_directive",
-                "mutation_allowed": False,
-                "mutation_block_reason": "quality-search v0 is planner-only",
-                "target_scope": "panel",
-                "target_hint": {
-                    "panels": ["F"],
-                    "reason": (
-                        "goal requests Panel F source-lead and q_tr hierarchy "
-                        "settling after label relief"
-                    ),
+    for _edit in panel_block_edits.load_bundled_panel_block_edits():
+        if all(any(term in normalized for term in group) for group in _edit.goal_trigger):
+            hypotheses.insert(
+                0,
+                {
+                    "fixture": name,
+                    "family": _edit.family_id,
+                    "source": "goal_directive",
+                    "mutation_allowed": False,
+                    "mutation_block_reason": "quality-search v0 is planner-only",
+                    "target_scope": "panel",
+                    "target_hint": {
+                        "panels": [_edit.panel],
+                        "reason": _edit.goal_hypothesis["reason"],
+                    },
+                    "expected_detector_movement": _edit.goal_hypothesis[
+                        "expected_detector_movement"
+                    ],
+                    "expected_visual_movement": _edit.goal_hypothesis["expected_visual_movement"],
+                    "rollback_condition": _edit.goal_hypothesis["rollback_condition"],
                 },
-                "expected_detector_movement": (
-                    "convert post-label-relief source-lead defects into a fresh "
-                    "source-bound Panel F candidate"
-                ),
-                "expected_visual_movement": (
-                    "source lead becomes less apparatus-dominant and q_tr aligns "
-                    "more calmly under trapped charge"
-                ),
-                "rollback_condition": (
-                    "candidate worsens compile, protected labels, source semantics, "
-                    "or force/electrode/air-gap relations"
-                ),
-            },
-        )
+            )
     if any(
         term in normalized
         for term in (
@@ -1918,8 +1865,7 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
             },
         )
     if any(
-        term in normalized
-        for term in ("demote", "dominance", "subordinate", "hierarchy", "lower")
+        term in normalized for term in ("demote", "dominance", "subordinate", "hierarchy", "lower")
     ):
         hypotheses.insert(
             0,
@@ -1932,9 +1878,7 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 "target_scope": "panel",
                 "target_hint": {
                     "panels": ["F"],
-                    "reason": (
-                        "goal explicitly requests Panel F source cue hierarchy demotion"
-                    ),
+                    "reason": ("goal explicitly requests Panel F source cue hierarchy demotion"),
                 },
                 "expected_detector_movement": (
                     "convert source-cue dominance feedback into a bounded Panel F "
@@ -1990,9 +1934,7 @@ def _stale_goal_escalation_hypotheses(
     if duplicate_rate < 0.5:
         return []
     existing_families = {
-        str(item.get("family") or "")
-        for item in existing_hypotheses
-        if isinstance(item, dict)
+        str(item.get("family") or "") for item in existing_hypotheses if isinstance(item, dict)
     }
     apparatus_attempts = _memory_attempt_count(memory, "apparatus_strengthen")
     if apparatus_attempts <= 0 or "apparatus_strengthen" not in existing_families:
@@ -2134,8 +2076,7 @@ def _micro_defect_hypotheses(name: str, driver: dict[str, Any]) -> list[dict[str
                     "convert unlinked q_tr micro-defect into a bounded Panel F candidate"
                 ),
                 "expected_visual_movement": (
-                    "q_tr reads as an authoritative trapped-charge notation at "
-                    "thumbnail scale"
+                    "q_tr reads as an authoritative trapped-charge notation at thumbnail scale"
                 ),
                 "rollback_condition": (
                     "candidate worsens compile, protected labels, or Panel F print-legibility"
@@ -2364,8 +2305,7 @@ def _tool_defect_candidates(driver: dict[str, Any], ledger: dict[str, Any]) -> l
                     "stronger patch-family switch"
                 ),
                 "expected_behavior": (
-                    "promote repeated typography_authority signals into step-out "
-                    "search families"
+                    "promote repeated typography_authority signals into step-out search families"
                 ),
                 "actual_behavior": loop.get("recommended_next_action") or driver.get("reason"),
                 "minimal_reproduction": "fig-agent loop <fixture> --goal <goal> --json",
@@ -2439,8 +2379,7 @@ def _tool_defect_candidates(driver: dict[str, Any], ledger: dict[str, Any]) -> l
                         "selector evidence"
                     ),
                     "expected_behavior": (
-                        "safe candidates should carry a declared panel and stable "
-                        "selector hash"
+                        "safe candidates should carry a declared panel and stable selector hash"
                     ),
                     "actual_behavior": {
                         "unknown_panel_defect_count": unknown,
@@ -2460,8 +2399,7 @@ def _tool_defect_candidates(driver: dict[str, Any], ledger: dict[str, Any]) -> l
             {
                 "id": f"TD{len(candidates) + 1:03d}",
                 "symptom": (
-                    "critique contains unlinked micro defects after detector "
-                    "accounting passed"
+                    "critique contains unlinked micro defects after detector accounting passed"
                 ),
                 "expected_behavior": (
                     "quality search should classify unlinked micro defects as search "
@@ -2489,12 +2427,8 @@ def _memory_summary(memory: dict[str, Any] | None) -> dict[str, Any]:
         "candidate_event_count": memory.get("candidate_event_count"),
         "eligible_prior_count": memory.get("eligible_prior_count"),
         "counterfactual_unchosen_count": memory.get("counterfactual_unchosen_count"),
-        "duplicate_experience_attempt_count": memory.get(
-            "duplicate_experience_attempt_count"
-        ),
-        "duplicate_experience_attempt_rate": memory.get(
-            "duplicate_experience_attempt_rate"
-        ),
+        "duplicate_experience_attempt_count": memory.get("duplicate_experience_attempt_count"),
+        "duplicate_experience_attempt_rate": memory.get("duplicate_experience_attempt_rate"),
         "families": memory.get("families", {}),
         "family_templates": memory.get("family_templates", {}),
     }
@@ -2523,9 +2457,7 @@ def _arm_statistics(plan: dict[str, Any], families: list[str]) -> dict[str, dict
         improved = _bounded_int(memory.get("improved"), default=0)
         neutral = _bounded_int(memory.get("neutral"), default=0)
         regressed = _bounded_int(memory.get("regressed"), default=0)
-        empirical_reward = (
-            (improved + 0.5 * neutral) / attempts if attempts > 0 else 0.5
-        )
+        empirical_reward = (improved + 0.5 * neutral) / attempts if attempts > 0 else 0.5
         arms[family] = {
             "attempts": attempts,
             "improved": improved,
@@ -2624,8 +2556,7 @@ def _search_policy_descriptor(
         "kind": BANDIT_POLICY_KIND,
         "operation_kind": next_operation.get("kind"),
         "selection_score": (
-            "base_evidence_score + memory_prior + bandit_bonus "
-            "+ render_adjustment + render_penalty"
+            "base_evidence_score + memory_prior + bandit_bonus + render_adjustment + render_penalty"
         ),
         "exploitation_inputs": [
             "candidate_family_priority",
@@ -2757,9 +2688,7 @@ def build_quality_search_plan(
             "source_mutation": "forbidden_in_plan_mode",
             "accepted_golden_release_mutation": "forbidden_without_explicit_human_approval",
             "stale_critique_search_bypass": (
-                "enabled_candidate_generation_only"
-                if allow_stale_critique_search
-                else "disabled"
+                "enabled_candidate_generation_only" if allow_stale_critique_search else "disabled"
             ),
             "writes": [],
         },
@@ -2826,11 +2755,7 @@ def _panel_region_context(name: str, paths: runtime_paths.RuntimePaths) -> dict[
 
     selectors: dict[str, dict[str, Any]] = {}
     for marker_index, (panel, start_index, marker) in enumerate(markers):
-        next_start = (
-            markers[marker_index + 1][1]
-            if marker_index + 1 < len(markers)
-            else len(lines)
-        )
+        next_start = markers[marker_index + 1][1] if marker_index + 1 < len(markers) else len(lines)
         selected_text = "\n".join(lines[start_index:next_start])
         selectors.setdefault(
             panel,
@@ -3064,9 +2989,7 @@ def _memory_template_attempts(
     state = plan.get("state") if isinstance(plan.get("state"), dict) else {}
     memory = state.get("memory") if isinstance(state.get("memory"), dict) else {}
     family_templates = (
-        memory.get("family_templates")
-        if isinstance(memory.get("family_templates"), dict)
-        else {}
+        memory.get("family_templates") if isinstance(memory.get("family_templates"), dict) else {}
     )
     entry = family_templates.get(f"{family}::{template_id}")
     if not isinstance(entry, dict):
@@ -3136,9 +3059,7 @@ def _line_width_replacement(
             continue
         replacement_value = f"{minimum_pt:.2f}".rstrip("0").rstrip(".")
         replacement_line = (
-            line[: match.start()]
-            + f"line width={replacement_value}pt"
-            + line[match.end() :]
+            line[: match.start()] + f"line width={replacement_value}pt" + line[match.end() :]
         )
         replacement = (line, replacement_line, offset)
     return replacement
@@ -3535,10 +3456,8 @@ def _refreshed_panel_f_overlay(block: str) -> str | None:
             "text=cRed!80!black] at (9.44, 1.45) {repulsion};",
         ),
         (
-            "\\draw[<->, cGray!62!black, line width=0.62pt]\n"
-            "  (10.36, 0.54) -- (13.18, 0.54);",
-            "\\draw[<->, cGray!66!black, line width=0.78pt]\n"
-            "  (9.70, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!62!black, line width=0.62pt]\n  (10.36, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!66!black, line width=0.78pt]\n  (9.70, 0.54) -- (13.18, 0.54);",
         ),
         (
             "at (11.88, 0.31) {air gap};",
@@ -3590,10 +3509,8 @@ def _refreshed_panel_f_overlay(block: str) -> str | None:
             "  (10.96, 1.18) -- (9.28, 1.18);",
         ),
         (
-            "\\draw[<->, cGray!64!black, line width=0.70pt]\n"
-            "  (9.92, 0.54) -- (13.18, 0.54);",
-            "\\draw[<->, cGray!66!black, line width=0.78pt]\n"
-            "  (9.70, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!64!black, line width=0.70pt]\n  (9.92, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!66!black, line width=0.78pt]\n  (9.70, 0.54) -- (13.18, 0.54);",
         ),
         (
             "at (11.88, 0.31) {air gap};",
@@ -3608,9 +3525,7 @@ def _refreshed_panel_f_overlay(block: str) -> str | None:
                 break
             replacement = replacement.replace(old, new)
         else:
-            if replacement != block and _panel_f_overlay_has_protected_labels(
-                replacement
-            ):
+            if replacement != block and _panel_f_overlay_has_protected_labels(replacement):
                 return replacement
     return None
 
@@ -3887,8 +3802,7 @@ def _panel_f_qtr_apparatus_lane_replacement(
             "(11.86, 3.25) rectangle (12.61, 3.82);",
         ),
         (
-            "\\draw[cGray!60!black, line width=0.25pt]\n"
-            "  (11.8, 3.2) rectangle (12.65, 3.85);",
+            "\\draw[cGray!60!black, line width=0.25pt]\n  (11.8, 3.2) rectangle (12.65, 3.85);",
             "\\draw[cGray!50!black, line width=0.20pt, rounded corners=1.1pt]\n"
             "  (11.86, 3.25) rectangle (12.61, 3.82);",
         ),
@@ -3903,8 +3817,7 @@ def _panel_f_qtr_apparatus_lane_replacement(
             "(11.95, 3.57) rectangle (12.52, 3.75);",
         ),
         (
-            "\\draw[cGray!55!black, line width=0.18pt]\n"
-            "  (11.9, 3.55) rectangle (12.55, 3.78);",
+            "\\draw[cGray!55!black, line width=0.18pt]\n  (11.9, 3.55) rectangle (12.55, 3.78);",
             "\\draw[cGray!45!black, line width=0.14pt, rounded corners=0.7pt]\n"
             "  (11.95, 3.57) rectangle (12.52, 3.75);",
         ),
@@ -4052,18 +3965,15 @@ def _panel_f_force_gap_lane_replacement(
             "      text=cRed!82!black] at (10.42, 1.20) {repulsion};",
         ),
         (
-            "\\draw[cGray!85!black, line width=0.50pt]\n"
-            "  (13.23, 0.4) rectangle (13.4, 2.6);",
+            "\\draw[cGray!85!black, line width=0.50pt]\n  (13.23, 0.4) rectangle (13.4, 2.6);",
             "\\draw[cGray!85!black, line width=0.50pt]\n"
             "  (13.23, 0.4) rectangle (13.4, 2.6);\n"
             "\\draw[cRed!38!black, line width=0.48pt, opacity=0.70]\n"
             "  (13.23, 0.58) -- (13.23, 2.44);",
         ),
         (
-            "\\draw[<->, cGray!55!black, line width=0.30pt]\n"
-            "  (11.5, 0.55) -- (13.23, 0.55);",
-            "\\draw[<->, cGray!62!black, line width=0.44pt]\n"
-            "  (11.14, 0.68) -- (13.23, 0.68);",
+            "\\draw[<->, cGray!55!black, line width=0.30pt]\n  (11.5, 0.55) -- (13.23, 0.55);",
+            "\\draw[<->, cGray!62!black, line width=0.44pt]\n  (11.14, 0.68) -- (13.23, 0.68);",
         ),
         (
             "\\node[labelMute, anchor=north, inner sep=1pt,\n"
@@ -4142,10 +4052,8 @@ def _panel_f_mechanical_anchor_lane_replacement(
             "\\fill[cGray!45!black, opacity=0.16] (11.72, 2.34) rectangle (12.28, 2.39);",
         ),
         (
-            "\\draw[cGray!75!black, line width=0.40pt]\n"
-            "  (11.785, 2.42) rectangle (12.185, 2.52);",
-            "\\draw[cGray!78!black, line width=0.46pt]\n"
-            "  (11.72, 2.36) rectangle (12.28, 2.58);",
+            "\\draw[cGray!75!black, line width=0.40pt]\n  (11.785, 2.42) rectangle (12.185, 2.52);",
+            "\\draw[cGray!78!black, line width=0.46pt]\n  (11.72, 2.36) rectangle (12.28, 2.58);",
         ),
         (
             "\\draw[cGray!50!black, line width=0.40pt] (11.685, 2.65) -- (12.285, 2.65);",
@@ -4189,21 +4097,21 @@ def _panel_f_mechanical_anchor_lane_replacement(
     if include_qtr_label:
         replacements.append(
             (
-            "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
-            "\\node[labelMute, anchor=west, inner sep=1pt,\n"
-            "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
-            "  at (12.35, 2) {$q_{tr}$};",
-            "\\draw[cRed!58!black, line width=0.34pt]\n"
-            "  (11.90, 2.00) .. controls (11.36, 2.66) and (10.34, 2.88) .. (9.98, 2.88);\n"
-            "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,\n"
-            "      inner xsep=1.3pt, inner ysep=0.6pt,\n"
-            "      font=\\sffamily\\bfseries\\fontsize{7.0}{8.4}\\selectfont,\n"
-            "      text=cRed!82!black]\n"
-            "  at (9.76, 2.88) {$q_{tr}$};\n"
-            "\\node[labelMute, anchor=west, fill=white, fill opacity=0.94, text opacity=1,\n"
-            "      inner xsep=1.2pt, inner ysep=0.5pt,\n"
-            "      font=\\sffamily\\fontsize{5.8}{7.0}\\selectfont, text=cRed!72!black]\n"
-            "  at (9.76, 3.10) {trapped charge};",
+                "\\draw[cRed!55!black, line width=0.30pt] (11.92, 2) -- (12.35, 2);\n"
+                "\\node[labelMute, anchor=west, inner sep=1pt,\n"
+                "      font=\\sffamily\\fontsize{6.5}{7.8}\\selectfont, text=cRed!70!black]\n"
+                "  at (12.35, 2) {$q_{tr}$};",
+                "\\draw[cRed!58!black, line width=0.34pt]\n"
+                "  (11.90, 2.00) .. controls (11.36, 2.66) and (10.34, 2.88) .. (9.98, 2.88);\n"
+                "\\node[anchor=west, fill=white, fill opacity=0.96, text opacity=1,\n"
+                "      inner xsep=1.3pt, inner ysep=0.6pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{7.0}{8.4}\\selectfont,\n"
+                "      text=cRed!82!black]\n"
+                "  at (9.76, 2.88) {$q_{tr}$};\n"
+                "\\node[labelMute, anchor=west, fill=white, fill opacity=0.94, text opacity=1,\n"
+                "      inner xsep=1.2pt, inner ysep=0.5pt,\n"
+                "      font=\\sffamily\\fontsize{5.8}{7.0}\\selectfont, text=cRed!72!black]\n"
+                "  at (9.76, 3.10) {trapped charge};",
             )
         )
     for old, new in replacements:
@@ -4405,58 +4313,55 @@ def _panel_f_v5f_electrode_connector_replacement(block: str) -> str | None:
         return None
     connector_base = block
     has_refresh_relation = (
-        "quality-search F refresh: left-margin trap label + electrode relation"
-        in connector_base
+        "quality-search F refresh: left-margin trap label + electrode relation" in connector_base
     )
-    if not has_refresh_relation and not _panel_f_overlay_refresh_template_applied(
-        connector_base
-    ):
+    if not has_refresh_relation and not _panel_f_overlay_refresh_template_applied(connector_base):
         refreshed = _refreshed_panel_f_overlay(connector_base)
         if refreshed is None:
             strengthened = _strengthened_panel_f_overlay(connector_base)
             refreshed = (
-                _refreshed_panel_f_overlay(strengthened)
-                if strengthened is not None
-                else None
+                _refreshed_panel_f_overlay(strengthened) if strengthened is not None else None
             )
         if refreshed is None:
             return None
         connector_base = refreshed
     optional_replacements = (
-        ((
-            "\\fill[cGray!30!black, opacity=0.010]\n"
-            "  (12.58, 3.78) rectangle (13.48, 4.14);",
-            "\\fill[cGray!30!black, opacity=0.018]\n"
-            "  (12.58, 3.78) rectangle (13.48, 4.14);",
+        (
+            (
+                "\\fill[cGray!30!black, opacity=0.010]\n  (12.58, 3.78) rectangle (13.48, 4.14);",
+                "\\fill[cGray!30!black, opacity=0.018]\n  (12.58, 3.78) rectangle (13.48, 4.14);",
+            ),
+            "\\fill[cGray!26!black, opacity=0.014]\n  (12.70, 3.86) rectangle (13.36, 4.12);",
         ),
-            "\\fill[cGray!26!black, opacity=0.014]\n"
-            "  (12.70, 3.86) rectangle (13.36, 4.12);",
-        ),
-        ((
-            "\\fill[cGray!2] (12.62, 3.82) rectangle (13.42, 4.16);",
-            "\\fill[cGray!3] (12.56, 3.82) rectangle (13.46, 4.16);",
-        ),
+        (
+            (
+                "\\fill[cGray!2] (12.62, 3.82) rectangle (13.42, 4.16);",
+                "\\fill[cGray!3] (12.56, 3.82) rectangle (13.46, 4.16);",
+            ),
             "\\fill[cGray!3] (12.68, 3.88) rectangle (13.38, 4.14);",
         ),
-        ((
-            "\\draw[cGray!44!black, line width=0.17pt, rounded corners=1.0pt]\n"
-            "  (12.62, 3.82) rectangle (13.42, 4.16);",
-            "\\draw[cGray!58!black, line width=0.22pt, rounded corners=1.0pt]\n"
-            "  (12.56, 3.82) rectangle (13.46, 4.16);",
-        ),
+        (
+            (
+                "\\draw[cGray!44!black, line width=0.17pt, rounded corners=1.0pt]\n"
+                "  (12.62, 3.82) rectangle (13.42, 4.16);",
+                "\\draw[cGray!58!black, line width=0.22pt, rounded corners=1.0pt]\n"
+                "  (12.56, 3.82) rectangle (13.46, 4.16);",
+            ),
             "\\draw[cGray!48!black, line width=0.18pt, rounded corners=1.0pt]\n"
             "  (12.68, 3.88) rectangle (13.38, 4.14);",
         ),
-        ((
-            "at (13.02, 4.03) {$V_{\\mathrm{active}}$};",
-            "at (12.99, 3.94) {$V_{\\mathrm{active}}$};",
-        ),
+        (
+            (
+                "at (13.02, 4.03) {$V_{\\mathrm{active}}$};",
+                "at (12.99, 3.94) {$V_{\\mathrm{active}}$};",
+            ),
             "at (13.03, 3.98) {$V_{\\mathrm{active}}$};",
         ),
-        ((
-            "at (13.02, 3.91) {bias};",
-            "at (12.99, 3.84) {bias};",
-        ),
+        (
+            (
+                "at (13.02, 3.91) {bias};",
+                "at (12.99, 3.84) {bias};",
+            ),
             "at (13.03, 3.88) {bias};",
         ),
     )
@@ -4523,10 +4428,7 @@ def _panel_f_electrode_lead_lane_replacement(
         return None
     if include_qtr_label and _panel_f_electrode_lead_lane_template_applied(original):
         return None
-    if (
-        not include_qtr_label
-        and _panel_f_electrode_lead_connection_template_applied(original)
-    ):
+    if not include_qtr_label and _panel_f_electrode_lead_connection_template_applied(original):
         return None
     replacements = [
         (
@@ -4545,10 +4447,8 @@ def _panel_f_electrode_lead_lane_replacement(
             "\\fill[cGray!45!black, opacity=0.18] (13.18, 2.40) rectangle (13.43, 2.62);",
         ),
         (
-            "\\draw[cGray!85!black, line width=0.50pt]\n"
-            "  (13.23, 0.4) rectangle (13.4, 2.6);",
-            "\\draw[cGray!82!black, line width=0.54pt]\n"
-            "  (13.18, 0.4) rectangle (13.43, 2.6);",
+            "\\draw[cGray!85!black, line width=0.50pt]\n  (13.23, 0.4) rectangle (13.4, 2.6);",
+            "\\draw[cGray!82!black, line width=0.54pt]\n  (13.18, 0.4) rectangle (13.43, 2.6);",
         ),
     ]
     if include_qtr_label:
@@ -4651,9 +4551,7 @@ def _panel_f_v5f_auto_composite_replacement(
         replacement=leader_replacement,
     )
     electrode_selector = dict(selector)
-    electrode_selector["line_end"] = (
-        line_start + len(leader_replacement.splitlines()) - 1
-    )
+    electrode_selector["line_end"] = line_start + len(leader_replacement.splitlines()) - 1
     electrode_lead = _panel_f_electrode_lead_lane_replacement(
         lines=leader_lines,
         selector=electrode_selector,
@@ -4734,18 +4632,14 @@ def _panel_f_auto_composite_lane_replacement(
             replacement=final_replacement,
         )
         electrode_selector = dict(selector)
-        electrode_selector["line_end"] = (
-            line_start + len(final_replacement.splitlines()) - 1
-        )
+        electrode_selector["line_end"] = line_start + len(final_replacement.splitlines()) - 1
         electrode_lead = _panel_f_electrode_lead_lane_replacement(
             lines=anchor_lines, selector=electrode_selector, include_qtr_label=False
         )
         if electrode_lead is None:
             return None
         _, final_replacement, electrode_start, electrode_end = electrode_lead
-        if electrode_start != line_start or electrode_end != int(
-            electrode_selector["line_end"]
-        ):
+        if electrode_start != line_start or electrode_end != int(electrode_selector["line_end"]):
             return None
     protected = (
         "q_{tr}",
@@ -5415,10 +5309,8 @@ def _panel_f_post_force_source_connector_replacement(
         return None
     replacements = (
         (
-            "\\fill[cGray!26!black, opacity=0.014]\n"
-            "  (12.70, 3.86) rectangle (13.36, 4.12);",
-            "\\fill[cGray!26!black, opacity=0.010]\n"
-            "  (12.74, 3.88) rectangle (13.34, 4.12);",
+            "\\fill[cGray!26!black, opacity=0.014]\n  (12.70, 3.86) rectangle (13.36, 4.12);",
+            "\\fill[cGray!26!black, opacity=0.010]\n  (12.74, 3.88) rectangle (13.34, 4.12);",
         ),
         (
             "\\fill[cGray!3] (12.68, 3.88) rectangle (13.38, 4.14);",
@@ -5955,10 +5847,8 @@ def _panel_f_post_trap_gap_readability_replacement(
             "  at (13.62, 1.62) {electrode};",
         ),
         (
-            "\\draw[<->, cGray!66!black, line width=0.78pt]\n"
-            "  (10.18, 0.54) -- (13.18, 0.54);",
-            "\\draw[<->, cGray!62!black, line width=0.68pt]\n"
-            "  (10.20, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!66!black, line width=0.78pt]\n  (10.18, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!62!black, line width=0.68pt]\n  (10.20, 0.54) -- (13.18, 0.54);",
         ),
         (
             "font=\\sffamily\\fontsize{5.4}{6.5}\\selectfont, text=cGray!75!black]\n"
@@ -6108,92 +5998,6 @@ def _panel_f_post_gap_label_relief_replacement(
     return original, replacement, line_start, line_end
 
 
-def _panel_f_post_label_relief_source_settle_template_applied(block: str) -> bool:
-    required_fragments = (
-        "% quality-search F post-label relief source settle: subordinate source lead",
-        "\\fill[cRed!50!black, opacity=0.78] (13.24, 3.82) circle (0.012);",
-        "\\draw[cGray!34!black, line width=0.18pt, opacity=0.78, rounded corners=2.2pt]",
-        "\\fill[cGray!66!black, opacity=0.86] (13.18, 2.82) circle (0.024);",
-        "(11.24,2.50) .. controls (10.72,3.02) and (10.18,3.30) .. (9.84,3.36);",
-        "at (9.62, 3.24) {$q_{\\mathrm{tr}}$};",
-    )
-    return all(fragment in block for fragment in required_fragments)
-
-
-def _panel_f_post_label_relief_source_settle_replacement(
-    *,
-    lines: list[str],
-    selector: dict[str, Any],
-) -> tuple[str, str, int, int] | None:
-    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
-    if line_range is None:
-        return None
-    line_start, line_end = line_range
-    original = "".join(lines[line_start - 1 : line_end])
-    if not _panel_f_overlay_has_protected_labels(original):
-        return None
-    if not _panel_f_post_gap_label_relief_template_applied(original):
-        return None
-    if _panel_f_post_label_relief_source_settle_template_applied(original):
-        return None
-    replacements = (
-        (
-            "\\fill[cRed!58!black] (13.24, 3.82) circle (0.016);",
-            "\\fill[cRed!50!black, opacity=0.78] (13.24, 3.82) circle (0.012);",
-        ),
-        (
-            "% quality-search F post-gap label relief: clear label backgrounds\n"
-            "\\draw[cGray!46!black, line width=0.26pt, rounded corners=2.0pt]\n"
-            "  (13.24, 3.78) -- (13.20, 3.40) -- (13.18, 2.82);\n"
-            "\\fill[cGray!74!black] (13.18, 2.82) circle (0.030);",
-            "% quality-search F post-gap label relief: clear label backgrounds\n"
-            "% quality-search F post-label relief source settle: subordinate source lead\n"
-            "\\draw[cGray!34!black, line width=0.18pt, opacity=0.78, rounded corners=2.2pt]\n"
-            "  (13.24, 3.76) -- (13.20, 3.38) -- (13.18, 2.82);\n"
-            "\\fill[cGray!66!black, opacity=0.86] (13.18, 2.82) circle (0.024);",
-        ),
-        (
-            "\\draw[cRed!52!black, line width=0.28pt]\n"
-            "  (11.28,2.50) .. controls (10.78,3.08) and (10.22,3.36) .. (9.82,3.40);\n"
-            "\\node[anchor=west, fill=white, fill opacity=0.82, text opacity=1,\n"
-            "      inner xsep=0.62pt, inner ysep=0.24pt,\n"
-            "      font=\\sffamily\\bfseries\\fontsize{3.7}{4.5}\\selectfont, text=cRed!68!black]\n"
-            "  at (9.60, 3.18) {$q_{\\mathrm{tr}}$};",
-            "\\draw[cRed!50!black, line width=0.26pt]\n"
-            "  (11.24,2.50) .. controls (10.72,3.02) and (10.18,3.30) .. (9.84,3.36);\n"
-            "\\node[anchor=west, fill=white, fill opacity=0.80, text opacity=1,\n"
-            "      inner xsep=0.58pt, inner ysep=0.22pt,\n"
-            "      font=\\sffamily\\bfseries\\fontsize{3.6}{4.4}\\selectfont, text=cRed!66!black]\n"
-            "  at (9.62, 3.24) {$q_{\\mathrm{tr}}$};",
-        ),
-    )
-    replacement = original
-    for old, new in replacements:
-        if old not in replacement:
-            return None
-        replacement = replacement.replace(old, new)
-    if replacement == original:
-        return None
-    protected = (
-        "q_{\\mathrm{tr}}",
-        "trapped charge",
-        "Coulomb",
-        "repulsion",
-        "electrode",
-        "air gap",
-        "mechanical",
-        "$V_{\\mathrm{active}}$",
-        "bias",
-    )
-    if not all(label in replacement for label in protected):
-        return None
-    if not _panel_f_post_label_relief_source_settle_template_applied(replacement):
-        return None
-    if "% quality-search F post-gap label relief: clear label backgrounds" not in replacement:
-        return None
-    return original, replacement, line_start, line_end
-
-
 def _panel_f_trap_label_left_rail_template_applied(block: str) -> bool:
     required_fragments = (
         "% quality-search F trap label left rail: park trap labels in margin",
@@ -6216,7 +6020,8 @@ def _panel_f_trap_label_left_rail_replacement(
     original = "".join(lines[line_start - 1 : line_end])
     if not _panel_f_overlay_has_protected_labels(original):
         return None
-    if not _panel_f_post_label_relief_source_settle_template_applied(original):
+    source_settle_entry = _panel_block_edit_by_family("panel_f_post_label_relief_source_settle")
+    if source_settle_entry is None or not _panel_block_edit_applied(original, source_settle_entry):
         return None
     if _panel_f_trap_label_left_rail_template_applied(original):
         return None
@@ -6334,10 +6139,8 @@ def _panel_f_final_finish_replacement(
         ("at (9.72, 3.20) {$q_{\\mathrm{tr}}$};", "at (9.62, 3.32) {$q_{\\mathrm{tr}}$};"),
         ("at (9.72, 3.46) {trapped charge};", "at (9.62, 3.58) {trapped charge};"),
         (
-            "\\draw[<->, cGray!64!black, line width=0.70pt]\n"
-            "  (10.18, 0.54) -- (13.18, 0.54);",
-            "\\draw[<->, cGray!62!black, line width=0.62pt]\n"
-            "  (10.36, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!64!black, line width=0.70pt]\n  (10.18, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!62!black, line width=0.62pt]\n  (10.36, 0.54) -- (13.18, 0.54);",
         ),
     )
     for old, new in replacements:
@@ -6469,10 +6272,8 @@ def _panel_f_density_relief_replacement(
             "\\foreach \\hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {",
         ),
         (
-            "\\draw[cGray!60!black, line width=0.25pt] (13.42, \\hy) -- "
-            "(13.18, {\\hy-0.06});",
-            "\\draw[cGray!54!black, line width=0.22pt] (13.42, \\hy) -- "
-            "(13.18, {\\hy-0.05});",
+            "\\draw[cGray!60!black, line width=0.25pt] (13.42, \\hy) -- (13.18, {\\hy-0.06});",
+            "\\draw[cGray!54!black, line width=0.22pt] (13.42, \\hy) -- (13.18, {\\hy-0.05});",
         ),
         (
             "\\foreach \\yy in {0.92,1.22,1.52,1.82,2.12} {",
@@ -6649,6 +6450,50 @@ def _density_panel_e_template_applied(
     )
 
 
+def _panel_block_edit_by_family(family: str) -> panel_block_edits.PanelBlockEdit | None:
+    for entry in panel_block_edits.load_bundled_panel_block_edits():
+        if entry.family_id == family:
+            return entry
+    return None
+
+
+def _panel_block_edit_applied(block: str, entry: panel_block_edits.PanelBlockEdit) -> bool:
+    return all(fragment in block for fragment in entry.applied_signature)
+
+
+def _panel_block_edit_replacement(
+    *,
+    entry: panel_block_edits.PanelBlockEdit,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if not all(fragment in original for fragment in entry.requires):
+        return None
+    if _panel_block_edit_applied(original, entry):
+        return None
+    replacement = original
+    for pair in entry.replacements:
+        if pair.old not in replacement:
+            return None
+        replacement = replacement.replace(pair.old, pair.new)
+    if replacement == original:
+        return None
+    if not all(label in replacement for label in entry.protected_labels):
+        return None
+    if not _panel_block_edit_applied(replacement, entry):
+        return None
+    if not all(fragment in replacement for fragment in entry.preserve_after):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _candidate_operation_for_spec(
     spec: dict[str, Any],
     *,
@@ -6703,6 +6548,36 @@ def _candidate_operation_for_spec(
         (item for item in bound_selectors if item.get("panel") == preferred_panel),
         bound_selectors[0],
     )
+    data_family = _panel_block_edit_by_family(family)
+    if data_family is not None:
+        block = _panel_block_edit_replacement(
+            entry=data_family,
+            lines=lines,
+            selector=selector,
+        )
+        if block is not None:
+            original, new_text, line_start, line_end = block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": f"quality_search_{data_family.family_id}_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": data_family.template_id,
+                "panel": data_family.panel,
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": f"no_{data_family.family_id}_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": data_family.template_id,
+            "panel": data_family.panel,
+        }
     if family == "apparatus_strengthen":
         panel_block = _apparatus_panel_block_status(lines=lines, selector=selector)
         if panel_block.get("state") == "replaceable":
@@ -6809,9 +6684,7 @@ def _candidate_operation_for_spec(
             "panel": "F",
         }
     if family == "panel_f_label_route_finish":
-        label_route_block = _panel_f_label_route_finish_replacement(
-            lines=lines, selector=selector
-        )
+        label_route_block = _panel_f_label_route_finish_replacement(lines=lines, selector=selector)
         if label_route_block is not None:
             original, new_text, line_start, line_end = label_route_block
             operation = {
@@ -6836,9 +6709,7 @@ def _candidate_operation_for_spec(
             "panel": "F",
         }
     if family == "panel_f_qtr_label_lane":
-        requested_template_id = str(
-            spec.get("template_id") or PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID
-        )
+        requested_template_id = str(spec.get("template_id") or PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID)
         qtr_block = _panel_f_qtr_label_lane_replacement(
             lines=lines,
             selector=selector,
@@ -6896,9 +6767,7 @@ def _candidate_operation_for_spec(
             "panel": "F",
         }
     if family == "panel_f_force_gap_lane":
-        force_gap_block = _panel_f_force_gap_lane_replacement(
-            lines=lines, selector=selector
-        )
+        force_gap_block = _panel_f_force_gap_lane_replacement(lines=lines, selector=selector)
         if force_gap_block is not None:
             original, new_text, line_start, line_end = force_gap_block
             operation = {
@@ -6930,9 +6799,7 @@ def _candidate_operation_for_spec(
             original, new_text, line_start, line_end = mechanical_anchor_block
             operation = {
                 "kind": "replace_text",
-                "semantic_kind": (
-                    "quality_search_panel_f_mechanical_anchor_lane_panel_block"
-                ),
+                "semantic_kind": ("quality_search_panel_f_mechanical_anchor_lane_panel_block"),
                 "operation_scale": "panel_block",
                 "template_id": PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID,
                 "panel": "F",
@@ -6952,9 +6819,7 @@ def _candidate_operation_for_spec(
             "panel": "F",
         }
     if family == "panel_f_leader_left_lane":
-        leader_left_block = _panel_f_leader_left_lane_replacement(
-            lines=lines, selector=selector
-        )
+        leader_left_block = _panel_f_leader_left_lane_replacement(lines=lines, selector=selector)
         if leader_left_block is not None:
             original, new_text, line_start, line_end = leader_left_block
             template_id = (
@@ -7016,9 +6881,7 @@ def _candidate_operation_for_spec(
             "panel": "F",
         }
     if family == "panel_f_auto_composite_lane":
-        template_id = str(
-            spec.get("template_id") or PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID
-        )
+        template_id = str(spec.get("template_id") or PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID)
         composite_block = _panel_f_auto_composite_lane_replacement(
             lines=lines, selector=selector, template_id=template_id
         )
@@ -7196,9 +7059,7 @@ def _candidate_operation_for_spec(
             original, new_text, line_start, line_end = force_balance_block
             operation = {
                 "kind": "replace_text",
-                "semantic_kind": (
-                    "quality_search_panel_f_post_boundary_force_balance_panel_block"
-                ),
+                "semantic_kind": ("quality_search_panel_f_post_boundary_force_balance_panel_block"),
                 "operation_scale": "panel_block",
                 "template_id": PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID,
                 "panel": "F",
@@ -7226,9 +7087,7 @@ def _candidate_operation_for_spec(
             original, new_text, line_start, line_end = source_connector_block
             operation = {
                 "kind": "replace_text",
-                "semantic_kind": (
-                    "quality_search_panel_f_post_force_source_connector_panel_block"
-                ),
+                "semantic_kind": ("quality_search_panel_f_post_force_source_connector_panel_block"),
                 "operation_scale": "panel_block",
                 "template_id": PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID,
                 "panel": "F",
@@ -7443,36 +7302,6 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_POST_GAP_LABEL_RELIEF_TEMPLATE_ID,
             "panel": "F",
         }
-    if family == "panel_f_post_label_relief_source_settle":
-        source_settle_block = _panel_f_post_label_relief_source_settle_replacement(
-            lines=lines,
-            selector=selector,
-        )
-        if source_settle_block is not None:
-            original, new_text, line_start, line_end = source_settle_block
-            operation = {
-                "kind": "replace_text",
-                "semantic_kind": (
-                    "quality_search_panel_f_post_label_relief_source_settle_panel_block"
-                ),
-                "operation_scale": "panel_block",
-                "template_id": PANEL_F_POST_LABEL_RELIEF_SOURCE_SETTLE_TEMPLATE_ID,
-                "panel": "F",
-                "path": source_ref,
-                "line_start": line_start,
-                "line_end": line_end,
-                "original": original,
-                "replacement": new_text,
-            }
-            return operation, None
-        return None, {
-            "code": "no_panel_f_post_label_relief_source_settle_block",
-            "candidate_id": str(spec.get("id")),
-            "family": family,
-            "operation_scale": "panel_block",
-            "template_id": PANEL_F_POST_LABEL_RELIEF_SOURCE_SETTLE_TEMPLATE_ID,
-            "panel": "F",
-        }
     if family == "panel_f_trap_label_left_rail":
         left_rail_block = _panel_f_trap_label_left_rail_replacement(
             lines=lines,
@@ -7502,9 +7331,7 @@ def _candidate_operation_for_spec(
             "panel": "F",
         }
     if family == "panel_f_density_relief":
-        density_relief_block = _panel_f_density_relief_replacement(
-            lines=lines, selector=selector
-        )
+        density_relief_block = _panel_f_density_relief_replacement(lines=lines, selector=selector)
         if density_relief_block is not None:
             original, new_text, line_start, line_end = density_relief_block
             operation = {
@@ -7643,9 +7470,7 @@ def _candidate_set_from_specs(
             continue
         candidate_id = str(spec.get("id") or f"QS{len(candidates) + 1:03d}")
         target_panels = (
-            spec.get("target_panels")
-            if isinstance(spec.get("target_panels"), list)
-            else []
+            spec.get("target_panels") if isinstance(spec.get("target_panels"), list) else []
         )
         operation_scale = str(operation.get("operation_scale") or "local_style_token")
         template_id = str(operation.get("template_id") or LINE_WIDTH_TEMPLATE_ID)
@@ -7776,9 +7601,7 @@ def _render_candidate_batch(
             crop_panel=crop_panel,
             evaluate=True,
         )
-        rendered.extend(
-            item for item in result.get("rendered", []) if isinstance(item, dict)
-        )
+        rendered.extend(item for item in result.get("rendered", []) if isinstance(item, dict))
     return {
         "schema": "figure-agent.candidate-render-result.v1",
         "fixture": name,
@@ -7804,12 +7627,7 @@ def _candidate_manifest_path(
 
 def _render_manifest_path(paths: runtime_paths.RuntimePaths, name: str, candidate_id: str) -> Path:
     return (
-        paths.examples_dir
-        / name
-        / "build"
-        / "candidates"
-        / candidate_id
-        / "render_manifest.json"
+        paths.examples_dir / name / "build" / "candidates" / candidate_id / "render_manifest.json"
     )
 
 
@@ -7926,9 +7744,7 @@ def _quality_search_visual_evidence(
         "contact_sheets": [],
         "min_full_changed_pixel_ratio": None,
     }
-    rendered = [
-        item for item in render_results.get("rendered", []) if isinstance(item, dict)
-    ]
+    rendered = [item for item in render_results.get("rendered", []) if isinstance(item, dict)]
     if render_mode != "compile_export_crop_evaluate" or not rendered:
         return manifest
     if not original_full.is_file():
@@ -8164,9 +7980,7 @@ def _quality_search_memory_events(
         )
         post_state = {
             "render_status": str(ranking.get("render_status") or "unknown"),
-            "effective_apply_authority": str(
-                ranking.get("effective_apply_authority") or "unknown"
-            ),
+            "effective_apply_authority": str(ranking.get("effective_apply_authority") or "unknown"),
         }
         target = candidate.get("target") if isinstance(candidate.get("target"), dict) else {}
         payload = {
@@ -8203,23 +8017,19 @@ def _quality_search_memory_events(
                         selected_acceptance_recommendation.get("status") or "unknown"
                     ),
                     "acceptance_recommendation": str(
-                        selected_acceptance_recommendation.get("recommendation")
-                        or "unknown"
+                        selected_acceptance_recommendation.get("recommendation") or "unknown"
                     ),
                     "acceptance_recommendation_authority": str(
                         selected_acceptance_recommendation.get("authority") or "unknown"
                     ),
                     "semantic_precheck_status": str(
-                        recommendation_evidence.get("semantic_precheck_status")
-                        or "unknown"
+                        recommendation_evidence.get("semantic_precheck_status") or "unknown"
                     ),
                     "review_packet_status": str(
-                        recommendation_evidence.get("review_packet_status")
-                        or "unknown"
+                        recommendation_evidence.get("review_packet_status") or "unknown"
                     ),
                     "apply_readiness_status": str(
-                        recommendation_evidence.get("apply_readiness_status")
-                        or "unknown"
+                        recommendation_evidence.get("apply_readiness_status") or "unknown"
                     ),
                 }
             )
@@ -8227,9 +8037,7 @@ def _quality_search_memory_events(
                 outcome_reason = "auto_accept_recommended_not_applied"
             evidence_paths.extend(
                 [
-                    _workspace_relative(
-                        paths, run_dir / "selected_semantic_precheck_000.json"
-                    ),
+                    _workspace_relative(paths, run_dir / "selected_semantic_precheck_000.json"),
                     _workspace_relative(paths, run_dir / "selected_review_packet_000.json"),
                     _workspace_relative(
                         paths,
@@ -8270,9 +8078,7 @@ def _quality_search_memory_events(
                     "semantic_precheck_status": recommendation_evidence.get(
                         "semantic_precheck_status"
                     ),
-                    "apply_readiness_status": recommendation_evidence.get(
-                        "apply_readiness_status"
-                    ),
+                    "apply_readiness_status": recommendation_evidence.get("apply_readiness_status"),
                     "acceptance_recommendation_status": (
                         selected_acceptance_recommendation.get("status")
                         if isinstance(selected_acceptance_recommendation, dict)
@@ -8369,9 +8175,7 @@ def _quality_search_contract_verdict(
         for candidate in candidate_set.get("candidates", [])
         if isinstance(candidate, dict)
     ]
-    rendered = [
-        item for item in render_results.get("rendered", []) if isinstance(item, dict)
-    ]
+    rendered = [item for item in render_results.get("rendered", []) if isinstance(item, dict)]
     render_mode = str(render_results.get("render_mode") or "unknown")
     candidate_ids = {str(candidate.get("id")) for candidate in candidates}
     ranking_ids = {str(score.get("candidate_id")) for score in candidate_rankings}
@@ -8442,8 +8246,7 @@ def _quality_search_contract_verdict(
     )
     require(
         all(
-            score.get("effective_apply_authority") == "review_only"
-            for score in candidate_rankings
+            score.get("effective_apply_authority") == "review_only" for score in candidate_rankings
         ),
         "non_review_only_ranking",
         "at least one ranking is not review_only",
@@ -8475,8 +8278,7 @@ def _quality_search_contract_verdict(
     )
     selected_attempt_outputs = (
         selected_attempt.get("outputs")
-        if isinstance(selected_attempt, dict)
-        and isinstance(selected_attempt.get("outputs"), dict)
+        if isinstance(selected_attempt, dict) and isinstance(selected_attempt.get("outputs"), dict)
         else {}
     )
     selected_attempt_id = (
@@ -8485,9 +8287,7 @@ def _quality_search_contract_verdict(
         else None
     )
     selected_convergence_state = (
-        convergence_decision.get("decision")
-        if isinstance(convergence_decision, dict)
-        else None
+        convergence_decision.get("decision") if isinstance(convergence_decision, dict) else None
     )
     convergence_blocks_acceptance = (
         selected_convergence_state is not None
@@ -8547,8 +8347,7 @@ def _quality_search_contract_verdict(
             )
             require(
                 isinstance(selected_acceptance_recommendation, dict)
-                and selected_acceptance_recommendation.get("status")
-                == "auto_accept_recommended",
+                and selected_acceptance_recommendation.get("status") == "auto_accept_recommended",
                 "selected_acceptance_recommendation_not_ready",
                 "selected non-marginal candidate lacks automatic acceptance recommendation",
             )
@@ -8571,8 +8370,7 @@ def _quality_search_contract_verdict(
                 else {}
             )
             require(
-                experience_outcome.get("human_decision_kind")
-                == "auto_accept_recommended",
+                experience_outcome.get("human_decision_kind") == "auto_accept_recommended",
                 "selected_recommendation_experience_kind_missing",
                 "selected durable experience row does not mark auto_accept_recommended",
             )
@@ -8612,8 +8410,7 @@ def _quality_search_contract_verdict(
             )
             require(
                 isinstance(convergence_decision, dict)
-                and convergence_decision.get("selected_attempt_id")
-                == selected_attempt_id,
+                and convergence_decision.get("selected_attempt_id") == selected_attempt_id,
                 "selected_convergence_attempt_mismatch",
                 "convergence decision does not select the selected attempt",
             )
@@ -8764,8 +8561,7 @@ def _quality_search_contract_verdict(
             "selected_recommendation_experience_log_status": (
                 "written"
                 if isinstance(recommendation_experience, dict)
-                and recommendation_experience.get("writes")
-                == [f"docs/experience-log/{name}.jsonl"]
+                and recommendation_experience.get("writes") == [f"docs/experience-log/{name}.jsonl"]
                 else None
             ),
             "selected_attempt_journal_constraints_passed": (
@@ -9206,9 +9002,7 @@ def _candidate_specs_from_plan(
 
 def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
     next_operation = plan.get("next_recommended_operation")
-    operation_kind = (
-        next_operation.get("kind") if isinstance(next_operation, dict) else "unknown"
-    )
+    operation_kind = next_operation.get("kind") if isinstance(next_operation, dict) else "unknown"
     if family == "null_baseline":
         return 0.0
     if operation_kind == "step_out_experiment":
@@ -9269,9 +9063,7 @@ def _family_template_memory(
         return None
     state = plan.get("state")
     memory = state.get("memory") if isinstance(state, dict) else None
-    family_templates = (
-        memory.get("family_templates") if isinstance(memory, dict) else None
-    )
+    family_templates = memory.get("family_templates") if isinstance(memory, dict) else None
     if not isinstance(family_templates, dict):
         return None
     entry = family_templates.get(f"{family}::{template_id}")
@@ -9352,26 +9144,14 @@ def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
         "panel_f_source_title_settle": PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID,
         "panel_f_source_cue_demote": PANEL_F_SOURCE_CUE_DEMOTE_TEMPLATE_ID,
         "panel_f_current_label_sanitize": PANEL_F_CURRENT_LABEL_SANITIZE_TEMPLATE_ID,
-        "panel_f_post_boundary_force_balance": (
-            PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID
-        ),
-        "panel_f_post_force_source_connector": (
-            PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID
-        ),
+        "panel_f_post_boundary_force_balance": (PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID),
+        "panel_f_post_force_source_connector": (PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID),
         "panel_f_post_source_label_scale": PANEL_F_POST_SOURCE_LABEL_SCALE_TEMPLATE_ID,
         "panel_f_post_label_force_cleanup": PANEL_F_POST_LABEL_FORCE_CLEANUP_TEMPLATE_ID,
-        "panel_f_post_force_spacing_finish": (
-            PANEL_F_POST_FORCE_SPACING_FINISH_TEMPLATE_ID
-        ),
-        "panel_f_post_spacing_source_finish": (
-            PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID
-        ),
-        "panel_f_post_source_trap_hierarchy": (
-            PANEL_F_POST_SOURCE_TRAP_HIERARCHY_TEMPLATE_ID
-        ),
-        "panel_f_post_trap_gap_readability": (
-            PANEL_F_POST_TRAP_GAP_READABILITY_TEMPLATE_ID
-        ),
+        "panel_f_post_force_spacing_finish": (PANEL_F_POST_FORCE_SPACING_FINISH_TEMPLATE_ID),
+        "panel_f_post_spacing_source_finish": (PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID),
+        "panel_f_post_source_trap_hierarchy": (PANEL_F_POST_SOURCE_TRAP_HIERARCHY_TEMPLATE_ID),
+        "panel_f_post_trap_gap_readability": (PANEL_F_POST_TRAP_GAP_READABILITY_TEMPLATE_ID),
         "panel_f_post_gap_label_relief": PANEL_F_POST_GAP_LABEL_RELIEF_TEMPLATE_ID,
         "panel_f_post_label_relief_source_settle": (
             PANEL_F_POST_LABEL_RELIEF_SOURCE_SETTLE_TEMPLATE_ID
@@ -9544,7 +9324,8 @@ def _candidate_policy_score(
         "goal_directive_bonus": goal_directive_bonus,
         "duplicate_experience_penalty": duplicate_penalty,
         "duplicate_experience_scope": (
-            "family_template" if _family_template_memory(plan, family, template_id) is not None
+            "family_template"
+            if _family_template_memory(plan, family, template_id) is not None
             else "family"
         ),
         "score": score,
@@ -9571,9 +9352,7 @@ def _candidate_scores(
         for score in candidate_rankings or []
         if isinstance(score, dict)
     }
-    full_ratios_by_id, panel_ratios_by_id = _visual_change_ratios_by_candidate(
-        visual_evidence
-    )
+    full_ratios_by_id, panel_ratios_by_id = _visual_change_ratios_by_candidate(visual_evidence)
     bandit_decision = _epsilon_greedy_bandit_decision(
         plan,
         [spec.get("family") for spec in candidate_specs if isinstance(spec, dict)],
@@ -9612,9 +9391,7 @@ def _candidate_scores(
             bandit_decision=bandit_decision,
         )
         render_status = (
-            str(ranking.get("render_status"))
-            if isinstance(ranking, dict)
-            else "not_rendered"
+            str(ranking.get("render_status")) if isinstance(ranking, dict) else "not_rendered"
         )
         full_changed_pixel_ratio = full_ratios_by_id.get(candidate_id)
         if full_changed_pixel_ratio is None:
@@ -9632,8 +9409,7 @@ def _candidate_scores(
                 "operation_scale": operation_scale,
                 "template_id": template_id,
                 "expected_visual_movement": (
-                    metadata.get("expected_visual_movement")
-                    or spec.get("expected_visual_movement")
+                    metadata.get("expected_visual_movement") or spec.get("expected_visual_movement")
                 ),
                 "structural_impact": spec.get("structural_impact", {}),
                 "evidence_score": score,
@@ -9726,9 +9502,7 @@ def _execution_decision(
             "evidence_score": 0.0,
             "policy_score": 0.0,
         }
-    non_null_scores = [
-        item for item in candidate_scores if item.get("family") != "null_baseline"
-    ]
+    non_null_scores = [item for item in candidate_scores if item.get("family") != "null_baseline"]
     if not non_null_scores:
         return {
             "kind": "no_materialized_candidate",
@@ -9763,24 +9537,18 @@ def _execution_decision(
         item
         for item in ranked
         if item.get("family") != "null_baseline"
-        and (
-            item.get("non_marginal_visual_change") is True
-            or _is_targeted_cleanup_candidate(item)
-        )
+        and (item.get("non_marginal_visual_change") is True or _is_targeted_cleanup_candidate(item))
         and item.get("stale_duplicate_experience_family") is not True
     ]
     selected = (
         eligible[0]
         if eligible
-        and float(eligible[0].get("policy_score") or eligible[0].get("evidence_score") or 0.0)
-        > 0
+        and float(eligible[0].get("policy_score") or eligible[0].get("evidence_score") or 0.0) > 0
         else None
     )
     if selected is None:
         top = ranked[0] if ranked else {}
-        refusals = [
-            item for item in candidate_refusals or [] if isinstance(item, dict)
-        ]
+        refusals = [item for item in candidate_refusals or [] if isinstance(item, dict)]
         stale_non_marginal = [
             item
             for item in ranked
@@ -9800,8 +9568,7 @@ def _execution_decision(
                 "candidates did not clear the non-marginal visual movement threshold"
                 if refusals and fallback_rendered
                 else (
-                    "rendered candidates did not clear the non-marginal visual "
-                    "movement threshold"
+                    "rendered candidates did not clear the non-marginal visual movement threshold"
                 )
             )
         )
@@ -9823,31 +9590,17 @@ def _execution_decision(
             "candidate_generation_state": (
                 "partial_materialization_with_refusals"
                 if refusals and fallback_rendered
-                else (
-                    "stale_duplicate_excluded"
-                    if stale_non_marginal
-                    else "rendered_but_marginal"
-                )
+                else ("stale_duplicate_excluded" if stale_non_marginal else "rendered_but_marginal")
             ),
             "candidate_refusal_count": len(refusals),
             "candidate_refusal_codes": sorted(
-                {
-                    str(item.get("code"))
-                    for item in refusals
-                    if item.get("code")
-                }
+                {str(item.get("code")) for item in refusals if item.get("code")}
             ),
             "candidate_refusal_families": sorted(
-                {
-                    str(item.get("family"))
-                    for item in refusals
-                    if item.get("family")
-                }
+                {str(item.get("family")) for item in refusals if item.get("family")}
             ),
             "stale_duplicate_non_marginal_candidate_count": len(stale_non_marginal),
-            "stale_duplicate_targeted_cleanup_candidate_count": len(
-                targeted_cleanup_candidates
-            ),
+            "stale_duplicate_targeted_cleanup_candidate_count": len(targeted_cleanup_candidates),
             "top_candidate_id": top.get("candidate_id"),
             "top_candidate_family": top.get("family"),
             "top_candidate_operation_scale": top.get("operation_scale"),
@@ -9855,12 +9608,8 @@ def _execution_decision(
             "top_candidate_stale_duplicate_experience_family": top.get(
                 "stale_duplicate_experience_family"
             ),
-            "top_candidate_full_changed_pixel_ratio": top.get(
-                "full_changed_pixel_ratio"
-            ),
-            "top_candidate_panel_changed_pixel_ratio": top.get(
-                "panel_changed_pixel_ratio"
-            ),
+            "top_candidate_full_changed_pixel_ratio": top.get("full_changed_pixel_ratio"),
+            "top_candidate_panel_changed_pixel_ratio": top.get("panel_changed_pixel_ratio"),
             "non_marginal_thresholds": {
                 "full_changed_pixel_ratio": NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO,
                 "panel_changed_pixel_ratio": NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO,
@@ -9897,8 +9646,7 @@ def _execution_decision(
         },
         "automation_boundary": "review_only_candidate_ready",
         "review_command": (
-            "fig-agent review-candidate "
-            f"{fixture_name} {selected.get('candidate_id')}"
+            f"fig-agent review-candidate {fixture_name} {selected.get('candidate_id')}"
         ),
         "source_mutation": "not_performed",
         "diagnostic_search_bypass": diagnostic_search_bypass,
@@ -9963,9 +9711,7 @@ def _semantic_label_present(text: str, label: str) -> bool:
 
 def _render_manifest_success(render_manifest: dict[str, Any]) -> bool:
     stages = (
-        render_manifest.get("stages")
-        if isinstance(render_manifest.get("stages"), dict)
-        else {}
+        render_manifest.get("stages") if isinstance(render_manifest.get("stages"), dict) else {}
     )
     expected = {
         "compile": "success",
@@ -10088,8 +9834,7 @@ def _write_selected_semantic_precheck(
             }
         ],
         "semantic_invariants": [
-            {"kind": "protected_label_present", "label": label}
-            for label in protected_labels
+            {"kind": "protected_label_present", "label": label} for label in protected_labels
         ],
         "findings": [
             {
@@ -10130,9 +9875,7 @@ def _convergence_allows_selected_acceptance(
         return True
     if decision != "stop":
         return False
-    if convergence_decision.get("attempt_id") != convergence_decision.get(
-        "selected_attempt_id"
-    ):
+    if convergence_decision.get("attempt_id") != convergence_decision.get("selected_attempt_id"):
         return False
     reasons = convergence_decision.get("reasons")
     return isinstance(reasons, list) and "marginal_improvement_below_threshold" in reasons
@@ -10172,10 +9915,7 @@ def _selected_acceptance_recommendation(
         and (convergence_decision is None or convergence_ready)
     )
     diagnostic_defer = decision.get("diagnostic_search_bypass") is True
-    convergence_defer = (
-        isinstance(convergence_decision, dict)
-        and not convergence_ready
-    )
+    convergence_defer = isinstance(convergence_decision, dict) and not convergence_ready
     required_commands = (
         apply_readiness.get("required_commands")
         if isinstance(apply_readiness.get("required_commands"), list)
@@ -10617,8 +10357,7 @@ def build_quality_search_execution(
         isinstance(selected_acceptance_recommendation, dict)
         and isinstance(selected_acceptance_recommendation.get("candidate_id"), str)
         and (
-            selected_acceptance_recommendation.get("status")
-            == "auto_accept_recommended"
+            selected_acceptance_recommendation.get("status") == "auto_accept_recommended"
             or (
                 isinstance(convergence_decision, dict)
                 and convergence_decision.get("decision") != "accept"
@@ -10694,26 +10433,14 @@ def build_quality_search_execution(
                 if selected_semantic_precheck is not None
                 else []
             ),
-            *(
-                ["selected_review_packet_000.json"]
-                if selected_review_packet is not None
-                else []
-            ),
+            *(["selected_review_packet_000.json"] if selected_review_packet is not None else []),
             *(
                 ["selected_acceptance_recommendation_000.json"]
                 if selected_acceptance_recommendation is not None
                 else []
             ),
-            *(
-                ["selected_attempt_000.json"]
-                if selected_attempt is not None
-                else []
-            ),
-            *(
-                ["convergence_decision_000.json"]
-                if convergence_decision is not None
-                else []
-            ),
+            *(["selected_attempt_000.json"] if selected_attempt is not None else []),
+            *(["convergence_decision_000.json"] if convergence_decision is not None else []),
             "tool_defect_candidates_000.json",
             "memory_events_000.json",
             "depone_plan_000.json",
@@ -10780,19 +10507,11 @@ def build_quality_search_execution(
             else {}
         ),
         **(
-            {
-                "selected_acceptance_recommendation_000.json": (
-                    selected_acceptance_recommendation
-                )
-            }
+            {"selected_acceptance_recommendation_000.json": (selected_acceptance_recommendation)}
             if selected_acceptance_recommendation is not None
             else {}
         ),
-        **(
-            {"selected_attempt_000.json": selected_attempt}
-            if selected_attempt is not None
-            else {}
-        ),
+        **({"selected_attempt_000.json": selected_attempt} if selected_attempt is not None else {}),
         **(
             {"convergence_decision_000.json": convergence_decision}
             if convergence_decision is not None
@@ -10801,17 +10520,13 @@ def build_quality_search_execution(
         "tool_defect_candidates_000.json": tool_defects,
         "memory_events_000.json": memory_events,
         "depone_plan_000.json": depone_pack["depone_plan"],
-        "depone_evidence_000/evidence-contract.json": depone_pack[
-            "evidence-contract.json"
-        ],
+        "depone_evidence_000/evidence-contract.json": depone_pack["evidence-contract.json"],
         "depone_evidence_000/run-metadata.json": depone_pack["run-metadata.json"],
         "depone_evidence_000/exit-code.txt": depone_pack["exit-code.txt"],
         "depone_evidence_000/quality-search-verdict.json": depone_pack[
             "quality-search-verdict.json"
         ],
-        "depone_evidence_000/quality-search-summary.md": depone_pack[
-            "quality-search-summary.md"
-        ],
+        "depone_evidence_000/quality-search-summary.md": depone_pack["quality-search-summary.md"],
     }
     writes: list[str] = []
     for filename, artifact in artifacts.items():
@@ -10848,9 +10563,7 @@ def build_quality_search_execution(
         "experience_log": recommendation_experience["writes"]
         if isinstance(recommendation_experience, dict)
         else [],
-        "recommendation_experience_record_count": len(
-            recommendation_experience.get("records", [])
-        )
+        "recommendation_experience_record_count": len(recommendation_experience.get("records", []))
         if isinstance(recommendation_experience, dict)
         and isinstance(recommendation_experience.get("records"), list)
         else 0,

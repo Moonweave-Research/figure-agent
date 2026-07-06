@@ -1,0 +1,72 @@
+- family_id: panel_f_post_label_relief_source_settle
+  template_id: v5f_panel_f_post_label_relief_source_settle_v1
+  panel: F
+  requires:
+  - '% quality-search F post-gap label relief: clear label backgrounds'
+  - \draw[cGray!46!black, line width=0.26pt, rounded corners=2.0pt]
+  - \fill[cGray!74!black] (13.18, 2.82) circle (0.030);
+  - \draw[cRed!52!black, line width=0.28pt]
+  - at (9.60, 3.62) {trapped charge};
+  - \draw[panelFCoulombRepulsionArrow, -{Stealth[length=6.2pt,width=4.2pt]}, cRed!72!black, line width=0.62pt]
+  applied_signature:
+  - '% quality-search F post-label relief source settle: subordinate source lead'
+  - \fill[cRed!50!black, opacity=0.78] (13.24, 3.82) circle (0.012);
+  - \draw[cGray!34!black, line width=0.18pt, opacity=0.78, rounded corners=2.2pt]
+  - \fill[cGray!66!black, opacity=0.86] (13.18, 2.82) circle (0.024);
+  - (11.24,2.50) .. controls (10.72,3.02) and (10.18,3.30) .. (9.84,3.36);
+  - at (9.62, 3.24) {$q_{\mathrm{tr}}$};
+  preserve_after:
+  - '% quality-search F post-gap label relief: clear label backgrounds'
+  replacements:
+  - old: \fill[cRed!58!black] (13.24, 3.82) circle (0.016);
+    new: \fill[cRed!50!black, opacity=0.78] (13.24, 3.82) circle (0.012);
+  - old: |-
+      % quality-search F post-gap label relief: clear label backgrounds
+      \draw[cGray!46!black, line width=0.26pt, rounded corners=2.0pt]
+        (13.24, 3.78) -- (13.20, 3.40) -- (13.18, 2.82);
+      \fill[cGray!74!black] (13.18, 2.82) circle (0.030);
+    new: |-
+      % quality-search F post-gap label relief: clear label backgrounds
+      % quality-search F post-label relief source settle: subordinate source lead
+      \draw[cGray!34!black, line width=0.18pt, opacity=0.78, rounded corners=2.2pt]
+        (13.24, 3.76) -- (13.20, 3.38) -- (13.18, 2.82);
+      \fill[cGray!66!black, opacity=0.86] (13.18, 2.82) circle (0.024);
+  - old: |-
+      \draw[cRed!52!black, line width=0.28pt]
+        (11.28,2.50) .. controls (10.78,3.08) and (10.22,3.36) .. (9.82,3.40);
+      \node[anchor=west, fill=white, fill opacity=0.82, text opacity=1,
+            inner xsep=0.62pt, inner ysep=0.24pt,
+            font=\sffamily\bfseries\fontsize{3.7}{4.5}\selectfont, text=cRed!68!black]
+        at (9.60, 3.18) {$q_{\mathrm{tr}}$};
+    new: |-
+      \draw[cRed!50!black, line width=0.26pt]
+        (11.24,2.50) .. controls (10.72,3.02) and (10.18,3.30) .. (9.84,3.36);
+      \node[anchor=west, fill=white, fill opacity=0.80, text opacity=1,
+            inner xsep=0.58pt, inner ysep=0.22pt,
+            font=\sffamily\bfseries\fontsize{3.6}{4.4}\selectfont, text=cRed!66!black]
+        at (9.62, 3.24) {$q_{\mathrm{tr}}$};
+  protected_labels:
+  - q_{\mathrm{tr}}
+  - trapped charge
+  - Coulomb
+  - repulsion
+  - electrode
+  - air gap
+  - mechanical
+  - $V_{\mathrm{active}}$
+  - bias
+  goal_trigger:
+  - - after label relief
+    - post label relief
+    - source lead still
+  - - source lead
+    - equipment wire
+    - q_tr
+    - trapped charge
+    - hierarchy
+    - polish
+  goal_hypothesis:
+    reason: goal requests Panel F source-lead and q_tr hierarchy settling after label relief
+    expected_detector_movement: convert post-label-relief source-lead defects into a fresh source-bound Panel F candidate
+    expected_visual_movement: source lead becomes less apparatus-dominant and q_tr aligns more calmly under trapped charge
+    rollback_condition: candidate worsens compile, protected labels, source semantics, or force/electrode/air-gap relations
