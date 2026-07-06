@@ -2812,6 +2812,281 @@ def test_quality_search_recommends_acceptance_without_authorizing_apply() -> Non
     ]
 
 
+def test_quality_search_selected_attempt_is_constraint_first_contract(
+    tmp_path: Path,
+) -> None:
+    name = "fig_demo"
+    candidate_id = "QS002"
+    tex_source = (
+        "\\node at (0,0) {q_tr trapped charge Coulomb repulsion "
+        "electrode air gap mechanical};\n"
+    )
+    fixture = _write_minimal_fixture(
+        tmp_path,
+        name=name,
+        tex_source=tex_source,
+    )
+    (fixture / "spec.yaml").write_text(
+        "\n".join(
+            [
+                f"name: {name}",
+                "target_journal: test_journal",
+                "journal_constraints:",
+                "  output_formats: [png]",
+                "  editable_required: true",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    paths = quality_search.runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+    sandbox = fixture / "build" / "candidates" / candidate_id
+    sandbox.mkdir(parents=True)
+    (sandbox / f"{name}.tex").write_text("% editable candidate\n", encoding="utf-8")
+    _write_png(sandbox / "preview.png", (255, 255, 255))
+    source_context = quality_search._panel_region_context(name, paths)
+    decision = {
+        "candidate_state": "non_marginal_review_candidate_ready",
+        "selected_candidate_id": candidate_id,
+        "selected_family": "apparatus_strengthen",
+        "policy_score": 0.88,
+        "full_changed_pixel_ratio": 0.003,
+        "panel_changed_pixel_ratio": 0.031,
+        "diagnostic_search_bypass": False,
+    }
+    selected_semantic_precheck = {
+        "schema": "figure-agent.selected-semantic-precheck.v0",
+        "status": "pass",
+        "candidate_id": candidate_id,
+        "protected_labels": ["q_tr", "trapped charge", "Coulomb"],
+    }
+    scores = [
+        {
+            "candidate_id": candidate_id,
+            "policy_score": 0.88,
+            "rank_score": 0.82,
+            "full_changed_pixel_ratio": 0.003,
+            "panel_changed_pixel_ratio": 0.031,
+            "non_marginal_visual_change": True,
+        }
+    ]
+
+    guide = quality_search.journal_guide.build_journal_guide(
+        name,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+    attempt = quality_search._selected_figure_attempt(
+        name=name,
+        goal="convergence contract smoke",
+        decision=decision,
+        source_context=source_context,
+        scores=scores,
+        selected_semantic_precheck=selected_semantic_precheck,
+        paths=paths,
+        journal_guide_payload=guide,
+        run_id="testrun",
+    )
+    convergence_decision = quality_search._selected_convergence_decision(
+        decision,
+        attempt,
+    )
+
+    assert attempt["schema"] == "figure-agent.figure-attempt.v1"
+    assert attempt["outputs"]["editable"].endswith(f"{candidate_id}/{name}.tex")
+    assert attempt["outputs"]["png"].endswith(f"{candidate_id}/preview.png")
+    assert attempt["journal_constraints"]["passed"] is True
+    assert attempt["semantic_score"]["complete"] is True
+    assert attempt["aesthetic_score"]["overall"] > 0
+    assert convergence_decision["schema"] == "figure-agent.convergence-decision.v1"
+    assert convergence_decision["decision"] == "accept"
+
+
+def test_quality_search_diagnostic_bypass_cannot_auto_accept_convergence(
+    tmp_path: Path,
+) -> None:
+    name = "fig_demo"
+    candidate_id = "QS002"
+    fixture = _write_minimal_fixture(tmp_path, name=name)
+    (fixture / "spec.yaml").write_text(
+        "\n".join(
+            [
+                f"name: {name}",
+                "journal_constraints:",
+                "  output_formats: [png]",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    paths = quality_search.runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+    sandbox = fixture / "build" / "candidates" / candidate_id
+    sandbox.mkdir(parents=True)
+    (sandbox / f"{name}.tex").write_text("% editable candidate\n", encoding="utf-8")
+    _write_png(sandbox / "preview.png", (0, 0, 0))
+    attempt = quality_search._selected_figure_attempt(
+        name=name,
+        goal="diagnostic bypass",
+        decision={
+            "candidate_state": "non_marginal_review_candidate_ready",
+            "selected_candidate_id": candidate_id,
+            "policy_score": 0.9,
+            "diagnostic_search_bypass": True,
+        },
+        source_context=quality_search._panel_region_context(name, paths),
+        scores=[{"candidate_id": candidate_id, "policy_score": 0.9, "rank_score": 0.9}],
+        selected_semantic_precheck={
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "pass",
+            "candidate_id": candidate_id,
+            "protected_labels": ["q_tr"],
+        },
+        paths=paths,
+        journal_guide_payload=quality_search.journal_guide.build_journal_guide(
+            name,
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=tmp_path,
+        ),
+        run_id="testrun",
+    )
+
+    convergence_decision = quality_search._selected_convergence_decision(
+        {"diagnostic_search_bypass": True},
+        attempt,
+    )
+
+    assert convergence_decision["decision"] == "human_review"
+    assert "diagnostic_search_bypass_requires_human_review" in convergence_decision["reasons"]
+
+
+def test_quality_search_execution_writes_selected_attempt_and_convergence_decision(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    name = "fig_demo"
+    tex_source = (
+        "\\node at (0,0) {q_tr trapped charge Coulomb repulsion "
+        "electrode air gap mechanical};\n"
+    )
+    _write_minimal_fixture(
+        tmp_path,
+        name=name,
+        tex_source=tex_source,
+    )
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_render_candidate_batch",
+        lambda *_args, **_kwargs: {
+            "schema": "figure-agent.candidate-render-batch.v1",
+            "render_mode": "compile_export_crop_evaluate",
+            "rendered": [{"candidate_id": "QS002"}],
+        },
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_rank_rendered_candidates",
+        lambda *_args, **_kwargs: [
+            {
+                "candidate_id": "QS002",
+                "rank_score": 0.8,
+                "render_status": "rendered_needs_human_review",
+                "effective_apply_authority": "review_only",
+                "scores": {"changed_pixel_ratio": 0.003},
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_quality_search_visual_evidence",
+        lambda *_args, **_kwargs: {"schema": "figure-agent.quality-search-visual-evidence.v0"},
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_execution_decision",
+        lambda *_args, **_kwargs: {
+            "kind": "selected_non_marginal_candidate",
+            "candidate_state": "non_marginal_review_candidate_ready",
+            "selected_candidate_id": "QS002",
+            "selected_family": "apparatus_strengthen",
+            "policy_score": 0.8,
+            "full_changed_pixel_ratio": 0.003,
+            "panel_changed_pixel_ratio": None,
+            "source_mutation": "not_performed",
+        },
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_write_selected_semantic_precheck",
+        lambda *_args, **_kwargs: {
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "pass",
+            "candidate_id": "QS002",
+            "protected_labels": ["q_tr", "trapped charge"],
+        },
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_selected_review_packet",
+        lambda *_args, **_kwargs: {
+            "schema": "figure-agent.candidate-review-packet.v1",
+            "status": "ready",
+            "candidate_id": "QS002",
+            "apply_readiness": {"status": "ready_for_local_acceptance"},
+        },
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_selected_acceptance_recommendation",
+        lambda *_args, **_kwargs: {
+            "schema": "figure-agent.selected-acceptance-recommendation.v0",
+            "status": "blocked",
+            "candidate_id": "QS002",
+            "recommendation": "defer",
+            "authority": "recommendation_only",
+            "is_acceptance_artifact": False,
+            "source_mutation": "not_performed",
+            "acceptance_gate": "explicit acceptance artifact still required",
+            "rationale": "test keeps experience append out of scope",
+            "evidence": {},
+            "required_commands": [],
+        },
+    )
+
+    payload = quality_search.build_quality_search_execution(
+        name,
+        goal="execution convergence artifact smoke",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    assert payload["selected_attempt"]["schema"] == "figure-agent.figure-attempt.v1"
+    assert payload["convergence_decision"]["schema"] == "figure-agent.convergence-decision.v1"
+    assert any(path.endswith("selected_attempt_000.json") for path in payload["writes"])
+    assert any(path.endswith("convergence_decision_000.json") for path in payload["writes"])
+
+
 def test_quality_search_visual_evidence_writes_full_and_panel_contact_sheets(
     tmp_path: Path,
 ) -> None:

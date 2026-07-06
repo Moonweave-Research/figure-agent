@@ -16,13 +16,17 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import aesthetic_objective
 import candidate_rank
 import candidate_render
 import candidate_review_packet
 import candidate_visual_eval
+import convergence_controller
+import convergence_models
 import experience_log
 import fig_driver
 import fixture_identity
+import journal_guide
 import quality_defect_ledger
 import quality_memory_index
 import runtime_paths
@@ -6363,6 +6367,232 @@ def _selected_acceptance_recommendation(
     }
 
 
+def _selected_candidate_score(
+    scores: list[dict[str, Any]],
+    candidate_id: str,
+) -> dict[str, Any]:
+    for score in scores:
+        if isinstance(score, dict) and score.get("candidate_id") == candidate_id:
+            return score
+    return {}
+
+
+def _first_existing_relative(
+    paths: runtime_paths.RuntimePaths,
+    candidates: list[Path],
+) -> str | None:
+    for path in candidates:
+        if path.is_file() and not path.is_symlink():
+            return _workspace_relative(paths, path)
+    return None
+
+
+def _candidate_attempt_outputs(
+    name: str,
+    candidate_id: str,
+    *,
+    paths: runtime_paths.RuntimePaths,
+) -> dict[str, str]:
+    example_dir = paths.examples_dir / name
+    sandbox = example_dir / "build" / "candidates" / candidate_id
+    source_path = sandbox / f"{name}.tex"
+    if not source_path.is_file():
+        source_path = example_dir / f"{name}.tex"
+    outputs: dict[str, str] = {}
+    editable = _first_existing_relative(paths, [source_path])
+    if editable is not None:
+        outputs["editable"] = editable
+    for fmt in ("pdf", "svg", "png"):
+        direct = [
+            sandbox / "render" / f"candidate.{fmt}",
+            sandbox / "render" / f"{name}.{fmt}",
+            sandbox / f"{name}.{fmt}",
+            sandbox / f"candidate.{fmt}",
+            sandbox / f"preview.{fmt}",
+        ]
+        recursive = sorted(path for path in sandbox.rglob(f"*.{fmt}") if path.is_file())
+        value = _first_existing_relative(paths, [*direct, *recursive])
+        if value is not None:
+            outputs[fmt] = value
+            if fmt == "png":
+                outputs["preview_png"] = value
+    return outputs
+
+
+def _semantic_score_from_precheck(
+    selected_semantic_precheck: dict[str, Any] | None,
+) -> dict[str, Any]:
+    if not isinstance(selected_semantic_precheck, dict):
+        return {
+            "complete": False,
+            "missing_elements": ["selected_semantic_precheck_missing"],
+            "incorrect_relations": [],
+        }
+    missing = [
+        str(item)
+        for item in selected_semantic_precheck.get("missing_labels", [])
+        if isinstance(item, str) and item.strip()
+    ]
+    blockers = [
+        str(item)
+        for item in selected_semantic_precheck.get("blocking_reasons", [])
+        if isinstance(item, str) and item.strip()
+    ]
+    complete = selected_semantic_precheck.get("status") == "pass" and not missing and not blockers
+    return {
+        "complete": complete,
+        "missing_elements": [*missing, *blockers],
+        "incorrect_relations": [],
+        "protected_labels": selected_semantic_precheck.get("protected_labels", []),
+    }
+
+
+def _float_score(*values: Any, default: float = 0.0) -> float:
+    for value in values:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            continue
+    return default
+
+
+def _aesthetic_score_from_quality_evidence(
+    decision: dict[str, Any],
+    candidate_score: dict[str, Any],
+    semantic_score: dict[str, Any],
+) -> dict[str, Any]:
+    base_score = _float_score(
+        candidate_score.get("policy_score"),
+        decision.get("policy_score"),
+        candidate_score.get("rank_score"),
+        candidate_score.get("evidence_score"),
+        default=0.0,
+    )
+    readability = 0.82 if semantic_score.get("complete") is True else 0.2
+    density = 0.72 if candidate_score.get("non_marginal_visual_change") is True else 0.5
+    hierarchy = _float_score(candidate_score.get("rank_score"), base_score, default=base_score)
+    objective = aesthetic_objective.score_aesthetic_evidence(
+        {
+            "rank_score": base_score,
+            "label_readability": readability,
+            "hierarchy_score": hierarchy,
+            "density_control": density,
+            "visual_clash_count": len(semantic_score.get("missing_elements", [])),
+        }
+    )
+    return dict(objective["scores"])
+
+
+def _selected_figure_attempt(
+    *,
+    name: str,
+    goal: str,
+    decision: dict[str, Any],
+    source_context: dict[str, Any],
+    scores: list[dict[str, Any]],
+    selected_semantic_precheck: dict[str, Any] | None,
+    paths: runtime_paths.RuntimePaths,
+    journal_guide_payload: dict[str, Any],
+    run_id: str,
+) -> dict[str, Any] | None:
+    candidate_id = decision.get("selected_candidate_id")
+    if (
+        decision.get("candidate_state") != NON_MARGINAL_REVIEW_CANDIDATE_STATE
+        or not isinstance(candidate_id, str)
+        or not candidate_id.strip()
+    ):
+        return None
+    source_hash = source_context.get("source_hash")
+    if not isinstance(source_hash, str) or not source_hash.startswith("sha256:"):
+        source_hash = _current_source_hash(paths, name) or ZERO_HASH
+    candidate_score = _selected_candidate_score(scores, candidate_id)
+    outputs = _candidate_attempt_outputs(name, candidate_id, paths=paths)
+    journal_constraints = journal_guide.evaluate_journal_constraints(
+        journal_guide_payload,
+        outputs=outputs,
+    )
+    semantic_score = _semantic_score_from_precheck(selected_semantic_precheck)
+    attempt = {
+        "schema": convergence_models.FIGURE_ATTEMPT_SCHEMA,
+        "attempt_id": f"{run_id}:{candidate_id}",
+        "parent_attempt_id": None,
+        "figure_id": name,
+        "candidate_id": candidate_id,
+        "user_goal": goal,
+        "target_medium": "journal_paper",
+        "target_journal": journal_guide_payload.get("target_journal", "unknown"),
+        "figure_type": "scientific_technical_figure",
+        "spec_hash": source_hash,
+        "journal_guide_hash": journal_guide_payload["guide_hash"],
+        "render_backend": "quality-search-candidate-render",
+        "outputs": outputs,
+        "journal_constraints": journal_constraints,
+        "semantic_score": semantic_score,
+        "aesthetic_score": _aesthetic_score_from_quality_evidence(
+            decision,
+            candidate_score,
+            semantic_score,
+        ),
+        "issues": [
+            *journal_constraints.get("violations", []),
+            *[
+                {"id": item, "severity": "hard", "source": "selected_semantic_precheck"}
+                for item in semantic_score.get("missing_elements", [])
+            ],
+        ],
+        "edit_plan": [],
+    }
+    return convergence_models.validate_figure_attempt(attempt)
+
+
+def _manual_convergence_decision(
+    *,
+    decision: str,
+    attempt_id: str,
+    reasons: list[str],
+    score: float,
+) -> dict[str, Any]:
+    return convergence_models.validate_convergence_decision(
+        {
+            "schema": convergence_models.CONVERGENCE_DECISION_SCHEMA,
+            "decision": decision,
+            "attempt_id": attempt_id,
+            "selected_attempt_id": attempt_id,
+            "best_previous_attempt_id": None,
+            "reasons": reasons,
+            "current_aesthetic_score": score,
+            "selected_aesthetic_score": score,
+        }
+    )
+
+
+def _selected_convergence_decision(
+    quality_decision: dict[str, Any],
+    selected_attempt: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if selected_attempt is None:
+        return None
+    score = _float_score(
+        (selected_attempt.get("aesthetic_score") or {}).get("overall")
+        if isinstance(selected_attempt.get("aesthetic_score"), dict)
+        else None,
+        default=0.0,
+    )
+    if quality_decision.get("diagnostic_search_bypass") is True:
+        selected_attempt["decision"] = "human_review"
+        convergence_models.validate_figure_attempt(selected_attempt)
+        return _manual_convergence_decision(
+            decision="human_review",
+            attempt_id=str(selected_attempt["attempt_id"]),
+            reasons=["diagnostic_search_bypass_requires_human_review"],
+            score=score,
+        )
+    convergence_decision = convergence_controller.decide_attempt(selected_attempt)
+    selected_attempt["decision"] = convergence_decision["decision"]
+    convergence_models.validate_figure_attempt(selected_attempt)
+    return convergence_decision
+
+
 def build_quality_search_execution(
     name: str,
     *,
@@ -6441,6 +6671,28 @@ def build_quality_search_execution(
         selected_semantic_precheck,
         selected_review_packet,
     )
+    selected_attempt = None
+    if (
+        decision.get("candidate_state") == NON_MARGINAL_REVIEW_CANDIDATE_STATE
+        and isinstance(decision.get("selected_candidate_id"), str)
+    ):
+        journal_guide_payload = journal_guide.build_journal_guide(
+            name,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+        )
+        selected_attempt = _selected_figure_attempt(
+            name=name,
+            goal=goal,
+            decision=decision,
+            source_context=source_context,
+            scores=scores,
+            selected_semantic_precheck=selected_semantic_precheck,
+            paths=paths,
+            journal_guide_payload=journal_guide_payload,
+            run_id=run_id,
+        )
+    convergence_decision = _selected_convergence_decision(decision, selected_attempt)
     recommendation_experience = None
     if (
         isinstance(selected_acceptance_recommendation, dict)
@@ -6520,6 +6772,16 @@ def build_quality_search_execution(
                 if selected_acceptance_recommendation is not None
                 else []
             ),
+            *(
+                ["selected_attempt_000.json"]
+                if selected_attempt is not None
+                else []
+            ),
+            *(
+                ["convergence_decision_000.json"]
+                if convergence_decision is not None
+                else []
+            ),
             "tool_defect_candidates_000.json",
             "memory_events_000.json",
             "depone_plan_000.json",
@@ -6592,6 +6854,16 @@ def build_quality_search_execution(
             if selected_acceptance_recommendation is not None
             else {}
         ),
+        **(
+            {"selected_attempt_000.json": selected_attempt}
+            if selected_attempt is not None
+            else {}
+        ),
+        **(
+            {"convergence_decision_000.json": convergence_decision}
+            if convergence_decision is not None
+            else {}
+        ),
         "tool_defect_candidates_000.json": tool_defects,
         "memory_events_000.json": memory_events,
         "depone_plan_000.json": depone_pack["depone_plan"],
@@ -6637,6 +6909,8 @@ def build_quality_search_execution(
         "selected_semantic_precheck": selected_semantic_precheck,
         "selected_review_packet": selected_review_packet,
         "selected_acceptance_recommendation": selected_acceptance_recommendation,
+        "selected_attempt": selected_attempt,
+        "convergence_decision": convergence_decision,
         "experience_log": recommendation_experience["writes"]
         if isinstance(recommendation_experience, dict)
         else [],
