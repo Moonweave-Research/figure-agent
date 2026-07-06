@@ -346,10 +346,15 @@ def _apply_readiness(
             apply_result = json.loads(apply_result_path.read_text(encoding="utf-8"))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError):
             apply_result = {}
-        if isinstance(apply_result, dict) and apply_result.get("status") in {
-            "applied",
-            "applied_with_failed_verification",
-        }:
+        if (
+            isinstance(apply_result, dict)
+            and apply_result.get("status")
+            in {
+                "applied",
+                "applied_with_failed_verification",
+            }
+            and apply_result.get("candidate_hash") == manifest.get("candidate_hash")
+        ):
             return {
                 "status": str(apply_result["status"]),
                 "blocking_reasons": [],
@@ -357,39 +362,47 @@ def _apply_readiness(
             }
     acceptance_path = manifest_path.parent / "acceptance.json"
     if acceptance_path.is_file() and not acceptance_path.is_symlink():
-        candidate_set_path = Path(
-            str(manifest.get("candidate_set_path") or "build/candidates/candidate_set.json")
-        )
-        dry_run = candidate_apply.apply_candidate(
-            name,
-            manifest,
-            workspace_root=workspace_root,
-            plugin_root=plugin_root,
-            candidate_set_path=candidate_set_path,
-            acceptance_path=Path(f"build/candidates/{candidate_id}/acceptance.json"),
-            apply=False,
-        )
-        if dry_run.get("status") != "ready":
+        try:
+            acceptance = json.loads(acceptance_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            acceptance = {}
+        if (
+            isinstance(acceptance, dict)
+            and acceptance.get("candidate_hash") == manifest.get("candidate_hash")
+        ):
+            candidate_set_path = Path(
+                str(manifest.get("candidate_set_path") or "build/candidates/candidate_set.json")
+            )
+            dry_run = candidate_apply.apply_candidate(
+                name,
+                manifest,
+                workspace_root=workspace_root,
+                plugin_root=plugin_root,
+                candidate_set_path=candidate_set_path,
+                acceptance_path=Path(f"build/candidates/{candidate_id}/acceptance.json"),
+                apply=False,
+            )
+            if dry_run.get("status") != "ready":
+                return {
+                    "status": "blocked",
+                    "blocking_reasons": [
+                        str(item.get("code", "unknown"))
+                        for item in dry_run.get("diagnostics", [])
+                        if isinstance(item, dict)
+                    ],
+                    "required_commands": [],
+                }
             return {
-                "status": "blocked",
-                "blocking_reasons": [
-                    str(item.get("code", "unknown"))
-                    for item in dry_run.get("diagnostics", [])
-                    if isinstance(item, dict)
+                "status": "accepted_ready_to_apply",
+                "blocking_reasons": [],
+                "required_commands": [
+                    (
+                        f"fig-agent apply-candidate {name} {candidate_id} "
+                        f"--candidate-set {manifest.get('candidate_set_path')} "
+                        f"--acceptance build/candidates/{candidate_id}/acceptance.json --json"
+                    )
                 ],
-                "required_commands": [],
             }
-        return {
-            "status": "accepted_ready_to_apply",
-            "blocking_reasons": [],
-            "required_commands": [
-                (
-                    f"fig-agent apply-candidate {name} {candidate_id} "
-                    f"--candidate-set {manifest.get('candidate_set_path')} "
-                    f"--acceptance build/candidates/{candidate_id}/acceptance.json --json"
-                )
-            ],
-        }
     candidate_set_path = Path(
         str(manifest.get("candidate_set_path") or "build/candidates/candidate_set.json")
     )

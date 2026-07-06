@@ -95,9 +95,11 @@ def decide_attempt(
     *,
     history: list[dict[str, Any]] | None = None,
     policy: dict[str, Any] | None = None,
+    current_attempt_count: int = 1,
 ) -> dict[str, Any]:
     policy_data = _policy(policy)
     history = history or []
+    current_attempt_count = max(1, int(current_attempt_count))
     attempt_id = str(current_attempt.get("attempt_id") or "")
     current_score = _score(current_attempt)
     invalid_reasons = _invalid_reasons(current_attempt, policy_data)
@@ -140,7 +142,7 @@ def decide_attempt(
         )
     selected_id = attempt_id if current_score >= previous_score else best_previous_id or attempt_id
     selected_score = max(current_score, previous_score)
-    if len(history) + 1 >= int(policy_data["max_attempts"]):
+    if current_attempt_count >= int(policy_data["max_attempts"]):
         return _decision(
             decision="stop",
             attempt_id=attempt_id,

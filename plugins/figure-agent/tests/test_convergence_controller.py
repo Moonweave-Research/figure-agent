@@ -122,3 +122,30 @@ def test_convergence_stops_when_improvement_is_below_threshold() -> None:
     assert decision["decision"] == "stop"
     assert decision["selected_attempt_id"] == "a2"
     assert "marginal_improvement_below_threshold" in decision["reasons"]
+
+
+def test_lifetime_history_does_not_trigger_max_attempts_stop() -> None:
+    history = [_attempt(f"a{index}", 0.60 + index * 0.01) for index in range(8)]
+
+    decision = convergence_controller.decide_attempt(
+        _attempt("fresh", 0.92),
+        history=history,
+        policy={"max_attempts": 8, "min_marginal_improvement": 0.02},
+    )
+
+    assert decision["decision"] == "accept"
+    assert decision["selected_attempt_id"] == "fresh"
+    assert "max_attempts_reached" not in decision["reasons"]
+
+
+def test_current_session_attempt_count_can_trigger_max_attempts_stop() -> None:
+    decision = convergence_controller.decide_attempt(
+        _attempt("a8", 0.92),
+        history=[_attempt("a1", 0.70)],
+        policy={"max_attempts": 8, "min_marginal_improvement": 0.02},
+        current_attempt_count=8,
+    )
+
+    assert decision["decision"] == "stop"
+    assert decision["selected_attempt_id"] == "a8"
+    assert "max_attempts_reached" in decision["reasons"]

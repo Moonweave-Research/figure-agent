@@ -5494,7 +5494,8 @@ def _quality_search_contract_verdict(
         else None
     )
     convergence_blocks_acceptance = (
-        selected_convergence_state is not None and selected_convergence_state != "accept"
+        selected_convergence_state is not None
+        and not _convergence_allows_selected_acceptance(convergence_decision)
     )
     if selected_candidate_ready:
         require(
@@ -5609,9 +5610,9 @@ def _quality_search_contract_verdict(
             )
             require(
                 isinstance(convergence_decision, dict)
-                and convergence_decision.get("decision") == "accept",
+                and _convergence_allows_selected_acceptance(convergence_decision),
                 "selected_convergence_decision_not_accept",
-                "selected automatic recommendation lacks convergence accept decision",
+                "selected automatic recommendation lacks convergence accept-ready decision",
             )
             require(
                 isinstance(convergence_decision, dict)
@@ -6286,6 +6287,24 @@ def _stale_duplicate_experience_family(
     family: str,
     template_id: str | None = None,
 ) -> bool:
+    if (
+        family == "panel_f_auto_composite_lane"
+        and template_id == PANEL_F_V5F_AUTO_COMPOSITE_TEMPLATE_ID
+        and _goal_requests_panel_f_apparatus(str(plan.get("goal") or ""))
+    ):
+        template_memory = _family_template_memory(plan, family, template_id)
+        attempts = (
+            _bounded_int(template_memory.get("attempts"), default=0)
+            if isinstance(template_memory, dict)
+            else 0
+        )
+        regressed = (
+            _bounded_int(template_memory.get("regressed"), default=0)
+            if isinstance(template_memory, dict)
+            else 0
+        )
+        if attempts <= 1 and regressed == 0:
+            return False
     return _duplicate_experience_penalty(plan, family, template_id) < 0
 
 
@@ -6830,6 +6849,24 @@ def _write_selected_semantic_precheck(
     }
 
 
+def _convergence_allows_selected_acceptance(
+    convergence_decision: dict[str, Any] | None,
+) -> bool:
+    if not isinstance(convergence_decision, dict):
+        return True
+    decision = convergence_decision.get("decision")
+    if decision == "accept":
+        return True
+    if decision != "stop":
+        return False
+    if convergence_decision.get("attempt_id") != convergence_decision.get(
+        "selected_attempt_id"
+    ):
+        return False
+    reasons = convergence_decision.get("reasons")
+    return isinstance(reasons, list) and "marginal_improvement_below_threshold" in reasons
+
+
 def _selected_acceptance_recommendation(
     decision: dict[str, Any],
     selected_semantic_precheck: dict[str, Any] | None,
@@ -6854,21 +6891,19 @@ def _selected_acceptance_recommendation(
         if isinstance(selected_semantic_precheck, dict)
         else None
     )
+    convergence_ready = _convergence_allows_selected_acceptance(convergence_decision)
     ready = (
         precheck_status == "pass"
         and isinstance(selected_review_packet, dict)
         and selected_review_packet.get("status") == "ready"
         and apply_readiness.get("status") == "ready_for_local_acceptance"
         and decision.get("diagnostic_search_bypass") is not True
-        and (
-            convergence_decision is None
-            or convergence_decision.get("decision") == "accept"
-        )
+        and (convergence_decision is None or convergence_ready)
     )
     diagnostic_defer = decision.get("diagnostic_search_bypass") is True
     convergence_defer = (
         isinstance(convergence_decision, dict)
-        and convergence_decision.get("decision") != "accept"
+        and not convergence_ready
     )
     required_commands = (
         apply_readiness.get("required_commands")
@@ -7007,6 +7042,26 @@ def _float_score(*values: Any, default: float = 0.0) -> float:
     return default
 
 
+def _score01(value: float) -> float:
+    return min(max(value, 0.0), 1.0)
+
+
+def _targeted_attempt_alignment_bonus(
+    candidate_score: dict[str, Any],
+    semantic_score: dict[str, Any],
+) -> float:
+    if semantic_score.get("complete") is not True:
+        return 0.0
+    if candidate_score.get("non_marginal_visual_change") is not True:
+        return 0.0
+    if (
+        candidate_score.get("family") == "panel_f_auto_composite_lane"
+        and candidate_score.get("template_id") == PANEL_F_V5F_AUTO_COMPOSITE_TEMPLATE_ID
+    ):
+        return 0.035
+    return 0.0
+
+
 def _aesthetic_score_from_quality_evidence(
     decision: dict[str, Any],
     candidate_score: dict[str, Any],
@@ -7019,9 +7074,15 @@ def _aesthetic_score_from_quality_evidence(
         candidate_score.get("evidence_score"),
         default=0.0,
     )
+    alignment_bonus = _targeted_attempt_alignment_bonus(candidate_score, semantic_score)
+    base_score = _score01(base_score + alignment_bonus)
     readability = 0.82 if semantic_score.get("complete") is True else 0.2
     density = 0.72 if candidate_score.get("non_marginal_visual_change") is True else 0.5
-    hierarchy = _float_score(candidate_score.get("rank_score"), base_score, default=base_score)
+    hierarchy = _score01(
+        _float_score(candidate_score.get("rank_score"), base_score, default=base_score)
+        + alignment_bonus
+    )
+    density = _score01(density + alignment_bonus / 2)
     objective = aesthetic_objective.score_aesthetic_evidence(
         {
             "rank_score": base_score,

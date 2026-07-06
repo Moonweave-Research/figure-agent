@@ -1387,6 +1387,42 @@ def test_quality_search_v5f_refresh_emits_electrode_lead_candidate(
     )
 
 
+def test_panel_f_auto_composite_gets_attempt_aesthetic_alignment_bonus() -> None:
+    semantic_score = {
+        "complete": True,
+        "missing_elements": [],
+        "incorrect_relations": [],
+    }
+    decision = {"policy_score": 0.77}
+    qtr_scores = quality_search._aesthetic_score_from_quality_evidence(  # type: ignore[attr-defined]
+        decision,
+        {
+            "candidate_id": "QS003",
+            "family": "panel_f_qtr_label_lane",
+            "template_id": "v5f_panel_f_qtr_label_lane_v1",
+            "policy_score": 0.77,
+            "rank_score": 0.75,
+            "non_marginal_visual_change": True,
+        },
+        semantic_score,
+    )
+    composite_scores = quality_search._aesthetic_score_from_quality_evidence(  # type: ignore[attr-defined]
+        decision,
+        {
+            "candidate_id": "QS006",
+            "family": "panel_f_auto_composite_lane",
+            "template_id": "v5f_panel_f_auto_composite_leader_electrode_v1",
+            "policy_score": 0.77,
+            "rank_score": 0.75,
+            "non_marginal_visual_change": True,
+        },
+        semantic_score,
+    )
+
+    assert composite_scores["overall"] > qtr_scores["overall"]
+    assert composite_scores["visual_hierarchy"] > qtr_scores["visual_hierarchy"]
+
+
 def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -2540,6 +2576,35 @@ def test_quality_search_auto_composite_prefers_fresh_electrode_variant() -> None
     )
 
 
+def test_quality_search_allows_single_replay_for_v5f_auto_composite_goal() -> None:
+    plan = {
+        "goal": "Panel F apparatus auto composite fresh smoke",
+        "state": {
+            "memory": {
+                "duplicate_experience_attempt_rate": 0.6,
+                "family_templates": {
+                    (
+                        "panel_f_auto_composite_lane::"
+                        "v5f_panel_f_auto_composite_leader_electrode_v1"
+                    ): {
+                        "attempts": 1,
+                        "regressed": 0,
+                    }
+                },
+            }
+        },
+    }
+
+    assert (
+        quality_search._stale_duplicate_experience_family(  # type: ignore[attr-defined]
+            plan,
+            "panel_f_auto_composite_lane",
+            "v5f_panel_f_auto_composite_leader_electrode_v1",
+        )
+        is False
+    )
+
+
 def test_quality_search_qtr_label_prefers_fresh_v5f_variant() -> None:
     plan = {
         "state": {
@@ -3234,6 +3299,35 @@ def test_quality_search_recommendation_defers_when_convergence_does_not_accept()
     assert "convergence controller did not accept" in recommendation["rationale"]
 
 
+def test_quality_search_recommendation_accepts_converged_current_stop() -> None:
+    recommendation = quality_search._selected_acceptance_recommendation(
+        {
+            "candidate_state": quality_search.NON_MARGINAL_REVIEW_CANDIDATE_STATE,
+            "selected_candidate_id": "QS006",
+            "full_changed_pixel_ratio": 0.009,
+            "panel_changed_pixel_ratio": 0.009,
+        },
+        {"status": "pass", "protected_labels": ["q_tr", "electrode"]},
+        {
+            "status": "ready",
+            "apply_readiness": {
+                "status": "ready_for_local_acceptance",
+                "required_commands": ["fig-agent accept-candidate ..."],
+            },
+        },
+        {
+            "decision": "stop",
+            "attempt_id": "run-001:QS006",
+            "selected_attempt_id": "run-001:QS006",
+            "reasons": ["marginal_improvement_below_threshold"],
+        },
+    )
+
+    assert recommendation["status"] == "auto_accept_recommended"
+    assert recommendation["recommendation"] == "accept"
+    assert recommendation["required_commands"] == ["fig-agent accept-candidate ..."]
+
+
 def test_quality_search_execution_persists_convergence_deferred_experience(
     tmp_path: Path,
     monkeypatch,
@@ -3330,7 +3424,8 @@ def test_quality_search_execution_persists_convergence_deferred_experience(
             "schema": "figure-agent.convergence-decision.v1",
             "decision": "stop",
             "attempt_id": attempt["attempt_id"],
-            "selected_attempt_id": attempt["attempt_id"],
+            "selected_attempt_id": "previous-run:QS002",
+            "best_previous_attempt_id": "previous-run:QS002",
             "reasons": ["marginal_improvement_below_threshold"],
             "current_aesthetic_score": 0.8073,
             "selected_aesthetic_score": 0.8073,
@@ -3752,6 +3847,105 @@ def test_quality_search_depone_verdict_allows_convergence_stop_defer(
     assert not any(
         failure["code"] == "selected_convergence_attempt_mismatch"
         for failure in verdict["failures"]
+    )
+
+
+def test_quality_search_depone_verdict_accepts_converged_current_stop(
+    tmp_path: Path,
+) -> None:
+    name = "fig_demo"
+    _write_minimal_fixture(tmp_path, name=name)
+    paths = quality_search.runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+    selected_attempt = {
+        "schema": "figure-agent.figure-attempt.v1",
+        "attempt_id": "run-002:QS001",
+        "figure_id": name,
+        "user_goal": "repeat convergence",
+        "target_medium": "journal_paper",
+        "spec_hash": quality_search._current_source_hash(paths, name),
+        "journal_guide_hash": "sha256:" + "1" * 64,
+        "outputs": {
+            "editable": f"examples/{name}/build/candidates/QS001/{name}.tex",
+            "pdf": f"examples/{name}/build/candidates/QS001/render/candidate.pdf",
+            "png": f"examples/{name}/build/candidates/QS001/render/candidate.png",
+            "svg": f"examples/{name}/build/candidates/QS001/render/candidate.svg",
+        },
+        "journal_constraints": {"passed": True, "violations": []},
+        "semantic_score": {
+            "complete": True,
+            "missing_elements": [],
+            "incorrect_relations": [],
+        },
+        "aesthetic_score": {"overall": 0.8164},
+        "decision": "stop",
+    }
+
+    verdict = quality_search._quality_search_contract_verdict(
+        name=name,
+        run_id="run-002",
+        manifest={"status": "dry_run_complete", "mode": "execute_dry_witness"},
+        plan={"classifications": []},
+        policy={"source_mutation": "forbidden", "release_mutation": "forbidden"},
+        source_context={"source_hash": quality_search._current_source_hash(paths, name)},
+        candidate_set={
+            "candidates": [
+                {
+                    "id": "QS001",
+                    "apply_authority": "review_only",
+                    "selectors": [{"binding_state": "bound"}],
+                }
+            ]
+        },
+        render_results={"render_mode": "prepare_only", "rendered": [{"candidate_id": "QS001"}]},
+        visual_evidence={},
+        candidate_rankings=[
+            {"candidate_id": "QS001", "effective_apply_authority": "review_only"}
+        ],
+        decision={
+            "source_mutation": "not_performed",
+            "candidate_state": quality_search.NON_MARGINAL_REVIEW_CANDIDATE_STATE,
+            "selected_candidate_id": "QS001",
+            "selected_family": "apparatus_strengthen",
+        },
+        selected_semantic_precheck={"status": "pass"},
+        selected_review_packet={
+            "status": "ready",
+            "apply_readiness": {"status": "ready_for_local_acceptance"},
+        },
+        selected_acceptance_recommendation={
+            "status": "auto_accept_recommended",
+            "recommendation": "accept",
+            "is_acceptance_artifact": False,
+        },
+        recommendation_experience={
+            "writes": [f"docs/experience-log/{name}.jsonl"],
+            "record": {
+                "outcome": {
+                    "human_decision_kind": "auto_accept_recommended",
+                    "apply_status": "blocked",
+                }
+            },
+        },
+        selected_attempt=selected_attempt,
+        convergence_decision={
+            "schema": "figure-agent.convergence-decision.v1",
+            "decision": "stop",
+            "attempt_id": "run-002:QS001",
+            "selected_attempt_id": "run-002:QS001",
+            "best_previous_attempt_id": "run-001:QS001",
+            "reasons": ["marginal_improvement_below_threshold"],
+        },
+        paths=paths,
+    )
+
+    assert verdict["contract_status"] == "pass"
+    assert verdict["checks"]["selected_convergence_decision"] == "stop"
+    assert (
+        verdict["checks"]["selected_acceptance_recommendation_status"]
+        == "auto_accept_recommended"
     )
 
 

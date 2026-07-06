@@ -322,6 +322,62 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
     assert _tree(workspace) == before
 
 
+def test_review_packet_ignores_stale_apply_result_for_reused_candidate_id(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = {
+        "schema": "figure-agent.candidate-set.v1",
+        "figure_name": "candidate_demo",
+        "candidates": [{"id": "CAND001", "candidate_hash": "sha256:" + "3" * 64}],
+    }
+    candidate_set_path = fixture / "build" / "candidates" / "panel_C_candidate_set.json"
+    candidate_set_path.write_text(
+        json.dumps(candidate_set, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    (sandbox / "apply_result.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-apply-result.v1",
+                "figure_name": "candidate_demo",
+                "candidate_id": "CAND001",
+                "candidate_hash": "sha256:" + "9" * 64,
+                "status": "applied_with_failed_verification",
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (sandbox / "acceptance.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-acceptance.v1",
+                "figure_name": "candidate_demo",
+                "candidate_id": "CAND001",
+                "candidate_hash": "sha256:" + "8" * 64,
+                "decision": "accept",
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    assert packet["candidate_hash"] == "sha256:" + "3" * 64
+    assert packet["apply_readiness"]["status"] != "applied_with_failed_verification"
+    assert "candidate_hash_mismatch" not in packet["apply_readiness"]["blocking_reasons"]
+
+
 def test_review_packet_includes_advisory_narrative_context(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
