@@ -431,6 +431,101 @@ def test_subregion_key_without_selector_hash_is_marked_unstable(tmp_path: Path) 
     }
 
 
+def _anchor_candidate_set(anchor_text: str) -> dict[str, Any]:
+    return {
+        "schema": "figure-agent.candidate-set.v1",
+        "candidates": [
+            {
+                "id": "CAND001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "visual_review": {"status": "missing_render"},
+                "target": {"panel": "F", "subregion": "panel"},
+                "operations": [
+                    {
+                        "kind": "replace_text",
+                        "path": "candidate_demo.tex",
+                        "original": anchor_text,
+                    }
+                ],
+            }
+        ],
+    }
+
+
+def test_subregion_key_is_stable_for_anchored_operation(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    anchor_text = "\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);\n\\draw (0,0) -- (1,1);\n"
+    candidate_set_path = fixture / "build" / "candidates" / "candidate_set.json"
+    candidate_set_path.write_text(
+        json.dumps(_anchor_candidate_set(anchor_text), sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    row = experience_log.build_apply_record(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+        plugin_root=tmp_path / "plugin",
+    )
+
+    subregion_key = row["state"]["target"]["subregion_key"]
+    assert not subregion_key.startswith("unstable:")
+    assert subregion_key.startswith("sha256:")
+
+
+def test_subregion_key_is_deterministic_across_runs(tmp_path: Path) -> None:
+    # Same logical operation applied in two fresh workspaces must yield the same
+    # subregion_key: the hash input must exclude timestamps, tmp paths, run ids.
+    anchor_text = "\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);\n"
+
+    def _key(root: Path) -> str:
+        workspace = root / "workspace"
+        fixture = _fixture(workspace)
+        candidate_set_path = fixture / "build" / "candidates" / "candidate_set.json"
+        candidate_set_path.write_text(
+            json.dumps(_anchor_candidate_set(anchor_text), sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        row = experience_log.build_apply_record(
+            "candidate_demo",
+            "CAND001",
+            workspace_root=workspace,
+            plugin_root=root / "plugin",
+        )
+        return row["state"]["target"]["subregion_key"]
+
+    first = _key(tmp_path / "run_a")
+    second = _key(tmp_path / "run_b")
+    assert first == second
+
+
+def test_subregion_key_is_stable_across_cosmetic_reflow(tmp_path: Path) -> None:
+    # Trailing whitespace and surrounding blank lines must not change the key.
+    base = "\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);\n\\draw (0,0) -- (1,1);\n"
+    reflowed = (
+        "\n\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);   \n\\draw (0,0) -- (1,1);\n\n"
+    )
+
+    def _key(root: Path, anchor_text: str) -> str:
+        workspace = root / "workspace"
+        fixture = _fixture(workspace)
+        candidate_set_path = fixture / "build" / "candidates" / "candidate_set.json"
+        candidate_set_path.write_text(
+            json.dumps(_anchor_candidate_set(anchor_text), sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        row = experience_log.build_apply_record(
+            "candidate_demo",
+            "CAND001",
+            workspace_root=workspace,
+            plugin_root=root / "plugin",
+        )
+        return row["state"]["target"]["subregion_key"]
+
+    assert _key(tmp_path / "run_a", base) == _key(tmp_path / "run_b", reflowed)
+
+
 def test_experience_log_path_defaults_to_plugin_docs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

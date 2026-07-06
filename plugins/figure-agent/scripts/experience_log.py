@@ -154,6 +154,38 @@ def _candidate_family(manifest: dict[str, Any], candidate: dict[str, Any]) -> st
     return str(value) if value else "unknown"
 
 
+def _normalize_anchor_text(text: str) -> str:
+    # Content identity of a sub-region: rstrip each line and drop leading/trailing
+    # blank lines so cosmetic reflow (trailing spaces, surrounding blank lines)
+    # does not change the join key. Internal spacing/indentation is preserved
+    # because in TikZ it can carry structural meaning and collapsing it would risk
+    # merging distinct sub-regions under one key.
+    lines = [line.rstrip() for line in text.splitlines()]
+    while lines and not lines[0]:
+        lines.pop(0)
+    while lines and not lines[-1]:
+        lines.pop()
+    return "\n".join(lines)
+
+
+def _operation_anchor_hash(candidate: dict[str, Any], manifest: dict[str, Any]) -> str | None:
+    for payload in (candidate, manifest):
+        operations = payload.get("operations")
+        if not isinstance(operations, list):
+            continue
+        anchors = [
+            _normalize_anchor_text(op["original"])
+            for op in operations
+            if isinstance(op, dict)
+            and isinstance(op.get("original"), str)
+            and op["original"].strip()
+        ]
+        if anchors:
+            digest = sha256("\n".join(anchors).encode("utf-8")).hexdigest()
+            return f"sha256:{digest}"
+    return None
+
+
 def _selector_text_hash(manifest: dict[str, Any], candidate: dict[str, Any]) -> str | None:
     for payload in (candidate, manifest):
         selector = payload.get("selector")
@@ -167,7 +199,9 @@ def _target(manifest: dict[str, Any], candidate: dict[str, Any]) -> dict[str, st
     if target is None and isinstance(manifest.get("target"), dict):
         target = manifest["target"]
     target = target or {}
-    selector_hash = _selector_text_hash(manifest, candidate)
+    selector_hash = _selector_text_hash(manifest, candidate) or _operation_anchor_hash(
+        candidate, manifest
+    )
     subregion = str(target.get("subregion") or "unknown")
     return {
         "panel": str(target.get("panel") or "unknown"),
