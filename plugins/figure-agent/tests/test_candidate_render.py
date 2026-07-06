@@ -442,6 +442,105 @@ def test_render_compile_export_success_writes_sandbox_artifacts(
     assert not (fixture / "build" / "candidate_demo.pdf").exists()
 
 
+def _counting_compile_run(calls: list[list[str]]):
+    def fake_run(
+        command: list[str],
+        *,
+        cwd: Path,
+        env: dict[str, str],
+    ) -> subprocess.CompletedProcess[str]:
+        calls.append(command)
+        if command[0] == "lualatex":
+            (cwd / "render" / "candidate.pdf").write_bytes(b"%PDF-1.7\n")
+        if command[0] == "pdftocairo":
+            if "-svg" in command:
+                (cwd / "render" / "candidate.svg").write_text("<svg />\n", encoding="utf-8")
+            else:
+                (cwd / "render" / "candidate.png").write_bytes(b"png")
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    return fake_run
+
+
+def test_render_reuses_cache_on_hash_identical_second_render(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A hash-identical re-render must skip every compile subprocess and reuse artifacts."""
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = _candidate_set(workspace, fixture)
+    calls: list[list[str]] = []
+    monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
+    monkeypatch.setattr(candidate_render, "_run_process", _counting_compile_run(calls))
+
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "render_manifest.json"
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+        compile=True,
+        export=True,
+    )
+    first_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert calls, "first render must actually compile"
+    assert first_data["cache"] == "miss"
+    calls.clear()
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+        compile=True,
+        export=True,
+    )
+    second_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    assert calls == [], "hash-identical re-render must perform zero compile subprocess calls"
+    assert second_data["cache"] == "hit"
+    first_data.pop("cache")
+    second_data.pop("cache")
+    assert first_data == second_data
+
+
+def test_render_cache_falls_back_to_recompile_when_artifact_deleted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A cache entry whose advertised artifact is gone must recompile, not error (Task 0.2 guard)."""
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = _candidate_set(workspace, fixture)
+    calls: list[list[str]] = []
+    monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
+    monkeypatch.setattr(candidate_render, "_run_process", _counting_compile_run(calls))
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+        compile=True,
+        export=True,
+    )
+    assert calls
+    calls.clear()
+
+    (fixture / "build" / "candidates" / "CAND001" / "render" / "candidate.pdf").unlink()
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+        compile=True,
+        export=True,
+    )
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "render_manifest.json"
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert calls, "missing artifact must trigger recompile"
+    assert data["cache"] == "miss"
+
+
 def test_render_crop_panel_writes_before_after_sandbox_artifacts(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

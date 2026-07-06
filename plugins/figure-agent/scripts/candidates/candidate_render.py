@@ -68,6 +68,132 @@ def _sha256_file(path: Path) -> str:
     return "sha256:" + digest.hexdigest()
 
 
+def _styles_signature(plugin_root: Path) -> str:
+    styles_dir = plugin_root / "styles"
+    if not styles_dir.is_dir():
+        return ZERO_HASH
+    entries = [
+        f"{path.relative_to(styles_dir).as_posix()}:{_sha256_file(path)}"
+        for path in sorted(styles_dir.rglob("*"))
+        if path.is_file()
+    ]
+    return "sha256:" + sha256("\n".join(entries).encode("utf-8")).hexdigest()
+
+
+def _render_cache_key(
+    *,
+    example_dir: Path,
+    fixture_name: str,
+    candidate_hash: Any,
+    out_dir: Path,
+    plugin_root: Path,
+    compile_requested: bool,
+    export_requested: bool,
+    crop_panel: str | None,
+    evaluate_requested: bool,
+) -> dict[str, Any]:
+    # candidate_hash covers the operations + generation-time source hash, but the compile
+    # input is the materialized source/candidate.tex plus the shared style files pulled in
+    # via TEXINPUTS. Key on both so an edited base source or preamble forces a recompile.
+    source_tex = out_dir / "source" / "candidate.tex"
+    key: dict[str, Any] = {
+        "candidate_hash": candidate_hash,
+        "source_tex_hash": _sha256_file(source_tex) if source_tex.is_file() else ZERO_HASH,
+        "styles_hash": _styles_signature(plugin_root),
+        "request": {
+            "compile": bool(compile_requested),
+            "export": bool(export_requested),
+            "crop_panel": crop_panel,
+            "evaluate": bool(evaluate_requested),
+        },
+    }
+    if crop_panel:
+        build_pdf = example_dir / "build" / f"{fixture_name}.pdf"
+        build_png = example_dir / "build" / f"{fixture_name}.png"
+        spec_path = example_dir / "spec.yaml"
+        key["crop_inputs"] = {
+            "original_pdf": _sha256_file(build_pdf) if build_pdf.is_file() else ZERO_HASH,
+            "original_png": _sha256_file(build_png) if build_png.is_file() else ZERO_HASH,
+            "spec": _sha256_file(spec_path) if spec_path.is_file() else ZERO_HASH,
+        }
+    return key
+
+
+def _render_request_satisfied(
+    prior: dict[str, Any],
+    *,
+    compile_requested: bool,
+    export_requested: bool,
+    crop_panel: str | None,
+    evaluate_requested: bool,
+) -> bool:
+    stages = prior.get("stages")
+    if not isinstance(stages, dict):
+        return False
+
+    def _status(name: str) -> Any:
+        stage = stages.get(name)
+        return stage.get("status") if isinstance(stage, dict) else None
+
+    if compile_requested and _status("compile") != "success":
+        return False
+    if export_requested and _status("export") != "success":
+        return False
+    if crop_panel and _status("crop") != "success":
+        return False
+    if evaluate_requested and _status("evaluate") in {
+        None,
+        "not_run",
+        "blocked",
+        "dependency_missing",
+    }:
+        return False
+    return True
+
+
+def _cached_artifacts_present(example_dir: Path, artifacts: Any) -> bool:
+    if not isinstance(artifacts, dict):
+        return False
+    for value in artifacts.values():
+        if isinstance(value, str) and not (example_dir / value).is_file():
+            return False
+    return True
+
+
+def _reuse_cached_render(
+    *,
+    out_dir: Path,
+    example_dir: Path,
+    cache_key: dict[str, Any],
+    compile_requested: bool,
+    export_requested: bool,
+    crop_panel: str | None,
+    evaluate_requested: bool,
+) -> dict[str, Any] | None:
+    manifest_path = out_dir / "render_manifest.json"
+    if not manifest_path.is_file():
+        return None
+    try:
+        prior = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(prior, dict) or prior.get("cache_key") != cache_key:
+        return None
+    if not _render_request_satisfied(
+        prior,
+        compile_requested=compile_requested,
+        export_requested=export_requested,
+        crop_panel=crop_panel,
+        evaluate_requested=evaluate_requested,
+    ):
+        return None
+    if not _cached_artifacts_present(example_dir, prior.get("artifacts")):
+        return None
+    reused = dict(prior)
+    reused["cache"] = "hit"
+    return reused
+
+
 def _safe_candidate_id(value: Any) -> str:
     candidate_id = str(value)
     if not fixture_identity.is_safe_fixture_name(candidate_id):
@@ -382,6 +508,28 @@ def _render_manifest(
     tex_engine = "lualatex"
     render_dir = _sandbox_child_dir(out_dir, "render")
     crops_dir = _sandbox_child_dir(out_dir, "crops") if crop_panel else None
+    cache_key = _render_cache_key(
+        example_dir=example_dir,
+        fixture_name=fixture_name,
+        candidate_hash=candidate.get("candidate_hash"),
+        out_dir=out_dir,
+        plugin_root=plugin_root,
+        compile_requested=compile_requested,
+        export_requested=export_requested,
+        crop_panel=crop_panel,
+        evaluate_requested=evaluate_requested,
+    )
+    cached = _reuse_cached_render(
+        out_dir=out_dir,
+        example_dir=example_dir,
+        cache_key=cache_key,
+        compile_requested=compile_requested,
+        export_requested=export_requested,
+        crop_panel=crop_panel,
+        evaluate_requested=evaluate_requested,
+    )
+    if cached is not None:
+        return cached
     if compile_requested:
         if _which(tex_engine) is None:
             compile_status = "dependency_missing"
@@ -611,6 +759,8 @@ def _render_manifest(
     return {
         "schema": RENDER_MANIFEST_SCHEMA,
         "schema_version": 1,
+        "cache": "miss",
+        "cache_key": cache_key,
         "figure_name": fixture_name,
         "candidate_id": candidate_id,
         "candidate_hash": candidate.get("candidate_hash"),
