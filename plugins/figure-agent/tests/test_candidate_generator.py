@@ -9,6 +9,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import candidate_generator  # noqa: E402
+import experience_log  # noqa: E402
 import quality_defect_ledger  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
@@ -714,7 +715,7 @@ def test_candidate_generator_suppresses_bad_family_on_same_subregion_key(
     fixture = _fixture(workspace)
     selector_hash = "sha256:" + "7" * 64
     source_hash = file_sha256(fixture / "candidate_demo.tex")
-    log_dir = plugin_root / "docs" / "experience-log"
+    log_dir = experience_log.experience_log_dir(plugin_root)
     log_dir.mkdir(parents=True)
     (log_dir / "candidate_demo.jsonl").write_text(
         json.dumps(

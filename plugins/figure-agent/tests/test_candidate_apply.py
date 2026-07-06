@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import candidate_acceptance  # noqa: E402
 import candidate_apply  # noqa: E402
+import experience_log  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -119,15 +120,18 @@ def _accepted_candidate_fixture(workspace: Path) -> tuple[Path, dict]:
 
 def _accepted_multiline_candidate_fixture(workspace: Path) -> tuple[Path, dict, str, str]:
     fixture, manifest = _rendered_candidate_fixture(workspace)
-    source = "\n".join(
-        [
-            "% Panel F -- mechanical",
-            "\\begin{scope}[shift={(9.5,0)}]",
-            "\\draw[cGray!64!black, line width=0.34pt] (0,0) rectangle (1,1);",
-            "\\node at (0.5,0.5) {Coulomb repulsion};",
-            "\\end{scope}",
-        ]
-    ) + "\n"
+    source = (
+        "\n".join(
+            [
+                "% Panel F -- mechanical",
+                "\\begin{scope}[shift={(9.5,0)}]",
+                "\\draw[cGray!64!black, line width=0.34pt] (0,0) rectangle (1,1);",
+                "\\node at (0.5,0.5) {Coulomb repulsion};",
+                "\\end{scope}",
+            ]
+        )
+        + "\n"
+    )
     replacement = source.replace("line width=0.34pt", "line width=0.92pt").replace(
         "{Coulomb repulsion}",
         "{Coulomb repulsion strengthened}",
@@ -331,7 +335,7 @@ def test_apply_candidate_exact_replace_writes_source_and_result(tmp_path: Path) 
     assert memory_index.is_file()
     rows = [
         json.loads(line)
-        for line in (plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl")
+        for line in (experience_log.experience_log_dir(plugin_root) / "candidate_demo.jsonl")
         .read_text(encoding="utf-8")
         .splitlines()
     ]
@@ -382,7 +386,7 @@ def test_apply_candidate_uses_explicit_candidate_set_for_experience_log(
     assert apply_result["memory_index"] == ["build/memory/quality_memory_index.json"]
     rows = [
         json.loads(line)
-        for line in (plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl")
+        for line in (experience_log.experience_log_dir(plugin_root) / "candidate_demo.jsonl")
         .read_text(encoding="utf-8")
         .splitlines()
     ]

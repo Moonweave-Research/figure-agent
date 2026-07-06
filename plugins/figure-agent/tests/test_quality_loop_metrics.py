@@ -6,6 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import experience_log  # noqa: E402
 import quality_loop_metrics  # noqa: E402
 
 
@@ -49,7 +50,7 @@ def _candidate_key(fixture: str, candidate_id: str) -> str:
 
 
 def _write_log(plugin_root: Path, fixture: str, rows: list[dict]) -> None:
-    path = plugin_root / "docs" / "experience-log" / f"{fixture}.jsonl"
+    path = experience_log.experience_log_dir(plugin_root) / f"{fixture}.jsonl"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
@@ -233,9 +234,7 @@ def test_loop_metrics_counts_repeated_hashes_as_wasted_iterations(
     assert wasted["wasted_count"] == 2
     assert wasted["rate"] == 0.6667
     assert wasted["wasted_candidates"] == [f"fig_demo:{repeated_hash}"]
-    assert wasted["reasons_by_candidate"][f"fig_demo:{repeated_hash}"] == [
-        "historical_repeat"
-    ]
+    assert wasted["reasons_by_candidate"][f"fig_demo:{repeated_hash}"] == ["historical_repeat"]
 
 
 def test_loop_metrics_skips_identityless_wasted_iteration_records(

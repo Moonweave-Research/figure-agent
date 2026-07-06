@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import experience_log
 import fixture_identity
 import runtime_paths
 
@@ -20,7 +21,7 @@ class QualityLoopMetricsError(ValueError):
 
 
 def _experience_log_dir(plugin_root: Path) -> Path:
-    log_dir = plugin_root / "docs" / "experience-log"
+    log_dir = experience_log.experience_log_dir(plugin_root)
     if log_dir.is_symlink():
         raise QualityLoopMetricsError("experience_log_symlink")
     return log_dir
@@ -363,9 +364,7 @@ def _experience_log_growth(
         }
         for run in runs
     ]
-    runs_without_growth = [
-        str(run["run_id"]) for run in records_by_run if run["record_count"] == 0
-    ]
+    runs_without_growth = [str(run["run_id"]) for run in records_by_run if run["record_count"] == 0]
     return {
         "state": "measured" if runs else "unmeasured",
         "run_count": len(runs),
@@ -406,9 +405,7 @@ def _stop_cause_histogram(workspace_root: Path) -> dict[str, Any]:
     for manifest_path, manifest in manifests:
         run_count += 1
         week = _week_key(
-            manifest.get("created_at")
-            or manifest.get("generated_at")
-            or manifest.get("started_at")
+            manifest.get("created_at") or manifest.get("generated_at") or manifest.get("started_at")
         )
         weekly_histogram = histogram_by_week.setdefault(week, {})
         for iteration_path in sorted(manifest_path.parent.glob("iteration_*.json")):

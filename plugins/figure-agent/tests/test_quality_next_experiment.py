@@ -8,6 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import experience_log  # noqa: E402
 import quality_next_experiment  # noqa: E402
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
@@ -22,8 +23,7 @@ def _write_suite(plugin_root: Path, fixtures: list[str]) -> None:
         "suites:\n"
         "  smoke:\n"
         "    description: test smoke suite\n"
-        "    fixtures:\n"
-        + "".join(f"      - {fixture}\n" for fixture in fixtures),
+        "    fixtures:\n" + "".join(f"      - {fixture}\n" for fixture in fixtures),
         encoding="utf-8",
     )
 
@@ -69,7 +69,7 @@ def _experience_record(
 
 
 def _write_experience(plugin_root: Path, fixture: str, records: list[dict]) -> None:
-    log_path = plugin_root / "docs" / "experience-log" / f"{fixture}.jsonl"
+    log_path = experience_log.experience_log_dir(plugin_root) / f"{fixture}.jsonl"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     log_path.write_text(
         "".join(json.dumps(record, sort_keys=True) + "\n" for record in records),

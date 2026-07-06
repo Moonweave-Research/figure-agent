@@ -137,11 +137,7 @@ def _experience_record(
             "candidate_id": candidate_id,
             "edit_family": "label_offset",
             "params": {
-                "operations": [
-                    {"template_id": template_id}
-                ]
-                if template_id is not None
-                else []
+                "operations": [{"template_id": template_id}] if template_id is not None else []
             },
             "candidate_hash": "sha256:" + "1" * 64,
             "rank_score": 0.7,
@@ -167,7 +163,9 @@ def test_build_fixture_index_reads_experience_log_not_build_artifacts(tmp_path: 
     fixture = workspace / "examples" / "candidate_demo"
     fixture.mkdir(parents=True)
     (fixture / "candidate_demo.tex").write_text("source\n", encoding="utf-8")
-    log_path = plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
+    log_path = (
+        quality_memory_index.experience_log.experience_log_dir(plugin_root) / "candidate_demo.jsonl"
+    )
     log_path.parent.mkdir(parents=True)
     log_path.write_text(
         "\n".join(
@@ -216,9 +214,7 @@ def test_recommendation_experience_records_are_candidate_recommended_attempts() 
     assert index["families"]["label_offset"]["neutral"] == 1
     assert index["family_templates"]["label_offset::template_a"]["attempts"] == 1
     assert index["family_templates"]["label_offset::template_a"]["neutral"] == 1
-    assert index["panel_patterns"]["C:sha256:" + "a" * 64 + ":label_offset"][
-        "attempts"
-    ] == 1
+    assert index["panel_patterns"]["C:sha256:" + "a" * 64 + ":label_offset"]["attempts"] == 1
 
 
 def test_convergence_deferred_experience_records_are_candidate_recommended_attempts() -> None:
@@ -267,18 +263,8 @@ def test_memory_index_tracks_family_template_attempts_separately() -> None:
     )
 
     assert index["families"]["panel_f_auto_composite_lane"]["attempts"] == 2
-    assert (
-        index["family_templates"]["panel_f_auto_composite_lane::variant_a"][
-            "attempts"
-        ]
-        == 1
-    )
-    assert (
-        index["family_templates"]["panel_f_auto_composite_lane::variant_b"][
-            "attempts"
-        ]
-        == 1
-    )
+    assert index["family_templates"]["panel_f_auto_composite_lane::variant_a"]["attempts"] == 1
+    assert index["family_templates"]["panel_f_auto_composite_lane::variant_b"]["attempts"] == 1
 
 
 def test_duplicate_recommendation_experience_rows_do_not_inflate_attempts() -> None:
@@ -785,9 +771,7 @@ def test_build_suite_index_skips_missing_fixtures_and_writes_scratch(tmp_path: P
     assert index["suite_diagnostics"] == [
         {"fixture": "missing_demo", "status": "skipped", "reason": "missing_fixture"}
     ]
-    assert index["writes"] == [
-        ".scratch/figure-agent-memory/smoke/quality_memory_index.json"
-    ]
+    assert index["writes"] == [".scratch/figure-agent-memory/smoke/quality_memory_index.json"]
     assert (
         workspace / ".scratch" / "figure-agent-memory" / "smoke" / "quality_memory_index.json"
     ).is_file()
@@ -814,7 +798,9 @@ def test_build_suite_index_aggregates_all_experience_logs_with_transfer_provenan
         encoding="utf-8",
     )
     (workspace / "examples" / "suite_demo").mkdir(parents=True)
-    log_path = plugin_root / "docs" / "experience-log" / "outside_demo.jsonl"
+    log_path = (
+        quality_memory_index.experience_log.experience_log_dir(plugin_root) / "outside_demo.jsonl"
+    )
     log_path.parent.mkdir(parents=True)
     log_path.write_text(
         json.dumps(

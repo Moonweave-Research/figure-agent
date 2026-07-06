@@ -15,6 +15,7 @@ import candidate_contracts
 import candidate_families
 import critique_adjudication
 import critique_contract
+import experience_log
 import figure_intent_model
 import fixture_identity
 import label_refit_derive
@@ -52,10 +53,11 @@ def _load_history_suppressions(
     paths: runtime_paths.RuntimePaths,
     name: str,
 ) -> dict[tuple[str, str], str]:
-    path = paths.plugin_root / "docs" / "experience-log" / f"{name}.jsonl"
+    log_dir = experience_log.experience_log_dir(paths.plugin_root)
+    path = log_dir / f"{name}.jsonl"
     for label, item in (
         ("docs", paths.plugin_root / "docs"),
-        ("experience_log", paths.plugin_root / "docs" / "experience-log"),
+        ("experience_log", log_dir),
         ("experience_log", path),
     ):
         if item.is_symlink():
@@ -493,9 +495,7 @@ def _defect_candidates(
             _append_refusals(refusals, source_hash_refusals)
             continue
         selector = defect.get("selector_hint")
-        selector_hash = (
-            selector.get("selector_text_hash") if isinstance(selector, dict) else None
-        )
+        selector_hash = selector.get("selector_text_hash") if isinstance(selector, dict) else None
         if isinstance(selector_hash, str):
             suppressed_outcome = history_suppressions.get((EDIT_FAMILY, selector_hash))
             if suppressed_outcome is not None:

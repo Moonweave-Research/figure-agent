@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -53,10 +54,11 @@ def _load_json(path: Path, label: str) -> dict[str, Any]:
 
 def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any]]:
     fixture_identity.validate_fixture_name(name)
-    path = plugin_root / "docs" / "experience-log" / f"{name}.jsonl"
+    log_dir = experience_log_dir(plugin_root)
+    path = log_dir / f"{name}.jsonl"
     for label, item in (
         ("docs", plugin_root / "docs"),
-        ("experience_log", plugin_root / "docs" / "experience-log"),
+        ("experience_log", log_dir),
         ("experience_log", path),
     ):
         if item.is_symlink():
@@ -297,9 +299,7 @@ def _convergence_summary(
         else {}
     )
     outputs = (
-        selected_attempt.get("outputs")
-        if isinstance(selected_attempt.get("outputs"), dict)
-        else {}
+        selected_attempt.get("outputs") if isinstance(selected_attempt.get("outputs"), dict) else {}
     )
     return {
         "attempt_id": selected_attempt.get("attempt_id"),
@@ -312,9 +312,7 @@ def _convergence_summary(
             convergence_decision.get("selected_aesthetic_score")
         ),
         "outputs": dict(outputs),
-        "output_formats": [
-            key for key in ("editable", "pdf", "png", "svg") if outputs.get(key)
-        ],
+        "output_formats": [key for key in ("editable", "pdf", "png", "svg") if outputs.get(key)],
     }
 
 
@@ -343,9 +341,7 @@ def _attempt_from_experience_record(record: dict[str, Any]) -> dict[str, Any] | 
     state = record.get("state") if isinstance(record.get("state"), dict) else {}
     outcome = record.get("outcome") if isinstance(record.get("outcome"), dict) else {}
     convergence = (
-        outcome.get("convergence")
-        if isinstance(outcome.get("convergence"), dict)
-        else None
+        outcome.get("convergence") if isinstance(outcome.get("convergence"), dict) else None
     )
     if convergence is None:
         return None
@@ -377,9 +373,7 @@ def _attempt_from_experience_record(record: dict[str, Any]) -> dict[str, Any] | 
             "missing_elements": [],
             "incorrect_relations": [],
         },
-        "aesthetic_score": {
-            "overall": _float_or_none(convergence.get("aesthetic_overall")) or 0.0
-        },
+        "aesthetic_score": {"overall": _float_or_none(convergence.get("aesthetic_overall")) or 0.0},
         "decision": convergence.get("decision"),
     }
     try:
@@ -577,9 +571,7 @@ def build_recommendation_record(
             },
             "detector_recheck": {},
             "pixel_delta": {
-                "changed_pixel_ratio": _float_or_none(
-                    evidence.get("full_changed_pixel_ratio")
-                )
+                "changed_pixel_ratio": _float_or_none(evidence.get("full_changed_pixel_ratio"))
             },
             "human_label": None,
             "human_decision_kind": human_decision_kind,
@@ -712,9 +704,7 @@ def build_recommendation_records(
     )
     example_dir = paths.examples_dir / name
     candidates = (
-        candidate_set.get("candidates")
-        if isinstance(candidate_set.get("candidates"), list)
-        else []
+        candidate_set.get("candidates") if isinstance(candidate_set.get("candidates"), list) else []
     )
     rankings_by_id = {
         str(ranking.get("candidate_id") or ""): ranking
@@ -790,9 +780,7 @@ def build_apply_records(
     )
     acceptance = _acceptance_payload(sandbox)
     candidates = (
-        candidate_set.get("candidates")
-        if isinstance(candidate_set.get("candidates"), list)
-        else []
+        candidate_set.get("candidates") if isinstance(candidate_set.get("candidates"), list) else []
     )
     created_at = _artifact_time(apply_path)
     base_tex_hash = _source_before_hash(example_dir, name, apply_result)
@@ -842,11 +830,7 @@ def build_apply_records(
     }
     records = [_record_with_id(record)]
     for item in candidates:
-        if (
-            isinstance(item, dict)
-            and item.get("id") != candidate_id
-            and _is_ranked_candidate(item)
-        ):
+        if isinstance(item, dict) and item.get("id") != candidate_id and _is_ranked_candidate(item):
             records.append(
                 _unchosen_record(
                     name=name,
@@ -862,11 +846,19 @@ def build_apply_records(
     return records
 
 
+def experience_log_dir(plugin_root: Path) -> Path:
+    override = os.environ.get("FIG_AGENT_EXPERIENCE_LOG_DIR")
+    return Path(override) if override else plugin_root / "docs" / "experience-log"
+
+
 def _experience_log_path(name: str, plugin_root: Path) -> Path:
-    docs_dir = plugin_root / "docs"
-    log_dir = docs_dir / "experience-log"
+    override = os.environ.get("FIG_AGENT_EXPERIENCE_LOG_DIR")
+    log_dir = experience_log_dir(plugin_root)
     path = log_dir / f"{name}.jsonl"
-    for label, item in (("docs", docs_dir), ("experience_log", log_dir), ("experience_log", path)):
+    checks = (("experience_log", log_dir), ("experience_log", path))
+    if not override:
+        checks = (("docs", plugin_root / "docs"), *checks)
+    for label, item in checks:
         if item.is_symlink():
             raise ExperienceLogError(f"{label}_symlink")
     log_dir.mkdir(parents=True, exist_ok=True)

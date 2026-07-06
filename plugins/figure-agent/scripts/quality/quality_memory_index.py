@@ -10,6 +10,7 @@ from pathlib import Path
 from statistics import median
 from typing import Any
 
+import experience_log
 import fixture_identity
 import runtime_paths
 
@@ -81,10 +82,11 @@ def _rank_score(event: dict[str, Any]) -> float | None:
 
 
 def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any]]:
-    path = plugin_root / "docs" / "experience-log" / f"{name}.jsonl"
+    log_dir = experience_log.experience_log_dir(plugin_root)
+    path = log_dir / f"{name}.jsonl"
     for label, item in (
         ("docs", plugin_root / "docs"),
-        ("experience_log", plugin_root / "docs" / "experience-log"),
+        ("experience_log", log_dir),
         ("experience_log", path),
     ):
         if item.is_symlink():
@@ -106,7 +108,7 @@ def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any
 
 
 def _experience_log_fixture_names(plugin_root: Path) -> list[str]:
-    log_dir = plugin_root / "docs" / "experience-log"
+    log_dir = experience_log.experience_log_dir(plugin_root)
     if log_dir.is_symlink():
         raise QualityMemoryIndexError("experience_log_symlink")
     if not log_dir.is_dir():
@@ -133,11 +135,7 @@ def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
     apply_status = str(outcome.get("apply_status") or "unknown")
     human_decision_kind = outcome.get("human_decision_kind")
     quality_movement = outcome.get("quality_movement")
-    outcome_state = (
-        str(quality_movement)
-        if quality_movement in ELIGIBLE_OUTCOMES
-        else apply_status
-    )
+    outcome_state = str(quality_movement) if quality_movement in ELIGIBLE_OUTCOMES else apply_status
     rank_score = action.get("rank_score")
     event_type = "candidate_applied"
     if apply_status == "unchosen":
@@ -170,9 +168,7 @@ def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
             "reason": apply_status,
             "evidence_paths": [f"docs/experience-log/{record.get('fixture')}.jsonl"],
         },
-        "metrics": {"candidate_rank_score": rank_score}
-        if rank_score is not None
-        else {},
+        "metrics": {"candidate_rank_score": rank_score} if rank_score is not None else {},
     }
 
 
@@ -185,9 +181,7 @@ def _recommended_prior(bucket: dict[str, Any]) -> float:
     if attempts < 3:
         return 0.0
     raw = (
-        int(bucket["improved"])
-        + 0.5 * int(bucket["neutral"])
-        - int(bucket["regressed"])
+        int(bucket["improved"]) + 0.5 * int(bucket["neutral"]) - int(bucket["regressed"])
     ) / attempts
     return round(_clamp(raw * 0.25, -0.25, 0.25), 4)
 
@@ -570,9 +564,7 @@ def build_suite_index(
     if write:
         output = _ensure_suite_memory_output(paths.workspace_root, suite)
         output.write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        index["writes"] = [
-            f".scratch/figure-agent-memory/{suite}/quality_memory_index.json"
-        ]
+        index["writes"] = [f".scratch/figure-agent-memory/{suite}/quality_memory_index.json"]
     else:
         index["writes"] = []
     return index

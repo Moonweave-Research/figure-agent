@@ -52,7 +52,7 @@ def test_append_apply_experience_record_joins_existing_artifacts(tmp_path: Path)
         plugin_root=plugin_root,
     )
 
-    output = plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
+    output = experience_log.experience_log_dir(plugin_root) / "candidate_demo.jsonl"
     assert result["writes"] == ["docs/experience-log/candidate_demo.jsonl"]
     rows = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
     assert len(rows) == 2
@@ -91,7 +91,7 @@ def test_append_apply_record_refuses_symlinked_experience_log(tmp_path: Path) ->
     workspace = tmp_path / "workspace"
     plugin_root = tmp_path / "plugin"
     _fixture(workspace)
-    log_dir = plugin_root / "docs" / "experience-log"
+    log_dir = experience_log.experience_log_dir(plugin_root)
     log_dir.mkdir(parents=True)
     outside = tmp_path / "outside.jsonl"
     outside.write_text("", encoding="utf-8")
@@ -184,7 +184,7 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
         },
     )
 
-    output = plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
+    output = experience_log.experience_log_dir(plugin_root) / "candidate_demo.jsonl"
     rows = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
     assert result["writes"] == ["docs/experience-log/candidate_demo.jsonl"]
     assert len(rows) == 2
@@ -313,9 +313,9 @@ def test_append_recommendation_record_writes_convergence_deferred_recommendation
 
     rows = [
         json.loads(line)
-        for line in (
-            plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
-        ).read_text(encoding="utf-8").splitlines()
+        for line in (experience_log.experience_log_dir(plugin_root) / "candidate_demo.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
     ]
     assert result["record"]["outcome"]["human_decision_kind"] == "convergence_deferred"
     assert len(rows) == 1
@@ -349,7 +349,7 @@ def test_experience_log_is_append_only(tmp_path: Path) -> None:
         plugin_root=plugin_root,
     )
 
-    output = plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
+    output = experience_log.experience_log_dir(plugin_root) / "candidate_demo.jsonl"
     rows = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
     assert len(rows) == 2
     assert rows[0] == first["record"]
@@ -362,7 +362,7 @@ def test_convergence_attempt_history_reconstructs_valid_prior_attempts(
     workspace = tmp_path / "workspace"
     plugin_root = workspace
     _fixture(workspace)
-    log_dir = plugin_root / "docs" / "experience-log"
+    log_dir = experience_log.experience_log_dir(plugin_root)
     log_dir.mkdir(parents=True)
     record = {
         "schema": "figure-agent.experience-record.v1",
@@ -428,6 +428,28 @@ def test_subregion_key_without_selector_hash_is_marked_unstable(tmp_path: Path) 
         "panel": "C",
         "subregion_key": "unstable:trap-label",
     }
+
+
+def test_experience_log_path_defaults_to_plugin_docs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("FIG_AGENT_EXPERIENCE_LOG_DIR", raising=False)
+    plugin_root = tmp_path / "plugin"
+
+    path = experience_log._experience_log_path("demo", plugin_root)
+
+    assert path == plugin_root / "docs" / "experience-log" / "demo.jsonl"
+
+
+def test_experience_log_path_honors_env_override(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    override = tmp_path / "isolated-log"
+    monkeypatch.setenv("FIG_AGENT_EXPERIENCE_LOG_DIR", str(override))
+
+    path = experience_log._experience_log_path("demo", tmp_path / "plugin")
+
+    assert path == override / "demo.jsonl"
 
 
 def test_quality_movement_ignores_llm_text_annotations() -> None:
