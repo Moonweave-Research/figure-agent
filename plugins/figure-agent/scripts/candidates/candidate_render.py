@@ -350,10 +350,20 @@ def _candidate_set_path_value(
         return resolved.relative_to(workspace_root.resolve()).as_posix()
 
 
+def _read_source_text(source_path: Path, cache: dict[Path, str] | None) -> str:
+    if cache is not None and source_path in cache:
+        return cache[source_path]
+    text = source_path.read_text(encoding="utf-8")
+    if cache is not None:
+        cache[source_path] = text
+    return text
+
+
 def _candidate_source_text(
     example_dir: Path,
     fixture_name: str,
     candidate: dict[str, Any],
+    source_text_cache: dict[Path, str] | None = None,
 ) -> tuple[str, str] | None:
     operations = candidate.get("operations")
     if not isinstance(operations, list):
@@ -366,7 +376,7 @@ def _candidate_source_text(
         source_path = _fixture_path(example_dir, fixture_name, operation.get("path"))
         text = sources.get(source_path)
         if text is None:
-            text = source_path.read_text(encoding="utf-8")
+            text = _read_source_text(source_path, source_text_cache)
         original = str(operation.get("original", ""))
         replacement = str(operation.get("replacement", ""))
         try:
@@ -418,6 +428,7 @@ def _operations_with_source_hashes(
     example_dir: Path,
     fixture_name: str,
     candidate: dict[str, Any],
+    source_hash_cache: dict[Path, str] | None = None,
 ) -> list[Any]:
     operations = candidate.get("operations")
     if not isinstance(operations, list):
@@ -430,7 +441,13 @@ def _operations_with_source_hashes(
         copied = dict(operation)
         if copied.get("kind") == "replace_text" and "source_sha256" not in copied:
             source_path = _fixture_path(example_dir, fixture_name, copied.get("path"))
-            copied["source_sha256"] = _sha256_file(source_path)
+            if source_hash_cache is not None and source_path in source_hash_cache:
+                copied["source_sha256"] = source_hash_cache[source_path]
+            else:
+                digest = _sha256_file(source_path)
+                if source_hash_cache is not None:
+                    source_hash_cache[source_path] = digest
+                copied["source_sha256"] = digest
         enriched.append(copied)
     return enriched
 
@@ -441,8 +458,9 @@ def _write_candidate_source_copy(
     fixture_name: str,
     candidate: dict[str, Any],
     out_dir: Path,
+    source_text_cache: dict[Path, str] | None = None,
 ) -> list[dict[str, str]]:
-    source_copy = _candidate_source_text(example_dir, fixture_name, candidate)
+    source_copy = _candidate_source_text(example_dir, fixture_name, candidate, source_text_cache)
     if source_copy is None:
         return []
     filename, text = source_copy
@@ -474,8 +492,9 @@ def _write_render_source_copy(
     fixture_name: str,
     candidate: dict[str, Any],
     out_dir: Path,
+    source_text_cache: dict[Path, str] | None = None,
 ) -> str | None:
-    source_copy = _candidate_source_text(example_dir, fixture_name, candidate)
+    source_copy = _candidate_source_text(example_dir, fixture_name, candidate, source_text_cache)
     if source_copy is None:
         return None
     _filename, text = source_copy
@@ -813,6 +832,9 @@ def render_candidate_set(
         paths.workspace_root,
         candidate_set_path,
     )
+    source_commit = _source_commit(paths.workspace_root)
+    source_text_cache: dict[Path, str] = {}
+    source_hash_cache: dict[Path, str] = {}
     rendered: list[dict[str, Any]] = []
     for candidate in candidate_set.get("candidates", []):
         if not isinstance(candidate, dict):
@@ -827,6 +849,7 @@ def render_candidate_set(
             fixture_name=name,
             candidate=candidate,
             out_dir=out_dir,
+            source_text_cache=source_text_cache,
         )
         render_source_copy = None
         if compile or export or crop_panel or evaluate:
@@ -835,6 +858,7 @@ def render_candidate_set(
                 fixture_name=name,
                 candidate=candidate,
                 out_dir=out_dir,
+                source_text_cache=source_text_cache,
             )
         hard_gate_state = "human_required"
         effective = candidate_contracts.effective_apply_authority(
@@ -842,7 +866,7 @@ def render_candidate_set(
             hard_gate_state,
         )
         base = candidate_set.get("base") if isinstance(candidate_set.get("base"), dict) else {}
-        operations = _operations_with_source_hashes(example_dir, name, candidate)
+        operations = _operations_with_source_hashes(example_dir, name, candidate, source_hash_cache)
         manifest = {
             "schema": SCHEMA,
             "candidate_id": current_candidate_id,
@@ -864,7 +888,7 @@ def render_candidate_set(
             ),
             "selectors": candidate.get("selectors", []),
             "base": {
-                "source_commit": _source_commit(paths.workspace_root),
+                "source_commit": source_commit,
                 "tex_hash": base.get("tex_hash", ZERO_HASH),
                 "status_hash": base.get("status_hash", ZERO_HASH),
                 "render_hash": ZERO_HASH,
