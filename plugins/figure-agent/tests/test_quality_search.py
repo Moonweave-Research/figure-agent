@@ -340,10 +340,11 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
     assert payload["status"] == "dry_run_complete"
     assert payload["executed_iterations"] == 1
     assert payload["safety"]["source_mutation"] == "forbidden_in_dry_executor"
-    assert payload["decision"]["kind"] == "no_non_marginal_candidate"
+    assert payload["decision"]["kind"] == "no_materialized_candidate"
     assert payload["decision"]["selected_candidate_id"] is None
     assert payload["decision"]["source_mutation"] == "not_performed"
-    assert payload["decision"]["top_candidate_id"] != "QSNULL"
+    assert payload["decision"]["candidate_generation_state"] == "exhausted"
+    assert payload["decision"]["top_candidate_id"] is None
     assert payload["decision"]["non_marginal_thresholds"] == {
         "full_changed_pixel_ratio": 0.002,
         "panel_changed_pixel_ratio": 0.02,
@@ -380,14 +381,7 @@ def test_quality_search_execute_writes_dry_run_witness_evidence(
         selector["binding_state"] == "unbound"
         for selector in hierarchy["source_selectors"]
     )
-    assert all("witness" in item for item in payload["candidate_scores"])
-    assert all("policy" in item for item in payload["candidate_scores"])
-    assert all("policy_score" in item for item in payload["candidate_scores"])
-    assert all("operation_scale" in item for item in payload["candidate_scores"])
-    assert all("template_id" in item for item in payload["candidate_scores"])
-    assert all("expected_visual_movement" in item for item in payload["candidate_scores"])
-    assert all("structural_impact" in item for item in payload["candidate_scores"])
-    assert all("non_marginal_visual_change" in item for item in payload["candidate_scores"])
+    assert payload["candidate_scores"] == []
     assert all(path.startswith(".scratch/quality-search-runs/") for path in payload["writes"])
 
     run_dir = tmp_path / payload["run_dir"]
@@ -2526,6 +2520,29 @@ def test_quality_search_policy_uses_memory_prior_and_bandit_bonus() -> None:
     assert decision["policy"]["kind"] == "epsilon_greedy_family_bandit_v1"
 
 
+def test_quality_search_empty_materialized_set_is_generation_exhausted() -> None:
+    plan = {"classifications": []}
+    candidate_specs = [
+        {
+            "id": "QS001",
+            "family": "apparatus_strengthen",
+            "operation_scale": "panel_block",
+        }
+    ]
+
+    scores = quality_search._candidate_scores(
+        candidate_specs,
+        plan,
+        materialized_candidate_ids=set(),
+    )
+    decision = quality_search._execution_decision(plan, scores)
+
+    assert scores == []
+    assert decision["kind"] == "no_materialized_candidate"
+    assert decision["candidate_generation_state"] == "exhausted"
+    assert decision["top_candidate_id"] is None
+
+
 def test_quality_search_memory_summary_preserves_duplicate_diagnostics() -> None:
     summary = quality_search._memory_summary(
         {
@@ -3020,6 +3037,52 @@ def test_quality_search_decision_rejects_only_marginal_rendered_candidates() -> 
         "full_changed_pixel_ratio": 0.002,
         "panel_changed_pixel_ratio": 0.02,
     }
+
+
+def test_quality_search_decision_reports_partial_materialization_refusals() -> None:
+    plan = {"classifications": []}
+    candidate_scores = [
+        {
+            "candidate_id": "QS003",
+            "family": "apparatus_strengthen",
+            "operation_scale": "panel_block",
+            "template_id": "v5f_panel_f_redraw_overlay_v1",
+            "evidence_score": 0.67,
+            "policy_score": 0.678,
+            "full_changed_pixel_ratio": 0.00002,
+            "panel_changed_pixel_ratio": 0.00002,
+            "non_marginal_visual_change": False,
+            "stale_duplicate_experience_family": True,
+        }
+    ]
+    refusals = [
+        {
+            "candidate_id": "QS001",
+            "family": "panel_f_source_cue_readability",
+            "code": "no_panel_f_source_cue_readability_block",
+        },
+        {
+            "candidate_id": "QS002",
+            "family": "panel_f_bias_label_cleanup",
+            "code": "no_panel_f_bias_label_cleanup_block",
+        },
+    ]
+
+    decision = quality_search._execution_decision(
+        plan,
+        candidate_scores,
+        candidate_refusals=refusals,
+    )
+
+    assert decision["kind"] == "no_non_marginal_candidate"
+    assert decision["candidate_generation_state"] == "partial_materialization_with_refusals"
+    assert decision["candidate_refusal_count"] == 2
+    assert decision["candidate_refusal_families"] == [
+        "panel_f_bias_label_cleanup",
+        "panel_f_source_cue_readability",
+    ]
+    assert decision["top_candidate_stale_duplicate_experience_family"] is True
+    assert "partially materialized" in decision["reason"]
 
 
 def test_quality_search_decision_accepts_targeted_cleanup_below_non_marginal_threshold() -> None:

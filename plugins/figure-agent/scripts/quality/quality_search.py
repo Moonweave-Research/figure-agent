@@ -7021,7 +7021,6 @@ def _candidate_scores(
         candidate_id = str(spec.get("id"))
         if (
             materialized_candidate_ids is not None
-            and candidate_id != "QSNULL"
             and candidate_id not in materialized_candidate_ids
         ):
             continue
@@ -7141,6 +7140,7 @@ def _execution_decision(
     candidate_scores: list[dict[str, Any]],
     *,
     fixture_name: str = "<fixture>",
+    candidate_refusals: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     diagnostic_search_bypass = any(
         isinstance(item, dict)
@@ -7163,6 +7163,31 @@ def _execution_decision(
             "diagnostic_search_bypass": diagnostic_search_bypass,
             "evidence_score": 0.0,
             "policy_score": 0.0,
+        }
+    non_null_scores = [
+        item for item in candidate_scores if item.get("family") != "null_baseline"
+    ]
+    if not non_null_scores:
+        return {
+            "kind": "no_materialized_candidate",
+            "reason": (
+                "candidate generator did not materialize any renderable candidates; "
+                "expand or repair the candidate family before scoring"
+            ),
+            "selected_candidate_id": None,
+            "evidence_score": 0.0,
+            "policy_score": 0.0,
+            "source_mutation": "not_performed",
+            "diagnostic_search_bypass": diagnostic_search_bypass,
+            "candidate_generation_state": "exhausted",
+            "top_candidate_id": None,
+            "top_candidate_family": None,
+            "top_candidate_operation_scale": None,
+            "top_candidate_policy_score": None,
+            "non_marginal_thresholds": {
+                "full_changed_pixel_ratio": NON_MARGINAL_FULL_CHANGED_PIXEL_RATIO,
+                "panel_changed_pixel_ratio": NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO,
+            },
         }
     ranked = sorted(
         candidate_scores,
@@ -7191,6 +7216,9 @@ def _execution_decision(
     )
     if selected is None:
         top = ranked[0] if ranked else {}
+        refusals = [
+            item for item in candidate_refusals or [] if isinstance(item, dict)
+        ]
         stale_non_marginal = [
             item
             for item in ranked
@@ -7198,14 +7226,21 @@ def _execution_decision(
             and item.get("non_marginal_visual_change") is True
             and item.get("stale_duplicate_experience_family") is True
         ]
+        fallback_rendered = bool(ranked) and not stale_non_marginal
         reason = (
             "non-marginal candidates were excluded as stale duplicate "
             "experience families; generator must produce a fresh non-marginal "
             "candidate"
             if stale_non_marginal
             else (
-                "rendered candidates did not clear the non-marginal visual "
-                "movement threshold"
+                "candidate generation only partially materialized; refused "
+                "families need fresh source-bound templates and rendered fallback "
+                "candidates did not clear the non-marginal visual movement threshold"
+                if refusals and fallback_rendered
+                else (
+                    "rendered candidates did not clear the non-marginal visual "
+                    "movement threshold"
+                )
             )
         )
         targeted_cleanup_candidates = [
@@ -7223,6 +7258,30 @@ def _execution_decision(
             "policy_score": 0.0,
             "source_mutation": "not_performed",
             "diagnostic_search_bypass": diagnostic_search_bypass,
+            "candidate_generation_state": (
+                "partial_materialization_with_refusals"
+                if refusals and fallback_rendered
+                else (
+                    "stale_duplicate_excluded"
+                    if stale_non_marginal
+                    else "rendered_but_marginal"
+                )
+            ),
+            "candidate_refusal_count": len(refusals),
+            "candidate_refusal_codes": sorted(
+                {
+                    str(item.get("code"))
+                    for item in refusals
+                    if item.get("code")
+                }
+            ),
+            "candidate_refusal_families": sorted(
+                {
+                    str(item.get("family"))
+                    for item in refusals
+                    if item.get("family")
+                }
+            ),
             "stale_duplicate_non_marginal_candidate_count": len(stale_non_marginal),
             "stale_duplicate_targeted_cleanup_candidate_count": len(
                 targeted_cleanup_candidates
@@ -7231,6 +7290,9 @@ def _execution_decision(
             "top_candidate_family": top.get("family"),
             "top_candidate_operation_scale": top.get("operation_scale"),
             "top_candidate_policy_score": top.get("policy_score"),
+            "top_candidate_stale_duplicate_experience_family": top.get(
+                "stale_duplicate_experience_family"
+            ),
             "top_candidate_full_changed_pixel_ratio": top.get(
                 "full_changed_pixel_ratio"
             ),
@@ -7935,10 +7997,15 @@ def build_quality_search_execution(
         plan,
         candidate_rankings,
         visual_evidence,
-        materialized_candidate_ids=materialized_ids or None,
+        materialized_candidate_ids=materialized_ids,
         candidate_metadata_by_id=_candidate_metadata_by_id(candidate_set),
     )
-    decision = _execution_decision(plan, scores, fixture_name=name)
+    decision = _execution_decision(
+        plan,
+        scores,
+        fixture_name=name,
+        candidate_refusals=candidate_set.get("refusals"),
+    )
     _write_json(run_dir / "candidate_set_000.json", candidate_set)
     selected_semantic_precheck = _write_selected_semantic_precheck(
         name,
