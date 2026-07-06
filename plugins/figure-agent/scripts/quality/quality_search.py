@@ -5064,6 +5064,14 @@ def _quality_search_contract_verdict(
         if isinstance(selected_attempt, dict) and selected_attempt.get("attempt_id")
         else None
     )
+    selected_convergence_state = (
+        convergence_decision.get("decision")
+        if isinstance(convergence_decision, dict)
+        else None
+    )
+    convergence_blocks_acceptance = (
+        selected_convergence_state is not None and selected_convergence_state != "accept"
+    )
     if selected_candidate_ready:
         require(
             isinstance(selected_semantic_precheck, dict)
@@ -5090,6 +5098,26 @@ def _quality_search_contract_verdict(
                 and selected_acceptance_recommendation.get("recommendation") == "defer",
                 "diagnostic_bypass_acceptance_not_blocked",
                 "stale-critique diagnostic search must defer acceptance",
+            )
+        elif convergence_blocks_acceptance:
+            require(
+                isinstance(selected_acceptance_recommendation, dict)
+                and selected_acceptance_recommendation.get("status") == "blocked"
+                and selected_acceptance_recommendation.get("recommendation") == "defer",
+                "convergence_non_accept_not_deferred",
+                "convergence non-accept decisions must defer acceptance",
+            )
+            require(
+                isinstance(selected_attempt, dict),
+                "selected_attempt_missing",
+                "selected convergence decision lacks selected attempt evidence",
+            )
+            require(
+                isinstance(convergence_decision, dict)
+                and convergence_decision.get("selected_attempt_id")
+                == selected_attempt_id,
+                "selected_convergence_attempt_mismatch",
+                "convergence decision does not select the selected attempt",
             )
         else:
             require(
@@ -6383,6 +6411,7 @@ def _selected_acceptance_recommendation(
     decision: dict[str, Any],
     selected_semantic_precheck: dict[str, Any] | None,
     selected_review_packet: dict[str, Any] | None,
+    convergence_decision: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     candidate_id = decision.get("selected_candidate_id")
     if (
@@ -6408,8 +6437,16 @@ def _selected_acceptance_recommendation(
         and selected_review_packet.get("status") == "ready"
         and apply_readiness.get("status") == "ready_for_local_acceptance"
         and decision.get("diagnostic_search_bypass") is not True
+        and (
+            convergence_decision is None
+            or convergence_decision.get("decision") == "accept"
+        )
     )
     diagnostic_defer = decision.get("diagnostic_search_bypass") is True
+    convergence_defer = (
+        isinstance(convergence_decision, dict)
+        and convergence_decision.get("decision") != "accept"
+    )
     required_commands = (
         apply_readiness.get("required_commands")
         if isinstance(apply_readiness.get("required_commands"), list)
@@ -6431,7 +6468,11 @@ def _selected_acceptance_recommendation(
             else (
                 "stale-critique diagnostic search cannot recommend acceptance"
                 if diagnostic_defer
-                else "selected candidate has not cleared all automatic readiness checks"
+                else (
+                    "convergence controller did not accept the selected attempt"
+                    if convergence_defer
+                    else "selected candidate has not cleared all automatic readiness checks"
+                )
             )
         ),
         "evidence": {
@@ -6656,6 +6697,8 @@ def _manual_convergence_decision(
 def _selected_convergence_decision(
     quality_decision: dict[str, Any],
     selected_attempt: dict[str, Any] | None,
+    *,
+    history: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any] | None:
     if selected_attempt is None:
         return None
@@ -6674,7 +6717,10 @@ def _selected_convergence_decision(
             reasons=["diagnostic_search_bypass_requires_human_review"],
             score=score,
         )
-    convergence_decision = convergence_controller.decide_attempt(selected_attempt)
+    convergence_decision = convergence_controller.decide_attempt(
+        selected_attempt,
+        history=history or [],
+    )
     selected_attempt["decision"] = convergence_decision["decision"]
     convergence_models.validate_figure_attempt(selected_attempt)
     return convergence_decision
@@ -6753,11 +6799,6 @@ def build_quality_search_execution(
         paths=paths,
     )
     selected_review_packet = _selected_review_packet(name, decision, paths=paths)
-    selected_acceptance_recommendation = _selected_acceptance_recommendation(
-        decision,
-        selected_semantic_precheck,
-        selected_review_packet,
-    )
     selected_attempt = None
     if (
         decision.get("candidate_state") == NON_MARGINAL_REVIEW_CANDIDATE_STATE
@@ -6779,7 +6820,22 @@ def build_quality_search_execution(
             journal_guide_payload=journal_guide_payload,
             run_id=run_id,
         )
-    convergence_decision = _selected_convergence_decision(decision, selected_attempt)
+    convergence_history = experience_log.convergence_attempt_history(
+        name,
+        workspace_root=paths.workspace_root,
+        plugin_root=paths.plugin_root,
+    )
+    convergence_decision = _selected_convergence_decision(
+        decision,
+        selected_attempt,
+        history=convergence_history,
+    )
+    selected_acceptance_recommendation = _selected_acceptance_recommendation(
+        decision,
+        selected_semantic_precheck,
+        selected_review_packet,
+        convergence_decision,
+    )
     recommendation_experience = None
     if (
         isinstance(selected_acceptance_recommendation, dict)

@@ -164,6 +164,7 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
         plugin_root=plugin_root,
         selected_attempt={
             "attempt_id": "run-001:QS001",
+            "journal_guide_hash": "sha256:" + "1" * 64,
             "journal_constraints": {"passed": True},
             "semantic_score": {"complete": True},
             "aesthetic_score": {"overall": 0.8073},
@@ -204,8 +205,15 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
         "journal_constraints_passed": True,
         "semantic_complete": True,
         "aesthetic_overall": 0.8073,
+        "journal_guide_hash": "sha256:" + "1" * 64,
         "selected_aesthetic_score": 0.8073,
         "output_formats": ["editable", "pdf", "png", "svg"],
+        "outputs": {
+            "editable": "candidate_demo.tex",
+            "pdf": "render/candidate.pdf",
+            "png": "render/candidate.png",
+            "svg": "render/candidate.svg",
+        },
     }
     assert row["outcome"]["verifiers"] == {
         "acceptance_recommendation": "pass",
@@ -253,6 +261,56 @@ def test_experience_log_is_append_only(tmp_path: Path) -> None:
     assert len(rows) == 2
     assert rows[0] == first["record"]
     assert rows[1] == second["record"]
+
+
+def test_convergence_attempt_history_reconstructs_valid_prior_attempts(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = workspace
+    _fixture(workspace)
+    log_dir = plugin_root / "docs" / "experience-log"
+    log_dir.mkdir(parents=True)
+    record = {
+        "schema": "figure-agent.experience-record.v1",
+        "fixture": "candidate_demo",
+        "created_at": "2026-07-06T00:00:00Z",
+        "state": {"base_tex_hash": "sha256:" + "0" * 64},
+        "action": {"candidate_id": "QS001"},
+        "outcome": {
+            "human_decision_kind": "auto_accept_recommended",
+            "convergence": {
+                "attempt_id": "run-001:QS001",
+                "decision": "accept",
+                "journal_guide_hash": "sha256:" + "1" * 64,
+                "journal_constraints_passed": True,
+                "semantic_complete": True,
+                "aesthetic_overall": 0.8073,
+                "outputs": {
+                    "editable": "candidate_demo.tex",
+                    "pdf": "render/candidate.pdf",
+                    "png": "render/candidate.png",
+                    "svg": "render/candidate.svg",
+                },
+            },
+        },
+    }
+    (log_dir / "candidate_demo.jsonl").write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    history = experience_log.convergence_attempt_history(
+        "candidate_demo",
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+
+    assert len(history) == 1
+    attempt = history[0]
+    assert attempt["schema"] == "figure-agent.figure-attempt.v1"
+    assert attempt["attempt_id"] == "run-001:QS001"
+    assert attempt["aesthetic_score"]["overall"] == 0.8073
+    assert attempt["journal_constraints"]["passed"] is True
+    assert attempt["semantic_score"]["complete"] is True
+    assert attempt["outputs"]["svg"] == "render/candidate.svg"
 
 
 def test_subregion_key_without_selector_hash_is_marked_unstable(tmp_path: Path) -> None:

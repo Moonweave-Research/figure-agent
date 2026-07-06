@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import candidate_contracts
+import convergence_models
 import fixture_identity
 import runtime_paths
 
@@ -48,6 +49,32 @@ def _load_json(path: Path, label: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ExperienceLogError(f"{label}_invalid")
     return payload
+
+
+def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any]]:
+    fixture_identity.validate_fixture_name(name)
+    path = plugin_root / "docs" / "experience-log" / f"{name}.jsonl"
+    for label, item in (
+        ("docs", plugin_root / "docs"),
+        ("experience_log", plugin_root / "docs" / "experience-log"),
+        ("experience_log", path),
+    ):
+        if item.is_symlink():
+            raise ExperienceLogError(f"{label}_symlink")
+    if not path.is_file():
+        return []
+    records: list[dict[str, Any]] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ExperienceLogError(f"experience_record_invalid:{line_number}") from exc
+        if not isinstance(payload, dict):
+            raise ExperienceLogError(f"experience_record_invalid:{line_number}")
+        records.append(payload)
+    return records
 
 
 def _fixture_relative(example_dir: Path, path: Path) -> str:
@@ -277,12 +304,14 @@ def _convergence_summary(
     return {
         "attempt_id": selected_attempt.get("attempt_id"),
         "decision": convergence_decision.get("decision"),
+        "journal_guide_hash": selected_attempt.get("journal_guide_hash"),
         "journal_constraints_passed": journal.get("passed"),
         "semantic_complete": semantic.get("complete"),
         "aesthetic_overall": _float_or_none(aesthetic.get("overall")),
         "selected_aesthetic_score": _float_or_none(
             convergence_decision.get("selected_aesthetic_score")
         ),
+        "outputs": dict(outputs),
         "output_formats": [
             key for key in ("editable", "pdf", "png", "svg") if outputs.get(key)
         ],
@@ -300,6 +329,77 @@ def _convergence_verifiers(convergence: dict[str, Any] | None) -> dict[str, str]
             "pass" if convergence.get("decision") == "accept" else "fail"
         ),
     }
+
+
+def _attempt_from_experience_record(record: dict[str, Any]) -> dict[str, Any] | None:
+    fixture = record.get("fixture")
+    if not isinstance(fixture, str) or not fixture:
+        return None
+    state = record.get("state") if isinstance(record.get("state"), dict) else {}
+    outcome = record.get("outcome") if isinstance(record.get("outcome"), dict) else {}
+    convergence = (
+        outcome.get("convergence")
+        if isinstance(outcome.get("convergence"), dict)
+        else None
+    )
+    if convergence is None:
+        return None
+    attempt_id = convergence.get("attempt_id")
+    spec_hash = state.get("base_tex_hash")
+    journal_guide_hash = convergence.get("journal_guide_hash")
+    if not (
+        isinstance(attempt_id, str)
+        and isinstance(spec_hash, str)
+        and isinstance(journal_guide_hash, str)
+    ):
+        return None
+    outputs = convergence.get("outputs") if isinstance(convergence.get("outputs"), dict) else {}
+    attempt = {
+        "schema": convergence_models.FIGURE_ATTEMPT_SCHEMA,
+        "attempt_id": attempt_id,
+        "figure_id": fixture,
+        "user_goal": "experience-log prior convergence attempt",
+        "target_medium": "journal_paper",
+        "spec_hash": spec_hash,
+        "journal_guide_hash": journal_guide_hash,
+        "outputs": outputs,
+        "journal_constraints": {
+            "passed": convergence.get("journal_constraints_passed") is True,
+            "violations": [],
+        },
+        "semantic_score": {
+            "complete": convergence.get("semantic_complete") is True,
+            "missing_elements": [],
+            "incorrect_relations": [],
+        },
+        "aesthetic_score": {
+            "overall": _float_or_none(convergence.get("aesthetic_overall")) or 0.0
+        },
+        "decision": convergence.get("decision"),
+    }
+    try:
+        return convergence_models.validate_figure_attempt(attempt)
+    except convergence_models.ConvergenceModelError:
+        return None
+
+
+def convergence_attempt_history(
+    name: str,
+    *,
+    workspace_root: Path | None = None,
+    plugin_root: Path | None = None,
+) -> list[dict[str, Any]]:
+    fixture_identity.validate_fixture_name(name)
+    paths = runtime_paths.resolve_runtime_paths(
+        workspace_root=workspace_root,
+        plugin_root=plugin_root,
+    )
+    history: list[dict[str, Any]] = []
+    for record in _load_experience_records(paths.plugin_root, name):
+        attempt = _attempt_from_experience_record(record)
+        if attempt is not None:
+            history.append(attempt)
+    return history
 
 
 def _is_ranked_candidate(candidate: dict[str, Any]) -> bool:
