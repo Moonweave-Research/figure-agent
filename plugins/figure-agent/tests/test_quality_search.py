@@ -1358,6 +1358,33 @@ def test_quality_search_v5f_refresh_emits_electrode_lead_candidate(
         in leader_operation["replacement"]
     )
     assert "at (9.22, 3.84) {trapped charge};" in leader_operation["replacement"]
+    composite_operation, composite_refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS006",
+            "family": "panel_f_auto_composite_lane",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(leader_lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=leader_lines,
+        source_ref="figures/example.tex",
+    )
+    assert composite_refusal is None
+    assert composite_operation is not None
+    assert (
+        composite_operation["template_id"]
+        == "v5f_panel_f_auto_composite_leader_electrode_v1"
+    )
+    assert "quality-search F leader-left lane" in composite_operation["replacement"]
+    assert (
+        "quality-search F connector: source-to-electrode lead"
+        in composite_operation["replacement"]
+    )
 
 
 def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(

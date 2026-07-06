@@ -71,6 +71,9 @@ PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID = "v5d_panel_f_auto_composite_force_anch
 PANEL_F_AUTO_COMPOSITE_ELECTRODE_TEMPLATE_ID = (
     "v5d_panel_f_auto_composite_force_anchor_electrode_v1"
 )
+PANEL_F_V5F_AUTO_COMPOSITE_TEMPLATE_ID = (
+    "v5f_panel_f_auto_composite_leader_electrode_v1"
+)
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -3307,7 +3310,13 @@ def _panel_f_v5f_electrode_connector_replacement(block: str) -> str | None:
     if _panel_f_v5f_electrode_connector_template_applied(block):
         return None
     connector_base = block
-    if not _panel_f_overlay_refresh_template_applied(connector_base):
+    has_refresh_relation = (
+        "quality-search F refresh: left-margin trap label + electrode relation"
+        in connector_base
+    )
+    if not has_refresh_relation and not _panel_f_overlay_refresh_template_applied(
+        connector_base
+    ):
         refreshed = _refreshed_panel_f_overlay(connector_base)
         if refreshed is None:
             strengthened = _strengthened_panel_f_overlay(connector_base)
@@ -3500,6 +3509,12 @@ def _panel_f_auto_composite_electrode_template_applied(block: str) -> bool:
     ) and _panel_f_electrode_lead_connection_template_applied(block)
 
 
+def _panel_f_v5f_auto_composite_template_applied(block: str) -> bool:
+    return _panel_f_v5f_leader_left_lane_template_applied(
+        block
+    ) and _panel_f_v5f_electrode_connector_template_applied(block)
+
+
 def _replace_lines_with_block(
     lines: list[str],
     *,
@@ -3510,6 +3525,58 @@ def _replace_lines_with_block(
     next_lines = list(lines)
     next_lines[line_start - 1 : line_end] = replacement.splitlines(keepends=True)
     return next_lines
+
+
+def _panel_f_v5f_auto_composite_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    try:
+        line_start = int(selector["line_start"])
+        line_end = int(selector["line_end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if line_start < 1 or line_end < line_start or line_end > len(lines):
+        return None
+    original = "".join(lines[line_start - 1 : line_end])
+    if _panel_f_v5f_auto_composite_template_applied(original):
+        return None
+
+    leader_left = _panel_f_leader_left_lane_replacement(lines=lines, selector=selector)
+    if leader_left is None:
+        return None
+    _, leader_replacement, leader_start, leader_end = leader_left
+    if leader_start != line_start or leader_end != line_end:
+        return None
+
+    leader_lines = _replace_lines_with_block(
+        lines,
+        line_start=line_start,
+        line_end=line_end,
+        replacement=leader_replacement,
+    )
+    electrode_selector = dict(selector)
+    electrode_selector["line_end"] = (
+        line_start + len(leader_replacement.splitlines()) - 1
+    )
+    electrode_lead = _panel_f_electrode_lead_lane_replacement(
+        lines=leader_lines,
+        selector=electrode_selector,
+        include_qtr_label=False,
+    )
+    if electrode_lead is None:
+        return None
+    _, final_replacement, electrode_start, electrode_end = electrode_lead
+    if electrode_start != line_start or electrode_end != int(electrode_selector["line_end"]):
+        return None
+    if final_replacement == original:
+        return None
+    if not _panel_f_overlay_has_protected_labels(final_replacement):
+        return None
+    if not _panel_f_v5f_auto_composite_template_applied(final_replacement):
+        return None
+    return original, final_replacement, line_start, line_end
 
 
 def _panel_f_auto_composite_lane_replacement(
@@ -3528,6 +3595,12 @@ def _panel_f_auto_composite_lane_replacement(
     if line_start < 1 or line_end < line_start or line_end > len(lines):
         return None
     original = "".join(lines[line_start - 1 : line_end])
+    v5f_composite = _panel_f_v5f_auto_composite_replacement(
+        lines=lines,
+        selector=selector,
+    )
+    if v5f_composite is not None:
+        return v5f_composite
     if template_id == PANEL_F_AUTO_COMPOSITE_ELECTRODE_TEMPLATE_ID:
         if _panel_f_auto_composite_electrode_template_applied(original):
             return None
@@ -4422,6 +4495,8 @@ def _candidate_operation_for_spec(
         )
         if composite_block is not None:
             original, new_text, line_start, line_end = composite_block
+            if _panel_f_v5f_auto_composite_template_applied(new_text):
+                template_id = PANEL_F_V5F_AUTO_COMPOSITE_TEMPLATE_ID
             operation = {
                 "kind": "replace_text",
                 "semantic_kind": "quality_search_panel_f_auto_composite_lane_panel_block",
