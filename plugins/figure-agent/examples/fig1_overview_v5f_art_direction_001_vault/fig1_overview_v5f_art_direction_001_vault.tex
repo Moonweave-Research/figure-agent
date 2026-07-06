@@ -2104,17 +2104,17 @@
   \shade[ball color=cRed!82!black] (\cx,\cy) circle (\rr);
   \draw[cRed!95!black, line width=0.25pt] (\cx,\cy) circle (\rr);
 }
-% quality-search F post-source label scale: lift trapped-charge legibility
-\draw[cRed!58!black, line width=0.36pt]
-  (11.35,2.52) .. controls (10.88,3.20) and (10.28,3.46) .. (9.76,3.44);
+% quality-search F post-source trap hierarchy: separate trap labels
+\draw[cRed!56!black, line width=0.34pt]
+  (11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);
 \node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,
-      inner xsep=0.72pt, inner ysep=0.32pt,
+      inner xsep=0.70pt, inner ysep=0.31pt,
+      font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!70!black]
+  at (9.64, 3.20) {$q_{\mathrm{tr}}$};
+\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,
+      inner xsep=0.82pt, inner ysep=0.34pt,
       font=\sffamily\bfseries\fontsize{3.9}{4.7}\selectfont, text=cRed!72!black]
-  at (9.70, 3.22) {$q_{\mathrm{tr}}$};
-\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,
-      inner xsep=0.78pt, inner ysep=0.32pt,
-      font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!72!black]
-  at (9.70, 3.52) {trapped charge};
+  at (9.64, 3.56) {trapped charge};
 
 % Coulomb-only response, intentionally stronger than the apparatus.
 % quality-search F post-force spacing finish: align force label rail

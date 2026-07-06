@@ -2435,6 +2435,117 @@ def test_quality_search_panel_f_post_spacing_source_finish_emits_panel_block(
     ]
 
 
+def test_quality_search_panel_f_post_source_trap_hierarchy_emits_panel_block(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column E -- ISPD-paired =================",
+            "\\draw[cAmber!70!black, line width=0.25pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);",
+            "\\node at (13.02, 4.105) {$V_{\\mathrm{active}}$};",
+            "\\node at (13.02, 3.80) {bias};",
+            "% quality-search F post-spacing source finish: soften source lead",
+            "\\draw[cGray!52!black, line width=0.30pt, rounded corners=2.0pt]",
+            "  (13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);",
+            "\\fill[cRed!58!black] (13.24, 3.82) circle (0.016);",
+            "\\fill[cGray!78!black] (13.18, 2.82) circle (0.034);",
+            "\\node at (13.64, 1.62) {electrode};",
+            "% quality-search F post-source label scale: lift trapped-charge legibility",
+            "\\draw[cRed!58!black, line width=0.36pt]",
+            (
+                "  (11.35,2.52) .. controls (10.88,3.20)"
+                " and (10.28,3.46) .. (9.76,3.44);"
+            ),
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.90, "
+                "text opacity=1,"
+            ),
+            "      inner xsep=0.72pt, inner ysep=0.32pt,",
+            (
+                "      font=\\sffamily\\bfseries\\fontsize{3.9}{4.7}"
+                "\\selectfont, text=cRed!72!black]"
+            ),
+            "  at (9.70, 3.22) {$q_{\\mathrm{tr}}$};",
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.90, "
+                "text opacity=1,"
+            ),
+            "      inner xsep=0.78pt, inner ysep=0.32pt,",
+            (
+                "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}"
+                "\\selectfont, text=cRed!72!black]"
+            ),
+            "  at (9.70, 3.52) {trapped charge};",
+            "% Coulomb-only response, intentionally stronger than the apparatus.",
+            "% quality-search F post-force spacing finish: align force label rail",
+            (
+                "\\draw[panelFCoulombRepulsionArrow, "
+                "-{Stealth[length=6.6pt,width=4.5pt]}, "
+                "cRed!74!black, line width=0.68pt]"
+            ),
+            "  (10.58, 1.08) -- (9.66, 1.08);",
+            "\\node at (9.58, 1.70) {Coulomb};",
+            "\\node at (9.58, 1.42) {repulsion};",
+            "\\draw[<->, cGray!66!black, line width=0.78pt]",
+            "  (10.18, 0.54) -- (13.18, 0.54);",
+            "\\node at (11.58, 0.28) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal=(
+            "Panel F after source finish trapped charge q_tr label hierarchy rail "
+            "publication polish"
+        ),
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    trap_hierarchy = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_post_source_trap_hierarchy"
+    ][0]
+    operation = trap_hierarchy["operations"][0]
+    assert trap_hierarchy["operation_scale"] == "panel_block"
+    assert (
+        trap_hierarchy["template_id"] == "v5f_panel_f_post_source_trap_hierarchy_v1"
+    )
+    assert operation["template_id"] == "v5f_panel_f_post_source_trap_hierarchy_v1"
+    assert "quality-search F post-source trap hierarchy" in operation["replacement"]
+    assert "at (9.64, 3.20) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
+    assert "at (9.64, 3.56) {trapped charge};" in operation["replacement"]
+    assert (
+        "(11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);"
+        in operation["replacement"]
+    )
+
+
 def test_quality_search_panel_f_final_finish_emits_post_boundary_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:
