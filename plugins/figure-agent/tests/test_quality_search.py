@@ -2925,6 +2925,118 @@ def test_quality_search_panel_f_post_label_relief_source_settle_emits_panel_bloc
     assert "at (9.62, 3.24) {$q_{\\mathrm{tr}}$};" in operation["replacement"]
 
 
+def test_quality_search_panel_f_trap_label_left_rail_emits_panel_block(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column E -- ISPD-paired =================",
+            "\\draw[cAmber!70!black, line width=0.25pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);",
+            "\\node at (13.02, 4.105) {$V_{\\mathrm{active}}$};",
+            "\\node at (13.02, 3.80) {bias};",
+            "\\fill[cRed!50!black, opacity=0.78] (13.24, 3.82) circle (0.012);",
+            "% quality-search F post-spacing source finish: soften source lead",
+            "% quality-search F post-gap label relief: clear label backgrounds",
+            "% quality-search F post-label relief source settle: subordinate source lead",
+            "\\draw[cGray!34!black, line width=0.18pt, opacity=0.78, rounded corners=2.2pt]",
+            "  (13.24, 3.76) -- (13.20, 3.38) -- (13.18, 2.82);",
+            "\\fill[cGray!66!black, opacity=0.86] (13.18, 2.82) circle (0.024);",
+            "% quality-search F post-trap gap readability: quiet electrode and gap",
+            "\\draw[cGray!82!black, line width=0.62pt] (13.18, 0.46) rectangle (13.42, 2.82);",
+            "\\foreach \\hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {",
+            (
+                "  \\draw[cGray!48!black, line width=0.20pt] "
+                "(13.42, \\hy) -- (13.18, {\\hy-0.05});"
+            ),
+            "}",
+            "\\node at (13.62, 1.62) {electrode};",
+            "% quality-search F post-source trap hierarchy: separate trap labels",
+            "\\draw[cRed!50!black, line width=0.26pt]",
+            (
+                "  (11.24,2.50) .. controls (10.72,3.02) "
+                "and (10.18,3.30) .. (9.84,3.36);"
+            ),
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.80, "
+                "text opacity=1,"
+            ),
+            "      inner xsep=0.58pt, inner ysep=0.22pt,",
+            (
+                "      font=\\sffamily\\bfseries\\fontsize{3.6}{4.4}"
+                "\\selectfont, text=cRed!66!black]"
+            ),
+            "  at (9.62, 3.24) {$q_{\\mathrm{tr}}$};",
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.84, "
+                "text opacity=1,"
+            ),
+            "      inner xsep=0.66pt, inner ysep=0.24pt,",
+            (
+                "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}"
+                "\\selectfont, text=cRed!70!black]"
+            ),
+            "  at (9.60, 3.62) {trapped charge};",
+            "% Coulomb-only response, intentionally stronger than the apparatus.",
+            "% quality-search F post-force spacing finish: align force label rail",
+            (
+                "\\draw[panelFCoulombRepulsionArrow, "
+                "-{Stealth[length=6.2pt,width=4.2pt]}, "
+                "cRed!72!black, line width=0.62pt]"
+            ),
+            "  (10.52, 1.02) -- (9.68, 1.02);",
+            "\\node at (9.58, 1.66) {Coulomb};",
+            "\\node at (9.58, 1.34) {repulsion};",
+            "\\node at (11.60, 0.29) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal=(
+            "Panel F trap label q_tr left margin label rail leader arrow "
+            "cantilever trapped charge polish"
+        ),
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    left_rail = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_trap_label_left_rail"
+    ][0]
+    operation = left_rail["operations"][0]
+    assert left_rail["operation_scale"] == "panel_block"
+    assert left_rail["template_id"] == "v5f_panel_f_trap_label_left_rail_v1"
+    assert operation["template_id"] == "v5f_panel_f_trap_label_left_rail_v1"
+    assert "quality-search F trap label left rail" in operation["replacement"]
+    assert "at (9.64, 3.70) {trapped charge};" in operation["replacement"]
+
+
 def test_quality_search_panel_f_final_finish_emits_post_boundary_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:
