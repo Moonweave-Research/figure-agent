@@ -1,3 +1,90 @@
+- family_id: panel_f_post_trap_gap_readability
+  template_id: v5f_panel_f_post_trap_gap_readability_v1
+  panel: F
+  requires:
+  - '% quality-search F post-source trap hierarchy: separate trap labels'
+  - (11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);
+  - at (9.64, 3.20) {$q_{\mathrm{tr}}$};
+  - at (9.64, 3.56) {trapped charge};
+  - '% quality-search F post-spacing source finish: soften source lead'
+  - (13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);
+  - \fill[cRed!58!black] (13.24, 3.82) circle (0.016);
+  - \fill[cGray!78!black] (13.18, 2.82) circle (0.034);
+  applied_signature:
+  - '% quality-search F post-trap gap readability: quiet electrode and gap'
+  - \draw[cGray!82!black, line width=0.62pt] (13.18, 0.46) rectangle (13.42, 2.82);
+  - \draw[cGray!48!black, line width=0.20pt] (13.42, \hy) -- (13.18, {\hy-0.05});
+  - \draw[<->, cGray!62!black, line width=0.68pt]
+  - font=\sffamily\fontsize{5.3}{6.4}\selectfont, text=cGray!70!black]
+  preserve_after:
+  - '% quality-search F post-source trap hierarchy: separate trap labels'
+  - (11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);
+  - at (9.64, 3.20) {$q_{\mathrm{tr}}$};
+  - at (9.64, 3.56) {trapped charge};
+  replacements:
+  - old: |-
+      % Right electrode and explicit gap field.
+      \shade[left color=cGray!34, right color=cGray!18] (13.18, 0.46) rectangle (13.42, 2.82);
+      \draw[cGray!88!black, line width=0.72pt] (13.18, 0.46) rectangle (13.42, 2.82);
+    new: |-
+      % Right electrode and explicit gap field.
+      % quality-search F post-trap gap readability: quiet electrode and gap
+      \shade[left color=cGray!30, right color=cGray!16] (13.18, 0.46) rectangle (13.42, 2.82);
+      \draw[cGray!82!black, line width=0.62pt] (13.18, 0.46) rectangle (13.42, 2.82);
+  - old: |-
+      \foreach \hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {
+        \draw[cGray!54!black, line width=0.22pt] (13.42, \hy) -- (13.18, {\hy-0.05});
+      }
+    new: |-
+      \foreach \hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {
+        \draw[cGray!48!black, line width=0.20pt] (13.42, \hy) -- (13.18, {\hy-0.05});
+      }
+  - old: |-
+      \node[labelMute, anchor=south, rotate=270, fill=white, fill opacity=0.95, text opacity=1,
+            inner xsep=1.1pt, inner ysep=0.7pt,
+            font=\sffamily\fontsize{5.4}{6.5}\selectfont, text=cGray!70!black]
+        at (13.64, 1.62) {electrode};
+    new: |-
+      \node[labelMute, anchor=south, rotate=270, fill=white, fill opacity=0.96, text opacity=1,
+            inner xsep=1.0pt, inner ysep=0.66pt,
+            font=\sffamily\fontsize{5.2}{6.3}\selectfont, text=cGray!68!black]
+        at (13.62, 1.62) {electrode};
+  - old: |-
+      \draw[<->, cGray!66!black, line width=0.78pt]
+        (10.18, 0.54) -- (13.18, 0.54);
+    new: |-
+      \draw[<->, cGray!62!black, line width=0.68pt]
+        (10.20, 0.54) -- (13.18, 0.54);
+  - old: |-
+      font=\sffamily\fontsize{5.4}{6.5}\selectfont, text=cGray!75!black]
+        at (11.58, 0.28) {air gap};
+    new: |-
+      font=\sffamily\fontsize{5.3}{6.4}\selectfont, text=cGray!70!black]
+        at (11.60, 0.29) {air gap};
+  protected_labels:
+  - q_{\mathrm{tr}}
+  - trapped charge
+  - Coulomb
+  - repulsion
+  - electrode
+  - air gap
+  - mechanical
+  - $V_{\mathrm{active}}$
+  - bias
+  goal_trigger:
+  - - after trap hierarchy
+    - post trap hierarchy
+  - - electrode
+    - air gap
+    - gap
+    - readability
+    - balance
+    - polish
+  goal_hypothesis:
+    reason: goal explicitly requests Panel F electrode/air-gap readability after trap hierarchy
+    expected_detector_movement: convert post-trap-hierarchy electrode and air-gap density defects into a fresh source-bound Panel F candidate
+    expected_visual_movement: electrode and air-gap cue become quieter while staying readable
+    rollback_condition: candidate worsens compile, protected labels, force direction, source lead, or electrode/air-gap semantics
 - family_id: panel_f_post_gap_label_relief
   template_id: v5f_panel_f_post_gap_label_relief_v1
   panel: F

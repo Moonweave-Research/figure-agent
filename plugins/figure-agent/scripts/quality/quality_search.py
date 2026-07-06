@@ -1611,39 +1611,6 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 ),
             },
         )
-    if any(term in normalized for term in ("after trap hierarchy", "post trap hierarchy")) and any(
-        term in normalized
-        for term in ("electrode", "air gap", "gap", "readability", "balance", "polish")
-    ):
-        hypotheses.insert(
-            0,
-            {
-                "fixture": name,
-                "family": "panel_f_post_trap_gap_readability",
-                "source": "goal_directive",
-                "mutation_allowed": False,
-                "mutation_block_reason": "quality-search v0 is planner-only",
-                "target_scope": "panel",
-                "target_hint": {
-                    "panels": ["F"],
-                    "reason": (
-                        "goal explicitly requests Panel F electrode/air-gap "
-                        "readability after trap hierarchy"
-                    ),
-                },
-                "expected_detector_movement": (
-                    "convert post-trap-hierarchy electrode and air-gap density defects "
-                    "into a fresh source-bound Panel F candidate"
-                ),
-                "expected_visual_movement": (
-                    "electrode and air-gap cue become quieter while staying readable"
-                ),
-                "rollback_condition": (
-                    "candidate worsens compile, protected labels, force direction, "
-                    "source lead, or electrode/air-gap semantics"
-                ),
-            },
-        )
     for _edit in panel_block_edits.load_bundled_panel_block_edits():
         if all(any(term in normalized for term in group) for group in _edit.goal_trigger):
             hypotheses.insert(
@@ -5733,107 +5700,6 @@ def _panel_f_post_source_trap_hierarchy_replacement(
     return original, replacement, line_start, line_end
 
 
-def _panel_f_post_trap_gap_readability_template_applied(block: str) -> bool:
-    required_fragments = (
-        "% quality-search F post-trap gap readability: quiet electrode and gap",
-        "\\draw[cGray!82!black, line width=0.62pt] (13.18, 0.46) rectangle (13.42, 2.82);",
-        "\\draw[cGray!48!black, line width=0.20pt] (13.42, \\hy) -- (13.18, {\\hy-0.05});",
-        "\\draw[<->, cGray!62!black, line width=0.68pt]",
-        "font=\\sffamily\\fontsize{5.3}{6.4}\\selectfont, text=cGray!70!black]",
-    )
-    return all(fragment in block for fragment in required_fragments)
-
-
-def _panel_f_post_trap_gap_readability_replacement(
-    *,
-    lines: list[str],
-    selector: dict[str, Any],
-) -> tuple[str, str, int, int] | None:
-    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
-    if line_range is None:
-        return None
-    line_start, line_end = line_range
-    original = "".join(lines[line_start - 1 : line_end])
-    if not _panel_f_overlay_has_protected_labels(original):
-        return None
-    if not _panel_f_post_source_trap_hierarchy_template_applied(original):
-        return None
-    if not _panel_f_post_spacing_source_finish_template_applied(original):
-        return None
-    if _panel_f_post_trap_gap_readability_template_applied(original):
-        return None
-    replacements = (
-        (
-            "% Right electrode and explicit gap field.\n"
-            "\\shade[left color=cGray!34, right color=cGray!18] "
-            "(13.18, 0.46) rectangle (13.42, 2.82);\n"
-            "\\draw[cGray!88!black, line width=0.72pt] "
-            "(13.18, 0.46) rectangle (13.42, 2.82);",
-            "% Right electrode and explicit gap field.\n"
-            "% quality-search F post-trap gap readability: quiet electrode and gap\n"
-            "\\shade[left color=cGray!30, right color=cGray!16] "
-            "(13.18, 0.46) rectangle (13.42, 2.82);\n"
-            "\\draw[cGray!82!black, line width=0.62pt] "
-            "(13.18, 0.46) rectangle (13.42, 2.82);",
-        ),
-        (
-            "\\foreach \\hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {\n"
-            "  \\draw[cGray!54!black, line width=0.22pt] (13.42, \\hy) -- (13.18, {\\hy-0.05});\n"
-            "}",
-            "\\foreach \\hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {\n"
-            "  \\draw[cGray!48!black, line width=0.20pt] (13.42, \\hy) -- (13.18, {\\hy-0.05});\n"
-            "}",
-        ),
-        (
-            "\\node[labelMute, anchor=south, rotate=270, fill=white, "
-            "fill opacity=0.95, text opacity=1,\n"
-            "      inner xsep=1.1pt, inner ysep=0.7pt,\n"
-            "      font=\\sffamily\\fontsize{5.4}{6.5}\\selectfont, text=cGray!70!black]\n"
-            "  at (13.64, 1.62) {electrode};",
-            "\\node[labelMute, anchor=south, rotate=270, fill=white, "
-            "fill opacity=0.96, text opacity=1,\n"
-            "      inner xsep=1.0pt, inner ysep=0.66pt,\n"
-            "      font=\\sffamily\\fontsize{5.2}{6.3}\\selectfont, text=cGray!68!black]\n"
-            "  at (13.62, 1.62) {electrode};",
-        ),
-        (
-            "\\draw[<->, cGray!66!black, line width=0.78pt]\n  (10.18, 0.54) -- (13.18, 0.54);",
-            "\\draw[<->, cGray!62!black, line width=0.68pt]\n  (10.20, 0.54) -- (13.18, 0.54);",
-        ),
-        (
-            "font=\\sffamily\\fontsize{5.4}{6.5}\\selectfont, text=cGray!75!black]\n"
-            "  at (11.58, 0.28) {air gap};",
-            "font=\\sffamily\\fontsize{5.3}{6.4}\\selectfont, text=cGray!70!black]\n"
-            "  at (11.60, 0.29) {air gap};",
-        ),
-    )
-    replacement = original
-    for old, new in replacements:
-        if old not in replacement:
-            return None
-        replacement = replacement.replace(old, new)
-    if replacement == original:
-        return None
-    protected = (
-        "q_{\\mathrm{tr}}",
-        "trapped charge",
-        "Coulomb",
-        "repulsion",
-        "electrode",
-        "air gap",
-        "mechanical",
-        "$V_{\\mathrm{active}}$",
-        "bias",
-    )
-    if not all(label in replacement for label in protected):
-        return None
-    if not _panel_f_post_trap_gap_readability_template_applied(replacement):
-        return None
-    if not _panel_f_post_source_trap_hierarchy_template_applied(replacement):
-        return None
-    return original, replacement, line_start, line_end
-
-
 def _panel_f_trap_label_left_rail_template_applied(block: str) -> bool:
     required_fragments = (
         "% quality-search F trap label left rail: park trap labels in margin",
@@ -7080,34 +6946,6 @@ def _candidate_operation_for_spec(
             "family": family,
             "operation_scale": "panel_block",
             "template_id": PANEL_F_POST_SOURCE_TRAP_HIERARCHY_TEMPLATE_ID,
-            "panel": "F",
-        }
-    if family == "panel_f_post_trap_gap_readability":
-        gap_readability_block = _panel_f_post_trap_gap_readability_replacement(
-            lines=lines,
-            selector=selector,
-        )
-        if gap_readability_block is not None:
-            original, new_text, line_start, line_end = gap_readability_block
-            operation = {
-                "kind": "replace_text",
-                "semantic_kind": "quality_search_panel_f_post_trap_gap_readability_panel_block",
-                "operation_scale": "panel_block",
-                "template_id": PANEL_F_POST_TRAP_GAP_READABILITY_TEMPLATE_ID,
-                "panel": "F",
-                "path": source_ref,
-                "line_start": line_start,
-                "line_end": line_end,
-                "original": original,
-                "replacement": new_text,
-            }
-            return operation, None
-        return None, {
-            "code": "no_panel_f_post_trap_gap_readability_block",
-            "candidate_id": str(spec.get("id")),
-            "family": family,
-            "operation_scale": "panel_block",
-            "template_id": PANEL_F_POST_TRAP_GAP_READABILITY_TEMPLATE_ID,
             "panel": "F",
         }
     if family == "panel_f_trap_label_left_rail":
