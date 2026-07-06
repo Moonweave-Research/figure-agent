@@ -101,6 +101,9 @@ PANEL_F_POST_SOURCE_TRAP_HIERARCHY_TEMPLATE_ID = (
 PANEL_F_POST_TRAP_GAP_READABILITY_TEMPLATE_ID = (
     "v5f_panel_f_post_trap_gap_readability_v1"
 )
+PANEL_F_POST_GAP_LABEL_RELIEF_TEMPLATE_ID = (
+    "v5f_panel_f_post_gap_label_relief_v1"
+)
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -661,6 +664,27 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "soften the electrode wall and hatch density after trap-label hierarchy",
             "make the air-gap bracket readable without overpowering the force cue",
             "preserve trap label rail, Coulomb arrow, source lead, and electrode semantics",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_post_gap_label_relief": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+            "$V_{\\mathrm{active}}$",
+            "bias",
+        ],
+        "design_moves": [
+            "pull the trapped-charge leader off the label background",
+            "reduce source-lead authority after electrode/air-gap readability cleanup",
+            "keep Coulomb/repulsion labels on a clean force rail",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -1598,6 +1622,56 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 "rollback_condition": (
                     "candidate worsens compile, protected labels, force direction, "
                     "source lead, or electrode/air-gap semantics"
+                ),
+            },
+        )
+    if any(
+        term in normalized
+        for term in (
+            "after gap readability",
+            "post gap readability",
+            "after electrode",
+        )
+    ) and any(
+        term in normalized
+        for term in (
+            "trapped charge",
+            "label",
+            "background",
+            "leader",
+            "source lead",
+            "force",
+            "rail",
+            "polish",
+        )
+    ):
+        hypotheses.insert(
+            0,
+            {
+                "fixture": name,
+                "family": "panel_f_post_gap_label_relief",
+                "source": "goal_directive",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "goal requests Panel F label-background and source-lead "
+                        "relief after electrode/air-gap readability cleanup"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert post-gap-readability label/background/source-lead "
+                    "defects into a fresh source-bound Panel F candidate"
+                ),
+                "expected_visual_movement": (
+                    "trapped-charge label background stops reading as an underline "
+                    "while source lead and force rail become quieter"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, force direction, "
+                    "electrode/air-gap semantics, or trapped-charge relation"
                 ),
             },
         )
@@ -2758,6 +2832,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_post_trap_gap_readability":
         return "panel_block"
+    if family == "panel_f_post_gap_label_relief":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -2818,6 +2894,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_POST_SOURCE_TRAP_HIERARCHY_TEMPLATE_ID
     if family == "panel_f_post_trap_gap_readability":
         return PANEL_F_POST_TRAP_GAP_READABILITY_TEMPLATE_ID
+    if family == "panel_f_post_gap_label_relief":
+        return PANEL_F_POST_GAP_LABEL_RELIEF_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -5764,6 +5842,120 @@ def _panel_f_post_trap_gap_readability_replacement(
     return original, replacement, line_start, line_end
 
 
+def _panel_f_post_gap_label_relief_template_applied(block: str) -> bool:
+    required_fragments = (
+        "% quality-search F post-gap label relief: clear label backgrounds",
+        "\\draw[cGray!46!black, line width=0.26pt, rounded corners=2.0pt]",
+        "\\fill[cGray!74!black] (13.18, 2.82) circle (0.030);",
+        "\\draw[cRed!52!black, line width=0.28pt]",
+        "at (9.60, 3.62) {trapped charge};",
+        (
+            "\\draw[panelFCoulombRepulsionArrow, "
+            "-{Stealth[length=6.2pt,width=4.2pt]}, "
+            "cRed!72!black, line width=0.62pt]"
+        ),
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_post_gap_label_relief_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if not _panel_f_post_trap_gap_readability_template_applied(original):
+        return None
+    if _panel_f_post_gap_label_relief_template_applied(original):
+        return None
+    replacements = (
+        (
+            "% quality-search F post-spacing source finish: soften source lead\n"
+            "\\draw[cGray!52!black, line width=0.30pt, rounded corners=2.0pt]\n"
+            "  (13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);\n"
+            "\\fill[cGray!78!black] (13.18, 2.82) circle (0.034);",
+            "% quality-search F post-spacing source finish: soften source lead\n"
+            "% quality-search F post-gap label relief: clear label backgrounds\n"
+            "\\draw[cGray!46!black, line width=0.26pt, rounded corners=2.0pt]\n"
+            "  (13.24, 3.78) -- (13.20, 3.40) -- (13.18, 2.82);\n"
+            "\\fill[cGray!74!black] (13.18, 2.82) circle (0.030);",
+        ),
+        (
+            "\\draw[cRed!56!black, line width=0.34pt]\n"
+            "  (11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);\n"
+            "\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,\n"
+            "      inner xsep=0.70pt, inner ysep=0.31pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}\\selectfont, text=cRed!70!black]\n"
+            "  at (9.64, 3.20) {$q_{\\mathrm{tr}}$};\n"
+            "\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,\n"
+            "      inner xsep=0.82pt, inner ysep=0.34pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.9}{4.7}\\selectfont, text=cRed!72!black]\n"
+            "  at (9.64, 3.56) {trapped charge};",
+            "\\draw[cRed!52!black, line width=0.28pt]\n"
+            "  (11.28,2.50) .. controls (10.78,3.08) and (10.22,3.36) .. (9.82,3.40);\n"
+            "\\node[anchor=west, fill=white, fill opacity=0.82, text opacity=1,\n"
+            "      inner xsep=0.62pt, inner ysep=0.24pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.7}{4.5}\\selectfont, text=cRed!68!black]\n"
+            "  at (9.60, 3.18) {$q_{\\mathrm{tr}}$};\n"
+            "\\node[anchor=west, fill=white, fill opacity=0.84, text opacity=1,\n"
+            "      inner xsep=0.66pt, inner ysep=0.24pt,\n"
+            "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}\\selectfont, text=cRed!70!black]\n"
+            "  at (9.60, 3.62) {trapped charge};",
+        ),
+        (
+            "\\draw[panelFCoulombRepulsionArrow, "
+            "-{Stealth[length=6.6pt,width=4.5pt]}, "
+            "cRed!74!black, line width=0.68pt]\n"
+            "  (10.58, 1.08) -- (9.66, 1.08);",
+            "\\draw[panelFCoulombRepulsionArrow, "
+            "-{Stealth[length=6.2pt,width=4.2pt]}, "
+            "cRed!72!black, line width=0.62pt]\n"
+            "  (10.52, 1.02) -- (9.68, 1.02);",
+        ),
+        (
+            "font=\\sffamily\\bfseries\\fontsize{4.9}{5.9}\\selectfont, text=cRed!74!black]\n"
+            "  at (9.58, 1.70) {Coulomb};",
+            "font=\\sffamily\\bfseries\\fontsize{4.8}{5.8}\\selectfont, text=cRed!72!black]\n"
+            "  at (9.58, 1.66) {Coulomb};",
+        ),
+        (
+            "text=cRed!72!black] at (9.58, 1.42) {repulsion};",
+            "text=cRed!70!black] at (9.58, 1.34) {repulsion};",
+        ),
+    )
+    replacement = original
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    protected = (
+        "q_{\\mathrm{tr}}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "mechanical",
+        "$V_{\\mathrm{active}}$",
+        "bias",
+    )
+    if not all(label in replacement for label in protected):
+        return None
+    if not _panel_f_post_gap_label_relief_template_applied(replacement):
+        return None
+    if not _panel_f_post_trap_gap_readability_template_applied(replacement):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _panel_f_final_finish_template_applied(block: str) -> bool:
     required_fragments = (
         "line width=0.22pt, dash pattern=on 1.2pt off 0.9pt",
@@ -6190,6 +6382,7 @@ def _candidate_operation_for_spec(
         "panel_f_post_spacing_source_finish": "F",
         "panel_f_post_source_trap_hierarchy": "F",
         "panel_f_post_trap_gap_readability": "F",
+        "panel_f_post_gap_label_relief": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -6908,6 +7101,34 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_POST_TRAP_GAP_READABILITY_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_post_gap_label_relief":
+        label_relief_block = _panel_f_post_gap_label_relief_replacement(
+            lines=lines,
+            selector=selector,
+        )
+        if label_relief_block is not None:
+            original, new_text, line_start, line_end = label_relief_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_post_gap_label_relief_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_POST_GAP_LABEL_RELIEF_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_post_gap_label_relief_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_POST_GAP_LABEL_RELIEF_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -6984,6 +7205,7 @@ def _candidate_operation_for_spec(
         "panel_f_post_spacing_source_finish": 0.8,
         "panel_f_post_source_trap_hierarchy": 0.8,
         "panel_f_post_trap_gap_readability": 0.8,
+        "panel_f_post_gap_label_relief": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -8470,6 +8692,7 @@ def _candidate_structural_impact(
         "panel_f_post_spacing_source_finish",
         "panel_f_post_source_trap_hierarchy",
         "panel_f_post_trap_gap_readability",
+        "panel_f_post_gap_label_relief",
     }:
         possible_ripples.append(
             {
@@ -8642,6 +8865,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_post_spacing_source_finish": 0.88,
             "panel_f_post_source_trap_hierarchy": 0.88,
             "panel_f_post_trap_gap_readability": 0.88,
+            "panel_f_post_gap_label_relief": 0.9,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
         }
@@ -8771,6 +8995,7 @@ def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
         "panel_f_post_trap_gap_readability": (
             PANEL_F_POST_TRAP_GAP_READABILITY_TEMPLATE_ID
         ),
+        "panel_f_post_gap_label_relief": PANEL_F_POST_GAP_LABEL_RELIEF_TEMPLATE_ID,
     }
     if score.get("template_id") != targeted_templates.get(str(score.get("family"))):
         return False

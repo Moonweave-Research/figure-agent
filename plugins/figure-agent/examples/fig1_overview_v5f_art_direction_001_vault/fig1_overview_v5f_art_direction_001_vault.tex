@@ -2047,9 +2047,10 @@
 \fill[cRed!58!black] (13.24, 3.82) circle (0.016);
 \fill[cGray!55!black] (13.30, 2.82) circle (0.020);
 % quality-search F post-spacing source finish: soften source lead
-\draw[cGray!52!black, line width=0.30pt, rounded corners=2.0pt]
-  (13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);
-\fill[cGray!78!black] (13.18, 2.82) circle (0.034);
+% quality-search F post-gap label relief: clear label backgrounds
+\draw[cGray!46!black, line width=0.26pt, rounded corners=2.0pt]
+  (13.24, 3.78) -- (13.20, 3.40) -- (13.18, 2.82);
+\fill[cGray!74!black] (13.18, 2.82) circle (0.030);
 
 % Fixed clip and charge-trapping cantilever.
 \fill[cGray!10] (11.55, 2.84) rectangle (12.10, 2.96);
@@ -2106,29 +2107,29 @@
   \draw[cRed!95!black, line width=0.25pt] (\cx,\cy) circle (\rr);
 }
 % quality-search F post-source trap hierarchy: separate trap labels
-\draw[cRed!56!black, line width=0.34pt]
-  (11.35,2.52) .. controls (10.86,3.24) and (10.22,3.50) .. (9.70,3.48);
-\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,
-      inner xsep=0.70pt, inner ysep=0.31pt,
+\draw[cRed!52!black, line width=0.28pt]
+  (11.28,2.50) .. controls (10.78,3.08) and (10.22,3.36) .. (9.82,3.40);
+\node[anchor=west, fill=white, fill opacity=0.82, text opacity=1,
+      inner xsep=0.62pt, inner ysep=0.24pt,
+      font=\sffamily\bfseries\fontsize{3.7}{4.5}\selectfont, text=cRed!68!black]
+  at (9.60, 3.18) {$q_{\mathrm{tr}}$};
+\node[anchor=west, fill=white, fill opacity=0.84, text opacity=1,
+      inner xsep=0.66pt, inner ysep=0.24pt,
       font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!70!black]
-  at (9.64, 3.20) {$q_{\mathrm{tr}}$};
-\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,
-      inner xsep=0.82pt, inner ysep=0.34pt,
-      font=\sffamily\bfseries\fontsize{3.9}{4.7}\selectfont, text=cRed!72!black]
-  at (9.64, 3.56) {trapped charge};
+  at (9.60, 3.62) {trapped charge};
 
 % Coulomb-only response, intentionally stronger than the apparatus.
 % quality-search F post-force spacing finish: align force label rail
-\draw[panelFCoulombRepulsionArrow, -{Stealth[length=6.6pt,width=4.5pt]}, cRed!74!black, line width=0.68pt]
-  (10.58, 1.08) -- (9.66, 1.08);
+\draw[panelFCoulombRepulsionArrow, -{Stealth[length=6.2pt,width=4.2pt]}, cRed!72!black, line width=0.62pt]
+  (10.52, 1.02) -- (9.68, 1.02);
 \node[anchor=south west, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=0.92pt, inner ysep=0.44pt,
-      font=\sffamily\bfseries\fontsize{4.9}{5.9}\selectfont, text=cRed!74!black]
-  at (9.58, 1.70) {Coulomb};
+      font=\sffamily\bfseries\fontsize{4.8}{5.8}\selectfont, text=cRed!72!black]
+  at (9.58, 1.66) {Coulomb};
 \node[labelMute, anchor=north west, fill=white, fill opacity=0.95, text opacity=1,
       inner xsep=1.02pt, inner ysep=0.50pt,
       font=\sffamily\fontsize{4.6}{5.6}\selectfont,
-      text=cRed!72!black] at (9.58, 1.42) {repulsion};
+      text=cRed!70!black] at (9.58, 1.34) {repulsion};
 
 \draw[<->, cGray!62!black, line width=0.68pt]
   (10.20, 0.54) -- (13.18, 0.54);
