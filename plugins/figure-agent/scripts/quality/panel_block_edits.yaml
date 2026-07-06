@@ -1,3 +1,74 @@
+- family_id: panel_f_post_force_spacing_finish
+  template_id: v5f_panel_f_post_force_spacing_finish_v1
+  panel: F
+  requires:
+  - '% quality-search F post-label force cleanup: quiet arrow and clear labels'
+  - -{Stealth[length=7.0pt,width=4.8pt]}, cRed!76!black, line width=0.74pt
+  - (10.66, 1.06) -- (9.58, 1.06);
+  - at (9.66, 1.62) {Coulomb};
+  - at (9.66, 1.36) {repulsion};
+  applied_signature:
+  - '% quality-search F post-force spacing finish: align force label rail'
+  - -{Stealth[length=6.6pt,width=4.5pt]}, cRed!74!black, line width=0.68pt
+  - (10.58, 1.08) -- (9.66, 1.08);
+  - at (9.58, 1.70) {Coulomb};
+  - at (9.58, 1.42) {repulsion};
+  preserve_after: []
+  replacements:
+  - old: |-
+      % quality-search F post-label force cleanup: quiet arrow and clear labels
+      \draw[panelFCoulombRepulsionArrow, -{Stealth[length=7.0pt,width=4.8pt]}, cRed!76!black, line width=0.74pt]
+        (10.66, 1.06) -- (9.58, 1.06);
+    new: |-
+      % quality-search F post-force spacing finish: align force label rail
+      \draw[panelFCoulombRepulsionArrow, -{Stealth[length=6.6pt,width=4.5pt]}, cRed!74!black, line width=0.68pt]
+        (10.58, 1.08) -- (9.66, 1.08);
+  - old: |-
+      \node[anchor=south west, fill=white, fill opacity=0.92, text opacity=1,
+            inner xsep=0.90pt, inner ysep=0.42pt,
+            font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont, text=cRed!74!black]
+        at (9.66, 1.62) {Coulomb};
+    new: |-
+      \node[anchor=south west, fill=white, fill opacity=0.94, text opacity=1,
+            inner xsep=0.92pt, inner ysep=0.44pt,
+            font=\sffamily\bfseries\fontsize{4.9}{5.9}\selectfont, text=cRed!74!black]
+        at (9.58, 1.70) {Coulomb};
+  - old: |-
+      \node[labelMute, anchor=north west, fill=white, fill opacity=0.94, text opacity=1,
+            inner xsep=1.0pt, inner ysep=0.48pt,
+            font=\sffamily\fontsize{4.7}{5.7}\selectfont,
+            text=cRed!72!black] at (9.66, 1.36) {repulsion};
+    new: |-
+      \node[labelMute, anchor=north west, fill=white, fill opacity=0.95, text opacity=1,
+            inner xsep=1.02pt, inner ysep=0.50pt,
+            font=\sffamily\fontsize{4.6}{5.6}\selectfont,
+            text=cRed!72!black] at (9.58, 1.42) {repulsion};
+  protected_labels:
+  - q_{\mathrm{tr}}
+  - trapped charge
+  - Coulomb
+  - repulsion
+  - electrode
+  - air gap
+  - mechanical
+  - $V_{\mathrm{active}}$
+  - bias
+  goal_trigger:
+  - - after force cleanup
+    - post force cleanup
+    - final
+  - - spacing
+    - hierarchy
+    - arrow
+    - source connector
+    - air gap
+    - label
+    - polish
+  goal_hypothesis:
+    reason: goal explicitly requests final Panel F spacing and label hierarchy after force cleanup
+    expected_detector_movement: convert post-force-cleanup label/arrow hierarchy defects into a fresh source-bound Panel F finish candidate
+    expected_visual_movement: force labels and arrow become quieter and more aligned while preserving the charge-to-electrode mechanism
+    rollback_condition: candidate worsens compile, protected labels, force direction, source connector, or electrode/air-gap semantics
 - family_id: panel_f_post_spacing_source_finish
   template_id: v5f_panel_f_post_spacing_source_finish_v1
   panel: F

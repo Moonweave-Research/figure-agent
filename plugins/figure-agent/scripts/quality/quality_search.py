@@ -1488,50 +1488,6 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 ),
             },
         )
-    if any(
-        term in normalized for term in ("after force cleanup", "post force cleanup", "final")
-    ) and any(
-        term in normalized
-        for term in (
-            "spacing",
-            "hierarchy",
-            "arrow",
-            "source connector",
-            "air gap",
-            "label",
-            "polish",
-        )
-    ):
-        hypotheses.insert(
-            0,
-            {
-                "fixture": name,
-                "family": "panel_f_post_force_spacing_finish",
-                "source": "goal_directive",
-                "mutation_allowed": False,
-                "mutation_block_reason": "quality-search v0 is planner-only",
-                "target_scope": "panel",
-                "target_hint": {
-                    "panels": ["F"],
-                    "reason": (
-                        "goal explicitly requests final Panel F spacing and "
-                        "label hierarchy after force cleanup"
-                    ),
-                },
-                "expected_detector_movement": (
-                    "convert post-force-cleanup label/arrow hierarchy defects into "
-                    "a fresh source-bound Panel F finish candidate"
-                ),
-                "expected_visual_movement": (
-                    "force labels and arrow become quieter and more aligned while "
-                    "preserving the charge-to-electrode mechanism"
-                ),
-                "rollback_condition": (
-                    "candidate worsens compile, protected labels, force direction, "
-                    "source connector, or electrode/air-gap semantics"
-                ),
-            },
-        )
     for _edit in panel_block_edits.load_bundled_panel_block_edits():
         if all(any(term in normalized for term in group) for group in _edit.goal_trigger):
             hypotheses.insert(
@@ -5379,92 +5335,6 @@ def _panel_f_post_label_force_cleanup_replacement(
     return original, replacement, line_start, line_end
 
 
-def _panel_f_post_force_spacing_finish_template_applied(block: str) -> bool:
-    required_fragments = (
-        "% quality-search F post-force spacing finish: align force label rail",
-        "-{Stealth[length=6.6pt,width=4.5pt]}, cRed!74!black, line width=0.68pt",
-        "(10.58, 1.08) -- (9.66, 1.08);",
-        "at (9.58, 1.70) {Coulomb};",
-        "at (9.58, 1.42) {repulsion};",
-    )
-    return all(fragment in block for fragment in required_fragments)
-
-
-def _panel_f_post_force_spacing_finish_replacement(
-    *,
-    lines: list[str],
-    selector: dict[str, Any],
-) -> tuple[str, str, int, int] | None:
-    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
-    if line_range is None:
-        return None
-    line_start, line_end = line_range
-    original = "".join(lines[line_start - 1 : line_end])
-    if not _panel_f_overlay_has_protected_labels(original):
-        return None
-    if not _panel_f_post_label_force_cleanup_template_applied(original):
-        return None
-    if _panel_f_post_force_spacing_finish_template_applied(original):
-        return None
-    replacements = (
-        (
-            "% quality-search F post-label force cleanup: quiet arrow and clear labels\n"
-            "\\draw[panelFCoulombRepulsionArrow, -{Stealth[length=7.0pt,width=4.8pt]}, "
-            "cRed!76!black, line width=0.74pt]\n"
-            "  (10.66, 1.06) -- (9.58, 1.06);",
-            "% quality-search F post-force spacing finish: align force label rail\n"
-            "\\draw[panelFCoulombRepulsionArrow, -{Stealth[length=6.6pt,width=4.5pt]}, "
-            "cRed!74!black, line width=0.68pt]\n"
-            "  (10.58, 1.08) -- (9.66, 1.08);",
-        ),
-        (
-            "\\node[anchor=south west, fill=white, fill opacity=0.92, text opacity=1,\n"
-            "      inner xsep=0.90pt, inner ysep=0.42pt,\n"
-            "      font=\\sffamily\\bfseries\\fontsize{5.0}{6.0}\\selectfont, "
-            "text=cRed!74!black]\n"
-            "  at (9.66, 1.62) {Coulomb};",
-            "\\node[anchor=south west, fill=white, fill opacity=0.94, text opacity=1,\n"
-            "      inner xsep=0.92pt, inner ysep=0.44pt,\n"
-            "      font=\\sffamily\\bfseries\\fontsize{4.9}{5.9}\\selectfont, "
-            "text=cRed!74!black]\n"
-            "  at (9.58, 1.70) {Coulomb};",
-        ),
-        (
-            "\\node[labelMute, anchor=north west, fill=white, fill opacity=0.94, text opacity=1,\n"
-            "      inner xsep=1.0pt, inner ysep=0.48pt,\n"
-            "      font=\\sffamily\\fontsize{4.7}{5.7}\\selectfont,\n"
-            "      text=cRed!72!black] at (9.66, 1.36) {repulsion};",
-            "\\node[labelMute, anchor=north west, fill=white, fill opacity=0.95, text opacity=1,\n"
-            "      inner xsep=1.02pt, inner ysep=0.50pt,\n"
-            "      font=\\sffamily\\fontsize{4.6}{5.6}\\selectfont,\n"
-            "      text=cRed!72!black] at (9.58, 1.42) {repulsion};",
-        ),
-    )
-    replacement = original
-    for old, new in replacements:
-        if old not in replacement:
-            return None
-        replacement = replacement.replace(old, new)
-    if replacement == original:
-        return None
-    protected = (
-        "q_{\\mathrm{tr}}",
-        "trapped charge",
-        "Coulomb",
-        "repulsion",
-        "electrode",
-        "air gap",
-        "mechanical",
-        "$V_{\\mathrm{active}}$",
-        "bias",
-    )
-    if not all(label in replacement for label in protected):
-        return None
-    if not _panel_f_post_force_spacing_finish_template_applied(replacement):
-        return None
-    return original, replacement, line_start, line_end
-
-
 def _panel_f_trap_label_left_rail_template_applied(block: str) -> bool:
     required_fragments = (
         "% quality-search F trap label left rail: park trap labels in margin",
@@ -6627,34 +6497,6 @@ def _candidate_operation_for_spec(
             "family": family,
             "operation_scale": "panel_block",
             "template_id": PANEL_F_POST_LABEL_FORCE_CLEANUP_TEMPLATE_ID,
-            "panel": "F",
-        }
-    if family == "panel_f_post_force_spacing_finish":
-        spacing_finish_block = _panel_f_post_force_spacing_finish_replacement(
-            lines=lines,
-            selector=selector,
-        )
-        if spacing_finish_block is not None:
-            original, new_text, line_start, line_end = spacing_finish_block
-            operation = {
-                "kind": "replace_text",
-                "semantic_kind": "quality_search_panel_f_post_force_spacing_finish_panel_block",
-                "operation_scale": "panel_block",
-                "template_id": PANEL_F_POST_FORCE_SPACING_FINISH_TEMPLATE_ID,
-                "panel": "F",
-                "path": source_ref,
-                "line_start": line_start,
-                "line_end": line_end,
-                "original": original,
-                "replacement": new_text,
-            }
-            return operation, None
-        return None, {
-            "code": "no_panel_f_post_force_spacing_finish_block",
-            "candidate_id": str(spec.get("id")),
-            "family": family,
-            "operation_scale": "panel_block",
-            "template_id": PANEL_F_POST_FORCE_SPACING_FINISH_TEMPLATE_ID,
             "panel": "F",
         }
     if family == "panel_f_trap_label_left_rail":
