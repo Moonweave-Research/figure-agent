@@ -2152,6 +2152,102 @@ def test_quality_search_panel_f_post_source_label_scale_emits_panel_block(
     assert "at (9.70, 3.52) {trapped charge};" in operation["replacement"]
 
 
+def test_quality_search_panel_f_post_label_force_cleanup_emits_panel_block(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column E -- ISPD-paired =================",
+            "\\draw[cAmber!70!black, line width=0.25pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);",
+            "\\node at (13.02, 4.105) {$V_{\\mathrm{active}}$};",
+            "\\node at (13.02, 3.80) {bias};",
+            "% quality-search F post-force source connector: simplify source lead",
+            "\\draw[cGray!58!black, line width=0.36pt, rounded corners=1.8pt]",
+            "  (13.24, 3.78) -- (13.18, 3.42) -- (13.18, 2.82);",
+            "\\node at (13.64, 1.62) {electrode};",
+            "% quality-search F post-source label scale: lift trapped-charge legibility",
+            "\\draw[cRed!58!black, line width=0.36pt]",
+            (
+                "  (11.35,2.52) .. controls (10.88,3.20)"
+                " and (10.28,3.46) .. (9.76,3.44);"
+            ),
+            "\\node at (9.70, 3.22) {$q_{\\mathrm{tr}}$};",
+            "\\node at (9.70, 3.52) {trapped charge};",
+            "% Coulomb-only response, intentionally stronger than the apparatus.",
+            "% quality-search F post-boundary force balance: separate force labels",
+            (
+                "\\draw[panelFCoulombRepulsionArrow, "
+                "-{Stealth[length=7.8pt,width=5.2pt]}, "
+                "cRed!78!black, line width=0.86pt]"
+            ),
+            "  (10.80, 1.06) -- (9.48, 1.06);",
+            (
+                "\\node[font=\\sffamily\\bfseries\\fontsize{5.2}{6.2}"
+                "\\selectfont, text=cRed!74!black,"
+            ),
+            "      anchor=south west] at (9.62, 1.66) {Coulomb};",
+            (
+                "\\node[labelMute, anchor=north west, fill=white, "
+                "fill opacity=0.90, text opacity=1,"
+            ),
+            "      inner xsep=0.95pt, inner ysep=0.45pt,",
+            "      font=\\sffamily\\fontsize{4.8}{5.8}\\selectfont,",
+            "      text=cRed!72!black] at (9.63, 1.44) {repulsion};",
+            "\\draw[<->, cGray!66!black, line width=0.78pt]",
+            "  (10.18, 0.54) -- (13.18, 0.54);",
+            "\\node at (11.58, 0.28) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal=(
+            "Panel F after label scale fix Coulomb repulsion label background "
+            "overlap and force arrow"
+        ),
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    force_cleanup = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_post_label_force_cleanup"
+    ][0]
+    operation = force_cleanup["operations"][0]
+    assert force_cleanup["operation_scale"] == "panel_block"
+    assert force_cleanup["template_id"] == "v5f_panel_f_post_label_force_cleanup_v1"
+    assert operation["template_id"] == "v5f_panel_f_post_label_force_cleanup_v1"
+    assert "quality-search F post-label force cleanup" in operation["replacement"]
+    assert "(10.66, 1.06) -- (9.58, 1.06);" in operation["replacement"]
+    assert "at (9.66, 1.62) {Coulomb};" in operation["replacement"]
+    assert "at (9.66, 1.36) {repulsion};" in operation["replacement"]
+
+
 def test_quality_search_panel_f_final_finish_emits_post_boundary_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:
