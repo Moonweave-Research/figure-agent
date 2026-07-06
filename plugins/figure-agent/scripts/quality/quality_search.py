@@ -64,6 +64,7 @@ PANEL_F_QTR_APPARATUS_LANE_TEMPLATE_ID = "v5d_panel_f_qtr_apparatus_lane_v1"
 PANEL_F_FORCE_GAP_LANE_TEMPLATE_ID = "v5d_panel_f_force_gap_lane_v1"
 PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID = "v5d_panel_f_mechanical_anchor_lane_v1"
 PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID = "v5d_panel_f_leader_left_lane_v1"
+PANEL_F_V5F_LEADER_LEFT_LANE_TEMPLATE_ID = "v5f_panel_f_leader_left_lane_v1"
 PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID = "v5d_panel_f_electrode_lead_lane_v1"
 PANEL_F_ELECTRODE_CONNECTOR_TEMPLATE_ID = "v5f_panel_f_electrode_connector_v1"
 PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID = "v5d_panel_f_auto_composite_force_anchor_v1"
@@ -3139,6 +3140,58 @@ def _panel_f_leader_left_lane_template_applied(block: str) -> bool:
     return all(fragment in block for fragment in required_fragments)
 
 
+def _panel_f_v5f_leader_left_lane_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search F leader-left lane",
+        "(11.42,2.46) .. controls (10.54,3.14) and (9.74,3.48) .. (9.22,3.48);",
+        "at (9.22, 3.28) {$q_{\\mathrm{tr}}$};",
+        "at (9.22, 3.84) {trapped charge};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_v5f_leader_left_lane_replacement(block: str) -> str | None:
+    if not _panel_f_overlay_has_protected_labels(block):
+        return None
+    if _panel_f_v5f_leader_left_lane_template_applied(block):
+        return None
+    replacement = block if _panel_f_overlay_refresh_template_applied(block) else None
+    if replacement is None:
+        replacement = _refreshed_panel_f_overlay(block)
+    if replacement is None:
+        replacement = _strengthened_panel_f_overlay(block)
+        if replacement is not None:
+            replacement = _refreshed_panel_f_overlay(replacement)
+    if replacement is None:
+        return None
+    replacements = (
+        (
+            "\\draw[cRed!62!black, line width=0.46pt]\n"
+            "  (11.46,2.50) .. controls (10.82,3.08) and (10.12,3.32) .. (9.54,3.32);",
+            "% quality-search F leader-left lane -- review-only candidate\n"
+            "\\draw[cRed!64!black, line width=0.50pt]\n"
+            "  (11.42,2.46) .. controls (10.54,3.14) and (9.74,3.48) .. (9.22,3.48);",
+        ),
+        (
+            "at (9.54, 3.18) {$q_{\\mathrm{tr}}$};",
+            "at (9.22, 3.28) {$q_{\\mathrm{tr}}$};",
+        ),
+        (
+            "at (9.54, 3.42) {trapped charge};",
+            "at (9.22, 3.84) {trapped charge};",
+        ),
+    )
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == block:
+        return None
+    if not _panel_f_overlay_has_protected_labels(replacement):
+        return None
+    return replacement
+
+
 def _panel_f_leader_left_lane_replacement(
     *,
     lines: list[str],
@@ -3154,6 +3207,9 @@ def _panel_f_leader_left_lane_replacement(
     if line_start < 1 or line_end < line_start or line_end > len(lines):
         return None
     original = "".join(lines[line_start - 1 : line_end])
+    v5f_replacement = _panel_f_v5f_leader_left_lane_replacement(original)
+    if v5f_replacement is not None:
+        return original, v5f_replacement, line_start, line_end
     required = (
         "q_{tr}",
         "Coulomb",
@@ -4299,11 +4355,16 @@ def _candidate_operation_for_spec(
         )
         if leader_left_block is not None:
             original, new_text, line_start, line_end = leader_left_block
+            template_id = (
+                PANEL_F_V5F_LEADER_LEFT_LANE_TEMPLATE_ID
+                if _panel_f_v5f_leader_left_lane_template_applied(new_text)
+                else PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID
+            )
             operation = {
                 "kind": "replace_text",
                 "semantic_kind": "quality_search_panel_f_leader_left_lane_panel_block",
                 "operation_scale": "panel_block",
-                "template_id": PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID,
+                "template_id": template_id,
                 "panel": "F",
                 "path": source_ref,
                 "line_start": line_start,

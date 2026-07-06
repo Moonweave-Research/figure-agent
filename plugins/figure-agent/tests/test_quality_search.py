@@ -1332,6 +1332,32 @@ def test_quality_search_v5f_refresh_emits_electrode_lead_candidate(
     )
     assert "(13.18, 2.82) circle (0.038);" in operation["replacement"]
     assert "at (9.54, 3.42) {trapped charge};" in operation["replacement"]
+    leader_lines = f"{tex_source}\n".splitlines(keepends=True)
+    leader_operation, leader_refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS005",
+            "family": "panel_f_leader_left_lane",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(leader_lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=leader_lines,
+        source_ref="figures/example.tex",
+    )
+    assert leader_refusal is None
+    assert leader_operation is not None
+    assert leader_operation["template_id"] == "v5f_panel_f_leader_left_lane_v1"
+    assert "quality-search F leader-left lane" in leader_operation["replacement"]
+    assert (
+        "(11.42,2.46) .. controls (10.54,3.14) and (9.74,3.48) .. (9.22,3.48);"
+        in leader_operation["replacement"]
+    )
+    assert "at (9.22, 3.84) {trapped charge};" in leader_operation["replacement"]
 
 
 def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
