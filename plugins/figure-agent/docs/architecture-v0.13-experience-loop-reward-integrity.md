@@ -32,7 +32,7 @@ compilability, not figure quality.
 | # | Fact | Evidence |
 | --- | --- | --- |
 | A1 | Only live cross-run feedback is the basin circuit-breaker, and it only forces stop | `scripts/loop/fig_loop_basin.py:97-163`, `scripts/fig_loop.py:202-214` |
-| A2 | The prior spine exists end-to-end but is starved: rank hook present, index never auto-persisted, production callers pass `None`, generator reads zero memory | `scripts/candidates/candidate_rank.py:93-114,182`; `scripts/quality/quality_memory_index.py:77-88`; `mcp/_legacy_server.py:1173` |
+| A2 | The prior spine exists end-to-end but is starved: rank hook present, index never auto-persisted, production callers pass `None`, generator reads zero memory | `scripts/candidates/candidate_rank.py:93-114,182`; `scripts/quality/quality_memory_index.py:77-88`; `mcp/server_impl.py:1173` |
 | A3 | The event builder emits only `improved`; `neutral`/`regressed` are never produced, so the ≥3-attempt floor is unreachable and the prior can only move positive | `scripts/quality/quality_memory_events.py:279` |
 | A4 | `improved` means "recompiled + status passed", not "figure got better" — a compilability signal masquerading as a quality reward | `scripts/quality/quality_memory_events.py:279` |
 | A5 | Rejects are structurally discarded: acceptance writers raise unless `decision=="accept"`; zero reject decision-records exist on disk | `scripts/candidates/candidate_acceptance.py:299`; `scripts/golden_acceptance.py:133` |
