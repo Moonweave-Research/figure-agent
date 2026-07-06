@@ -1532,49 +1532,6 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 ),
             },
         )
-    if any(
-        term in normalized for term in ("after spacing finish", "post spacing", "final")
-    ) and any(
-        term in normalized
-        for term in (
-            "source",
-            "connector",
-            "apparatus",
-            "electrode",
-            "air gap",
-            "restraint",
-            "polish",
-        )
-    ):
-        hypotheses.insert(
-            0,
-            {
-                "fixture": name,
-                "family": "panel_f_post_spacing_source_finish",
-                "source": "goal_directive",
-                "mutation_allowed": False,
-                "mutation_block_reason": "quality-search v0 is planner-only",
-                "target_scope": "panel",
-                "target_hint": {
-                    "panels": ["F"],
-                    "reason": (
-                        "goal explicitly requests final Panel F source connector "
-                        "and electrode-air-gap restraint after spacing finish"
-                    ),
-                },
-                "expected_detector_movement": (
-                    "convert post-spacing source/electrode apparatus defects into "
-                    "a fresh source-bound Panel F finish candidate"
-                ),
-                "expected_visual_movement": (
-                    "source lead becomes quieter while the electrode and air gap remain readable"
-                ),
-                "rollback_condition": (
-                    "candidate worsens compile, protected labels, source attachment, "
-                    "force direction, or electrode/air-gap semantics"
-                ),
-            },
-        )
     for _edit in panel_block_edits.load_bundled_panel_block_edits():
         if all(any(term in normalized for term in group) for group in _edit.goal_trigger):
             hypotheses.insert(
@@ -5508,77 +5465,6 @@ def _panel_f_post_force_spacing_finish_replacement(
     return original, replacement, line_start, line_end
 
 
-def _panel_f_post_spacing_source_finish_template_applied(block: str) -> bool:
-    required_fragments = (
-        "% quality-search F post-spacing source finish: soften source lead",
-        "(13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);",
-        "\\fill[cRed!58!black] (13.24, 3.82) circle (0.016);",
-        "\\fill[cGray!78!black] (13.18, 2.82) circle (0.034);",
-    )
-    return all(fragment in block for fragment in required_fragments)
-
-
-def _panel_f_post_spacing_source_finish_replacement(
-    *,
-    lines: list[str],
-    selector: dict[str, Any],
-) -> tuple[str, str, int, int] | None:
-    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
-    if line_range is None:
-        return None
-    line_start, line_end = line_range
-    original = "".join(lines[line_start - 1 : line_end])
-    if not _panel_f_overlay_has_protected_labels(original):
-        return None
-    if not _panel_f_post_force_spacing_finish_template_applied(original):
-        return None
-    if _panel_f_post_spacing_source_finish_template_applied(original):
-        return None
-    replacements = (
-        (
-            "\\fill[cRed!62!black] (13.24, 3.82) circle (0.018);",
-            "\\fill[cRed!58!black] (13.24, 3.82) circle (0.016);",
-        ),
-        (
-            "% quality-search F post-force source connector: simplify source lead\n"
-            "\\draw[cGray!58!black, line width=0.36pt, rounded corners=1.8pt]\n"
-            "  (13.24, 3.78) -- (13.18, 3.42) -- (13.18, 2.82);",
-            "% quality-search F post-spacing source finish: soften source lead\n"
-            "\\draw[cGray!52!black, line width=0.30pt, rounded corners=2.0pt]\n"
-            "  (13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);",
-        ),
-        (
-            "\\fill[cGray!82!black] (13.18, 2.82) circle (0.038);",
-            "\\fill[cGray!78!black] (13.18, 2.82) circle (0.034);",
-        ),
-    )
-    replacement = original
-    for old, new in replacements:
-        if old not in replacement:
-            return None
-        replacement = replacement.replace(old, new)
-    if replacement == original:
-        return None
-    protected = (
-        "q_{\\mathrm{tr}}",
-        "trapped charge",
-        "Coulomb",
-        "repulsion",
-        "electrode",
-        "air gap",
-        "mechanical",
-        "$V_{\\mathrm{active}}$",
-        "bias",
-    )
-    if not all(label in replacement for label in protected):
-        return None
-    if not _panel_f_post_spacing_source_finish_template_applied(replacement):
-        return None
-    if not _panel_f_post_force_spacing_finish_template_applied(replacement):
-        return None
-    return original, replacement, line_start, line_end
-
-
 def _panel_f_trap_label_left_rail_template_applied(block: str) -> bool:
     required_fragments = (
         "% quality-search F trap label left rail: park trap labels in margin",
@@ -6769,34 +6655,6 @@ def _candidate_operation_for_spec(
             "family": family,
             "operation_scale": "panel_block",
             "template_id": PANEL_F_POST_FORCE_SPACING_FINISH_TEMPLATE_ID,
-            "panel": "F",
-        }
-    if family == "panel_f_post_spacing_source_finish":
-        source_finish_block = _panel_f_post_spacing_source_finish_replacement(
-            lines=lines,
-            selector=selector,
-        )
-        if source_finish_block is not None:
-            original, new_text, line_start, line_end = source_finish_block
-            operation = {
-                "kind": "replace_text",
-                "semantic_kind": "quality_search_panel_f_post_spacing_source_finish_panel_block",
-                "operation_scale": "panel_block",
-                "template_id": PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID,
-                "panel": "F",
-                "path": source_ref,
-                "line_start": line_start,
-                "line_end": line_end,
-                "original": original,
-                "replacement": new_text,
-            }
-            return operation, None
-        return None, {
-            "code": "no_panel_f_post_spacing_source_finish_block",
-            "candidate_id": str(spec.get("id")),
-            "family": family,
-            "operation_scale": "panel_block",
-            "template_id": PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID,
             "panel": "F",
         }
     if family == "panel_f_trap_label_left_rail":
