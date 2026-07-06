@@ -3087,6 +3087,179 @@ def test_quality_search_execution_writes_selected_attempt_and_convergence_decisi
     assert any(path.endswith("convergence_decision_000.json") for path in payload["writes"])
 
 
+def test_quality_search_depone_verdict_requires_convergence_accept_for_auto_accept(
+    tmp_path: Path,
+) -> None:
+    name = "fig_demo"
+    _write_minimal_fixture(tmp_path, name=name)
+    paths = quality_search.runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+    selected_attempt = {
+        "schema": "figure-agent.figure-attempt.v1",
+        "attempt_id": "run-001:QS001",
+        "figure_id": name,
+        "user_goal": "depone convergence check",
+        "target_medium": "journal_paper",
+        "spec_hash": quality_search._current_source_hash(paths, name),
+        "journal_guide_hash": "sha256:" + "1" * 64,
+        "outputs": {
+            "editable": f"examples/{name}/build/candidates/QS001/{name}.tex",
+            "pdf": f"examples/{name}/build/candidates/QS001/render/candidate.pdf",
+            "png": f"examples/{name}/build/candidates/QS001/render/candidate.png",
+            "svg": f"examples/{name}/build/candidates/QS001/render/candidate.svg",
+        },
+        "journal_constraints": {"passed": True, "violations": []},
+        "semantic_score": {"complete": True, "missing_elements": [], "incorrect_relations": []},
+        "aesthetic_score": {"overall": 0.81},
+        "decision": "accept",
+    }
+    convergence_decision = {
+        "schema": "figure-agent.convergence-decision.v1",
+        "decision": "accept",
+        "attempt_id": "run-001:QS001",
+        "selected_attempt_id": "run-001:QS001",
+        "best_previous_attempt_id": None,
+        "reasons": ["first_valid_attempt"],
+        "current_aesthetic_score": 0.81,
+        "selected_aesthetic_score": 0.81,
+    }
+
+    verdict = quality_search._quality_search_contract_verdict(
+        name=name,
+        run_id="run-001",
+        manifest={"status": "dry_run_complete", "mode": "execute_dry_witness"},
+        plan={"classifications": []},
+        policy={"source_mutation": "forbidden", "release_mutation": "forbidden"},
+        source_context={"source_hash": quality_search._current_source_hash(paths, name)},
+        candidate_set={
+            "candidates": [
+                {
+                    "id": "QS001",
+                    "apply_authority": "review_only",
+                    "selectors": [{"binding_state": "bound"}],
+                }
+            ]
+        },
+        render_results={"render_mode": "prepare_only", "rendered": [{"candidate_id": "QS001"}]},
+        visual_evidence={},
+        candidate_rankings=[
+            {"candidate_id": "QS001", "effective_apply_authority": "review_only"}
+        ],
+        decision={
+            "source_mutation": "not_performed",
+            "candidate_state": quality_search.NON_MARGINAL_REVIEW_CANDIDATE_STATE,
+            "selected_candidate_id": "QS001",
+            "selected_family": "apparatus_strengthen",
+        },
+        selected_semantic_precheck={"status": "pass"},
+        selected_review_packet={
+            "status": "ready",
+            "apply_readiness": {"status": "ready_for_local_acceptance"},
+        },
+        selected_acceptance_recommendation={
+            "status": "auto_accept_recommended",
+            "recommendation": "accept",
+            "is_acceptance_artifact": False,
+        },
+        recommendation_experience={
+            "writes": [f"docs/experience-log/{name}.jsonl"],
+            "record": {
+                "outcome": {
+                    "human_decision_kind": "auto_accept_recommended",
+                    "apply_status": "blocked",
+                }
+            },
+        },
+        selected_attempt=selected_attempt,
+        convergence_decision=convergence_decision,
+        paths=paths,
+    )
+
+    assert verdict["contract_status"] == "pass"
+    checks = verdict["checks"]
+    assert checks["selected_attempt_journal_constraints_passed"] is True
+    assert checks["selected_attempt_semantic_complete"] is True
+    assert checks["selected_convergence_decision"] == "accept"
+
+
+def test_quality_search_depone_verdict_rejects_auto_accept_without_convergence_accept(
+    tmp_path: Path,
+) -> None:
+    name = "fig_demo"
+    _write_minimal_fixture(tmp_path, name=name)
+    paths = quality_search.runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    verdict = quality_search._quality_search_contract_verdict(
+        name=name,
+        run_id="run-001",
+        manifest={"status": "dry_run_complete", "mode": "execute_dry_witness"},
+        plan={"classifications": []},
+        policy={"source_mutation": "forbidden", "release_mutation": "forbidden"},
+        source_context={"source_hash": quality_search._current_source_hash(paths, name)},
+        candidate_set={
+            "candidates": [
+                {
+                    "id": "QS001",
+                    "apply_authority": "review_only",
+                    "selectors": [{"binding_state": "bound"}],
+                }
+            ]
+        },
+        render_results={"render_mode": "prepare_only", "rendered": [{"candidate_id": "QS001"}]},
+        visual_evidence={},
+        candidate_rankings=[
+            {"candidate_id": "QS001", "effective_apply_authority": "review_only"}
+        ],
+        decision={
+            "source_mutation": "not_performed",
+            "candidate_state": quality_search.NON_MARGINAL_REVIEW_CANDIDATE_STATE,
+            "selected_candidate_id": "QS001",
+            "selected_family": "apparatus_strengthen",
+        },
+        selected_semantic_precheck={"status": "pass"},
+        selected_review_packet={
+            "status": "ready",
+            "apply_readiness": {"status": "ready_for_local_acceptance"},
+        },
+        selected_acceptance_recommendation={
+            "status": "auto_accept_recommended",
+            "recommendation": "accept",
+            "is_acceptance_artifact": False,
+        },
+        recommendation_experience={
+            "writes": [f"docs/experience-log/{name}.jsonl"],
+            "record": {
+                "outcome": {
+                    "human_decision_kind": "auto_accept_recommended",
+                    "apply_status": "blocked",
+                }
+            },
+        },
+        selected_attempt=None,
+        convergence_decision={
+            "schema": "figure-agent.convergence-decision.v1",
+            "decision": "reject",
+            "attempt_id": "run-001:QS001",
+            "selected_attempt_id": "run-001:QS001",
+            "reasons": ["journal_constraints_failed"],
+        },
+        paths=paths,
+    )
+
+    assert verdict["contract_status"] == "fail"
+    assert {
+        failure["code"] for failure in verdict["failures"]
+    } >= {
+        "selected_attempt_missing",
+        "selected_convergence_decision_not_accept",
+    }
+
+
 def test_quality_search_visual_evidence_writes_full_and_panel_contact_sheets(
     tmp_path: Path,
 ) -> None:

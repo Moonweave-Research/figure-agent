@@ -4932,6 +4932,8 @@ def _quality_search_contract_verdict(
     selected_review_packet: dict[str, Any] | None = None,
     selected_acceptance_recommendation: dict[str, Any] | None = None,
     recommendation_experience: dict[str, Any] | None = None,
+    selected_attempt: dict[str, Any] | None = None,
+    convergence_decision: dict[str, Any] | None = None,
     paths: runtime_paths.RuntimePaths,
 ) -> dict[str, Any]:
     failures: list[dict[str, str]] = []
@@ -5039,6 +5041,29 @@ def _quality_search_contract_verdict(
         and isinstance(selected_review_packet.get("apply_readiness"), dict)
         else {}
     )
+    selected_attempt_journal = (
+        selected_attempt.get("journal_constraints")
+        if isinstance(selected_attempt, dict)
+        and isinstance(selected_attempt.get("journal_constraints"), dict)
+        else {}
+    )
+    selected_attempt_semantic = (
+        selected_attempt.get("semantic_score")
+        if isinstance(selected_attempt, dict)
+        and isinstance(selected_attempt.get("semantic_score"), dict)
+        else {}
+    )
+    selected_attempt_outputs = (
+        selected_attempt.get("outputs")
+        if isinstance(selected_attempt, dict)
+        and isinstance(selected_attempt.get("outputs"), dict)
+        else {}
+    )
+    selected_attempt_id = (
+        str(selected_attempt.get("attempt_id"))
+        if isinstance(selected_attempt, dict) and selected_attempt.get("attempt_id")
+        else None
+    )
     if selected_candidate_ready:
         require(
             isinstance(selected_semantic_precheck, dict)
@@ -5107,6 +5132,42 @@ def _quality_search_contract_verdict(
                 experience_outcome.get("apply_status") == "blocked",
                 "selected_recommendation_experience_apply_status_invalid",
                 "selected durable experience row must remain blocked until explicit apply",
+            )
+            require(
+                isinstance(selected_attempt, dict),
+                "selected_attempt_missing",
+                "selected automatic recommendation lacks selected attempt evidence",
+            )
+            require(
+                selected_attempt_journal.get("passed") is True,
+                "selected_attempt_journal_constraints_failed",
+                "selected attempt did not pass hard journal constraints",
+            )
+            require(
+                selected_attempt_semantic.get("complete") is True,
+                "selected_attempt_semantic_incomplete",
+                "selected attempt did not pass semantic correctness",
+            )
+            require(
+                bool(selected_attempt_outputs.get("editable"))
+                and bool(selected_attempt_outputs.get("pdf"))
+                and bool(selected_attempt_outputs.get("png"))
+                and bool(selected_attempt_outputs.get("svg")),
+                "selected_attempt_outputs_incomplete",
+                "selected attempt is missing editable/pdf/png/svg outputs",
+            )
+            require(
+                isinstance(convergence_decision, dict)
+                and convergence_decision.get("decision") == "accept",
+                "selected_convergence_decision_not_accept",
+                "selected automatic recommendation lacks convergence accept decision",
+            )
+            require(
+                isinstance(convergence_decision, dict)
+                and convergence_decision.get("selected_attempt_id")
+                == selected_attempt_id,
+                "selected_convergence_attempt_mismatch",
+                "convergence decision does not select the selected attempt",
             )
     all_candidates_have_bound_selector = all(
         any(
@@ -5259,6 +5320,26 @@ def _quality_search_contract_verdict(
                 == [f"docs/experience-log/{name}.jsonl"]
                 else None
             ),
+            "selected_attempt_journal_constraints_passed": (
+                selected_attempt_journal.get("passed")
+                if isinstance(selected_attempt_journal, dict)
+                else None
+            ),
+            "selected_attempt_semantic_complete": (
+                selected_attempt_semantic.get("complete")
+                if isinstance(selected_attempt_semantic, dict)
+                else None
+            ),
+            "selected_attempt_output_formats": sorted(
+                key
+                for key in ("editable", "pdf", "png", "svg")
+                if selected_attempt_outputs.get(key)
+            ),
+            "selected_convergence_decision": (
+                convergence_decision.get("decision")
+                if isinstance(convergence_decision, dict)
+                else None
+            ),
         },
         "mutation_boundary": {
             "source_mutation": "not_performed",
@@ -5389,6 +5470,8 @@ def _depone_evidence_pack(
     selected_review_packet: dict[str, Any] | None = None,
     selected_acceptance_recommendation: dict[str, Any] | None = None,
     recommendation_experience: dict[str, Any] | None = None,
+    selected_attempt: dict[str, Any] | None = None,
+    convergence_decision: dict[str, Any] | None = None,
     paths: runtime_paths.RuntimePaths,
 ) -> dict[str, dict[str, Any] | str]:
     verdict = _quality_search_contract_verdict(
@@ -5407,6 +5490,8 @@ def _depone_evidence_pack(
         selected_review_packet=selected_review_packet,
         selected_acceptance_recommendation=selected_acceptance_recommendation,
         recommendation_experience=recommendation_experience,
+        selected_attempt=selected_attempt,
+        convergence_decision=convergence_decision,
         paths=paths,
     )
     verdict_hash = _sha256_bytes(_json_bytes(verdict))
@@ -5445,6 +5530,8 @@ def _depone_evidence_pack(
         f"{verdict['checks']['selected_acceptance_recommendation_status']}\n"
         f"- selected_recommendation_experience_log_status: "
         f"{verdict['checks']['selected_recommendation_experience_log_status']}\n"
+        f"- selected_convergence_decision: "
+        f"{verdict['checks']['selected_convergence_decision']}\n"
         "- source_mutation: not_performed\n"
         "- release_mutation: forbidden\n"
     )
@@ -6808,6 +6895,8 @@ def build_quality_search_execution(
         selected_review_packet=selected_review_packet,
         selected_acceptance_recommendation=selected_acceptance_recommendation,
         recommendation_experience=recommendation_experience,
+        selected_attempt=selected_attempt,
+        convergence_decision=convergence_decision,
         paths=paths,
     )
     artifacts = {
