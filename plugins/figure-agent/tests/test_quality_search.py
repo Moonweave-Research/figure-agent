@@ -1847,6 +1847,107 @@ def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
     assert "(10.08, 0.54) -- (13.18, 0.54);" in operation["replacement"]
 
 
+def test_quality_search_panel_f_post_boundary_force_balance_emits_panel_block(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% Panel C -- Localized traps",
+            "\\draw[cAmber!75!black, line width=0.60pt] (0,0) -- (1,0);",
+            "% =============== Column E -- ISPD-paired =================",
+            "\\draw[cAmber!70!black, line width=0.25pt] (0,0) -- (1,0);",
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[white] (9.52, 0.18) rectangle (13.92, 4.34);",
+            "\\node at (13.02, 4.125) {$V_{\\mathrm{active}}$};",
+            "\\node at (13.02, 3.75) {bias};",
+            "\\node at (13.64, 1.62) {electrode};",
+            "% quality-search F boundary polish: pull callouts off panel edge",
+            "\\draw[cRed!58!black, line width=0.36pt]",
+            (
+                "  (11.35,2.52) .. controls (10.86,3.18)"
+                " and (10.30,3.42) .. (9.84,3.42);"
+            ),
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,\n"
+                "      inner xsep=0.65pt, inner ysep=0.30pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{3.6}{4.3}\\selectfont, "
+                "text=cRed!70!black]\n"
+                "  at (9.78, 3.22) {$q_{\\mathrm{tr}}$};"
+            ),
+            (
+                "\\node[anchor=west, fill=white, fill opacity=0.90, text opacity=1,\n"
+                "      inner xsep=0.7pt, inner ysep=0.30pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{3.5}{4.2}\\selectfont, "
+                "text=cRed!70!black]\n"
+                "  at (9.78, 3.48) {trapped charge};"
+            ),
+            (
+                "\\draw[panelFCoulombRepulsionArrow, "
+                "-{Stealth[length=7.2pt,width=5.0pt]}, "
+                "cRed!80!black, line width=0.92pt]"
+            ),
+            "  (10.72, 1.12) -- (9.62, 1.12);",
+            (
+                "\\node[font=\\sffamily\\bfseries\\fontsize{5.5}{6.6}\\selectfont, "
+                "text=cRed!76!black,"
+            ),
+            "      anchor=south west] at (9.66, 1.58) {Coulomb};",
+            (
+                "\\node[labelMute, anchor=north west, fill=white, fill opacity=0.90, "
+                "text opacity=1,"
+            ),
+            "      inner xsep=0.95pt, inner ysep=0.45pt,",
+            "      font=\\sffamily\\fontsize{5.0}{6.0}\\selectfont,",
+            "      text=cRed!74!black] at (9.67, 1.41) {repulsion};",
+            "\\draw[<->, cGray!66!black, line width=0.78pt]",
+            "  (10.08, 0.54) -- (13.18, 0.54);",
+            "\\node at (11.58, 0.28) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="Panel F force arrow Coulomb repulsion air gap balance",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    force_balance = [
+        item
+        for item in payload["candidate_set"]["candidates"]
+        if item["family"] == "panel_f_post_boundary_force_balance"
+    ][0]
+    operation = force_balance["operations"][0]
+    assert force_balance["operation_scale"] == "panel_block"
+    assert force_balance["template_id"] == "v5f_panel_f_post_boundary_force_balance_v1"
+    assert operation["template_id"] == "v5f_panel_f_post_boundary_force_balance_v1"
+    assert "quality-search F post-boundary force balance" in operation["replacement"]
+    assert "(10.80, 1.06) -- (9.48, 1.06);" in operation["replacement"]
+    assert "at (9.62, 1.66) {Coulomb};" in operation["replacement"]
+    assert "at (9.63, 1.44) {repulsion};" in operation["replacement"]
+    assert "(10.18, 0.54) -- (13.18, 0.54);" in operation["replacement"]
+
+
 def test_quality_search_panel_f_final_finish_emits_post_boundary_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:

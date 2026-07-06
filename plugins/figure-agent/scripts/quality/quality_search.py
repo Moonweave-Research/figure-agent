@@ -79,6 +79,9 @@ PANEL_F_SOURCE_CUE_READABILITY_TEMPLATE_ID = "v5f_panel_f_source_cue_readability
 PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID = "v5f_panel_f_source_title_settle_v1"
 PANEL_F_SOURCE_CUE_DEMOTE_TEMPLATE_ID = "v5f_panel_f_source_cue_demote_v2"
 PANEL_F_CURRENT_LABEL_SANITIZE_TEMPLATE_ID = "v5f_panel_f_current_label_sanitize_v2"
+PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID = (
+    "v5f_panel_f_post_boundary_force_balance_v1"
+)
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -471,6 +474,27 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "shorten the trap-label leader so it no longer sprawls across Panel F",
             "separate Coulomb and repulsion labels from the force arrow",
             "preserve source cue, electrode, and air-gap semantics while reducing label clutter",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_post_boundary_force_balance": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+            "$V_{\\mathrm{active}}$",
+            "bias",
+        ],
+        "design_moves": [
+            "rebalance the post-boundary Coulomb arrow and force labels",
+            "keep repulsion out of the arrow lane without weakening the force cue",
+            "preserve electrode, air-gap, trapped-charge, and compact source semantics",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -1079,6 +1103,40 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 "expected_visual_movement": (
                     "trap labels move off the boundary, the leader stays clear of "
                     "the cantilever, and force labels no longer sit on the arrow lane"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, source attachment, "
+                    "or electrode/air-gap semantics"
+                ),
+            },
+        )
+    if any(
+        term in normalized
+        for term in ("force", "coulomb", "repulsion", "arrow", "air gap", "electrode")
+    ) and not any(term in normalized for term in ("apparatus", "strengthen")):
+        hypotheses.insert(
+            0,
+            {
+                "fixture": name,
+                "family": "panel_f_post_boundary_force_balance",
+                "source": "goal_directive",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "goal explicitly requests post-boundary Panel F force, "
+                        "arrow, Coulomb/repulsion, or air-gap balance"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert post-boundary force-label and arrow-spacing defects "
+                    "into a fresh source-bound Panel F candidate"
+                ),
+                "expected_visual_movement": (
+                    "Coulomb and repulsion separate from the arrow lane while the "
+                    "air-gap/electrode relation stays readable"
                 ),
                 "rollback_condition": (
                     "candidate worsens compile, protected labels, source attachment, "
@@ -2256,6 +2314,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_current_label_sanitize":
         return "panel_block"
+    if family == "panel_f_post_boundary_force_balance":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -2300,6 +2360,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_SOURCE_CUE_DEMOTE_TEMPLATE_ID
     if family == "panel_f_current_label_sanitize":
         return PANEL_F_CURRENT_LABEL_SANITIZE_TEMPLATE_ID
+    if family == "panel_f_post_boundary_force_balance":
+        return PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -4556,6 +4618,89 @@ def _panel_f_boundary_polish_replacement(
     return original, replacement, line_start, line_end
 
 
+def _panel_f_post_boundary_force_balance_template_applied(block: str) -> bool:
+    required_fragments = (
+        "% quality-search F post-boundary force balance: separate force labels",
+        "(10.80, 1.06) -- (9.48, 1.06);",
+        "anchor=south west] at (9.62, 1.66) {Coulomb};",
+        "text=cRed!72!black] at (9.63, 1.44) {repulsion};",
+        "(10.18, 0.54) -- (13.18, 0.54);",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_post_boundary_force_balance_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if not _panel_f_boundary_polish_template_applied(original):
+        return None
+    if _panel_f_post_boundary_force_balance_template_applied(original):
+        return None
+    replacements = (
+        (
+            "\\draw[panelFCoulombRepulsionArrow, "
+            "-{Stealth[length=7.2pt,width=5.0pt]}, "
+            "cRed!80!black, line width=0.92pt]\n"
+            "  (10.72, 1.12) -- (9.62, 1.12);",
+            "% quality-search F post-boundary force balance: separate force labels\n"
+            "\\draw[panelFCoulombRepulsionArrow, "
+            "-{Stealth[length=7.8pt,width=5.2pt]}, "
+            "cRed!78!black, line width=0.86pt]\n"
+            "  (10.80, 1.06) -- (9.48, 1.06);",
+        ),
+        (
+            "font=\\sffamily\\bfseries\\fontsize{5.5}{6.6}\\selectfont, "
+            "text=cRed!76!black,\n"
+            "      anchor=south west] at (9.66, 1.58) {Coulomb};",
+            "font=\\sffamily\\bfseries\\fontsize{5.2}{6.2}\\selectfont, "
+            "text=cRed!74!black,\n"
+            "      anchor=south west] at (9.62, 1.66) {Coulomb};",
+        ),
+        (
+            "font=\\sffamily\\fontsize{5.0}{6.0}\\selectfont,\n"
+            "      text=cRed!74!black] at (9.67, 1.41) {repulsion};",
+            "font=\\sffamily\\fontsize{4.8}{5.8}\\selectfont,\n"
+            "      text=cRed!72!black] at (9.63, 1.44) {repulsion};",
+        ),
+        (
+            "(10.08, 0.54) -- (13.18, 0.54);",
+            "(10.18, 0.54) -- (13.18, 0.54);",
+        ),
+    )
+    replacement = original
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    protected = (
+        "q_{\\mathrm{tr}}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "mechanical",
+        "$V_{\\mathrm{active}}$",
+        "bias",
+    )
+    if not all(label in replacement for label in protected):
+        return None
+    if not _panel_f_post_boundary_force_balance_template_applied(replacement):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _panel_f_final_finish_template_applied(block: str) -> bool:
     required_fragments = (
         "line width=0.22pt, dash pattern=on 1.2pt off 0.9pt",
@@ -4974,6 +5119,7 @@ def _candidate_operation_for_spec(
         "panel_f_source_title_settle": "F",
         "panel_f_source_cue_demote": "F",
         "panel_f_current_label_sanitize": "F",
+        "panel_f_post_boundary_force_balance": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -5464,6 +5610,36 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_CURRENT_LABEL_SANITIZE_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_post_boundary_force_balance":
+        force_balance_block = _panel_f_post_boundary_force_balance_replacement(
+            lines=lines,
+            selector=selector,
+        )
+        if force_balance_block is not None:
+            original, new_text, line_start, line_end = force_balance_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": (
+                    "quality_search_panel_f_post_boundary_force_balance_panel_block"
+                ),
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_post_boundary_force_balance_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -5532,6 +5708,7 @@ def _candidate_operation_for_spec(
         "panel_f_source_title_settle": 0.8,
         "panel_f_source_cue_demote": 0.8,
         "panel_f_current_label_sanitize": 0.8,
+        "panel_f_post_boundary_force_balance": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -7010,6 +7187,7 @@ def _candidate_structural_impact(
         "panel_f_source_title_settle",
         "panel_f_source_cue_demote",
         "panel_f_current_label_sanitize",
+        "panel_f_post_boundary_force_balance",
     }:
         possible_ripples.append(
             {
@@ -7174,6 +7352,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_source_cue_demote": 0.88,
             "panel_f_current_label_sanitize": 0.9,
             "panel_f_boundary_polish": 0.84,
+            "panel_f_post_boundary_force_balance": 0.9,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
         }
@@ -7283,6 +7462,9 @@ def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
         "panel_f_source_title_settle": PANEL_F_SOURCE_TITLE_SETTLE_TEMPLATE_ID,
         "panel_f_source_cue_demote": PANEL_F_SOURCE_CUE_DEMOTE_TEMPLATE_ID,
         "panel_f_current_label_sanitize": PANEL_F_CURRENT_LABEL_SANITIZE_TEMPLATE_ID,
+        "panel_f_post_boundary_force_balance": (
+            PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID
+        ),
     }
     if score.get("template_id") != targeted_templates.get(str(score.get("family"))):
         return False

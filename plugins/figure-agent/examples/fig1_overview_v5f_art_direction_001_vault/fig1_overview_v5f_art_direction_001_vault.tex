@@ -2117,17 +2117,18 @@
   at (9.78, 3.48) {trapped charge};
 
 % Coulomb-only response, intentionally stronger than the apparatus.
-\draw[panelFCoulombRepulsionArrow, -{Stealth[length=7.2pt,width=5.0pt]}, cRed!80!black, line width=0.92pt]
-  (10.72, 1.12) -- (9.62, 1.12);
-\node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cRed!76!black,
-      anchor=south west] at (9.66, 1.58) {Coulomb};
+% quality-search F post-boundary force balance: separate force labels
+\draw[panelFCoulombRepulsionArrow, -{Stealth[length=7.8pt,width=5.2pt]}, cRed!78!black, line width=0.86pt]
+  (10.80, 1.06) -- (9.48, 1.06);
+\node[font=\sffamily\bfseries\fontsize{5.2}{6.2}\selectfont, text=cRed!74!black,
+      anchor=south west] at (9.62, 1.66) {Coulomb};
 \node[labelMute, anchor=north west, fill=white, fill opacity=0.90, text opacity=1,
       inner xsep=0.95pt, inner ysep=0.45pt,
-      font=\sffamily\fontsize{5.0}{6.0}\selectfont,
-      text=cRed!74!black] at (9.67, 1.41) {repulsion};
+      font=\sffamily\fontsize{4.8}{5.8}\selectfont,
+      text=cRed!72!black] at (9.63, 1.44) {repulsion};
 
 \draw[<->, cGray!66!black, line width=0.78pt]
-  (10.08, 0.54) -- (13.18, 0.54);
+  (10.18, 0.54) -- (13.18, 0.54);
 \node[labelMute, anchor=north, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=1.4pt, inner ysep=0.9pt,
       font=\sffamily\fontsize{5.4}{6.5}\selectfont, text=cGray!75!black]
