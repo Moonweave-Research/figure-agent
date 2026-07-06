@@ -987,3 +987,59 @@ def test_require_accepted_mode_rejects_unaccepted_fixture_with_checker_debt(
     assert "fixture is not marked accepted: true" in failures
     assert not any(failure.startswith("collision budget exceeded") for failure in failures)
     assert "unresolved visual clash budget exceeded: 13 > 0" in failures
+
+
+def test_check_example_auto_mode_missing_accepted_key_fails(tmp_path: Path) -> None:
+    """Auto mode (no flag) on a spec that declares neither the accepted key nor an
+    explicit basic-mode request must fail rather than silently skip provenance gates."""
+    fixture = tmp_path / "noAcceptedKey"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text("name: noAcceptedKey\n", encoding="utf-8")
+    (fixture / "noAcceptedKey.tex").write_text("% empty", encoding="utf-8")
+    _write_minimal_export_set(fixture / "exports", "noAcceptedKey")
+
+    failures = check_example(fixture)
+
+    assert any("missing accepted declaration" in failure for failure in failures)
+
+
+def test_check_example_explicit_basic_mode_missing_accepted_key_passes(tmp_path: Path) -> None:
+    """The permissive path stays available via the explicit require_accepted=False opt-in."""
+    fixture = tmp_path / "explicitBasic"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text("name: explicitBasic\n", encoding="utf-8")
+    (fixture / "explicitBasic.tex").write_text("% empty", encoding="utf-8")
+    _write_minimal_export_set(fixture / "exports", "explicitBasic")
+
+    failures = check_example(fixture, require_accepted=False)
+
+    assert failures == []
+
+
+def test_theory_guard_malformed_blocker_row_fails(tmp_path: Path) -> None:
+    """A BLOCKER row missing columns cannot be evaluated and must fail closed."""
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text(
+        "| ID | Severity | Claim | Check Method | Pass/Fail Evidence |\n"
+        "|---|---|---|---|---|\n"
+        "| TG-1 | BLOCKER | invariant |\n",
+        encoding="utf-8",
+    )
+
+    failures = golden_checks.theory_guard_failures(guard)
+
+    assert any("malformed theory guard BLOCKER row" in failure for failure in failures)
+
+
+def test_theory_guard_header_and_separator_rows_are_not_false_positives(tmp_path: Path) -> None:
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text(
+        "| ID | Severity | Claim | Check Method | Pass/Fail Evidence |\n"
+        "|---|---|\n"
+        "| TG-1 | BLOCKER | invariant | source review | Pass: invariant verified. |\n",
+        encoding="utf-8",
+    )
+
+    failures = golden_checks.theory_guard_failures(guard)
+
+    assert failures == []
