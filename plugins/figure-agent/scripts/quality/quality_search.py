@@ -92,6 +92,9 @@ PANEL_F_POST_LABEL_FORCE_CLEANUP_TEMPLATE_ID = (
 PANEL_F_POST_FORCE_SPACING_FINISH_TEMPLATE_ID = (
     "v5f_panel_f_post_force_spacing_finish_v1"
 )
+PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID = (
+    "v5f_panel_f_post_spacing_source_finish_v1"
+)
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -589,6 +592,27 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "finish the force-label rail after arrow cleanup",
             "shorten the force arrow slightly so it does not dominate the lower-left panel",
             "preserve source connector, electrode, air gap, and trapped-charge semantics",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_post_spacing_source_finish": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+            "$V_{\\mathrm{active}}$",
+            "bias",
+        ],
+        "design_moves": [
+            "soften the compact source lead after force-spacing finish",
+            "keep the source cue subordinate to the electrode-air-gap mechanism",
+            "preserve force labels, trapped-charge label rail, and air-gap semantics",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -1410,6 +1434,51 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 "rollback_condition": (
                     "candidate worsens compile, protected labels, force direction, "
                     "source connector, or electrode/air-gap semantics"
+                ),
+            },
+        )
+    if any(
+        term in normalized
+        for term in ("after spacing finish", "post spacing", "final")
+    ) and any(
+        term in normalized
+        for term in (
+            "source",
+            "connector",
+            "apparatus",
+            "electrode",
+            "air gap",
+            "restraint",
+            "polish",
+        )
+    ):
+        hypotheses.insert(
+            0,
+            {
+                "fixture": name,
+                "family": "panel_f_post_spacing_source_finish",
+                "source": "goal_directive",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "goal explicitly requests final Panel F source connector "
+                        "and electrode-air-gap restraint after spacing finish"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert post-spacing source/electrode apparatus defects into "
+                    "a fresh source-bound Panel F finish candidate"
+                ),
+                "expected_visual_movement": (
+                    "source lead becomes quieter while the electrode and air gap "
+                    "remain readable"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, source attachment, "
+                    "force direction, or electrode/air-gap semantics"
                 ),
             },
         )
@@ -2564,6 +2633,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_post_force_spacing_finish":
         return "panel_block"
+    if family == "panel_f_post_spacing_source_finish":
+        return "panel_block"
     if family == "density_reduce":
         return "panel_block"
     if family == "null_baseline":
@@ -2618,6 +2689,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_POST_LABEL_FORCE_CLEANUP_TEMPLATE_ID
     if family == "panel_f_post_force_spacing_finish":
         return PANEL_F_POST_FORCE_SPACING_FINISH_TEMPLATE_ID
+    if family == "panel_f_post_spacing_source_finish":
+        return PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID
     if family == "density_reduce":
         return DENSITY_PANEL_E_TEMPLATE_ID
     if family == "null_baseline":
@@ -5305,6 +5378,77 @@ def _panel_f_post_force_spacing_finish_replacement(
     return original, replacement, line_start, line_end
 
 
+def _panel_f_post_spacing_source_finish_template_applied(block: str) -> bool:
+    required_fragments = (
+        "% quality-search F post-spacing source finish: soften source lead",
+        "(13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);",
+        "\\fill[cRed!58!black] (13.24, 3.82) circle (0.016);",
+        "\\fill[cGray!78!black] (13.18, 2.82) circle (0.034);",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_post_spacing_source_finish_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+    if line_range is None:
+        return None
+    line_start, line_end = line_range
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if not _panel_f_post_force_spacing_finish_template_applied(original):
+        return None
+    if _panel_f_post_spacing_source_finish_template_applied(original):
+        return None
+    replacements = (
+        (
+            "\\fill[cRed!62!black] (13.24, 3.82) circle (0.018);",
+            "\\fill[cRed!58!black] (13.24, 3.82) circle (0.016);",
+        ),
+        (
+            "% quality-search F post-force source connector: simplify source lead\n"
+            "\\draw[cGray!58!black, line width=0.36pt, rounded corners=1.8pt]\n"
+            "  (13.24, 3.78) -- (13.18, 3.42) -- (13.18, 2.82);",
+            "% quality-search F post-spacing source finish: soften source lead\n"
+            "\\draw[cGray!52!black, line width=0.30pt, rounded corners=2.0pt]\n"
+            "  (13.24, 3.78) -- (13.21, 3.42) -- (13.18, 2.82);",
+        ),
+        (
+            "\\fill[cGray!82!black] (13.18, 2.82) circle (0.038);",
+            "\\fill[cGray!78!black] (13.18, 2.82) circle (0.034);",
+        ),
+    )
+    replacement = original
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    protected = (
+        "q_{\\mathrm{tr}}",
+        "trapped charge",
+        "Coulomb",
+        "repulsion",
+        "electrode",
+        "air gap",
+        "mechanical",
+        "$V_{\\mathrm{active}}$",
+        "bias",
+    )
+    if not all(label in replacement for label in protected):
+        return None
+    if not _panel_f_post_spacing_source_finish_template_applied(replacement):
+        return None
+    if not _panel_f_post_force_spacing_finish_template_applied(replacement):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _panel_f_final_finish_template_applied(block: str) -> bool:
     required_fragments = (
         "line width=0.22pt, dash pattern=on 1.2pt off 0.9pt",
@@ -5728,6 +5872,7 @@ def _candidate_operation_for_spec(
         "panel_f_post_source_label_scale": "F",
         "panel_f_post_label_force_cleanup": "F",
         "panel_f_post_force_spacing_finish": "F",
+        "panel_f_post_spacing_source_finish": "F",
         "density_reduce": "E",
     }.get(family)
     selector = next(
@@ -6362,6 +6507,34 @@ def _candidate_operation_for_spec(
             "template_id": PANEL_F_POST_FORCE_SPACING_FINISH_TEMPLATE_ID,
             "panel": "F",
         }
+    if family == "panel_f_post_spacing_source_finish":
+        source_finish_block = _panel_f_post_spacing_source_finish_replacement(
+            lines=lines,
+            selector=selector,
+        )
+        if source_finish_block is not None:
+            original, new_text, line_start, line_end = source_finish_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_post_spacing_source_finish_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_post_spacing_source_finish_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID,
+            "panel": "F",
+        }
     if family == "panel_f_density_relief":
         density_relief_block = _panel_f_density_relief_replacement(
             lines=lines, selector=selector
@@ -6435,6 +6608,7 @@ def _candidate_operation_for_spec(
         "panel_f_post_source_label_scale": 0.8,
         "panel_f_post_label_force_cleanup": 0.8,
         "panel_f_post_force_spacing_finish": 0.8,
+        "panel_f_post_spacing_source_finish": 0.8,
         "density_reduce": 0.65,
     }.get(family, 0.65)
     replacement = _line_width_replacement(
@@ -7918,6 +8092,7 @@ def _candidate_structural_impact(
         "panel_f_post_source_label_scale",
         "panel_f_post_label_force_cleanup",
         "panel_f_post_force_spacing_finish",
+        "panel_f_post_spacing_source_finish",
     }:
         possible_ripples.append(
             {
@@ -8087,6 +8262,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_post_source_label_scale": 0.88,
             "panel_f_post_label_force_cleanup": 0.9,
             "panel_f_post_force_spacing_finish": 0.9,
+            "panel_f_post_spacing_source_finish": 0.88,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
         }
@@ -8206,6 +8382,9 @@ def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
         "panel_f_post_label_force_cleanup": PANEL_F_POST_LABEL_FORCE_CLEANUP_TEMPLATE_ID,
         "panel_f_post_force_spacing_finish": (
             PANEL_F_POST_FORCE_SPACING_FINISH_TEMPLATE_ID
+        ),
+        "panel_f_post_spacing_source_finish": (
+            PANEL_F_POST_SPACING_SOURCE_FINISH_TEMPLATE_ID
         ),
     }
     if score.get("template_id") != targeted_templates.get(str(score.get("family"))):
