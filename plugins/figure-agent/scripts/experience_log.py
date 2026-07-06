@@ -54,13 +54,13 @@ def _load_json(path: Path, label: str) -> dict[str, Any]:
 
 def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any]]:
     fixture_identity.validate_fixture_name(name)
+    override = os.environ.get("FIG_AGENT_EXPERIENCE_LOG_DIR")
     log_dir = experience_log_dir(plugin_root)
     path = log_dir / f"{name}.jsonl"
-    for label, item in (
-        ("docs", plugin_root / "docs"),
-        ("experience_log", log_dir),
-        ("experience_log", path),
-    ):
+    checks = (("experience_log", log_dir), ("experience_log", path))
+    if not override:
+        checks = (("docs", plugin_root / "docs"), *checks)
+    for label, item in checks:
         if item.is_symlink():
             raise ExperienceLogError(f"{label}_symlink")
     if not path.is_file():

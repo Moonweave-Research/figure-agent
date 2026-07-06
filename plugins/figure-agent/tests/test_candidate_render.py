@@ -882,7 +882,7 @@ def test_render_rejects_build_dir_symlink_to_exports(tmp_path: Path) -> None:
     assert list(exports.rglob("*")) == []
 
 
-def test_render_candidate_set_missing_manifest_is_an_error(tmp_path: Path) -> None:
+def test_render_candidate_set_unmatched_candidate_id_is_an_error(tmp_path: Path) -> None:
     """A specific candidate_id that matches nothing must fail, not report empty success.
 
     This is the live fail-open: render_candidate_set filters by candidate_id and,

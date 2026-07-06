@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -82,13 +83,13 @@ def _rank_score(event: dict[str, Any]) -> float | None:
 
 
 def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any]]:
+    override = os.environ.get("FIG_AGENT_EXPERIENCE_LOG_DIR")
     log_dir = experience_log.experience_log_dir(plugin_root)
     path = log_dir / f"{name}.jsonl"
-    for label, item in (
-        ("docs", plugin_root / "docs"),
-        ("experience_log", log_dir),
-        ("experience_log", path),
-    ):
+    checks = (("experience_log", log_dir), ("experience_log", path))
+    if not override:
+        checks = (("docs", plugin_root / "docs"), *checks)
+    for label, item in checks:
         if item.is_symlink():
             raise QualityMemoryIndexError(f"{label}_symlink")
     if not path.is_file():

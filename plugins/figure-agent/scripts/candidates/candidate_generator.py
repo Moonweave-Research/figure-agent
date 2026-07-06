@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -53,13 +54,13 @@ def _load_history_suppressions(
     paths: runtime_paths.RuntimePaths,
     name: str,
 ) -> dict[tuple[str, str], str]:
+    override = os.environ.get("FIG_AGENT_EXPERIENCE_LOG_DIR")
     log_dir = experience_log.experience_log_dir(paths.plugin_root)
     path = log_dir / f"{name}.jsonl"
-    for label, item in (
-        ("docs", paths.plugin_root / "docs"),
-        ("experience_log", log_dir),
-        ("experience_log", path),
-    ):
+    checks = (("experience_log", log_dir), ("experience_log", path))
+    if not override:
+        checks = (("docs", paths.plugin_root / "docs"), *checks)
+    for label, item in checks:
         if item.is_symlink():
             raise CandidateGeneratorError(f"{label}_symlink")
     if not path.is_file():
