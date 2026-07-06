@@ -934,7 +934,7 @@ def test_source_detector_names_allowlisted_detector_from_evidence() -> None:
 
     assert (
         candidate_apply._source_detector(_with_uri("figure://demo/audit/undeclared-geometry"))
-        == "check_collisions"
+        == "check_undeclared_geometry"
     )
     assert (
         candidate_apply._source_detector(_with_uri("figure://demo/audit/visual-clash"))

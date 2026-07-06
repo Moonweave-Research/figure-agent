@@ -617,7 +617,7 @@ def _source_detector(source_defect: dict[str, Any]) -> str:
             if "text-boundary" in uri or "text_boundary" in uri:
                 return "check_text_boundary_clash"
             if "undeclared-geometry" in uri or "undeclared_geometry" in uri:
-                return "check_collisions"
+                return "check_undeclared_geometry"
     return "quality_defect_ledger"
 
 
