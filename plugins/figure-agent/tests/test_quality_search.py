@@ -801,6 +801,56 @@ def test_quality_search_apparatus_strengthen_materializes_current_v5f_panel_bloc
     assert "Stealth[length=9.6pt,width=6.8pt]" in operation["replacement"]
     assert "line width=1.24pt" in operation["replacement"]
     assert "\\draw[<->, cGray!64!black, line width=0.70pt]" in operation["replacement"]
+    qtr_label = quality_search._panel_f_qtr_label_lane_replacement(  # type: ignore[attr-defined]
+        lines=refresh_lines,
+        selector={"panel": "F", "line_start": 1, "line_end": len(refresh_lines)},
+    )
+    assert qtr_label is not None
+    _, qtr_replacement, _, _ = qtr_label
+    assert "quality-search F qtr-left label lane" in qtr_replacement
+    assert "at (9.50, 3.05) {$q_{\\mathrm{tr}}$};" in qtr_replacement
+    assert "at (9.50, 3.60) {trapped charge};" in qtr_replacement
+    qtr_operation, qtr_refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS003",
+            "family": "panel_f_qtr_label_lane",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(refresh_lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=refresh_lines,
+        source_ref="figures/example.tex",
+    )
+    assert qtr_refusal is None
+    assert qtr_operation is not None
+    assert qtr_operation["template_id"] == "v5f_panel_f_qtr_label_lane_v1"
+    qtr_operation_v2, qtr_refusal_v2 = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS003",
+            "family": "panel_f_qtr_label_lane",
+            "template_id": "v5f_panel_f_qtr_label_lane_v2",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(refresh_lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=refresh_lines,
+        source_ref="figures/example.tex",
+    )
+    assert qtr_refusal_v2 is None
+    assert qtr_operation_v2 is not None
+    assert qtr_operation_v2["template_id"] == "v5f_panel_f_qtr_label_lane_v2"
+    assert "quality-search F qtr-left label lane v2" in qtr_operation_v2["replacement"]
+    assert "at (9.30, 3.74) {trapped charge};" in qtr_operation_v2["replacement"]
 
 
 def test_quality_search_qtr_micro_defect_emits_panel_f_apparatus_lane_candidate(
@@ -2193,6 +2243,67 @@ def test_quality_search_memory_summary_preserves_duplicate_diagnostics() -> None
     )
 
 
+def test_quality_search_plan_escalates_stale_panel_f_apparatus_goal(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {
+            "event_count": 8,
+            "candidate_event_count": 8,
+            "eligible_prior_count": 2,
+            "duplicate_experience_attempt_count": 5,
+            "duplicate_experience_attempt_rate": 0.625,
+            "families": {
+                "apparatus_strengthen": {
+                    "attempts": 2,
+                    "recommended_prior": 0.0,
+                }
+            },
+            "family_templates": {
+                "apparatus_strengthen::v5f_panel_f_redraw_overlay_refresh_v1": {
+                    "attempts": 1,
+                    "recommended_prior": 0.0,
+                }
+            },
+        },
+    )
+
+    payload = quality_search.build_quality_search_plan(
+        "fig_demo",
+        goal="Panel F apparatus fresh family escalation",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=PLUGIN_ROOT,
+    )
+
+    families = payload["next_recommended_operation"]["candidate_families"]
+    assert families[:2] == ["apparatus_strengthen", "label_reflow"]
+    assert {
+        "panel_f_qtr_label_lane",
+        "panel_f_leader_left_lane",
+        "panel_f_electrode_lead_lane",
+        "panel_f_auto_composite_lane",
+    }.issubset(set(families))
+    escalation = [
+        item
+        for item in payload["patch_hypotheses"]
+        if item["source"] == "stale_goal_memory_escalation"
+    ]
+    assert len(escalation) == 4
+    assert all(item["mutation_allowed"] is False for item in escalation)
+
+
 def test_quality_search_policy_penalizes_duplicate_experience_family() -> None:
     plan = {
         "state": {
@@ -2349,6 +2460,32 @@ def test_quality_search_auto_composite_prefers_fresh_electrode_variant() -> None
             "panel_f_auto_composite_lane", plan
         )
         == "v5d_panel_f_auto_composite_force_anchor_electrode_v1"
+    )
+
+
+def test_quality_search_qtr_label_prefers_fresh_v5f_variant() -> None:
+    plan = {
+        "state": {
+            "memory": {
+                "family_templates": {
+                    (
+                        "panel_f_qtr_label_lane::"
+                        "v5f_panel_f_qtr_label_lane_v1"
+                    ): {"attempts": 1},
+                    (
+                        "panel_f_qtr_label_lane::"
+                        "v5f_panel_f_qtr_label_lane_v2"
+                    ): {"attempts": 0},
+                }
+            }
+        }
+    }
+
+    assert (
+        quality_search._preferred_template_id_for_plan(  # type: ignore[attr-defined]
+            "panel_f_qtr_label_lane", plan
+        )
+        == "v5f_panel_f_qtr_label_lane_v2"
     )
 
 
@@ -3525,7 +3662,8 @@ def test_quality_search_depone_verdict_allows_convergence_stop_defer(
             "schema": "figure-agent.convergence-decision.v1",
             "decision": "stop",
             "attempt_id": "run-002:QS001",
-            "selected_attempt_id": "run-002:QS001",
+            "selected_attempt_id": "run-001:QS001",
+            "best_previous_attempt_id": "run-001:QS001",
             "reasons": ["marginal_improvement_below_threshold"],
         },
         paths=paths,
@@ -3534,6 +3672,10 @@ def test_quality_search_depone_verdict_allows_convergence_stop_defer(
     assert verdict["contract_status"] == "pass"
     assert verdict["checks"]["selected_convergence_decision"] == "stop"
     assert verdict["checks"]["selected_acceptance_recommendation_status"] == "blocked"
+    assert not any(
+        failure["code"] == "selected_convergence_attempt_mismatch"
+        for failure in verdict["failures"]
+    )
 
 
 def test_quality_search_visual_evidence_writes_full_and_panel_contact_sheets(

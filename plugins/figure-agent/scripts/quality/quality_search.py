@@ -58,6 +58,8 @@ PANEL_F_FINAL_FINISH_TEMPLATE_ID = "v5f_panel_f_final_finish_v1"
 PANEL_F_LABEL_ROUTE_FINISH_TEMPLATE_ID = "v5f_panel_f_label_route_finish_v1"
 PANEL_F_DENSITY_RELIEF_TEMPLATE_ID = "v5f_panel_f_density_relief_v1"
 PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID = "v5d_panel_f_qtr_label_lane_v1"
+PANEL_F_V5F_QTR_LABEL_LANE_TEMPLATE_ID = "v5f_panel_f_qtr_label_lane_v1"
+PANEL_F_V5F_QTR_LABEL_LANE_V2_TEMPLATE_ID = "v5f_panel_f_qtr_label_lane_v2"
 PANEL_F_QTR_APPARATUS_LANE_TEMPLATE_ID = "v5d_panel_f_qtr_apparatus_lane_v1"
 PANEL_F_FORCE_GAP_LANE_TEMPLATE_ID = "v5d_panel_f_force_gap_lane_v1"
 PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID = "v5d_panel_f_mechanical_anchor_lane_v1"
@@ -917,6 +919,131 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
     return hypotheses
 
 
+def _memory_attempt_count(
+    memory: dict[str, Any],
+    family: str,
+    template_id: str | None = None,
+) -> int:
+    if template_id:
+        templates = (
+            memory.get("family_templates")
+            if isinstance(memory.get("family_templates"), dict)
+            else {}
+        )
+        entry = templates.get(f"{family}::{template_id}") if isinstance(templates, dict) else None
+    else:
+        families = memory.get("families") if isinstance(memory.get("families"), dict) else {}
+        entry = families.get(family) if isinstance(families, dict) else None
+    if not isinstance(entry, dict):
+        return 0
+    return _bounded_int(entry.get("attempts"), default=0)
+
+
+def _stale_goal_escalation_hypotheses(
+    name: str,
+    goal: str,
+    memory: dict[str, Any] | None,
+    existing_hypotheses: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if not isinstance(memory, dict) or not _goal_requests_panel_f_apparatus(goal):
+        return []
+    duplicate_rate = _bounded_float(
+        memory.get("duplicate_experience_attempt_rate"),
+        default=0.0,
+        lower=0.0,
+        upper=1.0,
+    )
+    if duplicate_rate < 0.5:
+        return []
+    existing_families = {
+        str(item.get("family") or "")
+        for item in existing_hypotheses
+        if isinstance(item, dict)
+    }
+    apparatus_attempts = _memory_attempt_count(memory, "apparatus_strengthen")
+    if apparatus_attempts <= 0 or "apparatus_strengthen" not in existing_families:
+        return []
+    common = {
+        "fixture": name,
+        "source": "stale_goal_memory_escalation",
+        "mutation_allowed": False,
+        "mutation_block_reason": "quality-search v0 is planner-only",
+        "target_scope": "panel",
+        "expected_detector_movement": (
+            "escape repeated Panel F apparatus-strengthen candidates after "
+            "convergence stop/defer evidence"
+        ),
+        "rollback_condition": (
+            "candidate worsens compile, protected labels, or Panel F mechanism semantics"
+        ),
+    }
+    return [
+        {
+            **common,
+            "family": "panel_f_qtr_label_lane",
+            "target_hint": {
+                "panels": ["F"],
+                "reason": (
+                    "apparatus_strengthen is stale; move charge-trapping notation "
+                    "into a fresh left-label lane"
+                ),
+            },
+            "expected_visual_movement": (
+                "q_tr and trapped-charge label move toward the left reading lane "
+                "with less cantilever crossing"
+            ),
+        },
+        {
+            **common,
+            "family": "panel_f_leader_left_lane",
+            "target_hint": {
+                "panels": ["F"],
+                "reason": (
+                    "apparatus_strengthen is stale; reroute the trapped-charge "
+                    "leader away from the cantilever body"
+                ),
+            },
+            "expected_visual_movement": (
+                "trapped-charge leader becomes shorter and avoids cutting across the beam"
+            ),
+        },
+        {
+            **common,
+            "family": "panel_f_electrode_lead_lane",
+            "target_hint": {
+                "panels": ["F"],
+                "reason": (
+                    "apparatus_strengthen is stale; make a fresh source-to-electrode "
+                    "connection candidate"
+                ),
+            },
+            "expected_visual_movement": (
+                "equipment source connects to the electrode through a clear contact path"
+            ),
+        },
+        {
+            **common,
+            "family": "panel_f_auto_composite_lane",
+            "target_hint": {
+                "panels": ["F"],
+                "reason": (
+                    "single apparatus redraw is stale; compose charge, force-gap, "
+                    "and mechanical-anchor changes into a fresh bounded candidate"
+                ),
+                "composite_sequence": [
+                    "panel_f_qtr_label_lane",
+                    "panel_f_force_gap_lane",
+                    "panel_f_mechanical_anchor_lane",
+                ],
+            },
+            "expected_visual_movement": (
+                "charge label, Coulomb force, electrode/air-gap, and mechanical support "
+                "move together instead of redrawing only the box"
+            ),
+        },
+    ]
+
+
 def _micro_defect_hypotheses(name: str, driver: dict[str, Any]) -> list[dict[str, Any]]:
     ids = _unlinked_micro_defect_ids(driver)
     normalized = {item.upper() for item in ids}
@@ -1522,6 +1649,14 @@ def build_quality_search_plan(
         goal=goal,
         allow_stale_critique_search=allow_stale_critique_search,
     )
+    stale_goal_hypotheses = _stale_goal_escalation_hypotheses(
+        name,
+        goal,
+        memory,
+        hypotheses,
+    )
+    if stale_goal_hypotheses:
+        hypotheses = _merge_hypotheses(hypotheses, stale_goal_hypotheses, limit=8)
     basin = _loop_basin(
         driver.get("loop_checkpoint") if isinstance(driver.get("loop_checkpoint"), dict) else None
     )
@@ -1843,6 +1978,23 @@ def _memory_template_attempts(
 
 def _preferred_template_id_for_plan(family: str, plan: dict[str, Any]) -> str:
     preferred = _preferred_template_id(family)
+    if family == "panel_f_qtr_label_lane":
+        if (
+            _memory_template_attempts(
+                plan,
+                family=family,
+                template_id=PANEL_F_V5F_QTR_LABEL_LANE_TEMPLATE_ID,
+            )
+            > 0
+            and _memory_template_attempts(
+                plan,
+                family=family,
+                template_id=PANEL_F_V5F_QTR_LABEL_LANE_V2_TEMPLATE_ID,
+            )
+            <= 0
+        ):
+            return PANEL_F_V5F_QTR_LABEL_LANE_V2_TEMPLATE_ID
+        return preferred
     if family != "panel_f_auto_composite_lane":
         return preferred
     if (
@@ -2425,10 +2577,112 @@ def _panel_f_qtr_label_lane_template_applied(block: str) -> bool:
     return all(fragment in block for fragment in required_fragments)
 
 
+def _panel_f_v5f_qtr_label_lane_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search F qtr-left label lane",
+        "(11.42,2.46) .. controls (10.70,2.96) and (9.98,3.20) .. (9.50,3.20);",
+        "at (9.50, 3.05) {$q_{\\mathrm{tr}}$};",
+        "at (9.50, 3.60) {trapped charge};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_v5f_qtr_label_lane_v2_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search F qtr-left label lane v2",
+        "(11.38,2.42) .. controls (10.58,3.02) and (9.78,3.34) .. (9.30,3.38);",
+        "at (9.30, 3.18) {$q_{\\mathrm{tr}}$};",
+        "at (9.30, 3.74) {trapped charge};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_v5f_qtr_label_lane_base_replacement(block: str) -> str | None:
+    if not _panel_f_overlay_has_protected_labels(block):
+        return None
+    replacement = _refreshed_panel_f_overlay(block)
+    if replacement is None:
+        replacement = _strengthened_panel_f_overlay(block)
+    return replacement
+
+
+def _panel_f_v5f_qtr_label_lane_replacement(block: str) -> str | None:
+    if _panel_f_v5f_qtr_label_lane_template_applied(block):
+        return None
+    replacement = _panel_f_v5f_qtr_label_lane_base_replacement(block)
+    if replacement is None:
+        return None
+    replacements = (
+        (
+            "\\draw[cRed!62!black, line width=0.46pt]\n"
+            "  (11.46,2.50) .. controls (10.82,3.08) and (10.12,3.32) .. (9.54,3.32);",
+            "% quality-search F qtr-left label lane -- review-only candidate\n"
+            "\\draw[cRed!64!black, line width=0.48pt]\n"
+            "  (11.42,2.46) .. controls (10.70,2.96) and (9.98,3.20) .. (9.50,3.20);",
+        ),
+        (
+            "at (9.54, 3.18) {$q_{\\mathrm{tr}}$};",
+            "at (9.50, 3.05) {$q_{\\mathrm{tr}}$};",
+        ),
+        (
+            "at (9.54, 3.42) {trapped charge};",
+            "at (9.50, 3.60) {trapped charge};",
+        ),
+    )
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == block or not _panel_f_overlay_has_protected_labels(replacement):
+        return None
+    return replacement
+
+
+def _panel_f_v5f_qtr_label_lane_v2_replacement(block: str) -> str | None:
+    if _panel_f_v5f_qtr_label_lane_v2_template_applied(block):
+        return None
+    replacement = _panel_f_v5f_qtr_label_lane_base_replacement(block)
+    if replacement is None:
+        return None
+    replacements = (
+        (
+            "\\draw[cRed!62!black, line width=0.46pt]\n"
+            "  (11.46,2.50) .. controls (10.82,3.08) and (10.12,3.32) .. (9.54,3.32);",
+            "% quality-search F qtr-left label lane v2 -- review-only candidate\n"
+            "\\draw[cRed!64!black, line width=0.50pt]\n"
+            "  (11.38,2.42) .. controls (10.58,3.02) and (9.78,3.34) .. (9.30,3.38);",
+        ),
+        (
+            "at (9.54, 3.18) {$q_{\\mathrm{tr}}$};",
+            "at (9.30, 3.18) {$q_{\\mathrm{tr}}$};",
+        ),
+        (
+            "at (9.54, 3.42) {trapped charge};",
+            "at (9.30, 3.74) {trapped charge};",
+        ),
+    )
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == block or not _panel_f_overlay_has_protected_labels(replacement):
+        return None
+    return replacement
+
+
+def _panel_f_qtr_label_lane_template_id(replacement: str) -> str:
+    if _panel_f_v5f_qtr_label_lane_v2_template_applied(replacement):
+        return PANEL_F_V5F_QTR_LABEL_LANE_V2_TEMPLATE_ID
+    if _panel_f_v5f_qtr_label_lane_template_applied(replacement):
+        return PANEL_F_V5F_QTR_LABEL_LANE_TEMPLATE_ID
+    return PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID
+
+
 def _panel_f_qtr_label_lane_replacement(
     *,
     lines: list[str],
     selector: dict[str, Any],
+    template_id: str | None = None,
 ) -> tuple[str, str, int, int] | None:
     if str(selector.get("panel") or "").upper() != "F":
         return None
@@ -2440,6 +2694,13 @@ def _panel_f_qtr_label_lane_replacement(
     if start < 1 or end < start or end > len(lines):
         return None
     block = "".join(lines[start - 1 : end])
+    if template_id == PANEL_F_V5F_QTR_LABEL_LANE_V2_TEMPLATE_ID:
+        v5f_v2_replacement = _panel_f_v5f_qtr_label_lane_v2_replacement(block)
+        if v5f_v2_replacement is not None:
+            return block, v5f_v2_replacement, start, end
+    v5f_replacement = _panel_f_v5f_qtr_label_lane_replacement(block)
+    if v5f_replacement is not None:
+        return block, v5f_replacement, start, end
     if _panel_f_qtr_label_lane_template_applied(block):
         return None
     original = (
@@ -3898,14 +4159,22 @@ def _candidate_operation_for_spec(
             "panel": "F",
         }
     if family == "panel_f_qtr_label_lane":
-        qtr_block = _panel_f_qtr_label_lane_replacement(lines=lines, selector=selector)
+        requested_template_id = str(
+            spec.get("template_id") or PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID
+        )
+        qtr_block = _panel_f_qtr_label_lane_replacement(
+            lines=lines,
+            selector=selector,
+            template_id=requested_template_id,
+        )
         if qtr_block is not None:
             original, new_text, line_start, line_end = qtr_block
+            template_id = _panel_f_qtr_label_lane_template_id(new_text)
             operation = {
                 "kind": "replace_text",
                 "semantic_kind": "quality_search_panel_f_qtr_label_lane_panel_block",
                 "operation_scale": "panel_block",
-                "template_id": PANEL_F_QTR_LABEL_LANE_TEMPLATE_ID,
+                "template_id": template_id,
                 "panel": "F",
                 "path": source_ref,
                 "line_start": line_start,
@@ -5114,10 +5383,9 @@ def _quality_search_contract_verdict(
             )
             require(
                 isinstance(convergence_decision, dict)
-                and convergence_decision.get("selected_attempt_id")
-                == selected_attempt_id,
-                "selected_convergence_attempt_mismatch",
-                "convergence decision does not select the selected attempt",
+                and convergence_decision.get("attempt_id") == selected_attempt_id,
+                "selected_convergence_current_attempt_mismatch",
+                "convergence decision does not evaluate the selected attempt",
             )
         else:
             require(
