@@ -6796,6 +6796,8 @@ def build_quality_search_execution(
             decision={**decision, "source_context": source_context},
             recommendation=selected_acceptance_recommendation,
             run_dir=run_dir,
+            selected_attempt=selected_attempt,
+            convergence_decision=convergence_decision,
             workspace_root=paths.workspace_root,
             plugin_root=paths.plugin_root,
         )

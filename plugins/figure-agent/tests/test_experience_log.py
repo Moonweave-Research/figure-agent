@@ -162,6 +162,25 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
         run_dir=run_dir,
         workspace_root=workspace,
         plugin_root=plugin_root,
+        selected_attempt={
+            "attempt_id": "run-001:QS001",
+            "journal_constraints": {"passed": True},
+            "semantic_score": {"complete": True},
+            "aesthetic_score": {"overall": 0.8073},
+            "outputs": {
+                "editable": "candidate_demo.tex",
+                "pdf": "render/candidate.pdf",
+                "png": "render/candidate.png",
+                "svg": "render/candidate.svg",
+            },
+        },
+        convergence_decision={
+            "decision": "accept",
+            "attempt_id": "run-001:QS001",
+            "selected_attempt_id": "run-001:QS001",
+            "current_aesthetic_score": 0.8073,
+            "selected_aesthetic_score": 0.8073,
+        },
     )
 
     output = plugin_root / "docs" / "experience-log" / "candidate_demo.jsonl"
@@ -179,13 +198,28 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
     assert row["outcome"]["human_label"] is None
     assert row["outcome"]["human_decision_kind"] == "auto_accept_recommended"
     assert row["outcome"]["automation_boundary"] == "recommendation_only"
+    assert row["outcome"]["convergence"] == {
+        "attempt_id": "run-001:QS001",
+        "decision": "accept",
+        "journal_constraints_passed": True,
+        "semantic_complete": True,
+        "aesthetic_overall": 0.8073,
+        "selected_aesthetic_score": 0.8073,
+        "output_formats": ["editable", "pdf", "png", "svg"],
+    }
     assert row["outcome"]["verifiers"] == {
         "acceptance_recommendation": "pass",
         "apply_readiness": "pass",
+        "convergence_decision": "pass",
+        "journal_constraints": "pass",
         "review_packet": "pass",
         "semantic_precheck": "pass",
     }
     assert row["outcome"]["pixel_delta"]["changed_pixel_ratio"] == 0.005
+    assert row["source_artifacts"][-2:] == [
+        ".scratch/quality-search-runs/run-001/selected_attempt_000.json",
+        ".scratch/quality-search-runs/run-001/convergence_decision_000.json",
+    ]
     unchosen = rows[1]
     assert unchosen["action"]["candidate_id"] == "QS002"
     assert unchosen["action"]["edit_family"] == "panel_f_qtr_label_lane"

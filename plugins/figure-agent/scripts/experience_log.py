@@ -248,6 +248,60 @@ def _record_with_id(record: dict[str, Any]) -> dict[str, Any]:
     return record
 
 
+def _convergence_summary(
+    selected_attempt: dict[str, Any] | None,
+    convergence_decision: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if not isinstance(selected_attempt, dict) or not isinstance(convergence_decision, dict):
+        return None
+    journal = (
+        selected_attempt.get("journal_constraints")
+        if isinstance(selected_attempt.get("journal_constraints"), dict)
+        else {}
+    )
+    semantic = (
+        selected_attempt.get("semantic_score")
+        if isinstance(selected_attempt.get("semantic_score"), dict)
+        else {}
+    )
+    aesthetic = (
+        selected_attempt.get("aesthetic_score")
+        if isinstance(selected_attempt.get("aesthetic_score"), dict)
+        else {}
+    )
+    outputs = (
+        selected_attempt.get("outputs")
+        if isinstance(selected_attempt.get("outputs"), dict)
+        else {}
+    )
+    return {
+        "attempt_id": selected_attempt.get("attempt_id"),
+        "decision": convergence_decision.get("decision"),
+        "journal_constraints_passed": journal.get("passed"),
+        "semantic_complete": semantic.get("complete"),
+        "aesthetic_overall": _float_or_none(aesthetic.get("overall")),
+        "selected_aesthetic_score": _float_or_none(
+            convergence_decision.get("selected_aesthetic_score")
+        ),
+        "output_formats": [
+            key for key in ("editable", "pdf", "png", "svg") if outputs.get(key)
+        ],
+    }
+
+
+def _convergence_verifiers(convergence: dict[str, Any] | None) -> dict[str, str]:
+    if not isinstance(convergence, dict):
+        return {}
+    return {
+        "journal_constraints": (
+            "pass" if convergence.get("journal_constraints_passed") is True else "fail"
+        ),
+        "convergence_decision": (
+            "pass" if convergence.get("decision") == "accept" else "fail"
+        ),
+    }
+
+
 def _is_ranked_candidate(candidate: dict[str, Any]) -> bool:
     return candidate.get("rank") is not None or candidate.get("rank_score") is not None
 
@@ -329,6 +383,8 @@ def build_recommendation_record(
     decision: dict[str, Any],
     recommendation: dict[str, Any],
     run_dir: Path,
+    selected_attempt: dict[str, Any] | None = None,
+    convergence_decision: dict[str, Any] | None = None,
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
 ) -> dict[str, Any]:
@@ -356,6 +412,7 @@ def build_recommendation_record(
     evidence = evidence if isinstance(evidence, dict) else {}
     if recommendation.get("status") != "auto_accept_recommended":
         raise ExperienceLogError("recommendation_not_ready")
+    convergence = _convergence_summary(selected_attempt, convergence_decision)
     record = {
         "schema": SCHEMA,
         "fixture": name,
@@ -401,6 +458,7 @@ def build_recommendation_record(
                 if evidence.get("apply_readiness_status") == "ready_for_local_acceptance"
                 else "fail",
                 "acceptance_recommendation": "pass",
+                **_convergence_verifiers(convergence),
             },
             "detector_recheck": {},
             "pixel_delta": {
@@ -411,6 +469,7 @@ def build_recommendation_record(
             "human_label": None,
             "human_decision_kind": "auto_accept_recommended",
             "automation_boundary": "recommendation_only",
+            **({"convergence": convergence} if convergence is not None else {}),
         },
         "source_artifacts": [
             _fixture_relative(example_dir, run_dir / "candidate_set_000.json"),
@@ -423,6 +482,16 @@ def build_recommendation_record(
             _fixture_relative(
                 example_dir,
                 run_dir / "selected_acceptance_recommendation_000.json",
+            ),
+            *(
+                [_fixture_relative(example_dir, run_dir / "selected_attempt_000.json")]
+                if selected_attempt is not None
+                else []
+            ),
+            *(
+                [_fixture_relative(example_dir, run_dir / "convergence_decision_000.json")]
+                if convergence_decision is not None
+                else []
             ),
         ],
     }
@@ -494,6 +563,8 @@ def build_recommendation_records(
     decision: dict[str, Any],
     recommendation: dict[str, Any],
     run_dir: Path,
+    selected_attempt: dict[str, Any] | None = None,
+    convergence_decision: dict[str, Any] | None = None,
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
 ) -> list[dict[str, Any]]:
@@ -505,6 +576,8 @@ def build_recommendation_records(
         decision=decision,
         recommendation=recommendation,
         run_dir=run_dir,
+        selected_attempt=selected_attempt,
+        convergence_decision=convergence_decision,
         workspace_root=workspace_root,
         plugin_root=plugin_root,
     )
@@ -718,6 +791,8 @@ def append_recommendation_record(
     decision: dict[str, Any],
     recommendation: dict[str, Any],
     run_dir: Path,
+    selected_attempt: dict[str, Any] | None = None,
+    convergence_decision: dict[str, Any] | None = None,
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
 ) -> dict[str, Any]:
@@ -733,6 +808,8 @@ def append_recommendation_record(
         decision=decision,
         recommendation=recommendation,
         run_dir=run_dir,
+        selected_attempt=selected_attempt,
+        convergence_decision=convergence_decision,
         workspace_root=paths.workspace_root,
         plugin_root=paths.plugin_root,
     )
