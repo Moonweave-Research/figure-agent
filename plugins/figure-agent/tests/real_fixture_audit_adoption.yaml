@@ -249,3 +249,187 @@ fixtures:
     rationale: >
       Newly tracked real fixture has not yet adopted deterministic boundary/path
       checks.
+
+  - fixture: fig1_overview_v3_pair_001_vault
+    reference_image: true
+    text_boundary_check_ids:
+      - panel_e_hv_display_avoid_inside
+      - panel_e_vs_meter_display_avoid_inside
+      - panel_f_psu_display_avoid_inside
+      - row2_contain_text
+      - row2_de_column_rule
+      - row2_ef_column_rule
+    label_path_check_ids:
+      - panel_c_deep_escape_curve
+      - panel_c_delta_et_caliper
+      - panel_c_mobility_edge_reference
+    aesthetic_intent: true
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      Successor vault iteration of fig1_overview_v2_pair_001_vault; inherits the
+      same Row-2 apparatus boundary and Panel C semantic-path checks plus
+      fixture-local aesthetic intent.
+
+  - fixture: fig1_overview_v4_pair_001_vault
+    reference_image: true
+    text_boundary_check_ids:
+      - panel_e_hv_display_avoid_inside
+      - panel_e_vs_meter_display_avoid_inside
+      - panel_f_psu_display_avoid_inside
+      - row2_contain_text
+      - row2_de_column_rule
+      - row2_ef_column_rule
+    label_path_check_ids:
+      - panel_c_deep_escape_curve
+      - panel_c_delta_et_caliper
+      - panel_c_mobility_edge_reference
+    aesthetic_intent: true
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      Successor vault iteration of fig1_overview_v2_pair_001_vault; inherits the
+      same Row-2 apparatus boundary and Panel C semantic-path checks plus
+      fixture-local aesthetic intent.
+
+  - fixture: fig1_overview_v5a_polish_001_vault
+    reference_image: true
+    text_boundary_check_ids:
+      - panel_e_hv_display_avoid_inside
+      - panel_e_vs_meter_display_avoid_inside
+      - panel_f_psu_display_avoid_inside
+      - row2_contain_text
+      - row2_de_column_rule
+      - row2_ef_column_rule
+    label_path_check_ids:
+      - panel_c_deep_escape_curve
+      - panel_c_delta_et_caliper
+      - panel_c_mobility_edge_reference
+    aesthetic_intent: true
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      Successor vault iteration of fig1_overview_v2_pair_001_vault; inherits the
+      same Row-2 apparatus boundary and Panel C semantic-path checks plus
+      fixture-local aesthetic intent.
+
+  - fixture: fig1_overview_v5b_editorial_001_vault
+    reference_image: true
+    text_boundary_check_ids:
+      - panel_e_hv_display_avoid_inside
+      - panel_e_vs_meter_display_avoid_inside
+      - panel_f_psu_display_avoid_inside
+      - row2_contain_text
+      - row2_de_column_rule
+      - row2_ef_column_rule
+    label_path_check_ids:
+      - panel_c_deep_escape_curve
+      - panel_c_delta_et_caliper
+      - panel_c_mobility_edge_reference
+    aesthetic_intent: true
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      Successor vault iteration of fig1_overview_v2_pair_001_vault; inherits the
+      same Row-2 apparatus boundary and Panel C semantic-path checks plus
+      fixture-local aesthetic intent.
+
+  - fixture: fig1_overview_v5c_quiet_001_vault
+    reference_image: true
+    text_boundary_check_ids:
+      - panel_e_hv_display_avoid_inside
+      - panel_e_vs_meter_display_avoid_inside
+      - panel_f_psu_display_avoid_inside
+      - row2_contain_text
+      - row2_de_column_rule
+      - row2_ef_column_rule
+    label_path_check_ids:
+      - panel_c_deep_escape_curve
+      - panel_c_delta_et_caliper
+      - panel_c_mobility_edge_reference
+    aesthetic_intent: true
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      Successor vault iteration of fig1_overview_v2_pair_001_vault; inherits the
+      same Row-2 apparatus boundary and Panel C semantic-path checks plus
+      fixture-local aesthetic intent.
+
+  - fixture: fig1_overview_v5d_redraw_001_vault
+    reference_image: true
+    text_boundary_check_ids:
+      - panel_e_hv_display_avoid_inside
+      - panel_e_vs_meter_display_avoid_inside
+      - panel_f_psu_display_avoid_inside
+      - row2_contain_text
+      - row2_de_column_rule
+      - row2_ef_column_rule
+    label_path_check_ids:
+      - panel_c_deep_escape_curve
+      - panel_c_delta_et_caliper
+      - panel_c_mobility_edge_reference
+    aesthetic_intent: true
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      Successor vault iteration of fig1_overview_v2_pair_001_vault; inherits the
+      same Row-2 apparatus boundary and Panel C semantic-path checks plus
+      fixture-local aesthetic intent.
+
+  - fixture: fig1_overview_v5e_aggressive_001_vault
+    reference_image: true
+    text_boundary_check_ids:
+      - panel_e_hv_display_avoid_inside
+      - panel_e_vs_meter_display_avoid_inside
+      - panel_f_psu_display_avoid_inside
+      - row2_contain_text
+      - row2_de_column_rule
+      - row2_ef_column_rule
+    label_path_check_ids:
+      - panel_c_deep_escape_curve
+      - panel_c_delta_et_caliper
+      - panel_c_mobility_edge_reference
+    aesthetic_intent: true
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      Successor vault iteration of fig1_overview_v2_pair_001_vault; inherits the
+      same Row-2 apparatus boundary and Panel C semantic-path checks plus
+      fixture-local aesthetic intent.
+
+  - fixture: fig1_overview_v5f_art_direction_001_vault
+    reference_image: true
+    text_boundary_check_ids:
+      - panel_e_hv_display_avoid_inside
+      - panel_e_vs_meter_display_avoid_inside
+      - panel_f_psu_display_avoid_inside
+      - row2_contain_text
+      - row2_de_column_rule
+      - row2_ef_column_rule
+    label_path_check_ids:
+      - panel_c_deep_escape_curve
+      - panel_c_delta_et_caliper
+      - panel_c_mobility_edge_reference
+    aesthetic_intent: true
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      Successor vault iteration of fig1_overview_v2_pair_001_vault; inherits the
+      same Row-2 apparatus boundary and Panel C semantic-path checks plus
+      fixture-local aesthetic intent.
