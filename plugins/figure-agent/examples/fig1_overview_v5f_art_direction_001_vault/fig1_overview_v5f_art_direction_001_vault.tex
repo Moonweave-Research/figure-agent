@@ -2034,16 +2034,16 @@
 \fill[cGray!3] (12.68, 3.88) rectangle (13.38, 4.14);
 \draw[cGray!48!black, line width=0.18pt, rounded corners=1.0pt]
   (12.68, 3.88) rectangle (13.38, 4.14);
-\draw[cGray!78!black, line width=0.24pt]
-  (12.66, 4.01) rectangle (13.12, 4.10);
-\draw[cGray!48!black, line width=0.24pt]
-  (12.70, 4.045) -- (12.83, 4.045) -- (12.83, 4.075)
-               -- (12.98, 4.075) -- (12.98, 4.045) -- (13.08, 4.045);
-% quality-search F bias-label cleanup: separate source labels
-\node[font=\sffamily\bfseries\fontsize{3.4}{4.1}\selectfont, text=cGray!58!black]
-  at (13.03, 4.03) {$V_{\mathrm{active}}$};
+% quality-search F source-cue readability: lift active-voltage label
+\draw[cGray!76!black, line width=0.22pt]
+  (12.72, 4.00) rectangle (13.12, 4.10);
+\draw[cGray!46!black, line width=0.22pt]
+  (12.76, 4.045) -- (12.88, 4.045) -- (12.88, 4.074)
+               -- (12.99, 4.074) -- (12.99, 4.045) -- (13.08, 4.045);
+\node[anchor=south, font=\sffamily\bfseries\fontsize{3.5}{4.2}\selectfont, text=cGray!58!black]
+  at (13.03, 4.20) {$V_{\mathrm{active}}$};
 \node[anchor=north, font=\sffamily\fontsize{2.8}{3.3}\selectfont, text=cGray!42!black]
-  at (13.03, 3.76) {bias};
+  at (13.03, 3.74) {bias};
 \fill[cRed!68!black] (13.30, 3.82) circle (0.020);
 \fill[cGray!55!black] (13.30, 2.82) circle (0.020);
 % quality-search F connector: source-to-electrode lead
