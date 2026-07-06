@@ -1173,6 +1173,93 @@ def test_quality_search_suppresses_already_applied_panel_f_template(
     assert {"hierarchy_rebalance", "density_reduce"} <= candidate_families
 
 
+def test_quality_search_v5f_refresh_emits_electrode_lead_candidate(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    tex_source = "\n".join(
+        [
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\fill[cGray!30!black, opacity=0.018]",
+            "  (12.58, 3.78) rectangle (13.48, 4.14);",
+            "\\fill[cGray!3] (12.56, 3.82) rectangle (13.46, 4.16);",
+            "\\draw[cGray!58!black, line width=0.22pt, rounded corners=1.0pt]",
+            "  (12.56, 3.82) rectangle (13.46, 4.16);",
+            "\\node at (12.99, 3.94) {$V_{\\mathrm{active}}$};",
+            "\\node at (12.99, 3.84) {bias};",
+            "% quality-search F refresh: left-margin trap label + electrode relation",
+            "\\draw[cGray!56!black, line width=0.30pt, rounded corners=0.9pt]",
+            "  (13.30, 3.82) -- (13.06, 3.50) -- (13.06, 3.12) -- (13.18, 2.82);",
+            "\\draw[cGray!86!black, line width=0.66pt] (13.18, 0.46) rectangle (13.42, 2.82);",
+            "\\node at (13.64, 1.62) {electrode};",
+            "\\foreach \\cx/\\cy/\\rr in {11.62/2.28/0.075,11.43/1.86/0.082} {",
+            (
+                "  \\draw[cRed!35!white, line width=0.25pt, opacity=0.36] "
+                "(\\cx,\\cy) circle ({2.35*\\rr});"
+            ),
+            "  \\shade[ball color=cRed!82!black] (\\cx,\\cy) circle (\\rr);",
+            "}",
+            "\\draw[cRed!62!black, line width=0.46pt]",
+            "  (11.46,2.50) .. controls (10.82,3.08) and (10.12,3.32) .. (9.54,3.32);",
+            "\\node at (9.54, 3.18) {$q_{\\mathrm{tr}}$};",
+            "\\node at (9.54, 3.42) {trapped charge};",
+            (
+                "\\draw[panelFCoulombRepulsionArrow, "
+                "-{Stealth[length=9.2pt,width=6.4pt]}, "
+                "cRed!82!black, line width=1.18pt]"
+            ),
+            "  (10.96, 1.18) -- (9.28, 1.18);",
+            "\\node at (9.44, 1.58) {Coulomb};",
+            "\\node at (9.44, 1.45) {repulsion};",
+            "\\draw[<->, cGray!66!black, line width=0.78pt]",
+            "  (9.70, 0.54) -- (13.18, 0.54);",
+            "\\node at (11.58, 0.28) {air gap};",
+            "\\node at (11.70, 4.56) {mechanical};",
+            "% v8.6 ROW 2 END",
+        ]
+    )
+    _write_minimal_fixture(tmp_path, name="fig_demo", tex_source=f"{tex_source}\n")
+
+    payload = quality_search.build_quality_search_execution(
+        "fig_demo",
+        goal="Panel F apparatus electrode lead connector",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    candidates_by_family = {
+        item["family"]: item for item in payload["candidate_set"]["candidates"]
+    }
+    electrode = candidates_by_family["panel_f_electrode_lead_lane"]
+    operation = electrode["operations"][0]
+    assert electrode["operation_scale"] == "panel_block"
+    assert electrode["template_id"] == "v5f_panel_f_electrode_connector_v1"
+    assert operation["template_id"] == "v5f_panel_f_electrode_connector_v1"
+    assert "quality-search F connector: source-to-electrode lead" in operation["replacement"]
+    assert (
+        "(13.28, 3.78) -- (13.08, 3.58) -- (13.08, 2.96) -- (13.18, 2.82);"
+        in operation["replacement"]
+    )
+    assert "(13.18, 2.82) circle (0.038);" in operation["replacement"]
+    assert "at (9.54, 3.42) {trapped charge};" in operation["replacement"]
+
+
 def test_quality_search_panel_f_boundary_polish_emits_v2_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:

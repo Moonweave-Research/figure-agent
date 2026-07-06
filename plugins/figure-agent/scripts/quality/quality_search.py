@@ -59,6 +59,7 @@ PANEL_F_FORCE_GAP_LANE_TEMPLATE_ID = "v5d_panel_f_force_gap_lane_v1"
 PANEL_F_MECHANICAL_ANCHOR_LANE_TEMPLATE_ID = "v5d_panel_f_mechanical_anchor_lane_v1"
 PANEL_F_LEADER_LEFT_LANE_TEMPLATE_ID = "v5d_panel_f_leader_left_lane_v1"
 PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID = "v5d_panel_f_electrode_lead_lane_v1"
+PANEL_F_ELECTRODE_CONNECTOR_TEMPLATE_ID = "v5f_panel_f_electrode_connector_v1"
 PANEL_F_AUTO_COMPOSITE_LANE_TEMPLATE_ID = "v5d_panel_f_auto_composite_force_anchor_v1"
 PANEL_F_AUTO_COMPOSITE_ELECTRODE_TEMPLATE_ID = (
     "v5d_panel_f_auto_composite_force_anchor_electrode_v1"
@@ -853,7 +854,7 @@ def _goal_requests_panel_f_apparatus(goal: str) -> bool:
 def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
     if not _goal_requests_panel_f_apparatus(goal):
         return []
-    return [
+    hypotheses = [
         {
             "fixture": name,
             "family": "apparatus_strengthen",
@@ -879,6 +880,37 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
             ),
         }
     ]
+    normalized = goal.casefold()
+    if any(term in normalized for term in ("electrode", "lead", "connector", "wire")):
+        hypotheses.append(
+            {
+                "fixture": name,
+                "family": "panel_f_electrode_lead_lane",
+                "source": "goal_directive",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "goal explicitly requests source-to-electrode lead and "
+                        "apparatus connector movement"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert apparatus/electrode connector feedback into a bounded "
+                    "Panel F lead-routing candidate"
+                ),
+                "expected_visual_movement": (
+                    "Panel F source-to-electrode connection reads as one intentional "
+                    "electrical path instead of a box-wire collision"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, or electrode/air-gap semantics"
+                ),
+            }
+        )
+    return hypotheses
 
 
 def _micro_defect_hypotheses(name: str, driver: dict[str, Any]) -> list[dict[str, Any]]:
@@ -2939,6 +2971,84 @@ def _panel_f_electrode_lead_connection_template_applied(block: str) -> bool:
     return all(fragment in block for fragment in required_fragments)
 
 
+def _panel_f_v5f_electrode_connector_template_applied(block: str) -> bool:
+    required_fragments = (
+        "quality-search F connector: source-to-electrode lead",
+        "(13.28, 3.78) -- (13.08, 3.58) -- (13.08, 2.96) -- (13.18, 2.82);",
+        "(13.18, 2.82) circle (0.038);",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_v5f_electrode_connector_replacement(block: str) -> str | None:
+    if not _panel_f_overlay_has_protected_labels(block):
+        return None
+    if _panel_f_v5f_electrode_connector_template_applied(block):
+        return None
+    connector_base = block
+    if not _panel_f_overlay_refresh_template_applied(connector_base):
+        refreshed = _refreshed_panel_f_overlay(connector_base)
+        if refreshed is None:
+            strengthened = _strengthened_panel_f_overlay(connector_base)
+            refreshed = (
+                _refreshed_panel_f_overlay(strengthened)
+                if strengthened is not None
+                else None
+            )
+        if refreshed is None:
+            return None
+        connector_base = refreshed
+    replacements = (
+        (
+            "\\fill[cGray!30!black, opacity=0.018]\n"
+            "  (12.58, 3.78) rectangle (13.48, 4.14);",
+            "\\fill[cGray!26!black, opacity=0.014]\n"
+            "  (12.70, 3.86) rectangle (13.36, 4.12);",
+        ),
+        (
+            "\\fill[cGray!3] (12.56, 3.82) rectangle (13.46, 4.16);",
+            "\\fill[cGray!3] (12.68, 3.88) rectangle (13.38, 4.14);",
+        ),
+        (
+            "\\draw[cGray!58!black, line width=0.22pt, rounded corners=1.0pt]\n"
+            "  (12.56, 3.82) rectangle (13.46, 4.16);",
+            "\\draw[cGray!48!black, line width=0.18pt, rounded corners=1.0pt]\n"
+            "  (12.68, 3.88) rectangle (13.38, 4.14);",
+        ),
+        (
+            "at (12.99, 3.94) {$V_{\\mathrm{active}}$};",
+            "at (13.03, 3.98) {$V_{\\mathrm{active}}$};",
+        ),
+        (
+            "at (12.99, 3.84) {bias};",
+            "at (13.03, 3.88) {bias};",
+        ),
+        (
+            "% quality-search F refresh: left-margin trap label + electrode relation\n"
+            "\\draw[cGray!56!black, line width=0.30pt, rounded corners=0.9pt]\n"
+            "  (13.30, 3.82) -- (13.06, 3.50) -- (13.06, 3.12) -- (13.18, 2.82);",
+            "% quality-search F connector: source-to-electrode lead\n"
+            "\\draw[cGray!64!black, line width=0.46pt, rounded corners=1.2pt]\n"
+            "  (13.28, 3.78) -- (13.08, 3.58) -- (13.08, 2.96) -- (13.18, 2.82);\n"
+            "\\fill[cGray!82!black] (13.18, 2.82) circle (0.038);",
+        ),
+        (
+            "\\draw[cGray!86!black, line width=0.66pt] (13.18, 0.46) rectangle (13.42, 2.82);",
+            "\\draw[cGray!88!black, line width=0.72pt] (13.18, 0.46) rectangle (13.42, 2.82);",
+        ),
+    )
+    replacement = connector_base
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == block:
+        return None
+    if not _panel_f_overlay_has_protected_labels(replacement):
+        return None
+    return replacement
+
+
 def _panel_f_electrode_lead_lane_replacement(
     *,
     lines: list[str],
@@ -2955,6 +3065,9 @@ def _panel_f_electrode_lead_lane_replacement(
     if line_start < 1 or line_end < line_start or line_end > len(lines):
         return None
     original = "".join(lines[line_start - 1 : line_end])
+    v5f_replacement = _panel_f_v5f_electrode_connector_replacement(original)
+    if v5f_replacement is not None:
+        return original, v5f_replacement, line_start, line_end
     required = (
         "q_{tr}",
         "Coulomb",
@@ -3921,11 +4034,16 @@ def _candidate_operation_for_spec(
         )
         if electrode_lead_block is not None:
             original, new_text, line_start, line_end = electrode_lead_block
+            template_id = (
+                PANEL_F_ELECTRODE_CONNECTOR_TEMPLATE_ID
+                if _panel_f_v5f_electrode_connector_template_applied(new_text)
+                else PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID
+            )
             operation = {
                 "kind": "replace_text",
                 "semantic_kind": "quality_search_panel_f_electrode_lead_lane_panel_block",
                 "operation_scale": "panel_block",
-                "template_id": PANEL_F_ELECTRODE_LEAD_LANE_TEMPLATE_ID,
+                "template_id": template_id,
                 "panel": "F",
                 "path": source_ref,
                 "line_start": line_start,
@@ -5838,6 +5956,12 @@ def _execution_decision(
     *,
     fixture_name: str = "<fixture>",
 ) -> dict[str, Any]:
+    diagnostic_search_bypass = any(
+        isinstance(item, dict)
+        and item.get("diagnostic_bypass") == "stale_critique_search"
+        and item.get("blocks_search") is False
+        for item in plan.get("classifications", [])
+    )
     blocking = [
         item
         for item in plan.get("classifications", [])
@@ -5850,6 +5974,7 @@ def _execution_decision(
             "blocking_classifications": blocking,
             "selected_candidate_id": None,
             "source_mutation": "not_performed",
+            "diagnostic_search_bypass": diagnostic_search_bypass,
             "evidence_score": 0.0,
             "policy_score": 0.0,
         }
@@ -5901,6 +6026,7 @@ def _execution_decision(
             "evidence_score": 0.0,
             "policy_score": 0.0,
             "source_mutation": "not_performed",
+            "diagnostic_search_bypass": diagnostic_search_bypass,
             "stale_duplicate_non_marginal_candidate_count": len(stale_non_marginal),
             "top_candidate_id": top.get("candidate_id"),
             "top_candidate_family": top.get("family"),
@@ -5943,6 +6069,7 @@ def _execution_decision(
             f"{fixture_name} {selected.get('candidate_id')}"
         ),
         "source_mutation": "not_performed",
+        "diagnostic_search_bypass": diagnostic_search_bypass,
         "next_action": NON_MARGINAL_REVIEW_NEXT_ACTION,
     }
 
@@ -6189,7 +6316,9 @@ def _selected_acceptance_recommendation(
         and isinstance(selected_review_packet, dict)
         and selected_review_packet.get("status") == "ready"
         and apply_readiness.get("status") == "ready_for_local_acceptance"
+        and decision.get("diagnostic_search_bypass") is not True
     )
+    diagnostic_defer = decision.get("diagnostic_search_bypass") is True
     required_commands = (
         apply_readiness.get("required_commands")
         if isinstance(apply_readiness.get("required_commands"), list)
@@ -6208,7 +6337,11 @@ def _selected_acceptance_recommendation(
             "selected candidate is non-marginal, render-complete, semantic-prechecked, "
             "and ready for local acceptance"
             if ready
-            else "selected candidate has not cleared all automatic readiness checks"
+            else (
+                "stale-critique diagnostic search cannot recommend acceptance"
+                if diagnostic_defer
+                else "selected candidate has not cleared all automatic readiness checks"
+            )
         ),
         "evidence": {
             "semantic_precheck_status": precheck_status,
