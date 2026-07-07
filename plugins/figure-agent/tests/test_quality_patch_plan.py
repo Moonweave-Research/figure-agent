@@ -202,6 +202,68 @@ def test_patch_from_selector_handoff_summary_when_no_coordinate(tmp_path: Path) 
     assert f"examples/{name}/{name}.tex:2" in proposed["summary"]
 
 
+def test_alignment_defect_without_axis_delta_is_manual_only(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    name = "quality_alignment_demo"
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / f"{name}.tex").write_text(
+        "\\node[anchor=south] at (6.975, 4.61) {ISPD};\n",
+        encoding="utf-8",
+    )
+    source = fixture / f"{name}.tex"
+    ledger = {
+        "schema": "figure-agent.quality-defect-ledger.v1",
+        "fixture": name,
+        "ledger_hash": "sha256:" + "1" * 64,
+        "defects": [
+            {
+                "id": "QD001",
+                "defect_class": "label_offset",
+                "source_detector": "semantic_assertions",
+                "owner": "tool",
+                "affected_files": [f"examples/{name}/{name}.tex"],
+                "evidence": [
+                    {
+                        "uri": f"figure://{name}/audit/semantic-assertions",
+                        "node_id": "row2-subtitle-baseline",
+                        "kind": "baseline_aligned",
+                        "edit_target": "ISPD",
+                        "measured_delta_cm": 0.418,
+                    }
+                ],
+                "patchability": {
+                    "state": "safe_candidate",
+                    "reasons": ["mechanical_label_offset"],
+                    "blocked_codes": [],
+                    "may_edit": False,
+                    "policy_version": "figure-agent.quality-patch-policy.v1",
+                },
+                "selector_hint": {
+                    "kind": "line_range",
+                    "value": "1:1",
+                    "edit_target": "ISPD",
+                },
+                "suggested_change": {
+                    "operation_type": "bounded_coordinate_offset",
+                    "summary": "Resolve declared semantic assertion violation",
+                },
+                "freshness": {
+                    "audit_evidence_graph_hash": "sha256:" + "2" * 64,
+                    "source_hashes": {f"examples/{name}/{name}.tex": file_sha256(source)},
+                },
+            }
+        ],
+    }
+
+    plan = quality_patch_plan.build_quality_patch_plan(name, ledger, workspace_root=workspace)
+
+    proposed = plan["operations"][0]["proposed_change"]
+    assert proposed["patch"] == ""
+    assert proposed.get("manual_only") is True
+    assert "axis/direction" in proposed["summary"]
+
+
 def test_patch_plan_refuses_forbidden_targets(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)

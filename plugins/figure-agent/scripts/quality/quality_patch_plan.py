@@ -80,6 +80,32 @@ def _patch_from_selector(
     return f"--- {source_file}\n+++ {source_file}\n{header}\n-{old}\n+{new}\n"
 
 
+def _alignment_requires_manual_patch(defect: dict[str, Any]) -> bool:
+    if defect.get("source_detector") != "semantic_assertions":
+        return False
+    evidence = defect.get("evidence")
+    if not isinstance(evidence, list):
+        return False
+    alignment_kinds = {
+        "baseline_aligned",
+        "top_aligned",
+        "left_aligned",
+        "right_aligned",
+        "center_aligned_x",
+        "center_aligned_y",
+    }
+    for item in evidence:
+        if not isinstance(item, dict):
+            continue
+        if item.get("kind") in alignment_kinds:
+            return not (
+                isinstance(item.get("patch_axis"), str)
+                and not isinstance(item.get("patch_delta_cm"), bool)
+                and isinstance(item.get("patch_delta_cm"), (int, float))
+            )
+    return False
+
+
 def _operation_from_defect(
     defect: dict[str, Any],
     fixture: str,
@@ -98,7 +124,14 @@ def _operation_from_defect(
     selector = defect.get("selector_hint")
     if not isinstance(selector, dict):
         selector = {"kind": "line_range", "value": "1:1"}
-    patch = suggested.get("patch") or _patch_from_selector(workspace_root, source_file, selector)
+    patch = suggested.get("patch")
+    manual_reason: str | None = None
+    if not patch:
+        if _alignment_requires_manual_patch(defect):
+            manual_reason = "axis/direction evidence is required for semantic alignment patches"
+            patch = ""
+        else:
+            patch = _patch_from_selector(workspace_root, source_file, selector)
     if patch:
         proposed_change = {
             "summary": suggested.get("summary") or f"Address {defect['id']}",
@@ -109,7 +142,8 @@ def _operation_from_defect(
         location = f"{source_file}:{line_number}" if line_number else source_file
         proposed_change = {
             "summary": (
-                suggested.get("summary")
+                manual_reason
+                or suggested.get("summary")
                 or f"Manual edit required at {location} to address {defect['id']}"
             ),
             "patch": "",
