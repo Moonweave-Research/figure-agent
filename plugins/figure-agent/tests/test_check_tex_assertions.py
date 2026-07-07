@@ -115,15 +115,18 @@ def test_check_reports_anchor_ambiguous_when_style_matches_twice():
     assert issues[0]["status"] == "anchor_ambiguous"
 
 
-def test_payload_has_stable_shape():
+def test_payload_has_stable_shape(tmp_path):
+    tex_path = tmp_path / "demo.tex"
+    tex_path.write_text(FORCE_TOWARD, encoding="utf-8")
     payload = cta.tex_assertions_payload(
-        Path("examples/demo/build/demo.tex"),
+        tex_path,
         cta.check_tex_assertions(FORCE_TOWARD, [ASSERTION]),
         assertion_count=1,
     )
     assert payload["schema"] == "figure-agent.tex-assertions.v1"
     assert payload["checked"] == 1
     assert payload["total"] == 1
+    assert payload["source_hashes"]["examples/demo/demo.tex"].startswith("sha256:")
 
 
 P3 = (11.05, 3.55, 11.62, 3.55)  # forceArr points +x
@@ -314,6 +317,7 @@ def test_cli_strict_flags_violation_and_writes_json(tmp_path):
     data = json.loads(jout.read_text(encoding="utf-8"))
     assert data["schema"] == "figure-agent.tex-assertions.v1"
     assert data["total"] == 1
+    assert data["source_hashes"]["examples/demo/demo.tex"].startswith("sha256:")
 
 
 # --- M1: direction must follow the arrowhead, not coordinate order ---

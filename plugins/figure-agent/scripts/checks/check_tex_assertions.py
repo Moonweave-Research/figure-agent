@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from hashlib import sha256
 from pathlib import Path
 
 import yaml
@@ -311,10 +312,22 @@ def read_blocking_issues(json_path) -> list[dict]:
     ]
 
 
+def _file_sha256(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
+
+
 def tex_assertions_payload(tex_path, issues: list[dict], assertion_count: int) -> dict:
+    tex_path = Path(tex_path)
     return {
         "schema": SCHEMA,
         "source_tex": tex_path.name,
+        "source_hashes": {
+            f"examples/{tex_path.stem}/{tex_path.name}": _file_sha256(tex_path),
+        },
         "checked": assertion_count,
         "issues": issues,
         "total": len(issues),
