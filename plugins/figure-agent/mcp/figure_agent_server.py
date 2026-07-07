@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 try:
-    from . import _legacy_server as _server
+    from . import server_impl as _server
 except ImportError:
-    import _legacy_server as _server
+    import server_impl as _server
 
 
 globals().update(

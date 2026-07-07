@@ -117,3 +117,61 @@ def test_payload_structure():
     assert payload["schema"] == "figure-agent.semantic-assertions.v1"
     assert payload["checked"] == 3
     assert payload["total"] == 0
+
+
+def test_load_spec_missing_returns_empty(tmp_path: Path) -> None:
+    from semantic_assertions import _load_spec
+
+    assert _load_spec(tmp_path / "spec.yaml") == {}
+
+
+def test_load_spec_empty_file_returns_empty(tmp_path: Path) -> None:
+    from semantic_assertions import _load_spec
+
+    spec = tmp_path / "spec.yaml"
+    spec.write_text("", encoding="utf-8")
+    assert _load_spec(spec) == {}
+
+
+def test_load_spec_non_dict_blocks(tmp_path: Path) -> None:
+    from semantic_assertions import _load_spec
+
+    spec = tmp_path / "spec.yaml"
+    spec.write_text("- just\n- a\n- list\n", encoding="utf-8")
+    with pytest.raises(SemanticAssertionError, match="not a mapping"):
+        _load_spec(spec)
+
+
+def test_load_spec_unreadable_yaml_blocks(tmp_path: Path) -> None:
+    from semantic_assertions import _load_spec
+
+    spec = tmp_path / "spec.yaml"
+    spec.write_text("semantic_assertions: [unterminated\n", encoding="utf-8")
+    with pytest.raises(SemanticAssertionError, match="unreadable spec.yaml"):
+        _load_spec(spec)
+
+
+def test_main_blocks_on_non_dict_spec(tmp_path: Path) -> None:
+    from semantic_assertions import main
+
+    fixture = tmp_path / "fig"
+    build = fixture / "build"
+    build.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("- not\n- a\n- mapping\n", encoding="utf-8")
+    pdf = build / "fig.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n%%EOF\n")
+
+    assert main([str(pdf)]) == 2
+
+
+def test_main_passes_when_spec_missing(tmp_path: Path) -> None:
+    from semantic_assertions import main
+
+    fixture = tmp_path / "fig"
+    build = fixture / "build"
+    build.mkdir(parents=True)
+    pdf = build / "fig.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n%%EOF\n")
+
+    # No spec.yaml -> nothing declared -> pass without touching the PDF.
+    assert main([str(pdf)]) == 0

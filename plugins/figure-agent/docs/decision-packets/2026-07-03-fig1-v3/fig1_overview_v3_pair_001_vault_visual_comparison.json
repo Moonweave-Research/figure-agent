@@ -1,0 +1,121 @@
+{
+  "schema": "figure-agent.visual-comparison-packet.v1",
+  "packet_kind": "candidate_visual_comparison_packet",
+  "fixture": "fig1_overview_v3_pair_001_vault",
+  "baseline_fixture": "fig1_overview_v2_pair_001_vault",
+  "candidate_fixture": "fig1_overview_v3_pair_001_vault",
+  "created_at": "2026-07-03T05:05:59Z",
+  "source_goal": "fig1-v3-candidate",
+  "source_style_direction_packet": "docs/decision-packets/2026-07-03-fig1-v3/fig1_overview_v3_pair_001_vault_style_direction.json",
+  "source_style_benchmark_comparison": "docs/style-benchmark-comparisons/2026-07-01-wave-f/fig1_overview_v3_pair_001_vault.json",
+  "source_human_decision_record": "docs/decision-records/2026-07-03-fig1-v3/fig1_overview_v3_pair_001_vault_prepare_candidate.json",
+  "boundary": "host_llm_critique_required",
+  "mutation_boundary": "no_source_mutation",
+  "required_actor": "host_llm",
+  "purpose": "Give the host critique step a concrete v2-versus-v3 comparison target before any accepted-state, export, publication, or golden mutation is considered.",
+  "current_state_summary": {
+    "artifact_class": "real_manuscript_figure_candidate",
+    "candidate_role": "non_golden_overview_v3_candidate",
+    "candidate_render_state": "FRESH",
+    "candidate_critique_state": "MISSING",
+    "candidate_export_state": "MISSING",
+    "candidate_acceptance_state": "NOT_DECLARED",
+    "candidate_publication_gate": "PROVENANCE_REQUIRED",
+    "next_action": "run_critique",
+    "stop_boundary": "host_llm_critique_required",
+    "known_blockers": [
+      "critique_missing",
+      "quality_audit_missing",
+      "human_attestation_missing"
+    ]
+  },
+  "comparison_refs": {
+    "baseline_source": "examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex",
+    "baseline_export_svg": "examples/fig1_overview_v2_pair_001_vault/exports/fig1_overview_v2_pair_001_vault.svg",
+    "baseline_export_pdf": "examples/fig1_overview_v2_pair_001_vault/exports/fig1_overview_v2_pair_001_vault.pdf",
+    "candidate_source": "examples/fig1_overview_v3_pair_001_vault/fig1_overview_v3_pair_001_vault.tex",
+    "candidate_plan": "examples/fig1_overview_v3_pair_001_vault/candidate_plan.md",
+    "candidate_render_regeneration_command": "./bin/fig-agent compile fig1_overview_v3_pair_001_vault",
+    "candidate_render_outputs_after_regeneration": [
+      "examples/fig1_overview_v3_pair_001_vault/build/fig1_overview_v3_pair_001_vault.pdf",
+      "examples/fig1_overview_v3_pair_001_vault/build/fig1_overview_v3_pair_001_vault.png"
+    ],
+    "host_critique_command": "/fig_critique fig1_overview_v3_pair_001_vault",
+    "host_critique_allowed_scope": [
+      "examples/fig1_overview_v3_pair_001_vault/critique.md",
+      "examples/fig1_overview_v3_pair_001_vault/build/audit_crops/"
+    ]
+  },
+  "candidate_change_summary": [
+    "Panel C mobility-edge label was demoted to lower visual hierarchy and moved away from the E_C caliper.",
+    "Panel C shallow label received a white backplate and clearer separation from the arrow field.",
+    "The deep escape curve endpoint was pulled slightly down and left so the arrow field has more breathing room.",
+    "No panel roles, required labels, symbol names, semantic colors, or mechanism claims were intentionally changed."
+  ],
+  "deterministic_evidence": [
+    "fig-agent compile fig1_overview_v3_pair_001_vault completed successfully.",
+    "label_path_proximity.json reported total=0 and candidates=[].",
+    "text_boundary_clash.json reported total=0 and candidates=[].",
+    "fig-agent status reports render_state=FRESH and critique_state=MISSING.",
+    "fig-agent drive reports action=run_critique, required_actor=host_llm, and stop_boundary=host_llm_critique_required."
+  ],
+  "human_review_questions": [
+    "Does v3 materially improve the Panel C mobility-edge/shallow readability problem compared with accepted v2?",
+    "Does v3 preserve the restrained manuscript overview style rather than becoming a new visual language?",
+    "Are there any remaining label-target, arrow-overlap, or semantic-readability defects that should return to source-level TikZ repair?",
+    "Is the candidate improvement strong enough to justify a separate acceptance/export/golden decision later?"
+  ],
+  "agent_recommendation": "Defer protected state mutation and run host vision critique against this packet; v3 is a plausible readability improvement, but the deterministic detectors only prove absence of configured proximity/text-boundary candidates, not final visual quality.",
+  "recommended_choice_id": "defer_for_host_critique",
+  "choices": [
+    {
+      "id": "defer_for_host_critique",
+      "label": "Run host critique before deciding",
+      "requires_explicit_authority": false,
+      "follow_up": {
+        "command": "/fig_critique fig1_overview_v3_pair_001_vault",
+        "after_decision": "rerun fig-agent status and queue for fig1-v3-candidate"
+      },
+      "risk": "Candidate remains blocked, but no protected state is mutated before visual review."
+    },
+    {
+      "id": "request_source_repair_iteration",
+      "label": "Iterate source-level TikZ repair",
+      "requires_explicit_authority": true,
+      "follow_up": {
+        "after_decision": "open a bounded source repair task tied to specific host critique findings"
+      },
+      "risk": "Further source changes can improve readability but must stay inside the existing semantic contract."
+    },
+    {
+      "id": "defer_and_keep_v2",
+      "label": "Keep v2 as the benchmark",
+      "requires_explicit_authority": false,
+      "follow_up": {
+        "after_decision": "leave v3 as an unaccepted candidate lane and continue other queue work"
+      },
+      "risk": "Panel C readability concern is not promoted into the accepted fixture."
+    },
+    {
+      "id": "prepare_release_decision_packet",
+      "label": "Prepare later release decision",
+      "requires_explicit_authority": true,
+      "follow_up": {
+        "after_decision": "only after fresh critique and human approval, prepare a separate acceptance/export/golden packet"
+      },
+      "risk": "Premature use would conflate visual comparison with protected release authority."
+    }
+  ],
+  "disallowed_actions": [
+    "do not treat this packet as human acceptance",
+    "do not set accepted: true from this packet",
+    "do not copy v3 source over the accepted v2 fixture from this packet",
+    "do not export v3 as a golden artifact from this packet",
+    "do not hand-edit generated exports or SVG artifacts from this packet",
+    "do not attest or publish v3 from this packet"
+  ],
+  "follow_up": {
+    "implementation_slice": "Run host vision critique, then decide whether to iterate v3, keep v2, or prepare a separate protected release decision packet.",
+    "safe_default_without_human_decision": "defer_for_host_critique"
+  }
+}

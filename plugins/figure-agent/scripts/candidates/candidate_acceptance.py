@@ -15,6 +15,7 @@ import semantic_candidate_review
 
 READINESS_SCHEMA = "figure-agent.candidate-apply-readiness.v1"
 ACCEPTANCE_SCHEMA = "figure-agent.candidate-acceptance.v1"
+ACCEPTANCE_DECISIONS = {"accept", "reject", "defer"}
 TERMINAL_APPLY_STATUSES = {
     "applied",
     "applied_unverified",
@@ -32,6 +33,26 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return "sha256:" + digest.hexdigest()
+
+
+def normalized_render_manifest_sha256(path: Path) -> str:
+    """Hash the render manifest with the volatile ``cache`` annotation removed.
+
+    A cache-hit re-render rewrites render_manifest.json with ``cache: "hit"`` (the
+    first render wrote ``"miss"``), a byte change that would otherwise flip the raw
+    file hash and falsely trip the acceptance pin. Excluding only that field makes
+    the pin invariant to whether the manifest was freshly rendered or cache-served.
+    """
+    if path.is_symlink():
+        raise CandidateAcceptanceError(f"sandbox_symlink_forbidden: {path.name}")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise CandidateAcceptanceError("render_manifest_unreadable") from exc
+    if isinstance(payload, dict):
+        payload = {key: value for key, value in payload.items() if key != "cache"}
+    canonical = json.dumps(payload, indent=2, sort_keys=True).encode("utf-8")
+    return "sha256:" + sha256(canonical).hexdigest()
 
 
 def _candidate_id(value: str) -> str:
@@ -87,9 +108,7 @@ def _candidate_set_candidate(
 
 def _render_gates(render_manifest: dict[str, Any]) -> list[str]:
     stages = (
-        render_manifest.get("stages")
-        if isinstance(render_manifest.get("stages"), dict)
-        else {}
+        render_manifest.get("stages") if isinstance(render_manifest.get("stages"), dict) else {}
     )
     required = {
         "compile": "success",
@@ -159,7 +178,7 @@ def _load_gate_inputs(
     )
     example_dir = paths.examples_dir / name
     sandbox = _candidate_sandbox(example_dir, safe_candidate_id)
-    candidate_set_file = candidate_contracts.fixture_local_output_path(
+    candidate_set_file = candidate_contracts.candidate_set_input_path(
         paths.workspace_root,
         name,
         candidate_set_path.as_posix(),
@@ -203,6 +222,14 @@ def _source_drift_blocks(
         elif _sha256_file(target) != drift_hash:
             blocking.append(f"source_drift_hash_mismatch:{relative}")
     return blocking
+
+
+def _is_same_candidate_apply_result(
+    apply_result: dict[str, Any],
+    manifest: dict[str, Any],
+) -> bool:
+    candidate_hash = apply_result.get("candidate_hash")
+    return isinstance(candidate_hash, str) and candidate_hash == manifest.get("candidate_hash")
 
 
 def build_apply_readiness(
@@ -257,9 +284,15 @@ def build_apply_readiness(
     )
     if apply_result_path.is_file():
         apply_result = _load_json(apply_result_path, "apply_result")
-        if apply_result.get("status") in TERMINAL_APPLY_STATUSES:
+        if apply_result.get(
+            "status"
+        ) in TERMINAL_APPLY_STATUSES and _is_same_candidate_apply_result(apply_result, manifest):
             blocking.append("already_applied")
-    candidate_set_relative = _fixture_relative(example_dir, candidate_set_file)
+    candidate_set_relative = candidate_contracts.candidate_set_path_label(
+        example_dir.parent.parent,
+        name,
+        candidate_set_file,
+    )
     status = "ready_for_local_acceptance" if not blocking else "blocked"
     return {
         "schema": READINESS_SCHEMA,
@@ -296,8 +329,8 @@ def write_acceptance(
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
 ) -> dict[str, Any]:
-    if decision != "accept":
-        raise CandidateAcceptanceError("decision must be accept")
+    if decision not in ACCEPTANCE_DECISIONS:
+        raise CandidateAcceptanceError("decision must be accept, reject, or defer")
     if not reviewer.strip() or not rationale.strip():
         raise CandidateAcceptanceError("reviewer and rationale are required")
     (
@@ -315,15 +348,16 @@ def write_acceptance(
         workspace_root=workspace_root,
         plugin_root=plugin_root,
     )
-    readiness = build_apply_readiness(
-        name,
-        candidate_id,
-        candidate_set_path=candidate_set_path,
-        workspace_root=workspace_root,
-        plugin_root=plugin_root,
-    )
-    if readiness["status"] != "ready_for_local_acceptance":
-        raise CandidateAcceptanceError("candidate is not ready for local acceptance")
+    if decision == "accept":
+        readiness = build_apply_readiness(
+            name,
+            candidate_id,
+            candidate_set_path=candidate_set_path,
+            workspace_root=workspace_root,
+            plugin_root=plugin_root,
+        )
+        if readiness["status"] != "ready_for_local_acceptance":
+            raise CandidateAcceptanceError("candidate is not ready for local acceptance")
     acceptance_path = manifest_path.parent / "acceptance.json"
     if acceptance_path.is_symlink():
         raise CandidateAcceptanceError("sandbox_symlink_forbidden: acceptance.json")
@@ -332,14 +366,21 @@ def write_acceptance(
         "figure_name": name,
         "candidate_id": candidate_id,
         "candidate_hash": manifest.get("candidate_hash"),
-        "candidate_set_path": _fixture_relative(example_dir, candidate_set_file),
+        "candidate_set_path": candidate_contracts.candidate_set_path_label(
+            example_dir.parent.parent,
+            name,
+            candidate_set_file,
+        ),
         "candidate_manifest_path": _fixture_relative(example_dir, manifest_path),
         "candidate_manifest_sha256": _sha256_file(manifest_path),
         "render_manifest_path": _fixture_relative(example_dir, render_manifest_path),
-        "render_manifest_sha256": _sha256_file(render_manifest_path),
+        "render_manifest_sha256": normalized_render_manifest_sha256(render_manifest_path),
         "decision": decision,
         "reviewer": reviewer,
-        "reviewed_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace(
+        "reviewed_at": datetime.now(UTC)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace(
             "+00:00",
             "Z",
         ),

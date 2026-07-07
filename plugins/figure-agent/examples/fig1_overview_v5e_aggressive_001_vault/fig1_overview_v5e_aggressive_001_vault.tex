@@ -1,0 +1,2023 @@
+% fig1_overview_v5e_aggressive_001_vault — 2-row 7-panel narrative overview
+% Pilot pair: fig1_overview_v4_pair_001 / arm: vault
+% Candidate lane: non-golden overview v4, branched from accepted v2 for
+% restrained Panel C readability polish. Does not mutate accepted/golden state.
+%
+% Authoring grammar: approved tikz-vault records (query 966e2e89, approved_only).
+% Metadata-only grounding (raw_source_path_exposed=false). degraded_mode=true
+% preserved (chroma_v2 absent).
+%
+% Vault grammar applied per panel (see briefing.md §2):
+%   Panel A : linear DIB-polysulfide-DIB microstructure [manual_seed_cho2024_fig1_s8_polymerization motif]
+%             dashed bond-exchange arrow                [manual_seed_cho2024_fig1_dynamic_exchange annotation]
+%             shapes.geometric regular polygon S8       [shared shapes.geometric grammar]
+%   Panel C : depth-encoded shallow/deep amplitudes     [manual_seed_natcommun2024_fig1 energy_diagram motif]
+%             charge-trap annotation idiom              [manual_seed_cho2024_fig7_corona_charge annotation]
+%   Layout  : 2-row × 7-panel proportions               [manual_seed_cho2024_fig2_mxene_percolation layout]
+%   Typography: 3-tier inline label hierarchy           [manual_seed_cho2024_fig1 typography composite]
+%
+% Design v2.2 corrections applied at author-time (not deferred to critique):
+%   - Panel C: left=shallow blue (3 wells), right=deep red (4 wells + escape arrows)
+%   - Panel G: NO Maxwell arrow (Coulomb-only)
+%   - Cantilever clip on TOP, polymer hangs down
+%   - Convergent evidence vertical arrow C → Row 2
+
+\documentclass[border=4pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\usetikzlibrary{decorations.pathmorphing}
+
+\begin{document}
+\resizebox{178mm}{!}{%
+\begin{tikzpicture}[
+  % Figure-wide Nature compliance (iter 8 P2 defensive): default node text
+  % capped at 7pt so any node without explicit font override stays within
+  % Nature's "max 7 pt for all other text" rule.
+  every node/.style={font=\sffamily\fontsize{7}{8.4}\selectfont},
+  % R4 style-guide tier (vault style_guide line_weights):
+  %   primary 0.9pt — narrative paths (interArrow, snake chain, well curves, polymer outline).
+  %   secondary 0.55pt — axes, spines, faint reference lines.
+  %   annotation 0.7pt — schematic outlines that are not narrative (DIB ring, S8, polymer strip).
+  interArrow/.style={-{Stealth[length=4.5pt,width=3pt]}, cGray!55!black,
+                     line width=0.7pt},
+  rowBridgeArrow/.style={-{Stealth[length=10pt,width=7pt]}, cGray!70!black,
+                         line width=1.6pt},
+  % Figure-wide Nature compliance (2026-05-17): max text size 7pt for
+  % non-panel-letter text per Nature/Nat Comm formatting guide.
+  labelStrong/.style={font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont},
+  labelStd/.style={font=\sffamily\fontsize{7}{8.4}\selectfont},
+  labelMute/.style={font=\sffamily\itshape\fontsize{7}{8.4}\selectfont,
+                    text=cGray!80!black},
+  % Figure-wide Nature compliance: panel letter 8pt bold upright per Nature
+  % final-submission rule "8 pt bold, upright (not italic) a, b, c"
+  % Panel letter size aligned to briefing §1 "panel-letter typography (a/b/c bold 8pt)"
+  % + Nature/Nat Comm "8 pt bold, upright" convention. Previously 9pt was 1pt over.
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
+                      text=cGray!90!black},
+]
+
+% 2026-05-22 NC-Fig-1 redirect: figure-wide cLGray!8 wash + Row 1 cAmber!4
+% unifying band BOTH REMOVED. NC main-text Fig 1 convention = clean white
+% background. Cover-scene cohesion cue is anti-pattern for this venue.
+% Briefing §1+§3 updated 2026-05-22 to lock white-background convention.
+
+% R4: panel letters A–F at NW corner of each panel/column bbox.
+% v8.6 restructure: Row 2 letters re-anchored to 3-column boundaries.
+%   D at column D NW (x=0.10)  | E at column E NW (x=4.70)
+%   F at column F NW (x=9.50)  | G letter REMOVED (no column G in v8.6)
+% Figure-wide Nature compliance: lowercase panel letters per Nature/Nat Comm
+% rule "8 pt bold, upright (not italic) a, b, c".
+\node[panelLetter, anchor=north west] at (0.10, 9.05) {a};
+\node[panelLetter, anchor=north west] at (3.60, 9.05) {b};
+\node[panelLetter, anchor=north west] at (6.95, 9.05) {c};
+\node[panelLetter, anchor=north west] at (0.10, 4.55) {d};
+\node[panelLetter, anchor=north west] at (4.70, 4.55) {e};
+% Iter 13: panel-letter f reverted to column-left convention (matches
+% d at 0.05 cm + e at 0.08 cm indent from column left). Iter 9 had
+% accidentally shifted f with Panel F apparatus content; panel-letters
+% identify the column, not the content, so they stay at the column edge.
+\node[panelLetter, anchor=north west] at (9.55, 4.55) {f};
+
+% ============================================================
+% Figure-wide macro: skeletal polysulfide zigzag chain (used by Panels A + B).
+% Optional offset [#1] shifts the zigzag vertically:
+%   default -0.06 cm → chain centered on (x0, y0) [Panel B use].
+%   pass 0          → first atom AT (x0, y0)      [Panel A use, anchored at DIB junction].
+% ============================================================
+\newcommand{\zigSChain}[4][-0.04]{% [#1]=zig offset, #2=x0, #3=y0, #4=n atoms
+  % R11 delicate: bond spacing 0.12→0.10cm, amplitude 0.12→0.08cm,
+  % atom radius 0.04→0.025cm, bond width 0.7→0.5pt. Reduces "beads-on-string"
+  % cartoon feel; closer to NC chemistry-paper line weight conventions.
+  \begin{scope}[shift={(#2,#3)}]
+    \foreach \i in {0,...,\numexpr#4-2\relax} {
+      \pgfmathsetmacro{\xa}{0.10*\i}
+      \pgfmathsetmacro{\ya}{#1 + 0.08*mod(\i,2)}
+      \pgfmathtruncatemacro{\inext}{\i+1}
+      \pgfmathsetmacro{\xb}{0.10*\inext}
+      \pgfmathsetmacro{\yb}{#1 + 0.08*mod(\inext,2)}
+      \draw[cAmber!85!black, line width=0.5pt] (\xa,\ya) -- (\xb,\yb);
+    }
+    \foreach \i in {0,...,\numexpr#4-1\relax} {
+      \pgfmathsetmacro{\xa}{0.10*\i}
+      \pgfmathsetmacro{\ya}{#1 + 0.08*mod(\i,2)}
+      \fill[cAmber!85!black] (\xa,\ya) circle (0.025cm);
+    }
+  \end{scope}
+}
+
+% ============================================================
+% Panel A — Sulfur-rich polymer (linear poly(S-r-DIB) + DIB rings + S8 inset)
+% ============================================================
+% Panel A bbox: x=0..3.50  y=5..9
+
+% R10: horizontal-row layout — wash replaced with horizontal ellipse hugging
+% the zigzag row of 4 rings + center polysulfide chains.
+% Panel A iter 3/10: wash tone cAmber!08→!12 (+50%) so the row-binding
+% cue is perceivable rather than near-invisible; still well below content
+% saturation (chain cAmber!85, ring cGray!85).
+% 2026-05-22 NC-Fig-1 redirect: Panel A cAmber wash ellipse REMOVED. Polymer
+% identity now carried purely by chain backbone color (cAmber!85 stroke) +
+% the "Sulfur-rich polymer" label. NC main-text Fig 1 = no decorative wash.
+
+% --- DIB benzene rings (meta-substituted, linear primary microstructure) ---
+\newcommand{\dibRingAt}[2]{%
+  \begin{scope}[shift={(#1,#2)}]
+    \pgfmathsetmacro{\dibR}{0.26}
+    % A-1 v8.5 [briefing relax R2, 2026-05-26]: v8.4 cAmber!06 wash REMOVED
+    % per advisor blocker 1 — sub-pixel noise. Ring material identity carried
+    % by polysulfide chain stroke color + 'Sulfur-rich polymer' label.
+    % A-1 iter 3 [Panel A 10-loop]: ring outline + aromatic ticks cGray→amber.
+    % A-1 iter 6 [Panel A 10-loop, 2026-05-26]: light cAmber!08 hexagon fill
+    % added BEFORE outline. v8.4 cAmber!06 (gray outline → wash poor contrast,
+    % flagged noise); now with amber outline the slight wash reads as "amber
+    % chemistry tile", removing the bright-white interior dissonance vs amber
+    % border. Chemistry constraints preserved (regular hexagon + meta vertices).
+    \fill[cAmber!08]
+      (0:\dibR) -- (60:\dibR) -- (120:\dibR) -- (180:\dibR) --
+      (240:\dibR) -- (300:\dibR) -- cycle;
+    % A-1 iter 13 [Panel A 10-loop, 2026-05-26]: line cap=round + line
+    % join=round on ring outline + aromatic ticks. Removes sharp pixel
+    % corners at hexagon vertices and tick endpoints → soft hand-drawn
+    % stroke feel without breaking regular hexagon chemistry constraint.
+    \draw[cAmber!75!black, line width=0.70pt, line cap=round, line join=round]
+      (0:\dibR) -- (60:\dibR) -- (120:\dibR) -- (180:\dibR) --
+      (240:\dibR) -- (300:\dibR) -- cycle;
+    \draw[cAmber!75!black, line width=0.65pt, line cap=round] (66:0.78*\dibR) -- (114:0.78*\dibR);
+    \draw[cAmber!75!black, line width=0.65pt, line cap=round] (186:0.78*\dibR) -- (234:0.78*\dibR);
+    \draw[cAmber!75!black, line width=0.65pt, line cap=round] (306:0.78*\dibR) -- (354:0.78*\dibR);
+  \end{scope}
+}
+% R10 horizontal-row zigzag layout: 4 DIB rings in alternating high/low row,
+% ring R=0.26 cm, horizontal spacing 0.75 cm, vertical zigzag amplitude 0.55 cm.
+% Each ring uses 2 meta vertices for polysulfide attachments (degree 2 ✓).
+% Topology: linear chain Ring_a → Ring_b → Ring_c → Ring_d (with terminal danglings).
+\dibRingAt{0.75}{7.10}
+\dibRingAt{1.50}{6.55}
+\dibRingAt{2.25}{7.10}
+\dibRingAt{3.00}{6.55}
+
+% A-2 iter 12 [Panel A 10-loop]: handChainBond style — used by both
+% isopropenyl linker stubs (iter 16) and polysulfide chain bonds (iter 11+12).
+% Defined here so it's available at first use point (linker bonds below).
+\tikzset{handChainBond/.style={cAmber!85!black, line width=0.9pt,
+        line cap=round, decorate,
+        decoration={snake, amplitude=0.05mm, segment length=2mm}}}
+
+% Quaternary C(CH3)2 methyl pair at each DIB-polysulfide junction (post-R7
+% reference fix: poly(S-r-DIB) has gem-dimethyl quaternary C between each
+% phenyl ring and its polysulfide chain, originating from 1,3-DIB's
+% isopropenyl groups). Two short methyl stubs perpendicular to the chain axis.
+\newcommand{\methylPair}[4]{%
+  \pgfmathsetmacro{\mdx}{#3-#1}
+  \pgfmathsetmacro{\mdy}{#4-#2}
+  \pgfmathsetmacro{\mnorm}{sqrt(\mdx*\mdx + \mdy*\mdy)}
+  \pgfmathsetmacro{\mnx}{\mdx/\mnorm}
+  \pgfmathsetmacro{\mny}{\mdy/\mnorm}
+  % A-4 iter 10 + iter 15 [Panel A 10-loop, 2026-05-26]: tone cGray!60
+  % + line cap=round for figure-wide hand-feel cohesion (matches iter 13
+  % ring outline + iter 14 arrow + iter 12 chain bond styling).
+  % A-4 iter 20 [Panel A 10-loop, 2026-05-26]: methylPair stub length
+  % 0.08→0.065cm (19% shorter). Reduces X-cross visual clutter at chain
+  % interior endpoints where the two perpendicular stubs meet. gem-dimethyl
+  % semantic preserved (still V shape) but less dominant at zoom view.
+  \draw[cGray!60!black, line width=0.55pt, line cap=round]
+    (#1,#2) -- ({#1 - 0.065*\mny}, {#2 + 0.065*\mnx});
+  \draw[cGray!60!black, line width=0.55pt, line cap=round]
+    (#1,#2) -- ({#1 + 0.065*\mny}, {#2 - 0.065*\mnx});
+}
+
+% --- Isopropenyl linker bonds (8 total: 2 per ring at META positions, R10) ---
+% Vertex assignments:
+%   Ring_a (0.75,7.10): 300° (LR → chain to b)  + 180° (L → left dangling)
+%   Ring_b (1.50,6.55): 120° (UL ← from a)      + 0°   (R  → chain to c)
+%   Ring_c (2.25,7.10): 240° (LL ← from b)      + 0°   (R  → chain to d)
+%   Ring_d (3.00,6.55): 120° (UL ← from c)      + 0°   (R  → right dangling)
+% All vertex pairs are 120° apart (meta).
+% Iter 16 [Panel A 10-loop, 2026-05-26]: 8 isopropenyl linker stubs
+% restyled cGray!85!black 0.55pt → cAmber!85!black 0.9pt + line cap=round
+% to match chain bond style. User-flagged at zoom: gray 0.55pt + amber
+% 0.9pt at same junction read as "✕" misaligned cross-cut. Now ring vertex
+% → linker → polysulfide chain flow as ONE continuous amber bond (chemistry
+% intent — quaternary C connection — still encoded by methylPair "V" stubs
+% at chain endpoints, which keep their gray detail-tier styling).
+\draw[handChainBond] (0.88,6.88) -- (0.93,6.79);    % Ring_a 300° → chain to b
+\draw[handChainBond] (0.49,7.10) -- (0.39,7.10);    % Ring_a 180° → left dangling
+\draw[handChainBond] (1.37,6.78) -- (1.32,6.86);    % Ring_b 120° ← from a
+\draw[handChainBond] (1.76,6.55) -- (1.86,6.55);    % Ring_b 0°   → to c
+\draw[handChainBond] (2.12,6.88) -- (2.07,6.79);    % Ring_c 240° ← from b
+\draw[handChainBond] (2.51,7.10) -- (2.61,7.10);    % Ring_c 0°   → to d
+\draw[handChainBond] (2.87,6.78) -- (2.82,6.86);    % Ring_d 120° ← from c
+\draw[handChainBond] (3.26,6.55) -- (3.36,6.55);    % Ring_d 0°   → right dangling
+
+% --- Polysulfide segments (R10 horizontal-row zigzag, linear chain) ---
+% 3 internal chains (a→b, b→c, c→d) + left + right danglings.
+% A-2 iter 11+12 [Panel A 10-loop]: snake pathmorphing (amplitude 0.05mm,
+% segment length 2mm) + line cap=round for organic hand-drawn bond flow.
+% handChainBond style defined above (after \dibRingAt) so both linker
+% stubs (iter 16) and polysulfide chains share the style.
+\draw[handChainBond] (0.93, 6.79) -- (1.32, 6.86);   % Ring_a → Ring_b
+\draw[handChainBond] (1.86, 6.55) -- (2.07, 6.79);   % Ring_b → Ring_c
+\draw[handChainBond] (2.61, 7.10) -- (2.82, 6.86);   % Ring_c → Ring_d
+\draw[handChainBond] (0.39, 7.10) -- (0.10, 7.20);   % left dangling
+\draw[handChainBond] (3.36, 6.55) -- (3.50, 6.50);   % right dangling
+% A-2 iter 4 [Panel A 10-loop, 2026-05-26]: terminal danglings reverted
+% from ball-shaded (0.035cm + outline) to flat fill (0.025cm cAmber!85
+% !black), matching chain interior atom convention. Ball-shaded variant
+% read as "alien sphere accessory" at 600dpi vs the flat skeletal chain;
+% chain-consistency wins over the v8.4 terminus emphasis idea.
+\foreach \tx/\ty in {0.10/7.20, 3.50/6.50} {
+  \fill[cAmber!85!black] (\tx, \ty) circle (0.025cm);
+}
+
+% A-4 iter 21 [Panel A 10-loop, 2026-05-26] final: chain interior atom
+% dots at 6 quaternary C positions (chain endpoint coords where methylPair
+% V stubs originate). Small flat amber dots (0.022cm, slightly smaller
+% than 0.025cm terminal atoms) — explicit "C atom" marker at V apex so
+% chemistry reads as "C with gem-dimethyl + polysulfide bonds" rather
+% than abstract "lines meeting". Matches terminal atom convention.
+\foreach \tx/\ty in {0.93/6.79, 1.32/6.86, 1.86/6.55, 2.07/6.79,
+                      2.61/7.10, 2.82/6.86} {
+  \fill[cAmber!85!black] (\tx, \ty) circle (0.022cm);
+}
+% Quaternary C(CH3)2 methyl pairs at the 6 internal junctions
+\methylPair{0.93}{6.79}{1.32}{6.86}
+\methylPair{1.32}{6.86}{0.93}{6.79}
+\methylPair{1.86}{6.55}{2.07}{6.79}
+\methylPair{2.07}{6.79}{1.86}{6.55}
+\methylPair{2.61}{7.10}{2.82}{6.86}
+\methylPair{2.82}{6.86}{2.61}{7.10}
+% R10: (S)_x composition label centered above the row, larger font (replaces
+% the prior small-on-short-chain placement). Acts as a single panel-level
+% composition annotation for all polysulfide segments.
+% iter 8 P1 fix: (S)_x label 8pt → 7pt to satisfy Nature max-text-size
+% rule (8pt was sole non-panel-letter violation post figure-wide pass).
+\node[font=\sffamily\fontsize{7}{8.4}\selectfont, text=cAmber!85!black,
+      anchor=south, inner sep=1pt]
+  at (1.85, 7.55) {$\mathord{-}(\mathrm{S})_x\mathord{-}$};
+
+% --- S8 ring inset: explicit S atoms + center "S_8" identity label.
+% Background octagon kept as cAmberSphere wash; 8 "S" letters sit on the
+% vertices + bold "S_8" at center (reference idiom: vertex atoms name the
+% element, center label names the ring).
+% Panel A iter 7/10: S₈ inset shifted (3.05, 8.45) → (3.05, 8.55) to free
+% vertical room for full-text "inverse vulcanization" 2-line label between
+% (S)_x top and S₈ bottom. Same horizontal x preserves panel top-right
+% corner position (§13.1 A-5 semantic).
+% A-5 iter 2 [Panel A 10-loop]: shadow opacity + offset calibrated.
+% A-5 iter 9 [Panel A 10-loop, 2026-05-26]: shadow color pure black →
+% cAmber!90!black for warm-tinted ambient consistent with amber chemistry
+% scene. Same opacity 0.18 + offset; only hue shift.
+% A-5 iter 22 [Panel A 10-loop, 2026-05-26] NC chemistry convention redesign:
+% Removed v8.4-v8.6 graphic frame (octagon outline + amber gradient + drop
+% shadow + specular highlight). Replaced with chemistry-standard 8 S-S
+% bonds + 8 'S' atom letters. Reference: typical chemistry literature
+% convention — S₈ molecule drawn as atoms-and-bonds, not graphic icon.
+% Bonds shortened at both ends (shorten <=2pt >=2pt) so they end with
+% small gap to letter glyphs (no overlap, atom letters readable).
+% A-5 iter 23 [Panel A 10-loop, 2026-05-26] P0 fix: minimum size 8.4mm
+% → 11mm. iter 22 sized bounding node to atom radius (0.42cm), causing
+% (s8.south west) anchor to coincide with SW 'S' atom letter position
+% (2.75, 8.25). Arrow tail visually originated INSIDE 'S' atom glyph —
+% chemistry convention violation (reaction arrows should originate exterior
+% to molecule). New 11mm bounding moves SW anchor to (2.66, 8.16),
+% ~0.13cm clear of SW atom letter, so arrow reads as "leaves S₈ molecule".
+\node[regular polygon, regular polygon sides=8, draw=none, fill=none,
+      minimum size=11mm, inner sep=0pt] (s8) at (3.05, 8.55) {};
+\foreach \ang in {0, 45, 90, 135, 180, 225, 270, 315} {
+  \pgfmathsetmacro{\nextAng}{\ang + 45}
+  \draw[cAmber!75!black, line width=0.55pt, line cap=round,
+        shorten <=2pt, shorten >=2pt]
+    ({3.05 + 0.42*cos(\ang)}, {8.55 + 0.42*sin(\ang)})
+    -- ({3.05 + 0.42*cos(\nextAng)}, {8.55 + 0.42*sin(\nextAng)});
+}
+% Panel A iter 3/10: S₈ atom letter font 4.4→6pt (+36%) so 8 vertex S
+% identities read at standard view (PNG-visible delta; previous 4.4pt
+% rendered as nearly-invisible marks inside octagon).
+% Iter 13 walk-back: circle backdrops at minimum size 1.8mm visually
+% overlapped adjacent S vertices (octagon chord ~2.68 mm < 2× disc size).
+% Reverted to the original rectangular cAmberSphere!40 backdrop — at print
+% scale it blends with the ring fill so it reads as 'S atom in yellow
+% ground' with bonds breaking at the atom per chemistry convention. The
+% perceived 'sticker patch' artifact only shows at extreme zoom, not at
+% NC main-text Fig 1 publication scale.
+% A-5 iter 1/17 [Panel A 10-loop]: sticker patch removed + vertex angle fix.
+% A-5 iter 19 [Panel A 10-loop, 2026-05-26]: letter radius 0.35→0.42cm.
+% Octagon outline (minimum size 7mm = radius 0.35) was passing through
+% letter center; with outward shift, 'S' atom letters sit just outside
+% vertex point — standard chemistry convention "atom label adjacent to
+% bond terminus rather than on bond line." Improves readability while
+% preserving 8-atoms-at-8-vertices semantic.
+\foreach \ang in {0, 45, 90, 135, 180, 225, 270, 315} {
+  \node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont,
+        text=cAmber!95!black, inner sep=0pt]
+    at ({3.05 + 0.42*cos(\ang)}, {8.55 + 0.42*sin(\ang)}) {S};
+}
+% A-5 iter 22: center 'S₈' identity label REMOVED per NC chemistry
+% convention (atoms + bonds carry molecular identity; redundant center
+% label is icon styling, not standard chemistry notation).
+
+% --- Inverse vulcanization transformation arrow (S8 → DIB Ring_c 60° vertex) ---
+% R10: arrow terminates on a specific atom (Ring_c upper-right vertex), making
+% the transformation destination semantically meaningful rather than landing in
+% empty space.
+% A-6 v8.4: arrow tone cAmber!85!black.
+% A-6 iter 14 [Panel A 10-loop, 2026-05-26]: dash pattern tightened
+% (default 3pt/3pt → 2.2pt/1.8pt) + line cap=round for hand-drawn dash
+% rhythm. Tighter dash density reads as "deliberate hand-traced reaction
+% arrow" rather than CAD dashed line; round caps soften pixel sharpness
+% at each dash endpoint. §17 transformation semantic + bend preserved.
+\draw[-{Stealth[length=4pt,width=3pt]}, cAmber!85!black,
+      line width=0.55pt, line cap=round,
+      dash pattern=on 2.2pt off 1.8pt]
+      (s8.south west) to[bend right=14] (2.38,7.32);
+% v8.2 polish: shifted from (2.55, 8.00) — old position right-edge bumped the
+%  S8 ring's lower-left vertex S atom. New position sits along the arrow path
+%  in the gap between the chain (top y=7.55) and the S8 ring (bottom y=8.10).
+% Panel A iter 7/10 (M1 Nature-compliance fix): non-standard abbreviation
+% "inv. vulc." replaced with full text "inverse vulcanization" as 2-line
+% stacked label. Nature/Nat Comm rule: standard abbreviations OR full
+% text; "inv. vulc." is idiosyncratic and was undefined in caption.md.
+% iter 38 acceptance-gate fix: x 2.50 -> 2.23 to clear the S8 lower-left
+% vertex S while preserving the arrow-path association.
+% A-6 iter 5/7/8 [Panel A 10-loop]: text color amber, position shifts.
+% A-6 iter 18 [Panel A 10-loop, 2026-05-26] P1 fix: after iter 17 S₈ vertex
+% repositioning, leftmost 'S' atom now at x=2.70 (octagon vertex). Italic
+% 'vulcanization' tail with 'n' descender grazes vertex letter. Additional
+% left shift 1.95→1.80 + anchor change to north (text grows downward instead
+% of expanding both sides) so right edge is more predictable.
+\node[font=\sffamily\fontsize{6.5}{7.8}\itshape\selectfont, text=cAmber!75!black,
+      anchor=center, inner sep=1pt, align=center]
+  at (1.80, 8.20) {inverse\\vulcanization};
+
+% --- Panel A inline labels (3-tier hierarchy per vault typography anchor) ---
+% Cycle 1 / C404 (2026-05-22): orange-saturated bold caption was pulling
+% first-fixation LEFT, defeating Panel C's 1.5× hero hierarchy. Demoted to
+% neutral gray semi-bold so hero stays in Panel C (NC Fig 1 single-hero rule).
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!85!black, anchor=north west]
+  at (0.10,5.80) {Sulfur-rich polymer};
+% R10 subtitle: changed from "DIB-linked polysulfide network" — strictly,
+% poly(S-r-DIB) is a LINEAR random copolymer (DIB is bivalent; no covalent
+% crosslinks in the primary microstructure). Subtitle reflects molecular truth.
+% v8.2 polish: subtitle dropped from y=5.55 to y=5.42 — was clipping descenders
+%  of "polymer" against ascenders of "poly" (IoU=0.055 collision).
+\node[labelMute, anchor=north west]
+  at (0.10,5.42) {poly(S-r-DIB) linear copolymer};
+
+% Inter-panel arrow A → B
+% iter PL4: length 0.35 → 0.47cm parity with B→C arrow (Panel-loop iter L6).
+\draw[interArrow] (3.43, 7.0) -- (3.90, 7.0);
+
+% ============================================================
+% Panel B — S60–S85 chain length scaffold (placeholder-level)
+% ============================================================
+% Panel B bbox: x=3.55..6.85  y=5..9
+
+% Panel B iter 1/10 (2026-05-17): restructured 4 → 3 representative chains
+% per user "개념 figure" framing. Actual experimental sample set is
+% S60/S70/S75/S80/S85 (5 samples, 60-85 wt% S, briefing §8.8 Q1 LOCKED
+% updated). Concept-figure overview shows endpoints + middle (S60/S75/S85)
+% for visual clarity; full 5-sample data is in Fig 2~ (quantitative figures).
+%
+% B-1: 3 zigzag chains, atom counts 10/18/24 (monotonic, artistic correlate).
+% B-2: 3 endpoint labels S60/S75/S85 at terminal atom (anchor=west).
+% R11 delicate: bond spacing 0.10cm, atom r=0.025cm, bond width 0.5pt.
+% Chain y positions span 1.80cm (7.90 / 7.00 / 6.10), spacing 0.90cm —
+% increased from prior 0.60cm for cleaner breathing room with fewer chains.
+\foreach \y/\n/\sn in {7.90/10/60, 7.00/18/75, 6.10/24/85} {
+  \zigSChain{3.95}{\y}{\n}
+  \pgfmathsetmacro{\xend}{3.95 + 0.10*(\n-1)}
+  \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cAmber!90!black,
+        anchor=west, inner sep=2pt]
+    at (\xend, {\y + 0.04}) {S$_{\sn}$};
+}
+% B-1 v8.4 [briefing relax R2, 2026-05-26]: chain endpoint ball-shaded
+% atoms emphasize each S_n label anchor. Radius 0.04cm slightly larger
+% than zigSChain interior atoms (0.025cm); reads as "labeled chain terminus".
+% Skeletal chain stroke + interior atoms untouched (NC chemistry idiom).
+\foreach \xe/\ye in {4.85/7.94, 5.65/7.04, 6.25/6.14} {
+  \shade[ball color=cAmber!85!black] (\xe, \ye) circle (0.04cm);
+  \draw[cAmber!95!black, line width=0.18pt] (\xe, \ye) circle (0.04cm);
+}
+% B-4 (post-iter1 update): 2 sample boundary dividers between 3 chains.
+% Tone cGray!40 (post-v8.7 C002 fix), width 0.18pt densely dotted; x extent
+% 3.85..6.30 covers chain row span; y at midpoints between adjacent chains.
+% New midpoints: y=7.45 (between 7.90 and 7.00) / y=6.55 (between 7.00 and 6.10).
+% Panel B iter 2026-05-25: divider tone cGray!55 -> cGray!30 (polish round).
+% Chain-length monotonic encoding + endpoint S60/S75/S85 labels carry sample
+% distinctness on their own; the dividers were competing with chain backbone
+% visual weight at print scale (post-cycle-2026-05-25 NC compliance assessment).
+% Demoted to faint hint tier — visible at thumbnail for grouping cue but no
+% longer reads as a structural element. Width held at 0.18pt.
+\foreach \dy in {7.45, 6.55} {
+  \draw[cGray!30, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
+}
+% Axis arrow
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.55pt]
+  (3.95, 5.65) -- (6.60, 5.65);
+% briefing relax R1 (2026-05-23): 3 micro tick marks aligned with chain
+% endpoints (S60 xend=4.85 / S75 xend=5.65 / S85 xend=6.25). Visually
+% connects the wt% axis sample positions to the labelled chain endpoints.
+% No numeric labels (§9 "Tick 수치 라벨 없음" preserved). 0.06cm tall,
+% cGray!60 stroke 0.30pt — reference tier per §10 3-tier ladder.
+\foreach \tx in {4.85, 5.65, 6.25} {
+  \draw[cGray!60, line width=0.30pt] (\tx, 5.65) -- (\tx, 5.59);
+}
+% v8 Q1 fix: axis label corrected from "Chain length, n" (chain atom count
+% interpretation) to actual composition variable = sulfur weight-percent.
+% Sample labels S60..S85 are wt% S sample names (per planning/sulfur_sample_
+% selection_policy.md + session_260427); visual chain length progression
+% (10/14/18/24 atoms drawn) is artistic correlate, NOT literal atom count.
+\node[labelMute, anchor=north] at (5.20, 5.62) {Sulfur content, wt\%};
+
+% Panel-loop iter L6: B→C interArrow length 0.35→0.47cm (more visible transition).
+\draw[interArrow] (6.78, 7.0) -- (7.25, 7.0);
+
+% ============================================================
+% Panel C — Localized traps (HERO #1, vault energy_diagram grammar)
+%   v2.2 CORRECT MAPPING: left = shallow blue (3 wells, 3 ⊖)
+%                         right = deep red (4 wells, 4 ⊖, 2 escape arrows)
+% ============================================================
+% Panel C bbox: x=6.90..13.95  y=5..9
+
+% --- δ design: hybrid spatial+energy split-half representation ---
+% LEFT half (x=6.95..10.30):  polymer matrix with embedded ⊖ trap sites
+%                             (shallow blue + deep red mixed in real space).
+% RIGHT half (x=10.50..13.80): pure energy diagram — horizontal trap level
+%                              lines (shallow cluster near mobility edge,
+%                              deep cluster further down) + E_C/E_V refs.
+% Dotted leader lines bind each LEFT site to its RIGHT level. Replaces the
+% prior "left=shallow region / right=deep region" spatial split which
+% mis-suggested phase segregation. Idiom: ref01b Haneef 2020 JMCC Fig 2 +
+% ref08a Liu 2025 NComm Fig 1a.
+
+% R12 simplification: 7 horizontal trap level lines → 2 filled band rectangles
+% (shallow + deep), reduces "ladder rungs" clutter per user critique. Reader
+% reads shallow vs deep by COLOR; binding from LEFT sites to RIGHT bands is
+% implicit via color matching, so leader lines are dropped entirely. Element
+% count: 27 → 12 (~55% reduction).
+
+% --- LEFT half: organic polymer-mass (R19, post user critique).
+% Drops cube/sheet "container" idiom. Sample = organic amber blob (soft
+% radial-gradient, no hard edge) with TANGLED polysulfide chains crossing
+% inside. Reads as the BULK material derived from Panel B's individual chains
+% — zoom-out narrative (molecule → single chain → tangled mass). Chemistry
+% explicit (S atoms on chains) but arrangement organic (not aligned like B).
+%
+% --- LEFT half: NC-grade rectangular sheet (R22 quality push).
+% Smaller sheet (2.30 × 1.50 cm vs R21's 2.80 × 2.10). Linear top→bottom
+% gradient adds depth without violating "no decoration" convention (the
+% gradient hints at film thickness/translucency, not aesthetic flourish).
+% Top-edge highlight + right-edge shadow = subtle 3D feel without drop shadow.
+% C-L1 v8.5 [briefing relax R2, 2026-05-26]: v8.4 dial turn-up per advisor.
+% shadow opacity 0.15→0.35 + offset widened (was already visible at 600dpi —
+% only opacity bumped); NW specular opacity 0.38→0.65 + size widened;
+% bottom AO opacity 0.35→0.55.
+% Panel C iter 3 [Panel C 15-loop, 2026-05-26]: drop shadow tone re-calibrated.
+% v8.5 shadow @ opacity 0.35 + offset (0.07,-0.07) read as a separate gray
+% rail on slab right edge at 178mm print scale (competing with slab outline).
+% Calibrated to NC norm: opacity 0.35 -> 0.22, offset 0.07 -> 0.05 (smaller
+% protrusion, lighter tone). Shadow rect now (7.60,6.15)..(9.90,7.65).
+% Panel C iter 12 [Panel C 15-loop, 2026-05-26]: rounded corners on slab + shadow.
+% Adds 1pt corner radius to slab body, drop-shadow rect, and outline. Subtle
+% NC refinement — eliminates sharp-rectangle "container box" feel, reads as a
+% real polymer film slab with softened edges.
+\fill[black, opacity=0.22, rounded corners=2pt] (7.60, 6.15) rectangle (9.90, 7.65);
+\shade[top color=cAmber!10, bottom color=cAmber!38, rounded corners=2pt]
+  (7.55, 6.20) rectangle (9.85, 7.70);
+% briefing relax R3 (2026-05-23): HERO polymer film outline 0.55pt → 0.60pt.
+% +0.05pt hero-tier micro variance — visually identical to neighbor curve tier
+% lines but anchors Panel C HERO #1 weight hierarchy. Within curve-tier cap (0.80pt).
+\draw[cAmber!75!black, line width=0.60pt, rounded corners=2pt]
+  (7.55, 6.20) rectangle (9.85, 7.70);
+% Top-edge highlight (subtle white reflection, opacity 0.5)
+% Panel C iter 15 [Panel C 15-loop, 2026-05-26]: edge accent registration to
+% rounded corners. iter12 added 1pt corner radius to slab body; the 3 accent
+% strokes (top highlight / right shadow / bottom AO) had endpoints sitting
+% inside the corner curve region. Tightened to straight-edge spans only —
+% no overshoot past the rounded outline at any corner.
+\draw[white, opacity=0.55, line width=0.40pt] (7.60, 7.66) -- (9.80, 7.66);
+% C-L1 v8.6: NW corner ellipsoidal specular calibrated back —
+% 3mm×1mm→1.5mm×0.5mm + opacity 0.65→0.45 (over-elongated v8.5 reverted)
+% Panel C iter 5 [Panel C 15-loop, 2026-05-26]: NW specular re-elongated +
+% slid toward corner. 1.5mm×0.5mm@(7.85,7.50) read as a stray dot; lengthening
+% to 1.8mm×0.4mm@(7.78,7.52) (slid 0.07 closer to NW corner 7.55,7.70) reads
+% as a streak reflection of a top-left light source, not a discrete object.
+\fill[white, opacity=0.45] (7.78, 7.52) ellipse (1.8mm and 0.4mm);
+% Right-edge thin shadow accent calibrated — 0.75→0.55
+% iter15: y range tightened 6.22..7.68 -> 6.24..7.66 (straight portion only).
+% Panel C iter 23 [round 3, 2026-05-26]: right-edge cAmber accent subdued.
+% Round 1 drop shadow (iter3) + round 3 deeper rounded corners (iter22 2pt)
+% already carry right-edge depth. The 0.45pt cAmber accent + drop shadow
+% combined into a visible double-rail at zoom. Subdued to 0.25pt opacity 0.30
+% (NC-grade barely-perceptible accent — reads as paper texture, not edge rail).
+\draw[cAmber!85!black, line width=0.25pt, opacity=0.30]
+  (9.85, 6.24) -- (9.85, 7.66);
+% v8.6: bottom-edge ambient occlusion calibrated — 0.55→0.40
+% iter15: x range 7.60..9.80 unchanged (within straight portion); y stays 6.26.
+% Panel C iter 18 [round 2, 2026-05-26]: AO opacity 0.40 -> 0.20 + width 0.40 -> 0.30pt.
+% Round 1's drop-shadow (iter3 opacity 0.22) + rounded corners (iter12) already
+% carry base-depth identity; iter15-era 0.40 AO read as a second baseline.
+% Subdued to a barely-perceptible inner shadow — preserves AO physical hint
+% (light from upper-left dims interior bottom) without competing edge weight.
+\draw[cAmber!90!black, line width=0.30pt, opacity=0.20]
+  (7.60, 6.26) -- (9.80, 6.26);
+
+% 3 wavy chain hints, varied weights for depth
+% Panel C iter 21 [round 3, 2026-05-26]: top chain right endpoint 9.75 -> 9.80
+% to match middle/bottom chain right extents (which reach near slab right edge
+% 9.85). 0.05cm extension restores L-R chain length symmetry.
+\draw[cAmber!65!black, line width=0.50pt, opacity=0.85] plot[smooth] coordinates
+  {(7.65, 7.30) (8.05, 7.40) (8.50, 7.30) (9.00, 7.40) (9.45, 7.30) (9.80, 7.33)};
+\draw[cAmber!70!black, line width=0.55pt] plot[smooth] coordinates
+  {(7.65, 6.85) (8.10, 6.95) (8.60, 6.85) (9.10, 6.95) (9.60, 6.85) (9.75, 6.90)};
+% Panel C iter 25 [round 3, 2026-05-26]: bottom chain wave direction unified
+% (peaks-DOWN -> peaks-UP). Chains 1+2 had peaks-UP; chain 3 alone had
+% peaks-DOWN, creating a subtle visual rhythm break at zoom. Flipping
+% intermediate y values 6.30 -> 6.50 aligns all 3 chains' wave phase.
+% Right endpoint also extended 9.75 -> 9.80 matching iter21 top chain.
+\draw[cAmber!65!black, line width=0.50pt, opacity=0.85] plot[smooth] coordinates
+  {(7.65, 6.40) (8.05, 6.50) (8.50, 6.40) (9.00, 6.50) (9.45, 6.40) (9.80, 6.43)};
+
+% Atom dots at chain peaks — varied sizes for depth perception
+% Panel C iter 6 [Panel C 15-loop, 2026-05-26]: size unified 0.022-0.028 -> 0.022 +
+% opacity 1.0 -> 0.7. 6 same-sized faint dots read as polymer chain
+% interior atoms (texture tier), no longer competing with 4 trap dots
+% (data tier) at radius 0.07. Hierarchy: texture 0.022@0.7 vs data 0.07@1.0.
+% Panel C iter 20 [round 2, 2026-05-26]: iter6 over-subdued — atom dots became
+% invisible (texture role failed). Re-lift size 0.022->0.026 + opacity 0.70->0.95.
+% Still under trap-dot 0.07 (data tier) by ~37% radius, so hierarchy preserved
+% but texture identity now legible. Color cAmber!85!black darkened slightly
+% by adding ! black mix; gives crisp "S atom on chain" dot at print scale.
+% iter25 followup: bottom-chain atom dots y 6.30 -> 6.50 (now at peaks-UP)
+\foreach \px/\py in {8.05/7.40, 9.00/7.40,
+                      8.10/6.95, 9.10/6.95,
+                      8.05/6.50, 9.00/6.50} {
+  \fill[cAmber!90!black, opacity=0.95] (\px, \py) circle (0.026cm);
+}
+
+% --- LEFT: 4 ⊖ trap sites (2 shallow + 2 deep) ---
+\coordinate (siteS1) at (8.25, 7.30);
+\coordinate (siteS2) at (9.35, 6.95);
+\coordinate (siteD1) at (7.85, 6.45);
+\coordinate (siteD2) at (9.25, 6.40);
+
+% Sheet caption below rectangle
+% Panel C iter 9 [Panel C 15-loop, 2026-05-26]: caption y 6.15 -> 6.03.
+% Was sitting at drop-shadow bottom edge (y=6.15) — visually pressed against
+% slab. 1.2mm shift down gives caption + slab visual separation while keeping
+% within Panel C's lower margin (slab caption stays well above bbox y=5).
+\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!70!black] at (8.70, 6.03) {poly(S-r-DIB) thin film};
+
+% C-L6 (v8.5 NEW): thin-film thickness anchor per briefing §13.3 C-L6.
+% Short double-headed dimension arrow inside sheet's left interior edge
+% (x=7.42 slightly inside the 7.55 left border so arrow doesn't blend into
+% the border line) spanning the sheet height with a small margin. Rotated
+% 'd ≈ 1 μm' label reads bottom-to-top to fit the 0.50cm gap between
+% panel-C left edge (6.95) and sheet left edge (7.55). Macroscale anchor —
+% "this rectangle is a real micron-thick spin-coat film, not an abstract box."
+% Panel C iter 1 [Panel C 15-loop, 2026-05-26]: dimension caliper rework.
+% Arrow x 7.42 -> 7.48 (closer to slab edge 7.55, sits in 0.07cm clearance).
+% Arrowheads 2pt -> 2.4pt (reads as proper dimension caliper at print).
+% Tick caps added (perpendicular ext line stubs at each end) — engineering-
+% drawing convention reinforces "this is a measured dimension, not a flow".
+% Label x 7.36 -> 7.28 (clears arrow glyph overlap; sits flush in left strip).
+\draw[{Stealth[length=2.4pt,width=1.8pt]}-{Stealth[length=2.4pt,width=1.8pt]},
+      cGray!65!black, line width=0.30pt] (7.48, 6.28) -- (7.48, 7.62);
+\draw[cGray!65!black, line width=0.30pt] (7.44, 6.28) -- (7.52, 6.28);
+\draw[cGray!65!black, line width=0.30pt] (7.44, 7.62) -- (7.52, 7.62);
+% Panel C iter 16 [Panel C 15-loop round 2, 2026-05-26]: label rotation REMOVED.
+% iter1+2 rotated-label-inside-caliper kept "1" glyph in the same vertical
+% column as the upper arrowhead — at zoom the "1" disappeared into the head.
+% Label now sits HORIZONTAL just above the upper tick cap (y=7.72), reading
+% "d ≈ 1 μm" left-to-right cleanly. Caliper stays in the narrow left strip,
+% label sits above it in slab-top airspace (slab top y=7.70; label baseline
+% at y=7.72 sits in the airspace just above outline).
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
+      anchor=south west] at (7.20, 7.74) {$d \approx 1\,\mu$m};
+% R20: ⊖ markers slightly smaller (1.6/1.7 → 1.4/1.5 mm) so chain detail
+% reads through better.
+% v8: ⊖ → ● (carrier-polarity neutral; Q6 lit verification — both electron
+% and hole trap possible; ⊖ would over-imply electron-only per Nicolai 2012
+% / Haneef 2020 convention). Solid filled circle = "trap site identity",
+% charge sign semantic deferred to paper experimental data.
+% Designer iter 10 (2026-05-22): trap dots upgraded from flat \fill circles
+% to ball-shaded spheres (TikZ ball color shading). NC main-text Fig 1 idiom
+% — key trap-site markers read as 3D dots with built-in specular highlight
+% + edge darkening, lifting them out of the flat polymer-film background.
+% Sphere radius matches the previous minimum-size 1.4mm / 1.5mm.
+% Panel C iter 10 [Panel C 15-loop, 2026-05-26]: stroke uniformity 0.20/0.22 -> 0.22.
+% All 4 LEFT trap dots use 0.22pt outline (matches RIGHT trap-level markers).
+% Marginal but removes a near-imperceptible inconsistency that softens dot-edge identity.
+\foreach \site in {siteS1, siteS2} {
+  \shade[ball color=cBlue!70!black] (\site) circle (0.07);
+  \draw[cBlue!95!black, line width=0.25pt] (\site) circle (0.07);
+}
+\foreach \site in {siteD1, siteD2} {
+  \shade[ball color=cRed!70!black] (\site) circle (0.075);
+  \draw[cRed!95!black, line width=0.25pt] (\site) circle (0.075);
+}
+
+% --- RIGHT half: energy diagram references + Vacuum level (R15) ---
+% R15: Vacuum level dashed reference at y=8.55 (above E_C) — adds ref04 anchor
+% convention. Vacuum is a *reference level*, not a quantitative measurement,
+% so allowed under briefing schematic rule.
+% Designer iter 6 (2026-05-22): iter-5 over-pulled the reference lines to 1.00 cm
+% and the labels sat right next to the axis, losing the NC energy-diagram
+% band-spanning convention (the references are supposed to read as horizontal
+% energy levels stretching across the band region). Re-extended references to
+% span the full band area including the Gaussian DOS overlay + trap level lines
+% + shallow/deep band labels, and re-pushed axis labels to line ends. New ranges
+% chosen so the LONGEST label ('mobility edge' at 1.15 cm width) lands its tail
+% exactly at the Row 2 outer-box right edge (x=13.30), so Panel C and Panel F
+% share the same right column.
+\draw[cGray!45!black, densely dashed, line width=0.30pt] (10.55, 8.55) -- (12.10, 8.55);
+% Panel C iter 7 [Panel C 15-loop, 2026-05-26]: 'vacuum' italic -> upright to
+% match 'mobility edge'. Both are aux dashed reference levels; auxiliary tier
+% kept via lighter cGray!55 (was !60). Symbols E_C / E_V keep math italic.
+% Panel-loop iter L7: vacuum label tone !55 → !60 (unify with mobility edge !65→!60).
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!60!black,
+      anchor=west] at (12.15, 8.55) {vacuum};
+\draw[cGray!60!black, line width=0.45pt] (10.55, 8.30) -- (12.10, 8.30);
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
+      anchor=west] at (12.15, 8.30) {$E_C$};
+\draw[cGray!55!black, dashed, line width=0.35pt] (10.55, 7.85) -- (12.10, 7.85);
+% Panel C iter 26 [round 4, 2026-05-26]: label baseline raised y 7.85 -> 7.92.
+% Both at y=7.85 caused label glyph caps to nearly touch the dashed line
+% (visually "stacked" appearance at zoom). 0.07cm raise puts label baseline
+% above dashed line; glyph y range becomes 7.92..~8.10 — clear visual gap.
+% Panel C iter 28 [2026-05-27, post-merge label_path_proximity gate]: 7.92 -> 8.00.
+% iter26 0.07cm TikZ shift = 2.5pt PDF clearance (figure resized 178/139.5);
+% spec.yaml panel_c_mobility_edge_reference declares clearance_pt=4.0 — still
+% violates. Bumped to y=8.00 → 0.15cm TikZ shift = 5.4pt PDF clear > 4.0pt.
+% Panel-loop iter L7b: mobility edge !65 → !60 (unify with vacuum tier).
+% Goal-1 elem-iter [2026-06-04]: y 8.10 -> 8.00. E_C label (8.30) and 'mobility
+% edge' nearly touched at zoom; -0.10 widens the E_C gap 0.20->0.30 while keeping
+% iter-28's 5.4pt clearance (>4.0pt req) above the dashed line at 7.85.
+% Human visual audit [2026-07-03]: x 12.25 -> 11.80 and y 8.00 -> 8.07. The
+% Delta-E_t caliper at x=13.40 crossed the right side of the label at reduction
+% scale; moving the label left/up preserves the mobility-edge reference line
+% while clearing the caliper and the line-stacking guard.
+% v4 candidate: make the reference label right-aligned to the dashed level so
+% the text does not extend into the escape-arrow / Delta-E_t optical lane.
+\node[font=\sffamily\fontsize{5.7}{6.8}\selectfont, text=cGray!60!black,
+      anchor=east, fill=white, fill opacity=0.88, text opacity=1,
+      inner xsep=0.75pt, inner ysep=0.35pt] at (12.08, 8.06) {mobility edge};
+\draw[cGray!60!black, line width=0.45pt] (10.55, 5.30) -- (12.10, 5.30);
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
+      anchor=west] at (12.15, 5.30) {$E_V$};
+
+% R15: Gaussian DOS overlays (between Energy axis and trap lines).
+% ref07 NComm 2014 + ref05 NComm 2025 idiom — smooth bell curves encode
+% energetic disorder distribution. Shallow narrow σ=0.085 (tight localization,
+% briefing §13.3 C-R1b spec). Deep wider σ=0.18 (broader trap-depth
+% distribution → "deep dominates" via spread, complementing the 2-line stack
+% per category and 1+1 ● count per band per §13.3 C-R2/C-R3).
+% v8.3 audit closure: σ 0.06 → 0.085 to match briefing §13.3 C-R1b (denominator
+% 0.0072 → 0.01445 = 2 × 0.085²).
+% v8.7 critique C001 fix: horizontal scale 0.28/0.32 → 0.45/0.55 + opacity
+% 0.55 → 0.70 so the bell shape registers at 178mm print scale as a visible
+% Gaussian distribution (Q8 narrative "continuous DOS, not 2-level traps").
+% Polish iter: shallow opacity 0.70 → 0.85 + stroke 0.50 → 0.60pt;
+%              deep    opacity 0.70 → 0.80 + stroke 0.55 → 0.65pt.
+% Both Gaussians now read clearly at 300 dpi without washing into each other.
+% HERO saturation lift: !22 -> !45 (Panel C HERO must out-saturate Panel E
+% g(E_t) evidence tier at !25 per briefing §5 hero hierarchy + §13.9 binding-1).
+% Panel C iter 13 [Panel C 15-loop, 2026-05-26]: DOS bell fill saturation 45 -> 52.
+% Bells were melting into the right-half axis whitespace at print scale. +7
+% saturation gives the distribution visible body without crossing into solid-
+% color territory. Strokes unchanged at 0.60/0.65 — bell silhouette stays
+% clean over the higher-saturation fill.
+\fill[cBlue!52, opacity=0.85]
+  plot[domain=7.20:7.80, samples=25, smooth]
+    ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x)
+  -- (10.55, 7.80) -- (10.55, 7.20) -- cycle;
+\draw[cBlue!80!black, line width=0.60pt]
+  plot[domain=7.20:7.80, samples=25, smooth]
+    ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x);
+\fill[cRed!52, opacity=0.80]
+  plot[domain=5.40:6.70, samples=30, smooth]
+    ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
+  -- (10.55, 6.70) -- (10.55, 5.40) -- cycle;
+\draw[cRed!80!black, line width=0.65pt]
+  plot[domain=5.40:6.70, samples=30, smooth]
+    ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x);
+% C-R2/C-R3 v8.6 [briefing relax R2, 2026-05-26]: REMOVED — v8.5 1.1mm
+% white specs at bell peaks read as ball-shaded DATA markers (matches
+% C-L3 trap / F-6 q_tr / E surface charges idiom), causing semantic
+% mis-read of distribution as scatter data. Bell 3D feel sacrificed to
+% preserve distribution-vs-data clarity. v8.4 small specs (0.4mm 0.40
+% opacity) was the over-the-line case; clean removal is safest.
+
+% --- Vertical Energy AXIS with tick marks (R14, replaces arrow).
+% Convention #2 from 3rd reference search: top-tier figures use a real graph-
+% style axis with tick marks at reference levels, not an arrow. eV anchors
+% omitted per briefing §4 "Eₜ 정확 수치 라벨 (정량은 Fig 3)" — schematic axis only.
+\draw[cGray!70!black, line width=0.45pt] (10.50, 5.20) -- (10.50, 8.45);
+\foreach \tickY in {8.30, 7.85, 7.49, 6.05, 5.30} {
+  \draw[cGray!70!black, line width=0.45pt] (10.43, \tickY) -- (10.50, \tickY);
+}
+% Finding C004 (v1.9 re-audit, VC054): rotated 'Energy' label centered at
+% y=6.85 had label y range 6.85..7.73 — both shallow trap leaders (siteS1
+% to axis y=7.55 crossing the label at y=7.51; siteS2 to axis y=7.35
+% crossing at y=7.23) passed THROUGH the label glyphs. Shifted y_anchor
+% 6.85 → 6.30 so label range becomes 6.30..7.18, sitting between the
+% deep leader band (y ≤ 6.23) and the shallow leader band (y ≥ 7.23).
+% Panel C iter 19 [round 2, 2026-05-26]: leader clearance.
+% Red deep leader from siteD1 (7.85,6.45) to axis (10.50,6.20) crossed x=10.35
+% at y~6.21 — sitting just below label south at y=6.30 (0.09cm gap, zoom-tight).
+% Pushed label x 10.35 -> 10.30 (0.05 left, into airspace just inside axis
+% margin) AND label y_anchor 6.30 -> 6.35 (0.05 up). Combined clearance from
+% deep leader at (10.30, y) becomes 0.14cm.
+\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!80!black,
+      anchor=south, rotate=90] at (10.30, 6.35) {Energy};
+
+% --- RIGHT half: trap states as thin horizontal LINES (R19 balanced).
+% R19: softer "deep dominates" — 2 shallow + 2 deep lines (was 1+3).
+% Both shallow & deep show distribution via 2 stacked levels per category.
+% v7 polish #7: trap line weight 0.80→1.00pt (mechanism tier per §10 3-tier)
+% Polish iter: 1.00→1.10pt + line cap=round for crisp manicured termination.
+% briefing relax R3 (2026-05-23): 1.10pt → 1.15pt for 4 trap energy level
+% lines. +0.05pt hero-tier variance anchors Panel C HERO #1 weight; within
+% mechanism-tier cap (1.55pt under relaxation).
+% Panel C iter 24 [round 3, 2026-05-26]: trap line cap round -> butt.
+% At 1.15pt with line cap=round, both ends had ~0.4mm round terminators that
+% read as "tabs" at zoom and merged with the Gaussian DOS fill on LEFT end.
+% Butt cap = clean straight terminator at coord; LEFT end x=10.95 cleanly
+% separates from Gaussian (which fills to x ~11.05 peak). Trap dots remain
+% ball-shaded spheres ON the line; line endpoints no longer compete.
+\foreach \tY in {7.55, 7.35} {
+  \draw[cBlue!80!black, line width=1.15pt, line cap=butt] (10.95, \tY) -- (11.55, \tY);
+}
+\foreach \tY in {6.20, 5.85} {
+  \draw[cRed!80!black, line width=1.15pt, line cap=butt] (10.95, \tY) -- (11.55, \tY);
+}
+% ⊖ markers on each trap line (1 per level, color-matched)
+% v8: ⊖ → ● on energy levels (same rationale as C-L3 sites)
+% Iter 14: trap level markers upgraded to ball-shaded spheres for
+% consistency with Panel C trap-site dots + Panel D log-log + Panel E
+% Gaussian + Panel F q_tr spheres (iter 10 idiom). Was last flat dot set
+% missed in the iter 10 sweep.
+% Panel C iter 10b: shallow R trap markers stroke 0.20 -> 0.22 (uniformity with deep).
+\foreach \dx/\dy in {11.15/7.55, 11.35/7.35} {
+  \shade[ball color=cBlue!70!black] (\dx, \dy) circle (0.075);
+  \draw[cBlue!95!black, line width=0.25pt] (\dx, \dy) circle (0.075);
+}
+\foreach \dx/\dy in {11.15/6.20, 11.35/5.85} {
+  \shade[ball color=cRed!70!black] (\dx, \dy) circle (0.08);
+  \draw[cRed!95!black, line width=0.25pt] (\dx, \dy) circle (0.08);
+}
+% Region labels — anchor to trap line clusters on right
+% Panel C iter 27 [round 4, 2026-05-26]: shallow label x 11.60 -> 11.78 to clear
+% deep escape S-curve (passes through x=11.6..11.7 at y=7.35-7.45 — under shallow
+% label glyph baseline). 0.18cm rightshift puts label START past curve apex.
+% deep label x kept at 11.60 (no curve passes through deep label area).
+% Panel C iter 28b [2026-05-27, post-merge label_path_proximity gate]:
+% shallow label x 11.78 -> 11.95. iter27 0.18cm TikZ shift gave PDF distance
+% from deep escape S-curve still <5pt threshold. Bumped to 11.95 (0.35cm
+% total shift from original 11.60) — beyond curve apex x=11.85 with margin.
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
+% Panel-loop iter L11: shallow tone !75 → !80!black (parity with high/low n + Coulomb).
+% Human visual audit [2026-07-03]: x 12.85 -> 12.30 and y 7.45 -> 7.64 to clear
+% the Delta-E_t vertical caliper while staying off the deep escape curve.
+% v4 candidate: keep the label above the deep-escape polyline's bbox while the
+% mobility-edge text and red escape curve move out of the same optical lane.
+% v5d redraw slice 2: restore the shallow label to the trap-line cluster instead
+% of the far-right caliper lane. The deep escape curve is re-routed below to
+% keep the label, arrow, and Delta-E_t annotation in separate optical lanes.
+      text=cBlue!80!black, anchor=west, fill=white, fill opacity=0.90,
+      text opacity=1, inner xsep=0.8pt, inner ysep=0.35pt] at (12.15, 7.58) {shallow};
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
+% Panel-loop iter L12: deep tone !75 → !80!black (parity).
+      text=cRed!80!black, anchor=west] at (11.60, 6.02) {deep};
+
+% Escape arrows from BOTH shallow and deep (showing both are dynamic, no
+% one-sided "dominate" claim). Shallow escapes easier (shorter arrow with
+% larger head). Deep harder (longer arrow, smaller head).
+% v8.7 critique C005 fix: shallow weight 0.35 → 0.50pt for visible "easy
+% escape" cue. Deep stays at 0.35pt — weight asymmetry encodes activation
+% energy difference (thicker = easier).
+% Panel C iter 17 [Panel C 15-loop round 2, 2026-05-26]: shallow escape mini-curve.
+% iter8 straight stub still read as carret "^" at zoom; deep curve dominated
+% visual comparison. Mini-S bezier (11.10,7.55) -> (11.20,7.82) gives the
+% shallow path "arrow" identity (parallels deep S-curve in form, opposite in
+% length+curvature magnitude). Activation-energy weight asymmetry preserved
+% (0.55pt shallow vs 0.35pt deep). Lands on mobility edge at x=11.20 (clears
+% trap dot at 11.15/7.55 by 0.05cm above).
+\draw[-{Stealth[length=3.2pt,width=2.6pt]}, dashed, cBlue!80!black,
+      line width=0.55pt] (11.10, 7.55) .. controls (11.10, 7.65) and (11.20, 7.72) .. (11.20, 7.82);
+% Panel C iter 14 [Panel C 15-loop, 2026-05-26]: deep escape arrowhead lift.
+% Curve length 1.6cm with arrowhead 2.6/2pt was visually weak at terminus.
+% Head 2.6 -> 3.2pt, width 2 -> 2.4pt. Line weight 0.35pt UNCHANGED — preserves
+% activation-energy weight-asymmetry encoding (thin = hard escape) per design.
+% v4 candidate: pull the deep escape terminus slightly left/down so it reads
+% as a difficult escape path without entering the shallow label's optical area.
+% v5d redraw slice 2: keep the hard-escape curve in the center lane, left of the
+% shallow label, so the blue label no longer has to occupy the Delta-E_t lane.
+\draw[-{Stealth[length=3.2pt,width=2.4pt]}, dashed, cRed!70!black,
+      line width=0.35pt] (11.10, 6.20) .. controls (11.02, 6.60) and (11.30, 6.88) .. (11.40, 7.72);
+
+% Trap depth annotation: E_C → deep band mid (encodes depth scale, no
+% "dominate" overstatement).
+% v8.3 audit closure: arrow + label color cGray!70!black → cRed!75!black to
+% match briefing §13.3 C-R5 spec. cRed binds the depth scalar to the deep
+% trap species (color convention §8.6 / §13.9 Binding-1).
+% Designer iter 8: arrow x 12.85 -> 13.40 (past mobility edge label tail
+% at x~13.38). At x=12.85 the vertical caliper passed through the 'l' of
+% 'mobility' at y=7.85, a real label-glyph-crossing defect visible at zoom
+% even though visual_clash did not flag it. Delta E_t label moves to the
+% right of the arrow (anchor=west at x=13.42, tail at ~13.82). Row 2 outer
+% box right edge widens 13.30 -> 13.85 to contain both.
+% Panel C iter 11 [Panel C 15-loop, 2026-05-26]: DeltaE_t caliper firm-up.
+% Arrowhead 2.6/2pt -> 3.2/2.4pt + line 0.45 -> 0.50pt. The 2.44cm span at
+% 0.45pt read as a thin reference cue rather than a measured scalar caliper.
+% Heads still inside cap (max 3.5pt scaler) per intra-panel arrow tier.
+\draw[{Stealth[length=3.2pt,width=2.4pt]}-{Stealth[length=3.2pt,width=2.4pt]},
+% iter PL5: ΔE_t tone cRed!80!black → cRed!75!black per briefing §13.3 C-R5 spec.
+      cRed!75!black, line width=0.50pt] (13.40, 8.27) -- (13.40, 5.83);
+% Polish iter: 5.5 → 6.5pt + cRed!80!black (stronger visual binding to deep trap).
+% iter PL5b: ΔE_t label tone parity with arrow !75!black per briefing §13.3 C-R5.
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!75!black,
+      anchor=west, inner sep=0.5pt]
+  at (13.42, 7.00) {$\Delta E_t$};
+
+% R13: Re-add thin BLACK straight leaders (checklist #12 — no arrowhead, no
+% color, 0.30pt). Each LEFT ⊖ → its corresponding RIGHT band left edge.
+% Two red leaders converge on the deep band = "multiple deep sites map to
+% one deep distribution".
+% R20: leaders color-matched to ⊖ (shallow tint blue, deep tint red) for
+% stronger visual binding LEFT site ↔ RIGHT level. Still dashed, low opacity.
+% Cycle 2 / C408 (2026-05-22): leader opacity 0.55 → 0.40 + dash sparser
+% (densely dashed → dash pattern with 1.5pt-on/1.5pt-off) so the 4 leaders
+% read as faint binding cues at zoom rather than competing structural lines
+% with the energy-band rules. Color identity preserved (blue/red).
+\draw[cBlue!55!black, opacity=0.72, dash pattern=on 1.5pt off 1.5pt,
+      line width=0.25pt] (siteS1) -- (10.50, 7.55);
+\draw[cBlue!55!black, opacity=0.72, dash pattern=on 1.5pt off 1.5pt,
+      line width=0.25pt] (siteS2) -- (10.50, 7.35);
+\draw[cRed!55!black, opacity=0.72, dash pattern=on 1.5pt off 1.5pt,
+      line width=0.25pt] (siteD1) -- (10.50, 6.20);
+\draw[cRed!55!black, opacity=0.72, dash pattern=on 1.5pt off 1.5pt,
+      line width=0.25pt] (siteD2) -- (10.50, 5.85);
+
+% R13: Half-identity labels and panel role subtitle.
+% iter E17 (C201): 5.5pt → 6pt for thumbnail-floor survival.
+% Panel C iter 4 [Panel C 15-loop, 2026-05-26]: sub-title baseline alignment.
+% 'real space' at y=8.55 vs 'energy diagram' at y=8.78 — 2.3mm asymmetry
+% weakened the companion-pair reading. Both now aligned at y=8.78 (just below
+% master title at y=8.92, above vacuum dashed at y=8.55). Letter-spacing
+% companion typography reads as a clean L/R pair.
+\node[labelMute, anchor=south,
+      font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
+      text=cGray!65!black] at (8.35, 8.78) {real space};
+\node[labelMute, anchor=south,
+      font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
+      text=cGray!65!black] at (12.20, 8.78) {energy diagram};
+% Cycle 3 / C415 (2026-05-22): hero panel-subtitle bumped 6.5pt italic →
+% 7pt semibold upright so the trap-landscape headline carries the Panel C
+% hero identity at thumbnail. Companion sub-labels ("real space" / "energy
+% diagram") stay 6pt italic — preserves intra-Panel-C 2-tier hierarchy.
+% 2026-05-25 polish: 7pt -> 7.5pt to strengthen Panel C HERO master-title
+% hierarchy relative to companion sub-labels ('real space' / 'energy diagram'
+% at 6pt italic). Stays below panel-letter 8pt cap so no letter-tier conflict.
+\node[anchor=south,
+      font=\sffamily\fontsize{6}{7.2}\selectfont,
+      text=cGray!70!black] at (10.40, 8.92) {localized traps};
+
+% ============================================================
+% Row 2 — NC main-text Fig 1 clean white background.
+% 2026-05-22 redirect: REMOVED cAmber!8 wash + 9 wave chain-hint segments.
+% Row 2 unity now carried entirely by:
+%   (i)  3-spoke branching arrows from C
+%   (ii) "convergent evidence" caption above branchRoot
+%   (iii) panel-letter typography (d / e / f) at top-left of each column
+% No background fill. No wavy chain hints. Dotted column dividers also REMOVED
+% — they were a Row-2-wash-only crutch; clean white-space gap reads as
+% the column separator under NC convention.
+% ============================================================
+
+
+% ============================================================
+% Convergent evidence — 2026-05-27 NC convention re-design:
+% 3-spoke branching arrows + 'convergent evidence' caption REMOVED.
+%
+% User critique: 3-spoke fan + caption in inter-row gap = over-narration,
+% NC main-text Fig 1 anti-pattern (He NatComm 2024 / Checa SS-KPFM panels
+% sit adjacent without explicit convergence arrows; "evidence" relationship
+% carried by caption text, not figure geometry).
+%
+% Connection now carried by:
+%   (i)   panel-letter typography pairing (Row 1 C HERO + Row 2 d/e/f)
+%   (ii)  modality sub-labels INLINE with panel-letters (kinetic/ISPD/mechanical
+%         immediately right of letter — replaces spoke-floating labels)
+%   (iii) color-binding (Panel C cRed deep traps + Panel E cRed g(E_t) deep peak
+%         + Panel F cRed Coulomb arrow — narrative carry without explicit arrows)
+%   (iv)  inter-row vertical breathing room (gap 0.45cm → cleaner)
+%
+% Modality sub-labels are now rendered alongside each Row 2 panel letter via
+% the panel-letter node (handled at lines 67-72 where d/e/f are drawn).
+% Below: per-column modality companion-label nodes anchored to panel-letter
+% baselines — 6pt italic cGray!70 right of each letter.
+% ============================================================
+% 2026-05-27 BRIDGE BRACKET form: user-proposed "묶은 후 위쪽 화살표".
+% Convergent semantic = 3 evidence (D/E/F) → grouped by bracket → up arrow
+% to Panel C model. This is TRUE convergent geometry (3 → 1), unlike previous
+% V-fan or 3-vertical-drops which were divergent (1 → 3).
+%
+% Geometry:
+%           ↑                          single up arrow at bracket center
+%           |                          → Panel C bottom (convergent target)
+%   ────────┼────────                  horizontal bracket at y=4.85
+%   |       |       |                  3 verticals (preserved from drops)
+%   d       e       f                  panel letters
+%  kinetic ISPD mechanical              modality labels (preserved)
+%
+% 3 evidence panels are visually "grouped" by horizontal bracket, and the
+% bracket itself points UP to Panel C — convergence target identified.
+% Stroke 0.35pt cGray!50 unified (bracket + 3 verticals + up arrow).
+% Up arrow: small 3pt stealth head, target y=5.18 (just inside Panel C bbox).
+
+% iter PL7: bridge bracket tone cGray!50 → cGray!55 unify with up arrow.
+% AGENT+ADVISOR FIX (2026-05-28): column-E center DOWN-vertical REMOVED.
+% The center already carries the UP arrow (convergence vector) + ISPD label;
+% a down-vertical there triple-stacked at x=6.975 and forced ISPD label down
+% into Panel E where it collided with the "V_s probe" instrument label.
+% v5d redraw slice 1: remove the bracket/up-arrow connector scaffold.
+% Convergence is now carried by row-level typography and cross-panel color
+% binding, not by a diagrammatic construction layer in the inter-row gap.
+\node[font=\sffamily\itshape\fontsize{5.4}{6.4}\selectfont, text=cGray!55!black,
+      anchor=south, inner sep=0pt] at (6.975, 5.00) {convergent evidence};
+\node[font=\sffamily\fontsize{5.3}{6.3}\selectfont, text=cGray!50!black,
+      anchor=north] at (2.275, 4.56) {kinetic};
+\node[font=\sffamily\fontsize{5.3}{6.3}\selectfont, text=cGray!50!black,
+      fill=white, inner xsep=1.1pt, inner ysep=0.35pt, anchor=south] at (6.975, 4.61) {ISPD};
+\node[font=\sffamily\fontsize{5.3}{6.3}\selectfont, text=cGray!50!black,
+      anchor=north] at (11.70, 4.56) {mechanical};
+
+% ============================================================
+% v8.6 ROW 2 RESTRUCTURE — 3-column Option α (apparatus + result stacking)
+%   Replaces pre-v8.6 4-panel D/E/F/G layout per briefing §6 + §13.5-§13.7.
+%   Each column: apparatus zone (top y=2.80..4.25) + result zone (y=0.20..2.60).
+%   Column D (kinetic):   x=0.05..4.50, spoke endpoint (2.28, 4.30)
+%   Column E (ISPD):      x=4.65..9.30, spoke endpoint (6.975, 4.30) vertical
+%   Column F (mechanical): x=9.45..13.95, spoke endpoint (11.70, 4.30)
+% ============================================================
+
+% Row 2 framing — Designer iter 3 (2026-05-22 v1.9.2): user request for
+% premium NC compartmentalisation. The iter-2 thin column rules read as too
+% subtle once apparatus + data zones shifted to fill Panel E. Promoted to a
+% 3-cell light rectangle band — an outer rounded box around Row 2 + 2 internal
+% verticals at the column boundaries (x=4.62 D/E, x=9.47 E/F). Asymmetric
+% framing convention: Row 1 (chemistry/landscape, free-flowing scene with
+% A→B inter-arrow) stays unboxed; Row 2 (heterogeneous apparatus + plot
+% panels) gets the box band. Stroke cGray!30 0.35pt rounded 2pt — visible
+% but unobtrusive at print scale, no fill, no colour. Drawn BEFORE panel
+% content so panel-letter typography sits on top of the box top edge per
+% NC corner-perch convention.
+% Panel-loop iter L2-L3 [post-spoke]: Row 2 frame tone subdue (post-spoke removal
+% the frame became visually prominent; lighter tone + thinner stroke).
+% v5c quiet-editorial candidate: remove the enclosing Row 2 box and retain only
+% faint column separators, so D/E/F read as manuscript evidence panels rather
+% than a UI card band.
+\draw[cGray!12, line width=0.25pt] (4.62, 0.14) -- (4.62, 4.36);
+\draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
+
+% =============== Column D — Kinetic =================
+
+% D-2 apparatus zone (v8.7): SMU box + MIM sample stack + ground
+% v8.7 critique iter 1: SMU box shrunk (height 0.85→0.55), MIM stack enlarged
+% (width 1.20→1.80, electrode thickness 0.08→0.10, polymer 0.30→0.45) so MIM
+% becomes the visual hero — apparatus zone communicates "sample-under-test"
+% not "instrument-with-attached-sample."
+% SMU box (LEFT, compact)
+% iter 53 redesign (Gemini MEDIUM: V/A flush-left detached from SMU label).
+% Consolidated to centered grid: "SMU" italic upper-half, "V / A" with
+% middle-dot separator lower-half — both centered in box x-axis. Reads as
+% unified instrument identity ("SMU" = name, "V/A" = dual function) instead
+% of scattered glyphs.
+% iter 61 illustration polish: rounded corners=2pt — soft cartoon-panel feel
+% vs sharp 90° engineering-box edges.
+% Cycle 1 / C401 (2026-05-22): compile emitted WARN collision IoU=0.064 between
+% SMU [28.5,189.5] and V/A [29.5,194.9]. At 6pt labels (~0.25cm tall each) the
+% 0.17cm c-to-c separation overlapped descenders+ascenders. Box height
+% 0.55→0.70cm; label c-to-c 0.17→0.30cm.
+% Iter 10: SMU box gets the same subtle top->bottom shade as the other
+% instrument boxes (HV+, V_s meter, V_active PSU). Previously outline-only.
+% D apparatus v8.6 [briefing relax R2, 2026-05-26]: calibrated.
+% shadow 0.40→0.25, gradient delta preserved, specular 1.2mm→0.6mm + 0.65→0.42.
+% Clean flat instrument box (NC-premium restyle 2026-06-01): no glossy gradient,
+% no specular highlight, no heavy drop shadow — crisp thin outline + flat light fill.
+\fill[cGray!6, rounded corners=1pt] (0.50, 3.07) rectangle (1.30, 3.77);
+\draw[cGray!70!black, line width=0.45pt, rounded corners=1pt]
+  (0.50, 3.07) rectangle (1.30, 3.77);
+% Instrument-substance pass (2026-06-01, user art direction): SMU was the only
+% source box WITHOUT a display, reading as a flimsy labeled rectangle. Brought to
+% the figure's own instrument standard (HV+/V_s meter/V_active each carry a
+% dark-glass display) + inner faceplate bezel for machined-panel weight. Flat —
+% no gloss, no hue, no fake readout data (empty dark glass like the others).
+% Reverses C007's minimalist readout deletion now that the art direction wants
+% substance over bare minimalism.
+\draw[cGray!35!black, line width=0.20pt, rounded corners=0.8pt]
+  (0.565, 3.115) rectangle (1.235, 3.725);
+\fill[cGray!70!black, rounded corners=0.6pt] (0.62, 3.58) rectangle (1.18, 3.70);
+\draw[cGray!85!black, line width=0.12pt, rounded corners=0.6pt]
+  (0.62, 3.58) rectangle (1.18, 3.70);
+\fill[cGray!45!black, opacity=0.5] (0.64, 3.685) rectangle (1.16, 3.692);
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
+      anchor=center] at (0.90, 3.45) {SMU};
+\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
+      anchor=center] at (0.90, 3.23) {V\,/\,A};
+
+% MIM sample stack (CENTER, ENLARGED to be visual hero)
+% Top electrode v8.5 [briefing relax R2, 2026-05-26]: dial turn-up.
+% gradient delta widened cGray!8→cGray!70 (was !18→!50).
+\fill[cGray!25]
+  (1.70, 3.70) rectangle (3.50, 3.80);
+\draw[cGray!75!black, line width=0.32pt]
+  (1.70, 3.70) rectangle (3.50, 3.80);
+\foreach \hx in {1.75, 1.90, 2.05, 2.20, 2.35, 2.50, 2.65, 2.80, 2.95, 3.10, 3.25, 3.40} {
+  \draw[cGray!60!black, line width=0.22pt] (\hx, 3.80) -- ({\hx-0.03}, 3.71);
+}
+% Polymer film — iter 59 illustration polish: solid \fill → \shade gradient
+% (matches Panel F cantilever convention cAmber!22→cAmber!42 top-to-bottom).
+% Subtle depth cue, cross-panel polymer material identity consistency.
+\shade[top color=cAmber!22, bottom color=cAmber!42]
+  (1.70, 3.25) rectangle (3.50, 3.70);
+\draw[cAmber!70!black, line width=0.32pt]
+  (1.70, 3.25) rectangle (3.50, 3.70);
+% Bottom electrode v8.5 [briefing relax R2, 2026-05-26]: matching turn-up.
+\fill[cGray!25]
+  (1.70, 3.15) rectangle (3.50, 3.25);
+\draw[cGray!75!black, line width=0.32pt]
+  (1.70, 3.15) rectangle (3.50, 3.25);
+\foreach \hx in {1.75, 1.90, 2.05, 2.20, 2.35, 2.50, 2.65, 2.80, 2.95, 3.10, 3.25, 3.40} {
+  \draw[cGray!60!black, line width=0.22pt] (\hx, 3.25) -- ({\hx-0.03}, 3.16);
+}
+
+% 2 leads from SMU box to MIM stack — iter 64 illustration polish:
+% rounded corners=2pt for soft elbow turns vs sharp 90° engineering elbows.
+\draw[cGray!75!black, line width=0.28pt, rounded corners=2pt]
+  (1.30, 3.60) -- (1.50, 3.60) -- (1.50, 3.75) -- (1.70, 3.75);
+\draw[cGray!75!black, line width=0.28pt, rounded corners=2pt]
+  (1.30, 3.27) -- (1.50, 3.27) -- (1.50, 3.20) -- (1.70, 3.20);
+% iter 53: contact dots at lead-electrode junctions (Gemini MEDIUM
+% "unfinished circuit schematic"). Radius 0.018cm = 0.5pt, cGray!75!black.
+\fill[cGray!75!black] (1.70, 3.75) circle (0.020);
+\fill[cGray!75!black] (1.70, 3.20) circle (0.020);
+\fill[cGray!75!black] (3.50, 3.20) circle (0.020);
+
+% Ground symbol at bottom electrode RIGHT side
+% iter 53b: horizontal segment lengthened 0.15→0.20cm + ground bars shifted.
+% iter 64: rounded corners=2pt on lead bend (matches SMU lead style).
+\draw[cGray!75!black, line width=0.28pt, rounded corners=2pt]
+  (3.50, 3.20) -- (3.70, 3.20) -- (3.70, 3.06);
+\draw[cGray!75!black, line width=0.30pt] (3.62, 3.06) -- (3.78, 3.06);
+\draw[cGray!75!black, line width=0.25pt] (3.65, 3.03) -- (3.75, 3.03);
+\draw[cGray!75!black, line width=0.22pt] (3.67, 3.00) -- (3.73, 3.00);
+
+% v8.7 critique iter 2: label readability — cAmber on cAmber fill was poor
+% contrast; switched to cGray!75!black for higher contrast against cAmber!28 fill.
+\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black]
+  at (2.60, 3.47) {polymer film};
+% v8.7 critique C012 fix: name the MIM architecture so the 3-layer structure
+% is reader-identifiable even though polymer dominates visually. Compact
+% label in apparatus zone top-left, outside the stack to avoid lead-routing.
+\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
+      anchor=north west] at (0.10, 4.20) {MIM stack};
+
+% D-3 result zone axes (Stealth tipped, minimal qualitative ticks)
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (0.45, 0.40) -- (0.45, 2.60);
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (0.45, 0.40) -- (4.20, 0.40);
+\draw[cGray!65!black, line width=0.45pt] (0.45, 1.10) -- (0.52, 1.10);
+\draw[cGray!65!black, line width=0.45pt] (0.45, 1.80) -- (0.52, 1.80);
+\draw[cGray!65!black, line width=0.45pt] (1.70, 0.40) -- (1.70, 0.47);
+\draw[cGray!65!black, line width=0.45pt] (3.10, 0.40) -- (3.10, 0.47);
+\node[labelMute, anchor=east, rotate=90] at (0.35, 2.45) {$\log I$};
+\node[labelMute, anchor=north, font=\sffamily\fontsize{6}{7.2}\selectfont] at (4.10, 0.36) {$\log t$};
+
+% D-5 high-n (sulfur, paper hero) + D-6 low-n (control) power-law curves
+% 2026-05-20 framework rewrite (briefing §8.4 + §13.5):
+%   CvS absorption current I(t)~t^-n under constant V.
+%   Both curves start at same y_0 = 2.30 (initial dielectric polarization
+%   order-of-magnitude match — cartoon simplification).
+%   D-5 RED = sulfur polymer, n_real ≈ 0.85 (paper-data 260504_sulfur_rh25),
+%     visual n ≈ 0.55 (cartoon-compressed) — STEEP, trap-rich, ends low.
+%   D-6 BLUE = control polymer (PI), n_real ≈ 0.55-0.60, visual n ≈ 0.25 —
+%     LESS STEEP, trap-poor, current persists.
+%   Prior coords (0.65,2.40→3.85,1.10) + (0.65,1.90→3.85,0.50) were locked
+%   to wrong depolarization framework; absorption-current rewrite swaps the
+%   physical interpretation: high n = strong trap = steep.
+% iter 56: RED 0.80 → 0.90pt (primary narrative tier). iter 60: line cap=round.
+% iter 64: BLUE cBlue!80 → cBlue!55 (desaturate control sample) to reinforce
+% RED hero visual hierarchy. Per user honest audit "BLUE too prominent for
+% secondary role".
+\draw[cRed!80!black, line width=0.90pt, line cap=round]
+  (0.65, 2.30) -- (3.85, 0.55);
+\draw[cBlue!55!black, line width=0.80pt, line cap=round]
+  (0.65, 2.30) -- (3.85, 1.50);
+% D-5/D-6 v8.4 [briefing relax R2, 2026-05-26]: common-start anchor dot at
+% (0.65, 2.30) — visualizes "shared I(0) initial polarization order-of-
+% magnitude match" cartoon convention (§8.4 + briefing line 844). Neutral
+% cGray ball (not red/blue) since point is shared, not associated with
+% either curve identity.
+\shade[ball color=cGray!65!black] (0.65, 2.30) circle (0.035);
+\draw[cGray!85!black, line width=0.16pt] (0.65, 2.30) circle (0.035);
+
+% Representative measured-data scatter points
+% Iter 10: power-law markers upgraded to ball-shaded spheres (NC convention
+% for primary data points). Red for high-n curve, blue for low-n curve.
+\foreach \mx/\my in {1.20/2.00, 2.00/1.56, 2.80/1.12, 3.60/0.69} {
+  \shade[ball color=cRed!75!black] (\mx, \my) circle (0.045);
+  \draw[cRed!95!black, line width=0.18pt] (\mx, \my) circle (0.045);
+}
+\foreach \mx/\my in {1.20/2.16, 2.00/1.96, 2.80/1.76, 3.60/1.56} {
+  \shade[ball color=cBlue!65!black] (\mx, \my) circle (0.040);
+  \draw[cBlue!95!black, line width=0.16pt] (\mx, \my) circle (0.040);
+}
+
+% D-7a Debye dashed reference (ends below both power-law tails per §8.4)
+% Column D iter 1 (2026-05-18, reference-grounded pilot): weight 0.55 → 0.75pt
+% (+36%) + tone cGray!70 → cGray!85 (+21%) so the reference-comparison
+% anchor reads with confidence vs power-law curves. Mined from Wang NatComm
+% 2022 Fig 1 (audit_table.md D-ref04 transferable: reference-curve styling).
+% Width 0.75pt stays under mechanism-tier 1.0pt — correct hierarchy preserved
+% (reference < primary curves 0.80pt).
+% iter 53: Debye curve endpoint y 0.50 → 0.56 (Gemini HIGH "abrupt termination
+% directly onto x-axis"). New gap to axis (0.40): 0.16cm = ~4.5pt, comfortably
+% above Gemini's 2pt minimum and visually clear of axis line.
+% iter 57: Debye bezier extended to (3.40, 0.45) — asymptotic exp shape.
+% iter 58: Label switched from horizontal anchor=west to sloped path-attached
+% along same bezier (pos=0.92 near endpoint) for visual convention symmetry
+% with high n / low n D-7b labels. above=4pt perpendicular offset above curve.
+% iter 60: Debye dash thinner (0.75 → 0.65pt) — reference tier clearly
+% below annotation tier; line cap=round for smooth dash endcaps.
+% Panel D 'Debye cliff' rewrite (2026-05-27, feature/panel-d-debye-cliff):
+% Prior bezier (0.65,2.30) .. (2.00,0.50) .. (3.40,0.45) descended too
+% smoothly, reading as "just a steeper power-law" — failed to convey
+% single-τ exp identity. User-curated theory reference
+% `02_Surfur_Polymer/docs/debye_vs_powerlaw_correct.png` "정확한 버전" shows
+% Debye as horizontal plateau + sharp cliff (single-τ exp on log-log:
+% y = a − 0.4343·10^x/τ → plateau for t≪τ, cliff for t≫τ).
+% New geometry: plateau (x=0.65→1.80, y=2.30) + knee at x≈1.95 + steep
+% cliff to terminus (2.22, 0.55). Curve TERMINATES mid-plot — Debye "dies
+% fast" while single-power-law RED/BLUE persist to right edge.
+% NOTE: RED stays single steep line (Scher-Montroll CTRW single power-law
+% per si_methods_S0 §60+§175; broken-power-law direction explored 2026-05-27
+% 17:14 then reverted after cross-check with paper framework + reference
+% image — paper's "two-component conduction" is power-law→DC-plateau, not
+% two power-law segments with different n).
+\draw[cGray!85!black, dashed, line width=0.65pt, line cap=round, line join=round]
+  (0.65, 2.30) -- (1.80, 2.30)
+  .. controls (2.05, 2.28) and (2.12, 0.80) .. (2.22, 0.55);
+% Debye label relocated to cliff-terminus right (horizontal text). Cliff is
+% near-vertical so sloped label would itself be near-vertical — unreadable.
+% Empty wedge below RED line at x∈[2.20, 2.50] gives clear placement next to
+% terminus; no leader needed (adjacency + color match unambiguous).
+\node[labelMute, text=cGray!65!black, anchor=west, inner sep=1pt]
+  at (2.28, 0.62) {Debye};
+
+% D-4 main equation label — iter 64 reverted to upper-left (0.55, 2.75)
+% per user honest audit: upper-left is reading-order convention ("equation
+% = mental model first"); iter 62 upper-right move was creative but added
+% reader cognitive cost. Math style = default serif italic (figure-wide
+% convention, matches Panel E/F math labels).
+% Cycle 4 / C419 (2026-05-22): bold 7pt sans equation read as "label header"
+% competing with curve labels (high n / low n / Debye). NC convention: equation
+% in math-italic, not bold sans. Switched to default serif italic 7.5pt with
+% subtle weight; preserves "equation = mental model" upper-left placement
+% while shrinking eye-pull weight relative to curve-identity labels.
+\node[font=\fontsize{7.5}{9}\selectfont, anchor=west] at (0.55, 2.75)
+  {$I(t)\!\sim\!t^{-n}$};
+
+% D-7b curve ID labels — 2026-05-20 framework rewrite + iter 55 interleave:
+%   high n (RED, sulfur) at pos=0.55 (RIGHT of midpoint)
+%   low n (BLUE, control) at pos=0.40 (LEFT of midpoint)
+%   prevents vertical stacking at same x (iter 54 audit: labels cluttered).
+% Cycle 2 / C409 (2026-05-22): "high n" cRed!75 on cRed!80 curve merges under
+% red-deficient CVD + grayscale. Switched label to bold cRed!90 with above=4pt
+% offset so weight + clearance carry the distinction; matches "low n" tier.
+% Panel-loop iter L10: high n / low n tone parity. cRed!90 / cBlue!60 → both
+% !80!black for cross-line consistency (matching Coulomb iter L8 + Panel C trap).
+% v5e aggressive slice 1: promote the high-n curve ID into a print-scale tag
+% so the red sulfur trace reads as the primary kinetic result at first glance.
+\node[font=\sffamily\bfseries\itshape\fontsize{6.7}{8.0}\selectfont,
+      text=cRed!82!black, anchor=west, fill=white, fill opacity=0.92,
+      text opacity=1, inner xsep=1.2pt, inner ysep=0.45pt]
+  at (3.00, 0.86) {high $n$};
+% Goal-1 overnight elem-iter (2026-06-04): pos=0.40 → 0.60. 2026-05-27 Debye
+% cliff rewrite (1169-1186) raised the dash plateau-then-cliff into this
+% pre-existing label (pos=0.40 at curve point (1.93,1.98)); cliff at x=1.93 is
+% y≈2.13, passing through the label box (lown_zoom.png confirms dash under 'lo').
+% pos=0.60 lands at (2.57,1.82), right of the cliff terminus (x=2.22), clearing it.
+\path[draw=none] (0.65, 2.30) -- (3.85, 1.50)
+  node[pos=0.60, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
+       text=cBlue!80!black, sloped, above=6pt, inner sep=1pt]
+  {low $n$};
+
+% =============== Column E — ISPD-paired =================
+
+% E-2 apparatus zone (v8.7): He et al Nat Commun 2024 Fig 1c adaptation
+% Layout: corona needle (LEFT, charging) + sample slab (CENTER) + Kelvin probe
+%   (RIGHT, V_s readout) + V_s meter box (FAR-RIGHT). Per briefing §13.6 E-2.
+
+% Column-E iter 2 (2026-05-18): apparatus comprehensive detail upgrade
+% (M1 paper-grade per user "최고 퀄리티"). Each element must communicate
+% the ISPD measurement mechanism (not just iconic shape):
+%   Corona  → discharge cue (sharp tip + spark indicators)
+%   Sample  → polymer-on-substrate (2-layer, ground to substrate)
+%   Probe   → Kelvin-probe modulation signature (vibration arcs)
+%   Meter   → measurement display cue (waveform inside)
+%
+% ----- Sample stack (2-layer): polymer film on substrate -----
+% Column-E iter 7 (2026-05-18): substrate thickness 0.11→0.22cm (2×) per
+% ref01 Checa NatComm 2023 SS-KPFM convention — real thin film on substrate
+% shows substrate visually dominant. Polymer film stays at 0.07cm thin.
+% Ground bars + polymer-film label repositioned for new substrate bottom y=3.23.
+%
+% Ground drop shadow — iter 16: shifted down to track new substrate bottom
+% (y=3.15). Strip y=3.11..3.15.
+\shade[top color=cGray!28, bottom color=cGray!2, opacity=0.55]
+  (5.94, 3.11) rectangle (7.49, 3.15);
+
+% Polymer film — iter 16: height 0.07 → 0.15cm. iter E5: gradient saturation
+% bumped cAmber!38→50 top, cAmber!20→28 bottom for clearer polymer-vs-substrate
+% contrast (substrate cGray!18 light, polymer was under-saturated for visibility).
+\shade[top color=cAmber!50, bottom color=cAmber!28]
+  (5.9, 3.45) rectangle (7.45, 3.6);
+\draw[cAmber!70!black, line width=0.25pt]
+  (5.9, 3.45) rectangle (7.45, 3.6);
+% Polymer top-edge sheen — iter 12: subtle near-white highlight on front-top
+% edge (y=3.52) — film/wax surface catching light. Thin (0.002cm) at low
+% opacity for sheen without breaking material identity.
+\fill[white, opacity=0.45]
+  (5.9, 3.599) rectangle (7.45, 3.601);
+% Disk ambient shadow on polymer — iter 15: parallelogram → thin horizontal
+% band on polymer front-top edge (y=3.51..3.52) under disk hover x range.
+% Side-view side-projection of "disk casts shadow on polymer surface". Slight
+% rightward offset (7.21..7.62) preserves upper-left light convention.
+% Panel E iter 7 [Panel E full-loop, 2026-05-27]: disk shadow x-align with disk.
+% Disk at x 6.80..7.20, but shadow strip at x 6.81..7.22 — offset 0.01 + 0.02
+% misalignment. With upper-left light convention, shadow should be slightly
+% RIGHT of disk (light from NW casts shadow to SE). Shifted shadow to
+% x 6.85..7.25 (disk_x + 0.05 each end). Aligns light-source convention.
+\fill[black, opacity=0.16] (6.85, 3.59) rectangle (7.25, 3.6);
+% Substrate — iter 16: height 0.22 → 0.30cm (y=3.15..3.45). Aspect 7:1 → 5:1.
+% iter E10: substrate gradient cGray!42→!22 → cGray!50→!25 (slight darken
+% for "metallic conductive substrate" feel — substrate is ground-attached
+% conductive base, deserves slightly more material weight than light gray).
+\fill[cGray!22]
+  (5.9, 3.15) rectangle (7.45, 3.45);
+% Panel E iter 24 [round 5 NC clean, 2026-05-27]: substrate striations REMOVED.
+% 3 white opacity 0.25 lines at 0.18pt = barely-visible noise. Either too
+% subtle (visual contribution ~0) or competing with leader at high zoom.
+% NC convention: clean single-tone substrate w/ gradient + outline carries
+% material identity. Removed lines for cleaner cross-section.
+\draw[cGray!75!black, line width=0.28pt]
+  (5.9, 3.15) rectangle (7.45, 3.45);
+% Sample ground attaches to substrate (right edge, mid-substrate y=3.34).
+% Iter 7: ground bars shifted down (y was 3.20..3.26, now 3.12..3.18) to
+% clear thicker substrate bottom (y=3.23).
+% Ground wire + bars — iter 45 (Pri 5b): line widths bumped for print.
+% iter E8: rounded corners=2pt on lead bend (matches Panel D iter 64 SMU
+% lead convention; cross-panel illustration-register consistency).
+% Panel E iter 28 [round 5 NC clean, 2026-05-27]: ground symbol IEEE standard.
+% 3-bar version had unbalanced widths (0.42/0.36/0.32pt + manually shrinking
+% bars) — looked amateurish. Replaced with standard IEEE earth symbol:
+% widest top bar, two progressively shorter bars below, consistent stroke.
+% Bar widths: 0.16/0.10/0.06cm (geometric tapering). Common stroke 0.35pt.
+\draw[cGray!75!black, line width=0.35pt, rounded corners=1pt]
+  (7.45, 3.3) -- (7.55, 3.3) -- (7.55, 3.10);
+\draw[cGray!75!black, line width=0.35pt] (7.47, 3.10) -- (7.63, 3.10);
+\draw[cGray!75!black, line width=0.35pt] (7.50, 3.07) -- (7.60, 3.07);
+\draw[cGray!75!black, line width=0.35pt] (7.52, 3.04) -- (7.58, 3.04);
+
+% ----- Corona electrode assembly — iter 8 Option Y (encapsulated HV source) -----
+% Tech illustrator audit: floating "+" cue + no HV identifier = "where does
+% the charging voltage come from?". Replaced with explicit HV+ source box
+% above needle + wire connection. "Corona" label removed (HV+ + needle +
+% sparks self-identifies as corona discharge per literature convention).
+%
+% HV+ source — Panel E iter 36: rebalanced internal layout for breathing
+% room (user-flagged 여유감). Display made shorter (4.18..4.27 → 4.20..4.27),
+% label "HV+" 6→5pt + moved to y=4.10 (centered in label zone 4.00..4.20).
+% Box width slightly enlarged 0.55 → 0.65cm for label horizontal margin.
+% iter 38 (Step 1: journal-grade instrument redesign): rounded corners +
+% darker premium body + dark glass display + glowing pulse trace (cAmber on
+% cGray!85!black background — oscilloscope aesthetic, replaces "icon in box").
+% iter 40: HV+ box lifted 0.10cm to accommodate longer wire + lifted needle
+% (user "corona too close to sample"). Box 4.00..4.30 → 4.10..4.40.
+% HV+ body — iter 46 (Pri 8): \shade → \fill matte solid (was "harsh PowerPoint
+% linear gradient" per Gemini). Iter 10 (2026-05-22): replaced flat matte fill
+% with a VERY SUBTLE top→bottom shade (cGray!10 → cGray!22, ~12% delta) to
+% match the V_active PSU box convention without re-introducing the iter-46
+% "harsh PowerPoint" feel. Sphere/markers + subtle gradient on instrument
+% boxes form the premium NC look together.
+% E apparatus v8.6 [briefing relax R2, 2026-05-26]: HV+ box calibrated.
+% shadow 0.40→0.25, gradient preserved, NW spec REMOVED (E zone declutter —
+% display dark glass already provides material identity; redundant spec
+% contributes to "white circle soup" pattern flagged in v8.5 review).
+% Panel E iter 8 [Panel E full-loop, 2026-05-27]: HV+ box gradient depth.
+% top !4 -> !12, bottom !40 -> !58 (deeper metallic feel; was washed out
+% schematic). Stroke !55 -> !65 for crisper edge definition. Drop shadow
+% opacity 0.25 stays (iter 10 will strengthen).
+% Panel E iter 10 [Panel E full-loop, 2026-05-27]: HV+ drop shadow strengthen.
+% opacity 0.25 -> 0.35 + offset (0.02, -0.02) -> (0.04, -0.04). Box now reads
+% as "physical instrument on paper" rather than "floating sketch". rounded
+% corners on shadow rect 1.8pt added for shadow/box edge alignment.
+% Panel E iter 25 [round 5 NC clean, 2026-05-27]: HV+ box silhouette differentiate.
+% Both boxes were same generic rectangular shape, visual indistinguishable.
+% Shrunk HV+ width 0.85 -> 0.65cm (compact HV source enclosure aesthetic) +
+% height 0.30 -> 0.25cm. NEW: 5.83..6.48 x 4.12..4.37.
+% Visual hierarchy: HV+ = compact source / V_s meter = larger read-out instrument.
+% Output terminal at (6.155, 4.13) stays inside; corona needle at x=6.155 stays
+% under box center (need slight shift: x 6.15 -> 6.155).
+\fill[cGray!6, rounded corners=1.2pt] (5.83, 4.12) rectangle (6.48, 4.37);
+\draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]
+  (5.83, 4.12) rectangle (6.48, 4.37);
+% Display — iter 50: enlarged vertically 0.07→0.16cm (was squashed 9:1 flat
+% per user "신호 찌그러짐"). New extent 4.22..4.38.
+% iter 25 follow-up: display refit to shrunk box. x 5.8→5.87, 6.45→6.44.
+% y 4.22→4.20, 4.38→4.33. Inside new box (5.83..6.48 x 4.12..4.37) with margin.
+% Panel E iter 32 [round 6 focal, 2026-05-27]: HV+ status LED indicator.
+% Display narrowed (x 5.87..6.44 → 5.90..6.36, width 0.57→0.46) to make
+% room for a status LED dot at right side (x=6.41, y=4.26) — small cRed!85
+% dot at 0.018cm radius signaling "HV ON". Subtle but adds active state
+% identity to PRIMARY tier instrument.
+\fill[cGray!70!black, rounded corners=1pt] (5.90, 4.20) rectangle (6.36, 4.33);
+\draw[cGray!85!black, line width=0.15pt, rounded corners=1pt]
+  (5.90, 4.20) rectangle (6.36, 4.33);
+% Instrument-substance pass (2026-06-01): glass-sheen highlight so the dark
+% display reads as a powered screen, consistent with the SMU upgrade.
+\fill[cGray!45!black, opacity=0.5] (5.92, 4.318) rectangle (6.34, 4.324);
+% iter 32: HV+ status LED — cRed dot indicating active discharge state.
+% iter E16 (M1 Panel E critical review): square-wave pulse trace read as
+% "pulse generator". Corona discharge is DC HV. Replaced with the standard
+% DC-source schematic glyph (⎓: long bar above, short bar below).
+% Panel E iter 21 [Panel E full-loop round 4, 2026-05-27]: readout REMOVED.
+% iter11/17 "5 kV" digital readout = NC convention violation. NC main-text Fig 1
+% does NOT show instrument readouts (display = empty dark glass abstract).
+% Display now stays as plain dark glass — '꺼짐 또는 wakeful pre-measurement'.
+% Reduces hue count (removed cBlue!8!white text + the gaming RGB feel).
+% Output terminal — iter 45 (Pri 6a): moved INSIDE box body.
+% iter E13: radius 0.022 → 0.018 outer, 0.011 → 0.009 inner; tone
+% cGray!85 → !70 (less aggressive black dot at print scale).
+% iter 25 follow-up: output terminal moved INSIDE shrunk box (4.12→4.15).
+\fill[cGray!70!black] (6.155, 4.15) circle (0.018);
+\fill[cGray!40!black] (6.155, 4.15) circle (0.009);
+% Wire from terminal to needle cuff (now from box bottom y=4.12 to needle 4.05).
+\draw[cGray!75!black, line width=0.32pt] (6.155, 4.12) -- (6.155, 4.05);
+% HV+ label — Designer iter (2026-05-22 v1.9 cleanup): the iter-E14 cGray!22
+% backdrop never fully masked the terminal→cuff wire (C001 regression). The
+% iter-C001 sideways shift to x=6.30 fixed the wire crossing but left the
+% box internally lopsided (display + corona centered at 6.525, label parked
+% on the left). Lifted the label OUTSIDE the box body using the V_s probe
+% convention (apparatus label sits above its source box, no fill backdrop).
+% Result: centered HV+ caption above a clean source box, all wire/terminal
+% geometry untouched.
+% Iter 18: caption was OUTSIDE Panel E box (sitting in inter-row band at
+% y=4.42..4.60, above box top y=4.50). Brought INSIDE — anchor=east at
+% (5.55, 4.25) — sits in Panel E left-margin airspace just LEFT of the
+% HV+ source box (which has left edge at x=5.70), at y=4.25 which is mid-
+% height of the source box. Free zone (polymer-film label now inside slab
+% below; no conflict).
+% Panel E iter 5 [Panel E full-loop, 2026-05-27]: HV+ label panel-letter clearance.
+% Old anchor=east at (5.55, 4.25) put label right edge at x=5.55. Panel letter
+% "e" at (4.70, 4.55) extends right ~0.10cm (8pt bold). At zoom "eHV+" read
+% as one token. Shifted HV+ DOWN to y=4.10 (mid-height between letter y=4.55
+% and box bottom y=4.10) and shrunk font 6.5 -> 5.5pt (apparatus secondary
+% tier per V_s probe / V_s meter convention; 5.5pt was Codex iter 49 standard).
+% Panel E iter 38 [round 7 Option C, 2026-05-27]: HV+ + V_s meter labels unified
+% as box LEFT-outside (anchor=east). HV+ initial ABOVE-box attempt overshot
+% Row 2 frame y=4.50. Both apparatus box labels now sit LEFT of their box at
+% box mid-height — consistent visual rhythm. V_s probe label stays ABOVE probe
+% (no box, instrument-on-stand convention). polymer keeps LEFT-leader convention.
+% Panel-loop iter L1 [post-spoke, 2026-05-27]: HV+ lowered to clear e+ISPD cluster.
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont, text=cGray!80!black,
+      anchor=east]
+  at (5.80, 4.10) {HV+};
+% Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
+% cuff 3.95→4.05. Air gap from polymer (3.60) now 0.13cm (was 0.03cm "touching feel").
+% Spark length grows from 0.03 → 0.13cm — corona discharge clearly visible traveling air.
+% Panel E iter 31 [round 6 focal, 2026-05-27]: corona needle visual weight ↑.
+% iter14 needle base 0.040 + tip y=3.73. Apparatus focal = corona charging,
+% so needle deserves PRIMARY tier weight. Lengthened: tip y 3.73 → 3.69
+% (extended 0.04 toward polymer at y=3.60 — 0.09cm gap = more visible
+% discharge path). Base widened 0.040 → 0.050 + gradient stronger
+% (cGray!90!black → black). Tip stroke 0.25 → 0.30pt for primary tier.
+% Cuff bushing slightly enlarged 0.028 → 0.032 with darker ball color.
+% iter 31 corrected: needle = symmetric triangle pointing DOWN.
+% Base width 0.050 (cx=6.155, was 0.030@6.15) + length extended (tip y 3.73→3.69).
+% Base x=6.130..6.180 + tip (6.155, 3.69). All centered on x=6.155 (matches
+% iter25 HV+ box center after shrink).
+\shade[left color=cGray!85!black, right color=black]
+  (6.130, 4.05) -- (6.180, 4.05) -- (6.155, 3.69) -- cycle;
+\draw[black, line width=0.30pt]
+  (6.130, 4.05) -- (6.180, 4.05) -- (6.155, 3.69) -- cycle;
+% iter 31 cuff: size 0.028 → 0.032, ball color darker, centered on x=6.155.
+\shade[ball color=cGray!85!black] (6.155, 4.05) circle (0.032);
+% Sparks — iter E1: 5 → 3 rays. iter E16 (H3 Panel E critical review): 3 narrow
+% rays read as "needle only charges the leftmost ⊕"; corona discharge actually
+% covers a broad ionization region. Replaced with a semi-transparent cone +
+% retained center spine ray for the "ion emission" cue. Cone spans the polymer
+% width directly under the needle (x 6.35..6.95); downstream ⊕ at x≥7.00
+% represent accumulated surface charge from earlier scan steps, not the
+% current discharge instant.
+% Panel E iter 18 [Panel E full-loop, 2026-05-27]: corona plasma color.
+% cRed!22 pastel pink read as cartoon. Real corona discharge ionization region
+% glows violet-blue / electric blue (N2/O2 plasma). Replaced cRed -> cBlue
+% for plasma identity. Cone fill cBlue!28 opacity 0.55 (slightly more saturated
+% than old !22 since blue is darker than red at same %). Center ray cBlue!65
+% (was cRed!55) at 0.35pt opacity 0.65. cAmber polymer slab below contrasts
+% sharply with cool blue cone — color theory complementary punch.
+% Panel E iter 20 [Panel E full-loop round 4, 2026-05-27]: plasma NC-mute.
+% iter18 cBlue!28/!65 electric blue read as cartoon plasma. NC convention =
+% muted gray cone hint (presence indicator, not glow effect). Cone fill
+% cGray!22 opacity 0.45 + center ray cGray!50 0.30pt. Stays as ionization
+% region cue without competing visual weight with apparatus structure.
+% iter 31 follow-up: spark cone tip 3.73 → 3.69 (matches lengthened needle).
+% Center ray also from new tip x=6.155 (was 6.15).
+\fill[cGray!22, opacity=0.45] (6.155, 3.69) -- (5.95, 3.6) -- (6.55, 3.6) -- cycle;
+\draw[cGray!50, line width=0.30pt, opacity=0.55] (6.155, 3.69) -- (6.155, 3.6);
+% Surface charges — iter E7: radius 0.038 → 0.045 (back to iter 47 size) +
+% font 4.5 → 5.5pt for clearer "+" legibility. iter 48 Codex shrink was too
+% aggressive; charges read as red dots without legible polarity at small scale.
+% Panel E iter 35 [round 6 focal, 2026-05-27]: ⊕ marker hierarchy.
+% iter 27 unified all 4 ⊕ markers. But charging-instant should differ from
+% accumulated-charge: corona cone covers x=5.95..6.55, so 1st ⊕ at x=6.25 is
+% under-cone (current-charge moment) — primary tier. 2nd ⊕ at x=6.60 just
+% past cone (recently-deposited) — secondary tier. 3rd+4th at x=6.95, 7.30
+% (accumulated from earlier scan steps) — tertiary tier.
+% Visual: 1st cRed!90 r=0.040 (focus), 2nd cRed!75 r=0.038, 3rd-4th cRed!55 r=0.034.
+\fill[cRed!90!black] (6.25, 3.62) circle (0.040);
+\draw[cRed!95!black, line width=0.20pt] (6.25, 3.62) circle (0.040);
+\node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=white,
+      inner sep=0pt] at (6.25, 3.62) {$+$};
+
+\fill[cRed!75!black] (6.60, 3.62) circle (0.038);
+\draw[cRed!90!black, line width=0.18pt] (6.60, 3.62) circle (0.038);
+\node[font=\sffamily\bfseries\fontsize{4.5}{5.4}\selectfont, text=white,
+      inner sep=0pt] at (6.60, 3.62) {$+$};
+
+\foreach \cx in {6.95, 7.30} {
+  \fill[cRed!55!black] (\cx, 3.62) circle (0.034);
+  \draw[cRed!75!black, line width=0.16pt] (\cx, 3.62) circle (0.034);
+  \node[font=\sffamily\bfseries\fontsize{4}{4.8}\selectfont, text=white,
+        inner sep=0pt] at (\cx, 3.62) {$+$};
+}
+
+% ----- Surface voltmeter probe (RIGHT, V_s readout) — iter 6 disk-on-shaft -----
+% iter E16 (2026-05-21, user clarification): the lab apparatus is a Keyence
+% SK-series electrostatic surface voltmeter (induction-type, NON-oscillating
+% probe), NOT a Kelvin probe (FM-CPD). Earlier comments tying the icon to
+% Kelvin-probe gap-capacitance modulation are inaccurate; the disk-on-shaft
+% sketch is retained as a generic non-contact probe abstraction, but the
+% vertical-oscillation cue and the "Probe" label have been revised so they
+% no longer evoke KPFM convention.
+%
+% Vertical shaft — iter E12 (user-flagged): shaft length 0.08 → 0.18cm
+% (top 3.95 → 4.05). Real Kelvin probes have shaft significantly longer
+% than disk diameter; previous 0.08cm shaft was visually a stub against
+% the 0.40cm-wide disk (1:5 ratio looked wrong). New 0.18cm shaft gives
+% 1:2.2 ratio — more recognizable probe assembly. No conflict with HV+
+% box (HV+ x=6.10-6.95, probe x=7.36-7.44, different x).
+% Panel E iter 33 [round 6 focal, 2026-05-27]: V_s probe DEMOTE (tertiary tier).
+% iter 13 widened to 0.10cm shaft + dome. Now reverted: shaft 0.10→0.08cm
+% + tone gradient muted (cGray!80 → cGray!60). Tertiary tier (readout side)
+% should not compete visually with corona-charging primary tier.
+% Shaft x range 6.96..7.04 (narrower); spec highlight x 7.005 unchanged.
+\shade[left color=cGray!60!black, middle color=cGray!10,
+       right color=cGray!60!black]
+  (6.96, 3.87) rectangle (7.04, 4.05);
+\draw[cGray!60!black, line width=0.18pt]
+  (6.96, 3.87) -- (6.96, 4.05);
+\draw[cGray!60!black, line width=0.18pt]
+  (7.04, 3.87) -- (7.04, 4.05);
+\fill[white, opacity=0.45] (6.995, 3.87) rectangle (7.005, 4.05);
+% iter 33: cable connection dome smaller + muted.
+\shade[ball color=cGray!55!black] (7.00, 4.055) circle (0.020);
+% Disk electrode — iter 40: lifted 0.10cm. iter E3: gradient cAmber → cGray
+% (silver/metal vs polymer color confusion). Kelvin probe disk = metal
+% electrode; sharing cAmber with polymer film read as "same material" at
+% glance. New gradient cGray!30 → cGray!55 → cGray!28 mimics polished metal
+% disk cross-section. Outline darker cGray for definition.
+% Panel E iter 34 [round 6 focal, 2026-05-27]: V_s probe disk DEMOTE.
+% iter E3 outline 0.45pt cGray!75 - too prominent for tertiary tier.
+% Reduced to 0.28pt cGray!55!black + disk gradient muted (cGray!30/!55/!28
+% → cGray!25/!42/!22). Less metallic shine.
+% Instrument-substance pass (2026-06-01): disk un-muted one notch (was iter-34
+% tertiary-tier demote) so the ISPD probe head reads as a defined metal sensor,
+% not a faint afterthought. Still below corona-primary tier.
+\shade[left color=cGray!32, middle color=cGray!52,
+       right color=cGray!30]
+  (6.8, 3.8) rectangle (7.2, 3.87);
+\draw[cGray!65!black, line width=0.30pt] (6.8, 3.8) rectangle (7.2, 3.87);
+\fill[white, opacity=0.40] (6.81, 3.868) rectangle (7.18, 3.87);
+% iter E16 (2026-05-21, user clarification): vertical-oscillation glyph
+% removed. Keyence SK-series surface voltmeter uses induction sensing, not
+% a vibrating tip — the ↕ cue evoked Kelvin-probe FM-CPD modulation and
+% misidentified the apparatus.
+% Air gap d — iter E12 (user-flagged): REMOVED. Reasons:
+%   1) Position was 0.20cm RIGHT of disk right edge (x=7.80 vs disk 7.20-7.60),
+%      visually off-axis from the gap being measured.
+%   2) Cartoon Fig 1 doesn't require quantitative gap annotation; the
+%      probe-hovers-above-polymer geometry self-conveys "non-contact".
+%   3) User audit: "그림에 d 가 필요 없을 수도 있어 보임".
+% Briefing §13.6 reference to "d label" superseded by this iter.
+% "Probe" — iter 48 (Codex): position (7, 4)→(6.94, 4.05), demoted to
+% cGray!65 (secondary apparatus label tier).
+% iter E16 (2026-05-21, user clarification): label "Probe" → "$V_s$ probe"
+% — pairs with the right-hand "$V_s$ meter" as sensor↔readout, and avoids
+% the Kelvin-probe reading the bare "Probe" + ↕ pair was producing.
+% Finding C003 (v1.9 re-audit, VC025): the math italic V glyph of "$V_s$ probe"
+% sat at TikZ x≈6.87 — 0.08cm INSIDE the HV+ source box (right edge x=6.95).
+% Shifted label center 7.34 → 7.50 so the label left edge clears the HV+ box
+% with a 0.075cm gap while staying within the probe column (shaft x=7.36-7.44,
+% meter box left x=8.08).
+% iter 36 follow-up: V_s probe tertiary tier — 6pt → 5.5pt + cGray!55!black.
+% AGENT+ADVISOR FIX: y 4.0 → 4.10 (clears probe shaft top 4.05; documented
+% iter E13 target restored). With ISPD label moved up to 4.62, this label's
+% top (4.29) now has 0.33cm clearance from ISPD — collision resolved.
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!55!black,
+      anchor=south] at (7.1, 4.10) {$V_s$ probe};
+% iter E13: y 4.05 → 4.10 to clear extended shaft top 4.05 (was overlapping baseline).
+
+% ----- V_s meter box — iter 15: side-view (pure 2D, isometric reverted) -----
+% Layers (in z-order, bottom-up):
+%   (1) Front face — beige metallic gradient + sharp 90° corners
+%   (2) Inset SCREEN frame — recessed darker rectangle for display zone
+%   (3) x/y axes + decay curve inside screen (Codex axis convention preserved)
+%   (4) V_s meter label BELOW screen (inside box bottom)
+%   (5) Bezier cable from probe (drawn before port so port caps it)
+%   (6) Input port circle — small dark socket at left wall, cable entry
+% Right-side and top isometric faces REMOVED per user direction.
+%
+% (1) Front face — iter 46 → matte \fill, iter 10 → subtle shade (cGray!10
+% → cGray!22) to match HV+ + V_active PSU box convention. NC main-text Fig 1
+% premium instrument finish.
+% Finding C002 (v1.9 re-audit, VC019): 'V_s meter' label at 6.5pt was overflowing
+% the box right edge (last 'r' clipped by rounded corner). Box widened right
+% edge 9.00 → 9.08 (gain 0.08cm) so the label fits inside with comfortable margin.
+% E apparatus v8.6 [briefing relax R2, 2026-05-26]: V_s meter calibrated.
+% NW spec REMOVED (display dark glass + label = sufficient material cue,
+% spec was redundant + contributed to "white circle soup").
+% iter8 follow-up: V_s meter box matching HV+ gradient depth + stroke.
+% iter10 follow-up: V_s meter drop shadow matching HV+.
+% iter 16 follow-up: V_s meter cool metallic to match HV+ box.
+% Layout fix (2026-06-01, user): box raised +0.12 to fill top space and sit
+% above the slab/probe; internal display re-centered + shrunk so the label fits.
+\fill[cGray!6, rounded corners=1.2pt] (7.68, 3.70) rectangle (8.68, 4.22);
+\draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]
+  (7.68, 3.70) rectangle (8.68, 4.22);
+% Goal-1 elem-iter (2026-06-04): inner faceplate bezel — the 2026-06-01 substance
+% pass gave V_s-meter the glass-sheen but NOT the bezel that SMU/V_active carry.
+% Matches SMU (L1033-34): cGray!35!black 0.20pt, inset 0.065cm x / 0.045cm y.
+\draw[cGray!35!black, line width=0.20pt, rounded corners=0.8pt]
+  (7.745, 3.745) rectangle (8.615, 4.175);
+% (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
+% iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
+% smaller (2pt→1.5pt), decay curve single-bezier (no kink).
+% Display — iter 50: enlarged vertically 0.15→0.22cm (decay curve room).
+\fill[cGray!70!black, rounded corners=1pt] (7.80, 4.05) rectangle (8.56, 4.17);
+\draw[cGray!85!black, line width=0.15pt, rounded corners=1pt]
+  (7.80, 4.05) rectangle (8.56, 4.17);
+% Instrument-substance pass (2026-06-01): glass-sheen highlight (matches SMU/HV+).
+\fill[cGray!45!black, opacity=0.5] (7.82, 4.158) rectangle (8.54, 4.165);
+% Panel E iter 12 [Panel E full-loop, 2026-05-27]: V_s meter display readout.
+% Removed empty x-y axes (left a vacant "scope ready" feel — schematic).
+% Added digital readout matching ESVM real instrument convention.
+% Panel E iter 15 [Panel E full-loop, 2026-05-27]: text fit fix.
+% iter 12 "V_s = 0.32 V" was tight inside display (0.84cm display vs 0.78cm
+% text). Shortened to "0.32 V" only — variable name V_s is established by
+% label below ('V_s meter'), so display showing just the value matches lab
+% instrument convention (display = current reading, no axis legend).
+% iter 21 follow-up: V_s meter readout also REMOVED (NC convention compliance).
+% iter E16 (H1 Panel E critical review): in-meter decay trace removed —
+% same V_s(t) is plotted in sub-zone below; inset duplicated the signal.
+% Screen now reads as "scope ready", with the real measurement deferred to E-3/E-4.
+% V_s meter label — iter 50: y 3.70→3.66 (centered in shrunk label zone
+% 3.58..3.78, mid y=3.68).
+% iter 51: thin space between V_s and meter. iter E2: weight unified to plain
+% 5pt cGray!75 (match Probe / HV+ / polymer film apparatus tier). Bold + larger
+% size was outlier among E apparatus labels.
+% iter 38: V_s meter label inside box bottom (revert to box-internal convention).
+% Layout fix (2026-06-01): display re-centered (was shifted left, asymmetric
+% margins) + shrunk; box raised. Box: x=7.68..8.68, y=3.70..4.22. Display:
+% x=7.80..8.56, y=4.05..4.17 (margins 0.12/0.12). Label centered at y=3.86,
+% clear of display bottom 4.05 and box bottom 3.70 (no longer colliding).
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!55!black]
+  at (8.18, 3.86) {$V_s$ meter};
+% (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
+% from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
+% reads as physical wire going horizontal from probe top then curving down
+% to meter input port (natural gravity-aware path, not aerial arc).
+% Cable + Input port — iter E12: cable start moved from (7, 3.95) →
+% (7, 4.05) to match new lengthened shaft top. Bezier control points
+% adjusted for smooth droop from new higher start to meter port (7.72, 3.85).
+% iter14 follow-up: bezier cable thickness 0.30 -> 0.35pt + start at probe dome
+% (now at 7.00, 4.085 — iter13 added dome at 7.00, 4.06+0.025=4.085).
+% Cable now connects cleanly to dome, not raw shaft top. Input port ball-shaded.
+% Cable re-aimed to the raised meter; input port now sits on the box left wall,
+% clear of the display (was overlapping the display corner).
+\draw[cGray!75!black, line width=0.35pt]
+  (7.00, 4.085) .. controls (7.22, 4.12) and (7.52, 4.11) .. (7.72, 4.11);
+\shade[ball color=cGray!85!black] (7.72, 4.11) circle (0.026);
+
+% Polymer film label — iter 48 (Codex): demoted to cGray!65 + position
+% (5.75, 3.525)→(5.6, 3.5). Secondary apparatus annotation tier.
+% Iter 20 (2026-05-23): cross-panel consistency restored — Panel C uses
+% 'poly(S-r-DIB) thin film' and Panel D uses 'polymer film'; Panel E with
+% no label was inconsistent and made the slab identity invisible to readers
+% scanning the figure briefly. Compromise: short 'polymer' label (no
+% 'film' — saves 0.54 cm vs full 'polymer film') anchored in the Panel E
+% left margin at (4.72, 3.50), italic 6.5pt, with a tiny leader pointing
+% to the slab top-left corner. cAmber slab color + ⊕ surface charges
+% carry the 'film' (thin layer) part implicitly.
+% Panel E iter 26 [round 5 NC clean, 2026-05-27]: polymer callout cleanup.
+% Straight leader from (5.45, 3.5) to (5.95, 3.52) had near-zero slope
+% (0.02cm rise over 0.50cm run) — read as a generic horizontal segment.
+% Replaced with elbow connector (down-right L-shape) per NC technical
+% illustration convention: horizontal from label x=5.45, then short
+% vertical down to polymer top edge y=3.55. Label dot endpoint snapped to
+% slab interior at (5.92, 3.55). Italic kept, font 6.5→6pt (apparatus
+% secondary tier consistency).
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
+      text=cGray!65!black, anchor=west] at (4.72, 3.50) {polymer};
+\draw[cGray!55!black, line width=0.20pt]
+  (5.42, 3.50) -- (5.85, 3.50) -- (5.92, 3.55);
+\fill[cGray!55!black] (5.92, 3.55) circle (0.014);
+
+% E-3 V_s sub-zone axes
+% Column-E iter 5 (2026-05-18, proportion adjust Option A): axis vertical
+% extent expanded from 0.90 → 1.20cm (top 2.55→2.85), reclaiming 0.30cm
+% from apparatus-V_s whitespace. Curve waypoints scaled proportionally
+% (multiplier 1.333× above axis y=1.65). V_s tip label shifted to new
+% mid-axis y=2.55.
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
+  (5.15, 1.65) -- (5.15, 2.85);
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
+  (5.15, 1.65) -- (8.75, 1.65);
+\draw[cGray!65!black, line width=0.40pt] (5.15, 2.05) -- (5.22, 2.05);
+\draw[cGray!65!black, line width=0.40pt] (5.15, 2.45) -- (5.22, 2.45);
+\draw[cGray!65!black, line width=0.40pt] (6.35, 1.65) -- (6.35, 1.72);
+\draw[cGray!65!black, line width=0.40pt] (7.55, 1.65) -- (7.55, 1.72);
+% iter 51: x 4.83→4.73 (Gemini Defect 2 HIGH: rotated label right-edge
+% touching axis line at x=4.95). 0.10cm clearance.
+\node[labelMute, rotate=90, anchor=center,
+      font=\sffamily\fontsize{6}{7.2}\selectfont]
+  at (4.93, 2.55) {$V_s(t)$};
+\node[labelMute, anchor=north,
+      font=\sffamily\fontsize{6}{7.2}\selectfont]
+  at (8.7, 1.55) {$t$};
+
+% E-4 V_s stretched-exp decay curve
+% v8.7 critique iter 2: waypoints adjusted to maintain stretched-exp shape
+% with longer decline before plateau (was flat from waypoint 5; now flat
+% from waypoint 7) — better visual dynamism for non-Debye tail cue.
+% iter 5: waypoints scaled (y-1.65)*1.333 + 1.65 to use new envelope
+% (axis top 2.55→2.85). Peak height above axis: 0.80→1.07, plateau values
+% stay near axis bottom.
+\draw[cRed!70!black, line width=0.70pt]
+  plot[smooth] coordinates
+  {(5.3, 2.72) (5.65, 2.32) (6.05, 2.01) (6.45, 1.81)
+   (6.85, 1.69) (7.3, 1.65) (7.75, 1.65) (8.2, 1.65) (8.6, 1.65)};
+% E-4 v8.4 [briefing relax R2, 2026-05-26]: V_s(0) anchor dot at decay
+% onset (5.3, 2.72) — neutral cGray (NOT cRed) to read as "reference
+% initial potential", distinct from cRed data markers. Does NOT reopen
+% iter 47/48 marker-count discipline (5→4→3 cRed marker reduction; cGray
+% anchor is a separate tier, similar to branchRoot dot semantic).
+\fill[cGray!70!black] (5.3, 2.72) circle (0.025);
+% E-4-ii markers — iter 47 (Top Defect 2): reduced 5→4 (last asymptote dup
+% removed), smaller (1.2mm→0.9mm), lighter fill (cRed!50→!30 + white tint),
+% thinner outline. Gemini: "markers shouldn't bleed into solid blob".
+% E-4-ii markers — iter 48 (Codex): 4→3 (drop final asymptote marker;
+% Codex "cut decay markers from 4 to 2-3").
+% iter E4: marker size 0.9 → 1.0mm + fill cRed!25 → cRed!35 (subtle uptick
+% for data-sampling presence without bleeding into decay curve "blob").
+% Iter 14: V_s(t) decay markers converted from flat light \fill circles
+% to ball-shaded spheres with a LIGHTER ball color (cRed!45 vs cRed!70 used
+% on primary data markers). Preserves the iter 47/48 design intent — these
+% markers stay lighter than Panel D log-log + Gaussian DOS spheres to read
+% as 'raw decay sampling' rather than 'extracted/processed datapoint' — but
+% adopts the figure-wide 3D-sphere idiom for visual consistency.
+% Panel E iter 1 [Panel E full-loop, 2026-05-27]: first sphere curve alignment.
+% Sphere (5.45, 2.32) was 0.17cm BELOW curve at x=5.45 (interp ~2.49).
+% Sphere read as floating ABOVE while curve passed under — broke "sampled data
+% point ON curve" semantic. Repositioned 1st sphere y 2.32 -> 2.50 (matches
+% curve interpolation between waypoints (5.30,2.72) and (5.65,2.32)).
+% 2nd sphere (5.95, 1.96): curve interp at 5.95 between (5.65,2.32) and (6.05,2.01)
+%   y ≈ 2.32 + (2.01-2.32)*(5.95-5.65)/(6.05-5.65) = 2.09. Sphere 1.96 → 2.08.
+% 3rd sphere (6.45, 1.78): curve at 6.45 = waypoint y 1.81. Sphere y 1.78 → 1.80.
+\foreach \mx/\my in {5.45/2.50, 5.95/2.08, 6.45/1.80} {
+  \shade[ball color=cRed!45] (\mx, \my) circle (0.05);
+  \draw[cRed!75!black, line width=0.18pt] (\mx, \my) circle (0.05);
+}
+
+% E-5 internal raw→derived inter-arrow (vertical, between V_s and g(E_t))
+% v8.7 critique iter 1+2: moved to CENTER + label changed from "ISPD" to "derive"
+% Column-E iter 4 (2026-05-18): arrow weight 0.35→0.55pt + larger Stealth tip
+% (5pt×4pt) for stronger inter-zone transformation cue. Label "derive" italic→
+% upright (verb describing transformation, not a math variable — per Typo
+% designer audit ISO 80000-2 convention).
+% derive — iter 49 (Codex narrow): font 5.5→5pt, gray !60→!50.
+% iter E16 (M3 Panel E critical review): tip y 1.28 → 1.18 — arrow used to
+% stop in the inter-zone gap above g(E_t) zone; now penetrates into the
+% distribution area, landing just above the Deep peak top (y=1.15). Visual
+% flow now clearly enters the energy domain, matching deep-dominant framing.
+% iter3 follow-up: derive arrow tip y 1.18 -> 1.26 (lands just above new deep
+% peak at y=1.23 — preserves "penetrates into distribution / lands on peak" cue).
+% v5d redraw slice 4: demote the derive verb to a small transformation label.
+% At print scale the previous 6.5pt word competed with the Deep peak and read
+% as a large annotation block between the two evidence plots.
+\draw[-{Stealth[length=3.5pt,width=2.5pt]}, cGray!55!black, line width=0.40pt]
+  (7.1, 1.55) -- (7.1, 1.26);
+\node[labelMute, anchor=west, font=\sffamily\fontsize{5.2}{6.2}\selectfont,
+      text=cGray!55!black, inner sep=1pt]
+  at (7.26, 1.49) {derive};
+
+% E-6 g(E_t) sub-zone axes
+% Column-E iter 5: axis top 1.35→1.45 (+0.10cm) — more headroom above
+% Gaussians for τ_d caliper.
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
+  (5.15, 0.4) -- (5.15, 1.45);
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
+  (5.15, 0.4) -- (8.75, 0.4);
+% Option-A qualitative ticks (C003 resolution): non-numeric tick strokes only,
+% no label nodes — visual anchors without Fig 3 quantitative overlap.
+\draw[cGray!65!black, line width=0.40pt] (5.15, 0.75) -- (5.22, 0.75);
+\draw[cGray!65!black, line width=0.40pt] (5.15, 1.1) -- (5.22, 1.1);
+\draw[cGray!65!black, line width=0.40pt] (6.35, 0.4) -- (6.35, 0.47);
+\draw[cGray!65!black, line width=0.40pt] (7.55, 0.4) -- (7.55, 0.47);
+% iter 51: x 4.83→4.73 mirror to V_s(t) fix (Gemini Defect 2 HIGH).
+\node[labelMute, rotate=90, anchor=center,
+      font=\sffamily\fontsize{6}{7.2}\selectfont]
+  at (4.93, 1.25) {$g(E_t)$};
+\node[labelMute, anchor=north,
+      font=\sffamily\fontsize{6}{7.2}\selectfont]
+  at (8.7, 0.36) {$E_t$};
+
+% E-7 shallow Gaussian + E-8 deep Gaussian (1.86× height per §5 Q4)
+% Column E iter 1 (2026-05-18) — T5 BLOCKER fix: deep peak y 1.30 → 1.24
+% (height 0.90 → 0.84) so ratio 0.84/0.45 = 1.87× ≈ Q4 spec 1.86× (was
+% 2.0× over-shoot from v8.7 critique iter 4). Fill saturation cBlue!25
+% → !35 + cRed!25 → !35 (+40% perceptible polish per A+B mode lesson).
+% Gaussians — iter 48 (Codex): Deep Gaussian narrowed 6.20..7.40 → 6.28..7.28
+% (Codex "narrow the deep Gaussian"). Peak y 1.24→1.15 (lower for less plush).
+\draw[cBlue!85, fill=cBlue!25, line width=0.55pt]
+  (5.5, 0.4) .. controls (5.75, 0.4) and (5.75, 0.85) .. (5.9, 0.85)
+              .. controls (6.05, 0.85) and (6.05, 0.4) .. (6.3, 0.4);
+% Panel E iter 2 [Panel E full-loop, 2026-05-27]: deep peak ratio restore.
+% Codex iter 48 lowered deep peak 1.24 -> 1.15. Result: ratio (1.15-0.4)/(0.85-0.4)
+% = 0.75/0.45 = 1.67x, violating briefing §5 Q4 spec 1.86×.
+% Restored deep peak y 1.15 -> 1.23: ratio (1.23-0.4)/(0.85-0.4) = 0.83/0.45
+% = 1.84x ≈ 1.86 spec. Codex "less plush" intent preserved (narrower width via
+% control point timing unchanged, only height restored).
+\draw[cRed!85, fill=cRed!25, line width=0.55pt]
+  (6.48, 0.4) .. controls (6.66, 0.4) and (6.66, 1.23) .. (6.98, 1.23)
+              .. controls (7.3, 1.23) and (7.3, 0.4) .. (7.48, 0.4);
+
+% Option-A representative scatter points on Gaussians (C003 resolution):
+% 3 pts on shallow (blue) Gaussian, 3 pts on deep (red) Gaussian.
+% Strictly positioned on Bezier curve — supports measured-data credibility
+% cue without introducing numeric axis labels.
+% Iter 10: Gaussian DOS markers upgraded to ball-shaded spheres for the
+% representative-scatter cue, matching Panel D power-law + Panel C trap-site
+% sphere idiom.
+\foreach \mx/\my in {5.75/0.65, 5.9/0.85, 6.05/0.65} {
+  \shade[ball color=cBlue!70!black] (\mx, \my) circle (0.045);
+  \draw[cBlue!95!black, line width=0.18pt] (\mx, \my) circle (0.045);
+}
+% Panel E iter 3 [Panel E full-loop, 2026-05-27]: deep data spheres follow peak.
+% Center peak sphere y 1.15 -> 1.23 (matches iter2 peak). Outer spheres at
+% y=0.8 stay on Gaussian flanks (Bezier midway between peak 1.23 and base 0.4
+% interpolates to ~0.82 at x=6.75/7.21). Tiny y bump 0.80 -> 0.86.
+\foreach \mx/\my in {6.75/0.86, 6.98/1.23, 7.21/0.86} {
+  \shade[ball color=cRed!70!black] (\mx, \my) circle (0.045);
+  \draw[cRed!95!black, line width=0.18pt] (\mx, \my) circle (0.045);
+}
+
+% E-9 τ_d annotation between Gaussian peaks (energy-domain interval).
+% Column-E iter 4 (2026-05-18): redesigned from dashed double-headed arrow
+% (`<- - - ->`, designer-flagged as chartjunk + AI-generic) to caliper-style:
+% solid horizontal bar + T-shaped end-caps at peak x-positions. Convention
+% for "distance between two points" in scientific diagrams. Tone cRed!70→!55
+% (less aggressive, proper annotation tier).
+% iter 5 proportion adjust: τ_d caliper shifted up to use new g(E_t)
+% headroom (axis top 1.35→1.45). Caliper now at y=1.42 with T-caps 1.39..1.45.
+% E-9 caliper — iter 47 (Top Defect 3): line 0.32→0.22pt (Gemini "very thin
+% 0.4-0.5pt preferable gray"); T-caps shortened 0.06 → 0.04cm (3 default→
+% minimal crisp). Color cRed!55!black → cGray!65!black (subordinate to data).
+% Panel E iter 6 [Panel E full-loop, 2026-05-27]: τ_d caliper inter-zone -> g(E_t) zone.
+% Old y=1.42 sat in inter-zone gap above g(E_t) axis (1.45) — visually closer
+% to V_s plot (axis bottom 1.65 above) than to g(E_t) peaks (Shallow 0.85 /
+% Deep 1.23 below). Reader could mis-bind τ_d to V_s plot.
+% Moved DOWN to y=1.32: sits in g(E_t) plot interior, just above deep peak
+% (1.23) by 0.09cm — clearly inside the energy-domain plot, between the two
+% Gaussian peaks (semantic per briefing §13.6 E-9 "energy-domain interval").
+% T-caps shift accordingly y range 1.30..1.34. Label baseline 1.33 (anchor=south).
+\draw[cGray!65!black, line width=0.22pt] (5.9, 1.30) -- (7, 1.30);
+\draw[cGray!65!black, line width=0.22pt] (5.9, 1.28) -- (5.9, 1.32);
+\draw[cGray!65!black, line width=0.22pt] (7, 1.28) -- (7, 1.32);
+% τ_d label — iter 49 (Codex narrow): 6→5pt + cGray!85→!70 + no fill.
+% iter6: caliper y 1.42 -> 1.30 (g(E_t) interior). Label anchor=south at 1.31.
+% Glyph y range 1.31..~1.43; axis top 1.45 has 0.02cm margin — tight but clear.
+\node[labelMute, anchor=south, text=cGray!70!black,
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont, inner sep=1pt]
+  at (6.45, 1.31) {$\tau_d$};
+
+% E-10 — iter 49 (Codex iter 48 narrow): font 6→5pt + tone 85→70 (Codex
+% "annotations still louder than evidence shapes").
+\node[labelMute, anchor=north, text=cGray!70!black,
+      font=\sffamily\fontsize{6}{7.2}\selectfont] at (5.9, 0.36) {Shallow};
+\node[labelMute, anchor=north, text=cGray!70!black,
+      font=\sffamily\fontsize{6}{7.2}\selectfont] at (6.98, 0.36) {Deep};
+
+% =============== Column F — Mechanical =================
+
+% F-2 apparatus zone: PSU box + 2 leads + neutral fixture
+% v8.6 polish: lead routing avoids crossing neutral polymer (was at y=3.45
+%  cutting through polymer y=3.05..4.05). New routing: top lead goes ABOVE
+%  fixture (y=4.30), bottom lead goes BELOW PSU (y=2.80).
+% PSU pulsed bias source — iter 27: shifted right 0.30cm to reduce trapped
+% wire space between PSU and electrode (Gemini iter 26 "massive 0.88cm
+% horizontal gap"). New range (11.8, 3.2)..(12.65, 3.85), wire gap 0.58cm.
+% F apparatus v8.6 [briefing relax R2, 2026-05-26]: PSU calibrated.
+% shadow 0.40→0.25, gradient preserved, spec 1.0mm→0.6mm + 0.65→0.42.
+\fill[cGray!6] (11.8, 3.2) rectangle (12.65, 3.85);
+\draw[cGray!60!black, line width=0.25pt]
+  (11.8, 3.2) rectangle (12.65, 3.85);
+% Instrument-substance pass (2026-06-01): inner faceplate bezel (matches SMU)
+% for machined-panel weight; V_active keeps its lit waveform display.
+\draw[cGray!35!black, line width=0.18pt] (11.85, 3.25) rectangle (12.60, 3.81);
+% Inset display window (shifted right with PSU)
+\fill[cGray!18] (11.9, 3.55) rectangle (12.55, 3.78);
+\draw[cGray!55!black, line width=0.18pt]
+  (11.9, 3.55) rectangle (12.55, 3.78);
+% Pulse trace inside display (shifted +0.30)
+\draw[cGray!80!black, line width=0.55pt]
+  (11.95, 3.58) -- (12.08, 3.58) -- (12.08, 3.73)
+              -- (12.3, 3.73) -- (12.3, 3.58) -- (12.5, 3.58);
+% V_active label
+\node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont, text=cGray!88!black]
+  at (12.225, 3.36) {$V_{\mathrm{active}}$};
+% Output terminal — iter 27: shifted with PSU (right by 0.30): (12.75) → (13.05).
+\fill[cGray!85!black] (12.65, 3.5) circle (0.028);
+\fill[cGray!50!black] (12.65, 3.5) circle (0.014);
+% iter 18 (user-flagged structural repetition fix): TOP CLIP + MOUNT STIPPLE +
+% TOP POLYMER (straight neutral cantilever) REMOVED. Cantilever was drawn
+% TWICE (top straight + bottom bent) — user direction: top = equipment only,
+% bottom = cantilever. Clip + mount + polymer relocated visual narrative to
+% bottom zone (which keeps full apparatus: clip + bent cantilever + Coulomb).
+% iter 19: TOP electrode + cross-hatch REMOVED per user direction
+% — PSU source equipment now connects directly DOWN to the bottom cantilever's
+% electrode (the only electrode in the panel). Maxwell stress is induced at
+% the bottom electrode acting on the cantilever (see Maxwell baseline arrow
+% relocated to bottom zone below). Cleaner narrative: top = source, bottom =
+% cantilever + electrode + both forces.
+% iter 18: TOP lead (PSU→clip) REMOVED — clip was removed in structural
+% repetition cleanup. PSU now connects only via BOTTOM lead to electrode.
+% PSU other terminal is implicit (ground/external, not drawn) for schematic
+% simplicity.
+% Lead from PSU to electrode — iter 27: wire horizontal length 0.88 → 0.58cm
+% (PSU shifted right). Path: (12.65, 3.5) → (13.23, 3.5) → (13.23, 2.6).
+\draw[cGray!75!black, line width=0.28pt]
+  (12.65, 3.5) -- (13.23, 3.5) -- (13.23, 2.6);
+% "−" polarity label REMOVED (was associated with removed top electrode).
+
+% F-3 Maxwell baseline arrow + label — iter 18 REMOVED. Original arrow
+% required a polymer to "act on"; with top polymer removed in structural
+% repetition fix, the arrow had no source. Maxwell vs Coulomb contrast is
+% now implicit: top equipment generates field, bottom shows Coulomb result.
+
+% F-4 result zone clip + mount
+% v8.7 critique iter 4: clip x-aligned with apparatus-zone clip (12.25..12.65)
+% so reader perceives "same mount, polymer bent" — clip is FIXED, polymer
+% MOVES under Coulomb force.
+% F-4 v8.6 [briefing relax R2, 2026-05-26]: calibrated. shadow 0.40→0.28,
+% gradient delta preserved (metallic identity), bevel 0.85→0.55.
+\fill[cGray!10] (11.785, 2.42) rectangle (12.185, 2.52);
+\draw[cGray!75!black, line width=0.40pt]
+  (11.785, 2.42) rectangle (12.185, 2.52);
+\draw[cGray!50!black, line width=0.40pt] (11.685, 2.65) -- (12.285, 2.65);
+\foreach \dx in {0,0.10,0.20,0.30,0.40,0.50} {
+  \draw[cGray!50!black, line width=0.25pt]
+    ({11.685+\dx}, 2.65) -- ({11.635+\dx}, 2.72);
+}
+\draw[cGray!75!black, line width=0.40pt] (11.985, 2.52) -- (11.985, 2.65);
+
+% F-5 bent cantilever polymer (root x=12.45, bent LEFT toward 11.75)
+% v8.7 iter 4: root + tip shifted to align with new clip position.
+\shade[top color=cAmber!22, bottom color=cAmber!42, rounded corners=0.3mm]
+  (11.92, 2.42) .. controls (11.94, 1.80) and (11.55, 1.22) ..
+  (11.11, 0.93) -- (11.21, 0.84) .. controls (11.74, 1.16) and
+  (12.07, 1.80) .. (12.05, 2.42) -- cycle;
+\draw[cAmber!80!black, line width=0.55pt, rounded corners=0.3mm]
+  (11.92, 2.42) .. controls (11.94, 1.80) and (11.55, 1.22) ..
+  (11.11, 0.93) -- (11.21, 0.84) .. controls (11.74, 1.16) and
+  (12.07, 1.80) .. (12.05, 2.42) -- cycle;
+\draw[cAmber!65!black, line width=0.28pt, opacity=0.38]
+  (11.94, 2.28) .. controls (11.955, 1.78) and (11.565, 1.23) .. (11.125, 0.95);
+\draw[cAmber!65!black, line width=0.28pt, opacity=0.38]
+  (11.995, 2.35) .. controls (12.015, 1.80) and (11.66, 1.20) .. (11.20, 0.86);
+% F-5 v8.6 [briefing relax R2, 2026-05-26]: calibrated — 1.2mm→0.6mm,
+% 0.60→0.42; reads as polymer surface highlight, not white disc.
+
+% F-6 3 q_tr markers along polymer (shifted with polymer)
+% Iter 10: q_tr markers upgraded to ball-shaded spheres (matches Panel C
+% trap dots + Panel E surface ⊕ charges aesthetic).
+% v5e aggressive slice 1: enlarge the cluster and add a restrained red halo
+% so the trapped-charge family, not a single tiny symbol, carries the mechanism.
+\foreach \cx/\cy in {11.90/2.00, 11.66/1.48, 11.34/1.07} {
+  \draw[cRed!35!white, line width=0.22pt, opacity=0.45] (\cx, \cy) circle (0.12);
+  \shade[ball color=cRed!72!black] (\cx, \cy) circle (0.082);
+  \draw[cRed!95!black, line width=0.24pt] (\cx, \cy) circle (0.082);
+}
+% Compact two-leader callout: labels the charge family without drawing a
+% bracket through the cantilever body.
+\draw[cRed!55!black, line width=0.32pt]
+  (11.90, 2.00) .. controls (12.12, 2.07) and (12.20, 2.15) .. (12.34, 2.15);
+\draw[cRed!45!black, line width=0.28pt]
+  (11.66, 1.48) .. controls (11.98, 1.66) and (12.16, 1.92) .. (12.34, 2.03);
+\node[anchor=west, align=left, fill=white, fill opacity=0.94, text opacity=1,
+      inner xsep=1.2pt, inner ysep=0.65pt,
+      font=\sffamily\fontsize{5.8}{6.35}\selectfont, text=cRed!75!black]
+  at (12.23, 2.10) {\textbf{trapped}\\[-0.8pt]\textbf{charge}\\[-0.6pt]$q_{\mathrm{tr}}$};
+
+% F-7 Coulomb repulsion arrow — iter 28: arrow stays shortened (tip 11.10).
+% Labels back to anchor=south east/north east AT arrow tip — extending LEFT
+% from tip puts labels in void but NOT overlapping cantilever (cantilever at
+% x≥12.00). iter 27's anchor=south/north placed labels over cantilever — fatal.
+% Iter 17: Coulomb label cluster (arrow + 'Coulomb' + 'repulsion') shifted
+% +0.15 cm right because 'Coulomb' label tail extended to TikZ x=9.38 — 0.09
+% cm past the E/F column rule (x=9.47) into Panel E airspace. New anchor x
+% =10.85 keeps the label cluster aligned to the leftward force arrow and
+% gives 0.06 cm clearance from the column rule. Arrow tail moves to x=11.75
+% which still reads as 'on cantilever' (cantilever right edge at this y is
+% around x=11.70).
+\draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt]
+  (11.55, 1.3) -- (10.85, 1.3);
+% Panel-loop iter L8: Coulomb tone cRed!75 → !80!black (match arrow stroke tone).
+\node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!80!black,
+      anchor=south east] at (10.85, 1.35) {Coulomb};
+% iter 29: repulsion y 1.25 → 1.27 (gap 0.05→0.03) to match Coulomb's tight
+% spacing per Gemini cohesion polish.
+% Panel-loop iter L9: repulsion tone parity with Coulomb iter 8 (!75 → !80!black).
+\node[labelMute, anchor=north east, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cRed!80!black] at (10.85, 1.27) {repulsion};
+
+% F-8 result zone electrode + ground + air gap — iter 25: SLIMMED 0.25 → 0.17cm
+% (Gemini iter 24 "overpowering vs cantilever"). Left edge 13.55 → 13.63,
+% right edge stays at 13.80 (hatches/label on right unaffected). All internal
+% details + ground triangle shifted accordingly.
+% F-8 v8.6 [briefing relax R2, 2026-05-26]: calibrated — shadow 0.45→0.32,
+% gradient delta preserved (metallic identity), stripe 0.85→0.70 + thinner,
+% NW spec 1.3mm→0.7mm + 0.70→0.50.
+\fill[cGray!25] (13.23, 0.4) rectangle (13.4, 2.6);
+\draw[cGray!85!black, line width=0.50pt]
+  (13.23, 0.4) rectangle (13.4, 2.6);
+% Hatched-metal electrode signature (matches Panel D MIM electrode hatching) so the
+% electrode reads as a distinct material from the matte light-gray instrument boxes and
+% the black readout displays; the neutral gray value space is otherwise saturated.
+\foreach \hy in {0.55, 0.70, 0.85, 1.00, 1.15, 1.30, 1.45, 1.60, 1.75, 1.90, 2.05, 2.20, 2.35, 2.50} {
+  \draw[cGray!60!black, line width=0.22pt] (13.40, \hy) -- (13.23, {\hy-0.05});
+}
+\foreach \ey in {0.70, 1.10, 1.50, 1.90, 2.30} {
+  \draw[cGray!75!black, line width=0.28pt]
+    (13.40, \ey) -- (13.55, {\ey+0.08});
+}
+\draw[cGray!70!black, fill=cGray!50!black, line width=0.35pt]
+  (13.25, 0.35) -- (13.38, 0.35) -- (13.315, 0.22) -- cycle;
+\draw[cGray!70!black, line width=0.28pt] (13.26, 0.2) -- (13.37, 0.2);
+\draw[cGray!70!black, line width=0.28pt] (13.29, 0.16) -- (13.34, 0.16);
+% Cycle 3 / C417 (2026-05-22): label at (13.95) anchor=west extended past
+% image right edge (x_max=14.10), clipping at NC reduction. Rotated to vertical
+% so it fits within the 0.15cm right-margin band without colliding with
+% cantilever or air-gap caliper.
+\node[labelMute, anchor=south, rotate=270,
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!85!black] at (13.58, 1.5) {electrode};
+% F-3 Maxwell baseline arrow + label — REMOVED 2026-05-28 (agent+advisor).
+% Agent 2 flagged this as a §8.5 BLOCKER: the iter-19 relocation put F_Maxwell
+% into the RESULT zone alongside Coulomb, which §8.5 LOCKED explicitly forbids
+% ("Maxwell arrow in result zone alongside Coulomb → FORBIDDEN; collapses the
+% contrast"). Advisor verdict: Panel F is a single-claim NC Fig 1 panel — the
+% Coulomb-repulsion signature IS the statement; the Maxwell-baseline contrast
+% belongs in the figure CAPTION text, not as a competing in-panel glyph.
+% Decision: Panel F is single-zone Coulomb-only. F_Maxwell arrow + label
+% deleted. Briefing §6/§8.5/§13.7 amended to the single-zone convention.
+% (User's original instinct — "척력만 표현" — was correct.)
+% Air gap arrow — iter 25: right end shifted 13.55 → 13.63 (new electrode left).
+\draw[<->, cGray!55!black, line width=0.30pt]
+  (11.5, 0.55) -- (13.23, 0.55);
+\node[labelMute, anchor=north, inner sep=1pt,
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont]
+  at (12.365, 0.5) {air gap};
+
+% ============================================================
+% v8.6 ROW 2 END — legacy 4-panel D/E/F/G content removed in v8.6 restructure.
+%   Pre-v8.6 .tex preserved in git history at commit 8e7edca (v8.5).
+% ============================================================
+\end{tikzpicture}
+}%
+\end{document}

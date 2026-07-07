@@ -516,6 +516,12 @@ def theory_guard_failures(theory_guard_path: Path) -> list[str]:
             continue
         cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
         if len(cells) < 5:
+            # A row that declares BLOCKER severity but is missing columns cannot be
+            # evaluated for its pass/fail evidence: fail closed rather than skip it.
+            if len(cells) >= 2 and cells[1] == "BLOCKER":
+                failures.append(
+                    f"malformed theory guard BLOCKER row (missing columns): {line.strip()}"
+                )
             continue
         guard_id, severity, _claim, _method, evidence = cells[:5]
         if severity != "BLOCKER" or guard_id == "ID":
@@ -607,12 +613,21 @@ def check_example(
     # Auto-escalate to accepted mode whenever the fixture's spec.yaml declares
     # the `accepted` key (regardless of true/false). The key's presence is the
     # signal that the fixture is in the golden class; a forgotten CLI flag
-    # must not be able to silently bypass the contract.
+    # must not be able to silently bypass the contract. A spec that declares
+    # neither the key nor an explicit basic-mode request (--no-require-accepted /
+    # require_accepted=False) is a failure rather than a silent bypass: the
+    # permissive path must be opted into, never reached by omission.
     if require_accepted is None:
         try:
-            require_accepted = spec_declares_accepted_key(spec)
+            declares_accepted = spec_declares_accepted_key(spec)
         except ValueError as exc:
             return [str(exc)]
+        if not declares_accepted:
+            return [
+                "spec.yaml missing accepted declaration "
+                "(pass --no-require-accepted to check a non-golden fixture)"
+            ]
+        require_accepted = True
 
     failures.extend(required_export_artifact_failures(exports, name))
     if failures:

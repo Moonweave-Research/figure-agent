@@ -79,11 +79,7 @@ def _candidate_apply_check(index: dict[str, Any]) -> dict[str, Any]:
                 evidence_path=apply_path,
                 evidence={"post_apply": post_apply if isinstance(post_apply, dict) else {}},
             )
-        failed = [
-            stage
-            for stage, status in (post_apply or {}).items()
-            if status != "success"
-        ]
+        failed = [stage for stage, status in (post_apply or {}).items() if status != "success"]
         if failed:
             return _check(
                 check_id="candidate_apply",
@@ -205,6 +201,12 @@ def _golden_acceptance_check(
     )
 
 
+# Final-artifact states that are release-safe. Mirrors the release-ready policy in
+# status_readiness_policy, which treats only these as non-blocking. Any other value
+# — the known-bad states AND any unrecognized string — blocks (known-good allowlist).
+_KNOWN_GOOD_FINAL_ARTIFACT_STATES = frozenset({"NONE", "FRESH"})
+
+
 def _final_artifact_check(status: dict[str, Any]) -> dict[str, Any]:
     state = status.get("final_artifact_state")
     kind = status.get("final_artifact_kind")
@@ -214,19 +216,28 @@ def _final_artifact_check(status: dict[str, Any]) -> dict[str, Any]:
         "final_artifact_kind": kind,
         "final_artifact_path": path,
     }
-    if state in {"MISSING", "INVALID", "STALE", "BLOCKED"}:
+    evidence_path = path if isinstance(path, str) else None
+    if not state:
         return _check(
             check_id="final_artifact",
-            state="blocked",
+            state="not_required",
+            reason="final_artifact_state is not reported",
+            evidence_path=evidence_path,
+            evidence=evidence,
+        )
+    if state in _KNOWN_GOOD_FINAL_ARTIFACT_STATES:
+        return _check(
+            check_id="final_artifact",
+            state="passed",
             reason=f"final_artifact_state is {state}",
-            evidence_path=path if isinstance(path, str) else None,
+            evidence_path=evidence_path,
             evidence=evidence,
         )
     return _check(
         check_id="final_artifact",
-        state="passed" if state else "not_required",
-        reason=f"final_artifact_state is {state or 'not reported'}",
-        evidence_path=path if isinstance(path, str) else None,
+        state="blocked",
+        reason=f"final_artifact_state is {state}",
+        evidence_path=evidence_path,
         evidence=evidence,
     )
 
@@ -241,6 +252,22 @@ def _release_check(status: dict[str, Any]) -> dict[str, Any]:
         "publication_gate_state": publication_state,
         "publication_gate_failures": failures_list,
     }
+    # Absent gate data cannot be read as "no failures": a status that never reported
+    # publication_gate_failures leaves the gate unevaluated, so block instead of pass.
+    if failures is None:
+        return _check(
+            check_id="release",
+            state="blocked",
+            reason="publication gate not evaluated (publication_gate_failures absent)",
+            evidence=evidence,
+        )
+    if not isinstance(failures, list):
+        return _check(
+            check_id="release",
+            state="blocked",
+            reason="publication_gate_failures is not a list",
+            evidence=evidence,
+        )
     if failures_list:
         return _check(
             check_id="release",
@@ -309,11 +336,7 @@ def build_closeout_readiness(
         _mapped_closeout_checks(closeout),
         status_payload,
     )
-    incomplete = [
-        check
-        for check in checks
-        if check["state"] not in {"passed", "not_required"}
-    ]
+    incomplete = [check for check in checks if check["state"] not in {"passed", "not_required"}]
     next_check = next((check for check in checks if check["state"] == "needs_action"), None)
     if next_check is None:
         next_check = next((check for check in checks if check["state"] == "blocked"), None)

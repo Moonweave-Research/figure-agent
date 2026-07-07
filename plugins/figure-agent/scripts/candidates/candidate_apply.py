@@ -14,8 +14,11 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+import candidate_acceptance
 import candidate_contracts
+import experience_log
 import fixture_identity
+import quality_memory_index
 import runtime_paths
 import semantic_candidate_review
 
@@ -164,6 +167,14 @@ def _active_mutation_lock(example_dir: Path) -> Path | None:
     return None
 
 
+def _is_same_candidate_apply_result(
+    apply_result: dict[str, Any],
+    manifest: dict[str, Any],
+) -> bool:
+    candidate_hash = apply_result.get("candidate_hash")
+    return isinstance(candidate_hash, str) and candidate_hash == manifest.get("candidate_hash")
+
+
 @contextmanager
 def _candidate_apply_lock(example_dir: Path) -> Iterator[Path | None]:
     lock_dir = example_dir / "build" / ".mcp-locks"
@@ -225,7 +236,16 @@ def _acceptance_hash_diagnostics(
                 "candidate manifest hash mismatch",
             )
         )
-    if acceptance.get("render_manifest_sha256") != _sha256_file(render_manifest_path):
+    # Dual-accept migration seam: new acceptances pin the cache-normalized hash
+    # (invariant to a cache-hit re-render flipping cache: miss->hit); acceptances
+    # written before that change pinned the raw file hash. Both are exact hashes of
+    # controlled content, so accepting either is a migration seam, not a fail-open.
+    stored_render_hash = acceptance.get("render_manifest_sha256")
+    accepted_render_hashes = {
+        candidate_acceptance.normalized_render_manifest_sha256(render_manifest_path),
+        _sha256_file(render_manifest_path),
+    }
+    if stored_render_hash not in accepted_render_hashes:
         diagnostics.append(
             _diagnostic("render_manifest_hash_mismatch", "render manifest hash mismatch")
         )
@@ -267,7 +287,46 @@ def _build_changes(
         text = target.read_text(encoding="utf-8")
         original = str(operation.get("original", ""))
         replacement = str(operation.get("replacement", ""))
-        if text.count(original) != 1:
+        try:
+            line_start = int(operation["line_start"])
+            line_end = int(operation.get("line_end", line_start))
+        except (KeyError, TypeError, ValueError):
+            line_start = 0
+            line_end = 0
+        line_scoped = line_start > 0
+        if line_scoped:
+            lines = text.splitlines(keepends=True)
+            if line_end < line_start or line_start > len(lines) or line_end > len(lines):
+                diagnostics.append(
+                    _diagnostic(
+                        "original_text_line_mismatch",
+                        "original text must match the declared source line range",
+                        relative,
+                    )
+                )
+                continue
+            if line_end == line_start:
+                if original not in lines[line_start - 1]:
+                    diagnostics.append(
+                        _diagnostic(
+                            "original_text_line_mismatch",
+                            "original text must appear at the declared source line",
+                            relative,
+                        )
+                    )
+                    continue
+            else:
+                selected = "".join(lines[line_start - 1 : line_end])
+                if selected != original:
+                    diagnostics.append(
+                        _diagnostic(
+                            "original_text_line_mismatch",
+                            "original text must match the declared source line range",
+                            relative,
+                        )
+                    )
+                    continue
+        elif text.count(original) != 1:
             diagnostics.append(
                 _diagnostic(
                     "original_text_count",
@@ -285,7 +344,19 @@ def _build_changes(
                 "after": text,
             },
         )
-        entry["after"] = str(entry["after"]).replace(original, replacement, 1)
+        if line_scoped:
+            lines = str(entry["after"]).splitlines(keepends=True)
+            if line_end == line_start:
+                lines[line_start - 1] = lines[line_start - 1].replace(
+                    original,
+                    replacement,
+                    1,
+                )
+            else:
+                lines[line_start - 1 : line_end] = [replacement]
+            entry["after"] = "".join(lines)
+        else:
+            entry["after"] = str(entry["after"]).replace(original, replacement, 1)
     return list(by_path.values()), diagnostics
 
 
@@ -538,6 +609,28 @@ def _post_crossing_texts(example_dir: Path) -> list[str]:
     ]
 
 
+# Best-effort map from a source defect to the allowlisted detector that originated
+# it, so the recheck record names WHICH detector re-ran (auditability). Grounded in
+# the defect's own evidence uri, not a guess: finding-sourced defects are visual_clash
+# crossings; ledger-sourced defects carry an audit uri that traces to one detector. An
+# unmapped defect falls back to the aggregate ledger name (the actual re-run unit),
+# never a fabricated detector.
+def _source_detector(source_defect: dict[str, Any]) -> str:
+    if source_defect.get("source") == "adjudicated_finding":
+        return "check_visual_clash"
+    evidence = source_defect.get("evidence")
+    if isinstance(evidence, list):
+        for item in evidence:
+            uri = str(item.get("uri") or "") if isinstance(item, dict) else ""
+            if "visual-clash" in uri or "visual_clash" in uri:
+                return "check_visual_clash"
+            if "text-boundary" in uri or "text_boundary" in uri:
+                return "check_text_boundary_clash"
+            if "undeclared-geometry" in uri or "undeclared_geometry" in uri:
+                return "check_undeclared_geometry"
+    return "quality_defect_ledger"
+
+
 def _post_apply_semantic_recheck(
     name: str,
     paths: runtime_paths.RuntimePaths,
@@ -551,6 +644,24 @@ def _post_apply_semantic_recheck(
     source_defect_id = source_defect.get("id")
     if not isinstance(source_defect_id, str) or not source_defect_id.strip():
         return None
+    verdict = _recheck_verdict(
+        name, paths, source_defect, source_defect_id, pre_defects, pre_crossing_texts
+    )
+    # Stamp the originating detector + finding id onto EVERY verdict path so the
+    # experience record names what re-ran (and never claims success without it).
+    verdict.setdefault("detector", _source_detector(source_defect))
+    verdict.setdefault("finding_id", source_defect_id)
+    return verdict
+
+
+def _recheck_verdict(
+    name: str,
+    paths: runtime_paths.RuntimePaths,
+    source_defect: dict[str, Any],
+    source_defect_id: str,
+    pre_defects: list[dict[str, Any]],
+    pre_crossing_texts: list[str] | None,
+) -> dict[str, Any]:
     if source_defect.get("source") == "adjudicated_finding":
         # Finding-sourced fixes are visual_clash-grounded; the ledger (and the
         # ledger-based recheck) is blind to them. Verify against the post-apply
@@ -560,6 +671,15 @@ def _post_apply_semantic_recheck(
             return {
                 "status": "failed",
                 "reason": "finding_target_texts_missing",
+                "source_defect_id": source_defect_id,
+            }
+        report = paths.examples_dir / name / "build" / "visual_clash.json"
+        if not report.is_file():
+            # Fail-closed: an absent detector report is missing evidence, not a
+            # resolved crossing. Never let empty post-crossings read as success.
+            return {
+                "status": "failed",
+                "reason": "finding_evidence_missing",
                 "source_defect_id": source_defect_id,
             }
         return _finding_recheck_verdict(
@@ -610,7 +730,38 @@ def _pdf_words(pdf_path: Path) -> Counter:
     )
     if completed.returncode != 0:
         return Counter()
-    return Counter(completed.stdout.split())
+    return _normalized_pdf_word_counter(completed.stdout.split())
+
+
+def _normalized_pdf_tokens(tokens: list[str]) -> list[str]:
+    normalized: list[str] = []
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        next_token = tokens[index + 1] if index + 1 < len(tokens) else ""
+        if token == "t" and next_token in {"−n", "-n"}:
+            normalized.append(f"t{next_token}")
+            index += 2
+            continue
+        normalized.append(token)
+        index += 1
+    return normalized
+
+
+def _normalized_pdf_word_counter(tokens: list[str]) -> Counter:
+    counter = Counter(_normalized_pdf_tokens(tokens))
+    for exponent_token in ("−n", "-n"):
+        split_count = min(counter.get("t", 0), counter.get(exponent_token, 0))
+        if split_count <= 0:
+            continue
+        counter["t"] -= split_count
+        counter[exponent_token] -= split_count
+        counter[f"t{exponent_token}"] += split_count
+        if counter["t"] == 0:
+            del counter["t"]
+        if counter[exponent_token] == 0:
+            del counter[exponent_token]
+    return counter
 
 
 def _compile_current_source(
@@ -795,7 +946,7 @@ def apply_candidate(
     candidate_set_path = candidate_set_path or Path(str(manifest.get("candidate_set_path", "")))
     acceptance_path = acceptance_path or Path(f"build/candidates/{candidate_id}/acceptance.json")
 
-    candidate_set_file = candidate_contracts.fixture_local_output_path(
+    candidate_set_file = candidate_contracts.candidate_set_input_path(
         paths.workspace_root,
         name,
         candidate_set_path.as_posix(),
@@ -842,7 +993,9 @@ def apply_candidate(
     apply_result_path = sandbox / "apply_result.json"
     if apply_result_path.is_file():
         apply_result = _load_json(apply_result_path, "apply_result")
-        if apply_result.get("status") in TERMINAL_APPLY_STATUSES:
+        if apply_result.get(
+            "status"
+        ) in TERMINAL_APPLY_STATUSES and _is_same_candidate_apply_result(apply_result, manifest):
             diagnostics.append(_diagnostic("already_applied", "candidate is already applied"))
 
     active_lock = _active_mutation_lock(example_dir)
@@ -910,9 +1063,7 @@ def apply_candidate(
         if post_apply and not build_pdf.is_file():
             _compile_current_source(name, paths)
         pre_words = _pdf_words(build_pdf) if post_apply else Counter()
-        export_snapshot = (
-            _snapshot_export_artifacts(example_dir, name) if post_apply else {}
-        )
+        export_snapshot = _snapshot_export_artifacts(example_dir, name) if post_apply else {}
         changed_files: list[dict[str, str]] = []
         for change in changes:
             target = change["path"]
@@ -954,9 +1105,7 @@ def apply_candidate(
                     paths,
                     build_pdf,
                 )
-                post_apply_result["rollback_exports"] = _restore_export_artifacts(
-                    export_snapshot
-                )
+                post_apply_result["rollback_exports"] = _restore_export_artifacts(export_snapshot)
             class_verifiers["rolled_back"] = rolled_back
             post_apply_result["class_verifiers"] = class_verifiers
             if rolled_back:
@@ -973,6 +1122,7 @@ def apply_candidate(
             "schema": SCHEMA,
             "figure_name": name,
             "candidate_id": candidate_id,
+            "candidate_hash": manifest.get("candidate_hash"),
             "status": result_status,
             "changed_files": changed_files,
             "rollback_patch": _fixture_relative(example_dir, rollback_path),
@@ -982,6 +1132,25 @@ def apply_candidate(
         }
         if apply_result_path.is_symlink():
             raise CandidateApplyError("sandbox_symlink_forbidden: apply_result.json")
+        apply_result_path.write_text(
+            json.dumps(result, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        experience = experience_log.append_apply_record(
+            name,
+            candidate_id,
+            workspace_root=paths.workspace_root,
+            plugin_root=paths.plugin_root,
+            candidate_set_path=candidate_set_path,
+        )
+        result["experience_log"] = experience["writes"]
+        memory = quality_memory_index.build_fixture_index(
+            name,
+            write=True,
+            workspace_root=paths.workspace_root,
+            plugin_root=paths.plugin_root,
+        )
+        result["memory_index"] = memory["writes"]
         apply_result_path.write_text(
             json.dumps(result, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",

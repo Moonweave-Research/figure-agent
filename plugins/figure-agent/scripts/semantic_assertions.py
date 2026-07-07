@@ -174,10 +174,21 @@ def semantic_assertions_payload(
 
 
 def _load_spec(spec_path: Path) -> dict[str, Any]:
+    # A missing spec.yaml means no assertions were declared (e.g. an ad-hoc compile
+    # with no fixture) -> nothing to check. But a spec that IS present yet cannot be
+    # read as a mapping is corrupt evidence: fail closed instead of silently treating
+    # it as an empty declaration.
     if not spec_path.is_file():
         return {}
-    spec = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
-    return spec if isinstance(spec, dict) else {}
+    try:
+        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise SemanticAssertionError(f"unreadable spec.yaml: {exc}") from exc
+    if spec is None:
+        return {}
+    if not isinstance(spec, dict):
+        raise SemanticAssertionError(f"spec.yaml is not a mapping: {spec_path}")
+    return spec
 
 
 def main(argv: list[str] | None = None) -> int:

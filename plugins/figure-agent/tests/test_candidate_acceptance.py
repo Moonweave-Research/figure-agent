@@ -203,6 +203,31 @@ def test_write_acceptance_artifact_records_manifest_hashes(tmp_path: Path) -> No
     assert data["render_manifest_sha256"].startswith("sha256:")
 
 
+def test_write_acceptance_persists_reject_without_apply_readiness(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+
+    payload = candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="reject",
+        reviewer="local-user",
+        rationale="Rendered evidence regressed labels.",
+        workspace_root=workspace,
+    )
+
+    path = fixture / "build" / "candidates" / "CAND001" / "acceptance.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["path"] == "build/candidates/CAND001/acceptance.json"
+    assert data["schema"] == "figure-agent.candidate-acceptance.v1"
+    assert data["decision"] == "reject"
+    assert data["candidate_id"] == "CAND001"
+    assert data["candidate_hash"] == "sha256:" + "1" * 64
+    assert data["candidate_manifest_sha256"].startswith("sha256:")
+    assert data["render_manifest_sha256"].startswith("sha256:")
+
+
 def test_acceptance_rejects_sandbox_symlink(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
@@ -266,11 +291,18 @@ def test_readiness_blocks_empty_operations(tmp_path: Path) -> None:
 def test_readiness_blocks_existing_unverified_apply_result(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
+    _write_semantic_review(fixture)
+    manifest = json.loads(
+        (
+            fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+        ).read_text(encoding="utf-8")
+    )
     apply_result = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
     apply_result.write_text(
         json.dumps(
             {
                 "schema": "figure-agent.candidate-apply-result.v1",
+                "candidate_hash": manifest["candidate_hash"],
                 "status": "applied_unverified",
             },
             sort_keys=True,
@@ -288,3 +320,34 @@ def test_readiness_blocks_existing_unverified_apply_result(tmp_path: Path) -> No
 
     assert readiness["status"] == "blocked"
     assert "already_applied" in readiness["blocking_reasons"]
+
+
+def test_readiness_ignores_stale_apply_result_for_reused_candidate_id(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _write_semantic_review(fixture)
+    apply_result = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
+    apply_result.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-apply-result.v1",
+                "candidate_hash": "sha256:" + "2" * 64,
+                "status": "applied_unverified",
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    readiness = candidate_acceptance.build_apply_readiness(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+
+    assert readiness["status"] == "ready_for_local_acceptance"
+    assert "already_applied" not in readiness["blocking_reasons"]

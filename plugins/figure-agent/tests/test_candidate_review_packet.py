@@ -224,7 +224,10 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
     assert packet["candidate_hash"] == "sha256:" + "3" * 64
     assert packet["panel"] == "C"
     assert packet["selectors"] == [{"kind": "tex_selector.v1", "line_start": 10, "line_end": 11}]
-    assert packet["visual_review"] == {"status": "missing_render"}
+    assert packet["visual_review"] == {
+        "status": "rendered_needs_human_review",
+        "source": "render_manifest",
+    }
     assert packet["manifest_summary"] == {
         "schema": "figure-agent.candidate-manifest.v1",
         "candidate_hash": "sha256:" + "3" * 64,
@@ -238,11 +241,15 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
         "risk": "low",
         "stages": {
             "prepare": "passed",
-            "compile": "not_run",
-            "export": "not_run",
-            "crop": "not_run",
+            "compile": "success",
+            "export": "success",
+            "crop": "success",
+            "evaluate": "rendered_needs_human_review",
         },
-        "visual_review": {"status": "missing_render"},
+        "visual_review": {
+            "status": "rendered_needs_human_review",
+            "source": "render_manifest",
+        },
         "expected_delta": ["increase panel boundary clearance"],
         "semantic_risks": ["panel spacing must preserve panel semantics"],
         "boundedness": {
@@ -313,6 +320,62 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
         "rationale",
     ]
     assert _tree(workspace) == before
+
+
+def test_review_packet_ignores_stale_apply_result_for_reused_candidate_id(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = {
+        "schema": "figure-agent.candidate-set.v1",
+        "figure_name": "candidate_demo",
+        "candidates": [{"id": "CAND001", "candidate_hash": "sha256:" + "3" * 64}],
+    }
+    candidate_set_path = fixture / "build" / "candidates" / "panel_C_candidate_set.json"
+    candidate_set_path.write_text(
+        json.dumps(candidate_set, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    (sandbox / "apply_result.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-apply-result.v1",
+                "figure_name": "candidate_demo",
+                "candidate_id": "CAND001",
+                "candidate_hash": "sha256:" + "9" * 64,
+                "status": "applied_with_failed_verification",
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (sandbox / "acceptance.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-acceptance.v1",
+                "figure_name": "candidate_demo",
+                "candidate_id": "CAND001",
+                "candidate_hash": "sha256:" + "8" * 64,
+                "decision": "accept",
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    assert packet["candidate_hash"] == "sha256:" + "3" * 64
+    assert packet["apply_readiness"]["status"] != "applied_with_failed_verification"
+    assert "candidate_hash_mismatch" not in packet["apply_readiness"]["blocking_reasons"]
 
 
 def test_review_packet_includes_advisory_narrative_context(tmp_path: Path) -> None:

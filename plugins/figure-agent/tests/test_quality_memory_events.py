@@ -43,7 +43,9 @@ def test_applied_candidate_produces_candidate_events(tmp_path: Path) -> None:
         event for event in payload["events"] if event["event_type"] == "candidate_applied"
     )
     assert applied["candidate_id"] == "CAND001"
-    assert applied["outcome"]["state"] == "improved"
+    assert applied["outcome"]["state"] == "neutral"
+    assert applied["outcome"]["pipeline_ok"] is True
+    assert applied["outcome"]["quality_movement"] == "neutral"
     assert applied["post_state"] == {
         "compile": "success",
         "export": "success",
@@ -107,7 +109,7 @@ def test_memory_log_attributes_candidate_generated_rendered_and_applied_events(
     expected_outcomes = {
         "candidate_generated": "unknown",
         "candidate_rendered": "reviewed_not_applied",
-        "candidate_applied": "improved",
+        "candidate_applied": "neutral",
     }
     for event_type, outcome in expected_outcomes.items():
         event = events[event_type]
@@ -155,7 +157,38 @@ def test_stale_apply_result_is_blocked_by_hard_gate(tmp_path: Path) -> None:
         event for event in payload["events"] if event["event_type"] == "candidate_applied"
     )
     assert applied["outcome"]["state"] == "blocked_by_hard_gate"
+    assert applied["outcome"]["pipeline_ok"] is False
+    assert applied["outcome"]["quality_movement"] is None
     assert "candidate_apply_stale:candidate_demo.tex" in applied["outcome"]["reason"]
+
+
+def test_rolled_back_apply_result_records_regressed_quality_movement(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    apply_path = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
+    apply_result = json.loads(apply_path.read_text(encoding="utf-8"))
+    apply_result["status"] = "rolled_back"
+    apply_result["post_apply"]["detector_recheck"] = {
+        "status": "failed",
+        "reason": "source_defect_unresolved",
+    }
+    apply_result["post_apply"]["class_verifiers"] = {
+        "status": "failed",
+        "rolled_back": True,
+        "verifiers": [{"verifier": "labels_unchanged", "status": "failed"}],
+    }
+    apply_path.write_text(json.dumps(apply_result, sort_keys=True) + "\n", encoding="utf-8")
+
+    payload = quality_memory_events.build_memory_log("candidate_demo", workspace_root=workspace)
+
+    applied = next(
+        event for event in payload["events"] if event["event_type"] == "candidate_applied"
+    )
+    assert applied["outcome"]["state"] == "regressed"
+    assert applied["outcome"]["pipeline_ok"] is False
+    assert applied["outcome"]["quality_movement"] == "regressed"
 
 
 def test_memory_log_rejects_manifest_fixture_mismatch(tmp_path: Path) -> None:

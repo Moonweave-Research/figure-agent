@@ -16,10 +16,17 @@ import candidate_render
 import fixture_identity
 import quality_memory_index
 import runtime_paths
+import yaml
 
 LIST_SCHEMA = "figure-agent.quality-benchmark-list.v1"
 RUN_SCHEMA = "figure-agent.quality-benchmark-run.v1"
 COMPARE_SCHEMA = "figure-agent.quality-benchmark-comparison.v1"
+TREND_SCHEMA = "figure-agent.quality-benchmark-trend.v1"
+TREND_REGRESSION_METRICS = (
+    "completed_rate",
+    "render_success_rate",
+    "candidate_specific_rank_rate",
+)
 
 
 class QualityBenchmarkError(ValueError):
@@ -125,6 +132,65 @@ def _fixture_artifact_path(example_dir: Path, relative: str) -> Path:
     if path.is_symlink():
         raise QualityBenchmarkError(f"sandbox_symlink_forbidden: {relative}")
     return path
+
+
+def _first_panel_id(example_dir: Path) -> str | None:
+    spec_path = _fixture_artifact_path(example_dir, "spec.yaml")
+    if not spec_path.is_file():
+        return None
+    payload = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        return None
+    panels = payload.get("panels")
+    if not isinstance(panels, list):
+        return None
+    for panel in panels:
+        if not isinstance(panel, dict):
+            continue
+        panel_id = panel.get("id")
+        if isinstance(panel_id, str) and panel_id:
+            return panel_id
+    return None
+
+
+def _contract_candidate_family(contract: dict[str, Any]) -> str | None:
+    if contract.get("state") != "present":
+        return None
+    families = contract.get("candidate_families")
+    if not isinstance(families, list):
+        return None
+    for family in families:
+        if isinstance(family, str) and family:
+            return family
+    return None
+
+
+def _build_contract_candidate_set(
+    fixture: str,
+    *,
+    example_dir: Path,
+    contract: dict[str, Any],
+    paths: runtime_paths.RuntimePaths,
+) -> dict[str, Any]:
+    default_set = candidate_generator.build_candidate_set(
+        fixture,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    default_candidates = default_set.get("candidates")
+    if isinstance(default_candidates, list) and default_candidates:
+        return default_set
+    family = _contract_candidate_family(contract)
+    panel = _first_panel_id(example_dir) if family is not None else None
+    if family is None or panel is None:
+        return default_set
+    return candidate_generator.build_candidate_set(
+        fixture,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+        panel=panel,
+        family=family,
+    )
 
 
 def _load_fixture_json(example_dir: Path, relative: str | None) -> dict[str, Any] | None:
@@ -426,10 +492,11 @@ def _run_fixture(
     status_payload = _status_summary(example_dir)
     try:
         detector_evaluation = _detector_evaluation(example_dir, contract)
-        candidate_set = candidate_generator.build_candidate_set(
+        candidate_set = _build_contract_candidate_set(
             fixture,
-            plugin_root=paths.plugin_root,
-            workspace_root=paths.workspace_root,
+            example_dir=example_dir,
+            contract=contract,
+            paths=paths,
         )
         candidates = [
             candidate
@@ -589,6 +656,145 @@ def _ensure_run_output(workspace_root: Path, run_id: str) -> Path:
         raise QualityBenchmarkError(reason)
     run_dir.mkdir(parents=True, exist_ok=False)
     return output
+
+
+def _trend_output(workspace_root: Path, suite: str) -> Path:
+    fixture_identity.validate_fixture_name(suite)
+    scratch_root = workspace_root / ".scratch"
+    benchmark_root = scratch_root / "figure-agent-benchmarks"
+    trend_root = benchmark_root / "trends"
+    output = trend_root / f"{suite}.jsonl"
+    for label, path in (
+        ("scratch", scratch_root),
+        ("benchmark", benchmark_root),
+        ("trends", trend_root),
+        ("trend", output),
+    ):
+        if path.is_symlink():
+            raise QualityBenchmarkError(f"sandbox_symlink_forbidden: {label}")
+    reason = _forbidden_write_reason(output)
+    if reason is not None:
+        raise QualityBenchmarkError(reason)
+    trend_root.mkdir(parents=True, exist_ok=True)
+    for label, path in (
+        ("scratch", scratch_root),
+        ("benchmark", benchmark_root),
+        ("trends", trend_root),
+    ):
+        if path.is_symlink():
+            raise QualityBenchmarkError(f"sandbox_symlink_forbidden: {label}")
+    return output
+
+
+def _relative_to_workspace(workspace_root: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(workspace_root.resolve()).as_posix()
+    except ValueError as exc:
+        raise QualityBenchmarkError("benchmark_output_escape") from exc
+
+
+def _capability_metrics(results: list[dict[str, Any]]) -> dict[str, float]:
+    fixture_count = len(results)
+    completed = sum(1 for result in results if result.get("status") == "completed")
+    metric_names = (
+        "render_success_rate",
+        "candidate_specific_rank_rate",
+        "mean_rank_score",
+    )
+    metrics = {
+        "completed_rate": round(completed / fixture_count, 4) if fixture_count else 0.0,
+    }
+    for metric_name in metric_names:
+        values = [_metric(result, metric_name) for result in results]
+        metrics[metric_name] = (
+            round(sum(values) / len(values), 4) if values else 0.0
+        )
+    return metrics
+
+
+def _last_trend_row(path: Path) -> dict[str, Any] | None:
+    if path.is_symlink():
+        raise QualityBenchmarkError("sandbox_symlink_forbidden: trend")
+    if not path.is_file():
+        return None
+    lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if not lines:
+        return None
+    payload = json.loads(lines[-1])
+    if not isinstance(payload, dict):
+        raise QualityBenchmarkError("benchmark_trend_invalid")
+    return payload
+
+
+def _trend_row(payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema": TREND_SCHEMA,
+        "generated_at": payload.get("generated_at"),
+        "run_id": payload.get("run_id"),
+        "suite": payload.get("suite"),
+        "summary": payload.get("summary", {}),
+        "capability_metrics": payload.get("capability_metrics", {}),
+    }
+
+
+def _trend_regression_tool_defects(
+    *,
+    suite: str,
+    previous: dict[str, Any] | None,
+    current: dict[str, Any],
+) -> list[dict[str, Any]]:
+    if not isinstance(previous, dict):
+        return []
+    previous_metrics = previous.get("capability_metrics")
+    current_metrics = current.get("capability_metrics")
+    if not isinstance(previous_metrics, dict) or not isinstance(current_metrics, dict):
+        return []
+    defects: list[dict[str, Any]] = []
+    for metric in TREND_REGRESSION_METRICS:
+        previous_value = _metric({"metrics": previous_metrics}, metric)
+        current_value = _metric({"metrics": current_metrics}, metric)
+        if current_value >= previous_value:
+            continue
+        defects.append(
+            {
+                "id": f"BTD{len(defects) + 1:03d}",
+                "symptom": "benchmark loop capability regressed",
+                "expected_behavior": (
+                    "loop capability metrics should not regress between trend rows"
+                ),
+                "actual_behavior": {
+                    "suite": suite,
+                    "metric": metric,
+                    "previous": previous_value,
+                    "current": current_value,
+                    "previous_run_id": previous.get("run_id"),
+                    "current_run_id": current.get("run_id"),
+                },
+                "minimal_reproduction": f"fig-agent benchmark-run --suite {suite} --write --json",
+                "recommended_fix": (
+                    "inspect benchmark trend regression before trusting loop automation"
+                ),
+            }
+        )
+    return defects
+
+
+def _append_trend_row(
+    workspace_root: Path,
+    payload: dict[str, Any],
+) -> tuple[str, list[dict[str, Any]]]:
+    suite = str(payload.get("suite") or "")
+    output = _trend_output(workspace_root, suite)
+    previous = _last_trend_row(output)
+    row = _trend_row(payload)
+    defects = _trend_regression_tool_defects(
+        suite=suite,
+        previous=previous,
+        current=row,
+    )
+    with output.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(row, sort_keys=True) + "\n")
+    return _relative_to_workspace(workspace_root, output), defects
 
 
 def _load_run(workspace_root: Path, run_id: str) -> dict[str, Any]:
@@ -800,6 +1006,7 @@ def run_benchmark_suite(
             if result["status"] == "completed"
         ),
     }
+    capability_metrics = _capability_metrics(results)
     payload = {
         "schema": RUN_SCHEMA,
         "run_id": run_id,
@@ -809,14 +1016,19 @@ def run_benchmark_suite(
         "render_dependency_probe": render_dependency_probe,
         "results": results,
         "summary": summary,
+        "capability_metrics": capability_metrics,
+        "tool_defect_candidates": [],
         "writes": [],
     }
     if write:
         output = _ensure_run_output(paths.workspace_root, run_id)
-        output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        trend_write, tool_defects = _append_trend_row(paths.workspace_root, payload)
+        payload["tool_defect_candidates"] = tool_defects
         payload["writes"] = [
-            f".scratch/figure-agent-benchmarks/{run_id}/run.json"
+            f".scratch/figure-agent-benchmarks/{run_id}/run.json",
+            trend_write,
         ]
+        output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload
 
 

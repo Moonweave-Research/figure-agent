@@ -37,6 +37,18 @@ def _declared_panel(intent: dict[str, Any], panel_id: str) -> dict[str, Any] | N
     return None
 
 
+def _single_declared_panel(intent: dict[str, Any], panel_id: str) -> bool:
+    panels = intent.get("panels")
+    if not isinstance(panels, list):
+        return False
+    declared = [
+        panel.get("id")
+        for panel in panels
+        if isinstance(panel, dict) and isinstance(panel.get("id"), str)
+    ]
+    return declared == [panel_id]
+
+
 def _panel_payload(panel: dict[str, Any] | None, panel_id: str) -> dict[str, Any]:
     if panel is None:
         return {
@@ -82,11 +94,26 @@ def build_panel_model(
         workspace_root=workspace_root,
     )
     panel = _declared_panel(intent, panel_id)
-    selectors = [
+    all_selectors = [
         item
         for item in tex_index.get("selectors", [])
-        if isinstance(item, dict) and item.get("panel") == panel_id
+        if isinstance(item, dict)
     ]
+    selectors = [
+        item
+        for item in all_selectors
+        if item.get("panel") == panel_id
+    ]
+    if not selectors and panel is not None and _single_declared_panel(intent, panel_id):
+        selectors = [
+            {
+                **item,
+                "panel": panel_id,
+                "panel_inference": "single_declared_panel",
+            }
+            for item in all_selectors
+            if item.get("panel") == "unknown"
+        ]
     refusals = []
     if panel is None:
         refusals.append({"code": "panel_not_declared"})

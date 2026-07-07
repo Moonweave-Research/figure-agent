@@ -34,7 +34,13 @@ def test_policy_marks_narrow_text_overlap_as_safe_candidate() -> None:
 
 
 def test_policy_blocks_semantic_and_publication_defects() -> None:
-    for defect_class in ("semantic_meaning", "taste_decision", "publication_gate"):
+    for defect_class in (
+        "aesthetic_direction",
+        "reference_balance",
+        "semantic_meaning",
+        "taste_decision",
+        "publication_gate",
+    ):
         result = quality_patch_policy.classify_patchability(
             _defect(defect_class=defect_class)
         )

@@ -1453,7 +1453,8 @@ def test_loop_detects_repeated_reference_aesthetic_metric_basin(
     stdout_summary = json_stdout_summary(run_dir)
 
     assert iteration["stop_reason"] == "basin_detected"
-    assert iteration["escalation_level"] == "human_review_required"
+    assert iteration["human_gate_status"] == "not_requested"
+    assert iteration["escalation_level"] == "basin_detected"
     assert iteration["basin_summary"]["evaluation_state"] == "basin_detected"
     assert iteration["basin_summary"]["history_count"] == 3
     assert "step out" in iteration["recommended_next_action"]
@@ -1669,6 +1670,59 @@ def test_loop_human_gates_v1_11_human_art_direction_lever(
     assert iteration["active_patch_target"] is None
     assert iteration["patch_handoff"] is None
     assert iteration["auto_patch_eligibility"] is None
+
+
+def test_loop_does_not_human_gate_patchable_needs_human_aesthetic_lever(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.14",
+        top_tier_audit=_top_tier_audit(),
+        editorial_art_direction=_editorial_art_direction(),
+        micro_defects=[],
+        crop_audit_log=[],
+        aesthetic_lever_audit=[
+            {
+                "lever_id": "print_typography_authority",
+                "dimension": "typography_authority",
+                "verdict": "needs_human",
+                "route": "tikz_patch",
+                "linked_evidence": ["quality_axes.journal_polish", "finding C001"],
+            }
+        ],
+    )
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C001",
+                "decision": "resolved",
+                "reason": "panel F typography patch has been applied",
+                "patch_target": "panel F label cluster",
+                "evidence": "critique.md C001 resolved by current source",
+            }
+        ],
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect patchable aesthetic lever",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["aesthetic_lever_summary"]["evaluation_state"] == "needs_human"
+    assert iteration["aesthetic_lever_summary"]["next_aesthetic_bottleneck"]["route"] == (
+        "tikz_patch"
+    )
+    assert iteration["stop_reason"] != "human_gate_required"
+    assert iteration["human_gate_status"] == "not_requested"
 
 
 def test_loop_marks_hash_mismatched_journal_assessment_not_gateable(
@@ -2192,6 +2246,7 @@ def test_loop_marks_label_spacing_patch_as_auto_patch_candidate(tmp_path: Path) 
                 "decision": "apply",
                 "reason": "label overlaps arrow; adjust label offset and spacing",
                 "patch_target": "panel A label cluster",
+                "patch_classes": ["label_offset", "text_overlap"],
                 "evidence": "critique.md C001",
             }
         ],
@@ -2212,7 +2267,7 @@ def test_loop_marks_label_spacing_patch_as_auto_patch_candidate(tmp_path: Path) 
         "level": "auto_patch_candidate",
         "target_type": "finding",
         "target_id": "C001",
-        "allowed_reasons": ["label offset", "text overlap"],
+        "allowed_reasons": ["label_offset", "text_overlap"],
         "blocked_reasons": [],
         "required_evidence": [
             "before compile/export evidence",
@@ -2426,6 +2481,7 @@ def test_loop_marks_mechanism_patch_as_human_review_required(tmp_path: Path) -> 
                 "decision": "apply",
                 "reason": "causal arrow semantics change the physical mechanism",
                 "patch_target": "panel B mechanism arrow",
+                "patch_classes": ["causal_arrow_semantics", "physical_mechanism"],
                 "evidence": "critique.md C002",
             }
         ],
@@ -2446,8 +2502,8 @@ def test_loop_marks_mechanism_patch_as_human_review_required(tmp_path: Path) -> 
     assert iteration["auto_patch_eligibility"]["level"] == "human_review_required"
     assert iteration["auto_patch_eligibility"]["may_edit"] is False
     assert iteration["auto_patch_eligibility"]["blocked_reasons"] == [
-        "physical mechanism",
-        "causal arrow semantics",
+        "causal_arrow_semantics",
+        "physical_mechanism",
     ]
 
 
@@ -2464,6 +2520,10 @@ def test_loop_marks_publication_safety_patch_as_human_review_required(tmp_path: 
                 "decision": "apply",
                 "reason": "publication safety depends on accepted golden state",
                 "patch_target": "accepted publication-safety metadata",
+                "patch_classes": [
+                    "accepted_golden_export_build_state",
+                    "publication_safety",
+                ],
                 "evidence": "critique.md C003",
             }
         ],
@@ -2480,8 +2540,8 @@ def test_loop_marks_publication_safety_patch_as_human_review_required(tmp_path: 
     assert iteration["auto_patch_eligibility"]["level"] == "human_review_required"
     assert iteration["auto_patch_eligibility"]["may_edit"] is False
     assert iteration["auto_patch_eligibility"]["blocked_reasons"] == [
-        "accepted/golden/export/build state",
-        "publication safety",
+        "accepted_golden_export_build_state",
+        "publication_safety",
     ]
 
 

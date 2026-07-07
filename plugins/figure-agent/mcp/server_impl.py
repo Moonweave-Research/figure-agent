@@ -1356,7 +1356,7 @@ def _accept_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
     decision = str(arguments.get("decision") or "")
     reviewer = str(arguments.get("reviewer") or "")
     rationale = str(arguments.get("rationale") or "")
-    if decision != "accept" or not reviewer.strip() or not rationale.strip():
+    if decision not in {"accept", "reject"} or not reviewer.strip() or not rationale.strip():
         return _tool_envelope(
             schema,
             success=False,
@@ -1365,7 +1365,7 @@ def _accept_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
             candidate_id=str(candidate_id),
             error=_error(
                 "invalid_request",
-                "decision=accept, reviewer, and rationale are required",
+                "decision must be accept or reject, and reviewer and rationale are required",
             ),
         )
     candidate_set = str(arguments.get("candidate_set") or "build/candidates/candidate_set.json")
@@ -1614,8 +1614,7 @@ def _apply_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
         rollback_exports = post.get("rollback_exports", {}) if isinstance(post, dict) else {}
         suffix = (
             " Source and generated exports were restored."
-            if isinstance(rollback_exports, dict)
-            and rollback_exports.get("status") == "success"
+            if isinstance(rollback_exports, dict) and rollback_exports.get("status") == "success"
             else (
                 " Source was restored; inspect apply_result.post_apply for "
                 "generated artifact cleanup."
@@ -2085,7 +2084,7 @@ TOOLS: dict[str, dict[str, Any]] = {
         "handler": _candidate_apply_readiness,
     },
     "figure_agent_accept_candidate": {
-        "description": "Record explicit local acceptance for one rendered candidate.",
+        "description": "Record an explicit local human verdict (accept or reject) for one rendered candidate.",
         "inputSchema": {
             "type": "object",
             "additionalProperties": False,
@@ -2094,7 +2093,7 @@ TOOLS: dict[str, dict[str, Any]] = {
                 "name": {"type": "string"},
                 "candidate_id": {"type": "string"},
                 "candidate_set": {"type": "string"},
-                "decision": {"type": "string", "enum": ["accept"]},
+                "decision": {"type": "string", "enum": ["accept", "reject"]},
                 "reviewer": {"type": "string"},
                 "rationale": {"type": "string"},
             },

@@ -1,0 +1,313 @@
+name: fig1_overview_v5f_art_direction_001_vault
+paper_id: pair001
+title: "Fig 1 \u2014 Charge trapping in sulfur-rich polymer (pair_001 vault arm, overview\
+  \ v5f art-direction candidate)"
+reference_image: reference/current_render_baseline_2026-07-03.png
+candidate_lane:
+  source_fixture: fig1_overview_v5e_aggressive_001_vault
+  purpose: 'Non-golden v5f art-direction lane: preserve v5d/v5e as fallbacks while
+    testing a larger composition redesign, clearer Panel C hero hierarchy, more
+    breathable Row 2 evidence, and a reworked Panel F mechanism scene for a stronger
+    Nature-level overview.'
+  mutation_boundary: candidate_source_only; does not mutate accepted, release, export,
+    or golden state
+  default_human_decision: compare_against_v5c_v5b_and_v4_before_acceptance_or_golden_roll_forward
+tex_assertions:
+- id: panelF-coulomb-repulsion-points-away-from-electrode
+  anchor_style: panelFCoulombRepulsionArrow
+  near:
+  - 10.86
+  - 1.18
+  axis: x
+  direction: decreasing
+panels:
+- id: A
+  caption: poly(S-r-DIB) primary microstructure
+  bbox_pdf_cm:
+  - 0.141
+  - 0.141
+  - 4.591
+  - 5.227
+- id: B
+  caption: "Sulfur composition variation \u2014 3 representative chains (S60/S75/S85)\
+    \ of paper's 5-sample range (S60/S70/S75/S80/S85)"
+  bbox_pdf_cm:
+  - 4.655
+  - 0.141
+  - 8.85
+  - 5.227
+- id: C
+  caption: Localized traps (HERO
+  bbox_pdf_cm:
+  - 8.914
+  - 0.141
+  - 17.878
+  - 5.227
+- id: D
+  caption: "Column D \u2014 Kinetic evidence (SMU+MIM apparatus + I(t)~t^-n result)"
+  bbox_pdf_cm:
+  - 0.205
+  - 5.926
+  - 5.883
+  - 11.07
+  reference_image: reference/row2_apparatus/apparatus1_ref04_NatComm2022_tribo_p3-03.png
+- id: E
+  caption: "Column E \u2014 ISPD-paired evidence (corona+probe apparatus + V_s decay\
+    \ + g(E_t) derived)"
+  bbox_pdf_cm:
+  - 6.074
+  - 5.926
+  - 12.008
+  - 11.07
+  reference_image: reference/row2_apparatus/apparatus2_ref01_NatComm2024_surfacecharge_p2-02.png
+- id: F
+  caption: "Column F \u2014 Mechanical evidence (PSU+fixture apparatus + Maxwell baseline\
+    \ + Coulomb result)"
+  bbox_pdf_cm:
+  - 12.199
+  - 5.926
+  - 17.878
+  - 11.07
+  reference_image: reference/row2_apparatus/apparatus3_ref01_NatComm2016_microactuator-2.png
+style_profile: polymer-paper
+visual_clash_cap: 59
+text_boundary_layout:
+  clearance_pt: 0.5
+  row_boxes:
+  - id: row2
+    bbox_pdf_cm:
+    - 0.205
+    - 5.863
+    - 17.75
+    - 11.457
+    clearance_pt: 0.0
+    text_allowlist:
+    - ISPD
+    - kinetic
+    - mechanical
+    - HV+
+    - probe
+    - MIM
+    - stack
+    - SMU
+    - V/A
+    - meter
+    - Coulomb
+    - Maxwell
+    - repulsion
+    - trapped
+    - charge
+  column_rules:
+  - id: row2_de
+    x_pdf_cm: 6.015
+    y_range_pdf_cm:
+    - 6.244
+    - 11.457
+  - id: row2_ef
+    x_pdf_cm: 12.182
+    y_range_pdf_cm:
+    - 6.244
+    - 11.457
+  forbidden_rects:
+  - id: panel_e_hv_display
+    bbox_pdf_cm:
+    - 7.515
+    - 6.015
+    - 8.342
+    - 6.219
+    role: instrument_internal_drawing
+  - id: panel_e_vs_meter_display
+    bbox_pdf_cm:
+    - 9.957
+    - 6.498
+    - 11.025
+    - 6.778
+    role: instrument_internal_drawing
+  - id: panel_f_psu_display
+    bbox_pdf_cm:
+    - 15.271
+    - 6.778
+    - 16.098
+    - 7.07
+    role: instrument_internal_drawing
+text_boundary_checks:
+- id: row2_contain_text
+  kind: rect
+  role: row_box
+  bbox_pdf_cm:
+  - 0.205
+  - 5.863
+  - 17.75
+  - 11.457
+  mode: contain_text
+  clearance_pt: 0.0
+  text_allowlist:
+  - ISPD
+  - kinetic
+  - mechanical
+  - HV+
+  - probe
+  - MIM
+  - stack
+  - SMU
+  - V/A
+  - meter
+  - Coulomb
+  - Maxwell
+  - repulsion
+  - trapped
+  - charge
+- id: row2_de_column_rule
+  kind: vertical_line
+  role: column_rule
+  x_pdf_cm: 6.015
+  y_range_pdf_cm:
+  - 6.244
+  - 11.457
+  clearance_pt: 0.5
+- id: row2_ef_column_rule
+  kind: vertical_line
+  role: column_rule
+  x_pdf_cm: 12.182
+  y_range_pdf_cm:
+  - 6.244
+  - 11.457
+  clearance_pt: 0.5
+- id: panel_e_hv_display_avoid_inside
+  kind: rect
+  role: instrument_internal_drawing
+  bbox_pdf_cm:
+  - 7.515
+  - 6.015
+  - 8.342
+  - 6.219
+  mode: avoid_inside
+  clearance_pt: 0.5
+- id: panel_e_vs_meter_display_avoid_inside
+  kind: rect
+  role: instrument_internal_drawing
+  bbox_pdf_cm:
+  - 9.957
+  - 6.498
+  - 11.025
+  - 6.778
+  mode: avoid_inside
+  clearance_pt: 0.5
+- id: panel_f_psu_display_avoid_inside
+  kind: rect
+  role: instrument_internal_drawing
+  bbox_pdf_cm:
+  - 15.271
+  - 6.778
+  - 16.098
+  - 7.07
+  mode: avoid_inside
+  clearance_pt: 0.5
+label_path_proximity_checks:
+- id: panel_c_mobility_edge_reference
+  kind: horizontal_line
+  role: reference_line
+  y_pdf_cm: 2.11
+  x_range_pdf_cm:
+  - 15.1
+  - 17.7
+  clearance_pt: 4.0
+  text_phrases:
+  - id: mobility_edge
+    words:
+    - mobility
+    - edge
+- id: panel_c_deep_escape_curve
+  kind: polyline
+  role: semantic_curve
+  points_pdf_cm:
+  - - 14.9
+    - 2.72
+  - - 15.18
+    - 2.75
+  - - 15.78
+    - 2.86
+  clearance_pt: 5.0
+  text_allowlist:
+  - shallow
+- id: panel_c_delta_et_caliper
+  kind: vertical_line
+  role: semantic_caliper
+  x_pdf_cm: 17.1
+  y_range_pdf_cm:
+  - 1.2
+  - 5.2
+  clearance_pt: 4.0
+  text_allowlist:
+  - shallow
+  text_phrases:
+  - id: mobility_edge
+    words:
+    - mobility
+    - edge
+notes: "pair_001 vault arm. v8.6 6-panel structure (A..F): Row 1 = A/B/C, Row 2 =\n\
+  D/E/F (3 columns, each split apparatus zone top + result zone bottom).\nPre-v8.6\
+  \ G panel removed (merged into v8.6 Column F).\n\nAuthored using approved-only tikz-vault\
+  \ references from query_id 966e2e89\nas grammar/style anchors (metadata only \u2014\
+  \ source paths masked). Same\ndesign.md snapshot SHA as no_vault arm\n(fa7a6d9ff7890a440ca3471995acf8145c47001a996dbd8bf2c428b363d8f7b7).\n\
+  degraded_mode=true preserved because chroma_v2 indexes still absent.\n\nPer-panel\
+  \ reference_image: D/E/F adopted per HANDOFF v8.7. Row 1 (A/B/C)\nreferences are\
+  \ gaps tracked in reference/audit_table.md \u2014 figure-research\nrecommended before\
+  \ deep iteration on Panel C (HERO, highest priority).\n"
+golden_contract:
+  required_labels:
+  - Sulfur-rich polymer
+  - poly(S-r-DIB) linear copolymer
+  - Sulfur content
+  - localized traps
+  - real space
+  - energy diagram
+  - poly(S-r-DIB) thin film
+  - convergent evidence
+  - kinetic
+  - ISPD
+  - mechanical
+  - MIM stack
+  - polymer film
+  - SMU
+  - HV
+  - Vs probe
+  - Vs meter
+  - Vactive
+  - I(t)
+  - - high n
+    - hig h n
+    - hig hn
+  - low n
+  - Debye
+  - g(Et)
+  - Coulomb
+  - repulsion
+  - electrode
+  - air gap
+  - qtr
+  source_inventory:
+    panel_letters:
+      pattern: \\node\[panelLetter\b
+      min: 6
+    inter_panel_arrows:
+      pattern: \\draw\[interArrow\]
+      min: 2
+    row2_spokes:
+      pattern: \([0-9.]+, 4\.85\) --
+      min: 3
+    shallow_trap_site_loop:
+      pattern: \\foreach \\site in \{siteS1, siteS2\}
+      min: 1
+    deep_trap_site_loop:
+      pattern: \\foreach \\site in \{siteD1, siteD2\}
+      min: 1
+    energy_trap_lines:
+      pattern: \\foreach \\tY in
+      min: 2
+    surface_charge_markers:
+      pattern: \\foreach \\cx in \{6\.95, 7\.30\}
+      min: 1
+    cantilever_charge_markers:
+      pattern: \\foreach \\cx/\\cy in \{11\.90/2\.00
+      min: 1

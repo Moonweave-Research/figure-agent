@@ -272,9 +272,17 @@ def _default_final_artifact(name: str) -> dict:
 _NON_RELEASE_DECISION_ROUTES = {
     "defer_for_dogfood": "dogfood",
     "reject_current_artifact": "artifact_rejection",
+    "keep_current_style": "selected_visual_direction",
+    "request_restrained_tikz_refinement": "restrained_tikz_refinement",
+    "request_editorial_redesign_benchmark": "editorial_redesign_benchmark",
     "request_full_style_redesign": "style_redesign",
     "request_bounded_tikz_source_polish": "bounded_tikz_source_polish",
+    "request_svg_polish_candidate_evidence": "svg_polish_candidate_evidence",
     "request_svg_polish_handoff_evidence": "svg_polish_handoff_evidence",
+    "prepare_bounded_tikz_refinement": "bounded_tikz_refinement",
+    "prepare_editorial_redesign_candidates": "editorial_redesign_candidates",
+    "prepare_svg_polish_handoff": "svg_polish_handoff",
+    "defer_design_decision": "design_decision",
 }
 
 

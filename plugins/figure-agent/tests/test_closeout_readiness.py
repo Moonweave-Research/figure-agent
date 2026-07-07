@@ -346,3 +346,45 @@ def test_closeout_ready_reports_release_ready_false_without_blocking_tracked_gol
     assert checks["release"]["state"] == "passed"
     assert checks["release"]["reason"] == "publication gate has no reported failures"
     assert checks["release"]["evidence"]["release_ready"] is False
+
+
+def test_release_check_blocks_when_publication_gate_failures_absent() -> None:
+    # Absent gate data must not read as "no failures".
+    check = closeout_readiness._release_check({"release_ready": True})
+    assert check["state"] == "blocked"
+    assert "not evaluated" in check["reason"]
+
+
+def test_release_check_blocks_when_publication_gate_failures_not_a_list() -> None:
+    check = closeout_readiness._release_check({"publication_gate_failures": "oops"})
+    assert check["state"] == "blocked"
+
+
+def test_release_check_passes_on_empty_failure_list() -> None:
+    check = closeout_readiness._release_check(
+        {"publication_gate_failures": [], "release_ready": True}
+    )
+    assert check["state"] == "passed"
+
+
+def test_final_artifact_check_blocks_unrecognized_state() -> None:
+    check = closeout_readiness._final_artifact_check({"final_artifact_state": "WAT"})
+    assert check["state"] == "blocked"
+    assert check["reason"] == "final_artifact_state is WAT"
+
+
+def test_final_artifact_check_passes_known_good_states() -> None:
+    for state in ("NONE", "FRESH"):
+        check = closeout_readiness._final_artifact_check({"final_artifact_state": state})
+        assert check["state"] == "passed"
+
+
+def test_final_artifact_check_blocks_known_bad_states() -> None:
+    for state in ("MISSING", "INVALID", "STALE", "BLOCKED"):
+        check = closeout_readiness._final_artifact_check({"final_artifact_state": state})
+        assert check["state"] == "blocked"
+
+
+def test_final_artifact_check_not_required_when_state_absent() -> None:
+    check = closeout_readiness._final_artifact_check({})
+    assert check["state"] == "not_required"

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import types
 from contextlib import contextmanager
@@ -13,15 +14,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import candidate_acceptance  # noqa: E402
 import candidate_apply  # noqa: E402
+import experience_log  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
-def _no_real_pre_mutation_compile(monkeypatch):
+def _no_real_pre_mutation_compile(monkeypatch, tmp_path: Path):
     # M3 added a best-effort pre-mutation compile when build/<name>.pdf is absent so
     # the value-preservation gate has a baseline; neutralize the shell-out here so
     # unit tests never invoke lualatex. Tests asserting the compile IS forced
     # re-override this with their own spy.
     monkeypatch.setattr(candidate_apply, "_compile_current_source", lambda *_a, **_k: None)
+    monkeypatch.setenv("FIGURE_AGENT_PLUGIN_ROOT", str(tmp_path / "plugin"))
 
 
 def _sha256_text(text: str) -> str:
@@ -113,6 +116,64 @@ def _accepted_candidate_fixture(workspace: Path) -> tuple[Path, dict]:
         workspace_root=workspace,
     )
     return fixture, manifest
+
+
+def _accepted_multiline_candidate_fixture(workspace: Path) -> tuple[Path, dict, str, str]:
+    fixture, manifest = _rendered_candidate_fixture(workspace)
+    source = (
+        "\n".join(
+            [
+                "% Panel F -- mechanical",
+                "\\begin{scope}[shift={(9.5,0)}]",
+                "\\draw[cGray!64!black, line width=0.34pt] (0,0) rectangle (1,1);",
+                "\\node at (0.5,0.5) {Coulomb repulsion};",
+                "\\end{scope}",
+            ]
+        )
+        + "\n"
+    )
+    replacement = source.replace("line width=0.34pt", "line width=0.92pt").replace(
+        "{Coulomb repulsion}",
+        "{Coulomb repulsion strengthened}",
+    )
+    tex_path = fixture / "candidate_demo.tex"
+    tex_path.write_text(source, encoding="utf-8")
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest_path = sandbox / "candidate_manifest.json"
+    operation_path = "examples/candidate_demo/candidate_demo.tex"
+    stored = json.loads(manifest_path.read_text(encoding="utf-8"))
+    stored["operations"] = [
+        {
+            "kind": "replace_text",
+            "path": operation_path,
+            "source_sha256": _sha256_text(source),
+            "line_start": 2,
+            "line_end": 5,
+            "original": "".join(source.splitlines(keepends=True)[1:5]),
+            "replacement": "".join(replacement.splitlines(keepends=True)[1:5]),
+        }
+    ]
+    stored["selectors"] = [
+        {
+            "kind": "tex_selector.v1",
+            "path": operation_path,
+            "source_hash": _sha256_text(source),
+            "line_start": 2,
+            "line_end": 5,
+        }
+    ]
+    manifest_path.write_text(json.dumps(stored, sort_keys=True) + "\n", encoding="utf-8")
+    _write_semantic_review(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    return fixture, stored, source, replacement
 
 
 def _write_semantic_review(fixture: Path) -> None:
@@ -244,6 +305,7 @@ def test_apply_candidate_blocks_required_missing_semantic_review(tmp_path: Path)
 
 def test_apply_candidate_exact_replace_writes_source_and_result(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
+    plugin_root = Path(os.environ["FIGURE_AGENT_PLUGIN_ROOT"])
     fixture, manifest = _accepted_candidate_fixture(workspace)
 
     result = candidate_apply.apply_candidate(
@@ -267,6 +329,125 @@ def test_apply_candidate_exact_replace_writes_source_and_result(tmp_path: Path) 
     ]
     assert (fixture / "build" / "candidates" / "CAND001" / "rollback.patch").is_file()
     assert (fixture / "build" / "candidates" / "CAND001" / "apply_result.json").is_file()
+    assert result["experience_log"] == ["docs/experience-log/candidate_demo.jsonl"]
+    assert result["memory_index"] == ["build/memory/quality_memory_index.json"]
+    memory_index = fixture / "build" / "memory" / "quality_memory_index.json"
+    assert memory_index.is_file()
+    rows = [
+        json.loads(line)
+        for line in (experience_log.experience_log_dir(plugin_root) / "candidate_demo.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
+    assert rows[0]["schema"] == "figure-agent.experience-record.v1"
+    assert rows[0]["action"]["candidate_id"] == "CAND001"
+    assert rows[0]["outcome"]["apply_status"] == "applied_unverified"
+
+
+def test_apply_candidate_uses_explicit_candidate_set_for_experience_log(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = Path(os.environ["FIGURE_AGENT_PLUGIN_ROOT"])
+    fixture, manifest = _rendered_candidate_fixture(workspace)
+    default_candidate_set = fixture / "build" / "candidates" / "candidate_set.json"
+    alternate_candidate_set = fixture / "build" / "candidates" / "quality_search_candidate_set.json"
+    default_candidate_set.rename(alternate_candidate_set)
+    _write_semantic_review(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/quality_search_candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered quality-search evidence reviewed.",
+        workspace_root=workspace,
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/quality_search_candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=False,
+    )
+
+    assert result["status"] == "applied_unverified"
+    assert result["experience_log"] == ["docs/experience-log/candidate_demo.jsonl"]
+    assert result["memory_index"] == ["build/memory/quality_memory_index.json"]
+    apply_result = json.loads(
+        (fixture / "build" / "candidates" / "CAND001" / "apply_result.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert apply_result["experience_log"] == ["docs/experience-log/candidate_demo.jsonl"]
+    assert apply_result["memory_index"] == ["build/memory/quality_memory_index.json"]
+    rows = [
+        json.loads(line)
+        for line in (experience_log.experience_log_dir(plugin_root) / "candidate_demo.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
+    assert rows[0]["source_artifacts"][0] == "build/candidates/quality_search_candidate_set.json"
+
+
+def test_apply_candidate_multiline_exact_replace_writes_source_and_result(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest, _source, replacement = _accepted_multiline_candidate_fixture(workspace)
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=False,
+    )
+
+    assert result["status"] == "applied_unverified"
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == replacement
+    assert result["changed_files"][0]["path"] == "candidate_demo.tex"
+
+
+def test_apply_candidate_blocks_multiline_replace_when_range_does_not_match(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest, source, _replacement = _accepted_multiline_candidate_fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest_path = sandbox / "candidate_manifest.json"
+    stored = json.loads(manifest_path.read_text(encoding="utf-8"))
+    stored["operations"][0]["line_end"] = 4
+    manifest_path.write_text(json.dumps(stored, sort_keys=True) + "\n", encoding="utf-8")
+    _write_semantic_review(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=False,
+    )
+
+    assert result["status"] == "blocked"
+    assert result["diagnostics"][0]["code"] == "original_text_line_mismatch"
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == source
 
 
 def test_apply_candidate_refuses_already_applied_result(tmp_path: Path) -> None:
@@ -274,7 +455,13 @@ def test_apply_candidate_refuses_already_applied_result(tmp_path: Path) -> None:
     fixture, manifest = _accepted_candidate_fixture(workspace)
     apply_result = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
     apply_result.write_text(
-        json.dumps({"schema": "figure-agent.candidate-apply-result.v1", "status": "applied"})
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-apply-result.v1",
+                "candidate_hash": manifest["candidate_hash"],
+                "status": "applied",
+            }
+        )
         + "\n",
         encoding="utf-8",
     )
@@ -301,6 +488,7 @@ def test_apply_candidate_refuses_unverified_apply_result(tmp_path: Path) -> None
         json.dumps(
             {
                 "schema": "figure-agent.candidate-apply-result.v1",
+                "candidate_hash": manifest["candidate_hash"],
                 "status": "applied_unverified",
             }
         )
@@ -320,6 +508,37 @@ def test_apply_candidate_refuses_unverified_apply_result(tmp_path: Path) -> None
 
     assert result["status"] == "blocked"
     assert result["diagnostics"][0]["code"] == "already_applied"
+
+
+def test_apply_candidate_ignores_stale_apply_result_for_reused_candidate_id(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    apply_result = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
+    apply_result.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-apply-result.v1",
+                "candidate_hash": "sha256:" + "2" * 64,
+                "status": "applied_unverified",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=False,
+        post_apply=False,
+    )
+
+    assert result["status"] == "ready"
 
 
 def test_apply_candidate_refuses_existing_mcp_or_quality_lock(tmp_path: Path) -> None:
@@ -700,6 +919,36 @@ def test_apply_candidate_semantic_recheck_success_when_resolved(
     assert recheck["status"] == "success"
     assert recheck["reason"] == "source_defect_resolved"
     assert recheck["source_defect_id"] == "QD001"
+    # The recheck record names the originating detector + finding so the learning
+    # loop's positive reward pole is auditable (not a bare status).
+    assert recheck["finding_id"] == "QD001"
+    assert recheck["detector"] == "quality_defect_ledger"
+
+
+def test_source_detector_names_allowlisted_detector_from_evidence() -> None:
+    # Ledger-sourced defects trace to an allowlisted detector via their audit uri;
+    # finding-sourced defects are visual_clash; an unmapped defect falls back to the
+    # aggregate ledger re-run unit, never a fabricated detector name.
+    def _with_uri(uri: str) -> dict[str, object]:
+        return {"id": "QD001", "evidence": [{"uri": uri}]}
+
+    assert (
+        candidate_apply._source_detector(_with_uri("figure://demo/audit/undeclared-geometry"))
+        == "check_undeclared_geometry"
+    )
+    assert (
+        candidate_apply._source_detector(_with_uri("figure://demo/audit/visual-clash"))
+        == "check_visual_clash"
+    )
+    assert (
+        candidate_apply._source_detector(_with_uri("figure://demo/audit/text-boundary"))
+        == "check_text_boundary_clash"
+    )
+    assert (
+        candidate_apply._source_detector({"id": "C001", "source": "adjudicated_finding"})
+        == "check_visual_clash"
+    )
+    assert candidate_apply._source_detector({"id": "QD001"}) == "quality_defect_ledger"
 
 
 def test_verify_labels_unchanged_equal_passes_and_differ_fails():
@@ -707,6 +956,18 @@ def test_verify_labels_unchanged_equal_passes_and_differ_fails():
     ok, reason = candidate_apply._verify_labels_unchanged({"S": 1}, {"S": 1, "NEW": 1})
     assert ok is False
     assert reason == "labels_changed"
+
+
+def test_pdf_token_normalization_merges_split_power_law_exponent():
+    tokens = candidate_apply._normalized_pdf_tokens(["I(t)", "∼", "t", "−n", "Debye"])
+
+    assert tokens == ["I(t)", "∼", "t−n", "Debye"]
+
+    counter = candidate_apply._normalized_pdf_word_counter(
+        ["I(t)", "∼", "−n", "low", "n", "derive", "t"]
+    )
+    assert counter["t−n"] == 1
+    assert "−n" not in counter
 
 
 def test_verify_labels_unchanged_blocks_without_baseline():
@@ -1157,6 +1418,29 @@ def test_post_apply_recheck_finding_sourced_without_target_texts_is_failed(tmp_p
     assert verdict["reason"] == "finding_target_texts_missing"
 
 
+def test_post_apply_recheck_finding_sourced_missing_report_is_failed(tmp_path: Path) -> None:
+    # Fail-closed: with target_texts present but the visual_clash report absent, the
+    # empty post-crossings must NOT read as a resolved finding. Missing evidence is
+    # an error condition, never success.
+    import runtime_paths
+
+    workspace = tmp_path / "workspace"
+    (workspace / "examples" / "demo" / "build").mkdir(parents=True)
+    paths = runtime_paths.resolve_runtime_paths(workspace_root=workspace)
+    manifest = {
+        "source_defect": {
+            "id": "C001",
+            "source": "adjudicated_finding",
+            "target_texts": ["PI,", "PET"],
+        }
+    }
+    verdict = candidate_apply._post_apply_semantic_recheck("demo", paths, manifest, [])
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "finding_evidence_missing"
+    assert verdict["detector"] == "check_visual_clash"
+    assert verdict["finding_id"] == "C001"
+
+
 def test_post_apply_recheck_finding_sourced_flags_new_crossing(tmp_path: Path) -> None:
     import runtime_paths
 
@@ -1190,3 +1474,76 @@ def test_post_apply_recheck_finding_sourced_flags_new_crossing(tmp_path: Path) -
     assert verdict["status"] == "failed"
     assert verdict["reason"] == "finding_new_crossing_introduced"
     assert "(shallow," in verdict["introduced_texts"]
+
+
+def _accept_over_cache_annotated_manifest(workspace: Path, initial_cache: str) -> tuple[Path, dict]:
+    fixture, manifest = _rendered_candidate_fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    render_path = sandbox / "render_manifest.json"
+    render = json.loads(render_path.read_text(encoding="utf-8"))
+    render["cache"] = initial_cache
+    render_path.write_text(json.dumps(render, sort_keys=True) + "\n", encoding="utf-8")
+    _write_semantic_review(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    return fixture, manifest
+
+
+def test_acceptance_pin_survives_cache_hit_reannotation(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accept_over_cache_annotated_manifest(workspace, "miss")
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    render_path = sandbox / "render_manifest.json"
+
+    # A cache-hit re-render of the same set flips ONLY the cache annotation.
+    render = json.loads(render_path.read_text(encoding="utf-8"))
+    render["cache"] = "hit"
+    render_path.write_text(json.dumps(render, sort_keys=True) + "\n", encoding="utf-8")
+    # The re-render refreshes its own semantic-review artifacts (a separate gate).
+    _write_semantic_review(fixture)
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=False,
+    )
+
+    codes = {diagnostic["code"] for diagnostic in result.get("diagnostics", [])}
+    assert "render_manifest_hash_mismatch" not in codes
+    assert result["status"] == "ready"
+
+
+def test_acceptance_pin_still_catches_real_manifest_content_change(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accept_over_cache_annotated_manifest(workspace, "miss")
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    render_path = sandbox / "render_manifest.json"
+
+    # Tamper a NON-cache field: the pin must still reject a real content change.
+    render = json.loads(render_path.read_text(encoding="utf-8"))
+    render["tampered_field"] = "unauthorized"
+    render_path.write_text(json.dumps(render, sort_keys=True) + "\n", encoding="utf-8")
+    _write_semantic_review(fixture)
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=False,
+    )
+
+    codes = {diagnostic["code"] for diagnostic in result.get("diagnostics", [])}
+    assert "render_manifest_hash_mismatch" in codes
+    assert result["status"] == "blocked"

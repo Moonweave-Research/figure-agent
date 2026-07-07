@@ -1,0 +1,32 @@
+{
+  "schema": "figure-agent.design-direction-packet.v1",
+  "fixture": "fig1_overview_v5d_redraw_001_vault",
+  "state": "human_visual_choice_recorded",
+  "agent_recommendation": "Record v5d as the selected finished visual direction and stop routing it back into open-ended iteration.",
+  "current_style_assessment": "The v5d redraw is the human-selected finished direction from the v5d/v5e/v5f comparison. v5f remains useful comparison evidence, but it is not the selected direction because the human assessment is that it still reads unfinished.",
+  "human_question": "Which v5 visual direction should remain the selected working direction after v5d/v5e/v5f comparison?",
+  "recommended_choice_id": "keep_current_style",
+  "alternatives": [
+    "v5d selected as finished visual direction",
+    "v5f rejected/deferred as unfinished art-direction lane",
+    "v5e remains fallback only"
+  ],
+  "evidence_refs": [
+    "selected_fixture:fig1_overview_v5d_redraw_001_vault",
+    "comparison_fixture:fig1_overview_v5f_art_direction_001_vault",
+    "fallback_fixture:fig1_overview_v5e_aggressive_001_vault",
+    "visual_comparison:examples/fig1_overview_v5f_art_direction_001_vault/visual_comparison.md",
+    "contact_sheet:examples/fig1_overview_v5f_art_direction_001_vault/build/v5f_comparison/v5d_v5e_v5f_full_contact_sheet.png",
+    "contact_sheet:examples/fig1_overview_v5f_art_direction_001_vault/build/v5f_comparison/v5d_v5e_v5f_panel_F_contact_sheet.png"
+  ],
+  "human_choice_boundary": {
+    "selected_visual_direction": "fig1_overview_v5d_redraw_001_vault",
+    "rejected_or_deferred_direction": "fig1_overview_v5f_art_direction_001_vault",
+    "reason": "v5d has the finished quality the human wants; v5f still feels incomplete after automation loops."
+  },
+  "does_not_block_release": true,
+  "mutation_boundary": "no_source_mutation",
+  "follow_up": {
+    "implementation_slice": "Treat v5d as the selected visual direction. Do not continue promoting v5f unless a later task explicitly requests a new v5f rebuild from the v5d standard."
+  }
+}

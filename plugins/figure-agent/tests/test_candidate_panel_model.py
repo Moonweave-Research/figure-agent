@@ -74,6 +74,28 @@ def test_panel_model_missing_panel_returns_empty_model(tmp_path: Path) -> None:
     assert payload["refusals"] == [{"code": "panel_not_declared"}]
 
 
+def test_panel_model_assigns_unknown_selectors_to_single_declared_panel(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "\\node (label-a) at (0,0) {Old Label};\n",
+        encoding="utf-8",
+    )
+
+    payload = candidate_panel_model.build_panel_model(
+        "candidate_demo",
+        "C",
+        workspace_root=workspace,
+    )
+
+    assert payload["selector_count"] == 1
+    selector = payload["selectors"][0]
+    assert selector["panel"] == "C"
+    assert selector["panel_inference"] == "single_declared_panel"
+
+
 def test_panel_model_rejects_unsafe_panel_id(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _fixture(workspace)

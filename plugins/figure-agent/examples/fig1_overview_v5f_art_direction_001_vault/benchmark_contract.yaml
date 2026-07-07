@@ -1,0 +1,22 @@
+schema: figure-agent.benchmark-contract.v1
+fixture: fig1_overview_v5f_art_direction_001_vault
+defect_class: label_overlap
+candidate_families:
+- label-repair
+candidate_edit_classes:
+- label_offset
+required_detectors:
+- text_boundary
+detector_reports:
+  text_boundary: build/text_boundary_clash.json
+expected_movement:
+  text_boundary.blocker_count: decrease_or_equal
+hard_regressions:
+- source_compile_failure
+- candidate_hard_gate_rejected
+reference_policy:
+  kind: user_owned_dogfood
+  external_images_allowed: true
+  golden_target_allowed: false
+release:
+  release_blocking: false

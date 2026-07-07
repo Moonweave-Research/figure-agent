@@ -1,0 +1,10 @@
+schema: figure-agent.critique-adjudication.v1
+fixture: fig1_overview_v5e_aggressive_001_vault
+source_critique_hash: sha256:61ca1eab71b2354dd50a3c42628b7a5a5ab27f63bbd1bdd62ba6ff041c3055e9
+decisions:
+- finding_id: C001
+  decision: needs_human
+  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
+  patch_target: examples/fig1_overview_v5e_aggressive_001_vault/fig1_overview_v5e_aggressive_001_vault.tex
+    lines 1943-1952
+  evidence: critique.md finding C001.

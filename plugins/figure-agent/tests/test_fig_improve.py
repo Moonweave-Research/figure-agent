@@ -446,6 +446,214 @@ def test_improve_stops_on_repeated_boundary(
     assert len(payload["cycles"]) == 2
 
 
+def test_aggressive_candidates_run_on_repeated_boundary(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    run = _run_payload(
+        final_action=fig_driver.ACTION_RUN_COMPILE,
+        final_stop_reason=fig_run.STOP_MAX_STEPS,
+    )
+    _install_runs(monkeypatch, [run, run])
+    candidate_calls: list[tuple[str, str, int, Path]] = []
+
+    def _fake_candidate_runner(
+        name: str,
+        *,
+        goal: str,
+        max_iterations: int,
+        repo_root: Path,
+    ) -> dict[str, Any]:
+        candidate_calls.append((name, goal, max_iterations, repo_root))
+        return {
+            "schema": "figure-agent.quality-search-execute.v0",
+            "status": "dry_run_complete",
+            "mode": "execute_dry_witness",
+            "run_dir": ".scratch/quality-search-runs/demo-run",
+            "safety": {"source_mutation": "forbidden_in_dry_executor"},
+            "decision": {"selected_candidate_id": "QS001"},
+            "visual_evidence": {
+                "state": "complete",
+                "render_mode": "compile_export_crop_evaluate",
+            },
+            "candidate_scores": [
+                {
+                    "candidate_id": "QS001",
+                    "family": "hierarchy_rebalance",
+                    "operation_scale": "local_style_token",
+                    "template_id": "line_width_minimum_v1",
+                    "policy_score": 0.93,
+                    "evidence_score": 0.85,
+                },
+                {
+                    "candidate_id": "QS002",
+                    "family": "apparatus_strengthen",
+                    "operation_scale": "panel_block",
+                    "template_id": "v5f_panel_f_redraw_overlay_v1",
+                    "policy_score": 0.92,
+                    "evidence_score": 0.81,
+                },
+            ],
+        }
+
+    payload = fig_improve.run_improvement(
+        "demo",
+        goal="improve",
+        execute=True,
+        max_loops=3,
+        repo_root=tmp_path,
+        aggressive_candidates=True,
+        candidate_iterations=2,
+        candidate_runner=_fake_candidate_runner,
+    )
+
+    assert candidate_calls == [("demo", "improve", 2, tmp_path)]
+    assert payload["final_stop_reason"] == "repeated_boundary"
+    assert payload["aggressive_candidate_run"]["status"] == "dry_run_complete"
+    assert payload["aggressive_candidate_run"]["source_mutation"] == (
+        "forbidden_in_dry_executor"
+    )
+    assert payload["aggressive_candidate_run"]["selected_candidate_id"] == "QS001"
+    assert payload["aggressive_candidate_run"]["render_mode"] == (
+        "compile_export_crop_evaluate"
+    )
+    assert payload["aggressive_candidate_run"]["competitive_candidates"][1] == {
+        "candidate_id": "QS002",
+        "family": "apparatus_strengthen",
+        "operation_scale": "panel_block",
+        "template_id": "v5f_panel_f_redraw_overlay_v1",
+        "policy_score": 0.92,
+        "evidence_score": 0.81,
+    }
+    assert "Review aggressive_candidate_run" in payload["next_operator_instruction"]
+
+
+def test_aggressive_candidates_do_not_run_for_release_operator(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_RELEASE_BLOCKED,
+                final_stop_reason=fig_run.STOP_NOT_EXECUTABLE,
+                final_stop_boundary=fig_driver.STOP_ACCEPTED_OR_FINAL_READY,
+            )
+        ],
+    )
+
+    def _unexpected_candidate_runner(
+        name: str,
+        *,
+        goal: str,
+        max_iterations: int,
+        repo_root: Path,
+    ) -> dict[str, Any]:
+        raise AssertionError("release boundaries must not run aggressive candidates")
+
+    payload = fig_improve.run_improvement(
+        "demo",
+        goal="improve",
+        execute=True,
+        repo_root=tmp_path,
+        aggressive_candidates=True,
+        candidate_runner=_unexpected_candidate_runner,
+    )
+
+    assert "aggressive_candidate_run" not in payload
+    assert payload["final_required_actor"] == "release_operator"
+
+
+def test_aggressive_candidates_run_on_basin_complete_boundary(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_COMPLETE,
+                final_stop_reason=fig_run.STOP_COMPLETE,
+                final_stop_boundary="basin_detected",
+            )
+        ],
+    )
+
+    def _fake_candidate_runner(
+        name: str,
+        *,
+        goal: str,
+        max_iterations: int,
+        repo_root: Path,
+    ) -> dict[str, Any]:
+        return {
+            "status": "dry_run_complete",
+            "mode": "execute_dry_witness",
+            "run_dir": ".scratch/quality-search-runs/demo-basin",
+            "safety": {
+                "source_mutation": "forbidden_in_dry_executor",
+                "accepted_golden_release_mutation": (
+                    "forbidden_without_explicit_human_approval"
+                ),
+            },
+            "decision": {"selected_candidate_id": "QS003"},
+        }
+
+    payload = fig_improve.run_improvement(
+        "demo",
+        goal="improve",
+        execute=True,
+        repo_root=tmp_path,
+        aggressive_candidates=True,
+        candidate_runner=_fake_candidate_runner,
+    )
+
+    assert payload["final_stop_reason"] == "complete"
+    assert payload["aggressive_candidate_run"]["run_dir"].endswith("demo-basin")
+    assert payload["aggressive_candidate_run"]["selected_candidate_id"] == "QS003"
+
+
+def test_main_accepts_aggressive_candidates_flag(
+    tmp_path: Path, monkeypatch: Any, capsys: Any
+) -> None:
+    run = _run_payload(
+        final_action=fig_driver.ACTION_HUMAN_GATE_STOP,
+        final_stop_reason=fig_run.STOP_NOT_EXECUTABLE,
+    )
+    _install_runs(monkeypatch, [run])
+
+    def _fake_candidate_runner(
+        name: str,
+        *,
+        goal: str,
+        max_iterations: int,
+        repo_root: Path,
+    ) -> dict[str, Any]:
+        return {
+            "status": "dry_run_complete",
+            "mode": "execute_dry_witness",
+            "run_dir": ".scratch/quality-search-runs/demo-run",
+            "safety": {"source_mutation": "forbidden_in_dry_executor"},
+            "decision": {"selected_candidate_id": "QS002"},
+        }
+
+    monkeypatch.setattr(fig_improve, "_run_aggressive_candidate_search", _fake_candidate_runner)
+
+    result = fig_improve.main(
+        [
+            "demo",
+            "--goal",
+            "improve",
+            "--aggressive-candidates",
+            "--candidate-iterations",
+            "3",
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["aggressive_candidate_run"]["selected_candidate_id"] == "QS002"
+
+
 def test_main_rejects_invalid_max_loops(
     tmp_path: Path, capsys: Any
 ) -> None:

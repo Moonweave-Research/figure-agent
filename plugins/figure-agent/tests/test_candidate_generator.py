@@ -4,11 +4,16 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import candidate_generator  # noqa: E402
+import experience_log  # noqa: E402
 import quality_defect_ledger  # noqa: E402
+import runtime_paths  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
+from test_evidence_index import _fixture as _sandbox_fixture  # noqa: E402
 
 
 def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
@@ -686,6 +691,155 @@ def test_candidate_generator_refuses_source_hash_mismatch_when_ledger_claims_sup
     assert payload["refusals"] == [{"code": "stale_detector_evidence", "defect_id": "QD001"}]
     assert payload["metrics"]["candidate_count"] == 0
     assert payload["metrics"]["refusal_count"] == 1
+
+
+@pytest.mark.parametrize(
+    ("outcome", "expected_outcome"),
+    [
+        (
+            {"apply_status": "unknown", "human_label": "reject", "quality_movement": None},
+            "rejected",
+        ),
+        (
+            {"apply_status": "rolled_back", "human_label": None, "quality_movement": "regressed"},
+            "regressed",
+        ),
+    ],
+)
+def test_candidate_generator_suppresses_bad_family_on_same_subregion_key(
+    tmp_path: Path,
+    monkeypatch,
+    outcome: dict[str, object],
+    expected_outcome: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    fixture = _fixture(workspace)
+    selector_hash = "sha256:" + "7" * 64
+    source_hash = file_sha256(fixture / "candidate_demo.tex")
+    log_dir = experience_log.experience_log_dir(plugin_root)
+    log_dir.mkdir(parents=True)
+    (log_dir / "candidate_demo.jsonl").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.experience-record.v1",
+                "fixture": "candidate_demo",
+                "state": {
+                    "target": {"panel": "A", "subregion_key": selector_hash},
+                },
+                "action": {
+                    "candidate_id": "CAND009",
+                    "edit_family": "bounded_coordinate_offset",
+                },
+                "outcome": outcome,
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    def fake_ledger(_name, **_kwargs):
+        return {
+            "ledger_hash": "sha256:" + "1" * 64,
+            "defects": [
+                {
+                    "id": "QD001",
+                    "source": "deterministic_audit",
+                    "defect_class": "text_overlap",
+                    "source_fingerprint": "sha256:" + "a" * 64,
+                    "evidence": [{"node_id": "UG001"}],
+                    "freshness": {
+                        "source_hashes": {
+                            "examples/candidate_demo/candidate_demo.tex": source_hash,
+                        }
+                    },
+                    "selector_hint": {
+                        "kind": "line_range",
+                        "value": "1:1",
+                        "selector_text_hash": selector_hash,
+                    },
+                    "target": {"panel": "A", "subregion": "label-a"},
+                    "actionability": {"state": "candidate_supported", "gaps": []},
+                    "patchability": {"state": "safe_candidate"},
+                }
+            ],
+        }
+
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        fake_ledger,
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+
+    assert payload["candidates"] == []
+    assert payload["refusals"] == [
+        {
+            "code": "suppressed_by_history",
+            "defect_id": "QD001",
+            "edit_family": "bounded_coordinate_offset",
+            "subregion_key": selector_hash,
+            "outcome": expected_outcome,
+        }
+    ]
+    assert payload["metrics"]["candidate_count"] == 0
+    assert payload["metrics"]["refusal_count"] == 1
+
+
+def test_reject_verdict_written_through_pipeline_reaches_suppression(
+    tmp_path: Path,
+) -> None:
+    # End-to-end: a human "reject" recorded via acceptance.json must flow through
+    # append_apply_record into a (family, subregion_key) suppression the generator
+    # loader honors, with no hand-authored human_label anywhere in the chain.
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    fixture = _sandbox_fixture(workspace)
+    selector_hash = "sha256:" + "7" * 64
+
+    candidate_set_path = fixture / "build" / "candidates" / "candidate_set.json"
+    candidate_set = json.loads(candidate_set_path.read_text(encoding="utf-8"))
+    candidate_set["candidates"][0].update(
+        {
+            "edit_family": "bounded_coordinate_offset",
+            "target": {"panel": "A", "subregion": "label-a"},
+            "selector": {"selector_text_hash": selector_hash},
+            "operations": [{"kind": "replace_text", "path": "candidate_demo.tex"}],
+        }
+    )
+    candidate_set_path.write_text(
+        json.dumps(candidate_set, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    (sandbox / "acceptance.json").write_text(
+        json.dumps(
+            {"schema": "figure-agent.candidate-acceptance.v1", "decision": "reject"},
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    experience_log.append_apply_record(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+
+    paths = runtime_paths.resolve_runtime_paths(
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+    suppressions = candidate_generator._load_history_suppressions(paths, "candidate_demo")
+    assert suppressions[("bounded_coordinate_offset", selector_hash)] == "rejected"
 
 
 def _write_apply_finding(

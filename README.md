@@ -1,8 +1,20 @@
-# figure-agent
+# Figure Agent
 
-A Claude Code plugin marketplace containing **`figure-agent`** — a plugin for building reproducible, paper-grade scientific figures in TikZ.
+Figure Agent is an agentic system for creating publication-quality scientific
+and technical figures.
 
-You (or any LLM) author the TikZ. The plugin handles Style Lock, compile, visual QA, vision critique (via the host Claude Code session — no external API keys), and clean PDF / SVG / TIFF / PNG export.
+It is not a graph plotting library. It is not a matplotlib wrapper. It is not a one-shot image generator.
+
+The system turns figure intent into an editable figure representation, renders
+candidate figures, critiques them visually and semantically, checks journal
+compliance, and iteratively repairs the figure until it converges.
+
+Convergence means reaching the highest achievable scientific-figure aesthetic
+quality while staying strictly inside the target journal's guidelines. Journal rules are hard constraints; beauty is optimized only within those constraints.
+
+This repository is also a Claude Code plugin marketplace containing
+**`figure-agent`**, the local plugin implementation for reproducible,
+paper-grade scientific figures in TikZ.
 
 ## Install
 

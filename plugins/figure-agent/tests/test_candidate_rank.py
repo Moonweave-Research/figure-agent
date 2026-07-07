@@ -107,6 +107,83 @@ def test_rendered_candidate_scores_above_dependency_missing_without_apply_promot
     assert "memory_prior" not in rendered_score["scores"]
 
 
+def test_rendered_candidate_without_pixel_change_does_not_get_render_bonus() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "review_only",
+        "verification": {"hard_gate_state": "pass"},
+    }
+    rendered = {
+        "stages": {
+            "compile": {"status": "success"},
+            "export": {"status": "success"},
+            "crop": {"status": "success"},
+            "evaluate": {"status": "rendered_needs_human_review"},
+        },
+        "visual_deltas": {"changed_pixel_ratio": 0.0},
+    }
+
+    score = candidate_rank.score_manifest(manifest, render_manifest=rendered)
+
+    assert score["rank_score"] == 0.35
+    assert score["evidence"]["positive"] == []
+    assert score["evidence"]["negative"] == ["rendered_no_pixel_change"]
+
+
+def test_rendered_candidate_with_tiny_pixel_change_gets_weaker_render_bonus() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "review_only",
+        "verification": {"hard_gate_state": "pass"},
+    }
+    rendered = {
+        "stages": {
+            "compile": {"status": "success"},
+            "export": {"status": "success"},
+            "crop": {"status": "success"},
+            "evaluate": {"status": "rendered_needs_human_review"},
+        },
+        "visual_deltas": {"changed_pixel_ratio": 0.00001},
+    }
+
+    score = candidate_rank.score_manifest(manifest, render_manifest=rendered)
+
+    assert score["rank_score"] == 0.55
+    assert score["scores"]["changed_pixel_ratio"] == 0.00001
+    assert score["evidence"]["positive"] == ["rendered_before_after_available"]
+    assert score["evidence"]["negative"] == ["rendered_change_below_review_threshold"]
+
+
+def test_rendered_candidate_with_small_layout_change_gets_partial_render_bonus() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "review_only",
+        "verification": {"hard_gate_state": "pass"},
+    }
+    rendered = {
+        "stages": {
+            "compile": {"status": "success"},
+            "export": {"status": "success"},
+            "crop": {"status": "success"},
+            "evaluate": {"status": "rendered_needs_human_review"},
+        },
+        "visual_deltas": {"changed_pixel_ratio": 0.001},
+    }
+
+    score = candidate_rank.score_manifest(manifest, render_manifest=rendered)
+
+    assert score["rank_score"] == 0.65
+    assert score["scores"]["changed_pixel_ratio"] == 0.001
+    assert score["evidence"]["positive"] == [
+        "rendered_before_after_available",
+        "rendered_small_layout_change",
+    ]
+    assert score["evidence"]["negative"] == []
+
+
 def test_memory_prior_changes_reviewable_candidate_score() -> None:
     manifest = {
         "schema": "figure-agent.candidate-manifest.v1",

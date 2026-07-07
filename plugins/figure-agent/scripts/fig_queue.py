@@ -49,6 +49,29 @@ BOTTLENECK_CATEGORY_DEFINITIONS = {
     "reference_context": "missing or stale reference, briefing, or context input",
     "template_style": "SVG polish, template, editorial, style, palette, or aesthetic gate",
 }
+OPERATOR_REPORT_BUCKETS = (
+    "hard_publication_blocker",
+    "human_critique_blocker",
+    "reproducibility_blocker",
+    "visual_quality_improvement_opportunity",
+    "optional_editorial_polish",
+    "deferred_redraw_decision",
+)
+OPERATOR_REPORT_BUCKET_DEFINITIONS = {
+    "hard_publication_blocker": (
+        "accepted, golden, final-artifact, publication-provenance, or release "
+        "policy boundary"
+    ),
+    "human_critique_blocker": "fresh host/human critique or adjudication required",
+    "reproducibility_blocker": "source, render, export, evidence, or deterministic tool work",
+    "visual_quality_improvement_opportunity": (
+        "style, benchmark, or advisory visual-quality evidence needs review"
+    ),
+    "optional_editorial_polish": (
+        "release path is otherwise visible; optional typography/style polish remains"
+    ),
+    "deferred_redraw_decision": "candidate comparison or style direction points to redesign",
+}
 HUMAN_DECISION_KINDS = (
     "accept_current_generated_export",
     "reject_current_artifact",
@@ -228,6 +251,9 @@ def _row_from_summary(
         "blocking_source": blocking_source_for_driver_summary(summary),
         "requires_human": requires_human_for_driver_summary(summary),
     }
+    release_decision = status.get("release_decision")
+    if isinstance(release_decision, dict):
+        row["release_decision"] = release_decision
     if release_blocker is not None:
         row["release_blocker"] = release_blocker
         row["release_blockers"] = release_blockers
@@ -278,6 +304,9 @@ def _row_from_summary(
     category = _bottleneck_category_for_row(row)
     if category is not None:
         row["bottleneck_category"] = category
+    bucket = _operator_report_bucket_for_row(row)
+    if bucket is not None:
+        row["operator_report_bucket"] = bucket
     return row
 
 
@@ -624,6 +653,7 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "by_required_actor": _count(rows, "required_actor"),
         "by_blocking_source": _count(rows, "blocking_source"),
         "by_bottleneck_category": _count(rows, "bottleneck_category"),
+        "by_operator_report_bucket": _count(rows, "operator_report_bucket"),
     }
     by_svg_gate = _count(rows, "svg_polish_gate_state")
     if by_svg_gate:
@@ -1902,6 +1932,92 @@ def _bottleneck_category_for_row(row: dict[str, Any]) -> str | None:
     return "mechanical_tool"
 
 
+def _operator_report_bucket_for_row(row: dict[str, Any]) -> str | None:
+    action = row.get("action")
+    if action == "error":
+        return "reproducibility_blocker"
+    if _row_fields_mention(
+        row,
+        ("publication", "provenance", "acceptance", "accepted", "final_artifact"),
+        (
+            "first_blocker",
+            "stop_boundary",
+            "blocking_source",
+            "publication_gate_state",
+        ),
+    ):
+        return "hard_publication_blocker"
+    if action == fig_driver.ACTION_RELEASE_BLOCKED:
+        return "hard_publication_blocker"
+    if row.get("required_actor") == "release_operator":
+        return "hard_publication_blocker"
+    if row.get("publication_gate_failures"):
+        return "hard_publication_blocker"
+    if action == fig_driver.ACTION_HUMAN_GATE_STOP and _row_fields_mention(
+        row,
+        ("acceptance", "accepted", "publication", "release", "golden"),
+        ("first_blocker", "stop_boundary", "blocking_source"),
+    ):
+        return "hard_publication_blocker"
+    if _row_fields_mention(
+        row,
+        ("critique", "adjudication"),
+        ("action", "first_blocker", "stop_boundary", "blocking_source"),
+    ):
+        return "human_critique_blocker"
+    if row.get("required_actor") == "host_llm":
+        return "human_critique_blocker"
+    if row.get("polish_blocker_reason") in {
+        "continue_tikz_recommended",
+        "ready_for_svg_polish_positive_evidence_missing",
+    }:
+        return "visual_quality_improvement_opportunity"
+    if row.get("svg_polish_evidence_state") in {
+        "not_qualified",
+        "blocked_missing_positive_readiness",
+    }:
+        return "visual_quality_improvement_opportunity"
+    if row.get("design_direction_state") in {
+        "blocked_missing_style_pack",
+        "blocked_missing_comparison",
+    }:
+        return "deferred_redraw_decision"
+    if _row_fields_mention(
+        row,
+        ("redesign", "benchmark", "style_pack", "comparison"),
+        (
+            "first_blocker",
+            "blocking_source",
+            "style_benchmark_pack_state",
+            "style_benchmark_comparison_state",
+            "design_direction_next_agent_action",
+        ),
+    ):
+        return "deferred_redraw_decision"
+    if row.get("style_direction_packet") is not None or row.get("design_direction_state"):
+        if action == fig_driver.ACTION_COMPLETE:
+            return "optional_editorial_polish"
+        return "visual_quality_improvement_opportunity"
+    if _row_mentions(
+        row,
+        (
+            "visual",
+            "quality",
+            "svg_polish",
+            "polish",
+            "style",
+            "aesthetic",
+            "palette",
+            "template",
+            "editorial",
+        ),
+    ):
+        return "visual_quality_improvement_opportunity"
+    if action == fig_driver.ACTION_COMPLETE:
+        return None
+    return "reproducibility_blocker"
+
+
 def _effective_bottleneck_category(row: dict[str, Any]) -> str | None:
     category = row.get("bottleneck_category")
     if isinstance(category, str) and category in BOTTLENECK_CATEGORIES:
@@ -1915,6 +2031,22 @@ def _bottleneck_category_counts(rows: list[dict[str, Any]]) -> dict[str, int]:
         category = _effective_bottleneck_category(row)
         if category is not None:
             counts[category] += 1
+    return counts
+
+
+def _effective_operator_report_bucket(row: dict[str, Any]) -> str | None:
+    bucket = row.get("operator_report_bucket")
+    if isinstance(bucket, str) and bucket in OPERATOR_REPORT_BUCKETS:
+        return bucket
+    return _operator_report_bucket_for_row(row)
+
+
+def _operator_report_bucket_counts(rows: list[dict[str, Any]]) -> dict[str, int]:
+    counts = {bucket: 0 for bucket in OPERATOR_REPORT_BUCKETS}
+    for row in rows:
+        bucket = _effective_operator_report_bucket(row)
+        if bucket is not None:
+            counts[bucket] += 1
     return counts
 
 
@@ -1959,6 +2091,36 @@ def _bottleneck_category_rollup(rows: list[dict[str, Any]]) -> list[dict[str, An
     ]
 
 
+def _operator_report_bucket_rollup(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    grouped: dict[str, list[dict[str, Any]]] = {
+        bucket: [] for bucket in OPERATOR_REPORT_BUCKETS
+    }
+    for row in rows:
+        bucket = _effective_operator_report_bucket(row)
+        if bucket is not None:
+            grouped[bucket].append(row)
+    return [
+        {
+            "bucket": bucket,
+            "definition": OPERATOR_REPORT_BUCKET_DEFINITIONS[bucket],
+            "count": len(bucket_rows),
+            "example_fixtures": [
+                fixture
+                for fixture in (
+                    row.get("fixture")
+                    for row in sorted(
+                        bucket_rows,
+                        key=lambda item: str(item.get("fixture") or ""),
+                    )[:5]
+                )
+                if isinstance(fixture, str) and fixture
+            ],
+            "top_signals": _category_signals(bucket_rows),
+        }
+        for bucket, bucket_rows in grouped.items()
+    ]
+
+
 def build_bottleneck_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
     """Summarize the live queue/status bottlenecks without executing work."""
 
@@ -1973,6 +2135,8 @@ def build_bottleneck_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "dominant_blocking_source": _bottleneck_leaders(rows, "blocking_source")[:3],
         "by_bottleneck_category": _bottleneck_category_counts(rows),
         "bottleneck_categories": _bottleneck_category_rollup(rows),
+        "by_operator_report_bucket": _operator_report_bucket_counts(rows),
+        "operator_report_buckets": _operator_report_bucket_rollup(rows),
         "command_plan": _command_plan_summary(rows),
     }
 

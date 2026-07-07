@@ -256,6 +256,42 @@ def _manifest_summary(manifest: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _summary_with_render_evidence(
+    summary: dict[str, Any],
+    render_evidence: dict[str, Any],
+) -> dict[str, Any]:
+    render_status = str(render_evidence.get("render_status") or "not_rendered")
+    if render_status == "not_rendered":
+        return summary
+    hard_gates = (
+        render_evidence.get("hard_gates")
+        if isinstance(render_evidence.get("hard_gates"), dict)
+        else {}
+    )
+    stages = dict(summary.get("stages") if isinstance(summary.get("stages"), dict) else {})
+    for stage in ("compile", "export", "crop"):
+        status = hard_gates.get(stage)
+        if isinstance(status, str) and status:
+            stages[stage] = status
+    stages["evaluate"] = render_status
+    visual_deltas = (
+        render_evidence.get("visual_deltas")
+        if isinstance(render_evidence.get("visual_deltas"), dict)
+        else {}
+    )
+    visual_review = {
+        "status": render_status,
+        "source": "render_manifest",
+    }
+    changed_pixel_ratio = visual_deltas.get("changed_pixel_ratio")
+    if changed_pixel_ratio is not None:
+        visual_review["changed_pixel_ratio"] = changed_pixel_ratio
+    updated = dict(summary)
+    updated["stages"] = stages
+    updated["visual_review"] = visual_review
+    return updated
+
+
 def _narrative_review_context(
     example_dir: Path,
     workspace_root: Path,
@@ -310,10 +346,15 @@ def _apply_readiness(
             apply_result = json.loads(apply_result_path.read_text(encoding="utf-8"))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError):
             apply_result = {}
-        if isinstance(apply_result, dict) and apply_result.get("status") in {
-            "applied",
-            "applied_with_failed_verification",
-        }:
+        if (
+            isinstance(apply_result, dict)
+            and apply_result.get("status")
+            in {
+                "applied",
+                "applied_with_failed_verification",
+            }
+            and apply_result.get("candidate_hash") == manifest.get("candidate_hash")
+        ):
             return {
                 "status": str(apply_result["status"]),
                 "blocking_reasons": [],
@@ -321,39 +362,47 @@ def _apply_readiness(
             }
     acceptance_path = manifest_path.parent / "acceptance.json"
     if acceptance_path.is_file() and not acceptance_path.is_symlink():
-        candidate_set_path = Path(
-            str(manifest.get("candidate_set_path") or "build/candidates/candidate_set.json")
-        )
-        dry_run = candidate_apply.apply_candidate(
-            name,
-            manifest,
-            workspace_root=workspace_root,
-            plugin_root=plugin_root,
-            candidate_set_path=candidate_set_path,
-            acceptance_path=Path(f"build/candidates/{candidate_id}/acceptance.json"),
-            apply=False,
-        )
-        if dry_run.get("status") != "ready":
+        try:
+            acceptance = json.loads(acceptance_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            acceptance = {}
+        if (
+            isinstance(acceptance, dict)
+            and acceptance.get("candidate_hash") == manifest.get("candidate_hash")
+        ):
+            candidate_set_path = Path(
+                str(manifest.get("candidate_set_path") or "build/candidates/candidate_set.json")
+            )
+            dry_run = candidate_apply.apply_candidate(
+                name,
+                manifest,
+                workspace_root=workspace_root,
+                plugin_root=plugin_root,
+                candidate_set_path=candidate_set_path,
+                acceptance_path=Path(f"build/candidates/{candidate_id}/acceptance.json"),
+                apply=False,
+            )
+            if dry_run.get("status") != "ready":
+                return {
+                    "status": "blocked",
+                    "blocking_reasons": [
+                        str(item.get("code", "unknown"))
+                        for item in dry_run.get("diagnostics", [])
+                        if isinstance(item, dict)
+                    ],
+                    "required_commands": [],
+                }
             return {
-                "status": "blocked",
-                "blocking_reasons": [
-                    str(item.get("code", "unknown"))
-                    for item in dry_run.get("diagnostics", [])
-                    if isinstance(item, dict)
+                "status": "accepted_ready_to_apply",
+                "blocking_reasons": [],
+                "required_commands": [
+                    (
+                        f"fig-agent apply-candidate {name} {candidate_id} "
+                        f"--candidate-set {manifest.get('candidate_set_path')} "
+                        f"--acceptance build/candidates/{candidate_id}/acceptance.json --json"
+                    )
                 ],
-                "required_commands": [],
             }
-        return {
-            "status": "accepted_ready_to_apply",
-            "blocking_reasons": [],
-            "required_commands": [
-                (
-                    f"fig-agent apply-candidate {name} {candidate_id} "
-                    f"--candidate-set {manifest.get('candidate_set_path')} "
-                    f"--acceptance build/candidates/{candidate_id}/acceptance.json --json"
-                )
-            ],
-        }
     candidate_set_path = Path(
         str(manifest.get("candidate_set_path") or "build/candidates/candidate_set.json")
     )
@@ -405,6 +454,10 @@ def build_review_packet(
             "human_review_required": True,
         }
     )
+    manifest_summary = _summary_with_render_evidence(
+        _manifest_summary(manifest),
+        render_evidence,
+    )
     packet = {
         "schema": SCHEMA,
         "fixture": name,
@@ -414,10 +467,10 @@ def build_review_packet(
         "selectors": (
             manifest.get("selectors") if isinstance(manifest.get("selectors"), list) else []
         ),
-        "visual_review": manifest.get("visual_review")
-        if isinstance(manifest.get("visual_review"), dict)
+        "visual_review": manifest_summary.get("visual_review")
+        if isinstance(manifest_summary.get("visual_review"), dict)
         else {"status": "missing_render"},
-        "manifest_summary": _manifest_summary(manifest),
+        "manifest_summary": manifest_summary,
         "artifacts": _artifact_descriptors(manifest_path, manifest.get("artifacts")),
         "source_changes": _source_change_summary(manifest),
         "score_report": {

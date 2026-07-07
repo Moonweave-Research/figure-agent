@@ -126,17 +126,6 @@ def _validate_follow_up(value: Any) -> dict[str, str | None]:
     return {"command": command, "implementation_slice": implementation_slice}
 
 
-def _combined_decision_text(record: dict[str, Any], follow_up: dict[str, str | None]) -> str:
-    parts = [
-        record.get("agent_recommendation"),
-        record.get("human_decision"),
-        record.get("human_note"),
-        follow_up.get("command"),
-        follow_up.get("implementation_slice"),
-    ]
-    return "\n".join(part for part in parts if isinstance(part, str))
-
-
 def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
     """Return a normalized durable decision record or raise a schema error.
 
@@ -196,13 +185,11 @@ def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
         and mutation_boundary != "source_mutation_allowed"
     ):
         raise HumanDecisionRecordError("source_mutation_decision_requires_source_boundary")
-    if decision_kind in _SVG_POLISH_DECISION_KINDS:
-        decision_text = _combined_decision_text(record, follow_up)
-        if (
-            "ready_for_svg_polish" not in decision_text
-            and "evidence" not in decision_text.lower()
-        ):
-            raise HumanDecisionRecordError("svg_polish_handoff_requires_evidence")
+    if (
+        decision_kind in _SVG_POLISH_DECISION_KINDS
+        and packet_recommendation != decision_kind
+    ):
+        raise HumanDecisionRecordError("svg_polish_handoff_requires_packet_recommendation")
 
     return {
         "schema": SCHEMA,

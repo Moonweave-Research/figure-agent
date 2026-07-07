@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -58,6 +60,8 @@ from fig_loop_patch_evidence import (  # noqa: E402
     post_patch_evidence_verdict,
 )
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
+from fig_loop_stop_diagnoser import diagnose_run as build_stop_diagnosis  # noqa: E402
+from fig_loop_stop_router import route_stop_cause  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 from next_action_summary import loop_next_action_summary  # noqa: E402
 from reference_aesthetic_metrics import (  # noqa: E402
@@ -75,6 +79,13 @@ _GIT_MUTATIONS = frozenset(
 
 class FigLoopError(ValueError):
     """Expected user-facing error for fig loop preflight failures."""
+
+
+@dataclass(frozen=True)
+class CommandResult:
+    returncode: int
+    stdout: str
+    stderr: str
 
 
 def ensure_safe_command(command: tuple[str, ...]) -> tuple[str, ...]:
@@ -98,6 +109,9 @@ def _apply_aesthetic_lever_stop(
     if aesthetic_lever_summary.get("evaluation_state") != "needs_human":
         return loop_decision
     bottleneck = aesthetic_lever_summary.get("next_aesthetic_bottleneck") or {}
+    route = bottleneck.get("route")
+    if route != "human_art_direction":
+        return loop_decision
     lever_id = bottleneck.get("lever_id", "aesthetic lever")
     updated = dict(loop_decision)
     updated.update(
@@ -205,10 +219,207 @@ def _apply_basin_stop(loop_decision: dict, basin_summary: dict | None) -> dict:
             "stop_reason": "basin_detected",
             "recommended_next_action": basin_summary["next_action"],
             "active_patch_target": None,
-            "human_gate_status": "required",
+            "human_gate_status": "not_requested",
         }
     )
     return updated
+
+
+def _stop_diagnosis_summary(report: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "stop_report": "stop_report.json",
+        "dominant_premature_cause": report.get("dominant_premature_cause"),
+        "dominant_premature_count": report.get("dominant_premature_count"),
+        "cause_histogram": report.get("cause_histogram") or {},
+    }
+
+
+def _stop_route_records(report: dict[str, Any]) -> list[dict[str, Any]]:
+    routes: list[dict[str, Any]] = []
+    for subregion in report.get("subregions") or []:
+        if not isinstance(subregion, dict):
+            continue
+        route = route_stop_cause(subregion)
+        routes.append(
+            {
+                "subregion_id": subregion.get("subregion_id"),
+                "stop_cause": route.cause,
+                "fix_mode": route.fix_mode,
+                "action": route.action,
+                "payload": route.payload,
+                "blocked_by": route.blocked_by,
+            }
+        )
+    return routes
+
+
+def _tail(text: str, *, limit: int = 2000) -> str:
+    if len(text) <= limit:
+        return text
+    return text[-limit:]
+
+
+def _run_auto_remedy_command(command: list[str], *, repo_root: Path) -> CommandResult:
+    ensure_safe_command(tuple(command))
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(REPO_ROOT)
+    env["FIGURE_AGENT_WORKSPACE"] = str(repo_root)
+    result = subprocess.run(
+        command,
+        cwd=repo_root,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+        errors="replace",
+    )
+    return CommandResult(
+        returncode=result.returncode,
+        stdout=result.stdout,
+        stderr=result.stderr,
+    )
+
+
+def _report_has_signal(report: dict[str, Any], signal_key: str) -> bool:
+    for subregion in report.get("subregions") or []:
+        if not isinstance(subregion, dict):
+            continue
+        for evidence in subregion.get("evidence") or []:
+            if isinstance(evidence, dict) and evidence.get("signal_key") == signal_key:
+                return True
+    return False
+
+
+def _auto_remedy_plan(
+    name: str,
+    status_result: dict[str, Any],
+    stop_report: dict[str, Any],
+) -> dict[str, Any] | None:
+    critique_state = status_result.get("critique_state")
+    fig_agent = str(REPO_ROOT / "bin" / "fig-agent")
+    if critique_state in {"MISSING", "STALE"}:
+        return {
+            "cause": f"critique_{str(critique_state).lower()}",
+            "commands": [[fig_agent, "critique-scaffold", name, "--json"]],
+        }
+    if _report_has_signal(stop_report, "stale_detector_evidence"):
+        return {
+            "cause": "stale_detector_evidence",
+            "commands": [[fig_agent, "compile", name, "--strict"]],
+        }
+    return None
+
+
+def _remedy_ineffective(
+    *,
+    plan: dict[str, Any],
+    after_status: dict[str, Any],
+    after_report: dict[str, Any],
+) -> bool:
+    cause = plan.get("cause")
+    if cause in {"critique_missing", "critique_stale"}:
+        return after_status.get("critique_state") in {"MISSING", "STALE"}
+    if cause == "stale_detector_evidence":
+        return _report_has_signal(after_report, "stale_detector_evidence")
+    return False
+
+
+def _existing_auto_remedy_for_cause(run_dir: Path, cause: str) -> dict[str, Any] | None:
+    for iteration_path in sorted(run_dir.glob("iteration_*.json")):
+        try:
+            payload = json.loads(iteration_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            return {
+                "cause": cause,
+                "status": "history_unreadable",
+                "reason": "auto_remedy_history_unreadable",
+                "path": str(iteration_path),
+                "error": str(exc),
+            }
+        if not isinstance(payload, dict):
+            return {
+                "cause": cause,
+                "status": "history_unreadable",
+                "reason": "auto_remedy_history_invalid",
+                "path": str(iteration_path),
+            }
+        auto_remedy = payload.get("auto_remedy")
+        if isinstance(auto_remedy, dict) and auto_remedy.get("cause") == cause:
+            return auto_remedy
+    return None
+
+
+def _apply_auto_remedy(
+    name: str,
+    run_dir: Path,
+    *,
+    repo_root: Path,
+    status_result: dict[str, Any],
+    stop_report: dict[str, Any],
+    runner=_run_auto_remedy_command,
+    diagnose=build_stop_diagnosis,
+    status_reader=infer_stage,
+) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+    plan = _auto_remedy_plan(name, status_result, stop_report)
+    if plan is None:
+        return None, stop_report
+    previous = _existing_auto_remedy_for_cause(run_dir, str(plan["cause"]))
+    if previous is not None:
+        return (
+            {
+                "cause": plan["cause"],
+                "status": "remedy_ineffective",
+                "reason": previous.get("reason") or "auto_remedy_already_attempted_for_cause",
+                "previous_status": previous.get("status"),
+                "command_results": [],
+            },
+            stop_report,
+        )
+    command_results: list[dict[str, Any]] = []
+    for command in plan["commands"]:
+        result = runner(command, repo_root=repo_root)
+        command_results.append(
+            {
+                "command": command,
+                "returncode": result.returncode,
+                "stdout_tail": _tail(result.stdout),
+                "stderr_tail": _tail(result.stderr),
+            }
+        )
+        if result.returncode != 0:
+            return (
+                {
+                    "cause": plan["cause"],
+                    "status": "command_failed",
+                    "command_results": command_results,
+                },
+                stop_report,
+            )
+    after_report = diagnose(
+        name,
+        run_dir,
+        repo_root=repo_root,
+        plugin_root=REPO_ROOT,
+    )
+    after_status = status_reader(repo_root / "examples" / name)
+    status = (
+        "remedy_ineffective"
+        if _remedy_ineffective(
+            plan=plan,
+            after_status=after_status,
+            after_report=after_report,
+        )
+        else "remedied"
+    )
+    return (
+        {
+            "cause": plan["cause"],
+            "status": status,
+            "command_results": command_results,
+            "post_remedy_stop_report": "stop_report.json",
+        },
+        after_report,
+    )
 
 
 def _git_value(repo_root: Path, args: tuple[str, ...]) -> str | None:
@@ -418,6 +629,33 @@ def run_loop(
         "command_results": [],
     }
 
+    write_json(run_dir / "iteration_001.json", iteration)
+    write_json(run_dir / "run_manifest.json", manifest)
+    stop_report = build_stop_diagnosis(
+        name,
+        run_dir,
+        repo_root=repo_root,
+        plugin_root=REPO_ROOT,
+    )
+    auto_remedy, stop_report = _apply_auto_remedy(
+        name,
+        run_dir,
+        repo_root=repo_root,
+        status_result=status_result,
+        stop_report=stop_report,
+    )
+    iteration["stop_diagnosis"] = _stop_diagnosis_summary(stop_report)
+    iteration["stop_routes"] = _stop_route_records(stop_report)
+    iteration["auto_remedy"] = auto_remedy
+    if auto_remedy is not None and auto_remedy.get("status") == "remedy_ineffective":
+        iteration["stop_reason"] = "remedy_ineffective"
+        iteration["recommended_next_action"] = (
+            f"auto-remedy ineffective for {auto_remedy.get('cause')}; inspect stop_report.json"
+        )
+        manifest["final_stop_reason"] = "remedy_ineffective"
+    manifest["stop_report"] = "stop_report.json"
+    manifest["dominant_premature_cause"] = stop_report.get("dominant_premature_cause")
+    manifest["dominant_premature_count"] = stop_report.get("dominant_premature_count")
     write_json(run_dir / "iteration_001.json", iteration)
     write_json(run_dir / "run_manifest.json", manifest)
     (run_dir / "decision.md").write_text(

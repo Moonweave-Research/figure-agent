@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -56,7 +57,7 @@ def _write_undeclared_candidate_defect(fixture: Path) -> None:
                         "source_line": 1,
                         "panel": "A",
                     }
-                ]
+                ],
             }
         ),
         encoding="utf-8",
@@ -68,6 +69,7 @@ def _candidate_set(workspace: Path, fixture: Path) -> dict:
     return candidate_generator.build_candidate_set(
         "candidate_demo",
         workspace_root=workspace,
+        plugin_root=workspace / "plugin-root",
     )
 
 
@@ -160,6 +162,188 @@ def test_render_writes_manifest_without_touching_exports(tmp_path: Path) -> None
     assert after_exports == before_exports
 
 
+def test_render_source_copy_respects_line_scoped_replace_text(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    repeated = "\\draw[cGray!55!black, line width=0.30pt] (0,0) -- (1,0);\n"
+    (fixture / "candidate_demo.tex").write_text(repeated + repeated, encoding="utf-8")
+    candidate_set = {
+        **_minimal_candidate_set(),
+        "candidates": [
+            {
+                "id": "CAND001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "target": {"panel": "F"},
+                "selectors": [{"kind": "tex_selector.v1", "line_start": 2, "line_end": 2}],
+                "operations": [
+                    {
+                        "kind": "replace_text",
+                        "path": "examples/candidate_demo/candidate_demo.tex",
+                        "line_start": 2,
+                        "line_end": 2,
+                        "original": repeated.rstrip("\n"),
+                        "replacement": repeated.replace("0.30pt", "0.80pt").rstrip("\n"),
+                    }
+                ],
+                "apply_authority": "review_only",
+            }
+        ],
+    }
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+    )
+
+    sandbox_source = fixture / "build" / "candidates" / "CAND001" / "candidate_demo.tex"
+    assert sandbox_source.read_text(encoding="utf-8") == (
+        repeated + repeated.replace("0.30pt", "0.80pt")
+    )
+
+
+def test_render_source_copy_wraps_tikz_fragment_for_compile(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = "\\node (label-a) at (0,0) {Old Label};\n"
+    replacement = "\\node (label-a) at (0.10,0) {Old Label};\n"
+    (fixture / "candidate_demo.tex").write_text(source, encoding="utf-8")
+    candidate_set = {
+        **_minimal_candidate_set(),
+        "candidates": [
+            {
+                "id": "CAND001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "target": {"panel": "A"},
+                "operations": [
+                    {
+                        "kind": "replace_text",
+                        "path": "examples/candidate_demo/candidate_demo.tex",
+                        "line_start": 1,
+                        "line_end": 1,
+                        "original": source.rstrip("\n"),
+                        "replacement": replacement.rstrip("\n"),
+                    }
+                ],
+                "apply_authority": "review_only",
+            }
+        ],
+    }
+    monkeypatch.setattr(candidate_render, "_which", lambda _name: None)
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+        compile=True,
+    )
+
+    sandbox_source = fixture / "build" / "candidates" / "CAND001" / "candidate_demo.tex"
+    render_source = fixture / "build" / "candidates" / "CAND001" / "source" / "candidate.tex"
+    assert sandbox_source.read_text(encoding="utf-8") == replacement
+    wrapped = render_source.read_text(encoding="utf-8")
+    assert "\\documentclass[tikz,border=2pt]{standalone}" in wrapped
+    assert "\\begin{tikzpicture}" in wrapped
+    assert replacement.rstrip("\n") in wrapped
+
+
+def test_render_source_copy_respects_exact_multiline_replace_text(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = (
+        "\n".join(
+            [
+                "% Panel F -- mechanical",
+                "\\begin{scope}[shift={(9.5,0)}]",
+                "\\draw[cGray!64!black, line width=0.34pt] (0,0) rectangle (1,1);",
+                "\\node at (0.5,0.5) {Coulomb repulsion};",
+                "\\end{scope}",
+            ]
+        )
+        + "\n"
+    )
+    replacement = source.replace("line width=0.34pt", "line width=0.92pt").replace(
+        "{Coulomb repulsion}",
+        "{Coulomb repulsion strengthened}",
+    )
+    (fixture / "candidate_demo.tex").write_text(source, encoding="utf-8")
+    candidate_set = {
+        **_minimal_candidate_set(),
+        "candidates": [
+            {
+                "id": "CAND001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "target": {"panel": "F"},
+                "selectors": [{"kind": "tex_selector.v1", "line_start": 2, "line_end": 5}],
+                "operations": [
+                    {
+                        "kind": "replace_text",
+                        "path": "examples/candidate_demo/candidate_demo.tex",
+                        "line_start": 2,
+                        "line_end": 5,
+                        "original": "".join(source.splitlines(keepends=True)[1:5]),
+                        "replacement": "".join(replacement.splitlines(keepends=True)[1:5]),
+                    }
+                ],
+                "apply_authority": "review_only",
+            }
+        ],
+    }
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+    )
+
+    sandbox_source = fixture / "build" / "candidates" / "CAND001" / "candidate_demo.tex"
+    assert sandbox_source.read_text(encoding="utf-8") == replacement
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == source
+
+
+def test_render_rejects_multiline_replace_text_when_range_does_not_match(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = "alpha\nbeta\ngamma\n"
+    (fixture / "candidate_demo.tex").write_text(source, encoding="utf-8")
+    candidate_set = {
+        **_minimal_candidate_set(),
+        "candidates": [
+            {
+                "id": "CAND001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "target": {"panel": "F"},
+                "selectors": [{"kind": "tex_selector.v1", "line_start": 1, "line_end": 3}],
+                "operations": [
+                    {
+                        "kind": "replace_text",
+                        "path": "examples/candidate_demo/candidate_demo.tex",
+                        "line_start": 1,
+                        "line_end": 2,
+                        "original": "alpha\nbeta\ngamma\n",
+                        "replacement": "ALPHA\nBETA\nGAMMA\n",
+                    }
+                ],
+                "apply_authority": "review_only",
+            }
+        ],
+    }
+
+    with pytest.raises(candidate_render.CandidateRenderError, match="original not found"):
+        candidate_render.render_candidate_set(
+            "candidate_demo",
+            candidate_set,
+            workspace_root=workspace,
+        )
+
+
 def test_render_compile_request_writes_render_manifest_dependency_diagnostic(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -226,7 +410,10 @@ def test_render_compile_export_success_writes_sandbox_artifacts(
         if command[0] == "lualatex":
             (cwd / "render" / "candidate.pdf").write_bytes(b"%PDF-1.7\n")
         if command[0] == "pdftocairo":
-            (cwd / "render" / "candidate.png").write_bytes(b"png")
+            if "-svg" in command:
+                (cwd / "render" / "candidate.svg").write_text("<svg />\n", encoding="utf-8")
+            else:
+                (cwd / "render" / "candidate.png").write_bytes(b"png")
         return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
 
     monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
@@ -245,12 +432,113 @@ def test_render_compile_export_success_writes_sandbox_artifacts(
     data = json.loads(render_manifest.read_text(encoding="utf-8"))
     assert calls[0][:3] == ["lualatex", "-interaction=nonstopmode", "-halt-on-error"]
     assert calls[1][0] == "pdftocairo"
+    assert calls[2][0] == "pdftocairo"
     assert data["stages"]["compile"]["status"] == "success"
     assert data["stages"]["export"]["status"] == "success"
     assert data["stages"]["evaluate"]["status"] == "rendered_needs_human_review"
     assert data["artifacts"]["pdf"] == "build/candidates/CAND001/render/candidate.pdf"
     assert data["artifacts"]["png"] == "build/candidates/CAND001/render/candidate.png"
+    assert data["artifacts"]["svg"] == "build/candidates/CAND001/render/candidate.svg"
     assert not (fixture / "build" / "candidate_demo.pdf").exists()
+
+
+def _counting_compile_run(calls: list[list[str]]):
+    def fake_run(
+        command: list[str],
+        *,
+        cwd: Path,
+        env: dict[str, str],
+    ) -> subprocess.CompletedProcess[str]:
+        calls.append(command)
+        if command[0] == "lualatex":
+            (cwd / "render" / "candidate.pdf").write_bytes(b"%PDF-1.7\n")
+        if command[0] == "pdftocairo":
+            if "-svg" in command:
+                (cwd / "render" / "candidate.svg").write_text("<svg />\n", encoding="utf-8")
+            else:
+                (cwd / "render" / "candidate.png").write_bytes(b"png")
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    return fake_run
+
+
+def test_render_reuses_cache_on_hash_identical_second_render(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A hash-identical re-render must skip every compile subprocess and reuse artifacts."""
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = _candidate_set(workspace, fixture)
+    calls: list[list[str]] = []
+    monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
+    monkeypatch.setattr(candidate_render, "_run_process", _counting_compile_run(calls))
+
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "render_manifest.json"
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+        compile=True,
+        export=True,
+    )
+    first_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert calls, "first render must actually compile"
+    assert first_data["cache"] == "miss"
+    calls.clear()
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+        compile=True,
+        export=True,
+    )
+    second_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    assert calls == [], "hash-identical re-render must perform zero compile subprocess calls"
+    assert second_data["cache"] == "hit"
+    first_data.pop("cache")
+    second_data.pop("cache")
+    assert first_data == second_data
+
+
+def test_render_cache_falls_back_to_recompile_when_artifact_deleted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A cache entry whose advertised artifact is gone must recompile, not error (Task 0.2 guard)."""
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = _candidate_set(workspace, fixture)
+    calls: list[list[str]] = []
+    monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
+    monkeypatch.setattr(candidate_render, "_run_process", _counting_compile_run(calls))
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+        compile=True,
+        export=True,
+    )
+    assert calls
+    calls.clear()
+
+    (fixture / "build" / "candidates" / "CAND001" / "render" / "candidate.pdf").unlink()
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+        compile=True,
+        export=True,
+    )
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "render_manifest.json"
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert calls, "missing artifact must trigger recompile"
+    assert data["cache"] == "miss"
 
 
 def test_render_crop_panel_writes_before_after_sandbox_artifacts(
@@ -259,9 +547,32 @@ def test_render_crop_panel_writes_before_after_sandbox_artifacts(
 ) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
+    (fixture / "spec.yaml").write_text(
+        """
+name: candidate_demo
+panels:
+  - id: C
+    bbox_pdf_cm: [1.0, 1.0, 3.0, 3.0]
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
     (fixture / "build").mkdir()
-    (fixture / "build" / "candidate_demo.png").write_bytes(b"original-png")
-    candidate_set = _candidate_set(workspace, fixture)
+    (fixture / "build" / "candidate_demo.pdf").write_bytes(b"%PDF-1.7\n")
+    (fixture / "build" / "candidate_demo.png").write_bytes(
+        _ppm(
+            4,
+            4,
+            [
+                (255, 255, 255),
+                (255, 255, 255),
+                (255, 255, 255),
+                (255, 255, 255),
+            ]
+            * 4,
+        )
+    )
+    candidate_set = _minimal_candidate_set()
 
     def fake_run(
         command: list[str],
@@ -272,11 +583,24 @@ def test_render_crop_panel_writes_before_after_sandbox_artifacts(
         if command[0] == "lualatex":
             (cwd / "render" / "candidate.pdf").write_bytes(b"%PDF-1.7\n")
         if command[0] == "pdftocairo":
-            (cwd / "render" / "candidate.png").write_bytes(b"candidate-png")
+            (cwd / "render" / "candidate.png").write_bytes(
+                _ppm(
+                    4,
+                    4,
+                    [
+                        (0, 0, 0),
+                        (0, 0, 0),
+                        (0, 0, 0),
+                        (0, 0, 0),
+                    ]
+                    * 4,
+                )
+            )
         return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
 
     monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
     monkeypatch.setattr(candidate_render, "_run_process", fake_run)
+    monkeypatch.setattr(candidate_render, "_pdf_page_size_cm", lambda _path: (4.0, 4.0))
 
     candidate_render.render_candidate_set(
         "candidate_demo",
@@ -296,12 +620,10 @@ def test_render_crop_panel_writes_before_after_sandbox_artifacts(
     assert data["artifacts"]["after_crop"] == (
         "build/candidates/CAND001/crops/candidate_panel_C.png"
     )
-    assert (
-        fixture / "build" / "candidates" / "CAND001" / "crops" / "original_panel_C.png"
-    ).read_bytes() == b"original-png"
-    assert (
-        fixture / "build" / "candidates" / "CAND001" / "crops" / "candidate_panel_C.png"
-    ).read_bytes() == b"candidate-png"
+    before_crop = fixture / "build" / "candidates" / "CAND001" / "crops" / "original_panel_C.png"
+    after_crop = fixture / "build" / "candidates" / "CAND001" / "crops" / "candidate_panel_C.png"
+    assert Image.open(before_crop).size == (2, 2)
+    assert Image.open(after_crop).size == (2, 2)
 
 
 def test_render_evaluate_records_visual_delta_when_crops_are_comparable(
@@ -310,11 +632,22 @@ def test_render_evaluate_records_visual_delta_when_crops_are_comparable(
 ) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
+    (fixture / "spec.yaml").write_text(
+        """
+name: candidate_demo
+panels:
+  - id: C
+    bbox_pdf_cm: [0.0, 0.0, 2.0, 1.0]
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
     (fixture / "build").mkdir()
+    (fixture / "build" / "candidate_demo.pdf").write_bytes(b"%PDF-1.7\n")
     (fixture / "build" / "candidate_demo.png").write_bytes(
         _ppm(2, 1, [(255, 255, 255), (255, 255, 255)])
     )
-    candidate_set = _candidate_set(workspace, fixture)
+    candidate_set = _minimal_candidate_set()
 
     def fake_run(
         command: list[str],
@@ -330,6 +663,7 @@ def test_render_evaluate_records_visual_delta_when_crops_are_comparable(
 
     monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
     monkeypatch.setattr(candidate_render, "_run_process", fake_run)
+    monkeypatch.setattr(candidate_render, "_pdf_page_size_cm", lambda _path: (2.0, 1.0))
 
     candidate_render.render_candidate_set(
         "candidate_demo",
@@ -645,3 +979,51 @@ def test_render_rejects_build_dir_symlink_to_exports(tmp_path: Path) -> None:
         )
 
     assert list(exports.rglob("*")) == []
+
+
+def test_render_candidate_set_unmatched_candidate_id_is_an_error(tmp_path: Path) -> None:
+    """A specific candidate_id that matches nothing must fail, not report empty success.
+
+    This is the live fail-open: render_candidate_set filters by candidate_id and,
+    when no candidate matches, silently returns rendered=[] with no manifest on disk.
+    The CLI then reports exit 0, and downstream manifest reads hit FileNotFoundError.
+    """
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = _minimal_candidate_set()
+
+    with pytest.raises(candidate_render.CandidateRenderError, match="matched no candidate"):
+        candidate_render.render_candidate_set(
+            "candidate_demo",
+            candidate_set,
+            workspace_root=workspace,
+            candidate_id="MISSING999",
+        )
+
+    assert not (fixture / "build" / "candidates" / "MISSING999").exists()
+
+
+def test_render_candidate_set_manifest_write_skipped_is_an_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """success report must imply the manifest exists on disk, even if the write is lost."""
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+    candidate_set = _minimal_candidate_set()
+
+    original_write = candidate_render._write_sandbox_file
+
+    def _skip_manifest_write(path: Path, text: str) -> None:
+        if path.name == "candidate_manifest.json":
+            return
+        original_write(path, text)
+
+    monkeypatch.setattr(candidate_render, "_write_sandbox_file", _skip_manifest_write)
+
+    with pytest.raises(candidate_render.CandidateRenderError, match="manifest missing"):
+        candidate_render.render_candidate_set(
+            "candidate_demo",
+            candidate_set,
+            workspace_root=workspace,
+            candidate_id="CAND001",
+        )

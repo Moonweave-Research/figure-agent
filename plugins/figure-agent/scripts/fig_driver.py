@@ -98,11 +98,13 @@ _STATUS_COMPACT_KEYS = (
     "golden_ready",
     "release_ready",
     "final_ready",
+    "release_decision",
     "publication_gate_state",
     "publication_gate_failures",
     "critique_lint_summary",
     "spine_evidence",
 )
+_SELECTED_VISUAL_DIRECTION_BLOCKER = "release_deferred_for_selected_visual_direction"
 
 _FORBIDDEN_BY_MODE: dict[str, list[str]] = {
     "authoring": [
@@ -276,6 +278,22 @@ def _status_for(example_dir: Path) -> dict[str, Any]:
     return infer_stage(example_dir)
 
 
+def _first_status_blocker_code(status: dict[str, Any]) -> str | None:
+    status_explanation = status.get("status_explanation")
+    if not isinstance(status_explanation, dict):
+        return None
+    first_blocker = status_explanation.get("first_blocker")
+    if not isinstance(first_blocker, dict):
+        return None
+    code = first_blocker.get("code")
+    if not isinstance(code, str):
+        return None
+    stripped = code.strip()
+    if not stripped or stripped == "none":
+        return None
+    return stripped
+
+
 is_safe_fixture_name = fixture_identity.is_safe_fixture_name
 
 
@@ -386,10 +404,16 @@ def _aesthetic_lever_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str
         return None
     bottleneck = summary.get("next_aesthetic_bottleneck")
     lever_id = None
+    route = None
     if isinstance(bottleneck, dict):
         raw_lever_id = bottleneck.get("lever_id")
         if isinstance(raw_lever_id, str) and raw_lever_id.strip():
             lever_id = raw_lever_id.strip()
+        raw_route = bottleneck.get("route")
+        if isinstance(raw_route, str) and raw_route.strip():
+            route = raw_route.strip()
+    if route != "human_art_direction":
+        return None
     return {
         "action": ACTION_HUMAN_GATE_STOP,
         "safe_command": None,
@@ -423,9 +447,9 @@ def _loop_checkpoint_review_blocker(
         history_count = basin.get("history_count")
         count_text = f"{history_count} times" if isinstance(history_count, int) else "repeatedly"
         return {
-            "action": ACTION_HUMAN_GATE_STOP,
+            "action": ACTION_COMPLETE,
             "safe_command": None,
-            "stop_boundary": STOP_HUMAN_GATE,
+            "stop_boundary": "basin_detected",
             "reason": (
                 "latest /fig_loop checkpoint reports repeated loop basin: "
                 f"{signal_text} appeared {count_text}; step out before another "
@@ -743,6 +767,16 @@ def _select_action(
                 reason=(
                     "critique.md is fresh but critique_adjudication.yaml is "
                     "missing or stale; scaffold adjudication next."
+                ),
+            )
+        if _first_status_blocker_code(status) == _SELECTED_VISUAL_DIRECTION_BLOCKER:
+            return make(
+                ACTION_COMPLETE,
+                safe_command=None,
+                stop_boundary=None,
+                reason=(
+                    "human design-direction record selected this visual direction; "
+                    "review mode does not rerun fig_loop for release-state closure."
                 ),
             )
         if loop_checkpoint is not None:

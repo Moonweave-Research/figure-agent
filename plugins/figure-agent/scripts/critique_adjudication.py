@@ -57,6 +57,19 @@ def _validate_hash(value: str) -> None:
         )
 
 
+def _validate_patch_classes(value: Any, *, label: str) -> None:
+    if value is None:
+        return
+    if isinstance(value, str):
+        if not value.strip():
+            raise CritiqueAdjudicationError(f"{label} must not be empty")
+        return
+    if not isinstance(value, list) or not value:
+        raise CritiqueAdjudicationError(f"{label} must be a non-empty string or string list")
+    if not all(isinstance(item, str) and item.strip() for item in value):
+        raise CritiqueAdjudicationError(f"{label} must be a non-empty string or string list")
+
+
 def validate_adjudication(data: dict[str, Any]) -> dict[str, Any]:
     """Validate a critique adjudication mapping and return it unchanged."""
     data = _require_mapping(data, "adjudication")
@@ -88,6 +101,14 @@ def validate_adjudication(data: dict[str, Any]) -> dict[str, Any]:
         if decision_value in _PATCH_EVIDENCE_REQUIRED:
             _require_non_empty_string(decision_item, "patch_target", label=decision_label)
             _require_non_empty_string(decision_item, "evidence", label=decision_label)
+        _validate_patch_classes(
+            decision_item.get("patch_class"),
+            label=f"{decision_label}.patch_class",
+        )
+        _validate_patch_classes(
+            decision_item.get("patch_classes"),
+            label=f"{decision_label}.patch_classes",
+        )
 
     return data
 

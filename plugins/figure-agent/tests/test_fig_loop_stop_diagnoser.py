@@ -75,6 +75,191 @@ def test_diagnose_run_writes_stop_report_v1(fig2_run):
             assert ev["source_module"] and ev["source_ref"]
 
 
+def test_run_loop_persists_stop_diagnosis_contract(fig2_run):
+    iteration = json.loads((fig2_run / "iteration_001.json").read_text(encoding="utf-8"))
+    manifest = json.loads((fig2_run / "run_manifest.json").read_text(encoding="utf-8"))
+
+    assert (fig2_run / "stop_report.json").is_file()
+    assert manifest["stop_report"] == "stop_report.json"
+    assert iteration["stop_diagnosis"]["stop_report"] == "stop_report.json"
+    assert set(iteration["stop_diagnosis"]) == {
+        "stop_report",
+        "dominant_premature_cause",
+        "dominant_premature_count",
+        "cause_histogram",
+    }
+    assert iteration["stop_routes"]
+    first_route = iteration["stop_routes"][0]
+    assert set(first_route) == {
+        "subregion_id",
+        "stop_cause",
+        "fix_mode",
+        "action",
+        "payload",
+        "blocked_by",
+    }
+
+
+def test_auto_remedy_executes_critique_scaffold_and_fails_loud_when_unchanged(
+    tmp_path: Path,
+) -> None:
+    commands: list[list[str]] = []
+
+    def runner(command: list[str], *, repo_root: Path) -> fig_loop.CommandResult:
+        commands.append(command)
+        return fig_loop.CommandResult(returncode=0, stdout="ok", stderr="")
+
+    def diagnose(_name: str, _run_dir: Path, **_kwargs) -> dict:
+        return {
+            "subregions": [],
+            "cause_histogram": {},
+            "dominant_premature_cause": None,
+            "dominant_premature_count": 0,
+        }
+
+    def status_reader(_example_dir: Path) -> dict:
+        return {"critique_state": "MISSING"}
+
+    remedy, _report = fig_loop._apply_auto_remedy(
+        "fig2_trap_design_space",
+        tmp_path,
+        repo_root=tmp_path,
+        status_result={"critique_state": "MISSING"},
+        stop_report={"subregions": []},
+        runner=runner,
+        diagnose=diagnose,
+        status_reader=status_reader,
+    )
+
+    assert commands == [
+        [
+            str(fig_loop.REPO_ROOT / "bin" / "fig-agent"),
+            "critique-scaffold",
+            "fig2_trap_design_space",
+            "--json",
+        ]
+    ]
+    assert remedy is not None
+    assert remedy["cause"] == "critique_missing"
+    assert remedy["status"] == "remedy_ineffective"
+
+
+def test_auto_remedy_does_not_repeat_same_cause_in_one_run(tmp_path: Path) -> None:
+    commands: list[list[str]] = []
+    (tmp_path / "iteration_001.json").write_text(
+        json.dumps(
+            {
+                "auto_remedy": {
+                    "cause": "critique_missing",
+                    "status": "remedy_ineffective",
+                }
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    def runner(command: list[str], *, repo_root: Path) -> fig_loop.CommandResult:
+        commands.append(command)
+        return fig_loop.CommandResult(returncode=0, stdout="ok", stderr="")
+
+    remedy, _report = fig_loop._apply_auto_remedy(
+        "fig2_trap_design_space",
+        tmp_path,
+        repo_root=tmp_path,
+        status_result={"critique_state": "MISSING"},
+        stop_report={"subregions": []},
+        runner=runner,
+        diagnose=lambda *_args, **_kwargs: {},
+        status_reader=lambda _example_dir: {"critique_state": "MISSING"},
+    )
+
+    assert commands == []
+    assert remedy == {
+        "cause": "critique_missing",
+        "status": "remedy_ineffective",
+        "reason": "auto_remedy_already_attempted_for_cause",
+        "previous_status": "remedy_ineffective",
+        "command_results": [],
+    }
+
+
+def test_auto_remedy_fails_closed_when_history_is_malformed(tmp_path: Path) -> None:
+    commands: list[list[str]] = []
+    (tmp_path / "iteration_001.json").write_text("{not-json", encoding="utf-8")
+
+    def runner(command: list[str], *, repo_root: Path) -> fig_loop.CommandResult:
+        commands.append(command)
+        return fig_loop.CommandResult(returncode=0, stdout="ok", stderr="")
+
+    remedy, _report = fig_loop._apply_auto_remedy(
+        "fig2_trap_design_space",
+        tmp_path,
+        repo_root=tmp_path,
+        status_result={"critique_state": "MISSING"},
+        stop_report={"subregions": []},
+        runner=runner,
+        diagnose=lambda *_args, **_kwargs: {},
+        status_reader=lambda _example_dir: {"critique_state": "MISSING"},
+    )
+
+    assert commands == []
+    assert remedy is not None
+    assert remedy["cause"] == "critique_missing"
+    assert remedy["status"] == "remedy_ineffective"
+    assert remedy["reason"] == "auto_remedy_history_unreadable"
+    assert remedy["previous_status"] == "history_unreadable"
+    assert remedy["command_results"] == []
+
+
+def test_auto_remedy_reruns_compile_for_stale_detector_evidence(tmp_path: Path) -> None:
+    commands: list[list[str]] = []
+
+    def runner(command: list[str], *, repo_root: Path) -> fig_loop.CommandResult:
+        commands.append(command)
+        return fig_loop.CommandResult(returncode=0, stdout="ok", stderr="")
+
+    stale_report = {
+        "subregions": [
+            {
+                "subregion_id": "sel:abc",
+                "stop_cause": "decision_weak",
+                "evidence": [{"signal_key": "stale_detector_evidence"}],
+            }
+        ],
+        "cause_histogram": {"decision_weak": 1},
+        "dominant_premature_cause": "decision_weak",
+        "dominant_premature_count": 1,
+    }
+
+    def diagnose(_name: str, _run_dir: Path, **_kwargs) -> dict:
+        return stale_report
+
+    remedy, _report = fig_loop._apply_auto_remedy(
+        "fig2_trap_design_space",
+        tmp_path,
+        repo_root=tmp_path,
+        status_result={"critique_state": "FRESH"},
+        stop_report=stale_report,
+        runner=runner,
+        diagnose=diagnose,
+        status_reader=lambda _example_dir: {"critique_state": "FRESH"},
+    )
+
+    assert commands == [
+        [
+            str(fig_loop.REPO_ROOT / "bin" / "fig-agent"),
+            "compile",
+            "fig2_trap_design_space",
+            "--strict",
+        ]
+    ]
+    assert remedy is not None
+    assert remedy["cause"] == "stale_detector_evidence"
+    assert remedy["status"] == "remedy_ineffective"
+
+
 def test_diagnose_run_fig3_produces_consistent_report(fig3_run):
     # Same anti-pattern guard as the fig2 test: assert the diagnoser MACHINERY
     # is consistent on the real fixture (histogram sums to sub-region count),

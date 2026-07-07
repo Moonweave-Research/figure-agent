@@ -1,0 +1,16 @@
+{
+  "schema": "figure-agent.human-decision-record.v1",
+  "fixture": "fig1_overview_v3_pair_001_vault",
+  "packet_schema": "figure-agent.style-direction-packet.v1",
+  "packet_path": "docs/decision-packets/2026-07-03-fig1-v3/fig1_overview_v3_pair_001_vault_style_direction.json",
+  "packet_recommendation": "compare_v3_against_v2",
+  "queue_run_id": "fig1-v3-candidate-2026-07-03",
+  "decision_kind": "request_restrained_tikz_refinement",
+  "agent_recommendation": "Prepare a separate non-golden v3 candidate and compare it against accepted v2 before any protected mutation.",
+  "human_decision": "request_restrained_tikz_refinement",
+  "human_note": "This records candidate-lane preparation only. It does not approve accepted-state mutation, release-state mutation, generated export mutation, SVG hand editing, or golden roll-forward.",
+  "follow_up": {
+    "implementation_slice": "Compile v3, inspect the rendered Panel C readability changes, and prepare a comparison packet before any acceptance or golden decision."
+  },
+  "mutation_boundary": "no_source_mutation"
+}

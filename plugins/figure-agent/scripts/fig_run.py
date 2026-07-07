@@ -109,10 +109,14 @@ def _is_slash_command(command: str | None) -> bool:
 def _is_executable_action(summary: dict[str, Any]) -> bool:
     action = summary.get("action")
     command = summary.get("safe_command")
+    stop_boundary = summary.get("stop_boundary")
+    boundary_allows_execution = stop_boundary is None or (
+        action == fig_driver.ACTION_RUN_FIG_LOOP and stop_boundary == fig_driver.STOP_CLOSEOUT
+    )
     return (
         isinstance(action, str)
         and action in EXECUTABLE_ACTIONS
-        and summary.get("stop_boundary") is None
+        and boundary_allows_execution
         and isinstance(command, str)
         and command.strip() != ""
         and not _is_slash_command(command)

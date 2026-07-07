@@ -14,6 +14,7 @@ import human_decision_record
 import runtime_paths
 
 SCHEMA = "figure-agent.golden-acceptance.v1"
+DECISIONS = {"accept", "reject", "defer"}
 
 
 class GoldenAcceptanceError(ValueError):
@@ -130,8 +131,8 @@ def write_golden_acceptance(
     plugin_root: Path | None = None,
 ) -> dict[str, Any]:
     fixture_identity.validate_fixture_name(name)
-    if decision != "accept":
-        raise GoldenAcceptanceError("decision must be accept")
+    if decision not in DECISIONS:
+        raise GoldenAcceptanceError("decision must be accept, reject, or defer")
     if not reviewer.strip() or not rationale.strip():
         raise GoldenAcceptanceError("reviewer and rationale are required")
     paths = runtime_paths.resolve_runtime_paths(
@@ -139,7 +140,7 @@ def write_golden_acceptance(
         workspace_root=workspace_root,
     )
     example_dir = paths.examples_dir / name
-    if not _has_authorizing_decision_record(name, paths.plugin_root):
+    if decision == "accept" and not _has_authorizing_decision_record(name, paths.plugin_root):
         raise GoldenAcceptanceError("release_decision_record_required")
     readiness = closeout_readiness.build_closeout_readiness(
         name,
@@ -151,7 +152,7 @@ def write_golden_acceptance(
         .get("status", {})
         .get("export_state")
     )
-    if export_state == "TRACKED_GOLDEN" and not accept_golden:
+    if decision == "accept" and export_state == "TRACKED_GOLDEN" and not accept_golden:
         raise GoldenAcceptanceError("accept_golden_required")
     blocking = _allowed_pre_acceptance_blocks(readiness)
     disallowed = [
@@ -161,7 +162,7 @@ def write_golden_acceptance(
         and check.get("state") not in {"passed", "not_required"}
         and check not in blocking
     ]
-    if disallowed:
+    if decision == "accept" and disallowed:
         raise GoldenAcceptanceError("closeout_not_ready")
     output = example_dir / "build" / "closeout" / "golden_acceptance.json"
     _ensure_safe_write_target(example_dir, output)

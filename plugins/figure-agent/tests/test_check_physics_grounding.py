@@ -78,11 +78,29 @@ def test_grounding_status_grounded(tmp_path):
     assert cpg.grounding_status(fixture)["status"] == "grounded"
 
 
-def test_grounding_status_undeclared_when_no_briefing(tmp_path):
+def test_grounding_status_briefing_missing_is_non_benign(tmp_path):
+    # A missing briefing must surface as a distinct gap, not collapse into the
+    # benign "undeclared" bucket (fail-closed, Task 0.6e).
     fixture = tmp_path / "demo"
     fixture.mkdir()
     (fixture / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
-    assert cpg.grounding_status(fixture)["status"] == "undeclared"
+    assert cpg.grounding_status(fixture)["status"] == "briefing_missing"
+
+
+def test_main_strict_fails_on_missing_briefing(tmp_path, monkeypatch):
+    fixture = tmp_path / "demo"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
+    monkeypatch.setattr("sys.argv", ["check_physics_grounding.py", str(fixture), "--strict"])
+    assert cpg.main() == 1
+
+
+def test_main_reports_but_does_not_fail_missing_briefing_without_strict(tmp_path, monkeypatch):
+    fixture = tmp_path / "demo"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
+    monkeypatch.setattr("sys.argv", ["check_physics_grounding.py", str(fixture)])
+    assert cpg.main() == 0
 
 
 def test_grounding_payload_shape():
