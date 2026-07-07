@@ -33,14 +33,17 @@ vector_clearance_checks:
 - id: panelE-deep-peak-caliper-min-clearance
   element_a:
     source_line: 1781
+    matched_text: "(6.48, 0.4) .. controls (6.66, 0.4) and (6.66, 1.23)"
     kind: curve
   element_b:
     source_line: 1824
+    matched_text: "(5.9, 1.30) -- (7, 1.30)"
     kind: line
   min_clearance_cm: 0.1
 - id: panelD-debye-must-not-cross-red-marker
   element_a:
     source_line: 1176
+    matched_text: "(0.65, 2.30) -- (1.80, 2.30)"
     kind: curve
   element_b:
     bbox_cm:

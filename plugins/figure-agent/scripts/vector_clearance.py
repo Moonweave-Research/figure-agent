@@ -305,8 +305,21 @@ def _parse_selector(raw: object, index: int, field: str) -> dict[str, Any]:
     return selector
 
 
-def _matches_selector(element: dict[str, Any], selector: dict[str, Any]) -> bool:
-    if "source_line" in selector and element["source_line"] != selector["source_line"]:
+def _selector_has_stable_identity(selector: dict[str, Any]) -> bool:
+    return "matched_text" in selector or "bbox_cm" in selector
+
+
+def _matches_selector(
+    element: dict[str, Any],
+    selector: dict[str, Any],
+    *,
+    include_source_line: bool = True,
+) -> bool:
+    if (
+        include_source_line
+        and "source_line" in selector
+        and element["source_line"] != selector["source_line"]
+    ):
         return False
     if "matched_text" in selector and selector["matched_text"] not in element["tex_anchor"]:
         return False
@@ -331,6 +344,20 @@ def _resolve_selector(
     selector: dict[str, Any],
 ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
     matches = [element for element in elements if _matches_selector(element, selector)]
+    if not matches and "source_line" in selector and _selector_has_stable_identity(selector):
+        matches = [
+            element
+            for element in elements
+            if _matches_selector(element, selector, include_source_line=False)
+        ]
+        if len(matches) == 1:
+            match = dict(matches[0])
+            match["_selector_line_drift"] = {
+                "selector": selector_name,
+                "declared_source_line": selector["source_line"],
+                "actual_source_line": match["source_line"],
+            }
+            return match, None
     if not matches:
         return None, {
             "id": check_id,
@@ -497,6 +524,16 @@ def check_vector_clearance(tex_text: str, checks: list[dict[str, Any]]) -> list[
             issue["clearance_delta_cm"] = round(distance_cm - required, 6)
         if not violated:
             continue
+        selector_line_drifts = [
+            drift
+            for drift in (
+                element_a.get("_selector_line_drift"),
+                element_b.get("_selector_line_drift"),
+            )
+            if isinstance(drift, dict)
+        ]
+        if selector_line_drifts:
+            issue["selector_line_drifts"] = selector_line_drifts
         non_auto = _non_auto_promotable(element_a, element_b)
         issue["non_auto_promotable"] = non_auto
         issue["promotion_tier"] = "review_queue" if non_auto else "auto"
