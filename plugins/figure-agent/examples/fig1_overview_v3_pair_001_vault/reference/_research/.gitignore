@@ -1,4 +1,0 @@
-# Reference page-renders are heavy (~16MB) local working material. The curated
-# findings (candidates.md notes, REFERENCE_GAP.md) are tracked; the raw renders
-# are reproducible from the source papers and kept out of the repo to stay lean.
-*.png
