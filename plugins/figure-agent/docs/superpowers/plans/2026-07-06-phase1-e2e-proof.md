@@ -92,22 +92,19 @@ CS=build/candidates/candidate_set.json
   --candidate-id CAND001 --compile --export --crop-panel A --evaluate
 ./bin/fig-agent accept-candidate fig2_trap_design_space CAND001 --candidate-set "$CS" \
   --decision reject --reviewer local-user --rationale "E2E proof: rejected on visual review."
-# accept-candidate writes acceptance.json{decision:"reject"}. apply-candidate blocks a
-# non-accept acceptance before it can append, so the reject row is logged via the
-# sanctioned append entrypoint directly (same path the unit test exercises):
-PYTHONPATH="$PR/scripts:$PR/scripts/checks:$PR/scripts/candidates:$PR/scripts/quality:$PR/scripts/loop:$PR/scripts/driver" \
-python3 -c "import experience_log; from pathlib import Path; \
-experience_log.append_apply_record('fig2_trap_design_space','CAND001', \
-  workspace_root=Path('$SC/ws'), plugin_root=Path('$PR'), \
-  candidate_set_path=Path('build/candidates/candidate_set.json'))"
 ```
 
-> Finding: there is no CLI/MCP command that appends the reject experience row.
-> `append_apply_record` is only called by `candidate_apply.apply_candidate`, which blocks a
-> non-accept acceptance (`acceptance_not_accepted`) before reaching the append. The reject
-> human-label signal is wired into `build_apply_records`/`_human_review_labels`, but driving
-> it end-to-end still needs the direct `append_apply_record` call above. A thin
-> `fig-agent log-reject` (or an append inside `accept-candidate` on reject) would close this.
+`accept-candidate --decision reject` now writes `acceptance.json{decision:"reject"}` **and**
+appends the reject experience row itself (via `experience_log.append_reject_record`), so no
+out-of-band `append_apply_record` call is needed. Because no apply ran, the row carries
+`apply_status="blocked"`, `quality_movement=null`, `human_label="reject"`. A repeat reject of
+the same candidate is idempotent — `append_reject_record` skips the write when a reject row
+for the same `candidate_hash` already exists.
+
+> Resolved: the reject learning signal is CLI-native. `apply-candidate` still blocks a
+> non-accept acceptance (`acceptance_not_accepted`), so the accept path continues to log
+> from `candidate_apply.apply_candidate` (no double-append), while the reject path logs from
+> `accept-candidate`.
 
 ## Step 4 — verify the three exit criteria
 

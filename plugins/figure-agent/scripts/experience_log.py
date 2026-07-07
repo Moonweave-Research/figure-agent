@@ -821,26 +821,43 @@ def build_apply_records(
     candidate_set = _load_json(resolved_candidate_set_path, "candidate_set")
     candidate = _candidate_from_set(candidate_set, candidate_id)
     render_manifest = _load_json(sandbox / "render_manifest.json", "render_manifest")
-    apply_path = sandbox / "apply_result.json"
-    apply_result = _load_json(apply_path, "apply_result")
-    if apply_result.get("candidate_id") not in {None, candidate_id}:
-        raise ExperienceLogError("candidate_id_mismatch")
-    post_apply = apply_result.get("post_apply")
-    post_apply = post_apply if isinstance(post_apply, dict) else {}
-    apply_status = str(apply_result.get("status") or "unknown")
-    pipeline_ok = _post_apply_pipeline_ok(apply_status, post_apply)
-    quality_movement = _quality_movement(
-        apply_status,
-        post_apply,
-        pipeline_ok=pipeline_ok,
-    )
     acceptance = _acceptance_payload(sandbox)
     human_label, human_decision_kind = _human_review_labels(acceptance)
+    apply_path = sandbox / "apply_result.json"
+    if apply_path.is_file():
+        apply_result = _load_json(apply_path, "apply_result")
+        if apply_result.get("candidate_id") not in {None, candidate_id}:
+            raise ExperienceLogError("candidate_id_mismatch")
+        post_apply = apply_result.get("post_apply")
+        post_apply = post_apply if isinstance(post_apply, dict) else {}
+        apply_status = str(apply_result.get("status") or "unknown")
+        pipeline_ok = _post_apply_pipeline_ok(apply_status, post_apply)
+        quality_movement = _quality_movement(
+            apply_status,
+            post_apply,
+            pipeline_ok=pipeline_ok,
+        )
+        created_at = _artifact_time(apply_path)
+        base_tex_hash = _source_before_hash(example_dir, name, apply_result)
+        outcome_artifact = apply_path
+    elif human_label == "reject":
+        # A human rejected the candidate before any apply ran, so no
+        # apply_result.json exists. Record the reject learning signal with a
+        # no-apply status; quality stays neutral because a human reject is
+        # suppressed by human_label, not scored as a regression.
+        apply_result = {}
+        post_apply = {}
+        apply_status = "blocked"
+        pipeline_ok = False
+        quality_movement = None
+        outcome_artifact = sandbox / "acceptance.json"
+        created_at = _artifact_time(outcome_artifact)
+        base_tex_hash = _source_before_hash(example_dir, name, apply_result)
+    else:
+        raise ExperienceLogError("apply_result_missing")
     candidates = (
         candidate_set.get("candidates") if isinstance(candidate_set.get("candidates"), list) else []
     )
-    created_at = _artifact_time(apply_path)
-    base_tex_hash = _source_before_hash(example_dir, name, apply_result)
     record = {
         "schema": SCHEMA,
         "fixture": name,
@@ -880,7 +897,7 @@ def build_apply_records(
             _fixture_relative(example_dir, resolved_candidate_set_path),
             _fixture_relative(example_dir, sandbox / "candidate_manifest.json"),
             _fixture_relative(example_dir, sandbox / "render_manifest.json"),
-            _fixture_relative(example_dir, apply_path),
+            _fixture_relative(example_dir, outcome_artifact),
         ],
     }
     records = [_record_with_id(record)]
@@ -952,6 +969,51 @@ def append_apply_record(
         "records": records,
         "writes": [f"docs/experience-log/{name}.jsonl"],
     }
+
+
+def append_reject_record(
+    name: str,
+    candidate_id: str,
+    *,
+    workspace_root: Path | None = None,
+    plugin_root: Path | None = None,
+    candidate_set_path: Path | None = None,
+) -> dict[str, Any] | None:
+    """Append the reject experience row for a human-rejected candidate.
+
+    The accept path appends via ``candidate_apply``; a reject never reaches apply,
+    so this is the sanctioned entrypoint. Returns ``None`` (no write) when a reject
+    row for the same candidate_hash already exists, so repeated
+    ``accept-candidate --decision reject`` invocations stay idempotent.
+    """
+    fixture_identity.validate_fixture_name(name)
+    fixture_identity.validate_fixture_name(candidate_id)
+    paths = runtime_paths.resolve_runtime_paths(
+        workspace_root=workspace_root,
+        plugin_root=plugin_root,
+    )
+    example_dir = paths.examples_dir / name
+    sandbox = _candidate_sandbox(example_dir, candidate_id)
+    acceptance = _acceptance_payload(sandbox)
+    if not isinstance(acceptance, dict) or acceptance.get("decision") != "reject":
+        raise ExperienceLogError("acceptance_not_reject")
+    candidate_hash = acceptance.get("candidate_hash")
+    for record in load_experience_records(paths.plugin_root, name):
+        action = record.get("action") if isinstance(record.get("action"), dict) else {}
+        outcome = record.get("outcome") if isinstance(record.get("outcome"), dict) else {}
+        if (
+            action.get("candidate_id") == candidate_id
+            and action.get("candidate_hash") == candidate_hash
+            and outcome.get("human_label") == "reject"
+        ):
+            return None
+    return append_apply_record(
+        name,
+        candidate_id,
+        workspace_root=paths.workspace_root,
+        plugin_root=paths.plugin_root,
+        candidate_set_path=candidate_set_path,
+    )
 
 
 def append_recommendation_record(

@@ -991,6 +991,23 @@ def _accept_candidate(argv: list[str]) -> int:
     except (ValueError, candidate_acceptance.CandidateAcceptanceError) as exc:
         print(f"fig-agent accept-candidate: {exc}", file=sys.stderr)
         return 1
+    if args.decision == "reject":
+        # The accept path appends its experience row from apply-candidate, which
+        # blocks a non-accept acceptance before it can log. Append the reject
+        # learning signal here so a human reject is not silently dropped.
+        import experience_log
+
+        try:
+            experience_log.append_reject_record(
+                name,
+                args.candidate_id,
+                candidate_set_path=Path(args.candidate_set),
+                plugin_root=_paths().plugin_root,
+                workspace_root=_paths().workspace_root,
+            )
+        except (ValueError, experience_log.ExperienceLogError) as exc:
+            print(f"fig-agent accept-candidate: {exc}", file=sys.stderr)
+            return 1
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
 
