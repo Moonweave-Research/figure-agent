@@ -43,7 +43,7 @@ vector_clearance_checks:
 - id: panelD-debye-must-not-cross-red-marker
   element_a:
     source_line: 1176
-    matched_text: "(0.65, 2.30) -- (1.80, 2.30)"
+    matched_text: "cGray!85!black, dashed, line width=0.65pt"
     kind: curve
   element_b:
     bbox_cm:
