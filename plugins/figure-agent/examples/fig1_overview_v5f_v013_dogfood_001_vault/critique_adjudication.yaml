@@ -1,0 +1,10 @@
+schema: figure-agent.critique-adjudication.v1
+fixture: fig1_overview_v5f_v013_dogfood_001_vault
+source_critique_hash: sha256:62e9a36a4028b452cb1f8f1b7f46565823f8eedab81b7a0532cf9da20d29e388
+decisions:
+- finding_id: C001
+  decision: needs_human
+  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
+  patch_target: examples/fig1_overview_v5f_v013_dogfood_001_vault/fig1_overview_v5f_v013_dogfood_001_vault.tex
+    lines 2060-2128
+  evidence: critique.md finding C001.
