@@ -241,6 +241,32 @@ def test_small_filled_circle_extracts_as_marker_and_matches_kind_selector() -> N
     assert issues[0]["non_auto_promotable"] is True
 
 
+def test_v5f_panel_e_peak_crowding_declaration_surfaces_review_queue() -> None:
+    fixture = ROOT / "examples" / "fig1_overview_v5f_art_direction_001_vault"
+    tex = (fixture / "fig1_overview_v5f_art_direction_001_vault.tex").read_text(
+        encoding="utf-8"
+    )
+    checks = vector_clearance.parse_vector_clearance_checks(
+        vector_clearance._load_spec(fixture / "spec.yaml")
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+    issue = next(
+        item
+        for item in issues
+        if item["id"] == "panelE-deep-peak-caliper-min-clearance"
+    )
+
+    assert issue["status"] == "violated"
+    assert issue["element_a_kind"] == "curve"
+    assert issue["element_b_kind"] == "line"
+    assert issue["measured_clearance_cm"] == pytest.approx(0.07)
+    assert issue["required_clearance_cm"] == pytest.approx(0.1)
+    assert issue["clearance_delta_cm"] == pytest.approx(-0.03)
+    assert issue["non_auto_promotable"] is True
+    assert issue["promotion_tier"] == "review_queue"
+
+
 def test_foreach_ball_shaded_markers_are_extracted_for_declared_checks() -> None:
     tex = "\n".join(
         [

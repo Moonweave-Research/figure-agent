@@ -30,6 +30,14 @@ semantic_assertions:
   tolerance_cm: 0.05
   target_panel: E
 vector_clearance_checks:
+- id: panelE-deep-peak-caliper-min-clearance
+  element_a:
+    source_line: 1781
+    kind: curve
+  element_b:
+    source_line: 1824
+    kind: line
+  min_clearance_cm: 0.1
 - id: panelD-debye-must-not-cross-red-marker
   element_a:
     source_line: 1176
