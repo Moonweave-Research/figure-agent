@@ -1,0 +1,295 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+import vector_clearance  # noqa: E402
+
+
+def test_parse_absent_vector_clearance_checks_is_empty() -> None:
+    assert vector_clearance.parse_vector_clearance_checks({}) == []
+
+
+def test_parse_rejects_malformed_vector_clearance_schema() -> None:
+    with pytest.raises(vector_clearance.VectorClearanceError, match="must be a list"):
+        vector_clearance.parse_vector_clearance_checks({"vector_clearance_checks": {}})
+
+    with pytest.raises(vector_clearance.VectorClearanceError, match="exactly one relation"):
+        vector_clearance.parse_vector_clearance_checks(
+            {
+                "vector_clearance_checks": [
+                    {
+                        "id": "bad",
+                        "element_a": {"source_line": 1},
+                        "element_b": {"source_line": 2},
+                    }
+                ]
+            }
+        )
+
+
+def test_source_line_selector_zero_match_is_loud_issue() -> None:
+    tex = r"\draw (0,0) -- (1,0);"
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "line-gap",
+                    "element_a": {"source_line": 99},
+                    "element_b": {"source_line": 1},
+                    "must_not_cross": True,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues == [
+        {
+            "id": "line-gap",
+            "status": "selector_missing",
+            "selector": "element_a",
+            "message": "vector_clearance 'line-gap' element_a selector matched 0 elements",
+        }
+    ]
+
+
+def test_matched_text_selector_multi_match_is_loud_issue() -> None:
+    tex = "\n".join(
+        [
+            r"\draw[probe] (0,0) -- (1,0);",
+            r"\draw[probe] (0,1) -- (1,1);",
+            r"\draw[target] (0,2) -- (1,2);",
+        ]
+    )
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "ambiguous",
+                    "element_a": {"matched_text": "probe"},
+                    "element_b": {"matched_text": "target"},
+                    "must_not_cross": True,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues[0]["status"] == "selector_ambiguous"
+    assert issues[0]["selector"] == "element_a"
+    assert issues[0]["match_count"] == 2
+
+
+def test_declared_must_not_cross_line_violation_reports_delta() -> None:
+    tex = "\n".join(
+        [
+            r"\draw[a] (0,0) -- (2,0);",
+            r"\draw[b] (1,-1) -- (1,1);",
+        ]
+    )
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "crossing-lines",
+                    "element_a": {"source_line": 1},
+                    "element_b": {"source_line": 2},
+                    "must_not_cross": True,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues[0]["id"] == "crossing-lines"
+    assert issues[0]["status"] == "violated"
+    assert issues[0]["relation"] == "must_not_cross"
+    assert issues[0]["measured_clearance_cm"] == pytest.approx(0.0)
+    assert issues[0]["promotion_tier"] == "auto"
+    assert issues[0]["non_auto_promotable"] is False
+
+
+def test_declared_min_clearance_line_violation_reports_margin() -> None:
+    tex = "\n".join(
+        [
+            r"\draw[a] (0,0) -- (1,0);",
+            r"\draw[b] (0,0.05) -- (1,0.05);",
+        ]
+    )
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "parallel-gap",
+                    "element_a": {"matched_text": "[a]"},
+                    "element_b": {"matched_text": "[b]"},
+                    "min_clearance_cm": 0.1,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues[0]["status"] == "violated"
+    assert issues[0]["relation"] == "min_clearance_cm"
+    assert issues[0]["measured_clearance_cm"] == pytest.approx(0.05)
+    assert issues[0]["required_clearance_cm"] == pytest.approx(0.1)
+    assert issues[0]["clearance_delta_cm"] == pytest.approx(-0.05)
+
+
+def test_declared_must_touch_reports_violation_when_separated() -> None:
+    tex = "\n".join(
+        [
+            r"\draw[a] (0,0) -- (1,0);",
+            r"\draw[b] (0,0.2) -- (1,0.2);",
+        ]
+    )
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "must-touch",
+                    "element_a": {"source_line": 1},
+                    "element_b": {"source_line": 2},
+                    "must_touch": True,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues[0]["status"] == "violated"
+    assert issues[0]["relation"] == "must_touch"
+    assert issues[0]["measured_clearance_cm"] == pytest.approx(0.2)
+
+
+def test_circle_and_curve_envelopes_are_non_auto_promotable() -> None:
+    tex = "\n".join(
+        [
+            r"\draw[line] (0,0) -- (2,0);",
+            r"\fill[mark] (1,0) circle (0.08);",
+            r"\draw[curve] (0,-0.1) .. controls (0.5,0.3) and (1.5,0.3) .. (2,-0.1);",
+        ]
+    )
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "line-through-marker",
+                    "element_a": {"matched_text": "[line]"},
+                    "element_b": {"matched_text": "[mark]"},
+                    "must_not_cross": True,
+                },
+                {
+                    "id": "line-through-curve-envelope",
+                    "element_a": {"matched_text": "[line]"},
+                    "element_b": {"matched_text": "[curve]"},
+                    "must_not_cross": True,
+                },
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert [issue["id"] for issue in issues] == [
+        "line-through-marker",
+        "line-through-curve-envelope",
+    ]
+    assert all(issue["non_auto_promotable"] is True for issue in issues)
+    assert all(issue["promotion_tier"] == "review_queue" for issue in issues)
+
+
+def test_small_filled_circle_extracts_as_marker_and_matches_kind_selector() -> None:
+    tex = "\n".join(
+        [
+            r"\draw[line] (0,0) -- (2,0);",
+            r"\fill[mark] (1,0) circle (0.08);",
+        ]
+    )
+    elements = vector_clearance.extract_vector_elements(tex)
+    marker = next(element for element in elements if element["tex_anchor"].startswith(r"\fill"))
+    assert marker["kind"] == "marker"
+
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "line-through-marker",
+                    "element_a": {"matched_text": "[line]", "kind": "line"},
+                    "element_b": {"matched_text": "[mark]", "kind": "marker"},
+                    "must_not_cross": True,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues[0]["element_b_kind"] == "marker"
+    assert issues[0]["non_auto_promotable"] is True
+
+
+def test_bbox_coordinate_selector_matches_single_declared_element() -> None:
+    tex = "\n".join(
+        [
+            r"\draw[a] (0,0) -- (2,0);",
+            r"\draw[b] (1,-1) -- (1,1);",
+        ]
+    )
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "bbox-selected-crossing",
+                    "element_a": {"bbox_cm": [0, 0, 2, 0], "kind": "line"},
+                    "element_b": {"bbox_cm": [1, -1, 1, 1], "kind": "line"},
+                    "must_not_cross": True,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues[0]["id"] == "bbox-selected-crossing"
+    assert issues[0]["status"] == "violated"
+
+
+def test_no_declarations_means_no_universal_detection() -> None:
+    tex = "\n".join(
+        [
+            r"\draw (0,0) -- (2,0);",
+            r"\fill (1,0) circle (0.08);",
+        ]
+    )
+
+    assert vector_clearance.check_vector_clearance(tex, []) == []
+
+
+def test_payload_structure_records_source_hashes(tmp_path: Path) -> None:
+    fixture = tmp_path / "fig_demo"
+    build = fixture / "build"
+    build.mkdir(parents=True)
+    tex_path = fixture / "fig_demo.tex"
+    tex_path.write_text(r"\draw (0,0) -- (1,0);", encoding="utf-8")
+    pdf_path = build / "fig_demo.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4\n%%EOF\n")
+
+    payload = vector_clearance.vector_clearance_payload(pdf_path, [], 2, tex_path=tex_path)
+
+    assert payload["schema"] == "figure-agent.vector-clearance.v1"
+    assert payload["checked"] == 2
+    assert payload["total"] == 0
+    assert payload["source_hashes"]["examples/fig_demo/fig_demo.tex"].startswith("sha256:")

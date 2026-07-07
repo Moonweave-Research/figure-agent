@@ -20,6 +20,7 @@ QUEUE_SCHEMA = "figure-agent.promotion-queue.v1"
 TRIAGE_SCHEMA = "figure-agent.promotion-triage.v1"
 TEX_ASSERTIONS_SCHEMA = "figure-agent.tex-assertions.v1"
 SEMANTIC_ASSERTIONS_SCHEMA = "figure-agent.semantic-assertions.v1"
+VECTOR_CLEARANCE_SCHEMA = "figure-agent.vector-clearance.v1"
 SUPPORTED_TRIAGE_DEFECT_CLASSES = frozenset(
     {"label_offset", "text_overlap", "whitespace_balance"}
 )
@@ -116,6 +117,12 @@ def load_detector_report(path: Path, detector: str) -> dict[str, Any]:
             raise PromotionWiringError(f"{detector}_schema:issues")
     elif detector == "semantic_assertions":
         if payload.get("schema") != SEMANTIC_ASSERTIONS_SCHEMA:
+            raise PromotionWiringError(f"{detector}_schema:{payload.get('schema')}")
+        issues = payload.get("issues")
+        if not isinstance(issues, list):
+            raise PromotionWiringError(f"{detector}_schema:issues")
+    elif detector == "vector_clearance":
+        if payload.get("schema") != VECTOR_CLEARANCE_SCHEMA:
             raise PromotionWiringError(f"{detector}_schema:{payload.get('schema')}")
         issues = payload.get("issues")
         if not isinstance(issues, list):
@@ -531,6 +538,7 @@ def auto_promoted_defects(example_dir: Path, name: str) -> list[dict[str, Any]]:
     defects: list[dict[str, Any]] = []
     defects.extend(_auto_promoted_tex_defects(example_dir, name))
     defects.extend(_auto_promoted_semantic_defects(example_dir, name))
+    defects.extend(_auto_promoted_vector_clearance_defects(example_dir, name))
     return defects
 
 
@@ -665,6 +673,66 @@ def _auto_promoted_semantic_defects(example_dir: Path, name: str) -> list[dict[s
                     "summary": str(
                         issue.get("message")
                         or "Resolve declared semantic assertion violation"
+                    ),
+                    "patch": "",
+                },
+            }
+        )
+    return defects
+
+
+def _auto_promoted_vector_clearance_defects(example_dir: Path, name: str) -> list[dict[str, Any]]:
+    report_path = example_dir / "build" / "vector_clearance.json"
+    if not report_path.is_file():
+        return []
+    report = load_detector_report(report_path, "vector_clearance")
+    source_hashes = report.get("source_hashes")
+    if source_hashes != _current_source_hashes(example_dir, name):
+        raise PromotionWiringError("vector_clearance_source_hash_mismatch")
+    defects: list[dict[str, Any]] = []
+    for issue in report["issues"]:
+        if not isinstance(issue, dict):
+            raise PromotionWiringError("vector_clearance_schema:issue")
+        if issue.get("status") != "violated":
+            continue
+        if issue.get("promotion_tier") != "auto" or issue.get("non_auto_promotable") is True:
+            continue
+        issue_id = str(issue.get("id") or "vector_clearance")
+        evidence: dict[str, Any] = {
+            "uri": f"figure://{name}/audit/vector-clearance",
+            "node_id": issue_id,
+            "status": issue.get("status"),
+        }
+        for key in (
+            "relation",
+            "element_a",
+            "element_b",
+            "element_a_kind",
+            "element_b_kind",
+            "measured_clearance_cm",
+            "required_clearance_cm",
+            "clearance_delta_cm",
+        ):
+            if key in issue:
+                evidence[key] = issue[key]
+        defects.append(
+            {
+                "source": "deterministic_audit",
+                "source_detector": "vector_clearance",
+                "promoted_by": "auto",
+                "evidence": [evidence],
+                "severity": "action",
+                "owner": "tool",
+                "defect_class": "vector_clearance_violation",
+                "affected_files": [f"examples/{name}/{name}.tex"],
+                "freshness": {"state": "fresh", "source_hashes": source_hashes},
+                "selector_hint": {"kind": "assertion_id", "value": issue_id},
+                "target": {"panel": "unknown", "subregion": f"{issue_id}#0"},
+                "suggested_change": {
+                    "operation_type": "human_review_required",
+                    "summary": str(
+                        issue.get("message")
+                        or "Resolve declared vector clearance violation"
                     ),
                     "patch": "",
                 },
