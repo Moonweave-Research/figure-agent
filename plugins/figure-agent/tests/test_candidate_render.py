@@ -508,7 +508,7 @@ def test_render_cache_falls_back_to_recompile_when_artifact_deleted(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A cache entry whose advertised artifact is gone must recompile, not error (Task 0.2 guard)."""
+    """A missing advertised cache artifact must recompile instead of erroring."""
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
     candidate_set = _candidate_set(workspace, fixture)
