@@ -115,6 +115,29 @@ def _semantic_report_from_words(fixture: Path, words: list[dict]) -> dict:
         "source_hashes": promotion_wiring._current_source_hashes(fixture, "fig_demo"),
     }
 
+def _vector_clearance_payload(fixture: Path, *, conservative: bool = False) -> dict:
+    issue = {
+        "id": "declared-crossing",
+        "status": "violated",
+        "relation": "must_not_cross",
+        "element_a": "VE001",
+        "element_b": "VE002",
+        "element_a_kind": "line",
+        "element_b_kind": "circle" if conservative else "line",
+        "measured_clearance_cm": 0.0,
+        "non_auto_promotable": conservative,
+        "promotion_tier": "review_queue" if conservative else "auto",
+        "message": "declared vector crossing",
+    }
+    return {
+        "schema": "figure-agent.vector-clearance.v1",
+        "render_pdf": "build/fig_demo.pdf",
+        "checked": 1,
+        "issues": [issue],
+        "total": 1,
+        "source_hashes": promotion_wiring._current_source_hashes(fixture, "fig_demo"),
+    }
+
 
 def test_tex_assertions_is_auto_promote_eligible_when_fail_closed_and_p5() -> None:
     state = promotion_wiring.detector_promotion_eligibility("tex_assertions")
@@ -137,6 +160,57 @@ def test_semantic_assertions_auto_promoted_after_p5() -> None:
     assert state["p5_zero_match"] is True
     assert state["p5_multi_match"] is True
     assert state["blocking_reasons"] == []
+
+
+def test_vector_clearance_report_missing_corrupt_wrong_schema_fail_loud(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(promotion_wiring.PromotionWiringError, match="vector_clearance_missing"):
+        promotion_wiring.load_detector_report(tmp_path / "missing.json", "vector_clearance")
+
+    corrupt = tmp_path / "vector_clearance.json"
+    corrupt.write_text("{not-json", encoding="utf-8")
+    with pytest.raises(
+        promotion_wiring.PromotionWiringError,
+        match="vector_clearance_unreadable",
+    ):
+        promotion_wiring.load_detector_report(corrupt, "vector_clearance")
+
+    wrong = tmp_path / "wrong.json"
+    _write_json(wrong, {"schema": "wrong", "issues": []})
+    with pytest.raises(promotion_wiring.PromotionWiringError, match="vector_clearance_schema"):
+        promotion_wiring.load_detector_report(wrong, "vector_clearance")
+
+
+def test_auto_promoted_vector_clearance_reaches_quality_ledger(tmp_path: Path) -> None:
+    fixture = _fixture(tmp_path)
+    _write_json(fixture / "build" / "vector_clearance.json", _vector_clearance_payload(fixture))
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "fig_demo",
+        plugin_root=ROOT,
+        workspace_root=tmp_path,
+    )
+
+    defect = next(
+        item for item in ledger["defects"] if item.get("source_detector") == "vector_clearance"
+    )
+    assert defect["promoted_by"] == "auto"
+    assert defect["defect_class"] == "vector_clearance_violation"
+    assert defect["suggested_change"]["operation_type"] == "human_review_required"
+    assert defect["evidence"][0]["measured_clearance_cm"] == 0.0
+
+
+def test_conservative_vector_clearance_is_not_auto_promoted(tmp_path: Path) -> None:
+    fixture = _fixture(tmp_path)
+    _write_json(
+        fixture / "build" / "vector_clearance.json",
+        _vector_clearance_payload(fixture, conservative=True),
+    )
+
+    defects = promotion_wiring.auto_promoted_defects(fixture, "fig_demo")
+
+    assert [item for item in defects if item["source_detector"] == "vector_clearance"] == []
 
 
 def test_non_promoting_detectors_are_recorded_as_intentional() -> None:
