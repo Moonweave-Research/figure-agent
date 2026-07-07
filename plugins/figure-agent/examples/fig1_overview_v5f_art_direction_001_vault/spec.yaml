@@ -38,6 +38,18 @@ vector_clearance_checks:
     source_line: 1824
     kind: line
   min_clearance_cm: 0.1
+- id: panelD-debye-must-not-cross-red-marker
+  element_a:
+    source_line: 1176
+    kind: curve
+  element_b:
+    bbox_cm:
+    - 1.955
+    - 1.515
+    - 2.045
+    - 1.605
+    kind: marker
+  must_not_cross: true
 panels:
 - id: A
   caption: poly(S-r-DIB) primary microstructure

@@ -30,6 +30,11 @@ _OPERATION_RE = re.compile(
     r"\\(?P<command>draw|fill|shade)(?:\[(?P<options>[^\]]*)\])?(?P<body>.*?);",
     re.DOTALL,
 )
+_FOREACH_PAIR_RE = re.compile(
+    r"\\foreach\s+\\(?P<xvar>[A-Za-z]\w*)\s*/\s*\\(?P<yvar>[A-Za-z]\w*)"
+    r"\s+in\s*\{(?P<pairs>[^}]*)\}\s*\{(?P<body>.*?)\}",
+    re.DOTALL,
+)
 _SEGMENT_RE = re.compile(rf"{_POINT_RE}\s*--\s*{_POINT_RE}")
 _RECT_RE = re.compile(rf"{_POINT_RE}\s*rectangle\s*{_POINT_RE}")
 _CIRCLE_RE = re.compile(rf"{_POINT_RE}\s*circle\s*\(\s*(-?\d+(?:\.\d+)?)(cm|mm|pt)?\s*\)")
@@ -89,7 +94,53 @@ def _iter_operations(tex_text: str) -> list[dict[str, Any]]:
                 "options": str(match.group("options") or ""),
             }
         )
+    operations.extend(_iter_expanded_foreach_operations(tex_text))
+    operations.sort(key=lambda operation: int(operation["source_line"]))
     return operations
+
+
+def _iter_expanded_foreach_operations(tex_text: str) -> list[dict[str, Any]]:
+    operations: list[dict[str, Any]] = []
+    for foreach_match in _FOREACH_PAIR_RE.finditer(tex_text):
+        xvar = str(foreach_match.group("xvar"))
+        yvar = str(foreach_match.group("yvar"))
+        body = str(foreach_match.group("body") or "")
+        pairs = _parse_foreach_pairs(str(foreach_match.group("pairs") or ""))
+        body_start = foreach_match.start("body")
+        for x_value, y_value in pairs:
+            expanded_body = body.replace(f"\\{xvar}", x_value).replace(f"\\{yvar}", y_value)
+            for operation_match in _OPERATION_RE.finditer(expanded_body):
+                original_start = body_start + operation_match.start()
+                prefix = tex_text[:original_start]
+                start_line = prefix.count("\n") + 1
+                line_start = prefix.rfind("\n") + 1
+                if tex_text[line_start:original_start].lstrip().startswith("%"):
+                    continue
+                operations.append(
+                    {
+                        "text": operation_match.group(0),
+                        "source_line": start_line,
+                        "command": str(operation_match.group("command") or ""),
+                        "options": str(operation_match.group("options") or ""),
+                    }
+                )
+    return operations
+
+
+def _parse_foreach_pairs(raw: str) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    for item in raw.split(","):
+        parts = item.strip().split("/")
+        if len(parts) != 2:
+            continue
+        x_raw, y_raw = (part.strip() for part in parts)
+        try:
+            float(x_raw)
+            float(y_raw)
+        except ValueError:
+            continue
+        pairs.append((x_raw, y_raw))
+    return pairs
 
 
 def extract_vector_elements(tex_text: str) -> list[dict[str, Any]]:
@@ -126,7 +177,7 @@ def extract_vector_elements(tex_text: str) -> list[dict[str, Any]]:
             radius_cm = _radius_cm(float(radius), unit)
             kind = (
                 "marker"
-                if operation["command"] == "fill" and radius_cm <= MARKER_RADIUS_MAX_CM
+                if operation["command"] in {"fill", "shade"} and radius_cm <= MARKER_RADIUS_MAX_CM
                 else "circle"
             )
             elements.append(

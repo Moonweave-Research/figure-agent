@@ -267,6 +267,48 @@ def test_v5f_panel_e_peak_crowding_declaration_surfaces_review_queue() -> None:
     assert issue["promotion_tier"] == "review_queue"
 
 
+def test_foreach_ball_shaded_markers_are_extracted_for_declared_checks() -> None:
+    tex = "\n".join(
+        [
+            r"\draw[debye] (1.80, 2.30) .. controls (2.05, 2.28) and (2.12, 0.80) .. (2.22, 0.55);",
+            r"\foreach \mx/\my in {1.20/2.00, 2.00/1.56} {",
+            r"  \shade[ball color=cRed!75!black] (\mx, \my) circle (0.045);",
+            r"  \draw[cRed!95!black, line width=0.18pt] (\mx, \my) circle (0.045);",
+            r"}",
+        ]
+    )
+    elements = vector_clearance.extract_vector_elements(tex)
+
+    marker = next(
+        element
+        for element in elements
+        if element["kind"] == "marker" and element["center_cm"] == [2.0, 1.56]
+    )
+    assert marker["source_line"] == 3
+
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "debye-through-red-marker",
+                    "element_a": {"matched_text": "[debye]", "kind": "curve"},
+                    "element_b": {
+                        "bbox_cm": marker["bbox_cm"],
+                        "kind": "marker",
+                    },
+                    "must_not_cross": True,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues[0]["id"] == "debye-through-red-marker"
+    assert issues[0]["status"] == "violated"
+    assert issues[0]["promotion_tier"] == "review_queue"
+
+
 def test_bbox_coordinate_selector_matches_single_declared_element() -> None:
     tex = "\n".join(
         [
