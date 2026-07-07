@@ -20,6 +20,15 @@ tex_assertions:
   - 1.18
   axis: x
   direction: decreasing
+semantic_assertions:
+- id: row2-subtitle-baseline
+  kind: baseline_aligned
+  targets:
+  - kinetic
+  - ISPD
+  - mechanical
+  tolerance_cm: 0.05
+  target_panel: E
 panels:
 - id: A
   caption: poly(S-r-DIB) primary microstructure
