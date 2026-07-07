@@ -178,6 +178,10 @@ def test_declared_must_not_cross_line_violation_reports_delta() -> None:
     assert issues[0]["status"] == "violated"
     assert issues[0]["relation"] == "must_not_cross"
     assert issues[0]["measured_clearance_cm"] == pytest.approx(0.0)
+    assert issues[0]["element_a_source_line"] == 1
+    assert issues[0]["element_b_source_line"] == 2
+    assert issues[0]["element_a_bbox_cm"] == [0.0, 0.0, 2.0, 0.0]
+    assert issues[0]["element_b_bbox_cm"] == [1.0, -1.0, 1.0, 1.0]
     assert issues[0]["promotion_tier"] == "auto"
     assert issues[0]["non_auto_promotable"] is False
 

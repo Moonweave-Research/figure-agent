@@ -612,6 +612,95 @@ def test_candidate_offset_is_geometry_aware_for_horizontal_near_miss(
     assert op["replacement"] == "\\draw[dashed] (0.45, 6.05) -- (4.78, 6.05);"
 
 
+def test_vector_clearance_review_queue_generates_review_only_line_candidate(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = (
+        "\\draw[peak] (0,0) .. controls (0.5,1.23) and (0.7,1.23) .. (1,0);\n"
+        "\\draw[caliper] (0,1.30) -- (1,1.30);\n"
+    )
+    (fixture / "candidate_demo.tex").write_text(source, encoding="utf-8")
+    source_hash = file_sha256(fixture / "candidate_demo.tex")
+    build_dir = fixture / "build"
+    build_dir.mkdir(exist_ok=True)
+    (build_dir / "vector_clearance.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.vector-clearance.v1",
+                "source_hashes": {"examples/candidate_demo/candidate_demo.tex": source_hash},
+                "issues": [
+                    {
+                        "id": "panelE-deep-peak-caliper-min-clearance",
+                        "status": "violated",
+                        "relation": "min_clearance_cm",
+                        "element_a": "VE001",
+                        "element_b": "VE002",
+                        "element_a_kind": "curve",
+                        "element_b_kind": "line",
+                        "element_a_source_line": 1,
+                        "element_b_source_line": 2,
+                        "element_a_bbox_cm": [0.0, 0.0, 1.0, 1.23],
+                        "element_b_bbox_cm": [0.0, 1.30, 1.0, 1.30],
+                        "measured_clearance_cm": 0.07,
+                        "required_clearance_cm": 0.1,
+                        "clearance_delta_cm": -0.03,
+                        "non_auto_promotable": True,
+                        "promotion_tier": "review_queue",
+                    },
+                    {
+                        "id": "panelD-debye-must-not-cross-red-marker",
+                        "status": "violated",
+                        "relation": "must_not_cross",
+                        "element_a_kind": "curve",
+                        "element_b_kind": "marker",
+                        "promotion_tier": "review_queue",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_ledger(_name, **_kwargs):
+        return {"defects": [], "ledger_hash": "sha256:" + "0" * 64}
+
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        fake_ledger,
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["metrics"]["candidate_count"] == 1
+    candidate = payload["candidates"][0]
+    assert candidate["family"] == "vector-clearance-offset"
+    assert candidate["edit_family"] == "vector_clearance_offset"
+    assert candidate["apply_authority"] == "review_only"
+    assert candidate["target"] == {
+        "panel": "E",
+        "subregion": "vector_clearance:panelE-deep-peak-caliper-min-clearance",
+    }
+    assert candidate["variant"] == {"id": "dy+0.05cm", "dy_cm": pytest.approx(0.05)}
+    assert candidate["selector"]["start_line"] == 2
+    operation = candidate["operations"][0]
+    assert operation["line_start"] == 2
+    assert operation["semantic_kind"] == "vector_clearance_offset"
+    assert operation["replacement"] == "\\draw[caliper] (0, 1.35) -- (1, 1.35);"
+    assert candidate["source_defect"]["defect_class"] == "vector_clearance_violation"
+    assert {
+        (item["code"], item.get("defect_id")) for item in payload["refusals"]
+    } == {
+        ("unsupported_vector_clearance_candidate", "panelD-debye-must-not-cross-red-marker")
+    }
+
+
 def test_candidate_ids_are_stable_for_identical_source_and_ledger_hashes(
     tmp_path: Path,
 ) -> None:
