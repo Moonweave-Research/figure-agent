@@ -10,10 +10,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import pytest  # noqa: E402
 from check_undeclared_geometry import (  # noqa: E402
     UndeclaredGeometryError,
+    _parse_tikz_geometry,
     _undeclared_geometry_profile,
     detect_rendered_boundary_crossings,
     detect_undeclared_geometry,
+    geometry_parse_coverage,
     partition_candidates_by_profile,
+    rendered_curve_coverage,
     undeclared_geometry_payload,
 )
 
@@ -119,6 +122,152 @@ def test_declared_horizontal_rule_suppresses_candidate() -> None:
     }
 
     assert detect_undeclared_geometry(tex, [], spec) == []
+
+
+def test_literal_circle_parses_as_typed_geometry() -> None:
+    tex = r"\fill[cRed] (2.0,3.0) circle (0.25);"
+
+    geometry = _parse_tikz_geometry(tex)
+
+    assert [item["kind"] for item in geometry] == ["circle"]
+    assert geometry[0]["center_pt"] == [56.692913, 85.03937]
+    assert geometry[0]["radius_pt"] == 7.086614
+    assert geometry[0]["bbox_pt"] == [49.606299, 77.952756, 63.779527, 92.125984]
+    assert geometry[0]["source_line"] == 1
+
+
+def test_bezier_controls_parse_as_conservative_curve_hull() -> None:
+    tex = r"\draw[walk] (1.0,1.0) .. controls (1.5,2.0) and (2.5,2.0) .. (3.0,1.0);"
+
+    geometry = _parse_tikz_geometry(tex)
+
+    assert [item["kind"] for item in geometry] == ["curve"]
+    assert geometry[0]["clearance_mode"] == "conservative_hull"
+    assert geometry[0]["bbox_pt"] == [28.346457, 28.346457, 85.03937, 56.692913]
+    assert geometry[0]["control_hull_pt"] == [
+        [28.346457, 28.346457],
+        [42.519685, 56.692913],
+        [70.866142, 56.692913],
+        [85.03937, 28.346457],
+    ]
+
+
+def test_parse_coverage_reports_unknown_nonliteral_circle() -> None:
+    tex = "\n".join(
+        [
+            r"\draw (0,0) -- (1,0);",
+            r"\shade[opacity=0.2] (\cx,\cy) circle ({2.35*\rr});",
+        ]
+    )
+
+    coverage = geometry_parse_coverage(tex)
+
+    assert coverage["total_operations"] == 2
+    assert coverage["parsed_operations"] == 1
+    assert coverage["unknown_operations"] == 1
+    assert coverage["parsed_geometry_counts"] == {"horizontal_line": 1}
+    assert coverage["unknown_reasons"] == {"nonliteral_circle": 1}
+    assert coverage["unknown_samples"][0]["source_line"] == 2
+    assert coverage["unknown_samples"][0]["reason"] == "nonliteral_circle"
+
+
+def test_parse_coverage_reports_specific_unknown_reasons() -> None:
+    tex = "\n".join(
+        [
+            r"\draw plot[smooth] coordinates {(0,0)(1,1)};",
+            r"\fill[white] (7.78, 7.52) ellipse (1.8mm and 0.4mm);",
+            r"\draw[xfer] (1.48,3.18) to[out=-105,in=82] (1.55,2.52);",
+        ]
+    )
+
+    coverage = geometry_parse_coverage(tex)
+
+    assert coverage["unknown_operations"] == 3
+    assert coverage["unknown_reasons"] == {
+        "unsupported_ellipse": 1,
+        "unsupported_plot": 1,
+        "unsupported_to_curve": 1,
+    }
+
+
+def test_parse_coverage_reports_mixed_parsed_and_unknown_operation() -> None:
+    tex = r"\draw (0,0) -- (1,0) plot[smooth] coordinates {(1,0)(2,1)};"
+
+    coverage = geometry_parse_coverage(tex)
+
+    assert coverage["total_operations"] == 1
+    assert coverage["parsed_operations"] == 1
+    assert coverage["fully_parsed_operations"] == 0
+    assert coverage["partial_unknown_operations"] == 1
+    assert coverage["unknown_operations"] == 0
+    assert coverage["parsed_geometry_counts"] == {"horizontal_line": 1}
+    assert coverage["unknown_reasons"] == {"unsupported_plot": 1}
+
+
+def test_payload_includes_geometry_parse_coverage() -> None:
+    tex = r"\fill (2,3) circle (0.25);"
+    candidates = detect_undeclared_geometry(tex, [], {})
+    payload = undeclared_geometry_payload(Path("fixture/build/fig.pdf"), candidates, tex_text=tex)
+
+    assert payload["geometry_parse_coverage"]["total_operations"] == 1
+    assert payload["geometry_parse_coverage"]["parsed_geometry_counts"] == {"circle": 1}
+    assert payload["geometry_parse_coverage"]["non_auto_promotable_geometry"] == [
+        "circle_envelope",
+        "curve_conservative_hull",
+    ]
+
+
+def test_payload_persists_rendered_curve_coverage() -> None:
+    tex = r"\fill (2,3) circle (0.25);"
+    payload = undeclared_geometry_payload(
+        Path("fixture/build/fig.pdf"),
+        [],
+        tex_text=tex,
+        rendered_curves=[
+            {
+                "pts": [(10.0, 20.0), (14.0, 18.0), (18.0, 22.0)],
+                "linewidth": 0.5,
+            }
+        ],
+    )
+
+    assert (
+        payload["geometry_parse_coverage"]["rendered_curves"]["rendered_curve_count"] == 1
+    )
+
+
+def test_circle_and_curve_do_not_emit_undeclared_geometry_candidates() -> None:
+    tex = "\n".join(
+        [
+            r"\fill[cRed] (2.0,3.0) circle (0.25);",
+            r"\draw[walk] (1.0,1.0) .. controls (1.5,2.0) and (2.5,2.0) .. (3.0,1.0);",
+        ]
+    )
+
+    assert detect_undeclared_geometry(tex, [], {}) == []
+
+
+def test_rendered_curve_coverage_consumes_pdfplumber_curves() -> None:
+    curves = [
+        {
+            "pts": [(10.0, 20.0), (14.0, 18.0), (18.0, 22.0)],
+            "linewidth": 0.5,
+            "stroking_color": (0.1, 0.2, 0.3),
+        }
+    ]
+
+    coverage = rendered_curve_coverage(curves)
+
+    assert coverage == {
+        "rendered_curve_count": 1,
+        "rendered_curve_envelopes": [
+            {
+                "bbox_pt": [10.0, 18.0, 18.0, 22.0],
+                "clearance_mode": "rendered_curve_bbox",
+                "linewidth_pt": 0.5,
+            }
+        ],
+    }
 
 
 def test_label_endpoint_near_miss_is_reported() -> None:
