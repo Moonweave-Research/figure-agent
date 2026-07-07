@@ -169,12 +169,14 @@ def _label_offset_candidate(
     variant_id: str = VARIANT_ID,
     variant_dx_cm: float = 0.1,
     selector_text_hash: str | None = None,
+    end_line: int | None = None,
 ) -> dict[str, Any]:
+    end_line = end_line or line_number
     selector = {
         "kind": "line_range_with_hash",
         "path": source_rel.as_posix(),
         "start_line": line_number,
-        "end_line": line_number,
+        "end_line": end_line,
         "original_hash": candidate_contracts.canonical_hash(line),
         "source_hash": source_hash,
     }
@@ -222,6 +224,7 @@ def _label_offset_candidate(
             "source_hash": source_hash,
             "source_path": source_rel.as_posix(),
             "start_line": line_number,
+            "end_line": end_line,
             "variant_id": variant_id,
         }
     )
@@ -363,6 +366,120 @@ def _variant_id_for_dy(dy_cm: float) -> str:
     return f"dy{dy_cm:+.2f}cm"
 
 
+def _operation_text_range(lines: list[str], source_line: int) -> tuple[int, int, str] | None:
+    if source_line < 1 or source_line > len(lines):
+        return None
+    end_line = source_line
+    while end_line <= len(lines):
+        if ";" in lines[end_line - 1]:
+            break
+        end_line += 1
+    if end_line > len(lines):
+        return None
+    text = "\n".join(lines[source_line - 1 : end_line])
+    if end_line > source_line:
+        text += "\n"
+    return source_line, end_line, text
+
+
+def _panel_d_debye_reroute_replacement(text: str) -> str | None:
+    replacements = {
+        "(1.80, 2.30)": "(1.62, 2.30)",
+        "(2.05, 2.28)": "(1.82, 2.28)",
+        "(2.12, 0.80)": "(1.82, 0.80)",
+        "(2.22, 0.55)": "(1.88, 0.55)",
+    }
+    replacement = text
+    for original, new in replacements.items():
+        if original not in replacement:
+            return None
+        replacement = replacement.replace(original, new, 1)
+    return replacement if replacement != text else None
+
+
+def _vector_curve_marker_candidate(
+    *,
+    name: str,
+    issue: dict[str, Any],
+    lines: list[str],
+    source_rel: Path,
+    current_source_hash: str,
+) -> dict[str, Any] | None:
+    issue_id = str(issue.get("id") or "")
+    if issue_id != "panelD-debye-must-not-cross-red-marker":
+        return None
+    line_number = issue.get("element_a_source_line")
+    if isinstance(line_number, bool) or not isinstance(line_number, int):
+        return None
+    operation_range = _operation_text_range(lines, line_number)
+    if operation_range is None:
+        return None
+    start, end, original = operation_range
+    replacement = _panel_d_debye_reroute_replacement(original)
+    if replacement is None:
+        return None
+    variant_id = "debye-cliff-left-of-marker"
+    selector_text_hash = candidate_contracts.canonical_hash(original)
+    candidate = _label_offset_candidate(
+        name=name,
+        candidate_id="",
+        source_rel=source_rel,
+        line_number=start,
+        line=original,
+        replacement=replacement,
+        apply_authority="review_only",
+        target={
+            "panel": _issue_panel(issue_id),
+            "subregion": f"vector_clearance:{issue_id}",
+        },
+        source_hash=current_source_hash,
+        source_defect={
+            "id": issue_id,
+            "source": "deterministic_audit",
+            "defect_class": "vector_clearance_violation",
+            "evidence": [issue],
+            "source_fingerprint": candidate_contracts.canonical_hash(issue),
+            "ledger_hash": "",
+        },
+        edit_class="vector_clearance_violation",
+        variant_id=variant_id,
+        variant_dx_cm=-0.18,
+        selector_text_hash=selector_text_hash,
+        end_line=end,
+    )
+    candidate["edit_family"] = VECTOR_CLEARANCE_EDIT_FAMILY
+    candidate["family"] = VECTOR_CLEARANCE_FAMILY
+    candidate["variant"] = {"id": variant_id, "reroute": "curve_left_of_marker"}
+    candidate["operations"][0]["semantic_kind"] = VECTOR_CLEARANCE_EDIT_FAMILY
+    candidate["operations"][0]["line_start"] = start
+    candidate["operations"][0]["line_end"] = end
+    candidate["risk"] = "medium"
+    candidate["expected_delta"] = [
+        "reroute declared Debye curve envelope away from the red marker"
+    ]
+    candidate["semantic_risks"] = [
+        "curve-marker candidate changes an authored reference curve; "
+        "human must confirm the Debye cliff still conveys intended decay"
+    ]
+    candidate["blocked_if"] = [
+        "semantic_invariant_failed",
+        "render_failed",
+        "human_rejected",
+    ]
+    candidate["candidate_hash"] = candidate_contracts.canonical_hash(
+        {
+            "edit_family": VECTOR_CLEARANCE_EDIT_FAMILY,
+            "issue": issue,
+            "source_hash": current_source_hash,
+            "source_path": source_rel.as_posix(),
+            "start_line": start,
+            "end_line": end,
+            "variant_id": variant_id,
+        }
+    )
+    return candidate
+
+
 def _vector_clearance_candidates(
     name: str,
     paths: runtime_paths.RuntimePaths,
@@ -407,6 +524,17 @@ def _vector_clearance_candidates(
             continue
         issue_id = str(issue.get("id") or "vector_clearance")
         if issue.get("element_b_kind") != "line":
+            curve_candidate = _vector_curve_marker_candidate(
+                name=name,
+                issue=issue,
+                lines=lines,
+                source_rel=source_rel,
+                current_source_hash=current_source_hash,
+            )
+            if curve_candidate is not None:
+                supported_count += 1
+                candidates.append(curve_candidate)
+                continue
             refusals.append(
                 {
                     "code": "unsupported_vector_clearance_candidate",
