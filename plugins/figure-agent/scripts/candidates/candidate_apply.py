@@ -14,6 +14,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+import candidate_acceptance
 import candidate_contracts
 import experience_log
 import fixture_identity
@@ -235,7 +236,16 @@ def _acceptance_hash_diagnostics(
                 "candidate manifest hash mismatch",
             )
         )
-    if acceptance.get("render_manifest_sha256") != _sha256_file(render_manifest_path):
+    # Dual-accept migration seam: new acceptances pin the cache-normalized hash
+    # (invariant to a cache-hit re-render flipping cache: miss->hit); acceptances
+    # written before that change pinned the raw file hash. Both are exact hashes of
+    # controlled content, so accepting either is a migration seam, not a fail-open.
+    stored_render_hash = acceptance.get("render_manifest_sha256")
+    accepted_render_hashes = {
+        candidate_acceptance.normalized_render_manifest_sha256(render_manifest_path),
+        _sha256_file(render_manifest_path),
+    }
+    if stored_render_hash not in accepted_render_hashes:
         diagnostics.append(
             _diagnostic("render_manifest_hash_mismatch", "render manifest hash mismatch")
         )

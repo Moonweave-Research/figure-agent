@@ -35,6 +35,26 @@ def _sha256_file(path: Path) -> str:
     return "sha256:" + digest.hexdigest()
 
 
+def normalized_render_manifest_sha256(path: Path) -> str:
+    """Hash the render manifest with the volatile ``cache`` annotation removed.
+
+    A cache-hit re-render rewrites render_manifest.json with ``cache: "hit"`` (the
+    first render wrote ``"miss"``), a byte change that would otherwise flip the raw
+    file hash and falsely trip the acceptance pin. Excluding only that field makes
+    the pin invariant to whether the manifest was freshly rendered or cache-served.
+    """
+    if path.is_symlink():
+        raise CandidateAcceptanceError(f"sandbox_symlink_forbidden: {path.name}")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise CandidateAcceptanceError("render_manifest_unreadable") from exc
+    if isinstance(payload, dict):
+        payload = {key: value for key, value in payload.items() if key != "cache"}
+    canonical = json.dumps(payload, indent=2, sort_keys=True).encode("utf-8")
+    return "sha256:" + sha256(canonical).hexdigest()
+
+
 def _candidate_id(value: str) -> str:
     fixture_identity.validate_fixture_name(value)
     return value
@@ -88,9 +108,7 @@ def _candidate_set_candidate(
 
 def _render_gates(render_manifest: dict[str, Any]) -> list[str]:
     stages = (
-        render_manifest.get("stages")
-        if isinstance(render_manifest.get("stages"), dict)
-        else {}
+        render_manifest.get("stages") if isinstance(render_manifest.get("stages"), dict) else {}
     )
     required = {
         "compile": "success",
@@ -266,10 +284,9 @@ def build_apply_readiness(
     )
     if apply_result_path.is_file():
         apply_result = _load_json(apply_result_path, "apply_result")
-        if (
-            apply_result.get("status") in TERMINAL_APPLY_STATUSES
-            and _is_same_candidate_apply_result(apply_result, manifest)
-        ):
+        if apply_result.get(
+            "status"
+        ) in TERMINAL_APPLY_STATUSES and _is_same_candidate_apply_result(apply_result, manifest):
             blocking.append("already_applied")
     candidate_set_relative = candidate_contracts.candidate_set_path_label(
         example_dir.parent.parent,
@@ -357,10 +374,13 @@ def write_acceptance(
         "candidate_manifest_path": _fixture_relative(example_dir, manifest_path),
         "candidate_manifest_sha256": _sha256_file(manifest_path),
         "render_manifest_path": _fixture_relative(example_dir, render_manifest_path),
-        "render_manifest_sha256": _sha256_file(render_manifest_path),
+        "render_manifest_sha256": normalized_render_manifest_sha256(render_manifest_path),
         "decision": decision,
         "reviewer": reviewer,
-        "reviewed_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace(
+        "reviewed_at": datetime.now(UTC)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace(
             "+00:00",
             "Z",
         ),

@@ -1474,3 +1474,76 @@ def test_post_apply_recheck_finding_sourced_flags_new_crossing(tmp_path: Path) -
     assert verdict["status"] == "failed"
     assert verdict["reason"] == "finding_new_crossing_introduced"
     assert "(shallow," in verdict["introduced_texts"]
+
+
+def _accept_over_cache_annotated_manifest(workspace: Path, initial_cache: str) -> tuple[Path, dict]:
+    fixture, manifest = _rendered_candidate_fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    render_path = sandbox / "render_manifest.json"
+    render = json.loads(render_path.read_text(encoding="utf-8"))
+    render["cache"] = initial_cache
+    render_path.write_text(json.dumps(render, sort_keys=True) + "\n", encoding="utf-8")
+    _write_semantic_review(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    return fixture, manifest
+
+
+def test_acceptance_pin_survives_cache_hit_reannotation(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accept_over_cache_annotated_manifest(workspace, "miss")
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    render_path = sandbox / "render_manifest.json"
+
+    # A cache-hit re-render of the same set flips ONLY the cache annotation.
+    render = json.loads(render_path.read_text(encoding="utf-8"))
+    render["cache"] = "hit"
+    render_path.write_text(json.dumps(render, sort_keys=True) + "\n", encoding="utf-8")
+    # The re-render refreshes its own semantic-review artifacts (a separate gate).
+    _write_semantic_review(fixture)
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=False,
+    )
+
+    codes = {diagnostic["code"] for diagnostic in result.get("diagnostics", [])}
+    assert "render_manifest_hash_mismatch" not in codes
+    assert result["status"] == "ready"
+
+
+def test_acceptance_pin_still_catches_real_manifest_content_change(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accept_over_cache_annotated_manifest(workspace, "miss")
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    render_path = sandbox / "render_manifest.json"
+
+    # Tamper a NON-cache field: the pin must still reject a real content change.
+    render = json.loads(render_path.read_text(encoding="utf-8"))
+    render["tampered_field"] = "unauthorized"
+    render_path.write_text(json.dumps(render, sort_keys=True) + "\n", encoding="utf-8")
+    _write_semantic_review(fixture)
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=False,
+    )
+
+    codes = {diagnostic["code"] for diagnostic in result.get("diagnostics", [])}
+    assert "render_manifest_hash_mismatch" in codes
+    assert result["status"] == "blocked"
