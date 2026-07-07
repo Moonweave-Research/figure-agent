@@ -219,6 +219,63 @@ def test_improve_reports_complete_without_optional_candidates(
     assert payload["next_operator_instruction"] == "No required plugin action remains."
 
 
+def test_aggressive_candidates_run_when_complete_if_flag_is_explicit(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_COMPLETE,
+                final_stop_reason=fig_run.STOP_COMPLETE,
+            )
+        ],
+    )
+    candidate_calls: list[tuple[str, str, int, Path]] = []
+
+    def _fake_candidate_runner(
+        name: str,
+        *,
+        goal: str,
+        max_iterations: int,
+        repo_root: Path,
+    ) -> dict[str, Any]:
+        candidate_calls.append((name, goal, max_iterations, repo_root))
+        return {
+            "schema": "figure-agent.quality-search-execute.v0",
+            "status": "dry_run_complete",
+            "mode": "execute_dry_witness",
+            "run_dir": ".scratch/quality-search-runs/demo-ready",
+            "safety": {"source_mutation": "forbidden_in_dry_executor"},
+            "decision": {
+                "selected_candidate_id": "CAND007",
+                "selected_family": "vector-clearance-offset",
+            },
+        }
+
+    payload = fig_improve.run_improvement(
+        "demo",
+        goal="improve detector-backed vector clearance",
+        execute=True,
+        repo_root=tmp_path,
+        aggressive_candidates=True,
+        candidate_iterations=2,
+        candidate_runner=_fake_candidate_runner,
+    )
+
+    assert candidate_calls == [
+        ("demo", "improve detector-backed vector clearance", 2, tmp_path)
+    ]
+    assert payload["final_stop_reason"] == "complete"
+    assert payload["final_required_actor"] == "none"
+    assert payload["aggressive_candidate_run"]["status"] == "dry_run_complete"
+    assert payload["aggressive_candidate_run"]["selected_candidate_id"] == "CAND007"
+    assert payload["aggressive_candidate_run"]["selected_family"] == (
+        "vector-clearance-offset"
+    )
+    assert "Review aggressive_candidate_run" in payload["next_operator_instruction"]
+
+
 def test_improve_surfaces_optional_improvement_candidates(
     tmp_path: Path, monkeypatch: Any
 ) -> None:
