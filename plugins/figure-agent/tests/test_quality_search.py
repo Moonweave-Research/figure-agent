@@ -4269,6 +4269,112 @@ def test_quality_search_decision_accepts_vector_clearance_cleanup_below_threshol
     assert decision["non_marginal_visual_change"] is False
 
 
+def test_quality_search_execution_includes_detector_backed_vector_candidates(
+    tmp_path: Path, monkeypatch
+) -> None:
+    name = "fig_demo"
+    _write_minimal_fixture(
+        tmp_path,
+        name=name,
+        tex_source="\\draw (0,0) -- (1,0);\n",
+    )
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+    monkeypatch.setattr(
+        quality_search.candidate_generator,
+        "build_candidate_set",
+        lambda *_args, **_kwargs: {
+            "schema": "figure-agent.candidate-set.v1",
+            "fixture": name,
+            "base": {"tex_hash": "sha256:detector"},
+            "candidates": [
+                {
+                    "id": "CAND007",
+                    "family": "vector-clearance-offset",
+                    "edit_family": "vector_clearance_offset",
+                    "operation_scale": "local_coordinate_offset",
+                    "target": {
+                        "panel": "E",
+                        "subregion": (
+                            "vector_clearance:panelE-deep-peak-caliper-min-clearance"
+                        ),
+                    },
+                    "source_defect": {
+                        "id": "panelE-deep-peak-caliper-min-clearance",
+                        "source": "deterministic_audit",
+                        "defect_class": "vector_clearance_violation",
+                    },
+                    "operations": [
+                        {
+                            "kind": "replace_text",
+                            "operation_scale": "local_coordinate_offset",
+                            "path": f"examples/{name}/{name}.tex",
+                            "line_start": 1,
+                            "line_end": 1,
+                            "original": "\\draw (0,0) -- (1,0);",
+                            "replacement": "\\draw (0,0.08) -- (1,0.08);",
+                        }
+                    ],
+                    "expected_delta": [
+                        "increase declared vector clearance around the deep peak"
+                    ],
+                    "apply_authority": "review_only",
+                    "candidate_hash": "sha256:cand007",
+                }
+            ],
+            "refusals": [],
+            "metrics": {"candidate_count": 1},
+        },
+    )
+    monkeypatch.setattr(
+        quality_search,
+        "_render_candidate_batch",
+        lambda *_args, **_kwargs: {"render_mode": "none", "rendered": []},
+    )
+    monkeypatch.setattr(quality_search, "_rank_rendered_candidates", lambda *_args, **_kwargs: [])
+    monkeypatch.setattr(
+        quality_search,
+        "_quality_search_visual_evidence",
+        lambda *_args, **_kwargs: {"state": "not_applicable"},
+    )
+
+    payload = quality_search.build_quality_search_execution(
+        name,
+        goal="include detector-backed vector clearance candidates",
+        max_iterations=1,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+
+    detector_specs = [
+        item for item in payload["candidate_specs"] if item.get("id") == "CAND007"
+    ]
+    assert len(detector_specs) == 1
+    assert detector_specs[0]["family"] == "vector-clearance-offset"
+    assert detector_specs[0]["source_defect"]["defect_class"] == "vector_clearance_violation"
+    assert any(
+        item.get("id") == "CAND007" for item in payload["candidate_set"]["candidates"]
+    )
+    detector_scores = [
+        item for item in payload["candidate_scores"] if item.get("candidate_id") == "CAND007"
+    ]
+    assert len(detector_scores) == 1
+    assert detector_scores[0]["source_defect"]["id"] == "panelE-deep-peak-caliper-min-clearance"
+
+
 def test_quality_search_rejects_vector_clearance_cleanup_without_detector_defect() -> None:
     plan = {
         "state": {"memory": {"state": "loaded", "families": {}}},
@@ -4813,6 +4919,47 @@ def test_quality_search_recommendation_accepts_converged_current_stop() -> None:
     assert recommendation["status"] == "auto_accept_recommended"
     assert recommendation["recommendation"] == "accept"
     assert recommendation["required_commands"] == ["fig-agent accept-candidate ..."]
+
+
+def test_quality_search_only_logs_experience_ready_recommendations() -> None:
+    blocked_recommendation = {
+        "candidate_id": "CAND007",
+        "status": "blocked",
+        "recommendation": "defer",
+    }
+
+    assert (
+        quality_search._recommendation_ready_for_experience_log(
+            {"candidate_id": "CAND007", "status": "auto_accept_recommended"},
+            None,
+            None,
+        )
+        is True
+    )
+    assert (
+        quality_search._recommendation_ready_for_experience_log(
+            blocked_recommendation,
+            {"attempt_id": "run:CAND007"},
+            {"decision": "stop"},
+        )
+        is True
+    )
+    assert (
+        quality_search._recommendation_ready_for_experience_log(
+            blocked_recommendation,
+            {"attempt_id": "run:CAND007"},
+            {"decision": "defer"},
+        )
+        is False
+    )
+    assert (
+        quality_search._recommendation_ready_for_experience_log(
+            blocked_recommendation,
+            None,
+            {"decision": "stop"},
+        )
+        is False
+    )
 
 
 def test_quality_search_execution_persists_convergence_deferred_experience(

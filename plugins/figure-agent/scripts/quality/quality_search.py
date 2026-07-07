@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import aesthetic_objective
+import candidate_generator
 import candidate_rank
 import candidate_render
 import candidate_review_packet
@@ -6748,6 +6749,115 @@ def _candidate_set_from_specs(
     }
 
 
+def _detector_candidate_specs(candidate_set: dict[str, Any]) -> list[dict[str, Any]]:
+    specs: list[dict[str, Any]] = []
+    for candidate in candidate_set.get("candidates", []):
+        if not isinstance(candidate, dict):
+            continue
+        candidate_id = str(candidate.get("id") or "")
+        if not candidate_id:
+            continue
+        family = str(candidate.get("family") or candidate.get("edit_family") or "")
+        if not family:
+            continue
+        target = candidate.get("target") if isinstance(candidate.get("target"), dict) else {}
+        panel = str(target.get("panel") or "")
+        operation = (
+            candidate["operations"][0]
+            if isinstance(candidate.get("operations"), list)
+            and candidate["operations"]
+            and isinstance(candidate["operations"][0], dict)
+            else {}
+        )
+        expected_delta = candidate.get("expected_delta")
+        expected_visual_movement = (
+            "; ".join(str(item) for item in expected_delta)
+            if isinstance(expected_delta, list)
+            else str(candidate.get("expected_visual_movement") or "")
+        )
+        specs.append(
+            {
+                "id": candidate_id,
+                "fixture": candidate_set.get("fixture"),
+                "family": family,
+                "registry_schema": FAMILY_REGISTRY_SCHEMA,
+                "builder": "detector_candidate_generator",
+                "source": "detector_candidate_generator",
+                "source_defect": (
+                    candidate.get("source_defect")
+                    if isinstance(candidate.get("source_defect"), dict)
+                    else {}
+                ),
+                "target_scope": "detector_candidate",
+                "target_hint": {"target": target},
+                "target_panels": [panel] if panel else [],
+                "source_selectors": (
+                    candidate.get("selectors")
+                    if isinstance(candidate.get("selectors"), list)
+                    else []
+                ),
+                "protected_labels": [],
+                "design_moves": [],
+                "render_targets": ["full", f"panel_{panel}"] if panel else ["full"],
+                "apply_authority": candidate.get("apply_authority") or "review_only",
+                "operation_scale": (
+                    candidate.get("operation_scale")
+                    or operation.get("operation_scale")
+                    or "detector_candidate"
+                ),
+                "template_id": candidate.get("template_id") or operation.get("template_id") or "",
+                "structural_impact": {
+                    "schema": "figure-agent.candidate-structural-impact.v0",
+                    "scope": candidate.get("operation_scale") or "detector_candidate",
+                    "risk_level": candidate.get("risk") or "low",
+                    "direct_targets": [panel] if panel else [],
+                    "possible_ripples": [],
+                    "guard_checks": ["detector_recheck"],
+                },
+                "operations": (
+                    candidate.get("operations")
+                    if isinstance(candidate.get("operations"), list)
+                    else []
+                ),
+                "operation_state": "generated_by_detector_candidate_generator",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search execute v0 is dry witness mode",
+                "expected_detector_movement": expected_visual_movement,
+                "expected_visual_movement": expected_visual_movement,
+                "rollback_condition": "detector recheck or semantic verification regresses",
+                "witness": {
+                    "state": "detector_candidate_generator",
+                    "evidence_inputs": ["candidate_generator", "quality_defect_ledger"],
+                },
+            }
+        )
+    return specs
+
+
+def _merge_candidate_sets(
+    quality_candidate_set: dict[str, Any],
+    detector_candidate_set: dict[str, Any],
+) -> dict[str, Any]:
+    quality_candidates = [
+        item for item in quality_candidate_set.get("candidates", []) if isinstance(item, dict)
+    ]
+    detector_candidates = [
+        item for item in detector_candidate_set.get("candidates", []) if isinstance(item, dict)
+    ]
+    quality_refusals = [
+        item for item in quality_candidate_set.get("refusals", []) if isinstance(item, dict)
+    ]
+    detector_refusals = [
+        item for item in detector_candidate_set.get("refusals", []) if isinstance(item, dict)
+    ]
+    return {
+        **quality_candidate_set,
+        "candidates": [*quality_candidates, *detector_candidates],
+        "refusals": [*quality_refusals, *detector_refusals],
+        "detector_candidate_metrics": detector_candidate_set.get("metrics", {}),
+    }
+
+
 def _render_candidate_batch(
     name: str,
     candidate_set: dict[str, Any],
@@ -8875,6 +8985,26 @@ def _execution_decision(
     }
 
 
+def _recommendation_ready_for_experience_log(
+    selected_acceptance_recommendation: dict[str, Any] | None,
+    selected_attempt: dict[str, Any] | None,
+    convergence_decision: dict[str, Any] | None,
+) -> bool:
+    if not isinstance(selected_acceptance_recommendation, dict) or not isinstance(
+        selected_acceptance_recommendation.get("candidate_id"), str
+    ):
+        return False
+    if selected_acceptance_recommendation.get("status") == "auto_accept_recommended":
+        return True
+    return (
+        isinstance(selected_attempt, dict)
+        and isinstance(convergence_decision, dict)
+        and convergence_decision.get("decision") in {"stop", "rollback", "human_review"}
+        and selected_acceptance_recommendation.get("status") == "blocked"
+        and selected_acceptance_recommendation.get("recommendation") == "defer"
+    )
+
+
 def _selected_review_packet(
     name: str,
     decision: dict[str, Any],
@@ -9493,13 +9623,23 @@ def build_quality_search_execution(
         "source_context": source_context,
         "families": QUALITY_SEARCH_FAMILY_REGISTRY,
     }
-    candidate_specs = _candidate_specs_from_plan(plan, source_context=source_context)
-    candidate_set = _candidate_set_from_specs(
+    plan_candidate_specs = _candidate_specs_from_plan(plan, source_context=source_context)
+    detector_candidate_set = candidate_generator.build_candidate_set(
         name,
-        candidate_specs,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    candidate_specs = [
+        *plan_candidate_specs,
+        *_detector_candidate_specs(detector_candidate_set),
+    ]
+    quality_candidate_set = _candidate_set_from_specs(
+        name,
+        plan_candidate_specs,
         source_context=source_context,
         paths=paths,
     )
+    candidate_set = _merge_candidate_sets(quality_candidate_set, detector_candidate_set)
     candidate_set_path = run_dir.relative_to(paths.workspace_root) / "candidate_set_000.json"
     render_results = _render_candidate_batch(
         name,
@@ -9574,20 +9714,10 @@ def build_quality_search_execution(
         convergence_decision,
     )
     recommendation_experience = None
-    recommendation_ready_for_experience = (
-        isinstance(selected_acceptance_recommendation, dict)
-        and isinstance(selected_acceptance_recommendation.get("candidate_id"), str)
-        and (
-            selected_acceptance_recommendation.get("status") == "auto_accept_recommended"
-            or (
-                isinstance(convergence_decision, dict)
-                and convergence_decision.get("decision") != "accept"
-                and selected_acceptance_recommendation.get("status") == "blocked"
-                and selected_acceptance_recommendation.get("recommendation") == "defer"
-                and "convergence controller did not accept"
-                in str(selected_acceptance_recommendation.get("rationale") or "")
-            )
-        )
+    recommendation_ready_for_experience = _recommendation_ready_for_experience_log(
+        selected_acceptance_recommendation,
+        selected_attempt,
+        convergence_decision,
     )
     if recommendation_ready_for_experience:
         selected_candidate_id = selected_acceptance_recommendation["candidate_id"]
