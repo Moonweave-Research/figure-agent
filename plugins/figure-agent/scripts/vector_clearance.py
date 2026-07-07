@@ -510,6 +510,10 @@ def check_vector_clearance(tex_text: str, checks: list[dict[str, Any]]) -> list[
             "element_b": element_b["id"],
             "element_a_kind": element_a["kind"],
             "element_b_kind": element_b["kind"],
+            "element_a_source_line": element_a["source_line"],
+            "element_b_source_line": element_b["source_line"],
+            "element_a_bbox_cm": element_a["bbox_cm"],
+            "element_b_bbox_cm": element_b["bbox_cm"],
             "measured_clearance_cm": round(distance_cm, 6),
         }
         if relation == "must_not_cross":

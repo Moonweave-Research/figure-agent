@@ -38,6 +38,8 @@ ACTIONABILITY_REFUSAL_CODES = frozenset(
 )
 EDIT_FAMILY = "bounded_coordinate_offset"
 FAMILY = "bounded-coordinate-offset"
+VECTOR_CLEARANCE_EDIT_FAMILY = "vector_clearance_offset"
+VECTOR_CLEARANCE_FAMILY = "vector-clearance-offset"
 VARIANT_ID = "dx+0.10cm"
 SEVERITY_RANK = {"blocker": 0, "action": 1, "major": 2, "minor": 3, "nit": 4}
 
@@ -315,6 +317,188 @@ def _source_defect(defect: dict[str, Any], ledger_hash: str) -> dict[str, Any]:
         "source_fingerprint": str(defect.get("source_fingerprint") or ""),
         "ledger_hash": ledger_hash,
     }
+
+
+def _issue_panel(issue_id: str) -> str:
+    match = re.search(r"panel([A-Za-z])", issue_id)
+    return match.group(1).upper() if match else "unknown"
+
+
+def _bbox_center_y(bbox: Any) -> float | None:
+    if (
+        not isinstance(bbox, list)
+        or len(bbox) != 4
+        or any(isinstance(value, bool) or not isinstance(value, int | float) for value in bbox)
+    ):
+        return None
+    return (float(bbox[1]) + float(bbox[3])) / 2.0
+
+
+def _vector_clearance_dy_cm(issue: dict[str, Any]) -> float | None:
+    if issue.get("relation") != "min_clearance_cm":
+        return None
+    measured = issue.get("measured_clearance_cm")
+    required = issue.get("required_clearance_cm")
+    if (
+        isinstance(measured, bool)
+        or not isinstance(measured, int | float)
+        or isinstance(required, bool)
+        or not isinstance(required, int | float)
+    ):
+        return None
+    deficit = float(required) - float(measured)
+    if deficit <= 0:
+        return None
+    element_a_y = _bbox_center_y(issue.get("element_a_bbox_cm"))
+    element_b_y = _bbox_center_y(issue.get("element_b_bbox_cm"))
+    if element_a_y is None or element_b_y is None:
+        return None
+    direction = 1.0 if element_b_y >= element_a_y else -1.0
+    # Add a small cushion beyond the measured deficit while staying inside the
+    # primitive's bounded 0.10 cm movement cap.
+    return direction * min(deficit + 0.02, bounded_coordinate_offset.MAX_TRANSLATE_CM)
+
+
+def _variant_id_for_dy(dy_cm: float) -> str:
+    return f"dy{dy_cm:+.2f}cm"
+
+
+def _vector_clearance_candidates(
+    name: str,
+    paths: runtime_paths.RuntimePaths,
+    lines: list[str],
+    source_rel: Path,
+    current_source_hash: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, str]], dict[str, int]]:
+    example_dir = paths.examples_dir / name
+    report_path = example_dir / "build" / "vector_clearance.json"
+    if not report_path.is_file():
+        return [], [], {"vector_clearance_supported_defect_count": 0}
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return [], [{"code": "vector_clearance_report_unreadable"}], {
+            "vector_clearance_supported_defect_count": 0
+        }
+    if not isinstance(report, dict):
+        return [], [{"code": "vector_clearance_report_unreadable"}], {
+            "vector_clearance_supported_defect_count": 0
+        }
+    source_hashes = report.get("source_hashes")
+    expected = (
+        source_hashes.get(source_rel.as_posix()) if isinstance(source_hashes, dict) else None
+    )
+    if expected != current_source_hash:
+        return [], [{"code": "stale_detector_evidence", "defect_id": "vector_clearance"}], {
+            "vector_clearance_supported_defect_count": 0
+        }
+    issues = report.get("issues")
+    if not isinstance(issues, list):
+        return [], [{"code": "vector_clearance_report_unreadable"}], {
+            "vector_clearance_supported_defect_count": 0
+        }
+    candidates: list[dict[str, Any]] = []
+    refusals: list[dict[str, str]] = []
+    supported_count = 0
+    for issue in issues:
+        if not isinstance(issue, dict) or issue.get("status") != "violated":
+            continue
+        if issue.get("promotion_tier") != "review_queue":
+            continue
+        issue_id = str(issue.get("id") or "vector_clearance")
+        if issue.get("element_b_kind") != "line":
+            refusals.append(
+                {
+                    "code": "unsupported_vector_clearance_candidate",
+                    "defect_id": issue_id,
+                }
+            )
+            continue
+        dy_cm = _vector_clearance_dy_cm(issue)
+        line_number = issue.get("element_b_source_line")
+        if (
+            dy_cm is None
+            or isinstance(line_number, bool)
+            or not isinstance(line_number, int)
+            or line_number < 1
+            or line_number > len(lines)
+        ):
+            refusals.append(
+                {
+                    "code": "unsupported_vector_clearance_candidate",
+                    "defect_id": issue_id,
+                }
+            )
+            continue
+        line = lines[line_number - 1]
+        replacement = bounded_coordinate_offset.offset_all_coordinates(
+            line,
+            axis="y",
+            dx_cm=dy_cm,
+        )
+        if replacement is None:
+            refusals.append({"code": "no_bounded_operation", "defect_id": issue_id})
+            continue
+        supported_count += 1
+        variant_id = _variant_id_for_dy(dy_cm)
+        selector_text_hash = candidate_contracts.canonical_hash(line)
+        candidate = _label_offset_candidate(
+            name=name,
+            candidate_id="",
+            source_rel=source_rel,
+            line_number=line_number,
+            line=line,
+            replacement=replacement,
+            apply_authority="review_only",
+            target={
+                "panel": _issue_panel(issue_id),
+                "subregion": f"vector_clearance:{issue_id}",
+            },
+            source_hash=current_source_hash,
+            source_defect={
+                "id": issue_id,
+                "source": "deterministic_audit",
+                "defect_class": "vector_clearance_violation",
+                "evidence": [issue],
+                "source_fingerprint": candidate_contracts.canonical_hash(issue),
+                "ledger_hash": "",
+            },
+            edit_class="vector_clearance_violation",
+            variant_id=variant_id,
+            variant_dx_cm=dy_cm,
+            selector_text_hash=selector_text_hash,
+        )
+        candidate["edit_family"] = VECTOR_CLEARANCE_EDIT_FAMILY
+        candidate["family"] = VECTOR_CLEARANCE_FAMILY
+        candidate["variant"] = {"id": variant_id, "dy_cm": dy_cm}
+        candidate["operations"][0]["semantic_kind"] = VECTOR_CLEARANCE_EDIT_FAMILY
+        candidate["operations"][0]["line_start"] = line_number
+        candidate["operations"][0]["line_end"] = line_number
+        candidate["risk"] = "medium"
+        candidate["expected_delta"] = [
+            "increase declared vector clearance without changing label text"
+        ]
+        candidate["semantic_risks"] = [
+            "vector clearance candidate moves an authored annotation line; "
+            "human must confirm intent"
+        ]
+        candidate["blocked_if"] = [
+            "semantic_invariant_failed",
+            "render_failed",
+            "human_rejected",
+        ]
+        candidate["candidate_hash"] = candidate_contracts.canonical_hash(
+            {
+                "edit_family": VECTOR_CLEARANCE_EDIT_FAMILY,
+                "issue": issue,
+                "source_hash": current_source_hash,
+                "source_path": source_rel.as_posix(),
+                "start_line": line_number,
+                "variant_id": variant_id,
+            }
+        )
+        candidates.append(candidate)
+    return candidates, refusals, {"vector_clearance_supported_defect_count": supported_count}
 
 
 def _defect_sort_key(
@@ -862,6 +1046,18 @@ def build_candidate_set(
         base["tex_hash"],
         apply_authority,
     )
+    vector_candidates, vector_refusals, vector_counts = _vector_clearance_candidates(
+        name,
+        paths,
+        lines,
+        source_rel,
+        base["tex_hash"],
+    )
+    candidates.extend(vector_candidates)
+    _append_refusals(refusals, vector_refusals)
+    defect_counts["candidate_supported_defect_count"] += vector_counts[
+        "vector_clearance_supported_defect_count"
+    ]
     covered_lines = {
         candidate["selector"]["start_line"]
         for candidate in candidates

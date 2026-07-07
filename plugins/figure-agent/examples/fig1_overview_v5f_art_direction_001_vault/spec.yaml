@@ -37,7 +37,7 @@ vector_clearance_checks:
     kind: curve
   element_b:
     source_line: 1824
-    matched_text: "(5.9, 1.30) -- (7, 1.30)"
+    matched_text: "line width=0.22pt] (5.9,"
     kind: line
   min_clearance_cm: 0.1
 - id: panelD-debye-must-not-cross-red-marker
