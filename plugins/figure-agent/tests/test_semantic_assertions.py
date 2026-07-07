@@ -104,6 +104,160 @@ def test_parse_rejects_non_positive_tolerance():
         parse_assertions(spec)
 
 
+def test_parse_valid_alignment_assertion():
+    spec = {
+        "semantic_assertions": [
+            {
+                "id": "row-subtitle-baseline",
+                "kind": "baseline_aligned",
+                "targets": ["kinetic", "ISPD", "mechanical"],
+                "tolerance_cm": 0.05,
+            }
+        ]
+    }
+
+    parsed = parse_assertions(spec)
+
+    assert parsed == [
+        {
+            "id": "row-subtitle-baseline",
+            "kind": "baseline_aligned",
+            "targets": ["kinetic", "ISPD", "mechanical"],
+            "tolerance_cm": 0.05,
+        }
+    ]
+
+
+def test_parse_rejects_bad_alignment_kind_and_too_few_targets():
+    with pytest.raises(SemanticAssertionError, match="kind"):
+        parse_assertions(
+            {
+                "semantic_assertions": [
+                    {"id": "bad", "kind": "diagonal_aligned", "targets": ["a", "b"]}
+                ]
+            }
+        )
+
+    with pytest.raises(SemanticAssertionError, match="targets"):
+        parse_assertions(
+            {"semantic_assertions": [{"id": "short", "kind": "left_aligned", "targets": ["a"]}]}
+        )
+
+
+def test_alignment_baseline_violation_reports_numeric_delta():
+    words = [
+        _word("kinetic", 10, 100.0),
+        _word("ISPD", 40, 92.0),
+        _word("mechanical", 80, 100.0),
+    ]
+    assertions = parse_assertions(
+        {
+            "semantic_assertions": [
+                {
+                    "id": "row-subtitle-baseline",
+                    "kind": "baseline_aligned",
+                    "targets": ["kinetic", "ISPD", "mechanical"],
+                    "tolerance_cm": 0.05,
+                }
+            ]
+        }
+    )
+
+    issues = check_semantic_assertions(words, assertions)
+
+    assert len(issues) == 1
+    issue = issues[0]
+    assert issue["status"] == "violated"
+    assert issue["kind"] == "baseline_aligned"
+    assert issue["targets"] == ["kinetic", "ISPD", "mechanical"]
+    assert issue["edit_target"] == "ISPD"
+    assert issue["measured_delta_pt"] == pytest.approx(8.0)
+    assert issue["measured_delta_cm"] == pytest.approx(8.0 / (72.0 / 2.54))
+    assert issue["tolerance_cm"] == 0.05
+
+
+def test_alignment_without_unique_outlier_omits_edit_target():
+    words = [_word("a", 10, 100.0), _word("b", 40, 92.0), _word("c", 70, 108.0)]
+    assertions = parse_assertions(
+        {
+            "semantic_assertions": [
+                {"id": "spread", "kind": "baseline_aligned", "targets": ["a", "b", "c"]}
+            ]
+        }
+    )
+
+    issues = check_semantic_assertions(words, assertions)
+
+    assert issues[0]["status"] == "violated"
+    assert "edit_target" not in issues[0]
+
+
+def test_alignment_variants_pass_within_tolerance():
+    words = [_word("a", 10.0, 20.0), _word("b", 10.5, 20.4), _word("c", 10.2, 20.2)]
+    for kind in (
+        "top_aligned",
+        "left_aligned",
+        "right_aligned",
+        "center_aligned_x",
+        "center_aligned_y",
+    ):
+        assertions = parse_assertions(
+            {
+                "semantic_assertions": [
+                    {
+                        "id": kind,
+                        "kind": kind,
+                        "targets": ["a", "b", "c"],
+                        "tolerance_cm": 0.05,
+                    }
+                ]
+            }
+        )
+
+        assert check_semantic_assertions(words, assertions) == []
+
+
+def test_p5_multi_match_is_anchor_ambiguous_for_relations_and_alignment():
+    words = [_word("deep", 10, 20), _word("deep", 30, 20), _word("shallow", 10, 80)]
+
+    relation_issues = check_semantic_assertions(
+        words, [{"id": "sd", "relation": "above", "subject": "shallow", "reference": "deep"}]
+    )
+    assert relation_issues[0]["status"] == "anchor_ambiguous"
+    assert relation_issues[0]["anchor"] == "deep"
+
+    alignment = parse_assertions(
+        {
+            "semantic_assertions": [
+                {"id": "ambiguous", "kind": "baseline_aligned", "targets": ["deep", "shallow"]}
+            ]
+        }
+    )
+    alignment_issues = check_semantic_assertions(words, alignment)
+    assert alignment_issues[0]["status"] == "anchor_ambiguous"
+    assert alignment_issues[0]["anchor"] == "deep"
+
+
+def test_cross_figure_recall_deliberate_baseline_float_on_non_v5f_fixture():
+    words = [_word("CB", 10, 100.0), _word("trap", 40, 92.0), _word("VB", 70, 100.0)]
+    assertions = parse_assertions(
+        {
+            "semantic_assertions": [
+                {
+                    "id": "fig3-deliberate-baseline-float",
+                    "kind": "baseline_aligned",
+                    "targets": ["CB", "trap", "VB"],
+                }
+            ]
+        }
+    )
+
+    issues = check_semantic_assertions(words, assertions)
+
+    assert issues[0]["status"] == "violated"
+    assert issues[0]["measured_delta_pt"] == pytest.approx(8.0)
+
+
 def test_missing_anchor_reported():
     words = [_word("shallow", 100, 20)]
     issues = check_semantic_assertions(

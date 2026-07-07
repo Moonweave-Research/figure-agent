@@ -19,8 +19,19 @@ import runtime_paths
 QUEUE_SCHEMA = "figure-agent.promotion-queue.v1"
 TRIAGE_SCHEMA = "figure-agent.promotion-triage.v1"
 TEX_ASSERTIONS_SCHEMA = "figure-agent.tex-assertions.v1"
+SEMANTIC_ASSERTIONS_SCHEMA = "figure-agent.semantic-assertions.v1"
 SUPPORTED_TRIAGE_DEFECT_CLASSES = frozenset(
     {"label_offset", "text_overlap", "whitespace_balance"}
+)
+ALIGNMENT_ASSERTION_KINDS = frozenset(
+    {
+        "baseline_aligned",
+        "top_aligned",
+        "left_aligned",
+        "right_aligned",
+        "center_aligned_x",
+        "center_aligned_y",
+    }
 )
 _PANEL_HINT_RE = re.compile(r"^\s*%\s*Panel\s+([A-Za-z0-9_-]+)\b")
 
@@ -42,11 +53,11 @@ AUTO_PROMOTE_ELIGIBILITY: dict[str, dict[str, Any]] = {
     "semantic_assertions": {
         "detector": "semantic_assertions",
         "promotion_tier": "auto",
-        "eligible": False,
+        "eligible": True,
         "fail_closed": True,
         "p5_zero_match": True,
-        "p5_multi_match": False,
-        "blocking_reasons": ["p5_multi_match_missing"],
+        "p5_multi_match": True,
+        "blocking_reasons": [],
     },
 }
 
@@ -99,6 +110,12 @@ def load_detector_report(path: Path, detector: str) -> dict[str, Any]:
     assert payload is not None
     if detector == "tex_assertions":
         if payload.get("schema") != TEX_ASSERTIONS_SCHEMA:
+            raise PromotionWiringError(f"{detector}_schema:{payload.get('schema')}")
+        issues = payload.get("issues")
+        if not isinstance(issues, list):
+            raise PromotionWiringError(f"{detector}_schema:issues")
+    elif detector == "semantic_assertions":
+        if payload.get("schema") != SEMANTIC_ASSERTIONS_SCHEMA:
             raise PromotionWiringError(f"{detector}_schema:{payload.get('schema')}")
         issues = payload.get("issues")
         if not isinstance(issues, list):
@@ -167,6 +184,31 @@ def _selector_text_hash(lines: list[str], start: int, end: int) -> str:
     selected = "\n".join(lines[start - 1 : end])
     encoded = json.dumps(selected, sort_keys=True, separators=(",", ":")).encode()
     return "sha256:" + sha256(encoded).hexdigest()
+
+
+def _semantic_edit_line(lines: list[str], issue: dict[str, Any]) -> int | None:
+    edit_target = issue.get("edit_target")
+    if not isinstance(edit_target, str) or not edit_target.strip():
+        return None
+    target = edit_target.strip()
+    braced = "{" + target + "}"
+    render_lines = [
+        (index, line)
+        for index, line in enumerate(lines, start=1)
+        if not line.lstrip().startswith("%")
+    ]
+    matches = [
+        index
+        for index, line in render_lines
+        if braced in line
+    ]
+    if not matches:
+        matches = [index for index, line in render_lines if target in line]
+    if not matches:
+        raise PromotionWiringError(f"semantic_assertions_source_anchor_missing:{target}")
+    if len(matches) > 1:
+        raise PromotionWiringError(f"semantic_assertions_source_anchor_ambiguous:{target}")
+    return matches[0]
 
 
 def _panel_markers(lines: list[str]) -> list[tuple[int, str]]:
@@ -486,6 +528,13 @@ def load_promotion_triage(path: Path, *, missing_ok: bool = True) -> dict[str, A
 
 
 def auto_promoted_defects(example_dir: Path, name: str) -> list[dict[str, Any]]:
+    defects: list[dict[str, Any]] = []
+    defects.extend(_auto_promoted_tex_defects(example_dir, name))
+    defects.extend(_auto_promoted_semantic_defects(example_dir, name))
+    return defects
+
+
+def _auto_promoted_tex_defects(example_dir: Path, name: str) -> list[dict[str, Any]]:
     report_path = example_dir / "build" / "tex_assertions.json"
     if not report_path.is_file():
         return []
@@ -534,6 +583,88 @@ def auto_promoted_defects(example_dir: Path, name: str) -> list[dict[str, Any]]:
                     "summary": str(
                         issue.get("message")
                         or "Resolve declared TeX assertion violation"
+                    ),
+                    "patch": "",
+                },
+            }
+        )
+    return defects
+
+
+def _auto_promoted_semantic_defects(example_dir: Path, name: str) -> list[dict[str, Any]]:
+    report_path = example_dir / "build" / "semantic_assertions.json"
+    if not report_path.is_file():
+        return []
+    report = load_detector_report(report_path, "semantic_assertions")
+    source_hashes = report.get("source_hashes")
+    if source_hashes != _current_source_hashes(example_dir, name):
+        raise PromotionWiringError("semantic_assertions_source_hash_mismatch")
+    lines = _source_lines(example_dir, name)
+    defects: list[dict[str, Any]] = []
+    for issue in report["issues"]:
+        if not isinstance(issue, dict):
+            raise PromotionWiringError("semantic_assertions_schema:issue")
+        status = issue.get("status")
+        if status not in {"violated", "anchor_missing", "anchor_ambiguous"}:
+            continue
+        issue_id = str(issue.get("id") or "semantic_assertion")
+        kind = issue.get("kind")
+        is_alignment = kind in ALIGNMENT_ASSERTION_KINDS
+        edit_line = (
+            _semantic_edit_line(lines, issue)
+            if is_alignment and status == "violated"
+            else None
+        )
+        actionable_alignment = is_alignment and status == "violated" and edit_line is not None
+        selector_hint: dict[str, Any] = {"kind": "assertion_id", "value": issue_id}
+        if edit_line is not None:
+            selector_hint = {
+                "kind": "line_range",
+                "value": f"{edit_line}:{edit_line}",
+                "assertion_id": issue_id,
+                "edit_target": issue.get("edit_target"),
+                "selector_text_hash": _selector_text_hash(lines, edit_line, edit_line),
+            }
+        panel = issue.get("target_panel")
+        if not isinstance(panel, str) or not panel.strip():
+            panel = "unknown"
+        evidence: dict[str, Any] = {
+            "uri": f"figure://{name}/audit/semantic-assertions",
+            "node_id": issue_id,
+            "status": status,
+        }
+        for key in (
+            "kind",
+            "targets",
+            "edit_target",
+            "measured_delta_pt",
+            "measured_delta_cm",
+            "tolerance_cm",
+        ):
+            if key in issue:
+                evidence[key] = issue[key]
+        defects.append(
+            {
+                "source": "deterministic_audit",
+                "source_detector": "semantic_assertions",
+                "promoted_by": "auto",
+                "evidence": [evidence],
+                "severity": "action",
+                "owner": "tool",
+                "defect_class": "label_offset"
+                if actionable_alignment
+                else "semantic_assertion_violation",
+                "affected_files": [f"examples/{name}/{name}.tex"],
+                "freshness": {"state": "fresh", "source_hashes": source_hashes},
+                "selector_hint": selector_hint,
+                "target": {"panel": panel.strip(), "subregion": f"{issue_id}#0"},
+                "suggested_change": {
+                    "operation_type": "bounded_coordinate_offset"
+                    if actionable_alignment
+                    else "human_review_required",
+                    "summary": str(
+                        issue.get("message")
+                        or "Resolve declared semantic assertion violation"
                     ),
                     "patch": "",
                 },
