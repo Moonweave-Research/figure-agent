@@ -8240,6 +8240,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_post_gap_label_relief": 0.9,
             "panel_f_post_label_relief_source_settle": 0.9,
             "panel_f_trap_label_left_rail": 0.92,
+            "vector-clearance-offset": 0.91,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
         }
@@ -8341,6 +8342,20 @@ def _render_policy_adjustment(ranking: dict[str, Any] | None) -> tuple[float, fl
 
 
 def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
+    source_defect = score.get("source_defect")
+    if (
+        score.get("family") == "vector-clearance-offset"
+        and isinstance(source_defect, dict)
+        and source_defect.get("defect_class") == "vector_clearance_violation"
+    ):
+        for key in ("panel_changed_pixel_ratio", "full_changed_pixel_ratio"):
+            try:
+                if float(score.get(key) or 0.0) > 0.0:
+                    return True
+            except (TypeError, ValueError):
+                continue
+        return False
+
     targeted_templates = {
         "panel_f_bias_label_cleanup": PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID,
         "panel_f_source_cue_readability": PANEL_F_SOURCE_CUE_READABILITY_TEMPLATE_ID,
@@ -8613,6 +8628,9 @@ def _candidate_scores(
                 "template_id": template_id,
                 "expected_visual_movement": (
                     metadata.get("expected_visual_movement") or spec.get("expected_visual_movement")
+                ),
+                "source_defect": (
+                    spec.get("source_defect") if isinstance(spec.get("source_defect"), dict) else {}
                 ),
                 "structural_impact": spec.get("structural_impact", {}),
                 "evidence_score": score,

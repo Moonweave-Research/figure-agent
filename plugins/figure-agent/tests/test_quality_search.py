@@ -4225,6 +4225,81 @@ def test_quality_search_decision_accepts_targeted_cleanup_below_non_marginal_thr
     assert decision["non_marginal_visual_change"] is False
 
 
+def test_quality_search_decision_accepts_vector_clearance_cleanup_below_threshold() -> None:
+    plan = {
+        "state": {"memory": {"state": "loaded", "families": {}}},
+        "classifications": [],
+        "next_recommended_operation": {"kind": "step_out_experiment"},
+    }
+    candidate_specs = [
+        {
+            "id": "CAND007",
+            "family": "vector-clearance-offset",
+            "source_defect": {
+                "id": "panelE-deep-peak-caliper-min-clearance",
+                "defect_class": "vector_clearance_violation",
+            },
+            "target": {
+                "panel": "E",
+                "subregion": "vector_clearance:panelE-deep-peak-caliper-min-clearance",
+            },
+        },
+    ]
+    rankings = [
+        {
+            "candidate_id": "CAND007",
+            "rank_score": 0.65,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.0011543659433891434},
+        },
+    ]
+
+    scores = quality_search._candidate_scores(candidate_specs, plan, rankings)
+    decision = quality_search._execution_decision(plan, scores)
+
+    assert scores[0]["evidence_score"] == 0.91
+    assert scores[0]["source_defect"]["defect_class"] == "vector_clearance_violation"
+    assert scores[0]["non_marginal_visual_change"] is False
+    assert decision["kind"] == "candidate_batch_ready"
+    assert decision["candidate_state"] == "targeted_cleanup_review_candidate_ready"
+    assert decision["selected_candidate_id"] == "CAND007"
+    assert decision["selected_family"] == "vector-clearance-offset"
+    assert decision["targeted_cleanup_visual_change"] is True
+    assert decision["non_marginal_visual_change"] is False
+
+
+def test_quality_search_rejects_vector_clearance_cleanup_without_detector_defect() -> None:
+    plan = {
+        "state": {"memory": {"state": "loaded", "families": {}}},
+        "classifications": [],
+        "next_recommended_operation": {"kind": "step_out_experiment"},
+    }
+    candidate_specs = [
+        {
+            "id": "CAND_FAKE",
+            "family": "vector-clearance-offset",
+            "source_defect": {"id": "missing-defect", "defect_class": "visual_clash"},
+        },
+    ]
+    rankings = [
+        {
+            "candidate_id": "CAND_FAKE",
+            "rank_score": 0.65,
+            "render_status": "rendered_needs_human_review",
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.001},
+        },
+    ]
+
+    scores = quality_search._candidate_scores(candidate_specs, plan, rankings)
+    decision = quality_search._execution_decision(plan, scores)
+
+    assert scores[0]["non_marginal_visual_change"] is False
+    assert decision["kind"] == "no_non_marginal_candidate"
+    assert decision["selected_candidate_id"] is None
+
+
 def test_quality_search_decision_accepts_panel_crop_non_marginal_candidate() -> None:
     plan = {
         "state": {"memory": {"state": "loaded", "families": {}}},
