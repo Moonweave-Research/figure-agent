@@ -60,6 +60,70 @@ def test_source_line_selector_zero_match_is_loud_issue() -> None:
     ]
 
 
+def test_stable_selector_recovers_when_source_line_drifts() -> None:
+    tex = "\n".join(
+        [
+            "% inserted comment shifts declared source lines",
+            r"\draw[a] (0,0) -- (2,0);",
+            r"\draw[b] (1,-1) -- (1,1);",
+        ]
+    )
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "drifted-source-line",
+                    "element_a": {"source_line": 1, "matched_text": "[a]", "kind": "line"},
+                    "element_b": {"source_line": 2, "matched_text": "[b]", "kind": "line"},
+                    "must_not_cross": True,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues[0]["id"] == "drifted-source-line"
+    assert issues[0]["status"] == "violated"
+    assert issues[0]["selector_line_drifts"] == [
+        {"selector": "element_a", "declared_source_line": 1, "actual_source_line": 2},
+        {"selector": "element_b", "declared_source_line": 2, "actual_source_line": 3},
+    ]
+
+
+def test_stable_selector_drift_fallback_still_fails_loud_on_multi_match() -> None:
+    tex = "\n".join(
+        [
+            "% inserted comment shifts declared source lines",
+            r"\draw[probe] (0,0) -- (1,0);",
+            r"\draw[probe] (0,1) -- (1,1);",
+            r"\draw[target] (0,2) -- (1,2);",
+        ]
+    )
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "drifted-ambiguous",
+                    "element_a": {
+                        "source_line": 1,
+                        "matched_text": "probe",
+                        "kind": "line",
+                    },
+                    "element_b": {"matched_text": "target", "kind": "line"},
+                    "must_not_cross": True,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues[0]["status"] == "selector_ambiguous"
+    assert issues[0]["selector"] == "element_a"
+    assert issues[0]["match_count"] == 2
+
+
 def test_matched_text_selector_multi_match_is_loud_issue() -> None:
     tex = "\n".join(
         [
