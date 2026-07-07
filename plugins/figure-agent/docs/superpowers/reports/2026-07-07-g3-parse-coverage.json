@@ -1,0 +1,347 @@
+{
+  "date": "2026-07-07",
+  "fixtures": {
+    "fig1_overview_v5a_polish_001_vault": {
+      "after": {
+        "coverage_ratio": 0.495455,
+        "fully_parsed_operations": 105,
+        "operation_counter": "G3 typed operation parser",
+        "parsed_geometry_counts": {
+          "circle": 18,
+          "curve": 12,
+          "horizontal_line": 21,
+          "rect": 47,
+          "vertical_line": 14
+        },
+        "parsed_operations": 109,
+        "partial_unknown_operations": 4,
+        "rendered_pdf_curve_count": 195,
+        "total_operations": 220,
+        "unknown_operations": 111,
+        "unknown_reasons": {
+          "nonliteral_circle": 26,
+          "nonliteral_coordinate": 19,
+          "unsupported_curve": 2,
+          "unsupported_ellipse": 1,
+          "unsupported_geometry": 58,
+          "unsupported_plot": 8,
+          "unsupported_to_curve": 1
+        }
+      },
+      "before": {
+        "circle_tokens": 46,
+        "controls_tokens": 14,
+        "coverage_ratio": 0.369,
+        "operation_counter": "pre-G3 broad command regex",
+        "parsed_operations": 83,
+        "total_operations": 225
+      }
+    },
+    "fig1_overview_v5b_editorial_001_vault": {
+      "after": {
+        "coverage_ratio": 0.493151,
+        "fully_parsed_operations": 104,
+        "operation_counter": "G3 typed operation parser",
+        "parsed_geometry_counts": {
+          "circle": 18,
+          "curve": 12,
+          "horizontal_line": 21,
+          "rect": 46,
+          "vertical_line": 14
+        },
+        "parsed_operations": 108,
+        "partial_unknown_operations": 4,
+        "rendered_pdf_curve_count": 194,
+        "total_operations": 219,
+        "unknown_operations": 111,
+        "unknown_reasons": {
+          "nonliteral_circle": 26,
+          "nonliteral_coordinate": 19,
+          "unsupported_curve": 2,
+          "unsupported_ellipse": 1,
+          "unsupported_geometry": 58,
+          "unsupported_plot": 8,
+          "unsupported_to_curve": 1
+        }
+      },
+      "before": {
+        "circle_tokens": 46,
+        "controls_tokens": 14,
+        "coverage_ratio": 0.366,
+        "operation_counter": "pre-G3 broad command regex",
+        "parsed_operations": 82,
+        "total_operations": 224
+      }
+    },
+    "fig1_overview_v5c_quiet_001_vault": {
+      "after": {
+        "coverage_ratio": 0.484018,
+        "fully_parsed_operations": 102,
+        "operation_counter": "G3 typed operation parser",
+        "parsed_geometry_counts": {
+          "circle": 18,
+          "curve": 12,
+          "horizontal_line": 21,
+          "rect": 46,
+          "vertical_line": 12
+        },
+        "parsed_operations": 106,
+        "partial_unknown_operations": 4,
+        "rendered_pdf_curve_count": 194,
+        "total_operations": 219,
+        "unknown_operations": 113,
+        "unknown_reasons": {
+          "nonliteral_circle": 26,
+          "nonliteral_coordinate": 19,
+          "unsupported_curve": 2,
+          "unsupported_ellipse": 1,
+          "unsupported_geometry": 60,
+          "unsupported_plot": 8,
+          "unsupported_to_curve": 1
+        }
+      },
+      "before": {
+        "circle_tokens": 46,
+        "controls_tokens": 14,
+        "coverage_ratio": 0.357,
+        "operation_counter": "pre-G3 broad command regex",
+        "parsed_operations": 80,
+        "total_operations": 224
+      }
+    },
+    "fig1_overview_v5d_redraw_001_vault": {
+      "after": {
+        "coverage_ratio": 0.488372,
+        "fully_parsed_operations": 101,
+        "operation_counter": "G3 typed operation parser",
+        "parsed_geometry_counts": {
+          "circle": 18,
+          "curve": 12,
+          "horizontal_line": 20,
+          "rect": 46,
+          "vertical_line": 12
+        },
+        "parsed_operations": 105,
+        "partial_unknown_operations": 4,
+        "rendered_pdf_curve_count": 193,
+        "total_operations": 215,
+        "unknown_operations": 110,
+        "unknown_reasons": {
+          "nonliteral_circle": 26,
+          "nonliteral_coordinate": 19,
+          "unsupported_curve": 2,
+          "unsupported_ellipse": 1,
+          "unsupported_geometry": 57,
+          "unsupported_plot": 8,
+          "unsupported_to_curve": 1
+        }
+      },
+      "before": {
+        "circle_tokens": 46,
+        "controls_tokens": 14,
+        "coverage_ratio": 0.359,
+        "operation_counter": "pre-G3 broad command regex",
+        "parsed_operations": 79,
+        "total_operations": 220
+      }
+    },
+    "fig1_overview_v5e_aggressive_001_vault": {
+      "after": {
+        "coverage_ratio": 0.488479,
+        "fully_parsed_operations": 102,
+        "operation_counter": "G3 typed operation parser",
+        "parsed_geometry_counts": {
+          "circle": 18,
+          "curve": 14,
+          "horizontal_line": 19,
+          "rect": 46,
+          "vertical_line": 12
+        },
+        "parsed_operations": 106,
+        "partial_unknown_operations": 4,
+        "rendered_pdf_curve_count": 198,
+        "total_operations": 217,
+        "unknown_operations": 111,
+        "unknown_reasons": {
+          "nonliteral_circle": 27,
+          "nonliteral_coordinate": 19,
+          "unsupported_curve": 2,
+          "unsupported_ellipse": 1,
+          "unsupported_geometry": 57,
+          "unsupported_plot": 8,
+          "unsupported_to_curve": 1
+        }
+      },
+      "before": {
+        "circle_tokens": 47,
+        "controls_tokens": 16,
+        "coverage_ratio": 0.351,
+        "operation_counter": "pre-G3 broad command regex",
+        "parsed_operations": 78,
+        "total_operations": 222
+      }
+    },
+    "fig1_overview_v5f_art_direction_001_vault": {
+      "after": {
+        "coverage_ratio": 0.517647,
+        "fully_parsed_operations": 128,
+        "operation_counter": "G3 typed operation parser",
+        "parsed_geometry_counts": {
+          "circle": 21,
+          "curve": 21,
+          "horizontal_line": 24,
+          "rect": 57,
+          "vertical_line": 14
+        },
+        "parsed_operations": 132,
+        "partial_unknown_operations": 4,
+        "rendered_pdf_curve_count": 222,
+        "total_operations": 255,
+        "unknown_operations": 123,
+        "unknown_reasons": {
+          "nonliteral_circle": 30,
+          "nonliteral_coordinate": 22,
+          "unsupported_curve": 2,
+          "unsupported_ellipse": 1,
+          "unsupported_geometry": 63,
+          "unsupported_plot": 8,
+          "unsupported_to_curve": 1
+        }
+      },
+      "before": {
+        "circle_tokens": 53,
+        "controls_tokens": 23,
+        "coverage_ratio": 0.369,
+        "operation_counter": "pre-G3 broad command regex",
+        "parsed_operations": 96,
+        "total_operations": 260
+      }
+    },
+    "fig2_trap_design_space": {
+      "after": {
+        "coverage_ratio": 0.714286,
+        "fully_parsed_operations": 13,
+        "operation_counter": "G3 typed operation parser",
+        "parsed_geometry_counts": {
+          "curve": 3,
+          "horizontal_line": 4,
+          "rect": 3,
+          "vertical_line": 5
+        },
+        "parsed_operations": 15,
+        "partial_unknown_operations": 2,
+        "rendered_pdf_curve_count": 37,
+        "total_operations": 21,
+        "unknown_operations": 6,
+        "unknown_reasons": {
+          "unsupported_curve": 2,
+          "unsupported_geometry": 4,
+          "unsupported_plot": 2
+        }
+      },
+      "before": {
+        "circle_tokens": 0,
+        "controls_tokens": 5,
+        "coverage_ratio": 0.571,
+        "operation_counter": "pre-G3 broad command regex",
+        "parsed_operations": 12,
+        "total_operations": 21
+      }
+    },
+    "fig3_floating_clip_protocol": {
+      "after": {
+        "coverage_ratio": 0.692308,
+        "fully_parsed_operations": 27,
+        "operation_counter": "G3 typed operation parser",
+        "parsed_geometry_counts": {
+          "circle": 6,
+          "curve": 2,
+          "horizontal_line": 10,
+          "rect": 8,
+          "vertical_line": 4
+        },
+        "parsed_operations": 27,
+        "partial_unknown_operations": 0,
+        "rendered_pdf_curve_count": 27,
+        "total_operations": 39,
+        "unknown_operations": 12,
+        "unknown_reasons": {
+          "nonliteral_coordinate": 1,
+          "unsupported_geometry": 11
+        }
+      },
+      "before": {
+        "circle_tokens": 6,
+        "controls_tokens": 2,
+        "coverage_ratio": 0.564,
+        "operation_counter": "pre-G3 broad command regex",
+        "parsed_operations": 22,
+        "total_operations": 39
+      }
+    },
+    "fig3_resistance_mechanism": {
+      "after": {
+        "coverage_ratio": 0.47619,
+        "fully_parsed_operations": 10,
+        "operation_counter": "G3 typed operation parser",
+        "parsed_geometry_counts": {
+          "curve": 1,
+          "horizontal_line": 2,
+          "rect": 4,
+          "vertical_line": 3
+        },
+        "parsed_operations": 10,
+        "partial_unknown_operations": 0,
+        "rendered_pdf_curve_count": 22,
+        "total_operations": 21,
+        "unknown_operations": 11,
+        "unknown_reasons": {
+          "nonliteral_coordinate": 1,
+          "unsupported_geometry": 3,
+          "unsupported_plot": 2,
+          "unsupported_to_curve": 5
+        }
+      },
+      "before": {
+        "circle_tokens": 0,
+        "controls_tokens": 1,
+        "coverage_ratio": 0.429,
+        "operation_counter": "pre-G3 broad command regex",
+        "parsed_operations": 9,
+        "total_operations": 21
+      }
+    },
+    "fig3_trapping_concept": {
+      "after": {
+        "coverage_ratio": 0.875,
+        "fully_parsed_operations": 14,
+        "operation_counter": "G3 typed operation parser",
+        "parsed_geometry_counts": {
+          "curve": 1,
+          "horizontal_line": 6,
+          "rect": 2,
+          "vertical_line": 5
+        },
+        "parsed_operations": 14,
+        "partial_unknown_operations": 0,
+        "rendered_pdf_curve_count": 21,
+        "total_operations": 16,
+        "unknown_operations": 2,
+        "unknown_reasons": {
+          "unsupported_ellipse": 1,
+          "unsupported_geometry": 1
+        }
+      },
+      "before": {
+        "circle_tokens": 0,
+        "controls_tokens": 1,
+        "coverage_ratio": 0.812,
+        "operation_counter": "pre-G3 broad command regex",
+        "parsed_operations": 13,
+        "total_operations": 16
+      }
+    }
+  },
+  "schema": "figure-agent.g3-parse-coverage.v1",
+  "scope": "G3 only: source circles and bezier hulls plus rendered pdf curve accounting; no G1 vector relations; no curve/circle auto-promotion"
+}
