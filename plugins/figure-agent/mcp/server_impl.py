@@ -2084,7 +2084,10 @@ TOOLS: dict[str, dict[str, Any]] = {
         "handler": _candidate_apply_readiness,
     },
     "figure_agent_accept_candidate": {
-        "description": "Record an explicit local human verdict (accept or reject) for one rendered candidate.",
+        "description": (
+            "Record an explicit local human verdict (accept or reject) "
+            "for one rendered candidate."
+        ),
         "inputSchema": {
             "type": "object",
             "additionalProperties": False,

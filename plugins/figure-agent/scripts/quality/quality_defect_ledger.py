@@ -14,6 +14,7 @@ import audit_evidence_graph
 import audit_evidence_summary
 import critique_finding_gate
 import fixture_identity
+import promotion_wiring
 import quality_patch_policy
 import runtime_paths
 import yaml
@@ -522,7 +523,9 @@ def _detector_defects(example_dir: Path, name: str, graph_hash: str) -> list[dic
     # from stale evidence. (The undeclared_geometry path below is self-adjudicating via
     # recommended_action and does not depend on this gate.)
     summary = audit_evidence_summary.summarize_audit_evidence(example_dir)
-    defects = _undeclared_geometry_defects(example_dir, name, graph_hash)
+    defects = promotion_wiring.auto_promoted_defects(example_dir, name)
+    defects += promotion_wiring.triage_promoted_defects(example_dir, name)
+    defects += _undeclared_geometry_defects(example_dir, name, graph_hash)
     visual_clash_defects: list[dict[str, Any]] = []
     if summary.get("detector_feedback", {}).get("visual_clash", {}).get("linked_defect_count"):
         visual_clash_defects = _visual_clash_defects(example_dir, name, graph_hash)

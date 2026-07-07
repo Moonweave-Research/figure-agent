@@ -60,6 +60,7 @@ RENDER_FRESH = "FRESH"
 
 _SPEC_PARSE_ERROR_KEY = "__spec_parse_error__"
 SPINE_EVIDENCE_SCHEMA = "figure-agent.spine-evidence-summary.v1"
+PROMOTION_QUEUE_SCHEMA = "figure-agent.promotion-queue.v1"
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -581,6 +582,25 @@ def _spine_evidence_summary(example_dir: Path) -> dict[str, Any]:
     }
 
 
+def _promotion_queue_summary(example_dir: Path) -> dict[str, Any]:
+    path = example_dir / "build" / "promotion_queue.json"
+    payload, error = _load_build_json_mapping(path)
+    if error is not None:
+        return {"state": error, "path": f"build/{path.name}", "total": 0, "top_items": []}
+    assert payload is not None
+    if payload.get("schema") != PROMOTION_QUEUE_SCHEMA:
+        return {"state": "invalid", "path": f"build/{path.name}", "total": 0, "top_items": []}
+    total = payload.get("total")
+    top_items = payload.get("top_items")
+    return {
+        "state": str(payload.get("status") or "present"),
+        "path": f"build/{path.name}",
+        "schema": payload.get("schema"),
+        "total": total if isinstance(total, int) and not isinstance(total, bool) else 0,
+        "top_items": top_items if isinstance(top_items, list) else [],
+    }
+
+
 def _finalize_status(result: dict, example_dir: Path) -> dict:
     if "release_decision" not in result:
         name = result.get("name")
@@ -594,6 +614,7 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
     result["adjudication_state"] = _adjudication_state(example_dir, result)
     result["audit_evidence"] = summarize_audit_evidence(example_dir)
     result["spine_evidence"] = _spine_evidence_summary(example_dir)
+    result["promotion_queue"] = _promotion_queue_summary(example_dir)
     metrics_summary = reference_aesthetic_metrics_summary(example_dir)
     if metrics_summary is not None:
         state = metrics_summary.get("evaluation_state", "invalid")

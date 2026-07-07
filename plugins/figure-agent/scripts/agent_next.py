@@ -166,6 +166,30 @@ def _alternatives(name: str, *, plugin_root: Path, workspace_root: Path) -> list
     return alternatives
 
 
+def _promotion_queue_next(name: str, status_payload: dict[str, Any]) -> dict[str, Any] | None:
+    queue = status_payload.get("promotion_queue")
+    if not isinstance(queue, dict):
+        return None
+    total = queue.get("total")
+    if not isinstance(total, int) or total <= 0:
+        return None
+    top_items = queue.get("top_items")
+    ids = ",".join(str(item) for item in top_items[:5]) if isinstance(top_items, list) else ""
+    return {
+        "command": (
+            f"fig-agent triage {name} --accept <ids> --reject-rest "
+            "--tex-lines <id:start:end> --defect-class <id:text_overlap> --json"
+        ),
+        "reason": f"promotion_queue has {total} visual_clash candidate(s) awaiting human triage",
+        "action": "promotion_queue_triage",
+        "requires_human": True,
+        "writes": True,
+        "count": total,
+        "top_items": top_items if isinstance(top_items, list) else [],
+        "example_accept_ids": ids,
+    }
+
+
 def build_next(
     name: str,
     *,
@@ -203,15 +227,16 @@ def build_next(
     summary = status_payload.get("next_action_summary")
     if not isinstance(summary, dict):
         summary = status.status_next_action_summary(status_payload)
+    queue_next = _promotion_queue_next(name, status_payload)
     return {
         "schema": SCHEMA,
         "success": True,
-        "state": _state(summary),
+        "state": "human_required" if queue_next is not None else _state(summary),
         "name": name,
         "diagnostics": [],
         "writes": [],
         "status": summary,
-        "next": _next_payload(summary),
+        "next": queue_next or _next_payload(summary),
         "alternatives": _alternatives(
             name,
             plugin_root=paths.plugin_root,

@@ -509,6 +509,16 @@ def _quality_search(argv: list[str]) -> int:
     )
 
 
+def _promotion_wiring(argv: list[str], command: str) -> int:
+    import promotion_wiring
+
+    return promotion_wiring.main(
+        [command, *argv],
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+
+
 def _next(argv: list[str]) -> int:
     import agent_next
 
@@ -1478,6 +1488,10 @@ def main(argv: list[str] | None = None) -> int:
         return _loop_metrics(rest)
     if command == "quality-search":
         return _quality_search(rest)
+    if command == "promotion-queue":
+        return _promotion_wiring(rest, command)
+    if command == "triage":
+        return _promotion_wiring(rest, command)
     if command == "next":
         return _next(rest)
     if command == "benchmark-detectors":
