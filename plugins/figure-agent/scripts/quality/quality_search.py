@@ -4780,6 +4780,20 @@ def _panel_f_current_label_sanitize_template_applied(block: str) -> bool:
     return all(fragment in block for fragment in required_fragments)
 
 
+def _panel_f_later_label_clearance_template_applied(block: str) -> bool:
+    later_markers = (
+        "% quality-search F post-boundary force balance: separate force labels",
+        "% quality-search F post-force spacing finish: align force label rail",
+        "% quality-search F post-spacing source finish: soften source lead",
+        "% quality-search F post-source trap hierarchy: separate trap labels",
+        "% quality-search F post-trap gap readability: quiet electrode and gap",
+        "% quality-search F post-gap label relief: clear label backgrounds",
+        "% quality-search F post-label relief source settle: subordinate source lead",
+        "% quality-search F trap label left rail: park trap labels in margin",
+    )
+    return any(marker in block for marker in later_markers)
+
+
 def _panel_f_current_label_sanitize_replacement(
     *,
     lines: list[str],
@@ -5995,6 +6009,10 @@ def _candidate_operation_for_spec(
                 "replacement": new_text,
             }
             return operation, None
+        line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+        original = "".join(lines[line_range[0] - 1 : line_range[1]]) if line_range else ""
+        if _panel_f_later_label_clearance_template_applied(original):
+            return None, None
         return None, {
             "code": "no_panel_f_boundary_polish_block",
             "candidate_id": str(spec.get("id")),
@@ -6412,6 +6430,13 @@ def _candidate_operation_for_spec(
                 "replacement": new_text,
             }
             return operation, None
+        line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+        original = "".join(lines[line_range[0] - 1 : line_range[1]]) if line_range else ""
+        if (
+            _panel_f_boundary_polish_geometry_applied(original)
+            or _panel_f_later_label_clearance_template_applied(original)
+        ):
+            return None, None
         return None, {
             "code": "no_panel_f_current_label_sanitize_block",
             "candidate_id": str(spec.get("id")),
