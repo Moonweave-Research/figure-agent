@@ -269,6 +269,36 @@ def test_quality_search_panel_f_geometry_label_clearance_goal_routes_to_panel_f(
     )
 
 
+def test_quality_search_skips_superseded_panel_f_label_clearance_templates() -> None:
+    source = (
+        PLUGIN_ROOT
+        / "examples"
+        / "fig1_overview_v5f_art_direction_001_vault"
+        / "fig1_overview_v5f_art_direction_001_vault.tex"
+    )
+    lines = source.read_text(encoding="utf-8").splitlines(keepends=True)
+    selector = {
+        "panel": "F",
+        "line_start": 1,
+        "line_end": len(lines),
+        "binding_state": "bound",
+    }
+
+    for family in ("panel_f_boundary_polish", "panel_f_current_label_sanitize"):
+        operation, refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+            {
+                "id": "QSLEGACY",
+                "family": family,
+                "source_selectors": [selector],
+            },
+            lines=lines,
+            source_ref="figures/example.tex",
+        )
+
+        assert operation is None
+        assert refusal is None
+
+
 def test_tool_defect_candidates_include_loop_stop_attribution() -> None:
     candidates = quality_search._tool_defect_candidates(
         {
