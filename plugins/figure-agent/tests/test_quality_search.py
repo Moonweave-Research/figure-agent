@@ -220,7 +220,13 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
     symptoms = " ".join(item["symptom"] for item in payload["tool_defect_candidates"])
     assert "tikz_patch route" in symptoms
     assert "not fully bound" in symptoms
-    assert "unlinked micro defects" in symptoms
+    assert "unlinked micro defects" not in symptoms
+    assert any(
+        item["source"] == "basin_step_out"
+        and item["family"] == "panel_f_density_relief"
+        and item["target_hint"]["micro_defect_ids"] == ["M_PANEL_F_DENSITY"]
+        for item in payload["patch_hypotheses"]
+    )
 
 
 def test_tool_defect_candidates_include_loop_stop_attribution() -> None:
@@ -254,6 +260,31 @@ def test_tool_defect_candidates_include_loop_stop_attribution() -> None:
     assert "candidate family is exhausted" in symptoms
     assert "decision_weak stop recurred" in symptoms
     assert "stale_detector_evidence" in json.dumps(candidates)
+
+
+def test_tool_defect_candidates_keep_unsupported_unlinked_micro_defect() -> None:
+    candidates = quality_search._tool_defect_candidates(
+        {
+            "audit_evidence": {
+                "detector_feedback": {
+                    "unlinked_micro_defect_count": 2,
+                    "unlinked_micro_defect_ids": [
+                        "M_PANEL_F_DENSITY",
+                        "M_UNSUPPORTED_REVIEW_NOTE",
+                    ],
+                }
+            }
+        },
+        {},
+    )
+
+    assert len(candidates) == 1
+    assert candidates[0]["actual_behavior"]["unlinked_micro_defect_ids"] == [
+        "M_UNSUPPORTED_REVIEW_NOTE"
+    ]
+    assert candidates[0]["actual_behavior"]["classified_unlinked_micro_defect_ids"] == [
+        "M_PANEL_F_DENSITY"
+    ]
 
 
 def _write_minimal_fixture(

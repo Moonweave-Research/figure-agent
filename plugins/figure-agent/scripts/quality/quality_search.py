@@ -910,6 +910,16 @@ def _unlinked_micro_defect_ids(driver: dict[str, Any]) -> list[str]:
     return [item for item in ids if isinstance(item, str) and item.strip()]
 
 
+def _search_classified_unlinked_micro_defect_ids(driver: dict[str, Any]) -> list[str]:
+    ids = _unlinked_micro_defect_ids(driver)
+    classified: list[str] = []
+    for item in ids:
+        normalized = item.upper()
+        if "QTR" in normalized or "DENSITY" in normalized:
+            classified.append(item)
+    return classified
+
+
 def _allows_stale_critique_search(
     driver: dict[str, Any],
     *,
@@ -1037,6 +1047,9 @@ def _step_out_hypotheses(
         "rollback_condition": "candidate worsens compile, semantics, or print-legibility evidence",
     }
     if signal_value == "print_typography_authority":
+        density_micro_defect_ids = [
+            item for item in _unlinked_micro_defect_ids(driver) if "DENSITY" in item.upper()
+        ]
         density_panels = [
             panel
             for panel in ("C", "E", "F")
@@ -1119,6 +1132,7 @@ def _step_out_hypotheses(
                 "target_scope": "panel",
                 "target_hint": {
                     "panels": ["F"],
+                    "micro_defect_ids": density_micro_defect_ids,
                     "reason": (
                         "Panel F remains the densest mechanism zone after label-route "
                         "finish; reduce field-line, hatch, and force-label dominance"
@@ -2190,26 +2204,35 @@ def _tool_defect_candidates(driver: dict[str, Any], ledger: dict[str, Any]) -> l
     audit = driver.get("audit_evidence")
     feedback = audit.get("detector_feedback") if isinstance(audit, dict) else None
     if isinstance(feedback, dict) and int(feedback.get("unlinked_micro_defect_count") or 0) > 0:
-        candidates.append(
-            {
-                "id": f"TD{len(candidates) + 1:03d}",
-                "symptom": (
-                    "critique contains unlinked micro defects after detector accounting passed"
-                ),
-                "expected_behavior": (
-                    "quality search should classify unlinked micro defects as search "
-                    "targets or accounting gaps"
-                ),
-                "actual_behavior": {
-                    "unlinked_micro_defect_ids": feedback.get("unlinked_micro_defect_ids", [])
-                },
-                "minimal_reproduction": "fig-agent drive <fixture> --mode review --dry-run --json",
-                "recommended_fix": (
-                    "surface unlinked micro defects in quality-map or a separate "
-                    "aesthetic-target ledger"
-                ),
-            }
-        )
+        raw_ids = feedback.get("unlinked_micro_defect_ids", [])
+        all_ids = [item for item in raw_ids if isinstance(item, str) and item.strip()]
+        classified_ids = set(_search_classified_unlinked_micro_defect_ids(driver))
+        unsupported_ids = [item for item in all_ids if item not in classified_ids]
+        if unsupported_ids:
+            candidates.append(
+                {
+                    "id": f"TD{len(candidates) + 1:03d}",
+                    "symptom": (
+                        "critique contains unclassified unlinked micro defects after "
+                        "detector accounting passed"
+                    ),
+                    "expected_behavior": (
+                        "quality search should classify unlinked micro defects as search "
+                        "targets or accounting gaps"
+                    ),
+                    "actual_behavior": {
+                        "unlinked_micro_defect_ids": unsupported_ids,
+                        "classified_unlinked_micro_defect_ids": sorted(classified_ids),
+                    },
+                    "minimal_reproduction": (
+                        "fig-agent drive <fixture> --mode review --dry-run --json"
+                    ),
+                    "recommended_fix": (
+                        "surface unsupported unlinked micro defects in quality-map or a "
+                        "separate aesthetic-target ledger"
+                    ),
+                }
+            )
     return candidates
 
 
