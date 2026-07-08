@@ -324,6 +324,8 @@ def _undeclared_geometry_defects(
         source_line = candidate.get("source_line")
         if not isinstance(source_line, int) or isinstance(source_line, bool):
             continue
+        if source_line < 1:
+            continue
         candidate_id = candidate.get("id")
         selector_hint: dict[str, Any] = {
             "kind": "line_range",

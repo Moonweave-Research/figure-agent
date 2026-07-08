@@ -133,6 +133,47 @@ def test_quality_defect_ledger_ingests_undeclared_geometry_near_miss(tmp_path: P
     )
 
 
+def test_quality_defect_ledger_ignores_unbound_undeclared_geometry_micro_defect(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    _write_undeclared_geometry_report(
+        fixture,
+        [
+            {
+                "id": "UG001",
+                "kind": "label_crosses_horizontal_rule",
+                "recommended_action": "add_micro_defect",
+                "source_line": 0,
+                "nearest_text": "Old Label",
+                "evidence": "rendered frame/rule crosses text 'Old Label'",
+                "bbox_pt": [10.0, 20.0, 30.0, 20.0],
+                "distance_pt": 0.0,
+            }
+        ],
+        source_hashes={
+            "examples/quality_demo/quality_demo.tex": file_sha256(
+                fixture / "quality_demo.tex"
+            )
+        },
+    )
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert all(
+        evidence["node_id"] != "UG001"
+        for defect in ledger["defects"]
+        for evidence in defect.get("evidence", [])
+    )
+    assert ledger["actionability_metrics"]["missing_selector_hash_count"] == 0
+    assert ledger["actionability_metrics"]["unknown_panel_defect_count"] == 0
+
+
 def _write_visual_clash_report(fixture: Path, candidates: list[dict[str, object]]) -> None:
     report = fixture / "build" / "visual_clash.json"
     report.parent.mkdir(parents=True, exist_ok=True)
