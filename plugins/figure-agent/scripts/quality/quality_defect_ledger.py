@@ -313,6 +313,7 @@ def _undeclared_geometry_defects(
     freshness = _detector_freshness(example_dir, name, graph_hash, data)
     panel_markers = _source_panel_map(example_dir, name)
     defects: list[dict[str, Any]] = []
+    defect_by_key: dict[tuple[object, ...], dict[str, Any]] = {}
     for candidate in candidates:
         if not isinstance(candidate, dict):
             continue
@@ -327,6 +328,21 @@ def _undeclared_geometry_defects(
         if source_line < 1:
             continue
         candidate_id = candidate.get("id")
+        dedupe_key = (
+            source_line,
+            candidate.get("kind"),
+            candidate.get("nearest_text"),
+            tuple(candidate.get("bbox_pt") or ()),
+        )
+        existing = defect_by_key.get(dedupe_key)
+        if existing is not None:
+            existing["evidence"].append(
+                {
+                    "uri": f"figure://{name}/audit/undeclared-geometry",
+                    "node_id": candidate_id,
+                }
+            )
+            continue
         selector_hint: dict[str, Any] = {
             "kind": "line_range",
             "value": f"{source_line}:{source_line}",
@@ -363,6 +379,7 @@ def _undeclared_geometry_defects(
                 "patch": "",
             },
         }
+        defect_by_key[dedupe_key] = defect
         defects.append(defect)
     return defects
 

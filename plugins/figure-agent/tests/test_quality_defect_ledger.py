@@ -174,6 +174,56 @@ def test_quality_defect_ledger_ignores_unbound_undeclared_geometry_micro_defect(
     assert ledger["actionability_metrics"]["unknown_panel_defect_count"] == 0
 
 
+def test_quality_defect_ledger_dedupes_repeated_undeclared_geometry_near_miss(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    _write_undeclared_geometry_report(
+        fixture,
+        [
+            {
+                "id": "UG001",
+                "kind": "label_endpoint_near_miss",
+                "recommended_action": "add_micro_defect",
+                "source_line": 1,
+                "nearest_text": "Old Label",
+                "evidence": "source line 1 is within 2.0 pt of text 'Old Label'",
+                "bbox_pt": [10.0, 20.0, 30.0, 20.0],
+                "distance_pt": 2.0,
+            },
+            {
+                "id": "UG002",
+                "kind": "label_endpoint_near_miss",
+                "recommended_action": "add_micro_defect",
+                "source_line": 1,
+                "nearest_text": "Old Label",
+                "evidence": "source line 1 is within 2.0 pt of text 'Old Label'",
+                "bbox_pt": [10.0, 20.0, 30.0, 20.0],
+                "distance_pt": 2.0,
+            },
+        ],
+        source_hashes={
+            "examples/quality_demo/quality_demo.tex": file_sha256(
+                fixture / "quality_demo.tex"
+            )
+        },
+    )
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert len(ledger["defects"]) == 1
+    assert [item["node_id"] for item in ledger["defects"][0]["evidence"]] == [
+        "UG001",
+        "UG002",
+    ]
+    assert ledger["actionability_metrics"]["safe_candidate_defect_count"] == 1
+
+
 def _write_visual_clash_report(fixture: Path, candidates: list[dict[str, object]]) -> None:
     report = fixture / "build" / "visual_clash.json"
     report.parent.mkdir(parents=True, exist_ok=True)
