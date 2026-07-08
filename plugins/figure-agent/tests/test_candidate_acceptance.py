@@ -141,6 +141,42 @@ def test_build_apply_readiness_reports_ready_for_local_acceptance(tmp_path: Path
     assert readiness["required_commands"][0].startswith("fig-agent accept-candidate")
 
 
+def test_apply_readiness_allows_reviewed_detector_backed_vector_clearance(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest_path = sandbox / "candidate_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest.update(
+        {
+            "edit_family": "vector_clearance_offset",
+            "family": "vector-clearance-offset",
+            "semantic_risks": ["human should confirm vector clearance intent"],
+            "source_defect": {
+                "id": "panelD-debye-must-not-cross-red-marker",
+                "source": "deterministic_audit",
+                "defect_class": "vector_clearance_violation",
+            },
+        }
+    )
+    manifest["operations"][0]["semantic_kind"] = "vector_clearance_offset"
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+    _write_semantic_review(fixture)
+
+    readiness = candidate_acceptance.build_apply_readiness(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+
+    assert readiness["status"] == "ready_for_local_acceptance"
+    assert readiness["blocking_reasons"] == []
+    assert readiness["required_commands"][0].startswith("fig-agent accept-candidate")
+
+
 def test_readiness_blocks_required_missing_semantic_review(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)

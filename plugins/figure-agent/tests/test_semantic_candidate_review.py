@@ -211,6 +211,36 @@ def test_replace_text_with_explicit_mechanical_kind_does_not_require_review(
     assert state["blocks_apply"] is False
 
 
+def test_detector_backed_vector_clearance_offset_is_pure_mechanical(
+    tmp_path: Path,
+) -> None:
+    fixture, manifest_path, _render_path, manifest = _fixture(
+        tmp_path / "workspace",
+        edit_family="vector_clearance_offset",
+        semantic_risks=["human should confirm vector clearance intent"],
+    )
+    manifest["family"] = "vector-clearance-offset"
+    manifest["source_defect"] = {
+        "id": "panelD-debye-must-not-cross-red-marker",
+        "source": "deterministic_audit",
+        "defect_class": "vector_clearance_violation",
+    }
+    manifest["operations"] = [
+        {
+            "kind": "replace_text",
+            "semantic_kind": "vector_clearance_offset",
+            "path": "examples/semantic_demo/semantic_demo.tex",
+        }
+    ]
+
+    state = _state(fixture, manifest_path, manifest)
+
+    assert state["required_before_apply"] is True
+    assert state["blocks_apply"] is True
+    assert "semantic_risk" in state["blocking_reasons"]
+    assert "not_pure_mechanical" not in state["blocking_reasons"]
+
+
 def test_stale_review_blocks_only_candidates_that_require_semantic_review(
     tmp_path: Path,
 ) -> None:

@@ -4619,6 +4619,90 @@ def test_quality_search_writes_selected_semantic_precheck_for_protected_panel_bl
     )
 
 
+def test_quality_search_writes_vector_clearance_semantic_precheck_without_labels(
+    tmp_path: Path,
+) -> None:
+    name = "fig_demo"
+    candidate_id = "CAND007"
+    paths = quality_search.runtime_paths.resolve_runtime_paths(
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=tmp_path,
+    )
+    sandbox = paths.examples_dir / name / "build" / "candidates" / candidate_id
+    sandbox.mkdir(parents=True)
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "fixture": name,
+        "candidate_id": candidate_id,
+        "candidate_hash": "sha256:" + "7" * 64,
+        "edit_family": "vector_clearance_offset",
+        "family": "vector-clearance-offset",
+        "source_defect": {
+            "id": "panelD-debye-must-not-cross-red-marker",
+            "source": "deterministic_audit",
+            "defect_class": "vector_clearance_violation",
+        },
+        "operations": [
+            {
+                "kind": "replace_text",
+                "semantic_kind": "vector_clearance_offset",
+                "replacement": "\\draw (0,0) -- (1,1);",
+            }
+        ],
+    }
+    render_manifest = {
+        "schema": "figure-agent.candidate-render-manifest.v1",
+        "candidate_id": candidate_id,
+        "candidate_hash": manifest["candidate_hash"],
+        "stages": {
+            "compile": {"status": "success"},
+            "export": {"status": "success"},
+            "crop": {"status": "success"},
+            "evaluate": {"status": "rendered_needs_human_review"},
+        },
+    }
+    (sandbox / "candidate_manifest.json").write_text(
+        json.dumps(manifest, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (sandbox / "render_manifest.json").write_text(
+        json.dumps(render_manifest, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    decision = {
+        "candidate_state": "targeted_cleanup_review_candidate_ready",
+        "selected_candidate_id": candidate_id,
+    }
+    candidate_set = {
+        "candidates": [
+            {
+                "id": candidate_id,
+                "apply_authority": "review_only",
+                "family": "vector-clearance-offset",
+                "source_defect": manifest["source_defect"],
+            }
+        ]
+    }
+
+    precheck = quality_search._write_selected_semantic_precheck(
+        name,
+        decision,
+        candidate_set,
+        paths=paths,
+    )
+
+    review_path = sandbox / "semantic_review.json"
+    review = json.loads(review_path.read_text(encoding="utf-8"))
+    assert precheck["status"] == "pass"
+    assert precheck["protected_labels"] == []
+    assert precheck["source_defect"]["defect_class"] == "vector_clearance_violation"
+    assert review["verdict"] == "pass"
+    assert review["human_required"] is False
+    assert {item["kind"] for item in review["semantic_invariants"]} == {
+        "detector_source_defect_preserved"
+    }
+
+
 def test_quality_search_recommends_acceptance_without_authorizing_apply() -> None:
     decision = {
         "candidate_state": "non_marginal_review_candidate_ready",

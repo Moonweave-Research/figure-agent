@@ -9088,6 +9088,19 @@ def _selected_candidate(candidate_set: dict[str, Any], candidate_id: str) -> dic
     return None
 
 
+def _vector_clearance_source_defect(
+    candidate: dict[str, Any],
+    manifest: dict[str, Any],
+) -> dict[str, Any] | None:
+    for payload in (manifest.get("source_defect"), candidate.get("source_defect")):
+        if (
+            isinstance(payload, dict)
+            and payload.get("defect_class") == "vector_clearance_violation"
+        ):
+            return payload
+    return None
+
+
 def _write_selected_semantic_precheck(
     name: str,
     decision: dict[str, Any],
@@ -9122,13 +9135,6 @@ def _write_selected_semantic_precheck(
         for label in candidate.get("protected_labels", [])
         if isinstance(label, str) and label.strip()
     ]
-    if not protected_labels:
-        return {
-            "schema": "figure-agent.selected-semantic-precheck.v0",
-            "status": "blocked",
-            "candidate_id": candidate_id,
-            "blocking_reasons": ["protected_labels_missing"],
-        }
     example_dir = paths.examples_dir / name
     sandbox = example_dir / "build" / "candidates" / candidate_id
     manifest_path = sandbox / "candidate_manifest.json"
@@ -9157,6 +9163,14 @@ def _write_selected_semantic_precheck(
             "candidate_id": candidate_id,
             "blocking_reasons": ["render_gates_not_passed"],
         }
+    vector_source_defect = _vector_clearance_source_defect(candidate, manifest)
+    if not protected_labels and vector_source_defect is None:
+        return {
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "blocked",
+            "candidate_id": candidate_id,
+            "blocking_reasons": ["protected_labels_missing"],
+        }
     operation_text = "\n".join(
         str(operation.get("replacement") or "")
         for operation in manifest.get("operations", [])
@@ -9184,16 +9198,29 @@ def _write_selected_semantic_precheck(
                 "sha256": _file_sha256(render_manifest_path),
             }
         ],
-        "semantic_invariants": [
-            {"kind": "protected_label_present", "label": label} for label in protected_labels
-        ],
+        "semantic_invariants": (
+            [{"kind": "protected_label_present", "label": label} for label in protected_labels]
+            if protected_labels
+            else [
+                {
+                    "kind": "detector_source_defect_preserved",
+                    "defect_id": vector_source_defect.get("id"),
+                    "defect_class": vector_source_defect.get("defect_class"),
+                    "source": vector_source_defect.get("source"),
+                }
+            ]
+        ),
         "findings": [
             {
                 "kind": "deterministic_semantic_precheck",
                 "status": "pass",
                 "basis": [
                     "render_manifest_gates_passed",
-                    "protected_labels_present_in_replacement",
+                    (
+                        "protected_labels_present_in_replacement"
+                        if protected_labels
+                        else "detector_backed_vector_clearance_source_defect"
+                    ),
                     "review_only_source_mutation_boundary",
                 ],
             }
@@ -9212,6 +9239,7 @@ def _write_selected_semantic_precheck(
         "candidate_id": candidate_id,
         "review_path": _workspace_relative(paths, review_path),
         "protected_labels": protected_labels,
+        **({"source_defect": vector_source_defect} if vector_source_defect is not None else {}),
         "reviewed_artifacts": review["reviewed_artifacts"],
     }
 
