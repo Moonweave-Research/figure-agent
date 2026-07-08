@@ -806,6 +806,38 @@ def test_candidate_ids_are_stable_for_identical_source_and_ledger_hashes(
     assert first_identity == second_identity
 
 
+def test_detector_candidate_offsets_multiline_draw_statement(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "\\draw[cGray!75!black, line width=0.28pt]\n"
+        "  (0.0, 1.0) -- (2.0, 1.0);\n",
+        encoding="utf-8",
+    )
+    _write_undeclared_candidate_defect(fixture, source_line=1)
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["refusals"] == []
+    candidate = payload["candidates"][0]
+    assert candidate["selector"]["start_line"] == 1
+    assert candidate["selector"]["end_line"] == 2
+    operation = candidate["operations"][0]
+    assert operation["line_start"] == 1
+    assert operation["line_end"] == 2
+    assert operation["original"] == (
+        "\\draw[cGray!75!black, line width=0.28pt]\n"
+        "  (0.0, 1.0) -- (2.0, 1.0);\n"
+    )
+    assert operation["replacement"] == (
+        "\\draw[cGray!75!black, line width=0.28pt]\n"
+        "  (0.10, 1.0) -- (2.0, 1.0);\n"
+    )
+
+
 def test_candidate_generator_refuses_source_hash_mismatch_when_ledger_claims_supported(
     tmp_path: Path,
     monkeypatch,
