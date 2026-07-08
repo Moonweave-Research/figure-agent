@@ -951,6 +951,130 @@ def test_source_detector_names_allowlisted_detector_from_evidence() -> None:
     assert candidate_apply._source_detector({"id": "QD001"}) == "quality_defect_ledger"
 
 
+def test_source_detector_names_vector_clearance_from_defect_class() -> None:
+    assert (
+        candidate_apply._source_detector(
+            {
+                "id": "panelD-debye-must-not-cross-red-marker",
+                "source": "deterministic_audit",
+                "source_detector": "vector_clearance",
+                "defect_class": "vector_clearance_violation",
+                "evidence": [{"uri": "figure://demo/audit/vector-clearance"}],
+            }
+        )
+        == "vector_clearance"
+    )
+
+
+def test_vector_clearance_recheck_passes_when_target_issue_resolved(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    example_dir = workspace / "examples" / "candidate_demo"
+    build_dir = example_dir / "build"
+    build_dir.mkdir(parents=True)
+    tex_path = example_dir / "candidate_demo.tex"
+    tex_path.write_text("after\n", encoding="utf-8")
+    (example_dir / "spec.yaml").write_text("vector_clearance_checks: []\n", encoding="utf-8")
+    (build_dir / "candidate_demo.pdf").write_bytes(b"%PDF-1.4\n")
+    paths = candidate_apply.runtime_paths.resolve_runtime_paths(workspace_root=workspace)
+    source_defect = {
+        "id": "panelD-debye-must-not-cross-red-marker",
+        "source": "deterministic_audit",
+        "source_detector": "vector_clearance",
+        "defect_class": "vector_clearance_violation",
+        "evidence": [
+            {
+                "uri": "figure://candidate_demo/audit/vector-clearance",
+                "node_id": "panelD-debye-must-not-cross-red-marker",
+                "status": "violated",
+            }
+        ],
+    }
+
+    monkeypatch.setitem(
+        sys.modules,
+        "vector_clearance",
+        types.SimpleNamespace(
+            parse_vector_clearance_checks=lambda _spec: [{"id": "declared"}],
+            check_vector_clearance=lambda _tex, _checks: [
+                {
+                    "id": "panelE-deep-peak-caliper-min-clearance",
+                    "status": "violated",
+                }
+            ],
+        ),
+    )
+
+    verdict = candidate_apply._recheck_verdict(
+        "candidate_demo",
+        paths,
+        source_defect,
+        "panelD-debye-must-not-cross-red-marker",
+        [],
+        None,
+    )
+
+    assert verdict["status"] == "success"
+    assert verdict["reason"] == "vector_clearance_resolved"
+    assert verdict["source_defect_id"] == "panelD-debye-must-not-cross-red-marker"
+
+
+def test_vector_clearance_recheck_fails_when_target_issue_persists(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    example_dir = workspace / "examples" / "candidate_demo"
+    build_dir = example_dir / "build"
+    build_dir.mkdir(parents=True)
+    (example_dir / "candidate_demo.tex").write_text("after\n", encoding="utf-8")
+    (example_dir / "spec.yaml").write_text("vector_clearance_checks: []\n", encoding="utf-8")
+    (build_dir / "candidate_demo.pdf").write_bytes(b"%PDF-1.4\n")
+    paths = candidate_apply.runtime_paths.resolve_runtime_paths(workspace_root=workspace)
+    source_defect = {
+        "id": "panelD-debye-must-not-cross-red-marker",
+        "source": "deterministic_audit",
+        "source_detector": "vector_clearance",
+        "defect_class": "vector_clearance_violation",
+        "evidence": [
+            {
+                "uri": "figure://candidate_demo/audit/vector-clearance",
+                "node_id": "panelD-debye-must-not-cross-red-marker",
+                "status": "violated",
+            }
+        ],
+    }
+
+    monkeypatch.setitem(
+        sys.modules,
+        "vector_clearance",
+        types.SimpleNamespace(
+            parse_vector_clearance_checks=lambda _spec: [{"id": "declared"}],
+            check_vector_clearance=lambda _tex, _checks: [
+                {
+                    "id": "panelD-debye-must-not-cross-red-marker",
+                    "status": "violated",
+                }
+            ],
+        ),
+    )
+
+    verdict = candidate_apply._recheck_verdict(
+        "candidate_demo",
+        paths,
+        source_defect,
+        "panelD-debye-must-not-cross-red-marker",
+        [],
+        None,
+    )
+
+    assert verdict["status"] == "failed"
+    assert verdict["reason"] == "vector_clearance_unresolved"
+    assert verdict["source_defect_id"] == "panelD-debye-must-not-cross-red-marker"
+
+
 def test_verify_labels_unchanged_equal_passes_and_differ_fails():
     assert candidate_apply._verify_labels_unchanged({"S": 1, "x": 2}, {"S": 1, "x": 2})[0] is True
     ok, reason = candidate_apply._verify_labels_unchanged({"S": 1}, {"S": 1, "NEW": 1})

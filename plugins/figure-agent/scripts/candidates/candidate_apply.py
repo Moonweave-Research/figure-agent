@@ -21,6 +21,7 @@ import fixture_identity
 import quality_memory_index
 import runtime_paths
 import semantic_candidate_review
+import yaml
 
 SCHEMA = "figure-agent.candidate-apply-result.v1"
 TERMINAL_APPLY_STATUSES = {
@@ -618,10 +619,17 @@ def _post_crossing_texts(example_dir: Path) -> list[str]:
 def _source_detector(source_defect: dict[str, Any]) -> str:
     if source_defect.get("source") == "adjudicated_finding":
         return "check_visual_clash"
+    if (
+        source_defect.get("source_detector") == "vector_clearance"
+        or source_defect.get("defect_class") == "vector_clearance_violation"
+    ):
+        return "vector_clearance"
     evidence = source_defect.get("evidence")
     if isinstance(evidence, list):
         for item in evidence:
             uri = str(item.get("uri") or "") if isinstance(item, dict) else ""
+            if "vector-clearance" in uri or "vector_clearance" in uri:
+                return "vector_clearance"
             if "visual-clash" in uri or "visual_clash" in uri:
                 return "check_visual_clash"
             if "text-boundary" in uri or "text_boundary" in uri:
@@ -629,6 +637,65 @@ def _source_detector(source_defect: dict[str, Any]) -> str:
             if "undeclared-geometry" in uri or "undeclared_geometry" in uri:
                 return "check_undeclared_geometry"
     return "quality_defect_ledger"
+
+
+def _is_vector_clearance_source(source_defect: dict[str, Any]) -> bool:
+    return _source_detector(source_defect) == "vector_clearance"
+
+
+def _vector_clearance_recheck_verdict(
+    name: str,
+    paths: runtime_paths.RuntimePaths,
+    source_defect_id: str,
+) -> dict[str, Any]:
+    import vector_clearance
+
+    example_dir = paths.examples_dir / name
+    tex_path = example_dir / f"{name}.tex"
+    spec_path = example_dir / "spec.yaml"
+    pdf_path = example_dir / "build" / f"{name}.pdf"
+    if not tex_path.is_file() or not spec_path.is_file() or not pdf_path.is_file():
+        return {
+            "status": "failed",
+            "reason": "vector_clearance_evidence_missing",
+            "source_defect_id": source_defect_id,
+        }
+    try:
+        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}
+        if not isinstance(spec, dict):
+            raise ValueError("spec.yaml is not a mapping")
+        checks = vector_clearance.parse_vector_clearance_checks(spec)
+        issues = vector_clearance.check_vector_clearance(
+            tex_path.read_text(encoding="utf-8"),
+            checks,
+        )
+    except Exception as exc:  # pragma: no cover - exact detector errors are version-specific.
+        return {
+            "status": "failed",
+            "reason": "vector_clearance_unreadable",
+            "source_defect_id": source_defect_id,
+            "error": str(exc),
+        }
+    unresolved = [
+        issue
+        for issue in issues
+        if isinstance(issue, dict)
+        and str(issue.get("id") or "") == source_defect_id
+        and issue.get("status") == "violated"
+    ]
+    if unresolved:
+        return {
+            "status": "failed",
+            "reason": "vector_clearance_unresolved",
+            "source_defect_id": source_defect_id,
+            "post_issue": unresolved[0],
+        }
+    return {
+        "status": "success",
+        "reason": "vector_clearance_resolved",
+        "source_defect_id": source_defect_id,
+        "remaining_issue_count": len([issue for issue in issues if isinstance(issue, dict)]),
+    }
 
 
 def _post_apply_semantic_recheck(
@@ -687,6 +754,8 @@ def _recheck_verdict(
             _post_crossing_texts(paths.examples_dir / name),
             pre_crossing_texts=pre_crossing_texts,
         )
+    if _is_vector_clearance_source(source_defect):
+        return _vector_clearance_recheck_verdict(name, paths, source_defect_id)
     import quality_defect_ledger
 
     ledger = quality_defect_ledger.build_quality_defect_ledger(
