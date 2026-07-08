@@ -746,6 +746,30 @@ def _geometry_aware_replacement(
     return bounded_coordinate_offset.offset_all_coordinates(line, axis=axis, dx_cm=dx_cm)
 
 
+def _statement_span(lines: list[str], line_number: int) -> tuple[str, int]:
+    statement_lines: list[str] = []
+    for index in range(line_number - 1, len(lines)):
+        line = lines[index]
+        statement_lines.append(line)
+        if ";" in line:
+            break
+    return "\n".join(statement_lines) + "\n", line_number + len(statement_lines) - 1
+
+
+def _is_tikz_statement_start(line: str) -> bool:
+    stripped = line.lstrip()
+    return stripped.startswith(
+        (
+            "\\coordinate",
+            "\\draw",
+            "\\fill",
+            "\\node",
+            "\\path",
+            "\\shade",
+        )
+    )
+
+
 def _defect_candidates(
     name: str,
     paths: runtime_paths.RuntimePaths,
@@ -831,8 +855,13 @@ def _defect_candidates(
         supported_count += 1
         line = lines[line_number - 1]
         replacement = _geometry_aware_replacement(defect, line, detector_index, pdf_path)
+        original_text = line
+        end_line = line_number
         if replacement is None:
             replacement = bounded_coordinate_offset.offset_first_coordinate(line)
+        if replacement is None and _is_tikz_statement_start(line):
+            original_text, end_line = _statement_span(lines, line_number)
+            replacement = bounded_coordinate_offset.offset_first_coordinate(original_text)
         if replacement is None:
             _append_refusals(
                 refusals,
@@ -844,14 +873,18 @@ def _defect_candidates(
             candidate_id="",
             source_rel=source_rel,
             line_number=line_number,
-            line=line,
+            line=original_text,
             replacement=replacement,
             apply_authority=apply_authority,
             target=_candidate_target(defect),
             source_hash=current_source_hash,
             source_defect=_source_defect(defect, ledger_hash),
             selector_text_hash=selector_hash if isinstance(selector_hash, str) else None,
+            end_line=end_line,
         )
+        if end_line != line_number:
+            candidate["operations"][0]["line_start"] = line_number
+            candidate["operations"][0]["line_end"] = end_line
         sortable_candidates.append((_defect_sort_key(defect, source_rel, line_number), candidate))
     candidates: list[dict[str, Any]] = []
     for index, (_sort_key, candidate) in enumerate(sorted(sortable_candidates), start=1):
