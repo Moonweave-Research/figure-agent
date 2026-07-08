@@ -229,6 +229,46 @@ def test_quality_search_plans_basin_step_out_without_human_gate(monkeypatch) -> 
     )
 
 
+def test_quality_search_panel_f_geometry_label_clearance_goal_routes_to_panel_f(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        quality_search.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: _driver_ready_without_basin(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: _ledger_with_actionable_and_unbound_defects(),
+    )
+    monkeypatch.setattr(
+        quality_search.quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {"event_count": 0, "candidate_event_count": 0},
+    )
+
+    payload = quality_search.build_quality_search_plan(
+        "fig_demo",
+        goal="improve Panel F geometry and label clearance",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=PLUGIN_ROOT,
+    )
+
+    families = [item["family"] for item in payload["patch_hypotheses"]]
+    assert families[:2] == ["panel_f_boundary_polish", "panel_f_current_label_sanitize"]
+    assert "apparatus_strengthen" in families
+    assert payload["next_recommended_operation"]["candidate_families"][:2] == [
+        "panel_f_boundary_polish",
+        "panel_f_current_label_sanitize",
+    ]
+    assert all(
+        item["target_hint"]["panels"] == ["F"]
+        for item in payload["patch_hypotheses"]
+        if item["source"] == "goal_directive"
+    )
+
+
 def test_tool_defect_candidates_include_loop_stop_attribution() -> None:
     candidates = quality_search._tool_defect_candidates(
         {
