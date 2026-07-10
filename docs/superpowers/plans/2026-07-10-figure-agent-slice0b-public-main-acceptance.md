@@ -13,7 +13,7 @@
 ## Scope lock and branch boundary
 
 - Implement only in a new clean `codex/` branch based on `origin/main` SHA `9d3db7347261229d6a0ce1c09b8893d49cf06e2f`.
-- Treat `4f50af8f0679f9997faed01e6581b6742f577fc3` as the pinned Slice 0 SSOT context; do not merge or rebase the experiment branch into this worktree.
+- Treat `4f50af8f0679f9997faed01b6581b6742f577fc3` as the pinned Slice 0 SSOT context; do not merge or rebase the experiment branch into this worktree.
 - Do not change either public fixture's `spec.yaml.accepted` or edit a human `QUALITY_AUDIT.md` declaration to make the gate green. The new behavior must expose, not choose between, conflicting human statements.
 - Keep this slice inside `plugins/figure-agent` and its tests. Slice 0C will record the resulting commit and evidence in the SSOT branch after both isolated slices are complete.
 

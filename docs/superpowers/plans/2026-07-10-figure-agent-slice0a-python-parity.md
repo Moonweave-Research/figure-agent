@@ -12,7 +12,7 @@
 
 ## Scope lock and branch boundary
 
-- Implement only in a clean worktree based on `4f50af8f0679f9997faed01e6581b6742f577fc3` (the Slice 0 SSOT commit on `experiment/python-svg-semantic-fig1`).
+- Implement only in a clean worktree based on `4f50af8f0679f9997faed01b6581b6742f577fc3` (the Slice 0 SSOT commit on `experiment/python-svg-semantic-fig1`).
 - Do not re-render, replace, or edit `experiments/python_svg_semantic_fig1/fig1_reference_semantic.svg`; its SHA-256 must remain `03e51b775bb0dc063e131ecff6f684ab9cb6fd807546df01e01076e5e4d131e1`.
 - Do not modify `plugins/figure-agent`, public-main fixtures, or unrelated untracked user files in this worktree.
 - Record the verified command output and implementation commit only after the code is complete; Slice 0C owns the SSOT result record.
