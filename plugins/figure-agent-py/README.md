@@ -2,7 +2,11 @@
 
 Python-first semantic SVG plugin for the Fig1 scientific schematic.
 
-The source of truth is `experiments/python_svg_semantic_fig1`: Python scene
+> **Product and execution source of truth:**
+> [`../../FIGURE_AGENT_SPEC.md`](../../FIGURE_AGENT_SPEC.md). This README
+> describes the current Python plugin implementation only.
+
+The implementation source is `experiments/python_svg_semantic_fig1`: Python scene
 payloads, scaffold layout contracts, drawsvg composition, Matplotlib-backed
 schematic glyphs, and verifier scripts. The plugin commands are thin wrappers
 around that experiment so Claude/Codex can use the Python renderer directly.

@@ -5,6 +5,10 @@ post-v0.1.7.2 cleanup. For the product-direction rationale behind each layer,
 see `docs/quality-kernel-goal.md`. For the canonical fixture acceptance criteria,
 see `docs/golden-target-trap-depth-picture.md` and `docs/golden-target-001-retrospective.md`.
 
+> This file documents the current quality-kernel implementation. Integrated
+> product scope and execution order are governed by
+> [`../../../FIGURE_AGENT_SPEC.md`](../../../FIGURE_AGENT_SPEC.md).
+
 ## Purpose
 
 `figure-agent` is a **paper-figure quality kernel**. Its value is not "produce
@@ -123,8 +127,10 @@ optional fixture-class flags:
 - `golden_contract` — golden-fixture spec for `check_golden_artifacts`
   (`required_labels`, `source_inventory`).
 
-Meaning lives in `briefing.md` and `<name>.tex`; `spec.yaml` is metadata
-only, never the single source of truth.
+Scientific meaning lives in `briefing.md` and `<name>.tex`; `spec.yaml` is not
+the source of scientific claims. Within fixture metadata, however,
+`spec.yaml.accepted` is the single machine-readable human-acceptance authority
+defined by `FIGURE_AGENT_SPEC.md`.
 
 ### Layer 2.5 — Reference Analysis
 
@@ -384,7 +390,8 @@ historical events; do not rewrite them.
 
 | You want to... | Look at |
 |---|---|
-| Understand product direction | `docs/quality-kernel-goal.md` |
+| Understand integrated product direction | `../../../FIGURE_AGENT_SPEC.md` |
+| Understand the quality-kernel rationale | `docs/quality-kernel-goal.md` |
 | Add a new fixture | `commands/fig_new.md` + `examples/<name>/` |
 | Add a new gate to `/fig_compile` | `scripts/compile.sh` + `scripts/check_*.py` |
 | Add a per-fixture validation rule | `spec.yaml.golden_contract` (new fixture) or `scripts/check_golden_artifacts.py` (new contract field) |

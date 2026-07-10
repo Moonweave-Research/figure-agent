@@ -1,13 +1,19 @@
 # Phase 3 — Pipeline-Level Quality Plan
 
+> **Historical execution plan.** Git history and the current implementation
+> may have moved beyond individual checkboxes in this file. The authoritative
+> product plan and next allowed Slice are defined in
+> [`../../../FIGURE_AGENT_SPEC.md`](../../../FIGURE_AGENT_SPEC.md). Phase 3
+> commits and reverts are inputs to the legacy salvage audit, not final product
+> verdicts.
+
 Branch: `experiment/python-svg-semantic-fig1`
 Pre-Phase-3 commit: `a8f0f54` (Phase 1+2 closed, schematic-grade)
 Owner: Moon-python
 
-This document is the single source of truth for Phase 3 execution.
-The Ralph loop reads this file, picks the next unchecked task, executes it,
-runs gates, ticks the box, and stops. Re-firing the prompt advances by one
-unit until all five phases close.
+While Phase 3 was active, this file drove its task loop. It is no longer an
+authoritative queue: unchecked boxes describe historical intent and must not
+be executed without routing through `FIGURE_AGENT_SPEC.md`.
 
 ## 0. Goal — Nature Communications Publication-Illustration Grade
 

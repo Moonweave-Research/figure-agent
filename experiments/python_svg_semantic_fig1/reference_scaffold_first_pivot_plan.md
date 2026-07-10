@@ -1,5 +1,11 @@
 # Reference-Scaffold-First Pivot Plan
 
+> **Historical execution evidence.** The current product specification,
+> legacy re-evaluation policy, and execution order are governed by
+> [`../../FIGURE_AGENT_SPEC.md`](../../FIGURE_AGENT_SPEC.md). The
+> reference-scaffold-first decision remains the default hypothesis, not an
+> irreversible verdict on other authoring approaches.
+
 ## Decision
 
 The Python SVG semantic experiment should stop treating the semantic scene as a layout generator. The better path is reference-scaffold-first rendering: a good layout scaffold is selected or authored first, then semantic payloads, computed geometry, and verifier contracts are bound into that scaffold.

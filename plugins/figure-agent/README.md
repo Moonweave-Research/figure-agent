@@ -2,16 +2,21 @@
 
 Claude Code plugin for paper-grade scientific figures.
 
-**Current product direction: quality kernel.**
+> **Product and execution source of truth:**
+> [`../../FIGURE_AGENT_SPEC.md`](../../FIGURE_AGENT_SPEC.md). This README
+> describes the current quality-kernel implementation surface; it does not own
+> the cross-layer roadmap.
 
-`figure-agent` is now treated as paper-figure quality, compile, and
+**Current plugin role: quality kernel.**
+
+`figure-agent` is currently the paper-figure quality, compile, and
 reproducibility infrastructure. A human or any LLM/tool may author the figure;
 the plugin's durable job is to enforce Style Lock, compile/export reliably,
 surface visual QA problems, and keep the figure reproducible.
 
 Earlier prompt/image-gen orchestration commands were removed from the active
-plugin surface. Historical design notes remain under `docs/historical/`; the
-maintained product direction is `docs/quality-kernel-goal.md`.
+plugin surface. Historical design notes remain under `docs/historical/`;
+`docs/quality-kernel-goal.md` records the rationale for this plugin boundary.
 
 **Plugin does not:**
 - Call image generation APIs
@@ -81,16 +86,16 @@ redaction, and preview-selection pipeline was removed in PR #8a.
 
 The latest shipped plugin version is recorded in `.claude-plugin/plugin.json`.
 The active line is the v0.2 quality-kernel release with v0.3 authoring
-grounding work in progress. Active direction is recorded in
-`docs/quality-kernel-goal.md`; the original v0.1 ship spec is preserved under
+grounding work in progress. Integrated product direction is recorded in
+`../../FIGURE_AGENT_SPEC.md`; the original v0.1 ship spec is preserved under
 `docs/historical/design-v0.1.md` as a frozen reference.
 
 ## Documentation map
 
-Active:
+Active implementation references:
 - `docs/architecture-overview.md` — layer-by-layer reference; start here.
-- `docs/quality-kernel-goal.md` — current product direction (durable kernel,
-  frozen-legacy boundary, export tracking policy).
+- `docs/quality-kernel-goal.md` — historical rationale and current kernel
+  mechanics; product direction is governed by `../../FIGURE_AGENT_SPEC.md`.
 - `docs/golden-target-trap-depth-picture.md` — Golden Target 001 acceptance
   criteria (the canonical fixture spec).
 - `docs/golden-target-001-retrospective.md` — N=1 evidence retrospective and

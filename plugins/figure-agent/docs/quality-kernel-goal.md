@@ -1,7 +1,11 @@
 # figure-agent Quality Kernel Goal
 
 **Date**: 2026-04-29
-**Status**: active direction after v0.1.7.2 review
+**Status**: historical product rationale; current kernel boundary reference
+
+> The integrated product direction and execution order are governed by
+> [`../../../FIGURE_AGENT_SPEC.md`](../../../FIGURE_AGENT_SPEC.md). This file
+> remains evidence for why the durable quality-kernel boundary was created.
 
 ## Decision
 
