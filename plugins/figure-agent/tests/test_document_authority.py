@@ -15,6 +15,15 @@ EXECUTION_MARKER = "<!-- FIGURE_AGENT:EXECUTION_AUTHORITY -->"
 PRODUCT_DOC = "docs/product-spec.md"
 EXECUTION_DOC = "docs/execution-plan.md"
 HISTORICAL_STATUS = "**Status:** Historical evidence — non-authoritative."
+COMPETING_AUTHORITY_PHRASES = (
+    "active product direction",
+    "active direction",
+    "canonical direction",
+    "active working plan",
+    "active roadmap",
+    "active handoff plan",
+    "active issue record and implementation direction",
+)
 
 AGENT_ENTRYPOINTS = (
     REPO_ROOT / "README.md",
@@ -69,6 +78,49 @@ def test_superseded_product_and_plan_docs_are_explicitly_non_authoritative() -> 
         assert HISTORICAL_STATUS in text, relative_path
         assert PRODUCT_DOC in text, relative_path
         assert EXECUTION_DOC in text, relative_path
+
+
+def test_no_other_document_can_claim_active_product_or_plan_authority() -> None:
+    canonical_docs = {PLUGIN_ROOT / PRODUCT_DOC, PLUGIN_ROOT / EXECUTION_DOC}
+    for path in PLUGIN_ROOT.rglob("*.md"):
+        if path in canonical_docs:
+            continue
+        text = _read(path)
+        lowered = text.lower()
+        if any(phrase in lowered for phrase in COMPETING_AUTHORITY_PHRASES):
+            assert HISTORICAL_STATUS in text, path.relative_to(PLUGIN_ROOT)
+
+
+def test_canonical_docs_close_known_attribution_and_provenance_edge_cases() -> None:
+    product = _read(PLUGIN_ROOT / PRODUCT_DOC)
+    execution = _read(PLUGIN_ROOT / EXECUTION_DOC)
+
+    for required in (
+        "stable selector ID",
+        "Line ranges are review snapshots",
+        "render-geometry hash",
+        "No fragment may depend on network access",
+        "aggregate review-input hash",
+    ):
+        assert required in product
+
+    for required in (
+        "tracked editable source",
+        "tracked Fig1-family editable source",
+        "source commit and tree hash",
+        "selector_id:",
+        "anchor_start:",
+        "coordinate_space: pdf_cm",
+        "page_index:",
+        "render_geometry_hash:",
+        "external URLs",
+        "review_input_hash",
+        "predeclared comparison protocol",
+    ):
+        assert required in execution
+
+    assert "fig1_overview_v5f_hybrid_panel_f_pilot" not in execution
+    assert "panel_f_fragment" not in execution
 
 
 def test_canonical_authority_docs_ship_in_cowork_package(tmp_path: Path) -> None:

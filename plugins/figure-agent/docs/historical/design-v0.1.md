@@ -1,7 +1,10 @@
 # figure-agent v0.1 Design
 
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
 **Date**: 2026-04-28
-**Status**: v0.1 ship spec; post-v0.1.7.2 direction pivots to quality kernel
+**Status at the time**: v0.1 ship spec; post-v0.1.7.2 direction pivots to quality kernel
 
 ## One-line Identity
 
@@ -13,7 +16,7 @@ vector finishing with deterministic compile, clash checks, and export.
 
 It is **not** an automatic image-to-vector reconstruction system in v0.1.
 
-After the v0.1.7.2 review, the active product direction is no longer expanded
+After the v0.1.7.2 review, the product direction was no longer expanded
 LLM/image-generation orchestration. The durable direction is a paper-figure
 quality kernel: Style Lock, macro quality, compile/export reliability, visual
 QA, and reproducibility. See `docs/quality-kernel-goal.md`.

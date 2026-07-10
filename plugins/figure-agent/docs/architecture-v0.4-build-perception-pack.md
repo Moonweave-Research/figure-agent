@@ -1,6 +1,9 @@
 # Architecture v0.4 — Build Perception Pack
 
-**Status:** REJECTED (2026-05-08, escalated from REVISION_NEEDED).
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
+**Status at the time:** REJECTED (2026-05-08, escalated from REVISION_NEEDED).
 v0.4.1 was authored to fix v0.4's 6 BLOCKING issues, then dual-reviewed (Codex + Gemini, `docs/trials/2026-05-08-perception-spec-review-v041-{codex,gemini}.md`). Both reviewers verdicted "needs further revision" — v0.4.1 left 6 BLOCKING issues unresolved (T-junction FP, path reconstruction underspec, probe baseline non-reproducible, coordinate math wrong by ~1.5%, intent enum incomplete, dependency policy contradictory). Three rounds of advisor + dual review converged on the same meta-pattern: topology auto-detection cannot be reduced to invariant PDF geometry — segmentation choice, color tolerance, and T-junction definition all depend on user taste, so the algorithm has no objective ground truth.
 **Successor:** the v0.4 line (auto-detection topology pack) is closed. Live successors:
 - `architecture-v0.4.2-perception-data-only.md` — descriptive data only (`extract.yaml` + `overlay.png`, no auto-detection claims).
@@ -11,7 +14,7 @@ v0.4.1 was authored to fix v0.4's 6 BLOCKING issues, then dual-reviewed (Codex +
 **Original Status:** DRAFT (2026-05-08)
 **Trigger:** N=2 dogfood on `fig1_overview_v2` revealed that compile-stage checkers (`lint_tex.py`, `check_collisions.py`, `check_visual_clash.py`, `check_layout_drift.py`) all pass while Panel A still reads as visually awkward (dangling polysulfide chain endpoints, sparse triangular DIB layout, floating S-S-S notation). Existing checks are mechanical (palette compliance, bbox overlap, pixel clash) — they cannot surface structural awkwardness like "this chain endpoint should connect to another but doesn't". Vision LLM (L4.5) catches some of this but is unreliable for tier-grade judgment (confirmed across this session). Build stage needs richer perceptual input — both for the agent's later vision call AND for the user's own grind cycle.
 **Predecessor:** `architecture-v0.3-llm-figure-quality-judgment.md` (REJECTED 2026-05-08; rejected proposal targeted vision-side ceiling, this spec targets build-side input ceiling — orthogonal axis), `architecture-v0.2-proposal.md` §4 (compile pipeline)
-**Active product direction:** `quality-kernel-goal.md`, ongoing fig1_overview_v2 dogfood
+**Historical product direction:** `quality-kernel-goal.md`, ongoing fig1_overview_v2 dogfood
 
 ---
 

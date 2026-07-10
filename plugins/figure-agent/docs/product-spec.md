@@ -142,6 +142,13 @@ must not invent a source location when declarations are missing or regions
 overlap. Every actionable finding produces a review overlay and focused crop so
 the human can verify the attribution before accepting an edit.
 
+A durable source selector has a stable selector ID and explicit structural or
+author-provided anchors. Line ranges are review snapshots, not durable identity:
+they may be emitted for a human, but they cannot remain authoritative after the
+source hash or anchor resolution changes. Missing, duplicated, or stale anchors
+degrade attribution to `ambiguous` or `unbound` rather than triggering a guessed
+edit.
+
 ### 4.3 Complex-panel hybrid authoring
 
 Python-generated semantic SVG fragments are allowed for sub-regions where they
@@ -159,6 +166,13 @@ Each fragment must provide:
 - a manifest tying both renders to the same fragment source; and
 - a clear boundary showing which labels, arrows, and panel relationships remain
   owned by TikZ.
+
+No fragment may depend on network access, mutable external URLs, ambient fonts,
+or unhashed local assets. Scripts are forbidden. Embedded raster assets, when a
+scientifically necessary exception is declared, carry content hashes and an
+explicit license/provenance record. SVG and its PDF-compatible render must pass
+a deterministic geometry and visual-equivalence check, including view-box and
+clipping checks.
 
 TikZ remains responsible for figure-wide composition unless a later promotion
 gate explicitly changes that policy.
@@ -189,8 +203,12 @@ machine-readable fixture artifacts. At minimum, a declaration identifies:
 - panel ID;
 - semantic object or relation ID;
 - role and scientific meaning;
-- PDF-space bounding box or deterministic transform into PDF space;
-- source path and source selector;
+- page index, named coordinate space, origin/axis convention, crop/media box,
+  page rotation, and PDF-space bounding box or deterministic transform;
+- render-geometry hash tying detector pixels, DPI, page geometry, and fragment
+  transforms to the reviewed render;
+- source path, stable selector ID, anchors, source hash, and optional line-range
+  snapshot;
 - provenance of the declaration; and
 - ambiguity when a one-to-one mapping is not possible.
 
@@ -212,6 +230,10 @@ Figure Agent separates three states:
 Machine-valid is not publication-accepted. A slice, fixture, or release that
 requires human review stays open until the verdict artifact exists and names the
 reviewed artifact hashes. Absence of a human verdict is `pending`, not success.
+The verdict binds an aggregate review-input hash covering the rendered artifact,
+semantic and reference-authority manifests, briefing/spec, object relations, and
+toolchain. Any bound-input change makes the verdict stale even when the final
+render bytes happen to remain unchanged.
 
 ## 7. Promotion rules
 
@@ -226,6 +248,11 @@ families:
 - detector precision does not improve by hiding or suppressing real defects;
 - a human review accepts both scientific meaning and publication quality; and
 - the path does not depend on fixture-name-specific patches.
+
+Correction-cost evidence follows a predeclared comparison protocol with the
+same starting contract, task boundary, and timing rules. Preparation, failed
+attempts, rendering, diagnosis, and repair time are included; missing or
+non-comparable measurements cannot support promotion.
 
 Until then, semantic SVG is an experimental hybrid fragment path and TikZ is the
 production baseline.

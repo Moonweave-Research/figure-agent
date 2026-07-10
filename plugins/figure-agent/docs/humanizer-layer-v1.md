@@ -1,11 +1,14 @@
 # Humanizer / Narrative Context Layer v1
 
-Status: implemented first slice for read-only context, critique, candidate review,
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
+Status at the time: implemented first slice for read-only context, critique, candidate review,
 ranking guard, and loop checkpoint surfacing.
 
 ## Research And Prior Art
 
-The active product direction in `quality-kernel-goal.md` rejects hidden prompt
+The historical product direction in `quality-kernel-goal.md` rejected hidden prompt
 loops, auto-designers, external image generation, and API-backed vision calls.
 The existing system already has partial narrative pieces in briefing files,
 authoring contracts, aesthetic intent, paper aesthetic context, critique quality

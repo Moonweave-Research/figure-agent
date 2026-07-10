@@ -1,9 +1,12 @@
 # Architecture v0.3 — Briefing Semantic Grounding
 
-**Status:** DRAFT (2026-05-04)
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
+**Status at the time:** DRAFT (2026-05-04)
 **Trigger:** First v0.2 dogfood on `golden_trap_depth_picture` (N=1) failed §7 gate by 4× (2/11 ≈ 18% accuracy vs ≥80% threshold). Failure is structural, not tunable.
 **Predecessor:** `architecture-v0.2-proposal.md` (ACCEPTED, shipped as v0.2.0)
-**Active product direction:** `quality-kernel-goal.md`, `session_strategic_direction_2026_05_04` (memory)
+**Historical product direction:** `quality-kernel-goal.md`, `session_strategic_direction_2026_05_04` (memory)
 
 ---
 

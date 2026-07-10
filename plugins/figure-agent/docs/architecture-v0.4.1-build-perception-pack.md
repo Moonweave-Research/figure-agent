@@ -1,6 +1,9 @@
 # Architecture v0.4.1 — Build Perception Pack (revised)
 
-**Status:** REJECTED (2026-05-08).
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
+**Status at the time:** REJECTED (2026-05-08).
 2nd-round dual external review (`docs/trials/2026-05-08-perception-spec-review-v041-{codex,gemini}.md`) found v0.4.1 left 6 BLOCKING issues unresolved:
 1. Topology fix does not handle T-junction false positives (chain-to-ring middle-of-path attachment) — Codex+Gemini concur.
 2. Path reconstruction guarantees false negatives — two faded chain tails terminate within ~0.12-0.19 cm of each other and form a `cluster size = 2`, never flagged as `lonely`.
@@ -16,7 +19,7 @@ Beyond mechanical fixes, advisor + reviewer trajectory converged on a deeper fin
 - `architecture-v0.5-per-panel-reference-workflow.md` — D-2 strategic shift. `spec.yaml.panels[i].reference_image` for `/fig_critique` reference grounding (user-as-master workflow).
 
 **Predecessor:** `architecture-v0.4-build-perception-pack.md` (REJECTED — same line).
-**Active product direction:** `quality-kernel-goal.md`, ongoing fig1_overview_v2 dogfood. See `feedback_perception_spec_rejected.md` memory entry.
+**Historical product direction:** `quality-kernel-goal.md`, ongoing fig1_overview_v2 dogfood. See `feedback_perception_spec_rejected.md` memory entry.
 
 ---
 

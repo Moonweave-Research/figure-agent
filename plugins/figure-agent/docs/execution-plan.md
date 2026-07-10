@@ -125,20 +125,36 @@ bin/fig-agent benchmark-run --suite visual-attribution --json
 
 ```yaml
 schema: figure-agent.semantic-regions.v1
+page_geometry:
+  coordinate_space: pdf_cm
+  page_index: 0
+  origin: bottom_left
+  media_box_pdf_cm: [0.0, 0.0, 17.8, 10.0]
+  crop_box_pdf_cm: [0.0, 0.0, 17.8, 10.0]
+  rotation_deg: 0
+  render_geometry_hash: sha256:<hash>
 regions:
-  - id: panel_f.trap_curve
-    panel_id: F
+  - id: target_panel.complex_region
+    panel_id: TARGET
     role: potential_profile
     bbox_pdf_cm: [10.1, 0.8, 12.9, 3.2]
     source:
-      path: fig1_overview_v5f_hybrid_panel_f_pilot.tex
+      path: fig1_hybrid_complex_panel_pilot.tex
+      selector_id: target_panel.complex_region
+      anchor_start: "% figure-agent:start target_panel.complex_region"
+      anchor_end: "% figure-agent:end target_panel.complex_region"
+      source_sha256: sha256:<hash>
       line_start: 210
       line_end: 248
     provenance: declared_by_author
 ```
 
-- [ ] Reject duplicate IDs, invalid boxes, unsafe paths, reversed line ranges,
-  unknown panels, out-of-page boxes, and selectors outside the named source.
+- [ ] Reject duplicate IDs or anchors, invalid boxes, unsafe paths, reversed
+  line ranges, unknown panels, out-of-page boxes, selectors outside the named
+  source, and page/render geometry that does not match the detector render.
+- [ ] Treat line ranges as regenerated review snapshots. Resolve identity from
+  `selector_id` plus unique anchors; missing, duplicated, or stale anchors are
+  `ambiguous`/`unbound` and never silently relocated by line proximity.
 - [ ] Normalize coordinates without fixture-specific offsets. Reuse existing
   `bbox_pdf_cm` parsing and page-geometry helpers where possible.
 - [ ] Emit stable normalized JSON and source/input hashes for downstream tools.
@@ -163,16 +179,18 @@ uv run pytest tests/test_semantic_region_contract.py tests/test_inputs.py \
   schema must carry the new attribution block
 
 - [ ] Write RED tests for bbox intersection with panel and semantic regions.
-- [ ] Return `exact` only when one valid region wins under a documented overlap
-  rule; return `ambiguous` with every candidate when regions tie or overlap;
-  return `unbound` when no declaration applies.
+- [ ] Return `exact` only when one valid region wins through an explicitly
+  declared containment/priority relationship. Area, nearest-center, and DOM
+  order are not implicit tie-breakers. Return `ambiguous` with every candidate
+  for undeclared overlap; return `unbound` when no declaration applies.
 - [ ] Copy the declared source selector into the finding only after validating
   the source hash. Never synthesize `tex_lines` from spatial proximity alone.
 - [ ] Preserve the original detector bbox and confidence so attribution cannot
   hide detector uncertainty.
-- [ ] Add regression tests for page transforms, boundary-touching boxes,
-  nested regions, missing declarations, stale source hashes, and malformed
-  detector output.
+- [ ] Add regression tests for top-left pixel versus bottom-left PDF origins,
+  DPI changes, MediaBox/CropBox differences, page rotation, page index, fragment
+  transforms, boundary-touching boxes, nested regions, missing declarations,
+  stale source/render-geometry hashes, and malformed detector output.
 - [ ] Verify:
 
 ```bash
@@ -242,11 +260,19 @@ bin/fig-agent helper detector_feedback_ledger.py --json
 
 ## Task 6: Build one semantic SVG fragment pilot
 
-**Fixture boundary:** Fork
-`examples/fig1_overview_v5f_v013_dogfood_001_vault` into
-`examples/fig1_overview_v5f_hybrid_panel_f_pilot`. If the benchmark lives only
-on another branch, first create a dedicated integration branch that contains it;
-never edit the historical benchmark in place.
+**Source authority gate:** The locally observed
+`fig1_overview_v5f_v013_dogfood_001_vault` directory contains generated
+`build/` and `exports/` evidence but no tracked editable source in this branch or
+its visible Git history. It is a visual comparison artifact, not a fork source.
+Do not import it from a user worktree or reconstruct source from its PDF/SVG.
+
+Before implementation, select a tracked Fig1-family editable source and record
+its source commit and tree hash in `benchmarks/hybrid_pilot_source.yaml`. The source
+package must contain TeX, briefing, spec, declared reference inputs, and a
+reproducible baseline render. If no candidate satisfies this provenance gate,
+Task 6 is blocked and the pilot fixture must not be created. Fork the verified
+source into `examples/fig1_hybrid_complex_panel_pilot`; never edit the
+benchmark in place.
 
 **Files:**
 
@@ -254,9 +280,10 @@ never edit the historical benchmark in place.
 - Create: `scripts/hybrid/render_fragment.py`
 - Create: `tests/test_hybrid_fragment_contract.py`
 - Create: `tests/test_hybrid_fragment_render.py`
-- Create inside the forked fixture: `fragments/panel_f_fragment.py`
-- Create inside the forked fixture: `fragments/panel_f_fragment.svg`
-- Create inside the forked fixture: `fragments/panel_f_fragment.pdf`
+- Create: `benchmarks/hybrid_pilot_source.yaml`
+- Create inside the forked fixture: `fragments/complex_panel_fragment.py`
+- Create inside the forked fixture: `fragments/complex_panel_fragment.svg`
+- Create inside the forked fixture: `fragments/complex_panel_fragment.pdf`
 - Create inside the forked fixture: `fragments/fragment_manifest.json`
 - Modify only inside the forked fixture: its `.tex`, `spec.yaml`, briefing,
   authoring plan, and review artifacts
@@ -268,15 +295,21 @@ never edit the historical benchmark in place.
   a clear prerequisite error when the SVG-to-PDF renderer is unavailable.
 - [ ] Require the SVG to expose stable IDs used by the manifest; reject orphaned
   manifest IDs and undeclared SVG IDs that claim semantic status.
-- [ ] Place only the complex Panel F geometry in the fragment. Keep global
+- [ ] Reject scripts, event handlers, external URLs, absolute paths, ambient
+  fonts/CSS, and unhashed linked or embedded assets. Rendering runs with network
+  access disabled and a declared asset allowlist.
+- [ ] Compare deterministic rasterizations of SVG and PDF at fixed dimensions;
+  reject unexplained geometry, clipping, view-box, or visual-equivalence drift.
+- [ ] Select the target panel only after source provenance passes. Place only
+  its complex geometry in the fragment. Keep global
   panel composition, text, labels, and inter-panel arrows in TikZ.
 - [ ] Compile from the plugin root using the mandated command:
 
 ```bash
 bash scripts/compile.sh \
-  examples/fig1_overview_v5f_hybrid_panel_f_pilot/fig1_overview_v5f_hybrid_panel_f_pilot.tex
+  examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex
 FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
-  examples/fig1_overview_v5f_hybrid_panel_f_pilot/fig1_overview_v5f_hybrid_panel_f_pilot.tex
+  examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex
 ```
 
 - [ ] Store compile logs, manifests, overlays, crops, and hashes as new pilot
@@ -287,18 +320,25 @@ FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
 
 **Files:**
 
-- Create: `docs/trials/<date>-hybrid-panel-f-comparison.md`
+- Create: `docs/trials/<date>-hybrid-complex-panel-comparison.md`
 - Create inside the pilot fixture: `review/human_scaffold_verdict.yaml`
 - Modify: `benchmarks/visual_attribution_suite.yaml`
 
 - [ ] Render both variants in one clean environment and record source hashes,
   tool versions, compile commands, output hashes, and failures.
+- [ ] Write a predeclared comparison protocol with identical starting inputs and
+  task boundaries. Count preparation, failed attempts, detector diagnosis,
+  rendering, and repair time; do not compare selectively trimmed successful
+  runs.
 - [ ] Compare visual quality, scientific fidelity, source edit size, correction
   minutes, detector findings, actionable attribution rate, and artifact
   reproducibility. Report missing measurements explicitly.
 - [ ] Require a human scaffold verdict for object relations and a separate
-  human artifact verdict for publication quality. Each verdict names the exact
-  artifact hash it reviewed.
+  human artifact verdict for publication quality. Each verdict records a
+  `review_input_hash` aggregating the exact artifact, semantic manifest,
+  reference-authority manifest, briefing/spec, relations, and toolchain.
+- [ ] Mark the verdict stale when any bound input changes, even if output bytes
+  happen to remain identical.
 - [ ] Keep the task open when either verdict is absent. Machine gates may mark
   the package `review-ready`, never `publication-accepted`.
 - [ ] Verify the comparison report against a schema test added beside the
@@ -307,10 +347,13 @@ FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
 
 ## Task 8: Cross-figure generalization on sulfur-polymer Fig3
 
-**Fixture:** Start from
-`examples/fig3_trap_schematic_v97` in a new Slice 3 output fixture. Preserve the
-reference, briefing, spec, coordinate hints, editable TeX, and review history as
-immutable inputs. Do not modify or overwrite the historical Fig3 artifact.
+**Fixture:** Recover `examples/fig3_trap_schematic_v97` from source commit
+`eaed8fb165e801e13cea3078f832496a011fa2f9`, fixture tree
+`6966d9cf193a34debc1ecfcd5d2a1d1aff1845e5`, into a new Slice 3 output
+fixture. Record that commit, tree, and every imported file hash before
+implementation. Preserve the reference, briefing, spec, coordinate hints,
+editable TeX, and review history as immutable inputs. Do not modify or
+overwrite the historical Fig3 artifact.
 
 **Files:**
 

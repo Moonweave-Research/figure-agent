@@ -1,13 +1,16 @@
 # Architecture v0.3 — LLM Figure Quality Judgment
 
-**Status:** REJECTED (2026-05-08) — superseded by existing primary-source evidence in `examples/golden_trap_depth_picture/critique_adjudication.yaml:280-303`. Cheap intervention (briefing §7 + reference attached) already lifted `F1_w` from 0.244 → 0.981 (4.9× the §6 threshold of 0.15). Independent Codex + Gemini review both verdicted "needs re-design before implementation plan" with 6 / 4 BLOCKING issues respectively. Reviews preserved at `docs/trials/2026-05-08-figure-quality-spec-review-{codex,gemini}.md`. Draft text below preserved as a record of the brainstorming chain that led here; do not implement.
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
+**Status at the time:** REJECTED (2026-05-08) — superseded by existing primary-source evidence in `examples/golden_trap_depth_picture/critique_adjudication.yaml:280-303`. Cheap intervention (briefing §7 + reference attached) already lifted `F1_w` from 0.244 → 0.981 (4.9× the §6 threshold of 0.15). Independent Codex + Gemini review both verdicted "needs re-design before implementation plan" with 6 / 4 BLOCKING issues respectively. Reviews preserved at `docs/trials/2026-05-08-figure-quality-spec-review-{codex,gemini}.md`. Draft text below preserved as a record of the brainstorming chain that led here; do not implement.
 
 ---
 
 **Original Status:** DRAFT (2026-05-08)
 **Trigger:** N=1 dogfood on `golden_trap_depth_picture` produced `P_w=0.31, R_w=0.20, F1_w=0.24` with one BLOCKER FN missed (polymer chain reads as wave, not chemistry). v1 rubric §6 cheap-experiment branch and follow-on N=3 catalog-stability run both confirmed the failure is structural, not prompt-tunable.
 **Predecessor:** `critique-evaluation-rubric-v1.md` (rubric and metrics), `architecture-v0.2-proposal.md` §7 (auto-apply gate), `architecture-v0.3-briefing-semantic-grounding.md` (parallel deferred work)
-**Active product direction:** `quality-kernel-goal.md`, `session_strategic_direction_2026_05_04` (memory)
+**Historical product direction:** `quality-kernel-goal.md`, `session_strategic_direction_2026_05_04` (memory)
 **Methodology basis:** Industry consensus 2026 — hybrid multidimensional rubrics + iterative bootstrap (RRD), Anthropic guidance "unit tests for correctness + LLM rubrics for overall quality", AdaRubric / Autorubric / Prometheus 2 / RubricEval line.
 
 ---
