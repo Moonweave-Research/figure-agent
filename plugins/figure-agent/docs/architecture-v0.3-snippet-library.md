@@ -1,7 +1,12 @@
-# Architecture v0.3 — L3 Snippet Library (active direction)
+# Architecture v0.3 — L3 Snippet Library
 
-**Status:** PLAN + branch implementation in progress (2026-05-04)
-**Supersedes:** `architecture-v0.3-briefing-semantic-grounding.md` and `briefing-semantic-schema-v1.md` as the *active* v0.3 direction. Those documents remain in the repo as design reference but are demoted to **secondary tracks**.
+**Status:** Historical evidence — non-authoritative.
+
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
+**Status at the time:** PLAN + branch implementation in progress (2026-05-04)
+
+**Historical relationship:** superseded `architecture-v0.3-briefing-semantic-grounding.md` and `briefing-semantic-schema-v1.md` as the active v0.3 direction at that time.
 **Derived from:** N=1 dogfood failure (single-rater F1_w 0.244 → predicted 0.981 with prose grounding) + user real-quality assessment ("달라지는 게 없는데… 우리 피겨 에이전트 개선했냐?") + `/compass` STOP verdict (drift + rot SUSPICIOUS).
 **One-line goal:** stop authoring scientific-figure TikZ from scratch; vendor and curate battle-tested community packages and snippets so paper-grade reach becomes a composition problem, not an authoring problem.
 

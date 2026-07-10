@@ -1,6 +1,9 @@
 # Iteration-First Figure-Agent — Direction & Implementation Spec
 
-> **Status:** canonical direction as of 2026-06-21 (rev 2 — hole-reviewed by 3 adversarial passes, all code refs verified live). **Corrects the premise** of `2026-06-21-figure-agent-v2-svg-illustrator-design.md` (the "safety-scaffold-first / SVG-illustrator" line), which this session's research + architecture audit demoted as over-built for the actual lever.
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
+> **Status at the time:** canonical direction as of 2026-06-21 (rev 2 — hole-reviewed by 3 adversarial passes, all code refs verified live). **Corrects the premise** of `2026-06-21-figure-agent-v2-svg-illustrator-design.md` (the "safety-scaffold-first / SVG-illustrator" line), which this session's research + architecture audit demoted as over-built for the actual lever.
 > **Provenance (full evidence):** `../2026-06-21-techstack-direction-decision.md`, `../2026-06-21-architecture-audit-decision.md`. Memory: `project_techstack_direction_2026_06_21`, `project_architecture_audit_2026_06_21`, `project_tool_value_dogfood_2026_06_21`, `feedback_element_iteration_workflow`.
 > **One-line:** premium comes from the *volume* of cheap human element-iteration (not skill, not money, not autonomous AI); the tool's job is to amplify that loop and bank its output as reusable components — and the agent-driven loop must first be made to actually run-and-apply on real figures.
 
@@ -8,7 +11,7 @@
 
 ## 0. Entry point (read this first; for the agent executing this spec)
 
-- **This file is the canonical direction.** If multiple specs exist in `docs/superpowers/specs/`, this one (rev 2026-06-21) supersedes the v2-svg-illustrator spec's premise. Start here.
+- **Historical instruction:** this file was the canonical direction in its original session. For current work, start at `docs/product-spec.md` and `docs/execution-plan.md`.
 - **Start work at §8 Slice 0.** Slice 1+ are **blocked** until the §8 gates pass (see "Slice gates"). Do not begin Slice 1/2 first.
 - **Working method (applies to every step):** superpowers:test-driven-development (write the failing test first) + superpowers:subagent-driven-development (fresh implementer per task + spec-compliance then code-quality review) + a clean-checkout proof before declaring a slice done.
 - **Runtime rule:** ALL python/tool invocations use `uv run` (a repo hook blocks bare `python3`). Run from `plugins/figure-agent/`. Tests: `uv run pytest tests/ -q`. Clean-checkout proof: `git worktree add --detach /tmp/<new> <HEAD> && cd /tmp/<new>/plugins/figure-agent && uv sync && uv run pytest tests/ -q` (expect 0 failed in a clean checkout), then `git worktree remove --force`.

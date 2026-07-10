@@ -1,8 +1,11 @@
 # Next Agent Execution Waves
 
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
 Date: 2026-07-01
 
-Status: active handoff plan for the next agent or OMX team
+Status at the time: active handoff plan for the next agent or OMX team
 
 Primary objective: continue figure-agent development from the current verified
 state without reopening completed work, bypassing human release gates, or

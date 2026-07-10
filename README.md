@@ -56,7 +56,12 @@ After install, the six commands are available in any Claude Code session:
 
 ## Documentation
 
-The full docs live in [`plugins/figure-agent/README.md`](plugins/figure-agent/README.md). It covers:
+Agents and contributors must start with the two product authorities:
+
+- [`plugins/figure-agent/docs/product-spec.md`](plugins/figure-agent/docs/product-spec.md) — what Figure Agent is, its architecture, boundaries, and acceptance model.
+- [`plugins/figure-agent/docs/execution-plan.md`](plugins/figure-agent/docs/execution-plan.md) — the single active implementation sequence and completion boundary.
+
+The operational docs live in [`plugins/figure-agent/README.md`](plugins/figure-agent/README.md). It covers:
 
 - A start-to-finish walkthrough (one figure, six commands)
 - Current state (what's shipped in v0.5.0)

@@ -1,6 +1,9 @@
 # Instrumented Dogfood-Driven Ceiling-Raising Meta-Loop — Design Spec v1
 
-**Status:** Proposed (design-only). Supersedes the framing in [[session_holistic_review_2026_06_25]]. Backed by [[project_techstack_direction_2026_06_21]] canonical spec.
+**Status:** Historical evidence — non-authoritative.
+
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+**Status at the time:** Proposed (design-only). Superseded the framing in [[session_holistic_review_2026_06_25]]. Backed by [[project_techstack_direction_2026_06_21]] canonical spec.
 **Branch context:** builds on Slice 0 + Slice 1 (candidate_generator geometry-aware candidates; `line_weight_tier.py` / `gradient_depth_fill.py` value-preserving levers).
 **Authoring rule applied:** Every adversarial-critic correction overrides the conflicting lens. The 10 corrections are integrated and each is flagged inline as **[CORR-n]**.
 

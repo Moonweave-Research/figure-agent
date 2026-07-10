@@ -1,7 +1,11 @@
 # Quality-State Hardening Plan
 
 **Date:** 2026-05-17
-**Status:** active issue record and implementation direction
+**Status:** Historical evidence — non-authoritative.
+
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
+**Status at the time:** active issue record and implementation direction
 
 ## Direction
 

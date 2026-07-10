@@ -1,8 +1,8 @@
 # figure-agent — Architecture Overview
 
-**Status**: active reference. Mirrors the layer model used to organize
-post-v0.1.7.2 cleanup. For the product-direction rationale behind each layer,
-see `docs/quality-kernel-goal.md`. For the canonical fixture acceptance criteria,
+**Status**: operational reference, not product or execution authority. Mirrors
+the layer model used to organize post-v0.1.7.2 cleanup. Read
+`docs/product-spec.md` and `docs/execution-plan.md` first. For canonical fixture acceptance criteria,
 see `docs/golden-target-trap-depth-picture.md` and `docs/golden-target-001-retrospective.md`.
 
 ## Purpose
@@ -474,8 +474,8 @@ happened, but they are never replay commands; operators must rerun live
 
 ### Layer 8 — Reproducibility / Asset
 
-**Files**: repo-root `.gitignore`, `.gitattributes`,
-`docs/quality-kernel-goal.md` ("Export Tracking Policy" section).
+**Files**: repo-root `.gitignore`, `.gitattributes`. The historical rationale
+is recorded in `docs/quality-kernel-goal.md` ("Export Tracking Policy" section).
 
 Per-figure folders use the .gitignore default of treating `build/`,
 `exports/`, and `previews/` as untracked. Two fixture classes:
@@ -487,7 +487,8 @@ Per-figure folders use the .gitignore default of treating `build/`,
   in one commit: spec.yaml (`reference_image:` + `accepted:` keys),
   `.gitignore` negation block, optional `.gitattributes` LFS line.
 
-Detailed rationale and the promotion checklist live in
+The current artifact and provenance boundary lives in `docs/product-spec.md`.
+The older detailed rationale and checklist remain as historical evidence in
 `docs/quality-kernel-goal.md`.
 
 ### Layer 4.5 — Vision Critique (host-orchestrated)
@@ -526,10 +527,14 @@ See `docs/architecture-v0.2-proposal.md` for the full layer redesign.
 
 ### Layer 10 — Documentation
 
-**Files**: `docs/` (active) + `docs/historical/` (frozen).
+**Files**: `docs/` (canonical authorities plus operational and historical
+evidence) + `docs/historical/` (frozen).
 
-Active:
-- `docs/quality-kernel-goal.md` — product-direction spec.
+Product authorities:
+- `docs/product-spec.md` — single product specification.
+- `docs/execution-plan.md` — single active forward execution plan.
+
+Operational and acceptance references:
 - `docs/golden-target-trap-depth-picture.md` — Golden Target 001
   acceptance criteria.
 - `docs/golden-target-001-retrospective.md` — N=1 evidence retrospective.
@@ -547,7 +552,8 @@ historical events; do not rewrite them.
 
 | You want to... | Look at |
 |---|---|
-| Understand product direction | `docs/quality-kernel-goal.md` |
+| Understand product direction | `docs/product-spec.md` |
+| Continue product implementation | `docs/execution-plan.md` |
 | Add a new fixture | `commands/fig_new.md` + `examples/<name>/` |
 | Add a new gate to `/fig_compile` | `scripts/compile.sh` + `scripts/check_*.py` |
 | Add a per-fixture validation rule | `spec.yaml.golden_contract` (new fixture) or `scripts/checks/check_golden_artifacts.py` (new contract field) |

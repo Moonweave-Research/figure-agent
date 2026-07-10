@@ -125,8 +125,8 @@ def test_public_docs_do_not_route_to_deleted_legacy_commands() -> None:
 
 def test_authoring_context_pack_docs_preserve_quality_kernel_boundary() -> None:
     docs_by_path = {
-        "docs/quality-kernel-goal.md": (
-            REPO_ROOT / "docs" / "quality-kernel-goal.md"
+        "docs/product-spec.md": (
+            REPO_ROOT / "docs" / "product-spec.md"
         ).read_text(),
         "README.md": (REPO_ROOT / "README.md").read_text(),
         "skills/figure-agent/SKILL.md": (

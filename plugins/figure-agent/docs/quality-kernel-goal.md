@@ -1,7 +1,10 @@
 # figure-agent Quality Kernel Goal
 
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
 **Date**: 2026-04-29
-**Status**: active direction after v0.1.7.2 review
+**Status at the time**: active direction after v0.1.7.2 review
 
 ## Decision
 

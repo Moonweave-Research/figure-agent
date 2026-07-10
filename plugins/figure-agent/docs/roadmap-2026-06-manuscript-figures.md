@@ -1,6 +1,9 @@
 # Roadmap — poly(S-r-DIB) manuscript figures (2026-06)
 
-Active working plan. Re-orient from here after any /compact.
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
+Historical working plan. Its original session used it as the re-orientation point.
 
 ## North star
 Ship the remaining 4-5 manuscript figures at fig1's Nature-tier quality, consistently,

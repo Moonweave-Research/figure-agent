@@ -1,5 +1,8 @@
 # 2026-07-03 Forward Execution Plan and Status
 
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
 ## Purpose
 
 Move figure-agent beyond the v0.9.3 baseline by making the operational truth

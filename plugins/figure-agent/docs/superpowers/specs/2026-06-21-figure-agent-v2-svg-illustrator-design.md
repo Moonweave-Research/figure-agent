@@ -1,5 +1,8 @@
 # figure-agent v2 — SVG Illustrator (hand-craft schematics)
 
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
 *Design spec. Brainstorm output, 2026-06-21. Builds on and pivots away from the v0.10 TikZ/convention-context-spine line. Design only — no build. Piece #3 detail lives in `ILLUSTRATORS_HAND_design.md` (verified against source); the deep-dive evidence is in `.hand-deepdive-2026-06-21/`.*
 
 ## 1. Problem and north star

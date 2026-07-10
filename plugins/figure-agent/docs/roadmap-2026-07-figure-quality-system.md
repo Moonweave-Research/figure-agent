@@ -1,7 +1,10 @@
 # Figure Quality System Roadmap
 
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
 Date: 2026-07-03
-Status: execution roadmap after fig1 v5 visual dogfood
+Status at the time: execution roadmap after fig1 v5 visual dogfood
 
 Implementation update:
 

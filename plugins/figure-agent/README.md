@@ -227,12 +227,12 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 ## Documentation map
 
 **Read these first:**
-- `docs/architecture-overview.md` — the layer-by-layer reference. Start here.
+- `docs/product-spec.md` — the single product authority. Start here.
+- `docs/execution-plan.md` — the single active forward implementation plan.
+- `docs/architecture-overview.md` — the shipped layer-by-layer reference.
 - `docs/v0.9-operator-playbook.md` — release-candidate command sequence for
   single-fixture, queue, host critique, closeout, and release/golden operation.
-- `docs/quality-kernel-goal.md` — current product direction.
 - `docs/architecture-v0.5-per-panel-reference-workflow.md` — how `/fig_critique` works now.
-- `docs/milestones-archive/2026-05-17-quality-state-hardening.md` — current issue record for reference contracts, readiness states, manifest hashes, and TIFF quality gates.
 
 **Topic deep-dives:**
 - `docs/architecture-v0.4.2-perception-data-only.md` — the perception data pack.
@@ -242,8 +242,13 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 - `docs/trials/` — dated dogfood reports.
 
 **Frozen historical (do not maintain, kept for context):**
+- `docs/quality-kernel-goal.md` — prior quality-kernel direction, superseded by
+  `docs/product-spec.md` and `docs/execution-plan.md`.
+- `docs/milestones-archive/2026-05-17-quality-state-hardening.md` — prior issue
+  record for reference contracts, readiness states, manifest hashes, and TIFF
+  quality gates.
 - `docs/historical/design-v0.1.md` — the v0.1 prompt/preview/selection-notes workflow that was removed in v0.2.
-- `docs/historical/roadmap-v0.1.7-selection-notes.md` — rollout decisions superseded by the quality-kernel goal.
+- `docs/historical/roadmap-v0.1.7-selection-notes.md` — superseded rollout decisions.
 
 ---
 

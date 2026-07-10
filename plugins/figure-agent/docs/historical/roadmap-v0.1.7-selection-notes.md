@@ -28,9 +28,8 @@ against §6 invariants and §3 composition intent. No new slash command.
 
 **2026-04-29 update:** this roadmap is historical for the v0.1.7
 `selection_notes` work. Its v0.2 orchestration branches are no longer the active
-direction. Active direction is the quality kernel described in
-`docs/quality-kernel-goal.md`: Style Lock, macro quality, compile/export
-reliability, visual QA, and reproducibility.
+direction. The current product and execution authorities are
+`docs/product-spec.md` and `docs/execution-plan.md`.
 
 ## Why this exists
 

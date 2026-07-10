@@ -1,7 +1,10 @@
 # Architecture v0.12 - Quality Search Execution Plan
 
+**Status:** Historical evidence — non-authoritative.
+**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`.
+
 **Date**: 2026-07-04
-**Status**: planning document after broad fig-agent analysis
+**Status at the time**: planning document after broad fig-agent analysis
 **Fixture used for dogfood evidence**: `fig1_overview_v5f_art_direction_001_vault`
 
 ## Executive Decision
