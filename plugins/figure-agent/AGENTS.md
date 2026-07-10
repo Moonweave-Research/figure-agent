@@ -1,6 +1,6 @@
 # AGENTS.md — figure-agent
 
-Codex entry point. Authoritative workflow: `skills/figure-agent/SKILL.md`. Active product direction: `docs/quality-kernel-goal.md`.
+Codex entry point. Authoritative workflow: `skills/figure-agent/SKILL.md`. Active product direction and execution order: `../../FIGURE_AGENT_SPEC.md`. `docs/quality-kernel-goal.md` is historical rationale and current quality-kernel mechanics.
 
 ## Identity
 
@@ -16,7 +16,7 @@ Quality kernel responsibilities:
 Plugin does **not**:
 - Call image-gen or external vision APIs directly.
 - Decide which frontier LLM/agent to use.
-- Convert PNG → SVG/TikZ automatically (see `docs/quality-kernel-goal.md`).
+- Convert PNG → SVG/TikZ automatically (see `docs/quality-kernel-goal.md` for rationale).
 
 Plugin **does** delegate vision tasks to the host main loop (L4.5 vision
 critique). The host reads the build PNG and writes `critique.md` using
@@ -51,4 +51,4 @@ was renamed and extended into `/fig_critique` (PR #9). See
 - Successor to `[tikz-paper-workflow]/` (archived 2026-04-27).
 - Reference-layer architecture deprecated (Y0 pilot evidence).
 - v0.1 spec: `docs/historical/design-v0.1.md` (frozen historical).
-- v0.2 direction: `docs/quality-kernel-goal.md` (active).
+- v0.2 quality-kernel rationale: `docs/quality-kernel-goal.md`; integrated product direction: `../../FIGURE_AGENT_SPEC.md`.

@@ -26,7 +26,9 @@ Durable responsibilities:
 
 Prompt/image-gen orchestration from v0.1 is historical only in this plugin line.
 Do not route users to deleted commands.
-Active direction: `docs/quality-kernel-goal.md`.
+Active integrated product direction and execution order:
+`../../FIGURE_AGENT_SPEC.md`. `docs/quality-kernel-goal.md` remains the
+quality-kernel rationale and mechanics reference.
 
 ## Workflow shape
 

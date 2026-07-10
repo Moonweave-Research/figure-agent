@@ -372,7 +372,7 @@ See `docs/architecture-v0.2-proposal.md` for the full layer redesign.
 **Files**: `docs/` (active) + `docs/historical/` (frozen).
 
 Active:
-- `docs/quality-kernel-goal.md` — product-direction spec.
+- `docs/quality-kernel-goal.md` — quality-kernel rationale and mechanics.
 - `docs/golden-target-trap-depth-picture.md` — Golden Target 001
   acceptance criteria.
 - `docs/golden-target-001-retrospective.md` — N=1 evidence retrospective.

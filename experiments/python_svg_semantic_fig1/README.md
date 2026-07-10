@@ -1,5 +1,9 @@
 # Fig1 Python SVG Semantic Experiment
 
+Product direction and execution order are governed by
+[`../../FIGURE_AGENT_SPEC.md`](../../FIGURE_AGENT_SPEC.md). This README
+describes the current experiment implementation and provenance.
+
 This folder contains two generations of the Fig1 redraw experiment.
 
 ## Current Reference-Based Pilot
@@ -21,6 +25,7 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `src/fig1_visual_policies.py`
 - `src/run_fig1_gates.py`
 - `src/verify_fig1_render_parity.py`
+- `src/render_toolchain.py`
 - `src/verify_fig1_baseline_hash.py`
 - `src/test_fig1_physics_sanity.py`
 - `src/test_fig1_render_parity.py`
@@ -132,7 +137,13 @@ The probe writes `fig_probe_02_semantic.svg` and `fig_probe_02_semantic.png`. It
 
 ## Reference-Scaffold-First Pivot
 
-The experiment now treats `reference_scaffold_first_pivot_plan.md` as the next direction document. The key decision is to stop treating the semantic scene as a layout generator. A good reference, sketch, or human-authored scaffold should define panel bounds, local boxes, object-to-slot mapping, flow anchors, and visual hierarchy first; semantic payloads then control scientific meaning, computed geometry, roles, and mutation safety inside that scaffold.
+`reference_scaffold_first_pivot_plan.md` is historical provenance for the
+reference-scaffold-first decision. The active execution order lives in
+`../../FIGURE_AGENT_SPEC.md`. The key decision is to stop treating the semantic
+scene as a layout generator. A good reference, sketch, or human-authored
+scaffold should define panel bounds, local boxes, object-to-slot mapping, flow
+anchors, and visual hierarchy first; semantic payloads then control scientific
+meaning, computed geometry, roles, and mutation safety inside that scaffold.
 
 Fig1 v14 remains the byte-identity baseline for structure-only work:
 
@@ -165,7 +176,7 @@ The legacy annotated redraw is kept for provenance and comparison. It is not the
 Run the current pilot with:
 
 ```bash
-uv run --with drawsvg --with matplotlib --with numpy --with shapely --with svgelements --with svgpathtools python experiments/python_svg_semantic_fig1/src/render_fig1_l1.py
+uv run --with drawsvg==2.4.1 --with matplotlib==3.10.9 --with numpy==2.5.1 --with rdkit==2026.3.3 --with shapely==2.1.2 --with svgelements==1.9.6 --with svgpathtools==1.7.2 python experiments/python_svg_semantic_fig1/src/render_fig1_l1.py
 python experiments/python_svg_semantic_fig1/src/report_fig1_visual_judgment.py
 python experiments/python_svg_semantic_fig1/src/verify_fig1_semantics.py
 python experiments/python_svg_semantic_fig1/src/check_fig1_docs_manifest.py
@@ -177,8 +188,8 @@ python experiments/python_svg_semantic_fig1/src/verify_fig1_render_parity.py
 python experiments/python_svg_semantic_fig1/src/run_fig1_gates.py
 python experiments/python_svg_semantic_fig1/src/verify_fig1_baseline_hash.py
 PYTHONPATH=experiments/python_svg_semantic_fig1/src python -m unittest discover -s experiments/python_svg_semantic_fig1/src -p 'test_fig1_physics_sanity.py' -v
-uv run --with drawsvg --with matplotlib --with numpy --with shapely --with svgelements --with svgpathtools python -m unittest discover -s experiments/python_svg_semantic_fig1/src -p 'test_fig1_render_parity.py' -v
-uv run --with drawsvg --with matplotlib --with numpy --with shapely --with svgelements --with svgpathtools python -m unittest discover -s experiments/python_svg_semantic_fig1/src -p 'test_fig1_origin_payload_visibility.py' -v
+uv run --with drawsvg==2.4.1 --with matplotlib==3.10.9 --with numpy==2.5.1 --with rdkit==2026.3.3 --with shapely==2.1.2 --with svgelements==1.9.6 --with svgpathtools==1.7.2 python -m unittest discover -s experiments/python_svg_semantic_fig1/src -p 'test_fig1_render_parity.py' -v
+uv run --with drawsvg==2.4.1 --with matplotlib==3.10.9 --with numpy==2.5.1 --with rdkit==2026.3.3 --with shapely==2.1.2 --with svgelements==1.9.6 --with svgpathtools==1.7.2 python -m unittest discover -s experiments/python_svg_semantic_fig1/src -p 'test_fig1_origin_payload_visibility.py' -v
 PYTHONPATH=experiments/python_svg_semantic_fig1/src python -m unittest discover -s experiments/python_svg_semantic_fig1/src -p 'test_fig1_visual_judgment_report.py' -v
 python -m xml.etree.ElementTree experiments/python_svg_semantic_fig1/fig1_reference_semantic.svg
 rsvg-convert -w 1595 -h 986 experiments/python_svg_semantic_fig1/fig1_reference_semantic.svg -o /tmp/fig1_reference_semantic_check.png

@@ -34,15 +34,15 @@
 | 항목 | 현재 사실 |
 | --- | --- |
 | 작업 브랜치 | `experiment/python-svg-semantic-fig1` |
-| 작업 HEAD | `8586ebc8595384888b7cacaf6f546564280512a4` |
+| Slice 0C 기록 기준점 | `b6771a51bdc414cacc363569b461f5c4a48449ad` |
 | 로컬 `origin/main` | `9d3db7347261229d6a0ce1c09b8893d49cf06e2f` |
 | 공통 기반 | `0295760793f6f2659b801a8ed7e687f0acdd76ca` |
 | 분기 상태 | 작업 브랜치 전용 80 commits, `origin/main` 전용 1309 commits |
-| Python Fig1 gate | 7/8; `render-parity` 불일치 |
+| Python Fig1 gate | Slice 0A branch에서 8/8; `render-parity` 통과 |
 | tracked Fig1 SVG hash | `03e51b775bb0dc063e131ecff6f684ab9cb6fd807546df01e01076e5e4d131e1` |
-| 재생성 SVG hash | `199d6f218f259a9736d2ab2283c1e47bf20ba6b4838eb48e18187de4d187a76e` |
+| 재생성 SVG hash | locked toolchain에서 2회 모두 `03e51b775bb0dc063e131ecff6f684ab9cb6fd807546df01e01076e5e4d131e1` |
 | Phase 3-C | 구현 commit 후 revert됨; 아이디어 폐기 판정은 아님 |
-| Phase 3 문서 | 3-B commit 사실과 상태 표기가 어긋남 |
+| Phase 3 문서 | historical로 격하됨; 잔여 체크박스 정리는 Slice 1 salvage audit 대상 |
 
 현재 브랜치와 `origin/main`은 서로 대규모로 분기돼 있다. 검증 없이 merge, rebase, 또는 한쪽의 상태 문서를 다른 쪽에 덮어쓰지 않는다.
 
@@ -385,10 +385,60 @@ uv run ruff check scripts/publication_gate.py scripts/checks/check_golden_artifa
 
 - Python Fig1 gate 8/8
 - 같은 환경에서 두 번 생성한 Python SVG가 byte-for-byte 동일함
-- 현재 phase 상태가 git history와 일치
+- Phase 3 문서가 active execution authority에서 제거됨
 - 모순된 audit에 대한 regression test와 관련 acceptance targeted test가 통과함
 - Slice 0A와 0B가 서로의 분기 이력을 혼합하지 않고 검증됨
 - 변경 범위와 무관한 사용자 파일은 보존됨
+
+#### Slice 0 결과 기록 — 2026-07-10
+
+Slice 0은 두 격리 branch에서 수행했고, 이 문서 branch에는 결과와
+권위 포인터만 기록한다. 두 branch의 이력을 검증 없이 merge하거나 rebase하지
+않는다.
+
+| 단위 | 기준 | 결과 commit | 검증 요약 |
+| --- | --- | --- | --- |
+| Slice 0A — Python 실험 기준선 | `4f50af8f0679f9997faed01b6581b6742f577fc3` | `388505f3ebbf414b03c7223345fb86672252b719` on `codex/slice0a-python-parity` | locked direct deps에서 `pyfig.py verify-fig1` 8/8, focused render-parity unittest 8 OK, tracked SVG hash 보존 |
+| Slice 0B — Public main acceptance authority | `origin/main` `9d3db7347261229d6a0ce1c09b8893d49cf06e2f` | `6258ca07de2fbe7979ffee221a191d722f160dea` on `codex/slice0b-public-main-acceptance` | `tests/test_publication_gate.py` + `tests/test_golden_artifact_checks.py` 74 passed, scoped Ruff clean |
+
+Slice 0A의 render identity는 다음 direct dependency contract로 고정됐다.
+
+```text
+drawsvg==2.4.1
+matplotlib==3.10.9
+numpy==2.5.1
+rdkit==2026.3.3
+shapely==2.1.2
+svgelements==1.9.6
+svgpathtools==1.7.2
+```
+
+동일 locked environment에서 `svg_text_for_scene(build_scene())`을 두 번
+독립 실행한 결과는 모두 tracked SVG hash와 동일했다.
+
+```text
+03e51b775bb0dc063e131ecff6f684ab9cb6fd807546df01e01076e5e4d131e1
+```
+
+Slice 0B의 실제 accepted fixtures는 둘 다 `spec.yaml`에 `accepted: true`를
+갖는다. 현재 checkout에서는 full artifact gate가 export 누락에서 먼저
+실패한다. publication parser 자체는 `fig1_overview_v2_pair_001_vault`의
+`QUALITY_AUDIT.md`에서 `contradictory_submission_safe`를 보고하며,
+`fig1_overview_v4_pair_001_vault`는 기존처럼 `missing_submission_safe_true`와
+`missing_disclosure_needed`를 보고한다. public human audit나
+`spec.yaml.accepted`는 수정하지 않았다.
+
+변경되지 않은 사용자 파일은 보존했다. 2026-07-10 현재 본 작업 branch에는
+작업 전부터 존재한 untracked `.agents/`, 세 개의 2026-05-07 plan 파일,
+`plugins/figure-agent/docs/STYLE_GUIDE.md`가 남아 있다.
+
+Phase 3 문서는 active 실행 queue가 아니라 historical input으로 격하됐다.
+체크박스 잔여 상태와 실제 commit/revert history의 세부 reconciliation은
+Slice 1 legacy salvage audit에서 수행한다.
+
+다음 진입 가능한 단위는 Slice 1이다. Slice 1은 구현이 아니라 legacy salvage
+audit이며, 과거 실험을 `adopt/retest/hold/retire` 후보와 최소 재실험으로
+정리한다.
 
 ### Slice 1 — Legacy Salvage Audit
 
