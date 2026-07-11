@@ -7,6 +7,20 @@ historical_evidence:
   source_binding_count: 0
   review_status: unreviewed_inventory
   authority: orientation_only
+hybrid_pilot_evidence:
+  fixture: fig1_hybrid_complex_panel_pilot
+  artifact: review/hybrid-clean.png
+  artifact_sha256: f03848fd7c20f2665a1a4e3ea6905e87d97ffbc2c573786a4172c12765fba865
+  semantic_manifest: fragments/fragment_manifest.json
+  semantic_manifest_sha256: a4ee6412a6dafbf034d392a48fb3135cf31616cdd8e49aee06ba046ec19281e4
+  detector_findings:
+    visual_clash: 39
+    label_path: 0
+    text_boundary: 0
+    undeclared_geometry: 95
+  actionable_attribution_rate: null
+  review_status: pending_bound_human_adjudication
+  authority: machine_evidence_only
 reviewed_evidence:
   - id: fig1-v2-vc009-reviewed-false-positive
     source_path: examples/fig1_overview_v2_pair_001_vault/critique.md

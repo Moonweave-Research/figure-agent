@@ -324,24 +324,24 @@ FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
 - Create inside the pilot fixture: `review/human_scaffold_verdict.yaml`
 - Modify: `benchmarks/visual_attribution_suite.yaml`
 
-- [ ] Render both variants in one clean environment and record source hashes,
+- [x] Render both variants in one clean environment and record source hashes,
   tool versions, compile commands, output hashes, and failures.
-- [ ] Write a predeclared comparison protocol with identical starting inputs and
+- [x] Write a predeclared comparison protocol with identical starting inputs and
   task boundaries. Count preparation, failed attempts, detector diagnosis,
   rendering, and repair time; do not compare selectively trimmed successful
   runs.
-- [ ] Compare visual quality, scientific fidelity, source edit size, correction
+- [x] Compare visual quality, scientific fidelity, source edit size, correction
   minutes, detector findings, actionable attribution rate, and artifact
   reproducibility. Report missing measurements explicitly.
-- [ ] Require a human scaffold verdict for object relations and a separate
+- [x] Require a human scaffold verdict for object relations and a separate
   human artifact verdict for publication quality. Each verdict records a
   `review_input_hash` aggregating the exact artifact, semantic manifest,
   reference-authority manifest, briefing/spec, relations, and toolchain.
-- [ ] Mark the verdict stale when any bound input changes, even if output bytes
+- [x] Mark the verdict stale when any bound input changes, even if output bytes
   happen to remain identical.
-- [ ] Keep the task open when either verdict is absent. Machine gates may mark
+- [x] Keep the task open when either verdict is absent. Machine gates may mark
   the package `review-ready`, never `publication-accepted`.
-- [ ] Verify the comparison report against a schema test added beside the
+- [x] Verify the comparison report against a schema test added beside the
   existing trial/report contract tests.
 - [ ] Commit: `docs: record human-reviewed TikZ versus hybrid pilot`
 

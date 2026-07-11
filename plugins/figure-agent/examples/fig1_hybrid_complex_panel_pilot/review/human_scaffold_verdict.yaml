@@ -1,0 +1,49 @@
+schema: figure-agent.hybrid-human-verdicts.v1
+fixture: fig1_hybrid_complex_panel_pilot
+review_input_hash: sha256:bdd10c1e5735aa24aff9431830122f9bebc4e910bd8647547c3084263844c207
+bound_inputs:
+  - role: artifact
+    path: review/hybrid-clean.png
+    sha256: sha256:f03848fd7c20f2665a1a4e3ea6905e87d97ffbc2c573786a4172c12765fba865
+  - role: semantic_manifest
+    path: fragments/fragment_manifest.json
+    sha256: sha256:a4ee6412a6dafbf034d392a48fb3135cf31616cdd8e49aee06ba046ec19281e4
+  - role: reference_authority
+    path: reference_authority_manifest.yaml
+    sha256: sha256:585f83abb2c2742c98784a4fc90d734af20e520e82fac2639f103b1ea54d1197
+  - role: briefing
+    path: briefing.md
+    sha256: sha256:1ef22509309ccb0f5404b74552da3f5a6e322ce24e9ec716a68fac1d210c7273
+  - role: spec
+    path: spec.yaml
+    sha256: sha256:5340c7f5b747b459fdaac119809d44ddc96d386dd8fda32e8ad4caffe6d1d120
+  - role: declared_relations
+    path: fragments/fragment_manifest.json
+    sha256: sha256:a4ee6412a6dafbf034d392a48fb3135cf31616cdd8e49aee06ba046ec19281e4
+toolchain:
+  compile_python: 3.13.12
+  fragment_python: 3.12.13
+  lualatex: LuaHBTeX 1.24.0
+  rsvg_convert: 2.62.1
+  pdftocairo: 26.03.0
+stale_when: any bound input or toolchain value changes
+scaffold_verdict:
+  status: pending
+  reviewer: null
+  reviewed_at: null
+  object_relations:
+    trap_sites_embedded_in_film: null
+    shallow_is_above_deep: null
+    escape_paths_originate_from_deep_traps: null
+  scientific_fidelity: null
+  notes: null
+artifact_verdict:
+  status: pending
+  reviewer: null
+  reviewed_at: null
+  publication_quality: null
+  visual_hierarchy: null
+  label_legibility: null
+  notes: null
+review_state: review-ready
+publication_acceptance: not_claimed

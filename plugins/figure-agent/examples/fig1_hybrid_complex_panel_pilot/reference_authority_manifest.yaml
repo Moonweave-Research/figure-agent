@@ -1,0 +1,21 @@
+schema: figure-agent.reference-authority.v1
+fixture: fig1_hybrid_complex_panel_pilot
+source_fixture: fig1_overview_v2_pair_001_vault
+authorities:
+  - role: reference_interpretation
+    path: reference/reference_pack.md
+    sha256: sha256:ce75144c808fb1c18da945e3a7c614f1c8cc8fbd241d0c1a2575896b0ba1ecc5
+    authority: declared_transfer_and_non_transfer_rules
+  - role: reference_audit
+    path: reference/audit_table.md
+    sha256: sha256:21ef5e57fa776f0b73aa616531ec2324df2a61f8da138c53c6e6aebe3d7cbd48
+    authority: panel_specific_reference_roles
+  - role: source_visual_baseline
+    path: reference/current_render_baseline_2026-07-03.png
+    sha256: sha256:52f8c893d277be17a808177a3a2e9b3e81d1ba3b42e1086dedf4b9ab86b34bb9
+    authority: historical_visual_comparison_only
+non_authorities:
+  - generated hybrid render
+  - machine detector verdict
+  - inherited source critique applied to the hybrid artifact
+publication_acceptance: not_claimed
