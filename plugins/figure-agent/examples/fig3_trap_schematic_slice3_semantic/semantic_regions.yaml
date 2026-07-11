@@ -1,44 +1,39 @@
 schema: figure-agent.semantic-regions.v1
-fixture: fig3_trap_schematic_slice3_semantic
-coordinate_space: tikz_cm
-panels:
-  - {id: a, role: measurement_setup}
-  - {id: b, role: power_law_signature}
-  - {id: c, role: trapping_index_interpretation}
-  - {id: d, role: chemical_origin}
-  - {id: e, role: structural_origin}
-  - {id: f, role: multimodal_convergence}
-regions:
-  - id: e.chain_backbones
-    panel: e
-    semantic_object: chain.backbones
-    selector_id: chain.backbones
-    relation_role: linear_non_crosslinked_support
-  - id: e.sulfur_regions
-    panel: e
-    semantic_object: sulfur.regions
-    selector_id: sulfur.regions
-    relation_role: sulfur_rich_domain
-  - id: e.sulfur_sites
-    panel: e
-    semantic_object: sulfur.sites
-    selector_id: sulfur.sites
-    relation_role: attached_to_chain
-  - id: e.trap_levels
-    panel: e
-    semantic_object: trap.levels
-    selector_id: trap.levels
-    relation_role: localized_inside_sulfur_region
-  - id: e.trapped_carriers
-    panel: e
-    semantic_object: trapped.carriers
-    selector_id: trapped.carriers
-    relation_role: sits_on_trap_level
+page_geometry:
+  coordinate_space: pdf_cm
+  page_index: 0
+  origin: bottom_left
+  media_box_pdf_cm: [0.0, 0.0, 18.864263, 12.249079]
+  crop_box_pdf_cm: [0.0, 0.0, 18.864263, 12.249079]
+  rotation_deg: 0
+  render_geometry_hash: sha256:625a73331919a295a3863452c545983ac6a5705e69ad9a67d5551f60de44187b
+semantic_objects:
+  - {id: chain.backbones, role: linear_polymer_chain_geometry}
+  - {id: sulfur.regions, role: sulfur_rich_spatial_regions}
+  - {id: sulfur.sites, role: sulfur_sites_on_chains}
+  - {id: trap.levels, role: localized_trap_levels}
+  - {id: trapped.carriers, role: carriers_on_trap_levels}
 relations:
-  - [e.sulfur_sites, attached_to, e.chain_backbones]
-  - [e.sulfur_sites, located_in, e.sulfur_regions]
-  - [e.trap_levels, co_located_with, e.sulfur_regions]
-  - [e.trapped_carriers, sits_on, e.trap_levels]
+  - {subject: sulfur.sites, predicate: attached_to, object: chain.backbones}
+  - {subject: sulfur.sites, predicate: located_in, object: sulfur.regions}
+  - {subject: trap.levels, predicate: co_located_with, object: sulfur.regions}
+  - {subject: trapped.carriers, predicate: sits_on, object: trap.levels}
+regions:
+  - id: e.structural_origin_fragment
+    panel_id: e
+    role: structural_origin_complex_geometry
+    bbox_pdf_cm: [6.3, 0.5, 12.4, 5.9]
+    source:
+      path: fig3_trap_schematic_slice3_semantic.tex
+      selector_id: e.structural_origin_fragment
+      anchor_start: "% figure-agent:start e.structural_origin_fragment"
+      anchor_end: "% figure-agent:end e.structural_origin_fragment"
+      source_sha256: sha256:3fae482eadba01b6e27123a8184596acaffd788dc894d19177ac463e8eea96dd
+      line_start: 253
+      line_end: 256
+    provenance: declared_from_slice3_fig3_panel_e
+    contains: []
+    priority: 10
 forbidden_imports:
   - Fig1 coordinates
   - Fig1 panel names

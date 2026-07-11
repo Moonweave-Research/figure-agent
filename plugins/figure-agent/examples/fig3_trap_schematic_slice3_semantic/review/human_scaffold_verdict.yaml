@@ -1,13 +1,13 @@
 schema: figure-agent.hybrid-human-verdicts.v1
 fixture: fig3_trap_schematic_slice3_semantic
-review_input_hash: sha256:30141ca841a773a7640afe491d08029472705ed094d6e40727cbd2869fc43ecb
+review_input_hash: sha256:d5609aa5f3d30810a8966b27c5376c605f4757b09e9280370cf20cf0fe1cfde9
 bound_inputs:
   - role: artifact
     path: review/full-render.png
     sha256: sha256:36eb70d2c283ccf1ed0170766baab2e2137fbb843bbf0f9cea33efe789ee2b1c
   - role: complex_panel_crop
     path: review/panel-e-render.png
-    sha256: sha256:60aa64ac27bc188e5b401cbb6e6323731f1675d0c5e245e3c9de2a1e6bd9cfda
+    sha256: sha256:b7bc8c8624466ad89feeae1b0a85f286398d1bfe36cf5722c29b67d8f01d64e8
   - role: visual_reference
     path: reference/codex_v01.png
     sha256: sha256:0c8bc4bd77d3ff51c700ee2b7b6e8e564611ff58a5ade8e952e1d5248033d7fb
@@ -16,7 +16,10 @@ bound_inputs:
     sha256: sha256:05f815beb2ea77d4f878ae81c18f87763d1a558e81162662b7a5bdd02f3f7542
   - role: declared_regions
     path: semantic_regions.yaml
-    sha256: sha256:8bc5bcde80495c891b919c7e97bdf82fdf49f86a4e85e615b835a096c900a018
+    sha256: sha256:1b2f2eb07004c0f0611c1479ad31eb9bb1f5b1c1b41d262ca349091491f4e136
+  - role: editable_source
+    path: fig3_trap_schematic_slice3_semantic.tex
+    sha256: sha256:3fae482eadba01b6e27123a8184596acaffd788dc894d19177ac463e8eea96dd
   - role: reference_authority
     path: reference_authority_manifest.yaml
     sha256: sha256:696fc0a032a5edd47cc4957ea8dbabf05584ef7bb571701ea4af467ac17cbc63
@@ -25,7 +28,7 @@ bound_inputs:
     sha256: sha256:35b5f5c88cba0e271b1a8afc69685d8c1224a2d6232fcc6339ff2558b64c0c9e
   - role: spec
     path: spec.yaml
-    sha256: sha256:041fa74836698288e7a8d71c587159868c7cbbd27d7e47b9570b0673862cc581
+    sha256: sha256:17b1be068863356ba3f5c07e0a1d9eb947952dd9126564ed97f842c8c0a43996
 toolchain:
   compile_python: 3.13.12
   fragment_python: 3.12.13

@@ -1,7 +1,7 @@
 Lint: Style Lock check (BLOCKER fails, WARN reports)...
 examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex:1: WARN: flagship_macros_unused: no flagship macros used; see styles/polymer-paper-preamble.sty for available flagship macros (BellCurve, BandDiagram, IsoBlock, ...)
-examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex:279: WARN: label_fill_source_order: filled label may be overpainted by later draw/path commands; move protected label after later draw commands
-examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex:288: WARN: label_fill_source_order: filled label may be overpainted by later draw/path commands; move protected label after later draw commands
+examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex:281: WARN: label_fill_source_order: filled label may be overpainted by later draw/path commands; move protected label after later draw commands
+examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex:290: WARN: label_fill_source_order: filled label may be overpainted by later draw/path commands; move protected label after later draw commands
 Strict mode: collision/clash findings will fail the compile.
 This is LuaHBTeX, Version 1.24.0 (TeX Live 2026) 
  restricted system commands enabled.

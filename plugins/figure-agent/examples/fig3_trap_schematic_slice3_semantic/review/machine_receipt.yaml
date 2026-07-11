@@ -4,11 +4,11 @@ machine_gate: pass
 ordinary_compile:
   exit: 0
   log: normal_compile.log
-  log_sha256: sha256:183d4f2fe9562a4b1ed069d3776a5a94f7d880fbf01c5b58c023993e9e01e478
+  log_sha256: sha256:b25496d655238157bf00e7521eb66ce1cf91d8dd794459ce11d37d74f04b0b2e
 strict_compile:
   exit: 1
   log: strict_compile.log
-  log_sha256: sha256:4dbb507f0d037a74bb90e55e2abbc98239851225b9722308d6dc798019e52841
+  log_sha256: sha256:d27a2c9938d822fecb20b5f0fc90bb4d35f24f3034180c0204c24a7b732686dd
   classification: inherited_full_figure_detector_baseline
   evidence:
     - 57 undeclared geometry candidates
@@ -18,13 +18,15 @@ strict_compile:
 fragment_contract:
   fig1_and_fig3_packages_valid: true
   semantic_region_bindings_valid: true
+  visual_finding_attribution_state: exact
+  general_zoom_crop_contract_valid: true
   fig1_import_patterns_absent: true
   svg_pdf_raster_mae: 0.000594
   svg_pdf_raster_equivalent: true
 artifacts:
-  full_render_pdf: sha256:09d5b8a6316890417025febff3f862efa91d84705603f55ea3bd58fa6d122243
+  full_render_pdf: sha256:2cc149515f88788b39e8ea6e3a7b5e7b53f72d4ed24a92e44fec0dd784549df7
   full_render_png: sha256:36eb70d2c283ccf1ed0170766baab2e2137fbb843bbf0f9cea33efe789ee2b1c
-  panel_e_crop: sha256:60aa64ac27bc188e5b401cbb6e6323731f1675d0c5e245e3c9de2a1e6bd9cfda
+  panel_e_crop: sha256:b7bc8c8624466ad89feeae1b0a85f286398d1bfe36cf5722c29b67d8f01d64e8
   fragment_svg_raster: sha256:3cf35660a93e7a05993665e20ea7ba1089667a9d90dfccf2d28a95afce84d886
   fragment_pdf_raster: sha256:d95fd16478ce4721df4d39d3fb6bdcf63d824792a7d4b85eb2ddba74c9bcd4d5
   fragment_difference_amplified: sha256:740ea981f7acc2255e0252fcab5ed4ee86feadebc06b32b4a6f7ae91285ee2e8

@@ -2,16 +2,22 @@ name: fig3_trap_schematic_slice3_semantic
 panels:
   - id: a
     caption: 측정 셋업
+    bbox_pdf_cm: [0.0, 6.1, 6.3, 12.249079]
   - id: b
     caption: 멱함수 (power-law) 의 이해
+    bbox_pdf_cm: [6.1, 6.1, 12.6, 12.249079]
   - id: c
     caption: Trapping index n 해석
+    bbox_pdf_cm: [12.4, 6.1, 18.864263, 12.249079]
   - id: d
     caption: 화학적 원인
+    bbox_pdf_cm: [0.0, 0.0, 6.3, 6.2]
   - id: e
     caption: 물리적 원인
+    bbox_pdf_cm: [6.1, 0.0, 12.6, 6.2]
   - id: f
     caption: Multi-modal convergence (n / g(E_t) / τ_d → consistent trap depth)
+    bbox_pdf_cm: [12.4, 0.0, 18.864263, 6.2]
 style_profile: polymer-default
 reference_image: reference/codex_v01.png
 accepted: false

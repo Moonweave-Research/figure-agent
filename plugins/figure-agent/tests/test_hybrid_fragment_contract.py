@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -12,9 +13,13 @@ import yaml
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = PLUGIN_ROOT.parents[1]
 SOURCE_MANIFEST = PLUGIN_ROOT / "benchmarks" / "hybrid_pilot_source.yaml"
+sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "hybrid"))
 
+from critique_zoom_crops import build_zoom_crop_pack  # noqa: E402
 from fragment_contract import FragmentContractError, validate_fragment_package  # noqa: E402
+from semantic_region_contract import load_semantic_region_contract  # noqa: E402
+from visual_finding_attribution import attribute_visual_finding  # noqa: E402
 
 
 def _sha256(path: Path) -> str:
@@ -179,17 +184,26 @@ def test_fig3_semantic_regions_bind_to_fragment_without_fig1_imports() -> None:
     regions = yaml.safe_load((fixture / "semantic_regions.yaml").read_text(encoding="utf-8"))
     fragment = validate_fragment_package(fixture / "fragments" / "fragment_manifest.json")
 
-    panel_ids = {panel["id"] for panel in regions["panels"]}
-    region_ids = {region["id"] for region in regions["regions"]}
-    selector_ids = {region["selector_id"] for region in regions["regions"]}
-    semantic_objects = {region["semantic_object"] for region in regions["regions"]}
+    contract = load_semantic_region_contract(fixture)
+    assert {item["id"] for item in regions["semantic_objects"]} == set(
+        fragment["semantic_ids"]
+    )
+    assert contract["regions"][0]["source"]["binding_state"] == "exact"
 
-    assert {region["panel"] for region in regions["regions"]} <= panel_ids
-    assert selector_ids == set(fragment["semantic_ids"])
-    assert semantic_objects == selector_ids
-    for subject, _predicate, object_id in regions["relations"]:
-        assert subject in region_ids
-        assert object_id in region_ids
+    attribution = attribute_visual_finding(
+        {"id": "slice3-panel-e-probe", "bbox_px": [2100, 1900, 2300, 2100]},
+        detector_render={
+            "page_geometry": contract["page_geometry"],
+            "pixel_origin": "top_left",
+            "image_size_px": [4457, 2894],
+            "fragment_transform": [1, 0, 0, 1, 0, 0],
+            "raster_box": "media_box",
+        },
+        semantic_contract=contract,
+        fixture_dir=fixture,
+    )
+    assert attribution["state"] == "exact"
+    assert attribution["region_candidates"] == ["e.structural_origin_fragment"]
 
     patterns = regions["forbidden_import_patterns"]
     derivative_sources = [fixture / "fig3_trap_schematic_slice3_semantic.tex"]
@@ -197,3 +211,22 @@ def test_fig3_semantic_regions_bind_to_fragment_without_fig1_imports() -> None:
     for source in derivative_sources:
         contents = source.read_text(encoding="utf-8").lower()
         assert all(pattern.lower() not in contents for pattern in patterns)
+
+
+def test_fig3_full_render_and_panel_e_use_general_zoom_crop_contract(tmp_path: Path) -> None:
+    source = PLUGIN_ROOT / "examples" / "fig3_trap_schematic_slice3_semantic"
+    fixture = tmp_path / source.name
+    render = fixture / "review" / "full-render.png"
+    panel = fixture / "review" / "panel-e-render.png"
+    render.parent.mkdir(parents=True)
+    shutil.copyfile(source / "review" / "full-render.png", render)
+    shutil.copyfile(source / "review" / "panel-e-render.png", panel)
+
+    crops = build_zoom_crop_pack(fixture, render, panel_crop_paths=(panel,))
+
+    crop_ids = {item["id"] for item in crops}
+    assert {"full_q1", "full_q2", "full_q3", "full_q4"} <= crop_ids
+    assert any(item.startswith("panel_panel-e-render_s") for item in crop_ids)
+    manifest = fixture / "build" / "audit_crops" / "manifest.json"
+    assert manifest.is_file()
+    assert json.loads(manifest.read_text(encoding="utf-8"))["fixture"] == fixture.name
