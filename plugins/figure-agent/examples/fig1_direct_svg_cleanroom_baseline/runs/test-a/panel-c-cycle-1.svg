@@ -41,7 +41,7 @@
   <g id="c_shallow_trap_population">
     <circle cx="196" cy="307" r="11" fill="url(#blue-trap)" stroke="#285f91" stroke-width="1.5"/>
     <circle cx="360" cy="356" r="11" fill="url(#blue-trap)" stroke="#285f91" stroke-width="1.5"/>
-    <path d="M532 238 C534 253 545 260 565 267 C585 274 604 279 609 286 C603 294 586 301 566 307 C547 313 535 321 532 335 Z" fill="#a9c1d9" stroke="#356c9d" stroke-width="3" data-subject="c_shallow_trap_population" data-predicate="represented_as" data-object="continuous Gaussian density of states"/>
+    <path d="M532 238 C534 253 545 260 565 267 C585 274 604 279 609 286 C603 294 586 301 566 307 C547 313 535 321 532 335 Z" fill="#a9c1d9" stroke="#356c9d" stroke-width="3"/>
     <line x1="601" y1="278" x2="686" y2="278" stroke="#356c9d" stroke-width="6"/>
     <line x1="601" y1="309" x2="686" y2="309" stroke="#356c9d" stroke-width="6"/>
     <circle cx="630" cy="278" r="11" fill="url(#blue-trap)" stroke="#285f91" stroke-width="1.5"/>
@@ -52,7 +52,7 @@
   <g id="c_deep_trap_population">
     <circle cx="141" cy="427" r="11" fill="url(#red-trap)" stroke="#a8485a" stroke-width="1.5"/>
     <circle cx="346" cy="435" r="11" fill="url(#red-trap)" stroke="#a8485a" stroke-width="1.5"/>
-    <path d="M532 404 C534 422 548 431 568 441 C591 452 617 463 624 477 C618 490 592 503 569 514 C549 524 536 536 532 554 Z" fill="#e5b2bd" stroke="#ae5262" stroke-width="3" data-subject="c_deep_trap_population" data-predicate="represented_as" data-object="continuous Gaussian density of states"/>
+    <path d="M532 404 C534 422 548 431 568 441 C591 452 617 463 624 477 C618 490 592 503 569 514 C549 524 536 536 532 554 Z" fill="#e5b2bd" stroke="#ae5262" stroke-width="3"/>
     <line x1="601" y1="455" x2="686" y2="455" stroke="#ae5262" stroke-width="6"/>
     <line x1="601" y1="507" x2="686" y2="507" stroke="#ae5262" stroke-width="6"/>
     <circle cx="630" cy="455" r="11" fill="url(#red-trap)" stroke="#a8485a" stroke-width="1.5"/>
@@ -69,7 +69,7 @@
   </g>
   <g id="c_conduction_band" stroke="#292929" fill="#292929">
     <line x1="532" y1="164" x2="768" y2="164" stroke-width="2.4"/>
-    <text x="794" y="174" font-family="Latin Modern Sans, sans-serif" font-size="31" font-style="italic">E<tspan font-size="20" baseline-shift="sub">C</tspan></text>
+    <text x="794" y="174" font-family="Latin Modern Sans, sans-serif" font-size="31" font-style="italic">E_C</text>
   </g>
   <g id="c_mobility_edge" stroke="#292929" fill="#292929">
     <line x1="532" y1="230" x2="768" y2="230" stroke-width="1.7" stroke-dasharray="15 10"/>
@@ -77,12 +77,12 @@
   </g>
   <g id="c_valence_band" stroke="#292929" fill="#292929">
     <line x1="532" y1="568" x2="768" y2="568" stroke-width="2.4"/>
-    <text x="794" y="577" font-family="Latin Modern Sans, sans-serif" font-size="31" font-style="italic">E<tspan font-size="20" baseline-shift="sub">V</tspan></text>
+    <text x="794" y="577" font-family="Latin Modern Sans, sans-serif" font-size="31" font-style="italic">E_V</text>
   </g>
   <g id="c_trap_depth" stroke="#a54d5d" fill="#a54d5d">
     <line x1="952" y1="184" x2="952" y2="515" stroke-width="2.5"/>
     <path d="M945 198 L952 180 L959 198 Z M945 501 L952 519 L959 501 Z"/>
-    <text x="966" y="361" font-family="Latin Modern Sans, sans-serif" font-size="28" font-style="italic" data-semantic-text="ΔE_t^d">ΔE<tspan x="1008" y="371" font-size="17">t</tspan><tspan x="1018" y="347" font-size="17">d</tspan></text>
+    <text x="966" y="361" font-family="Latin Modern Sans, sans-serif" font-size="28" font-style="italic">ΔE_t^d</text>
   </g>
   <g id="panel_c_energy_axis" stroke="#292929" fill="#292929">
     <line x1="525" y1="144" x2="525" y2="584" stroke-width="2.4"/>

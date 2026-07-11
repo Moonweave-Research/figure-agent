@@ -4,12 +4,15 @@ import shutil
 from pathlib import Path
 
 import pytest
+import yaml
 from direct_svg_candidate import (
     DirectSvgCandidateError,
     begin_ledger,
     record_iteration,
     render_candidate,
+    semantic_requirements,
     validate_candidate,
+    validate_candidate_from_semantic_packet,
 )
 from PIL import Image
 
@@ -85,6 +88,102 @@ def test_candidate_requires_every_semantic_group_id(tmp_path: Path) -> None:
             svg,
             required_ids={"panel_c.real_space", "panel_c.energy"},
         )
+
+
+def test_candidate_requirements_are_derived_from_semantic_packet(tmp_path: Path) -> None:
+    packet = tmp_path / "semantic-packet.yaml"
+    packet.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "figure-agent.direct-svg-semantic-packet.v1",
+                "panels": ["C", "F"],
+                "scientific_objects": {
+                    "panel_c": [{"id": "c_object"}],
+                    "panel_f": [{"id": "f_object"}],
+                },
+                "visual_roles": {
+                    "panel_c": {
+                        "c_object": "object",
+                        "c_relation": "declared relation cue",
+                    },
+                    "panel_f": {"f_object": "object"},
+                },
+                "text_content": {
+                    "panel_c": ["C", "E_C", "ΔE_t^d"],
+                    "panel_f": ["F"],
+                },
+                "object_relations": [],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    requirements = semantic_requirements(packet, panel="C")
+
+    assert requirements == {
+        "required_ids": {"c_object", "c_relation"},
+        "required_text": {"C", "E_C", "ΔE_t^d"},
+        "relations": set(),
+    }
+
+
+def test_candidate_validates_live_notation_and_explicit_relations(
+    tmp_path: Path,
+) -> None:
+    packet = tmp_path / "semantic-packet.yaml"
+    packet.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "figure-agent.direct-svg-semantic-packet.v1",
+                "panels": ["C", "F"],
+                "scientific_objects": {
+                    "panel_c": [{"id": "c_source"}, {"id": "c_target"}],
+                    "panel_f": [],
+                },
+                "visual_roles": {
+                    "panel_c": {"c_source": "source", "c_target": "target"},
+                    "panel_f": {},
+                },
+                "text_content": {"panel_c": ["E_C", "ΔE_t^d"], "panel_f": []},
+                "object_relations": [
+                    {
+                        "subject": "c_source",
+                        "predicate": "acts_on",
+                        "object": "c_target",
+                    }
+                ],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+    svg = tmp_path / "candidate.svg"
+    svg.write_text(
+        """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+        <g id="c_source"><text x="4" y="16">E<tspan baseline-shift="sub">C</tspan></text></g>
+        <g id="c_target"><text x="4" y="36">ΔE
+        <tspan baseline-shift="sub">t</tspan>
+        <tspan baseline-shift="super">d</tspan></text></g>
+        <path data-subject="c_source" data-predicate="acts_on" data-object="c_target" d="M0 0L1 1"/>
+        </svg>""",
+        encoding="utf-8",
+    )
+
+    result = validate_candidate_from_semantic_packet(svg, packet, panel="C")
+    assert result["validated_relations"] == [
+        ["c_source", "acts_on", "c_target"],
+    ]
+
+    svg.write_text(
+        svg.read_text(encoding="utf-8").replace(
+            'data-predicate="acts_on"',
+            'data-predicate="contains"',
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(DirectSvgCandidateError, match="semantic_relation_undeclared"):
+        validate_candidate_from_semantic_packet(svg, packet, panel="C")
 
 
 @pytest.mark.parametrize("forbidden", ["script", "image", "foreignObject"])

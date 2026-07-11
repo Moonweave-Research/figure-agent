@@ -1,11 +1,19 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import subprocess
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
 import yaml
-from direct_svg_candidate import begin_ledger, record_iteration, validate_candidate
+from direct_svg_candidate import (
+    begin_ledger,
+    record_iteration,
+    semantic_requirements,
+    validate_candidate_from_semantic_packet,
+)
 from direct_svg_packet import validate_packet
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
@@ -203,27 +211,7 @@ def test_completed_test_a_binds_candidates_ledgers_and_machine_only_state() -> N
     packet_path = FIXTURE / "packets" / "test-a-reconstruction.yaml"
     run_root = FIXTURE / "runs" / "test-a"
     state = _load("runs/test-a/run-state.yaml")
-    required_ids = {
-        "C": {
-            "c_polymer_film",
-            "c_shallow_trap_population",
-            "c_deep_trap_population",
-            "c_mobility_edge",
-            "c_conduction_band",
-            "c_valence_band",
-            "c_trap_depth",
-            "real_space_to_energy_relations",
-        },
-        "F": {
-            "f_polymer_cantilever",
-            "f_fixed_support",
-            "f_planar_electrode",
-            "f_active_bias",
-            "f_trapped_charge",
-            "f_coulomb_repulsion",
-            "f_air_gap",
-        },
-    }
+    semantic_packet = FIXTURE / "contract" / "semantic-packet.yaml"
 
     validate_packet(packet_path)
     assert state["schema"] == "figure-agent.direct-svg-run-state.v1"
@@ -236,10 +224,20 @@ def test_completed_test_a_binds_candidates_ledgers_and_machine_only_state() -> N
     assert state["human_quality_review"] == "not_performed"
     assert state["scientific_acceptance"] == "not_claimed"
     assert state["publication_acceptance"] == "not_claimed"
-    assert {artifact["panel"] for artifact in state["candidate_artifacts"]} == {
+    assert len(state["candidate_artifacts"]) == 2
+    assert [artifact["panel"] for artifact in state["candidate_artifacts"]] == [
         "C",
         "F",
-    }
+    ]
+    assert len(
+        {artifact["svg_path"] for artifact in state["candidate_artifacts"]}
+    ) == 2
+    assert len(
+        {artifact["render_path"] for artifact in state["candidate_artifacts"]}
+    ) == 2
+    assert len(
+        {artifact["ledger_path"] for artifact in state["candidate_artifacts"]}
+    ) == 2
 
     for artifact in state["candidate_artifacts"]:
         panel = artifact["panel"]
@@ -248,15 +246,28 @@ def test_completed_test_a_binds_candidates_ledgers_and_machine_only_state() -> N
         ledger_path = run_root / artifact["ledger_path"]
         ledger = yaml.safe_load(ledger_path.read_text(encoding="utf-8"))
 
-        assert artifact["cycles_completed"] == 3
         assert artifact["svg_sha256"] == _sha256(svg_path)
         assert artifact["render_sha256"] == _sha256(render_path)
         assert artifact["ledger_sha256"] == _sha256(ledger_path)
-        assert validate_candidate(svg_path, required_ids=required_ids[panel])
+        requirements = semantic_requirements(semantic_packet, panel=panel)
+        assert requirements["required_ids"]
+        assert requirements["required_text"]
+        validation = validate_candidate_from_semantic_packet(
+            svg_path,
+            semantic_packet,
+            panel=panel,
+        )
+        assert validation["validated_relations"]
         assert ledger["panel"] == panel
-        assert ledger["budget"] == EXPECTED_BUDGETS["utility"]
+        assert artifact["cycles_completed"] == ledger["total_attempted_cycles"]
+        assert ledger["utility_checkpoint"] == EXPECTED_BUDGETS["utility"]
+        assert ledger["budget"] == EXPECTED_BUDGETS["ceiling"]
         assert ledger["ceiling_budget"] == EXPECTED_BUDGETS["ceiling"]
-        assert len(ledger["iterations"]) == 3
+        assert len(ledger["iterations"]) == ledger["total_attempted_cycles"]
+        assert ledger["evidence_status"] == "valid"
+        assert ledger["valid_review_cycles"] == list(
+            range(1, ledger["total_attempted_cycles"] + 1)
+        )
 
         validated_ledger = begin_ledger(
             ledger["budget"],
@@ -264,10 +275,36 @@ def test_completed_test_a_binds_candidates_ledgers_and_machine_only_state() -> N
         )
         for cycle, receipt in enumerate(ledger["iterations"], start=1):
             cycle_render = run_root / f"panel-{panel.lower()}-cycle-{cycle}.png"
+            cycle_source = run_root / receipt["source_path"]
             assert receipt["cycle"] == cycle
+            assert receipt["source_path"] == f"panel-{panel.lower()}-cycle-{cycle}.svg"
+            assert receipt["render_path"] == f"panel-{panel.lower()}-cycle-{cycle}.png"
+            assert receipt["source_sha256"] == _sha256(cycle_source)
             assert receipt["render_sha256"] == _sha256(cycle_render)
+            assert receipt["command"][0:3] == ["uv", "run", "python"]
+            assert receipt["command"][3] == "scripts/direct_svg_render.py"
+            assert receipt["runtime_receipt"]["fontconfig"]["path"] == (
+                "examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml"
+            )
+            assert receipt["runtime_receipt"]["font"]["path"] == (
+                "examples/fig1_direct_svg_cleanroom_baseline/contract/fonts/lmsans10-regular.otf"
+            )
+            assert receipt["runtime_receipt"]["rsvg"]["version"]
+            assert receipt["runtime_receipt"]["python"]["version"]
+            assert receipt["runtime_receipt"]["pillow"]["version"]
+            assert receipt["runtime_receipt"]["environment"]["FONTCONFIG_FILE"]
+            assert receipt["runtime_receipt"]["environment"]["FONTCONFIG_PATH"]
             assert receipt["tool_model_receipt"]["task"]["mode"] == (
                 "cleanroom_manual_direct_svg"
+            )
+            assert receipt["tool_model_receipt"]["provider"] == "openai"
+            assert receipt["tool_model_receipt"]["model"] == "gpt-5-codex"
+            assert receipt["tool_model_receipt"]["model_identity_independently_verified"] is False
+            assert receipt["tool_model_receipt"]["snapshot"] is None
+            assert receipt["tool_model_receipt"]["reasoning"] is None
+            assert receipt["tool_model_receipt"]["task"]["name"]
+            assert receipt["tool_model_receipt"]["task"]["base_commit"] == (
+                "064a3cc62671ef0f086efb03f26c00d97bb783cd"
             )
             assert receipt["tool_model_receipt"]["tools"]["image_generation"] == (
                 "not_used"
@@ -281,6 +318,50 @@ def test_completed_test_a_binds_candidates_ledgers_and_machine_only_state() -> N
         assert ledger["iterations"][-1]["source_sha256"] == artifact["svg_sha256"]
         assert ledger["iterations"][-1]["render_sha256"] == artifact["render_sha256"]
         assert ledger["publication_acceptance"] == "not_claimed"
+
+
+def test_panel_c_symbolic_depth_is_one_editable_text_tree() -> None:
+    svg = ET.parse(FIXTURE / "runs" / "test-a" / "panel-c.svg").getroot()
+    trap_depth = next(
+        element for element in svg.iter() if element.get("id") == "c_trap_depth"
+    )
+    labels = [
+        element
+        for element in trap_depth.iter()
+        if element.tag.rsplit("}", 1)[-1] == "text"
+    ]
+
+    assert len(labels) == 1
+    assert labels[0].get("data-semantic-text") == "ΔE_t^d"
+    assert "".join(labels[0].itertext()) == "ΔEtd"
+    assert len(list(labels[0])) == 2
+
+
+def test_test_a_valid_cycles_replay_byte_identically(tmp_path: Path) -> None:
+    for panel in ("c", "f"):
+        ledger = _load(f"runs/test-a/panel-{panel}-ledger.yaml")
+        valid_cycles = set(ledger["valid_review_cycles"])
+        assert valid_cycles
+        for receipt in ledger["iterations"]:
+            if receipt["cycle"] not in valid_cycles:
+                continue
+            replay = tmp_path / f"panel-{panel}-cycle-{receipt['cycle']}.png"
+            command = list(receipt["command"])
+            output_index = command.index("--output") + 1
+            command[output_index] = str(replay)
+            completed = subprocess.run(
+                command,
+                check=True,
+                capture_output=True,
+                cwd=PLUGIN_ROOT,
+                text=True,
+            )
+            runtime_receipt = json.loads(completed.stdout)
+
+            assert runtime_receipt["source_sha256"] == receipt["source_sha256"]
+            assert runtime_receipt["render_sha256"] == receipt["render_sha256"]
+            assert _sha256(replay) == receipt["render_sha256"]
+            assert runtime_receipt == receipt["runtime_receipt"]
 
 
 def test_ready_test_b_binds_validated_packet_without_execution_claim() -> None:

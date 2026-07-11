@@ -1,85 +1,340 @@
 schema: figure-agent.direct-svg-iteration-ledger.v1
 panel: C
-budget:
+utility_checkpoint:
   cycles: 3
   wall_minutes_per_panel: 30
+budget:
+  cycles: 8
+  wall_minutes_per_panel: 120
 ceiling_budget:
   cycles: 8
   wall_minutes_per_panel: 120
-started_at: "2026-07-11T14:08:00Z"
+started_at: '2026-07-11T14:08:00Z'
 elapsed_measurement: operator_wall_clock_rounded
+evidence_status: valid
+evidence_recovery: exact_original_source_hashes_recovered
+total_attempted_cycles: 4
+valid_review_cycles:
+- 1
+- 2
+- 3
+- 4
 iterations:
-  - cycle: 1
-    elapsed_minutes: 6.0
-    source_sha256: sha256:034ac10082a75b1ca612e0323c5b35da06ff876297c00e8cc73d85430ee46f4c
+- cycle: 1
+  elapsed_minutes: 6.0
+  source_path: panel-c-cycle-1.svg
+  source_sha256: sha256:034ac10082a75b1ca612e0323c5b35da06ff876297c00e8cc73d85430ee46f4c
+  render_path: panel-c-cycle-1.png
+  render_sha256: sha256:a1e5e57491292e18e5c621f6a1905b229292c49aeb75151beceee621e34cba9d
+  command:
+  - uv
+  - run
+  - python
+  - scripts/direct_svg_render.py
+  - --svg
+  - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-1.svg
+  - --output
+  - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-1.png
+  - --semantic-packet
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml
+  - --panel
+  - C
+  - --width
+  - '2160'
+  - --height
+  - '1360'
+  - --fontconfig
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+  - --font
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/fonts/lmsans10-regular.otf
+  - --receipt-base
+  - .
+  runtime_receipt:
+    environment:
+      FONTCONFIG_FILE: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/direct-svg-test-a/plugins/figure-agent/examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+      FONTCONFIG_PATH: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/direct-svg-test-a/plugins/figure-agent/examples/fig1_direct_svg_cleanroom_baseline/contract
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    font:
+      path: examples/fig1_direct_svg_cleanroom_baseline/contract/fonts/lmsans10-regular.otf
+      sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
+    fontconfig:
+      path: examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+      sha256: sha256:134f62bcaec72f154f449294f57c7b46fd76d43d1fc3cecf689ee2dfb8cb4a6d
+    height: 1360
+    pillow:
+      version: 12.2.0
+    publication_acceptance: not_claimed
+    python:
+      implementation: CPython
+      version: 3.12.13
     render_sha256: sha256:a1e5e57491292e18e5c621f6a1905b229292c49aeb75151beceee621e34cba9d
-    command:
-      - /opt/homebrew/bin/rsvg-convert
-      - -b
-      - white
-      - -w
-      - "2160"
-      - -h
-      - "1360"
-      - -o
-      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-1.png
-      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c.svg
-    tool_model_receipt: &tool_model_receipt
-      provider: openai
-      model: gpt-5-codex
-      snapshot: unavailable
-      reasoning: high
-      task:
-        name: Task 20 Step 2 Test A reference reconstruction
-        mode: cleanroom_manual_direct_svg
-        branch: codex/direct-svg-test-a
-        base_commit: 064a3cc62671ef0f086efb03f26c00d97bb783cd
-      tools:
-        authoring: apply_patch
-        validation_and_render: scripts/direct_svg_candidate.py with rsvg-convert
-        visual_inspection: view_image
-        image_generation: not_used
-    correction_reason: initial hand-authored SVG from semantic authority and target crop
+    rsvg:
+      executable: /opt/homebrew/bin/rsvg-convert
+      version: "rsvg-convert version 2.62.1\n\nlibraries used:\n  cairo 1.18.4\n  pango 1.57.0\n  harfbuzz 14.1.0\n  fontconfig 2.17.1"
+    schema: figure-agent.direct-svg-runtime-receipt.v1
+    semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+    source_sha256: sha256:034ac10082a75b1ca612e0323c5b35da06ff876297c00e8cc73d85430ee46f4c
+    width: 2160
+  tool_model_receipt:
+    provider: openai
+    model: gpt-5-codex
+    model_identity_independently_verified: false
+    snapshot: null
+    reasoning: null
+    token_cap: null
+    compute_cap: null
+    task:
+      name: Task 20 Step 2 Test A reference reconstruction
+      mode: cleanroom_manual_direct_svg
+      branch: codex/direct-svg-test-a
+      base_commit: 064a3cc62671ef0f086efb03f26c00d97bb783cd
+    tools:
+      authoring: apply_patch
+      validation_and_render: scripts/direct_svg_render.py with direct_svg_candidate.py and rsvg-convert
+      visual_inspection: view_image
+      image_generation: not_used
+  correction_reason: initial hand-authored SVG from semantic authority and target crop
+  correction_type: visual
+  render_changed_from_prior: true
+  publication_acceptance: not_claimed
+- cycle: 2
+  elapsed_minutes: 10.0
+  source_path: panel-c-cycle-2.svg
+  source_sha256: sha256:211873ca6aee78f3e03dd3218cf9fd99b67ecbb40330fdd6521f04875ebe0741
+  render_path: panel-c-cycle-2.png
+  render_sha256: sha256:fdf88ca4503c4479b1c014f43f5103ee2a15d46385ffd2249b66ac7bbc865cda
+  command:
+  - uv
+  - run
+  - python
+  - scripts/direct_svg_render.py
+  - --svg
+  - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-2.svg
+  - --output
+  - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-2.png
+  - --semantic-packet
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml
+  - --panel
+  - C
+  - --width
+  - '2160'
+  - --height
+  - '1360'
+  - --fontconfig
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+  - --font
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/fonts/lmsans10-regular.otf
+  - --receipt-base
+  - .
+  runtime_receipt:
+    environment:
+      FONTCONFIG_FILE: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/direct-svg-test-a/plugins/figure-agent/examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+      FONTCONFIG_PATH: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/direct-svg-test-a/plugins/figure-agent/examples/fig1_direct_svg_cleanroom_baseline/contract
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    font:
+      path: examples/fig1_direct_svg_cleanroom_baseline/contract/fonts/lmsans10-regular.otf
+      sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
+    fontconfig:
+      path: examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+      sha256: sha256:134f62bcaec72f154f449294f57c7b46fd76d43d1fc3cecf689ee2dfb8cb4a6d
+    height: 1360
+    pillow:
+      version: 12.2.0
     publication_acceptance: not_claimed
-  - cycle: 2
-    elapsed_minutes: 10.0
-    source_sha256: sha256:211873ca6aee78f3e03dd3218cf9fd99b67ecbb40330fdd6521f04875ebe0741
+    python:
+      implementation: CPython
+      version: 3.12.13
     render_sha256: sha256:fdf88ca4503c4479b1c014f43f5103ee2a15d46385ffd2249b66ac7bbc865cda
-    command:
-      - /opt/homebrew/bin/rsvg-convert
-      - -b
-      - white
-      - -w
-      - "2160"
-      - -h
-      - "1360"
-      - -o
-      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-2.png
-      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c.svg
-    tool_model_receipt: *tool_model_receipt
-    correction_reason: replace visibly literal underscore and caret notation with live SVG subscript styling
+    rsvg:
+      executable: /opt/homebrew/bin/rsvg-convert
+      version: "rsvg-convert version 2.62.1\n\nlibraries used:\n  cairo 1.18.4\n  pango 1.57.0\n  harfbuzz 14.1.0\n  fontconfig 2.17.1"
+    schema: figure-agent.direct-svg-runtime-receipt.v1
+    semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+    source_sha256: sha256:211873ca6aee78f3e03dd3218cf9fd99b67ecbb40330fdd6521f04875ebe0741
+    width: 2160
+  tool_model_receipt:
+    provider: openai
+    model: gpt-5-codex
+    model_identity_independently_verified: false
+    snapshot: null
+    reasoning: null
+    token_cap: null
+    compute_cap: null
+    task:
+      name: Task 20 Step 2 Test A reference reconstruction
+      mode: cleanroom_manual_direct_svg
+      branch: codex/direct-svg-test-a
+      base_commit: 064a3cc62671ef0f086efb03f26c00d97bb783cd
+    tools:
+      authoring: apply_patch
+      validation_and_render: scripts/direct_svg_render.py with direct_svg_candidate.py and rsvg-convert
+      visual_inspection: view_image
+      image_generation: not_used
+  correction_reason: replace visibly literal underscore and caret notation with live SVG subscript styling
+  correction_type: visual
+  render_changed_from_prior: true
+  publication_acceptance: not_claimed
+- cycle: 3
+  elapsed_minutes: 13.0
+  source_path: panel-c-cycle-3.svg
+  source_sha256: sha256:6c76b6083ed59a2e3492a2e6cd7ec14ccaea3757e86ad7b7d76082a29a7e8690
+  render_path: panel-c-cycle-3.png
+  render_sha256: sha256:73d4e5cb9a7d8661b90401dd90f9f77981222e358e20930009d01928c24ef71a
+  command:
+  - uv
+  - run
+  - python
+  - scripts/direct_svg_render.py
+  - --svg
+  - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-3.svg
+  - --output
+  - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-3.png
+  - --semantic-packet
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml
+  - --panel
+  - C
+  - --width
+  - '2160'
+  - --height
+  - '1360'
+  - --fontconfig
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+  - --font
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/fonts/lmsans10-regular.otf
+  - --receipt-base
+  - .
+  runtime_receipt:
+    environment:
+      FONTCONFIG_FILE: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/direct-svg-test-a/plugins/figure-agent/examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+      FONTCONFIG_PATH: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/direct-svg-test-a/plugins/figure-agent/examples/fig1_direct_svg_cleanroom_baseline/contract
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    font:
+      path: examples/fig1_direct_svg_cleanroom_baseline/contract/fonts/lmsans10-regular.otf
+      sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
+    fontconfig:
+      path: examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+      sha256: sha256:134f62bcaec72f154f449294f57c7b46fd76d43d1fc3cecf689ee2dfb8cb4a6d
+    height: 1360
+    pillow:
+      version: 12.2.0
     publication_acceptance: not_claimed
-  - cycle: 3
-    elapsed_minutes: 13.0
-    source_sha256: sha256:6c76b6083ed59a2e3492a2e6cd7ec14ccaea3757e86ad7b7d76082a29a7e8690
+    python:
+      implementation: CPython
+      version: 3.12.13
     render_sha256: sha256:73d4e5cb9a7d8661b90401dd90f9f77981222e358e20930009d01928c24ef71a
-    command:
-      - /opt/homebrew/bin/rsvg-convert
-      - -b
-      - white
-      - -w
-      - "2160"
-      - -h
-      - "1360"
-      - -o
-      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-3.png
-      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c.svg
-    tool_model_receipt: *tool_model_receipt
-    correction_reason: separate the symbolic trap-depth subscript and superscript after visible collision
+    rsvg:
+      executable: /opt/homebrew/bin/rsvg-convert
+      version: "rsvg-convert version 2.62.1\n\nlibraries used:\n  cairo 1.18.4\n  pango 1.57.0\n  harfbuzz 14.1.0\n  fontconfig 2.17.1"
+    schema: figure-agent.direct-svg-runtime-receipt.v1
+    semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+    source_sha256: sha256:6c76b6083ed59a2e3492a2e6cd7ec14ccaea3757e86ad7b7d76082a29a7e8690
+    width: 2160
+  tool_model_receipt:
+    provider: openai
+    model: gpt-5-codex
+    model_identity_independently_verified: false
+    snapshot: null
+    reasoning: null
+    token_cap: null
+    compute_cap: null
+    task:
+      name: Task 20 Step 2 Test A reference reconstruction
+      mode: cleanroom_manual_direct_svg
+      branch: codex/direct-svg-test-a
+      base_commit: 064a3cc62671ef0f086efb03f26c00d97bb783cd
+    tools:
+      authoring: apply_patch
+      validation_and_render: scripts/direct_svg_render.py with direct_svg_candidate.py and rsvg-convert
+      visual_inspection: view_image
+      image_generation: not_used
+  correction_reason: separate the symbolic trap-depth subscript and superscript after visible collision
+  correction_type: visual
+  render_changed_from_prior: true
+  publication_acceptance: not_claimed
+- cycle: 4
+  elapsed_minutes: 18.0
+  source_path: panel-c-cycle-4.svg
+  source_sha256: sha256:233a57135d20296b9d3bafa46927085fa5d31dc9a793498a6b7df219a4c8f0ad
+  render_path: panel-c-cycle-4.png
+  render_sha256: sha256:73d4e5cb9a7d8661b90401dd90f9f77981222e358e20930009d01928c24ef71a
+  command:
+  - uv
+  - run
+  - python
+  - scripts/direct_svg_render.py
+  - --svg
+  - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-4.svg
+  - --output
+  - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-4.png
+  - --semantic-packet
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml
+  - --panel
+  - C
+  - --width
+  - '2160'
+  - --height
+  - '1360'
+  - --fontconfig
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+  - --font
+  - examples/fig1_direct_svg_cleanroom_baseline/contract/fonts/lmsans10-regular.otf
+  - --receipt-base
+  - .
+  runtime_receipt:
+    environment:
+      FONTCONFIG_FILE: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/direct-svg-test-a/plugins/figure-agent/examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+      FONTCONFIG_PATH: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/direct-svg-test-a/plugins/figure-agent/examples/fig1_direct_svg_cleanroom_baseline/contract
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    font:
+      path: examples/fig1_direct_svg_cleanroom_baseline/contract/fonts/lmsans10-regular.otf
+      sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
+    fontconfig:
+      path: examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+      sha256: sha256:134f62bcaec72f154f449294f57c7b46fd76d43d1fc3cecf689ee2dfb8cb4a6d
+    height: 1360
+    pillow:
+      version: 12.2.0
     publication_acceptance: not_claimed
+    python:
+      implementation: CPython
+      version: 3.12.13
+    render_sha256: sha256:73d4e5cb9a7d8661b90401dd90f9f77981222e358e20930009d01928c24ef71a
+    rsvg:
+      executable: /opt/homebrew/bin/rsvg-convert
+      version: "rsvg-convert version 2.62.1\n\nlibraries used:\n  cairo 1.18.4\n  pango 1.57.0\n  harfbuzz 14.1.0\n  fontconfig 2.17.1"
+    schema: figure-agent.direct-svg-runtime-receipt.v1
+    semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+    source_sha256: sha256:233a57135d20296b9d3bafa46927085fa5d31dc9a793498a6b7df219a4c8f0ad
+    width: 2160
+  tool_model_receipt:
+    provider: openai
+    model: gpt-5-codex
+    model_identity_independently_verified: false
+    snapshot: null
+    reasoning: null
+    token_cap: null
+    compute_cap: null
+    task:
+      name: Task 20 Step 2 Test A reference reconstruction
+      mode: cleanroom_manual_direct_svg
+      branch: codex/direct-svg-test-a
+      base_commit: 064a3cc62671ef0f086efb03f26c00d97bb783cd
+    tools:
+      authoring: apply_patch
+      validation_and_render: scripts/direct_svg_render.py with direct_svg_candidate.py and rsvg-convert
+      visual_inspection: view_image
+      image_generation: not_used
+  correction_reason: consolidate symbolic trap-depth typography into one editable text tree and bind explicit declared DOS relations
+  correction_type: semantic_metadata_and_editability
+  render_changed_from_prior: false
+  publication_acceptance: not_claimed
+publication_acceptance: not_claimed
 final_candidate:
   source_path: panel-c.svg
-  source_sha256: sha256:6c76b6083ed59a2e3492a2e6cd7ec14ccaea3757e86ad7b7d76082a29a7e8690
+  source_sha256: sha256:233a57135d20296b9d3bafa46927085fa5d31dc9a793498a6b7df219a4c8f0ad
   render_path: panel-c.png
   render_sha256: sha256:73d4e5cb9a7d8661b90401dd90f9f77981222e358e20930009d01928c24ef71a
-publication_acceptance: not_claimed

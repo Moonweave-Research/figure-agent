@@ -7,21 +7,24 @@ semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf82133
 execution_started: true
 candidate_artifacts:
   - panel: C
-    cycles_completed: 3
+    cycles_completed: 4
+    valid_review_cycles: [1, 2, 3, 4]
     svg_path: panel-c.svg
-    svg_sha256: sha256:6c76b6083ed59a2e3492a2e6cd7ec14ccaea3757e86ad7b7d76082a29a7e8690
+    svg_sha256: sha256:233a57135d20296b9d3bafa46927085fa5d31dc9a793498a6b7df219a4c8f0ad
     render_path: panel-c.png
     render_sha256: sha256:73d4e5cb9a7d8661b90401dd90f9f77981222e358e20930009d01928c24ef71a
     ledger_path: panel-c-ledger.yaml
-    ledger_sha256: sha256:8b3dab41a6a8eae2fefb73c006f418760a77be53a6a3fb81428f38cd8c7111fa
+    ledger_sha256: sha256:845f14b507330c4d9d722f03a741a6cf7e38b24694fcc910c1914283c22f067d
   - panel: F
-    cycles_completed: 3
+    cycles_completed: 4
+    valid_review_cycles: [1, 2, 3, 4]
     svg_path: panel-f.svg
-    svg_sha256: sha256:a4227534b2f5fbc4f90f1416358516fc58c68535a5de0b078b56b03526802174
+    svg_sha256: sha256:4873866b34fcc953fc34ab0624163ec118f48f070c00a23e5eaf034a0ece21c1
     render_path: panel-f.png
     render_sha256: sha256:bcd7ebbb7c0e45f8e54efc2cd930f63eeabf6e37d20c8e60ec8322073f760cd5
     ledger_path: panel-f-ledger.yaml
-    ledger_sha256: sha256:496d546cb6a27a8bf2c62bb1c217fed81898d963cbe5943558d5d15c7ce3a157
+    ledger_sha256: sha256:c8743cbb03dd5f41d92feb62fa4c427f1848182db51298e84284c5d570b0ffb5
+execution_evidence: exact_original_cycle_sources_recovered_and_extended
 human_quality_review: not_performed
 scientific_acceptance: not_claimed
 publication_acceptance: not_claimed

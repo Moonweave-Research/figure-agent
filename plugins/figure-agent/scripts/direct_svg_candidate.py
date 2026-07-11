@@ -12,6 +12,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
+import yaml
 from PIL import Image, UnidentifiedImageError
 
 FORBIDDEN_ELEMENTS = {"script", "image", "foreignobject"}
@@ -71,7 +72,82 @@ def _validate_urls(text: str, ids: set[str], gradient_ids: set[str]) -> None:
         raise DirectSvgCandidateError("external_url_forbidden")
 
 
-def validate_candidate(path: Path, *, required_ids: set[str]) -> dict[str, Any]:
+def _semantic_text(element: ET.Element) -> str:
+    explicit = element.get("data-semantic-text")
+    if explicit:
+        return explicit
+    parts = [element.text or ""]
+    for child in element:
+        shift = child.get("baseline-shift")
+        if shift == "sub":
+            parts.append("_")
+        elif shift == "super":
+            parts.append("^")
+        parts.append("".join(child.itertext()))
+        parts.append(child.tail or "")
+    return "".join(parts).strip()
+
+
+def _semantic_text_key(value: str) -> str:
+    return re.sub(r"[\s_^]", "", value.replace("µ", "μ"))
+
+
+def semantic_requirements(path: Path, *, panel: str) -> dict[str, set[Any]]:
+    """Derive candidate IDs, live text, and declared relations from authority."""
+    try:
+        loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise DirectSvgCandidateError("semantic_packet_invalid") from exc
+    if not isinstance(loaded, dict) or loaded.get("schema") != (
+        "figure-agent.direct-svg-semantic-packet.v1"
+    ):
+        raise DirectSvgCandidateError("semantic_packet_invalid")
+    if panel not in {"C", "F"} or panel not in loaded.get("panels", []):
+        raise DirectSvgCandidateError("semantic_panel_invalid")
+
+    panel_key = f"panel_{panel.lower()}"
+    scientific_objects = loaded.get("scientific_objects", {}).get(panel_key)
+    visual_roles = loaded.get("visual_roles", {}).get(panel_key)
+    text_content = loaded.get("text_content", {}).get(panel_key)
+    relations = loaded.get("object_relations")
+    if (
+        not isinstance(scientific_objects, list)
+        or not isinstance(visual_roles, dict)
+        or not isinstance(text_content, list)
+        or not isinstance(relations, list)
+    ):
+        raise DirectSvgCandidateError("semantic_packet_invalid")
+
+    object_ids = {
+        item.get("id")
+        for item in scientific_objects
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    role_ids = {key for key in visual_roles if isinstance(key, str)}
+    required_text = {item for item in text_content if isinstance(item, str)}
+    declared_relations = {
+        (item.get("subject"), item.get("predicate"), item.get("object"))
+        for item in relations
+        if isinstance(item, dict)
+        and all(isinstance(item.get(key), str) for key in ("subject", "predicate", "object"))
+    }
+    if len(object_ids) != len(scientific_objects) or len(required_text) != len(
+        text_content
+    ):
+        raise DirectSvgCandidateError("semantic_packet_invalid")
+    return {
+        "required_ids": object_ids | role_ids,
+        "required_text": required_text,
+        "relations": declared_relations,
+    }
+
+
+def validate_candidate(
+    path: Path,
+    *,
+    required_ids: set[str],
+    required_text: set[str] | None = None,
+) -> dict[str, Any]:
     """Validate SVG editability, semantic IDs, and self-contained resources."""
     text, root = _parse_svg(path)
     _validate_view_box(root)
@@ -80,6 +156,8 @@ def validate_candidate(path: Path, *, required_ids: set[str]) -> dict[str, Any]:
     group_ids: set[str] = set()
     gradient_ids: set[str] = set()
     live_text = False
+    semantic_text: set[str] = set()
+    semantic_group_text: set[str] = set()
     for element in root.iter():
         name = _local_name(element.tag).lower()
         if name in FORBIDDEN_ELEMENTS:
@@ -95,6 +173,15 @@ def validate_candidate(path: Path, *, required_ids: set[str]) -> dict[str, Any]:
                 gradient_ids.add(element_id)
         if name == "text" and "".join(element.itertext()).strip():
             live_text = True
+            semantic_text.add(_semantic_text(element))
+        if name == "g":
+            grouped = "".join(
+                "".join(descendant.itertext()).strip()
+                for descendant in element.iter()
+                if _local_name(descendant.tag).lower() == "text"
+            )
+            if grouped:
+                semantic_group_text.add(grouped)
         for raw_name in element.attrib:
             if _local_name(raw_name).lower().startswith("on"):
                 raise DirectSvgCandidateError("forbidden_svg_attribute")
@@ -103,6 +190,13 @@ def validate_candidate(path: Path, *, required_ids: set[str]) -> dict[str, Any]:
         raise DirectSvgCandidateError("live_text_required")
     if not required_ids.issubset(group_ids):
         raise DirectSvgCandidateError("semantic_id_missing")
+    if required_text is not None:
+        observed_keys = {
+            _semantic_text_key(value)
+            for value in semantic_text | semantic_group_text
+        }
+        if any(_semantic_text_key(value) not in observed_keys for value in required_text):
+            raise DirectSvgCandidateError("semantic_text_missing")
     _validate_urls(text, ids, gradient_ids)
     return {
         "view_box": root.get("viewBox"),
@@ -110,6 +204,37 @@ def validate_candidate(path: Path, *, required_ids: set[str]) -> dict[str, Any]:
         "source_sha256": _sha256(path),
         "publication_acceptance": "not_claimed",
     }
+
+
+def validate_candidate_from_semantic_packet(
+    path: Path,
+    semantic_packet: Path,
+    *,
+    panel: str,
+) -> dict[str, Any]:
+    """Validate candidate structure against the declared semantic authority."""
+    requirements = semantic_requirements(semantic_packet, panel=panel)
+    result = validate_candidate(
+        path,
+        required_ids=requirements["required_ids"],
+        required_text=requirements["required_text"],
+    )
+    _, root = _parse_svg(path)
+    relation_keys = ("data-subject", "data-predicate", "data-object")
+    validated_relations: set[tuple[str, str, str]] = set()
+    for element in root.iter():
+        values = tuple(element.get(key) for key in relation_keys)
+        if not any(value is not None for value in values):
+            continue
+        if any(value is None for value in values):
+            raise DirectSvgCandidateError("semantic_relation_incomplete")
+        if values not in requirements["relations"]:
+            raise DirectSvgCandidateError("semantic_relation_undeclared")
+        validated_relations.add(values)
+    result["semantic_packet_sha256"] = _sha256(semantic_packet)
+    result["semantic_text"] = sorted(requirements["required_text"])
+    result["validated_relations"] = [list(item) for item in sorted(validated_relations)]
+    return result
 
 
 def begin_ledger(budget: dict[str, int], *, started_at: str) -> dict[str, Any]:
