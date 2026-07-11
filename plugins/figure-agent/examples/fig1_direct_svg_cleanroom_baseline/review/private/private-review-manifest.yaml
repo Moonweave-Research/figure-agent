@@ -1,28 +1,28 @@
 schema: figure-agent.private-review-key.v1
-seed_hex: 1484e2b8fa2f574e9bf27ce40a5c6780538d67f6d4f5f8f3bac65b8d01385790
+seed_hex: 4b1038e8f420bcc0c705fadce199661b18f5d79f702ce6cefeb863ce54f269a4
 experiment_assignments:
-  R1: test-b
-  R2: test-a
+  R1: test-a
+  R2: test-b
 keys:
   R1:
-    run: test-b
-    panels:
-      C:
-        key_manifest: R1/C/blinding-key.yaml
-        key_manifest_sha256: sha256:42dd2b311da5d46e471898f56f8cabf3d5222bab9e36384d053b142b1af1605c
-      F:
-        key_manifest: R1/F/blinding-key.yaml
-        key_manifest_sha256: sha256:0d011da583053919f55064a656a0dd575a5117c09717f11f90901abed5f6e656
-  R2:
     run: test-a
     panels:
       C:
+        key_manifest: R1/C/blinding-key.yaml
+        key_manifest_sha256: sha256:7495a10f3e72f62131b4a4a2d21a266f9b5465532027493444846184387e8597
+      F:
+        key_manifest: R1/F/blinding-key.yaml
+        key_manifest_sha256: sha256:b0658ac96155c46339003dd8e93b79a0c6f0614320ff1463c1ff6dbcdc0a040e
+  R2:
+    run: test-b
+    panels:
+      C:
         key_manifest: R2/C/blinding-key.yaml
-        key_manifest_sha256: sha256:287dc99be9142a2be62b90f1a713b5c43d0cdd62200c2413c619b9dfd57f7dea
+        key_manifest_sha256: sha256:a23f25dfab4e7b1a2580a41bbc8b53dcd15f3bceb2b77cf3269c4bf54dd1ce2f
       F:
         key_manifest: R2/F/blinding-key.yaml
-        key_manifest_sha256: sha256:7f333cce23c96de48115203c1e75cba109a67dacaae37caa3db94fa27dc87a06
-public_manifest_sha256: sha256:a4b6d1bc9c4eb00383b7af57135db776d6dca8b8c0faa1b09f6878c730147cad
+        key_manifest_sha256: sha256:83578839c5699fd1249a66e811c4f0ee971caecb64cbf7b5742bd6ddc52982c6
+public_manifest_sha256: sha256:202e009d186540c2aa6d755f2fac2a2954ea7cf8b8de16381a05b3c75fdcaef5
 blinding_keys_revealed: false
 release_condition: named_human_scores_fixed
 publication_acceptance: not_claimed

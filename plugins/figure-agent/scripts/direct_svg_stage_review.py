@@ -150,16 +150,16 @@ def _semantic_review_context(fixture_root: Path) -> dict[str, Any]:
 
 def _response_template() -> dict[str, Any]:
     return {
-        "option_A_scientific_fidelity": "pass/fail",
-        "option_A_scientific_evidence": "",
-        "option_B_scientific_fidelity": "pass/fail",
-        "option_B_scientific_evidence": "",
-        "composition_preference": "A/equivalent/B",
-        "illustration_quality_preference": "A/equivalent/B",
-        "typography_preference": "A/equivalent/B",
-        "borderline_or_disputed": False,
-        "named_reviewer": "",
-        "reviewed_at": "",
+        "option_A_scientific_fidelity": None,
+        "option_A_scientific_evidence": None,
+        "option_B_scientific_fidelity": None,
+        "option_B_scientific_evidence": None,
+        "composition_preference": None,
+        "illustration_quality_preference": None,
+        "typography_preference": None,
+        "borderline_or_disputed": None,
+        "named_reviewer": None,
+        "reviewed_at": None,
     }
 
 

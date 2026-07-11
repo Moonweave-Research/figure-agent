@@ -1,11 +1,11 @@
 schema: figure-agent.blinding-key.v1
 assignments:
-  A: comparator
-  B: candidate
+  A: candidate
+  B: comparator
 content_sha256:
-  A: sha256:1ba5617ea9dc78c67098379f740d423fb21f113c78352723a4a24896d65c9a06
-  B: sha256:8cc90db555e662a266bed0004b99542f13a559ac716c5856b595135a7bf82749
-seed_sha256: sha256:37fe4cfb30d053acc175287fc9bb49e1c9a5d4e1105496e149ccc94bfedbcf3e
-public_manifest_sha256: sha256:867eea253be85839c3e7d14bbead98346eabd0bd9e6f5b110d1943f31cbbff73
-review_input_hash: sha256:32dc135dac6e184342d14c9b000ff16ef06ae75e750fdddbc5a586684d64e7e7
+  A: sha256:f8532e4fdb858c7a633835c36bdafe57719ea7a772a0759dab8465fd0e93e04c
+  B: sha256:62c73560f1b054c79959ef9f5407eeb38e6f9471ce11195d2787ab2f68e74f37
+seed_sha256: sha256:1c19ca1963c4d03324eab042d8924cee6468899ad2dd81d75eddb5a6c7e7df00
+public_manifest_sha256: sha256:5dce7d2626d6a4437df3a42c6a609ff9973fe4ef911dd07f996fb024880a27ce
+review_input_hash: sha256:36a6a652f64c9f2ce82bab869839a140db96793a9116f4176a01c6877af08b90
 publication_acceptance: not_claimed

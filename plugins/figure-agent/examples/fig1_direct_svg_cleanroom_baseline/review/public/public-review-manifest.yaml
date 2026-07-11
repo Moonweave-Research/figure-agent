@@ -3,65 +3,65 @@ experiments:
   R1:
     C:
       manifest: R1/C/public-review-manifest.yaml
-      manifest_sha256: sha256:867eea253be85839c3e7d14bbead98346eabd0bd9e6f5b110d1943f31cbbff73
-      review_input_hash: sha256:32dc135dac6e184342d14c9b000ff16ef06ae75e750fdddbc5a586684d64e7e7
+      manifest_sha256: sha256:5dce7d2626d6a4437df3a42c6a609ff9973fe4ef911dd07f996fb024880a27ce
+      review_input_hash: sha256:36a6a652f64c9f2ce82bab869839a140db96793a9116f4176a01c6877af08b90
       response_template:
-        option_A_scientific_fidelity: pass/fail
-        option_A_scientific_evidence: ''
-        option_B_scientific_fidelity: pass/fail
-        option_B_scientific_evidence: ''
-        composition_preference: A/equivalent/B
-        illustration_quality_preference: A/equivalent/B
-        typography_preference: A/equivalent/B
-        borderline_or_disputed: false
-        named_reviewer: ''
-        reviewed_at: ''
+        option_A_scientific_fidelity: null
+        option_A_scientific_evidence: null
+        option_B_scientific_fidelity: null
+        option_B_scientific_evidence: null
+        composition_preference: null
+        illustration_quality_preference: null
+        typography_preference: null
+        borderline_or_disputed: null
+        named_reviewer: null
+        reviewed_at: null
     F:
       manifest: R1/F/public-review-manifest.yaml
-      manifest_sha256: sha256:0167755313eb9dfada9e762558ea15831b0301120709d6d8c7090ce33d26d5c0
-      review_input_hash: sha256:38c7ee445199687b4e44ab198cd28e97b9d6fa7c3c0358cd71b55d1e0ff7d6ef
+      manifest_sha256: sha256:b44e73f193cee0d9e2582c0e1117485cd2f38a9923e32b9f3825e6b74aaa44a2
+      review_input_hash: sha256:02415eda15a9279f77b8854ae18e54a132eafe612fb6c74d2fd09e24f9c9066c
       response_template:
-        option_A_scientific_fidelity: pass/fail
-        option_A_scientific_evidence: ''
-        option_B_scientific_fidelity: pass/fail
-        option_B_scientific_evidence: ''
-        composition_preference: A/equivalent/B
-        illustration_quality_preference: A/equivalent/B
-        typography_preference: A/equivalent/B
-        borderline_or_disputed: false
-        named_reviewer: ''
-        reviewed_at: ''
+        option_A_scientific_fidelity: null
+        option_A_scientific_evidence: null
+        option_B_scientific_fidelity: null
+        option_B_scientific_evidence: null
+        composition_preference: null
+        illustration_quality_preference: null
+        typography_preference: null
+        borderline_or_disputed: null
+        named_reviewer: null
+        reviewed_at: null
   R2:
     C:
       manifest: R2/C/public-review-manifest.yaml
-      manifest_sha256: sha256:c65ca3ed5f23e987bec6df2de26a51378beeece46cfdbbf963efce11bce0816b
-      review_input_hash: sha256:d2ace43b3e754724c1fc8703f0abf496d1ded59487b8caf970edc1e82efd4d05
+      manifest_sha256: sha256:0a75a3db7c806f225e2865a1c854e71bcc0247945d5f4aa4867a6f7036f16c4f
+      review_input_hash: sha256:5f2274f1cf612812c44396e83066074750b7df0565d29bd40419c0d262b619ae
       response_template:
-        option_A_scientific_fidelity: pass/fail
-        option_A_scientific_evidence: ''
-        option_B_scientific_fidelity: pass/fail
-        option_B_scientific_evidence: ''
-        composition_preference: A/equivalent/B
-        illustration_quality_preference: A/equivalent/B
-        typography_preference: A/equivalent/B
-        borderline_or_disputed: false
-        named_reviewer: ''
-        reviewed_at: ''
+        option_A_scientific_fidelity: null
+        option_A_scientific_evidence: null
+        option_B_scientific_fidelity: null
+        option_B_scientific_evidence: null
+        composition_preference: null
+        illustration_quality_preference: null
+        typography_preference: null
+        borderline_or_disputed: null
+        named_reviewer: null
+        reviewed_at: null
     F:
       manifest: R2/F/public-review-manifest.yaml
-      manifest_sha256: sha256:b1007301bf10c824c4cefa399fe4487b4fe920612fe7adcd6377d1116ce10f7d
-      review_input_hash: sha256:0b3ca50009774af2653463fc44b74ffe58e54e73a88a1ff2935ad70b0763e463
+      manifest_sha256: sha256:f3432f56d1c4798b1c8ce01d0f9fe38b8947cd3b9ad715a6c7e72806305ad955
+      review_input_hash: sha256:57bd017e9342591c58fad5e7f4574a1c6f5fbd997ed8459795b28a70cad95916
       response_template:
-        option_A_scientific_fidelity: pass/fail
-        option_A_scientific_evidence: ''
-        option_B_scientific_fidelity: pass/fail
-        option_B_scientific_evidence: ''
-        composition_preference: A/equivalent/B
-        illustration_quality_preference: A/equivalent/B
-        typography_preference: A/equivalent/B
-        borderline_or_disputed: false
-        named_reviewer: ''
-        reviewed_at: ''
+        option_A_scientific_fidelity: null
+        option_A_scientific_evidence: null
+        option_B_scientific_fidelity: null
+        option_B_scientific_evidence: null
+        composition_preference: null
+        illustration_quality_preference: null
+        typography_preference: null
+        borderline_or_disputed: null
+        named_reviewer: null
+        reviewed_at: null
 semantic_review_context:
   scientific_objects:
     panel_c:
@@ -174,4 +174,4 @@ editability_cost: separate_not_inferred_from_images
 publication_acceptance: not_claimed
 html:
   path: index.html
-  sha256: sha256:28272b7b7419a43bf1d7b76706be98706494fff14f0d19a413b79bed9eb67b4e
+  sha256: sha256:f3e432343eec4bc63da319f55a90888c6438b6f5ee5cb5c287e95e07010f7015

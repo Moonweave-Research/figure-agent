@@ -39,6 +39,11 @@ def test_stage_review_creates_two_level_blinded_public_packets(tmp_path: Path) -
     assert set(result["public_manifest"]["experiments"]) == {"R1", "R2"}
     for experiment in ("R1", "R2"):
         for panel in ("C", "F"):
+            response_template = result["public_manifest"]["experiments"][experiment][
+                panel
+            ]["response_template"]
+            assert response_template
+            assert all(value is None for value in response_template.values())
             directory = review_root / "public" / experiment / panel
             assert {"option-a.png", "option-b.png", "public-review-manifest.yaml"}.issubset(
                 {path.name for path in directory.iterdir()}

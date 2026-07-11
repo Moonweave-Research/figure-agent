@@ -2,25 +2,25 @@ schema: figure-agent.blind-review.v1
 options:
   A:
     path: option-a.png
-    sha256: sha256:6171a09eaf009b0e5f8a77d6384944325fb04e5cf18fbafdfd620750235d6239
+    sha256: sha256:c364f653b6e48a4fa5f4e35897a08194edadcf095d1e2f64d217e678343eefcb
   B:
     path: option-b.png
-    sha256: sha256:b647f5c95ffb98fb8b987ffb1545acf8d21bfdf935169a5c11cd78437c785ffe
+    sha256: sha256:683fcfaba585f48c18ce1a46db840ba69653b99ef26f33f1d66a7003ac4ff28a
 score_inputs:
 - role: opaque_option_A
   path: option-a.png
-  sha256: sha256:6171a09eaf009b0e5f8a77d6384944325fb04e5cf18fbafdfd620750235d6239
+  sha256: sha256:c364f653b6e48a4fa5f4e35897a08194edadcf095d1e2f64d217e678343eefcb
 - role: opaque_option_B
   path: option-b.png
-  sha256: sha256:b647f5c95ffb98fb8b987ffb1545acf8d21bfdf935169a5c11cd78437c785ffe
+  sha256: sha256:683fcfaba585f48c18ce1a46db840ba69653b99ef26f33f1d66a7003ac4ff28a
 diagnostics:
 - kind: difference
   path: diagnostic-difference.png
-  sha256: sha256:5e2df08a65bfc02bc50ceb1774f09c4f82972fda7b84b6247defa25e2096d3df
+  sha256: sha256:acacf260f2e7b62d2add2154256c93579cdea86bae8b3e162d5ffaa53a467043
   diagnostic_only: true
 - kind: flicker
   path: diagnostic-flicker.gif
-  sha256: sha256:ed1ab6cf8281256cd5e79b81c7cb232506419be4ab0cc7d746275f8633b5061e
+  sha256: sha256:319604b544245a8edc686fe23614a0267dd0de0b1d58fb16e2815364d044cd3d
   diagnostic_only: true
 toolchain:
   pillow: 12.2.0
@@ -31,5 +31,5 @@ toolchain:
     application: opaque
     resampling: LANCZOS
     contain_mode: aspect_preserving_centered_white_canvas
-review_input_hash: sha256:32dc135dac6e184342d14c9b000ff16ef06ae75e750fdddbc5a586684d64e7e7
+review_input_hash: sha256:36a6a652f64c9f2ce82bab869839a140db96793a9116f4176a01c6877af08b90
 publication_acceptance: not_claimed
