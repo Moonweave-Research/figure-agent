@@ -110,10 +110,12 @@ def _resolve_path(value: Any, roots: tuple[Path, ...]) -> Path:
     ):
         raise DirectSvgReviewError("review_prerequisite_path_invalid")
     authorized_roots = tuple(root.resolve() for root in roots)
+    escaped = False
     for base in roots:
         candidate = Path(os.path.abspath(base / raw))
         owners = [root for root in authorized_roots if candidate.is_relative_to(root)]
         if not owners:
+            escaped = escaped or ".." in raw.parts
             continue
         owner = max(owners, key=lambda root: len(root.parts))
         try:
@@ -128,6 +130,8 @@ def _resolve_path(value: Any, roots: tuple[Path, ...]) -> Path:
             continue
         if path == candidate and path.is_file():
             return path
+    if escaped:
+        raise DirectSvgReviewError("review_prerequisite_path_invalid")
     raise DirectSvgReviewError("review_prerequisite_missing")
 
 
