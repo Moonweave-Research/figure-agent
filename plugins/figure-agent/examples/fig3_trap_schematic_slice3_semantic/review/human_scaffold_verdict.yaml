@@ -45,12 +45,16 @@ scaffold_verdict:
   cross_panel_flow_preserved: null
   notes: null
 artifact_verdict:
-  status: pending
-  reviewer: null
-  reviewed_at: null
+  status: rejected
+  reviewer: choemun-yeong
+  reviewed_at: 2026-07-11T14:44:13+09:00
   chain_region_site_relations_legible: null
   no_false_crosslink_semantics: null
-  publication_quality: null
-  notes: null
+  publication_quality: false
+  notes: >-
+    The primitive SVG geometry, visual density, and cross-panel illustration
+    language are below the bound TikZ comparator. This artifact-quality
+    rejection does not supply a scaffold verdict or reject semantic SVG as a
+    QA surface.
 review_state: review-ready
 publication_acceptance: not_claimed

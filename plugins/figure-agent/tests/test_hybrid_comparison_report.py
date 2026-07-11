@@ -132,3 +132,15 @@ def test_human_verdict_binding_becomes_stale_when_an_input_changes(tmp_path: Pat
     assert validate_human_verdict_bindings(verdict_path, tmp_path)["stale"] is False
     artifact.write_bytes(b"second")
     assert validate_human_verdict_bindings(verdict_path, tmp_path)["stale"] is True
+
+
+def test_fig3_records_artifact_rejection_without_inventing_scaffold_acceptance() -> None:
+    fixture = PLUGIN_ROOT / "examples" / "fig3_trap_schematic_slice3_semantic"
+    verdict_path = fixture / "review" / "human_scaffold_verdict.yaml"
+    verdict = yaml.safe_load(verdict_path.read_text(encoding="utf-8"))
+    binding = validate_human_verdict_bindings(verdict_path, fixture)
+
+    assert binding["stale"] is False
+    assert verdict["scaffold_verdict"]["status"] == "pending"
+    assert verdict["artifact_verdict"]["status"] == "rejected"
+    assert verdict["publication_acceptance"] == "not_claimed"
