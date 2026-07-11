@@ -220,7 +220,7 @@ def test_completed_test_a_binds_candidates_ledgers_and_machine_only_state() -> N
     assert state["schema"] == "figure-agent.direct-svg-run-state.v1"
     assert state["test_kind"] == "reconstruction"
     assert state["state"] == "machine_review_ready"
-    assert state["validated_packet"] == "../../packets/test-a-reconstruction.yaml"
+    assert state["validated_packet"] == "packets/test-a-reconstruction.yaml"
     assert state["validated_packet_sha256"] == _sha256(packet_path)
     assert state["semantic_packet_sha256"] == semantic_hash
     assert state["execution_started"] is True
