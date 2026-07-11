@@ -1,0 +1,12 @@
+schema: figure-agent.illustration-provenance.v1
+fixture: fig3_trap_schematic_slice4_illustration_grammar
+motif_family: sulfur_trap_domain
+source_authority:
+  historical_fixture: fig3_trap_schematic_slice3_semantic
+  original_example: fig3_trap_schematic_v97
+  grammar: styles/illustration-grammar/sulfur_trap_domain.v1.yaml
+boundaries:
+  historical_artifacts_immutable: true
+  fig1_imports: forbidden
+  backend_syntax_in_instance: forbidden
+publication_acceptance: not_claimed

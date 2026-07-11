@@ -402,7 +402,7 @@ verdict, close Slice 3, or claim that all SVG backends are rejected.
 - Create: `docs/decision-records/2026-07-11-raw-semantic-svg-non-promotion.md`
 - Modify: `tests/test_hybrid_comparison_report.py`
 
-- [ ] **Step 1: Write the failing bound-verdict test**
+- [x] **Step 1: Write the failing bound-verdict test**
 
 ```python
 def test_fig3_records_artifact_rejection_without_inventing_scaffold_acceptance() -> None:
@@ -417,7 +417,7 @@ def test_fig3_records_artifact_rejection_without_inventing_scaffold_acceptance()
     assert verdict["publication_acceptance"] == "not_claimed"
 ```
 
-- [ ] **Step 2: Run the test and verify RED**
+- [x] **Step 2: Run the test and verify RED**
 
 Run:
 
@@ -428,7 +428,7 @@ uv run pytest \
 
 Expected: FAIL because the artifact verdict is still `pending`.
 
-- [ ] **Step 3: Record only the supplied human artifact judgment**
+- [x] **Step 3: Record only the supplied human artifact judgment**
 
 Set `artifact_verdict.status: rejected`, `reviewer: choemun-yeong`, and an
 execution-time ISO-8601 `reviewed_at` timestamp. Record that the primitive
@@ -446,7 +446,7 @@ does_not_reject:
 publication_acceptance: not_claimed
 ```
 
-- [ ] **Step 4: Re-run binding and comparison tests**
+- [x] **Step 4: Re-run binding and comparison tests**
 
 Run:
 
@@ -456,7 +456,7 @@ uv run pytest tests/test_hybrid_comparison_report.py -q
 
 Expected: PASS with the exact review-input hash still fresh.
 
-- [ ] **Step 5: Commit the bounded decision**
+- [x] **Step 5: Commit the bounded decision**
 
 ```bash
 git add examples/fig3_trap_schematic_slice3_semantic/review/human_scaffold_verdict.yaml \
@@ -478,7 +478,7 @@ geometry or mutate a backend.
 - Create: `tests/test_illustration_grammar.py`
 - Create: `styles/illustration-grammar/sulfur_trap_domain.v1.yaml`
 
-- [ ] **Step 1: Write failing contract tests**
+- [x] **Step 1: Write failing contract tests**
 
 ```python
 def test_loads_sulfur_trap_domain_with_closed_visual_contract() -> None:
@@ -514,13 +514,13 @@ def test_grammar_fails_closed(
         load_illustration_grammar(candidate)
 ```
 
-- [ ] **Step 2: Run the tests and verify RED**
+- [x] **Step 2: Run the tests and verify RED**
 
 Run: `uv run pytest tests/test_illustration_grammar.py -q`
 
 Expected: FAIL because the loader and grammar file do not exist.
 
-- [ ] **Step 3: Implement the minimal loader and closed motif file**
+- [x] **Step 3: Implement the minimal loader and closed motif file**
 
 `scripts/illustration_grammar.py` defines
 `IllustrationGrammarError(ValueError)` and
@@ -553,15 +553,23 @@ optical_rules:
   minimum_clearance_em: 0.35
   carrier_centering: optical
   repeated_site_variation: controlled
+role_bindings:
+  global: {curvature: organic_backbone, join: round, cap: round}
+  slots:
+    sulfur.regions: {stroke_family: support, color_role: sulfur, emphasis: background}
+    chain.backbones: {stroke_family: primary, color_role: polymer, emphasis: structure}
+    sulfur.sites: {stroke_family: primary, color_role: sulfur, emphasis: structure}
+    trap.levels: {stroke_family: support, color_role: neutral, emphasis: structure}
+    trapped.carriers: {stroke_family: focal, color_role: carrier, emphasis: focal}
 ownership:
-  grammar: [motif_geometry, layer_order, visual_tokens]
+  grammar: [motif_contract, layer_order, visual_tokens, role_bindings]
   tikz: [global_panel_composition, typography, labels, inter_panel_arrows]
 ```
 
 Reject `aesthetic_levers`, route fields, freeform effects, filters, arbitrary
 fonts, and unknown required token groups.
 
-- [ ] **Step 4: Run contract tests and Ruff**
+- [x] **Step 4: Run contract tests and Ruff**
 
 ```bash
 uv run pytest tests/test_illustration_grammar.py -q
@@ -570,7 +578,7 @@ uv run ruff check scripts/illustration_grammar.py tests/test_illustration_gramma
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit the grammar contract**
+- [x] **Step 5: Commit the grammar contract**
 
 ```bash
 git add scripts/illustration_grammar.py tests/test_illustration_grammar.py \
@@ -591,7 +599,7 @@ tags nor TikZ commands.
 - Create: `examples/fig3_trap_schematic_slice4_illustration_grammar/motif_instance.yaml`
 - Create: `examples/fig3_trap_schematic_slice4_illustration_grammar/provenance.yaml`
 
-- [ ] **Step 1: Write the failing neutral-scene test**
+- [x] **Step 1: Write the failing neutral-scene test**
 
 ```python
 def test_scene_preserves_slots_layers_and_has_no_backend_syntax() -> None:
@@ -608,19 +616,21 @@ def test_scene_preserves_slots_layers_and_has_no_backend_syntax() -> None:
     assert "fig3_trap_schematic" not in serialized
 ```
 
-- [ ] **Step 2: Run the test and verify RED**
+- [x] **Step 2: Run the test and verify RED**
 
 Run: `uv run pytest tests/test_illustration_scene.py -q`
 
 Expected: FAIL because `compile_illustration_scene` does not exist.
 
-- [ ] **Step 3: Implement normalized scene compilation**
+- [x] **Step 3: Implement normalized scene compilation**
 
 `scripts/illustration_scene.py` defines
 `IllustrationSceneError(ValueError)` and
 `compile_illustration_scene(grammar_path: Path, instance_path: Path) ->
 dict[str, Any]`. The compiler returns normalized `semantic_ids`, `relations`,
-`layers`, and `resolved_tokens` fields without backend syntax.
+`layers`, and `resolved_tokens` fields without backend syntax. The resolved
+tokens come only from the grammar's explicit semantic-slot role bindings; the
+scene compiler and renderers may not invent those assignments.
 
 The instance uses a unit-square coordinate system, contains four non-crossing
 backbone splines and three sulfur-rich domains, and binds every visible site,
@@ -629,7 +639,7 @@ crossing relation, point outside `[0, 1]`, missing domain membership, or carrier
 without a trap level. Do not import Fig1 coordinates, panel names, templates, or
 helpers.
 
-- [ ] **Step 4: Run scene and cross-figure regression tests**
+- [x] **Step 4: Run scene and cross-figure regression tests**
 
 ```bash
 uv run pytest tests/test_illustration_scene.py \
@@ -639,7 +649,7 @@ uv run ruff check scripts/illustration_scene.py tests/test_illustration_scene.py
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit the neutral scene**
+- [x] **Step 5: Commit the neutral scene**
 
 ```bash
 git add scripts/illustration_scene.py tests/test_illustration_scene.py \

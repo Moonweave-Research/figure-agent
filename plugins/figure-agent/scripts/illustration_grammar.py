@@ -40,8 +40,38 @@ _OPTICAL_RULES = {
     "carrier_centering": "optical",
     "repeated_site_variation": "controlled",
 }
+_ROLE_BINDINGS = {
+    "global": {"curvature": "organic_backbone", "join": "round", "cap": "round"},
+    "slots": {
+        "sulfur.regions": {
+            "stroke_family": "support",
+            "color_role": "sulfur",
+            "emphasis": "background",
+        },
+        "chain.backbones": {
+            "stroke_family": "primary",
+            "color_role": "polymer",
+            "emphasis": "structure",
+        },
+        "sulfur.sites": {
+            "stroke_family": "primary",
+            "color_role": "sulfur",
+            "emphasis": "structure",
+        },
+        "trap.levels": {
+            "stroke_family": "support",
+            "color_role": "neutral",
+            "emphasis": "structure",
+        },
+        "trapped.carriers": {
+            "stroke_family": "focal",
+            "color_role": "carrier",
+            "emphasis": "focal",
+        },
+    },
+}
 _OWNERSHIP = {
-    "grammar": ["motif_geometry", "layer_order", "visual_tokens"],
+    "grammar": ["motif_contract", "layer_order", "visual_tokens", "role_bindings"],
     "tikz": ["global_panel_composition", "typography", "labels", "inter_panel_arrows"],
 }
 _TOP_LEVEL_FIELDS = {
@@ -52,6 +82,7 @@ _TOP_LEVEL_FIELDS = {
     "layer_order",
     "visual_tokens",
     "optical_rules",
+    "role_bindings",
     "ownership",
 }
 
@@ -88,6 +119,8 @@ def load_illustration_grammar(path: Path) -> dict[str, Any]:
         raise IllustrationGrammarError("visual_tokens_invalid")
     if payload["optical_rules"] != _OPTICAL_RULES:
         raise IllustrationGrammarError("optical_rules_invalid")
+    if payload["role_bindings"] != _ROLE_BINDINGS:
+        raise IllustrationGrammarError("role_bindings_invalid")
     if payload["ownership"] != _OWNERSHIP:
         raise IllustrationGrammarError("ownership_invalid")
 
