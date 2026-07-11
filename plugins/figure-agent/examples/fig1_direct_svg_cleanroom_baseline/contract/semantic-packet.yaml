@@ -1,7 +1,7 @@
 schema: figure-agent.direct-svg-semantic-packet.v1
 panels: [C, F]
 authority:
-  named_preparer: OpenAI Codex semantic_packet subagent
+  named_preparer: codex-task:/root/semantic_packet
   prepared_at: "2026-07-11T13:52:11Z"
   source_authority_hashes:
     examples/fig1_hybrid_complex_panel_pilot/briefing.md: sha256:1ef22509309ccb0f5404b74552da3f5a6e322ce24e9ec716a68fac1d210c7273
@@ -12,6 +12,9 @@ authority:
     I prepared this semantic packet without inspecting any target SVG, TeX,
     candidate, target pixels, coordinate hints, build artifact, implementation
     history, review history, experience log, or illustration grammar.
+  preparation_receipt:
+    path: semantic-packet-preparation-receipt.yaml
+    sha256: sha256:991f9f94fd5af6e7c882c1211bdcf3059404072f732d4a41fdae547988233541
 scientific_objects:
   panel_c:
     - id: c_polymer_film

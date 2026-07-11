@@ -1,0 +1,31 @@
+schema: figure-agent.direct-svg-semantic-packet-preparation-receipt.v1
+receipt_kind: task_authored_access_self_attestation
+independently_verified_telemetry: false
+preparer: codex-task:/root/semantic_packet
+prepared_at: "2026-07-11T13:52:11Z"
+branch: codex/direct-svg-semantic-packet
+base_commit: 0bd81f56
+source_authority_hashes:
+  examples/fig1_hybrid_complex_panel_pilot/briefing.md: sha256:1ef22509309ccb0f5404b74552da3f5a6e322ce24e9ec716a68fac1d210c7273
+  examples/fig1_hybrid_complex_panel_pilot/caption.md: sha256:2dfeb596683654b902d96b8592a9cc9c480557461a904c463023e4c933a75bd3
+  examples/fig1_hybrid_complex_panel_pilot/panel_goals.md: sha256:fdf018dcd20fa8c223b1a2c3ba935a9f3fb1ca29643aff36c7ff08fd4dc5ca6c
+  examples/fig1_hybrid_complex_panel_pilot/theory_guard.md: sha256:27550eda8e57b44224d6c248c92dc49335acad5f2081f51ba1b36eda30abca57
+no_forbidden_access_declaration: >-
+  During semantic preparation, this task did not list, open, inspect, or hash
+  target implementation sources, target pixels, SVG, TeX, coordinate hints,
+  build artifacts, references, fragments, provenance coordinates, histories,
+  experience logs, or illustration grammar. Automated validation of the
+  separately authorized Test A manifest was not used as semantic authority.
+tools_used:
+  - apply_patch
+  - exec_command
+actions:
+  - read the four declared semantic authority documents
+  - computed SHA-256 hashes for exactly those four authority documents
+  - authored the panels C and F semantic packet without candidate authoring
+  - validated the standalone packet contracts after semantic preparation
+attestation_limits: >-
+  This receipt records the task's own actions and access declaration. It is a
+  self-attestation and is not external monitoring or independently verified
+  access telemetry.
+publication_acceptance: not_claimed

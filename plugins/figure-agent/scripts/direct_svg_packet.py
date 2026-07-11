@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +33,20 @@ MODEL_CONTRACT_KEYS = {
     "tools",
     "token_cap",
     "compute_cap",
+}
+SYNTHESIS_ISOLATION_DECLARATIONS = {
+    "reference_pixels_available",
+    "reference_hashes_available",
+    "geometry_derivatives_available",
+    "test_a_history_available",
+    "test_a_outputs_available",
+}
+SYNTHESIS_LEAKAGE_CONCEPTS = {
+    "target",
+    "reference",
+    "geometry",
+    "testahistory",
+    "testaoutput",
 }
 
 
@@ -73,6 +88,48 @@ def _validate_font_contract(packet: dict[str, Any], inputs: list[dict[str, Any]]
         raise DirectSvgPacketError("font_hash_mismatch")
 
 
+def _normalized(value: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", value.lower())
+
+
+def _contains_synthesis_leakage(value: str) -> bool:
+    normalized = _normalized(value)
+    return any(concept in normalized for concept in SYNTHESIS_LEAKAGE_CONCEPTS)
+
+
+def _string_values(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        return [text for item in value for text in _string_values(item)]
+    if isinstance(value, dict):
+        return [text for item in value.values() for text in _string_values(item)]
+    return []
+
+
+def _validate_synthesis_isolation(packet: dict[str, Any]) -> None:
+    def inspect(value: Any) -> None:
+        if isinstance(value, dict):
+            for raw_key, nested in value.items():
+                key = str(raw_key)
+                if key not in SYNTHESIS_ISOLATION_DECLARATIONS:
+                    if _contains_synthesis_leakage(key):
+                        raise DirectSvgPacketError("synthesis_source_leakage")
+                    normalized_key = _normalized(key)
+                    if normalized_key.endswith(("path", "paths", "role", "roles")):
+                        if any(
+                            _contains_synthesis_leakage(item)
+                            for item in _string_values(nested)
+                        ):
+                            raise DirectSvgPacketError("synthesis_source_leakage")
+                inspect(nested)
+        elif isinstance(value, list):
+            for item in value:
+                inspect(item)
+
+    inspect(packet)
+
+
 def validate_packet(path: Path) -> dict[str, Any]:
     """Validate packet structure and every allowed input path and hash."""
     try:
@@ -100,6 +157,10 @@ def validate_packet(path: Path) -> dict[str, Any]:
         raise DirectSvgPacketError("denied_source_families_incomplete")
     if packet.get("publication_acceptance") != "not_claimed":
         raise DirectSvgPacketError("publication_acceptance_must_not_be_claimed")
+    if test_kind == "synthesis" and any(
+        packet.get(key) is not False for key in SYNTHESIS_ISOLATION_DECLARATIONS
+    ):
+        raise DirectSvgPacketError("synthesis_isolation_declaration_required")
 
     raw_inputs = packet.get("allowed_inputs")
     if not isinstance(raw_inputs, list):
@@ -111,15 +172,14 @@ def validate_packet(path: Path) -> dict[str, Any]:
     if len(roles) != len(set(roles)):
         raise DirectSvgPacketError("input_role_duplicate")
     role_set = set(roles)
-    if not REQUIRED_INPUT_ROLES.issubset(role_set):
-        raise DirectSvgPacketError("required_input_missing")
     if test_kind == "reconstruction" and not TARGET_ROLES.issubset(role_set):
         raise DirectSvgPacketError("target_crop_required")
-    forbidden_synthesis_roles = TARGET_ROLES | {
-        role for role in role_set if "geometry" in role or "target" in role
-    }
-    if test_kind == "synthesis" and role_set & forbidden_synthesis_roles:
+    if test_kind == "synthesis" and role_set & TARGET_ROLES:
         raise DirectSvgPacketError("target_crop_forbidden")
+    if test_kind == "synthesis":
+        _validate_synthesis_isolation(packet)
+    if not REQUIRED_INPUT_ROLES.issubset(role_set):
+        raise DirectSvgPacketError("required_input_missing")
 
     for item in inputs:
         raw_path = item.get("path")

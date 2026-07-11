@@ -79,6 +79,16 @@ def _write_packet(
         },
         "publication_acceptance": "not_claimed",
     }
+    if test_kind == "synthesis":
+        packet.update(
+            {
+                "reference_pixels_available": False,
+                "reference_hashes_available": False,
+                "geometry_derivatives_available": False,
+                "test_a_history_available": False,
+                "test_a_outputs_available": False,
+            }
+        )
     packet_path = tmp_path / "packet.yaml"
     packet_path.write_text(yaml.safe_dump(packet, sort_keys=False), encoding="utf-8")
     return packet_path
@@ -117,6 +127,71 @@ def test_synthesis_rejects_target_or_geometry_derivatives(tmp_path: Path) -> Non
     )
 
     with pytest.raises(DirectSvgPacketError, match="target_crop_forbidden"):
+        validate_packet(packet_path)
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        "reference_pixels_available",
+        "reference_hashes_available",
+        "geometry_derivatives_available",
+        "test_a_history_available",
+        "test_a_outputs_available",
+    ],
+)
+@pytest.mark.parametrize("invalid_value", [None, True])
+def test_synthesis_requires_false_isolation_declarations(
+    tmp_path: Path,
+    declaration: str,
+    invalid_value: bool | None,
+) -> None:
+    packet_path = _write_packet(tmp_path, test_kind="synthesis")
+    packet = _load_packet(packet_path)
+    if invalid_value is None:
+        del packet[declaration]
+    else:
+        packet[declaration] = invalid_value
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(
+        DirectSvgPacketError,
+        match="synthesis_isolation_declaration_required",
+    ):
+        validate_packet(packet_path)
+
+
+@pytest.mark.parametrize(
+    ("surface", "leakage"),
+    [
+        ("key", "TargetPixelCache"),
+        ("key", "reference_hash_archive"),
+        ("role", "REFERENCE_PIXEL_SOURCE"),
+        ("role", "test-A-history"),
+        ("path", "reference/crops/panel-c.png"),
+        ("path", "inputs/Geometry-Derivative.json"),
+        ("path", "runs/Test-A/outputs/candidate.yaml"),
+        ("nested_path", "inputs/TARGET-pixels.png"),
+    ],
+)
+def test_synthesis_rejects_case_insensitive_leakage_anywhere(
+    tmp_path: Path,
+    surface: str,
+    leakage: str,
+) -> None:
+    packet_path = _write_packet(tmp_path, test_kind="synthesis")
+    packet = _load_packet(packet_path)
+    if surface == "key":
+        packet[leakage] = False
+    elif surface == "role":
+        packet["allowed_inputs"][0]["role"] = leakage
+    elif surface == "path":
+        packet["model_contract"]["prompt_paths"] = [leakage]
+    else:
+        packet["artifact_paths"] = [{"source": leakage}]
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(DirectSvgPacketError, match="synthesis_source_leakage"):
         validate_packet(packet_path)
 
 

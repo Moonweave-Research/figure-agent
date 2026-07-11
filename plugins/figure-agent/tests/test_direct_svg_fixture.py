@@ -50,10 +50,12 @@ def test_fixture_binds_independently_prepared_semantic_packet() -> None:
     state = _load("contract/experiment-state.yaml")
     semantic = _load("contract/semantic-packet.yaml")
     semantic_path = FIXTURE / "contract" / "semantic-packet.yaml"
+    receipt = _load("contract/semantic-packet-preparation-receipt.yaml")
+    receipt_path = FIXTURE / "contract" / "semantic-packet-preparation-receipt.yaml"
 
     assert semantic["schema"] == "figure-agent.direct-svg-semantic-packet.v1"
     assert semantic["panels"] == ["C", "F"]
-    assert semantic["authority"]["named_preparer"]
+    assert semantic["authority"]["named_preparer"] == "codex-task:/root/semantic_packet"
     assert semantic["authority"]["prepared_at"].endswith("Z")
     assert semantic["authority"]["source_authority_hashes"] == {
         "examples/fig1_hybrid_complex_panel_pilot/briefing.md": (
@@ -70,6 +72,24 @@ def test_fixture_binds_independently_prepared_semantic_packet() -> None:
         ),
     }
     assert semantic["authority"]["implementation_details_not_observed_declaration"]
+    assert semantic["authority"]["preparation_receipt"] == {
+        "path": "semantic-packet-preparation-receipt.yaml",
+        "sha256": _sha256(receipt_path),
+    }
+    assert receipt["receipt_kind"] == "task_authored_access_self_attestation"
+    assert receipt["independently_verified_telemetry"] is False
+    assert receipt["preparer"] == semantic["authority"]["named_preparer"]
+    assert receipt["prepared_at"] == semantic["authority"]["prepared_at"]
+    assert receipt["base_commit"] == "0bd81f56"
+    assert receipt["branch"] == "codex/direct-svg-semantic-packet"
+    assert receipt["source_authority_hashes"] == semantic["authority"][
+        "source_authority_hashes"
+    ]
+    assert len(receipt["source_authority_hashes"]) == 4
+    assert receipt["no_forbidden_access_declaration"]
+    assert receipt["tools_used"]
+    assert receipt["actions"]
+    assert receipt["publication_acceptance"] == "not_claimed"
     assert semantic["scientific_objects"]
     assert semantic["object_relations"]
     assert semantic["text_content"]
@@ -82,6 +102,8 @@ def test_fixture_binds_independently_prepared_semantic_packet() -> None:
         "preparer": semantic["authority"]["named_preparer"],
         "prepared_at": semantic["authority"]["prepared_at"],
         "sha256": _sha256(semantic_path),
+        "receipt_path": "semantic-packet-preparation-receipt.yaml",
+        "receipt_sha256": _sha256(receipt_path),
     }
     assert state["run_state"] == "ready"
     assert state["next_valid_transition"] == "run_test_a_or_test_b"
@@ -169,11 +191,32 @@ def test_test_b_template_contains_no_target_or_geometry_derivative_input() -> No
 
 
 def test_run_and_review_states_cannot_claim_machine_or_publication_acceptance() -> None:
-    for relative in (
-        "runs/test-a/run-state.yaml",
-        "runs/test-b/run-state.yaml",
-        "review/review-state.yaml",
-    ):
-        state = _load(relative)
-        assert state["state"].startswith("blocked_")
-        assert state["publication_acceptance"] == "not_claimed"
+    review = _load("review/review-state.yaml")
+
+    assert review["state"].startswith("blocked_")
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_ready_run_states_bind_validated_packets_without_execution_claim() -> None:
+    semantic_hash = _sha256(FIXTURE / "contract" / "semantic-packet.yaml")
+    cases = (
+        ("test-a", "reconstruction", "test-a-reconstruction.yaml"),
+        ("test-b", "synthesis", "test-b-synthesis.yaml"),
+    )
+
+    for run_name, test_kind, packet_name in cases:
+        packet_path = FIXTURE / "packets" / packet_name
+        state = _load(f"runs/{run_name}/run-state.yaml")
+
+        validate_packet(packet_path)
+        assert state == {
+            "schema": "figure-agent.direct-svg-run-state.v1",
+            "test_kind": test_kind,
+            "state": "ready_not_started",
+            "validated_packet": f"../../packets/{packet_name}",
+            "validated_packet_sha256": _sha256(packet_path),
+            "semantic_packet_sha256": semantic_hash,
+            "execution_started": False,
+            "candidate_artifacts": [],
+            "publication_acceptance": "not_claimed",
+        }

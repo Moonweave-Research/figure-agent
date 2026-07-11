@@ -1,6 +1,9 @@
 schema: figure-agent.direct-svg-run-state.v1
 test_kind: synthesis
-state: blocked_independent_semantic_packet_missing
-packet_template: ../../packets/test-b-synthesis.template.yaml
+state: ready_not_started
+validated_packet: ../../packets/test-b-synthesis.yaml
+validated_packet_sha256: sha256:3f83047950ce528d4ad23168b47df2df3bef7cbc414c858dcfbef72627cf9c70
+semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+execution_started: false
 candidate_artifacts: []
 publication_acceptance: not_claimed
