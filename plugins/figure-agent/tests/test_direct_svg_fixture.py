@@ -377,20 +377,25 @@ def test_test_a_valid_cycles_replay_byte_identically_from_current_and_copied_che
                 assert runtime_receipt == receipt["runtime_receipt"]
 
 
-def test_ready_test_b_binds_validated_packet_without_execution_claim() -> None:
+def test_executed_test_b_binds_validated_packet_without_acceptance_claim() -> None:
     semantic_hash = _sha256(FIXTURE / "contract" / "semantic-packet.yaml")
     packet_path = FIXTURE / "packets" / "test-b-synthesis.yaml"
     state = _load("runs/test-b/run-state.yaml")
 
     validate_packet(packet_path)
-    assert state == {
-        "schema": "figure-agent.direct-svg-run-state.v1",
-        "test_kind": "synthesis",
-        "state": "ready_not_started",
-        "validated_packet": "../../packets/test-b-synthesis.yaml",
-        "validated_packet_sha256": _sha256(packet_path),
-        "semantic_packet_sha256": semantic_hash,
-        "execution_started": False,
-        "candidate_artifacts": [],
-        "publication_acceptance": "not_claimed",
+    assert state["schema"] == "figure-agent.direct-svg-run-state.v1"
+    assert state["test_kind"] == "synthesis"
+    assert state["state"] == "machine_review_ready"
+    assert state["synthesis_packet"] == {
+        "path": "examples/fig1_direct_svg_cleanroom_baseline/packets/test-b-synthesis.yaml",
+        "sha256": _sha256(packet_path),
     }
+    assert state["semantic_packet"] == {
+        "path": "examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml",
+        "sha256": semantic_hash,
+    }
+    assert state["execution_started"] is True
+    assert {item["panel"] for item in state["candidate_artifacts"]} == {"C", "F"}
+    assert state["human_scientific_acceptance"] == "pending"
+    assert state["human_visual_acceptance"] == "pending"
+    assert state["publication_acceptance"] == "not_claimed"
