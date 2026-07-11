@@ -67,7 +67,7 @@ def _write_packet(
             "model": "gpt-test",
             "snapshot": None,
             "reasoning": "high",
-            "prompt_paths": ["inputs/semantic.yaml"],
+            "prompt_paths": [],
             "tools": ["apply_patch", "rsvg-convert"],
             "token_cap": 20000,
             "compute_cap": None,
@@ -292,7 +292,10 @@ def test_packet_requires_every_denied_source_family(tmp_path: Path, family: str)
     packet["denied_source_families"].remove(family)
     _rewrite_packet(packet_path, packet)
 
-    with pytest.raises(DirectSvgPacketError, match="denied_source_families_incomplete"):
+    with pytest.raises(
+        DirectSvgPacketError,
+        match="denied_source_families_must_be_unique_complete",
+    ):
         validate_packet(packet_path)
 
 
@@ -333,6 +336,70 @@ def test_packet_requires_complete_model_contract(tmp_path: Path) -> None:
     _rewrite_packet(packet_path, packet)
 
     with pytest.raises(DirectSvgPacketError, match="model_contract_incomplete"):
+        validate_packet(packet_path)
+
+
+def test_packet_rejects_neutral_prompt_path_input_channel(tmp_path: Path) -> None:
+    packet_path = _write_packet(tmp_path, test_kind="synthesis")
+    _write_input(tmp_path, "inputs/oracle.bin", b"neutral-oracle-context")
+    packet = _load_packet(packet_path)
+    packet["model_contract"]["prompt_paths"] = ["inputs/oracle.bin"]
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(DirectSvgPacketError, match="prompt_paths_must_be_empty"):
+        validate_packet(packet_path)
+
+
+def test_packet_requires_prompt_paths_list(tmp_path: Path) -> None:
+    packet_path = _write_packet(tmp_path)
+    packet = _load_packet(packet_path)
+    packet["model_contract"]["prompt_paths"] = None
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(DirectSvgPacketError, match="prompt_paths_invalid"):
+        validate_packet(packet_path)
+
+
+@pytest.mark.parametrize("panels", [["C", "C"], "CF"])
+def test_packet_requires_unique_typed_panel_collection(
+    tmp_path: Path,
+    panels: list[str] | str,
+) -> None:
+    packet_path = _write_packet(tmp_path)
+    packet = _load_packet(packet_path)
+    packet["panels"] = panels
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(DirectSvgPacketError, match="panels_must_be_unique_C_and_F"):
+        validate_packet(packet_path)
+
+
+@pytest.mark.parametrize(
+    "families",
+    [
+        [
+            "tex",
+            "tex",
+            "whole_figure_svg",
+            "candidate_patch",
+            "experience_log",
+        ],
+        "tex,whole_figure_svg,candidate_patch,experience_log,illustration_grammar",
+    ],
+)
+def test_packet_requires_unique_typed_denied_source_families(
+    tmp_path: Path,
+    families: list[str] | str,
+) -> None:
+    packet_path = _write_packet(tmp_path)
+    packet = _load_packet(packet_path)
+    packet["denied_source_families"] = families
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(
+        DirectSvgPacketError,
+        match="denied_source_families_must_be_unique_complete",
+    ):
         validate_packet(packet_path)
 
 

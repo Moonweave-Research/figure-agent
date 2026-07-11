@@ -133,10 +133,23 @@ def _validate_model_contract(value: Any) -> None:
         unknown_error="model_contract_unknown_field",
         incomplete_error="model_contract_incomplete",
     )
-    if not isinstance(contract["prompt_paths"], list) or not isinstance(
-        contract["tools"], list
-    ):
+    prompt_paths = contract["prompt_paths"]
+    if not isinstance(prompt_paths, list):
+        raise DirectSvgPacketError("prompt_paths_invalid")
+    if prompt_paths:
+        raise DirectSvgPacketError("prompt_paths_must_be_empty")
+    if not isinstance(contract["tools"], list):
         raise DirectSvgPacketError("model_contract_invalid")
+
+
+def _is_exact_unique_string_list(value: Any, expected: set[str]) -> bool:
+    return (
+        isinstance(value, list)
+        and len(value) == len(expected)
+        and all(isinstance(item, str) for item in value)
+        and len(set(value)) == len(value)
+        and set(value) == expected
+    )
 
 
 def _validate_font_contract(packet: dict[str, Any], inputs: list[dict[str, Any]]) -> None:
@@ -232,10 +245,12 @@ def validate_packet(path: Path) -> dict[str, Any]:
         unknown_error="packet_unknown_field",
         incomplete_error="packet_incomplete",
     )
-    if set(packet.get("panels") or []) != PANELS:
-        raise DirectSvgPacketError("panels_must_be_C_and_F")
-    if set(packet.get("denied_source_families") or []) != DENIED_SOURCE_FAMILIES:
-        raise DirectSvgPacketError("denied_source_families_incomplete")
+    if not _is_exact_unique_string_list(packet.get("panels"), PANELS):
+        raise DirectSvgPacketError("panels_must_be_unique_C_and_F")
+    if not _is_exact_unique_string_list(
+        packet.get("denied_source_families"), DENIED_SOURCE_FAMILIES
+    ):
+        raise DirectSvgPacketError("denied_source_families_must_be_unique_complete")
     if packet.get("publication_acceptance") != "not_claimed":
         raise DirectSvgPacketError("publication_acceptance_must_not_be_claimed")
     if packet.get("output_root") != EXPECTED_OUTPUT_ROOTS[test_kind]:
