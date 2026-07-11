@@ -15,6 +15,8 @@ synthesis_packet:
 iterations:
   - cycle: 1
     cycle_type: visual_source_change
+    reproducibility_mode: read_only_verify
+    temporary_render_retention: deleted_after_hash_comparison
     elapsed_minutes: 2.2
     svg_path: panel-c/cycles/cycle-01.svg
     png_path: panel-c/cycles/cycle-01.png
@@ -22,7 +24,7 @@ iterations:
     render_sha256: sha256:768f101b8a91def1c2fd6465bc026e3b6651c565e2562c27605208464118efca
     render_width: 960
     render_height: 640
-    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, --panel, C, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.png]
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --verify, --panel, C, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.png]
     tool_model_receipt: &receipt
       task: Task 20 Step 2 Test B
       provider: OpenAI
@@ -50,6 +52,8 @@ iterations:
     publication_acceptance: not_claimed
   - cycle: 2
     cycle_type: visual_source_change
+    reproducibility_mode: read_only_verify
+    temporary_render_retention: deleted_after_hash_comparison
     elapsed_minutes: 3.4
     svg_path: panel-c/cycles/cycle-02.svg
     png_path: panel-c/cycles/cycle-02.png
@@ -57,12 +61,14 @@ iterations:
     render_sha256: sha256:8b82cc3424f709e12a9bb71973d415b6b1d80fd18db1fd996cdbe904111cc54a
     render_width: 960
     render_height: 640
-    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, --panel, C, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-02.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-02.png]
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --verify, --panel, C, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-02.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-02.png]
     tool_model_receipt: *receipt
     correction_reason: Own-render inspection showed crowded overlap between shallow and deep distributions and uneven axis spacing; separated peaks and regularized the energy frame.
     publication_acceptance: not_claimed
   - cycle: 3
     cycle_type: visual_source_change
+    reproducibility_mode: read_only_verify
+    temporary_render_retention: deleted_after_hash_comparison
     elapsed_minutes: 5.8
     svg_path: panel-c/cycles/cycle-03.svg
     png_path: panel-c/cycles/cycle-03.png
@@ -70,7 +76,7 @@ iterations:
     render_sha256: sha256:607110bff04a6f604e935726ab0a2114ba29d4a529ceca9d1df0a0ad9c193748
     render_width: 960
     render_height: 640
-    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, --panel, C, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-03.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-03.png]
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --verify, --panel, C, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-03.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-03.png]
     tool_model_receipt: *receipt
     correction_reason: Own-render inspection showed the real-space to energy mapping and thermal meaning were implicit; added a neutral correspondence cue and explicit Boltzmann-release label.
     publication_acceptance: not_claimed

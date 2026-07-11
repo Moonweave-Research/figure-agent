@@ -144,7 +144,7 @@ def test_test_b_run_is_packet_derived_reproducible_and_machine_review_ready() ->
     assert state["publication_acceptance"] == "not_claimed"
 
     replay = subprocess.run(
-        ["uv", "run", "python", str(REPLAY_PATH), "--verify"],
+        ["uv", "run", "python", str(REPLAY_PATH), "--verify-all"],
         cwd=PLUGIN_ROOT,
         check=False,
         capture_output=True,
@@ -152,6 +152,34 @@ def test_test_b_run_is_packet_derived_reproducible_and_machine_review_ready() ->
     )
     assert replay.returncode == 0, replay.stdout + replay.stderr
     assert "replay verified: 6/6 deterministic renders" in replay.stdout
+
+
+def test_all_recorded_reproducibility_commands_preserve_retained_evidence() -> None:
+    retained = sorted(
+        path
+        for panel in ("c", "f")
+        for path in (RUN_ROOT / f"panel-{panel}" / "cycles").iterdir()
+        if path.suffix in {".svg", ".png"}
+    )
+    before = {path: _sha256(path) for path in retained}
+
+    for panel in ("c", "f"):
+        ledger = _load(RUN_ROOT / f"panel-{panel}" / "ledger.yaml")
+        for receipt in ledger["iterations"]:
+            command = receipt["command"]
+            assert "--verify" in command
+            assert "--render" not in command
+            result = subprocess.run(
+                command,
+                cwd=PLUGIN_ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            assert result.returncode == 0, result.stdout + result.stderr
+            assert "verification matched retained PNG" in result.stdout
+
+    assert {path: _sha256(path) for path in retained} == before
 
 
 @pytest.mark.parametrize("surface", ["environment", "ledger", "cycle"])
@@ -312,4 +340,47 @@ def test_render_paths_are_confined_to_test_b(svg: str, png: str) -> None:
             run_root=RUN_ROOT,
             svg=svg,
             png=png,
+        )
+
+
+@pytest.mark.parametrize(
+    "retained_png",
+    [
+        "examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.png",
+        "examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-03.png",
+    ],
+)
+def test_authoring_render_rejects_existing_retained_png(retained_png: str) -> None:
+    with pytest.raises(test_b_replay.TestBRunError, match="render_path_invalid"):
+        test_b_replay.resolve_render_paths(
+            plugin_root=PLUGIN_ROOT,
+            run_root=RUN_ROOT,
+            svg=(
+                "examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/"
+                "panel-c/cycles/cycle-01.svg"
+            ),
+            png=retained_png,
+        )
+
+
+def test_authoring_render_rejects_declared_retained_png_even_if_missing(
+    tmp_path: Path,
+) -> None:
+    plugin_root, fixture = _copy_fixture(tmp_path)
+    run_root = fixture / "runs" / "test-b"
+    retained_png = run_root / "panel-c" / "cycles" / "cycle-01.png"
+    retained_png.unlink()
+
+    with pytest.raises(test_b_replay.TestBRunError, match="render_path_invalid"):
+        test_b_replay.resolve_render_paths(
+            plugin_root=plugin_root,
+            run_root=run_root,
+            svg=(
+                "examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/"
+                "panel-c/cycles/cycle-01.svg"
+            ),
+            png=(
+                "examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/"
+                "panel-c/cycles/cycle-01.png"
+            ),
         )

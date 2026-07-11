@@ -19,7 +19,7 @@ candidate_artifacts:
     png_path: panel-c/cycles/cycle-03.png
     render_sha256: sha256:607110bff04a6f604e935726ab0a2114ba29d4a529ceca9d1df0a0ad9c193748
     ledger_path: panel-c/ledger.yaml
-    ledger_sha256: sha256:3f366b1d758a0fe387134911c4eebab2bb2ca19ae0ae77365759d09bc578cb44
+    ledger_sha256: sha256:69541abf327194c704b1d0a6c5c6864a87f5c0bb068f053185dfd4783e7cce95
   - panel: F
     cycles: 3
     svg_path: panel-f/cycles/cycle-03.svg
@@ -27,7 +27,7 @@ candidate_artifacts:
     png_path: panel-f/cycles/cycle-03.png
     render_sha256: sha256:f16c66b5236d3644043c42452fe170b0bfc319e635a4ea34d43a4e80cb86ac60
     ledger_path: panel-f/ledger.yaml
-    ledger_sha256: sha256:14bc1cfcd621e6d09791c75aa137355caa96dd2c7bbf0f208ba6a5cb0d1c4c1a
+    ledger_sha256: sha256:544e1adcebdbb62bd60cd47c8aee286dae8616be1c14edbbf516a62d8c609bfc
 machine_validation:
   svg_safety_and_structure: passed_all_6_cycles
   relation_metadata_complete: passed_all_6_cycles

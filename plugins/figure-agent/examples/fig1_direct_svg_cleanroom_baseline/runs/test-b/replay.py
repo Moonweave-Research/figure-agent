@@ -95,6 +95,34 @@ def _run_relative(run_root: Path, raw: Any, *, suffix: str) -> Path:
     return path
 
 
+def _retained_evidence_paths(run_root: Path) -> set[Path]:
+    state_path = run_root / "run-state.yaml"
+    retained = {state_path.resolve()}
+    state = _load(state_path)
+    environment = state.get("environment_receipt")
+    if isinstance(environment, dict):
+        retained.add((run_root / str(environment.get("path", ""))).resolve())
+    artifacts = state.get("candidate_artifacts")
+    if not isinstance(artifacts, list):
+        raise TestBRunError("render_path_invalid")
+    for artifact in artifacts:
+        if not isinstance(artifact, dict):
+            raise TestBRunError("render_path_invalid")
+        for key in ("svg_path", "png_path", "ledger_path"):
+            retained.add((run_root / str(artifact.get(key, ""))).resolve())
+        ledger_path = (run_root / str(artifact.get("ledger_path", ""))).resolve()
+        ledger = _load(ledger_path)
+        iterations = ledger.get("iterations")
+        if not isinstance(iterations, list):
+            raise TestBRunError("render_path_invalid")
+        for receipt in iterations:
+            if not isinstance(receipt, dict):
+                raise TestBRunError("render_path_invalid")
+            retained.add((run_root / str(receipt.get("svg_path", ""))).resolve())
+            retained.add((run_root / str(receipt.get("png_path", ""))).resolve())
+    return retained
+
+
 def resolve_render_paths(
     *,
     plugin_root: Path,
@@ -105,6 +133,38 @@ def resolve_render_paths(
     """Resolve a render pair while confining both paths to runs/test-b."""
     raw_svg = Path(svg)
     raw_png = Path(png)
+    unresolved_svg = plugin_root / raw_svg
+    unresolved_png = plugin_root / raw_png
+    svg_path = unresolved_svg.resolve()
+    png_path = unresolved_png.resolve()
+    if (
+        raw_svg.is_absolute()
+        or raw_png.is_absolute()
+        or not svg_path.is_relative_to(run_root.resolve())
+        or not png_path.is_relative_to(run_root.resolve())
+        or svg_path.suffix.lower() != ".svg"
+        or png_path.suffix.lower() != ".png"
+        or svg_path == png_path
+        or not svg_path.is_file()
+        or not png_path.parent.is_dir()
+        or unresolved_png.is_symlink()
+        or png_path.exists()
+        or png_path in _retained_evidence_paths(run_root)
+    ):
+        raise TestBRunError("render_path_invalid")
+    return svg_path, png_path
+
+
+def resolve_verify_paths(
+    *,
+    plugin_root: Path,
+    run_root: Path,
+    svg: str,
+    expected_png: str,
+) -> tuple[Path, Path]:
+    """Resolve retained read-only evidence for a single reproducibility check."""
+    raw_svg = Path(svg)
+    raw_png = Path(expected_png)
     svg_path = (plugin_root / raw_svg).resolve()
     png_path = (plugin_root / raw_png).resolve()
     if (
@@ -116,9 +176,9 @@ def resolve_render_paths(
         or png_path.suffix.lower() != ".png"
         or svg_path == png_path
         or not svg_path.is_file()
-        or not png_path.parent.is_dir()
+        or not png_path.is_file()
     ):
-        raise TestBRunError("render_path_invalid")
+        raise TestBRunError("verify_path_invalid")
     return svg_path, png_path
 
 
@@ -211,7 +271,7 @@ def _canonical_command(
         "run",
         "python",
         REPLAY_RELATIVE_PATH,
-        "--render",
+        "--verify",
         "--panel",
         panel,
         "--width",
@@ -364,6 +424,11 @@ def validate_run(*, plugin_root: Path, fixture_root: Path) -> dict[str, Any]:
         for expected_cycle, receipt in enumerate(iterations, start=1):
             if not isinstance(receipt, dict) or receipt.get("cycle") != expected_cycle:
                 raise TestBRunError("cycle_sequence_invalid")
+            if (
+                receipt.get("reproducibility_mode") != "read_only_verify"
+                or receipt.get("temporary_render_retention") != "deleted_after_hash_comparison"
+            ):
+                raise TestBRunError("reproducibility_receipt_invalid")
             elapsed = receipt.get("elapsed_minutes")
             if (
                 not isinstance(elapsed, (int, float))
@@ -518,28 +583,63 @@ def _render(
     print(yaml.safe_dump(result, sort_keys=False).strip())
 
 
-def _verify() -> None:
+def _verify_retained(
+    *,
+    svg: str,
+    expected_png: str,
+    panel: str,
+    width: int,
+    height: int,
+    semantic_packet: str,
+    fontconfig: str,
+) -> None:
+    svg_path, expected_path = resolve_verify_paths(
+        plugin_root=PLUGIN_ROOT,
+        run_root=RUN_ROOT,
+        svg=svg,
+        expected_png=expected_png,
+    )
+    packet = validate_packet(PACKET_PATH)
+    semantic_path, _ = _packet_input(PACKET_PATH, packet, role="semantic_packet")
+    if (
+        panel not in {"C", "F"}
+        or f"panel-{panel.lower()}" not in svg_path.parts
+        or f"panel-{panel.lower()}" not in expected_path.parts
+        or Path(semantic_packet) != Path(_plugin_relative(semantic_path, PLUGIN_ROOT))
+        or Path(fontconfig) != Path(_plugin_relative(FONTCONFIG_PATH, PLUGIN_ROOT))
+    ):
+        raise TestBRunError("verify_contract_invalid")
+    with tempfile.TemporaryDirectory(prefix="figure-agent-test-b-verify-") as tmp:
+        temporary_png = Path(tmp) / "render.png"
+        result = render_candidate(
+            svg_path,
+            temporary_png,
+            width=width,
+            height=height,
+            fontconfig_file=FONTCONFIG_PATH,
+        )
+        if result["render_sha256"] != _sha256(expected_path):
+            raise TestBRunError("replay_mismatch")
+    print("verification matched retained PNG")
+
+
+def _verify_all() -> None:
     report = validate_run(plugin_root=PLUGIN_ROOT, fixture_root=FIXTURE_ROOT)
     verified = 0
-    with tempfile.TemporaryDirectory(prefix=".replay-", dir=RUN_ROOT) as tmp:
-        temp_root = Path(tmp)
-        for panel in ("c", "f"):
-            ledger = _load(RUN_ROOT / f"panel-{panel}" / "ledger.yaml")
-            for receipt in ledger["iterations"]:
-                svg = _run_relative(RUN_ROOT, receipt["svg_path"], suffix=".svg")
-                expected = _run_relative(RUN_ROOT, receipt["png_path"], suffix=".png")
-                replay = temp_root / panel / f"cycle-{receipt['cycle']:02d}.png"
-                replay.parent.mkdir(parents=True, exist_ok=True)
-                render_candidate(
-                    svg,
-                    replay,
-                    width=receipt["render_width"],
-                    height=receipt["render_height"],
-                    fontconfig_file=FONTCONFIG_PATH,
-                )
-                if _sha256(replay) != _sha256(expected):
-                    raise TestBRunError(f"replay_mismatch:{receipt['png_path']}")
-                verified += 1
+    for panel in ("c", "f"):
+        ledger = _load(RUN_ROOT / f"panel-{panel}" / "ledger.yaml")
+        for receipt in ledger["iterations"]:
+            command = receipt["command"]
+            _verify_retained(
+                svg=command[-2],
+                expected_png=command[-1],
+                panel=panel.upper(),
+                width=receipt["render_width"],
+                height=receipt["render_height"],
+                semantic_packet=receipt["tool_model_receipt"]["semantic_packet_path"],
+                fontconfig=receipt["tool_model_receipt"]["fontconfig_path"],
+            )
+            verified += 1
     if verified != report["cycles_validated"]:
         raise TestBRunError("replay_cycle_count_mismatch")
     print(f"replay verified: {verified}/6 deterministic renders")
@@ -550,6 +650,7 @@ def main() -> None:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--render", action="store_true")
     mode.add_argument("--verify", action="store_true")
+    mode.add_argument("--verify-all", action="store_true")
     parser.add_argument("--panel", choices=("C", "F"))
     parser.add_argument("--width", type=int)
     parser.add_argument("--height", type=int)
@@ -558,7 +659,7 @@ def main() -> None:
     parser.add_argument("svg", nargs="?")
     parser.add_argument("png", nargs="?")
     args = parser.parse_args()
-    if args.verify:
+    if args.verify_all:
         if any(
             value is not None
             for value in (
@@ -571,8 +672,8 @@ def main() -> None:
                 args.png,
             )
         ):
-            parser.error("--verify accepts no render arguments")
-        _verify()
+            parser.error("--verify-all accepts no artifact arguments")
+        _verify_all()
         return
     if any(
         value is None
@@ -586,16 +687,27 @@ def main() -> None:
             args.png,
         )
     ):
-        parser.error("--render requires the complete render contract")
-    _render(
-        svg=args.svg,
-        png=args.png,
-        panel=args.panel,
-        width=args.width,
-        height=args.height,
-        semantic_packet=args.semantic_packet,
-        fontconfig=args.fontconfig,
-    )
+        parser.error("--render and --verify require the complete artifact contract")
+    if args.verify:
+        _verify_retained(
+            svg=args.svg,
+            expected_png=args.png,
+            panel=args.panel,
+            width=args.width,
+            height=args.height,
+            semantic_packet=args.semantic_packet,
+            fontconfig=args.fontconfig,
+        )
+    else:
+        _render(
+            svg=args.svg,
+            png=args.png,
+            panel=args.panel,
+            width=args.width,
+            height=args.height,
+            semantic_packet=args.semantic_packet,
+            fontconfig=args.fontconfig,
+        )
 
 
 if __name__ == "__main__":
