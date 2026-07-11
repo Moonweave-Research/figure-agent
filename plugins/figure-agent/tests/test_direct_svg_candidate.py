@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import shutil
 from pathlib import Path
 
@@ -47,14 +48,103 @@ def _utility_budget() -> dict[str, int]:
 
 
 def _iteration_receipt(cycle: int, *, elapsed_minutes: float = 5.0) -> dict[str, object]:
+    source_hash = "sha256:" + str(cycle) * 64
+    render_hash = "sha256:" + str(cycle + 1) * 64
+    source_path = f"runs/panel-c-cycle-{cycle}.svg"
+    render_path = f"runs/panel-c-cycle-{cycle}.png"
     return {
         "cycle": cycle,
         "elapsed_minutes": elapsed_minutes,
-        "source_sha256": "sha256:" + str(cycle) * 64,
-        "render_sha256": "sha256:" + str(cycle + 1) * 64,
-        "command": ["rsvg-convert"],
-        "tool_model_receipt": {"model": "gpt-test"},
+        "source_path": source_path,
+        "source_sha256": source_hash,
+        "render_path": render_path,
+        "render_sha256": render_hash,
+        "command": [
+            "uv",
+            "run",
+            "python",
+            "scripts/direct_svg_render.py",
+            "--root",
+            ".",
+            "--svg",
+            source_path,
+            "--output",
+            render_path,
+            "--semantic-packet",
+            "contract/semantic-packet.yaml",
+            "--panel",
+            "C",
+            "--width",
+            "120",
+            "--height",
+            "80",
+            "--fontconfig",
+            "contract/fontconfig.xml",
+            "--font",
+            "contract/font.otf",
+        ],
+        "runtime_receipt": {
+            "schema": "figure-agent.direct-svg-runtime-receipt.v1",
+            "path_base": "plugin_root",
+            "validation_mode": "declared_relation_coverage",
+            "source_path": source_path,
+            "source_sha256": source_hash,
+            "render_path": render_path,
+            "render_sha256": render_hash,
+            "semantic_packet": {
+                "path": "contract/semantic-packet.yaml",
+                "sha256": "sha256:" + "a" * 64,
+            },
+            "fontconfig": {"path": "contract/fontconfig.xml", "sha256": "sha256:" + "b" * 64},
+            "font": {"path": "contract/font.otf", "sha256": "sha256:" + "c" * 64},
+            "rsvg": {"executable": "rsvg-convert", "version": "rsvg-convert 1"},
+            "python": {"implementation": "CPython", "version": "3.12.0"},
+            "pillow": {"version": "12.0.0"},
+            "environment": {
+                "FONTCONFIG_FILE": "contract/fontconfig.xml",
+                "FONTCONFIG_PATH": "contract",
+                "LANG": "C.UTF-8",
+                "LC_ALL": "C.UTF-8",
+            },
+            "producer": {
+                "wrapper_path": "scripts/direct_svg_render.py",
+                "wrapper_sha256": "sha256:" + "d" * 64,
+                "validator_path": "scripts/direct_svg_candidate.py",
+                "validator_sha256": "sha256:" + "e" * 64,
+                "lock_path": "uv.lock",
+                "lock_sha256": "sha256:" + "f" * 64,
+                "base_commit": "0" * 40,
+                "head_commit": None,
+                "head_commit_status": "unavailable_precommit",
+            },
+            "width": 120,
+            "height": 80,
+            "publication_acceptance": "not_claimed",
+        },
+        "tool_model_receipt": {
+            "provider": "openai",
+            "model": "gpt-test",
+            "model_identity_independently_verified": False,
+            "snapshot": None,
+            "reasoning": None,
+            "token_cap": None,
+            "compute_cap": None,
+            "task": {
+                "name": "test",
+                "mode": "direct_svg",
+                "branch": "test",
+                "base_commit": "0" * 40,
+            },
+            "tools": {
+                "authoring": "apply_patch",
+                "validation_and_render": "direct_svg_render.py",
+                "visual_inspection": "view_image",
+                "image_generation": "not_used",
+            },
+        },
         "correction_reason": "initial" if cycle == 1 else "visual correction",
+        "correction_type": "initial" if cycle == 1 else "visual",
+        "render_changed_from_prior": cycle > 1,
         "publication_acceptance": "not_claimed",
     }
 
@@ -186,6 +276,66 @@ def test_candidate_validates_live_notation_and_explicit_relations(
         validate_candidate_from_semantic_packet(svg, packet, panel="C")
 
 
+def test_semantic_relations_are_scoped_by_subject_panel_membership(tmp_path: Path) -> None:
+    packet = tmp_path / "semantic-packet.yaml"
+    packet.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "figure-agent.direct-svg-semantic-packet.v1",
+                "panels": ["C", "F"],
+                "scientific_objects": {
+                    "panel_c": [{"id": "c_a"}, {"id": "c_b"}],
+                    "panel_f": [{"id": "f_a"}],
+                },
+                "visual_roles": {"panel_c": {"c_a": "a", "c_b": "b"}, "panel_f": {"f_a": "a"}},
+                "text_content": {"panel_c": ["C"], "panel_f": ["F"]},
+                "object_relations": [
+                    {"subject": "c_a", "predicate": "acts_on", "object": "c_b"},
+                    {"subject": "f_a", "predicate": "manifests", "object": "c_b"},
+                ],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    assert semantic_requirements(packet, panel="C")["relations"] == {("c_a", "acts_on", "c_b")}
+    assert semantic_requirements(packet, panel="F")["relations"] == {("f_a", "manifests", "c_b")}
+
+
+@pytest.mark.parametrize("remove_all", [False, True])
+def test_candidate_requires_complete_declared_relation_coverage(
+    tmp_path: Path, remove_all: bool
+) -> None:
+    packet = tmp_path / "semantic-packet.yaml"
+    packet.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "figure-agent.direct-svg-semantic-packet.v1",
+                "panels": ["C", "F"],
+                "scientific_objects": {"panel_c": [{"id": "c_a"}, {"id": "c_b"}], "panel_f": []},
+                "visual_roles": {"panel_c": {"c_a": "a", "c_b": "b"}, "panel_f": {}},
+                "text_content": {"panel_c": ["C"], "panel_f": []},
+                "object_relations": [
+                    {"subject": "c_a", "predicate": "acts_on", "object": "c_b"},
+                    {"subject": "c_b", "predicate": "coexists_with", "object": "c_a"},
+                ],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+    relations = (
+        "" if remove_all else '<g data-subject="c_a" data-predicate="acts_on" data-object="c_b"/>'
+    )
+    svg = _write_svg(
+        tmp_path, semantic_ids={"c_a", "c_b"}, extra_body=f'<text x="1" y="2">C</text>{relations}'
+    )
+
+    with pytest.raises(DirectSvgCandidateError, match="semantic_relation_missing"):
+        validate_candidate_from_semantic_packet(svg, packet, panel="C")
+
+
 @pytest.mark.parametrize("forbidden", ["script", "image", "foreignObject"])
 def test_candidate_rejects_unsafe_elements(tmp_path: Path, forbidden: str) -> None:
     svg = _write_svg(tmp_path, extra_element=forbidden)
@@ -233,6 +383,72 @@ def test_iteration_ledger_requires_sequential_cycles() -> None:
 
     with pytest.raises(DirectSvgCandidateError, match="cycle_sequence_invalid"):
         record_iteration(ledger, _iteration_receipt(2))
+
+
+@pytest.mark.parametrize("missing", sorted(_iteration_receipt(1)))
+def test_iteration_receipt_requires_every_declared_key(missing: str) -> None:
+    receipt = _iteration_receipt(1)
+    del receipt[missing]
+    with pytest.raises(DirectSvgCandidateError, match="iteration_receipt_incomplete"):
+        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
+
+
+def test_iteration_receipt_rejects_unknown_keys() -> None:
+    receipt = _iteration_receipt(1)
+    receipt["unexpected"] = True
+    with pytest.raises(DirectSvgCandidateError, match="iteration_receipt_keys_invalid"):
+        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "error"),
+    [
+        ("source_path", "/tmp/source.svg", "iteration_path_invalid"),
+        ("render_path", "../render.png", "iteration_path_invalid"),
+        ("source_sha256", "not-a-hash", "iteration_hash_invalid"),
+        ("command", ["rsvg-convert"], "iteration_command_invalid"),
+        ("render_changed_from_prior", "false", "iteration_receipt_type_invalid"),
+    ],
+)
+def test_iteration_receipt_rejects_bad_types_paths_and_hashes(
+    field: str, value: object, error: str
+) -> None:
+    receipt = _iteration_receipt(1)
+    receipt[field] = value
+    with pytest.raises(DirectSvgCandidateError, match=error):
+        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
+
+
+def test_iteration_receipt_rejects_nested_hash_mismatch() -> None:
+    receipt = _iteration_receipt(1)
+    runtime = copy.deepcopy(receipt["runtime_receipt"])
+    assert isinstance(runtime, dict)
+    runtime["source_sha256"] = "sha256:" + "9" * 64
+    receipt["runtime_receipt"] = runtime
+    with pytest.raises(DirectSvgCandidateError, match="iteration_runtime_mismatch"):
+        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
+
+
+@pytest.mark.parametrize("missing", sorted(_iteration_receipt(1)["runtime_receipt"]))
+def test_runtime_receipt_requires_every_declared_key(missing: str) -> None:
+    receipt = _iteration_receipt(1)
+    runtime = copy.deepcopy(receipt["runtime_receipt"])
+    assert isinstance(runtime, dict)
+    del runtime[missing]
+    receipt["runtime_receipt"] = runtime
+    with pytest.raises(DirectSvgCandidateError, match="iteration_runtime_receipt_invalid"):
+        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
+
+
+@pytest.mark.parametrize("missing", sorted(_iteration_receipt(1)["tool_model_receipt"]))
+def test_tool_model_receipt_requires_every_declared_key(missing: str) -> None:
+    receipt = _iteration_receipt(1)
+    tool_model = copy.deepcopy(receipt["tool_model_receipt"])
+    assert isinstance(tool_model, dict)
+    del tool_model[missing]
+    receipt["tool_model_receipt"] = tool_model
+    with pytest.raises(DirectSvgCandidateError, match="iteration_tool_model_receipt_invalid"):
+        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
 
 
 @pytest.mark.skipif(shutil.which("rsvg-convert") is None, reason="rsvg-convert missing")

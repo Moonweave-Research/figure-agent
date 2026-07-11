@@ -9,7 +9,7 @@ import re
 import shutil
 import subprocess
 import xml.etree.ElementTree as ET
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import yaml
@@ -130,10 +130,9 @@ def semantic_requirements(path: Path, *, panel: str) -> dict[str, set[Any]]:
         for item in relations
         if isinstance(item, dict)
         and all(isinstance(item.get(key), str) for key in ("subject", "predicate", "object"))
+        and item.get("subject") in object_ids
     }
-    if len(object_ids) != len(scientific_objects) or len(required_text) != len(
-        text_content
-    ):
+    if len(object_ids) != len(scientific_objects) or len(required_text) != len(text_content):
         raise DirectSvgCandidateError("semantic_packet_invalid")
     return {
         "required_ids": object_ids | role_ids,
@@ -191,10 +190,7 @@ def validate_candidate(
     if not required_ids.issubset(group_ids):
         raise DirectSvgCandidateError("semantic_id_missing")
     if required_text is not None:
-        observed_keys = {
-            _semantic_text_key(value)
-            for value in semantic_text | semantic_group_text
-        }
+        observed_keys = {_semantic_text_key(value) for value in semantic_text | semantic_group_text}
         if any(_semantic_text_key(value) not in observed_keys for value in required_text):
             raise DirectSvgCandidateError("semantic_text_missing")
     _validate_urls(text, ids, gradient_ids)
@@ -231,6 +227,8 @@ def validate_candidate_from_semantic_packet(
         if values not in requirements["relations"]:
             raise DirectSvgCandidateError("semantic_relation_undeclared")
         validated_relations.add(values)
+    if validated_relations != requirements["relations"]:
+        raise DirectSvgCandidateError("semantic_relation_missing")
     result["semantic_packet_sha256"] = _sha256(semantic_packet)
     result["semantic_text"] = sorted(requirements["required_text"])
     result["validated_relations"] = [list(item) for item in sorted(validated_relations)]
@@ -255,23 +253,224 @@ def begin_ledger(budget: dict[str, int], *, started_at: str) -> dict[str, Any]:
     }
 
 
+def _is_relative_posix_path(value: Any) -> bool:
+    if not isinstance(value, str) or not value or "\\" in value:
+        return False
+    path = PurePosixPath(value)
+    return not path.is_absolute() and ".." not in path.parts and value == path.as_posix()
+
+
+def _require_closed_keys(value: Any, expected: set[str], error: str) -> dict[str, Any]:
+    if not isinstance(value, dict) or set(value) != expected:
+        raise DirectSvgCandidateError(error)
+    return value
+
+
+def _validate_runtime_receipt(runtime: Any, receipt: dict[str, Any]) -> None:
+    runtime = _require_closed_keys(
+        runtime,
+        {
+            "schema",
+            "path_base",
+            "validation_mode",
+            "source_path",
+            "source_sha256",
+            "render_path",
+            "render_sha256",
+            "semantic_packet",
+            "fontconfig",
+            "font",
+            "rsvg",
+            "python",
+            "pillow",
+            "environment",
+            "producer",
+            "width",
+            "height",
+            "publication_acceptance",
+        },
+        "iteration_runtime_receipt_invalid",
+    )
+    if (
+        runtime["schema"] != "figure-agent.direct-svg-runtime-receipt.v1"
+        or runtime["path_base"] != "plugin_root"
+    ):
+        raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+    if runtime["validation_mode"] not in {
+        "declared_relation_coverage",
+        "historical_structure_replay",
+    }:
+        raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+    if runtime["publication_acceptance"] != "not_claimed":
+        raise DirectSvgCandidateError("publication_claim_forbidden")
+    if any(not _is_relative_posix_path(runtime[key]) for key in ("source_path", "render_path")):
+        raise DirectSvgCandidateError("iteration_path_invalid")
+    if any(
+        runtime[key] != receipt[key]
+        for key in ("source_path", "source_sha256", "render_path", "render_sha256")
+    ):
+        raise DirectSvgCandidateError("iteration_runtime_mismatch")
+
+    for name in ("semantic_packet", "fontconfig", "font"):
+        item = _require_closed_keys(
+            runtime[name], {"path", "sha256"}, "iteration_runtime_receipt_invalid"
+        )
+        if not _is_relative_posix_path(item["path"]) or not HASH_PATTERN.fullmatch(
+            str(item["sha256"])
+        ):
+            raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+    rsvg = _require_closed_keys(
+        runtime["rsvg"], {"executable", "version"}, "iteration_runtime_receipt_invalid"
+    )
+    if (
+        rsvg["executable"] != "rsvg-convert"
+        or not isinstance(rsvg["version"], str)
+        or not rsvg["version"]
+    ):
+        raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+    python = _require_closed_keys(
+        runtime["python"], {"implementation", "version"}, "iteration_runtime_receipt_invalid"
+    )
+    pillow = _require_closed_keys(
+        runtime["pillow"], {"version"}, "iteration_runtime_receipt_invalid"
+    )
+    environment = _require_closed_keys(
+        runtime["environment"],
+        {"FONTCONFIG_FILE", "FONTCONFIG_PATH", "LANG", "LC_ALL"},
+        "iteration_runtime_receipt_invalid",
+    )
+    producer = _require_closed_keys(
+        runtime["producer"],
+        {
+            "wrapper_path",
+            "wrapper_sha256",
+            "validator_path",
+            "validator_sha256",
+            "lock_path",
+            "lock_sha256",
+            "base_commit",
+            "head_commit",
+            "head_commit_status",
+        },
+        "iteration_runtime_receipt_invalid",
+    )
+    if not all(
+        isinstance(item, str) and item
+        for item in (*python.values(), *pillow.values(), *environment.values())
+    ):
+        raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+    for path_key, hash_key in (
+        ("wrapper_path", "wrapper_sha256"),
+        ("validator_path", "validator_sha256"),
+        ("lock_path", "lock_sha256"),
+    ):
+        if not _is_relative_posix_path(producer[path_key]) or not HASH_PATTERN.fullmatch(
+            str(producer[hash_key])
+        ):
+            raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+    if not re.fullmatch(r"[0-9a-f]{40}", str(producer["base_commit"])):
+        raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+    if (
+        producer["head_commit"] is not None
+        or producer["head_commit_status"] != "unavailable_precommit"
+    ):
+        raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+    if any(
+        not isinstance(runtime[key], int) or isinstance(runtime[key], bool) or runtime[key] <= 0
+        for key in ("width", "height")
+    ):
+        raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+
+
+def _validate_tool_model_receipt(value: Any) -> None:
+    receipt = _require_closed_keys(
+        value,
+        {
+            "provider",
+            "model",
+            "model_identity_independently_verified",
+            "snapshot",
+            "reasoning",
+            "token_cap",
+            "compute_cap",
+            "task",
+            "tools",
+        },
+        "iteration_tool_model_receipt_invalid",
+    )
+    if not isinstance(receipt["model_identity_independently_verified"], bool):
+        raise DirectSvgCandidateError("iteration_tool_model_receipt_invalid")
+    if not all(isinstance(receipt[key], str) and receipt[key] for key in ("provider", "model")):
+        raise DirectSvgCandidateError("iteration_tool_model_receipt_invalid")
+    task = _require_closed_keys(
+        receipt["task"],
+        {"name", "mode", "branch", "base_commit"},
+        "iteration_tool_model_receipt_invalid",
+    )
+    tools = _require_closed_keys(
+        receipt["tools"],
+        {"authoring", "validation_and_render", "visual_inspection", "image_generation"},
+        "iteration_tool_model_receipt_invalid",
+    )
+    if not all(isinstance(item, str) and item for item in (*task.values(), *tools.values())):
+        raise DirectSvgCandidateError("iteration_tool_model_receipt_invalid")
+
+
 def _validate_iteration_receipt(receipt: dict[str, Any]) -> None:
     required = {
         "cycle",
         "elapsed_minutes",
+        "source_path",
         "source_sha256",
+        "render_path",
         "render_sha256",
         "command",
+        "runtime_receipt",
         "tool_model_receipt",
         "correction_reason",
+        "correction_type",
+        "render_changed_from_prior",
         "publication_acceptance",
     }
-    if not required.issubset(receipt):
+    if not isinstance(receipt, dict) or not required.issubset(receipt):
         raise DirectSvgCandidateError("iteration_receipt_incomplete")
+    if set(receipt) != required:
+        raise DirectSvgCandidateError("iteration_receipt_keys_invalid")
+    if any(not _is_relative_posix_path(receipt[key]) for key in ("source_path", "render_path")):
+        raise DirectSvgCandidateError("iteration_path_invalid")
     if not HASH_PATTERN.fullmatch(str(receipt["source_sha256"])) or not HASH_PATTERN.fullmatch(
         str(receipt["render_sha256"])
     ):
         raise DirectSvgCandidateError("iteration_hash_invalid")
+    command = receipt["command"]
+    if (
+        not isinstance(command, list)
+        or not all(isinstance(item, str) for item in command)
+        or command[:4] != ["uv", "run", "python", "scripts/direct_svg_render.py"]
+    ):
+        raise DirectSvgCandidateError("iteration_command_invalid")
+    for flag, expected in (("--svg", receipt["source_path"]), ("--output", receipt["render_path"])):
+        if (
+            command.count(flag) != 1
+            or command.index(flag) + 1 >= len(command)
+            or command[command.index(flag) + 1] != expected
+        ):
+            raise DirectSvgCandidateError("iteration_command_invalid")
+    if "--root" not in command or command[command.index("--root") + 1] != ".":
+        raise DirectSvgCandidateError("iteration_command_invalid")
+    if (
+        not isinstance(receipt["cycle"], int)
+        or isinstance(receipt["cycle"], bool)
+        or receipt["cycle"] <= 0
+    ):
+        raise DirectSvgCandidateError("iteration_receipt_type_invalid")
+    if not isinstance(receipt["render_changed_from_prior"], bool) or not all(
+        isinstance(receipt[key], str) and receipt[key]
+        for key in ("correction_reason", "correction_type")
+    ):
+        raise DirectSvgCandidateError("iteration_receipt_type_invalid")
+    _validate_runtime_receipt(receipt["runtime_receipt"], receipt)
+    _validate_tool_model_receipt(receipt["tool_model_receipt"])
     if receipt["publication_acceptance"] != "not_claimed":
         raise DirectSvgCandidateError("publication_claim_forbidden")
 
@@ -337,6 +536,8 @@ def render_candidate(
         **os.environ,
         "FONTCONFIG_FILE": str(fontconfig_file.resolve()),
         "FONTCONFIG_PATH": str(fontconfig_file.parent.resolve()),
+        "LANG": "en_US.UTF-8",
+        "LC_ALL": "en_US.UTF-8",
     }
     command_prefix = [
         renderer,
