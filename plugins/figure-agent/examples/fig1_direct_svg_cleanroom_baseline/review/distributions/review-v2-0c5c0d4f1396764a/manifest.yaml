@@ -1,106 +1,77 @@
-schema: figure-agent.three-way-blind-review.v1
-version: review-v1-b995dafec3f0ee5e
+schema: figure-agent.three-way-blind-review.v2
+version: review-v2-0c5c0d4f1396764a
 panels:
   C:
     options:
       A: &id001
         path: option-a.png
-        opaque_sha256: sha256:6a4dd7c909156f95e87e72b74ac9f601f08eb3c38d0c3da0afca5b28325edf70
+        opaque_sha256: sha256:da4eee5591ee29cddfffdde50b672b8bf6b8af929e1da0b72afef49f8def37c8
       B: &id002
         path: option-b.png
-        opaque_sha256: sha256:93fad8bd3404ab9c02457c5358249bb004f7276bb54c2728a1f0cb02fe52794d
+        opaque_sha256: sha256:51ebb17b41b1a401e0a91a58388307df4839ba16ae235414d00d860819d66c13
       C: &id003
         path: option-c.png
-        opaque_sha256: sha256:66a099a4a6f6c26c929f279470bda1436b847e7f99ed6d3303f06f08353276ec
+        opaque_sha256: sha256:4736848534147495fc9d399e82d86114ed04044ad7773ec53f4899759856a492
     score_inputs:
     - *id001
     - *id002
     - *id003
     diagnostics:
     - path: diagnostic-a-b.png
-      opaque_sha256: sha256:d39cb681d52c039451002852a7b128073a5e614bbd6e082a92df77ad90e24aa1
+      opaque_sha256: sha256:0bdba90846872ce94cae756ef93f5841682f56b503d9478f494af6a292b5638f
       diagnostic_only: true
     - path: diagnostic-a-c.png
-      opaque_sha256: sha256:e808958ddf8c5507b01939aa27868a0368f521768d02531552ac2923ef63d743
+      opaque_sha256: sha256:da85b5f6ed2a0304f562a6b49a2982194cd0142e9b7d5e26c59f8c1a6ae699b7
       diagnostic_only: true
     - path: diagnostic-b-c.png
-      opaque_sha256: sha256:8430156a78a4fb30cf3d3d8fb3c66d8c4337f3ea63a96fa8fdfc33f83d508dbe
+      opaque_sha256: sha256:2e5ba99c7372808067ecafa2528db2eae31d6faa1398598f9f838929a0139ee7
       diagnostic_only: true
-    response_template:
-      option_A_scientific_fidelity: null
-      option_A_scientific_evidence: null
-      option_B_scientific_fidelity: null
-      option_B_scientific_evidence: null
-      option_C_scientific_fidelity: null
-      option_C_scientific_evidence: null
-      composition_preference: null
-      illustration_quality_preference: null
-      typography_preference: null
-      borderline_or_disputed: null
   F:
     options:
       A: &id004
         path: option-a.png
-        opaque_sha256: sha256:fa92fcd6a0eba41e0c20d5a8016eeb330c377fb6f9e87984826495c900212926
+        opaque_sha256: sha256:970db42668283e98e89dff0af380f6df3bf5417aca76f8bfeda61a0c96aeec0b
       B: &id005
         path: option-b.png
-        opaque_sha256: sha256:20381c702e8afbb9bb0ce105532b8f58dd8c0dc57c5e4e72e35561bb98cf29bd
+        opaque_sha256: sha256:3ed78e7a5aa3784800994bc6e2dd058dcf72a3208d3522c73fea3dce3d4b527b
       C: &id006
         path: option-c.png
-        opaque_sha256: sha256:701527bda0ff3ffc12bffb256ee3269f6f6b979abe632b859658a44b233afc53
+        opaque_sha256: sha256:a55fb35977467be1cca00240325d07190c33d7af5eb7d1453f5021c06eaf7d8e
     score_inputs:
     - *id004
     - *id005
     - *id006
     diagnostics:
     - path: diagnostic-a-b.png
-      opaque_sha256: sha256:6e730f0dac5c5c32b5beac565eef4651b0f91abd5a9393174a60a750976a875a
+      opaque_sha256: sha256:82bf27024610e949337c5f1d8b1f6b3a03ce30331cc2b5e8415b3685706fc529
       diagnostic_only: true
     - path: diagnostic-a-c.png
-      opaque_sha256: sha256:d30b495c78234c6b80f58a338c510f65157ec0789108fa57c2ab8a158d4e3ed8
+      opaque_sha256: sha256:3b784b6233fb29e41d881260e9ed2dd934e85ea952861ad1c94ebd50b8bdd94e
       diagnostic_only: true
     - path: diagnostic-b-c.png
-      opaque_sha256: sha256:9246988df7b5fac56961d6e74e9e49a4a2f3a8d92b4fbe52f107d3ae46636503
+      opaque_sha256: sha256:5b181deb8910cee0046c694b7d779f951df0764734894474a9c859e3516d6000
       diagnostic_only: true
-    response_template:
-      option_A_scientific_fidelity: null
-      option_A_scientific_evidence: null
-      option_B_scientific_fidelity: null
-      option_B_scientific_evidence: null
-      option_C_scientific_fidelity: null
-      option_C_scientific_evidence: null
-      composition_preference: null
-      illustration_quality_preference: null
-      typography_preference: null
-      borderline_or_disputed: null
 responses:
   C:
-    option_A_scientific_fidelity: null
-    option_A_scientific_evidence: null
-    option_B_scientific_fidelity: null
-    option_B_scientific_evidence: null
-    option_C_scientific_fidelity: null
-    option_C_scientific_evidence: null
-    composition_preference: null
-    illustration_quality_preference: null
-    typography_preference: null
-    borderline_or_disputed: null
+    scientific_gate: null
+    visual_scoring: null
   F:
-    option_A_scientific_fidelity: null
-    option_A_scientific_evidence: null
-    option_B_scientific_fidelity: null
-    option_B_scientific_evidence: null
-    option_C_scientific_fidelity: null
-    option_C_scientific_evidence: null
-    composition_preference: null
-    illustration_quality_preference: null
-    typography_preference: null
-    borderline_or_disputed: null
-response_schema: figure-agent.three-way-review-response.v1
+    scientific_gate: null
+    visual_scoring: null
+response_schema: figure-agent.three-way-review-response.v2
 response_contract:
   additional_fields: false
-  primary_reviewer_required: true
-  second_reviewer_required_when: borderline_or_disputed
+  state_machine:
+  - scientific_gate_pending
+  - primary_scientific_fixed
+  - primary_visual_fixed
+  - second_scientific_fixed
+  - second_visual_fixed
+  - finalized
+  scientific_gate_precedes_visual_scoring: true
+  named_reviewer_and_date_required: true
+  scientific_evidence_required: true
+  distinct_second_reviewer_required_when: borderline_or_disputed
 semantic_review_context:
   scientific_objects:
     panel_c:
@@ -206,16 +177,20 @@ normalization:
   application: all_three_options
   resampling: LANCZOS
   canvas: authority_dimensions_centered_white
-upstream_bindings:
-  run_state_hashes:
-  - sha256:f68e3fc05f2ca9d3ac7d427a861be9c4a05426a7c932db7e88dcdf6bfc59ea9f
-  - sha256:d658af4dff72b51c9b0bc2e263f4fd2b5267583f919325ac7c8e5762e290c808
-  semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
-  authority_sha256:
-    C: sha256:40fdadde6e9e428d32caabe007e4891caacf11e99ac6565dccb1f531e6953703
-    F: sha256:d74d2ee3c360eb585486b12784170861bdaa84f574d7f1b6c0446b7be43b0f09
+perceptual_duplicate_policy:
+  metric: normalized_rgb_mean_absolute_error.v1
+  threshold: 0.002
+  fail_when: distance_lte_threshold
+  scope: within_panel_all_option_pairs
+upstream_commitments:
+  run_state_1: sha256:3852358494a7340af67d3c0258ccf7ab423d8526e7505751e1fefb2c5a1fee48
+  run_state_2: sha256:91b04b14fb755306e7756af7a2ef2e64cc17713a874bedf37f1effb5ddb69f68
+  semantic_packet: sha256:4c63b1350c4cc4bc2e0028bf900a4e1a4e2480b8c944b98ccf81e0c85d80d23b
+  authority_C: sha256:dc14b08ddb17561d0dd3d32e3a9d4a88f1ba6e2fe17e7d4cc0aead61c0dc3e99
+  authority_F: sha256:a63d8882f71a57059b1a881e3a5eeb91ea77d80b215299370581575b0b318ae7
 generator:
-  revision: direct_svg_stage_review.v2
-  commit: 12867b7c
+  revision: direct_svg_stage_review.v3
+  commit: a2ec82e1b8e69400a0ffbd150896a7f11e15789d
+  script_blob_sha256: sha256:aa475f3ed5596208b5f52c5e835bb8641bb2a36770d86be661e23338e2986a42
 publication_acceptance: not_claimed
-html_sha256: sha256:e45edfa0b790569baec0b7498fc149297e31110e9935026d185abe3b65775dc4
+html_sha256: sha256:565a548012f1c1aabe893a49e6f19968417138f7dd66922ae17d3ed57b6061bb

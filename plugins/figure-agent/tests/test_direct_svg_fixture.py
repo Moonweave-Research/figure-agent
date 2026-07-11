@@ -198,10 +198,14 @@ def test_test_b_template_contains_no_target_or_geometry_derivative_input() -> No
     assert test_b["geometry_derivatives_available"] is False
 
 
-def test_run_and_review_states_cannot_claim_machine_or_publication_acceptance() -> None:
+def test_review_state_awaits_named_verdict_without_claiming_acceptance() -> None:
     review = _load("review/review-state.yaml")
 
-    assert review["state"].startswith("blocked_")
+    assert review["state"] == "awaiting_named_human_verdict"
+    assert review["response_state"] == "scientific_gate_pending"
+    assert review["finalized_response_sha256"] is None
+    assert review["blinding_keys_revealed"] is False
+    assert review["cold_reproductions"] == 0
     assert review["publication_acceptance"] == "not_claimed"
 
 

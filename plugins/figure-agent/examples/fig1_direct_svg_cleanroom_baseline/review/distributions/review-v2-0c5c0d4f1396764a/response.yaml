@@ -1,0 +1,77 @@
+schema: figure-agent.three-way-review-response.v2
+state: scientific_gate_pending
+primary_review:
+  reviewer:
+    name: null
+    reviewed_at: null
+  panels:
+    C:
+      scientific:
+        A:
+          verdict: null
+          evidence: null
+        B:
+          verdict: null
+          evidence: null
+        C:
+          verdict: null
+          evidence: null
+      visual:
+        composition_preference: null
+        illustration_quality_preference: null
+        typography_preference: null
+        borderline_or_disputed: null
+    F:
+      scientific:
+        A:
+          verdict: null
+          evidence: null
+        B:
+          verdict: null
+          evidence: null
+        C:
+          verdict: null
+          evidence: null
+      visual:
+        composition_preference: null
+        illustration_quality_preference: null
+        typography_preference: null
+        borderline_or_disputed: null
+second_review:
+  required: null
+  reviewer:
+    name: null
+    reviewed_at: null
+  panels:
+    C:
+      scientific:
+        A:
+          verdict: null
+          evidence: null
+        B:
+          verdict: null
+          evidence: null
+        C:
+          verdict: null
+          evidence: null
+      visual:
+        composition_preference: null
+        illustration_quality_preference: null
+        typography_preference: null
+        borderline_or_disputed: null
+    F:
+      scientific:
+        A:
+          verdict: null
+          evidence: null
+        B:
+          verdict: null
+          evidence: null
+        C:
+          verdict: null
+          evidence: null
+      visual:
+        composition_preference: null
+        illustration_quality_preference: null
+        typography_preference: null
+        borderline_or_disputed: null

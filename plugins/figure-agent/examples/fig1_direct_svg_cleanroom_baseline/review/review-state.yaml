@@ -1,21 +1,28 @@
-schema: figure-agent.direct-svg-review-state.v2
+schema: figure-agent.direct-svg-review-state.v3
 state: awaiting_named_human_verdict
-version: review-v1-b995dafec3f0ee5e
-public_manifest_sha256: sha256:119060eaa79ed4f716e2d01a4172f0ba76fae67a7b54d502303242a6761bf6dd
-private_manifest_sha256: sha256:45cee9b469371b70287b8bce5faa33f349816fd0bcef32105931263fef8ae1e3
-upstream_bindings:
-  run_state_hashes:
-  - sha256:f68e3fc05f2ca9d3ac7d427a861be9c4a05426a7c932db7e88dcdf6bfc59ea9f
-  - sha256:d658af4dff72b51c9b0bc2e263f4fd2b5267583f919325ac7c8e5762e290c808
-  semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
-  authority_sha256:
-    C: sha256:40fdadde6e9e428d32caabe007e4891caacf11e99ac6565dccb1f531e6953703
-    F: sha256:d74d2ee3c360eb585486b12784170861bdaa84f574d7f1b6c0446b7be43b0f09
+version: review-v2-0c5c0d4f1396764a
+public_manifest_sha256: sha256:c836ab5d9fd1376e1ba8adf3ff577aa0306084768e3dbea79ef86715478aed31
+private_manifest_sha256: sha256:8d14eaf2ee6ed17d92236f2004cf68474f9934db5dab6a14e1e5eceecef88865
+upstream_commitments:
+  run_state_1: sha256:3852358494a7340af67d3c0258ccf7ab423d8526e7505751e1fefb2c5a1fee48
+  run_state_2: sha256:91b04b14fb755306e7756af7a2ef2e64cc17713a874bedf37f1effb5ddb69f68
+  semantic_packet: sha256:4c63b1350c4cc4bc2e0028bf900a4e1a4e2480b8c944b98ccf81e0c85d80d23b
+  authority_C: sha256:dc14b08ddb17561d0dd3d32e3a9d4a88f1ba6e2fe17e7d4cc0aead61c0dc3e99
+  authority_F: sha256:a63d8882f71a57059b1a881e3a5eeb91ea77d80b215299370581575b0b318ae7
 generator:
-  revision: direct_svg_stage_review.v2
-  commit: 12867b7c
-response_schema: figure-agent.three-way-review-response.v1
+  revision: direct_svg_stage_review.v3
+  commit: a2ec82e1b8e69400a0ffbd150896a7f11e15789d
+  script_blob_sha256: sha256:aa475f3ed5596208b5f52c5e835bb8641bb2a36770d86be661e23338e2986a42
+response_schema: figure-agent.three-way-review-response.v2
+response_state: scientific_gate_pending
+response_sha256: sha256:fb86f7f37a7112c0e44ebfc223765073a8cb74d8ca4591d3c1927ec58a485df9
+finalized_response_sha256: null
 normalization_policy: contain_white_pad_authority_size.v1
+perceptual_duplicate_policy:
+  metric: normalized_rgb_mean_absolute_error.v1
+  threshold: 0.002
+  fail_when: distance_lte_threshold
+  scope: within_panel_all_option_pairs
 blinding_keys_revealed: false
 cold_reproductions: 0
 publication_acceptance: not_claimed
