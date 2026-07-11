@@ -7,9 +7,11 @@ import hashlib
 import html
 import json
 import os
+import platform
 import random
 import secrets
 import shutil
+import stat
 import subprocess
 import tempfile
 from datetime import datetime
@@ -27,6 +29,7 @@ from PIL import (
     PngImagePlugin,
     UnidentifiedImageError,
 )
+from PIL import __version__ as PILLOW_VERSION
 
 PANELS = ("C", "F")
 LETTERS = ("A", "B", "C")
@@ -37,6 +40,14 @@ PRIVATE_SCHEMA = "figure-agent.private-three-way-review-key.v2"
 GENERATOR_REVISION = "direct_svg_stage_review.v3"
 PERCEPTUAL_METRIC = "normalized_rgb_mean_absolute_error.v1"
 PERCEPTUAL_THRESHOLD = 0.002
+GENERATOR_FILES = (
+    "pyproject.toml",
+    "uv.lock",
+    "scripts/direct_svg_stage_review.py",
+    "scripts/direct_svg_review.py",
+    "scripts/direct_svg_packet.py",
+    "scripts/hybrid/comparison_report.py",
+)
 RESPONSE_STATES = (
     "scientific_gate_pending",
     "primary_scientific_fixed",
@@ -90,11 +101,31 @@ def _require_exact_keys(value: Any, expected: set[str], error: str) -> dict[str,
 
 
 def _resolve_path(value: Any, roots: tuple[Path, ...]) -> Path:
-    if not isinstance(value, str) or not value or Path(value).is_absolute():
+    raw = Path(value) if isinstance(value, str) else None
+    if (
+        raw is None
+        or not value
+        or raw.is_absolute()
+        or ".." in raw.parts
+        or "." in raw.parts
+    ):
         raise DirectSvgReviewError("review_prerequisite_path_invalid")
     for root in roots:
-        path = (root / value).resolve()
-        if path.is_file():
+        resolved_root = root.resolve()
+        candidate = root / raw
+        try:
+            if candidate.is_symlink():
+                raise DirectSvgReviewError("review_prerequisite_path_invalid")
+            relative = candidate.relative_to(root)
+            cursor = root
+            for part in relative.parts:
+                cursor = cursor / part
+                if cursor.is_symlink():
+                    raise DirectSvgReviewError("review_prerequisite_path_invalid")
+            path = candidate.resolve(strict=True)
+        except (FileNotFoundError, ValueError):
+            continue
+        if path.is_relative_to(resolved_root) and path.is_file():
             return path
     raise DirectSvgReviewError("review_prerequisite_missing")
 
@@ -247,14 +278,18 @@ def _perceptual_distance(first: Path, second: Path) -> float:
         raise DirectSvgReviewError("review_image_invalid") from exc
 
 
-def assert_perceptually_distinct(paths: list[Path]) -> None:
+def assert_perceptually_distinct(
+    paths: list[Path], *, threshold: float = PERCEPTUAL_THRESHOLD
+) -> None:
     """Fail closed when exact or near-duplicate score inputs are present."""
+    if not isinstance(threshold, float | int) or isinstance(threshold, bool) or threshold < 0:
+        raise DirectSvgReviewError("perceptual_threshold_invalid")
     raw_hashes = [_sha256(path) for path in paths]
     if len(raw_hashes) != len(set(raw_hashes)):
         raise DirectSvgReviewError("exact_duplicate")
     for index, left in enumerate(paths):
         for right in paths[index + 1 :]:
-            if _perceptual_distance(left, right) <= PERCEPTUAL_THRESHOLD:
+            if _perceptual_distance(left, right) <= threshold:
                 raise DirectSvgReviewError("perceptual_duplicate")
 
 
@@ -382,7 +417,8 @@ def _generator_binding(
     plugin_root: Path,
     generator_commit: str,
     declared_script_sha256: str | None,
-) -> dict[str, str]:
+    declared_receipt_sha256: str | None,
+) -> dict[str, Any]:
     try:
         resolved = subprocess.check_output(
             ["git", "rev-parse", "--verify", f"{generator_commit}^{{commit}}"],
@@ -393,26 +429,49 @@ def _generator_binding(
         prefix = subprocess.check_output(
             ["git", "rev-parse", "--show-prefix"], cwd=plugin_root, text=True
         ).strip()
-        script_bytes = subprocess.check_output(
-            ["git", "show", f"{resolved}:{prefix}scripts/direct_svg_stage_review.py"],
-            cwd=plugin_root,
-            stderr=subprocess.DEVNULL,
-        )
+        committed_files = {
+            relative: subprocess.check_output(
+                ["git", "show", f"{resolved}:{prefix}{relative}"],
+                cwd=plugin_root,
+                stderr=subprocess.DEVNULL,
+            )
+            for relative in GENERATOR_FILES
+        }
     except (OSError, subprocess.CalledProcessError) as exc:
         raise DirectSvgReviewError("generator_commit_invalid") from exc
-    script_hash = _sha256_bytes(script_bytes)
-    executing_script_hash = _sha256(Path(__file__).resolve())
-    if (
-        executing_script_hash != script_hash
-        or declared_script_sha256 is not None
-        and declared_script_sha256 != script_hash
-    ):
+    file_hashes = {
+        relative: _sha256_bytes(content) for relative, content in committed_files.items()
+    }
+    for relative, committed_hash in file_hashes.items():
+        local_path = plugin_root / relative
+        if (
+            not local_path.is_file()
+            or local_path.is_symlink()
+            or _sha256(local_path) != committed_hash
+        ):
+            raise DirectSvgReviewError("generator_script_blob_mismatch")
+    script_hash = file_hashes["scripts/direct_svg_stage_review.py"]
+    if declared_script_sha256 is not None and declared_script_sha256 != script_hash:
         raise DirectSvgReviewError("generator_script_blob_mismatch")
-    return {
+    environment = {
+        "python": platform.python_version(),
+        "pillow": PILLOW_VERSION,
+        "pyyaml": yaml.__version__,
+        "png_zlib": str(getattr(Image.core, "zlib_version", "unknown")),
+        "resampling": "Pillow.Image.Resampling.LANCZOS",
+    }
+    receipt_body: dict[str, Any] = {
         "revision": GENERATOR_REVISION,
         "commit": resolved,
-        "script_blob_sha256": script_hash,
+        "files": file_hashes,
+        "environment": environment,
     }
+    receipt_hash = _sha256_bytes(
+        json.dumps(receipt_body, sort_keys=True, separators=(",", ":")).encode()
+    )
+    if declared_receipt_sha256 is not None and declared_receipt_sha256 != receipt_hash:
+        raise DirectSvgReviewError("generator_receipt_mismatch")
+    return {**receipt_body, "receipt_sha256": receipt_hash}
 
 
 def _tree_bytes(root: Path) -> dict[str, bytes]:
@@ -430,14 +489,168 @@ def _compare_tree(expected: Path, actual: Path) -> None:
         raise DirectSvgReviewError("replay_byte_mismatch")
 
 
-def export_public_distribution(distribution: Path, destination: Path) -> Path:
-    """Export exactly one validated public distribution and nothing adjacent."""
+def _read_regular_snapshot(path: Path) -> bytes:
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as exc:
+        raise DirectSvgReviewError("export_validation_failed") from exc
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise DirectSvgReviewError("export_validation_failed")
+        chunks: list[bytes] = []
+        while chunk := os.read(descriptor, 1024 * 1024):
+            chunks.append(chunk)
+        return b"".join(chunks)
+    finally:
+        os.close(descriptor)
+
+
+def _commitments_from_key(key: dict[str, Any]) -> dict[str, str]:
+    try:
+        seed = bytes.fromhex(key["seed_hex"])
+        raw = key["raw_upstream_bindings"]
+        return {
+            "run_state_1": _opaque_commitment(
+                raw["run_state_hashes"][0], seed, "run-state-1"
+            ),
+            "run_state_2": _opaque_commitment(
+                raw["run_state_hashes"][1], seed, "run-state-2"
+            ),
+            "semantic_packet": _opaque_commitment(
+                raw["semantic_packet_sha256"], seed, "semantic-packet"
+            ),
+            **{
+                f"authority_{panel}": _opaque_commitment(
+                    raw["authority_sha256"][panel], seed, f"authority-{panel}"
+                )
+                for panel in PANELS
+            },
+        }
+    except (KeyError, IndexError, TypeError, ValueError) as exc:
+        raise DirectSvgReviewError("export_validation_failed") from exc
+
+
+def _validated_export_snapshot(
+    distribution: Path, review_root: Path, private_root: Path
+) -> dict[str, bytes]:
+    try:
+        distribution = distribution.resolve(strict=True)
+        review_root = review_root.resolve(strict=True)
+        private_root = private_root.resolve(strict=True)
+        state_path = review_root / "review-state.yaml"
+        state_bytes = _read_regular_snapshot(state_path)
+        state = yaml.safe_load(state_bytes)
+        if not isinstance(state, dict) or state.get("schema") != STATE_SCHEMA:
+            raise DirectSvgReviewError("export_validation_failed")
+        version = state.get("version")
+        expected_distribution = (review_root / "distributions" / version).resolve(strict=True)
+        if distribution != expected_distribution:
+            raise DirectSvgReviewError("export_validation_failed")
+        manifest_bytes = _read_regular_snapshot(distribution / "manifest.yaml")
+        manifest = yaml.safe_load(manifest_bytes)
+        if (
+            not isinstance(manifest, dict)
+            or manifest.get("schema") != PUBLIC_SCHEMA
+            or manifest.get("version") != version
+            or state.get("public_manifest_sha256") != _sha256_bytes(manifest_bytes)
+        ):
+            raise DirectSvgReviewError("export_validation_failed")
+        key_path = private_root / version / "key.yaml"
+        key_bytes = _read_regular_snapshot(key_path)
+        key = yaml.safe_load(key_bytes)
+        if (
+            not isinstance(key, dict)
+            or key.get("schema") != PRIVATE_SCHEMA
+            or key.get("version") != version
+            or state.get("private_manifest_sha256") != _sha256_bytes(key_bytes)
+            or key.get("public_manifest_sha256") != _sha256_bytes(manifest_bytes)
+            or key.get("public_upstream_commitments") != manifest.get("upstream_commitments")
+            or _commitments_from_key(key) != manifest.get("upstream_commitments")
+            or key.get("generator") != manifest.get("generator")
+            or state.get("generator") != manifest.get("generator")
+        ):
+            raise DirectSvgReviewError("export_validation_failed")
+        inventory = manifest.get("public_inventory")
+        if not isinstance(inventory, dict):
+            raise DirectSvgReviewError("export_validation_failed")
+        allowed = {"manifest.yaml", *inventory}
+        if state.get("blinding_keys_revealed") is True:
+            allowed.add("unblinding.yaml")
+        actual: set[str] = set()
+        for path in distribution.rglob("*"):
+            relative = path.relative_to(distribution).as_posix()
+            if path.is_symlink() or not (path.is_dir() or path.is_file()):
+                raise DirectSvgReviewError("export_validation_failed")
+            if path.is_file():
+                actual.add(relative)
+        if actual != allowed:
+            raise DirectSvgReviewError("export_validation_failed")
+        snapshots = {"manifest.yaml": manifest_bytes}
+        for relative, expected_hash in inventory.items():
+            if (
+                not isinstance(relative, str)
+                or Path(relative).is_absolute()
+                or ".." in Path(relative).parts
+            ):
+                raise DirectSvgReviewError("export_validation_failed")
+            content = _read_regular_snapshot(distribution / relative)
+            bound_hash = (
+                state.get("response_sha256")
+                if expected_hash == "state:response_sha256"
+                else expected_hash
+            )
+            if bound_hash != _sha256_bytes(content):
+                raise DirectSvgReviewError("export_validation_failed")
+            snapshots[relative] = content
+        response = yaml.safe_load(snapshots["response.yaml"])
+        if not isinstance(response, dict):
+            raise DirectSvgReviewError("export_validation_failed")
+        _validate_response(response)
+        if response.get("state") != state.get("response_state"):
+            raise DirectSvgReviewError("export_validation_failed")
+        for panel in PANELS:
+            for letter in LETTERS:
+                relative = f"panels/{panel}/option-{letter.lower()}.png"
+                if key["panel_assignments"][panel][letter]["content_sha256"] != _sha256_bytes(
+                    snapshots[relative]
+                ):
+                    raise DirectSvgReviewError("export_validation_failed")
+        if state.get("blinding_keys_revealed") is True:
+            unblinding = _read_regular_snapshot(distribution / "unblinding.yaml")
+            if state.get("unblinding_sha256") != _sha256_bytes(unblinding):
+                raise DirectSvgReviewError("export_validation_failed")
+            snapshots["unblinding.yaml"] = unblinding
+        return snapshots
+    except (DirectSvgReviewError, OSError, TypeError, ValueError, yaml.YAMLError) as exc:
+        if isinstance(exc, DirectSvgReviewError) and str(exc) == "export_validation_failed":
+            raise
+        raise DirectSvgReviewError("export_validation_failed") from exc
+
+
+def export_public_distribution(
+    distribution: Path,
+    destination: Path,
+    *,
+    review_root: Path,
+    private_root: Path,
+) -> Path:
+    """Validate and export an exact regular-file snapshot of the current distribution."""
     if destination.exists():
         raise DirectSvgReviewError("export_destination_exists")
-    manifest = _load_yaml(distribution / "manifest.yaml", "public_manifest_invalid")
-    if manifest.get("schema") != PUBLIC_SCHEMA:
-        raise DirectSvgReviewError("public_manifest_invalid")
-    shutil.copytree(distribution, destination)
+    snapshots = _validated_export_snapshot(distribution, review_root, private_root)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = Path(tempfile.mkdtemp(prefix=".review-export-", dir=destination.parent))
+    try:
+        for relative, content in snapshots.items():
+            target = temporary / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content)
+        os.replace(temporary, destination)
+    finally:
+        if temporary.exists():
+            shutil.rmtree(temporary)
     return destination
 
 
@@ -536,6 +749,9 @@ def _build_staged_bundle(
             "threshold": PERCEPTUAL_THRESHOLD,
             "fail_when": "distance_lte_threshold",
             "scope": "within_panel_all_option_pairs",
+            "calibration": "inclusive_boundary_and_localized_single-pixel_regression",
+            "limitation": "global_mean_metric_may_underweight_small_local_defects",
+            "authority": "duplicate_screen_only_not_visual_or_publication_acceptance",
         },
         "upstream_commitments": upstream_commitments,
         "generator": generator,
@@ -545,6 +761,15 @@ def _build_staged_bundle(
         _html(manifest, response), encoding="utf-8"
     )
     manifest["html_sha256"] = _sha256(public_temp / "index.html")
+    manifest["public_inventory"] = {
+        path.relative_to(public_temp).as_posix(): (
+            "state:response_sha256"
+            if path.name == "response.yaml"
+            else _sha256(path)
+        )
+        for path in sorted(public_temp.rglob("*"))
+        if path.is_file()
+    }
     (public_temp / "manifest.yaml").write_bytes(_yaml_bytes(manifest))
     private_manifest = {
         "schema": PRIVATE_SCHEMA,
@@ -590,6 +815,97 @@ def _restore_state(path: Path, previous: bytes | None) -> None:
         _atomic_bytes(path, previous)
 
 
+class _SimulatedCrash(BaseException):
+    """Test-only interruption that bypasses normal transactional rollback."""
+
+
+def _inject(step: str, failure_injection: str | None, crash_injection: str | None) -> None:
+    if crash_injection == step:
+        raise _SimulatedCrash("simulated_crash")
+    if failure_injection == step:
+        raise RuntimeError("injected")
+
+
+def _previous_state_from_journal(journal: dict[str, Any]) -> bytes | None:
+    encoded = journal.get("previous_state_hex")
+    if encoded is None:
+        return None
+    if not isinstance(encoded, str):
+        raise DirectSvgReviewError("transaction_journal_invalid")
+    try:
+        return bytes.fromhex(encoded)
+    except ValueError as exc:
+        raise DirectSvgReviewError("transaction_journal_invalid") from exc
+
+
+def recover_review_transaction(review_root: Path, private_root: Path) -> dict[str, str]:
+    """Conservatively roll back one interrupted publication or reveal transaction."""
+    review_root = review_root.resolve()
+    private_root = private_root.resolve()
+    journals = [
+        path
+        for path in (
+            review_root / ".publish-journal.yaml",
+            review_root / ".reveal-journal.yaml",
+        )
+        if path.exists()
+    ]
+    if not journals:
+        return {"status": "no_pending_transaction"}
+    if len(journals) != 1:
+        raise DirectSvgReviewError("multiple_transaction_journals")
+    journal_path = journals[0]
+    journal = _load_yaml(journal_path, "transaction_journal_invalid")
+    version = journal.get("version")
+    if not isinstance(version, str) or not version.startswith("review-v2-"):
+        raise DirectSvgReviewError("transaction_journal_invalid")
+    previous_state = _previous_state_from_journal(journal)
+    state_path = review_root / "review-state.yaml"
+    kind = journal.get("kind")
+    if kind == "publication":
+        expected = {
+            "schema",
+            "kind",
+            "version",
+            "previous_state_hex",
+            "private_published",
+            "public_published",
+            "state_published",
+        }
+        _require_exact_keys(journal, expected, "transaction_journal_invalid")
+        distribution = review_root / "distributions" / version
+        protected = private_root / version
+        if journal["state_published"]:
+            _restore_state(state_path, previous_state)
+        if journal["public_published"] and distribution.exists():
+            shutil.rmtree(distribution)
+        if journal["private_published"] and protected.exists():
+            shutil.rmtree(protected)
+    elif kind == "reveal":
+        expected = {
+            "schema",
+            "kind",
+            "version",
+            "previous_state_hex",
+            "stage_written",
+            "public_published",
+            "state_published",
+        }
+        _require_exact_keys(journal, expected, "transaction_journal_invalid")
+        staged = review_root / f".reveal-stage-{version}.yaml"
+        public = review_root / "distributions" / version / "unblinding.yaml"
+        if journal["state_published"]:
+            _restore_state(state_path, previous_state)
+        if journal["public_published"]:
+            public.unlink(missing_ok=True)
+        if journal["stage_written"]:
+            staged.unlink(missing_ok=True)
+    else:
+        raise DirectSvgReviewError("transaction_journal_invalid")
+    journal_path.unlink()
+    return {"status": "rolled_back", "kind": kind, "version": version}
+
+
 def stage_review(
     fixture_root: Path,
     *,
@@ -597,9 +913,11 @@ def stage_review(
     private_root: Path,
     generator_commit: str,
     generator_script_sha256: str | None = None,
+    generator_receipt_sha256: str | None = None,
     private_seed: bytes | None = None,
     replay: bool = False,
     failure_injection: str | None = None,
+    crash_injection: str | None = None,
 ) -> dict[str, Any]:
     """Build, byte-verify, and transactionally publish one immutable review version."""
     fixture_root = fixture_root.resolve()
@@ -611,7 +929,10 @@ def stage_review(
     if not generator_commit:
         raise DirectSvgReviewError("generator_commit_required")
     generator = _generator_binding(
-        plugin_root, generator_commit, generator_script_sha256
+        plugin_root,
+        generator_commit,
+        generator_script_sha256,
+        generator_receipt_sha256,
     )
     if not replay:
         _fail_if_responses_exist(review_root)
@@ -671,31 +992,31 @@ def stage_review(
         previous_state = state_path.read_bytes() if state_path.exists() else None
         journal = {
             "schema": "figure-agent.review-publication-journal.v1",
+            "kind": "publication",
             "version": version,
+            "previous_state_hex": (
+                previous_state.hex() if previous_state is not None else None
+            ),
             "private_published": False,
             "public_published": False,
             "state_published": False,
         }
         _atomic_yaml(journal_path, journal)
         try:
-            if failure_injection == "before_publish":
-                raise RuntimeError("injected")
+            _inject("before_publish", failure_injection, crash_injection)
             distribution_path.parent.mkdir(parents=True, exist_ok=True)
             os.replace(private_temp, private_path)
             journal["private_published"] = True
             _atomic_yaml(journal_path, journal)
-            if failure_injection == "after_private_publish":
-                raise RuntimeError("injected")
+            _inject("after_private_publish", failure_injection, crash_injection)
             os.replace(public_temp, distribution_path)
             journal["public_published"] = True
             _atomic_yaml(journal_path, journal)
-            if failure_injection == "after_public_publish":
-                raise RuntimeError("injected")
+            _inject("after_public_publish", failure_injection, crash_injection)
             _atomic_bytes(state_path, expected_state_bytes)
             journal["state_published"] = True
             _atomic_yaml(journal_path, journal)
-            if failure_injection == "after_state_publish":
-                raise RuntimeError("injected")
+            _inject("after_state_publish", failure_injection, crash_injection)
             journal_path.unlink()
         except Exception:
             if journal["state_published"]:
@@ -953,15 +1274,30 @@ def advance_review_response(
     }
 
 
-def reveal_blinding_keys(review_root: Path, private_root: Path) -> dict[str, Any]:
+def reveal_blinding_keys(
+    review_root: Path,
+    private_root: Path,
+    *,
+    failure_injection: str | None = None,
+    crash_injection: str | None = None,
+) -> dict[str, Any]:
     """Release assignments only after the protected finalized response validates."""
     review_root = review_root.resolve()
     private_root = private_root.resolve()
     state_path = review_root / "review-state.yaml"
     state = _load_yaml(state_path, "review_state_invalid")
+    version = state.get("version")
+    public_path = review_root / "distributions" / str(version) / "unblinding.yaml"
+    if state.get("blinding_keys_revealed") is True:
+        if (
+            public_path.is_file()
+            and not public_path.is_symlink()
+            and state.get("unblinding_sha256") == _sha256(public_path)
+        ):
+            return {"version": version, "unblinding_path": public_path}
+        raise DirectSvgReviewError("revealed_state_inconsistent")
     if state.get("response_state") != "finalized":
         raise DirectSvgReviewError("response_not_finalized")
-    version = state.get("version")
     response_path = review_root / "distributions" / version / "response.yaml"
     final_path = private_root / version / "final-response.yaml"
     expected = state.get("finalized_response_sha256")
@@ -974,7 +1310,6 @@ def reveal_blinding_keys(review_root: Path, private_root: Path) -> dict[str, Any
     ):
         raise DirectSvgReviewError("finalized_response_hash_mismatch")
     key = _load_yaml(private_root / version / "key.yaml", "private_manifest_invalid")
-    public_path = review_root / "distributions" / version / "unblinding.yaml"
     if public_path.exists() or state.get("blinding_keys_revealed") is not False:
         raise DirectSvgReviewError("blinding_keys_already_revealed")
     release = {
@@ -984,11 +1319,47 @@ def reveal_blinding_keys(review_root: Path, private_root: Path) -> dict[str, Any
         "finalized_response_sha256": expected,
         "publication_acceptance": "not_claimed",
     }
-    _atomic_yaml(public_path, release)
-    state["blinding_keys_revealed"] = True
-    state["state"] = "named_human_verdict_fixed_and_unblinded"
-    state["unblinding_sha256"] = _sha256(public_path)
-    _atomic_yaml(state_path, state)
+    journal_path = review_root / ".reveal-journal.yaml"
+    if journal_path.exists() or (review_root / ".publish-journal.yaml").exists():
+        raise DirectSvgReviewError("transaction_recovery_required")
+    previous_state = state_path.read_bytes()
+    staged_path = review_root / f".reveal-stage-{version}.yaml"
+    journal = {
+        "schema": "figure-agent.review-reveal-journal.v1",
+        "kind": "reveal",
+        "version": version,
+        "previous_state_hex": previous_state.hex(),
+        "stage_written": False,
+        "public_published": False,
+        "state_published": False,
+    }
+    _atomic_yaml(journal_path, journal)
+    try:
+        _atomic_yaml(staged_path, release)
+        journal["stage_written"] = True
+        _atomic_yaml(journal_path, journal)
+        _inject("after_reveal_stage", failure_injection, crash_injection)
+        os.replace(staged_path, public_path)
+        journal["public_published"] = True
+        _atomic_yaml(journal_path, journal)
+        _inject("after_reveal_publish", failure_injection, crash_injection)
+        state["blinding_keys_revealed"] = True
+        state["state"] = "named_human_verdict_fixed_and_unblinded"
+        state["unblinding_sha256"] = _sha256(public_path)
+        _atomic_yaml(state_path, state)
+        journal["state_published"] = True
+        _atomic_yaml(journal_path, journal)
+        _inject("after_reveal_state", failure_injection, crash_injection)
+        journal_path.unlink()
+    except Exception:
+        if journal["state_published"]:
+            _atomic_bytes(state_path, previous_state)
+        if journal["public_published"]:
+            public_path.unlink(missing_ok=True)
+        if journal["stage_written"]:
+            staged_path.unlink(missing_ok=True)
+        journal_path.unlink(missing_ok=True)
+        raise
     return {"version": version, "unblinding_path": public_path}
 
 
@@ -999,12 +1370,16 @@ def main() -> int:
     parser.add_argument("--private-root", type=Path, required=True)
     parser.add_argument("--generator-commit")
     parser.add_argument("--generator-script-sha256")
+    parser.add_argument("--generator-receipt-sha256")
     parser.add_argument("--replay", action="store_true")
     parser.add_argument("--export-to", type=Path)
     parser.add_argument("--advance-response", type=Path)
     parser.add_argument("--reveal", action="store_true")
+    parser.add_argument("--recover", action="store_true")
     args = parser.parse_args()
-    if args.advance_response:
+    if args.recover:
+        result = recover_review_transaction(args.review_root, args.private_root)
+    elif args.advance_response:
         result = advance_review_response(
             args.review_root,
             args.private_root,
@@ -1021,10 +1396,16 @@ def main() -> int:
             private_root=args.private_root,
             generator_commit=args.generator_commit,
             generator_script_sha256=args.generator_script_sha256,
+            generator_receipt_sha256=args.generator_receipt_sha256,
             replay=args.replay,
         )
         if args.export_to:
-            export_public_distribution(Path(result["distribution_path"]), args.export_to)
+            export_public_distribution(
+                Path(result["distribution_path"]),
+                args.export_to,
+                review_root=args.review_root,
+                private_root=args.private_root,
+            )
     print(json.dumps({key: str(value) for key, value in result.items()}, indent=2))
     return 0
 

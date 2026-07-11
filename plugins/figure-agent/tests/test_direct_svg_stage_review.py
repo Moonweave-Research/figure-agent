@@ -89,6 +89,9 @@ def test_stage_review_creates_one_three_way_packet_per_panel(tmp_path: Path) -> 
         "threshold": 0.002,
         "fail_when": "distance_lte_threshold",
         "scope": "within_panel_all_option_pairs",
+        "calibration": "inclusive_boundary_and_localized_single-pixel_regression",
+        "limitation": "global_mean_metric_may_underweight_small_local_defects",
+        "authority": "duplicate_screen_only_not_visual_or_publication_acceptance",
     }
     assert "upstream_bindings" not in manifest
     assert set(manifest["upstream_commitments"]) == {
