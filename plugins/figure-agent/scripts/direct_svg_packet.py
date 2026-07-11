@@ -20,6 +20,14 @@ DENIED_SOURCE_FAMILIES = {
 }
 TARGET_ROLES = {"panel_c_target_crop", "panel_f_target_crop"}
 REQUIRED_INPUT_ROLES = {"semantic_packet", "licensed_font"}
+EXPECTED_INPUT_ROLES = {
+    "reconstruction": REQUIRED_INPUT_ROLES | TARGET_ROLES,
+    "synthesis": REQUIRED_INPUT_ROLES,
+}
+EXPECTED_OUTPUT_ROOTS = {
+    "reconstruction": "runs/test-a",
+    "synthesis": "runs/test-b",
+}
 EXPECTED_BUDGETS = {
     "utility": {"cycles": 3, "wall_minutes_per_panel": 30},
     "ceiling": {"cycles": 8, "wall_minutes_per_panel": 120},
@@ -230,6 +238,12 @@ def validate_packet(path: Path) -> dict[str, Any]:
         raise DirectSvgPacketError("denied_source_families_incomplete")
     if packet.get("publication_acceptance") != "not_claimed":
         raise DirectSvgPacketError("publication_acceptance_must_not_be_claimed")
+    if packet.get("output_root") != EXPECTED_OUTPUT_ROOTS[test_kind]:
+        raise DirectSvgPacketError("output_root_invalid")
+    if packet.get("runnable") is not True:
+        raise DirectSvgPacketError("packet_not_runnable")
+    if packet.get("blocked_reason") is not None:
+        raise DirectSvgPacketError("packet_blocked")
     if test_kind == "synthesis" and any(
         packet.get(key) is not False for key in SYNTHESIS_ISOLATION_DECLARATIONS
     ):
@@ -256,10 +270,10 @@ def validate_packet(path: Path) -> dict[str, Any]:
         raise DirectSvgPacketError("target_crop_required")
     if test_kind == "synthesis" and role_set & TARGET_ROLES:
         raise DirectSvgPacketError("target_crop_forbidden")
+    if role_set != EXPECTED_INPUT_ROLES[test_kind]:
+        raise DirectSvgPacketError("input_roles_invalid")
     if test_kind == "synthesis":
         _validate_synthesis_isolation(packet)
-    if not REQUIRED_INPUT_ROLES.issubset(role_set):
-        raise DirectSvgPacketError("required_input_missing")
 
     for item in inputs:
         raw_path = item.get("path")

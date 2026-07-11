@@ -77,7 +77,9 @@ def _write_packet(
             "license": "OFL-1.1",
             "sha256": font["sha256"],
         },
-        "output_root": f"runs/{test_kind}",
+        "output_root": (
+            "runs/test-a" if test_kind == "reconstruction" else "runs/test-b"
+        ),
         "path_base": "packet_root",
         "runnable": True,
         "blocked_reason": None,
@@ -131,6 +133,83 @@ def test_synthesis_rejects_target_or_geometry_derivatives(tmp_path: Path) -> Non
     )
 
     with pytest.raises(DirectSvgPacketError, match="target_crop_forbidden"):
+        validate_packet(packet_path)
+
+
+@pytest.mark.parametrize("test_kind", ["reconstruction", "synthesis"])
+@pytest.mark.parametrize("mutation", ["extra", "missing", "duplicate"])
+def test_packet_requires_exact_input_role_set(
+    tmp_path: Path,
+    test_kind: str,
+    mutation: str,
+) -> None:
+    packet_path = _write_packet(tmp_path, test_kind=test_kind)
+    packet = _load_packet(packet_path)
+    if mutation == "extra":
+        packet["allowed_inputs"].append(
+            {
+                **packet["allowed_inputs"][0],
+                "role": "oracle_context",
+            }
+        )
+        error = "input_roles_invalid"
+    elif mutation == "missing":
+        packet["allowed_inputs"] = [
+            item
+            for item in packet["allowed_inputs"]
+            if item["role"] != "licensed_font"
+        ]
+        error = "input_roles_invalid"
+    else:
+        packet["allowed_inputs"].append(packet["allowed_inputs"][0].copy())
+        error = "input_role_duplicate"
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(DirectSvgPacketError, match=error):
+        validate_packet(packet_path)
+
+
+@pytest.mark.parametrize(
+    ("test_kind", "output_root"),
+    [
+        ("reconstruction", "runs/test-b"),
+        ("synthesis", "runs/test-a"),
+        ("reconstruction", "../runs/test-a"),
+        ("synthesis", "/tmp/runs/test-b"),
+        ("synthesis", "reference/crops"),
+    ],
+)
+def test_packet_rejects_invalid_output_root(
+    tmp_path: Path,
+    test_kind: str,
+    output_root: str,
+) -> None:
+    packet_path = _write_packet(tmp_path, test_kind=test_kind)
+    packet = _load_packet(packet_path)
+    packet["output_root"] = output_root
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(DirectSvgPacketError, match="output_root_invalid"):
+        validate_packet(packet_path)
+
+
+def test_packet_requires_runnable_true(tmp_path: Path) -> None:
+    packet_path = _write_packet(tmp_path)
+    packet = _load_packet(packet_path)
+    packet["runnable"] = False
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(DirectSvgPacketError, match="packet_not_runnable"):
+        validate_packet(packet_path)
+
+
+def test_packet_requires_null_blocked_reason(tmp_path: Path) -> None:
+    packet_path = _write_packet(tmp_path)
+    packet = _load_packet(packet_path)
+    packet["blocked_reason"] = "semantic_packet_missing"
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(DirectSvgPacketError, match="packet_blocked"):
         validate_packet(packet_path)
 
 
@@ -198,6 +277,8 @@ def test_synthesis_rejects_case_insensitive_leakage_anywhere(
     error = (
         "packet_unknown_field"
         if surface in {"key", "nested_path"}
+        else "input_roles_invalid"
+        if surface == "role"
         else "synthesis_source_leakage"
     )
     with pytest.raises(DirectSvgPacketError, match=error):
