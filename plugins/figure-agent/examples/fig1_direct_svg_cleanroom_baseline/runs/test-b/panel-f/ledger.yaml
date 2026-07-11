@@ -3,8 +3,15 @@ panel: F
 budget:
   cycles: 3
   wall_minutes_per_panel: 30
-started_at: "2026-07-12T00:44:30Z"
-elapsed_basis: cumulative_wall_minutes_from_started_at_using_artifact_timestamps
+elapsed_provenance: self_reported_during_authoring
+timestamp_reconstruction: not_available_and_not_reconstructable_from_git_timestamps
+elapsed_minutes_interpretation: cumulative_self_attested_wall_minutes
+semantic_packet:
+  path: examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml
+  sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+synthesis_packet:
+  path: examples/fig1_direct_svg_cleanroom_baseline/packets/test-b-synthesis.yaml
+  sha256: sha256:8831d5515ba3bfd6d6588f5324a36e52f6eb01a2aca543dcfdf5fe05e3dcadff
 iterations:
   - cycle: 1
     cycle_type: visual_source_change
@@ -15,7 +22,7 @@ iterations:
     render_sha256: sha256:f06817a4ed5e988713932768c1696b0ab3164f85e7895706756e173f9e9cdd63
     render_width: 960
     render_height: 640
-    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-01.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-01.png, --width, "960", --height, "640"]
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, --panel, F, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-01.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-01.png]
     tool_model_receipt: &receipt
       task: Task 20 Step 2 Test B
       provider: OpenAI
@@ -50,7 +57,7 @@ iterations:
     render_sha256: sha256:15f138e8c7fdf2af95d4dfb88cee705883cd70af33aab491b131a782051d3c0b
     render_width: 960
     render_height: 640
-    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-02.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-02.png, --width, "960", --height, "640"]
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, --panel, F, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-02.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-02.png]
     tool_model_receipt: *receipt
     correction_reason: Own-render inspection showed the mechanism label crossed the force field and electrode polarity was implicit; moved the label and added same-sign electrode charge cues.
     publication_acceptance: not_claimed
@@ -63,7 +70,7 @@ iterations:
     render_sha256: sha256:f16c66b5236d3644043c42452fe170b0bfc319e635a4ea34d43a4e80cb86ac60
     render_width: 960
     render_height: 640
-    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-03.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-03.png, --width, "960", --height, "640"]
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, --panel, F, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-03.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-f/cycles/cycle-03.png]
     tool_model_receipt: *receipt
     correction_reason: Own-render inspection showed the air-gap bracket did not bind the visible cantilever tip; extended it to the tip with a leader and labeled the away-from-electrode response.
     publication_acceptance: not_claimed

@@ -3,8 +3,15 @@ panel: C
 budget:
   cycles: 3
   wall_minutes_per_panel: 30
-started_at: "2026-07-12T00:39:00Z"
-elapsed_basis: cumulative_wall_minutes_from_started_at_using_artifact_timestamps
+elapsed_provenance: self_reported_during_authoring
+timestamp_reconstruction: not_available_and_not_reconstructable_from_git_timestamps
+elapsed_minutes_interpretation: cumulative_self_attested_wall_minutes
+semantic_packet:
+  path: examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml
+  sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+synthesis_packet:
+  path: examples/fig1_direct_svg_cleanroom_baseline/packets/test-b-synthesis.yaml
+  sha256: sha256:8831d5515ba3bfd6d6588f5324a36e52f6eb01a2aca543dcfdf5fe05e3dcadff
 iterations:
   - cycle: 1
     cycle_type: visual_source_change
@@ -15,7 +22,7 @@ iterations:
     render_sha256: sha256:768f101b8a91def1c2fd6465bc026e3b6651c565e2562c27605208464118efca
     render_width: 960
     render_height: 640
-    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.png, --width, "960", --height, "640"]
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, --panel, C, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.png]
     tool_model_receipt: &receipt
       task: Task 20 Step 2 Test B
       provider: OpenAI
@@ -50,7 +57,7 @@ iterations:
     render_sha256: sha256:8b82cc3424f709e12a9bb71973d415b6b1d80fd18db1fd996cdbe904111cc54a
     render_width: 960
     render_height: 640
-    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-02.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-02.png, --width, "960", --height, "640"]
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, --panel, C, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-02.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-02.png]
     tool_model_receipt: *receipt
     correction_reason: Own-render inspection showed crowded overlap between shallow and deep distributions and uneven axis spacing; separated peaks and regularized the energy frame.
     publication_acceptance: not_claimed
@@ -63,7 +70,7 @@ iterations:
     render_sha256: sha256:607110bff04a6f604e935726ab0a2114ba29d4a529ceca9d1df0a0ad9c193748
     render_width: 960
     render_height: 640
-    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-03.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-03.png, --width, "960", --height, "640"]
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, --panel, C, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-03.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-03.png]
     tool_model_receipt: *receipt
     correction_reason: Own-render inspection showed the real-space to energy mapping and thermal meaning were implicit; added a neutral correspondence cue and explicit Boltzmann-release label.
     publication_acceptance: not_claimed

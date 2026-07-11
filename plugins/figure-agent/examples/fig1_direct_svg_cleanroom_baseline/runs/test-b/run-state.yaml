@@ -1,9 +1,12 @@
 schema: figure-agent.direct-svg-run-state.v1
 test_kind: synthesis
 state: machine_review_ready
-validated_packet: ../../packets/test-b-synthesis.yaml
-validated_packet_sha256: sha256:8831d5515ba3bfd6d6588f5324a36e52f6eb01a2aca543dcfdf5fe05e3dcadff
-semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+synthesis_packet:
+  path: examples/fig1_direct_svg_cleanroom_baseline/packets/test-b-synthesis.yaml
+  sha256: sha256:8831d5515ba3bfd6d6588f5324a36e52f6eb01a2aca543dcfdf5fe05e3dcadff
+semantic_packet:
+  path: examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml
+  sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
 execution_started: true
 environment_receipt:
   path: environment-receipt.yaml
@@ -16,7 +19,7 @@ candidate_artifacts:
     png_path: panel-c/cycles/cycle-03.png
     render_sha256: sha256:607110bff04a6f604e935726ab0a2114ba29d4a529ceca9d1df0a0ad9c193748
     ledger_path: panel-c/ledger.yaml
-    ledger_sha256: sha256:2fea21d070cb1fe3b1cfb85ea15c6256129ee85b07841fcb76c33a209384471b
+    ledger_sha256: sha256:3f366b1d758a0fe387134911c4eebab2bb2ca19ae0ae77365759d09bc578cb44
   - panel: F
     cycles: 3
     svg_path: panel-f/cycles/cycle-03.svg
@@ -24,9 +27,11 @@ candidate_artifacts:
     png_path: panel-f/cycles/cycle-03.png
     render_sha256: sha256:f16c66b5236d3644043c42452fe170b0bfc319e635a4ea34d43a4e80cb86ac60
     ledger_path: panel-f/ledger.yaml
-    ledger_sha256: sha256:4668c5fe29d9fc612c79d96cbaae6ba75c4d89b664aa8f38294755169762497d
+    ledger_sha256: sha256:14bc1cfcd621e6d09791c75aa137355caa96dd2c7bbf0f208ba6a5cb0d1c4c1a
 machine_validation:
-  candidate_validation: passed_all_6_cycles
+  svg_safety_and_structure: passed_all_6_cycles
+  relation_metadata_complete: passed_all_6_cycles
+  spatial_scientific_verification: pending_human_review
   deterministic_replay: passed_6_of_6
   focused_tests: passed
 human_scientific_acceptance: pending
