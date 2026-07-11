@@ -1,0 +1,369 @@
+% fig3_trap_schematic_v97.tex
+% Sulfur polymer paper Fig 3 conceptual schematic — 6-panel.
+% Briefing: briefing.md (sections 1-6, v0.1.2 contract).
+% Selected preview: codex_v01.png.
+% iteration 2 (2026-04-28): /fig_review critique fixes — Debye curvature,
+%   panel (d) callout split, panel (e) chain amplitude, panel (f) simplification,
+%   sub-header shortening, label declutter.
+
+\documentclass[border=8pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{183mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\textsf{\fontsize{8}{10}\selectfont}},
+  electron/.style={circle, fill=cBlue, draw=cBlue!70!black, inner sep=0pt,
+                   minimum size=2.4mm, line width=0.4pt},
+  sulfur/.style={circle, fill=cAmberSphere, draw=cAmber!80!black, inner sep=0pt,
+                 minimum size=2.6mm, line width=0.4pt,
+                 font=\textsf{\bfseries\fontsize{6.5}{7.5}\selectfont}, text=cAmber!50!black},
+  bandLine/.style={line width=1.3pt},
+  trapLine/.style={line width=1.2pt, dash pattern=on 2.0pt off 1.4pt},
+  trapSeg/.style={line width=1.4pt, cAmber},
+  axisArr/.style={-{Stealth[length=3pt,width=2pt]}, cGray, line width=0.5pt},
+  smallArr/.style={-{Stealth[length=3pt,width=2pt]}, cGray!70!black, line width=0.6pt},
+  curveBlue/.style={cBlue, line width=1.2pt},
+  curveBlueLight/.style={cBlue!55, line width=1.0pt},
+  curveRed/.style={cRed, line width=1.2pt},
+  callout/.style={-{Stealth[length=2.5pt,width=2pt]}, cGray!70!black, line width=0.4pt},
+  chainLine/.style={cGray!75!black, line width=0.7pt},
+  haloFill/.style={fill=cAmber!18, draw=cAmber!50!black, line width=0.3pt,
+                   dash pattern=on 1.0pt off 0.8pt},
+]
+
+% =============================================================================
+% Layout: 18.4 × 12.0 cm canvas, 3 cols × 2 rows, 5.8 × 5.8 cm panels
+% Pure white background (panel grid implied by layout + headers; no fill boxes).
+% =============================================================================
+
+% Panel headers — Nature Comms style: bold panel letter only.
+% Descriptive content goes in the figure caption (paper text), not on the figure.
+\node[font=\textsf{\bfseries\fontsize{10}{12}\selectfont}, anchor=west]
+    at (0.30, 11.70) {a};
+\node[font=\textsf{\bfseries\fontsize{10}{12}\selectfont}, anchor=west]
+    at (6.30, 11.70) {b};
+\node[font=\textsf{\bfseries\fontsize{10}{12}\selectfont}, anchor=west]
+    at (12.30, 11.70) {c};
+\node[font=\textsf{\bfseries\fontsize{10}{12}\selectfont}, anchor=west]
+    at (0.30, 5.50) {d};
+\node[font=\textsf{\bfseries\fontsize{10}{12}\selectfont}, anchor=west]
+    at (6.30, 5.50) {e};
+\node[font=\textsf{\bfseries\fontsize{10}{12}\selectfont}, anchor=west]
+    at (12.30, 5.50) {f};
+
+% =============================================================================
+% PANEL (a): Measurement setup — simplified (no time inset, battery symbol)
+% =============================================================================
+\begin{scope}[shift={(0.00, 6.20)}]
+  % Top electrode (raised, wider gap from header for breathing room)
+  \fill[cLGray!50, draw=cGray!80!black, line width=0.6pt]
+      (1.20, 4.40) rectangle (4.55, 4.65);
+  % Bottom electrode (lowered, more vertical real estate)
+  \fill[cLGray!50, draw=cGray!80!black, line width=0.6pt]
+      (1.20, 1.10) rectangle (4.55, 1.35);
+  \node[font=\textsf{\fontsize{6.8}{8.2}\selectfont}, cGray, anchor=south]
+      at (5.00, 4.45) {electrode};
+  \node[font=\textsf{\fontsize{6.8}{8.2}\selectfont}, cGray, anchor=north]
+      at (5.00, 1.32) {electrode};
+
+  % Polymer film body — larger
+  \fill[cAmberSphere!18, draw=cGray!50!black, line width=0.4pt]
+      (1.30, 1.35) rectangle (4.45, 4.40);
+
+  % Sulfur side groups (5, scattered)
+  \node[sulfur] at (1.95, 3.75) {S};
+  \node[sulfur] at (3.10, 3.35) {S};
+  \node[sulfur] at (3.95, 3.85) {S};
+  \node[sulfur] at (2.50, 2.40) {S};
+  \node[sulfur] at (3.55, 2.10) {S};
+
+  % Mobile electron drifting downward
+  \node[electron] at (2.85, 4.10) {};
+  \draw[smallArr, dashed, line width=0.5pt] (2.85, 4.00) -- (2.85, 1.65);
+
+  % Battery symbol on left — larger, cleaner
+  \draw[cGray!80!black, line width=0.6pt] (0.55, 3.40) -- (0.55, 4.52) -- (1.20, 4.52);
+  \draw[cGray!80!black, line width=0.6pt] (0.55, 2.30) -- (0.55, 1.22) -- (1.20, 1.22);
+  \draw[cGray!80!black, line width=0.6pt] (0.55, 2.95) -- (0.55, 3.40);
+  \draw[cGray!80!black, line width=0.6pt] (0.55, 2.55) -- (0.55, 2.30);
+  % battery plates: long (+) above, short (-) below
+  \draw[cGray!80!black, line width=1.0pt] (0.35, 2.95) -- (0.75, 2.95);
+  \draw[cGray!80!black, line width=1.0pt] (0.42, 2.65) -- (0.68, 2.65);
+  \node[font=\textsf{\fontsize{8}{9.5}\selectfont}, cRed!70!black, anchor=east] at (0.30, 2.95) {$+$};
+  \node[font=\textsf{\fontsize{8}{9.5}\selectfont}, cBlue!70!black, anchor=east] at (0.36, 2.65) {$-$};
+
+  % Current meter on right — larger
+  \draw[cGray!80!black, line width=0.6pt] (4.55, 4.52) -- (5.40, 4.52);
+  \draw[cGray!80!black, line width=0.6pt] (5.40, 4.52) -- (5.40, 3.20);
+  \draw[cGray!80!black, line width=0.6pt] (4.55, 1.22) -- (5.40, 1.22);
+  \draw[cGray!80!black, line width=0.6pt] (5.40, 1.22) -- (5.40, 2.50);
+  \draw[cGray!80!black, fill=white, line width=0.6pt] (5.40, 2.85) circle (0.36);
+  \node[font=\textsf{\itshape\fontsize{10}{12}\selectfont}] at (5.40, 2.85) {$I$};
+
+  % (no in-figure sub-caption — moved to figure caption in paper text)
+\end{scope}
+
+% =============================================================================
+% PANEL (b): Power-law signature — no inset, stronger Debye curvature
+% =============================================================================
+\begin{scope}[shift={(6.00, 6.20)}]
+  % Axes
+  \draw[axisArr] (1.00, 1.10) -- (5.20, 1.10);
+  \draw[axisArr] (1.00, 1.10) -- (1.00, 4.60);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray, anchor=north]
+      at (5.05, 1.05) {$\log t$};
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray, anchor=south, rotate=90]
+      at (0.95, 4.30) {$\log I(t)$};
+
+  % Power-law line: STRAIGHT diagonal
+  \draw[curveBlue] (1.30, 4.30) -- (5.05, 1.45);
+  % Label near top-left of panel, below the 'b' header
+  \node[font=\textsf{\fontsize{8}{9.5}\selectfont}, cBlue!80!black, anchor=west]
+      at (1.00, 5.28) {power-law};
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cBlue!80!black, anchor=west]
+      at (3.30, 3.90) {$I(t) \propto t^{-n}$};
+
+  % Debye curve: concave-down ending AT axis level (not plunging below)
+  % y(x=0)=4.30, y(x=1)=1.20 (just above axis at 1.10)
+  \draw[curveRed]
+      plot[smooth, samples=60, domain=0:1]
+      ({1.30+\x*3.75}, {4.30-0.10*\x-3.00*\x*\x*\x*\x*\x*\x});
+  % Debye labels in BOTTOM-LEFT empty area
+  \node[font=\textsf{\fontsize{8}{9.5}\selectfont}, cRed!80!black, anchor=west]
+      at (1.30, 2.20) {Debye};
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cRed!80!black, anchor=west]
+      at (1.30, 1.85) {$\exp(-t/\tau)$};
+
+\end{scope}
+
+% =============================================================================
+% PANEL (c): Trapping index n — three curves, repositioned labels, stronger Debye
+% =============================================================================
+\begin{scope}[shift={(12.00, 6.20)}]
+  % Axes
+  \draw[axisArr] (1.00, 1.10) -- (5.20, 1.10);
+  \draw[axisArr] (1.00, 1.10) -- (1.00, 4.60);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray, anchor=north]
+      at (5.05, 1.05) {$\log t$};
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray, anchor=south, rotate=90]
+      at (0.95, 4.30) {$\log I(t)$};
+
+  % High-n: STEEPEST straight line (slightly steeper than panel b)
+  \draw[curveBlue] (1.30, 4.40) -- (5.05, 1.30);
+  % Label above line in TOP-RIGHT empty area
+  \node[font=\textsf{\fontsize{7.5}{9}\selectfont}, cBlue!80!black, anchor=west]
+      at (3.40, 4.20) {high $n$};
+
+  % Low-n: GENTLE straight line, label ABOVE the line near right end
+  \draw[curveBlueLight] (1.30, 3.55) -- (5.05, 2.30);
+  \node[font=\textsf{\fontsize{7.5}{9}\selectfont}, cBlue!55, anchor=south]
+      at (4.50, 2.85) {low $n$};
+
+  % No-trap Debye: concave-down ending AT axis level
+  % y(x=0)=2.95, y(x=1)=1.20 (just above axis at 1.10)
+  \draw[curveRed]
+      plot[smooth, samples=60, domain=0:1]
+      ({1.30+\x*3.75}, {2.95-0.05*\x-1.70*\x*\x*\x*\x*\x*\x});
+  \node[font=\textsf{\fontsize{7.5}{9}\selectfont}, cRed!80!black, anchor=east]
+      at (5.20, 2.29) {no-trap (Debye)};
+
+\end{scope}
+
+% =============================================================================
+% PANEL (d): Chemical origin — chain with S-S amber halo + larger band diagram
+%   linked by "creates" arrow. No `( )_n` clutter.
+% =============================================================================
+\begin{scope}[shift={(0.00, 0.00)}]
+  % LEFT HALF — chemistry view (x: 0.30 to 3.20)
+
+  % Linear chain backbone (zigzag, horizontal)
+  \draw[chainLine, line width=1.0pt]
+      (0.40, 3.00) -- (0.75, 3.30) -- (1.10, 3.00) -- (1.45, 3.30) -- (1.80, 3.00)
+      -- (2.15, 3.30) -- (2.50, 3.00) -- (2.85, 3.30) -- (3.20, 3.00);
+
+  % S side groups (4) — two adjacent (S-S motif) + two singletons
+  \node[sulfur] at (0.75, 3.75) {S};
+  \node[sulfur] at (1.85, 3.75) {S};
+  \node[sulfur] at (2.20, 3.75) {S};
+  \node[sulfur] at (3.10, 3.75) {S};
+
+  % Bond lines S → backbone
+  \draw[chainLine, line width=0.5pt] (0.75, 3.30) -- (0.75, 3.60);
+  \draw[chainLine, line width=0.5pt] (1.85, 3.30) -- (1.85, 3.60);
+  \draw[chainLine, line width=0.5pt] (2.20, 3.30) -- (2.20, 3.60);
+  \draw[chainLine, line width=0.5pt] (3.10, 3.30) -- (3.10, 3.60);
+
+  % S-S bond — bolder, brighter amber (visual emphasis without halo at molecular scale)
+  \draw[cAmber, line width=1.8pt] (1.85, 3.75) -- (2.20, 3.75);
+
+  % Callout: "S--S trap site" ABOVE the S-S bond
+  \draw[callout] (2.025, 4.50) -- (2.025, 3.95);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cAmber!50!black, anchor=south, align=center]
+      at (2.025, 4.50) {S--S trap site};
+
+  % Callout: "electron affinity" BELOW chain, points up to S-S region
+  \draw[callout] (0.64, 2.40) -- (1.85, 3.55);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cAmber!50!black, anchor=north, align=center]
+      at (0.64, 2.32) {electron\\[-0.2em]affinity};
+
+  % "creates" arrow: from S-S region → trap level E_t (visual bridge)
+  \draw[smallArr, line width=0.8pt, cAmber!60!black]
+      (3.20, 3.30) .. controls (3.55, 3.10) and (3.85, 2.80) .. (4.55, 2.65);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cAmber!50!black, anchor=south]
+      at (3.85, 3.00) {creates};
+
+  % RIGHT HALF — larger band diagram (x: 4.10 to 5.70)
+
+  % E-axis arrow
+  \draw[axisArr, line width=0.5pt] (4.10, 1.20) -- (4.10, 4.20);
+  \node[font=\textsf{\itshape\fontsize{8}{9.5}\selectfont}, cGray, anchor=east]
+      at (4.05, 4.18) {$E$};
+
+  % CB line (top, blue)
+  \draw[bandLine, cBlue] (4.30, 3.85) -- (5.55, 3.85);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cBlue!80!black, anchor=west]
+      at (5.60, 3.85) {CB};
+
+  % VB line (bottom, red)
+  \draw[bandLine, cRed] (4.30, 1.40) -- (5.55, 1.40);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cRed!80!black, anchor=west]
+      at (5.60, 1.40) {VB};
+
+  % Trap level E_t (mid-gap, amber, localized short segment)
+  \draw[trapLine, cAmber, line width=1.4pt] (4.55, 2.55) -- (5.30, 2.55);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cAmber!50!black, anchor=west]
+      at (5.40, 2.55) {$E_t$};
+
+  % Trapped electron sitting ON E_t
+  \node[electron] at (4.85, 2.55) {};
+
+\end{scope}
+
+% =============================================================================
+% PANEL (e): Physical origin — chains with HIGHER amplitude, simpler legend
+% =============================================================================
+\begin{scope}[shift={(6.00, 0.00)}]
+  % Three wavy linear chains — amplitude 0.40 (more dramatic), 1.5 periods
+  \draw[chainLine, line width=1.0pt]
+      plot[smooth, samples=100, domain=0:1]
+      ({0.40+\x*4.95}, {4.30+0.40*sin(\x*540)});
+  \draw[chainLine, line width=1.0pt]
+      plot[smooth, samples=100, domain=0:1]
+      ({0.40+\x*4.95}, {3.05+0.40*sin(\x*540+150)});
+  \draw[chainLine, line width=1.0pt]
+      plot[smooth, samples=100, domain=0:1]
+      ({0.40+\x*4.95}, {1.80+0.40*sin(\x*540+300)});
+
+  % Sulfur clusters with larger halo regions (radius 0.60)
+  % Cluster A (top chain, left)
+  \fill[haloFill] (1.30, 4.30) circle (0.60);
+  \node[sulfur] at (1.10, 4.20) {S};
+  \node[sulfur] at (1.40, 4.45) {S};
+  \draw[trapSeg, line width=1.0pt] (1.65, 4.15) -- (2.15, 4.15);
+  \node[circle, fill=cBlue, draw=cBlue!70!black, inner sep=0pt, minimum size=1.8mm]
+      at (1.90, 4.15) {};
+
+  % Cluster B (middle chain, right)
+  \fill[haloFill] (4.00, 3.05) circle (0.60);
+  \node[sulfur] at (3.80, 2.95) {S};
+  \node[sulfur] at (4.05, 3.20) {S};
+  \node[sulfur] at (4.20, 2.90) {S};
+  \draw[trapSeg, line width=1.0pt] (4.45, 3.00) -- (4.95, 3.00);
+  \node[circle, fill=cBlue, draw=cBlue!70!black, inner sep=0pt, minimum size=1.8mm]
+      at (4.70, 3.00) {};
+
+  % Cluster C (bottom chain, center)
+  \fill[haloFill] (2.75, 1.85) circle (0.60);
+  \node[sulfur] at (2.55, 1.75) {S};
+  \node[sulfur] at (2.80, 2.00) {S};
+  \draw[trapSeg, line width=1.0pt] (3.10, 1.75) -- (3.60, 1.75);
+  \node[circle, fill=cBlue, draw=cBlue!70!black, inner sep=0pt, minimum size=1.8mm]
+      at (3.35, 1.75) {};
+
+  % Lone S groups (no cluster) on chains
+  \node[sulfur] at (3.50, 4.50) {S};
+  \node[sulfur] at (4.85, 4.15) {S};
+  \node[sulfur] at (2.05, 2.95) {S};
+  \node[sulfur] at (4.95, 1.95) {S};
+
+  % Simplified legend (2 items only)
+  \draw[chainLine, line width=1.0pt] (0.55, 1.05) -- (1.05, 1.05);
+  \node[font=\textsf{\fontsize{6.5}{8}\selectfont}, cGray, anchor=west]
+      at (1.10, 1.05) {linear chain};
+  \draw[trapSeg, line width=1.0pt] (3.10, 1.05) -- (3.50, 1.05);
+  \node[font=\textsf{\fontsize{6.5}{8}\selectfont}, cGray, anchor=west]
+      at (3.55, 1.05) {trap site};
+
+\end{scope}
+
+% =============================================================================
+% PANEL (f): Multi-modal convergence — 3 mini-metrics + ONE big g(E_t) plot
+% =============================================================================
+\begin{scope}[shift={(12.00, 0.00)}]
+
+  % --- Three mini metric plots, top row ---
+  % Mini 1: power-law decay (n)
+  \draw[cGray!50, line width=0.3pt, rounded corners=0.5mm]
+      (0.40, 3.50) rectangle (2.10, 4.65);
+  \draw[axisArr, line width=0.3pt] (0.55, 3.65) -- (1.95, 3.65);
+  \draw[axisArr, line width=0.3pt] (0.55, 3.65) -- (0.55, 4.50);
+  \draw[curveBlue, line width=0.8pt] (0.65, 4.40) -- (1.90, 3.75);
+  \node[font=\textsf{\bfseries\fontsize{6.8}{8}\selectfont}, cBlue!80!black, anchor=south]
+      at (1.25, 4.55) {1) $n$ exponent};
+
+  % Mini 2: ISPD g(E_t) two lobes
+  \draw[cGray!50, line width=0.3pt, rounded corners=0.5mm]
+      (2.30, 3.50) rectangle (4.00, 4.65);
+  \draw[axisArr, line width=0.3pt] (2.45, 3.65) -- (3.85, 3.65);
+  \draw[axisArr, line width=0.3pt] (2.45, 3.65) -- (2.45, 4.50);
+  \draw[curveRed, line width=0.8pt, draw=cAmber!60!black]
+      plot[smooth, samples=50, domain=0:1]
+      ({2.55+\x*1.30}, {3.70+0.55*exp(-((\x-0.30)*4)^2)+0.45*exp(-((\x-0.75)*5)^2)});
+  \node[font=\textsf{\bfseries\fontsize{6.8}{8}\selectfont}, cAmber!50!black, anchor=south]
+      at (3.15, 4.55) {2) $g(E_t)$};
+
+  % Mini 3: discharge time τ_d
+  \draw[cGray!50, line width=0.3pt, rounded corners=0.5mm]
+      (4.20, 3.50) rectangle (5.70, 4.65);
+  \draw[axisArr, line width=0.3pt] (4.35, 3.65) -- (5.55, 3.65);
+  \draw[axisArr, line width=0.3pt] (4.35, 3.65) -- (4.35, 4.50);
+  \draw[curveRed, line width=0.8pt]
+      plot[smooth, samples=40, domain=0:1]
+      ({4.45+\x*1.10}, {3.70+0.75*exp(-((\x-0.50)*5)^2)});
+  \node[font=\textsf{\bfseries\fontsize{6.8}{8}\selectfont}, cRed!80!black, anchor=south]
+      at (4.95, 4.55) {3) $\tau_d$};
+
+  % --- Three convergence arrows pointing down to convergence label ---
+  \draw[smallArr, line width=0.7pt, cBlue!70!black]
+      (1.25, 3.50) -- (1.95, 3.05);
+  \draw[smallArr, line width=0.7pt, cAmber!50!black]
+      (3.15, 3.50) -- (3.05, 3.05);
+  \draw[smallArr, line width=0.7pt, cRed!70!black]
+      (4.95, 3.50) -- (4.15, 3.05);
+
+  % --- Convergence label ---
+  \node[font=\textsf{\bfseries\fontsize{8}{10}\selectfont}, cTeal!50!black, anchor=south, align=center]
+      at (3.05, 2.95) {consistent trap depth distribution};
+
+  % --- Big consolidated g(E_t) plot showing two-lobe distribution ---
+  \draw[axisArr, line width=0.5pt] (1.10, 1.20) -- (5.10, 1.20);
+  \draw[axisArr, line width=0.5pt] (1.10, 1.20) -- (1.10, 2.85);
+  % Curve sits AT axis baseline at endpoints (no floating gap)
+  \draw[line width=1.4pt, draw=cTeal!50!black]
+      plot[smooth, samples=80, domain=0:1]
+      ({1.20+\x*3.80}, {1.20+1.10*exp(-((\x-0.30)*5)^2)+0.95*exp(-((\x-0.75)*5)^2)});
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray, anchor=north]
+      at (4.95, 1.15) {$E_t$};
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray, anchor=south, rotate=90]
+      at (1.05, 2.50) {$g(E_t)$};
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cTeal!50!black, anchor=south]
+      at (2.30, 2.55) {shallow};
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cTeal!50!black, anchor=south]
+      at (4.05, 2.40) {deep};
+
+\end{scope}
+
+\end{tikzpicture}%
+}
+\end{document}

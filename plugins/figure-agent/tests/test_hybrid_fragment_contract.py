@@ -159,3 +159,41 @@ def test_fragment_contract_rejects_unsafe_svg_features(
 
     with pytest.raises(FragmentContractError, match=message):
         validate_fragment_package(manifest)
+
+
+@pytest.mark.parametrize(
+    "manifest",
+    [
+        "examples/fig1_hybrid_complex_panel_pilot/fragments/fragment_manifest.json",
+        "examples/fig3_trap_schematic_slice3_semantic/fragments/fragment_manifest.json",
+    ],
+)
+def test_fragment_contract_generalizes_across_fig1_and_fig3(manifest: str) -> None:
+    result = validate_fragment_package(PLUGIN_ROOT / manifest)
+    assert result["publication_acceptance"] == "not_claimed"
+    assert result["semantic_ids"]
+
+
+def test_fig3_semantic_regions_bind_to_fragment_without_fig1_imports() -> None:
+    fixture = PLUGIN_ROOT / "examples" / "fig3_trap_schematic_slice3_semantic"
+    regions = yaml.safe_load((fixture / "semantic_regions.yaml").read_text(encoding="utf-8"))
+    fragment = validate_fragment_package(fixture / "fragments" / "fragment_manifest.json")
+
+    panel_ids = {panel["id"] for panel in regions["panels"]}
+    region_ids = {region["id"] for region in regions["regions"]}
+    selector_ids = {region["selector_id"] for region in regions["regions"]}
+    semantic_objects = {region["semantic_object"] for region in regions["regions"]}
+
+    assert {region["panel"] for region in regions["regions"]} <= panel_ids
+    assert selector_ids == set(fragment["semantic_ids"])
+    assert semantic_objects == selector_ids
+    for subject, _predicate, object_id in regions["relations"]:
+        assert subject in region_ids
+        assert object_id in region_ids
+
+    patterns = regions["forbidden_import_patterns"]
+    derivative_sources = [fixture / "fig3_trap_schematic_slice3_semantic.tex"]
+    derivative_sources.extend((fixture / "fragments").glob("*.py"))
+    for source in derivative_sources:
+        contents = source.read_text(encoding="utf-8").lower()
+        assert all(pattern.lower() not in contents for pattern in patterns)

@@ -1,0 +1,55 @@
+{
+  "schema": "figure-agent.semantic-fragment.v1",
+  "view_box": [0, 0, 580, 440],
+  "semantic_objects": [
+    {"id": "chain.backbones", "role": "linear_polymer_chain_geometry"},
+    {"id": "sulfur.regions", "role": "sulfur_rich_spatial_regions"},
+    {"id": "sulfur.sites", "role": "sulfur_sites_on_chains"},
+    {"id": "trap.levels", "role": "localized_trap_levels"},
+    {"id": "trapped.carriers", "role": "carriers_on_trap_levels"}
+  ],
+  "relations": [
+    {"subject": "sulfur.sites", "predicate": "attached_to", "object": "chain.backbones"},
+    {"subject": "sulfur.sites", "predicate": "located_in", "object": "sulfur.regions"},
+    {"subject": "trap.levels", "predicate": "co_located_with", "object": "sulfur.regions"},
+    {"subject": "trapped.carriers", "predicate": "sits_on", "object": "trap.levels"}
+  ],
+  "ownership": {
+    "svg": ["complex_geometry"],
+    "tikz": ["global_panel_composition", "text_labels", "inter_panel_arrows"]
+  },
+  "generator": {
+    "path": "structural_origin_fragment.py",
+    "sha256": "sha256:30f829b6ccfd7c317bb74b69041af7f59a20dfffa2cd8763d887bbb3fa2547a5"
+  },
+  "inputs": [
+    {
+      "path": "fragment_inputs.json",
+      "sha256": "sha256:ee1e8a18906b8658c386fbfda5221fcc6fc5edaf68823f763e1d294992266012"
+    }
+  ],
+  "assets": [],
+  "artifacts": {
+    "svg": {
+      "path": "structural_origin_fragment.svg",
+      "sha256": "sha256:fe69e12c4d6a65de69e36505b8532bb80e7a9e4dcd224625c386487287ea0cde"
+    },
+    "pdf": {
+      "path": "structural_origin_fragment.pdf",
+      "sha256": "sha256:5e404c3543ba72d3bd84c4a0b016a8bfb095c414433dc942613d97530f2d1ab1"
+    }
+  },
+  "toolchain": {
+    "python": "3.12.13",
+    "svg_to_pdf": "rsvg-convert 2.62.1",
+    "pdf_to_png": "pdftocairo 26.03.0",
+    "network_sandbox": "sandbox-exec deny network*"
+  },
+  "raster_equivalence": {
+    "width": 1160,
+    "height": 880,
+    "mean_absolute_error": 0.000594,
+    "equivalent": true
+  },
+  "publication_acceptance": "not_claimed"
+}

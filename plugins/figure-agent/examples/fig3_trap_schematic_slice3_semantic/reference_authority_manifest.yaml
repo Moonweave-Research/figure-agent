@@ -1,0 +1,23 @@
+schema: figure-agent.reference-authority.v1
+fixture: fig3_trap_schematic_slice3_semantic
+authorities:
+  - source: source/briefing.md
+    authority: scientific narrative and nine physics invariants
+  - source: source/spec.yaml
+    authority: panel inventory, required labels, accepted false
+  - source: source/coordinate_hints.yaml
+    authority: reference-derived coordinate hints only, never scientific truth
+  - source: source/reference/codex_v01.png
+    authority: selected visual baseline and motif reference
+  - source: source/fig3_trap_schematic_v97.tex
+    authority: canonical editable historical TikZ source
+  - source: source/REVIEW.md
+    authority: historical iteration evidence only, not Slice 3 verdict
+conflict_order:
+  - briefing physics invariants
+  - spec panel and label contract
+  - editable source behavior
+  - coordinate hints
+  - visual reference motifs
+  - historical review observations
+publication_acceptance: not_claimed

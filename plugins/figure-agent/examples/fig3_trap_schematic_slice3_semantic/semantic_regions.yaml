@@ -1,0 +1,50 @@
+schema: figure-agent.semantic-regions.v1
+fixture: fig3_trap_schematic_slice3_semantic
+coordinate_space: tikz_cm
+panels:
+  - {id: a, role: measurement_setup}
+  - {id: b, role: power_law_signature}
+  - {id: c, role: trapping_index_interpretation}
+  - {id: d, role: chemical_origin}
+  - {id: e, role: structural_origin}
+  - {id: f, role: multimodal_convergence}
+regions:
+  - id: e.chain_backbones
+    panel: e
+    semantic_object: chain.backbones
+    selector_id: chain.backbones
+    relation_role: linear_non_crosslinked_support
+  - id: e.sulfur_regions
+    panel: e
+    semantic_object: sulfur.regions
+    selector_id: sulfur.regions
+    relation_role: sulfur_rich_domain
+  - id: e.sulfur_sites
+    panel: e
+    semantic_object: sulfur.sites
+    selector_id: sulfur.sites
+    relation_role: attached_to_chain
+  - id: e.trap_levels
+    panel: e
+    semantic_object: trap.levels
+    selector_id: trap.levels
+    relation_role: localized_inside_sulfur_region
+  - id: e.trapped_carriers
+    panel: e
+    semantic_object: trapped.carriers
+    selector_id: trapped.carriers
+    relation_role: sits_on_trap_level
+relations:
+  - [e.sulfur_sites, attached_to, e.chain_backbones]
+  - [e.sulfur_sites, located_in, e.sulfur_regions]
+  - [e.trap_levels, co_located_with, e.sulfur_regions]
+  - [e.trapped_carriers, sits_on, e.trap_levels]
+forbidden_imports:
+  - Fig1 coordinates
+  - Fig1 panel names
+  - Fig1 templates
+  - Fig1 private helpers
+forbidden_import_patterns:
+  - examples/fig1_
+  - experiments/python_svg_semantic_fig1
+  - fig1_hybrid_complex_panel_pilot

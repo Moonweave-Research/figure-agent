@@ -1,0 +1,3 @@
+# Preserve imported historical bytes and raw compiler evidence verbatim.
+source/** -diff
+review/*.log -diff

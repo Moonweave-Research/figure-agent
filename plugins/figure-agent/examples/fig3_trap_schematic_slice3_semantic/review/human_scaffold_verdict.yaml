@@ -1,0 +1,53 @@
+schema: figure-agent.hybrid-human-verdicts.v1
+fixture: fig3_trap_schematic_slice3_semantic
+review_input_hash: sha256:30141ca841a773a7640afe491d08029472705ed094d6e40727cbd2869fc43ecb
+bound_inputs:
+  - role: artifact
+    path: review/full-render.png
+    sha256: sha256:36eb70d2c283ccf1ed0170766baab2e2137fbb843bbf0f9cea33efe789ee2b1c
+  - role: complex_panel_crop
+    path: review/panel-e-render.png
+    sha256: sha256:60aa64ac27bc188e5b401cbb6e6323731f1675d0c5e245e3c9de2a1e6bd9cfda
+  - role: visual_reference
+    path: reference/codex_v01.png
+    sha256: sha256:0c8bc4bd77d3ff51c700ee2b7b6e8e564611ff58a5ade8e952e1d5248033d7fb
+  - role: semantic_manifest
+    path: fragments/fragment_manifest.json
+    sha256: sha256:05f815beb2ea77d4f878ae81c18f87763d1a558e81162662b7a5bdd02f3f7542
+  - role: declared_regions
+    path: semantic_regions.yaml
+    sha256: sha256:8bc5bcde80495c891b919c7e97bdf82fdf49f86a4e85e615b835a096c900a018
+  - role: reference_authority
+    path: reference_authority_manifest.yaml
+    sha256: sha256:696fc0a032a5edd47cc4957ea8dbabf05584ef7bb571701ea4af467ac17cbc63
+  - role: briefing
+    path: briefing.md
+    sha256: sha256:35b5f5c88cba0e271b1a8afc69685d8c1224a2d6232fcc6339ff2558b64c0c9e
+  - role: spec
+    path: spec.yaml
+    sha256: sha256:041fa74836698288e7a8d71c587159868c7cbbd27d7e47b9570b0673862cc581
+toolchain:
+  compile_python: 3.13.12
+  fragment_python: 3.12.13
+  lualatex: LuaHBTeX 1.24.0
+  rsvg_convert: 2.62.1
+  pdftocairo: 26.03.0
+stale_when: any bound input or toolchain value changes
+scaffold_verdict:
+  status: pending
+  reviewer: null
+  reviewed_at: null
+  six_panel_narrative_legible: null
+  panel_e_role_distinct_from_fig1: null
+  cross_panel_flow_preserved: null
+  notes: null
+artifact_verdict:
+  status: pending
+  reviewer: null
+  reviewed_at: null
+  chain_region_site_relations_legible: null
+  no_false_crosslink_semantics: null
+  publication_quality: null
+  notes: null
+review_state: review-ready
+publication_acceptance: not_claimed

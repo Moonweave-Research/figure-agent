@@ -1,0 +1,17 @@
+schema: figure-agent.slice3-provenance.v1
+fixture: fig3_trap_schematic_slice3_semantic
+source_fixture: fig3_trap_schematic_v97
+source_commit: eaed8fb165e801e13cea3078f832496a011fa2f9
+source_tree: 6966d9cf193a34debc1ecfcd5d2a1d1aff1845e5
+import_hashes: source_import_hashes.sha256
+historical_source_policy: immutable_under_source_directory
+clean_reproduction:
+  compile_command: bash scripts/compile.sh examples/fig3_trap_schematic_v97/fig3_trap_schematic_v97.tex
+  repeated_compile_count: 2
+  compile_exit: 0
+  fixed_raster_repeatable: true
+  raster_sha256: sha256:a4b250d93fa88cf63d17e7348d69b5e12bda1c2ec83ff87830d3eb182c1cb97a
+  pdf_bytes_repeatable: false
+  first_pdf_sha256: sha256:d719de1d598f59a97d9a38b6b7da966671cac7288f40c741cdbd19400ae8a0f2
+  second_pdf_sha256: sha256:72d175991c3e5341b9310329886b8f67489c65bfbc241dd6a203799a46822e5f
+publication_acceptance: not_claimed
