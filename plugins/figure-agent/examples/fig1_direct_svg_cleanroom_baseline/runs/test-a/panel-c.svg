@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 680">
+  <defs>
+    <linearGradient id="film-fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7f2df"/>
+      <stop offset="1" stop-color="#e7ddbc"/>
+    </linearGradient>
+    <radialGradient id="blue-trap" cx="35%" cy="30%" r="68%">
+      <stop offset="0" stop-color="#dbeaff"/>
+      <stop offset="0.35" stop-color="#547ca8"/>
+      <stop offset="1" stop-color="#123f69"/>
+    </radialGradient>
+    <radialGradient id="red-trap" cx="35%" cy="30%" r="68%">
+      <stop offset="0" stop-color="#f6dce1"/>
+      <stop offset="0.38" stop-color="#a85463"/>
+      <stop offset="1" stop-color="#6f2431"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="680" fill="#ffffff"/>
+  <g id="panel_c_labels" fill="#292929" font-family="Latin Modern Sans, sans-serif">
+    <text x="30" y="72" font-size="38" font-weight="700">C</text>
+    <text x="355" y="55" font-size="36" font-weight="700">localized traps</text>
+    <text x="145" y="86" font-size="29" font-style="italic">real space</text>
+    <text x="700" y="86" font-size="29" font-style="italic">energy diagram</text>
+  </g>
+  <g id="c_polymer_film">
+    <rect x="96" y="252" width="340" height="232" rx="13" fill="#b9b9b9" opacity="0.55" transform="translate(7 7)"/>
+    <rect x="96" y="252" width="340" height="232" rx="13" fill="url(#film-fill)" stroke="#876f18" stroke-width="4"/>
+    <path d="M112 306 C158 286 177 296 212 307 S274 318 318 301 S370 313 421 302" fill="none" stroke="#886f21" stroke-width="3"/>
+    <path d="M112 369 C153 353 179 351 219 366 S265 381 309 363 S363 356 418 370" fill="none" stroke="#886f21" stroke-width="3"/>
+    <path d="M112 434 C152 418 177 417 218 430 S267 445 306 427 S361 428 421 430" fill="none" stroke="#886f21" stroke-width="3"/>
+    <g fill="#9b7b1d">
+      <circle cx="170" cy="293" r="4"/><circle cx="315" cy="294" r="4"/>
+      <circle cx="178" cy="354" r="4"/><circle cx="329" cy="355" r="4"/>
+      <circle cx="170" cy="420" r="4"/><circle cx="315" cy="420" r="4"/>
+    </g>
+    <line x1="86" y1="263" x2="86" y2="472" stroke="#292929" stroke-width="2"/>
+    <path d="M80 268 L86 254 L92 268 M80 467 L86 481 L92 467" fill="none" stroke="#292929" stroke-width="2"/>
+    <text x="64" y="224" fill="#292929" font-family="Latin Modern Sans, sans-serif" font-size="28" font-style="italic">d ≈ 1 µm</text>
+    <text x="105" y="550" fill="#292929" font-family="Latin Modern Sans, sans-serif" font-size="31" font-style="italic">poly(S-r-DIB) thin film</text>
+  </g>
+  <g id="c_shallow_trap_population">
+    <circle cx="196" cy="307" r="11" fill="url(#blue-trap)" stroke="#285f91" stroke-width="1.5"/>
+    <circle cx="360" cy="356" r="11" fill="url(#blue-trap)" stroke="#285f91" stroke-width="1.5"/>
+    <path d="M532 238 C534 253 545 260 565 267 C585 274 604 279 609 286 C603 294 586 301 566 307 C547 313 535 321 532 335 Z" fill="#a9c1d9" stroke="#356c9d" stroke-width="3"/>
+    <line x1="601" y1="278" x2="686" y2="278" stroke="#356c9d" stroke-width="6"/>
+    <line x1="601" y1="309" x2="686" y2="309" stroke="#356c9d" stroke-width="6"/>
+    <circle cx="630" cy="278" r="11" fill="url(#blue-trap)" stroke="#285f91" stroke-width="1.5"/>
+    <circle cx="661" cy="309" r="11" fill="url(#blue-trap)" stroke="#285f91" stroke-width="1.5"/>
+    <path d="M630 267 L637 250 L643 267 L637 263 Z M661 298 L668 281 L674 298 L668 294 Z" fill="#356c9d"/>
+    <text x="790" y="289" fill="#356c9d" font-family="Latin Modern Sans, sans-serif" font-size="34" font-weight="700">shallow</text>
+  </g>
+  <g id="c_deep_trap_population">
+    <circle cx="141" cy="427" r="11" fill="url(#red-trap)" stroke="#a8485a" stroke-width="1.5"/>
+    <circle cx="346" cy="435" r="11" fill="url(#red-trap)" stroke="#a8485a" stroke-width="1.5"/>
+    <path d="M532 404 C534 422 548 431 568 441 C591 452 617 463 624 477 C618 490 592 503 569 514 C549 524 536 536 532 554 Z" fill="#e5b2bd" stroke="#ae5262" stroke-width="3"/>
+    <line x1="601" y1="455" x2="686" y2="455" stroke="#ae5262" stroke-width="6"/>
+    <line x1="601" y1="507" x2="686" y2="507" stroke="#ae5262" stroke-width="6"/>
+    <circle cx="630" cy="455" r="11" fill="url(#red-trap)" stroke="#a8485a" stroke-width="1.5"/>
+    <circle cx="661" cy="507" r="11" fill="url(#red-trap)" stroke="#a8485a" stroke-width="1.5"/>
+    <path d="M630 444 C633 405 648 361 666 322" fill="none" stroke="#ae5262" stroke-width="2" stroke-dasharray="12 13"/>
+    <path d="M660 330 L669 313 L672 332 L665 326 Z" fill="#ae5262"/>
+    <text x="720" y="492" fill="#ae5262" font-family="Latin Modern Sans, sans-serif" font-size="34" font-weight="700">deep</text>
+  </g>
+  <g id="real_space_to_energy_relations" fill="none" stroke-width="1.5" stroke-dasharray="8 8" opacity="0.72">
+    <path d="M207 307 C340 303 420 282 532 278" stroke="#356c9d"/>
+    <path d="M371 356 C432 335 478 312 532 298" stroke="#356c9d"/>
+    <path d="M152 427 C333 447 420 456 532 455" stroke="#9f5b67"/>
+    <path d="M357 435 C430 465 477 493 532 507" stroke="#9f5b67"/>
+  </g>
+  <g id="c_conduction_band" stroke="#292929" fill="#292929">
+    <line x1="532" y1="164" x2="768" y2="164" stroke-width="2.4"/>
+    <text x="794" y="174" font-family="Latin Modern Sans, sans-serif" font-size="31" font-style="italic">E<tspan font-size="20" baseline-shift="sub">C</tspan></text>
+  </g>
+  <g id="c_mobility_edge" stroke="#292929" fill="#292929">
+    <line x1="532" y1="230" x2="768" y2="230" stroke-width="1.7" stroke-dasharray="15 10"/>
+    <text x="582" y="207" font-family="Latin Modern Sans, sans-serif" font-size="28">mobility edge</text>
+  </g>
+  <g id="c_valence_band" stroke="#292929" fill="#292929">
+    <line x1="532" y1="568" x2="768" y2="568" stroke-width="2.4"/>
+    <text x="794" y="577" font-family="Latin Modern Sans, sans-serif" font-size="31" font-style="italic">E<tspan font-size="20" baseline-shift="sub">V</tspan></text>
+  </g>
+  <g id="c_trap_depth" stroke="#a54d5d" fill="#a54d5d">
+    <line x1="952" y1="184" x2="952" y2="515" stroke-width="2.5"/>
+    <path d="M945 198 L952 180 L959 198 Z M945 501 L952 519 L959 501 Z"/>
+    <text x="966" y="361" font-family="Latin Modern Sans, sans-serif" font-size="28" font-style="italic">ΔE</text>
+    <text x="1008" y="371" font-family="Latin Modern Sans, sans-serif" font-size="17" font-style="italic">t</text>
+    <text x="1018" y="347" font-family="Latin Modern Sans, sans-serif" font-size="17" font-style="italic">d</text>
+  </g>
+  <g id="panel_c_energy_axis" stroke="#292929" fill="#292929">
+    <line x1="525" y1="144" x2="525" y2="584" stroke-width="2.4"/>
+    <line x1="514" y1="164" x2="525" y2="164" stroke-width="2"/>
+    <line x1="514" y1="278" x2="525" y2="278" stroke-width="2"/>
+    <line x1="514" y1="455" x2="525" y2="455" stroke-width="2"/>
+    <line x1="514" y1="568" x2="525" y2="568" stroke-width="2"/>
+    <text x="474" y="464" transform="rotate(-90 474 464)" font-family="Latin Modern Sans, sans-serif" font-size="26">Energy</text>
+  </g>
+</svg>

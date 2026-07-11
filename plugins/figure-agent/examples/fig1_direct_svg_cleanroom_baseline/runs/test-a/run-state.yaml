@@ -1,9 +1,27 @@
 schema: figure-agent.direct-svg-run-state.v1
 test_kind: reconstruction
-state: ready_not_started
+state: machine_review_ready
 validated_packet: ../../packets/test-a-reconstruction.yaml
 validated_packet_sha256: sha256:be62792ad14acf551f80ded4727e421f96af8ad9066de641ef94ad3c38cab510
 semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
-execution_started: false
-candidate_artifacts: []
+execution_started: true
+candidate_artifacts:
+  - panel: C
+    cycles_completed: 3
+    svg_path: panel-c.svg
+    svg_sha256: sha256:6c76b6083ed59a2e3492a2e6cd7ec14ccaea3757e86ad7b7d76082a29a7e8690
+    render_path: panel-c.png
+    render_sha256: sha256:73d4e5cb9a7d8661b90401dd90f9f77981222e358e20930009d01928c24ef71a
+    ledger_path: panel-c-ledger.yaml
+    ledger_sha256: sha256:8b3dab41a6a8eae2fefb73c006f418760a77be53a6a3fb81428f38cd8c7111fa
+  - panel: F
+    cycles_completed: 3
+    svg_path: panel-f.svg
+    svg_sha256: sha256:a4227534b2f5fbc4f90f1416358516fc58c68535a5de0b078b56b03526802174
+    render_path: panel-f.png
+    render_sha256: sha256:bcd7ebbb7c0e45f8e54efc2cd930f63eeabf6e37d20c8e60ec8322073f760cd5
+    ledger_path: panel-f-ledger.yaml
+    ledger_sha256: sha256:496d546cb6a27a8bf2c62bb1c217fed81898d963cbe5943558d5d15c7ce3a157
+human_quality_review: not_performed
+scientific_acceptance: not_claimed
 publication_acceptance: not_claimed

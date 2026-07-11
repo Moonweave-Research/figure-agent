@@ -1,0 +1,85 @@
+schema: figure-agent.direct-svg-iteration-ledger.v1
+panel: F
+budget:
+  cycles: 3
+  wall_minutes_per_panel: 30
+ceiling_budget:
+  cycles: 8
+  wall_minutes_per_panel: 120
+started_at: "2026-07-11T14:18:00Z"
+elapsed_measurement: operator_wall_clock_rounded
+iterations:
+  - cycle: 1
+    elapsed_minutes: 4.0
+    source_sha256: sha256:521b78b9cdcbf91a9cddaea069a79cbe1752c3869a75923259563ac690da8602
+    render_sha256: sha256:a2292b770165f60b50538e16d66c4a94a3a8a8d0667850fc7484c9ed76508ecc
+    command:
+      - /opt/homebrew/bin/rsvg-convert
+      - -b
+      - white
+      - -w
+      - "1379"
+      - -h
+      - "1380"
+      - -o
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-f-cycle-1.png
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-f.svg
+    tool_model_receipt: &tool_model_receipt
+      provider: openai
+      model: gpt-5-codex
+      snapshot: unavailable
+      reasoning: high
+      task:
+        name: Task 20 Step 2 Test A reference reconstruction
+        mode: cleanroom_manual_direct_svg
+        branch: codex/direct-svg-test-a
+        base_commit: 064a3cc62671ef0f086efb03f26c00d97bb783cd
+      tools:
+        authoring: apply_patch
+        validation_and_render: scripts/direct_svg_candidate.py with rsvg-convert
+        visual_inspection: view_image
+        image_generation: not_used
+    correction_reason: initial hand-authored SVG from semantic authority and target crop
+    publication_acceptance: not_claimed
+  - cycle: 2
+    elapsed_minutes: 8.0
+    source_sha256: sha256:e8731764e57b3da7a21f1ccd64402a402d18812be725908ca88aeea00d202eae
+    render_sha256: sha256:aaf543328389ca61de4e4728c277bae8d9e65e67e042851d245d5b29c6c2afe8
+    command:
+      - /opt/homebrew/bin/rsvg-convert
+      - -b
+      - white
+      - -w
+      - "1379"
+      - -h
+      - "1380"
+      - -o
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-f-cycle-2.png
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-f.svg
+    tool_model_receipt: *tool_model_receipt
+    correction_reason: move clearance guides behind the cantilever and lower the dimension line after visible overlap
+    publication_acceptance: not_claimed
+  - cycle: 3
+    elapsed_minutes: 11.0
+    source_sha256: sha256:a4227534b2f5fbc4f90f1416358516fc58c68535a5de0b078b56b03526802174
+    render_sha256: sha256:bcd7ebbb7c0e45f8e54efc2cd930f63eeabf6e37d20c8e60ec8322073f760cd5
+    command:
+      - /opt/homebrew/bin/rsvg-convert
+      - -b
+      - white
+      - -w
+      - "1379"
+      - -h
+      - "1380"
+      - -o
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-f-cycle-3.png
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-f.svg
+    tool_model_receipt: *tool_model_receipt
+    correction_reason: raise the air-gap label after visible bottom-edge clipping
+    publication_acceptance: not_claimed
+final_candidate:
+  source_path: panel-f.svg
+  source_sha256: sha256:a4227534b2f5fbc4f90f1416358516fc58c68535a5de0b078b56b03526802174
+  render_path: panel-f.png
+  render_sha256: sha256:bcd7ebbb7c0e45f8e54efc2cd930f63eeabf6e37d20c8e60ec8322073f760cd5
+publication_acceptance: not_claimed

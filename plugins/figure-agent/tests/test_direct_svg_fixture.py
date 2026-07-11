@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from direct_svg_candidate import begin_ledger, record_iteration, validate_candidate
 from direct_svg_packet import validate_packet
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
@@ -197,26 +198,105 @@ def test_run_and_review_states_cannot_claim_machine_or_publication_acceptance() 
     assert review["publication_acceptance"] == "not_claimed"
 
 
-def test_ready_run_states_bind_validated_packets_without_execution_claim() -> None:
+def test_completed_test_a_binds_candidates_ledgers_and_machine_only_state() -> None:
     semantic_hash = _sha256(FIXTURE / "contract" / "semantic-packet.yaml")
-    cases = (
-        ("test-a", "reconstruction", "test-a-reconstruction.yaml"),
-        ("test-b", "synthesis", "test-b-synthesis.yaml"),
-    )
+    packet_path = FIXTURE / "packets" / "test-a-reconstruction.yaml"
+    run_root = FIXTURE / "runs" / "test-a"
+    state = _load("runs/test-a/run-state.yaml")
+    required_ids = {
+        "C": {
+            "c_polymer_film",
+            "c_shallow_trap_population",
+            "c_deep_trap_population",
+            "c_mobility_edge",
+            "c_conduction_band",
+            "c_valence_band",
+            "c_trap_depth",
+            "real_space_to_energy_relations",
+        },
+        "F": {
+            "f_polymer_cantilever",
+            "f_fixed_support",
+            "f_planar_electrode",
+            "f_active_bias",
+            "f_trapped_charge",
+            "f_coulomb_repulsion",
+            "f_air_gap",
+        },
+    }
 
-    for run_name, test_kind, packet_name in cases:
-        packet_path = FIXTURE / "packets" / packet_name
-        state = _load(f"runs/{run_name}/run-state.yaml")
+    validate_packet(packet_path)
+    assert state["schema"] == "figure-agent.direct-svg-run-state.v1"
+    assert state["test_kind"] == "reconstruction"
+    assert state["state"] == "machine_review_ready"
+    assert state["validated_packet"] == "../../packets/test-a-reconstruction.yaml"
+    assert state["validated_packet_sha256"] == _sha256(packet_path)
+    assert state["semantic_packet_sha256"] == semantic_hash
+    assert state["execution_started"] is True
+    assert state["human_quality_review"] == "not_performed"
+    assert state["scientific_acceptance"] == "not_claimed"
+    assert state["publication_acceptance"] == "not_claimed"
+    assert {artifact["panel"] for artifact in state["candidate_artifacts"]} == {
+        "C",
+        "F",
+    }
 
-        validate_packet(packet_path)
-        assert state == {
-            "schema": "figure-agent.direct-svg-run-state.v1",
-            "test_kind": test_kind,
-            "state": "ready_not_started",
-            "validated_packet": f"../../packets/{packet_name}",
-            "validated_packet_sha256": _sha256(packet_path),
-            "semantic_packet_sha256": semantic_hash,
-            "execution_started": False,
-            "candidate_artifacts": [],
-            "publication_acceptance": "not_claimed",
-        }
+    for artifact in state["candidate_artifacts"]:
+        panel = artifact["panel"]
+        svg_path = run_root / artifact["svg_path"]
+        render_path = run_root / artifact["render_path"]
+        ledger_path = run_root / artifact["ledger_path"]
+        ledger = yaml.safe_load(ledger_path.read_text(encoding="utf-8"))
+
+        assert artifact["cycles_completed"] == 3
+        assert artifact["svg_sha256"] == _sha256(svg_path)
+        assert artifact["render_sha256"] == _sha256(render_path)
+        assert artifact["ledger_sha256"] == _sha256(ledger_path)
+        assert validate_candidate(svg_path, required_ids=required_ids[panel])
+        assert ledger["panel"] == panel
+        assert ledger["budget"] == EXPECTED_BUDGETS["utility"]
+        assert ledger["ceiling_budget"] == EXPECTED_BUDGETS["ceiling"]
+        assert len(ledger["iterations"]) == 3
+
+        validated_ledger = begin_ledger(
+            ledger["budget"],
+            started_at=ledger["started_at"],
+        )
+        for cycle, receipt in enumerate(ledger["iterations"], start=1):
+            cycle_render = run_root / f"panel-{panel.lower()}-cycle-{cycle}.png"
+            assert receipt["cycle"] == cycle
+            assert receipt["render_sha256"] == _sha256(cycle_render)
+            assert receipt["tool_model_receipt"]["task"]["mode"] == (
+                "cleanroom_manual_direct_svg"
+            )
+            assert receipt["tool_model_receipt"]["tools"]["image_generation"] == (
+                "not_used"
+            )
+            assert receipt["publication_acceptance"] == "not_claimed"
+            validated_ledger = record_iteration(validated_ledger, receipt)
+
+        final = ledger["final_candidate"]
+        assert final["source_sha256"] == artifact["svg_sha256"]
+        assert final["render_sha256"] == artifact["render_sha256"]
+        assert ledger["iterations"][-1]["source_sha256"] == artifact["svg_sha256"]
+        assert ledger["iterations"][-1]["render_sha256"] == artifact["render_sha256"]
+        assert ledger["publication_acceptance"] == "not_claimed"
+
+
+def test_ready_test_b_binds_validated_packet_without_execution_claim() -> None:
+    semantic_hash = _sha256(FIXTURE / "contract" / "semantic-packet.yaml")
+    packet_path = FIXTURE / "packets" / "test-b-synthesis.yaml"
+    state = _load("runs/test-b/run-state.yaml")
+
+    validate_packet(packet_path)
+    assert state == {
+        "schema": "figure-agent.direct-svg-run-state.v1",
+        "test_kind": "synthesis",
+        "state": "ready_not_started",
+        "validated_packet": "../../packets/test-b-synthesis.yaml",
+        "validated_packet_sha256": _sha256(packet_path),
+        "semantic_packet_sha256": semantic_hash,
+        "execution_started": False,
+        "candidate_artifacts": [],
+        "publication_acceptance": "not_claimed",
+    }

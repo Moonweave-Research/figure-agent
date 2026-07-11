@@ -1,0 +1,85 @@
+schema: figure-agent.direct-svg-iteration-ledger.v1
+panel: C
+budget:
+  cycles: 3
+  wall_minutes_per_panel: 30
+ceiling_budget:
+  cycles: 8
+  wall_minutes_per_panel: 120
+started_at: "2026-07-11T14:08:00Z"
+elapsed_measurement: operator_wall_clock_rounded
+iterations:
+  - cycle: 1
+    elapsed_minutes: 6.0
+    source_sha256: sha256:034ac10082a75b1ca612e0323c5b35da06ff876297c00e8cc73d85430ee46f4c
+    render_sha256: sha256:a1e5e57491292e18e5c621f6a1905b229292c49aeb75151beceee621e34cba9d
+    command:
+      - /opt/homebrew/bin/rsvg-convert
+      - -b
+      - white
+      - -w
+      - "2160"
+      - -h
+      - "1360"
+      - -o
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-1.png
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c.svg
+    tool_model_receipt: &tool_model_receipt
+      provider: openai
+      model: gpt-5-codex
+      snapshot: unavailable
+      reasoning: high
+      task:
+        name: Task 20 Step 2 Test A reference reconstruction
+        mode: cleanroom_manual_direct_svg
+        branch: codex/direct-svg-test-a
+        base_commit: 064a3cc62671ef0f086efb03f26c00d97bb783cd
+      tools:
+        authoring: apply_patch
+        validation_and_render: scripts/direct_svg_candidate.py with rsvg-convert
+        visual_inspection: view_image
+        image_generation: not_used
+    correction_reason: initial hand-authored SVG from semantic authority and target crop
+    publication_acceptance: not_claimed
+  - cycle: 2
+    elapsed_minutes: 10.0
+    source_sha256: sha256:211873ca6aee78f3e03dd3218cf9fd99b67ecbb40330fdd6521f04875ebe0741
+    render_sha256: sha256:fdf88ca4503c4479b1c014f43f5103ee2a15d46385ffd2249b66ac7bbc865cda
+    command:
+      - /opt/homebrew/bin/rsvg-convert
+      - -b
+      - white
+      - -w
+      - "2160"
+      - -h
+      - "1360"
+      - -o
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-2.png
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c.svg
+    tool_model_receipt: *tool_model_receipt
+    correction_reason: replace visibly literal underscore and caret notation with live SVG subscript styling
+    publication_acceptance: not_claimed
+  - cycle: 3
+    elapsed_minutes: 13.0
+    source_sha256: sha256:6c76b6083ed59a2e3492a2e6cd7ec14ccaea3757e86ad7b7d76082a29a7e8690
+    render_sha256: sha256:73d4e5cb9a7d8661b90401dd90f9f77981222e358e20930009d01928c24ef71a
+    command:
+      - /opt/homebrew/bin/rsvg-convert
+      - -b
+      - white
+      - -w
+      - "2160"
+      - -h
+      - "1360"
+      - -o
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c-cycle-3.png
+      - examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-c.svg
+    tool_model_receipt: *tool_model_receipt
+    correction_reason: separate the symbolic trap-depth subscript and superscript after visible collision
+    publication_acceptance: not_claimed
+final_candidate:
+  source_path: panel-c.svg
+  source_sha256: sha256:6c76b6083ed59a2e3492a2e6cd7ec14ccaea3757e86ad7b7d76082a29a7e8690
+  render_path: panel-c.png
+  render_sha256: sha256:73d4e5cb9a7d8661b90401dd90f9f77981222e358e20930009d01928c24ef71a
+publication_acceptance: not_claimed
