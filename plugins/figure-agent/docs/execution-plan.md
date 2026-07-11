@@ -178,27 +178,27 @@ uv run pytest tests/test_semantic_region_contract.py tests/test_inputs.py \
 - Modify: `scripts/critique_schema_validator.py` only if the public critique
   schema must carry the new attribution block
 
-- [ ] Write RED tests for bbox intersection with panel and semantic regions.
-- [ ] Return `exact` only when one valid region wins through an explicitly
+- [x] Write RED tests for bbox intersection with panel and semantic regions.
+- [x] Return `exact` only when one valid region wins through an explicitly
   declared containment/priority relationship. Area, nearest-center, and DOM
   order are not implicit tie-breakers. Return `ambiguous` with every candidate
   for undeclared overlap; return `unbound` when no declaration applies.
-- [ ] Copy the declared source selector into the finding only after validating
+- [x] Copy the declared source selector into the finding only after validating
   the source hash. Never synthesize `tex_lines` from spatial proximity alone.
-- [ ] Preserve the original detector bbox and confidence so attribution cannot
+- [x] Preserve the original detector bbox and confidence so attribution cannot
   hide detector uncertainty.
-- [ ] Add regression tests for top-left pixel versus bottom-left PDF origins,
+- [x] Add regression tests for top-left pixel versus bottom-left PDF origins,
   DPI changes, MediaBox/CropBox differences, page rotation, page index, fragment
   transforms, boundary-touching boxes, nested regions, missing declarations,
   stale source/render-geometry hashes, and malformed detector output.
-- [ ] Verify:
+- [x] Verify:
 
 ```bash
 uv run pytest tests/test_visual_finding_attribution.py \
   tests/test_visual_attribution_suite.py tests/test_critique_schema_validator.py -q
 ```
 
-- [ ] Commit: `feat: map visual findings to declared source regions`
+- [x] Commit: `feat: map visual findings to declared source regions`
 
 ## Task 4: Always produce attribution overlays and crops
 

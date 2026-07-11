@@ -438,10 +438,16 @@ def _fixture_name(pdf_path: Path) -> str:
     return pdf_path.stem
 
 
-def visual_clash_payload(pdf_path: Path, issues: list[VisualIssue]) -> dict:
+def visual_clash_payload(
+    pdf_path: Path,
+    issues: list[VisualIssue],
+    *,
+    attribution_context: dict | None = None,
+) -> dict:
     """Return the stable machine-readable visual-clash report."""
-    candidates = [
-        {
+    candidates = []
+    for index, issue in enumerate(issues, start=1):
+        candidate = {
             "id": f"VC{index:03d}",
             "kind": issue.kind,
             "text": issue.text,
@@ -449,8 +455,14 @@ def visual_clash_payload(pdf_path: Path, issues: list[VisualIssue]) -> dict:
             "metric": _metric_from_detail(issue.detail),
             "tex_lines": None,
         }
-        for index, issue in enumerate(issues, start=1)
-    ]
+        if attribution_context is not None:
+            from visual_finding_attribution import attribute_visual_finding
+
+            candidate["attribution"] = attribute_visual_finding(
+                candidate,
+                **attribution_context,
+            )
+        candidates.append(candidate)
     return {
         "fixture": _fixture_name(pdf_path),
         "render_pdf": _render_pdf_field(pdf_path),

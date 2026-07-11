@@ -107,6 +107,21 @@ def test_loads_normalized_contract_with_exact_source_binding(tmp_path: Path) -> 
     assert payload["normalized_sha256"].startswith("sha256:")
 
 
+def test_preserves_explicit_relation_fields_for_downstream_tie_breaking(
+    tmp_path: Path,
+) -> None:
+    module = _module()
+    fixture, _ = _write_fixture(
+        tmp_path,
+        region_updates={"contains": [], "priority": 7},
+    )
+
+    region = module.load_semantic_region_contract(fixture)["regions"][0]
+
+    assert region["contains"] == []
+    assert region["priority"] == 7
+
+
 @pytest.mark.parametrize(
     ("region_updates", "error"),
     [

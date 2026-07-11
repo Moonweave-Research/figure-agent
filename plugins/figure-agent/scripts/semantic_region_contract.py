@@ -276,6 +276,18 @@ def load_semantic_region_contract(
             raise SemanticRegionContractError(f"role_missing: {region_id}")
         if not provenance:
             raise SemanticRegionContractError(f"provenance_missing: {region_id}")
+        contains = raw_region.get("contains", [])
+        if not isinstance(contains, list) or not all(
+            isinstance(child_id, str) and child_id for child_id in contains
+        ):
+            raise SemanticRegionContractError(f"contains_invalid: {region_id}")
+        if region_id in contains or len(contains) != len(set(contains)):
+            raise SemanticRegionContractError(f"contains_invalid: {region_id}")
+        priority = raw_region.get("priority")
+        if priority is not None and (
+            not isinstance(priority, int) or isinstance(priority, bool)
+        ):
+            raise SemanticRegionContractError(f"priority_invalid: {region_id}")
         normalized_regions.append(
             {
                 "id": region_id,
@@ -284,8 +296,16 @@ def load_semantic_region_contract(
                 "bbox_pdf_cm": bbox,
                 "source": source,
                 "provenance": provenance,
+                "contains": list(contains),
+                "priority": priority,
             }
         )
+    for region in normalized_regions:
+        unknown_children = set(region["contains"]) - region_ids
+        if unknown_children:
+            raise SemanticRegionContractError(
+                f"contains_unknown_region: {region['id']}: {sorted(unknown_children)}"
+            )
     core = {
         "schema": SCHEMA,
         "page_geometry": geometry,
