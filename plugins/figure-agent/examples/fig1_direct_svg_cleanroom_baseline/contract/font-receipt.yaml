@@ -1,0 +1,18 @@
+schema: figure-agent.direct-svg-font-receipt.v1
+font:
+  family: Latin Modern Sans
+  style: 10 Regular
+  version: "2.005"
+  path: fonts/lmsans10-regular.otf
+  sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
+  source_path: /usr/local/texlive/2026/texmf-dist/fonts/opentype/public/lm/lmsans10-regular.otf
+license:
+  id: GUST-FONT-LICENSE
+  version: "1.0"
+  path: licenses/GUST-FONT-LICENSE.TXT
+  sha256: sha256:49ea6cb9257bbee0a3979c48a774cd221550ac1c20c95549efe45fc99cc18050
+fontconfig:
+  path: fontconfig.xml
+  sha256: sha256:134f62bcaec72f154f449294f57c7b46fd76d43d1fc3cecf689ee2dfb8cb4a6d
+  system_font_fallback: forbidden
+publication_acceptance: not_claimed

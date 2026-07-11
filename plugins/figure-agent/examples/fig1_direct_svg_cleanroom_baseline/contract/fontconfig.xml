@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <dir prefix="relative">fonts</dir>
+  <cachedir prefix="xdg">figure-agent-fontconfig</cachedir>
+  <match target="pattern">
+    <test name="family" qual="any">
+      <string>sans-serif</string>
+    </test>
+    <edit name="family" mode="prepend" binding="strong">
+      <string>Latin Modern Sans</string>
+    </edit>
+  </match>
+</fontconfig>

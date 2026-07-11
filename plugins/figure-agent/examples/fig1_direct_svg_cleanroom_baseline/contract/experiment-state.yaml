@@ -1,0 +1,19 @@
+schema: figure-agent.direct-svg-experiment-state.v1
+experiment: fig1_direct_svg_cleanroom_baseline
+allowed_current_session_work:
+  - packet_validation
+  - crop_authority
+  - candidate_validation
+  - render_reproducibility
+  - blinded_review_infrastructure
+semantic_packet_authority:
+  prepared_by_current_session: false
+  implementation_details_observed: false
+  preparer: null
+  prepared_at: null
+  sha256: null
+run_state: blocked_pending_independent_semantic_packet
+next_valid_transition: ready_after_independent_packet_validation
+machine_gate_state: infrastructure_validatable
+human_review_state: not_started
+publication_acceptance: not_claimed

@@ -101,6 +101,11 @@ def test_canonical_docs_close_known_attribution_and_provenance_edge_cases() -> N
         "render-geometry hash",
         "No fragment may depend on network access",
         "aggregate review-input hash",
+        "Test A — reference reconstruction",
+        "Test B — semantic synthesis",
+        "separately hashed input packet",
+        "two independent cold-reproduction tasks",
+        "author either the semantic packet or clean-room SVG artifacts",
     ):
         assert required in product
 
@@ -116,6 +121,10 @@ def test_canonical_docs_close_known_attribution_and_provenance_edge_cases() -> N
         "external URLs",
         "review_input_hash",
         "predeclared comparison protocol",
+        "Task 15: Validate clean-room direct-SVG input packets",
+        "target_crop_forbidden",
+        "blocked_pending_independent_semantic_packet",
+        "Run two cold reproductions only for a passing claim",
     ):
         assert required in execution
 

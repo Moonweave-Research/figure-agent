@@ -1,0 +1,8 @@
+schema: figure-agent.direct-svg-review-state.v1
+state: blocked_candidate_runs_not_available
+test_a_review: not_started
+test_b_review: not_started
+scientific_verdict: pending_named_human
+visual_verdict: pending_blinded_human
+cold_reproductions: 0
+publication_acceptance: not_claimed

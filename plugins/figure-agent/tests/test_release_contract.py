@@ -478,7 +478,7 @@ def test_closeout_status_matches_current_release_truth() -> None:
     assert "implemented on branch" not in issue_48
 
 
-def test_issue_100_inventory_header_and_surface_counts_match_current_tree() -> None:
+def test_issue_100_inventory_preserves_a_non_authoritative_snapshot() -> None:
     inventory = (
         REPO_ROOT
         / "docs"
@@ -492,16 +492,14 @@ def test_issue_100_inventory_header_and_surface_counts_match_current_tree() -> N
     )
     latest_issue_suffix = _issue_suffix_from_value(latest_issue)
 
-    script_count = len(list((REPO_ROOT / "scripts").glob("*.py")))
-    test_count = len(list((REPO_ROOT / "tests").glob("test_*.py")))
-    command_doc_count = len(list((REPO_ROOT / "commands").glob("fig_*.md")))
-
     assert f"through Issue 100{latest_issue_suffix}" in inventory
     assert f"branch baseline: `main` after Issue 100{latest_issue_suffix}" in inventory
-    assert (
-        f"Current inventory is {script_count} scripts, {test_count} tests, "
-        f"and {command_doc_count} command docs."
-    ) in inventory
+    assert "**Status:** Historical evidence — non-authoritative." in inventory
+    assert "**Superseded by:** `docs/product-spec.md` and `docs/execution-plan.md`." in inventory
+    assert re.search(
+        r"Current inventory is \d+ scripts, \d+ tests, and \d+ command docs\.",
+        inventory,
+    )
 
 
 def test_issue_100_inventory_tracks_latest_issue_file_suffix() -> None:
@@ -821,6 +819,12 @@ def test_schema_module_map_covers_script_schema_constants() -> None:
         / "issues"
         / "2026-06-01-issue-100hi-schema-module-map.md"
     ).read_text()
+    active_authority = "\n".join(
+        (
+            (REPO_ROOT / "docs" / "product-spec.md").read_text(),
+            (REPO_ROOT / "docs" / "execution-plan.md").read_text(),
+        )
+    )
     missing: list[str] = []
     for script_path in sorted(SCRIPTS_ROOT.glob("*.py")):
         tree = ast.parse(script_path.read_text(encoding="utf-8"))
@@ -843,7 +847,7 @@ def test_schema_module_map_covers_script_schema_constants() -> None:
                     and critique_shorthand in module_map
                 ):
                     continue
-                if schema not in module_map:
+                if schema not in module_map and schema not in active_authority:
                     missing.append(f"{schema} ({script_path.relative_to(REPO_ROOT)})")
 
     assert missing == []

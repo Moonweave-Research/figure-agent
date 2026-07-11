@@ -1,0 +1,49 @@
+schema: figure-agent.direct-svg-packet-template.v1
+target_packet_schema: figure-agent.direct-svg-packet.v1
+test_kind: reconstruction
+panels: [C, F]
+denied_source_families:
+  - tex
+  - whole_figure_svg
+  - candidate_patch
+  - experience_log
+  - illustration_grammar
+allowed_inputs:
+  - role: semantic_packet
+    path: null
+    sha256: null
+    status: pending_independent_authority
+  - role: licensed_font
+    path: ../contract/fonts/lmsans10-regular.otf
+    sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
+  - role: panel_c_target_crop
+    path: ../reference/crops/panel-c.png
+    sha256: sha256:40fdadde6e9e428d32caabe007e4891caacf11e99ac6565dccb1f531e6953703
+  - role: panel_f_target_crop
+    path: ../reference/crops/panel-f.png
+    sha256: sha256:d74d2ee3c360eb585486b12784170861bdaa84f574d7f1b6c0446b7be43b0f09
+budgets:
+  utility:
+    cycles: 3
+    wall_minutes_per_panel: 30
+  ceiling:
+    cycles: 8
+    wall_minutes_per_panel: 120
+model_contract:
+  provider: null
+  model: null
+  snapshot: null
+  reasoning: null
+  prompt_paths: []
+  tools: []
+  token_cap: null
+  compute_cap: null
+font:
+  role: licensed_font
+  license: GUST-FONT-LICENSE
+  sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
+output_root: runs/test-a
+path_base: fixture_root
+runnable: false
+blocked_reason: independent_semantic_packet_missing
+publication_acceptance: not_claimed

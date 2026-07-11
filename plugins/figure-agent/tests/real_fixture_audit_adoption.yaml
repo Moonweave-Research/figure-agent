@@ -1,4 +1,55 @@
 fixtures:
+  - fixture: fig1_hybrid_complex_panel_pilot
+    reference_image: true
+    text_boundary_check_ids:
+      - panel_e_hv_display_avoid_inside
+      - panel_e_vs_meter_display_avoid_inside
+      - panel_f_psu_display_avoid_inside
+      - row2_contain_text
+      - row2_de_column_rule
+      - row2_ef_column_rule
+    label_path_check_ids:
+      - panel_c_deep_escape_curve
+      - panel_c_delta_et_caliper
+      - panel_c_mobility_edge_reference
+    aesthetic_intent: true
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      The hybrid pilot preserves the parent fixture's Row-2 apparatus boundary
+      checks and Panel C semantic-path checks while replacing only declared
+      complex geometry with a provenance-bound SVG fragment.
+
+  - fixture: fig3_trap_schematic_slice3_semantic
+    reference_image: true
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_reference_only
+    rationale: >
+      Slice 3 preserves a reference-grounded six-panel historical fixture and
+      adds semantic-region provenance, but it does not declare deterministic
+      text-boundary or label-path geometry.
+
+  - fixture: fig3_trap_schematic_slice4_illustration_grammar
+    reference_image: true
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_reference_only
+    rationale: >
+      Slice 4 compares backend-neutral illustration grammar renderings against
+      the reference, while deterministic text-boundary and label-path adoption
+      remains outside that paired-render experiment.
+
   - fixture: fig1_overview_v2_pair_001_vault
     reference_image: true
     text_boundary_check_ids:

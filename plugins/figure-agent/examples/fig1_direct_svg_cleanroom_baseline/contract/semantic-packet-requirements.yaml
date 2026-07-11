@@ -1,0 +1,19 @@
+schema: figure-agent.direct-svg-semantic-packet-requirements.v1
+panels: [C, F]
+required_authority:
+  - named_preparer
+  - prepared_at
+  - source_authority_hashes
+  - scientific_objects
+  - object_relations
+  - text_content
+  - visual_roles
+  - implementation_details_not_observed_declaration
+forbidden_source_families:
+  - tex
+  - whole_figure_svg
+  - candidate_patch
+  - experience_log
+  - illustration_grammar
+current_session_may_author: false
+publication_acceptance: not_claimed

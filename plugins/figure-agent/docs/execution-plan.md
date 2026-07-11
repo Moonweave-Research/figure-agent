@@ -927,7 +927,7 @@ not create or sanitize scientific content.
 - Create: `scripts/direct_svg_packet.py`
 - Create: `tests/test_direct_svg_packet.py`
 
-- [ ] **Step 1: Write RED tests for the packet boundary**
+- [x] **Step 1: Write RED tests for the packet boundary**
 
 ```python
 def test_reconstruction_requires_target_crops(packet_factory) -> None:
@@ -961,7 +961,7 @@ The test factory writes real files under `tmp_path` and includes exactly panels
 `C` and `F`, `publication_acceptance: not_claimed`, the utility/ceiling budgets,
 model/tool contract fields, a semantic packet, and a hash-pinned licensed font.
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
 ```bash
 uv run pytest tests/test_direct_svg_packet.py -q
@@ -969,7 +969,7 @@ uv run pytest tests/test_direct_svg_packet.py -q
 
 Expected: import failure because `direct_svg_packet.py` does not exist.
 
-- [ ] **Step 3: Implement the minimal validator**
+- [x] **Step 3: Implement the minimal validator**
 
 ```python
 class DirectSvgPacketError(ValueError):
@@ -1021,7 +1021,7 @@ and ceiling `{cycles: 8, wall_minutes_per_panel: 120}`. The model contract
 requires provider, model/snapshot, reasoning, prompt paths, tools, and
 token/compute cap keys; unavailable values are explicitly `null`.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 ```bash
 uv run pytest tests/test_direct_svg_packet.py -q
@@ -1043,7 +1043,7 @@ its bytes into a new fixture and derive crops only through a hash-bound manifest
 - Create under `examples/fig1_direct_svg_cleanroom_baseline/reference/`:
   source receipt, crop manifest, immutable benchmark PNG, and generated C/F crops
 
-- [ ] **Step 1: Write RED tests for deterministic, bounded crops**
+- [x] **Step 1: Write RED tests for deterministic, bounded crops**
 
 ```python
 def test_crop_manifest_binds_source_geometry_and_output_hashes(tmp_path: Path) -> None:
@@ -1071,7 +1071,7 @@ def test_crop_manifest_rejects_out_of_bounds_bbox(tmp_path: Path) -> None:
         create_authority_crops(write_manifest_with_invalid_bbox(tmp_path))
 ```
 
-- [ ] **Step 2: Verify RED, then implement crop creation**
+- [x] **Step 2: Verify RED, then implement crop creation**
 
 ```bash
 uv run pytest tests/test_direct_svg_crop_authority.py -q
@@ -1084,7 +1084,7 @@ and `algorithm: pillow.crop.v1`. It writes fixed-mode RGB PNGs without metadata,
 persists output hashes, and must be byte-identical on a second run. It never
 infers or adjusts a crop boundary.
 
-- [ ] **Step 3: Snapshot and visually verify the real authority**
+- [x] **Step 3: Snapshot and visually verify the real authority**
 
 Copy the exact user-supplied PNG from the named
 `fig1_overview_v5f_v013_dogfood_001_vault/build/` path. Record original path,
@@ -1093,7 +1093,7 @@ Generate C/F crops and inspect them at original resolution. If a box cuts a
 panel-owned label or includes an adjacent panel, repair the manifest declaration
 before accepting it—never post-crop the generated output.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 ```bash
 uv run pytest tests/test_direct_svg_crop_authority.py -q
@@ -1111,7 +1111,7 @@ git commit -m "test: bind direct svg benchmark crops"
 - Create: `scripts/direct_svg_candidate.py`
 - Create: `tests/test_direct_svg_candidate.py`
 
-- [ ] **Step 1: Write RED candidate-contract tests**
+- [x] **Step 1: Write RED candidate-contract tests**
 
 ```python
 def test_candidate_requires_live_text_viewbox_and_semantic_ids(tmp_path: Path) -> None:
@@ -1141,7 +1141,7 @@ def test_iteration_ledger_enforces_cycle_budget(tmp_path: Path) -> None:
         record_iteration(ledger, iteration_receipt(tmp_path, 4))
 ```
 
-- [ ] **Step 2: Verify RED, then implement the harness**
+- [x] **Step 2: Verify RED, then implement the harness**
 
 ```bash
 uv run pytest tests/test_direct_svg_candidate.py -q
@@ -1155,7 +1155,7 @@ source/render hashes, command, tool/model receipt, cycle, elapsed time,
 correction reason, and `publication_acceptance: not_claimed`. Unchanged SVG
 bytes that produce a different PNG hash fail `nondeterministic_render`.
 
-- [ ] **Step 3: Verify and commit**
+- [x] **Step 3: Verify and commit**
 
 ```bash
 uv run pytest tests/test_direct_svg_candidate.py tests/test_svg_to_png.py -q
@@ -1172,7 +1172,7 @@ git commit -m "feat: record bounded direct svg authoring runs"
 - Create: `scripts/direct_svg_review.py`
 - Create: `tests/test_direct_svg_review.py`
 
-- [ ] **Step 1: Write RED tests for blinding and verdict aggregation**
+- [x] **Step 1: Write RED tests for blinding and verdict aggregation**
 
 ```python
 def test_review_packet_uses_opaque_options(tmp_path: Path) -> None:
@@ -1207,7 +1207,7 @@ def test_quality_pass_requires_both_panels_no_worse_and_one_better() -> None:
     assert classify_quality_hypothesis({"C": "worse", "F": "better"}) == "failed"
 ```
 
-- [ ] **Step 2: Verify RED, then implement the review contract**
+- [x] **Step 2: Verify RED, then implement the review contract**
 
 ```bash
 uv run pytest tests/test_direct_svg_review.py -q
@@ -1222,7 +1222,7 @@ records named reviewer(s), scientific hard-gate evidence, the three visual
 dimensions, separate editability/cost evidence, borderline state, second-review
 requirement, cold-run count, and `publication_acceptance: not_claimed`.
 
-- [ ] **Step 3: Verify and commit**
+- [x] **Step 3: Verify and commit**
 
 ```bash
 uv run pytest tests/test_direct_svg_review.py tests/test_illustration_backends.py -q
@@ -1241,7 +1241,7 @@ git commit -m "feat: build blinded direct svg review packets"
 - Create: `tests/test_direct_svg_fixture.py`
 - Modify: `tests/test_document_authority.py`
 
-- [ ] **Step 1: Add a fixture-boundary RED test**
+- [x] **Step 1: Add a fixture-boundary RED test**
 
 The test requires immutable source/crop receipts, separate Test A/Test B packet
 schemas, distinct output roots, all denied source families, fixed budgets, font
@@ -1258,14 +1258,14 @@ publication_acceptance: not_claimed
 It rejects any Test B packet containing target pixels, target hashes, or
 geometry derivatives.
 
-- [ ] **Step 2: Verify RED, then stage non-semantic infrastructure only**
+- [x] **Step 2: Verify RED, then stage non-semantic infrastructure only**
 
 Create comparator authority, schemas, font receipt, output roots, and the
 explicit blocked state. Do not create fake or current-session-authored semantic
 content to make the test pass. The fixture test passes while the run honestly
 remains blocked.
 
-- [ ] **Step 3: Verify and commit**
+- [x] **Step 3: Verify and commit**
 
 ```bash
 uv run pytest tests/test_direct_svg_fixture.py tests/test_document_authority.py -q
@@ -1274,6 +1274,22 @@ git add examples/fig1_direct_svg_cleanroom_baseline \
   tests/test_direct_svg_fixture.py tests/test_document_authority.py
 git commit -m "test: stage clean-room direct svg experiment"
 ```
+
+**Recorded state:** The packet, crop, candidate, and blinded-review contracts
+are implemented. The immutable C/F comparator, licensed isolated font, Test A
+and Test B templates, separate output roots, and non-semantic run states are
+bound under `examples/fig1_direct_svg_cleanroom_baseline/`. The experiment is
+honestly `blocked_pending_independent_semantic_packet`; no clean-room candidate
+or human quality verdict has been claimed.
+
+Schema ownership introduced by this plan remains in the canonical execution
+authority rather than the historical Issue 100H/I map:
+
+- `figure-agent.illustration-grammar.v1` — `scripts/illustration_grammar.py`;
+- `figure-agent.illustration-instance.v1` — `scripts/illustration_scene.py`;
+- `figure-agent.illustration-backend-profile.v1` — `scripts/illustration_backend.py`;
+- `figure-agent.direct-svg-packet.v1` — `scripts/direct_svg_packet.py`;
+- `figure-agent.direct-svg-crop-authority.v1` — `scripts/direct_svg_crop_authority.py`.
 
 ## Task 20: Run independent authoring and decide the next product path
 
