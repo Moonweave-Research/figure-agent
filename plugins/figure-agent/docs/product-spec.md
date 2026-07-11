@@ -44,8 +44,10 @@ The immediate product focus is:
 
 1. make visual findings actionable by connecting rendered defects back to
    panels, semantic objects, and source selectors; and
-2. reduce the cost of complex panels through a hybrid path in which Python can
-   generate semantic SVG fragments that TikZ composes into the final figure.
+2. extract the visual rules that make the accepted TikZ benchmark effective
+   into a narrow scientific illustration grammar; and
+3. reduce the cost of complex panels only when a grammar-driven backend can
+   match the surrounding TikZ visual language under human review.
 
 ## 3. Current truth and target architecture
 
@@ -57,6 +59,15 @@ The immediate product focus is:
 - **SVG is a vector representation, not a replacement for Python.** Semantic SVG
   may serve as an inspectable fragment IR and QA surface when it carries stable
   object identities and provenance.
+- **Semantic structure alone does not create illustration quality.** The Fig3
+  hybrid pilot preserved object identities and relations, while the current
+  human observation is that its primitive SVG geometry falls below the TikZ
+  visual-quality baseline. The formal hash-bound artifact verdict remains
+  pending; until it is recorded, both the observation and the missing verdict
+  block promotion of raw semantic-SVG authoring.
+- **Illustration quality requires an explicit grammar layer** for motifs,
+  strokes, curvature, layering, spacing, emphasis, and optical correction.
+  Those decisions must not be hidden inside one renderer.
 - **PDF, annotated SVG, PNG, overlays, and crops are evidence artifacts.** They
   serve different inspection and export purposes; no single render format is the
   whole source of truth.
@@ -74,10 +85,13 @@ intent + references + declared semantics
                   v
        semantic regions / object relations
                   |
+                  v
+      scientific illustration grammar
+                  |
           +-------+--------+
           |                |
           v                v
-   TikZ composition   Python-generated semantic SVG fragment
+   TikZ backend       optional SVG backend
           |                |
           +-------+--------+
                   |
@@ -107,6 +121,7 @@ entire accepted figure merely to change technology.
 | --- | --- | --- |
 | TikZ/TeX | Primary composition, typography, labels, arrows, panel assembly, editable benchmark | A technology that must be removed |
 | Python | Orchestration, deterministic geometry, detectors, contracts, manifests, source attribution | A final visual format |
+| Scientific illustration grammar | Renderer-neutral motif, stroke, layer, spacing, and optical-correction contract | A full Illustrator clone, arbitrary style generator, or renderer |
 | Semantic SVG | Optional complex-fragment IR with stable IDs, relations, and inspectable geometry | Semantic merely because it has an `.svg` suffix |
 | PDF | Deterministic vector assembly and manuscript artifact | Sufficient proof of semantic correctness |
 | PNG | Raster review and vision input | Editable source |
@@ -149,12 +164,57 @@ source hash or anchor resolution changes. Missing, duplicated, or stale anchors
 degrade attribution to `ambiguous` or `unbound` rather than triggering a guessed
 edit.
 
-### 4.3 Complex-panel hybrid authoring
+### 4.3 Scientific illustration grammar
+
+The grammar is the narrow contract between declared scientific semantics and a
+rendering backend. It makes the visual decisions that raw circles, paths, and
+coordinates do not express. TikZ and SVG may implement the contract, but
+neither backend owns the grammar.
+
+A versioned motif definition contains only:
+
+- a motif-family ID and the semantic object/relation slots it must preserve;
+- stroke, fill, color-role, curvature, corner, cap, and join families;
+- layer and occlusion order, including foreground/background ownership;
+- spacing, repetition, controlled-variation, and optical-alignment rules;
+- label and composition ownership boundaries retained by TikZ;
+- deterministic backend parameters and provenance; and
+- review assertions that can be inspected in a paired TikZ/backend crop.
+
+The first allowed motif family is `sulfur_trap_domain`: polymer backbone,
+sulfur-rich region, sulfur sites, localized trap levels, and trapped carriers.
+The strongest reproducible TikZ treatment available for the fixture is the
+comparator; selecting it does not itself make it human-accepted. The first
+experiment succeeds only if a grammar-driven result is visibly better than the
+raw Fig3 SVG pilot and reads as the same illustration language as its
+surrounding TikZ panels. Matching schemas, hashes, or semantic relations is
+necessary but insufficient.
+
+Grammar loading fails closed on an unknown schema version, motif family,
+semantic slot, relation, or required visual token. A backend must report an
+unsupported capability explicitly; it may not silently omit a layer, substitute
+a default motif, or change semantic roles. Contract tests verify schema and slot
+preservation, backend tests verify deterministic structural output, and paired
+render tests produce crops for human comparison. Raster similarity may detect
+drift but cannot decide publication quality.
+
+The grammar is not a general-purpose scene graph or complete vector-design
+application. It does not include arbitrary brushes, freeform effects, filters,
+page layout, typography engines, or unconstrained style synthesis. New motif
+families are added one at a time only after a real figure exposes a repeated
+need and a human accepts the resulting paired review.
+
+### 4.4 Complex-panel hybrid authoring
 
 Python-generated semantic SVG fragments are allowed for sub-regions where they
 materially reduce complexity or improve geometry: dense molecular structures,
 organic freeform shapes, repeated objects, spatial fields, and other geometry
 that is awkward to maintain directly in TikZ.
+
+SVG is not allowed merely because a region is complex. A new fragment must
+either implement an approved illustration motif or remain an experimental QA
+artifact. Raw backend-specific polish rules may be prototyped to discover
+grammar requirements, but they cannot become the product contract.
 
 Each fragment must provide:
 
@@ -177,7 +237,7 @@ clipping checks.
 TikZ remains responsible for figure-wide composition unless a later promotion
 gate explicitly changes that policy.
 
-### 4.4 Reference-conditioned authoring
+### 4.5 Reference-conditioned authoring
 
 The active reference workflow remains:
 
@@ -249,6 +309,13 @@ families:
 - a human review accepts both scientific meaning and publication quality; and
 - the path does not depend on fixture-name-specific patches.
 
+An illustration grammar or backend has an additional promotion requirement:
+the same motif contract must lower into at least two backends without changing
+its semantic slots or visual-role definitions. Backend outputs need not be
+pixel-identical, but both must pass the same declared relation checks and a
+paired human quality review. A lower-quality SVG implementation does not weaken
+the TikZ baseline and cannot be promoted by averaging machine scores.
+
 Correction-cost evidence follows a predeclared comparison protocol with the
 same starting contract, task boundary, and timing rules. Preparation, failed
 attempts, rendering, diagnosis, and repair time are included; missing or
@@ -260,6 +327,10 @@ production baseline.
 ## 8. Non-goals and hard boundaries
 
 - Replacing TikZ merely because SVG is easier to inspect.
+- Recreating Adobe Illustrator, a general vector editor, or an unrestricted
+  style language inside Figure Agent.
+- Hiding illustration decisions in SVG-only helpers when they belong to a
+  renderer-neutral motif contract.
 - Treating arbitrary SVG groups as semantic objects without a declaration.
 - Building a hidden autonomous taste judge or claiming that a numerical score
   proves publication quality.
@@ -298,6 +369,11 @@ it against the named branch or artifact before relying on exact counts.
 - Slice 3 machine gates have evidence on their development branch, while human
   scaffold/artifact verdicts remain required; therefore the slice is not closed
   and publication acceptance is not claimed here.
+- The Fig3 semantic-SVG pilot is reproducible and source-attributable. The
+  current human observation is that its basic illustration quality is below the
+  TikZ benchmark, while the bound artifact verdict remains pending. The next
+  bottleneck is not SVG serialization; it is the missing scientific
+  illustration grammar and the explicit verdict that evaluates it.
 
 The active work needed to close these gaps is defined only in
 `docs/execution-plan.md`.
