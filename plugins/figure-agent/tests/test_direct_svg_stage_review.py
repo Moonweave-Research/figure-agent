@@ -134,7 +134,7 @@ def test_existing_response_fails_closed(tmp_path: Path) -> None:
     result = _stage(tmp_path)
     response_path = Path(result["distribution_path"]) / "response.yaml"
     response = yaml.safe_load(response_path.read_text())
-    response["primary_reviewer"]["name"] = "already recorded"
+    response["primary_review"]["reviewer"]["name"] = "already recorded"
     response_path.write_text(yaml.safe_dump(response, sort_keys=False))
 
     with pytest.raises(DirectSvgReviewError, match="existing_review_response"):
