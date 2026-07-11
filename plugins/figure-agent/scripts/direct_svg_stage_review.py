@@ -126,7 +126,7 @@ def _resolve_path(value: Any, roots: tuple[Path, ...]) -> Path:
                 if cursor.is_symlink():
                     raise DirectSvgReviewError("review_prerequisite_path_invalid")
             path = candidate.resolve(strict=True)
-        except (FileNotFoundError, ValueError):
+        except FileNotFoundError:
             continue
         if path == candidate and path.is_file():
             return path
