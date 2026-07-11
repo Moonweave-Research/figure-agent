@@ -609,7 +609,24 @@ def stage_review(
     )
     if not replay:
         _fail_if_responses_exist(review_root)
-    seed = private_seed if private_seed is not None else secrets.token_bytes(32)
+    if replay and private_seed is None:
+        current_state = _load_yaml(
+            review_root / "review-state.yaml", "review_state_invalid"
+        )
+        current_version = current_state.get("version")
+        if not isinstance(current_version, str):
+            raise DirectSvgReviewError("review_state_invalid")
+        protected_key = _load_yaml(
+            private_root / current_version / "key.yaml", "private_manifest_invalid"
+        )
+        if protected_key.get("schema") != PRIVATE_SCHEMA:
+            raise DirectSvgReviewError("private_manifest_invalid")
+        try:
+            seed = bytes.fromhex(protected_key["seed_hex"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise DirectSvgReviewError("private_seed_invalid") from exc
+    else:
+        seed = private_seed if private_seed is not None else secrets.token_bytes(32)
     if not isinstance(seed, bytes) or len(seed) < 32:
         raise DirectSvgReviewError("private_seed_invalid")
 
