@@ -244,6 +244,14 @@ def test_generator_commit_must_resolve_and_match_script_blob(tmp_path: Path) -> 
             generator_commit=_head(),
             generator_script_sha256="sha256:" + "0" * 64,
         )
+    with pytest.raises(DirectSvgReviewError, match="generator_script_blob_mismatch"):
+        stage_review(
+            FIXTURE,
+            review_root=tmp_path / "review-three",
+            private_root=tmp_path / ".private-three",
+            private_seed=b"z" * 32,
+            generator_commit="e7d75313",
+        )
 
 
 def _filled_scientific(response: dict[str, object], reviewer: str) -> dict[str, object]:
@@ -284,6 +292,16 @@ def test_response_state_machine_rejects_visual_scores_before_scientific_gate(
     proposed = _filled_visual(proposed, False)
 
     with pytest.raises(DirectSvgReviewError, match="review_transition_invalid"):
+        advance_review_response(tmp_path / "review", tmp_path / ".private", proposed)
+
+
+def test_response_state_machine_rejects_unzoned_reviewer_timestamp(tmp_path: Path) -> None:
+    result = _stage(tmp_path)
+    response_path = Path(result["distribution_path"]) / "response.yaml"
+    proposed = _filled_scientific(yaml.safe_load(response_path.read_text()), "Reviewer One")
+    proposed["primary_review"]["reviewer"]["reviewed_at"] = "2026-07-12"
+
+    with pytest.raises(DirectSvgReviewError, match="reviewed_at_invalid"):
         advance_review_response(tmp_path / "review", tmp_path / ".private", proposed)
 
 
