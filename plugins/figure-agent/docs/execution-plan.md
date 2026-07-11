@@ -288,22 +288,22 @@ benchmark in place.
 - Modify only inside the forked fixture: its `.tex`, `spec.yaml`, briefing,
   authoring plan, and review artifacts
 
-- [ ] RED-test a general fragment manifest containing schema version, semantic
+- [x] RED-test a general fragment manifest containing schema version, semantic
   IDs, declared relations, deterministic view box, generator path/hash, input
   hashes, SVG hash, PDF hash, toolchain versions, and TikZ ownership boundary.
-- [ ] Implement deterministic generation with existing dependencies. Fail with
+- [x] Implement deterministic generation with existing dependencies. Fail with
   a clear prerequisite error when the SVG-to-PDF renderer is unavailable.
-- [ ] Require the SVG to expose stable IDs used by the manifest; reject orphaned
+- [x] Require the SVG to expose stable IDs used by the manifest; reject orphaned
   manifest IDs and undeclared SVG IDs that claim semantic status.
-- [ ] Reject scripts, event handlers, external URLs, absolute paths, ambient
+- [x] Reject scripts, event handlers, external URLs, absolute paths, ambient
   fonts/CSS, and unhashed linked or embedded assets. Rendering runs with network
   access disabled and a declared asset allowlist.
-- [ ] Compare deterministic rasterizations of SVG and PDF at fixed dimensions;
+- [x] Compare deterministic rasterizations of SVG and PDF at fixed dimensions;
   reject unexplained geometry, clipping, view-box, or visual-equivalence drift.
-- [ ] Select the target panel only after source provenance passes. Place only
+- [x] Select the target panel only after source provenance passes. Place only
   its complex geometry in the fragment. Keep global
   panel composition, text, labels, and inter-panel arrows in TikZ.
-- [ ] Compile from the plugin root using the mandated command:
+- [x] Compile from the plugin root using the mandated command:
 
 ```bash
 bash scripts/compile.sh \
@@ -312,7 +312,7 @@ FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
   examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex
 ```
 
-- [ ] Store compile logs, manifests, overlays, crops, and hashes as new pilot
+- [x] Store compile logs, manifests, overlays, crops, and hashes as new pilot
   artifacts. Do not overwrite historical Fig1 outputs.
 - [ ] Commit: `feat: pilot semantic SVG fragment in forked TikZ fixture`
 

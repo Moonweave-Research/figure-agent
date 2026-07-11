@@ -1,0 +1,629 @@
+Lint: Style Lock check (BLOCKER fails, WARN reports)...
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1: WARN: flagship_macros_unused: no flagship macros used; see styles/polymer-paper-preamble.sty for available flagship macros (BellCurve, BandDiagram, IsoBlock, ...)
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:397: WARN: thin_stroke: line width 0.18pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:410: WARN: thin_stroke: line width 0.18pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1076: WARN: thin_stroke: line width 0.2pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1079: WARN: thin_stroke: line width 0.12pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1095: WARN: thin_stroke: line width 0.22pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1110: WARN: thin_stroke: line width 0.22pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1132: WARN: thin_stroke: line width 0.22pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1182: WARN: thin_stroke: line width 0.16pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1189: WARN: thin_stroke: line width 0.18pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1193: WARN: thin_stroke: line width 0.16pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1403: WARN: thin_stroke: line width 0.15pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1508: WARN: thin_stroke: line width 0.2pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1513: WARN: thin_stroke: line width 0.18pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1519: WARN: thin_stroke: line width 0.16pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1547: WARN: thin_stroke: line width 0.18pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1549: WARN: thin_stroke: line width 0.18pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1630: WARN: thin_stroke: line width 0.2pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1637: WARN: thin_stroke: line width 0.15pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1701: WARN: thin_stroke: line width 0.2pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1768: WARN: thin_stroke: line width 0.18pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1840: WARN: thin_stroke: line width 0.18pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1848: WARN: thin_stroke: line width 0.18pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1870: WARN: thin_stroke: line width 0.22pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1871: WARN: thin_stroke: line width 0.22pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1872: WARN: thin_stroke: line width 0.22pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1903: WARN: thin_stroke: line width 0.18pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1906: WARN: thin_stroke: line width 0.18pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:1982: WARN: thin_stroke: line width 0.22pt is below 0.25pt minimum stroke
+examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex:2031: WARN: thin_stroke: line width 0.22pt is below 0.25pt minimum stroke
+Strict mode: collision/clash findings will fail the compile.
+This is LuaHBTeX, Version 1.24.0 (TeX Live 2026)
+ restricted system commands enabled.
+(./fig1_hybrid_complex_panel_pilot.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+ (/usr/local/texlive/2026/texmf-dist/tex/latex/standalone/standalone.cls
+Document Class: standalone 2025/02/22 v1.5a Class to compile TeX sub-files stan
+dalone
+(/usr/local/texlive/2026/texmf-dist/tex/latex/tools/shellesc.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/iftex/ifluatex.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/iftex/iftex.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/xkeyval/xkeyval.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/xkeyval/xkeyval.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/xkeyval/xkvutils.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/xkeyval/keyval.tex))))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/standalone/standalone.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2025/01/22 v1.4n Standard LaTeX document class
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/size10.clo))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/luatex85/luatex85.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/infwarerr/infwarerr.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty)))
+(/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/single-aut
+hority-docs/plugins/figure-agent/styles/polymer-paper-preamble.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/fontspec/fontspec.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/l3packages/xparse/xparse.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/l3kernel/expl3.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/l3backend/l3backend-luatex.def)))
+ (/usr/local/texlive/2026/texmf-dist/tex/latex/fontspec/fontspec-luatex.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/fontenc.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/fontspec/fontspec.cfg)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/utilities/pgfrcs.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfutil-common.te
+x)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfutil-latex.def
+) (/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfrcs.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/pgf.revision.tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/basiclayer/pgfcore.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphicx.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphics.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/trig.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/graphics.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-def/luatex.def)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/systemlayer/pgfsys.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgfsys.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfkeyslibraryfil
+tered.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgf.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-luatex.d
+ef
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-common-p
+df.def)))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgfsyssoftpath.
+code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgfsysprotocol.
+code.tex)) (/usr/local/texlive/2026/texmf-dist/tex/latex/xcolor/xcolor.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcore.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathutil.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathparser.code.tex
+)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.code.
+tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.basic
+.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.trigo
+nometric.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.rando
+m.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.compa
+rison.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.base.
+code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.round
+.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.misc.
+code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.integ
+erarithmetics.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathcalc.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfloat.code.tex)
+) (/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfint.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepoints.co
+de.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathconst
+ruct.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathusage
+.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorescopes.co
+de.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoregraphicst
+ate.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretransform
+ations.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorequick.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreobjects.c
+ode.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathproce
+ssing.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorearrows.co
+de.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreshade.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreimage.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreexternal.
+code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorelayers.co
+de.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretranspare
+ncy.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepatterns.
+code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorerdf.code.
+tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/modules/pgfmoduleshapes.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/modules/pgfmoduleplot.code.
+tex)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version
+-0-65.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version
+-1-18.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/utilities/pgffor.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/utilities/pgfkeys.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex)
+) (/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/math/pgfmath.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgffor.code.tex))
+
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/tikz.cod
+e.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/pgflibraryplothan
+dlers.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/modules/pgfmodulematrix.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarytopaths.code.tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amstext.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsgen.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsbsy.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsopn.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/amssymb.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/amsfonts.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/etoolbox/etoolbox.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/xstring/xstring.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/xstring/xstring.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/chemfig/chemfig.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/chemfig/chemfig.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/simplekv/simplekv.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/pgflibraryarrows.
+meta.code.tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgfplots/pgfplots.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.revision.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotscore.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/sys/pgfplotssysgeneric
+.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/libs/pgfplotslibrary.c
+ode.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/oldpgfcompatib/pgfplot
+soldpgfsupp_loader.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/pgflibraryfpu.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/oldpgfcompatib/pgfplot
+soldpgfsupp_pgfutil-common-lists.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/luamath/pgflibrar
+yluamath.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotsutil.code
+.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/liststructure/pgfplots
+liststructure.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/liststructure/pgfplots
+liststructureext.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/liststructure/pgfplots
+array.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/liststructure/pgfplots
+matrix.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/numtable/pgfplotstable
+shared.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/liststructure/pgfplots
+deque.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotsbinary.co
+de.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotsbinary.da
+ta.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotsutil.verb
+.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/libs/pgflibrarypgfplot
+s.surfshading.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/sys/pgflibrarypgfplots
+.surfshading.pgfsys-luatex.def)))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotscolormap.
+code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotscolor.cod
+e.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotsstackedplots.c
+ode.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotsplothandlers.c
+ode.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotsmeshplothandle
+r.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotsmeshplotimage.
+code.tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.scaling.code.
+tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotscoordprocessin
+g.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.errorbars.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.markers.code.
+tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotsticks.code.tex
+)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.paths.code.te
+x)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarydecorations.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/modules/pgfmoduledecoration
+s.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarydecorations.pathmorphing.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/decorations/pgfli
+brarydecorations.pathmorphing.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarydecorations.pathreplacing.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/decorations/pgfli
+brarydecorations.pathreplacing.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/libs/tikzlibrarypgfplo
+ts.contourlua.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibraryplotmarks.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/pgflibraryplotmar
+ks.code.tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarycalc.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarybackgrounds.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibraryshapes.geometric.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/shapes/pgflibrary
+shapes.geometric.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibraryshadings.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/pgflibraryshading
+s.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarypositioning.code.tex))
+(./build/fig1_hybrid_complex_panel_pilot.aux)
+(/usr/local/texlive/2026/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+) (/usr/local/texlive/2026/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg))
+Package pgfplots notification 'compat/show suggested version=true': document ha
+s been generated with the most recent feature set (\pgfplotsset{compat=1.18}).
+
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd)
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <6.5> not available
+(Font)              size <6> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <4.54997> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <3.25> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <6.5> not available
+(Font)              size <6> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <4.54997> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <3.25> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <6.5> not available
+(Font)              size <6> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <4.54997> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <3.25> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <7.5> not available
+(Font)              size <7> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <3.75> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <7.5> not available
+(Font)              size <7> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <3.75> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <7.5> not available
+(Font)              size <7> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <3.75> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <4.5> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <3.14998> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <2.25> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <4.5> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <3.14998> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <2.25> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <4.5> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <3.14998> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <2.25> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <4> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <2.79999> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <2> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <4> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <2.79999> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <2> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <4> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <2.79999> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <2> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <5.5> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <3.84998> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <2.75> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <5.5> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <3.84998> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <2.75> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <5.5> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <3.84998> not available
+(Font)              size <5> substituted on input line 2070.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <2.75> not available
+(Font)              size <5> substituted on input line 2070.
+
+[1
+Non-PDF special ignored!{/usr/local/texlive/2026/texmf-var/fonts/map/pdftex/upd
+map/pdftex.map}<./fragments/complex_panel_fragment.pdf>]
+(./build/fig1_hybrid_complex_panel_pilot.aux)
+
+LaTeX Font Warning: Size substitutions with differences
+(Font)              up to 3.0pt have occurred.
+
+)
+ 76338 words of node memory still in use:
+   718 hlist, 3 vlist, 37 rule, 40 disc, 50 math, 2505 glue, 19 kern, 441 glyph
+, 7690 attribute, 51 glue_spec, 7690 attribute_list, 2 write, 4472 pdf_literal,
+ 872 pdf_colorstack, 2 pdf_setmatrix, 2 pdf_save, 2 pdf_restore nodes
+   avail lists: 1:2,2:36,3:8961,4:1754,5:48,6:2,7:6012,8:8,9:1518,11:80
+</System/Library/Fonts/Supplemental/Arial Bold Italic.ttf></System/Library/Font
+s/Supplemental/Arial Italic.ttf></System/Library/Fonts/Supplemental/Arial.ttf><
+/System/Library/Fonts/Supplemental/Arial Bold.ttf></usr/local/texlive/2026/texm
+f-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2026/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/texlive/2026/texmf-di
+st/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2026/texmf-dist
+/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2026/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2026/texmf-dist/fonts
+/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2026/texmf-dist/fonts/ty
+pe1/public/amsfonts/cm/cmsy5.pfb></usr/local/texlive/2026/texmf-dist/fonts/type
+1/public/amsfonts/cm/cmsy7.pfb>
+Output written on fig1_hybrid_complex_panel_pilot.pdf (1 page, 158906 bytes).
+Transcript written on fig1_hybrid_complex_panel_pilot.log.
+OK: no collisions found in fig1_hybrid_complex_panel_pilot.pdf (111 words)
+visual clash report: fig1_hybrid_complex_panel_pilot.pdf (111 words)
+WARN visual_clash: candidates serialized to build/visual_clash.json
+0 suppressed (use --no-ignore-known-fp to see all)
+OK: no text-boundary clashes found in fig1_hybrid_complex_panel_pilot.pdf (111 words)
+OK: no label-path proximity candidates found in fig1_hybrid_complex_panel_pilot.pdf (111 words)
+WARN undeclared_horizontal_rule: UG001 text='' distance=None
+WARN label_endpoint_near_miss: UG002 text='copolymer' distance=2.592059
+WARN undeclared_horizontal_rule: UG003 text='' distance=None
+WARN label_endpoint_near_miss: UG004 text='HV+' distance=1.659016
+WARN undeclared_horizontal_rule: UG005 text='' distance=None
+WARN undeclared_rect_boundary: UG006 text='' distance=None
+WARN undeclared_rect_boundary: UG007 text='' distance=None
+WARN undeclared_rect_boundary: UG008 text='' distance=None
+WARN undeclared_horizontal_rule: UG009 text='' distance=None
+WARN label_endpoint_near_miss: UG010 text='Vs' distance=1.234503
+WARN undeclared_column_rule: UG011 text='' distance=None
+WARN label_endpoint_near_miss: UG012 text='ISPD' distance=3.209696
+WARN label_endpoint_near_miss: UG013 text='probe' distance=3.893698
+WARN undeclared_horizontal_rule: UG014 text='' distance=None
+WARN undeclared_column_rule: UG015 text='' distance=None
+WARN undeclared_horizontal_rule: UG016 text='' distance=None
+WARN undeclared_horizontal_rule: UG017 text='' distance=None
+WARN undeclared_horizontal_rule: UG018 text='' distance=None
+WARN undeclared_horizontal_rule: UG019 text='' distance=None
+WARN label_endpoint_near_miss: UG020 text='meter' distance=0.13477
+WARN undeclared_column_rule: UG021 text='' distance=None
+WARN undeclared_column_rule: UG022 text='' distance=None
+WARN undeclared_column_rule: UG023 text='' distance=None
+WARN undeclared_column_rule: UG024 text='' distance=None
+WARN undeclared_column_rule: UG025 text='' distance=None
+WARN undeclared_column_rule: UG026 text='' distance=None
+WARN label_endpoint_near_miss: UG027 text='poly(S-r-DIB)' distance=0.557286
+WARN label_endpoint_near_miss: UG028 text='thin' distance=0.557286
+WARN undeclared_horizontal_rule: UG029 text='' distance=None
+WARN undeclared_rect_boundary: UG030 text='' distance=None
+WARN label_endpoint_near_miss: UG031 text='S' distance=1.809592
+WARN undeclared_column_rule: UG032 text='' distance=None
+WARN undeclared_column_rule: UG033 text='' distance=None
+WARN undeclared_rect_boundary: UG034 text='' distance=None
+WARN undeclared_rect_boundary: UG035 text='' distance=None
+WARN undeclared_rect_boundary: UG036 text='' distance=None
+WARN undeclared_rect_boundary: UG037 text='' distance=None
+WARN undeclared_rect_boundary: UG038 text='' distance=None
+WARN undeclared_rect_boundary: UG039 text='' distance=None
+WARN undeclared_rect_boundary: UG040 text='' distance=None
+WARN undeclared_rect_boundary: UG041 text='' distance=None
+WARN undeclared_rect_boundary: UG042 text='' distance=None
+WARN undeclared_rect_boundary: UG043 text='' distance=None
+WARN undeclared_rect_boundary: UG044 text='' distance=None
+WARN undeclared_rect_boundary: UG045 text='' distance=None
+WARN undeclared_column_rule: UG046 text='' distance=None
+WARN label_endpoint_near_miss: UG047 text='S' distance=3.697873
+WARN undeclared_horizontal_rule: UG048 text='' distance=None
+WARN label_endpoint_near_miss: UG049 text='−(S)' distance=0.061571
+WARN undeclared_horizontal_rule: UG050 text='' distance=None
+WARN undeclared_rect_boundary: UG051 text='' distance=None
+WARN undeclared_rect_boundary: UG052 text='' distance=None
+WARN undeclared_rect_boundary: UG053 text='' distance=None
+WARN undeclared_rect_boundary: UG054 text='' distance=None
+WARN undeclared_rect_boundary: UG055 text='' distance=None
+WARN undeclared_rect_boundary: UG056 text='' distance=None
+WARN undeclared_rect_boundary: UG057 text='' distance=None
+WARN undeclared_rect_boundary: UG058 text='' distance=None
+WARN undeclared_rect_boundary: UG059 text='' distance=None
+WARN undeclared_rect_boundary: UG060 text='' distance=None
+WARN undeclared_rect_boundary: UG061 text='' distance=None
+WARN undeclared_rect_boundary: UG062 text='' distance=None
+WARN undeclared_rect_boundary: UG063 text='' distance=None
+WARN undeclared_rect_boundary: UG064 text='' distance=None
+WARN undeclared_rect_boundary: UG065 text='' distance=None
+WARN undeclared_rect_boundary: UG066 text='' distance=None
+WARN undeclared_rect_boundary: UG067 text='' distance=None
+WARN undeclared_rect_boundary: UG068 text='' distance=None
+WARN undeclared_rect_boundary: UG069 text='' distance=None
+WARN undeclared_rect_boundary: UG070 text='' distance=None
+WARN undeclared_rect_boundary: UG071 text='' distance=None
+WARN undeclared_rect_boundary: UG072 text='' distance=None
+WARN undeclared_rect_boundary: UG073 text='' distance=None
+WARN undeclared_horizontal_rule: UG074 text='' distance=None
+WARN undeclared_column_rule: UG075 text='' distance=None
+WARN undeclared_horizontal_rule: UG076 text='' distance=None
+WARN undeclared_column_rule: UG077 text='' distance=None
+WARN undeclared_column_rule: UG078 text='' distance=None
+WARN undeclared_horizontal_rule: UG079 text='' distance=None
+WARN undeclared_horizontal_rule: UG080 text='' distance=None
+WARN undeclared_rect_boundary: UG081 text='' distance=None
+WARN undeclared_rect_boundary: UG082 text='' distance=None
+WARN undeclared_rect_boundary: UG083 text='' distance=None
+WARN undeclared_rect_boundary: UG084 text='' distance=None
+WARN undeclared_rect_boundary: UG085 text='' distance=None
+WARN undeclared_horizontal_rule: UG086 text='' distance=None
+WARN undeclared_rect_boundary: UG087 text='' distance=None
+WARN undeclared_rect_boundary: UG088 text='' distance=None
+WARN undeclared_horizontal_rule: UG089 text='' distance=None
+WARN undeclared_horizontal_rule: UG090 text='' distance=None
+WARN undeclared_horizontal_rule: UG091 text='' distance=None
+WARN undeclared_rect_boundary: UG092 text='' distance=None
+WARN undeclared_rect_boundary: UG093 text='' distance=None
+WARN label_endpoint_near_miss: UG094 text='localized' distance=0.418633
+WARN undeclared_horizontal_rule: UG095 text='' distance=None
+95 undeclared geometry candidate(s)
+OK: no label hyphenation found in fig1_hybrid_complex_panel_pilot.pdf
+tex assertions: fig1_hybrid_complex_panel_pilot.tex (1 checked)
+OK: no tex-geometry assertion issues
+physics grounding: fig1_hybrid_complex_panel_pilot = grounded
+OK layout drift Sulfur-rich polymer: 0.001
+OK layout drift poly(S-r-DIB) linear copolymer: 0.001
+OK layout drift Sulfur content: 0.001
+OK layout drift localized traps: 0.003
+OK layout drift real space: 0.002
+OK layout drift energy diagram: 0.003
+OK layout drift poly(S-r-DIB) thin film: 0.006
+OK layout drift convergent evidence: 0.002
+OK layout drift kinetic: 0.002
+OK layout drift ISPD: 0.003
+OK layout drift mechanical: 0.004
+OK layout drift MIM stack: 0.003
+OK layout drift polymer film: 0.000
+OK layout drift SMU: 0.003
+OK layout drift HV: 0.003
+OK layout drift Vs probe: 0.003
+SKIP layout drift Vs meter: uncovered_ref
+SKIP layout drift Vactive: uncovered_ref
+SKIP layout drift I(t): uncovered_ref
+WARN layout drift ['high n', 'hig h n', 'hig hn']: uncovered_both
+SKIP layout drift low n: uncovered_ref
+OK layout drift Debye: 0.001
+SKIP layout drift g(Et): uncovered_ref
+OK layout drift Coulomb: 0.003
+OK layout drift repulsion: 0.002
+SKIP layout drift electrode: uncovered_ref
+OK layout drift air gap: 0.004
+SKIP layout drift qtr: uncovered_ref
+ERROR: strict detector gate failed after review evidence generation

@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.semantic-fragment-inputs.v1",
+  "view_box": [0, 0, 700, 400],
+  "palette": {
+    "amber": "#d9a441",
+    "blue": "#2474b5",
+    "red": "#b53832",
+    "gray": "#59636d"
+  },
+  "trap_sites": {
+    "shallow": [[165, 168], [275, 206]],
+    "deep": [[125, 252], [265, 260]]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "figure-agent.semantic-fragment.v1",
+  "view_box": [0, 0, 700, 400],
+  "semantic_objects": [
+    {"id": "film.body", "role": "polymer_film_geometry"},
+    {"id": "trap.sites", "role": "real_space_trap_sites"},
+    {"id": "energy.references", "role": "energy_reference_geometry"},
+    {"id": "trap.shallow", "role": "shallow_trap_distribution"},
+    {"id": "trap.deep", "role": "deep_trap_distribution"},
+    {"id": "escape.paths", "role": "thermal_escape_geometry"}
+  ],
+  "relations": [
+    {"subject": "trap.sites", "predicate": "embedded_in", "object": "film.body"},
+    {"subject": "trap.shallow", "predicate": "shallower_than", "object": "trap.deep"},
+    {"subject": "trap.shallow", "predicate": "located_against", "object": "energy.references"},
+    {"subject": "trap.deep", "predicate": "located_against", "object": "energy.references"},
+    {"subject": "escape.paths", "predicate": "originates_from", "object": "trap.deep"}
+  ],
+  "ownership": {
+    "svg": ["complex_geometry"],
+    "tikz": ["global_panel_composition", "text_labels", "inter_panel_arrows"]
+  },
+  "generator": {
+    "path": "complex_panel_fragment.py",
+    "sha256": "sha256:5e2d8cd7c655ae5daadb603b7414b4b9e0b67a3fa239292db97752cd99bb0448"
+  },
+  "inputs": [
+    {
+      "path": "fragment_inputs.json",
+      "sha256": "sha256:58ba8045e14cb803555d17db30c50a31df0c8356c3b19e2892febae7e99406ef"
+    }
+  ],
+  "assets": [],
+  "artifacts": {
+    "svg": {
+      "path": "complex_panel_fragment.svg",
+      "sha256": "sha256:2bf76d71971c96ebd9271bcba61942373ec1b72ff7d94aaa2dd461909b0d766f"
+    },
+    "pdf": {
+      "path": "complex_panel_fragment.pdf",
+      "sha256": "sha256:d72c4186374f6360b66620c944a91570d753ed7d41316094787865032972ae87"
+    }
+  },
+  "toolchain": {
+    "python": "3.12.13",
+    "svg_to_pdf": "rsvg-convert 2.62.1",
+    "pdf_to_png": "pdftocairo 26.03.0",
+    "network_sandbox": "sandbox-exec deny network*"
+  },
+  "raster_equivalence": {
+    "width": 1400,
+    "height": 800,
+    "mean_absolute_error": 0.000819,
+    "equivalent": true
+  },
+  "publication_acceptance": "not_claimed"
+}

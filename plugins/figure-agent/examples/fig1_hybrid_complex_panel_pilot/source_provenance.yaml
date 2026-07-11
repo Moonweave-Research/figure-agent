@@ -1,0 +1,15 @@
+schema: figure-agent.hybrid-pilot-provenance.v1
+source_fixture: fig1_overview_v2_pair_001_vault
+source_commit: 58cae3323e87bd7b95cad26ed9977104fc936a80
+source_tree: a57222b5f9343ba208a4e9957b6b110b2e96de5c
+fork_policy: historical_source_unchanged
+reference_authority: inherited_from_source_fixture
+fragment_manifest: fragments/fragment_manifest.json
+ownership:
+  svg:
+    - complex_geometry
+  tikz:
+    - global_panel_composition
+    - text_labels
+    - inter_panel_arrows
+publication_acceptance: not_claimed

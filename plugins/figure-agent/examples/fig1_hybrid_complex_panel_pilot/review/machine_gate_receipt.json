@@ -1,0 +1,33 @@
+{
+  "schema": "figure-agent.hybrid-pilot-machine-receipt.v1",
+  "fixture": "fig1_hybrid_complex_panel_pilot",
+  "source_commit": "58cae3323e87bd7b95cad26ed9977104fc936a80",
+  "commands": {
+    "normal_compile": "bash scripts/compile.sh examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex",
+    "normal_exit": 0,
+    "strict_compile": "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex",
+    "strict_exit": 1
+  },
+  "normal_findings": {
+    "collisions": 0,
+    "text_boundary_clashes": 0,
+    "label_path_proximity": 0,
+    "tex_geometry_assertion_issues": 0,
+    "physics_grounding": "grounded",
+    "undeclared_geometry_candidates": 95
+  },
+  "strict_failure": {
+    "category": "inherited_review_coverage",
+    "detail": "The inherited high-n layout-drift reference is uncovered in both compared renders; undeclared geometry candidates also remain review inputs.",
+    "hybrid_fragment_contract_failure": false
+  },
+  "fragment_equivalence": {
+    "dimensions": [1400, 800],
+    "mean_absolute_error": 0.000819,
+    "equivalent": true
+  },
+  "human_scaffold_verdict": "absent",
+  "human_artifact_verdict": "absent",
+  "review_state": "machine-valid-with-strict-gap",
+  "publication_acceptance": "not_claimed"
+}

@@ -1,0 +1,61 @@
+schema: figure-agent.hybrid-pilot-source.v1
+gate: passed
+source_fixture: fig1_overview_v2_pair_001_vault
+source_commit: 58cae3323e87bd7b95cad26ed9977104fc936a80
+source_tree: a57222b5f9343ba208a4e9957b6b110b2e96de5c
+source_unchanged_at_selection_commit: 3b488ca30e1c22271011da568b333b986db20ad7
+selection_reason: >-
+  This tracked Fig1-family package contains editable TikZ, briefing, spec,
+  authoring instructions, declared references, and fixed baseline exports. The
+  untracked-source dogfood artifact is excluded from fork authority.
+inputs:
+  - role: editable_tex
+    path: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
+    sha256: sha256:80e5d3fc5c69b2c6abe631cf9d2a8d33526b4d2473ec2c288bc42df3a3210c05
+  - role: briefing
+    path: examples/fig1_overview_v2_pair_001_vault/briefing.md
+    sha256: sha256:16c021baf0484abc63d700d38d9e93b9e605f7e615677fd74b74d4770d6a0827
+  - role: spec
+    path: examples/fig1_overview_v2_pair_001_vault/spec.yaml
+    sha256: sha256:950d1de1a82ca567f55d81e132cbc4d1401f1db9269f356bc585008d3aa86f06
+  - role: authoring_plan
+    path: examples/fig1_overview_v2_pair_001_vault/authoring_plan.md
+    sha256: sha256:5502bc314bf872d5c348fe05253a85fae289a86102b633ca4b39e6016a46aec3
+  - role: reference_pack
+    path: examples/fig1_overview_v2_pair_001_vault/reference/reference_pack.md
+    sha256: sha256:ce75144c808fb1c18da945e3a7c614f1c8cc8fbd241d0c1a2575896b0ba1ecc5
+  - role: reference_baseline_png
+    path: examples/fig1_overview_v2_pair_001_vault/reference/current_render_baseline_2026-07-03.png
+    sha256: sha256:52f8c893d277be17a808177a3a2e9b3e81d1ba3b42e1086dedf4b9ab86b34bb9
+  - role: baseline_pdf
+    path: examples/fig1_overview_v2_pair_001_vault/exports/fig1_overview_v2_pair_001_vault.pdf
+    sha256: sha256:2f88445dbd65ca75b7a0f47d0270e17753ce8e5bc350caf99ee8c8e82de4d878
+  - role: baseline_svg
+    path: examples/fig1_overview_v2_pair_001_vault/exports/fig1_overview_v2_pair_001_vault.svg
+    sha256: sha256:51b5ded3bb5b993a9356dc3593665f282af538bc84d0bd81dd8b752018e08083
+baseline_reproduction:
+  clean_checkout: true
+  checkout_method: git archive of source_unchanged_at_selection_commit
+  compile_command: >-
+    bash scripts/compile.sh
+    examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
+  compile_exit: 0
+  repeated_compile_count: 2
+  fixed_raster_repeatable: true
+  raster_sha256: sha256:e97c16a47561d9e12eb0227a7bd992c1a12c7ff05dc5776fae408c40eb3be9eb
+  pdf_bytes_repeatable: false
+  first_pdf_sha256: sha256:a679cf1c320ee15af43e3370f5845b6fdf3828488a75af64407f8eb487586a8e
+  second_pdf_sha256: sha256:2f1ec979bd544ab32fcffc4b5dd5f9cee6baf2305d2c9ed437e0338764165089
+  pdf_variance_note: >-
+    LuaLaTeX metadata changes PDF bytes across repeated compiles; the fixed
+    raster output is byte-identical and is the baseline visual-reproduction
+    evidence. PDF byte determinism remains an explicit gap.
+pilot_target:
+  panel_id: C
+  role: complex_trap_geometry
+  svg_ownership: complex geometry only
+  tikz_ownership:
+    - global panel composition
+    - all text and labels
+    - inter-panel arrows
+publication_acceptance: not_claimed

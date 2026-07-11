@@ -1,0 +1,222 @@
+schema: figure-agent.aesthetic-intent.v2
+fixture: fig1_hybrid_complex_panel_pilot
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: "Prefer restrained, publication-grade visual hierarchy over decorative or cartoon-like emphasis."
+  - id: instrument_precision
+    instruction: "Keep apparatus components crisp and physically plausible while avoiding toy-like rounded blocks."
+  - id: scientific_hand_craft
+    instruction: "Use subtle component-level texture only when it clarifies mechanism, material identity, or scale."
+must_avoid:
+  - id: toy_diagram
+    pattern: "Oversized arrows, rounded generic boxes, unmodulated flat colors, or poster-like decorative gradients."
+    severity: MAJOR
+    # v8.5 [briefing relax R2, 2026-05-26] qualification: "poster-like decorative gradients"
+    # excludes component-scale gradients that (a) bind to mechanism/material identity,
+    # (b) follow figure-wide upper-left light convention, and (c) are subordinate to
+    # stroke/label legibility. See briefing.md §9 line 384 R2 relax for the permitted
+    # band. Full-panel decorative washes and high-saturation poster gradients remain MAJOR.
+  - id: preset_macro_feel
+    pattern: "Repeated identical icon grammar that makes panels feel templated rather than editorially composed."
+    severity: MINOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: "TikZ is semantically correct but print-scale label, stroke, or spacing refinement still limits journal polish."
+    recommended_path: ready_for_svg_polish
+  - id: semantic_backport
+    condition: "A polish request would change mechanism, label meaning, component identity, or panel storyline."
+    recommended_path: semantic_backport_required
+aesthetic_levers:
+  - id: maturity_restraint
+    dimension: maturity
+    intent: "Make the figure read as restrained editorial science illustration rather than a toy schematic."
+    priority: required
+    positive_signals:
+      - "neutral hierarchy and limited decorative emphasis"
+      - "instrument boxes and labels remain crisp at print scale"
+      - "accent color is tied to scientific meaning"
+    anti_patterns:
+      # v8.5 [R2 relax, 2026-05-26] qualification: "unnecessary gradients" excludes
+      # mechanism-bound gradients (material identity, light source convention, depth
+      # cue). Saturation cap remains anti-pattern.
+      - "poster-like saturation or unnecessary gradients"
+      - "oversized arrows or cartoon apparatus styling"
+      - "labels visually louder than the scientific objects they describe"
+    allowed_adjustments:
+      - "reduce non-essential label prominence"
+      - "rebalance accent color usage"
+      - "simplify decorative emphasis that does not carry mechanism"
+    forbidden_adjustments:
+      - "remove scientific components"
+      - "change mechanism meaning"
+      - "hide required labels"
+    default_route: tikz_patch
+  - id: panel_c_hero_hierarchy
+    dimension: hero_hierarchy
+    intent: "Keep Panel C as the first-fixation model panel while preserving the A/B setup and D/E/F evidence roles."
+    priority: required
+    positive_signals:
+      - "Panel C remains visually dominant without swallowing Row 2 evidence panels"
+      - "real-space and energy-diagram halves read as one model"
+      - "three-spoke fan clearly routes from the model to D/E/F evidence"
+    anti_patterns:
+      - "Panel A chemistry becomes the visual hero"
+      - "D/E/F evidence panels compete with the model for first fixation"
+      - "spoke fan looks decorative instead of explanatory"
+    allowed_adjustments:
+      - "adjust Panel C label weight or local contrast"
+      - "rebalance spoke label prominence"
+      - "tighten Row 1 to Row 2 transition spacing"
+    forbidden_adjustments:
+      - "collapse Panel C into a decorative cover scene"
+      - "change the declared A/B/C/D/E/F panel roles"
+    default_route: tikz_patch
+  - id: row2_whitespace_breathing
+    dimension: whitespace_breathing
+    intent: "Keep the three lower evidence columns dense but breathable, with no label or instrument-box crowding."
+    priority: required
+    positive_signals:
+      - "D/E/F column gutters remain visible"
+      - "instrument-box labels stay inside their intended outlines"
+      - "sub-zone labels have local breathing room"
+    anti_patterns:
+      - "text touches column rules, box outlines, or internal display elements"
+      - "micro-labels require zoom to separate from strokes"
+      - "one evidence column feels optically heavier than its siblings"
+    allowed_adjustments:
+      - "micro-shift labels or instrument boxes"
+      - "increase local box height or width"
+      - "thin or lighten support strokes around dense labels"
+    forbidden_adjustments:
+      - "move evidence between columns"
+      - "delete required Row 2 instrument labels"
+    default_route: tikz_patch
+  - id: print_typography_authority
+    dimension: typography_authority
+    intent: "Make labels, subscripts, and math symbols look authoritative at Nature Materials print scale."
+    priority: required
+    positive_signals:
+      - "subscripts remain readable in 178 mm proxy and thumbnail crops"
+      - "math labels have consistent size and weight"
+      - "panel letters and role labels form a controlled hierarchy"
+    anti_patterns:
+      - "subscripts collapse into strokes"
+      - "math labels overflow instrument boxes"
+      - "panel labels drift from the column convention"
+    allowed_adjustments:
+      - "micro-position labels"
+      - "split a cramped label"
+      - "adjust local fill/backdrop padding"
+    forbidden_adjustments:
+      - "rename symbols"
+      - "change measured quantities"
+      - "hide a label that anchors a mechanism"
+    default_route: tikz_patch
+  - id: semantic_color_economy
+    dimension: color_harmony
+    intent: "Use color as a semantic code for polymer, shallow traps, deep traps, and force families rather than decoration."
+    priority: required
+    positive_signals:
+      - "amber, blue, red, and gray families map consistently to meaning"
+      - "grayscale/background elements do not compete with semantic accents"
+      - "deep-trap red appears only where it carries the intended mechanism"
+    anti_patterns:
+      - "extra accent hues without semantic role"
+      # v8.5 [R2 relax, 2026-05-26]: "decorative surface treatment" still anti, but
+      # mechanism-bound directional gradient + NW specular + drop shadow per
+      # briefing.md §9 line 384 R2 relax permitted band is NOT decorative.
+      - "gradient polish that reads as decorative surface treatment"
+      - "red or blue reused for unrelated emphasis"
+    allowed_adjustments:
+      - "desaturate non-semantic accents"
+      - "rebalance red/blue emphasis"
+      - "convert decorative color to gray-family support"
+    forbidden_adjustments:
+      - "swap shallow and deep trap colors"
+      - "change force direction color semantics"
+    default_route: tikz_patch
+  - id: line_weight_rhythm
+    dimension: line_weight_rhythm
+    intent: "Maintain a publication-grade hierarchy between foreground mechanisms, supports, axes, and background texture."
+    priority: recommended
+    positive_signals:
+      - "foreground mechanism strokes are distinguishable from support strokes"
+      - "axes and wiring do not overpower labels"
+      - "repeated textures are present but subordinate"
+    anti_patterns:
+      - "all strokes use the same visual weight"
+      - "support lines cut through label glyphs"
+      - "background texture reads as a foreground object"
+    allowed_adjustments:
+      - "thin support strokes"
+      - "raise or lower opacity of repeated texture"
+      - "adjust one foreground emphasis stroke"
+    forbidden_adjustments:
+      - "change graph/data relationships"
+      - "remove required wiring or axes"
+    default_route: tikz_patch
+  - id: component_fidelity_finish
+    dimension: component_fidelity
+    intent: "Keep apparatus and molecular components concrete enough to avoid generic icon or preset-macro feel."
+    priority: required
+    positive_signals:
+      - "instrument components have recognizable roles"
+      - "polymer and apparatus details support the stated mechanism"
+      - "D/E/F evidence modes remain visually distinct"
+    anti_patterns:
+      - "featureless waves standing in for chemically meaningful chains"
+      - "generic boxes without internal cues"
+      - "reused icon grammar that hides the modality difference"
+    allowed_adjustments:
+      - "add small internal component cues"
+      - "add mechanism-preserving texture"
+      - "clarify an instrument display or terminal"
+    forbidden_adjustments:
+      - "invent unsupported apparatus"
+      - "change the experiment class"
+      - "add decorative detail that implies false measurement capability"
+    default_route: semantic_backport
+  - id: hand_craft_escape_route
+    dimension: hand_craft
+    intent: "Identify whether the remaining polish is TikZ-correct but needs SVG-level optical hand finishing."
+    priority: optional
+    positive_signals:
+      - "geometry is semantically correct"
+      - "remaining issue is optical spacing, stroke polish, or texture feel"
+      - "SVG polish can improve finish without changing mechanism"
+    anti_patterns:
+      - "preset macro repetition makes the figure feel mechanically generated"
+      - "organic detail is absent where material identity depends on it"
+      - "small optical refinements exceed practical TikZ iteration value"
+    allowed_adjustments:
+      - "route to SVG polish when semantic geometry is locked"
+      - "limit polish to label micro-position, stroke finish, or texture nuance"
+      - "preserve source-of-truth TikZ semantics"
+    forbidden_adjustments:
+      - "use SVG polish to alter mechanism"
+      - "change accepted or golden artifacts without explicit gate"
+    default_route: svg_polish
+  - id: cross_panel_grammar
+    dimension: cross_panel_grammar
+    intent: "Make all six panels read as one figure series rather than six separately styled mini-figures."
+    priority: required
+    positive_signals:
+      - "panel letters, title weights, and icon abstractions repeat coherently"
+      - "Row 2 evidence panels share a common apparatus-register grammar"
+      - "Panel A/B setup and Panel C model visually prepare D/E/F"
+    anti_patterns:
+      - "one panel uses a different illustration register"
+      - "spacing or title hierarchy changes without role-based reason"
+      - "panel-local polish breaks figure-wide consistency"
+    allowed_adjustments:
+      - "normalize title and label rhythm"
+      - "align column grammar"
+      - "rebalance panel-local contrast"
+    forbidden_adjustments:
+      - "make all panels visually identical"
+      - "remove role-specific visual distinctions"
+    default_route: tikz_patch
