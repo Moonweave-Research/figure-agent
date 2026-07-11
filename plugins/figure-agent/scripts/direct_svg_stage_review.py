@@ -12,6 +12,7 @@ import secrets
 import shutil
 import subprocess
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -400,7 +401,12 @@ def _generator_binding(
     except (OSError, subprocess.CalledProcessError) as exc:
         raise DirectSvgReviewError("generator_commit_invalid") from exc
     script_hash = _sha256_bytes(script_bytes)
-    if declared_script_sha256 is not None and declared_script_sha256 != script_hash:
+    executing_script_hash = _sha256(Path(__file__).resolve())
+    if (
+        executing_script_hash != script_hash
+        or declared_script_sha256 is not None
+        and declared_script_sha256 != script_hash
+    ):
         raise DirectSvgReviewError("generator_script_blob_mismatch")
     return {
         "revision": GENERATOR_REVISION,
@@ -718,6 +724,13 @@ def _validate_reviewer(value: Any, *, required: bool) -> dict[str, Any]:
     values = (reviewer["name"], reviewer["reviewed_at"])
     if required and any(not isinstance(item, str) or not item.strip() for item in values):
         raise DirectSvgReviewError("named_reviewer_required")
+    if required:
+        try:
+            reviewed_at = datetime.fromisoformat(reviewer["reviewed_at"])
+        except ValueError as exc:
+            raise DirectSvgReviewError("reviewed_at_invalid") from exc
+        if reviewed_at.tzinfo is None or reviewed_at.utcoffset() is None:
+            raise DirectSvgReviewError("reviewed_at_invalid")
     if not required and any(item is not None for item in values):
         raise DirectSvgReviewError("reviewer_must_be_empty")
     return reviewer
