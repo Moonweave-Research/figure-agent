@@ -92,6 +92,9 @@ def _extract_pdf(pdf_path: Path) -> dict[str, Any]:
 
         return {
             "schema_version": SCHEMA_VERSION,
+            "artifact_manifests": {
+                "visual_findings": "visual_findings/manifest.json",
+            },
             "source": {
                 "pdf_path": "",
                 "pdf_size_cm": [_cm(page.width), _cm(page.height)],

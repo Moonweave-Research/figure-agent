@@ -210,16 +210,16 @@ uv run pytest tests/test_visual_finding_attribution.py \
 - Modify: the perception-pack manifest writer that currently owns
   `build/perception/`
 
-- [ ] Write RED tests requiring, for every detector finding, a deterministic
+- [x] Write RED tests requiring, for every detector finding, a deterministic
   overlay image, focused crop, and manifest record containing finding ID,
   attribution state, input render hash, pixel bbox, PDF bbox, and output hashes.
-- [ ] Render distinct, accessible styles for exact, ambiguous, and unbound
+- [x] Render distinct, accessible styles for exact, ambiguous, and unbound
   attribution without changing the manuscript artifact.
-- [ ] Generate artifacts in ordinary compile mode even when findings are
+- [x] Generate artifacts in ordinary compile mode even when findings are
   report-only. Strict mode may change the exit code but not the evidence set.
-- [ ] Ensure a no-finding compile creates a valid empty manifest and no fake
+- [x] Ensure a no-finding compile creates a valid empty manifest and no fake
   crop.
-- [ ] Verify:
+- [x] Verify:
 
 ```bash
 uv run pytest tests/test_visual_finding_artifacts.py tests/test_strict_mode.py -q
@@ -228,7 +228,7 @@ FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
   examples/<synthetic-fixture>/<synthetic-fixture>.tex
 ```
 
-- [ ] Commit: `feat: emit review overlays and crops for visual findings`
+- [x] Commit: `feat: emit review overlays and crops for visual findings`
 
 ## Task 5: Improve detector precision from reviewed evidence
 

@@ -97,54 +97,75 @@ if [[ ${#STRICT_ARGS[@]} -eq 0 ]]; then
   trap - ERR
   set +e
 fi
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visual_clash.py" \
+STRICT_CHECK_FAILURE=0
+run_report_check() {
+  local status=0
+  "$@" || status=$?
+  if [[ ${#STRICT_ARGS[@]} -ne 0 && $status -ne 0 ]]; then
+    STRICT_CHECK_FAILURE=1
+  fi
+  return 0
+}
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} "$PDF_OUT"
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visual_clash.py" \
   ${VISUAL_CLASH_ARGS[@]+"${VISUAL_CLASH_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/visual_clash.json" \
   "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_text_boundary_clash.py" \
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_text_boundary_clash.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/text_boundary_clash.json" \
   "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_path_proximity.py" \
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_path_proximity.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/label_path_proximity.json" \
   "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_undeclared_geometry.py" \
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_undeclared_geometry.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/undeclared_geometry.json" \
   "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_hyphenation.py" \
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_hyphenation.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/label_hyphenation.json" \
   "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/semantic_assertions.py" \
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/semantic_assertions.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/semantic_assertions.json" \
   "$PDF_OUT"
 # Directional-physics assertions read from the .tex (a reversed force/bend arrow is
 # a defect no render detector catches). STRICT-gated like the other clash checkers.
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_tex_assertions.py" \
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_tex_assertions.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/tex_assertions.json" \
   "$FILE"
 # Physics-intent grounding meta-check (advisory: which figures still need assertions).
 # Always report-only — it surfaces a TODO, not a defect, so it never fails a build.
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_physics_grounding.py" \
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_physics_grounding.py" \
   --json-output "${BUILD_DIR}/physics_grounding.json" \
   "$PWD"
 if [[ -f "coordinate_hints.yaml" ]]; then
-  "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" \
+  run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" \
     ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
     .
 fi
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"
+ARTIFACT_STATUS=0
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/visual_finding_artifacts.py" "$BASE" || ARTIFACT_STATUS=$?
+if [[ $ARTIFACT_STATUS -ne 0 ]]; then
+  echo "ERROR: visual finding artifact generation failed" >&2
+  trap - ERR
+  exit "$ARTIFACT_STATUS"
+fi
 # Injection receipt (spec §4 Phase 1a): surface the injected use_as_constraint
 # conventions with their source quotes so the author sees them on every figure.
 # Report-only; best-effort — must never fail the build (no FIGURE_AGENT_WORKSPACE
 # in some invocations means the fixture is unresolvable, which is fine to skip).
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/convention_receipt.py" "$BASE" --write >/dev/null || true
 trap - ERR
+
+if [[ $STRICT_CHECK_FAILURE -ne 0 ]]; then
+  echo "ERROR: strict detector gate failed after review evidence generation" >&2
+  exit 1
+fi
 
 echo "Generated: ${BUILD_DIR}/${BASE}.pdf, ${BUILD_DIR}/${BASE}.png (engine: $ENGINE)"

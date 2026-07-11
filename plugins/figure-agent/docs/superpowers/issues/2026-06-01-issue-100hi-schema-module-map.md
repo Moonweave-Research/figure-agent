@@ -60,6 +60,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.audit-crop-manifest.v1` | audit evidence | `critique_zoom_crops.py` | `critique_lint.py`, `audit_evidence_summary.py` | Blocks critique evidence if required crops mismatch |
 | `figure-agent.audit-evidence-summary.v1` | audit evidence | `audit_evidence_summary.py` | `status.py`, `fig_loop.py`, `fig_driver.py` | Advisory until state is `missing_input`, `needs_action`, or `stale_or_mismatched` |
 | `figure-agent.audit-evidence-graph.v1` | audit evidence | `audit_evidence_graph.py` | operators, MCP resource metadata | Read-only provenance graph; never mutates fixture state |
+| `figure-agent.visual-finding-artifacts.v1` | visual attribution review evidence | `visual_finding_artifacts.py` | operators, future review packets | Deterministic overlays/crops only; `review_evidence_only` and never publication acceptance |
 | `figure-agent.spine-evidence-summary.v1` | compile evidence spine | `status.py` | `fig_driver.py`, `fig_queue.py`, `fig_closeout.py`, operators | Read-only summary of compile-produced assertion, convention receipt, and grounding reports; report-only and does not create a new gate |
 | `figure-agent.detector-feedback-ledger.v1` | detector tuning diagnostics | `detector_feedback_ledger.py` | operators | Read-only cross-fixture summary; no threshold or gate authority |
 | `figure-agent.text-boundary-clash.v1` | deterministic detector | `check_text_boundary_clash.py` | `audit_evidence_summary.py`, `fig_closeout.py` | Can block closeout when stale/missing or malformed |
@@ -217,6 +218,7 @@ Owns official evidence packs that host vision or status consumers inspect.
 - `critique_zoom_crops.py` owns `build/audit_crops/manifest.json`
 - `audit_evidence_summary.py` owns compact accounting state
 - `audit_evidence_graph.py` owns deterministic read-only provenance graph output
+- `visual_finding_artifacts.py` owns deterministic finding overlays, crops, and hashes
 - `detector_feedback_ledger.py` owns cross-fixture detector feedback rollups
 - `diagnostic_artifact_provenance.py` owns ad hoc/scratch artifact classification
 - `critique_evidence_lint.py` owns narrow evidence-specific lint helpers
