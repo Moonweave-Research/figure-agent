@@ -120,7 +120,7 @@ bin/fig-agent benchmark-run --suite visual-attribution --json
 - Modify: `README.md`
 - Modify: `docs/architecture-overview.md`
 
-- [ ] Write RED tests for a fixture-local `semantic_regions.yaml` contract with
+- [x] Write RED tests for a fixture-local `semantic_regions.yaml` contract with
   this minimum shape:
 
 ```yaml
@@ -149,23 +149,23 @@ regions:
     provenance: declared_by_author
 ```
 
-- [ ] Reject duplicate IDs or anchors, invalid boxes, unsafe paths, reversed
+- [x] Reject duplicate IDs or anchors, invalid boxes, unsafe paths, reversed
   line ranges, unknown panels, out-of-page boxes, selectors outside the named
   source, and page/render geometry that does not match the detector render.
-- [ ] Treat line ranges as regenerated review snapshots. Resolve identity from
+- [x] Treat line ranges as regenerated review snapshots. Resolve identity from
   `selector_id` plus unique anchors; missing, duplicated, or stale anchors are
   `ambiguous`/`unbound` and never silently relocated by line proximity.
-- [ ] Normalize coordinates without fixture-specific offsets. Reuse existing
+- [x] Normalize coordinates without fixture-specific offsets. Reuse existing
   `bbox_pdf_cm` parsing and page-geometry helpers where possible.
-- [ ] Emit stable normalized JSON and source/input hashes for downstream tools.
-- [ ] Verify:
+- [x] Emit stable normalized JSON and source/input hashes for downstream tools.
+- [x] Verify:
 
 ```bash
 uv run pytest tests/test_semantic_region_contract.py tests/test_inputs.py \
   tests/test_spec_bbox_helper.py -q
 ```
 
-- [ ] Commit: `feat: validate declared semantic regions and source selectors`
+- [x] Commit: `feat: validate declared semantic regions and source selectors`
 
 ## Task 3: Attribute visual findings without guessing
 

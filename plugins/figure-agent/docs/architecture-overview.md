@@ -124,7 +124,8 @@ when adjusting one, adjust all.
 
 ### Layer 2 — Authoring Intent
 
-**Files**: `examples/<name>/briefing.md`, `examples/<name>/spec.yaml`.
+**Files**: `examples/<name>/briefing.md`, `examples/<name>/spec.yaml`, optional
+`examples/<name>/semantic_regions.yaml`.
 
 `briefing.md` is the prose record of intent (what the figure shows, in what
 panels, with what physics invariants). It is structured by numbered headings
@@ -140,6 +141,22 @@ optional fixture-class flags:
 
 Meaning lives in `briefing.md` and `<name>.tex`; `spec.yaml` is metadata
 only, never the single source of truth.
+
+`semantic_regions.yaml` is an opt-in object-relation boundary for visual
+attribution. It declares PDF-cm page geometry, panel-owned region boxes, and a
+source selector whose identity is resolved through unique marker anchors. The
+contract records a source hash and a line-range snapshot, but line numbers are
+review evidence rather than identity: missing anchors are `unbound`, duplicated
+or stale anchors are `ambiguous`, and the validator never relocates a selector
+by line proximity. `region.id` names the visual semantic object while
+`source.selector_id` names an editable source block; they may differ.
+
+`scripts/semantic_region_contract.py` validates the declaration against the
+fixture panels, CropBox/MediaBox geometry, an optional detector-render geometry,
+and the named source. It emits canonical JSON plus hashes of the contract,
+spec, normalized payload, and declared sources for downstream tools. These
+machine checks establish attribution readiness only; they do not establish
+visual correctness, publication acceptance, or authority to mutate source.
 
 ### Layer 2.5 — Reference Analysis
 

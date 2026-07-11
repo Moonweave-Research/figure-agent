@@ -172,6 +172,7 @@ and closeout rows stay visible as blocked operator handoffs.
 | **Operator queue** | `/fig_queue` scans real fixtures through `/fig_drive`, groups next work by actor/action/blocker, emits blocked-row `operator_handoff` packets, and `/fig_queue_run` delegates the workflow-agent subset to `/fig_run` after plan-only review. |
 | **Runner journal** | `/fig_run --execute` records `.scratch/fig-run-runs/<timestamp>-<name>/` evidence by default. Journals are not replayable and do not replace fresh `/fig_status` or `/fig_drive` checks. |
 | **Per-panel reference** | `spec.yaml.panels[i].reference_image` + `bbox_pdf_cm`. Each panel compared against its own reference. |
+| **Declared semantic regions** | Optional `semantic_regions.yaml` binds PDF-cm regions to hash-checked source selectors with unique `% figure-agent:start/end <selector_id>` anchors. `semantic_region_contract.py` reports stale or missing bindings as `ambiguous`/`unbound`; it never recovers identity from nearby line numbers. This is downstream attribution evidence, not a publication verdict or an automatic source-edit instruction. |
 | **Perception pack** | `/fig_compile` emits descriptive data (`extract.yaml`, `overlay.png`) under `build/perception/` for downstream inspection. |
 | **Reproducibility** | `/fig_status` separates render freshness (`.tex`, briefing, spec, Style Lock) from critique freshness (reference images, hints, authoring context, audit evidence, and aesthetic intent), and reports workflow/golden/release readiness separately. Routine generated export SVGs do not make critiques stale. |
 | **Golden fixtures** | Accepted figures declare `accepted: true` + `golden_contract`; `check_golden_artifacts.py --require-accepted` is the hard gate and rejects low-resolution TIFF exports. |
@@ -194,6 +195,7 @@ and closeout rows stay visible as blocked operator handoffs.
   prepared images/evidence and writes structured critique; lint and loop
   contracts verify the result.
 - **Opt-in:** authoring context packs, semantic claims/locked invariants,
+  declared semantic-region/source-selector contracts,
   convention receipts, paper-wide context, aesthetic intent, journal style-pack catalog,
   reference-calibrated packs, reference-learning aesthetic metrics,
   SVG-polish handoff evidence labels, and external vision review evidence.

@@ -14,6 +14,20 @@ _FOOTER_RULE = re.compile(r"^---\s*$", re.MULTILINE)
 _KNOWN_STYLE_PROFILES = {"polymer-default", "polymer-paper"}
 
 
+def normalize_bbox_pdf_cm(value: object, *, label: str) -> list[float]:
+    """Normalize a PDF-cm bbox without applying fixture-specific offsets."""
+    if not isinstance(value, list | tuple) or len(value) != 4:
+        raise ValueError(f"{label} must be a list of four numbers")
+    try:
+        normalized = [float(item) for item in value]
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} must be a list of four numbers") from exc
+    x0, y0, x1, y1 = normalized
+    if x1 <= x0 or y1 <= y0:
+        raise ValueError(f"{label} must be [x0, y0, x1, y1] with x1>x0, y1>y0")
+    return normalized
+
+
 def _normalize_panel(panel: dict, index: int) -> dict:
     normalized = dict(panel)
     panel_id = normalized.get("id", f"index {index}")
@@ -24,20 +38,10 @@ def _normalize_panel(panel: dict, index: int) -> dict:
     bbox = normalized.get("bbox_pdf_cm")
     if bbox is None:
         return normalized
-    if not isinstance(bbox, list | tuple) or len(bbox) != 4:
-        raise ValueError(f"panels[{panel_id!r}].bbox_pdf_cm must be a list of four numbers")
-    try:
-        normalized_bbox = [float(value) for value in bbox]
-    except (TypeError, ValueError) as exc:
-        raise ValueError(
-            f"panels[{panel_id!r}].bbox_pdf_cm must be a list of four numbers"
-        ) from exc
-    x0, y0, x1, y1 = normalized_bbox
-    if x1 <= x0 or y1 <= y0:
-        raise ValueError(
-            f"panels[{panel_id!r}].bbox_pdf_cm must be [x0, y0, x1, y1] with x1>x0, y1>y0"
-        )
-    normalized["bbox_pdf_cm"] = normalized_bbox
+    normalized["bbox_pdf_cm"] = normalize_bbox_pdf_cm(
+        bbox,
+        label=f"panels[{panel_id!r}].bbox_pdf_cm",
+    )
     return normalized
 
 
