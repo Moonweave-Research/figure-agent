@@ -346,6 +346,19 @@ def test_prerequisite_paths_reject_parent_and_symlink_escapes(tmp_path: Path) ->
         _resolve_path("link.txt", (root,))
 
 
+def test_prerequisite_paths_reject_parent_traversal_between_authorized_roots(
+    tmp_path: Path,
+) -> None:
+    outer_root = tmp_path / "outer"
+    inner_root = outer_root / "inner"
+    inner_root.mkdir(parents=True)
+    target = outer_root / "target.txt"
+    target.write_text("target")
+
+    with pytest.raises(DirectSvgReviewError, match="review_prerequisite_path_invalid"):
+        _resolve_path("../target.txt", (inner_root, outer_root))
+
+
 def _filled_scientific(response: dict[str, object], reviewer: str) -> dict[str, object]:
     response["state"] = "primary_scientific_fixed"
     primary = response["primary_review"]

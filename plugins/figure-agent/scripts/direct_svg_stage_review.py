@@ -107,6 +107,7 @@ def _resolve_path(value: Any, roots: tuple[Path, ...]) -> Path:
         or not value
         or raw.is_absolute()
         or "." in raw.parts
+        or ".." in raw.parts
     ):
         raise DirectSvgReviewError("review_prerequisite_path_invalid")
     authorized_roots = tuple(root.resolve() for root in roots)
