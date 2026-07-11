@@ -1,13 +1,13 @@
 schema: figure-agent.illustration-human-verdict.v1
 fixture: fig3_trap_schematic_slice4_illustration_grammar
 reviewer:
-  name: null
-  reviewed_at: null
-raw_svg_vs_grammar_svg: pending
-grammar_svg_vs_tikz_language: pending
-grammar_tikz_artifact: pending
-grammar_svg_artifact: pending
-review_state: pending_human_review
+  name: 최문영
+  reviewed_at: "2026-07-11"
+raw_svg_vs_grammar_svg: worse
+grammar_svg_vs_tikz_language: matched
+grammar_tikz_artifact: rejected
+grammar_svg_artifact: rejected
+review_state: completed
 human_review_required: true
 publication_acceptance: not_claimed
 bound_inputs:

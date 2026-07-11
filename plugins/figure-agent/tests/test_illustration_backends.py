@@ -186,12 +186,19 @@ def test_slice4_fixture_binds_three_comparable_artifacts() -> None:
     assert comparison["publication_acceptance"] == "not_claimed"
 
 
-def test_slice4_pending_verdict_is_fresh_and_does_not_claim_acceptance() -> None:
+def test_slice4_rejected_verdict_is_fresh_and_does_not_claim_acceptance() -> None:
     verdict_path = SLICE4_FIXTURE / "review" / "human_illustration_verdict.yaml"
     verdict = yaml.safe_load(verdict_path.read_text(encoding="utf-8"))
     binding = validate_human_verdict_bindings(verdict_path, SLICE4_FIXTURE)
 
     assert binding["stale"] is False
-    assert verdict["raw_svg_vs_grammar_svg"] == "pending"
-    assert verdict["grammar_svg_vs_tikz_language"] == "pending"
+    assert verdict["reviewer"] == {
+        "name": "최문영",
+        "reviewed_at": "2026-07-11",
+    }
+    assert verdict["raw_svg_vs_grammar_svg"] == "worse"
+    assert verdict["grammar_svg_vs_tikz_language"] == "matched"
+    assert verdict["grammar_tikz_artifact"] == "rejected"
+    assert verdict["grammar_svg_artifact"] == "rejected"
+    assert verdict["review_state"] == "completed"
     assert verdict["publication_acceptance"] == "not_claimed"

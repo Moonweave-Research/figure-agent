@@ -885,23 +885,36 @@ git commit -m "feat: prepare paired sulfur trap grammar review"
 
 ## Task 14: Decide whether the grammar improves the product
 
-- [ ] Require a named human to compare all three bound Panel e crops and record
+- [x] Require a named human to compare all three bound Panel e crops and record
   whether grammar-SVG improves on raw SVG and whether both grammar outputs share
   the surrounding TikZ illustration language.
-- [ ] Reject the grammar implementation if it merely adds schema complexity,
+- [x] Reject the grammar implementation if it merely adds schema complexity,
   if TikZ and SVG require different semantic/visual-role definitions, or if the
   SVG result remains visibly inferior to raw or TikZ comparators.
-- [ ] Retain the grammar experimentally when it improves raw SVG but does not
+- [x] Retain the grammar experimentally when it improves raw SVG but does not
   yet match TikZ. When both backends pass the paired human review and clean
   reproduction, advance the motif only to a second materially different figure
   family; one-family evidence cannot promote a production default.
-- [ ] Record the decision in `docs/decision-records/`, update this single plan,
+- [x] Record the decision in `docs/decision-records/`, update this single plan,
   run `tests/test_document_authority.py`, and commit with a message that names
   the actual outcome rather than assuming promotion.
-- [ ] Commit the decision record, verdict, and plan update together. Allowed
+- [x] Commit the decision record, verdict, and plan update together. Allowed
   messages are `docs: reject sulfur trap illustration grammar`,
   `docs: retain sulfur trap illustration grammar experiment`, or
   `docs: advance sulfur trap grammar to second-family review`.
+
+**Recorded outcome:** The named review found that the grammar SVG is worse than
+the historical raw SVG. The two grammar backends do share one neutral scene and
+the surrounding TikZ illustration language, but both rendered artifacts remain
+below the production-quality bar. The current grammar implementation is
+rejected; its backend-neutral compiler and paired-review infrastructure remain
+experimental foundations for a richer illustration grammar.
+
+The repeatable work is automated: paired renders, equal-boundary crops, hashes,
+toolchain receipts, clean-environment reproduction, stale-verdict detection,
+and machine findings. A named human still owns the final visual verdict;
+automation may prepare evidence and a provisional recommendation but cannot
+claim publication acceptance.
 
 ## Completion boundary
 
