@@ -772,7 +772,7 @@ modify the Slice 3 fixture.
 - Create: review renders, equal-boundary crops, difference image, compile logs, and clean-reproduction receipts
 - Modify: `tests/test_illustration_backends.py`
 
-- [ ] **Step 1: Write the failing fixture-boundary test**
+- [x] **Step 1: Write the failing fixture-boundary test**
 
 ```python
 def test_slice4_fixture_binds_three_comparable_artifacts() -> None:
@@ -797,7 +797,7 @@ def test_slice4_pending_verdict_is_fresh_and_does_not_claim_acceptance() -> None
     assert verdict["publication_acceptance"] == "not_claimed"
 ```
 
-- [ ] **Step 2: Run the test and verify RED**
+- [x] **Step 2: Run the test and verify RED**
 
 Run:
 
@@ -808,7 +808,7 @@ uv run pytest \
 
 Expected: FAIL because the paired fixture and manifest do not exist.
 
-- [ ] **Step 3: Generate and compile both grammar variants**
+- [x] **Step 3: Generate and compile both grammar variants**
 
 Run from `plugins/figure-agent/`:
 
@@ -837,7 +837,7 @@ FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
   examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_svg.tex
 ```
 
-- [ ] **Step 4: Produce equal-boundary review evidence**
+- [x] **Step 4: Produce equal-boundary review evidence**
 
 First copy the already-bound Slice 3 raw SVG render and Panel e crop into
 `comparators/raw_svg_slice3/`; record their original paths, source commit, and
@@ -862,7 +862,7 @@ existing review-binding validator contract so any changed input makes the
 verdict stale. The manifest must distinguish the identical neutral scene shared
 by grammar TikZ/SVG from the raw SVG's same-semantic-boundary comparison basis.
 
-- [ ] **Step 5: Re-run tests, compile, Ruff, and diff checks**
+- [x] **Step 5: Re-run tests, compile, Ruff, and diff checks**
 
 ```bash
 uv run pytest tests/test_illustration_grammar.py \
@@ -875,7 +875,7 @@ git diff --check
 
 Expected: machine tests pass and the review packet remains explicitly pending.
 
-- [ ] **Step 6: Commit the review-ready fixture**
+- [x] **Step 6: Commit the review-ready fixture**
 
 ```bash
 git add examples/fig3_trap_schematic_slice4_illustration_grammar \

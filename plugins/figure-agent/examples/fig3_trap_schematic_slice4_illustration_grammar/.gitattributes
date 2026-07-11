@@ -1,0 +1,2 @@
+# Preserve raw compiler evidence verbatim.
+review/*.log -diff

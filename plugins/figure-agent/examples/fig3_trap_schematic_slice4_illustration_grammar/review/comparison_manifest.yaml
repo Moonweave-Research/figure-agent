@@ -1,0 +1,55 @@
+schema: figure-agent.illustration-comparison.v1
+fixture: fig3_trap_schematic_slice4_illustration_grammar
+variants:
+  raw_svg_slice3:
+    artifact: review/raw-svg-panel-e-equal.png
+    sha256: sha256:da4e66bb837fb9c86f8df657b10ef30f8df15fc19ea3c74cd25429a669f4589d
+    lineage: comparators/raw_svg_slice3/source_receipt.yaml
+  grammar_tikz:
+    artifact: review/grammar-tikz-panel-e-equal.png
+    sha256: sha256:ecbc6868e86260420c15140ea52f79285378bb13934046ff1c95056c280aaca8
+    source: fig3_trap_schematic_slice4_tikz.tex
+  grammar_svg:
+    artifact: review/grammar-svg-panel-e-equal.png
+    sha256: sha256:1669a2b0da27212d13f2866a4c6cfc63dd4067fa55f8bb6c4a7db712a61b2e52
+    source: fig3_trap_schematic_slice4_svg.tex
+equal_boundary_crop:
+  width_px: 1150
+  height_px: 1450
+  x_px: 1600
+  alignment: bottom
+  raw_svg_full_height_px: 2894
+  grammar_full_height_px: 2942
+  raw_svg_y_px: 1444
+  grammar_y_px: 1492
+grammar_pair_same_scene: true
+grammar_scene_manifest: fragments/render_manifest.yaml
+raw_svg_comparator_basis: same_semantic_boundary
+slice3_source_immutable: true
+backend_difference:
+  artifact: review/grammar-backend-difference-amplified.png
+  sha256: sha256:45272d76906471d360b241b9cb7eb5515dea2b8faa9abf10d8fb3dfc2af3ca9c
+compile:
+  grammar_tikz:
+    ordinary_exit: 0
+    strict_exit: 1
+    strict_classification: inherited_full_figure_detector_baseline
+  grammar_svg:
+    ordinary_exit: 0
+    strict_exit: 1
+    strict_classification: inherited_full_figure_detector_baseline
+clean_reproduction:
+  archive_commit: e20a81f8
+  clean_checkouts: 2
+  ordinary_compile_exits:
+    grammar_tikz: [0, 0]
+    grammar_svg: [0, 0]
+  png_repeatable: true
+  grammar_tikz_png_sha256: sha256:542e223a12bb183ed1813ad573c02a2d4686b6fa259e0cbd74734767bd17c4a5
+  grammar_svg_png_sha256: sha256:bef8619df155f7774687cabbb1b0f5e2ad0984341ce799b9dda71f3d52e4ea61
+  pdf_bytes_repeatable: false
+  strict_exits:
+    grammar_tikz: 1
+    grammar_svg: 1
+human_review_required: true
+publication_acceptance: not_claimed

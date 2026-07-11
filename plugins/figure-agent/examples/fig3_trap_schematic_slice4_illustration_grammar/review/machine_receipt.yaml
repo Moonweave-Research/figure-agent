@@ -1,0 +1,46 @@
+schema: figure-agent.slice4-illustration-machine-receipt.v1
+fixture: fig3_trap_schematic_slice4_illustration_grammar
+machine_gate: review_ready_only
+ordinary_compile:
+  grammar_tikz:
+    exit: 0
+    log: tikz-normal-compile.log
+    log_sha256: sha256:fb1fe7cd54045e7890550c05326fca974177966617953133379ba6fac9c653e9
+  grammar_svg:
+    exit: 0
+    log: svg-normal-compile.log
+    log_sha256: sha256:3ff8b81d0fe44168f115f626ac7014d020e5925f10f781eb4e6a0cb4fc802f0e
+strict_compile:
+  grammar_tikz:
+    exit: 1
+    log: tikz-strict-compile.log
+    log_sha256: sha256:a1d02433376b220c5df6897e9fa07df5c8f20be3d173243d79ee671e5e6d755f
+  grammar_svg:
+    exit: 1
+    log: svg-strict-compile.log
+    log_sha256: sha256:c44c1e39a61898268fe153c9741f6418920c5ffbc5f48e9fd609bbf2c775cab0
+  classification: inherited_full_figure_detector_baseline
+  backend_contract_failure: false
+artifacts:
+  grammar_tikz_full_render: sha256:542e223a12bb183ed1813ad573c02a2d4686b6fa259e0cbd74734767bd17c4a5
+  grammar_svg_full_render: sha256:bef8619df155f7774687cabbb1b0f5e2ad0984341ce799b9dda71f3d52e4ea61
+  raw_svg_equal_crop: sha256:da4e66bb837fb9c86f8df657b10ef30f8df15fc19ea3c74cd25429a669f4589d
+  grammar_tikz_equal_crop: sha256:ecbc6868e86260420c15140ea52f79285378bb13934046ff1c95056c280aaca8
+  grammar_svg_equal_crop: sha256:1669a2b0da27212d13f2866a4c6cfc63dd4067fa55f8bb6c4a7db712a61b2e52
+  three_way_review: sha256:798b6d5437902f8d7284068da868174d91223582ba324d28dc9a97b54cee649a
+clean_reproduction:
+  archive_commit: e20a81f8
+  clean_checkout: true
+  runs: 2
+  ordinary_compile_exits:
+    grammar_tikz: [0, 0]
+    grammar_svg: [0, 0]
+  fixed_raster_repeatable: true
+  grammar_tikz_png_sha256: sha256:542e223a12bb183ed1813ad573c02a2d4686b6fa259e0cbd74734767bd17c4a5
+  grammar_svg_png_sha256: sha256:bef8619df155f7774687cabbb1b0f5e2ad0984341ce799b9dda71f3d52e4ea61
+  pdf_bytes_repeatable: false
+  strict_exits:
+    grammar_tikz: 1
+    grammar_svg: 1
+human_review_required: true
+publication_acceptance: not_claimed

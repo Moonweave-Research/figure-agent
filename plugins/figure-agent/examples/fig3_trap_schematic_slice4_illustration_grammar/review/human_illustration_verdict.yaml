@@ -1,0 +1,112 @@
+schema: figure-agent.illustration-human-verdict.v1
+fixture: fig3_trap_schematic_slice4_illustration_grammar
+reviewer:
+  name: null
+  reviewed_at: null
+raw_svg_vs_grammar_svg: pending
+grammar_svg_vs_tikz_language: pending
+grammar_tikz_artifact: pending
+grammar_svg_artifact: pending
+review_state: pending_human_review
+human_review_required: true
+publication_acceptance: not_claimed
+bound_inputs:
+  - role: scientific_briefing
+    path: briefing.md
+    sha256: sha256:07a68de67d033b56fac82dbc7088f0c4a27b5cb33ecb075628ea0789449b8a9d
+  - role: panel_spec
+    path: spec.yaml
+    sha256: sha256:21d5ef11347596a51f9ea5265c15097ebfcb55f2c1c8f6bbdc85b0b6d027e9ac
+  - role: reference_authority
+    path: reference_authority_manifest.yaml
+    sha256: sha256:15742a2a7956f0a0428db53d1f21cf2f8b6eafa09c3f35fcd5a558a7941ee54b
+  - role: semantic_boundary
+    path: semantic_boundary.yaml
+    sha256: sha256:2f2b90eddf25403307112f89cf51d323a4a045d8b4b4344ebfd68c99e326e13f
+  - role: motif_instance
+    path: motif_instance.yaml
+    sha256: sha256:be5e9269071e25aba48d838f32915d4f0f7c1b29b94415143d834334efd59cca
+  - role: provenance
+    path: provenance.yaml
+    sha256: sha256:8249c749e0e6a48bfd900b027dd27a36b8886b203c18c0eee5e30556ba1495d2
+  - role: grammar
+    path: contract/sulfur_trap_domain.v1.yaml
+    sha256: sha256:1d4d2fe1fe89e8ced763b3e3c710e2118cdc72cd373d513df7d9265cabc33375
+  - role: tikz_profile
+    path: contract/polymer-tikz.v1.yaml
+    sha256: sha256:e2ae9832a8379021fb1b1252ac6d2fae7e69853a87fb43b8dc4f4bb6dcce23bb
+  - role: svg_profile
+    path: contract/polymer-svg.v1.yaml
+    sha256: sha256:339f9cfa1e631a4a93f3ca34f27238d3cd9f175bfa393114ca1f0dc549f3a194
+  - role: compiled_scene
+    path: fragments/sulfur_trap_domain.scene.yaml
+    sha256: sha256:281459eda04617f8cb4d02ac477c411109a17ca5cffd7cb9c7b892ed7a36282f
+  - role: render_manifest
+    path: fragments/render_manifest.yaml
+    sha256: sha256:d5f79933eaf829f5e1c5790d8a11577b5075a8383508ab8405a3e76b95e27f65
+  - role: tikz_fragment
+    path: fragments/sulfur_trap_domain.tikz.tex
+    sha256: sha256:e0195fdf6601d32257201136648fd22d8e6384f666e64aff485bb6e6a8efdacb
+  - role: svg_fragment
+    path: fragments/sulfur_trap_domain.svg
+    sha256: sha256:e7a2bad9463a9eefebc9fe977893aa1d20e0dec7f855734efc4bd098cbe8fbcd
+  - role: svg_import_pdf
+    path: fragments/sulfur_trap_domain.pdf
+    sha256: sha256:990dd50427cd8a61832b0eee4860a78b5f7d6bcc7ae99e7e1b7aba7defca8275
+  - role: tikz_source
+    path: fig3_trap_schematic_slice4_tikz.tex
+    sha256: sha256:f527774e777c540f6945565ef6b11acee14f4bea257f97537f90f6f3adb62162
+  - role: svg_source
+    path: fig3_trap_schematic_slice4_svg.tex
+    sha256: sha256:8da2d38b09901ab45ebf6e5032ae4b758b5be571e24f806e21366b56c415654b
+  - role: reference_image
+    path: reference/codex_v01.png
+    sha256: sha256:0c8bc4bd77d3ff51c700ee2b7b6e8e564611ff58a5ade8e952e1d5248033d7fb
+  - role: historical_receipt
+    path: comparators/raw_svg_slice3/source_receipt.yaml
+    sha256: sha256:88cef8e76e1a45d56f554f775ee03f4e1c4f34484027bf4929a4fc43d496bc6b
+  - role: historical_raw_crop
+    path: comparators/raw_svg_slice3/panel-e-render.png
+    sha256: sha256:b7bc8c8624466ad89feeae1b0a85f286398d1bfe36cf5722c29b67d8f01d64e8
+  - role: raw_svg_equal_crop
+    path: review/raw-svg-panel-e-equal.png
+    sha256: sha256:da4e66bb837fb9c86f8df657b10ef30f8df15fc19ea3c74cd25429a669f4589d
+  - role: grammar_tikz_equal_crop
+    path: review/grammar-tikz-panel-e-equal.png
+    sha256: sha256:ecbc6868e86260420c15140ea52f79285378bb13934046ff1c95056c280aaca8
+  - role: grammar_svg_equal_crop
+    path: review/grammar-svg-panel-e-equal.png
+    sha256: sha256:1669a2b0da27212d13f2866a4c6cfc63dd4067fa55f8bb6c4a7db712a61b2e52
+  - role: grammar_tikz_full_render
+    path: review/grammar-tikz-full-render.png
+    sha256: sha256:542e223a12bb183ed1813ad573c02a2d4686b6fa259e0cbd74734767bd17c4a5
+  - role: grammar_svg_full_render
+    path: review/grammar-svg-full-render.png
+    sha256: sha256:bef8619df155f7774687cabbb1b0f5e2ad0984341ce799b9dda71f3d52e4ea61
+  - role: three_way_review
+    path: review/three-way-panel-e.png
+    sha256: sha256:798b6d5437902f8d7284068da868174d91223582ba324d28dc9a97b54cee649a
+  - role: comparison_manifest
+    path: review/comparison_manifest.yaml
+    sha256: sha256:22c4816f2f33570037cc49a7450c37a33164109126f1ee9edcc4288dd03b34ea
+  - role: machine_receipt
+    path: review/machine_receipt.yaml
+    sha256: sha256:3d0bd905bfd2ce065376db6fc63ab136f8482fc4f1d0c798732b488e685c4889
+  - role: tikz_normal_log
+    path: review/tikz-normal-compile.log
+    sha256: sha256:fb1fe7cd54045e7890550c05326fca974177966617953133379ba6fac9c653e9
+  - role: svg_normal_log
+    path: review/svg-normal-compile.log
+    sha256: sha256:3ff8b81d0fe44168f115f626ac7014d020e5925f10f781eb4e6a0cb4fc802f0e
+  - role: tikz_strict_log
+    path: review/tikz-strict-compile.log
+    sha256: sha256:a1d02433376b220c5df6897e9fa07df5c8f20be3d173243d79ee671e5e6d755f
+  - role: svg_strict_log
+    path: review/svg-strict-compile.log
+    sha256: sha256:c44c1e39a61898268fe153c9741f6418920c5ffbc5f48e9fd609bbf2c775cab0
+toolchain:
+  python: 3.12.13
+  lualatex: LuaHBTeX 1.24.0 (TeX Live 2026)
+  rsvg_convert: 2.62.1
+  imagemagick: 7.1.2-17
+review_input_hash: sha256:ae1201ef8cd1c9acd38ba443f0b92b25b41ac9289e5b403b6cf9cee860023f26

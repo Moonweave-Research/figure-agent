@@ -1,0 +1,350 @@
+Lint: Style Lock check (BLOCKER fails, WARN reports)...
+examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_tikz.tex:1: WARN: flagship_macros_unused: no flagship macros used; see styles/polymer-paper-preamble.sty for available flagship macros (BellCurve, BandDiagram, IsoBlock, ...)
+Strict mode: collision/clash findings will fail the compile.
+This is LuaHBTeX, Version 1.24.0 (TeX Live 2026) 
+ restricted system commands enabled.
+(./fig3_trap_schematic_slice4_tikz.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+ (/usr/local/texlive/2026/texmf-dist/tex/latex/standalone/standalone.cls
+Document Class: standalone 2025/02/22 v1.5a Class to compile TeX sub-files stan
+dalone
+(/usr/local/texlive/2026/texmf-dist/tex/latex/tools/shellesc.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/iftex/ifluatex.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/iftex/iftex.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/xkeyval/xkeyval.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/xkeyval/xkeyval.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/xkeyval/xkvutils.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/xkeyval/keyval.tex))))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/standalone/standalone.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2025/01/22 v1.4n Standard LaTeX document class
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/size10.clo))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/luatex85/luatex85.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/infwarerr/infwarerr.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty)))
+(/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/single-aut
+hority-docs/plugins/figure-agent/styles/polymer-paper-preamble.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/fontspec/fontspec.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/l3packages/xparse/xparse.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/l3kernel/expl3.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/l3backend/l3backend-luatex.def)))
+ (/usr/local/texlive/2026/texmf-dist/tex/latex/fontspec/fontspec-luatex.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/fontenc.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/fontspec/fontspec.cfg)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/utilities/pgfrcs.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfutil-common.te
+x)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfutil-latex.def
+) (/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfrcs.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/pgf.revision.tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/basiclayer/pgfcore.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphicx.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphics.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/trig.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/graphics.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-def/luatex.def)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/systemlayer/pgfsys.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgfsys.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfkeyslibraryfil
+tered.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgf.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-luatex.d
+ef
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-common-p
+df.def)))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgfsyssoftpath.
+code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgfsysprotocol.
+code.tex)) (/usr/local/texlive/2026/texmf-dist/tex/latex/xcolor/xcolor.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcore.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathutil.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathparser.code.tex
+)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.code.
+tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.basic
+.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.trigo
+nometric.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.rando
+m.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.compa
+rison.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.base.
+code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.round
+.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.misc.
+code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.integ
+erarithmetics.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathcalc.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmathfloat.code.tex)
+) (/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfint.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepoints.co
+de.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathconst
+ruct.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathusage
+.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorescopes.co
+de.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoregraphicst
+ate.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretransform
+ations.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorequick.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreobjects.c
+ode.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathproce
+ssing.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorearrows.co
+de.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreshade.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreimage.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreexternal.
+code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorelayers.co
+de.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretranspare
+ncy.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepatterns.
+code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/basiclayer/pgfcorerdf.code.
+tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/modules/pgfmoduleshapes.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/modules/pgfmoduleplot.code.
+tex)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version
+-0-65.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version
+-1-18.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/utilities/pgffor.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/utilities/pgfkeys.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex)
+) (/usr/local/texlive/2026/texmf-dist/tex/latex/pgf/math/pgfmath.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/utilities/pgffor.code.tex))
+
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/tikz.cod
+e.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/pgflibraryplothan
+dlers.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/modules/pgfmodulematrix.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarytopaths.code.tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amstext.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsgen.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsbsy.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsopn.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/amssymb.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/amsfonts.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/etoolbox/etoolbox.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/xstring/xstring.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/xstring/xstring.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/chemfig/chemfig.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/chemfig/chemfig.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/simplekv/simplekv.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/pgflibraryarrows.
+meta.code.tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/pgfplots/pgfplots.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.revision.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotscore.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/sys/pgfplotssysgeneric
+.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/libs/pgfplotslibrary.c
+ode.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/oldpgfcompatib/pgfplot
+soldpgfsupp_loader.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/pgflibraryfpu.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/oldpgfcompatib/pgfplot
+soldpgfsupp_pgfutil-common-lists.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/luamath/pgflibrar
+yluamath.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotsutil.code
+.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/liststructure/pgfplots
+liststructure.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/liststructure/pgfplots
+liststructureext.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/liststructure/pgfplots
+array.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/liststructure/pgfplots
+matrix.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/numtable/pgfplotstable
+shared.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/liststructure/pgfplots
+deque.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotsbinary.co
+de.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotsbinary.da
+ta.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotsutil.verb
+.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/libs/pgflibrarypgfplot
+s.surfshading.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/sys/pgflibrarypgfplots
+.surfshading.pgfsys-luatex.def)))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotscolormap.
+code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/util/pgfplotscolor.cod
+e.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotsstackedplots.c
+ode.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotsplothandlers.c
+ode.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotsmeshplothandle
+r.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotsmeshplotimage.
+code.tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.scaling.code.
+tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotscoordprocessin
+g.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.errorbars.cod
+e.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.markers.code.
+tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplotsticks.code.tex
+)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/pgfplots.paths.code.te
+x)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarydecorations.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/modules/pgfmoduledecoration
+s.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarydecorations.pathmorphing.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/decorations/pgfli
+brarydecorations.pathmorphing.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarydecorations.pathreplacing.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/decorations/pgfli
+brarydecorations.pathreplacing.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgfplots/libs/tikzlibrarypgfplo
+ts.contourlua.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibraryplotmarks.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/pgflibraryplotmar
+ks.code.tex)))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarycalc.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarybackgrounds.code.tex)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibraryshapes.geometric.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/shapes/pgflibrary
+shapes.geometric.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibraryshadings.code.tex
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/libraries/pgflibraryshading
+s.code.tex))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarypositioning.code.tex))
+(./build/fig3_trap_schematic_slice4_tikz.aux)
+(/usr/local/texlive/2026/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+) (/usr/local/texlive/2026/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg))
+Package pgfplots notification 'compat/show suggested version=true': document ha
+s been generated with the most recent feature set (\pgfplotsset{compat=1.18}).
+
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd)
+(./fragments/sulfur_trap_domain.tikz.tex) [1
+Non-PDF special ignored!{/usr/local/texlive/2026/texmf-var/fonts/map/pdftex/upd
+map/pdftex.map}] (./build/fig3_trap_schematic_slice4_tikz.aux))
+ 34967 words of node memory still in use:
+   385 hlist, 3 vlist, 2 rule, 19 disc, 36 math, 1119 glue, 19 kern, 267 glyph,
+ 3385 attribute, 51 glue_spec, 3385 attribute_list, 2 write, 2001 pdf_literal, 
+330 pdf_colorstack, 1 pdf_setmatrix, 1 pdf_save, 1 pdf_restore nodes
+   avail lists: 2:36,3:4013,4:670,5:48,6:2,7:2864,8:10,9:782,11:38
+</System/Library/Fonts/Supplemental/Arial.ttf></usr/local/texlive/2026/texmf-di
+st/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2026/texmf-dis
+t/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2026/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2026/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2026/texmf-dist/fon
+ts/type1/public/amsfonts/cm/cmsy7.pfb>
+Output written on fig3_trap_schematic_slice4_tikz.pdf (1 page, 76469 bytes).
+Transcript written on fig3_trap_schematic_slice4_tikz.log.
+OK: no collisions found in fig3_trap_schematic_slice4_tikz.pdf (77 words)
+visual clash report: fig3_trap_schematic_slice4_tikz.pdf (77 words)
+WARN visual_clash: candidates serialized to build/visual_clash.json
+0 suppressed (use --no-ignore-known-fp to see all)
+OK: no text-boundary clashes found in fig3_trap_schematic_slice4_tikz.pdf (77 words)
+OK: no label-path proximity candidates found in fig3_trap_schematic_slice4_tikz.pdf (77 words)
+WARN undeclared_rect_boundary: UG001 text='' distance=None
+WARN undeclared_rect_boundary: UG002 text='' distance=None
+WARN undeclared_rect_boundary: UG003 text='' distance=None
+WARN label_endpoint_near_miss: UG004 text='S' distance=2.381368
+WARN undeclared_column_rule: UG005 text='' distance=None
+WARN label_endpoint_near_miss: UG006 text='+' distance=2.973049
+WARN undeclared_column_rule: UG007 text='' distance=None
+WARN undeclared_column_rule: UG008 text='' distance=None
+WARN undeclared_column_rule: UG009 text='' distance=None
+WARN undeclared_column_rule: UG010 text='' distance=None
+WARN label_endpoint_near_miss: UG011 text='+' distance=0.747418
+WARN undeclared_horizontal_rule: UG012 text='' distance=None
+WARN undeclared_horizontal_rule: UG013 text='' distance=None
+WARN undeclared_horizontal_rule: UG014 text='' distance=None
+WARN undeclared_column_rule: UG015 text='' distance=None
+WARN undeclared_horizontal_rule: UG016 text='' distance=None
+WARN undeclared_column_rule: UG017 text='' distance=None
+WARN label_endpoint_near_miss: UG018 text='electrode' distance=3.280358
+WARN undeclared_horizontal_rule: UG019 text='' distance=None
+WARN undeclared_column_rule: UG020 text='' distance=None
+WARN label_endpoint_near_miss: UG021 text='electrode' distance=3.280358
+WARN undeclared_horizontal_rule: UG022 text='' distance=None
+WARN undeclared_column_rule: UG023 text='' distance=None
+WARN label_endpoint_near_miss: UG024 text='+' distance=1.988712
+WARN label_endpoint_near_miss: UG025 text='−' distance=0.247646
+WARN undeclared_column_rule: UG026 text='' distance=None
+WARN undeclared_column_rule: UG027 text='' distance=None
+WARN undeclared_column_rule: UG028 text='' distance=None
+WARN undeclared_column_rule: UG029 text='' distance=None
+WARN undeclared_horizontal_rule: UG030 text='' distance=None
+WARN undeclared_column_rule: UG031 text='' distance=None
+WARN undeclared_column_rule: UG032 text='' distance=None
+WARN label_endpoint_near_miss: UG033 text='S' distance=1.69496
+WARN undeclared_horizontal_rule: UG034 text='' distance=None
+WARN undeclared_horizontal_rule: UG035 text='' distance=None
+WARN label_endpoint_near_miss: UG036 text='S' distance=3.673757
+WARN undeclared_horizontal_rule: UG037 text='' distance=None
+WARN undeclared_rect_boundary: UG038 text='' distance=None
+WARN label_endpoint_near_miss: UG039 text='−' distance=1.374358
+WARN undeclared_horizontal_rule: UG040 text='' distance=None
+WARN label_endpoint_near_miss: UG041 text='−' distance=1.374358
+WARN undeclared_column_rule: UG042 text='' distance=None
+WARN undeclared_rect_boundary: UG043 text='' distance=None
+WARN undeclared_horizontal_rule: UG044 text='' distance=None
+WARN undeclared_column_rule: UG045 text='' distance=None
+WARN undeclared_rect_boundary: UG046 text='' distance=None
+WARN undeclared_horizontal_rule: UG047 text='' distance=None
+WARN label_endpoint_near_miss: UG048 text='S' distance=2.952994
+WARN undeclared_column_rule: UG049 text='' distance=None
+WARN label_endpoint_near_miss: UG050 text='electrode' distance=0.445712
+WARN undeclared_horizontal_rule: UG051 text='' distance=None
+WARN undeclared_column_rule: UG052 text='' distance=None
+52 undeclared geometry candidate(s)
+OK: no label hyphenation found in fig3_trap_schematic_slice4_tikz.pdf
+tex assertions: fig3_trap_schematic_slice4_tikz.tex (0 checked)
+OK: no tex-geometry assertion issues
+WARN physics_grounding: fig3_trap_schematic_slice4_illustration_grammar declares physics invariants but has no tex_assertions or semantic_assertions (read the briefing §6/§7 and author them)
+ERROR: strict detector gate failed after review evidence generation
