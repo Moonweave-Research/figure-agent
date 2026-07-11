@@ -10,9 +10,11 @@ import pytest
 import yaml
 from direct_svg_review import DirectSvgReviewError
 from direct_svg_stage_review import (
+    _resolve_path,
     advance_review_response,
     assert_perceptually_distinct,
     export_public_distribution,
+    recover_review_transaction,
     reveal_blinding_keys,
     stage_review,
 )
@@ -97,7 +99,22 @@ def test_stage_review_creates_one_three_way_packet_per_panel(tmp_path: Path) -> 
         "authority_F",
     }
     assert len(manifest["generator"]["commit"]) == 40
-    assert manifest["generator"]["script_blob_sha256"].startswith("sha256:")
+    assert set(manifest["generator"]["files"]) == {
+        "pyproject.toml",
+        "uv.lock",
+        "scripts/direct_svg_stage_review.py",
+        "scripts/direct_svg_review.py",
+        "scripts/direct_svg_packet.py",
+        "scripts/hybrid/comparison_report.py",
+    }
+    assert set(manifest["generator"]["environment"]) == {
+        "python",
+        "pillow",
+        "pyyaml",
+        "png_zlib",
+        "resampling",
+    }
+    assert manifest["generator"]["receipt_sha256"].startswith("sha256:")
 
 
 def test_fixed_seed_replay_is_deterministic_and_cannot_overwrite(tmp_path: Path) -> None:
@@ -183,7 +200,12 @@ def test_failure_at_each_publish_step_preserves_current_version(
 def test_export_contains_only_public_distribution(tmp_path: Path) -> None:
     result = _stage(tmp_path)
     export = tmp_path / "export"
-    export_public_distribution(Path(result["distribution_path"]), export)
+    export_public_distribution(
+        Path(result["distribution_path"]),
+        export,
+        review_root=tmp_path / "review",
+        private_root=tmp_path / ".private",
+    )
 
     assert (export / "manifest.yaml").is_file()
     assert not list(export.rglob("*private*"))
@@ -196,6 +218,33 @@ def test_export_contains_only_public_distribution(tmp_path: Path) -> None:
         path.relative_to(export) for path in export.rglob("*") if path.is_file()
     }
     assert exported_files == public_files
+
+
+@pytest.mark.parametrize("tamper", ["extra", "symlink", "content", "state", "private"])
+def test_export_fails_closed_on_any_unbound_or_modified_surface(
+    tmp_path: Path, tamper: str
+) -> None:
+    result = _stage(tmp_path)
+    distribution = Path(result["distribution_path"])
+    if tamper == "extra":
+        (distribution / "extra.txt").write_text("unmanifested")
+    elif tamper == "symlink":
+        (distribution / "extra-link").symlink_to(tmp_path / "outside")
+    elif tamper == "content":
+        (distribution / "index.html").write_bytes(b"tampered")
+    elif tamper == "state":
+        (tmp_path / "review" / "review-state.yaml").write_bytes(b"invalid")
+    else:
+        (Path(result["private_path"]) / "key.yaml").write_bytes(b"invalid")
+
+    with pytest.raises(DirectSvgReviewError, match="export_validation_failed"):
+        export_public_distribution(
+            distribution,
+            tmp_path / "export",
+            review_root=tmp_path / "review",
+            private_root=tmp_path / ".private",
+        )
+    assert not (tmp_path / "export").exists()
 
 
 def test_project_locked_reproducibility(tmp_path: Path) -> None:
@@ -226,6 +275,22 @@ def test_perceptual_duplicate_policy_rejects_near_duplicate(tmp_path: Path) -> N
         assert_perceptually_distinct([first, second])
 
 
+def test_perceptual_threshold_is_inclusive_and_calibrated_for_local_change(
+    tmp_path: Path,
+) -> None:
+    first = tmp_path / "first.png"
+    second = tmp_path / "second.png"
+    Image.new("RGB", (10, 10), "white").save(first)
+    localized = Image.new("RGB", (10, 10), "white")
+    localized.putpixel((0, 0), (0, 0, 0))
+    localized.save(second)
+    distance = 1 / 100
+
+    with pytest.raises(DirectSvgReviewError, match="perceptual_duplicate"):
+        assert_perceptually_distinct([first, second], threshold=distance)
+    assert_perceptually_distinct([first, second], threshold=distance - 1e-9)
+
+
 def test_generator_commit_must_resolve_and_match_script_blob(tmp_path: Path) -> None:
     with pytest.raises(DirectSvgReviewError, match="generator_commit_invalid"):
         stage_review(
@@ -252,6 +317,30 @@ def test_generator_commit_must_resolve_and_match_script_blob(tmp_path: Path) -> 
             private_seed=b"z" * 32,
             generator_commit="e7d75313",
         )
+    with pytest.raises(DirectSvgReviewError, match="generator_receipt_mismatch"):
+        stage_review(
+            FIXTURE,
+            review_root=tmp_path / "review-four",
+            private_root=tmp_path / ".private-four",
+            private_seed=b"r" * 32,
+            generator_commit=_head(),
+            generator_receipt_sha256="sha256:" + "0" * 64,
+        )
+
+
+def test_prerequisite_paths_reject_parent_and_symlink_escapes(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    (root / "inside.txt").write_text("inside")
+    outside = tmp_path / "outside.txt"
+    outside.write_text("outside")
+    (root / "link.txt").symlink_to(outside)
+
+    assert _resolve_path("inside.txt", (root,)) == (root / "inside.txt").resolve()
+    with pytest.raises(DirectSvgReviewError, match="review_prerequisite_path_invalid"):
+        _resolve_path("../outside.txt", (root,))
+    with pytest.raises(DirectSvgReviewError, match="review_prerequisite_path_invalid"):
+        _resolve_path("link.txt", (root,))
 
 
 def _filled_scientific(response: dict[str, object], reviewer: str) -> dict[str, object]:
@@ -353,6 +442,14 @@ def test_unblind_rejects_nonfinal_or_tampered_response(tmp_path: Path) -> None:
     with pytest.raises(DirectSvgReviewError, match="response_not_finalized"):
         reveal_blinding_keys(tmp_path / "review", tmp_path / ".private")
 
+    _finalize_uncontested(tmp_path, result)
+    response_path = Path(result["distribution_path"]) / "response.yaml"
+    response_path.write_bytes(response_path.read_bytes() + b"\n# tampered\n")
+    with pytest.raises(DirectSvgReviewError, match="finalized_response_hash_mismatch"):
+        reveal_blinding_keys(tmp_path / "review", tmp_path / ".private")
+
+
+def _finalize_uncontested(tmp_path: Path, result: dict[str, object]) -> None:
     response_path = Path(result["distribution_path"]) / "response.yaml"
     proposed = _filled_scientific(yaml.safe_load(response_path.read_text()), "Reviewer One")
     advance_review_response(tmp_path / "review", tmp_path / ".private", proposed)
@@ -360,10 +457,67 @@ def test_unblind_rejects_nonfinal_or_tampered_response(tmp_path: Path) -> None:
     advance_review_response(tmp_path / "review", tmp_path / ".private", proposed)
     proposed["state"] = "finalized"
     advance_review_response(tmp_path / "review", tmp_path / ".private", proposed)
-    response_path.write_bytes(response_path.read_bytes() + b"\n# tampered\n")
-    with pytest.raises(DirectSvgReviewError, match="finalized_response_hash_mismatch"):
-        reveal_blinding_keys(tmp_path / "review", tmp_path / ".private")
 
+
+@pytest.mark.parametrize(
+    "failure_step", ["after_reveal_stage", "after_reveal_publish", "after_reveal_state"]
+)
+def test_reveal_failure_is_transactional_and_retry_safe(
+    tmp_path: Path, failure_step: str
+) -> None:
+    result = _stage(tmp_path)
+    _finalize_uncontested(tmp_path, result)
+    state_path = tmp_path / "review" / "review-state.yaml"
+    before = state_path.read_bytes()
+    public_path = Path(result["distribution_path"]) / "unblinding.yaml"
+
+    with pytest.raises(RuntimeError, match="injected"):
+        reveal_blinding_keys(
+            tmp_path / "review",
+            tmp_path / ".private",
+            failure_injection=failure_step,
+        )
+    assert state_path.read_bytes() == before
+    assert not public_path.exists()
+    assert not (tmp_path / "review" / ".reveal-journal.yaml").exists()
+
+    first = reveal_blinding_keys(tmp_path / "review", tmp_path / ".private")
+    second = reveal_blinding_keys(tmp_path / "review", tmp_path / ".private")
+    assert first == second
+
+
+@pytest.mark.parametrize(
+    ("kind", "step"),
+    [("publication", "after_public_publish"), ("reveal", "after_reveal_publish")],
+)
+def test_explicit_recovery_rolls_back_interrupted_transactions(
+    tmp_path: Path, kind: str, step: str
+) -> None:
+    if kind == "publication":
+        first = _stage(tmp_path)
+        state_before = (tmp_path / "review" / "review-state.yaml").read_bytes()
+        with pytest.raises(BaseException, match="simulated_crash"):
+            _stage(tmp_path, seed_byte=19, crash_injection=step)
+    else:
+        first = _stage(tmp_path)
+        _finalize_uncontested(tmp_path, first)
+        state_before = (tmp_path / "review" / "review-state.yaml").read_bytes()
+        with pytest.raises(BaseException, match="simulated_crash"):
+            reveal_blinding_keys(
+                tmp_path / "review",
+                tmp_path / ".private",
+                crash_injection=step,
+            )
+
+    recovered = recover_review_transaction(tmp_path / "review", tmp_path / ".private")
+    assert recovered["status"] == "rolled_back"
+    assert (tmp_path / "review" / "review-state.yaml").read_bytes() == state_before
+    assert not list((tmp_path / "review").glob(".*-journal.yaml"))
+    if kind == "publication":
+        assert len(list((tmp_path / "review" / "distributions").iterdir())) == 1
+        assert Path(first["distribution_path"]).is_dir()
+    else:
+        assert not (Path(first["distribution_path"]) / "unblinding.yaml").exists()
 
 def test_public_tree_contains_no_known_raw_input_hash(tmp_path: Path) -> None:
     result = _stage(tmp_path)
