@@ -1,0 +1,25 @@
+schema: figure-agent.reference-authority.v1
+fixture: fig3_trap_schematic_slice4_illustration_grammar
+authorities:
+  - source: briefing.md
+    authority: scientific narrative and nine inherited physics invariants
+  - source: spec.yaml
+    authority: six-panel inventory, required labels, and non-acceptance state
+  - source: reference/codex_v01.png
+    authority: selected visual baseline and sulfur-polymer motif reference
+  - source: semantic_boundary.yaml
+    authority: declared Panel e object and relation boundary
+  - source: motif_instance.yaml
+    authority: backend-neutral normalized motif geometry
+  - source: fragments/render_manifest.yaml
+    authority: paired grammar lowering hashes and toolchain receipt
+  - source: comparators/raw_svg_slice3/source_receipt.yaml
+    authority: immutable historical raw-SVG comparison lineage
+conflict_order:
+  - briefing physics invariants
+  - spec panel and label contract
+  - declared semantic and relation boundary
+  - backend-neutral motif instance
+  - visual reference motifs
+  - historical raw-SVG artifact
+publication_acceptance: not_claimed

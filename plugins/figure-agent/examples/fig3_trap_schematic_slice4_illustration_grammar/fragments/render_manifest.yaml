@@ -1,0 +1,32 @@
+artifacts:
+  svg:
+    path: sulfur_trap_domain.svg
+    sha256: sha256:e7a2bad9463a9eefebc9fe977893aa1d20e0dec7f855734efc4bd098cbe8fbcd
+  tikz:
+    path: sulfur_trap_domain.tikz.tex
+    sha256: sha256:e0195fdf6601d32257201136648fd22d8e6384f666e64aff485bb6e6a8efdacb
+inputs:
+  grammar:
+    name: sulfur_trap_domain.v1.yaml
+    sha256: sha256:1d4d2fe1fe89e8ced763b3e3c710e2118cdc72cd373d513df7d9265cabc33375
+  instance:
+    name: motif_instance.yaml
+    sha256: sha256:be5e9269071e25aba48d838f32915d4f0f7c1b29b94415143d834334efd59cca
+  svg_profile:
+    name: polymer-svg.v1.yaml
+    sha256: sha256:339f9cfa1e631a4a93f3ca34f27238d3cd9f175bfa393114ca1f0dc549f3a194
+  tikz_profile:
+    name: polymer-tikz.v1.yaml
+    sha256: sha256:e2ae9832a8379021fb1b1252ac6d2fae7e69853a87fb43b8dc4f4bb6dcce23bb
+motif_family: sulfur_trap_domain
+publication_acceptance: not_claimed
+schema: figure-agent.illustration-render.v1
+sources:
+  illustration_backend.py: sha256:3454f2d81a3b561cde98d820519620620b23612d2787e874b3ca4b1bfcca9d13
+  illustration_backend_svg.py: sha256:116e81bca76cba94a3d2656f717d4e8aa3815f97fd71a635ae8493e0e8e8616c
+  illustration_backend_tikz.py: sha256:1db70cac4c4c1da84af92a8d2488af3f8a93725c57cca9d27206164d66142a50
+  illustration_grammar.py: sha256:43e11859fd05c2c7bb4aa8b7aa9bd476718256f10398e84e01f530aa98c6ebee
+  illustration_scene.py: sha256:733037aa9ead498a2d18bd460b016aacabfd3a488c6a3b18bd18eb501d3bc258
+  render_illustration_motif.py: sha256:6ee9e7683283e48bbd03af7277dfa34cba20a11477d533b9b02e31bbb1caf306
+toolchain:
+  python: 3.12.13

@@ -1,0 +1,75 @@
+name: fig3_trap_schematic_slice4_illustration_grammar
+panels:
+  - id: a
+    caption: 측정 셋업
+    bbox_pdf_cm: [0.0, 6.1, 6.3, 12.249079]
+  - id: b
+    caption: 멱함수 (power-law) 의 이해
+    bbox_pdf_cm: [6.1, 6.1, 12.6, 12.249079]
+  - id: c
+    caption: Trapping index n 해석
+    bbox_pdf_cm: [12.4, 6.1, 18.864263, 12.249079]
+  - id: d
+    caption: 화학적 원인
+    bbox_pdf_cm: [0.0, 0.0, 6.3, 6.2]
+  - id: e
+    caption: 물리적 원인
+    bbox_pdf_cm: [6.1, 0.0, 12.6, 6.2]
+  - id: f
+    caption: Multi-modal convergence (n / g(E_t) / τ_d → consistent trap depth)
+    bbox_pdf_cm: [12.4, 0.0, 18.864263, 6.2]
+style_profile: polymer-default
+reference_image: reference/codex_v01.png
+accepted: false
+slice4_illustration_grammar:
+  source_fixture: fig3_trap_schematic_slice3_semantic
+  source_commit: eaed8fb165e801e13cea3078f832496a011fa2f9
+  source_tree: 6966d9cf193a34debc1ecfcd5d2a1d1aff1845e5
+  render_manifest: fragments/render_manifest.yaml
+  semantic_boundary: semantic_boundary.yaml
+  publication_acceptance: not_claimed
+golden_contract:
+  required_labels:
+    - "power-law"
+    - ["no-trap (Debye)", "no—trap (Debye)", "no-trap"]
+    - "electron affinity"
+    - ["creates", "create"]
+    - ["linear chain", "Linear-chain"]
+    - "consistent trap depth distribution"
+    - "electrode"
+  source_inventory:
+    chainLine:
+      pattern: "chainLine"
+      min: 5
+    haloFill:
+      pattern: "haloFill"
+      min: 3
+    trapSeg:
+      pattern: "trapSeg"
+      min: 3
+selected_preview: null
+selection_notes: |
+  Codex app (codex_v01) chosen as primary baseline (2026-04-28 2-candidate
+  compare with chatgpt_web_v01). Codex was preferred for 2D line-art
+  consistency that carries invariant #8 visually — panels (d) and (e)
+  share the same visual motif — and for a palette closer to Nature
+  schematic convention.
+
+  Visual motifs to preserve:
+    - green wavy polymer backbone shared between panels (d) and (e)
+    - yellow S-circle marking sulfur sites along the chain
+    - amber trap halo on sulfur cluster regions
+    - shared sulfur-halo motif across (d)+(e) so invariant #8 (chem ↔ phys point to same sulfur regions) reads visually
+
+  Preview errors to fix in TikZ:
+    - panel (c) no-trap Debye curve is drawn nearly straight in both previews — must be concave-down to honor invariant #5
+    - both previews under-visualize invariant #8 — TikZ must add an explicit shared sulfur-halo marker across (d)+(e)
+
+  Labels to lift (from chatgpt_web_v01, kept as enrichment reference):
+    - (a) explicit "voltage-bias" / "current-meter" labels
+    - (b) "trap-controlled hopping" inset cartoon labeling
+    - (c) "trap-rich" / "shallow or fewer traps" verbal labels
+    - (f) numbered-metric panel labeling
+
+  Style overrides:
+    - polymer-paper-preamble.sty Style Lock wins: Paul Tol Muted palette + Arial override both previews' palettes during .tex authoring

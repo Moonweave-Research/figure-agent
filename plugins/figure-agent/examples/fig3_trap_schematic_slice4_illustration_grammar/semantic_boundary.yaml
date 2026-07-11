@@ -1,0 +1,39 @@
+schema: figure-agent.semantic-boundary.v1
+fixture: fig3_trap_schematic_slice4_illustration_grammar
+panel: e
+boundary_id: e.sulfur_trap_domain
+semantic_objects:
+  - {id: chain.backbones, role: linear_polymer_chain_geometry}
+  - {id: sulfur.regions, role: sulfur_rich_spatial_regions}
+  - {id: sulfur.sites, role: sulfur_sites_on_chains}
+  - {id: trap.levels, role: localized_trap_levels}
+  - {id: trapped.carriers, role: carriers_on_trap_levels}
+relations:
+  - {subject: sulfur.sites, predicate: attached_to, object: chain.backbones}
+  - {subject: sulfur.sites, predicate: located_in, object: sulfur.regions}
+  - {subject: trap.levels, predicate: co_located_with, object: sulfur.regions}
+  - {subject: trapped.carriers, predicate: sits_on, object: trap.levels}
+ownership:
+  neutral_scene:
+    - complex chain geometry
+    - sulfur-rich domain geometry
+    - sulfur negative-site glyphs
+    - localized trap levels
+    - trapped carrier placement
+  parent_tikz:
+    - six-panel composition
+    - panel letters
+    - typography and labels
+    - legends
+    - inter-panel narrative
+forbidden_imports:
+  - Fig1 coordinates
+  - Fig1 panel names
+  - Fig1 templates
+  - Fig1 private helpers
+forbidden_import_patterns:
+  - examples/fig1_
+  - experiments/python_svg_semantic_fig1
+  - fig1_hybrid_complex_panel_pilot
+historical_artifacts_immutable: true
+publication_acceptance: not_claimed

@@ -1,0 +1,14 @@
+schema: figure-agent.historical-comparator-receipt.v1
+source_fixture: fig3_trap_schematic_slice3_semantic
+source_commit: 47309ef86d3ea41eff429d3005fa79cfe6161506
+source_tree: 6575fb1f7472777de051248760e258fe7250cce1
+copied_artifacts:
+  - source_path: ../fig3_trap_schematic_slice3_semantic/review/full-render.png
+    local_path: full-render.png
+    sha256: sha256:36eb70d2c283ccf1ed0170766baab2e2137fbb843bbf0f9cea33efe789ee2b1c
+  - source_path: ../fig3_trap_schematic_slice3_semantic/review/panel-e-render.png
+    local_path: panel-e-render.png
+    sha256: sha256:b7bc8c8624466ad89feeae1b0a85f286398d1bfe36cf5722c29b67d8f01d64e8
+copy_verification: byte_identical
+historical_artifacts_immutable: true
+publication_acceptance: not_claimed
