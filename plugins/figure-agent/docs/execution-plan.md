@@ -347,6 +347,10 @@ FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
 
 ## Task 8: Cross-figure generalization on sulfur-polymer Fig3
 
+**Status:** Machine-complete at clean archive commit `95e29908`; scaffold and
+artifact verdicts remain pending, so Slice 3 is open and no publication
+acceptance is claimed.
+
 **Fixture:** Recover `examples/fig3_trap_schematic_v97` from source commit
 `eaed8fb165e801e13cea3078f832496a011fa2f9`, fixture tree
 `6966d9cf193a34debc1ecfcd5d2a1d1aff1845e5`, into a new Slice 3 output
@@ -364,16 +368,16 @@ overwrite the historical Fig3 artifact.
 - Modify: general contracts only when a failing cross-figure test proves a real
   abstraction gap
 
-- [ ] Declare which facts are authoritative in the reference, briefing, spec,
+- [x] Declare which facts are authoritative in the reference, briefing, spec,
   coordinate hints, editable source, and review history.
-- [ ] Exercise the same region, attribution, overlay/crop, and fragment contracts
+- [x] Exercise the same region, attribution, overlay/crop, and fragment contracts
   against the six-panel narrative without importing Fig1-specific coordinates,
   panel names, templates, or private helpers.
-- [ ] Add one cross-figure test that runs the contract on both Fig1 and Fig3.
-- [ ] Reproduce from a clean tracked checkout using only declared inputs.
-- [ ] Preserve the distinction between machine-valid, review-ready, and
+- [x] Add one cross-figure test that runs the contract on both Fig1 and Fig3.
+- [x] Reproduce from a clean tracked checkout using only declared inputs.
+- [x] Preserve the distinction between machine-valid, review-ready, and
   human-accepted. Slice 3 closes only when both human verdicts exist.
-- [ ] Compile from `plugins/figure-agent/`:
+- [x] Compile from `plugins/figure-agent/`:
 
 ```bash
 bash scripts/compile.sh examples/<slice3-name>/<slice3-name>.tex
@@ -381,7 +385,7 @@ FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
   examples/<slice3-name>/<slice3-name>.tex
 ```
 
-- [ ] Commit: `feat: prove semantic attribution across Fig1 and Fig3 families`
+- [x] Commit: `feat: prove semantic attribution across Fig1 and Fig3 families`
 
 ## Task 9: Decide production promotion
 

@@ -30,5 +30,16 @@ artifacts:
   fragment_svg_raster: sha256:3cf35660a93e7a05993665e20ea7ba1089667a9d90dfccf2d28a95afce84d886
   fragment_pdf_raster: sha256:d95fd16478ce4721df4d39d3fb6bdcf63d824792a7d4b85eb2ddba74c9bcd4d5
   fragment_difference_amplified: sha256:740ea981f7acc2255e0252fcab5ed4ee86feadebc06b32b4a6f7ae91285ee2e8
+clean_reproduction:
+  archive_commit: 95e29908
+  clean_checkout: true
+  ordinary_compile_exits: [0, 0]
+  fixed_raster_repeatable: true
+  raster_sha256: sha256:36eb70d2c283ccf1ed0170766baab2e2137fbb843bbf0f9cea33efe789ee2b1c
+  review_artifact_matches_raster: true
+  pdf_bytes_repeatable: false
+  first_pdf_sha256: sha256:39445d45b5bcdbb525a2fd20df8306399702586fa3e86aceb5b324d78994d475
+  second_pdf_sha256: sha256:ad78172ed56df904e6bc1e6a51a9efb6d2a5abb52e2a41d7fd754c563e88ae18
+  strict_exit: 1
 human_review_required: true
 publication_acceptance: not_claimed

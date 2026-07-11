@@ -14,4 +14,18 @@ clean_reproduction:
   pdf_bytes_repeatable: false
   first_pdf_sha256: sha256:d719de1d598f59a97d9a38b6b7da966671cac7288f40c741cdbd19400ae8a0f2
   second_pdf_sha256: sha256:72d175991c3e5341b9310329886b8f67489c65bfbc241dd6a203799a46822e5f
+derivative_clean_reproduction:
+  archive_commit: 95e29908
+  clean_checkout: true
+  compile_command: bash scripts/compile.sh examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex
+  repeated_compile_count: 2
+  compile_exits: [0, 0]
+  fixed_raster_repeatable: true
+  raster_sha256: sha256:36eb70d2c283ccf1ed0170766baab2e2137fbb843bbf0f9cea33efe789ee2b1c
+  review_artifact_matches_raster: true
+  pdf_bytes_repeatable: false
+  first_pdf_sha256: sha256:39445d45b5bcdbb525a2fd20df8306399702586fa3e86aceb5b324d78994d475
+  second_pdf_sha256: sha256:ad78172ed56df904e6bc1e6a51a9efb6d2a5abb52e2a41d7fd754c563e88ae18
+  strict_exit: 1
+  strict_classification: inherited_full_figure_detector_baseline
 publication_acceptance: not_claimed

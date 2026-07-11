@@ -18,3 +18,7 @@ Review inputs:
 The ordinary compile passes. Strict mode exits 1 on inherited full-figure
 detector findings; `machine_receipt.yaml` records them without reclassifying
 the derivative as publication-accepted.
+
+The tracked derivative was replayed from clean archive commit `95e29908` twice.
+Both ordinary compiles exited 0 and produced the exact bound PNG hash; PDF bytes
+varied across runs. This is reproducibility evidence, not a human verdict.
