@@ -1,0 +1,12 @@
+schema: figure-agent.visual-attribution-suite.v1
+historical_evidence: {}
+cases:
+  - id: forbidden-fixture-dispatch
+    fixture: special_fixture
+    detector: visual_clash
+    finding:
+      bbox_px: [0, 0, 10, 10]
+    review_outcome: true_positive
+    expected_attribution: exact
+    expected_by_fixture:
+      special_fixture: exact

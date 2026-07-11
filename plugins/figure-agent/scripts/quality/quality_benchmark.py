@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -22,6 +23,10 @@ LIST_SCHEMA = "figure-agent.quality-benchmark-list.v1"
 RUN_SCHEMA = "figure-agent.quality-benchmark-run.v1"
 COMPARE_SCHEMA = "figure-agent.quality-benchmark-comparison.v1"
 TREND_SCHEMA = "figure-agent.quality-benchmark-trend.v1"
+VISUAL_ATTRIBUTION_SCHEMA = "figure-agent.visual-attribution-suite.v1"
+VISUAL_ATTRIBUTION_STATES = {"exact", "ambiguous", "unbound"}
+VISUAL_REVIEW_OUTCOMES = {"true_positive", "false_positive"}
+VISUAL_EVIDENCE_OUTCOMES = {"false_positive", "linked_defect"}
 TREND_REGRESSION_METRICS = (
     "completed_rate",
     "render_success_rate",
@@ -63,9 +68,287 @@ def _forbidden_write_reason(path: Path) -> str | None:
 
 def _load_suites(plugin_root: Path) -> dict[str, dict[str, Any]]:
     suites = quality_memory_index._load_quality_suites(plugin_root)  # type: ignore[attr-defined]
+    suites_path = plugin_root / "benchmarks" / "quality_suites.yaml"
+    if suites_path.is_symlink():
+        raise QualityBenchmarkError("suite_manifest_symlink")
+    payload = yaml.safe_load(suites_path.read_text(encoding="utf-8")) or {}
+    raw_suites = payload.get("suites") if isinstance(payload, dict) else {}
+    raw_suites = raw_suites if isinstance(raw_suites, dict) else {}
+    normalized: dict[str, dict[str, Any]] = {}
+    for suite, fixtures in sorted(suites.items()):
+        raw = raw_suites.get(suite)
+        raw = raw if isinstance(raw, dict) else {}
+        normalized[suite] = {
+            "description": str(raw.get("description") or ""),
+            "fixtures": fixtures,
+        }
+        for key in ("kind", "corpus"):
+            value = raw.get(key)
+            if isinstance(value, str) and value:
+                normalized[suite][key] = value
+    return normalized
+
+
+def _bbox_px(value: object, *, case_id: str) -> list[float]:
+    if not isinstance(value, list) or len(value) != 4:
+        raise QualityBenchmarkError(f"visual_attribution_bbox_invalid: {case_id}")
+    try:
+        bbox = [float(item) for item in value]
+    except (TypeError, ValueError) as exc:
+        raise QualityBenchmarkError(
+            f"visual_attribution_bbox_invalid: {case_id}"
+        ) from exc
+    x0, y0, x1, y1 = bbox
+    if x1 <= x0 or y1 <= y0:
+        raise QualityBenchmarkError(f"visual_attribution_bbox_invalid: {case_id}")
+    return bbox
+
+
+def summarize_visual_attribution_cases(cases: list[dict[str, Any]]) -> dict[str, Any]:
+    finding_count = len(cases)
+    true_positives = sum(
+        1 for case in cases if case.get("review_outcome") == "true_positive"
+    )
+    false_positives = sum(
+        1 for case in cases if case.get("review_outcome") == "false_positive"
+    )
+    attribution_counts = {
+        state: sum(1 for case in cases if case.get("expected_attribution") == state)
+        for state in sorted(VISUAL_ATTRIBUTION_STATES)
+    }
+    correction_minutes = [case.get("human_correction_minutes") for case in cases]
+    total_minutes = (
+        round(sum(float(value) for value in correction_minutes), 3)
+        if correction_minutes and all(value is not None for value in correction_minutes)
+        else None
+    )
     return {
-        suite: {"description": "", "fixtures": fixtures}
-        for suite, fixtures in sorted(suites.items())
+        "finding_count": finding_count,
+        "reviewed_true_positive_count": true_positives,
+        "reviewed_false_positive_count": false_positives,
+        "exact_attribution_rate": (
+            round(attribution_counts["exact"] / finding_count, 6) if finding_count else 0.0
+        ),
+        "ambiguous_attribution_rate": (
+            round(attribution_counts["ambiguous"] / finding_count, 6)
+            if finding_count
+            else 0.0
+        ),
+        "unbound_attribution_rate": (
+            round(attribution_counts["unbound"] / finding_count, 6)
+            if finding_count
+            else 0.0
+        ),
+        "human_correction_minutes": total_minutes,
+    }
+
+
+def load_visual_attribution_corpus(plugin_root: Path) -> dict[str, Any]:
+    path = plugin_root / "benchmarks" / "visual_attribution_suite.yaml"
+    if path.is_symlink():
+        raise QualityBenchmarkError("visual_attribution_corpus_symlink")
+    try:
+        payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except FileNotFoundError as exc:
+        raise QualityBenchmarkError("visual_attribution_corpus_missing") from exc
+    if not isinstance(payload, dict) or payload.get("schema") != VISUAL_ATTRIBUTION_SCHEMA:
+        raise QualityBenchmarkError("visual_attribution_schema_invalid")
+    cases = payload.get("cases")
+    if not isinstance(cases, list) or not cases:
+        raise QualityBenchmarkError("visual_attribution_cases_missing")
+    normalized_cases: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, raw_case in enumerate(cases):
+        if not isinstance(raw_case, dict):
+            raise QualityBenchmarkError(f"visual_attribution_case_invalid: {index}")
+        if "expected_by_fixture" in raw_case:
+            raise QualityBenchmarkError("fixture_specific_expectation_forbidden")
+        if "expected_by_bbox" in raw_case:
+            raise QualityBenchmarkError("coordinate_specific_expectation_forbidden")
+        case_id = str(raw_case.get("id") or "")
+        if not case_id or case_id in seen_ids:
+            raise QualityBenchmarkError(f"visual_attribution_case_id_invalid: {index}")
+        seen_ids.add(case_id)
+        fixture = str(raw_case.get("fixture") or "")
+        fixture_identity.validate_fixture_name(fixture)
+        finding = raw_case.get("finding")
+        if not isinstance(finding, dict):
+            raise QualityBenchmarkError(f"visual_attribution_finding_invalid: {case_id}")
+        normalized_finding = dict(finding)
+        normalized_finding["bbox_px"] = _bbox_px(
+            finding.get("bbox_px"),
+            case_id=case_id,
+        )
+        review_outcome = str(raw_case.get("review_outcome") or "")
+        if review_outcome not in VISUAL_REVIEW_OUTCOMES:
+            raise QualityBenchmarkError(f"visual_attribution_review_invalid: {case_id}")
+        expected = str(raw_case.get("expected_attribution") or "")
+        if expected not in VISUAL_ATTRIBUTION_STATES:
+            raise QualityBenchmarkError(f"visual_attribution_expected_invalid: {case_id}")
+        minutes = raw_case.get("human_correction_minutes")
+        if minutes is not None:
+            try:
+                minutes = float(minutes)
+            except (TypeError, ValueError) as exc:
+                raise QualityBenchmarkError(
+                    f"visual_attribution_minutes_invalid: {case_id}"
+                ) from exc
+            if minutes < 0:
+                raise QualityBenchmarkError(
+                    f"visual_attribution_minutes_invalid: {case_id}"
+                )
+        normalized_cases.append(
+            {
+                **raw_case,
+                "finding": normalized_finding,
+                "review_outcome": review_outcome,
+                "expected_attribution": expected,
+                "human_correction_minutes": minutes,
+            }
+        )
+    computed = summarize_visual_attribution_cases(normalized_cases)
+    if payload.get("baseline_metrics") != computed:
+        raise QualityBenchmarkError("visual_attribution_baseline_drift")
+    historical = payload.get("historical_evidence")
+    if not isinstance(historical, dict):
+        raise QualityBenchmarkError("visual_attribution_historical_evidence_invalid")
+    reviewed_evidence = payload.get("reviewed_evidence")
+    if not isinstance(reviewed_evidence, list) or not reviewed_evidence:
+        raise QualityBenchmarkError("visual_attribution_reviewed_evidence_missing")
+    normalized_evidence: list[dict[str, Any]] = []
+    seen_evidence_ids: set[str] = set()
+    for index, raw_evidence in enumerate(reviewed_evidence):
+        if not isinstance(raw_evidence, dict):
+            raise QualityBenchmarkError(
+                f"visual_attribution_reviewed_evidence_invalid: {index}"
+            )
+        evidence_id = str(raw_evidence.get("id") or "")
+        if not evidence_id or evidence_id in seen_evidence_ids:
+            raise QualityBenchmarkError(
+                f"visual_attribution_reviewed_evidence_id_invalid: {index}"
+            )
+        seen_evidence_ids.add(evidence_id)
+        source_relative = Path(str(raw_evidence.get("source_path") or ""))
+        if (
+            not source_relative.parts
+            or source_relative.is_absolute()
+            or ".." in source_relative.parts
+        ):
+            raise QualityBenchmarkError(
+                f"visual_attribution_reviewed_evidence_path_invalid: {evidence_id}"
+            )
+        source_path = plugin_root / source_relative
+        if source_path.is_symlink() or not source_path.is_file():
+            raise QualityBenchmarkError(
+                f"visual_attribution_reviewed_evidence_source_missing: {evidence_id}"
+            )
+        source_sha256 = str(raw_evidence.get("source_sha256") or "")
+        actual_sha256 = hashlib.sha256(source_path.read_bytes()).hexdigest()
+        if source_sha256 != actual_sha256:
+            raise QualityBenchmarkError(
+                f"visual_attribution_reviewed_evidence_hash_mismatch: {evidence_id}"
+            )
+        review_outcome = str(raw_evidence.get("review_outcome") or "")
+        if review_outcome not in VISUAL_EVIDENCE_OUTCOMES:
+            raise QualityBenchmarkError(
+                f"visual_attribution_reviewed_evidence_outcome_invalid: {evidence_id}"
+            )
+        detector_ref = str(raw_evidence.get("detector_ref") or "")
+        source_locator = str(raw_evidence.get("source_locator") or "")
+        linked_finding_id = raw_evidence.get("linked_finding_id")
+        if not detector_ref or not source_locator:
+            raise QualityBenchmarkError(
+                f"visual_attribution_reviewed_evidence_locator_invalid: {evidence_id}"
+            )
+        if review_outcome == "linked_defect" and not linked_finding_id:
+            raise QualityBenchmarkError(
+                f"visual_attribution_reviewed_evidence_link_invalid: {evidence_id}"
+            )
+        if raw_evidence.get("authority") != "reviewed_evidence_only":
+            raise QualityBenchmarkError(
+                f"visual_attribution_reviewed_evidence_authority_invalid: {evidence_id}"
+            )
+        normalized_evidence.append(
+            {
+                **raw_evidence,
+                "source_path": source_relative.as_posix(),
+                "source_sha256": source_sha256,
+                "review_outcome": review_outcome,
+                "detector_ref": detector_ref,
+                "source_locator": source_locator,
+            }
+        )
+    if {item["review_outcome"] for item in normalized_evidence} != (
+        VISUAL_EVIDENCE_OUTCOMES
+    ):
+        raise QualityBenchmarkError(
+            "visual_attribution_reviewed_evidence_outcomes_incomplete"
+        )
+    return {
+        **payload,
+        "cases": normalized_cases,
+        "reviewed_evidence": normalized_evidence,
+        "baseline_metrics": computed,
+    }
+
+
+def _run_visual_attribution_suite(
+    suite: str,
+    *,
+    paths: runtime_paths.RuntimePaths,
+    limit: int | None,
+    render: bool,
+    write: bool,
+    run_id: str | None,
+) -> dict[str, Any]:
+    if render:
+        raise QualityBenchmarkError("visual_attribution_render_not_supported")
+    if write:
+        raise QualityBenchmarkError("visual_attribution_write_not_supported")
+    corpus = load_visual_attribution_corpus(paths.plugin_root)
+    cases = list(corpus["cases"])
+    if limit is not None:
+        cases = cases[:limit]
+    metrics = summarize_visual_attribution_cases(cases)
+    results = [
+        {
+            "fixture": case["fixture"],
+            "case_id": case["id"],
+            "status": "completed",
+            "detector": case["detector"],
+            "review_outcome": case["review_outcome"],
+            "expected_attribution": case["expected_attribution"],
+            "human_correction_minutes": case["human_correction_minutes"],
+            "metrics": {},
+        }
+        for case in cases
+    ]
+    return {
+        "schema": RUN_SCHEMA,
+        "run_id": run_id or _run_id(suite),
+        "suite": suite,
+        "suite_kind": "visual_attribution",
+        "generated_at": _utc_now(),
+        "fixture_count": len(cases),
+        "render_dependency_probe": {"state": "not_requested", "tools": {}, "missing": []},
+        "results": results,
+        "summary": {
+            "completed": len(cases),
+            "skipped": 0,
+            "failed": 0,
+            "regression_count": 0,
+        },
+        "capability_metrics": {
+            "completed_rate": 1.0 if cases else 0.0,
+            "render_success_rate": 0.0,
+            "candidate_specific_rank_rate": 0.0,
+            "mean_rank_score": 0.0,
+        },
+        "attribution_metrics": metrics,
+        "historical_evidence": corpus["historical_evidence"],
+        "acceptance": "machine_valid_only",
+        "tool_defect_candidates": [],
+        "writes": [],
     }
 
 
@@ -977,6 +1260,15 @@ def run_benchmark_suite(
     suites = _load_suites(paths.plugin_root)
     if suite not in suites:
         raise QualityBenchmarkError(f"unknown_suite: {suite}")
+    if suites[suite].get("kind") == "visual_attribution":
+        return _run_visual_attribution_suite(
+            suite,
+            paths=paths,
+            limit=limit,
+            render=render,
+            write=write,
+            run_id=run_id,
+        )
     fixtures = list(suites[suite]["fixtures"])
     if limit is not None:
         fixtures = fixtures[:limit]

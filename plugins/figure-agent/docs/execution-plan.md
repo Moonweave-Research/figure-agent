@@ -89,26 +89,26 @@ git diff --check
 - Modify: `benchmarks/quality_suites.yaml`
 - Modify: `scripts/quality/quality_benchmark.py`
 
-- [ ] Define a small corpus containing true collision/clash findings, accepted
+- [x] Define a small corpus containing true collision/clash findings, accepted
   false positives, panel boundaries, semantic region declarations, and expected
   attribution states (`exact`, `ambiguous`, `unbound`). Use synthetic fixtures
   for contract edge cases and immutable copies of reviewed evidence for realism.
-- [ ] Record baseline metrics: finding count, reviewed true positives, reviewed
+- [x] Record baseline metrics: finding count, reviewed true positives, reviewed
   false positives, exact attribution rate, ambiguous rate, unbound rate, and
   human correction minutes. Unknown measurements are represented as `null`, not
   invented estimates.
-- [ ] Add a test proving that a fixture-specific name or hard-coded coordinate
+- [x] Add a test proving that a fixture-specific name or hard-coded coordinate
   cannot determine the expected result.
-- [ ] Integrate the suite as an opt-in benchmark; do not add publication claims
+- [x] Integrate the suite as an opt-in benchmark; do not add publication claims
   to the machine output.
-- [ ] Verify:
+- [x] Verify:
 
 ```bash
 uv run pytest tests/test_visual_attribution_suite.py tests/test_quality_benchmark.py -q
 bin/fig-agent benchmark-run --suite visual-attribution --json
 ```
 
-- [ ] Commit: `test: lock visual attribution benchmark corpus`
+- [x] Commit: `test: lock visual attribution benchmark corpus`
 
 ## Task 2: Declare semantic regions and source selectors
 

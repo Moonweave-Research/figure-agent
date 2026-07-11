@@ -1,0 +1,92 @@
+schema: figure-agent.visual-attribution-suite.v1
+historical_evidence:
+  fixture: fig1_overview_v5f_v013_dogfood_001_vault
+  artifact: build/visual_clash.json
+  sha256: d6dffdffb37b32ee398d663134bfae00fd6bfa831bc703cf8c38501cd15e0031
+  finding_count: 46
+  source_binding_count: 0
+  review_status: unreviewed_inventory
+  authority: orientation_only
+reviewed_evidence:
+  - id: fig1-v2-vc009-reviewed-false-positive
+    source_path: examples/fig1_overview_v2_pair_001_vault/critique.md
+    source_sha256: 07863cea8b8acba52f538a1590d461818b8c52a22a21b7b4d11cf2309e6328be
+    source_locator: M009
+    detector_ref: VC009
+    detector_kind: visual_clash
+    review_outcome: false_positive
+    review_status: accept_simplification
+    linked_finding_id: null
+    excerpt: >-
+      Host crop verdict: no_defect; label stays legible, not a real collision.
+    authority: reviewed_evidence_only
+  - id: fig1-v5f-lp001-reviewed-linked-defect
+    source_path: examples/fig1_overview_v5f_art_direction_001_vault/critique.md
+    source_sha256: a4c0c96dbe981ae7ef6ca7bad3c47eba7cdfb82229d11de82fb4a1642612f063
+    source_locator: M_LP001
+    detector_ref: LP001
+    detector_kind: label_path
+    review_outcome: linked_defect
+    review_status: open
+    linked_finding_id: C001
+    excerpt: >-
+      The label remains readable, but this is kept under C001 for human
+      comparison of the stronger Panel C hierarchy.
+    authority: reviewed_evidence_only
+baseline_metrics:
+  finding_count: 4
+  reviewed_true_positive_count: 3
+  reviewed_false_positive_count: 1
+  exact_attribution_rate: 0.25
+  ambiguous_attribution_rate: 0.25
+  unbound_attribution_rate: 0.5
+  human_correction_minutes: null
+cases:
+  - id: exact-single-declared-region
+    fixture: synthetic_exact_alpha
+    detector: visual_clash
+    finding:
+      id: VC-SYN-001
+      bbox_px: [40, 40, 80, 80]
+    review_outcome: true_positive
+    expected_attribution: exact
+    panel_ids: [A]
+    semantic_region_ids: [A.label_primary]
+    human_correction_minutes: null
+    provenance: repo_authored_synthetic_reviewed_case
+  - id: ambiguous-overlapping-declarations
+    fixture: synthetic_ambiguous_beta
+    detector: visual_clash
+    finding:
+      id: VC-SYN-002
+      bbox_px: [120, 40, 160, 80]
+    review_outcome: true_positive
+    expected_attribution: ambiguous
+    panel_ids: [B]
+    semantic_region_ids: [B.curve, B.annotation]
+    human_correction_minutes: null
+    provenance: repo_authored_synthetic_reviewed_case
+  - id: unbound-real-defect-without-declaration
+    fixture: synthetic_unbound_gamma
+    detector: collision
+    finding:
+      id: CO-SYN-001
+      bbox_px: [200, 40, 240, 80]
+    review_outcome: true_positive
+    expected_attribution: unbound
+    panel_ids: []
+    semantic_region_ids: []
+    human_correction_minutes: null
+    provenance: repo_authored_synthetic_reviewed_case
+  - id: unbound-accepted-false-positive
+    fixture: synthetic_false_positive_delta
+    detector: visual_clash
+    finding:
+      id: VC-SYN-003
+      bbox_px: [280, 40, 320, 80]
+    review_outcome: false_positive
+    expected_attribution: unbound
+    panel_ids: []
+    semantic_region_ids: []
+    human_correction_minutes: null
+    provenance: repo_authored_synthetic_reviewed_case

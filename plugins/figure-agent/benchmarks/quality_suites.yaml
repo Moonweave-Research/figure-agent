@@ -12,3 +12,8 @@ suites:
     description: Local dogfood fixtures with real manuscript complexity.
     fixtures:
       - fig1_overview_v2_pair_001_vault
+  visual-attribution:
+    description: Reviewed detector-finding attribution contract corpus.
+    kind: visual_attribution
+    corpus: visual_attribution_suite.yaml
+    fixtures: []
