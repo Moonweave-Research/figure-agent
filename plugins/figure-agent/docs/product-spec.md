@@ -252,11 +252,19 @@ gate explicitly changes that policy.
 ### 4.5 Clean-room direct-SVG capability baseline
 
 Before expanding the rejected illustration grammar, Figure Agent measures the
-quality ceiling of direct LLM-authored SVG. This is a diagnostic experiment,
-not a production-path promotion. It asks whether an LLM can match or exceed the
-accepted Fig1 TikZ benchmark without reading its editable source, generated SVG
-export, experience log, candidate patches, or Figure Agent illustration
-grammar.
+quality ceiling and repeatability of direct LLM-authored SVG. This is a
+diagnostic experiment, not a production-path promotion. It asks two different
+questions that must not be collapsed into one result:
+
+- **Test A — reference reconstruction:** can an LLM convert an exact target PNG
+  into an editable SVG of equal or better quality?
+- **Test B — semantic synthesis:** can an LLM design an equal or better SVG from
+  scientific requirements and non-target style constraints when the target
+  panel pixels are withheld?
+
+A Test A pass establishes raster-to-vector reconstruction ability only. It
+cannot show that a drawing grammar is unnecessary for authoring a new figure.
+Only Test B can inform that question, and only within the tested figure family.
 
 The first challenge uses two demanding and materially different regions of the
 six-panel Fig1 benchmark:
@@ -265,60 +273,112 @@ six-panel Fig1 benchmark:
 - Panel F: biased apparatus, bent polymer cantilever, trapped charges,
   electrode separation, and Coulomb-repulsion direction.
 
-The allowed clean-room inputs are immutable equal-boundary PNG crops, a
-sanitized scientific briefing/specification, panel dimensions, and explicit
-palette and typography constraints. The briefing preserves scientific meaning
-and required object relations but contains no source coordinates, drawing
-commands, or backend-specific implementation hints. The task may not read any
-existing `.tex`, whole-figure SVG export, candidate patch, experience log, or
-illustration-grammar artifact. A provenance receipt binds the exact allowed
-inputs and records the denied source families.
+Each test uses a separately hashed input packet. Test A receives immutable
+equal-boundary target PNG crops, panel dimensions, required scientific
+objects/relations, and the rendering contract. Test B receives the same
+scientific objects/relations, dimensions, palette, typography constraints, and
+non-target style references, but neither target crop nor any derivative that
+reveals its geometry. The review harness retains the withheld target for later
+comparison.
 
-The experiment has two sequential stages:
+The crop authority manifest records the full benchmark PNG hash, pixel-space
+bounding box, crop algorithm/version, output dimensions, and crop hash for each
+panel. No reviewer or author may substitute a manually resized or differently
+bounded crop. The semantic packet contains no source coordinates, drawing
+commands, backend-specific implementation hints, existing `.tex`, whole-figure
+SVG export, candidate patch, experience log, or illustration-grammar artifact.
 
-1. **Direct gold:** one clean LLM invocation writes editable `panel_c.svg` and
-   `panel_f.svg`, then performs at most three render-inspect-revise iterations.
-   Every iteration, prompt/input receipt, SVG, raster, elapsed time, and stated
-   correction reason is retained.
-2. **Cold reproduction:** only if direct gold passes human review, a separate
-   clean invocation receives the same allowed input contract without the gold
-   SVG or its iteration history. This distinguishes a one-off drawing success
-   from reproducible authoring behavior.
+Clean-room isolation is an evidence requirement, not a prompt promise. A named
+human or a separate preparation task that has never inspected the target
+implementation authors the semantic packet. A contaminated session may build a
+deterministic packager only after the packet bytes are fixed; it may not select,
+paraphrase, or add free-form authoring guidance. The author task starts in a
+standalone directory containing only the allowed packet and output skeleton.
+Its tool log is retained, and any read outside the packet or any access to a
+denied source family invalidates the run rather than becoming a warning.
 
-The SVGs remain self-contained and editable. They use stable semantic group
-IDs, explicit view boxes, vector paths/shapes, and live text. They may use
-declared gradients when they improve material readability, but may not use
-scripts, network access, external URLs or fonts, embedded raster images, or
-unbound local assets. Direct SVG may discover backend-specific visual
-techniques; those techniques do not become a product contract unless later
-evidence justifies a general rule.
+Test A and Test B use independent clean author tasks. Test B may not inherit the
+Test A prompt, SVG, render, critique, or iteration history. Each task writes
+editable `panel_c.svg` and `panel_f.svg` candidates and follows two predeclared
+budgets:
 
-Each iteration automatically produces an equal-boundary TikZ comparator crop,
-SVG crop, side-by-side image, difference/flicker evidence, SVG safety report,
-semantic-object inventory, deterministic render receipt, and correction-cost
-ledger. Machine gates establish safety, structure, and reproducibility only. A
-named human records `better`, `equivalent`, or `worse` for scientific fidelity,
-composition, illustration quality, typography/scale readability, and
-editability/correction cost.
+- **Utility checkpoint:** at most three complete render-inspect-revise cycles
+  and 30 minutes wall time per panel;
+- **Quality-ceiling checkpoint:** continuation to at most eight total cycles
+  and 120 minutes wall time per panel.
 
-The direct-SVG quality hypothesis passes only when Panels C and F are both no
-worse than the TikZ benchmark and at least one is clearly better. The result
-changes product direction as follows:
+One cycle contains one complete SVG source revision followed by one canonical
+render and inspection. Model token/compute limits are fixed before the run and
+cannot be increased after seeing quality. The receipt records model/provider,
+model version or snapshot, reasoning setting, sampling/seed when exposed,
+system and user prompts, available tools, tool versions, token usage, wall time,
+and every correction reason. Unknown fields are `null`, never reconstructed
+from memory.
 
-- direct gold fails: a richer illustrator language or grammar has stronger
-  justification;
-- direct gold passes but cold reproduction fails: Figure Agent should focus on
-  control, reproducibility, and bounded correction;
-- both stages pass: a dedicated drawing grammar has weak justification, so
-  Figure Agent should concentrate on verification, provenance, visual-error
+The SVG candidates use stable semantic group IDs, explicit view boxes, vector
+paths/shapes, and live text. They may use declared gradients when they improve
+material readability, but may not use scripts, network access, external URLs,
+embedded raster images, or unbound local assets. Typography uses a
+license-recorded, hash-pinned font asset shipped in the clean packet and loaded
+through an isolated render configuration; ambient font substitution is a
+failure. An optional outlined-text review/export copy may be derived from the
+live-text source, but it cannot replace the editable authoring artifact.
+
+Each iteration automatically produces the canonical comparator crop, SVG crop,
+anonymized side-by-side image, SVG safety report, semantic-object inventory,
+deterministic render receipt, and correction-cost ledger. Difference and
+flicker images are diagnostic evidence for clipping, alignment, or missing
+content only; pixel similarity cannot rank a deliberate redesign. Machine gates
+establish safety, structure, and reproducibility, not visual superiority.
+
+Human comparison uses opaque A/B identifiers, randomized left/right order,
+equal dimensions, background, and rasterization, and stripped format metadata.
+Scientific fidelity is a non-compensating hard gate: every required object and
+relation must be present and correct, with no scientifically material invented
+object. Any failure rejects that panel regardless of visual polish. After that
+gate, a named human records `better`, `equivalent`, or `worse` separately for
+composition, illustration quality, and typography/scale readability.
+
+A panel is **no worse** only when all three visual dimensions are at least
+`equivalent`. It is **better** only when at least one dimension is `better` and
+none is `worse`. The direct-SVG quality hypothesis passes only when Panels C and
+F are both no worse and at least one is better. Editability and correction cost
+are reported as a separate utility verdict; they cannot compensate for failed
+scientific or visual quality, and they cannot support a TikZ cost comparison
+until a matched TikZ task has comparable timing evidence. A borderline or
+disputed human result requires a second named review before it changes product
+direction.
+
+A passing author artifact becomes **reviewed gold** only after that verdict;
+before review it remains a candidate. Any passing result used to support a
+product-direction claim then requires two independent cold-reproduction tasks
+using the same allowed packet, model snapshot, prompt, tool contract, and fixed
+budget without the candidate SVG or iteration history. Both cold runs must pass
+the scientific hard gate and produce Panels C and F that are no worse than the
+benchmark. One successful retry is insufficient evidence of repeatability.
+
+The result changes product direction narrowly:
+
+- Test A passes but Test B fails: direct SVG can reconstruct existing art, but
+  the experiment says nothing favorable about new semantic authoring;
+- Test B quality fails: a richer illustrator language or grammar has stronger
+  justification, but is not proven necessary by one failure;
+- Test B passes but cold reproduction fails: Figure Agent should prioritize
+  control, reproducibility, and bounded correction for Fig1-like panels;
+- Test B and both cold runs pass: defer further grammar investment for
+  Fig1-like panels and prioritize verification, provenance, visual-error
   detection, and review automation.
+
+No result from Panels C and F alone rejects illustration grammar globally or
+promotes direct SVG as a production default. A materially different second
+figure family remains required for either broader conclusion.
 
 The accepted TikZ figure, historical exports, and prior experiments remain
 immutable. Because the current design session observed historical Panel F TikZ
 implementation details while inspecting the repository, it is not eligible to
-author the clean-room SVG artifacts. It may prepare the sanitized input packet,
-automation, and review harness; the drawing run must occur in a fresh task that
-has access only to the declared inputs.
+author either the semantic packet or clean-room SVG artifacts. It may implement
+the deterministic packet schema, packager, render harness, and review tooling
+after independently prepared input bytes are fixed.
 
 ### 4.6 Reference-conditioned authoring
 
