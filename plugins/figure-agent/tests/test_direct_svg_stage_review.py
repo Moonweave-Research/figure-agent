@@ -111,6 +111,19 @@ def test_fixed_seed_replay_is_deterministic_and_cannot_overwrite(tmp_path: Path)
     }
 
 
+def test_replay_recovers_protected_seed_without_caller_receiving_it(tmp_path: Path) -> None:
+    first = _stage(tmp_path)
+    replay = stage_review(
+        FIXTURE,
+        review_root=tmp_path / "review",
+        private_root=tmp_path / ".private",
+        generator_commit=_head(),
+        replay=True,
+    )
+
+    assert replay["version"] == first["version"]
+
+
 @pytest.mark.parametrize("surface", ["public", "private", "state"])
 def test_replay_regenerates_and_rejects_any_bound_tamper(
     tmp_path: Path, surface: str
