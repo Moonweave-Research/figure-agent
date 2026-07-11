@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -66,6 +67,33 @@ def test_scene_contains_bounded_non_crossing_motif_geometry() -> None:
     )
 
 
+def test_scene_enforces_declared_cluster_cardinality_per_sulfur_region() -> None:
+    scene = compile_illustration_scene(GRAMMAR_PATH, INSTANCE_PATH)
+    objects_by_slot = {
+        layer["semantic_id"]: layer["objects"] for layer in scene["layers"]
+    }
+    trap_regions = {
+        item["id"]: item["co_located_with"]
+        for item in objects_by_slot["trap.levels"]
+    }
+
+    assert scene["resolved_tokens"]["optical_rules"]["cluster_cardinality"] == {
+        "sulfur_sites": 3,
+        "trap_levels": 2,
+        "trapped_carriers": 2,
+    }
+    assert Counter(
+        item["located_in"] for item in objects_by_slot["sulfur.sites"]
+    ) == Counter({"region.1": 3, "region.2": 3, "region.3": 3})
+    assert Counter(
+        item["co_located_with"] for item in objects_by_slot["trap.levels"]
+    ) == Counter({"region.1": 2, "region.2": 2, "region.3": 2})
+    assert Counter(
+        trap_regions[item["sits_on"]]
+        for item in objects_by_slot["trapped.carriers"]
+    ) == Counter({"region.1": 2, "region.2": 2, "region.3": 2})
+
+
 def test_scene_rejects_point_outside_normalized_bounds(tmp_path: Path) -> None:
     payload = yaml.safe_load(INSTANCE_PATH.read_text(encoding="utf-8"))
     payload["objects"]["chain.backbones"][0]["points"][0] = [-0.1, 0.2]
@@ -83,6 +111,16 @@ def test_scene_rejects_carrier_without_trap_relation(tmp_path: Path) -> None:
     candidate.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
     with pytest.raises(IllustrationSceneError, match="carrier_without_trap_level"):
+        compile_illustration_scene(GRAMMAR_PATH, candidate)
+
+
+def test_scene_rejects_cluster_cardinality_drift(tmp_path: Path) -> None:
+    payload = yaml.safe_load(INSTANCE_PATH.read_text(encoding="utf-8"))
+    payload["objects"]["sulfur.sites"].pop()
+    candidate = tmp_path / "instance.yaml"
+    candidate.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+    with pytest.raises(IllustrationSceneError, match="cluster_cardinality_invalid"):
         compile_illustration_scene(GRAMMAR_PATH, candidate)
 
 

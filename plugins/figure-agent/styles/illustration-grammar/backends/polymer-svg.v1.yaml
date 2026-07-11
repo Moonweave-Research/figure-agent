@@ -18,3 +18,4 @@ supported_tokens:
   curvature: [organic_backbone]
   joins: [round]
   caps: [round]
+  glyphs: [sulfur_negative]

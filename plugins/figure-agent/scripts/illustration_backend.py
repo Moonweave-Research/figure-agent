@@ -41,6 +41,7 @@ def load_backend_profile(path: Path, backend: str) -> dict[str, Any]:
         "curvature": ["organic_backbone"],
         "joins": ["round"],
         "caps": ["round"],
+        "glyphs": ["sulfur_negative"],
     }:
         raise IllustrationBackendError("supported_tokens_invalid")
     _validate_profile_values(profile, backend)
@@ -72,6 +73,16 @@ def validate_scene_tokens(scene: dict[str, Any], profile: dict[str, Any]) -> Non
             or roles.get("emphasis") not in profile["emphasis"]
         ):
             raise IllustrationBackendError("token_unsupported: slot_role")
+    glyphs = tokens.get("glyphs")
+    if not isinstance(glyphs, dict) or set(glyphs) != {"sulfur.sites"}:
+        raise IllustrationBackendError("glyph_bindings_invalid")
+    site_glyph = glyphs["sulfur.sites"]
+    if (
+        site_glyph.get("kind") not in supported["glyphs"]
+        or not 0.0 < site_glyph.get("mark_half_width_ratio", 0.0) < 1.0
+        or not 0.0 < site_glyph.get("mark_stroke_ratio", 0.0) <= 1.0
+    ):
+        raise IllustrationBackendError("token_unsupported: glyph")
 
 
 def style_for_slot(

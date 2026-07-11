@@ -11,6 +11,7 @@ import yaml
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 
+from hybrid.comparison_report import validate_human_verdict_bindings  # noqa: E402
 from illustration_backend import (  # noqa: E402
     IllustrationBackendError,
     load_backend_profile,
@@ -43,6 +44,9 @@ SVG_PROFILE_PATH = (
     / "backends"
     / "polymer-svg.v1.yaml"
 )
+SLICE4_NAME = "fig3_trap_schematic_slice4_illustration_grammar"
+SLICE4_FIXTURE = PLUGIN_ROOT / "examples" / SLICE4_NAME
+COMPARISON_MANIFEST = SLICE4_FIXTURE / "review" / "comparison_manifest.yaml"
 
 
 def test_backends_preserve_the_same_semantic_slots() -> None:
@@ -94,6 +98,22 @@ def test_backend_strokes_have_equivalent_physical_weight() -> None:
         )
 
 
+def test_sulfur_sites_lower_as_the_same_compound_charge_glyph() -> None:
+    scene = compile_illustration_scene(GRAMMAR_PATH, INSTANCE_PATH)
+    tikz = render_tikz(scene, TIKZ_PROFILE_PATH)
+    svg = render_svg(scene, SVG_PROFILE_PATH)
+
+    glyph = scene["resolved_tokens"]["glyphs"]["sulfur.sites"]
+    expected_glyphs = next(
+        len(layer["objects"])
+        for layer in scene["layers"]
+        if layer["semantic_id"] == "sulfur.sites"
+    )
+    assert glyph["kind"] == "sulfur_negative"
+    assert tikz.count("figure-agent:glyph sulfur_negative") == expected_glyphs
+    assert svg.count('data-glyph="sulfur_negative"') == expected_glyphs
+
+
 def test_svg_is_geometry_only_and_self_contained() -> None:
     scene = compile_illustration_scene(GRAMMAR_PATH, INSTANCE_PATH)
     svg = render_svg(scene, SVG_PROFILE_PATH)
@@ -129,3 +149,28 @@ def test_render_pair_is_byte_deterministic_and_records_non_acceptance(tmp_path: 
     assert first == second
     assert manifest["artifacts"] == first["artifacts"]
     assert manifest["publication_acceptance"] == "not_claimed"
+
+
+def test_slice4_fixture_binds_three_comparable_artifacts() -> None:
+    comparison = yaml.safe_load(COMPARISON_MANIFEST.read_text(encoding="utf-8"))
+
+    assert set(comparison["variants"]) == {
+        "raw_svg_slice3",
+        "grammar_tikz",
+        "grammar_svg",
+    }
+    assert comparison["grammar_pair_same_scene"] is True
+    assert comparison["raw_svg_comparator_basis"] == "same_semantic_boundary"
+    assert comparison["slice3_source_immutable"] is True
+    assert comparison["publication_acceptance"] == "not_claimed"
+
+
+def test_slice4_pending_verdict_is_fresh_and_does_not_claim_acceptance() -> None:
+    verdict_path = SLICE4_FIXTURE / "review" / "human_illustration_verdict.yaml"
+    verdict = yaml.safe_load(verdict_path.read_text(encoding="utf-8"))
+    binding = validate_human_verdict_bindings(verdict_path, SLICE4_FIXTURE)
+
+    assert binding["stale"] is False
+    assert verdict["raw_svg_vs_grammar_svg"] == "pending"
+    assert verdict["grammar_svg_vs_tikz_language"] == "pending"
+    assert verdict["publication_acceptance"] == "not_claimed"

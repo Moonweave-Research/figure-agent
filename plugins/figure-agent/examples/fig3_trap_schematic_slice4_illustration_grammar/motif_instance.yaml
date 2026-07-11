@@ -16,17 +16,26 @@ objects:
     - {id: region.2, center: [0.55, 0.52], radius: [0.17, 0.14]}
     - {id: region.3, center: [0.78, 0.72], radius: [0.14, 0.11]}
   sulfur.sites:
-    - {id: site.1, center: [0.22, 0.22], radius: 0.025, attached_to: backbone.1, located_in: region.1}
-    - {id: site.2, center: [0.32, 0.34], radius: 0.025, attached_to: backbone.2, located_in: region.1}
-    - {id: site.3, center: [0.49, 0.50], radius: 0.025, attached_to: backbone.3, located_in: region.2}
-    - {id: site.4, center: [0.61, 0.58], radius: 0.025, attached_to: backbone.3, located_in: region.2}
-    - {id: site.5, center: [0.73, 0.73], radius: 0.025, attached_to: backbone.4, located_in: region.3}
-    - {id: site.6, center: [0.83, 0.70], radius: 0.025, attached_to: backbone.4, located_in: region.3}
+    - {id: site.1, center: [0.19, 0.27], radius: 0.025, attached_to: backbone.2, located_in: region.1}
+    - {id: site.2, center: [0.25, 0.36], radius: 0.025, attached_to: backbone.2, located_in: region.1}
+    - {id: site.3, center: [0.35, 0.30], radius: 0.025, attached_to: backbone.2, located_in: region.1}
+    - {id: site.4, center: [0.45, 0.49], radius: 0.025, attached_to: backbone.3, located_in: region.2}
+    - {id: site.5, center: [0.55, 0.60], radius: 0.025, attached_to: backbone.3, located_in: region.2}
+    - {id: site.6, center: [0.66, 0.52], radius: 0.025, attached_to: backbone.3, located_in: region.2}
+    - {id: site.7, center: [0.69, 0.71], radius: 0.025, attached_to: backbone.4, located_in: region.3}
+    - {id: site.8, center: [0.78, 0.79], radius: 0.025, attached_to: backbone.4, located_in: region.3}
+    - {id: site.9, center: [0.87, 0.70], radius: 0.025, attached_to: backbone.4, located_in: region.3}
   trap.levels:
-    - {id: trap.1, center: [0.27, 0.28], width: 0.10, co_located_with: region.1}
-    - {id: trap.2, center: [0.55, 0.50], width: 0.11, co_located_with: region.2}
-    - {id: trap.3, center: [0.78, 0.70], width: 0.09, co_located_with: region.3}
+    - {id: trap.1, center: [0.25, 0.29], width: 0.10, co_located_with: region.1}
+    - {id: trap.2, center: [0.29, 0.33], width: 0.085, co_located_with: region.1}
+    - {id: trap.3, center: [0.53, 0.49], width: 0.11, co_located_with: region.2}
+    - {id: trap.4, center: [0.58, 0.55], width: 0.09, co_located_with: region.2}
+    - {id: trap.5, center: [0.76, 0.70], width: 0.09, co_located_with: region.3}
+    - {id: trap.6, center: [0.81, 0.74], width: 0.08, co_located_with: region.3}
   trapped.carriers:
-    - {id: carrier.1, center: [0.27, 0.28], radius: 0.017, sits_on: trap.1}
-    - {id: carrier.2, center: [0.55, 0.50], radius: 0.017, sits_on: trap.2}
-    - {id: carrier.3, center: [0.78, 0.70], radius: 0.017, sits_on: trap.3}
+    - {id: carrier.1, center: [0.25, 0.29], radius: 0.017, sits_on: trap.1}
+    - {id: carrier.2, center: [0.29, 0.33], radius: 0.017, sits_on: trap.2}
+    - {id: carrier.3, center: [0.53, 0.49], radius: 0.017, sits_on: trap.3}
+    - {id: carrier.4, center: [0.58, 0.55], radius: 0.017, sits_on: trap.4}
+    - {id: carrier.5, center: [0.76, 0.70], radius: 0.017, sits_on: trap.5}
+    - {id: carrier.6, center: [0.81, 0.74], radius: 0.017, sits_on: trap.6}

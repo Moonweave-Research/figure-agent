@@ -34,11 +34,17 @@ _VISUAL_TOKENS = {
     "joins": ["round"],
     "caps": ["round"],
     "emphasis": ["background", "structure", "focal"],
+    "glyphs": ["sulfur_negative"],
 }
 _OPTICAL_RULES = {
     "minimum_clearance_em": 0.35,
     "carrier_centering": "optical",
     "repeated_site_variation": "controlled",
+    "cluster_cardinality": {
+        "sulfur_sites": 3,
+        "trap_levels": 2,
+        "trapped_carriers": 2,
+    },
 }
 _ROLE_BINDINGS = {
     "global": {"curvature": "organic_backbone", "join": "round", "cap": "round"},
@@ -59,8 +65,8 @@ _ROLE_BINDINGS = {
             "emphasis": "structure",
         },
         "trap.levels": {
-            "stroke_family": "support",
-            "color_role": "neutral",
+            "stroke_family": "primary",
+            "color_role": "sulfur",
             "emphasis": "structure",
         },
         "trapped.carriers": {
@@ -68,6 +74,13 @@ _ROLE_BINDINGS = {
             "color_role": "carrier",
             "emphasis": "focal",
         },
+    },
+    "glyphs": {
+        "sulfur.sites": {
+            "kind": "sulfur_negative",
+            "mark_half_width_ratio": 0.42,
+            "mark_stroke_ratio": 0.55,
+        }
     },
 }
 _OWNERSHIP = {

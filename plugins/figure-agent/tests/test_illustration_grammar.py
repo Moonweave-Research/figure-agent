@@ -44,6 +44,8 @@ def test_loads_sulfur_trap_domain_with_closed_visual_contract() -> None:
         ["trap.levels", "co_located_with", "sulfur.regions"],
         ["trapped.carriers", "sits_on", "trap.levels"],
     ]
+    assert grammar["role_bindings"]["slots"]["trap.levels"]["color_role"] == "sulfur"
+    assert grammar["role_bindings"]["slots"]["trap.levels"]["stroke_family"] == "primary"
 
 
 @pytest.mark.parametrize(

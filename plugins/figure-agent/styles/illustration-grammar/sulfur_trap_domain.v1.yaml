@@ -24,10 +24,15 @@ visual_tokens:
   joins: [round]
   caps: [round]
   emphasis: [background, structure, focal]
+  glyphs: [sulfur_negative]
 optical_rules:
   minimum_clearance_em: 0.35
   carrier_centering: optical
   repeated_site_variation: controlled
+  cluster_cardinality:
+    sulfur_sites: 3
+    trap_levels: 2
+    trapped_carriers: 2
 role_bindings:
   global:
     curvature: organic_backbone
@@ -47,13 +52,18 @@ role_bindings:
       color_role: sulfur
       emphasis: structure
     trap.levels:
-      stroke_family: support
-      color_role: neutral
+      stroke_family: primary
+      color_role: sulfur
       emphasis: structure
     trapped.carriers:
       stroke_family: focal
       color_role: carrier
       emphasis: focal
+  glyphs:
+    sulfur.sites:
+      kind: sulfur_negative
+      mark_half_width_ratio: 0.42
+      mark_stroke_ratio: 0.55
 ownership:
   grammar: [motif_contract, layer_order, visual_tokens, role_bindings]
   tikz: [global_panel_composition, typography, labels, inter_panel_arrows]

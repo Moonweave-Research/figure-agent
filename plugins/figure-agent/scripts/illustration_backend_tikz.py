@@ -15,7 +15,15 @@ def render_tikz(scene: dict[str, Any], profile_path: Path) -> str:
         slot = layer["semantic_id"]
         style = style_for_slot(scene, profile, slot)
         lines.append(f"% figure-agent:start {slot}")
-        lines.extend(_render_layer(slot, layer["objects"], style, scale))
+        lines.extend(
+            _render_layer(
+                slot,
+                layer["objects"],
+                style,
+                scale,
+                scene["resolved_tokens"]["glyphs"].get(slot),
+            )
+        )
         lines.append(f"% figure-agent:end {slot}")
     return "\n".join(lines) + "\n"
 
@@ -25,13 +33,18 @@ def _render_layer(
     objects: list[dict[str, Any]],
     style: dict[str, Any],
     scale: float,
+    glyph: dict[str, Any] | None,
 ) -> list[str]:
     options = _options(style)
     if slot == "chain.backbones":
         return [_tikz_curve(item["points"], options, scale) for item in objects]
     if slot == "sulfur.regions":
         return [_tikz_ellipse(item, options, scale) for item in objects]
-    if slot in {"sulfur.sites", "trapped.carriers"}:
+    if slot == "sulfur.sites":
+        if glyph is None:
+            return []
+        return [line for item in objects for line in _tikz_site_glyph(item, style, scale, glyph)]
+    if slot == "trapped.carriers":
         return [_tikz_circle(item, options, scale) for item in objects]
     if slot == "trap.levels":
         return [_tikz_trap(item, options, scale) for item in objects]
@@ -67,6 +80,26 @@ def _tikz_circle(item: dict[str, Any], options: str, scale: float) -> str:
     center = _point(item["center"], scale)
     radius = _fmt(item["radius"] * scale)
     return f"\\filldraw[{options}] {center} circle [radius={radius}];"
+
+
+def _tikz_site_glyph(
+    item: dict[str, Any],
+    style: dict[str, Any],
+    scale: float,
+    glyph: dict[str, Any],
+) -> list[str]:
+    circle = _tikz_circle(item, _options(style), scale)
+    x, y = item["center"]
+    half_width = item["radius"] * glyph["mark_half_width_ratio"]
+    start = _point([x - half_width, y], scale)
+    end = _point([x + half_width, y], scale)
+    base_width = float(style["stroke"].removesuffix("pt"))
+    mark_width = _fmt(base_width * glyph["mark_stroke_ratio"])
+    mark = (
+        f"\\draw[draw={style['color']['stroke']}, line width={mark_width}pt, "
+        f"line cap=round] {start} -- {end};"
+    )
+    return [f"% figure-agent:glyph {glyph['kind']} {item['id']}", circle, mark]
 
 
 def _tikz_trap(item: dict[str, Any], options: str, scale: float) -> str:

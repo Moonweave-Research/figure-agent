@@ -34,11 +34,16 @@ def compile_illustration_scene(
         raise IllustrationSceneError("semantic_slots_invalid")
     _validate_geometry(objects)
     relations = _compile_relations(objects)
+    _validate_cluster_cardinality(
+        objects,
+        grammar["optical_rules"]["cluster_cardinality"],
+    )
 
     role_bindings = grammar["role_bindings"]
     resolved_tokens = {
         **role_bindings["global"],
         "slot_roles": role_bindings["slots"],
+        "glyphs": role_bindings["glyphs"],
         "optical_rules": grammar["optical_rules"],
     }
     return {
@@ -141,3 +146,28 @@ def _compile_relations(objects: dict[str, Any]) -> list[dict[str, str]]:
                     {"subject": item["id"], "predicate": predicate, "object": target}
                 )
     return relations
+
+
+def _validate_cluster_cardinality(
+    objects: dict[str, Any],
+    expected: dict[str, int],
+) -> None:
+    region_ids = {item["id"] for item in objects["sulfur.regions"]}
+    trap_regions = {
+        item["id"]: item["co_located_with"] for item in objects["trap.levels"]
+    }
+    regions_by_slot = {
+        "sulfur_sites": [item["located_in"] for item in objects["sulfur.sites"]],
+        "trap_levels": [
+            item["co_located_with"] for item in objects["trap.levels"]
+        ],
+        "trapped_carriers": [
+            trap_regions[item["sits_on"]] for item in objects["trapped.carriers"]
+        ],
+    }
+    if any(
+        regions.count(region_id) != expected[slot]
+        for slot, regions in regions_by_slot.items()
+        for region_id in region_ids
+    ):
+        raise IllustrationSceneError("cluster_cardinality_invalid")
