@@ -670,7 +670,7 @@ git commit -m "feat: compile backend-neutral sulfur trap scenes"
 - Create: `styles/illustration-grammar/backends/polymer-tikz.v1.yaml`
 - Create: `styles/illustration-grammar/backends/polymer-svg.v1.yaml`
 
-- [ ] **Step 1: Write failing paired-backend tests**
+- [x] **Step 1: Write failing paired-backend tests**
 
 ```python
 def test_backends_preserve_the_same_semantic_slots() -> None:
@@ -694,13 +694,17 @@ def test_backend_profiles_cover_identical_visual_roles() -> None:
     assert set(tikz_profile["stroke_families"]) == set(svg_profile["stroke_families"])
 ```
 
-- [ ] **Step 2: Run the tests and verify RED**
+The paired profile tests also convert TeX points to SVG view-box units and
+require equivalent physical stroke weights. Equal role names with visibly
+different line weight are not backend parity.
+
+- [x] **Step 2: Run the tests and verify RED**
 
 Run: `uv run pytest tests/test_illustration_backends.py -q`
 
 Expected: FAIL because neither backend exists.
 
-- [ ] **Step 3: Implement deterministic backend lowering**
+- [x] **Step 3: Implement deterministic backend lowering**
 
 `scripts/illustration_backend.py` defines
 `IllustrationBackendError(ValueError)` and
@@ -722,7 +726,7 @@ text, scripts, ambient CSS/fonts, external URLs, filters, or raster assets.
 manifest with grammar/instance/source/toolchain hashes, and sets
 `publication_acceptance: not_claimed`.
 
-- [ ] **Step 4: Run backend, fragment-security, and lint tests**
+- [x] **Step 4: Run backend, fragment-security, and lint tests**
 
 ```bash
 uv run pytest tests/test_illustration_backends.py \
@@ -736,7 +740,7 @@ uv run ruff check scripts/illustration_backend_tikz.py \
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit both backends**
+- [x] **Step 5: Commit both backends**
 
 ```bash
 git add scripts/illustration_backend_tikz.py \
