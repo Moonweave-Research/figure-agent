@@ -53,6 +53,11 @@ def test_stage_review_creates_one_three_way_packet_per_panel(tmp_path: Path) -> 
     assert all(stat.S_IMODE(path.stat().st_mode) == 0o600 for path in private_path.rglob("*"))
     assert manifest["normalization"]["policy"] == "contain_white_pad_authority_size.v1"
     assert manifest["response_schema"] == "figure-agent.three-way-review-response.v1"
+    assert manifest["response_contract"] == {
+        "additional_fields": False,
+        "primary_reviewer_required": True,
+        "second_reviewer_required_when": "borderline_or_disputed",
+    }
 
 
 def test_fixed_seed_replay_is_deterministic_and_cannot_overwrite(tmp_path: Path) -> None:

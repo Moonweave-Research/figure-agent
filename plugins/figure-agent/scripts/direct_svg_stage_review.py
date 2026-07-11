@@ -376,6 +376,11 @@ def stage_review(
             "panels": public_panels,
             "responses": {panel: _response_panel() for panel in PANELS},
             "response_schema": RESPONSE_SCHEMA,
+            "response_contract": {
+                "additional_fields": False,
+                "primary_reviewer_required": True,
+                "second_reviewer_required_when": "borderline_or_disputed",
+            },
             "semantic_review_context": _semantic_context(fixture_root),
             "normalization": {
                 "policy": CONTAIN_GEOMETRY_POLICY,
