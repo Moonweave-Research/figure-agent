@@ -2,130 +2,123 @@ from __future__ import annotations
 
 import hashlib
 import json
+import stat
 from pathlib import Path
 
+import pytest
 import yaml
-from direct_svg_stage_review import stage_review
+from direct_svg_review import DirectSvgReviewError
+from direct_svg_stage_review import export_public_distribution, stage_review
 from PIL import Image
 
 FIXTURE = Path(__file__).parents[1] / "examples" / "fig1_direct_svg_cleanroom_baseline"
-FORBIDDEN_PUBLIC_TERMS = {
-    "test-a",
-    "test-b",
-    "reconstruction",
-    "synthesis",
-    "comparator",
-    "candidate",
-    "direct-svg",
-    "tikz",
-    "source paths",
-    "private key",
-    "assignment",
-    "seed",
-}
 
 
-def test_stage_review_creates_two_level_blinded_public_packets(tmp_path: Path) -> None:
-    review_root = tmp_path / "review"
-    state_path = review_root / "review-state.yaml"
+def _rgb_hash(path: Path) -> str:
+    with Image.open(path) as image:
+        return hashlib.sha256(image.convert("RGB").tobytes()).hexdigest()
 
-    result = stage_review(
+
+def _stage(tmp_path: Path, seed_byte: int = 17, **kwargs: object) -> dict[str, object]:
+    return stage_review(
         FIXTURE,
-        review_root=review_root,
-        review_state_path=state_path,
-        private_seed=bytes.fromhex("11" * 32),
+        review_root=tmp_path / "review",
+        private_root=tmp_path / ".private",
+        private_seed=bytes([seed_byte]) * 32,
+        generator_commit="test-generator-commit",
+        **kwargs,
     )
 
-    assert set(result["public_manifest"]["experiments"]) == {"R1", "R2"}
-    for experiment in ("R1", "R2"):
-        for panel in ("C", "F"):
-            response_template = result["public_manifest"]["experiments"][experiment][
-                panel
-            ]["response_template"]
-            assert response_template
-            assert all(value is None for value in response_template.values())
-            directory = review_root / "public" / experiment / panel
-            assert {"option-a.png", "option-b.png", "public-review-manifest.yaml"}.issubset(
-                {path.name for path in directory.iterdir()}
-            )
-            assert Image.open(directory / "option-a.png").size == Image.open(
-                directory / "option-b.png"
-            ).size
-    assert (review_root / "public" / "index.html").is_file()
-    assert (review_root / "private" / "private-review-manifest.yaml").is_file()
-    assert not list((review_root / "public").rglob("*private*"))
 
-    option_hashes_by_panel = {panel: [] for panel in ("C", "F")}
-    file_hashes_by_panel = {panel: [] for panel in ("C", "F")}
-    for experiment in ("R1", "R2"):
-        for panel in ("C", "F"):
-            manifest = yaml.safe_load(
-                (
-                    review_root
-                    / "public"
-                    / experiment
-                    / panel
-                    / "public-review-manifest.yaml"
-                ).read_text(encoding="utf-8")
-            )
-            option_hashes_by_panel[panel].extend(
-                item["sha256"] for item in manifest["options"].values()
-            )
-            file_hashes_by_panel[panel].extend(
-                hashlib.sha256(path.read_bytes()).hexdigest()
-                for path in (review_root / "public" / experiment / panel).glob(
-                    "option-?.png"
-                )
-            )
-    assert all(len(values) == len(set(values)) for values in option_hashes_by_panel.values())
-    assert all(len(values) == len(set(values)) for values in file_hashes_by_panel.values())
+def test_stage_review_creates_one_three_way_packet_per_panel(tmp_path: Path) -> None:
+    result = _stage(tmp_path)
+    distribution = Path(result["distribution_path"])
+    manifest = yaml.safe_load((distribution / "manifest.yaml").read_text())
 
-    public_text = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in (review_root / "public").rglob("*")
-        if path.suffix in {".html", ".yaml"}
-    ).lower()
-    leaked_terms = {term for term in FORBIDDEN_PUBLIC_TERMS if term in public_text}
-    assert not leaked_terms
-    for required in (
-        "scientific fidelity",
-        "composition preference",
-        "illustration quality preference",
-        "typography preference",
-        "borderline/disputed",
-        "named reviewer",
-        "reviewed_at",
-    ):
-        assert required in public_text
+    assert manifest["schema"] == "figure-agent.three-way-blind-review.v1"
+    assert set(manifest["panels"]) == {"C", "F"}
+    decoded_hashes: list[str] = []
+    for panel in ("C", "F"):
+        panel_dir = distribution / "panels" / panel
+        options = sorted(panel_dir.glob("option-?.png"))
+        assert len(options) == 3
+        assert len({Image.open(path).size for path in options}) == 1
+        decoded_hashes.extend(_rgb_hash(path) for path in options)
+        assert all(value is None for value in manifest["responses"][panel].values())
+    assert len(decoded_hashes) == len(set(decoded_hashes))
+    assert not list(distribution.rglob("*private*"))
 
-    state = yaml.safe_load(state_path.read_text(encoding="utf-8"))
-    assert state["state"] == "awaiting_named_human_verdict"
-    assert state["cold_reproductions"] == 0
-    assert state["publication_acceptance"] == "not_claimed"
-    assert state["public_manifest_sha256"].startswith("sha256:")
-    assert state["private_manifest_sha256"].startswith("sha256:")
+    private_path = Path(result["private_path"])
+    assert stat.S_IMODE(private_path.stat().st_mode) == 0o700
+    assert all(stat.S_IMODE(path.stat().st_mode) == 0o600 for path in private_path.rglob("*"))
+    assert manifest["normalization"]["policy"] == "contain_white_pad_authority_size.v1"
+    assert manifest["response_schema"] == "figure-agent.three-way-review-response.v1"
 
 
-def test_stage_review_hashes_are_deterministic_for_fixed_private_seed(
-    tmp_path: Path,
-) -> None:
-    results = []
-    for name in ("one", "two"):
-        root = tmp_path / name
-        results.append(
-            stage_review(
-                FIXTURE,
-                review_root=root,
-                review_state_path=root / "review-state.yaml",
-                private_seed=bytes.fromhex("22" * 32),
-            )
-        )
+def test_fixed_seed_replay_is_deterministic_and_cannot_overwrite(tmp_path: Path) -> None:
+    first = _stage(tmp_path)
+    with pytest.raises(DirectSvgReviewError, match="review_version_exists"):
+        _stage(tmp_path)
+    replay = _stage(tmp_path, replay=True)
+    comparable = ("version", "public_manifest_sha256")
+    assert {key: first[key] for key in comparable} == {
+        key: replay[key] for key in comparable
+    }
 
+
+def test_existing_response_fails_closed(tmp_path: Path) -> None:
+    result = _stage(tmp_path)
+    response_path = Path(result["distribution_path"]) / "response.yaml"
+    response = yaml.safe_load(response_path.read_text())
+    response["primary_reviewer"]["name"] = "already recorded"
+    response_path.write_text(yaml.safe_dump(response, sort_keys=False))
+
+    with pytest.raises(DirectSvgReviewError, match="existing_review_response"):
+        _stage(tmp_path, seed_byte=18)
+
+
+def test_failure_before_publish_preserves_current_version(tmp_path: Path) -> None:
+    first = _stage(tmp_path)
+    state_path = tmp_path / "review" / "review-state.yaml"
+    state_before = state_path.read_bytes()
+
+    with pytest.raises(RuntimeError, match="injected"):
+        _stage(tmp_path, seed_byte=19, failure_injection="before_publish")
+
+    assert state_path.read_bytes() == state_before
+    assert Path(first["distribution_path"]).is_dir()
+    assert len(list((tmp_path / "review" / "distributions").iterdir())) == 1
+
+
+def test_export_contains_only_public_distribution(tmp_path: Path) -> None:
+    result = _stage(tmp_path)
+    export = tmp_path / "export"
+    export_public_distribution(Path(result["distribution_path"]), export)
+
+    assert (export / "manifest.yaml").is_file()
+    assert not list(export.rglob("*private*"))
+    public_files = {
+        path.relative_to(Path(result["distribution_path"]))
+        for path in Path(result["distribution_path"]).rglob("*")
+        if path.is_file()
+    }
+    exported_files = {
+        path.relative_to(export) for path in export.rglob("*") if path.is_file()
+    }
+    assert exported_files == public_files
+
+
+def test_project_locked_reproducibility(tmp_path: Path) -> None:
+    results = [_stage(tmp_path / name) for name in ("one", "two")]
     comparable = [
         {
-            "public_manifest": result["public_manifest"],
-            "public_manifest_sha256": result["review_state"]["public_manifest_sha256"],
+            "version": result["version"],
+            "manifest": yaml.safe_load(
+                (Path(result["distribution_path"]) / "manifest.yaml").read_text()
+            ),
         }
         for result in results
     ]
-    assert json.dumps(comparable[0], sort_keys=True) == json.dumps(comparable[1], sort_keys=True)
+    assert json.dumps(comparable[0], sort_keys=True) == json.dumps(
+        comparable[1], sort_keys=True
+    )

@@ -44,6 +44,9 @@ dist/
 .claude/
 .worktrees/
 
+# Live blinded-review keys are local-only and never publishable.
+**/.review-private/
+
 # Local agent-native MCP registration (machine-specific absolute paths).
 # Root-anchored so the tracked bundle config plugins/figure-agent/.mcp.json stays committed.
 /.mcp.json

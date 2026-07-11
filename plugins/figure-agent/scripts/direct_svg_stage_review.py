@@ -1,4 +1,4 @@
-"""Stage opaque, image-only human review packets for two completed runs."""
+"""Atomically stage a versioned three-way blinded human-review distribution."""
 
 from __future__ import annotations
 
@@ -6,141 +6,226 @@ import argparse
 import hashlib
 import html
 import json
+import os
+import random
 import secrets
 import shutil
+import tempfile
 from pathlib import Path
 from typing import Any
 
 import yaml
 from direct_svg_packet import validate_packet
-from direct_svg_review import (
-    CONTAIN_GEOMETRY_POLICY,
-    EXACT_GEOMETRY_POLICY,
-    DirectSvgReviewError,
-    build_review_packet,
-)
+from direct_svg_review import CONTAIN_GEOMETRY_POLICY, DirectSvgReviewError
+from PIL import Image, ImageChops, ImageOps, PngImagePlugin, UnidentifiedImageError
 
-RUN_STATE_SCHEMA = "figure-agent.direct-svg-run-state.v1"
-PUBLIC_SCHEMA = "figure-agent.opaque-human-review.v1"
-PRIVATE_SCHEMA = "figure-agent.private-review-key.v1"
-REVIEW_STATE_SCHEMA = "figure-agent.direct-svg-review-state.v1"
 PANELS = ("C", "F")
+LETTERS = ("A", "B", "C")
+PUBLIC_SCHEMA = "figure-agent.three-way-blind-review.v1"
+RESPONSE_SCHEMA = "figure-agent.three-way-review-response.v1"
+STATE_SCHEMA = "figure-agent.direct-svg-review-state.v2"
+PRIVATE_SCHEMA = "figure-agent.private-three-way-review-key.v1"
+GENERATOR_REVISION = "direct_svg_stage_review.v2"
 
 
 def _sha256(path: Path) -> str:
     return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
 
 
-def _load_yaml(path: Path, *, error: str) -> dict[str, Any]:
+def _opaque_hash(path: Path, seed: bytes, purpose: str) -> str:
+    digest = hashlib.sha256(b"figure-agent.opaque-review.v2\0" + seed + purpose.encode())
+    digest.update(path.read_bytes())
+    return f"sha256:{digest.hexdigest()}"
+
+
+def _load_yaml(path: Path, error: str) -> dict[str, Any]:
     try:
-        loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+        value = yaml.safe_load(path.read_text(encoding="utf-8"))
     except (FileNotFoundError, OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
         raise DirectSvgReviewError(error) from exc
-    if not isinstance(loaded, dict):
+    if not isinstance(value, dict):
         raise DirectSvgReviewError(error)
-    return loaded
+    return value
 
 
-def _resolve_declared_path(
-    value: Any,
-    *,
-    run_dir: Path,
-    fixture_root: Path,
-    plugin_root: Path,
-) -> Path:
-    if not isinstance(value, str) or not value:
+def _resolve_path(value: Any, roots: tuple[Path, ...]) -> Path:
+    if not isinstance(value, str) or not value or Path(value).is_absolute():
         raise DirectSvgReviewError("review_prerequisite_path_invalid")
-    relative = Path(value)
-    if relative.is_absolute():
-        raise DirectSvgReviewError("review_prerequisite_path_invalid")
-    candidates = (run_dir / relative, fixture_root / relative, plugin_root / relative)
-    for candidate in candidates:
-        resolved = candidate.resolve()
-        if resolved.is_relative_to(plugin_root) and resolved.is_file():
-            return resolved
+    for root in roots:
+        path = (root / value).resolve()
+        if path.is_file():
+            return path
     raise DirectSvgReviewError("review_prerequisite_missing")
-
-
-def _require_hash(path: Path, expected: Any, *, error: str) -> None:
-    if expected != _sha256(path):
-        raise DirectSvgReviewError(error)
 
 
 def _validated_run(
     fixture_root: Path,
-    run_name: str,
-    packet_name: str,
-    *,
+    run_dir: Path,
+    packet_path: Path,
     plugin_root: Path,
-) -> dict[str, Path]:
-    run_dir = fixture_root / "runs" / run_name
-    state = _load_yaml(run_dir / "run-state.yaml", error="run_state_invalid")
-    if state.get("schema") != RUN_STATE_SCHEMA or state.get("state") != "machine_review_ready":
+) -> tuple[dict[str, Path], str]:
+    state_path = run_dir / "run-state.yaml"
+    state = _load_yaml(state_path, "run_state_invalid")
+    if state.get("schema") != "figure-agent.direct-svg-run-state.v1":
+        raise DirectSvgReviewError("run_state_invalid")
+    if state.get("state") != "machine_review_ready":
         raise DirectSvgReviewError("run_not_machine_review_ready")
     if state.get("publication_acceptance") != "not_claimed":
         raise DirectSvgReviewError("publication_claim_forbidden")
-
-    packet_path = fixture_root / "packets" / packet_name
     validate_packet(packet_path)
-    packet_field = state.get("validated_packet") or state.get("synthesis_packet")
-    if isinstance(packet_field, dict):
-        declared_packet_path = packet_field.get("path")
-        declared_packet_hash = packet_field.get("sha256")
+    packet_ref = state.get("validated_packet") or state.get("synthesis_packet")
+    if isinstance(packet_ref, dict):
+        declared_path, declared_hash = packet_ref.get("path"), packet_ref.get("sha256")
     else:
-        declared_packet_path = packet_field
-        declared_packet_hash = state.get("validated_packet_sha256")
-    resolved_packet = _resolve_declared_path(
-        declared_packet_path,
-        run_dir=run_dir,
-        fixture_root=fixture_root,
-        plugin_root=plugin_root,
-    )
-    if resolved_packet != packet_path.resolve():
-        raise DirectSvgReviewError("validated_packet_path_mismatch")
-    _require_hash(packet_path, declared_packet_hash, error="validated_packet_hash_mismatch")
-
+        declared_path = packet_ref
+        declared_hash = state.get("validated_packet_sha256")
+    resolved = _resolve_path(declared_path, (run_dir, fixture_root, plugin_root))
+    if resolved != packet_path.resolve() or declared_hash != _sha256(packet_path):
+        raise DirectSvgReviewError("validated_packet_hash_mismatch")
+    images: dict[str, Path] = {}
     artifacts = state.get("candidate_artifacts")
-    if not isinstance(artifacts, list) or len(artifacts) != 2:
+    if not isinstance(artifacts, list):
         raise DirectSvgReviewError("candidate_artifacts_invalid")
-    panel_paths: dict[str, Path] = {}
-    for artifact in artifacts:
-        if not isinstance(artifact, dict) or artifact.get("panel") not in PANELS:
+    for item in artifacts:
+        if not isinstance(item, dict) or item.get("panel") not in PANELS:
             raise DirectSvgReviewError("candidate_artifacts_invalid")
-        panel = artifact["panel"]
-        render_value = artifact.get("render_path") or artifact.get("png_path")
-        render_path = _resolve_declared_path(
-            render_value,
-            run_dir=run_dir,
-            fixture_root=fixture_root,
-            plugin_root=plugin_root,
+        render = _resolve_path(
+            item.get("render_path") or item.get("png_path"),
+            (run_dir, fixture_root, plugin_root),
         )
-        _require_hash(
-            render_path,
-            artifact.get("render_sha256"),
-            error="candidate_render_hash_mismatch",
-        )
-        panel_paths[panel] = render_path
-    if set(panel_paths) != set(PANELS):
+        if item.get("render_sha256") != _sha256(render):
+            raise DirectSvgReviewError("candidate_render_hash_mismatch")
+        images[item["panel"]] = render
+    if set(images) != set(PANELS):
         raise DirectSvgReviewError("candidate_artifacts_invalid")
-    return panel_paths
+    return images, _sha256(state_path)
 
 
-def _experiment_order(private_seed: bytes) -> list[str]:
-    digest = hashlib.sha256(private_seed + b"experiment-order").digest()
-    return ["test-a", "test-b"] if digest[0] % 2 == 0 else ["test-b", "test-a"]
+def _response_panel() -> dict[str, None]:
+    fields = {
+        f"option_{letter}_{suffix}": None
+        for letter in LETTERS
+        for suffix in ("scientific_fidelity", "scientific_evidence")
+    }
+    return {
+        **fields,
+        "composition_preference": None,
+        "illustration_quality_preference": None,
+        "typography_preference": None,
+        "borderline_or_disputed": None,
+    }
 
 
-def _option_seed(private_seed: bytes, experiment: str, panel: str) -> str:
-    return hashlib.sha256(
-        private_seed + b"option-order" + experiment.encode() + panel.encode()
-    ).hexdigest()
+def _response_document() -> dict[str, Any]:
+    return {
+        "schema": RESPONSE_SCHEMA,
+        "primary_reviewer": {"name": None, "reviewed_at": None},
+        "second_reviewer": {
+            "required": None,
+            "name": None,
+            "reviewed_at": None,
+        },
+        "panels": {panel: _response_panel() for panel in PANELS},
+    }
 
 
-def _semantic_review_context(fixture_root: Path) -> dict[str, Any]:
-    packet = _load_yaml(
-        fixture_root / "contract" / "semantic-packet.yaml",
-        error="semantic_packet_invalid",
+def _response_has_answers(response: dict[str, Any]) -> bool:
+    values: list[Any] = []
+    for role in ("primary_reviewer", "second_reviewer"):
+        block = response.get(role, {})
+        if isinstance(block, dict):
+            values.extend(block.values())
+    panels = response.get("panels", {})
+    if isinstance(panels, dict):
+        for block in panels.values():
+            if isinstance(block, dict):
+                values.extend(block.values())
+    return any(value is not None for value in values)
+
+
+def _fail_if_responses_exist(review_root: Path) -> None:
+    for path in review_root.glob("distributions/*/response.yaml"):
+        if _response_has_answers(_load_yaml(path, "response_invalid")):
+            raise DirectSvgReviewError("existing_review_response")
+
+
+def _normalized(
+    source: Path,
+    destination: Path,
+    authority_size: tuple[int, int],
+    packet_id: str,
+) -> None:
+    try:
+        with Image.open(source) as opened:
+            contained = ImageOps.contain(
+                opened.convert("RGB"), authority_size, method=Image.Resampling.LANCZOS
+            )
+    except (FileNotFoundError, OSError, UnidentifiedImageError) as exc:
+        raise DirectSvgReviewError("review_image_invalid") from exc
+    canvas = Image.new("RGB", authority_size, "white")
+    canvas.paste(
+        contained,
+        ((authority_size[0] - contained.width) // 2, (authority_size[1] - contained.height) // 2),
     )
+    info = PngImagePlugin.PngInfo()
+    info.add_text("packet_id", packet_id)
+    canvas.save(destination, format="PNG", pnginfo=info)
+
+
+def _write_panel(
+    panel: str,
+    sources: dict[str, Path],
+    output_dir: Path,
+    seed: bytes,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    output_dir.mkdir(parents=True)
+    with Image.open(sources["authority"]) as authority:
+        authority_size = authority.size
+    roles = ["authority", "run_one", "run_two"]
+    random.Random(hashlib.sha256(seed + panel.encode()).digest()).shuffle(roles)
+    mapping = dict(zip(LETTERS, roles, strict=True))
+    public_options: dict[str, Any] = {}
+    private_options: dict[str, Any] = {}
+    for letter in LETTERS:
+        path = output_dir / f"option-{letter.lower()}.png"
+        packet_id = hashlib.sha256(seed + panel.encode() + letter.encode()).hexdigest()
+        _normalized(sources[mapping[letter]], path, authority_size, packet_id)
+        public_options[letter] = {
+            "path": path.name,
+            "opaque_sha256": _opaque_hash(path, seed, f"{panel}-{letter}"),
+        }
+        private_options[letter] = {
+            "role": mapping[letter],
+            "content_sha256": _sha256(path),
+        }
+    diagnostics: list[dict[str, Any]] = []
+    for left, right in (("A", "B"), ("A", "C"), ("B", "C")):
+        with Image.open(output_dir / f"option-{left.lower()}.png") as first, Image.open(
+            output_dir / f"option-{right.lower()}.png"
+        ) as second:
+            difference = ImageChops.difference(first.convert("RGB"), second.convert("RGB"))
+            path = output_dir / f"diagnostic-{left.lower()}-{right.lower()}.png"
+            difference.save(path)
+        diagnostics.append(
+            {
+                "path": path.name,
+                "opaque_sha256": _opaque_hash(path, seed, f"diag-{panel}-{left}-{right}"),
+                "diagnostic_only": True,
+            }
+        )
+    return (
+        {
+            "options": public_options,
+            "score_inputs": [public_options[letter] for letter in LETTERS],
+            "diagnostics": diagnostics,
+            "response_template": _response_panel(),
+        },
+        private_options,
+    )
+
+
+def _semantic_context(fixture_root: Path) -> dict[str, Any]:
+    packet = _load_yaml(fixture_root / "contract/semantic-packet.yaml", "semantic_packet_invalid")
     return {
         "scientific_objects": packet.get("scientific_objects"),
         "object_relations": packet.get("object_relations"),
@@ -148,238 +233,243 @@ def _semantic_review_context(fixture_root: Path) -> dict[str, Any]:
     }
 
 
-def _response_template() -> dict[str, Any]:
-    return {
-        "option_A_scientific_fidelity": None,
-        "option_A_scientific_evidence": None,
-        "option_B_scientific_fidelity": None,
-        "option_B_scientific_evidence": None,
-        "composition_preference": None,
-        "illustration_quality_preference": None,
-        "typography_preference": None,
-        "borderline_or_disputed": None,
-        "named_reviewer": None,
-        "reviewed_at": None,
-    }
+def _html(manifest: dict[str, Any]) -> str:
+    sections = []
+    for panel in PANELS:
+        images = "".join(
+            f'<figure><img src="panels/{panel}/option-{letter.lower()}.png" '
+            f'alt="Panel {panel} Option {letter}"><figcaption>Option {letter}</figcaption></figure>'
+            for letter in LETTERS
+        )
+        response = html.escape(yaml.safe_dump(manifest["responses"][panel], sort_keys=False))
+        sections.append(
+            f"<section><h2>Panel {panel}</h2><div class='options'>{images}</div>"
+            f"<h3>Unanswered response</h3><pre>{response}</pre></section>"
+        )
+    return (
+        "<!doctype html><html><head><meta charset='utf-8'><title>Three-way opaque review</title>"
+        "<style>body{font-family:system-ui;max-width:1500px;margin:auto}.options{display:grid;"
+        "grid-template-columns:repeat(3,1fr);gap:1rem}img{width:100%;height:auto}"
+        "figcaption{text-align:center;font-weight:700}pre{white-space:pre-wrap}</style></head><body>"
+        "<h1>Three-way opaque review</h1><p>Diagnostics are diagnostic only and excluded "
+        "from score inputs. Editability and cost remain separate.</p>"
+        + "".join(sections)
+        + "</body></html>"
+    )
 
 
-def _render_html(public_manifest: dict[str, Any]) -> str:
-    context = public_manifest["semantic_review_context"]
-    sections: list[str] = []
-    for experiment in ("R1", "R2"):
-        for panel in PANELS:
-            base = f"{experiment}/{panel}"
-            template = yaml.safe_dump(_response_template(), sort_keys=False)
-            panel_key = f"panel_{panel.lower()}"
-            objects = yaml.safe_dump(
-                context["scientific_objects"][panel_key], sort_keys=False
-            )
-            texts = yaml.safe_dump(context["text_content"][panel_key], sort_keys=False)
-            relations = [
-                item
-                for item in context["object_relations"]
-                if str(item.get("subject", "")).lower().startswith(panel.lower())
-            ]
-            sections.append(
-                f"""
-<section>
-  <h2>{experiment} / Panel {panel}</h2>
-  <div class="pair">
-    <figure>
-      <img src="{base}/option-a.png" alt="{experiment} Panel {panel} Option A">
-      <figcaption>Option A</figcaption>
-    </figure>
-    <figure>
-      <img src="{base}/option-b.png" alt="{experiment} Panel {panel} Option B">
-      <figcaption>Option B</figcaption>
-    </figure>
-  </div>
-  <details><summary>Semantic objects, text, and relations</summary>
-    <h3>Objects</h3><pre>{html.escape(objects)}</pre>
-    <h3>Text</h3><pre>{html.escape(texts)}</pre>
-    <h3>Relations</h3><pre>{html.escape(yaml.safe_dump(relations, sort_keys=False))}</pre>
-  </details>
-  <h3>Response template</h3>
-  <ul>
-    <li>Option A scientific fidelity (pass/fail) + evidence</li>
-    <li>Option B scientific fidelity (pass/fail) + evidence</li>
-    <li>Composition preference (A/equivalent/B)</li>
-    <li>Illustration quality preference (A/equivalent/B)</li>
-    <li>Typography preference (A/equivalent/B)</li>
-    <li>Borderline/disputed flag</li>
-    <li>Named reviewer and reviewed_at</li>
-  </ul>
-  <pre>{html.escape(template)}</pre>
-</section>"""
-            )
-    return f"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Opaque Human Review</title>
-<style>
-body{{font-family:system-ui,sans-serif;max-width:1400px;margin:2rem auto;
-padding:0 1rem;color:#17202a}}
-.pair{{display:grid;grid-template-columns:1fr 1fr;gap:1rem}}
-figure{{margin:0}}
-img{{width:100%;height:auto;border:1px solid #ccd1d1;background:white}}
-figcaption{{font-weight:700;text-align:center;margin:.4rem}}
-section{{margin:3rem 0;border-top:2px solid #566573;padding-top:1rem}}
-pre{{white-space:pre-wrap;background:#f4f6f7;padding:1rem}}
-.notice{{background:#fff8e1;padding:1rem}}
-</style></head><body>
-<h1>Opaque Human Review</h1>
-<p class="notice">Diagnostics are diagnostic only and excluded from score inputs.
-Editability and cost are outside this image review and must be recorded separately.</p>
-{''.join(sections)}
-</body></html>
-"""
+def _private_permissions(root: Path) -> None:
+    os.chmod(root, 0o700)
+    for path in root.rglob("*"):
+        os.chmod(path, 0o700 if path.is_dir() else 0o600)
+
+
+def _atomic_yaml(path: Path, value: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        "w", dir=path.parent, delete=False, encoding="utf-8"
+    ) as handle:
+        yaml.safe_dump(value, handle, sort_keys=False)
+        temporary = Path(handle.name)
+    os.replace(temporary, path)
+
+
+def export_public_distribution(distribution: Path, destination: Path) -> Path:
+    """Export exactly one validated public distribution and nothing adjacent."""
+    if destination.exists():
+        raise DirectSvgReviewError("export_destination_exists")
+    manifest = _load_yaml(distribution / "manifest.yaml", "public_manifest_invalid")
+    if manifest.get("schema") != PUBLIC_SCHEMA:
+        raise DirectSvgReviewError("public_manifest_invalid")
+    shutil.copytree(distribution, destination)
+    return destination
 
 
 def stage_review(
     fixture_root: Path,
     *,
-    review_root: Path | None = None,
-    review_state_path: Path | None = None,
+    review_root: Path,
+    private_root: Path,
+    generator_commit: str,
     private_seed: bytes | None = None,
+    replay: bool = False,
+    failure_injection: str | None = None,
 ) -> dict[str, Any]:
-    """Validate completed runs and stage public/private review artifacts."""
+    """Build, validate, and atomically publish one immutable review version."""
     fixture_root = fixture_root.resolve()
+    review_root = review_root.resolve()
+    private_root = private_root.resolve()
     plugin_root = fixture_root.parents[1]
-    review_root = (review_root or fixture_root / "review").resolve()
-    review_state_path = (review_state_path or review_root / "review-state.yaml").resolve()
-    private_seed = private_seed if private_seed is not None else secrets.token_bytes(32)
-    if not isinstance(private_seed, bytes) or len(private_seed) < 32:
+    if review_root == private_root or private_root.is_relative_to(review_root):
+        raise DirectSvgReviewError("private_root_must_be_external")
+    if not generator_commit:
+        raise DirectSvgReviewError("generator_commit_required")
+    seed = private_seed if private_seed is not None else secrets.token_bytes(32)
+    if not isinstance(seed, bytes) or len(seed) < 32:
         raise DirectSvgReviewError("private_seed_invalid")
+    _fail_if_responses_exist(review_root)
 
-    run_images = {
-        "test-a": _validated_run(
-            fixture_root,
-            "test-a",
-            "test-a-reconstruction.yaml",
-            plugin_root=plugin_root,
-        ),
-        "test-b": _validated_run(
-            fixture_root,
-            "test-b",
-            "test-b-synthesis.yaml",
-            plugin_root=plugin_root,
-        ),
+    run_one, run_one_state_hash = _validated_run(
+        fixture_root,
+        fixture_root / "runs/test-a",
+        fixture_root / "packets/test-a-reconstruction.yaml",
+        plugin_root,
+    )
+    run_two, run_two_state_hash = _validated_run(
+        fixture_root,
+        fixture_root / "runs/test-b",
+        fixture_root / "packets/test-b-synthesis.yaml",
+        plugin_root,
+    )
+    semantic_path = fixture_root / "contract/semantic-packet.yaml"
+    authorities = {
+        panel: fixture_root / f"reference/crops/panel-{panel.lower()}.png" for panel in PANELS
     }
-    authority_images = {
-        panel: fixture_root / "reference" / "crops" / f"panel-{panel.lower()}.png"
-        for panel in PANELS
+    upstream = {
+        "run_state_hashes": [run_one_state_hash, run_two_state_hash],
+        "semantic_packet_sha256": _sha256(semantic_path),
+        "authority_sha256": {panel: _sha256(path) for panel, path in authorities.items()},
     }
+    version_digest = hashlib.sha256(
+        seed + json.dumps(upstream, sort_keys=True).encode() + generator_commit.encode()
+    ).hexdigest()[:16]
+    version = f"review-v1-{version_digest}"
+    distribution_path = review_root / "distributions" / version
+    private_path = private_root / version
+    if distribution_path.exists():
+        if replay:
+            manifest_path = distribution_path / "manifest.yaml"
+            return {
+                "version": version,
+                "distribution_path": distribution_path,
+                "private_path": private_path,
+                "public_manifest_sha256": _sha256(manifest_path),
+            }
+        raise DirectSvgReviewError("review_version_exists")
 
-    public_root = review_root / "public"
-    private_root = review_root / "private"
-    for root in (public_root, private_root):
-        if root.exists():
-            shutil.rmtree(root)
-        root.mkdir(parents=True)
-
-    experiment_names = _experiment_order(private_seed)
-    experiment_map = dict(zip(("R1", "R2"), experiment_names, strict=True))
-    public_experiments: dict[str, Any] = {}
-    private_keys: dict[str, Any] = {}
-    for public_label in ("R1", "R2"):
-        internal_name = experiment_map[public_label]
-        public_experiments[public_label] = {}
-        private_keys[public_label] = {"run": internal_name, "panels": {}}
-        geometry_policy = (
-            EXACT_GEOMETRY_POLICY
-            if internal_name == "test-a"
-            else CONTAIN_GEOMETRY_POLICY
-        )
+    review_root.mkdir(parents=True, exist_ok=True)
+    private_root.mkdir(parents=True, exist_ok=True)
+    os.chmod(private_root, 0o700)
+    public_temp = Path(tempfile.mkdtemp(prefix=".review-stage-", dir=review_root))
+    private_temp = Path(tempfile.mkdtemp(prefix=".key-stage-", dir=private_root))
+    try:
+        public_panels: dict[str, Any] = {}
+        private_panels: dict[str, Any] = {}
         for panel in PANELS:
-            public_dir = public_root / public_label / panel
-            private_path = private_root / public_label / panel / "blinding-key.yaml"
-            packet = build_review_packet(
-                authority_images[panel],
-                run_images[internal_name][panel],
-                public_dir,
-                seed=_option_seed(private_seed, internal_name, panel),
-                private_manifest_path=private_path,
-                candidate_normalization_policy=geometry_policy,
+            public_panels[panel], private_panels[panel] = _write_panel(
+                panel,
+                {
+                    "authority": authorities[panel],
+                    "run_one": run_one[panel],
+                    "run_two": run_two[panel],
+                },
+                public_temp / "panels" / panel,
+                seed,
             )
-            public_experiments[public_label][panel] = {
-                "manifest": f"{public_label}/{panel}/public-review-manifest.yaml",
-                "manifest_sha256": _sha256(packet["public_manifest_path"]),
-                "review_input_hash": packet["public_manifest"]["review_input_hash"],
-                "response_template": _response_template(),
-            }
-            private_keys[public_label]["panels"][panel] = {
-                "key_manifest": str(private_path.relative_to(private_root)),
-                "key_manifest_sha256": _sha256(private_path),
-            }
-
-    public_manifest = {
-        "schema": PUBLIC_SCHEMA,
-        "experiments": public_experiments,
-        "semantic_review_context": _semantic_review_context(fixture_root),
-        "normalization": {
-            "policy_set": [EXACT_GEOMETRY_POLICY, CONTAIN_GEOMETRY_POLICY],
-            "application": "opaque",
-            "resampling": "LANCZOS",
-            "canvas": "authority_size_centered_white",
-        },
-        "diagnostics": "diagnostic_only_excluded_from_score_inputs",
-        "editability_cost": "separate_not_inferred_from_images",
-        "publication_acceptance": "not_claimed",
-    }
-    html_path = public_root / "index.html"
-    html_path.write_text(_render_html(public_manifest), encoding="utf-8")
-    public_manifest["html"] = {"path": "index.html", "sha256": _sha256(html_path)}
-    public_manifest_path = public_root / "public-review-manifest.yaml"
-    public_manifest_path.write_text(
-        yaml.safe_dump(public_manifest, sort_keys=False), encoding="utf-8"
-    )
-
-    private_manifest = {
-        "schema": PRIVATE_SCHEMA,
-        "seed_hex": private_seed.hex(),
-        "experiment_assignments": experiment_map,
-        "keys": private_keys,
-        "public_manifest_sha256": _sha256(public_manifest_path),
-        "blinding_keys_revealed": False,
-        "release_condition": "named_human_scores_fixed",
-        "publication_acceptance": "not_claimed",
-    }
-    private_manifest_path = private_root / "private-review-manifest.yaml"
-    private_manifest_path.write_text(
-        yaml.safe_dump(private_manifest, sort_keys=False), encoding="utf-8"
-    )
-
-    review_state = {
-        "schema": REVIEW_STATE_SCHEMA,
-        "state": "awaiting_named_human_verdict",
-        "public_manifest_sha256": _sha256(public_manifest_path),
-        "private_manifest_sha256": _sha256(private_manifest_path),
-        "blinding_keys_revealed": False,
-        "cold_reproductions": 0,
-        "publication_acceptance": "not_claimed",
-    }
-    review_state_path.parent.mkdir(parents=True, exist_ok=True)
-    review_state_path.write_text(
-        yaml.safe_dump(review_state, sort_keys=False), encoding="utf-8"
-    )
+        response = _response_document()
+        (public_temp / "response.yaml").write_text(
+            yaml.safe_dump(response, sort_keys=False), encoding="utf-8"
+        )
+        manifest = {
+            "schema": PUBLIC_SCHEMA,
+            "version": version,
+            "panels": public_panels,
+            "responses": {panel: _response_panel() for panel in PANELS},
+            "response_schema": RESPONSE_SCHEMA,
+            "semantic_review_context": _semantic_context(fixture_root),
+            "normalization": {
+                "policy": CONTAIN_GEOMETRY_POLICY,
+                "application": "all_three_options",
+                "resampling": "LANCZOS",
+                "canvas": "authority_dimensions_centered_white",
+            },
+            "upstream_bindings": upstream,
+            "generator": {"revision": GENERATOR_REVISION, "commit": generator_commit},
+            "publication_acceptance": "not_claimed",
+        }
+        (public_temp / "index.html").write_text(_html(manifest), encoding="utf-8")
+        manifest["html_sha256"] = _sha256(public_temp / "index.html")
+        (public_temp / "manifest.yaml").write_text(
+            yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8"
+        )
+        private_manifest = {
+            "schema": PRIVATE_SCHEMA,
+            "version": version,
+            "seed_hex": seed.hex(),
+            "panel_assignments": private_panels,
+            "public_manifest_sha256": _sha256(public_temp / "manifest.yaml"),
+            "blinding_keys_revealed": False,
+            "release_condition": "named_human_scores_fixed",
+        }
+        (private_temp / "key.yaml").write_text(
+            yaml.safe_dump(private_manifest, sort_keys=False), encoding="utf-8"
+        )
+        _private_permissions(private_temp)
+        if _response_has_answers(response):
+            raise DirectSvgReviewError("staged_response_not_empty")
+        decoded = []
+        for path in public_temp.glob("panels/*/option-?.png"):
+            with Image.open(path) as image:
+                decoded.append(hashlib.sha256(image.convert("RGB").tobytes()).hexdigest())
+        if len(decoded) != 6 or len(decoded) != len(set(decoded)):
+            raise DirectSvgReviewError("decoded_pixel_duplicate")
+        if failure_injection == "before_publish":
+            raise RuntimeError("injected")
+        distribution_path.parent.mkdir(parents=True, exist_ok=True)
+        os.replace(private_temp, private_path)
+        os.replace(public_temp, distribution_path)
+        state = {
+            "schema": STATE_SCHEMA,
+            "state": "awaiting_named_human_verdict",
+            "version": version,
+            "public_manifest_sha256": _sha256(distribution_path / "manifest.yaml"),
+            "private_manifest_sha256": _sha256(private_path / "key.yaml"),
+            "upstream_bindings": upstream,
+            "generator": {"revision": GENERATOR_REVISION, "commit": generator_commit},
+            "response_schema": RESPONSE_SCHEMA,
+            "normalization_policy": CONTAIN_GEOMETRY_POLICY,
+            "blinding_keys_revealed": False,
+            "cold_reproductions": 0,
+            "publication_acceptance": "not_claimed",
+        }
+        _atomic_yaml(review_root / "review-state.yaml", state)
+    finally:
+        if public_temp.exists():
+            shutil.rmtree(public_temp)
+        if private_temp.exists():
+            shutil.rmtree(private_temp)
     return {
-        "public_manifest": public_manifest,
-        "review_state": review_state,
-        "public_manifest_path": public_manifest_path,
+        "version": version,
+        "distribution_path": distribution_path,
+        "private_path": private_path,
+        "public_manifest_sha256": _sha256(distribution_path / "manifest.yaml"),
     }
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("fixture_root", type=Path)
+    parser.add_argument("--review-root", type=Path, required=True)
+    parser.add_argument("--private-root", type=Path, required=True)
+    parser.add_argument("--generator-commit", required=True)
+    parser.add_argument("--replay", action="store_true")
+    parser.add_argument("--export-to", type=Path)
     args = parser.parse_args()
-    result = stage_review(args.fixture_root)
+    result = stage_review(
+        args.fixture_root,
+        review_root=args.review_root,
+        private_root=args.private_root,
+        generator_commit=args.generator_commit,
+        replay=args.replay,
+    )
+    if args.export_to:
+        export_public_distribution(Path(result["distribution_path"]), args.export_to)
     print(
         json.dumps(
             {
-                "state": result["review_state"]["state"],
-                "public_review": str(result["public_manifest_path"]),
-                "public_manifest_sha256": result["review_state"][
-                    "public_manifest_sha256"
-                ],
+                "version": result["version"],
+                "public_review": str(result["distribution_path"]),
+                "public_manifest_sha256": result["public_manifest_sha256"],
             },
             indent=2,
         )
