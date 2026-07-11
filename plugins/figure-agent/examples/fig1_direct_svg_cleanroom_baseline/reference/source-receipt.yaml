@@ -1,0 +1,30 @@
+schema: figure-agent.direct-svg-source-receipt.v1
+source:
+  original_path: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/plugins/figure-agent/examples/fig1_overview_v5f_v013_dogfood_001_vault/build/fig1_overview_v5f_v013_dogfood_001_vault.png
+  sha256: sha256:07b903409ddd7a9c212dc6fb34e61c10bba6dee23094cc6c293c1de9298ff49f
+  width: 4272
+  height: 2907
+  mode: RGB
+snapshot:
+  path: benchmark.png
+  sha256: sha256:07b903409ddd7a9c212dc6fb34e61c10bba6dee23094cc6c293c1de9298ff49f
+  copy_method: byte_for_byte
+panel_declaration_authority:
+  path: examples/fig1_overview_v5f_art_direction_001_vault/fig1_overview_v5f_art_direction_001_vault.tex
+  tracked: true
+  panel_c_bbox_tikz: [6.90, 5.00, 13.95, 9.00]
+  panel_f_column_tikz: [9.47, 0.14, 13.95, 4.55]
+render_geometry:
+  algorithm: declared_tikz_bbox_with_empirical_divider_registration.v1
+  divider_samples:
+    - tikz_x: 4.62
+      raster_x_center: 1397.0
+      raster_x_span: [1396, 1398]
+    - tikz_x: 9.47
+      raster_x_center: 2852.5
+      raster_x_span: [2851, 2854]
+  pixels_per_tikz_unit_x: 300.1030927835
+  pixels_per_tikz_unit_y: 300.0
+  y_axis_intercept: 2849.0
+  note: Crop boxes add only panel-owned label and antialiasing margins to declared extents.
+publication_acceptance: not_claimed

@@ -1,0 +1,27 @@
+schema: figure-agent.direct-svg-crop-authority.v1
+algorithm: pillow.crop.v1
+source:
+  path: benchmark.png
+  sha256: sha256:07b903409ddd7a9c212dc6fb34e61c10bba6dee23094cc6c293c1de9298ff49f
+  width: 4272
+  height: 2907
+crops:
+  C:
+    bbox:
+    - 2070
+    - 0
+    - 4230
+    - 1360
+    output: crops/panel-c.png
+    authority: declared_panel_c_bbox_plus_owned_label_margin
+    sha256: sha256:40fdadde6e9e428d32caabe007e4891caacf11e99ac6565dccb1f531e6953703
+  F:
+    bbox:
+    - 2851
+    - 1450
+    - 4230
+    - 2830
+    output: crops/panel-f.png
+    authority: declared_panel_f_column_plus_owned_label_margin
+    sha256: sha256:d74d2ee3c360eb585486b12784170861bdaa84f574d7f1b6c0446b7be43b0f09
+publication_acceptance: not_claimed
