@@ -77,6 +77,10 @@ def _write_packet(
             "license": "OFL-1.1",
             "sha256": font["sha256"],
         },
+        "output_root": f"runs/{test_kind}",
+        "path_base": "packet_root",
+        "runnable": True,
+        "blocked_reason": None,
         "publication_acceptance": "not_claimed",
     }
     if test_kind == "synthesis":
@@ -191,7 +195,12 @@ def test_synthesis_rejects_case_insensitive_leakage_anywhere(
         packet["artifact_paths"] = [{"source": leakage}]
     _rewrite_packet(packet_path, packet)
 
-    with pytest.raises(DirectSvgPacketError, match="synthesis_source_leakage"):
+    error = (
+        "packet_unknown_field"
+        if surface in {"key", "nested_path"}
+        else "synthesis_source_leakage"
+    )
+    with pytest.raises(DirectSvgPacketError, match=error):
         validate_packet(packet_path)
 
 
@@ -246,15 +255,76 @@ def test_packet_requires_complete_model_contract(tmp_path: Path) -> None:
         validate_packet(packet_path)
 
 
-def test_packet_allows_additional_model_receipt_fields(tmp_path: Path) -> None:
+def test_packet_rejects_additional_model_receipt_fields(tmp_path: Path) -> None:
     packet_path = _write_packet(tmp_path)
     packet = _load_packet(packet_path)
     packet["model_contract"]["runtime_version"] = "codex-test"
     _rewrite_packet(packet_path, packet)
 
-    result = validate_packet(packet_path)
+    with pytest.raises(DirectSvgPacketError, match="model_contract_unknown_field"):
+        validate_packet(packet_path)
 
-    assert result["model_contract"]["runtime_version"] == "codex-test"
+
+@pytest.mark.parametrize(
+    ("location", "field", "value", "error"),
+    [
+        ("packet", "payload", "target-pixels-secret", "packet_unknown_field"),
+        (
+            "allowed_input",
+            "checksum",
+            "40fdadde6e9e428d32caabe007e4891caacf11e99ac6565dccb1f531e6953703",
+            "allowed_input_unknown_field",
+        ),
+        ("budgets", "payload", "target-pixels-secret", "budget_unknown_field"),
+        ("budget_tier", "payload", "target-pixels-secret", "budget_unknown_field"),
+        (
+            "model_contract",
+            "payload",
+            "target-pixels-secret",
+            "model_contract_unknown_field",
+        ),
+        (
+            "font",
+            "checksum",
+            "40fdadde6e9e428d32caabe007e4891caacf11e99ac6565dccb1f531e6953703",
+            "font_contract_unknown_field",
+        ),
+    ],
+)
+def test_packet_rejects_unknown_fields_before_hidden_leakage(
+    tmp_path: Path,
+    location: str,
+    field: str,
+    value: str,
+    error: str,
+) -> None:
+    packet_path = _write_packet(tmp_path, test_kind="synthesis")
+    packet = _load_packet(packet_path)
+    if location == "packet":
+        target = packet
+    elif location == "allowed_input":
+        target = packet["allowed_inputs"][0]
+    elif location == "budgets":
+        target = packet["budgets"]
+    elif location == "budget_tier":
+        target = packet["budgets"]["utility"]
+    else:
+        target = packet[location]
+    target[field] = value
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(DirectSvgPacketError, match=error):
+        validate_packet(packet_path)
+
+
+def test_reconstruction_rejects_synthesis_only_declaration(tmp_path: Path) -> None:
+    packet_path = _write_packet(tmp_path)
+    packet = _load_packet(packet_path)
+    packet["reference_pixels_available"] = False
+    _rewrite_packet(packet_path, packet)
+
+    with pytest.raises(DirectSvgPacketError, match="packet_unknown_field"):
+        validate_packet(packet_path)
 
 
 def test_packet_can_resolve_declared_fixture_root_inputs(tmp_path: Path) -> None:

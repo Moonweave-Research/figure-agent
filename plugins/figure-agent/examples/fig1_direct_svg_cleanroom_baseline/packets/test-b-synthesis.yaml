@@ -30,7 +30,6 @@ model_contract:
   tools: []
   token_cap: null
   compute_cap: null
-  receipt_status: not_run
 font:
   role: licensed_font
   license: GUST-FONT-LICENSE

@@ -34,6 +34,25 @@ MODEL_CONTRACT_KEYS = {
     "token_cap",
     "compute_cap",
 }
+COMMON_PACKET_KEYS = {
+    "schema",
+    "test_kind",
+    "panels",
+    "denied_source_families",
+    "allowed_inputs",
+    "budgets",
+    "model_contract",
+    "font",
+    "output_root",
+    "path_base",
+    "runnable",
+    "blocked_reason",
+    "publication_acceptance",
+}
+ALLOWED_INPUT_KEYS = {"role", "path", "sha256"}
+BUDGET_KEYS = {"utility", "ceiling"}
+BUDGET_TIER_KEYS = {"cycles", "wall_minutes_per_panel"}
+FONT_CONTRACT_KEYS = {"role", "license", "sha256"}
 SYNTHESIS_ISOLATION_DECLARATIONS = {
     "reference_pixels_available",
     "reference_hashes_available",
@@ -60,19 +79,52 @@ def _mapping(value: Any, field: str) -> dict[str, Any]:
     return value
 
 
+def _validate_exact_keys(
+    value: dict[str, Any],
+    expected: set[str],
+    *,
+    unknown_error: str,
+    incomplete_error: str,
+) -> None:
+    keys = set(value)
+    if keys - expected:
+        raise DirectSvgPacketError(unknown_error)
+    if expected - keys:
+        raise DirectSvgPacketError(incomplete_error)
+
+
 def _sha256(path: Path) -> str:
     return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
 
 
 def _validate_budgets(value: Any) -> None:
-    if value != EXPECTED_BUDGETS:
+    budgets = _mapping(value, "budget_contract")
+    _validate_exact_keys(
+        budgets,
+        BUDGET_KEYS,
+        unknown_error="budget_unknown_field",
+        incomplete_error="budget_contract_invalid",
+    )
+    for tier in BUDGET_KEYS:
+        tier_contract = _mapping(budgets[tier], "budget_contract")
+        _validate_exact_keys(
+            tier_contract,
+            BUDGET_TIER_KEYS,
+            unknown_error="budget_unknown_field",
+            incomplete_error="budget_contract_invalid",
+        )
+    if budgets != EXPECTED_BUDGETS:
         raise DirectSvgPacketError("budget_contract_invalid")
 
 
 def _validate_model_contract(value: Any) -> None:
     contract = _mapping(value, "model_contract")
-    if not MODEL_CONTRACT_KEYS.issubset(contract):
-        raise DirectSvgPacketError("model_contract_incomplete")
+    _validate_exact_keys(
+        contract,
+        MODEL_CONTRACT_KEYS,
+        unknown_error="model_contract_unknown_field",
+        incomplete_error="model_contract_incomplete",
+    )
     if not isinstance(contract["prompt_paths"], list) or not isinstance(
         contract["tools"], list
     ):
@@ -81,6 +133,12 @@ def _validate_model_contract(value: Any) -> None:
 
 def _validate_font_contract(packet: dict[str, Any], inputs: list[dict[str, Any]]) -> None:
     font = _mapping(packet.get("font"), "font_contract")
+    _validate_exact_keys(
+        font,
+        FONT_CONTRACT_KEYS,
+        unknown_error="font_contract_unknown_field",
+        incomplete_error="font_contract_incomplete",
+    )
     if not isinstance(font.get("license"), str) or not font["license"]:
         raise DirectSvgPacketError("font_license_required")
     font_inputs = [item for item in inputs if item.get("role") == "licensed_font"]
@@ -151,6 +209,21 @@ def validate_packet(path: Path) -> dict[str, Any]:
     test_kind = packet.get("test_kind")
     if test_kind not in {"reconstruction", "synthesis"}:
         raise DirectSvgPacketError("invalid_test_kind")
+    packet_keys = COMMON_PACKET_KEYS
+    if test_kind == "synthesis":
+        packet_keys = packet_keys | SYNTHESIS_ISOLATION_DECLARATIONS
+    if set(packet) - packet_keys:
+        raise DirectSvgPacketError("packet_unknown_field")
+    if test_kind == "synthesis" and not SYNTHESIS_ISOLATION_DECLARATIONS.issubset(
+        packet
+    ):
+        raise DirectSvgPacketError("synthesis_isolation_declaration_required")
+    _validate_exact_keys(
+        packet,
+        packet_keys,
+        unknown_error="packet_unknown_field",
+        incomplete_error="packet_incomplete",
+    )
     if set(packet.get("panels") or []) != PANELS:
         raise DirectSvgPacketError("panels_must_be_C_and_F")
     if set(packet.get("denied_source_families") or []) != DENIED_SOURCE_FAMILIES:
@@ -166,6 +239,13 @@ def validate_packet(path: Path) -> dict[str, Any]:
     if not isinstance(raw_inputs, list):
         raise DirectSvgPacketError("allowed_inputs_invalid")
     inputs = [_mapping(item, "allowed_input") for item in raw_inputs]
+    for item in inputs:
+        _validate_exact_keys(
+            item,
+            ALLOWED_INPUT_KEYS,
+            unknown_error="allowed_input_unknown_field",
+            incomplete_error="allowed_input_incomplete",
+        )
     roles = [item.get("role") for item in inputs]
     if any(not isinstance(role, str) or not role for role in roles):
         raise DirectSvgPacketError("input_role_invalid")
