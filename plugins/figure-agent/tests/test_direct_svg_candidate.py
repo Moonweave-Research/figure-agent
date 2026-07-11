@@ -55,6 +55,7 @@ def _iteration_receipt(cycle: int, *, elapsed_minutes: float = 5.0) -> dict[str,
     return {
         "cycle": cycle,
         "elapsed_minutes": elapsed_minutes,
+        "semantic_packet_sha256": "sha256:" + "a" * 64,
         "source_path": source_path,
         "source_sha256": source_hash,
         "render_path": render_path,
@@ -82,6 +83,8 @@ def _iteration_receipt(cycle: int, *, elapsed_minutes: float = 5.0) -> dict[str,
             "contract/fontconfig.xml",
             "--font",
             "contract/font.otf",
+            "--validation-mode",
+            "declared_relation_coverage",
         ],
         "runtime_receipt": {
             "schema": "figure-agent.direct-svg-runtime-receipt.v1",
@@ -114,7 +117,7 @@ def _iteration_receipt(cycle: int, *, elapsed_minutes: float = 5.0) -> dict[str,
                 "lock_path": "uv.lock",
                 "lock_sha256": "sha256:" + "f" * 64,
                 "base_commit": "0" * 40,
-                "head_commit": None,
+                "head_commit": "unavailable_precommit",
                 "head_commit_status": "unavailable_precommit",
             },
             "width": 120,
@@ -363,7 +366,7 @@ def test_candidate_allows_only_fragment_local_gradient_urls(tmp_path: Path) -> N
 
 
 def test_iteration_ledger_enforces_cycle_budget() -> None:
-    ledger = begin_ledger(_utility_budget(), started_at="2026-07-11T00:00:00Z")
+    ledger = begin_ledger(_utility_budget(), started_at="2026-07-11T00:00:00Z", panel="C")
     for cycle in range(1, 4):
         ledger = record_iteration(ledger, _iteration_receipt(cycle))
 
@@ -372,14 +375,14 @@ def test_iteration_ledger_enforces_cycle_budget() -> None:
 
 
 def test_iteration_ledger_enforces_wall_time_budget() -> None:
-    ledger = begin_ledger(_utility_budget(), started_at="2026-07-11T00:00:00Z")
+    ledger = begin_ledger(_utility_budget(), started_at="2026-07-11T00:00:00Z", panel="C")
 
     with pytest.raises(DirectSvgCandidateError, match="wall_time_budget_exceeded"):
         record_iteration(ledger, _iteration_receipt(1, elapsed_minutes=31.0))
 
 
 def test_iteration_ledger_requires_sequential_cycles() -> None:
-    ledger = begin_ledger(_utility_budget(), started_at="2026-07-11T00:00:00Z")
+    ledger = begin_ledger(_utility_budget(), started_at="2026-07-11T00:00:00Z", panel="C")
 
     with pytest.raises(DirectSvgCandidateError, match="cycle_sequence_invalid"):
         record_iteration(ledger, _iteration_receipt(2))
@@ -390,14 +393,14 @@ def test_iteration_receipt_requires_every_declared_key(missing: str) -> None:
     receipt = _iteration_receipt(1)
     del receipt[missing]
     with pytest.raises(DirectSvgCandidateError, match="iteration_receipt_incomplete"):
-        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
+        record_iteration(begin_ledger(_utility_budget(), started_at="now", panel="C"), receipt)
 
 
 def test_iteration_receipt_rejects_unknown_keys() -> None:
     receipt = _iteration_receipt(1)
     receipt["unexpected"] = True
     with pytest.raises(DirectSvgCandidateError, match="iteration_receipt_keys_invalid"):
-        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
+        record_iteration(begin_ledger(_utility_budget(), started_at="now", panel="C"), receipt)
 
 
 @pytest.mark.parametrize(
@@ -416,7 +419,7 @@ def test_iteration_receipt_rejects_bad_types_paths_and_hashes(
     receipt = _iteration_receipt(1)
     receipt[field] = value
     with pytest.raises(DirectSvgCandidateError, match=error):
-        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
+        record_iteration(begin_ledger(_utility_budget(), started_at="now", panel="C"), receipt)
 
 
 def test_iteration_receipt_rejects_nested_hash_mismatch() -> None:
@@ -426,7 +429,7 @@ def test_iteration_receipt_rejects_nested_hash_mismatch() -> None:
     runtime["source_sha256"] = "sha256:" + "9" * 64
     receipt["runtime_receipt"] = runtime
     with pytest.raises(DirectSvgCandidateError, match="iteration_runtime_mismatch"):
-        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
+        record_iteration(begin_ledger(_utility_budget(), started_at="now", panel="C"), receipt)
 
 
 @pytest.mark.parametrize("missing", sorted(_iteration_receipt(1)["runtime_receipt"]))
@@ -437,7 +440,7 @@ def test_runtime_receipt_requires_every_declared_key(missing: str) -> None:
     del runtime[missing]
     receipt["runtime_receipt"] = runtime
     with pytest.raises(DirectSvgCandidateError, match="iteration_runtime_receipt_invalid"):
-        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
+        record_iteration(begin_ledger(_utility_budget(), started_at="now", panel="C"), receipt)
 
 
 @pytest.mark.parametrize("missing", sorted(_iteration_receipt(1)["tool_model_receipt"]))
@@ -448,7 +451,79 @@ def test_tool_model_receipt_requires_every_declared_key(missing: str) -> None:
     del tool_model[missing]
     receipt["tool_model_receipt"] = tool_model
     with pytest.raises(DirectSvgCandidateError, match="iteration_tool_model_receipt_invalid"):
-        record_iteration(begin_ledger(_utility_budget(), started_at="now"), receipt)
+        record_iteration(begin_ledger(_utility_budget(), started_at="now", panel="C"), receipt)
+
+
+def _ledger_with_panel(panel: str = "C") -> dict[str, object]:
+    return begin_ledger(_utility_budget(), started_at="now", panel=panel)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda receipt: receipt["command"].extend(["--width", "120"]),
+        lambda receipt: receipt["command"].extend(["--unknown", "value"]),
+        lambda receipt: receipt["command"].remove("--height"),
+    ],
+)
+def test_iteration_command_rejects_duplicate_unknown_and_missing_flags(mutation) -> None:
+    receipt = _iteration_receipt(1)
+    mutation(receipt)
+    with pytest.raises(DirectSvgCandidateError, match="iteration_command_invalid"):
+        record_iteration(_ledger_with_panel(), receipt)
+
+
+@pytest.mark.parametrize(
+    ("flag", "value"),
+    [
+        ("--semantic-packet", "contract/other-packet.yaml"),
+        ("--width", "121"),
+        ("--fontconfig", "contract/other-fontconfig.xml"),
+        ("--panel", "F"),
+        ("--validation-mode", "historical_structure_replay"),
+    ],
+)
+def test_iteration_command_is_cross_bound_to_runtime_and_ledger(flag: str, value: str) -> None:
+    receipt = _iteration_receipt(1)
+    receipt["command"][receipt["command"].index(flag) + 1] = value
+    with pytest.raises(DirectSvgCandidateError, match="iteration_command_mismatch"):
+        record_iteration(_ledger_with_panel(), receipt)
+
+
+def test_iteration_semantic_packet_hash_is_cross_bound() -> None:
+    receipt = _iteration_receipt(1)
+    receipt["semantic_packet_sha256"] = "sha256:" + "9" * 64
+    with pytest.raises(DirectSvgCandidateError, match="iteration_runtime_mismatch"):
+        record_iteration(_ledger_with_panel(), receipt)
+
+
+def test_iteration_rejects_malformed_semantic_packet_receipt() -> None:
+    receipt = _iteration_receipt(1)
+    receipt["runtime_receipt"]["semantic_packet"] = "contract/packet.yaml"
+    with pytest.raises(DirectSvgCandidateError, match="iteration_runtime_receipt_invalid"):
+        record_iteration(_ledger_with_panel(), receipt)
+
+
+def test_iteration_fontconfig_environment_is_cross_bound() -> None:
+    receipt = _iteration_receipt(1)
+    receipt["runtime_receipt"]["environment"]["FONTCONFIG_FILE"] = "contract/other-fontconfig.xml"
+    with pytest.raises(DirectSvgCandidateError, match="iteration_environment_mismatch"):
+        record_iteration(_ledger_with_panel(), receipt)
+
+
+@pytest.mark.parametrize("base_commit", ["ABC", "A" * 40, "unavailable"])
+def test_iteration_rejects_malformed_task_base_commit(base_commit: str) -> None:
+    receipt = _iteration_receipt(1)
+    receipt["tool_model_receipt"]["task"]["base_commit"] = base_commit
+    with pytest.raises(DirectSvgCandidateError, match="iteration_provenance_invalid"):
+        record_iteration(_ledger_with_panel(), receipt)
+
+
+def test_iteration_rejects_disagreeing_task_and_producer_base_commit() -> None:
+    receipt = _iteration_receipt(1)
+    receipt["tool_model_receipt"]["task"]["base_commit"] = "1" * 40
+    with pytest.raises(DirectSvgCandidateError, match="iteration_provenance_mismatch"):
+        record_iteration(_ledger_with_panel(), receipt)
 
 
 @pytest.mark.skipif(shutil.which("rsvg-convert") is None, reason="rsvg-convert missing")

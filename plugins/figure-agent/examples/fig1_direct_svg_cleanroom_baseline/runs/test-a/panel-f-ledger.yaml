@@ -69,14 +69,14 @@ iterations:
       version: 12.2.0
     producer:
       base_commit: 064a3cc62671ef0f086efb03f26c00d97bb783cd
-      head_commit: null
+      head_commit: unavailable_precommit
       head_commit_status: unavailable_precommit
       lock_path: uv.lock
       lock_sha256: sha256:e4a26154557124084aea47dea399986fe881bf7c81b217b91a6a5e3d72dd1684
       validator_path: scripts/direct_svg_candidate.py
-      validator_sha256: sha256:32bb85ed68f7f188b547788ecedacfd47f941616b75436783078d4f6deae6379
+      validator_sha256: sha256:ff5c6f9665e90e06d38fe60ef54412c693a45d9ee0cef78d8550e364fc8a8c0f
       wrapper_path: scripts/direct_svg_render.py
-      wrapper_sha256: sha256:ed81f8c4f2af2506c58cc06eef9f513438f647b7f7d253e7a5cc3bb175588c8a
+      wrapper_sha256: sha256:c1878b0a0552582cf99bc44d57a7a80f37bf79a04137eacd184e6733029584ab
     publication_acceptance: not_claimed
     python:
       implementation: CPython
@@ -119,6 +119,7 @@ iterations:
   correction_type: visual
   render_changed_from_prior: true
   publication_acceptance: not_claimed
+  semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
 - cycle: 2
   elapsed_minutes: 8.0
   source_path: examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-f-cycle-2.svg
@@ -168,14 +169,14 @@ iterations:
       version: 12.2.0
     producer:
       base_commit: 064a3cc62671ef0f086efb03f26c00d97bb783cd
-      head_commit: null
+      head_commit: unavailable_precommit
       head_commit_status: unavailable_precommit
       lock_path: uv.lock
       lock_sha256: sha256:e4a26154557124084aea47dea399986fe881bf7c81b217b91a6a5e3d72dd1684
       validator_path: scripts/direct_svg_candidate.py
-      validator_sha256: sha256:32bb85ed68f7f188b547788ecedacfd47f941616b75436783078d4f6deae6379
+      validator_sha256: sha256:ff5c6f9665e90e06d38fe60ef54412c693a45d9ee0cef78d8550e364fc8a8c0f
       wrapper_path: scripts/direct_svg_render.py
-      wrapper_sha256: sha256:ed81f8c4f2af2506c58cc06eef9f513438f647b7f7d253e7a5cc3bb175588c8a
+      wrapper_sha256: sha256:c1878b0a0552582cf99bc44d57a7a80f37bf79a04137eacd184e6733029584ab
     publication_acceptance: not_claimed
     python:
       implementation: CPython
@@ -218,6 +219,7 @@ iterations:
   correction_type: visual
   render_changed_from_prior: true
   publication_acceptance: not_claimed
+  semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
 - cycle: 3
   elapsed_minutes: 11.0
   source_path: examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-f-cycle-3.svg
@@ -267,14 +269,14 @@ iterations:
       version: 12.2.0
     producer:
       base_commit: 064a3cc62671ef0f086efb03f26c00d97bb783cd
-      head_commit: null
+      head_commit: unavailable_precommit
       head_commit_status: unavailable_precommit
       lock_path: uv.lock
       lock_sha256: sha256:e4a26154557124084aea47dea399986fe881bf7c81b217b91a6a5e3d72dd1684
       validator_path: scripts/direct_svg_candidate.py
-      validator_sha256: sha256:32bb85ed68f7f188b547788ecedacfd47f941616b75436783078d4f6deae6379
+      validator_sha256: sha256:ff5c6f9665e90e06d38fe60ef54412c693a45d9ee0cef78d8550e364fc8a8c0f
       wrapper_path: scripts/direct_svg_render.py
-      wrapper_sha256: sha256:ed81f8c4f2af2506c58cc06eef9f513438f647b7f7d253e7a5cc3bb175588c8a
+      wrapper_sha256: sha256:c1878b0a0552582cf99bc44d57a7a80f37bf79a04137eacd184e6733029584ab
     publication_acceptance: not_claimed
     python:
       implementation: CPython
@@ -316,6 +318,7 @@ iterations:
   correction_type: visual
   render_changed_from_prior: true
   publication_acceptance: not_claimed
+  semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
 - cycle: 4
   elapsed_minutes: 16.0
   source_path: examples/fig1_direct_svg_cleanroom_baseline/runs/test-a/panel-f-cycle-4.svg
@@ -365,14 +368,14 @@ iterations:
       version: 12.2.0
     producer:
       base_commit: 064a3cc62671ef0f086efb03f26c00d97bb783cd
-      head_commit: null
+      head_commit: unavailable_precommit
       head_commit_status: unavailable_precommit
       lock_path: uv.lock
       lock_sha256: sha256:e4a26154557124084aea47dea399986fe881bf7c81b217b91a6a5e3d72dd1684
       validator_path: scripts/direct_svg_candidate.py
-      validator_sha256: sha256:32bb85ed68f7f188b547788ecedacfd47f941616b75436783078d4f6deae6379
+      validator_sha256: sha256:ff5c6f9665e90e06d38fe60ef54412c693a45d9ee0cef78d8550e364fc8a8c0f
       wrapper_path: scripts/direct_svg_render.py
-      wrapper_sha256: sha256:ed81f8c4f2af2506c58cc06eef9f513438f647b7f7d253e7a5cc3bb175588c8a
+      wrapper_sha256: sha256:c1878b0a0552582cf99bc44d57a7a80f37bf79a04137eacd184e6733029584ab
     publication_acceptance: not_claimed
     python:
       implementation: CPython
@@ -415,6 +418,7 @@ iterations:
   correction_type: semantic_metadata
   render_changed_from_prior: false
   publication_acceptance: not_claimed
+  semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
 publication_acceptance: not_claimed
 final_candidate:
   source_path: panel-f.svg

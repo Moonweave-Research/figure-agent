@@ -263,6 +263,7 @@ def test_completed_test_a_binds_candidates_ledgers_and_machine_only_state() -> N
         validated_ledger = begin_ledger(
             ledger["budget"],
             started_at=ledger["started_at"],
+            panel=panel,
         )
         for cycle, receipt in enumerate(ledger["iterations"], start=1):
             cycle_source = PLUGIN_ROOT / receipt["source_path"]
@@ -288,7 +289,9 @@ def test_completed_test_a_binds_candidates_ledgers_and_machine_only_state() -> N
             assert receipt["runtime_receipt"]["path_base"] == "plugin_root"
             assert receipt["runtime_receipt"]["source_path"] == receipt["source_path"]
             assert receipt["runtime_receipt"]["render_path"] == receipt["render_path"]
-            assert receipt["runtime_receipt"]["producer"]["head_commit"] is None
+            assert receipt["runtime_receipt"]["producer"]["head_commit"] == (
+                "unavailable_precommit"
+            )
             assert (
                 receipt["runtime_receipt"]["producer"]["head_commit_status"]
                 == "unavailable_precommit"

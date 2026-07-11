@@ -150,7 +150,7 @@ def render_with_receipt(
             "lock_path": lock_receipt,
             "lock_sha256": _sha256(lock),
             "base_commit": BASE_COMMIT,
-            "head_commit": None,
+            "head_commit": "unavailable_precommit",
             "head_commit_status": "unavailable_precommit",
         },
         "width": width,

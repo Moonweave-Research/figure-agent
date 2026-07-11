@@ -14,7 +14,7 @@ candidate_artifacts:
     render_path: panel-c.png
     render_sha256: sha256:73d4e5cb9a7d8661b90401dd90f9f77981222e358e20930009d01928c24ef71a
     ledger_path: panel-c-ledger.yaml
-    ledger_sha256: sha256:30f5818684b96aeda8374b4944e97d1193c317fd11ef0fef7d967112439ae572
+    ledger_sha256: sha256:123492d9ebbde1b694e797904de6a675a936725901a541d2a1fb2d6ffa53f76c
   - panel: F
     cycles_completed: 4
     valid_review_cycles: [1, 2, 3, 4]
@@ -23,7 +23,7 @@ candidate_artifacts:
     render_path: panel-f.png
     render_sha256: sha256:bcd7ebbb7c0e45f8e54efc2cd930f63eeabf6e37d20c8e60ec8322073f760cd5
     ledger_path: panel-f-ledger.yaml
-    ledger_sha256: sha256:a9bdd226fd656bed39721f179e6bdf67548b80b88c3509ea757b086f8a2e27a2
+    ledger_sha256: sha256:39f0302bc9929bc2580bc944cc76e7248f09d157602b6a6326d4cfd8a262c5e5
 execution_evidence: exact_original_cycle_sources_recovered_and_extended
 human_quality_review: not_performed
 scientific_acceptance: not_claimed

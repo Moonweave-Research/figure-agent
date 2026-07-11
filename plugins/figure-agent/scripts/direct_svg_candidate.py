@@ -19,6 +19,21 @@ FORBIDDEN_ELEMENTS = {"script", "image", "foreignobject"}
 GRADIENT_ELEMENTS = {"lineargradient", "radialgradient"}
 HASH_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 URL_PATTERN = re.compile(r"url\(\s*([^)]*?)\s*\)", re.IGNORECASE)
+COMMIT_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+UNAVAILABLE_PRECOMMIT = "unavailable_precommit"
+RENDER_COMMAND_PREFIX = ["uv", "run", "python", "scripts/direct_svg_render.py"]
+RENDER_COMMAND_FLAGS = {
+    "--root",
+    "--svg",
+    "--output",
+    "--semantic-packet",
+    "--panel",
+    "--width",
+    "--height",
+    "--fontconfig",
+    "--font",
+    "--validation-mode",
+}
 
 
 class DirectSvgCandidateError(ValueError):
@@ -235,7 +250,7 @@ def validate_candidate_from_semantic_packet(
     return result
 
 
-def begin_ledger(budget: dict[str, int], *, started_at: str) -> dict[str, Any]:
+def begin_ledger(budget: dict[str, int], *, started_at: str, panel: str) -> dict[str, Any]:
     """Create an empty bounded-iteration ledger."""
     if set(budget) != {"cycles", "wall_minutes_per_panel"} or any(
         not isinstance(value, int) or isinstance(value, bool) or value <= 0
@@ -244,8 +259,11 @@ def begin_ledger(budget: dict[str, int], *, started_at: str) -> dict[str, Any]:
         raise DirectSvgCandidateError("iteration_budget_invalid")
     if not isinstance(started_at, str) or not started_at:
         raise DirectSvgCandidateError("started_at_required")
+    if panel not in {"C", "F"}:
+        raise DirectSvgCandidateError("iteration_panel_invalid")
     return {
         "schema": "figure-agent.direct-svg-iteration-ledger.v1",
+        "panel": panel,
         "budget": dict(budget),
         "started_at": started_at,
         "iterations": [],
@@ -266,7 +284,7 @@ def _require_closed_keys(value: Any, expected: set[str], error: str) -> dict[str
     return value
 
 
-def _validate_runtime_receipt(runtime: Any, receipt: dict[str, Any]) -> None:
+def _validate_runtime_receipt(runtime: Any, receipt: dict[str, Any]) -> dict[str, Any]:
     runtime = _require_closed_keys(
         runtime,
         {
@@ -310,7 +328,6 @@ def _validate_runtime_receipt(runtime: Any, receipt: dict[str, Any]) -> None:
         for key in ("source_path", "source_sha256", "render_path", "render_sha256")
     ):
         raise DirectSvgCandidateError("iteration_runtime_mismatch")
-
     for name in ("semantic_packet", "fontconfig", "font"):
         item = _require_closed_keys(
             runtime[name], {"path", "sha256"}, "iteration_runtime_receipt_invalid"
@@ -319,6 +336,8 @@ def _validate_runtime_receipt(runtime: Any, receipt: dict[str, Any]) -> None:
             str(item["sha256"])
         ):
             raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+    if runtime["semantic_packet"]["sha256"] != receipt["semantic_packet_sha256"]:
+        raise DirectSvgCandidateError("iteration_runtime_mismatch")
     rsvg = _require_closed_keys(
         runtime["rsvg"], {"executable", "version"}, "iteration_runtime_receipt_invalid"
     )
@@ -359,6 +378,18 @@ def _validate_runtime_receipt(runtime: Any, receipt: dict[str, Any]) -> None:
         for item in (*python.values(), *pillow.values(), *environment.values())
     ):
         raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+    if (
+        environment["FONTCONFIG_FILE"] != runtime["fontconfig"]["path"]
+        or environment["FONTCONFIG_PATH"]
+        != PurePosixPath(runtime["fontconfig"]["path"]).parent.as_posix()
+        or environment["LANG"] != environment["LC_ALL"]
+    ):
+        raise DirectSvgCandidateError("iteration_environment_mismatch")
+    if any(
+        not _is_relative_posix_path(environment[key])
+        for key in ("FONTCONFIG_FILE", "FONTCONFIG_PATH")
+    ):
+        raise DirectSvgCandidateError("iteration_environment_mismatch")
     for path_key, hash_key in (
         ("wrapper_path", "wrapper_sha256"),
         ("validator_path", "validator_sha256"),
@@ -368,11 +399,17 @@ def _validate_runtime_receipt(runtime: Any, receipt: dict[str, Any]) -> None:
             str(producer[hash_key])
         ):
             raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
-    if not re.fullmatch(r"[0-9a-f]{40}", str(producer["base_commit"])):
+    if not COMMIT_PATTERN.fullmatch(str(producer["base_commit"])):
         raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
-    if (
-        producer["head_commit"] is not None
-        or producer["head_commit_status"] != "unavailable_precommit"
+    head_commit = producer["head_commit"]
+    head_status = producer["head_commit_status"]
+    if not (
+        (head_commit == UNAVAILABLE_PRECOMMIT and head_status == UNAVAILABLE_PRECOMMIT)
+        or (
+            isinstance(head_commit, str)
+            and COMMIT_PATTERN.fullmatch(head_commit)
+            and head_status == "recorded"
+        )
     ):
         raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
     if any(
@@ -380,9 +417,10 @@ def _validate_runtime_receipt(runtime: Any, receipt: dict[str, Any]) -> None:
         for key in ("width", "height")
     ):
         raise DirectSvgCandidateError("iteration_runtime_receipt_invalid")
+    return producer
 
 
-def _validate_tool_model_receipt(value: Any) -> None:
+def _validate_tool_model_receipt(value: Any) -> dict[str, Any]:
     receipt = _require_closed_keys(
         value,
         {
@@ -414,12 +452,37 @@ def _validate_tool_model_receipt(value: Any) -> None:
     )
     if not all(isinstance(item, str) and item for item in (*task.values(), *tools.values())):
         raise DirectSvgCandidateError("iteration_tool_model_receipt_invalid")
+    if not COMMIT_PATTERN.fullmatch(task["base_commit"]):
+        raise DirectSvgCandidateError("iteration_provenance_invalid")
+    return task
 
 
-def _validate_iteration_receipt(receipt: dict[str, Any]) -> None:
+def _parse_render_command(command: Any) -> dict[str, str]:
+    if (
+        not isinstance(command, list)
+        or not all(isinstance(item, str) for item in command)
+        or command[:4] != RENDER_COMMAND_PREFIX
+    ):
+        raise DirectSvgCandidateError("iteration_command_invalid")
+    arguments = command[4:]
+    if len(arguments) != 2 * len(RENDER_COMMAND_FLAGS):
+        raise DirectSvgCandidateError("iteration_command_invalid")
+    parsed: dict[str, str] = {}
+    for index in range(0, len(arguments), 2):
+        flag, value = arguments[index : index + 2]
+        if flag not in RENDER_COMMAND_FLAGS or flag in parsed or not value:
+            raise DirectSvgCandidateError("iteration_command_invalid")
+        parsed[flag] = value
+    if set(parsed) != RENDER_COMMAND_FLAGS:
+        raise DirectSvgCandidateError("iteration_command_invalid")
+    return parsed
+
+
+def _validate_iteration_receipt(receipt: dict[str, Any], *, panel: str) -> None:
     required = {
         "cycle",
         "elapsed_minutes",
+        "semantic_packet_sha256",
         "source_path",
         "source_sha256",
         "render_path",
@@ -442,22 +505,8 @@ def _validate_iteration_receipt(receipt: dict[str, Any]) -> None:
         str(receipt["render_sha256"])
     ):
         raise DirectSvgCandidateError("iteration_hash_invalid")
-    command = receipt["command"]
-    if (
-        not isinstance(command, list)
-        or not all(isinstance(item, str) for item in command)
-        or command[:4] != ["uv", "run", "python", "scripts/direct_svg_render.py"]
-    ):
-        raise DirectSvgCandidateError("iteration_command_invalid")
-    for flag, expected in (("--svg", receipt["source_path"]), ("--output", receipt["render_path"])):
-        if (
-            command.count(flag) != 1
-            or command.index(flag) + 1 >= len(command)
-            or command[command.index(flag) + 1] != expected
-        ):
-            raise DirectSvgCandidateError("iteration_command_invalid")
-    if "--root" not in command or command[command.index("--root") + 1] != ".":
-        raise DirectSvgCandidateError("iteration_command_invalid")
+    if not HASH_PATTERN.fullmatch(str(receipt["semantic_packet_sha256"])):
+        raise DirectSvgCandidateError("iteration_hash_invalid")
     if (
         not isinstance(receipt["cycle"], int)
         or isinstance(receipt["cycle"], bool)
@@ -469,15 +518,36 @@ def _validate_iteration_receipt(receipt: dict[str, Any]) -> None:
         for key in ("correction_reason", "correction_type")
     ):
         raise DirectSvgCandidateError("iteration_receipt_type_invalid")
-    _validate_runtime_receipt(receipt["runtime_receipt"], receipt)
-    _validate_tool_model_receipt(receipt["tool_model_receipt"])
+    runtime = receipt["runtime_receipt"]
+    producer = _validate_runtime_receipt(runtime, receipt)
+    task = _validate_tool_model_receipt(receipt["tool_model_receipt"])
+    if task["base_commit"] != producer["base_commit"]:
+        raise DirectSvgCandidateError("iteration_provenance_mismatch")
+    command = _parse_render_command(receipt["command"])
+    expected_command = {
+        "--root": ".",
+        "--svg": receipt["source_path"],
+        "--output": receipt["render_path"],
+        "--semantic-packet": runtime["semantic_packet"]["path"],
+        "--panel": panel,
+        "--width": str(runtime["width"]),
+        "--height": str(runtime["height"]),
+        "--fontconfig": runtime["fontconfig"]["path"],
+        "--font": runtime["font"]["path"],
+        "--validation-mode": runtime["validation_mode"],
+    }
+    if command != expected_command:
+        raise DirectSvgCandidateError("iteration_command_mismatch")
     if receipt["publication_acceptance"] != "not_claimed":
         raise DirectSvgCandidateError("publication_claim_forbidden")
 
 
 def record_iteration(ledger: dict[str, Any], receipt: dict[str, Any]) -> dict[str, Any]:
     """Append one receipt while enforcing the declared cycle and wall budget."""
-    _validate_iteration_receipt(receipt)
+    panel = ledger.get("panel")
+    if panel not in {"C", "F"}:
+        raise DirectSvgCandidateError("iteration_panel_invalid")
+    _validate_iteration_receipt(receipt, panel=panel)
     updated = copy.deepcopy(ledger)
     iterations = updated.get("iterations")
     budget = updated.get("budget")
