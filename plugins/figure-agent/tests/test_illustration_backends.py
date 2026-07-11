@@ -85,6 +85,22 @@ def test_backends_preserve_visual_orientation_across_coordinate_conventions() ->
     assert 'd="M 8 17 C' in svg
 
 
+def test_open_tikz_paths_never_receive_fill_options() -> None:
+    scene = compile_illustration_scene(GRAMMAR_PATH, INSTANCE_PATH)
+    tikz = render_tikz(scene, TIKZ_PROFILE_PATH)
+    backbone_block = tikz.split(
+        "% figure-agent:start chain.backbones\n",
+        1,
+    )[1].split("% figure-agent:end chain.backbones", 1)[0]
+    trap_block = tikz.split("% figure-agent:start trap.levels\n", 1)[1].split(
+        "% figure-agent:end trap.levels",
+        1,
+    )[0]
+
+    assert "fill=" not in backbone_block
+    assert "fill=" not in trap_block
+
+
 def test_backend_strokes_have_equivalent_physical_weight() -> None:
     tikz_profile = load_backend_profile(TIKZ_PROFILE_PATH, backend="tikz")
     svg_profile = load_backend_profile(SVG_PROFILE_PATH, backend="svg")

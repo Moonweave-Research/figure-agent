@@ -35,7 +35,7 @@ def _render_layer(
     scale: float,
     glyph: dict[str, Any] | None,
 ) -> list[str]:
-    options = _options(style)
+    options = _options(style, fill=slot not in {"chain.backbones", "trap.levels"})
     if slot == "chain.backbones":
         return [_tikz_curve(item["points"], options, scale) for item in objects]
     if slot == "sulfur.regions":
@@ -51,18 +51,20 @@ def _render_layer(
     return []
 
 
-def _options(style: dict[str, Any]) -> str:
+def _options(style: dict[str, Any], *, fill: bool) -> str:
     color = style["color"]
-    return ", ".join(
+    options = [f"draw={color['stroke']}"]
+    if fill:
+        options.append(f"fill={color['fill']}")
+    options.extend(
         [
-            f"draw={color['stroke']}",
-            f"fill={color['fill']}",
             f"line width={style['stroke']}",
             "line cap=round",
             "line join=round",
             f"opacity={_fmt(style['opacity'])}",
         ]
     )
+    return ", ".join(options)
 
 
 def _tikz_curve(points: list[list[float]], options: str, scale: float) -> str:
@@ -88,7 +90,7 @@ def _tikz_site_glyph(
     scale: float,
     glyph: dict[str, Any],
 ) -> list[str]:
-    circle = _tikz_circle(item, _options(style), scale)
+    circle = _tikz_circle(item, _options(style, fill=True), scale)
     x, y = item["center"]
     half_width = item["radius"] * glyph["mark_half_width_ratio"]
     start = _point([x - half_width, y], scale)
