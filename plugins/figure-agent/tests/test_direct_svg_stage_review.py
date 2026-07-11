@@ -250,6 +250,113 @@ def test_export_fails_closed_on_any_unbound_or_modified_surface(
     assert not (tmp_path / "export").exists()
 
 
+def _rewrite_yaml(path: Path, value: dict[str, object]) -> str:
+    content = yaml.safe_dump(value, sort_keys=False).encode()
+    path.write_bytes(content)
+    return f"sha256:{hashlib.sha256(content).hexdigest()}"
+
+
+def test_export_rejects_coordinated_finalized_public_response_tamper(
+    tmp_path: Path,
+) -> None:
+    result = _stage(tmp_path)
+    _finalize_uncontested(tmp_path, result)
+    distribution = Path(result["distribution_path"])
+    response_path = distribution / "response.yaml"
+    response = yaml.safe_load(response_path.read_text())
+    response["primary_review"]["reviewer"]["name"] = "Altered Reviewer"
+    tampered_hash = _rewrite_yaml(response_path, response)
+    state_path = tmp_path / "review" / "review-state.yaml"
+    state = yaml.safe_load(state_path.read_text())
+    state["response_sha256"] = tampered_hash
+    state["finalized_response_sha256"] = tampered_hash
+    _rewrite_yaml(state_path, state)
+
+    with pytest.raises(DirectSvgReviewError, match="export_validation_failed"):
+        export_public_distribution(
+            distribution,
+            tmp_path / "export",
+            review_root=tmp_path / "review",
+            private_root=tmp_path / ".private",
+        )
+
+
+def test_export_rejects_coordinated_revealed_assignment_tamper(tmp_path: Path) -> None:
+    result = _stage(tmp_path)
+    _finalize_uncontested(tmp_path, result)
+    reveal_blinding_keys(tmp_path / "review", tmp_path / ".private")
+    distribution = Path(result["distribution_path"])
+    unblinding_path = distribution / "unblinding.yaml"
+    unblinding = yaml.safe_load(unblinding_path.read_text())
+    assignment = unblinding["panel_assignments"]["C"]["A"]
+    assignment["role"] = (
+        "run_one" if assignment["role"] != "run_one" else "run_two"
+    )
+    tampered_hash = _rewrite_yaml(unblinding_path, unblinding)
+    state_path = tmp_path / "review" / "review-state.yaml"
+    state = yaml.safe_load(state_path.read_text())
+    state["unblinding_sha256"] = tampered_hash
+    _rewrite_yaml(state_path, state)
+
+    with pytest.raises(DirectSvgReviewError, match="export_validation_failed"):
+        export_public_distribution(
+            distribution,
+            tmp_path / "export",
+            review_root=tmp_path / "review",
+            private_root=tmp_path / ".private",
+        )
+
+
+@pytest.mark.parametrize("malformation", ["extra", "missing"])
+def test_export_rejects_malformed_revealed_assignment_fields(
+    tmp_path: Path, malformation: str
+) -> None:
+    result = _stage(tmp_path)
+    _finalize_uncontested(tmp_path, result)
+    reveal_blinding_keys(tmp_path / "review", tmp_path / ".private")
+    distribution = Path(result["distribution_path"])
+    unblinding_path = distribution / "unblinding.yaml"
+    unblinding = yaml.safe_load(unblinding_path.read_text())
+    assignment = unblinding["panel_assignments"]["C"]["A"]
+    if malformation == "extra":
+        assignment["unexpected"] = "field"
+    else:
+        assignment.pop("content_sha256")
+    tampered_hash = _rewrite_yaml(unblinding_path, unblinding)
+    state_path = tmp_path / "review" / "review-state.yaml"
+    state = yaml.safe_load(state_path.read_text())
+    state["unblinding_sha256"] = tampered_hash
+    _rewrite_yaml(state_path, state)
+
+    with pytest.raises(DirectSvgReviewError, match="export_validation_failed"):
+        export_public_distribution(
+            distribution,
+            tmp_path / "export",
+            review_root=tmp_path / "review",
+            private_root=tmp_path / ".private",
+        )
+
+
+@pytest.mark.parametrize("revealed", [False, True])
+def test_export_accepts_valid_finalized_and_revealed_state(
+    tmp_path: Path, revealed: bool
+) -> None:
+    result = _stage(tmp_path)
+    _finalize_uncontested(tmp_path, result)
+    if revealed:
+        reveal_blinding_keys(tmp_path / "review", tmp_path / ".private")
+
+    export_public_distribution(
+        Path(result["distribution_path"]),
+        tmp_path / "export",
+        review_root=tmp_path / "review",
+        private_root=tmp_path / ".private",
+    )
+
+    assert (tmp_path / "export" / "response.yaml").is_file()
+    assert (tmp_path / "export" / "unblinding.yaml").is_file() is revealed
+
+
 def test_project_locked_reproducibility(tmp_path: Path) -> None:
     results = [_stage(tmp_path / name) for name in ("one", "two")]
     comparable = [

@@ -37,6 +37,7 @@ PUBLIC_SCHEMA = "figure-agent.three-way-blind-review.v3"
 RESPONSE_SCHEMA = "figure-agent.three-way-review-response.v2"
 STATE_SCHEMA = "figure-agent.direct-svg-review-state.v4"
 PRIVATE_SCHEMA = "figure-agent.private-three-way-review-key.v3"
+UNBLINDING_SCHEMA = "figure-agent.three-way-review-unblinding.v1"
 GENERATOR_REVISION = "direct_svg_stage_review.v4"
 PERCEPTUAL_METRIC = "normalized_rgb_mean_absolute_error.v1"
 PERCEPTUAL_THRESHOLD = 0.002
@@ -538,6 +539,42 @@ def _commitments_from_key(key: dict[str, Any]) -> dict[str, str]:
         raise DirectSvgReviewError("export_validation_failed") from exc
 
 
+def _is_sha256(value: Any) -> bool:
+    if not isinstance(value, str) or not value.startswith("sha256:") or len(value) != 71:
+        return False
+    try:
+        int(value[7:], 16)
+    except ValueError:
+        return False
+    return True
+
+
+def _validated_panel_assignments(value: Any) -> dict[str, Any]:
+    assignments = _require_exact_keys(
+        value, set(PANELS), "export_validation_failed"
+    )
+    expected_roles = {"authority", "run_one", "run_two"}
+    for panel in PANELS:
+        panel_assignments = _require_exact_keys(
+            assignments[panel], set(LETTERS), "export_validation_failed"
+        )
+        roles: set[str] = set()
+        for letter in LETTERS:
+            assignment = _require_exact_keys(
+                panel_assignments[letter],
+                {"role", "content_sha256"},
+                "export_validation_failed",
+            )
+            if assignment["role"] not in expected_roles or not _is_sha256(
+                assignment["content_sha256"]
+            ):
+                raise DirectSvgReviewError("export_validation_failed")
+            roles.add(assignment["role"])
+        if roles != expected_roles:
+            raise DirectSvgReviewError("export_validation_failed")
+    return assignments
+
+
 def _validated_export_snapshot(
     distribution: Path, review_root: Path, private_root: Path
 ) -> dict[str, bytes]:
@@ -567,10 +604,25 @@ def _validated_export_snapshot(
             raise DirectSvgReviewError("export_validation_failed")
         key_path = private_root / version / "key.yaml"
         key_bytes = _read_regular_snapshot(key_path)
-        key = yaml.safe_load(key_bytes)
+        key = _require_exact_keys(
+            yaml.safe_load(key_bytes),
+            {
+                "schema",
+                "version",
+                "seed_hex",
+                "panel_assignments",
+                "raw_upstream_bindings",
+                "public_upstream_commitments",
+                "generator",
+                "public_manifest_sha256",
+                "blinding_keys_revealed",
+                "release_condition",
+            },
+            "export_validation_failed",
+        )
+        private_assignments = _validated_panel_assignments(key["panel_assignments"])
         if (
-            not isinstance(key, dict)
-            or key.get("schema") != PRIVATE_SCHEMA
+            key.get("schema") != PRIVATE_SCHEMA
             or key.get("version") != version
             or state.get("private_manifest_sha256") != _sha256_bytes(key_bytes)
             or key.get("public_manifest_sha256") != _sha256_bytes(manifest_bytes)
@@ -578,6 +630,9 @@ def _validated_export_snapshot(
             or _commitments_from_key(key) != manifest.get("upstream_commitments")
             or key.get("generator") != manifest.get("generator")
             or state.get("generator") != manifest.get("generator")
+            or key.get("blinding_keys_revealed") is not False
+            or key.get("release_condition")
+            != "validated_finalized_named_human_scores"
         ):
             raise DirectSvgReviewError("export_validation_failed")
         current_generator = _generator_binding(
@@ -626,18 +681,62 @@ def _validated_export_snapshot(
         _validate_response(response)
         if response.get("state") != state.get("response_state"):
             raise DirectSvgReviewError("export_validation_failed")
+        if response["state"] == "finalized":
+            final_bytes = _read_regular_snapshot(
+                private_root / version / "final-response.yaml"
+            )
+            final_response = yaml.safe_load(final_bytes)
+            if not isinstance(final_response, dict):
+                raise DirectSvgReviewError("export_validation_failed")
+            _validate_response(final_response)
+            final_hash = _sha256_bytes(final_bytes)
+            if (
+                final_response.get("state") != "finalized"
+                or snapshots["response.yaml"] != final_bytes
+                or state.get("response_sha256") != final_hash
+                or state.get("finalized_response_sha256") != final_hash
+            ):
+                raise DirectSvgReviewError("export_validation_failed")
+        elif state.get("finalized_response_sha256") is not None:
+            raise DirectSvgReviewError("export_validation_failed")
         for panel in PANELS:
             for letter in LETTERS:
                 relative = f"panels/{panel}/option-{letter.lower()}.png"
-                if key["panel_assignments"][panel][letter]["content_sha256"] != _sha256_bytes(
+                if private_assignments[panel][letter]["content_sha256"] != _sha256_bytes(
                     snapshots[relative]
                 ):
                     raise DirectSvgReviewError("export_validation_failed")
         if state.get("blinding_keys_revealed") is True:
-            unblinding = _read_regular_snapshot(distribution / "unblinding.yaml")
-            if state.get("unblinding_sha256") != _sha256_bytes(unblinding):
+            unblinding_bytes = _read_regular_snapshot(distribution / "unblinding.yaml")
+            unblinding = _require_exact_keys(
+                yaml.safe_load(unblinding_bytes),
+                {
+                    "schema",
+                    "version",
+                    "panel_assignments",
+                    "finalized_response_sha256",
+                    "publication_acceptance",
+                },
+                "export_validation_failed",
+            )
+            public_assignments = _validated_panel_assignments(
+                unblinding["panel_assignments"]
+            )
+            if (
+                response["state"] != "finalized"
+                or state.get("state") != "named_human_verdict_fixed_and_unblinded"
+                or state.get("unblinding_sha256") != _sha256_bytes(unblinding_bytes)
+                or unblinding["schema"] != UNBLINDING_SCHEMA
+                or unblinding["version"] != version
+                or unblinding["finalized_response_sha256"]
+                != state.get("finalized_response_sha256")
+                or unblinding["publication_acceptance"] != "not_claimed"
+                or public_assignments != private_assignments
+            ):
                 raise DirectSvgReviewError("export_validation_failed")
-            snapshots["unblinding.yaml"] = unblinding
+            snapshots["unblinding.yaml"] = unblinding_bytes
+        elif state.get("unblinding_sha256") is not None:
+            raise DirectSvgReviewError("export_validation_failed")
         return snapshots
     except (
         DirectSvgReviewError,
@@ -1337,7 +1436,7 @@ def reveal_blinding_keys(
     if public_path.exists() or state.get("blinding_keys_revealed") is not False:
         raise DirectSvgReviewError("blinding_keys_already_revealed")
     release = {
-        "schema": "figure-agent.three-way-review-unblinding.v1",
+        "schema": UNBLINDING_SCHEMA,
         "version": version,
         "panel_assignments": key.get("panel_assignments"),
         "finalized_response_sha256": expected,
