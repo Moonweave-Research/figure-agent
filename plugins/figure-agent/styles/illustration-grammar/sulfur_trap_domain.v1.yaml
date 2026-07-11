@@ -1,0 +1,33 @@
+schema: figure-agent.illustration-grammar.v1
+motif_family: sulfur_trap_domain
+semantic_slots:
+  - chain.backbones
+  - sulfur.regions
+  - sulfur.sites
+  - trap.levels
+  - trapped.carriers
+relations:
+  - [sulfur.sites, attached_to, chain.backbones]
+  - [sulfur.sites, located_in, sulfur.regions]
+  - [trap.levels, co_located_with, sulfur.regions]
+  - [trapped.carriers, sits_on, trap.levels]
+layer_order:
+  - sulfur.regions
+  - chain.backbones
+  - sulfur.sites
+  - trap.levels
+  - trapped.carriers
+visual_tokens:
+  stroke_families: [support, primary, focal]
+  color_roles: [polymer, sulfur, carrier, neutral]
+  curvature: [organic_backbone]
+  joins: [round]
+  caps: [round]
+  emphasis: [background, structure, focal]
+optical_rules:
+  minimum_clearance_em: 0.35
+  carrier_centering: optical
+  repeated_site_variation: controlled
+ownership:
+  grammar: [motif_geometry, layer_order, visual_tokens]
+  tikz: [global_panel_composition, typography, labels, inter_panel_arrows]
