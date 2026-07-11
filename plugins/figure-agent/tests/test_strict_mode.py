@@ -206,6 +206,54 @@ def test_check_visual_clash_json_payload_uses_machine_readable_metrics(tmp_path:
     }
 
 
+def test_visual_clash_ignores_low_confidence_luma_only_fill_signal(monkeypatch) -> None:
+    image = Image.new("RGB", (100, 100), "white")
+    words = [{"text": "label", "xmin": 10, "ymin": 10, "xmax": 20, "ymax": 20}]
+    monkeypatch.setattr(
+        check_visual_clash,
+        "_ring_stats",
+        lambda *_args: {"dark_ratio": 0.0, "luma_std": 30.0, "edge_density": 0.0},
+    )
+    monkeypatch.setattr(
+        check_visual_clash,
+        "_fill_under_text_stats",
+        lambda *_args: {
+            "mean_delta": 0.0,
+            "bbox_mean": 255.0,
+            "outer_mean": 255.0,
+            "bbox_std": 0.0,
+            "ring_std": 0.0,
+        },
+    )
+
+    assert check_visual_clash.detect_visual_clashes(image, words, (100, 100)) == []
+
+
+def test_visual_clash_preserves_reviewed_high_luma_fill_signal(monkeypatch) -> None:
+    image = Image.new("RGB", (100, 100), "white")
+    words = [{"text": "label", "xmin": 10, "ymin": 10, "xmax": 20, "ymax": 20}]
+    monkeypatch.setattr(
+        check_visual_clash,
+        "_ring_stats",
+        lambda *_args: {"dark_ratio": 0.0, "luma_std": 40.0, "edge_density": 0.0},
+    )
+    monkeypatch.setattr(
+        check_visual_clash,
+        "_fill_under_text_stats",
+        lambda *_args: {
+            "mean_delta": 0.0,
+            "bbox_mean": 255.0,
+            "outer_mean": 255.0,
+            "bbox_std": 0.0,
+            "ring_std": 0.0,
+        },
+    )
+
+    issues = check_visual_clash.detect_visual_clashes(image, words, (100, 100))
+
+    assert [(issue.kind, issue.text) for issue in issues] == [("text_on_fill", "label")]
+
+
 def test_check_visual_clash_writes_json_output_without_count_banner(
     tmp_path: Path,
     monkeypatch,

@@ -283,7 +283,7 @@ def detect_visual_clashes(
                     bbox,
                 )
             )
-        elif stats["luma_std"] >= 25.0:
+        elif stats["luma_std"] >= 36.0:
             issues.append(
                 VisualIssue(
                     "text_on_fill",

@@ -20,6 +20,74 @@ reviewed_evidence:
     excerpt: >-
       Host crop verdict: no_defect; label stays legible, not a real collision.
     authority: reviewed_evidence_only
+  - id: fig1-v5d-vc014-reviewed-luma-false-positive
+    source_path: examples/fig1_overview_v5d_redraw_001_vault/critique.md
+    source_sha256: 3e5b678463509a7c26b95b06ac237f8420216c9b427ec364025b0a256b2988c2
+    source_locator: M_VC014
+    detector_ref: VC014
+    detector_kind: visual_clash
+    detector_family: text_on_fill
+    detector_signal: {luma_std: 27.5}
+    detected_before: true
+    detected_after: false
+    review_outcome: false_positive
+    review_status: accept_simplification
+    linked_finding_id: null
+    excerpt: >-
+      Crop review shows an intentional schematic relationship rather than a
+      source defect.
+    authority: reviewed_evidence_only
+  - id: fig1-v5d-vc015-reviewed-luma-false-positive
+    source_path: examples/fig1_overview_v5d_redraw_001_vault/critique.md
+    source_sha256: 3e5b678463509a7c26b95b06ac237f8420216c9b427ec364025b0a256b2988c2
+    source_locator: M_VC015
+    detector_ref: VC015
+    detector_kind: visual_clash
+    detector_family: text_on_fill
+    detector_signal: {luma_std: 26.4}
+    detected_before: true
+    detected_after: false
+    review_outcome: false_positive
+    review_status: accept_simplification
+    linked_finding_id: null
+    excerpt: >-
+      Crop review shows an intentional schematic relationship rather than a
+      source defect.
+    authority: reviewed_evidence_only
+  - id: fig1-v5d-vc017-reviewed-luma-false-positive
+    source_path: examples/fig1_overview_v5d_redraw_001_vault/critique.md
+    source_sha256: 3e5b678463509a7c26b95b06ac237f8420216c9b427ec364025b0a256b2988c2
+    source_locator: M_VC017
+    detector_ref: VC017
+    detector_kind: visual_clash
+    detector_family: text_on_fill
+    detector_signal: {luma_std: 30.6}
+    detected_before: true
+    detected_after: false
+    review_outcome: false_positive
+    review_status: accept_simplification
+    linked_finding_id: null
+    excerpt: >-
+      Crop review shows an intentional schematic relationship rather than a
+      source defect.
+    authority: reviewed_evidence_only
+  - id: fig1-v5d-vc029-reviewed-luma-linked-defect
+    source_path: examples/fig1_overview_v5d_redraw_001_vault/critique.md
+    source_sha256: 3e5b678463509a7c26b95b06ac237f8420216c9b427ec364025b0a256b2988c2
+    source_locator: M_VC029_HIGH
+    detector_ref: VC029
+    detector_kind: visual_clash
+    detector_family: text_on_fill
+    detector_signal: {luma_std: 38.1}
+    detected_before: true
+    detected_after: true
+    review_outcome: linked_defect
+    review_status: open
+    linked_finding_id: C002
+    excerpt: >-
+      The high n label remains too close to the red curve endpoint at reduced
+      scale.
+    authority: reviewed_evidence_only
   - id: fig1-v5f-lp001-reviewed-linked-defect
     source_path: examples/fig1_overview_v5f_art_direction_001_vault/critique.md
     source_sha256: a4c0c96dbe981ae7ef6ca7bad3c47eba7cdfb82229d11de82fb4a1642612f063
@@ -33,6 +101,18 @@ reviewed_evidence:
       The label remains readable, but this is kept under C001 for human
       comparison of the stronger Panel C hierarchy.
     authority: reviewed_evidence_only
+reviewed_family_selection:
+  selection_basis: highest accepted_false_positive_count in reviewed detector ledger
+  detector: visual_clash
+  family: text_on_fill
+  accepted_false_positive_count: 3
+  linked_defect_count: 1
+  reviewed_precision_before: 0.25
+  reviewed_precision_after: 1.0
+  reviewed_recall_before: 1.0
+  reviewed_recall_after: 1.0
+  attribution_comparison: cases
+  machine_evidence_only: true
 baseline_metrics:
   finding_count: 4
   reviewed_true_positive_count: 3
@@ -50,6 +130,8 @@ cases:
       bbox_px: [40, 40, 80, 80]
     review_outcome: true_positive
     expected_attribution: exact
+    detected_before: true
+    detected_after: true
     panel_ids: [A]
     semantic_region_ids: [A.label_primary]
     human_correction_minutes: null
@@ -62,6 +144,8 @@ cases:
       bbox_px: [120, 40, 160, 80]
     review_outcome: true_positive
     expected_attribution: ambiguous
+    detected_before: true
+    detected_after: true
     panel_ids: [B]
     semantic_region_ids: [B.curve, B.annotation]
     human_correction_minutes: null
@@ -74,6 +158,8 @@ cases:
       bbox_px: [200, 40, 240, 80]
     review_outcome: true_positive
     expected_attribution: unbound
+    detected_before: true
+    detected_after: true
     panel_ids: []
     semantic_region_ids: []
     human_correction_minutes: null
@@ -86,6 +172,8 @@ cases:
       bbox_px: [280, 40, 320, 80]
     review_outcome: false_positive
     expected_attribution: unbound
+    detected_before: true
+    detected_after: false
     panel_ids: []
     semantic_region_ids: []
     human_correction_minutes: null

@@ -240,15 +240,15 @@ FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
 - Create or modify: the matching focused detector test module
 - Modify: `benchmarks/visual_attribution_suite.yaml`
 
-- [ ] Use the reviewed ledger to select one dominant false-positive family.
+- [x] Use the reviewed ledger to select one dominant false-positive family.
   Do not tune against raw finding volume.
-- [ ] Write a RED regression test for that family while preserving every known
+- [x] Write a RED regression test for that family while preserving every known
   true positive in the benchmark corpus.
-- [ ] Make one detector-level repair. Do not add fixture-name checks, accepted
+- [x] Make one detector-level repair. Do not add fixture-name checks, accepted
   artifact hashes, or coordinate exceptions.
-- [ ] Compare before/after reviewed precision, recall, and unbound attribution.
+- [x] Compare before/after reviewed precision, recall, and unbound attribution.
   A lower finding count alone is not success.
-- [ ] Verify:
+- [x] Verify:
 
 ```bash
 uv run pytest tests/test_detector_feedback_ledger.py \
@@ -256,7 +256,7 @@ uv run pytest tests/test_detector_feedback_ledger.py \
 bin/fig-agent helper detector_feedback_ledger.py --json
 ```
 
-- [ ] Commit: `fix: reduce reviewed visual detector false positives`
+- [x] Commit: `fix: reduce reviewed visual detector false positives`
 
 ## Task 6: Build one semantic SVG fragment pilot
 

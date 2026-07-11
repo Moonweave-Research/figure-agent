@@ -29,7 +29,29 @@ def test_installed_visual_attribution_corpus_locks_reviewed_baseline() -> None:
     }
     assert all(item["authority"] == "reviewed_evidence_only" for item in reviewed_evidence)
     assert all(len(item["source_sha256"]) == 64 for item in reviewed_evidence)
-    assert {item["detector_ref"] for item in reviewed_evidence} == {"VC009", "LP001"}
+    assert {item["detector_ref"] for item in reviewed_evidence} == {
+        "VC009",
+        "VC014",
+        "VC015",
+        "VC017",
+        "VC029",
+        "LP001",
+    }
+    assert corpus["reviewed_family_selection"] == {
+        "selection_basis": (
+            "highest accepted_false_positive_count in reviewed detector ledger"
+        ),
+        "detector": "visual_clash",
+        "family": "text_on_fill",
+        "accepted_false_positive_count": 3,
+        "linked_defect_count": 1,
+        "reviewed_precision_before": 0.25,
+        "reviewed_precision_after": 1.0,
+        "reviewed_recall_before": 1.0,
+        "reviewed_recall_after": 1.0,
+        "attribution_comparison": "cases",
+        "machine_evidence_only": True,
+    }
     assert corpus["baseline_metrics"] == {
         "finding_count": 4,
         "reviewed_true_positive_count": 3,
@@ -39,6 +61,10 @@ def test_installed_visual_attribution_corpus_locks_reviewed_baseline() -> None:
         "unbound_attribution_rate": 0.5,
         "human_correction_minutes": None,
     }
+    assert all(
+        isinstance(case["detected_before"], bool) and isinstance(case["detected_after"], bool)
+        for case in corpus["cases"]
+    )
 
 
 def test_corpus_summary_ignores_fixture_names_and_absolute_coordinates() -> None:
@@ -53,6 +79,21 @@ def test_corpus_summary_ignores_fixture_names_and_absolute_coordinates() -> None
     assert quality_benchmark.summarize_visual_attribution_cases(translated) == (
         quality_benchmark.summarize_visual_attribution_cases(cases)
     )
+
+
+def test_reviewed_family_selection_rejects_metric_drift() -> None:
+    corpus = quality_benchmark.load_visual_attribution_corpus(PLUGIN_ROOT)
+    selection = copy.deepcopy(corpus["reviewed_family_selection"])
+    selection["accepted_false_positive_count"] += 1
+
+    with pytest.raises(
+        quality_benchmark.QualityBenchmarkError,
+        match="visual_attribution_reviewed_family_selection_drift",
+    ):
+        quality_benchmark.validate_reviewed_family_selection(
+            selection,
+            corpus["reviewed_evidence"],
+        )
 
 
 @pytest.mark.parametrize(

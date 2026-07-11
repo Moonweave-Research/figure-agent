@@ -8,7 +8,11 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from detector_feedback_ledger import build_detector_feedback_ledger, main  # noqa: E402
+from detector_feedback_ledger import (  # noqa: E402
+    build_detector_feedback_ledger,
+    compare_reviewed_benchmark_stages,
+    main,
+)
 from quality_manifest import file_sha256  # noqa: E402
 
 
@@ -264,6 +268,113 @@ def test_ledger_aggregates_detector_feedback_across_selected_fixtures(
     assert ledger["totals"]["visual_clash"]["linked_defect_count"] == 1
     assert ledger["totals"]["unlinked_micro_defect_count"] == 1
     assert ledger["totals"]["unlinked_micro_defect_refs"] == ["beta:M011"]
+
+
+def test_ledger_selects_dominant_reviewed_false_positive_family(
+    tmp_path: Path,
+) -> None:
+    examples_root = tmp_path / "examples"
+    alpha = _write_complete_fixture(
+        examples_root,
+        "alpha",
+        visual_candidates=("VC001", "VC002", "VC003"),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    kind: drawing_order_suspect\n"
+            "    severity: NIT\n"
+            "    observation: reviewed fill false positive\n"
+            '    linked_finding_id: ""\n'
+            "    visual_clash_ref: VC001\n"
+            '    text_boundary_ref: ""\n'
+            '    undeclared_geometry_ref: ""\n'
+            "    status: accept_simplification\n"
+            "    accept_simplification_reason: false_positive\n"
+            "    accept_simplification_rationale: reviewed no defect\n"
+            "  - id: M002\n"
+            "    kind: drawing_order_suspect\n"
+            "    severity: NIT\n"
+            "    observation: another reviewed fill false positive\n"
+            '    linked_finding_id: ""\n'
+            "    visual_clash_ref: VC002\n"
+            '    text_boundary_ref: ""\n'
+            '    undeclared_geometry_ref: ""\n'
+            "    status: accept_simplification\n"
+            "    accept_simplification_reason: false_positive\n"
+            "    accept_simplification_rationale: reviewed no defect\n"
+            "  - id: M003\n"
+            "    kind: line_crosses_label\n"
+            "    severity: MAJOR\n"
+            "    observation: reviewed path defect\n"
+            "    linked_finding_id: C003\n"
+            "    visual_clash_ref: VC003\n"
+            '    text_boundary_ref: ""\n'
+            '    undeclared_geometry_ref: ""\n'
+            "    status: open\n"
+        ),
+    )
+    report = json.loads((alpha / "build" / "visual_clash.json").read_text())
+    report["candidates"][0]["kind"] = "text_on_fill"
+    report["candidates"][1]["kind"] = "text_on_fill"
+    report["candidates"][2]["kind"] = "text_on_path"
+    (alpha / "build" / "visual_clash.json").write_text(json.dumps(report) + "\n")
+
+    ledger = build_detector_feedback_ledger(examples_root, [])
+
+    assert ledger["dominant_false_positive_family"] == {
+        "detector": "visual_clash",
+        "family": "text_on_fill",
+        "accepted_false_positive_count": 2,
+        "linked_defect_count": 0,
+        "reviewed_precision": 0.0,
+    }
+    assert ledger["reviewed_metrics"] == {
+        "reviewed_true_positive_count": 1,
+        "reviewed_false_positive_count": 2,
+        "unlinked_false_negative_count": 0,
+        "precision": pytest.approx(1 / 3),
+        "recall": 1.0,
+    }
+
+
+def test_reviewed_benchmark_comparison_requires_recall_and_unbound_evidence() -> None:
+    cases = [
+        {
+            "review_outcome": "true_positive",
+            "expected_attribution": "exact",
+            "detected_before": True,
+            "detected_after": True,
+        },
+        {
+            "review_outcome": "true_positive",
+            "expected_attribution": "unbound",
+            "detected_before": True,
+            "detected_after": True,
+        },
+        {
+            "review_outcome": "false_positive",
+            "expected_attribution": "unbound",
+            "detected_before": True,
+            "detected_after": False,
+        },
+    ]
+
+    assert compare_reviewed_benchmark_stages(cases) == {
+        "before": {
+            "reviewed_true_positive_count": 2,
+            "reviewed_false_positive_count": 1,
+            "precision": pytest.approx(2 / 3),
+            "recall": 1.0,
+            "unbound_attribution_rate": pytest.approx(2 / 3),
+        },
+        "after": {
+            "reviewed_true_positive_count": 2,
+            "reviewed_false_positive_count": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "unbound_attribution_rate": 0.5,
+        },
+    }
 
 
 def test_ledger_default_fixture_selection_skips_directories_without_critiques(

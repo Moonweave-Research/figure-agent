@@ -143,6 +143,58 @@ def summarize_visual_attribution_cases(cases: list[dict[str, Any]]) -> dict[str,
     }
 
 
+def validate_reviewed_family_selection(
+    selection: dict[str, Any],
+    reviewed_evidence: list[dict[str, Any]],
+) -> None:
+    detector = selection.get("detector")
+    family = selection.get("family")
+    selected = [
+        item
+        for item in reviewed_evidence
+        if item.get("detector_kind") == detector
+        and item.get("detector_family") == family
+    ]
+    if not selected or any(
+        not isinstance(item.get("detected_before"), bool)
+        or not isinstance(item.get("detected_after"), bool)
+        for item in selected
+    ):
+        raise QualityBenchmarkError(
+            "visual_attribution_reviewed_family_selection_invalid"
+        )
+
+    true_positives = sum(item["review_outcome"] == "linked_defect" for item in selected)
+    false_positives = sum(item["review_outcome"] == "false_positive" for item in selected)
+
+    def stage_metrics(stage: str) -> tuple[float | None, float | None]:
+        detected = [item for item in selected if item[f"detected_{stage}"]]
+        detected_tp = sum(item["review_outcome"] == "linked_defect" for item in detected)
+        detected_fp = sum(item["review_outcome"] == "false_positive" for item in detected)
+        precision = (
+            round(detected_tp / (detected_tp + detected_fp), 6)
+            if detected_tp + detected_fp
+            else None
+        )
+        recall = round(detected_tp / true_positives, 6) if true_positives else None
+        return precision, recall
+
+    precision_before, recall_before = stage_metrics("before")
+    precision_after, recall_after = stage_metrics("after")
+    expected = {
+        "accepted_false_positive_count": false_positives,
+        "linked_defect_count": true_positives,
+        "reviewed_precision_before": precision_before,
+        "reviewed_precision_after": precision_after,
+        "reviewed_recall_before": recall_before,
+        "reviewed_recall_after": recall_after,
+    }
+    if any(selection.get(key) != value for key, value in expected.items()):
+        raise QualityBenchmarkError(
+            "visual_attribution_reviewed_family_selection_drift"
+        )
+
+
 def load_visual_attribution_corpus(plugin_root: Path) -> dict[str, Any]:
     path = plugin_root / "benchmarks" / "visual_attribution_suite.yaml"
     if path.is_symlink():
@@ -185,6 +237,11 @@ def load_visual_attribution_corpus(plugin_root: Path) -> dict[str, Any]:
         expected = str(raw_case.get("expected_attribution") or "")
         if expected not in VISUAL_ATTRIBUTION_STATES:
             raise QualityBenchmarkError(f"visual_attribution_expected_invalid: {case_id}")
+        for stage in ("before", "after"):
+            if not isinstance(raw_case.get(f"detected_{stage}"), bool):
+                raise QualityBenchmarkError(
+                    f"visual_attribution_detection_stage_invalid: {case_id}:{stage}"
+                )
         minutes = raw_case.get("human_correction_minutes")
         if minutes is not None:
             try:
@@ -284,6 +341,12 @@ def load_visual_attribution_corpus(plugin_root: Path) -> dict[str, Any]:
         raise QualityBenchmarkError(
             "visual_attribution_reviewed_evidence_outcomes_incomplete"
         )
+    family_selection = payload.get("reviewed_family_selection")
+    if not isinstance(family_selection, dict):
+        raise QualityBenchmarkError(
+            "visual_attribution_reviewed_family_selection_invalid"
+        )
+    validate_reviewed_family_selection(family_selection, normalized_evidence)
     return {
         **payload,
         "cases": normalized_cases,
