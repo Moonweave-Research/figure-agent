@@ -1,0 +1,47 @@
+schema: figure-agent.direct-svg-packet.v1
+test_kind: synthesis
+panels: [C, F]
+denied_source_families:
+  - tex
+  - whole_figure_svg
+  - candidate_patch
+  - experience_log
+  - illustration_grammar
+allowed_inputs:
+  - role: semantic_packet
+    path: contract/semantic-packet.yaml
+    sha256: sha256:e456c97de17b98890daae48fdc2535344f3927292d1e96ef152fa7ef4c999e72
+  - role: licensed_font
+    path: contract/fonts/lmsans10-regular.otf
+    sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
+budgets:
+  utility:
+    cycles: 3
+    wall_minutes_per_panel: 30
+  ceiling:
+    cycles: 8
+    wall_minutes_per_panel: 120
+model_contract:
+  provider: null
+  model: null
+  snapshot: null
+  reasoning: null
+  prompt_paths: []
+  tools: []
+  token_cap: null
+  compute_cap: null
+  receipt_status: not_run
+font:
+  role: licensed_font
+  license: GUST-FONT-LICENSE
+  sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
+reference_pixels_available: false
+reference_hashes_available: false
+geometry_derivatives_available: false
+test_a_history_available: false
+test_a_outputs_available: false
+output_root: runs/test-b
+path_base: fixture_root
+runnable: true
+blocked_reason: null
+publication_acceptance: not_claimed

@@ -180,3 +180,18 @@ def test_packet_allows_additional_model_receipt_fields(tmp_path: Path) -> None:
     result = validate_packet(packet_path)
 
     assert result["model_contract"]["runtime_version"] == "codex-test"
+
+
+def test_packet_can_resolve_declared_fixture_root_inputs(tmp_path: Path) -> None:
+    packets = tmp_path / "packets"
+    packets.mkdir()
+    packet_path = _write_packet(packets)
+    packet = _load_packet(packet_path)
+    packet["path_base"] = "fixture_root"
+    for item in packet["allowed_inputs"]:
+        item["path"] = f"packets/{item['path']}"
+    _rewrite_packet(packet_path, packet)
+
+    result = validate_packet(packet_path)
+
+    assert result["path_base"] == "fixture_root"

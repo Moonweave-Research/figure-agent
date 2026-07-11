@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from direct_svg_packet import validate_packet
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = PLUGIN_ROOT / "examples" / "fig1_direct_svg_cleanroom_baseline"
@@ -45,18 +46,67 @@ def test_fixture_binds_immutable_reference_source_and_crops() -> None:
     assert crop_manifest["publication_acceptance"] == "not_claimed"
 
 
-def test_fixture_is_honestly_blocked_on_independent_semantic_packet() -> None:
+def test_fixture_binds_independently_prepared_semantic_packet() -> None:
     state = _load("contract/experiment-state.yaml")
+    semantic = _load("contract/semantic-packet.yaml")
+    semantic_path = FIXTURE / "contract" / "semantic-packet.yaml"
+
+    assert semantic["schema"] == "figure-agent.direct-svg-semantic-packet.v1"
+    assert semantic["panels"] == ["C", "F"]
+    assert semantic["authority"]["named_preparer"]
+    assert semantic["authority"]["prepared_at"].endswith("Z")
+    assert semantic["authority"]["source_authority_hashes"] == {
+        "examples/fig1_hybrid_complex_panel_pilot/briefing.md": (
+            "sha256:1ef22509309ccb0f5404b74552da3f5a6e322ce24e9ec716a68fac1d210c7273"
+        ),
+        "examples/fig1_hybrid_complex_panel_pilot/caption.md": (
+            "sha256:2dfeb596683654b902d96b8592a9cc9c480557461a904c463023e4c933a75bd3"
+        ),
+        "examples/fig1_hybrid_complex_panel_pilot/panel_goals.md": (
+            "sha256:fdf018dcd20fa8c223b1a2c3ba935a9f3fb1ca29643aff36c7ff08fd4dc5ca6c"
+        ),
+        "examples/fig1_hybrid_complex_panel_pilot/theory_guard.md": (
+            "sha256:27550eda8e57b44224d6c248c92dc49335acad5f2081f51ba1b36eda30abca57"
+        ),
+    }
+    assert semantic["authority"]["implementation_details_not_observed_declaration"]
+    assert semantic["scientific_objects"]
+    assert semantic["object_relations"]
+    assert semantic["text_content"]
+    assert semantic["visual_roles"]
+    assert semantic["publication_acceptance"] == "not_claimed"
 
     assert state["semantic_packet_authority"] == {
         "prepared_by_current_session": False,
         "implementation_details_observed": False,
-        "preparer": None,
-        "prepared_at": None,
-        "sha256": None,
+        "preparer": semantic["authority"]["named_preparer"],
+        "prepared_at": semantic["authority"]["prepared_at"],
+        "sha256": _sha256(semantic_path),
     }
-    assert state["run_state"] == "blocked_pending_independent_semantic_packet"
+    assert state["run_state"] == "ready"
+    assert state["next_valid_transition"] == "run_test_a_or_test_b"
     assert state["publication_acceptance"] == "not_claimed"
+
+
+def test_standalone_packets_validate_and_test_b_is_semantically_isolated() -> None:
+    test_a_path = FIXTURE / "packets" / "test-a-reconstruction.yaml"
+    test_b_path = FIXTURE / "packets" / "test-b-synthesis.yaml"
+
+    test_a = validate_packet(test_a_path)
+    test_b = validate_packet(test_b_path)
+
+    assert test_a["test_kind"] == "reconstruction"
+    assert test_b["test_kind"] == "synthesis"
+    assert {item["role"] for item in test_b["allowed_inputs"]} == {
+        "semantic_packet",
+        "licensed_font",
+    }
+    assert test_b["reference_pixels_available"] is False
+    assert test_b["reference_hashes_available"] is False
+    assert test_b["geometry_derivatives_available"] is False
+    assert test_b["test_a_history_available"] is False
+    assert test_b["test_a_outputs_available"] is False
+    assert test_b["publication_acceptance"] == "not_claimed"
 
 
 def test_fixture_binds_a_licensed_font_and_isolated_fontconfig() -> None:

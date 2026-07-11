@@ -9,11 +9,11 @@ allowed_current_session_work:
 semantic_packet_authority:
   prepared_by_current_session: false
   implementation_details_observed: false
-  preparer: null
-  prepared_at: null
-  sha256: null
-run_state: blocked_pending_independent_semantic_packet
-next_valid_transition: ready_after_independent_packet_validation
+  preparer: OpenAI Codex semantic_packet subagent
+  prepared_at: "2026-07-11T13:52:11Z"
+  sha256: sha256:e456c97de17b98890daae48fdc2535344f3927292d1e96ef152fa7ef4c999e72
+run_state: ready
+next_valid_transition: run_test_a_or_test_b
 machine_gate_state: infrastructure_validatable
 human_review_state: not_started
 publication_acceptance: not_claimed

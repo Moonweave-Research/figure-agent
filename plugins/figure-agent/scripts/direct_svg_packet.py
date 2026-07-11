@@ -80,7 +80,14 @@ def validate_packet(path: Path) -> dict[str, Any]:
     except (FileNotFoundError, OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
         raise DirectSvgPacketError("packet_invalid") from exc
     packet = _mapping(loaded, "packet")
-    root = path.parent.resolve()
+    packet_root = path.parent.resolve()
+    path_base = packet.get("path_base", "packet_root")
+    if path_base == "packet_root":
+        root = packet_root
+    elif path_base == "fixture_root":
+        root = packet_root.parent
+    else:
+        raise DirectSvgPacketError("path_base_invalid")
 
     if packet.get("schema") != SCHEMA:
         raise DirectSvgPacketError("unsupported_schema")

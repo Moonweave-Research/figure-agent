@@ -1,0 +1,144 @@
+schema: figure-agent.direct-svg-semantic-packet.v1
+panels: [C, F]
+authority:
+  named_preparer: OpenAI Codex semantic_packet subagent
+  prepared_at: "2026-07-11T13:52:11Z"
+  source_authority_hashes:
+    examples/fig1_hybrid_complex_panel_pilot/briefing.md: sha256:1ef22509309ccb0f5404b74552da3f5a6e322ce24e9ec716a68fac1d210c7273
+    examples/fig1_hybrid_complex_panel_pilot/caption.md: sha256:2dfeb596683654b902d96b8592a9cc9c480557461a904c463023e4c933a75bd3
+    examples/fig1_hybrid_complex_panel_pilot/panel_goals.md: sha256:fdf018dcd20fa8c223b1a2c3ba935a9f3fb1ca29643aff36c7ff08fd4dc5ca6c
+    examples/fig1_hybrid_complex_panel_pilot/theory_guard.md: sha256:27550eda8e57b44224d6c248c92dc49335acad5f2081f51ba1b36eda30abca57
+  implementation_details_not_observed_declaration: >-
+    I prepared this semantic packet without inspecting any target SVG, TeX,
+    candidate, target pixels, coordinate hints, build artifact, implementation
+    history, review history, experience log, or illustration grammar.
+scientific_objects:
+  panel_c:
+    - id: c_polymer_film
+      kind: poly(S-r-DIB) thin film
+      properties:
+        morphology: fully amorphous
+        thickness_scale: approximately 1 micrometre
+    - id: c_shallow_trap_population
+      kind: continuous shallow-trap distribution
+      properties:
+        release: thermally easier
+        lifetime: shorter
+    - id: c_deep_trap_population
+      kind: continuous deep-trap distribution
+      properties:
+        release: thermally harder
+        lifetime: longer
+    - id: c_mobility_edge
+      kind: mobility edge
+    - id: c_conduction_band
+      kind: conduction-band reference
+    - id: c_valence_band
+      kind: valence-band reference
+    - id: c_trap_depth
+      kind: symbolic deep-trap depth
+  panel_f:
+    - id: f_polymer_cantilever
+      kind: poly(S-r-DIB) cantilever
+    - id: f_fixed_support
+      kind: cantilever clamp
+    - id: f_planar_electrode
+      kind: biased planar electrode
+    - id: f_active_bias
+      kind: applied electrical bias
+    - id: f_trapped_charge
+      kind: trapped surface charge population
+    - id: f_coulomb_repulsion
+      kind: electrostatic repulsive force
+    - id: f_air_gap
+      kind: cantilever-electrode clearance
+object_relations:
+  - subject: c_shallow_trap_population
+    predicate: coexists_with
+    object: c_deep_trap_population
+    qualification: spatially mixed within the same polymer matrix
+  - subject: c_shallow_trap_population
+    predicate: lies_below
+    object: c_mobility_edge
+    qualification: closer to the mobility edge than the deep population
+  - subject: c_deep_trap_population
+    predicate: lies_below
+    object: c_mobility_edge
+    qualification: farther below the mobility edge than the shallow population
+  - subject: c_shallow_trap_population
+    predicate: represented_as
+    object: continuous Gaussian density of states
+  - subject: c_deep_trap_population
+    predicate: represented_as
+    object: continuous Gaussian density of states
+  - subject: c_trap_depth
+    predicate: measures_symbolically
+    object: c_deep_trap_population
+    qualification: no numeric value or energy unit
+  - subject: f_active_bias
+    predicate: energizes
+    object: f_planar_electrode
+  - subject: f_trapped_charge
+    predicate: accumulates_on
+    object: f_polymer_cantilever
+  - subject: f_coulomb_repulsion
+    predicate: acts_on
+    object: f_polymer_cantilever
+    qualification: drives the cantilever away from the electrode
+  - subject: f_polymer_cantilever
+    predicate: manifests_macroscopically
+    object: c_deep_trap_population
+    qualification: mechanical evidence for the same trap landscape
+text_content:
+  panel_c:
+    - "C"
+    - localized traps
+    - poly(S-r-DIB) thin film
+    - d ≈ 1 μm
+    - Energy
+    - E_C
+    - mobility edge
+    - E_V
+    - shallow
+    - deep
+    - ΔE_t^d
+  panel_f:
+    - "F"
+    - mechanical
+    - V_active
+    - q_tr
+    - Coulomb
+    - repulsion
+    - electrode
+    - air gap
+visual_roles:
+  panel_c:
+    c_polymer_film: material_identity_and_real_space_host
+    c_shallow_trap_population: blue_shallow_species_cue
+    c_deep_trap_population: red_deep_species_cue
+    c_mobility_edge: localization_boundary_reference
+    c_conduction_band: upper_energy_reference
+    c_valence_band: lower_energy_reference
+    c_trap_depth: symbolic_depth_annotation
+    real_space_to_energy_relations: same_traps_in_two_representations
+  panel_f:
+    f_polymer_cantilever: active_material_and_macroscopic_response
+    f_fixed_support: fixed_boundary_cue
+    f_planar_electrode: electrical_reference_and_force_counterpart
+    f_active_bias: applied_bias_cue
+    f_trapped_charge: red_charge_cue_linked_to_deep_traps
+    f_coulomb_repulsion: dominant_red_mechanism_cue
+    f_air_gap: separation_cue
+constraints:
+  panel_c:
+    - shallow and deep trap sites must remain mixed in one matrix
+    - shallow is blue and deep is red
+    - trap distributions are continuous rather than two discrete levels
+    - release arrows represent thermal Boltzmann release only
+    - trap depth remains symbolic with no numeric value or energy unit
+  panel_f:
+    - the visible mechanism is Coulomb repulsion only
+    - the cantilever bends away from the electrode
+    - trapped-charge and Coulomb cues are red
+    - do not depict a control polymer response
+publication_acceptance: not_claimed
