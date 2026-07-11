@@ -7,13 +7,15 @@
 
 **Goal:** Make Figure Agent reduce the correction cost of visual errors and
 complex panels while preserving or exceeding the accepted TikZ quality
-benchmark.
+benchmark, with illustration quality represented as an explicit reusable
+contract rather than hidden renderer code.
 
-**Architecture:** Keep TikZ as the production composition baseline. Add a
-declaration-driven attribution path from rendered findings to panels, semantic
-objects, and source selectors; then validate one Python-generated semantic SVG
-fragment inside a forked TikZ fixture. Machine evidence and human publication
-acceptance remain separate gates.
+**Architecture:** Keep TikZ as the production composition baseline. Preserve
+the declaration-driven attribution path from rendered findings to panels,
+semantic objects, and source selectors. Put a narrow scientific illustration
+grammar between semantics and TikZ/SVG backends, beginning with one
+`sulfur_trap_domain` motif. Machine evidence and human publication acceptance
+remain separate gates.
 
 **Tech Stack:** Python 3.11+, pytest, PyYAML, existing figure-agent CLI/helpers,
 TikZ/LuaLaTeX, dvisvgm, deterministic SVG/PDF/PNG artifacts. Add no dependency
@@ -387,27 +389,505 @@ FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
 
 - [x] Commit: `feat: prove semantic attribution across Fig1 and Fig3 families`
 
-## Task 9: Decide production promotion
+## Task 9: Bind the raw semantic-SVG non-promotion decision
+
+The current human observation is that the Fig3 primitive SVG artifact has lower
+basic illustration quality than the TikZ benchmark. Record that artifact
+rejection against the already-bound review inputs. Do not infer a scaffold
+verdict, close Slice 3, or claim that all SVG backends are rejected.
 
 **Files:**
 
-- Modify: `docs/product-spec.md` only if the evidence satisfies its promotion
-  rules
-- Modify: `docs/execution-plan.md` to record the next measured bottleneck
-- Modify: operator docs and status schemas only after a production decision
+- Modify: `examples/fig3_trap_schematic_slice3_semantic/review/human_scaffold_verdict.yaml`
+- Create: `docs/decision-records/2026-07-11-raw-semantic-svg-non-promotion.md`
+- Modify: `tests/test_hybrid_comparison_report.py`
 
-- [ ] Assemble a decision packet containing benchmark deltas, clean-reproduction
-  receipts, provenance manifests, unresolved defects, and both families' human
-  verdicts.
-- [ ] Choose exactly one outcome: retain experimental hybrid, promote hybrid for
-  declared panel classes, or reject the approach.
-- [ ] Do not promote when evidence covers only one figure family, review is
-  pending, or gains depend on fixture-specific code.
-- [ ] If promoted, add an end-to-end release contract before changing the
-  default workflow. If retained or rejected, preserve evidence and remove no
-  production path merely to make the decision look cleaner.
-- [ ] Commit the decision and update this plan so the next agent has one
-  unambiguous active task sequence.
+- [ ] **Step 1: Write the failing bound-verdict test**
+
+```python
+def test_fig3_records_artifact_rejection_without_inventing_scaffold_acceptance() -> None:
+    fixture = PLUGIN_ROOT / "examples" / "fig3_trap_schematic_slice3_semantic"
+    verdict_path = fixture / "review" / "human_scaffold_verdict.yaml"
+    verdict = yaml.safe_load(verdict_path.read_text(encoding="utf-8"))
+    binding = validate_human_verdict_bindings(verdict_path, fixture)
+
+    assert binding["stale"] is False
+    assert verdict["scaffold_verdict"]["status"] == "pending"
+    assert verdict["artifact_verdict"]["status"] == "rejected"
+    assert verdict["publication_acceptance"] == "not_claimed"
+```
+
+- [ ] **Step 2: Run the test and verify RED**
+
+Run:
+
+```bash
+uv run pytest \
+  tests/test_hybrid_comparison_report.py::test_fig3_records_artifact_rejection_without_inventing_scaffold_acceptance -q
+```
+
+Expected: FAIL because the artifact verdict is still `pending`.
+
+- [ ] **Step 3: Record only the supplied human artifact judgment**
+
+Set `artifact_verdict.status: rejected`, `reviewer: choemun-yeong`, and an
+execution-time ISO-8601 `reviewed_at` timestamp. Record that the primitive
+geometry, visual density, and cross-panel illustration language fall below the
+TikZ comparator.
+Leave every scaffold field unchanged and pending. The decision record must say:
+
+```yaml
+outcome: retain_experimental
+applies_to: raw_semantic_svg_pilot
+does_not_reject:
+  - semantic SVG as a QA surface
+  - grammar-driven SVG backends not yet tested
+  - TikZ production composition
+publication_acceptance: not_claimed
+```
+
+- [ ] **Step 4: Re-run binding and comparison tests**
+
+Run:
+
+```bash
+uv run pytest tests/test_hybrid_comparison_report.py -q
+```
+
+Expected: PASS with the exact review-input hash still fresh.
+
+- [ ] **Step 5: Commit the bounded decision**
+
+```bash
+git add examples/fig3_trap_schematic_slice3_semantic/review/human_scaffold_verdict.yaml \
+  docs/decision-records/2026-07-11-raw-semantic-svg-non-promotion.md \
+  tests/test_hybrid_comparison_report.py
+git commit -m "docs: retain raw semantic SVG as experimental"
+```
+
+## Task 10: Add the renderer-neutral illustration grammar contract
+
+This is a rendering contract, not the existing `aesthetic_intent.yaml` review
+grammar. The existing aesthetic levers may identify `line_weight_rhythm`,
+`hand_craft`, or `cross_panel_grammar` failures, but they must not contain path
+geometry or mutate a backend.
+
+**Files:**
+
+- Create: `scripts/illustration_grammar.py`
+- Create: `tests/test_illustration_grammar.py`
+- Create: `styles/illustration-grammar/sulfur_trap_domain.v1.yaml`
+
+- [ ] **Step 1: Write failing contract tests**
+
+```python
+def test_loads_sulfur_trap_domain_with_closed_visual_contract() -> None:
+    grammar = load_illustration_grammar(
+        PLUGIN_ROOT / "styles/illustration-grammar/sulfur_trap_domain.v1.yaml"
+    )
+    assert grammar["schema"] == "figure-agent.illustration-grammar.v1"
+    assert grammar["motif_family"] == "sulfur_trap_domain"
+    assert set(grammar["semantic_slots"]) == {
+        "chain.backbones", "sulfur.regions", "sulfur.sites",
+        "trap.levels", "trapped.carriers",
+    }
+    assert grammar["layer_order"] == [
+        "sulfur.regions", "chain.backbones", "sulfur.sites",
+        "trap.levels", "trapped.carriers",
+    ]
+
+@pytest.mark.parametrize("mutation,error", [
+    (("schema", "figure-agent.illustration-grammar.v2"), "schema_unsupported"),
+    (("motif_family", ""), "motif_family_invalid"),
+    (("layer_order", ["chain.backbones"]), "layer_order_incomplete"),
+])
+def test_grammar_fails_closed(
+    tmp_path: Path,
+    mutation: tuple[str, object],
+    error: str,
+) -> None:
+    payload = yaml.safe_load(GRAMMAR_PATH.read_text(encoding="utf-8"))
+    payload[mutation[0]] = mutation[1]
+    candidate = tmp_path / "grammar.yaml"
+    candidate.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    with pytest.raises(IllustrationGrammarError, match=error):
+        load_illustration_grammar(candidate)
+```
+
+- [ ] **Step 2: Run the tests and verify RED**
+
+Run: `uv run pytest tests/test_illustration_grammar.py -q`
+
+Expected: FAIL because the loader and grammar file do not exist.
+
+- [ ] **Step 3: Implement the minimal loader and closed motif file**
+
+`scripts/illustration_grammar.py` defines
+`IllustrationGrammarError(ValueError)` and
+`load_illustration_grammar(path: Path) -> dict[str, Any]`. The loader returns a
+normalized mapping only after validating every required slot, relation, visual
+token group, layer entry, optical rule, and ownership field.
+
+The motif YAML must declare the five semantic slots, the five-item layer order
+above, and these four relations already used by the Fig3 fragment manifest:
+
+```yaml
+relations:
+  - [sulfur.sites, attached_to, chain.backbones]
+  - [sulfur.sites, located_in, sulfur.regions]
+  - [trap.levels, co_located_with, sulfur.regions]
+  - [trapped.carriers, sits_on, trap.levels]
+```
+
+It must also declare these closed token groups:
+
+```yaml
+visual_tokens:
+  stroke_families: [support, primary, focal]
+  color_roles: [polymer, sulfur, carrier, neutral]
+  curvature: [organic_backbone]
+  joins: [round]
+  caps: [round]
+  emphasis: [background, structure, focal]
+optical_rules:
+  minimum_clearance_em: 0.35
+  carrier_centering: optical
+  repeated_site_variation: controlled
+ownership:
+  grammar: [motif_geometry, layer_order, visual_tokens]
+  tikz: [global_panel_composition, typography, labels, inter_panel_arrows]
+```
+
+Reject `aesthetic_levers`, route fields, freeform effects, filters, arbitrary
+fonts, and unknown required token groups.
+
+- [ ] **Step 4: Run contract tests and Ruff**
+
+```bash
+uv run pytest tests/test_illustration_grammar.py -q
+uv run ruff check scripts/illustration_grammar.py tests/test_illustration_grammar.py
+```
+
+Expected: PASS.
+
+- [ ] **Step 5: Commit the grammar contract**
+
+```bash
+git add scripts/illustration_grammar.py tests/test_illustration_grammar.py \
+  styles/illustration-grammar/sulfur_trap_domain.v1.yaml
+git commit -m "feat: define sulfur trap illustration grammar"
+```
+
+## Task 11: Compile a backend-neutral motif scene
+
+The grammar owns appearance rules; a fixture-local instance owns normalized
+geometry and semantic membership. The compiled scene must contain neither SVG
+tags nor TikZ commands.
+
+**Files:**
+
+- Create: `scripts/illustration_scene.py`
+- Create: `tests/test_illustration_scene.py`
+- Create: `examples/fig3_trap_schematic_slice4_illustration_grammar/motif_instance.yaml`
+- Create: `examples/fig3_trap_schematic_slice4_illustration_grammar/provenance.yaml`
+
+- [ ] **Step 1: Write the failing neutral-scene test**
+
+```python
+def test_scene_preserves_slots_layers_and_has_no_backend_syntax() -> None:
+    scene = compile_illustration_scene(GRAMMAR_PATH, INSTANCE_PATH)
+    serialized = json.dumps(scene, sort_keys=True)
+
+    assert scene["motif_family"] == "sulfur_trap_domain"
+    assert [layer["semantic_id"] for layer in scene["layers"]] == [
+        "sulfur.regions", "chain.backbones", "sulfur.sites",
+        "trap.levels", "trapped.carriers",
+    ]
+    assert "<svg" not in serialized
+    assert "\\draw" not in serialized
+    assert "fig3_trap_schematic" not in serialized
+```
+
+- [ ] **Step 2: Run the test and verify RED**
+
+Run: `uv run pytest tests/test_illustration_scene.py -q`
+
+Expected: FAIL because `compile_illustration_scene` does not exist.
+
+- [ ] **Step 3: Implement normalized scene compilation**
+
+`scripts/illustration_scene.py` defines
+`IllustrationSceneError(ValueError)` and
+`compile_illustration_scene(grammar_path: Path, instance_path: Path) ->
+dict[str, Any]`. The compiler returns normalized `semantic_ids`, `relations`,
+`layers`, and `resolved_tokens` fields without backend syntax.
+
+The instance uses a unit-square coordinate system, contains four non-crossing
+backbone splines and three sulfur-rich domains, and binds every visible site,
+trap level, and carrier to one declared relation. Reject an unknown slot,
+crossing relation, point outside `[0, 1]`, missing domain membership, or carrier
+without a trap level. Do not import Fig1 coordinates, panel names, templates, or
+helpers.
+
+- [ ] **Step 4: Run scene and cross-figure regression tests**
+
+```bash
+uv run pytest tests/test_illustration_scene.py \
+  tests/test_hybrid_fragment_contract.py -q
+uv run ruff check scripts/illustration_scene.py tests/test_illustration_scene.py
+```
+
+Expected: PASS.
+
+- [ ] **Step 5: Commit the neutral scene**
+
+```bash
+git add scripts/illustration_scene.py tests/test_illustration_scene.py \
+  examples/fig3_trap_schematic_slice4_illustration_grammar/motif_instance.yaml \
+  examples/fig3_trap_schematic_slice4_illustration_grammar/provenance.yaml
+git commit -m "feat: compile backend-neutral sulfur trap scenes"
+```
+
+## Task 12: Lower one scene into TikZ and SVG backends
+
+**Files:**
+
+- Create: `scripts/illustration_backend_tikz.py`
+- Create: `scripts/illustration_backend_svg.py`
+- Create: `scripts/illustration_backend.py`
+- Create: `scripts/render_illustration_motif.py`
+- Create: `tests/test_illustration_backends.py`
+- Create: `styles/illustration-grammar/backends/polymer-tikz.v1.yaml`
+- Create: `styles/illustration-grammar/backends/polymer-svg.v1.yaml`
+
+- [ ] **Step 1: Write failing paired-backend tests**
+
+```python
+def test_backends_preserve_the_same_semantic_slots() -> None:
+    scene = compile_illustration_scene(GRAMMAR_PATH, INSTANCE_PATH)
+    tikz = render_tikz(scene, TIKZ_PROFILE_PATH)
+    svg = render_svg(scene, SVG_PROFILE_PATH)
+    for semantic_id in scene["semantic_ids"]:
+        assert f"figure-agent:start {semantic_id}" in tikz
+        assert f'id="{semantic_id}"' in svg
+
+def test_unsupported_token_fails_instead_of_falling_back() -> None:
+    scene = copy.deepcopy(compile_illustration_scene(GRAMMAR_PATH, INSTANCE_PATH))
+    scene["resolved_tokens"]["curvature"] = "airbrush_blob"
+    with pytest.raises(IllustrationBackendError, match="token_unsupported"):
+        render_svg(scene, SVG_PROFILE_PATH)
+
+def test_backend_profiles_cover_identical_visual_roles() -> None:
+    tikz_profile = load_backend_profile(TIKZ_PROFILE_PATH, backend="tikz")
+    svg_profile = load_backend_profile(SVG_PROFILE_PATH, backend="svg")
+    assert set(tikz_profile["color_roles"]) == set(svg_profile["color_roles"])
+    assert set(tikz_profile["stroke_families"]) == set(svg_profile["stroke_families"])
+```
+
+- [ ] **Step 2: Run the tests and verify RED**
+
+Run: `uv run pytest tests/test_illustration_backends.py -q`
+
+Expected: FAIL because neither backend exists.
+
+- [ ] **Step 3: Implement deterministic backend lowering**
+
+`scripts/illustration_backend.py` defines
+`IllustrationBackendError(ValueError)` and
+`load_backend_profile(path: Path, backend: str) -> dict[str, Any]`.
+`illustration_backend_tikz.py` exposes
+`render_tikz(scene: dict[str, Any], profile_path: Path) -> str`;
+`illustration_backend_svg.py` exposes
+`render_svg(scene: dict[str, Any], profile_path: Path) -> str`; and
+`render_illustration_motif.py` exposes
+`render_pair(grammar: Path, instance: Path, tikz_profile: Path,
+svg_profile: Path, output_dir: Path) -> dict[str, Any]`.
+
+The two backend profile files map the same grammar roles to existing TikZ style
+tokens and canonical SVG values; a renderer may not invent an undeclared role.
+The TikZ output contains geometry only and uses the existing polymer style
+palette through its profile. The SVG output contains geometry only, stable semantic group IDs, no
+text, scripts, ambient CSS/fonts, external URLs, filters, or raster assets.
+`render_pair` runs twice, requires byte-identical TikZ/SVG outputs, writes a
+manifest with grammar/instance/source/toolchain hashes, and sets
+`publication_acceptance: not_claimed`.
+
+- [ ] **Step 4: Run backend, fragment-security, and lint tests**
+
+```bash
+uv run pytest tests/test_illustration_backends.py \
+  tests/test_hybrid_fragment_contract.py \
+  tests/test_hybrid_fragment_render.py -q
+uv run ruff check scripts/illustration_backend_tikz.py \
+  scripts/illustration_backend_svg.py scripts/illustration_backend.py \
+  scripts/render_illustration_motif.py \
+  tests/test_illustration_backends.py
+```
+
+Expected: PASS.
+
+- [ ] **Step 5: Commit both backends**
+
+```bash
+git add scripts/illustration_backend_tikz.py \
+  scripts/illustration_backend_svg.py scripts/illustration_backend.py \
+  scripts/render_illustration_motif.py tests/test_illustration_backends.py \
+  styles/illustration-grammar/backends/polymer-tikz.v1.yaml \
+  styles/illustration-grammar/backends/polymer-svg.v1.yaml
+git commit -m "feat: render illustration grammar through TikZ and SVG"
+```
+
+## Task 13: Build the paired Fig3 grammar review fixture
+
+Fork the tracked Slice 3 derivative into
+`examples/fig3_trap_schematic_slice4_illustration_grammar`. Preserve the source
+commit/tree and raw SVG review artifact as immutable comparison inputs. Do not
+modify the Slice 3 fixture.
+
+**Files:**
+
+- Create: `examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_tikz.tex`
+- Create: `examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_svg.tex`
+- Create: generated `fragments/sulfur_trap_domain.tikz.tex`
+- Create: generated `fragments/sulfur_trap_domain.svg`
+- Create: generated `fragments/render_manifest.yaml`
+- Create: immutable `comparators/raw_svg_slice3/` snapshot plus source receipt
+- Create: fixture-local reference, briefing, spec, authority manifest, and semantic boundary files
+- Create: `review/comparison_manifest.yaml`
+- Create: `review/human_illustration_verdict.yaml`
+- Create: review renders, equal-boundary crops, difference image, compile logs, and clean-reproduction receipts
+- Modify: `tests/test_illustration_backends.py`
+
+- [ ] **Step 1: Write the failing fixture-boundary test**
+
+```python
+def test_slice4_fixture_binds_three_comparable_artifacts() -> None:
+    comparison = yaml.safe_load(COMPARISON_MANIFEST.read_text(encoding="utf-8"))
+    assert set(comparison["variants"]) == {
+        "raw_svg_slice3", "grammar_tikz", "grammar_svg"
+    }
+    assert comparison["grammar_pair_same_scene"] is True
+    assert comparison["raw_svg_comparator_basis"] == "same_semantic_boundary"
+    assert comparison["slice3_source_immutable"] is True
+    assert comparison["publication_acceptance"] == "not_claimed"
+
+def test_slice4_pending_verdict_is_fresh_and_does_not_claim_acceptance() -> None:
+    fixture = PLUGIN_ROOT / "examples" / SLICE4_NAME
+    verdict_path = fixture / "review" / "human_illustration_verdict.yaml"
+    verdict = yaml.safe_load(verdict_path.read_text(encoding="utf-8"))
+    binding = validate_human_verdict_bindings(verdict_path, fixture)
+
+    assert binding["stale"] is False
+    assert verdict["raw_svg_vs_grammar_svg"] == "pending"
+    assert verdict["grammar_svg_vs_tikz_language"] == "pending"
+    assert verdict["publication_acceptance"] == "not_claimed"
+```
+
+- [ ] **Step 2: Run the test and verify RED**
+
+Run:
+
+```bash
+uv run pytest \
+  tests/test_illustration_backends.py::test_slice4_fixture_binds_three_comparable_artifacts -q
+```
+
+Expected: FAIL because the paired fixture and manifest do not exist.
+
+- [ ] **Step 3: Generate and compile both grammar variants**
+
+Run from `plugins/figure-agent/`:
+
+```bash
+uv run python scripts/render_illustration_motif.py \
+  --grammar styles/illustration-grammar/sulfur_trap_domain.v1.yaml \
+  --instance examples/fig3_trap_schematic_slice4_illustration_grammar/motif_instance.yaml \
+  --tikz-profile styles/illustration-grammar/backends/polymer-tikz.v1.yaml \
+  --svg-profile styles/illustration-grammar/backends/polymer-svg.v1.yaml \
+  --output-dir examples/fig3_trap_schematic_slice4_illustration_grammar/fragments
+
+bash scripts/compile.sh \
+  examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_tikz.tex
+bash scripts/compile.sh \
+  examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_svg.tex
+```
+
+Expected: both ordinary compiles exit 0. Run strict for both and record its
+actual exit and findings without treating strict success as publication
+acceptance.
+
+```bash
+FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
+  examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_tikz.tex
+FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
+  examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_svg.tex
+```
+
+- [ ] **Step 4: Produce equal-boundary review evidence**
+
+First copy the already-bound Slice 3 raw SVG render and Panel e crop into
+`comparators/raw_svg_slice3/`; record their original paths, source commit, and
+SHA-256 values, and assert the copied bytes match those receipts. Never write
+back to the Slice 3 fixture. Then create full renders, identical Panel e crops,
+fixed-size grammar-fragment rasters, a grammar-TikZ/grammar-SVG difference
+image, source hashes, toolchain versions, compile logs, and clean-archive
+two-run receipts. The human verdict begins with:
+
+```yaml
+raw_svg_vs_grammar_svg: pending
+grammar_svg_vs_tikz_language: pending
+grammar_tikz_artifact: pending
+grammar_svg_artifact: pending
+publication_acceptance: not_claimed
+```
+
+Bind all three artifacts, the grammar, instance, compiled grammar scene,
+historical raw-SVG comparator receipt, reference, briefing/spec, comparison
+manifest, and toolchain under one aggregate review input hash. Reuse the
+existing review-binding validator contract so any changed input makes the
+verdict stale. The manifest must distinguish the identical neutral scene shared
+by grammar TikZ/SVG from the raw SVG's same-semantic-boundary comparison basis.
+
+- [ ] **Step 5: Re-run tests, compile, Ruff, and diff checks**
+
+```bash
+uv run pytest tests/test_illustration_grammar.py \
+  tests/test_illustration_scene.py tests/test_illustration_backends.py \
+  tests/test_hybrid_fragment_contract.py tests/test_hybrid_fragment_render.py -q
+uv run ruff check scripts/illustration_*.py \
+  scripts/render_illustration_motif.py tests/test_illustration_*.py
+git diff --check
+```
+
+Expected: machine tests pass and the review packet remains explicitly pending.
+
+- [ ] **Step 6: Commit the review-ready fixture**
+
+```bash
+git add examples/fig3_trap_schematic_slice4_illustration_grammar \
+  tests/test_illustration_backends.py
+git commit -m "feat: prepare paired sulfur trap grammar review"
+```
+
+## Task 14: Decide whether the grammar improves the product
+
+- [ ] Require a named human to compare all three bound Panel e crops and record
+  whether grammar-SVG improves on raw SVG and whether both grammar outputs share
+  the surrounding TikZ illustration language.
+- [ ] Reject the grammar implementation if it merely adds schema complexity,
+  if TikZ and SVG require different semantic/visual-role definitions, or if the
+  SVG result remains visibly inferior to raw or TikZ comparators.
+- [ ] Retain the grammar experimentally when it improves raw SVG but does not
+  yet match TikZ. When both backends pass the paired human review and clean
+  reproduction, advance the motif only to a second materially different figure
+  family; one-family evidence cannot promote a production default.
+- [ ] Record the decision in `docs/decision-records/`, update this single plan,
+  run `tests/test_document_authority.py`, and commit with a message that names
+  the actual outcome rather than assuming promotion.
+- [ ] Commit the decision record, verdict, and plan update together. Allowed
+  messages are `docs: reject sulfur trap illustration grammar`,
+  `docs: retain sulfur trap illustration grammar experiment`, or
+  `docs: advance sulfur trap grammar to second-family review`.
 
 ## Completion boundary
 
@@ -416,8 +896,12 @@ The plan is complete only when:
 - visual findings are reviewable and source-actionable without guessed mapping;
 - one hybrid complex-panel pilot is reproducible;
 - the contracts generalize across Fig1 and sulfur-polymer Fig3;
-- human scaffold and artifact verdicts exist for both evaluated families; and
-- the production-promotion decision is recorded with evidence.
+- the raw SVG non-promotion judgment is bound without inventing a scaffold
+  verdict;
+- one `sulfur_trap_domain` grammar lowers through TikZ and SVG from the same
+  neutral scene;
+- the three-way raw-SVG/grammar-TikZ/grammar-SVG human verdict is recorded; and
+- the grammar decision is recorded with clean-reproduction evidence.
 
 Passing tests, strict compile, or machine gates alone cannot satisfy this
 completion boundary.
