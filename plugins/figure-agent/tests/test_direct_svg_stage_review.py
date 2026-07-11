@@ -51,7 +51,7 @@ def test_stage_review_creates_one_three_way_packet_per_panel(tmp_path: Path) -> 
     distribution = Path(result["distribution_path"])
     manifest = yaml.safe_load((distribution / "manifest.yaml").read_text())
 
-    assert manifest["schema"] == "figure-agent.three-way-blind-review.v2"
+    assert manifest["schema"] == "figure-agent.three-way-blind-review.v3"
     assert set(manifest["panels"]) == {"C", "F"}
     decoded_hashes: list[str] = []
     for panel in ("C", "F"):

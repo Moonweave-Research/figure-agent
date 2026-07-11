@@ -33,11 +33,11 @@ from PIL import __version__ as PILLOW_VERSION
 
 PANELS = ("C", "F")
 LETTERS = ("A", "B", "C")
-PUBLIC_SCHEMA = "figure-agent.three-way-blind-review.v2"
+PUBLIC_SCHEMA = "figure-agent.three-way-blind-review.v3"
 RESPONSE_SCHEMA = "figure-agent.three-way-review-response.v2"
-STATE_SCHEMA = "figure-agent.direct-svg-review-state.v3"
-PRIVATE_SCHEMA = "figure-agent.private-three-way-review-key.v2"
-GENERATOR_REVISION = "direct_svg_stage_review.v3"
+STATE_SCHEMA = "figure-agent.direct-svg-review-state.v4"
+PRIVATE_SCHEMA = "figure-agent.private-three-way-review-key.v3"
+GENERATOR_REVISION = "direct_svg_stage_review.v4"
 PERCEPTUAL_METRIC = "normalized_rgb_mean_absolute_error.v1"
 PERCEPTUAL_THRESHOLD = 0.002
 GENERATOR_FILES = (
@@ -541,6 +541,8 @@ def _validated_export_snapshot(
     distribution: Path, review_root: Path, private_root: Path
 ) -> dict[str, bytes]:
     try:
+        if distribution.is_symlink() or review_root.is_symlink() or private_root.is_symlink():
+            raise DirectSvgReviewError("export_validation_failed")
         distribution = distribution.resolve(strict=True)
         review_root = review_root.resolve(strict=True)
         private_root = private_root.resolve(strict=True)
@@ -576,6 +578,14 @@ def _validated_export_snapshot(
             or key.get("generator") != manifest.get("generator")
             or state.get("generator") != manifest.get("generator")
         ):
+            raise DirectSvgReviewError("export_validation_failed")
+        current_generator = _generator_binding(
+            Path(__file__).resolve().parents[1],
+            manifest["generator"]["commit"],
+            manifest["generator"]["files"]["scripts/direct_svg_stage_review.py"],
+            manifest["generator"]["receipt_sha256"],
+        )
+        if current_generator != manifest.get("generator"):
             raise DirectSvgReviewError("export_validation_failed")
         inventory = manifest.get("public_inventory")
         if not isinstance(inventory, dict):
@@ -628,7 +638,15 @@ def _validated_export_snapshot(
                 raise DirectSvgReviewError("export_validation_failed")
             snapshots["unblinding.yaml"] = unblinding
         return snapshots
-    except (DirectSvgReviewError, OSError, TypeError, ValueError, yaml.YAMLError) as exc:
+    except (
+        DirectSvgReviewError,
+        IndexError,
+        KeyError,
+        OSError,
+        TypeError,
+        ValueError,
+        yaml.YAMLError,
+    ) as exc:
         if isinstance(exc, DirectSvgReviewError) and str(exc) == "export_validation_failed":
             raise
         raise DirectSvgReviewError("export_validation_failed") from exc
