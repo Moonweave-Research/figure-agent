@@ -1,9 +1,34 @@
 schema: figure-agent.direct-svg-run-state.v1
 test_kind: synthesis
-state: ready_not_started
+state: machine_review_ready
 validated_packet: ../../packets/test-b-synthesis.yaml
 validated_packet_sha256: sha256:8831d5515ba3bfd6d6588f5324a36e52f6eb01a2aca543dcfdf5fe05e3dcadff
 semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
-execution_started: false
-candidate_artifacts: []
+execution_started: true
+environment_receipt:
+  path: environment-receipt.yaml
+  sha256: sha256:7ab41a7b6caa5a586a8bd94a7b39c46063a03cdc61c3fee7861f8d93daddf507
+candidate_artifacts:
+  - panel: C
+    cycles: 3
+    svg_path: panel-c/cycles/cycle-03.svg
+    source_sha256: sha256:d9d9be86468b6d584e1f5ba72aceb2882715c6e6c25a6d3995b3d208982b9c6c
+    png_path: panel-c/cycles/cycle-03.png
+    render_sha256: sha256:607110bff04a6f604e935726ab0a2114ba29d4a529ceca9d1df0a0ad9c193748
+    ledger_path: panel-c/ledger.yaml
+    ledger_sha256: sha256:2fea21d070cb1fe3b1cfb85ea15c6256129ee85b07841fcb76c33a209384471b
+  - panel: F
+    cycles: 3
+    svg_path: panel-f/cycles/cycle-03.svg
+    source_sha256: sha256:e602a81d3c812d9024f4bf0038b31bcfe2eca126e21153b3c12d46c417f39477
+    png_path: panel-f/cycles/cycle-03.png
+    render_sha256: sha256:f16c66b5236d3644043c42452fe170b0bfc319e635a4ea34d43a4e80cb86ac60
+    ledger_path: panel-f/ledger.yaml
+    ledger_sha256: sha256:4668c5fe29d9fc612c79d96cbaae6ba75c4d89b664aa8f38294755169762497d
+machine_validation:
+  candidate_validation: passed_all_6_cycles
+  deterministic_replay: passed_6_of_6
+  focused_tests: passed
+human_scientific_acceptance: pending
+human_visual_acceptance: pending
 publication_acceptance: not_claimed

@@ -1,0 +1,70 @@
+schema: figure-agent.direct-svg-iteration-ledger.v1
+panel: C
+budget:
+  cycles: 3
+  wall_minutes_per_panel: 30
+started_at: "2026-07-12T00:39:00Z"
+elapsed_basis: cumulative_wall_minutes_from_started_at_using_artifact_timestamps
+iterations:
+  - cycle: 1
+    cycle_type: visual_source_change
+    elapsed_minutes: 2.2
+    svg_path: panel-c/cycles/cycle-01.svg
+    png_path: panel-c/cycles/cycle-01.png
+    source_sha256: sha256:ba9d2f3ffe0e3d2121c824c06a724e3bd7bf3f267da6d5862d47493e94c208db
+    render_sha256: sha256:768f101b8a91def1c2fd6465bc026e3b6651c565e2562c27605208464118efca
+    render_width: 960
+    render_height: 640
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.png, --width, "960", --height, "640"]
+    tool_model_receipt: &receipt
+      task: Task 20 Step 2 Test B
+      provider: OpenAI
+      model: GPT-5 Codex API session
+      model_snapshot: not_exposed_to_session
+      method: manual_llm_direct_svg
+      tools: [apply_patch, render_candidate]
+      panel: C
+      width: 960
+      height: 640
+      renderer_version: rsvg-convert 2.62.1
+      python_version: 3.12.13
+      pillow_version: 12.2.0
+      environment: macOS-26.5.1-arm64-arm-64bit; plugin-root cwd; no network; no image generation
+      semantic_packet_path: examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml
+      semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+      synthesis_packet_path: examples/fig1_direct_svg_cleanroom_baseline/packets/test-b-synthesis.yaml
+      synthesis_packet_sha256: sha256:8831d5515ba3bfd6d6588f5324a36e52f6eb01a2aca543dcfdf5fe05e3dcadff
+      font_path: examples/fig1_direct_svg_cleanroom_baseline/contract/fonts/lmsans10-regular.otf
+      font_sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
+      fontconfig_path: examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+      fontconfig_sha256: sha256:134f62bcaec72f154f449294f57c7b46fd76d43d1fc3cecf689ee2dfb8cb4a6d
+      reference_pixels_available: false
+    correction_reason: Initial semantic-only synthesis; establish mixed real-space traps and continuous shallow/deep energy distributions without target or reference access.
+    publication_acceptance: not_claimed
+  - cycle: 2
+    cycle_type: visual_source_change
+    elapsed_minutes: 3.4
+    svg_path: panel-c/cycles/cycle-02.svg
+    png_path: panel-c/cycles/cycle-02.png
+    source_sha256: sha256:5bce113b83a7825e08662478bd72e22521f7a4bef7909c33d3e8fc855d934f49
+    render_sha256: sha256:8b82cc3424f709e12a9bb71973d415b6b1d80fd18db1fd996cdbe904111cc54a
+    render_width: 960
+    render_height: 640
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-02.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-02.png, --width, "960", --height, "640"]
+    tool_model_receipt: *receipt
+    correction_reason: Own-render inspection showed crowded overlap between shallow and deep distributions and uneven axis spacing; separated peaks and regularized the energy frame.
+    publication_acceptance: not_claimed
+  - cycle: 3
+    cycle_type: visual_source_change
+    elapsed_minutes: 5.8
+    svg_path: panel-c/cycles/cycle-03.svg
+    png_path: panel-c/cycles/cycle-03.png
+    source_sha256: sha256:d9d9be86468b6d584e1f5ba72aceb2882715c6e6c25a6d3995b3d208982b9c6c
+    render_sha256: sha256:607110bff04a6f604e935726ab0a2114ba29d4a529ceca9d1df0a0ad9c193748
+    render_width: 960
+    render_height: 640
+    command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --render, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-03.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-03.png, --width, "960", --height, "640"]
+    tool_model_receipt: *receipt
+    correction_reason: Own-render inspection showed the real-space to energy mapping and thermal meaning were implicit; added a neutral correspondence cue and explicit Boltzmann-release label.
+    publication_acceptance: not_claimed
+publication_acceptance: not_claimed

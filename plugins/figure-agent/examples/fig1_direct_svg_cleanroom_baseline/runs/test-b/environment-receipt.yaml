@@ -1,0 +1,39 @@
+schema: figure-agent.direct-svg-environment-receipt.v1
+task: Task 20 Step 2 Test B
+method: manual_llm_direct_svg
+provider: OpenAI
+model: GPT-5 Codex API session
+model_snapshot: not_exposed_to_session
+reasoning_setting: not_exposed_to_session
+tools:
+  - apply_patch
+  - render_candidate
+renderer:
+  executable: rsvg-convert
+  version: 2.62.1
+  cairo: 1.18.4
+  pango: 1.57.0
+  harfbuzz: 14.1.0
+  fontconfig: 2.17.1
+runtime:
+  python: 3.12.13
+  pillow: 12.2.0
+environment:
+  platform: macOS-26.5.1-arm64-arm-64bit
+  working_directory: plugin_root
+  network_used: false
+  image_generation_used: false
+  target_or_reference_pixels_available: false
+semantic_packet:
+  path: examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml
+  sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+synthesis_packet:
+  path: examples/fig1_direct_svg_cleanroom_baseline/packets/test-b-synthesis.yaml
+  sha256: sha256:8831d5515ba3bfd6d6588f5324a36e52f6eb01a2aca543dcfdf5fe05e3dcadff
+font:
+  path: examples/fig1_direct_svg_cleanroom_baseline/contract/fonts/lmsans10-regular.otf
+  sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
+fontconfig:
+  path: examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
+  sha256: sha256:134f62bcaec72f154f449294f57c7b46fd76d43d1fc3cecf689ee2dfb8cb4a6d
+publication_acceptance: not_claimed

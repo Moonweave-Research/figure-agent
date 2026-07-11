@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" role="img" aria-labelledby="title desc">
+  <title id="title">Panel C: localized shallow and deep traps in an amorphous polymer</title>
+  <desc id="desc">A real-space polymer film with mixed shallow and deep trap sites is paired with continuous energy distributions below a mobility edge.</desc>
+  <defs>
+    <linearGradient id="film-fill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fbfd"/>
+      <stop offset="1" stop-color="#e8eef2"/>
+    </linearGradient>
+    <linearGradient id="shallow-fill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1688c7" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#1688c7" stop-opacity="0.56"/>
+    </linearGradient>
+    <linearGradient id="deep-fill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#df3c42" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#df3c42" stop-opacity="0.56"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="640" fill="#ffffff"/>
+  <g fill="#17212b" font-family="Latin Modern Sans, sans-serif">
+    <text x="34" y="56" font-size="38" font-weight="700">C</text>
+    <text x="92" y="54" font-size="25" font-weight="700">localized traps</text>
+  </g>
+
+  <g id="c_polymer_film" data-semantic="true">
+    <rect x="72" y="136" width="368" height="370" rx="28" fill="url(#film-fill)" stroke="#81909a" stroke-width="2"/>
+    <path d="M104 190 C148 156 184 210 226 178 S304 176 340 210 S390 202 414 174" fill="none" stroke="#b6c2c9" stroke-width="4" opacity="0.75"/>
+    <path d="M92 278 C138 244 174 302 218 270 S300 264 344 296 S390 288 422 256" fill="none" stroke="#c0cbd1" stroke-width="4" opacity="0.75"/>
+    <path d="M106 374 C144 338 188 396 228 362 S306 354 350 390 S392 380 414 350" fill="none" stroke="#b6c2c9" stroke-width="4" opacity="0.75"/>
+    <path d="M94 456 C134 424 178 470 218 444 S296 430 340 460 S390 454 418 426" fill="none" stroke="#c0cbd1" stroke-width="4" opacity="0.75"/>
+    <text x="256" y="548" text-anchor="middle" fill="#17212b" font-family="Latin Modern Sans, sans-serif" font-size="22">poly(S-r-DIB) thin film</text>
+    <text x="256" y="578" text-anchor="middle" fill="#53616b" font-family="Latin Modern Sans, sans-serif" font-size="19">d ≈ 1 μm</text>
+  </g>
+
+  <g id="c_shallow_trap_population" data-semantic="true" fill="#1688c7" stroke="#ffffff" stroke-width="2">
+    <circle cx="134" cy="226" r="10"/><circle cx="236" cy="214" r="10"/><circle cx="365" cy="240" r="10"/>
+    <circle cx="182" cy="328" r="10"/><circle cx="306" cy="312" r="10"/><circle cx="392" cy="350" r="10"/>
+    <circle cx="126" cy="420" r="10"/><circle cx="270" cy="448" r="10"/>
+    <path d="M134 212 L134 180 M126 190 L134 180 L142 190" fill="none" stroke="#1688c7" stroke-width="3"/>
+    <path d="M306 298 L306 266 M298 276 L306 266 L314 276" fill="none" stroke="#1688c7" stroke-width="3"/>
+  </g>
+  <g id="c_deep_trap_population" data-semantic="true" fill="#df3c42" stroke="#ffffff" stroke-width="2">
+    <circle cx="182" cy="248" r="11"/><circle cx="294" cy="242" r="11"/><circle cx="404" cy="204" r="11"/>
+    <circle cx="118" cy="344" r="11"/><circle cx="250" cy="350" r="11"/><circle cx="350" cy="382" r="11"/>
+    <circle cx="202" cy="438" r="11"/><circle cx="378" cy="454" r="11"/>
+    <path d="M250 334 L250 288 M242 298 L250 288 L258 298" fill="none" stroke="#df3c42" stroke-width="3" stroke-dasharray="5 5"/>
+  </g>
+
+  <g transform="translate(502 112)" fill="none" stroke="#17212b">
+    <path d="M50 438 L50 34 M42 46 L50 34 L58 46" stroke-width="2.5"/>
+    <path d="M50 438 L390 438" stroke-width="2.5"/>
+    <text x="5" y="40" transform="rotate(-90 5 40)" fill="#17212b" stroke="none" font-family="Latin Modern Sans, sans-serif" font-size="21">Energy</text>
+    <text x="234" y="474" text-anchor="middle" fill="#53616b" stroke="none" font-family="Latin Modern Sans, sans-serif" font-size="17">density of localized states</text>
+  </g>
+  <g id="c_conduction_band" data-semantic="true">
+    <path d="M552 168 H890" stroke="#17212b" stroke-width="3"/>
+    <path d="M552 156 H890" stroke="#17212b" stroke-width="2" opacity="0.35"/>
+    <text x="904" y="174" fill="#17212b" font-family="Latin Modern Sans, sans-serif" font-size="20">E_C</text>
+  </g>
+  <g id="c_mobility_edge" data-semantic="true">
+    <path d="M552 228 H890" stroke="#596873" stroke-width="2.5" stroke-dasharray="10 7"/>
+    <text x="880" y="217" text-anchor="end" fill="#596873" font-family="Latin Modern Sans, sans-serif" font-size="18">mobility edge</text>
+  </g>
+  <g id="c_shallow_trap_population_energy">
+    <path d="M552 228 C595 228 612 236 634 256 C660 280 688 294 744 298 C688 302 660 316 634 340 C612 360 595 368 552 368 Z" fill="url(#shallow-fill)" stroke="#1688c7" stroke-width="3"/>
+    <text x="754" y="304" fill="#1688c7" font-family="Latin Modern Sans, sans-serif" font-size="20" font-weight="700">shallow</text>
+  </g>
+  <g id="c_deep_trap_population_energy">
+    <path d="M552 322 C594 322 620 334 648 360 C680 390 714 406 784 410 C714 414 680 430 648 460 C620 486 594 498 552 498 Z" fill="url(#deep-fill)" stroke="#df3c42" stroke-width="3"/>
+    <text x="794" y="416" fill="#df3c42" font-family="Latin Modern Sans, sans-serif" font-size="20" font-weight="700">deep</text>
+  </g>
+  <g id="c_valence_band" data-semantic="true">
+    <path d="M552 548 H890" stroke="#17212b" stroke-width="3"/>
+    <text x="904" y="555" fill="#17212b" font-family="Latin Modern Sans, sans-serif" font-size="20">E_V</text>
+  </g>
+  <g id="c_trap_depth" data-semantic="true" stroke="#df3c42" fill="none">
+    <path d="M842 228 H866 M854 228 V410 M842 410 H866" stroke-width="2.5"/>
+    <text x="872" y="328" fill="#df3c42" stroke="none" font-family="Latin Modern Sans, sans-serif" font-size="20">ΔE_t^d</text>
+  </g>
+
+  <g id="relation-c-01" data-coverage="declared-not-spatially-verified" data-relation-subject="c_shallow_trap_population" data-relation-predicate="coexists_with" data-relation-object="c_deep_trap_population" data-qualification="spatially mixed within the same polymer matrix"/>
+  <g id="relation-c-02" data-coverage="declared-not-spatially-verified" data-relation-subject="c_shallow_trap_population" data-relation-predicate="lies_below" data-relation-object="c_mobility_edge" data-qualification="closer to the mobility edge than the deep population"/>
+  <g id="relation-c-03" data-coverage="declared-not-spatially-verified" data-relation-subject="c_deep_trap_population" data-relation-predicate="lies_below" data-relation-object="c_mobility_edge" data-qualification="farther below the mobility edge than the shallow population"/>
+  <g id="relation-c-04" data-coverage="declared-not-spatially-verified" data-relation-subject="c_shallow_trap_population" data-relation-predicate="represented_as" data-relation-object="continuous Gaussian density of states"/>
+  <g id="relation-c-05" data-coverage="declared-not-spatially-verified" data-relation-subject="c_deep_trap_population" data-relation-predicate="represented_as" data-relation-object="continuous Gaussian density of states"/>
+  <g id="relation-c-06" data-coverage="declared-not-spatially-verified" data-relation-subject="c_trap_depth" data-relation-predicate="measures_symbolically" data-relation-object="c_deep_trap_population" data-qualification="no numeric value or energy unit"/>
+</svg>
