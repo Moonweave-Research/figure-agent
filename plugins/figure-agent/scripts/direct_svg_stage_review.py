@@ -725,7 +725,7 @@ def _build_staged_bundle(
         + json.dumps(raw_upstream, sort_keys=True).encode()
         + json.dumps(generator, sort_keys=True).encode()
     ).hexdigest()[:16]
-    version = f"review-v2-{version_digest}"
+    version = f"review-v3-{version_digest}"
     public_temp = Path(tempfile.mkdtemp(prefix=".review-stage-", dir=review_root))
     private_temp = Path(tempfile.mkdtemp(prefix=".key-stage-", dir=private_root))
     public_panels: dict[str, Any] = {}
@@ -880,7 +880,7 @@ def recover_review_transaction(review_root: Path, private_root: Path) -> dict[st
     journal_path = journals[0]
     journal = _load_yaml(journal_path, "transaction_journal_invalid")
     version = journal.get("version")
-    if not isinstance(version, str) or not version.startswith("review-v2-"):
+    if not isinstance(version, str) or not version.startswith("review-v3-"):
         raise DirectSvgReviewError("transaction_journal_invalid")
     previous_state = _previous_state_from_journal(journal)
     state_path = review_root / "review-state.yaml"
