@@ -43,11 +43,15 @@ reproducibility, or human control.
 The immediate product focus is:
 
 1. make visual findings actionable by connecting rendered defects back to
-   panels, semantic objects, and source selectors; and
-2. extract the visual rules that make the accepted TikZ benchmark effective
-   into a narrow scientific illustration grammar; and
-3. reduce the cost of complex panels only when a grammar-driven backend can
-   match the surrounding TikZ visual language under human review.
+   panels, semantic objects, and source selectors;
+2. determine whether an LLM can directly author SVG at the accepted TikZ
+   quality level before investing further in a drawing grammar;
+3. locate the durable product value in direct drawing, reproducibility,
+   verification, provenance, or correction-cost reduction from that evidence;
+   and
+4. expand a scientific illustration grammar only when the direct-authoring
+   baseline exposes a repeated visual-control problem that simpler tooling does
+   not solve.
 
 ## 3. Current truth and target architecture
 
@@ -60,14 +64,17 @@ The immediate product focus is:
   may serve as an inspectable fragment IR and QA surface when it carries stable
   object identities and provenance.
 - **Semantic structure alone does not create illustration quality.** The Fig3
-  hybrid pilot preserved object identities and relations, while the current
-  human observation is that its primitive SVG geometry falls below the TikZ
-  visual-quality baseline. The formal hash-bound artifact verdict remains
-  pending; until it is recorded, both the observation and the missing verdict
-  block promotion of raw semantic-SVG authoring.
-- **Illustration quality requires an explicit grammar layer** for motifs,
-  strokes, curvature, layering, spacing, emphasis, and optical correction.
-  Those decisions must not be hidden inside one renderer.
+  hybrid pilot preserved object identities and relations, but its bound human
+  verdict rejected the primitive SVG artifact as a production-quality
+  rendering.
+- **The first paired illustration grammar did not solve the quality gap.** Its
+  TikZ and SVG backends shared one neutral scene and surrounding illustration
+  language, yet both sulfur-trap artifacts were rejected for production and the
+  grammar SVG remained worse than the historical raw SVG comparator.
+- **A grammar layer is a hypothesis, not an assumed product requirement.** It
+  may be needed for motifs, strokes, curvature, layering, spacing, emphasis,
+  and optical correction, but Figure Agent must first measure whether an LLM
+  can author a comparable SVG directly from a reference and scientific brief.
 - **PDF, annotated SVG, PNG, overlays, and crops are evidence artifacts.** They
   serve different inspection and export purposes; no single render format is the
   whole source of truth.
@@ -78,6 +85,11 @@ The immediate product focus is:
   not establish publication acceptance.
 
 ### 3.2 Target flow
+
+The flow below is the retained hybrid architecture when evidence justifies a
+grammar. The clean-room direct-SVG baseline in Section 4.5 is a diagnostic
+branch used to decide whether further grammar investment is warranted; it is
+not silently inserted into the production flow.
 
 ```text
 intent + references + declared semantics
@@ -181,14 +193,13 @@ A versioned motif definition contains only:
 - deterministic backend parameters and provenance; and
 - review assertions that can be inspected in a paired TikZ/backend crop.
 
-The first allowed motif family is `sulfur_trap_domain`: polymer backbone,
+The first implemented motif family is `sulfur_trap_domain`: polymer backbone,
 sulfur-rich region, sulfur sites, localized trap levels, and trapped carriers.
-The strongest reproducible TikZ treatment available for the fixture is the
-comparator; selecting it does not itself make it human-accepted. The first
-experiment succeeds only if a grammar-driven result is visibly better than the
-raw Fig3 SVG pilot and reads as the same illustration language as its
-surrounding TikZ panels. Matching schemas, hashes, or semantic relations is
-necessary but insufficient.
+Its paired TikZ/SVG experiment preserved the neutral scene and shared visual
+roles, but the bound human review rejected both artifacts and found the grammar
+SVG worse than the raw Fig3 SVG comparator. The implementation remains
+experimental infrastructure and does not justify another motif family.
+Matching schemas, hashes, or semantic relations was necessary but insufficient.
 
 Grammar loading fails closed on an unknown schema version, motif family,
 semantic slot, relation, or required visual token. A backend must report an
@@ -213,8 +224,9 @@ that is awkward to maintain directly in TikZ.
 
 SVG is not allowed merely because a region is complex. A new fragment must
 either implement an approved illustration motif or remain an experimental QA
-artifact. Raw backend-specific polish rules may be prototyped to discover
-grammar requirements, but they cannot become the product contract.
+or direct-authoring artifact with an explicit non-promotion verdict. Raw
+backend-specific polish rules may be prototyped to discover grammar
+requirements, but they cannot become the product contract.
 
 Each fragment must provide:
 
@@ -237,7 +249,78 @@ clipping checks.
 TikZ remains responsible for figure-wide composition unless a later promotion
 gate explicitly changes that policy.
 
-### 4.5 Reference-conditioned authoring
+### 4.5 Clean-room direct-SVG capability baseline
+
+Before expanding the rejected illustration grammar, Figure Agent measures the
+quality ceiling of direct LLM-authored SVG. This is a diagnostic experiment,
+not a production-path promotion. It asks whether an LLM can match or exceed the
+accepted Fig1 TikZ benchmark without reading its editable source, generated SVG
+export, experience log, candidate patches, or Figure Agent illustration
+grammar.
+
+The first challenge uses two demanding and materially different regions of the
+six-panel Fig1 benchmark:
+
+- Panel C: thin-film real-space trap structure plus the related energy diagram;
+- Panel F: biased apparatus, bent polymer cantilever, trapped charges,
+  electrode separation, and Coulomb-repulsion direction.
+
+The allowed clean-room inputs are immutable equal-boundary PNG crops, a
+sanitized scientific briefing/specification, panel dimensions, and explicit
+palette and typography constraints. The briefing preserves scientific meaning
+and required object relations but contains no source coordinates, drawing
+commands, or backend-specific implementation hints. The task may not read any
+existing `.tex`, whole-figure SVG export, candidate patch, experience log, or
+illustration-grammar artifact. A provenance receipt binds the exact allowed
+inputs and records the denied source families.
+
+The experiment has two sequential stages:
+
+1. **Direct gold:** one clean LLM invocation writes editable `panel_c.svg` and
+   `panel_f.svg`, then performs at most three render-inspect-revise iterations.
+   Every iteration, prompt/input receipt, SVG, raster, elapsed time, and stated
+   correction reason is retained.
+2. **Cold reproduction:** only if direct gold passes human review, a separate
+   clean invocation receives the same allowed input contract without the gold
+   SVG or its iteration history. This distinguishes a one-off drawing success
+   from reproducible authoring behavior.
+
+The SVGs remain self-contained and editable. They use stable semantic group
+IDs, explicit view boxes, vector paths/shapes, and live text. They may use
+declared gradients when they improve material readability, but may not use
+scripts, network access, external URLs or fonts, embedded raster images, or
+unbound local assets. Direct SVG may discover backend-specific visual
+techniques; those techniques do not become a product contract unless later
+evidence justifies a general rule.
+
+Each iteration automatically produces an equal-boundary TikZ comparator crop,
+SVG crop, side-by-side image, difference/flicker evidence, SVG safety report,
+semantic-object inventory, deterministic render receipt, and correction-cost
+ledger. Machine gates establish safety, structure, and reproducibility only. A
+named human records `better`, `equivalent`, or `worse` for scientific fidelity,
+composition, illustration quality, typography/scale readability, and
+editability/correction cost.
+
+The direct-SVG quality hypothesis passes only when Panels C and F are both no
+worse than the TikZ benchmark and at least one is clearly better. The result
+changes product direction as follows:
+
+- direct gold fails: a richer illustrator language or grammar has stronger
+  justification;
+- direct gold passes but cold reproduction fails: Figure Agent should focus on
+  control, reproducibility, and bounded correction;
+- both stages pass: a dedicated drawing grammar has weak justification, so
+  Figure Agent should concentrate on verification, provenance, visual-error
+  detection, and review automation.
+
+The accepted TikZ figure, historical exports, and prior experiments remain
+immutable. Because the current design session observed historical Panel F TikZ
+implementation details while inspecting the repository, it is not eligible to
+author the clean-room SVG artifacts. It may prepare the sanitized input packet,
+automation, and review harness; the drawing run must occur in a fresh task that
+has access only to the declared inputs.
+
+### 4.6 Reference-conditioned authoring
 
 The active reference workflow remains:
 
@@ -366,14 +449,16 @@ it against the named branch or artifact before relying on exact counts.
 - Slice 3 selected the six-panel sulfur-polymer Fig3 family because it applies a
   different composition and semantic pressure than Fig1 and carries reference,
   briefing, spec, coordinate hints, editable TeX, and review history.
-- Slice 3 machine gates have evidence on their development branch, while human
-  scaffold/artifact verdicts remain required; therefore the slice is not closed
-  and publication acceptance is not claimed here.
 - The Fig3 semantic-SVG pilot is reproducible and source-attributable. The
-  current human observation is that its basic illustration quality is below the
-  TikZ benchmark, while the bound artifact verdict remains pending. The next
-  bottleneck is not SVG serialization; it is the missing scientific
-  illustration grammar and the explicit verdict that evaluates it.
+  bound human verdict rejects its basic illustration quality for production.
+- The paired sulfur-trap grammar proved deterministic neutral-scene lowering
+  into TikZ and SVG, but the named review rejected both artifacts and found its
+  SVG worse than the raw SVG comparator. The infrastructure remains
+  experimental; the current grammar implementation does not advance.
+- The next unresolved question is whether a clean LLM can directly author
+  Panels C and F at the accepted TikZ level. Until the clean-room baseline and,
+  if eligible, cold reproduction are reviewed, the repository lacks evidence
+  that another drawing grammar is the right next product investment.
 
 The active work needed to close these gaps is defined only in
 `docs/execution-plan.md`.
