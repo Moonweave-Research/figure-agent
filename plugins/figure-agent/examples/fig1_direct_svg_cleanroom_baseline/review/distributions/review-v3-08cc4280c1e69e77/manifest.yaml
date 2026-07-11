@@ -1,0 +1,227 @@
+schema: figure-agent.three-way-blind-review.v3
+version: review-v3-08cc4280c1e69e77
+panels:
+  C:
+    options:
+      A: &id001
+        path: option-a.png
+        opaque_sha256: sha256:06240a189aeaab0a469e4da0196568536ced29ed05f80116729e9eb41c9c83d0
+      B: &id002
+        path: option-b.png
+        opaque_sha256: sha256:e0d247a4771db72c1fc735a8e3820bc4a39ef113f62343bb9bea425bdc8dcc7d
+      C: &id003
+        path: option-c.png
+        opaque_sha256: sha256:3f275b4b7a1103d64820ddac6e30d14f72bd4733e07490663e2e74776790eae1
+    score_inputs:
+    - *id001
+    - *id002
+    - *id003
+    diagnostics:
+    - path: diagnostic-a-b.png
+      opaque_sha256: sha256:eb40023f0c6447b87be39f8d97ffd0265dc59ca00e41a3288c28ad23f1999a9f
+      diagnostic_only: true
+    - path: diagnostic-a-c.png
+      opaque_sha256: sha256:78734ea736f9a6d8e6b89d3e68c6b9ebebab114c2bc35fb85efcc34b795ffb78
+      diagnostic_only: true
+    - path: diagnostic-b-c.png
+      opaque_sha256: sha256:1d7374c2ea481da2b96d40191e7f38590e17d86368507f97ad53a883f0c51d34
+      diagnostic_only: true
+  F:
+    options:
+      A: &id004
+        path: option-a.png
+        opaque_sha256: sha256:e097b2973bc52ccf536b5b4a0156c1bfdc23bc4a770c8602045b7be68a758e26
+      B: &id005
+        path: option-b.png
+        opaque_sha256: sha256:d2b95461776d6d65c6855f22c398cfddbae9e8f9e5507775542b1d3697f2c60b
+      C: &id006
+        path: option-c.png
+        opaque_sha256: sha256:6054b100d2a2fa305dd032c208fc9fd71fdc1c6611eb0d51df6b7f548cf918ab
+    score_inputs:
+    - *id004
+    - *id005
+    - *id006
+    diagnostics:
+    - path: diagnostic-a-b.png
+      opaque_sha256: sha256:7de0d772d0a9c794b437070b5bc911abe021b978ecbd7bf4a6a9eff4b09d51f7
+      diagnostic_only: true
+    - path: diagnostic-a-c.png
+      opaque_sha256: sha256:2fd3452fd168c255adf15dda0006774d278b05cf361c1ceb326a0e0b40acc832
+      diagnostic_only: true
+    - path: diagnostic-b-c.png
+      opaque_sha256: sha256:201a2e5244ea7a30615856c739b6c00e394f73f1de18df8c0b32cf1ab93e4c31
+      diagnostic_only: true
+responses:
+  C:
+    scientific_gate: null
+    visual_scoring: null
+  F:
+    scientific_gate: null
+    visual_scoring: null
+response_schema: figure-agent.three-way-review-response.v2
+response_contract:
+  additional_fields: false
+  state_machine:
+  - scientific_gate_pending
+  - primary_scientific_fixed
+  - primary_visual_fixed
+  - second_scientific_fixed
+  - second_visual_fixed
+  - finalized
+  scientific_gate_precedes_visual_scoring: true
+  named_reviewer_and_date_required: true
+  scientific_evidence_required: true
+  distinct_second_reviewer_required_when: borderline_or_disputed
+semantic_review_context:
+  scientific_objects:
+    panel_c:
+    - id: c_polymer_film
+      kind: poly(S-r-DIB) thin film
+      properties:
+        morphology: fully amorphous
+        thickness_scale: approximately 1 micrometre
+    - id: c_shallow_trap_population
+      kind: continuous shallow-trap distribution
+      properties:
+        release: thermally easier
+        lifetime: shorter
+    - id: c_deep_trap_population
+      kind: continuous deep-trap distribution
+      properties:
+        release: thermally harder
+        lifetime: longer
+    - id: c_mobility_edge
+      kind: mobility edge
+    - id: c_conduction_band
+      kind: conduction-band reference
+    - id: c_valence_band
+      kind: valence-band reference
+    - id: c_trap_depth
+      kind: symbolic deep-trap depth
+    panel_f:
+    - id: f_polymer_cantilever
+      kind: poly(S-r-DIB) cantilever
+    - id: f_fixed_support
+      kind: cantilever clamp
+    - id: f_planar_electrode
+      kind: biased planar electrode
+    - id: f_active_bias
+      kind: applied electrical bias
+    - id: f_trapped_charge
+      kind: trapped surface charge population
+    - id: f_coulomb_repulsion
+      kind: electrostatic repulsive force
+    - id: f_air_gap
+      kind: cantilever-electrode clearance
+  object_relations:
+  - subject: c_shallow_trap_population
+    predicate: coexists_with
+    object: c_deep_trap_population
+    qualification: spatially mixed within the same polymer matrix
+  - subject: c_shallow_trap_population
+    predicate: lies_below
+    object: c_mobility_edge
+    qualification: closer to the mobility edge than the deep population
+  - subject: c_deep_trap_population
+    predicate: lies_below
+    object: c_mobility_edge
+    qualification: farther below the mobility edge than the shallow population
+  - subject: c_shallow_trap_population
+    predicate: represented_as
+    object: continuous Gaussian density of states
+  - subject: c_deep_trap_population
+    predicate: represented_as
+    object: continuous Gaussian density of states
+  - subject: c_trap_depth
+    predicate: measures_symbolically
+    object: c_deep_trap_population
+    qualification: no numeric value or energy unit
+  - subject: f_active_bias
+    predicate: energizes
+    object: f_planar_electrode
+  - subject: f_trapped_charge
+    predicate: accumulates_on
+    object: f_polymer_cantilever
+  - subject: f_coulomb_repulsion
+    predicate: acts_on
+    object: f_polymer_cantilever
+    qualification: drives the cantilever away from the electrode
+  - subject: f_polymer_cantilever
+    predicate: manifests_macroscopically
+    object: c_deep_trap_population
+    qualification: mechanical evidence for the same trap landscape
+  text_content:
+    panel_c:
+    - C
+    - localized traps
+    - poly(S-r-DIB) thin film
+    - "d \u2248 1 \u03BCm"
+    - Energy
+    - E_C
+    - mobility edge
+    - E_V
+    - shallow
+    - deep
+    - "\u0394E_t^d"
+    panel_f:
+    - F
+    - mechanical
+    - V_active
+    - q_tr
+    - Coulomb
+    - repulsion
+    - electrode
+    - air gap
+normalization:
+  policy: contain_white_pad_authority_size.v1
+  application: all_three_options
+  resampling: LANCZOS
+  canvas: authority_dimensions_centered_white
+perceptual_duplicate_policy:
+  metric: normalized_rgb_mean_absolute_error.v1
+  threshold: 0.002
+  fail_when: distance_lte_threshold
+  scope: within_panel_all_option_pairs
+  calibration: inclusive_boundary_and_localized_single-pixel_regression
+  limitation: global_mean_metric_may_underweight_small_local_defects
+  authority: duplicate_screen_only_not_visual_or_publication_acceptance
+upstream_commitments:
+  run_state_1: sha256:e9aa7ed7248c6861008c60dae32672cbfd20ec7d944234b3e7590153287b0420
+  run_state_2: sha256:24b5fa0f9b93320ff310431f40bad3d24df4d99c5a441e7f73a8e08a66c0ed41
+  semantic_packet: sha256:19232c8d818a2598f9f51ae6490cdd6454df12181d4a806001bba66d3661c173
+  authority_C: sha256:217cbe3b1f55ed431e7a0fe64de060c80641a715c6bfd859d85f015981fe6770
+  authority_F: sha256:b948d1b42ad9237a1d3245df024764f9719d9d43a8a627e48af9690cffe17fa2
+generator:
+  revision: direct_svg_stage_review.v4
+  commit: 81dbfbe8abeb676fffbac320743563b2c008b8db
+  files:
+    pyproject.toml: sha256:a00fb543e6ce8011324b2ee770073306c78b611546c4c5860949d01e4b091cb0
+    uv.lock: sha256:e4a26154557124084aea47dea399986fe881bf7c81b217b91a6a5e3d72dd1684
+    scripts/direct_svg_stage_review.py: sha256:f6a920776fbd681d0e739e9efb836ca9d38c9a6a82b14a6dfaf49d5e9f1e5789
+    scripts/direct_svg_review.py: sha256:8b5161da1cdb1a47182a75ad1db02171d9f4b9b88fee94e218f2b94980db3a4f
+    scripts/direct_svg_packet.py: sha256:20dc248b744cff6c1701ba423f80511d95527fdc34e69f621a01892a916feebd
+    scripts/hybrid/comparison_report.py: sha256:5a8659086d330b6e6705733f99227047ab80cd9f1ae2ebc9643ac8802d9415d9
+  environment:
+    python: 3.12.13
+    pillow: 12.2.0
+    pyyaml: 6.0.3
+    png_zlib: 1.3.1.zlib-ng
+    resampling: Pillow.Image.Resampling.LANCZOS
+  receipt_sha256: sha256:b2a86256adc3c80ed4c9034fdeedf3d3c55be67f9ae95d144c385ffd0fae4140
+publication_acceptance: not_claimed
+html_sha256: sha256:565a548012f1c1aabe893a49e6f19968417138f7dd66922ae17d3ed57b6061bb
+public_inventory:
+  index.html: sha256:565a548012f1c1aabe893a49e6f19968417138f7dd66922ae17d3ed57b6061bb
+  panels/C/diagnostic-a-b.png: sha256:bdc6c6ab764e61ed082d04ef56aabdcca620b1f1e695b0e4d0a9cea7b4290b97
+  panels/C/diagnostic-a-c.png: sha256:0fcca5ac83fcb62491400d64ca75fc58ce633efe3997d7c1987dcb27d57d38df
+  panels/C/diagnostic-b-c.png: sha256:f1315dbfe60cd57540bcb4ec5a7b369422738031cf1951072c76fa676d248e69
+  panels/C/option-a.png: sha256:fbec43d9d524ddd041bb57b4ba16e6458f6afe7f459de061307cf3656fa1896e
+  panels/C/option-b.png: sha256:807d75789ff72225c8239a0b5d014fd040bd3dda03de5928d3b366025d7ab47f
+  panels/C/option-c.png: sha256:30e1c22dbfda29a80d33c0c9bfcbfb5ee873e61a699a52fb3ffe806c10bf8b6c
+  panels/F/diagnostic-a-b.png: sha256:5d73b7836bf186c6247802f4cf46960ee7c910ee041456f445f5b0eaa849ad19
+  panels/F/diagnostic-a-c.png: sha256:345f2a3a770716e20e787dfc57a4758a4919f3910cdf4784a87405b25a5cc0c5
+  panels/F/diagnostic-b-c.png: sha256:362f0094a0538fa943589b22b91b79dcb26064770aa0277e4c17396395d641b0
+  panels/F/option-a.png: sha256:97cb66d36dd04466962fc08a2960f2b94364f192ebc9d1e919ab3d9778865771
+  panels/F/option-b.png: sha256:022c2d56ac9bfd90d814070e9dc458d80b94746f70dd2213245c22828948181e
+  panels/F/option-c.png: sha256:d90196374d38a7ce7f38dc68141f0afbf40bf0fd345d6c9b4d801c0f8b2f535e
+  response.yaml: state:response_sha256

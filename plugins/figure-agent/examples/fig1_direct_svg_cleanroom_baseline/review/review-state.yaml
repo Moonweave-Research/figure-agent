@@ -1,21 +1,21 @@
 schema: figure-agent.direct-svg-review-state.v4
 state: awaiting_named_human_verdict
-version: review-v3-2a591b78a46b00d4
-public_manifest_sha256: sha256:20d3cdca371e94b77914515ba4a580329979f5b56d785d2185243ea2e4f2058c
-private_manifest_sha256: sha256:f50085bc3c7c72b8dd250cca12e336da7db8c5974d0db8dd1dd55f533029c732
+version: review-v3-08cc4280c1e69e77
+public_manifest_sha256: sha256:176a9362121a65d3807e355ece4d5eeb4a09e77915372aa17825d78c0999aefc
+private_manifest_sha256: sha256:9783652e90491c039349905af5ca895e8abd7f18293a1c8152085e5e70b82a0d
 upstream_commitments:
-  run_state_1: sha256:b480de0335afd0379bcbbddd2564f150e1a2711c5cbbfb0bebecebef47e20be2
-  run_state_2: sha256:ae60be17e28959d16b7d95cd195170b2d43877ffc2b919073659c5f4c8c64485
-  semantic_packet: sha256:047cf3e84643cf96e9a1516ae2bf3c15b0a4de56e53fe9924bf4a507e150bce9
-  authority_C: sha256:baba9038c3b119247f13b690a3f2e5132c1365ef9ae01452e3594f3fbcc128f6
-  authority_F: sha256:271d46774d878209c993dccfd8ae3ea55de25553e5257613d9b3d5c45754cefd
+  run_state_1: sha256:e9aa7ed7248c6861008c60dae32672cbfd20ec7d944234b3e7590153287b0420
+  run_state_2: sha256:24b5fa0f9b93320ff310431f40bad3d24df4d99c5a441e7f73a8e08a66c0ed41
+  semantic_packet: sha256:19232c8d818a2598f9f51ae6490cdd6454df12181d4a806001bba66d3661c173
+  authority_C: sha256:217cbe3b1f55ed431e7a0fe64de060c80641a715c6bfd859d85f015981fe6770
+  authority_F: sha256:b948d1b42ad9237a1d3245df024764f9719d9d43a8a627e48af9690cffe17fa2
 generator:
   revision: direct_svg_stage_review.v4
-  commit: 43ced8f824c9f6ec7b4ce29179747dfd18659ee3
+  commit: 81dbfbe8abeb676fffbac320743563b2c008b8db
   files:
     pyproject.toml: sha256:a00fb543e6ce8011324b2ee770073306c78b611546c4c5860949d01e4b091cb0
     uv.lock: sha256:e4a26154557124084aea47dea399986fe881bf7c81b217b91a6a5e3d72dd1684
-    scripts/direct_svg_stage_review.py: sha256:41e1987fbae4a2c59c93e32d13d07d104277e616e34533bcee9705f48c5a7748
+    scripts/direct_svg_stage_review.py: sha256:f6a920776fbd681d0e739e9efb836ca9d38c9a6a82b14a6dfaf49d5e9f1e5789
     scripts/direct_svg_review.py: sha256:8b5161da1cdb1a47182a75ad1db02171d9f4b9b88fee94e218f2b94980db3a4f
     scripts/direct_svg_packet.py: sha256:20dc248b744cff6c1701ba423f80511d95527fdc34e69f621a01892a916feebd
     scripts/hybrid/comparison_report.py: sha256:5a8659086d330b6e6705733f99227047ab80cd9f1ae2ebc9643ac8802d9415d9
@@ -25,7 +25,7 @@ generator:
     pyyaml: 6.0.3
     png_zlib: 1.3.1.zlib-ng
     resampling: Pillow.Image.Resampling.LANCZOS
-  receipt_sha256: sha256:555f321f9ccfc2f60ea91072790d03420bca6c9f2aef96d722439fcdd33eeeab
+  receipt_sha256: sha256:b2a86256adc3c80ed4c9034fdeedf3d3c55be67f9ae95d144c385ffd0fae4140
 response_schema: figure-agent.three-way-review-response.v2
 response_state: scientific_gate_pending
 response_sha256: sha256:fb86f7f37a7112c0e44ebfc223765073a8cb74d8ca4591d3c1927ec58a485df9
