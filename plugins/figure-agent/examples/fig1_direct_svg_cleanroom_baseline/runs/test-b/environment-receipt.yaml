@@ -1,5 +1,5 @@
 schema: figure-agent.direct-svg-environment-receipt.v1
-task: Task 20 Step 2 Test B
+task: Task 20 Step 2 Test B semantic synthesis
 method: manual_llm_direct_svg
 provider: OpenAI
 model: GPT-5 Codex API session
@@ -8,6 +8,7 @@ reasoning_setting: not_exposed_to_session
 tools:
   - apply_patch
   - render_candidate
+  - view_image
 renderer:
   executable: rsvg-convert
   version: 2.62.1
@@ -24,6 +25,11 @@ environment:
   network_used: false
   image_generation_used: false
   target_or_reference_pixels_available: false
+  reference_pixels_available: false
+  reference_hashes_available: false
+  geometry_derivatives_available: false
+  test_a_history_available: false
+  test_a_outputs_available: false
 semantic_packet:
   path: examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml
   sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c

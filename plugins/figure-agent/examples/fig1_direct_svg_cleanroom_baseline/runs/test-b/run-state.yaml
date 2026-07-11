@@ -10,7 +10,7 @@ semantic_packet:
 execution_started: true
 environment_receipt:
   path: environment-receipt.yaml
-  sha256: sha256:7ab41a7b6caa5a586a8bd94a7b39c46063a03cdc61c3fee7861f8d93daddf507
+  sha256: sha256:2c68e627a9386d2c047e12463bd0e3d90bf5e1d41e0b9771933c5882e12b95e8
 candidate_artifacts:
   - panel: C
     cycles: 3
@@ -19,7 +19,7 @@ candidate_artifacts:
     png_path: panel-c/cycles/cycle-03.png
     render_sha256: sha256:607110bff04a6f604e935726ab0a2114ba29d4a529ceca9d1df0a0ad9c193748
     ledger_path: panel-c/ledger.yaml
-    ledger_sha256: sha256:69541abf327194c704b1d0a6c5c6864a87f5c0bb068f053185dfd4783e7cce95
+    ledger_sha256: sha256:0049a4b0536fbdefa3cc2412607a749b339a123ceba65301d333e36c58ec5b12
   - panel: F
     cycles: 3
     svg_path: panel-f/cycles/cycle-03.svg
@@ -27,7 +27,7 @@ candidate_artifacts:
     png_path: panel-f/cycles/cycle-03.png
     render_sha256: sha256:f16c66b5236d3644043c42452fe170b0bfc319e635a4ea34d43a4e80cb86ac60
     ledger_path: panel-f/ledger.yaml
-    ledger_sha256: sha256:544e1adcebdbb62bd60cd47c8aee286dae8616be1c14edbbf516a62d8c609bfc
+    ledger_sha256: sha256:1f58817571eb32517cf62c8d67ef394f12c440fe945f675964e059f8e3e9543c
 machine_validation:
   svg_safety_and_structure: passed_all_6_cycles
   relation_metadata_complete: passed_all_6_cycles

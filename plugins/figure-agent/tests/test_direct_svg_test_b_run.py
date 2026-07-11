@@ -41,6 +41,9 @@ def _copy_fixture(tmp_path: Path) -> tuple[Path, Path]:
     (fixture / "packets").mkdir(parents=True)
     (fixture / "contract" / "fonts").mkdir(parents=True)
     (fixture / "contract" / "licenses").mkdir(parents=True)
+    (plugin_root / "scripts").mkdir(parents=True)
+    for script in ("direct_svg_candidate.py", "direct_svg_packet.py"):
+        shutil.copy2(PLUGIN_ROOT / "scripts" / script, plugin_root / "scripts" / script)
     shutil.copy2(FIXTURE / "packets" / "test-b-synthesis.yaml", fixture / "packets")
     for relative in (
         "semantic-packet.yaml",
@@ -228,6 +231,79 @@ def test_cycle_synthesis_hash_mutation_is_rejected(tmp_path: Path) -> None:
     _write(state_path, state)
 
     with pytest.raises(test_b_replay.TestBRunError, match="synthesis_binding_mismatch"):
+        test_b_replay.validate_run(plugin_root=plugin_root, fixture_root=fixture)
+
+
+def test_verify_all_rejects_rehashed_reference_guided_provenance(
+    tmp_path: Path,
+) -> None:
+    plugin_root, fixture = _copy_fixture(tmp_path)
+    run_root = fixture / "runs" / "test-b"
+    state_path = run_root / "run-state.yaml"
+    state = _load(state_path)
+    flags = (
+        "network_used",
+        "image_generation_used",
+        "target_or_reference_pixels_available",
+        "reference_pixels_available",
+        "reference_hashes_available",
+        "geometry_derivatives_available",
+        "test_a_history_available",
+        "test_a_outputs_available",
+    )
+
+    environment_path = run_root / state["environment_receipt"]["path"]
+    environment = _load(environment_path)
+    environment["method"] = "reference_guided_tracing"
+    for flag in flags:
+        environment["environment"][flag] = True
+    _write(environment_path, environment)
+    _update_bound_file_hash(state, run_root, "environment_receipt")
+
+    for panel in ("C", "F"):
+        ledger_path = run_root / f"panel-{panel.lower()}" / "ledger.yaml"
+        ledger = _load(ledger_path)
+        for receipt in ledger["iterations"]:
+            tool = receipt["tool_model_receipt"]
+            tool["method"] = "reference_guided_tracing"
+            for flag in flags:
+                tool[flag] = True
+        _write(ledger_path, ledger)
+        _update_ledger_hash(state, run_root, panel)
+    _write(state_path, state)
+
+    result = subprocess.run(
+        [
+            "uv",
+            "run",
+            "python",
+            str(run_root / "replay.py"),
+            "--verify-all",
+        ],
+        cwd=plugin_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "provenance_contract_invalid" in result.stdout + result.stderr
+
+
+def test_environment_unknown_imagegen_tool_is_rejected_after_rehash(
+    tmp_path: Path,
+) -> None:
+    plugin_root, fixture = _copy_fixture(tmp_path)
+    run_root = fixture / "runs" / "test-b"
+    state_path = run_root / "run-state.yaml"
+    state = _load(state_path)
+    environment_path = run_root / state["environment_receipt"]["path"]
+    environment = _load(environment_path)
+    environment["tools"].append("imagegen")
+    _write(environment_path, environment)
+    _update_bound_file_hash(state, run_root, "environment_receipt")
+    _write(state_path, state)
+
+    with pytest.raises(test_b_replay.TestBRunError, match="provenance_contract_invalid"):
         test_b_replay.validate_run(plugin_root=plugin_root, fixture_root=fixture)
 
 

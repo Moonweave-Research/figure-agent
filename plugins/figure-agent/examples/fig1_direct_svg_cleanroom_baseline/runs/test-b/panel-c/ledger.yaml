@@ -26,19 +26,30 @@ iterations:
     render_height: 640
     command: [uv, run, python, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/replay.py, --verify, --panel, C, --width, "960", --height, "640", --semantic-packet, examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml, --fontconfig, examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.svg, examples/fig1_direct_svg_cleanroom_baseline/runs/test-b/panel-c/cycles/cycle-01.png]
     tool_model_receipt: &receipt
-      task: Task 20 Step 2 Test B
+      task: Task 20 Step 2 Test B semantic synthesis
       provider: OpenAI
       model: GPT-5 Codex API session
       model_snapshot: not_exposed_to_session
+      reasoning_setting: not_exposed_to_session
       method: manual_llm_direct_svg
-      tools: [apply_patch, render_candidate]
+      tools: [apply_patch, render_candidate, view_image]
       panel: C
       width: 960
       height: 640
+      renderer_executable: rsvg-convert
       renderer_version: rsvg-convert 2.62.1
       python_version: 3.12.13
       pillow_version: 12.2.0
-      environment: macOS-26.5.1-arm64-arm-64bit; plugin-root cwd; no network; no image generation
+      environment_platform: macOS-26.5.1-arm64-arm-64bit
+      working_directory: plugin_root
+      network_used: false
+      image_generation_used: false
+      target_or_reference_pixels_available: false
+      reference_pixels_available: false
+      reference_hashes_available: false
+      geometry_derivatives_available: false
+      test_a_history_available: false
+      test_a_outputs_available: false
       semantic_packet_path: examples/fig1_direct_svg_cleanroom_baseline/contract/semantic-packet.yaml
       semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
       synthesis_packet_path: examples/fig1_direct_svg_cleanroom_baseline/packets/test-b-synthesis.yaml
@@ -47,7 +58,6 @@ iterations:
       font_sha256: sha256:d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682
       fontconfig_path: examples/fig1_direct_svg_cleanroom_baseline/contract/fontconfig.xml
       fontconfig_sha256: sha256:134f62bcaec72f154f449294f57c7b46fd76d43d1fc3cecf689ee2dfb8cb4a6d
-      reference_pixels_available: false
     correction_reason: Initial semantic-only synthesis; establish mixed real-space traps and continuous shallow/deep energy distributions without target or reference access.
     publication_acceptance: not_claimed
   - cycle: 2

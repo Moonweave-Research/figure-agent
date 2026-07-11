@@ -32,6 +32,24 @@ class TestBRunError(ValueError):
     """Raised when the Test B run is not internally cross-bound."""
 
 
+PROVENANCE_TASK = "Task 20 Step 2 Test B semantic synthesis"
+PROVENANCE_METHOD = "manual_llm_direct_svg"
+PROVENANCE_PROVIDER = "OpenAI"
+PROVENANCE_MODEL = "GPT-5 Codex API session"
+PROVENANCE_NOT_EXPOSED = "not_exposed_to_session"
+PROVENANCE_TOOLS = ["apply_patch", "render_candidate", "view_image"]
+PROVENANCE_FLAGS = {
+    "network_used": False,
+    "image_generation_used": False,
+    "target_or_reference_pixels_available": False,
+    "reference_pixels_available": False,
+    "reference_hashes_available": False,
+    "geometry_derivatives_available": False,
+    "test_a_history_available": False,
+    "test_a_outputs_available": False,
+}
+
+
 def _sha256(path: Path) -> str:
     return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
 
@@ -79,6 +97,114 @@ def _require_binding(
 ) -> None:
     if value != expected:
         raise TestBRunError(error)
+
+
+def _require_exact_mapping(value: Any, expected: dict[str, Any]) -> None:
+    if not isinstance(value, dict) or value != expected:
+        raise TestBRunError("provenance_contract_invalid")
+
+
+def _validate_environment_provenance(
+    environment: dict[str, Any], packet: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate the semantic-synthesis identity and return cycle expectations."""
+    for key in (
+        "reference_pixels_available",
+        "reference_hashes_available",
+        "geometry_derivatives_available",
+        "test_a_history_available",
+        "test_a_outputs_available",
+    ):
+        if packet.get(key) is not False:
+            raise TestBRunError("provenance_contract_invalid")
+    if packet.get("test_kind") != "synthesis":
+        raise TestBRunError("provenance_contract_invalid")
+
+    expected_top_level = {
+        "schema",
+        "task",
+        "method",
+        "provider",
+        "model",
+        "model_snapshot",
+        "reasoning_setting",
+        "tools",
+        "renderer",
+        "runtime",
+        "environment",
+        "semantic_packet",
+        "synthesis_packet",
+        "font",
+        "fontconfig",
+        "publication_acceptance",
+    }
+    if set(environment) != expected_top_level:
+        raise TestBRunError("provenance_contract_invalid")
+    expected_identity = {
+        "schema": "figure-agent.direct-svg-environment-receipt.v1",
+        "task": PROVENANCE_TASK,
+        "method": PROVENANCE_METHOD,
+        "provider": PROVENANCE_PROVIDER,
+        "model": PROVENANCE_MODEL,
+        "model_snapshot": PROVENANCE_NOT_EXPOSED,
+        "reasoning_setting": PROVENANCE_NOT_EXPOSED,
+        "tools": PROVENANCE_TOOLS,
+        "publication_acceptance": "not_claimed",
+    }
+    if any(environment.get(key) != value for key, value in expected_identity.items()):
+        raise TestBRunError("provenance_contract_invalid")
+
+    renderer = environment.get("renderer")
+    runtime = environment.get("runtime")
+    environment_values = environment.get("environment")
+    if not isinstance(renderer, dict) or set(renderer) != {
+        "executable",
+        "version",
+        "cairo",
+        "pango",
+        "harfbuzz",
+        "fontconfig",
+    }:
+        raise TestBRunError("provenance_contract_invalid")
+    if not isinstance(runtime, dict) or set(runtime) != {"python", "pillow"}:
+        raise TestBRunError("provenance_contract_invalid")
+    if not isinstance(environment_values, dict):
+        raise TestBRunError("provenance_contract_invalid")
+    _require_exact_mapping(
+        environment_values,
+        {
+            "platform": "macOS-26.5.1-arm64-arm-64bit",
+            "working_directory": "plugin_root",
+            **PROVENANCE_FLAGS,
+        },
+    )
+    expected_runtime = {
+        "executable": "rsvg-convert",
+        "version": "2.62.1",
+        "cairo": "1.18.4",
+        "pango": "1.57.0",
+        "harfbuzz": "14.1.0",
+        "fontconfig": "2.17.1",
+    }
+    if renderer != expected_runtime or runtime != {"python": "3.12.13", "pillow": "12.2.0"}:
+        raise TestBRunError("provenance_contract_invalid")
+
+    return {
+        "task": PROVENANCE_TASK,
+        "provider": PROVENANCE_PROVIDER,
+        "model": PROVENANCE_MODEL,
+        "model_snapshot": PROVENANCE_NOT_EXPOSED,
+        "reasoning_setting": PROVENANCE_NOT_EXPOSED,
+        "method": PROVENANCE_METHOD,
+        "tools": PROVENANCE_TOOLS,
+        "renderer_executable": renderer["executable"],
+        "renderer_version": f"{renderer['executable']} {renderer['version']}",
+        "python_version": runtime["python"],
+        "pillow_version": runtime["pillow"],
+        "environment_platform": environment_values["platform"],
+        "working_directory": environment_values["working_directory"],
+        **PROVENANCE_FLAGS,
+    }
 
 
 def _run_relative(run_root: Path, raw: Any, *, suffix: str) -> Path:
@@ -365,6 +491,7 @@ def validate_run(*, plugin_root: Path, fixture_root: Path) -> dict[str, Any]:
         fontconfig_binding,
         error="fontconfig_binding_mismatch",
     )
+    cycle_provenance = _validate_environment_provenance(environment, packet)
 
     raw_artifacts = state.get("candidate_artifacts")
     if not isinstance(raw_artifacts, list):
@@ -492,6 +619,23 @@ def validate_run(*, plugin_root: Path, fixture_root: Path) -> dict[str, Any]:
                 },
                 fontconfig_binding,
                 error="fontconfig_binding_mismatch",
+            )
+            _require_exact_mapping(
+                tool,
+                {
+                    **cycle_provenance,
+                    "panel": panel_name,
+                    "width": receipt.get("render_width"),
+                    "height": receipt.get("render_height"),
+                    "semantic_packet_path": semantic_binding["path"],
+                    "semantic_packet_sha256": semantic_binding["sha256"],
+                    "synthesis_packet_path": packet_binding["path"],
+                    "synthesis_packet_sha256": packet_binding["sha256"],
+                    "font_path": font_binding["path"],
+                    "font_sha256": font_binding["sha256"],
+                    "fontconfig_path": fontconfig_binding["path"],
+                    "fontconfig_sha256": fontconfig_binding["sha256"],
+                },
             )
 
             svg_plugin_path = _plugin_relative(svg_path, plugin_root)
