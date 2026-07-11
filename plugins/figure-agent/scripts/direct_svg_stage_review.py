@@ -106,18 +106,19 @@ def _resolve_path(value: Any, roots: tuple[Path, ...]) -> Path:
         raw is None
         or not value
         or raw.is_absolute()
-        or ".." in raw.parts
         or "." in raw.parts
     ):
         raise DirectSvgReviewError("review_prerequisite_path_invalid")
-    for root in roots:
-        resolved_root = root.resolve()
-        candidate = root / raw
+    authorized_roots = tuple(root.resolve() for root in roots)
+    for base in roots:
+        candidate = Path(os.path.abspath(base / raw))
+        owners = [root for root in authorized_roots if candidate.is_relative_to(root)]
+        if not owners:
+            continue
+        owner = max(owners, key=lambda root: len(root.parts))
         try:
-            if candidate.is_symlink():
-                raise DirectSvgReviewError("review_prerequisite_path_invalid")
-            relative = candidate.relative_to(root)
-            cursor = root
+            relative = candidate.relative_to(owner)
+            cursor = owner
             for part in relative.parts:
                 cursor = cursor / part
                 if cursor.is_symlink():
@@ -125,7 +126,7 @@ def _resolve_path(value: Any, roots: tuple[Path, ...]) -> Path:
             path = candidate.resolve(strict=True)
         except (FileNotFoundError, ValueError):
             continue
-        if path.is_relative_to(resolved_root) and path.is_file():
+        if path == candidate and path.is_file():
             return path
     raise DirectSvgReviewError("review_prerequisite_missing")
 
