@@ -31,8 +31,13 @@ def render_pair(
     output_dir.mkdir(parents=True, exist_ok=True)
     tikz_path = output_dir / "sulfur_trap_domain.tikz.tex"
     svg_path = output_dir / "sulfur_trap_domain.svg"
+    scene_path = output_dir / "sulfur_trap_domain.scene.yaml"
     tikz_path.write_text(tikz_first, encoding="utf-8")
     svg_path.write_text(svg_first, encoding="utf-8")
+    scene_path.write_text(
+        yaml.safe_dump(scene, sort_keys=True),
+        encoding="utf-8",
+    )
     source_paths = [
         Path(__file__),
         Path(__file__).with_name("illustration_backend.py"),
@@ -53,6 +58,7 @@ def render_pair(
         "sources": {path.name: _sha256(path) for path in source_paths},
         "toolchain": {"python": platform.python_version()},
         "artifacts": {
+            "scene": {"path": scene_path.name, "sha256": _sha256(scene_path)},
             "tikz": {"path": tikz_path.name, "sha256": _sha256(tikz_path)},
             "svg": {"path": svg_path.name, "sha256": _sha256(svg_path)},
         },

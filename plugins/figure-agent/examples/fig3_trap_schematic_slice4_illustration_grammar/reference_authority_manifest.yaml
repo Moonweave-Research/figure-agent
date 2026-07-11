@@ -11,6 +11,12 @@ authorities:
     authority: declared Panel e object and relation boundary
   - source: motif_instance.yaml
     authority: backend-neutral normalized motif geometry
+  - source: contract/sulfur_trap_domain.v1.yaml
+    authority: fixture-bound closed illustration grammar snapshot
+  - source: contract/polymer-tikz.v1.yaml
+    authority: fixture-bound TikZ backend profile snapshot
+  - source: contract/polymer-svg.v1.yaml
+    authority: fixture-bound SVG backend profile snapshot
   - source: fragments/render_manifest.yaml
     authority: paired grammar lowering hashes and toolchain receipt
   - source: comparators/raw_svg_slice3/source_receipt.yaml

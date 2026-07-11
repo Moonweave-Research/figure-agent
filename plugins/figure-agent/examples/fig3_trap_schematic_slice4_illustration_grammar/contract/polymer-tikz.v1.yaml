@@ -1,0 +1,21 @@
+schema: figure-agent.illustration-backend-profile.v1
+backend: tikz
+canvas: {scale_cm: 5.0}
+color_roles:
+  polymer: {stroke: cTeal!85!black, fill: cTeal}
+  sulfur: {stroke: cAmber!80!black, fill: cAmberSphere}
+  carrier: {stroke: cBlue!70!black, fill: cBlue}
+  neutral: {stroke: cGray!70!black, fill: cLGray}
+stroke_families:
+  support: 0.35pt
+  primary: 0.70pt
+  focal: 0.95pt
+emphasis:
+  background: 0.24
+  structure: 1.0
+  focal: 1.0
+supported_tokens:
+  curvature: [organic_backbone]
+  joins: [round]
+  caps: [round]
+  glyphs: [sulfur_negative]

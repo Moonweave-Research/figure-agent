@@ -1,0 +1,345 @@
+coordinate_system: normalized_unit_square
+layers:
+- objects:
+  - center:
+    - 0.27
+    - 0.3
+    id: region.1
+    radius:
+    - 0.15
+    - 0.12
+  - center:
+    - 0.55
+    - 0.52
+    id: region.2
+    radius:
+    - 0.17
+    - 0.14
+  - center:
+    - 0.78
+    - 0.72
+    id: region.3
+    radius:
+    - 0.14
+    - 0.11
+  semantic_id: sulfur.regions
+- objects:
+  - id: backbone.1
+    points:
+    - - 0.08
+      - 0.17
+    - - 0.31
+      - 0.12
+    - - 0.58
+      - 0.22
+    - - 0.92
+      - 0.16
+  - id: backbone.2
+    points:
+    - - 0.06
+      - 0.34
+    - - 0.3
+      - 0.29
+    - - 0.61
+      - 0.39
+    - - 0.94
+      - 0.32
+  - id: backbone.3
+    points:
+    - - 0.08
+      - 0.55
+    - - 0.34
+      - 0.47
+    - - 0.63
+      - 0.6
+    - - 0.91
+      - 0.53
+  - id: backbone.4
+    points:
+    - - 0.07
+      - 0.76
+    - - 0.31
+      - 0.68
+    - - 0.62
+      - 0.81
+    - - 0.93
+      - 0.73
+  semantic_id: chain.backbones
+- objects:
+  - attached_to: backbone.2
+    center:
+    - 0.19
+    - 0.27
+    id: site.1
+    located_in: region.1
+    radius: 0.025
+  - attached_to: backbone.2
+    center:
+    - 0.25
+    - 0.36
+    id: site.2
+    located_in: region.1
+    radius: 0.025
+  - attached_to: backbone.2
+    center:
+    - 0.35
+    - 0.3
+    id: site.3
+    located_in: region.1
+    radius: 0.025
+  - attached_to: backbone.3
+    center:
+    - 0.45
+    - 0.49
+    id: site.4
+    located_in: region.2
+    radius: 0.025
+  - attached_to: backbone.3
+    center:
+    - 0.55
+    - 0.6
+    id: site.5
+    located_in: region.2
+    radius: 0.025
+  - attached_to: backbone.3
+    center:
+    - 0.66
+    - 0.52
+    id: site.6
+    located_in: region.2
+    radius: 0.025
+  - attached_to: backbone.4
+    center:
+    - 0.69
+    - 0.71
+    id: site.7
+    located_in: region.3
+    radius: 0.025
+  - attached_to: backbone.4
+    center:
+    - 0.78
+    - 0.79
+    id: site.8
+    located_in: region.3
+    radius: 0.025
+  - attached_to: backbone.4
+    center:
+    - 0.87
+    - 0.7
+    id: site.9
+    located_in: region.3
+    radius: 0.025
+  semantic_id: sulfur.sites
+- objects:
+  - center:
+    - 0.25
+    - 0.29
+    co_located_with: region.1
+    id: trap.1
+    width: 0.1
+  - center:
+    - 0.29
+    - 0.33
+    co_located_with: region.1
+    id: trap.2
+    width: 0.085
+  - center:
+    - 0.53
+    - 0.49
+    co_located_with: region.2
+    id: trap.3
+    width: 0.11
+  - center:
+    - 0.58
+    - 0.55
+    co_located_with: region.2
+    id: trap.4
+    width: 0.09
+  - center:
+    - 0.76
+    - 0.7
+    co_located_with: region.3
+    id: trap.5
+    width: 0.09
+  - center:
+    - 0.81
+    - 0.74
+    co_located_with: region.3
+    id: trap.6
+    width: 0.08
+  semantic_id: trap.levels
+- objects:
+  - center:
+    - 0.25
+    - 0.29
+    id: carrier.1
+    radius: 0.017
+    sits_on: trap.1
+  - center:
+    - 0.29
+    - 0.33
+    id: carrier.2
+    radius: 0.017
+    sits_on: trap.2
+  - center:
+    - 0.53
+    - 0.49
+    id: carrier.3
+    radius: 0.017
+    sits_on: trap.3
+  - center:
+    - 0.58
+    - 0.55
+    id: carrier.4
+    radius: 0.017
+    sits_on: trap.4
+  - center:
+    - 0.76
+    - 0.7
+    id: carrier.5
+    radius: 0.017
+    sits_on: trap.5
+  - center:
+    - 0.81
+    - 0.74
+    id: carrier.6
+    radius: 0.017
+    sits_on: trap.6
+  semantic_id: trapped.carriers
+motif_family: sulfur_trap_domain
+relations:
+- object: backbone.2
+  predicate: attached_to
+  subject: site.1
+- object: region.1
+  predicate: located_in
+  subject: site.1
+- object: backbone.2
+  predicate: attached_to
+  subject: site.2
+- object: region.1
+  predicate: located_in
+  subject: site.2
+- object: backbone.2
+  predicate: attached_to
+  subject: site.3
+- object: region.1
+  predicate: located_in
+  subject: site.3
+- object: backbone.3
+  predicate: attached_to
+  subject: site.4
+- object: region.2
+  predicate: located_in
+  subject: site.4
+- object: backbone.3
+  predicate: attached_to
+  subject: site.5
+- object: region.2
+  predicate: located_in
+  subject: site.5
+- object: backbone.3
+  predicate: attached_to
+  subject: site.6
+- object: region.2
+  predicate: located_in
+  subject: site.6
+- object: backbone.4
+  predicate: attached_to
+  subject: site.7
+- object: region.3
+  predicate: located_in
+  subject: site.7
+- object: backbone.4
+  predicate: attached_to
+  subject: site.8
+- object: region.3
+  predicate: located_in
+  subject: site.8
+- object: backbone.4
+  predicate: attached_to
+  subject: site.9
+- object: region.3
+  predicate: located_in
+  subject: site.9
+- object: region.1
+  predicate: co_located_with
+  subject: trap.1
+- object: region.1
+  predicate: co_located_with
+  subject: trap.2
+- object: region.2
+  predicate: co_located_with
+  subject: trap.3
+- object: region.2
+  predicate: co_located_with
+  subject: trap.4
+- object: region.3
+  predicate: co_located_with
+  subject: trap.5
+- object: region.3
+  predicate: co_located_with
+  subject: trap.6
+- object: trap.1
+  predicate: sits_on
+  subject: carrier.1
+- object: trap.2
+  predicate: sits_on
+  subject: carrier.2
+- object: trap.3
+  predicate: sits_on
+  subject: carrier.3
+- object: trap.4
+  predicate: sits_on
+  subject: carrier.4
+- object: trap.5
+  predicate: sits_on
+  subject: carrier.5
+- object: trap.6
+  predicate: sits_on
+  subject: carrier.6
+resolved_tokens:
+  cap: round
+  curvature: organic_backbone
+  glyphs:
+    sulfur.sites:
+      kind: sulfur_negative
+      mark_half_width_ratio: 0.42
+      mark_stroke_ratio: 0.55
+  join: round
+  optical_rules:
+    carrier_centering: optical
+    cluster_cardinality:
+      sulfur_sites: 3
+      trap_levels: 2
+      trapped_carriers: 2
+    minimum_clearance_em: 0.35
+    repeated_site_variation: controlled
+  slot_roles:
+    chain.backbones:
+      color_role: polymer
+      emphasis: structure
+      stroke_family: primary
+    sulfur.regions:
+      color_role: sulfur
+      emphasis: background
+      stroke_family: support
+    sulfur.sites:
+      color_role: sulfur
+      emphasis: structure
+      stroke_family: primary
+    trap.levels:
+      color_role: sulfur
+      emphasis: structure
+      stroke_family: primary
+    trapped.carriers:
+      color_role: carrier
+      emphasis: focal
+      stroke_family: focal
+schema: figure-agent.illustration-scene.v1
+semantic_ids:
+- sulfur.regions
+- chain.backbones
+- sulfur.sites
+- trap.levels
+- trapped.carriers

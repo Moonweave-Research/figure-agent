@@ -161,9 +161,14 @@ def test_render_pair_is_byte_deterministic_and_records_non_acceptance(tmp_path: 
         tmp_path,
     )
     manifest = yaml.safe_load((tmp_path / "render_manifest.yaml").read_text(encoding="utf-8"))
+    compiled_scene = yaml.safe_load(
+        (tmp_path / "sulfur_trap_domain.scene.yaml").read_text(encoding="utf-8")
+    )
 
     assert first == second
     assert manifest["artifacts"] == first["artifacts"]
+    assert manifest["artifacts"]["scene"]["path"] == "sulfur_trap_domain.scene.yaml"
+    assert compiled_scene == compile_illustration_scene(GRAMMAR_PATH, INSTANCE_PATH)
     assert manifest["publication_acceptance"] == "not_claimed"
 
 

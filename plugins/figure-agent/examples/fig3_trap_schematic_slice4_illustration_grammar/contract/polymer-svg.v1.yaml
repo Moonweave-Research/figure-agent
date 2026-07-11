@@ -1,0 +1,21 @@
+schema: figure-agent.illustration-backend-profile.v1
+backend: svg
+canvas: {view_box: [0, 0, 100, 100]}
+color_roles:
+  polymer: {stroke: '#2F7F78', fill: '#44AA99'}
+  sulfur: {stroke: '#785F18', fill: '#DDCC77'}
+  carrier: {stroke: '#335983', fill: '#4477AA'}
+  neutral: {stroke: '#5E6268', fill: '#D9D9D9'}
+stroke_families:
+  support: 0.25
+  primary: 0.49
+  focal: 0.67
+emphasis:
+  background: 0.24
+  structure: 1.0
+  focal: 1.0
+supported_tokens:
+  curvature: [organic_backbone]
+  joins: [round]
+  caps: [round]
+  glyphs: [sulfur_negative]

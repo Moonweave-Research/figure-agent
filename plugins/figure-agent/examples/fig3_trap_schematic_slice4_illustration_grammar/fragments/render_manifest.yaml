@@ -1,4 +1,7 @@
 artifacts:
+  scene:
+    path: sulfur_trap_domain.scene.yaml
+    sha256: sha256:281459eda04617f8cb4d02ac477c411109a17ca5cffd7cb9c7b892ed7a36282f
   svg:
     path: sulfur_trap_domain.svg
     sha256: sha256:e7a2bad9463a9eefebc9fe977893aa1d20e0dec7f855734efc4bd098cbe8fbcd
@@ -27,6 +30,6 @@ sources:
   illustration_backend_tikz.py: sha256:1db70cac4c4c1da84af92a8d2488af3f8a93725c57cca9d27206164d66142a50
   illustration_grammar.py: sha256:43e11859fd05c2c7bb4aa8b7aa9bd476718256f10398e84e01f530aa98c6ebee
   illustration_scene.py: sha256:733037aa9ead498a2d18bd460b016aacabfd3a488c6a3b18bd18eb501d3bc258
-  render_illustration_motif.py: sha256:6ee9e7683283e48bbd03af7277dfa34cba20a11477d533b9b02e31bbb1caf306
+  render_illustration_motif.py: sha256:bd0cc1b714cb65aefff41bd1af1f777dbdbbb1e6e7f116ecb3a3f9b215a34b97
 toolchain:
   python: 3.12.13
