@@ -1,0 +1,177 @@
+schema: figure-agent.opaque-human-review.v1
+experiments:
+  R1:
+    C:
+      manifest: R1/C/public-review-manifest.yaml
+      manifest_sha256: sha256:867eea253be85839c3e7d14bbead98346eabd0bd9e6f5b110d1943f31cbbff73
+      review_input_hash: sha256:32dc135dac6e184342d14c9b000ff16ef06ae75e750fdddbc5a586684d64e7e7
+      response_template:
+        option_A_scientific_fidelity: pass/fail
+        option_A_scientific_evidence: ''
+        option_B_scientific_fidelity: pass/fail
+        option_B_scientific_evidence: ''
+        composition_preference: A/equivalent/B
+        illustration_quality_preference: A/equivalent/B
+        typography_preference: A/equivalent/B
+        borderline_or_disputed: false
+        named_reviewer: ''
+        reviewed_at: ''
+    F:
+      manifest: R1/F/public-review-manifest.yaml
+      manifest_sha256: sha256:0167755313eb9dfada9e762558ea15831b0301120709d6d8c7090ce33d26d5c0
+      review_input_hash: sha256:38c7ee445199687b4e44ab198cd28e97b9d6fa7c3c0358cd71b55d1e0ff7d6ef
+      response_template:
+        option_A_scientific_fidelity: pass/fail
+        option_A_scientific_evidence: ''
+        option_B_scientific_fidelity: pass/fail
+        option_B_scientific_evidence: ''
+        composition_preference: A/equivalent/B
+        illustration_quality_preference: A/equivalent/B
+        typography_preference: A/equivalent/B
+        borderline_or_disputed: false
+        named_reviewer: ''
+        reviewed_at: ''
+  R2:
+    C:
+      manifest: R2/C/public-review-manifest.yaml
+      manifest_sha256: sha256:c65ca3ed5f23e987bec6df2de26a51378beeece46cfdbbf963efce11bce0816b
+      review_input_hash: sha256:d2ace43b3e754724c1fc8703f0abf496d1ded59487b8caf970edc1e82efd4d05
+      response_template:
+        option_A_scientific_fidelity: pass/fail
+        option_A_scientific_evidence: ''
+        option_B_scientific_fidelity: pass/fail
+        option_B_scientific_evidence: ''
+        composition_preference: A/equivalent/B
+        illustration_quality_preference: A/equivalent/B
+        typography_preference: A/equivalent/B
+        borderline_or_disputed: false
+        named_reviewer: ''
+        reviewed_at: ''
+    F:
+      manifest: R2/F/public-review-manifest.yaml
+      manifest_sha256: sha256:b1007301bf10c824c4cefa399fe4487b4fe920612fe7adcd6377d1116ce10f7d
+      review_input_hash: sha256:0b3ca50009774af2653463fc44b74ffe58e54e73a88a1ff2935ad70b0763e463
+      response_template:
+        option_A_scientific_fidelity: pass/fail
+        option_A_scientific_evidence: ''
+        option_B_scientific_fidelity: pass/fail
+        option_B_scientific_evidence: ''
+        composition_preference: A/equivalent/B
+        illustration_quality_preference: A/equivalent/B
+        typography_preference: A/equivalent/B
+        borderline_or_disputed: false
+        named_reviewer: ''
+        reviewed_at: ''
+semantic_review_context:
+  scientific_objects:
+    panel_c:
+    - id: c_polymer_film
+      kind: poly(S-r-DIB) thin film
+      properties:
+        morphology: fully amorphous
+        thickness_scale: approximately 1 micrometre
+    - id: c_shallow_trap_population
+      kind: continuous shallow-trap distribution
+      properties:
+        release: thermally easier
+        lifetime: shorter
+    - id: c_deep_trap_population
+      kind: continuous deep-trap distribution
+      properties:
+        release: thermally harder
+        lifetime: longer
+    - id: c_mobility_edge
+      kind: mobility edge
+    - id: c_conduction_band
+      kind: conduction-band reference
+    - id: c_valence_band
+      kind: valence-band reference
+    - id: c_trap_depth
+      kind: symbolic deep-trap depth
+    panel_f:
+    - id: f_polymer_cantilever
+      kind: poly(S-r-DIB) cantilever
+    - id: f_fixed_support
+      kind: cantilever clamp
+    - id: f_planar_electrode
+      kind: biased planar electrode
+    - id: f_active_bias
+      kind: applied electrical bias
+    - id: f_trapped_charge
+      kind: trapped surface charge population
+    - id: f_coulomb_repulsion
+      kind: electrostatic repulsive force
+    - id: f_air_gap
+      kind: cantilever-electrode clearance
+  object_relations:
+  - subject: c_shallow_trap_population
+    predicate: coexists_with
+    object: c_deep_trap_population
+    qualification: spatially mixed within the same polymer matrix
+  - subject: c_shallow_trap_population
+    predicate: lies_below
+    object: c_mobility_edge
+    qualification: closer to the mobility edge than the deep population
+  - subject: c_deep_trap_population
+    predicate: lies_below
+    object: c_mobility_edge
+    qualification: farther below the mobility edge than the shallow population
+  - subject: c_shallow_trap_population
+    predicate: represented_as
+    object: continuous Gaussian density of states
+  - subject: c_deep_trap_population
+    predicate: represented_as
+    object: continuous Gaussian density of states
+  - subject: c_trap_depth
+    predicate: measures_symbolically
+    object: c_deep_trap_population
+    qualification: no numeric value or energy unit
+  - subject: f_active_bias
+    predicate: energizes
+    object: f_planar_electrode
+  - subject: f_trapped_charge
+    predicate: accumulates_on
+    object: f_polymer_cantilever
+  - subject: f_coulomb_repulsion
+    predicate: acts_on
+    object: f_polymer_cantilever
+    qualification: drives the cantilever away from the electrode
+  - subject: f_polymer_cantilever
+    predicate: manifests_macroscopically
+    object: c_deep_trap_population
+    qualification: mechanical evidence for the same trap landscape
+  text_content:
+    panel_c:
+    - C
+    - localized traps
+    - poly(S-r-DIB) thin film
+    - "d \u2248 1 \u03BCm"
+    - Energy
+    - E_C
+    - mobility edge
+    - E_V
+    - shallow
+    - deep
+    - "\u0394E_t^d"
+    panel_f:
+    - F
+    - mechanical
+    - V_active
+    - q_tr
+    - Coulomb
+    - repulsion
+    - electrode
+    - air gap
+normalization:
+  policy_set:
+  - exact_authority_size.v1
+  - contain_white_pad_authority_size.v1
+  application: opaque
+  resampling: LANCZOS
+  canvas: authority_size_centered_white
+diagnostics: diagnostic_only_excluded_from_score_inputs
+editability_cost: separate_not_inferred_from_images
+publication_acceptance: not_claimed
+html:
+  path: index.html
+  sha256: sha256:28272b7b7419a43bf1d7b76706be98706494fff14f0d19a413b79bed9eb67b4e

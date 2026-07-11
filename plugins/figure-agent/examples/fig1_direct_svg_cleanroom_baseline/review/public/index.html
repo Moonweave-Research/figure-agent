@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Opaque Human Review</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:1400px;margin:2rem auto;
+padding:0 1rem;color:#17202a}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+figure{margin:0}
+img{width:100%;height:auto;border:1px solid #ccd1d1;background:white}
+figcaption{font-weight:700;text-align:center;margin:.4rem}
+section{margin:3rem 0;border-top:2px solid #566573;padding-top:1rem}
+pre{white-space:pre-wrap;background:#f4f6f7;padding:1rem}
+.notice{background:#fff8e1;padding:1rem}
+</style></head><body>
+<h1>Opaque Human Review</h1>
+<p class="notice">Diagnostics are diagnostic only and excluded from score inputs.
+Editability and cost are outside this image review and must be recorded separately.</p>
+
+<section>
+  <h2>R1 / Panel C</h2>
+  <div class="pair">
+    <figure>
+      <img src="R1/C/option-a.png" alt="R1 Panel C Option A">
+      <figcaption>Option A</figcaption>
+    </figure>
+    <figure>
+      <img src="R1/C/option-b.png" alt="R1 Panel C Option B">
+      <figcaption>Option B</figcaption>
+    </figure>
+  </div>
+  <details><summary>Semantic objects, text, and relations</summary>
+    <h3>Objects</h3><pre>- id: c_polymer_film
+  kind: poly(S-r-DIB) thin film
+  properties:
+    morphology: fully amorphous
+    thickness_scale: approximately 1 micrometre
+- id: c_shallow_trap_population
+  kind: continuous shallow-trap distribution
+  properties:
+    release: thermally easier
+    lifetime: shorter
+- id: c_deep_trap_population
+  kind: continuous deep-trap distribution
+  properties:
+    release: thermally harder
+    lifetime: longer
+- id: c_mobility_edge
+  kind: mobility edge
+- id: c_conduction_band
+  kind: conduction-band reference
+- id: c_valence_band
+  kind: valence-band reference
+- id: c_trap_depth
+  kind: symbolic deep-trap depth
+</pre>
+    <h3>Text</h3><pre>- C
+- localized traps
+- poly(S-r-DIB) thin film
+- &quot;d \u2248 1 \u03BCm&quot;
+- Energy
+- E_C
+- mobility edge
+- E_V
+- shallow
+- deep
+- &quot;\u0394E_t^d&quot;
+</pre>
+    <h3>Relations</h3><pre>- subject: c_shallow_trap_population
+  predicate: coexists_with
+  object: c_deep_trap_population
+  qualification: spatially mixed within the same polymer matrix
+- subject: c_shallow_trap_population
+  predicate: lies_below
+  object: c_mobility_edge
+  qualification: closer to the mobility edge than the deep population
+- subject: c_deep_trap_population
+  predicate: lies_below
+  object: c_mobility_edge
+  qualification: farther below the mobility edge than the shallow population
+- subject: c_shallow_trap_population
+  predicate: represented_as
+  object: continuous Gaussian density of states
+- subject: c_deep_trap_population
+  predicate: represented_as
+  object: continuous Gaussian density of states
+- subject: c_trap_depth
+  predicate: measures_symbolically
+  object: c_deep_trap_population
+  qualification: no numeric value or energy unit
+</pre>
+  </details>
+  <h3>Response template</h3>
+  <ul>
+    <li>Option A scientific fidelity (pass/fail) + evidence</li>
+    <li>Option B scientific fidelity (pass/fail) + evidence</li>
+    <li>Composition preference (A/equivalent/B)</li>
+    <li>Illustration quality preference (A/equivalent/B)</li>
+    <li>Typography preference (A/equivalent/B)</li>
+    <li>Borderline/disputed flag</li>
+    <li>Named reviewer and reviewed_at</li>
+  </ul>
+  <pre>option_A_scientific_fidelity: pass/fail
+option_A_scientific_evidence: &#x27;&#x27;
+option_B_scientific_fidelity: pass/fail
+option_B_scientific_evidence: &#x27;&#x27;
+composition_preference: A/equivalent/B
+illustration_quality_preference: A/equivalent/B
+typography_preference: A/equivalent/B
+borderline_or_disputed: false
+named_reviewer: &#x27;&#x27;
+reviewed_at: &#x27;&#x27;
+</pre>
+</section>
+<section>
+  <h2>R1 / Panel F</h2>
+  <div class="pair">
+    <figure>
+      <img src="R1/F/option-a.png" alt="R1 Panel F Option A">
+      <figcaption>Option A</figcaption>
+    </figure>
+    <figure>
+      <img src="R1/F/option-b.png" alt="R1 Panel F Option B">
+      <figcaption>Option B</figcaption>
+    </figure>
+  </div>
+  <details><summary>Semantic objects, text, and relations</summary>
+    <h3>Objects</h3><pre>- id: f_polymer_cantilever
+  kind: poly(S-r-DIB) cantilever
+- id: f_fixed_support
+  kind: cantilever clamp
+- id: f_planar_electrode
+  kind: biased planar electrode
+- id: f_active_bias
+  kind: applied electrical bias
+- id: f_trapped_charge
+  kind: trapped surface charge population
+- id: f_coulomb_repulsion
+  kind: electrostatic repulsive force
+- id: f_air_gap
+  kind: cantilever-electrode clearance
+</pre>
+    <h3>Text</h3><pre>- F
+- mechanical
+- V_active
+- q_tr
+- Coulomb
+- repulsion
+- electrode
+- air gap
+</pre>
+    <h3>Relations</h3><pre>- subject: f_active_bias
+  predicate: energizes
+  object: f_planar_electrode
+- subject: f_trapped_charge
+  predicate: accumulates_on
+  object: f_polymer_cantilever
+- subject: f_coulomb_repulsion
+  predicate: acts_on
+  object: f_polymer_cantilever
+  qualification: drives the cantilever away from the electrode
+- subject: f_polymer_cantilever
+  predicate: manifests_macroscopically
+  object: c_deep_trap_population
+  qualification: mechanical evidence for the same trap landscape
+</pre>
+  </details>
+  <h3>Response template</h3>
+  <ul>
+    <li>Option A scientific fidelity (pass/fail) + evidence</li>
+    <li>Option B scientific fidelity (pass/fail) + evidence</li>
+    <li>Composition preference (A/equivalent/B)</li>
+    <li>Illustration quality preference (A/equivalent/B)</li>
+    <li>Typography preference (A/equivalent/B)</li>
+    <li>Borderline/disputed flag</li>
+    <li>Named reviewer and reviewed_at</li>
+  </ul>
+  <pre>option_A_scientific_fidelity: pass/fail
+option_A_scientific_evidence: &#x27;&#x27;
+option_B_scientific_fidelity: pass/fail
+option_B_scientific_evidence: &#x27;&#x27;
+composition_preference: A/equivalent/B
+illustration_quality_preference: A/equivalent/B
+typography_preference: A/equivalent/B
+borderline_or_disputed: false
+named_reviewer: &#x27;&#x27;
+reviewed_at: &#x27;&#x27;
+</pre>
+</section>
+<section>
+  <h2>R2 / Panel C</h2>
+  <div class="pair">
+    <figure>
+      <img src="R2/C/option-a.png" alt="R2 Panel C Option A">
+      <figcaption>Option A</figcaption>
+    </figure>
+    <figure>
+      <img src="R2/C/option-b.png" alt="R2 Panel C Option B">
+      <figcaption>Option B</figcaption>
+    </figure>
+  </div>
+  <details><summary>Semantic objects, text, and relations</summary>
+    <h3>Objects</h3><pre>- id: c_polymer_film
+  kind: poly(S-r-DIB) thin film
+  properties:
+    morphology: fully amorphous
+    thickness_scale: approximately 1 micrometre
+- id: c_shallow_trap_population
+  kind: continuous shallow-trap distribution
+  properties:
+    release: thermally easier
+    lifetime: shorter
+- id: c_deep_trap_population
+  kind: continuous deep-trap distribution
+  properties:
+    release: thermally harder
+    lifetime: longer
+- id: c_mobility_edge
+  kind: mobility edge
+- id: c_conduction_band
+  kind: conduction-band reference
+- id: c_valence_band
+  kind: valence-band reference
+- id: c_trap_depth
+  kind: symbolic deep-trap depth
+</pre>
+    <h3>Text</h3><pre>- C
+- localized traps
+- poly(S-r-DIB) thin film
+- &quot;d \u2248 1 \u03BCm&quot;
+- Energy
+- E_C
+- mobility edge
+- E_V
+- shallow
+- deep
+- &quot;\u0394E_t^d&quot;
+</pre>
+    <h3>Relations</h3><pre>- subject: c_shallow_trap_population
+  predicate: coexists_with
+  object: c_deep_trap_population
+  qualification: spatially mixed within the same polymer matrix
+- subject: c_shallow_trap_population
+  predicate: lies_below
+  object: c_mobility_edge
+  qualification: closer to the mobility edge than the deep population
+- subject: c_deep_trap_population
+  predicate: lies_below
+  object: c_mobility_edge
+  qualification: farther below the mobility edge than the shallow population
+- subject: c_shallow_trap_population
+  predicate: represented_as
+  object: continuous Gaussian density of states
+- subject: c_deep_trap_population
+  predicate: represented_as
+  object: continuous Gaussian density of states
+- subject: c_trap_depth
+  predicate: measures_symbolically
+  object: c_deep_trap_population
+  qualification: no numeric value or energy unit
+</pre>
+  </details>
+  <h3>Response template</h3>
+  <ul>
+    <li>Option A scientific fidelity (pass/fail) + evidence</li>
+    <li>Option B scientific fidelity (pass/fail) + evidence</li>
+    <li>Composition preference (A/equivalent/B)</li>
+    <li>Illustration quality preference (A/equivalent/B)</li>
+    <li>Typography preference (A/equivalent/B)</li>
+    <li>Borderline/disputed flag</li>
+    <li>Named reviewer and reviewed_at</li>
+  </ul>
+  <pre>option_A_scientific_fidelity: pass/fail
+option_A_scientific_evidence: &#x27;&#x27;
+option_B_scientific_fidelity: pass/fail
+option_B_scientific_evidence: &#x27;&#x27;
+composition_preference: A/equivalent/B
+illustration_quality_preference: A/equivalent/B
+typography_preference: A/equivalent/B
+borderline_or_disputed: false
+named_reviewer: &#x27;&#x27;
+reviewed_at: &#x27;&#x27;
+</pre>
+</section>
+<section>
+  <h2>R2 / Panel F</h2>
+  <div class="pair">
+    <figure>
+      <img src="R2/F/option-a.png" alt="R2 Panel F Option A">
+      <figcaption>Option A</figcaption>
+    </figure>
+    <figure>
+      <img src="R2/F/option-b.png" alt="R2 Panel F Option B">
+      <figcaption>Option B</figcaption>
+    </figure>
+  </div>
+  <details><summary>Semantic objects, text, and relations</summary>
+    <h3>Objects</h3><pre>- id: f_polymer_cantilever
+  kind: poly(S-r-DIB) cantilever
+- id: f_fixed_support
+  kind: cantilever clamp
+- id: f_planar_electrode
+  kind: biased planar electrode
+- id: f_active_bias
+  kind: applied electrical bias
+- id: f_trapped_charge
+  kind: trapped surface charge population
+- id: f_coulomb_repulsion
+  kind: electrostatic repulsive force
+- id: f_air_gap
+  kind: cantilever-electrode clearance
+</pre>
+    <h3>Text</h3><pre>- F
+- mechanical
+- V_active
+- q_tr
+- Coulomb
+- repulsion
+- electrode
+- air gap
+</pre>
+    <h3>Relations</h3><pre>- subject: f_active_bias
+  predicate: energizes
+  object: f_planar_electrode
+- subject: f_trapped_charge
+  predicate: accumulates_on
+  object: f_polymer_cantilever
+- subject: f_coulomb_repulsion
+  predicate: acts_on
+  object: f_polymer_cantilever
+  qualification: drives the cantilever away from the electrode
+- subject: f_polymer_cantilever
+  predicate: manifests_macroscopically
+  object: c_deep_trap_population
+  qualification: mechanical evidence for the same trap landscape
+</pre>
+  </details>
+  <h3>Response template</h3>
+  <ul>
+    <li>Option A scientific fidelity (pass/fail) + evidence</li>
+    <li>Option B scientific fidelity (pass/fail) + evidence</li>
+    <li>Composition preference (A/equivalent/B)</li>
+    <li>Illustration quality preference (A/equivalent/B)</li>
+    <li>Typography preference (A/equivalent/B)</li>
+    <li>Borderline/disputed flag</li>
+    <li>Named reviewer and reviewed_at</li>
+  </ul>
+  <pre>option_A_scientific_fidelity: pass/fail
+option_A_scientific_evidence: &#x27;&#x27;
+option_B_scientific_fidelity: pass/fail
+option_B_scientific_evidence: &#x27;&#x27;
+composition_preference: A/equivalent/B
+illustration_quality_preference: A/equivalent/B
+typography_preference: A/equivalent/B
+borderline_or_disputed: false
+named_reviewer: &#x27;&#x27;
+reviewed_at: &#x27;&#x27;
+</pre>
+</section>
+</body></html>

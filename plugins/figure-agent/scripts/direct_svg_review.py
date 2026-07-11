@@ -10,7 +10,7 @@ from typing import Any
 
 import yaml
 from hybrid.comparison_report import aggregate_review_input_hash
-from PIL import Image, ImageChops, UnidentifiedImageError
+from PIL import Image, ImageChops, ImageOps, PngImagePlugin, UnidentifiedImageError
 from PIL import __version__ as PILLOW_VERSION
 
 VISUAL_DIMENSIONS = {"composition", "illustration_quality", "typography"}
@@ -22,6 +22,9 @@ PANEL_CLASSIFICATIONS = {
     "rejected_scientific_fidelity",
 }
 HASH_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+EXACT_GEOMETRY_POLICY = "exact_authority_size.v1"
+CONTAIN_GEOMETRY_POLICY = "contain_white_pad_authority_size.v1"
+GEOMETRY_POLICIES = {EXACT_GEOMETRY_POLICY, CONTAIN_GEOMETRY_POLICY}
 
 
 class DirectSvgReviewError(ValueError):
@@ -32,24 +35,65 @@ def _sha256(path: Path) -> str:
     return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
 
 
+def _opaque_sha256(path: Path, *, seed: str, purpose: str) -> str:
+    digest = hashlib.sha256()
+    digest.update(b"figure-agent.opaque-public-hash.v1\0")
+    digest.update(seed.encode())
+    digest.update(b"\0")
+    digest.update(purpose.encode())
+    digest.update(b"\0")
+    digest.update(path.read_bytes())
+    return f"sha256:{digest.hexdigest()}"
+
+
 def _mapping(value: Any, field: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise DirectSvgReviewError(f"{field}_invalid")
     return value
 
 
-def _normalize_image(source: Path, destination: Path, *, size: tuple[int, int]) -> None:
+def _normalize_image(
+    source: Path,
+    destination: Path,
+    *,
+    size: tuple[int, int],
+    policy: str = EXACT_GEOMETRY_POLICY,
+    packet_id: str | None = None,
+) -> None:
+    if policy not in GEOMETRY_POLICIES:
+        raise DirectSvgReviewError("review_geometry_policy_invalid")
     try:
         with Image.open(source) as opened:
-            if opened.size != size:
+            if policy == EXACT_GEOMETRY_POLICY and opened.size != size:
                 raise DirectSvgReviewError("review_geometry_mismatch")
-            normalized = opened.convert("RGB")
-            normalized.save(destination, format="PNG")
+            converted = opened.convert("RGB")
+            if policy == CONTAIN_GEOMETRY_POLICY and converted.size != size:
+                contained = ImageOps.contain(
+                    converted,
+                    size,
+                    method=Image.Resampling.LANCZOS,
+                )
+                normalized = Image.new("RGB", size, "white")
+                left = (size[0] - contained.width) // 2
+                top = (size[1] - contained.height) // 2
+                normalized.paste(contained, (left, top))
+            else:
+                normalized = converted
+            png_info = PngImagePlugin.PngInfo()
+            if packet_id is not None:
+                png_info.add_text("packet_id", packet_id)
+            normalized.save(destination, format="PNG", pnginfo=png_info)
     except (FileNotFoundError, OSError, UnidentifiedImageError) as exc:
         raise DirectSvgReviewError("review_image_invalid") from exc
 
 
-def _write_diagnostics(option_a: Path, option_b: Path, output_dir: Path) -> list[dict[str, Any]]:
+def _write_diagnostics(
+    option_a: Path,
+    option_b: Path,
+    output_dir: Path,
+    *,
+    seed: str,
+) -> list[dict[str, Any]]:
     with Image.open(option_a) as first, Image.open(option_b) as second:
         difference = ImageChops.difference(first.convert("RGB"), second.convert("RGB"))
         difference_path = output_dir / "diagnostic-difference.png"
@@ -68,13 +112,17 @@ def _write_diagnostics(option_a: Path, option_b: Path, output_dir: Path) -> list
         {
             "kind": "difference",
             "path": difference_path.name,
-            "sha256": _sha256(difference_path),
+            "sha256": _opaque_sha256(
+                difference_path, seed=seed, purpose="diagnostic-difference"
+            ),
             "diagnostic_only": True,
         },
         {
             "kind": "flicker",
             "path": flicker_path.name,
-            "sha256": _sha256(flicker_path),
+            "sha256": _opaque_sha256(
+                flicker_path, seed=seed, purpose="diagnostic-flicker"
+            ),
             "diagnostic_only": True,
         },
     ]
@@ -86,10 +134,14 @@ def build_review_packet(
     output_dir: Path,
     *,
     seed: str,
+    private_manifest_path: Path,
+    candidate_normalization_policy: str = EXACT_GEOMETRY_POLICY,
 ) -> dict[str, Any]:
     """Create opaque normalized options, private assignments, and diagnostics."""
     if not isinstance(seed, str) or not seed:
         raise DirectSvgReviewError("blinding_seed_required")
+    if private_manifest_path.resolve().is_relative_to(output_dir.resolve()):
+        raise DirectSvgReviewError("private_output_must_be_separate")
     try:
         with Image.open(comparator_png) as authority:
             authority_size = authority.size
@@ -106,11 +158,26 @@ def build_review_packet(
     score_inputs: list[dict[str, str]] = []
     for letter in ("A", "B"):
         destination = output_dir / f"option-{letter.lower()}.png"
-        _normalize_image(sources[blinding_key[letter]], destination, size=authority_size)
+        policy = (
+            candidate_normalization_policy
+            if blinding_key[letter] == "candidate"
+            else EXACT_GEOMETRY_POLICY
+        )
+        _normalize_image(
+            sources[blinding_key[letter]],
+            destination,
+            size=authority_size,
+            policy=policy,
+            packet_id=hashlib.sha256(
+                f"{seed}\0option-{letter}".encode()
+            ).hexdigest(),
+        )
         item = {
             "role": f"opaque_option_{letter}",
             "path": destination.name,
-            "sha256": _sha256(destination),
+            "sha256": _opaque_sha256(
+                destination, seed=seed, purpose=f"option-{letter}"
+            ),
         }
         score_inputs.append(item)
         public_options[letter] = {"path": item["path"], "sha256": item["sha256"]}
@@ -119,8 +186,17 @@ def build_review_packet(
         output_dir / "option-a.png",
         output_dir / "option-b.png",
         output_dir,
+        seed=seed,
     )
-    toolchain = {"pillow": PILLOW_VERSION, "normalization": "rgb-white-authority-size.v1"}
+    toolchain = {
+        "pillow": PILLOW_VERSION,
+        "normalization": {
+            "policy_set": [EXACT_GEOMETRY_POLICY, CONTAIN_GEOMETRY_POLICY],
+            "application": "opaque",
+            "resampling": "LANCZOS",
+            "contain_mode": "aspect_preserving_centered_white_canvas",
+        },
+    }
     review_input_hash = aggregate_review_input_hash(score_inputs, toolchain)
     public_manifest = {
         "schema": "figure-agent.blind-review.v1",
@@ -137,19 +213,25 @@ def build_review_packet(
     private_manifest = {
         "schema": "figure-agent.blinding-key.v1",
         "assignments": blinding_key,
+        "content_sha256": {
+            letter: _sha256(output_dir / f"option-{letter.lower()}.png")
+            for letter in ("A", "B")
+        },
         "seed_sha256": f"sha256:{hashlib.sha256(seed.encode()).hexdigest()}",
         "public_manifest_sha256": _sha256(public_path),
         "review_input_hash": review_input_hash,
         "publication_acceptance": "not_claimed",
     }
-    private_path = output_dir / "private-blinding-key.yaml"
-    private_path.write_text(yaml.safe_dump(private_manifest, sort_keys=False), encoding="utf-8")
+    private_manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    private_manifest_path.write_text(
+        yaml.safe_dump(private_manifest, sort_keys=False), encoding="utf-8"
+    )
     return {
         "public_options": public_options,
         "public_manifest": public_manifest,
         "blinding_key": private_manifest,
         "public_manifest_path": public_path,
-        "private_blinding_key_path": private_path,
+        "private_blinding_key_path": private_manifest_path,
     }
 
 

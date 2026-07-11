@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -25,7 +26,13 @@ def test_review_packet_uses_opaque_options(tmp_path: Path) -> None:
     comparator = _write_png(tmp_path / "tikz-comparator.png", (240, 240, 240))
     candidate = _write_png(tmp_path / "direct-svg-candidate.png", (230, 235, 240))
 
-    packet = build_review_packet(comparator, candidate, tmp_path / "review", seed="run-01")
+    packet = build_review_packet(
+        comparator,
+        candidate,
+        tmp_path / "public",
+        seed="run-01",
+        private_manifest_path=tmp_path / "private" / "key.yaml",
+    )
 
     assert set(packet["public_options"]) == {"A", "B"}
     assert "tikz" not in json.dumps(packet["public_manifest"]).lower()
@@ -33,17 +40,31 @@ def test_review_packet_uses_opaque_options(tmp_path: Path) -> None:
     assert packet["blinding_key"]["assignments"]["A"] != packet["blinding_key"][
         "assignments"
     ]["B"]
-    public_path = tmp_path / "review" / "public-review-manifest.yaml"
+    public_path = tmp_path / "public" / "public-review-manifest.yaml"
     assert yaml.safe_load(public_path.read_text(encoding="utf-8")) == packet[
         "public_manifest"
     ]
+    raw_hashes = {
+        f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
+        for path in (comparator, candidate)
+    }
+    assert not raw_hashes & {
+        item["sha256"] for item in packet["public_options"].values()
+    }
+    assert set(packet["blinding_key"]["content_sha256"]) == {"A", "B"}
 
 
 def test_diagnostics_are_excluded_from_score_inputs(tmp_path: Path) -> None:
     comparator = _write_png(tmp_path / "comparator.png", (240, 240, 240))
     candidate = _write_png(tmp_path / "candidate.png", (230, 235, 240))
 
-    packet = build_review_packet(comparator, candidate, tmp_path / "review", seed="run-02")
+    packet = build_review_packet(
+        comparator,
+        candidate,
+        tmp_path / "public",
+        seed="run-02",
+        private_manifest_path=tmp_path / "private" / "key.yaml",
+    )
 
     public = packet["public_manifest"]
     assert {item["role"] for item in public["score_inputs"]} == {
@@ -54,6 +75,76 @@ def test_diagnostics_are_excluded_from_score_inputs(tmp_path: Path) -> None:
     assert not {
         item["path"] for item in public["diagnostics"]
     } & {item["path"] for item in public["score_inputs"]}
+
+
+def test_review_packet_rejects_geometry_mismatch_by_default(tmp_path: Path) -> None:
+    comparator = _write_png(tmp_path / "authority.png", (240, 240, 240))
+    candidate = tmp_path / "option.png"
+    Image.new("RGB", (60, 80), (20, 30, 40)).save(candidate, format="PNG")
+
+    with pytest.raises(DirectSvgReviewError, match="review_geometry_mismatch"):
+        build_review_packet(
+            comparator,
+            candidate,
+            tmp_path / "public",
+            seed="geometry-exact",
+            private_manifest_path=tmp_path / "private" / "key.yaml",
+        )
+
+
+def test_contain_policy_preserves_aspect_and_centers_on_white_canvas(
+    tmp_path: Path,
+) -> None:
+    comparator = _write_png(tmp_path / "authority.png", (240, 240, 240))
+    candidate = tmp_path / "option.png"
+    Image.new("RGB", (60, 80), (20, 30, 40)).save(candidate, format="PNG")
+
+    packet = build_review_packet(
+        comparator,
+        candidate,
+        tmp_path / "public",
+        seed="geometry-contain",
+        private_manifest_path=tmp_path / "private" / "key.yaml",
+        candidate_normalization_policy="contain_white_pad_authority_size.v1",
+    )
+
+    normalized_paths = [
+        tmp_path / "public" / item["path"]
+        for item in packet["public_options"].values()
+    ]
+    assert all(Image.open(path).size == (120, 80) for path in normalized_paths)
+    assert any(Image.open(path).getpixel((0, 40)) == (255, 255, 255) for path in normalized_paths)
+    toolchain = packet["public_manifest"]["toolchain"]
+    assert toolchain["normalization"]["policy_set"] == [
+        "exact_authority_size.v1",
+        "contain_white_pad_authority_size.v1",
+    ]
+    assert toolchain["normalization"]["application"] == "opaque"
+
+
+def test_private_manifest_is_separate_and_public_hashes_are_deterministic(
+    tmp_path: Path,
+) -> None:
+    comparator = _write_png(tmp_path / "authority.png", (240, 240, 240))
+    candidate = _write_png(tmp_path / "option.png", (20, 30, 40))
+    packets = []
+    for name in ("one", "two"):
+        packets.append(
+            build_review_packet(
+                comparator,
+                candidate,
+                tmp_path / name / "public",
+                seed="stable-seed",
+                private_manifest_path=tmp_path / name / "private" / "key.yaml",
+            )
+        )
+
+    assert not list((tmp_path / "one" / "public").glob("*private*"))
+    assert packets[0]["public_manifest"] == packets[1]["public_manifest"]
+    assert (
+        packets[0]["public_manifest_path"].read_bytes()
+        == packets[1]["public_manifest_path"].read_bytes()
+    )
 
 
 def test_scientific_failure_cannot_be_compensated_by_visual_scores() -> None:

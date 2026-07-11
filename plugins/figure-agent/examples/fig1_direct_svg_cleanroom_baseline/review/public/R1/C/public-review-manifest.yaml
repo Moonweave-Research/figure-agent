@@ -1,0 +1,35 @@
+schema: figure-agent.blind-review.v1
+options:
+  A:
+    path: option-a.png
+    sha256: sha256:6171a09eaf009b0e5f8a77d6384944325fb04e5cf18fbafdfd620750235d6239
+  B:
+    path: option-b.png
+    sha256: sha256:b647f5c95ffb98fb8b987ffb1545acf8d21bfdf935169a5c11cd78437c785ffe
+score_inputs:
+- role: opaque_option_A
+  path: option-a.png
+  sha256: sha256:6171a09eaf009b0e5f8a77d6384944325fb04e5cf18fbafdfd620750235d6239
+- role: opaque_option_B
+  path: option-b.png
+  sha256: sha256:b647f5c95ffb98fb8b987ffb1545acf8d21bfdf935169a5c11cd78437c785ffe
+diagnostics:
+- kind: difference
+  path: diagnostic-difference.png
+  sha256: sha256:5e2df08a65bfc02bc50ceb1774f09c4f82972fda7b84b6247defa25e2096d3df
+  diagnostic_only: true
+- kind: flicker
+  path: diagnostic-flicker.gif
+  sha256: sha256:ed1ab6cf8281256cd5e79b81c7cb232506419be4ab0cc7d746275f8633b5061e
+  diagnostic_only: true
+toolchain:
+  pillow: 12.2.0
+  normalization:
+    policy_set:
+    - exact_authority_size.v1
+    - contain_white_pad_authority_size.v1
+    application: opaque
+    resampling: LANCZOS
+    contain_mode: aspect_preserving_centered_white_canvas
+review_input_hash: sha256:32dc135dac6e184342d14c9b000ff16ef06ae75e750fdddbc5a586684d64e7e7
+publication_acceptance: not_claimed

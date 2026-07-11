@@ -1,0 +1,11 @@
+schema: figure-agent.blinding-key.v1
+assignments:
+  A: comparator
+  B: candidate
+content_sha256:
+  A: sha256:bbecd9ec2ebb8e3adbb3e059257fb99db9647fd2c9e449e891a74352efafb06b
+  B: sha256:45d7c0193e21ed8faef295fc5ecff4e5f3bb79e6900f5d852e961ab71aa9ec6e
+seed_sha256: sha256:7926345e4295444a2e60f9b908fa213b63111d02afe68b08b1e31d3a5a8d0263
+public_manifest_sha256: sha256:b1007301bf10c824c4cefa399fe4487b4fe920612fe7adcd6377d1116ce10f7d
+review_input_hash: sha256:0b3ca50009774af2653463fc44b74ffe58e54e73a88a1ff2935ad70b0763e463
+publication_acceptance: not_claimed
