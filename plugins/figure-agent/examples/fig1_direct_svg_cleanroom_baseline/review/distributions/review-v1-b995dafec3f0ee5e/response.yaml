@@ -1,0 +1,31 @@
+schema: figure-agent.three-way-review-response.v1
+primary_reviewer:
+  name: null
+  reviewed_at: null
+second_reviewer:
+  required: null
+  name: null
+  reviewed_at: null
+panels:
+  C:
+    option_A_scientific_fidelity: null
+    option_A_scientific_evidence: null
+    option_B_scientific_fidelity: null
+    option_B_scientific_evidence: null
+    option_C_scientific_fidelity: null
+    option_C_scientific_evidence: null
+    composition_preference: null
+    illustration_quality_preference: null
+    typography_preference: null
+    borderline_or_disputed: null
+  F:
+    option_A_scientific_fidelity: null
+    option_A_scientific_evidence: null
+    option_B_scientific_fidelity: null
+    option_B_scientific_evidence: null
+    option_C_scientific_fidelity: null
+    option_C_scientific_evidence: null
+    composition_preference: null
+    illustration_quality_preference: null
+    typography_preference: null
+    borderline_or_disputed: null

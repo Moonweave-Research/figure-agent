@@ -1,0 +1,21 @@
+schema: figure-agent.direct-svg-review-state.v2
+state: awaiting_named_human_verdict
+version: review-v1-b995dafec3f0ee5e
+public_manifest_sha256: sha256:119060eaa79ed4f716e2d01a4172f0ba76fae67a7b54d502303242a6761bf6dd
+private_manifest_sha256: sha256:45cee9b469371b70287b8bce5faa33f349816fd0bcef32105931263fef8ae1e3
+upstream_bindings:
+  run_state_hashes:
+  - sha256:f68e3fc05f2ca9d3ac7d427a861be9c4a05426a7c932db7e88dcdf6bfc59ea9f
+  - sha256:d658af4dff72b51c9b0bc2e263f4fd2b5267583f919325ac7c8e5762e290c808
+  semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+  authority_sha256:
+    C: sha256:40fdadde6e9e428d32caabe007e4891caacf11e99ac6565dccb1f531e6953703
+    F: sha256:d74d2ee3c360eb585486b12784170861bdaa84f574d7f1b6c0446b7be43b0f09
+generator:
+  revision: direct_svg_stage_review.v2
+  commit: 12867b7c
+response_schema: figure-agent.three-way-review-response.v1
+normalization_policy: contain_white_pad_authority_size.v1
+blinding_keys_revealed: false
+cold_reproductions: 0
+publication_acceptance: not_claimed

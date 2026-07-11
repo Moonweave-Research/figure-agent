@@ -1,0 +1,221 @@
+schema: figure-agent.three-way-blind-review.v1
+version: review-v1-b995dafec3f0ee5e
+panels:
+  C:
+    options:
+      A: &id001
+        path: option-a.png
+        opaque_sha256: sha256:6a4dd7c909156f95e87e72b74ac9f601f08eb3c38d0c3da0afca5b28325edf70
+      B: &id002
+        path: option-b.png
+        opaque_sha256: sha256:93fad8bd3404ab9c02457c5358249bb004f7276bb54c2728a1f0cb02fe52794d
+      C: &id003
+        path: option-c.png
+        opaque_sha256: sha256:66a099a4a6f6c26c929f279470bda1436b847e7f99ed6d3303f06f08353276ec
+    score_inputs:
+    - *id001
+    - *id002
+    - *id003
+    diagnostics:
+    - path: diagnostic-a-b.png
+      opaque_sha256: sha256:d39cb681d52c039451002852a7b128073a5e614bbd6e082a92df77ad90e24aa1
+      diagnostic_only: true
+    - path: diagnostic-a-c.png
+      opaque_sha256: sha256:e808958ddf8c5507b01939aa27868a0368f521768d02531552ac2923ef63d743
+      diagnostic_only: true
+    - path: diagnostic-b-c.png
+      opaque_sha256: sha256:8430156a78a4fb30cf3d3d8fb3c66d8c4337f3ea63a96fa8fdfc33f83d508dbe
+      diagnostic_only: true
+    response_template:
+      option_A_scientific_fidelity: null
+      option_A_scientific_evidence: null
+      option_B_scientific_fidelity: null
+      option_B_scientific_evidence: null
+      option_C_scientific_fidelity: null
+      option_C_scientific_evidence: null
+      composition_preference: null
+      illustration_quality_preference: null
+      typography_preference: null
+      borderline_or_disputed: null
+  F:
+    options:
+      A: &id004
+        path: option-a.png
+        opaque_sha256: sha256:fa92fcd6a0eba41e0c20d5a8016eeb330c377fb6f9e87984826495c900212926
+      B: &id005
+        path: option-b.png
+        opaque_sha256: sha256:20381c702e8afbb9bb0ce105532b8f58dd8c0dc57c5e4e72e35561bb98cf29bd
+      C: &id006
+        path: option-c.png
+        opaque_sha256: sha256:701527bda0ff3ffc12bffb256ee3269f6f6b979abe632b859658a44b233afc53
+    score_inputs:
+    - *id004
+    - *id005
+    - *id006
+    diagnostics:
+    - path: diagnostic-a-b.png
+      opaque_sha256: sha256:6e730f0dac5c5c32b5beac565eef4651b0f91abd5a9393174a60a750976a875a
+      diagnostic_only: true
+    - path: diagnostic-a-c.png
+      opaque_sha256: sha256:d30b495c78234c6b80f58a338c510f65157ec0789108fa57c2ab8a158d4e3ed8
+      diagnostic_only: true
+    - path: diagnostic-b-c.png
+      opaque_sha256: sha256:9246988df7b5fac56961d6e74e9e49a4a2f3a8d92b4fbe52f107d3ae46636503
+      diagnostic_only: true
+    response_template:
+      option_A_scientific_fidelity: null
+      option_A_scientific_evidence: null
+      option_B_scientific_fidelity: null
+      option_B_scientific_evidence: null
+      option_C_scientific_fidelity: null
+      option_C_scientific_evidence: null
+      composition_preference: null
+      illustration_quality_preference: null
+      typography_preference: null
+      borderline_or_disputed: null
+responses:
+  C:
+    option_A_scientific_fidelity: null
+    option_A_scientific_evidence: null
+    option_B_scientific_fidelity: null
+    option_B_scientific_evidence: null
+    option_C_scientific_fidelity: null
+    option_C_scientific_evidence: null
+    composition_preference: null
+    illustration_quality_preference: null
+    typography_preference: null
+    borderline_or_disputed: null
+  F:
+    option_A_scientific_fidelity: null
+    option_A_scientific_evidence: null
+    option_B_scientific_fidelity: null
+    option_B_scientific_evidence: null
+    option_C_scientific_fidelity: null
+    option_C_scientific_evidence: null
+    composition_preference: null
+    illustration_quality_preference: null
+    typography_preference: null
+    borderline_or_disputed: null
+response_schema: figure-agent.three-way-review-response.v1
+response_contract:
+  additional_fields: false
+  primary_reviewer_required: true
+  second_reviewer_required_when: borderline_or_disputed
+semantic_review_context:
+  scientific_objects:
+    panel_c:
+    - id: c_polymer_film
+      kind: poly(S-r-DIB) thin film
+      properties:
+        morphology: fully amorphous
+        thickness_scale: approximately 1 micrometre
+    - id: c_shallow_trap_population
+      kind: continuous shallow-trap distribution
+      properties:
+        release: thermally easier
+        lifetime: shorter
+    - id: c_deep_trap_population
+      kind: continuous deep-trap distribution
+      properties:
+        release: thermally harder
+        lifetime: longer
+    - id: c_mobility_edge
+      kind: mobility edge
+    - id: c_conduction_band
+      kind: conduction-band reference
+    - id: c_valence_band
+      kind: valence-band reference
+    - id: c_trap_depth
+      kind: symbolic deep-trap depth
+    panel_f:
+    - id: f_polymer_cantilever
+      kind: poly(S-r-DIB) cantilever
+    - id: f_fixed_support
+      kind: cantilever clamp
+    - id: f_planar_electrode
+      kind: biased planar electrode
+    - id: f_active_bias
+      kind: applied electrical bias
+    - id: f_trapped_charge
+      kind: trapped surface charge population
+    - id: f_coulomb_repulsion
+      kind: electrostatic repulsive force
+    - id: f_air_gap
+      kind: cantilever-electrode clearance
+  object_relations:
+  - subject: c_shallow_trap_population
+    predicate: coexists_with
+    object: c_deep_trap_population
+    qualification: spatially mixed within the same polymer matrix
+  - subject: c_shallow_trap_population
+    predicate: lies_below
+    object: c_mobility_edge
+    qualification: closer to the mobility edge than the deep population
+  - subject: c_deep_trap_population
+    predicate: lies_below
+    object: c_mobility_edge
+    qualification: farther below the mobility edge than the shallow population
+  - subject: c_shallow_trap_population
+    predicate: represented_as
+    object: continuous Gaussian density of states
+  - subject: c_deep_trap_population
+    predicate: represented_as
+    object: continuous Gaussian density of states
+  - subject: c_trap_depth
+    predicate: measures_symbolically
+    object: c_deep_trap_population
+    qualification: no numeric value or energy unit
+  - subject: f_active_bias
+    predicate: energizes
+    object: f_planar_electrode
+  - subject: f_trapped_charge
+    predicate: accumulates_on
+    object: f_polymer_cantilever
+  - subject: f_coulomb_repulsion
+    predicate: acts_on
+    object: f_polymer_cantilever
+    qualification: drives the cantilever away from the electrode
+  - subject: f_polymer_cantilever
+    predicate: manifests_macroscopically
+    object: c_deep_trap_population
+    qualification: mechanical evidence for the same trap landscape
+  text_content:
+    panel_c:
+    - C
+    - localized traps
+    - poly(S-r-DIB) thin film
+    - "d \u2248 1 \u03BCm"
+    - Energy
+    - E_C
+    - mobility edge
+    - E_V
+    - shallow
+    - deep
+    - "\u0394E_t^d"
+    panel_f:
+    - F
+    - mechanical
+    - V_active
+    - q_tr
+    - Coulomb
+    - repulsion
+    - electrode
+    - air gap
+normalization:
+  policy: contain_white_pad_authority_size.v1
+  application: all_three_options
+  resampling: LANCZOS
+  canvas: authority_dimensions_centered_white
+upstream_bindings:
+  run_state_hashes:
+  - sha256:f68e3fc05f2ca9d3ac7d427a861be9c4a05426a7c932db7e88dcdf6bfc59ea9f
+  - sha256:d658af4dff72b51c9b0bc2e263f4fd2b5267583f919325ac7c8e5762e290c808
+  semantic_packet_sha256: sha256:9eab4534eee188d407d9d808e87ce3e4fcf4d57a8edf821332d95fe3f315d63c
+  authority_sha256:
+    C: sha256:40fdadde6e9e428d32caabe007e4891caacf11e99ac6565dccb1f531e6953703
+    F: sha256:d74d2ee3c360eb585486b12784170861bdaa84f574d7f1b6c0446b7be43b0f09
+generator:
+  revision: direct_svg_stage_review.v2
+  commit: 12867b7c
+publication_acceptance: not_claimed
+html_sha256: sha256:e45edfa0b790569baec0b7498fc149297e31110e9935026d185abe3b65775dc4
