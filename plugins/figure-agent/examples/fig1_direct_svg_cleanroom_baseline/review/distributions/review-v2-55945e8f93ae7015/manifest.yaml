@@ -1,55 +1,55 @@
 schema: figure-agent.three-way-blind-review.v2
-version: review-v2-d7125fdf4d82bacf
+version: review-v2-55945e8f93ae7015
 panels:
   C:
     options:
       A: &id001
         path: option-a.png
-        opaque_sha256: sha256:e89567e1f8950b1a75b97dabb307764f478d84f78753ee9e2a22cd0c1969625a
+        opaque_sha256: sha256:8ff733bd8f0a12848987ebbf9008f897c49300995bcf0b123e3be35ab0a01179
       B: &id002
         path: option-b.png
-        opaque_sha256: sha256:69518fc435d65942b7ad58f62165dd330b042fc66f0b2a27fd43591e1f182d79
+        opaque_sha256: sha256:4de102a7f2bb8fa3e16a647cf2352acade6994b94e60d2a7f8850ffed851cb50
       C: &id003
         path: option-c.png
-        opaque_sha256: sha256:124053216cabb8f1c690f302d299d898f964281f44d75517a5cd96e2f71e6d4c
+        opaque_sha256: sha256:2dbd2e70109b5d90219409d99f601f70c061fc5e6cb60b156656df40cd687d81
     score_inputs:
     - *id001
     - *id002
     - *id003
     diagnostics:
     - path: diagnostic-a-b.png
-      opaque_sha256: sha256:ef31a5a6b7c6c28d5687913c49077d6700ecd4c5239524c58acb99173c5fe5d0
+      opaque_sha256: sha256:a9f0be6bea1150a98d9faa07237b7c15e9eb4d5c31289ddae2558f0ed4da2d3c
       diagnostic_only: true
     - path: diagnostic-a-c.png
-      opaque_sha256: sha256:db6a5fc4803309e0d715f977d9468cbc0bdb3056f6ba55a6f5b8e22884676c44
+      opaque_sha256: sha256:58141731b4f819ab28572ee5e3d3c5be426c523d0a7838d5a5e72b269bad8f27
       diagnostic_only: true
     - path: diagnostic-b-c.png
-      opaque_sha256: sha256:5aa003998b13f376663aa2cb8a2aca0516a0a6df702a9b7920078ad75ee74aae
+      opaque_sha256: sha256:aa582c58c51df38a666978fce4bbcf04d0532368d0584e3e18dc54a409d7c761
       diagnostic_only: true
   F:
     options:
       A: &id004
         path: option-a.png
-        opaque_sha256: sha256:291c6b51a3355c21be2c8053bcf6755e28cd3781304ee46fff5e1df5a3636519
+        opaque_sha256: sha256:0ff6bd2ab95e74868a1a50b0f0916a28f00224fe729056049f9e91a2c790fb60
       B: &id005
         path: option-b.png
-        opaque_sha256: sha256:6492346fc8a0b2e73c50a638d90d7a14031c8fa10d7c57862082c180971bcdd1
+        opaque_sha256: sha256:7fa7120e0ca6ea3237fe5094fe83a42a1839f28706a027c42df6c144cc9662df
       C: &id006
         path: option-c.png
-        opaque_sha256: sha256:b6f4b476b68004fbb7c19ee9186f9cd15335a20c7c7d7de84072f2aa65e78c2a
+        opaque_sha256: sha256:5a67395b8a5950b4bc6d72a38b9944b3995a7bdc39a94f6caa1c3a1ae93ef88e
     score_inputs:
     - *id004
     - *id005
     - *id006
     diagnostics:
     - path: diagnostic-a-b.png
-      opaque_sha256: sha256:01902501ddae99bc685989d07d1a6d5565602afb68f1589651382e35d36121b4
+      opaque_sha256: sha256:d2a73396ed8ff617d973c5fad5117b7706f52d0ef6fcefc013fcaf80cd879c3d
       diagnostic_only: true
     - path: diagnostic-a-c.png
-      opaque_sha256: sha256:98ee1e60ec027012de95735902ee6af26351ee39133158943231854bc1af718d
+      opaque_sha256: sha256:2e1e26fb43f08db08ee8e60e9a416a7fdd042e2df31775b3be40cd59a98ac623
       diagnostic_only: true
     - path: diagnostic-b-c.png
-      opaque_sha256: sha256:7da5dfb13ace608e3ddb6e520277f5116ce73293429caeba0a0c79f772a59e30
+      opaque_sha256: sha256:2934f2ba10f083a39ebdb431f0f5fd5b4667e389414564813b8eefced19774a7
       diagnostic_only: true
 responses:
   C:
@@ -182,15 +182,46 @@ perceptual_duplicate_policy:
   threshold: 0.002
   fail_when: distance_lte_threshold
   scope: within_panel_all_option_pairs
+  calibration: inclusive_boundary_and_localized_single-pixel_regression
+  limitation: global_mean_metric_may_underweight_small_local_defects
+  authority: duplicate_screen_only_not_visual_or_publication_acceptance
 upstream_commitments:
-  run_state_1: sha256:6990dc0eeacda140dcd4dde5fc592b66937ff27640bd02ec9b7588a484b83ed0
-  run_state_2: sha256:8e9118c232dc031d029d93a4d9cc540f9e123f9a862c1259c58782ed74b406fc
-  semantic_packet: sha256:ff4f1c10ae0883516bb662ed72bbe5f2aad2870e922df70fb27f72d12de28748
-  authority_C: sha256:32d5de9a4d3f57e53ef64d153636c8764247911088cac3f271ea9bf1ce4d66a3
-  authority_F: sha256:cfa2a37f6ffe21f8328b03ce27a929405a2a52a65602652c87e6c2f83f2f968f
+  run_state_1: sha256:fd9f848335ed2a7b052d543a120e1cd3892594daca4c87fcfcc8c7577e508167
+  run_state_2: sha256:2cbd230a645695be3ffc72d7367313fc67e8ee18d034bc2a93c17acf26117feb
+  semantic_packet: sha256:a0a9208ac3ee94ee5b806c6d6a7c14ca9ce983ab1826affece7c8b5634062cc9
+  authority_C: sha256:dfafe350a9d05ea82b3252fcdeeb5ed83cc9e54abd7ee6389bab16e11f2c3f07
+  authority_F: sha256:e597500eca36a113a9a5915690e3d2821d6b313dde9391c3e0ab88798a4a47a4
 generator:
   revision: direct_svg_stage_review.v3
-  commit: 8c5d59ce22ed14b539186b308dd1b78225484db2
-  script_blob_sha256: sha256:04ca5d27e949d28930b958e83e008d1f473871550bd76975a2036b060fbccd3f
+  commit: cb9e7b56903ec0b50edbfaaac32c0f4a5fee0ea9
+  files:
+    pyproject.toml: sha256:a00fb543e6ce8011324b2ee770073306c78b611546c4c5860949d01e4b091cb0
+    uv.lock: sha256:e4a26154557124084aea47dea399986fe881bf7c81b217b91a6a5e3d72dd1684
+    scripts/direct_svg_stage_review.py: sha256:eb5837ed81036ff359849d787c7f709c75559e13c14ae3659e1bfd9492845e8b
+    scripts/direct_svg_review.py: sha256:8b5161da1cdb1a47182a75ad1db02171d9f4b9b88fee94e218f2b94980db3a4f
+    scripts/direct_svg_packet.py: sha256:20dc248b744cff6c1701ba423f80511d95527fdc34e69f621a01892a916feebd
+    scripts/hybrid/comparison_report.py: sha256:5a8659086d330b6e6705733f99227047ab80cd9f1ae2ebc9643ac8802d9415d9
+  environment:
+    python: 3.12.13
+    pillow: 12.2.0
+    pyyaml: 6.0.3
+    png_zlib: 1.3.1.zlib-ng
+    resampling: Pillow.Image.Resampling.LANCZOS
+  receipt_sha256: sha256:f1d2e031cf0c0ec17c0901da9e0c5ac30303c7026c84e65be6eaf6e5e17095bd
 publication_acceptance: not_claimed
 html_sha256: sha256:565a548012f1c1aabe893a49e6f19968417138f7dd66922ae17d3ed57b6061bb
+public_inventory:
+  index.html: sha256:565a548012f1c1aabe893a49e6f19968417138f7dd66922ae17d3ed57b6061bb
+  panels/C/diagnostic-a-b.png: sha256:bdc6c6ab764e61ed082d04ef56aabdcca620b1f1e695b0e4d0a9cea7b4290b97
+  panels/C/diagnostic-a-c.png: sha256:0fcca5ac83fcb62491400d64ca75fc58ce633efe3997d7c1987dcb27d57d38df
+  panels/C/diagnostic-b-c.png: sha256:f1315dbfe60cd57540bcb4ec5a7b369422738031cf1951072c76fa676d248e69
+  panels/C/option-a.png: sha256:e56e72e2c286d2d35c3de17e2b4d50417b93ebe2d5af149a85b1da5cfad1328b
+  panels/C/option-b.png: sha256:dd64bcd297e2c43890c2cbc0681d8c7f66a37e9345553bc8c15fdfd2be838be6
+  panels/C/option-c.png: sha256:ce9250124b53032f69a9c6d4f59080355beb8b4bcfe7df627bac387cf0b7cde1
+  panels/F/diagnostic-a-b.png: sha256:362f0094a0538fa943589b22b91b79dcb26064770aa0277e4c17396395d641b0
+  panels/F/diagnostic-a-c.png: sha256:5d73b7836bf186c6247802f4cf46960ee7c910ee041456f445f5b0eaa849ad19
+  panels/F/diagnostic-b-c.png: sha256:345f2a3a770716e20e787dfc57a4758a4919f3910cdf4784a87405b25a5cc0c5
+  panels/F/option-a.png: sha256:f96ed16e87b27fb36aad2204b8fb8df5031054633dbf7391bcc8880902ee7c6e
+  panels/F/option-b.png: sha256:8e0eb6f2632cdde63ff9881bef40739e9479769bfd3f9a895989be187b225be5
+  panels/F/option-c.png: sha256:bbda20eb60bdcd6d8ae5653c915b8b4c79ff735d92788d61a634ca8c70360a59
+  response.yaml: state:response_sha256
