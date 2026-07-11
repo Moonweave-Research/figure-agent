@@ -152,13 +152,20 @@ def _pdf_bbox(
     )
 
 
-def build_visual_finding_artifacts(fixture_dir: Path) -> dict[str, Any]:
+def build_visual_finding_artifacts(
+    fixture_dir: Path,
+    *,
+    artifact_base: str | None = None,
+) -> dict[str, Any]:
     """Build a review-only artifact set without modifying manuscript outputs."""
     fixture_dir = fixture_dir.resolve()
     build_dir = fixture_dir / "build"
     name = fixture_dir.name
-    png_path = build_dir / f"{name}.png"
-    pdf_path = build_dir / f"{name}.pdf"
+    artifact_base = artifact_base or name
+    if not _SAFE_FINDING_ID.fullmatch(artifact_base):
+        raise VisualFindingArtifactError("artifact_base_invalid")
+    png_path = build_dir / f"{artifact_base}.png"
+    pdf_path = build_dir / f"{artifact_base}.pdf"
     report_path = build_dir / "visual_clash.json"
     try:
         report = json.loads(report_path.read_text(encoding="utf-8"))
@@ -228,6 +235,7 @@ def build_visual_finding_artifacts(fixture_dir: Path) -> dict[str, Any]:
     manifest = {
         "schema": SCHEMA,
         "fixture": name,
+        "artifact_base": artifact_base,
         "input_render_sha256": _sha256(png_path),
         "input_visual_clash_sha256": _sha256(report_path),
         "finding_count": len(records),
@@ -254,8 +262,12 @@ def _resolve_fixture(value: str) -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("fixture")
+    parser.add_argument("--artifact-base")
     args = parser.parse_args()
-    build_visual_finding_artifacts(_resolve_fixture(args.fixture))
+    build_visual_finding_artifacts(
+        _resolve_fixture(args.fixture),
+        artifact_base=args.artifact_base,
+    )
     return 0
 
 

@@ -18,6 +18,11 @@ def test_compile_script_pins_uv_project_after_changing_to_workspace_fixture() ->
     assert 'UV_RUN=(uv run --project "$WORKFLOW_DIR")' in script
     assert 'uv run python3 "$WORKFLOW_DIR/scripts/perception_pack.py"' not in script
     assert '"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"' in script
+    assert (
+        '"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/visual_finding_artifacts.py" .'
+        in script
+    )
+    assert '--artifact-base "$BASE"' in script
 
 
 @pytest.mark.skipif(

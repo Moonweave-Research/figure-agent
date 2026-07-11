@@ -107,6 +107,23 @@ def test_no_finding_report_emits_empty_manifest_without_fake_images(tmp_path: Pa
     assert list((artifact_dir / "crops").iterdir()) == []
 
 
+def test_explicit_artifact_base_supports_multiple_tex_variants_in_one_fixture(
+    tmp_path: Path,
+) -> None:
+    module = _module()
+    fixture = _fixture(tmp_path, [])
+    build = fixture / "build"
+    Image.new("RGB", (100, 100), "white").save(build / "variant_a.png")
+
+    manifest = module.build_visual_finding_artifacts(
+        fixture,
+        artifact_base="variant_a",
+    )
+
+    assert manifest["fixture"] == "demo"
+    assert manifest["artifact_base"] == "variant_a"
+
+
 def test_rejects_unsafe_finding_id_before_writing_images(tmp_path: Path) -> None:
     module = _module()
     fixture = _fixture(
@@ -131,6 +148,7 @@ def test_compile_generates_artifacts_before_deferred_strict_exit() -> None:
     assert perception_call < artifact_call
     assert deferred_exit < artifact_call
     assert "exit 1" in compile_sh[artifact_call:]
+    assert '--artifact-base "$BASE"' in compile_sh[artifact_call:]
 
 
 def test_perception_extract_declares_visual_finding_manifest_path() -> None:

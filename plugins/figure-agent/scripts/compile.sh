@@ -150,7 +150,8 @@ if [[ -f "coordinate_hints.yaml" ]]; then
 fi
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"
 ARTIFACT_STATUS=0
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/visual_finding_artifacts.py" "$BASE" || ARTIFACT_STATUS=$?
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/visual_finding_artifacts.py" . \
+  --artifact-base "$BASE" || ARTIFACT_STATUS=$?
 if [[ $ARTIFACT_STATUS -ne 0 ]]; then
   echo "ERROR: visual finding artifact generation failed" >&2
   trap - ERR
