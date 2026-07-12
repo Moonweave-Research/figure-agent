@@ -202,11 +202,61 @@ def test_review_state_awaits_named_verdict_without_claiming_acceptance() -> None
     review = _load("review/review-state.yaml")
 
     assert review["state"] == "awaiting_named_human_verdict"
-    assert review["response_state"] == "scientific_gate_pending"
+    assert review["response_state"] == "primary_visual_fixed"
     assert review["finalized_response_sha256"] is None
     assert review["blinding_keys_revealed"] is False
     assert review["cold_reproductions"] == 0
     assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_task20_records_blocked_status_without_product_direction_outcome() -> None:
+    status = _load("review/task20-status.yaml")
+    review_state_path = FIXTURE / "review" / "review-state.yaml"
+    response_path = (
+        FIXTURE
+        / "review"
+        / "distributions"
+        / "review-v3-08cc4280c1e69e77"
+        / "response.yaml"
+    )
+
+    assert status["schema"] == "figure-agent.direct-svg-task20-status.v1"
+    assert status["state"] == "blocked_pending_second_human_review"
+    assert status["product_direction_outcome"] == "not_recorded"
+    assert status["scope"] == "fig1_c_f_direct_svg_experiment_only"
+    assert status["blocker"] == {
+        "reason": "primary_review_marked_borderline_or_disputed",
+        "required_resolution": "distinct_second_named_human_review",
+    }
+    assert status["review"] == {
+        "review_state": "awaiting_named_human_verdict",
+        "response_state": "primary_visual_fixed",
+        "primary_named_reviewer": "moon",
+        "second_human_review": "unavailable",
+        "blinding_keys_revealed": False,
+    }
+    assert status["evidence"] == {
+        "review_state_path": "review-state.yaml",
+        "review_state_sha256": _sha256(review_state_path),
+        "response_path": (
+            "distributions/review-v3-08cc4280c1e69e77/response.yaml"
+        ),
+        "response_sha256": _sha256(response_path),
+    }
+    assert status["cold_reproductions"] == {
+        "required_for_passing_claim": True,
+        "passing_claim_present": False,
+        "runs_completed": 0,
+        "decision": "not_run_without_passing_claim",
+    }
+    assert status["claims"] == {
+        "direct_svg_promoted": False,
+        "grammar_globally_rejected": False,
+        "one_fig1_family_cannot_decide_globally": True,
+        "machine_valid_is_publication_acceptance": False,
+        "publication_acceptance": "not_claimed",
+    }
+    assert status["next_action"] == "obtain_distinct_second_named_human_verdict"
 
 
 def test_completed_test_a_binds_candidates_ledgers_and_machine_only_state() -> None:

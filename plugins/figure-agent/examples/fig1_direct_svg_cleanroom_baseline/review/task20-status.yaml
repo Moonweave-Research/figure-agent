@@ -1,0 +1,31 @@
+schema: figure-agent.direct-svg-task20-status.v1
+recorded_at: '2026-07-12T10:30:00+09:00'
+state: blocked_pending_second_human_review
+product_direction_outcome: not_recorded
+scope: fig1_c_f_direct_svg_experiment_only
+blocker:
+  reason: primary_review_marked_borderline_or_disputed
+  required_resolution: distinct_second_named_human_review
+review:
+  review_state: awaiting_named_human_verdict
+  response_state: primary_visual_fixed
+  primary_named_reviewer: moon
+  second_human_review: unavailable
+  blinding_keys_revealed: false
+evidence:
+  review_state_path: review-state.yaml
+  review_state_sha256: sha256:8ee745fc4ea0104d93ac439731e4885ff6fdcdeec53fc99b71140753a02e8789
+  response_path: distributions/review-v3-08cc4280c1e69e77/response.yaml
+  response_sha256: sha256:ec23de12b18f9aba35971714025e7f4b20a5eec16cb6618fbf8397b5ec441d90
+cold_reproductions:
+  required_for_passing_claim: true
+  passing_claim_present: false
+  runs_completed: 0
+  decision: not_run_without_passing_claim
+claims:
+  direct_svg_promoted: false
+  grammar_globally_rejected: false
+  one_fig1_family_cannot_decide_globally: true
+  machine_valid_is_publication_acceptance: false
+  publication_acceptance: not_claimed
+next_action: obtain_distinct_second_named_human_verdict

@@ -1289,7 +1289,9 @@ authority rather than the historical Issue 100H/I map:
 - `figure-agent.illustration-instance.v1` — `scripts/illustration_scene.py`;
 - `figure-agent.illustration-backend-profile.v1` — `scripts/illustration_backend.py`;
 - `figure-agent.direct-svg-packet.v1` — `scripts/direct_svg_packet.py`;
-- `figure-agent.direct-svg-crop-authority.v1` — `scripts/direct_svg_crop_authority.py`.
+- `figure-agent.direct-svg-crop-authority.v1` — `scripts/direct_svg_crop_authority.py`;
+- `figure-agent.direct-svg-task20-status.v1` —
+  `examples/fig1_direct_svg_cleanroom_baseline/review/task20-status.yaml`.
 
 ## Task 20: Run independent authoring and decide the next product path
 
@@ -1297,13 +1299,13 @@ This task cannot run in the current contaminated session. A fresh task receives
 only a validated standalone packet. No subagent or new user-owned task is
 created without explicit user authorization.
 
-- [ ] **Step 1: Bind an independently authored semantic packet**
+- [x] **Step 1: Bind an independently authored semantic packet**
 
 Require a named preparer, timestamp, source-authority hashes, and a declaration
 that the preparer did not inspect target implementation details. Validate with
 Task 15 before changing `run_state` from `blocked` to `ready`.
 
-- [ ] **Step 2: Execute Test A and Test B in separate clean tasks**
+- [x] **Step 2: Execute Test A and Test B in separate clean tasks**
 
 Each task preserves the three-cycle utility checkpoint, then may continue to
 the eight-cycle ceiling checkpoint. Test B receives no Test A history. Any
@@ -1315,11 +1317,20 @@ Run the scientific hard gate first. Require a second named reviewer for a
 borderline or disputed result. Do not reveal the blinding key until scores are
 fixed.
 
-- [ ] **Step 4: Run two cold reproductions only for a passing claim**
+**Recorded state:** The named primary reviewer completed the scientific and
+visual gates and marked both panels borderline or disputed. A distinct second
+human reviewer was unavailable. The independent AI advisory remains explicitly
+supplemental, the response remains `primary_visual_fixed`, and the blinding key
+remains unrevealed. This step is therefore intentionally incomplete.
+
+- [x] **Step 4: Run two cold reproductions only for a passing claim**
 
 Both use the same packet, model snapshot, prompt, tools, and budget without the
 reviewed candidate or history. Both must pass scientific fidelity and produce
 C/F panels that are no worse.
+
+**Recorded state:** No passing claim exists. Zero cold reproductions were run,
+as required by the conditional gate.
 
 - [ ] **Step 5: Record and commit the narrow outcome**
 
@@ -1329,6 +1340,13 @@ decision must state that one Fig1 family cannot reject grammar globally or
 promote direct SVG. Update this plan and commit with a message naming the actual
 outcome. Machine-valid and review-ready remain distinct from publication
 acceptance.
+
+**Recorded blocked state:** No product-direction outcome is authorized yet. The
+primary human review marked both panels borderline or disputed, and the required
+distinct second human review is unavailable. The response therefore remains
+`primary_visual_fixed`, the blinding key remains unrevealed, and no cold
+reproduction or publication claim is allowed. The bound interim artifact is
+`examples/fig1_direct_svg_cleanroom_baseline/review/task20-status.yaml`.
 
 ## Completion boundary
 
