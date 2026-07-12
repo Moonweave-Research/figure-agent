@@ -195,18 +195,20 @@ modules listed in Section 0.
 
 ### Steps
 
-- [ ] Create `tests/test_fig3_failure_first_cross_family.py` as the first RED
+- [x] Create `tests/test_fig3_failure_first_cross_family.py` as the first RED
   change. It intentionally does not exist at plan-authoring time; do not replace
   it with the unrelated cohort test or add a placeholder that passes.
-- [ ] Bind reference, briefing, specification, coordinate hints, editable source,
+- [x] Bind reference, briefing, specification, coordinate hints, editable source,
   and review history to explicit hashes and authority roles.
-- [ ] Declare the six-panel narrative, required objects and relations, forbidden
+- [x] Declare the six-panel narrative, required objects and relations, forbidden
   implications, and stable source selectors without importing Fig1 declarations.
 - [ ] Produce comparable `raw`, `verified`, and `repaired` manifests using the
   same model, input packet, budget, and starting artifact; do not treat manually
-  staged manifests as actual LLM runs without generation receipts.
-- [ ] Generate whole, panel, object/relation, and zoom crops and overlays.
-- [ ] Keep ambiguous and unbound findings review-only.
+  staged manifests as actual LLM runs without generation receipts. A receipt is
+  evidence-bound only when its adjacent non-symlink transcript and both declared
+  starting/generated artifacts match their SHA-256 hashes and shared contract.
+- [x] Generate whole, panel, object/relation, and zoom crops and overlays.
+- [x] Keep ambiguous and unbound findings review-only.
 - [ ] Apply at most one smallest exact bounded repair with protected invariants,
   change budget, receipt, and rollback evidence.
 - [ ] Obtain the missing named scaffold review, preserve the existing artifact
@@ -228,8 +230,8 @@ git diff --check
 
 ### Exit condition
 
-Slice 3 begins only after all three ablation manifests and their bound generation
-receipts exist. The Fig3 packet is cleanly reproducible, contains no
+This cross-family proof advances only after all three ablation manifests and
+their bound generation receipts exist. The Fig3 packet is cleanly reproducible, contains no
 Fig1-specific dependency, reports exact/ambiguous/unbound attribution honestly,
 preserves scientific relations across any repair, and has a named human outcome.
 A passing machine gate without human scaffold review is not completion.
