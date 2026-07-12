@@ -1,0 +1,17 @@
+\documentclass[border=4pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\begin{tikzpicture}[
+  every node/.style={font=\sffamily\fontsize{7}{8.4}\selectfont},
+  relation/.style={-{Stealth[length=4pt,width=3pt]}, line width=0.7pt},
+]
+% figure-agent:start panel_a.label.repulsion
+\node[draw, rounded corners=1pt] (electrode) at (0,0) {electrode};
+\node[draw, rounded corners=1pt] (sample) at (3,0) {sample};
+\draw[relation] (electrode) -- node[above] {electrode separation} (sample);
+\draw[relation] (sample) -- ++(0,1.2) node[right] {Coulomb repulsion};
+\node[anchor=west] at (3.55,1.65) {repulsion label};
+% figure-agent:end panel_a.label.repulsion
+\end{tikzpicture}
+\end{document}

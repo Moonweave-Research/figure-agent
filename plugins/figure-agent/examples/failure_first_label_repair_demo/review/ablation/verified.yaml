@@ -1,0 +1,17 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: verified
+model_contract_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+input_packet_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222
+budget_contract_hash: sha256:3333333333333333333333333333333333333333333333333333333333333333
+figure_family: failure_first_label_repair_demo
+findings:
+  - id: TYPO001
+    failure_class: typography
+    review_outcome: confirmed_defect
+    attribution_state: exact
+    selector_id: panel_a.label.repulsion
+human_correction_minutes: null
+intervention_count: 0
+clean_reproduction: true
+human_verdict:
+  state: pending

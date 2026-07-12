@@ -1,0 +1,13 @@
+name: failure_first_label_repair_demo
+style_profile: polymer-default
+panels:
+  - id: A
+    caption: Bounded label-repair control fixture
+    bbox_pdf_cm: [0.0, 0.0, 6.0, 3.0]
+semantic_relations:
+  - id: panel_a.electrode_relation
+    label: electrode separation
+  - id: panel_a.coulomb_direction
+    label: Coulomb repulsion
+acceptance:
+  publication_acceptance: not_claimed

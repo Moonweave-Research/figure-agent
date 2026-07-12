@@ -1,0 +1,10 @@
+schema: figure-agent.semantic-regions.v1
+fixture: failure_first_label_repair_demo
+regions:
+  - selector_id: panel_a.label.repulsion
+    source_file: failure_first_label_repair_demo.tex
+    anchor_start: "% figure-agent:start panel_a.label.repulsion"
+    anchor_end: "% figure-agent:end panel_a.label.repulsion"
+    protected_invariants:
+      - Coulomb repulsion
+      - electrode separation

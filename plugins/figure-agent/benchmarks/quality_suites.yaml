@@ -8,6 +8,10 @@ suites:
       - smoke_panel_spacing_demo
       - smoke_contrast_demo
       - smoke_annotation_box_demo
+  failure-first-smoke:
+    description: Synthetic fixture for failure attribution and bounded repair.
+    fixtures:
+      - failure_first_label_repair_demo
   dogfood:
     description: Local dogfood fixtures with real manuscript complexity.
     fixtures:

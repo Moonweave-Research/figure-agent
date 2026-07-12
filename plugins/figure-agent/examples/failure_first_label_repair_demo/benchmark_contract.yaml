@@ -1,0 +1,17 @@
+schema: figure-agent.benchmark-contract.v1
+fixture: failure_first_label_repair_demo
+defect_class: label_overlap
+candidate_families:
+  - label-repair
+candidate_edit_classes:
+  - label_offset
+required_detectors: []
+expected_movement: {}
+hard_regressions:
+  - source_compile_failure
+reference_policy:
+  kind: repo_authored_synthetic
+  external_images_allowed: false
+  golden_target_allowed: false
+release:
+  release_blocking: false
