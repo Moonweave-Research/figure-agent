@@ -6,9 +6,9 @@ source:
   review_state: human_reviewed_revise
   historical_source_unchanged: true
 selector:
-  selector_id: panel_f.metal_contact
-  anchor_start: "% figure-agent:start panel_f.metal_contact"
-  anchor_end: "% figure-agent:end panel_f.metal_contact"
+  selector_id: panel_f.mechanism_scene
+  anchor_start: "% figure-agent:start panel_f.mechanism_scene"
+  anchor_end: "% figure-agent:end panel_f.mechanism_scene"
   coordinate_space: pdf_cm
   page_index: 0
   render_geometry_hash: null

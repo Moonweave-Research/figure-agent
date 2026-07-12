@@ -29,7 +29,7 @@
   },
   "publication_acceptance": "not_claimed",
   "render_geometry_hash": "sha256:8d48ad804a4e07d847c106669a3ec9d63886d12897e0d76389db179edbf3dcfd",
-  "review_input_hash": "sha256:e28ada69677a60706505a9195f17a54a0b38ba8c9a8310f61bb02c7b5c79b877",
+  "review_input_hash": "sha256:d12d76636ddd2a52b278b4c46fc7d39f98f00b058ecb8e8a9894c0020eb8207a",
   "review_inputs": [
     {
       "path": "review/evidence/raw/object_relation.png",
@@ -84,31 +84,31 @@
     {
       "path": "review/evidence/repaired/object_relation.png",
       "role": "repaired.object_relation",
-      "sha256": "sha256:304dc2cddd80af83034235327e705e1dc5a52c6ee705a2cb106332eecdca7997"
+      "sha256": "sha256:32171ab8163dd48da68c57e86f16df40dd2cd801e360c9ac29dde394fb9cb2dc"
     },
     {
       "path": "review/evidence/repaired/overlay.png",
       "role": "repaired.overlay",
-      "sha256": "sha256:af8d8ed623475c8aff2bd27f3113c2a4f89e06d74fb051349933e8e5886d0020"
+      "sha256": "sha256:be7b438609775717051dd281daaf2be2522eb99d3e16ff7166f9d3c3d2a39968"
     },
     {
       "path": "review/evidence/repaired/panel.png",
       "role": "repaired.panel",
-      "sha256": "sha256:b39054c209c238691208705f42d2769f3e750f32ba2d3efa7ab58eda7095d7c7"
+      "sha256": "sha256:7526bdf31d94725d413a6ea43d963222fbb7e7d2bc0ade2ad9862a25fc807cc9"
     },
     {
       "path": "review/evidence/repaired/whole.png",
       "role": "repaired.whole",
-      "sha256": "sha256:11f2e2834f5385e3f50ba2a5b743d698b586918f49ac669753aa02e9a0a34f0b"
+      "sha256": "sha256:c72f3fbdebaf11e2b905773cb05dd136634f836949ce5e99162f8d0bc65b86a2"
     },
     {
       "path": "review/evidence/repaired/zoom.png",
       "role": "repaired.zoom",
-      "sha256": "sha256:24b56d0b9e187688d1fa29f58a40a95a396c239c682f6b5f0e442525185845ce"
+      "sha256": "sha256:9b6c297433a013998d0fe0b872ef0d499add8b926e7e3940aa45d032c982cad8"
     }
   ],
   "schema": "figure-agent.review-evidence-receipt.v1",
-  "selector_id": "panel_f.metal_contact",
+  "selector_id": "panel_f.mechanism_scene",
   "variants": [
     "raw",
     "verified",

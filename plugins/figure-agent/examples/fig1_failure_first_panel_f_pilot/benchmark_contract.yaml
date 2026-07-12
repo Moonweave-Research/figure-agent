@@ -4,7 +4,7 @@ defect_class: false_scientific_implication
 candidate_families:
   - semantic-contact-repair
 candidate_edit_classes:
-  - simplify_metal_contact_and_remove_false_ground
+  - clarify_mechanical_fixture_and_charge_encoding
 required_detectors:
   - tex_geometry_assertions
 expected_movement:

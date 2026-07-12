@@ -21,7 +21,7 @@ def _yaml(relative: str) -> dict:
     return yaml.safe_load((FIXTURE / relative).read_text(encoding="utf-8"))
 
 
-def test_pilot_pins_reviewed_source_and_exact_contact_authority() -> None:
+def test_pilot_pins_reviewed_source_and_exact_jig_authority() -> None:
     authority = _yaml("authority.yaml")
     assert authority["source"] == {
         "fixture": "fig1_overview_v5f_art_direction_001_vault",
@@ -32,9 +32,9 @@ def test_pilot_pins_reviewed_source_and_exact_contact_authority() -> None:
     }
     selector = authority["selector"]
     assert selector == {
-        "selector_id": "panel_f.metal_contact",
-        "anchor_start": "% figure-agent:start panel_f.metal_contact",
-        "anchor_end": "% figure-agent:end panel_f.metal_contact",
+        "selector_id": "panel_f.mechanism_scene",
+        "anchor_start": "% figure-agent:start panel_f.mechanism_scene",
+        "anchor_end": "% figure-agent:end panel_f.mechanism_scene",
         "coordinate_space": "pdf_cm",
         "page_index": 0,
         "render_geometry_hash": None,
@@ -66,15 +66,15 @@ def test_pilot_pins_reviewed_source_and_exact_contact_authority() -> None:
     ).stdout
     raw = (FIXTURE / "review" / "states" / "raw.tex").read_text(encoding="utf-8")
     raw_without_anchors = raw.replace(
-        "% figure-agent:start panel_f.metal_contact\n", ""
-    ).replace("% figure-agent:end panel_f.metal_contact\n", "")
+        "% figure-agent:start panel_f.mechanism_scene\n", ""
+    ).replace("% figure-agent:end panel_f.mechanism_scene\n", "")
     assert raw_without_anchors == historical
 
 
 def test_pilot_declares_semantics_and_bounded_repair_before_review() -> None:
     contract = _yaml("semantic_contract.yaml")
     assert set(contract["required_objects"]) >= {
-        "panel_f.metal_contact",
+        "panel_f.mechanical_jig",
         "panel_f.cantilever",
         "panel_f.electrode",
         "panel_f.coulomb_force",
@@ -83,30 +83,39 @@ def test_pilot_declares_semantics_and_bounded_repair_before_review() -> None:
         "panel_f.ground_symbol",
         "panel_f.grounded_electrode",
         "panel_f.second_contact",
+        "panel_f.electrical_contact_at_jig",
     }
     assert contract["repair"] == {
-        "family": "simplify_metal_contact_and_remove_false_ground",
-        "selector_id": "panel_f.metal_contact",
+        "family": "clarify_mechanical_fixture_and_charge_encoding",
+        "selector_id": "panel_f.mechanism_scene",
         "max_source_blocks": 1,
     }
     assert set(contract["protected_relations"]) >= {
-        "metal_contact_attached_to_cantilever",
+        "mechanical_jig_holds_cantilever",
         "cantilever_separated_from_electrode_by_air_gap",
         "coulomb_force_points_away_from_electrode",
     }
 
 
-def test_repaired_source_has_one_exact_contact_block_and_no_ground_glyph() -> None:
+def test_repaired_source_has_one_exact_jig_block_and_no_false_electrical_cues() -> None:
     source = (FIXTURE / "fig1_failure_first_panel_f_pilot.tex").read_text(
         encoding="utf-8"
     )
-    start = "% figure-agent:start panel_f.metal_contact"
-    end = "% figure-agent:end panel_f.metal_contact"
+    start = "% figure-agent:start panel_f.mechanism_scene"
+    end = "% figure-agent:end panel_f.mechanism_scene"
     assert source.count(start) == 1
     assert source.count(end) == 1
     block = source.split(start, 1)[1].split(end, 1)[0]
-    assert "single understated metal contact" in block
+    assert "small neutral mechanical jig" in block
     assert "ground" not in block.lower()
+    assert "V_{\\mathrm{active}}" not in block
+    assert "{bias}" not in block
+    assert "(13.24, 3.76) -- (13.20, 3.38)" not in block
+    assert "ball color" not in block
+    assert "(11.08,2.48) .. controls" not in block
+    assert "$q_{\\mathrm{tr}}$" not in block
+    assert "flat trapped-charge markers" in block.lower()
+    assert "{trapped charge}" in block
     assert "panelFCoulombRepulsionArrow" in source
     assert "{air gap}" in source
     assert "(13.23, 0.40) -- (13.37, 0.40)" not in source
@@ -132,7 +141,7 @@ def test_ablation_contract_is_comparable_and_stops_at_human_boundary() -> None:
 
 def test_generated_receipt_binds_multiscale_pixel_evidence(tmp_path: Path) -> None:
     receipt = build_review_evidence_receipt(FIXTURE, tmp_path / "receipt.json")
-    assert receipt["selector_id"] == "panel_f.metal_contact"
+    assert receipt["selector_id"] == "panel_f.mechanism_scene"
     assert receipt["attribution_state"] == "exact"
     assert receipt["render_geometry_hash"].startswith("sha256:")
     assert receipt["review_input_hash"].startswith("sha256:")

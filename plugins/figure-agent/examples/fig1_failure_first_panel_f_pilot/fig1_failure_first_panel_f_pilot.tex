@@ -2022,44 +2022,23 @@
 % ============================================================
 % v5f Panel F art-direction redraw overlay.
 % Covers the v5e apparatus-heavy mechanical panel and redraws it as a single
-% result-first mechanism scene: electrode, air gap, trapped-charge family, and
-% Coulomb repulsion are read before the compact bias source.
+% result-first mechanism scene: jig, electrode, air gap, trapped-charge family,
+% and Coulomb repulsion, without an invented circuit topology.
 % ============================================================
 \fill[white] (9.52, 0.18) rectangle (13.92, 4.34);
 \draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
 
-% Compact bias module: a restrained instrument cue, not the visual subject.
-\fill[cGray!26!black, opacity=0.010]
-  (12.74, 3.88) rectangle (13.34, 4.12);
-\fill[cGray!3] (12.72, 3.90) rectangle (13.36, 4.14);
-\draw[cGray!44!black, line width=0.16pt, rounded corners=1.0pt]
-  (12.72, 3.90) rectangle (13.36, 4.14);
-% quality-search F source-cue demote: subordinate source label hierarchy
-\draw[cGray!70!black, line width=0.18pt]
-  (12.74, 4.01) rectangle (13.10, 4.09);
-\draw[cGray!38!black, line width=0.18pt]
-  (12.78, 4.045) -- (12.88, 4.045) -- (12.88, 4.068)
-               -- (12.98, 4.068) -- (12.98, 4.045) -- (13.06, 4.045);
-\node[anchor=south, font=\sffamily\bfseries\fontsize{3.0}{3.6}\selectfont, text=cGray!46!black]
-  at (13.02, 4.105) {$V_{\mathrm{active}}$};
-\node[anchor=north, font=\sffamily\fontsize{2.7}{3.2}\selectfont, text=cGray!38!black]
-  at (13.02, 3.80) {bias};
-\fill[cRed!50!black, opacity=0.78] (13.24, 3.82) circle (0.012);
-\fill[cGray!55!black] (13.30, 2.82) circle (0.020);
-% quality-search F post-spacing source finish: soften source lead
-% quality-search F post-gap label relief: clear label backgrounds
-% quality-search F post-label relief source settle: subordinate source lead
-\draw[cGray!34!black, line width=0.18pt, opacity=0.78, rounded corners=2.2pt]
-  (13.24, 3.76) -- (13.20, 3.38) -- (13.18, 2.82);
-\fill[cGray!66!black, opacity=0.86] (13.18, 2.82) circle (0.024);
-
-% figure-agent:start panel_f.metal_contact
-% A single understated metal contact sits on the cantilever root. It is a
-% contact cue, not a clamp assembly and not evidence of an electrical return.
-\shade[left color=cGray!34, right color=cGray!12, rounded corners=0.35mm]
-  (11.72, 2.82) rectangle (11.96, 2.94);
+% figure-agent:start panel_f.mechanism_scene
+% A small neutral mechanical jig holds the cantilever root. Its matte geometry
+% is deliberately non-electrical: no contact pad, terminal, source box, or lead.
+\fill[cGray!12, rounded corners=0.35mm]
+  (11.72, 2.84) rectangle (11.96, 2.94);
 \draw[cGray!68!black, line width=0.30pt, rounded corners=0.35mm]
-  (11.72, 2.82) rectangle (11.96, 2.94);
+  (11.72, 2.84) rectangle (11.96, 2.94);
+\draw[cGray!58!black, line width=0.30pt]
+  (11.66, 3.02) -- (12.02, 3.02);
+\draw[cGray!58!black, line width=0.30pt]
+  (11.84, 2.94) -- (11.84, 3.02);
 
 \shade[top color=cAmber!18, bottom color=cAmber!46, rounded corners=0.5mm]
   (11.70, 2.84) .. controls (11.82, 2.10) and (11.35, 1.30) ..
@@ -2095,26 +2074,17 @@
       font=\sffamily\fontsize{5.2}{6.3}\selectfont, text=cGray!68!black]
   at (13.62, 1.62) {electrode};
 \fill[white] (13.12, 0.10) rectangle (13.50, 0.23);
-% figure-agent:end panel_f.metal_contact
 
-% Charge family and label: geometry is the message, label is secondary.
+% Flat trapped-charge markers: consistent scientific symbols, not glossy beads.
 \foreach \cx/\cy/\rr in {11.62/2.28/0.075,11.43/1.86/0.082,11.10/1.36/0.088,10.72/0.94/0.082} {
-  \draw[cRed!35!white, line width=0.22pt, opacity=0.18] (\cx,\cy) circle ({1.82*\rr});
-  \shade[ball color=cRed!82!black] (\cx,\cy) circle (\rr);
-  \draw[cRed!95!black, line width=0.25pt] (\cx,\cy) circle (\rr);
+  \fill[cRed!68!black] (\cx,\cy) circle (\rr);
+  \draw[cRed!88!black, line width=0.25pt] (\cx,\cy) circle (\rr);
 }
-% quality-search F post-source trap hierarchy: separate trap labels
-% quality-search F trap label left rail: park trap labels in margin
-\draw[cRed!46!black, line width=0.20pt, opacity=0.82]
-  (11.08,2.48) .. controls (10.58,3.02) and (10.10,3.40) .. (9.86,3.46);
-\node[anchor=west, fill=white, fill opacity=0.86, text opacity=1,
-      inner xsep=0.60pt, inner ysep=0.24pt,
-      font=\sffamily\bfseries\fontsize{3.6}{4.4}\selectfont, text=cRed!66!black]
-  at (9.64, 3.32) {$q_{\mathrm{tr}}$};
-\node[anchor=west, fill=white, fill opacity=0.88, text opacity=1,
-      inner xsep=0.70pt, inner ysep=0.26pt,
-      font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!70!black]
-  at (9.64, 3.70) {trapped charge};
+\node[anchor=east, fill=white, fill opacity=0.94, text opacity=1,
+      inner xsep=0.75pt, inner ysep=0.30pt,
+      font=\sffamily\bfseries\fontsize{4.1}{4.9}\selectfont, text=cRed!68!black]
+  at (11.30, 2.58) {trapped charge};
+% figure-agent:end panel_f.mechanism_scene
 
 % Coulomb-only response, intentionally stronger than the apparatus.
 % quality-search F post-force spacing finish: align force label rail

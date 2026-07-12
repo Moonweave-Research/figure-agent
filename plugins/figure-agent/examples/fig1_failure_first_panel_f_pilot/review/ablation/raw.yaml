@@ -5,7 +5,7 @@ input_packet_hash: sha256:a39ad5210e0d0052f3a433d08442fd49b915d6f4e5873035ec6b0e
 budget_contract_hash: sha256:72f41cd3130a011369271af4ad1c431bedf60afc56b3001909d132f4f27b5d9e
 figure_family: fig1_failure_first_panel_f_pilot
 findings:
-  - id: PANEL_F_FALSE_GROUND
+  - id: PANEL_F_FALSE_ELECTRICAL_CUES
     failure_class: semantic
     review_outcome: confirmed_defect
 human_correction_minutes: null

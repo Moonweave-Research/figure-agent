@@ -8,7 +8,8 @@ checks establish publication quality.
 
 ## §3. Correctness rules
 
-- Panel F must show one understated metal contact attached to the cantilever.
+- Panel F must show one understated mechanical jig holding the cantilever.
+- Panel F must not invent a source box, voltage label, or ambiguous lead.
 - Panel F must not imply that the right electrode is grounded.
 - The historical v5f source must remain unchanged.
 
