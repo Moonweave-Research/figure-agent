@@ -15,6 +15,9 @@ sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 from failure_ablation import evaluate_ablation  # noqa: E402
 from review_evidence_pack import build_review_evidence_pack  # noqa: E402
 from review_evidence_receipt import build_review_evidence_receipt  # noqa: E402
+from semantic_legibility_contract import (  # noqa: E402
+    validate_semantic_legibility_contract,
+)
 
 
 def _yaml(relative: str) -> dict:
@@ -95,6 +98,45 @@ def test_pilot_declares_semantics_and_bounded_repair_before_review() -> None:
         "cantilever_separated_from_electrode_by_air_gap",
         "coulomb_force_points_away_from_electrode",
     }
+
+
+def test_pilot_declares_role_connector_and_label_legibility() -> None:
+    result = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
+    assert result["summary"]["object_role_count"] >= 5
+    assert result["summary"]["visible_connector_count"] >= 3
+    assert result["summary"]["forbidden_connector_count"] >= 2
+    assert result["summary"]["label_ownership_count"] >= 2
+    assert result["summary"]["visual_review_required"] is True
+    assert result["publication_acceptance"] == "not_claimed"
+
+
+def test_named_human_findings_bind_reviewed_revision_without_accepting_repair() -> None:
+    findings = _yaml("review/human_findings.yaml")
+    assert findings["schema"] == "figure-agent.human-reviewed-findings.v1"
+    assert findings["reviewer"] == "moon"
+    assert findings["reviewed_source"] == {
+        "commit": "432a9573a188a79c720c204ceb3138aa29a7b5e2",
+        "variant": "repaired",
+        "receipt_sha256": (
+            "2895ff9d57d19b083e7df313343f3a883e5aa9a20b5258c8ca92268c68b3729a"
+        ),
+        "review_input_hash": (
+            "sha256:e28ada69677a60706505a9195f17a54a0b38ba8c9a8310f61bb02c7b5c79b877"
+        ),
+    }
+    assert {item["id"] for item in findings["findings"]} == {
+        "PF-ROLE-001",
+        "PF-APPARATUS-001",
+        "PF-CHARGE-001",
+        "PF-LABEL-001",
+        "PF-CONNECTOR-001",
+    }
+    assert all(
+        item["review_outcome"] == "confirmed_defect"
+        for item in findings["findings"]
+    )
+    assert findings["revised_variant_acceptance"] == "pending"
+    assert findings["publication_acceptance"] == "not_claimed"
 
 
 def test_repaired_source_has_one_exact_jig_block_and_no_false_electrical_cues() -> None:

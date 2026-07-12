@@ -26,6 +26,8 @@ The strict compile currently exits 1 on inherited whole-figure detector
 findings. This is recorded in `machine_gate.yaml`; it is not rewritten as a
 publication or human acceptance claim.
 
-The pilot is intentionally absent from `benchmarks/llm_failure_corpus.yaml`
-until a named human reviews these exact bound inputs. The corpus remains
-reviewed-evidence-only rather than learning from a machine-authored verdict.
+The named human findings from the pre-revision repaired packet are recorded in
+`human_findings.yaml` and admitted to `benchmarks/llm_failure_corpus.yaml` with
+their source commit and review-input hash. The later revised packet remains
+pending human acceptance; defect evidence is not converted into approval of
+the repair.

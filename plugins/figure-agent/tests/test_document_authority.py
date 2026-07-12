@@ -158,6 +158,19 @@ def test_canonical_docs_define_failure_first_llm_control() -> None:
     assert "determine whether an LLM can directly author SVG" not in product
 
 
+def test_product_authority_owns_semantic_legibility_misses() -> None:
+    product = _read(PLUGIN_ROOT / PRODUCT_DOC)
+    for required in (
+        "object-role legibility",
+        "connector endpoint and purpose legibility",
+        "label ownership",
+        "unnecessary glyphs and false apparatus topology",
+        "A declarative contract does not prove rendered semantic legibility.",
+        "named human or independent visual review",
+    ):
+        assert required in product
+
+
 def test_canonical_authority_docs_ship_in_cowork_package(tmp_path: Path) -> None:
     zip_path = build_zip(tmp_path)
     with zipfile.ZipFile(zip_path) as archive:

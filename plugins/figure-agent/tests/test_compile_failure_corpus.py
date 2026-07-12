@@ -20,6 +20,8 @@ def test_compiles_real_reviewed_sources_deterministically(tmp_path: Path) -> Non
     second = compile_failure_corpus(source_index, tmp_path / "second.yaml")
     assert first == second
     assert {case["failure_class"] for case in first["cases"]} >= {
+        "semantic",
+        "relation",
         "typography",
         "geometry",
         "finish",
@@ -30,7 +32,7 @@ def test_compiles_real_reviewed_sources_deterministically(tmp_path: Path) -> Non
         load_failure_corpus(tmp_path / "first.yaml", source_root=PLUGIN_ROOT)[
             "summary"
         ]["case_count"]
-        == 5
+        == 10
     )
 
 

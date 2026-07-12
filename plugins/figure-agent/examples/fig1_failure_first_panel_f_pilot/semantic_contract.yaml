@@ -6,6 +6,7 @@ required_objects:
   - panel_f.electrode
   - panel_f.coulomb_force
   - panel_f.air_gap
+  - panel_f.trapped_charge_markers
 forbidden_implications:
   - panel_f.ground_symbol
   - panel_f.grounded_electrode
@@ -19,4 +20,57 @@ protected_relations:
   - mechanical_jig_holds_cantilever
   - cantilever_separated_from_electrode_by_air_gap
   - coulomb_force_points_away_from_electrode
+semantic_legibility:
+  object_roles:
+    - object_id: panel_f.mechanical_jig
+      declared_role: mechanical_fixture
+      forbidden_readings:
+        - electrical_contact
+        - electrode_clip
+    - object_id: panel_f.cantilever
+      declared_role: mechanical_member
+      forbidden_readings: []
+    - object_id: panel_f.electrode
+      declared_role: active_electrode
+      forbidden_readings:
+        - grounded_electrode
+    - object_id: panel_f.coulomb_force
+      declared_role: directed_force
+      forbidden_readings:
+        - annotation_leader
+    - object_id: panel_f.air_gap
+      declared_role: physical_separation
+      forbidden_readings:
+        - electrical_lead
+    - object_id: panel_f.trapped_charge_markers
+      declared_role: scientific_symbol
+      forbidden_readings:
+        - decorative_bead
+  visible_connectors:
+    - connector_id: panel_f.jig_holds_cantilever
+      from_object: panel_f.mechanical_jig
+      to_object: panel_f.cantilever
+      declared_role: mechanical_attachment
+    - connector_id: panel_f.air_gap_separates_members
+      from_object: panel_f.cantilever
+      to_object: panel_f.electrode
+      declared_role: separation_by_air_gap
+    - connector_id: panel_f.force_acts_on_cantilever
+      from_object: panel_f.coulomb_force
+      to_object: panel_f.cantilever
+      declared_role: force_direction
+  forbidden_connectors:
+    - from_object: panel_f.mechanical_jig
+      to_object: panel_f.cantilever
+      declared_role: electrical_contact
+    - from_object: panel_f.mechanical_jig
+      to_object: panel_f.electrode
+      declared_role: electrical_lead
+  label_ownership:
+    - label_id: panel_f.trapped_charge_label
+      owner: panel_f.trapped_charge_markers
+    - label_id: panel_f.air_gap_label
+      owner: panel_f.air_gap
+    - label_id: panel_f.coulomb_repulsion_label
+      owner: panel_f.coulomb_force
 publication_acceptance: not_claimed

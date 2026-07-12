@@ -85,6 +85,12 @@ persistently unreliable:
 9. evidence-backed learning from accepted and rejected repairs; and
 10. an explicit boundary between machine evidence and human acceptance.
 
+Semantic legibility is part of that ownership boundary. It includes
+object-role legibility and connector endpoint and purpose legibility. It also
+includes label ownership, unnecessary glyphs and false apparatus topology.
+These are not minor taste defects: they determine whether a reader infers the
+declared scientific apparatus and relation rather than an unintended one.
+
 ### 3.3 Durable value test
 
 Every product change must answer at least one of these questions:
@@ -239,6 +245,14 @@ never guess a source location merely to enable automation.
 
 Every actionable finding produces a focused crop, an overlay, the relevant
 semantic declaration, the selector snapshot, and a render-geometry hash.
+
+A declarative contract does not prove rendered semantic legibility. A
+deterministic gate can require every salient object to declare a role, every
+visible connector to declare both endpoints and its purpose, and every label to
+declare one owner. Whether those declarations are actually legible in the
+render remains pending until named human or independent visual review records
+the observed reading. Machine-valid declarations therefore cannot authorize
+publication acceptance.
 
 ## 8. Bounded repair contract
 
