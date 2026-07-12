@@ -1,3 +1,4 @@
+from hashlib import sha256
 from pathlib import Path
 
 import yaml
@@ -5,6 +6,9 @@ import yaml
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 SNIPPET = PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.tex"
 CONTRACT = PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.contract.yaml"
+TRANSFER_RECEIPT = (
+    PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.transfer.yaml"
+)
 FIXTURES = (
     PLUGIN_ROOT
     / "examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex",
@@ -62,6 +66,30 @@ def test_contract_declares_owned_roles_and_forbids_sample_ground() -> None:
         },
     }
     assert ["floating_cantilever", "ground"] in contract["forbidden_connections"]
+    assert contract["objects"]["voltage_source"]["electrical_state"] == "driven"
+    assert contract["objects"]["ground"]["electrical_state"] == "reference"
+    assert contract["objects"]["floating_cantilever"]["electrical_state"] == "floating"
+    assert contract["relations"]["trapped_charge_ownership"] == {
+        "subject": "trapped_charge",
+        "role": "owned_by",
+        "object": "floating_cantilever",
+    }
+
+
+def test_snippet_excludes_fixture_local_force_and_composition_tokens() -> None:
+    source = SNIPPET.read_text(encoding="utf-8")
+
+    for forbidden in (
+        "panelFCoulombRepulsionArrow",
+        "Coulomb",
+        "repulsion",
+        "panelLetter",
+        "figure-agent:start",
+        "figure-agent:end",
+        r"\resizebox",
+        r"\begin{tikzpicture}",
+    ):
+        assert forbidden not in source
 
 
 def test_both_fixtures_input_and_invoke_the_same_motif_inside_selector() -> None:
@@ -75,3 +103,26 @@ def test_both_fixtures_input_and_invoke_the_same_motif_inside_selector() -> None
         selected = source.split(SELECTOR_START, 1)[1].split(SELECTOR_END, 1)[0]
         assert MACRO + "{" in selected
         assert "panelFCoulombRepulsionArrow" not in selected
+
+
+def test_transfer_receipt_binds_sources_and_records_non_publication_evidence() -> None:
+    receipt = yaml.safe_load(TRANSFER_RECEIPT.read_text(encoding="utf-8"))
+
+    expected_bindings = {
+        str(fixture.relative_to(PLUGIN_ROOT)): "sha256:" + sha256(fixture.read_bytes()).hexdigest()
+        for fixture in FIXTURES
+    }
+    assert receipt["motif"] == "panel-f-floating-cantilever"
+    assert receipt["source_bindings"] == expected_bindings
+    assert receipt["compile_results"] == {
+        path: "passed" for path in expected_bindings
+    }
+    assert receipt["crop_comparison"] == {
+        "status": "passed_with_fixture_local_differences",
+        "scope": "same_family_reuse_only",
+        "geometry": "1000x1100+3150+1650",
+        "absolute_error_pixels": 4049,
+        "absolute_error_fraction": 0.00368091,
+    }
+    assert receipt["strict_review_evidence"] == "generated_not_passed"
+    assert receipt["publication_acceptance"] == "not_claimed"

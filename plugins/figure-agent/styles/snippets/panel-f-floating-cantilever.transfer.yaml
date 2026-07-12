@@ -1,0 +1,16 @@
+schema_version: 1
+motif: panel-f-floating-cantilever
+source_bindings:
+  examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex: sha256:f9dceb6c01971a642a703a33808296521e91d66d7d82a2c7c0b4a4ed84511682
+  examples/fig1_overview_v5f_art_direction_001_vault/fig1_overview_v5f_art_direction_001_vault.tex: sha256:789d49ffd9a68c149c3aab30f1e5a4bcd55259c36a2aefac7051cc2fef679545
+compile_results:
+  examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex: passed
+  examples/fig1_overview_v5f_art_direction_001_vault/fig1_overview_v5f_art_direction_001_vault.tex: passed
+crop_comparison:
+  status: passed_with_fixture_local_differences
+  scope: same_family_reuse_only
+  geometry: 1000x1100+3150+1650
+  absolute_error_pixels: 4049
+  absolute_error_fraction: 0.00368091
+strict_review_evidence: generated_not_passed
+publication_acceptance: not_claimed
