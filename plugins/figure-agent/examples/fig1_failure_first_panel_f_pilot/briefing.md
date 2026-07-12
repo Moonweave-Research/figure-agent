@@ -8,12 +8,16 @@ checks establish publication quality.
 
 ## §3. Correctness rules
 
-- Panel F must show one understated mechanical jig holding the cantilever.
+- Panel F must show one understated fixed mechanical boundary holding the
+  cantilever: a restrained support rail, short structural stem, and shallow jaw.
 - Panel F must show a compact voltage source driving the right electrode.
 - The source return must terminate at ground; the ground belongs to the source
   circuit, not to the sample.
 - The sample and cantilever must remain electrically floating, with no
   electrical connector at the mechanical jig.
+- The holder's material and conductivity are not established by the reference;
+  leave them electrically unmodeled rather than declaring an insulating or
+  conducting clip.
 - A compact source symbol is sufficient; a detailed instrument display is not required.
 - The historical v5f source must remain unchanged.
 

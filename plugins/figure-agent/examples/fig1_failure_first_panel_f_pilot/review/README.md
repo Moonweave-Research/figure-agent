@@ -4,8 +4,9 @@ This packet compares the tracked historical raw fork, an attribution-only
 verified state with identical pixels, and one bounded repaired state. The
 repaired state removes the false sample-ground implication, incoherent
 instrument display, and ambiguous lead, then replaces them with one understated
-mechanical jig, a compact voltage source, an explicit source-to-electrode lead,
-and a grounded source return. The sample and cantilever remain floating. The
+fixed mechanical boundary, a compact voltage source, an explicit
+source-to-electrode lead, and a grounded source return. The holder's electrical
+material is left unmodeled; the sample and cantilever remain floating. The
 repair does not change the cantilever, electrode, air-gap, or Coulomb force
 relations.
 

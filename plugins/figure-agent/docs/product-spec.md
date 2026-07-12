@@ -251,8 +251,10 @@ evidence pack is regenerated.
 
 A declarative contract does not prove rendered semantic legibility. A
 deterministic gate can require every salient object to declare a role, every
-visible connector to declare both endpoints and its purpose, and every label to
-declare one owner. Whether those declarations are actually legible in the
+visible connector to declare both endpoints, its purpose, and a render-style
+family, and every label to declare one owner. Connector style must agree with
+role: a mechanical attachment cannot reuse an electrical-lead style merely
+because both are lines. Whether those declarations are actually legible in the
 render remains pending until named human or independent visual review records
 the observed reading. Machine-valid declarations therefore cannot authorize
 publication acceptance.
@@ -261,7 +263,9 @@ When electrical topology is scientifically relevant, the contract also declares
 electrical object states and source/return connections. An object declared
 floating cannot be an endpoint of an electrical connection; a ground reference
 must identify the circuit node it actually belongs to rather than merely appear
-near the apparatus.
+near the apparatus. When a fixture's conductivity is not established by the
+authority packet, declare it `electrically_unmodeled`: omit electrical
+connections without inventing either an insulating or conducting material.
 
 ## 8. Bounded repair contract
 

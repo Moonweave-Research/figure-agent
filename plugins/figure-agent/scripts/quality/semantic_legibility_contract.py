@@ -15,6 +15,7 @@ ELECTRICAL_STATES = {
     "ground_reference",
     "floating",
     "non_electrical",
+    "electrically_unmodeled",
 }
 ELECTRICAL_CONNECTION_ROLES = {
     "electrical_bias_lead",
@@ -22,6 +23,16 @@ ELECTRICAL_CONNECTION_ROLES = {
     "electrical_lead",
     "ground_return",
     "grounded_source_return",
+}
+CONNECTOR_STYLE_FAMILIES = {
+    "mechanical_attachment": "mechanical_",
+    "separation_by_air_gap": "separation_",
+    "force_direction": "force_",
+    "electrical_bias_lead": "electrical_",
+    "electrical_contact": "electrical_",
+    "electrical_lead": "electrical_",
+    "ground_return": "electrical_",
+    "grounded_source_return": "electrical_",
 }
 
 
@@ -102,12 +113,20 @@ def _visible_connectors(
             raise SemanticLegibilityContractError("visible_connector_invalid")
         _connector_endpoints(item, required, "visible_connector_endpoint_invalid")
         connector_id = item.get("connector_id")
+        declared_role = item.get("declared_role")
+        render_style = item.get("render_style")
         if (
             not _nonempty_string(connector_id)
             or connector_id in seen
-            or not _nonempty_string(item.get("declared_role"))
+            or not _nonempty_string(declared_role)
+            or not _nonempty_string(render_style)
         ):
             raise SemanticLegibilityContractError("visible_connector_invalid")
+        expected_prefix = CONNECTOR_STYLE_FAMILIES.get(declared_role)
+        if expected_prefix is not None and not render_style.startswith(expected_prefix):
+            raise SemanticLegibilityContractError(
+                "visible_connector_style_role_mismatch"
+            )
         seen.add(connector_id)
     return values
 
@@ -228,6 +247,10 @@ def _electrical_topology(
             raise SemanticLegibilityContractError("floating_object_connected")
         if "non_electrical" in endpoint_states:
             raise SemanticLegibilityContractError("non_electrical_object_connected")
+        if "electrically_unmodeled" in endpoint_states:
+            raise SemanticLegibilityContractError(
+                "electrically_unmodeled_object_connected"
+            )
 
     for item in visible_electrical:
         record = (

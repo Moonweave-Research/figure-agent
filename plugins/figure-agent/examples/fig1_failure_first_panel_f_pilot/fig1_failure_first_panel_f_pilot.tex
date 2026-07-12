@@ -53,6 +53,10 @@
   % + Nature/Nat Comm "8 pt bold, upright" convention. Previously 9pt was 1pt over.
   panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
                       text=cGray!90!black},
+  panelFMechanicalAttachment/.style={cGray!62!black, line width=0.72pt,
+                                     line cap=round, line join=round},
+  panelFElectricalLead/.style={cBlue!70!black, line width=0.36pt,
+                              rounded corners=0.3mm},
   panelFCoulombRepulsionArrow/.style={},
 ]
 
@@ -2029,17 +2033,26 @@
 \draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
 
 % figure-agent:start panel_f.mechanism_scene
-% A compact neutral saddle clamp holds the cantilever root. The short top jaw
-% and two side lips read as a fixture without the rotor-and-mast silhouette of
-% the previous jig. Its matte geometry remains deliberately non-electrical.
-\fill[cGray!12, rounded corners=0.25mm]
-  (11.66, 2.84) rectangle (12.02, 2.95);
-\draw[cGray!68!black, line width=0.30pt, rounded corners=0.25mm]
-  (11.66, 2.84) rectangle (12.02, 2.95);
-\draw[cGray!58!black, line width=0.30pt]
-  (11.70, 2.84) -- (11.70, 2.77);
-\draw[cGray!58!black, line width=0.30pt]
-  (11.98, 2.84) -- (11.98, 2.77);
+% A small neutral mechanical jig is reduced to a fixed mechanical boundary:
+% a rigid support rail, a short structural stem, and a shallow root jaw. The
+% material and conductivity of the real holder remain deliberately unmodeled;
+% the heavy neutral connector encodes mechanical attachment, never a wire.
+% Rigid support rail with restrained fixed-boundary hatching.
+\draw[panelFMechanicalAttachment] (11.58, 3.18) -- (12.10, 3.18);
+\foreach \hx in {11.62,11.76,11.90,12.04} {
+  \draw[cGray!48!black, line width=0.30pt]
+    (\hx,3.18) -- ({\hx+0.07},3.26);
+}
+% Short structural stem connects the fixed rail to the shallow root jaw.
+\draw[panelFMechanicalAttachment] (11.84,3.18) -- (11.84,2.98);
+\fill[cGray!12, rounded corners=0.22mm]
+  (11.68, 2.84) rectangle (12.00, 2.98);
+\draw[panelFMechanicalAttachment, rounded corners=0.22mm]
+  (11.68, 2.84) rectangle (12.00, 2.98);
+\draw[cGray!56!black, line width=0.34pt]
+  (11.72, 2.84) -- (11.72, 2.78);
+\draw[cGray!56!black, line width=0.34pt]
+  (11.96, 2.84) -- (11.96, 2.78);
 
 \shade[top color=cAmber!18, bottom color=cAmber!46, rounded corners=0.5mm]
   (11.70, 2.84) .. controls (11.82, 2.10) and (11.35, 1.30) ..
@@ -2088,7 +2101,7 @@
 
 % Source-to-electrode lead (lower source terminal).
 \fill[cBlue!70!black] (13.08,3.34) circle (0.025);
-\draw[cBlue!70!black, line width=0.36pt, rounded corners=0.3mm]
+\draw[panelFElectricalLead]
   (13.08,3.34) -- (13.30,3.34) -- (13.30,2.82);
 \node[anchor=south, fill=white, fill opacity=0.96, text opacity=1,
       inner xsep=0.75pt, inner ysep=0.32pt,
@@ -2098,7 +2111,7 @@
 % Grounded source return (upper source terminal); this ground belongs to the
 % voltage source, never to the sample or cantilever.
 \fill[cBlue!70!black] (13.08,3.52) circle (0.025);
-\draw[cBlue!58!black, line width=0.34pt, rounded corners=0.3mm]
+\draw[panelFElectricalLead, cBlue!58!black, line width=0.34pt]
   (13.08,3.52) -- (13.58,3.52) -- (13.58,3.23);
 \draw[cBlue!58!black, line width=0.34pt] (13.45,3.23) -- (13.71,3.23);
 \draw[cBlue!58!black, line width=0.34pt] (13.49,3.17) -- (13.67,3.17);

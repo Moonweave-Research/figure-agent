@@ -210,6 +210,23 @@ def test_repaired_source_has_grounded_source_and_floating_sample() -> None:
     assert "(13.23, 0.40) -- (13.37, 0.40)" not in source
 
 
+def test_repaired_source_uses_a_fixed_boundary_not_a_floating_cap() -> None:
+    source = (FIXTURE / "fig1_failure_first_panel_f_pilot.tex").read_text(
+        encoding="utf-8"
+    )
+    start = "% figure-agent:start panel_f.mechanism_scene"
+    end = "% figure-agent:end panel_f.mechanism_scene"
+    block = source.split(start, 1)[1].split(end, 1)[0]
+
+    assert "panelFMechanicalAttachment" in source
+    assert "panelFElectricalLead" in source
+    assert "fixed mechanical boundary" in block.lower()
+    assert "rigid support rail" in block.lower()
+    assert "short structural stem" in block.lower()
+    assert "shallow root jaw" in block.lower()
+    assert "saddle clamp" not in block.lower()
+
+
 def test_pilot_docs_require_grounded_source_and_floating_sample() -> None:
     briefing = (FIXTURE / "briefing.md").read_text(encoding="utf-8")
     caption = (FIXTURE / "caption.md").read_text(encoding="utf-8")

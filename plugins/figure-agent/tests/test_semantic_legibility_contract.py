@@ -51,6 +51,7 @@ def valid_contract() -> dict:
                     "from_object": "panel_f.mechanical_jig",
                     "to_object": "panel_f.cantilever",
                     "declared_role": "mechanical_attachment",
+                    "render_style": "mechanical_structural",
                 }
             ],
             "forbidden_connectors": [
@@ -74,7 +75,7 @@ def valid_contract() -> dict:
                     },
                     {
                         "object_id": "panel_f.mechanical_jig",
-                        "declared_state": "non_electrical",
+                        "declared_state": "electrically_unmodeled",
                     },
                 ],
                 "connections": [],
@@ -128,6 +129,18 @@ def test_rejects_visible_connector_without_both_endpoints() -> None:
         validate_semantic_legibility_contract(contract)
 
 
+def test_rejects_mechanical_attachment_with_electrical_render_style() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["visible_connectors"][0][
+        "render_style"
+    ] = "electrical_bias_lead"
+    with pytest.raises(
+        SemanticLegibilityContractError,
+        match="visible_connector_style_role_mismatch",
+    ):
+        validate_semantic_legibility_contract(contract)
+
+
 @pytest.mark.parametrize("owner", [None, ["panel_f.cantilever", "panel_f.mechanical_jig"]])
 def test_rejects_label_without_one_declared_owner(owner: object) -> None:
     contract = valid_contract()
@@ -168,15 +181,36 @@ def test_rejects_electrical_connection_to_floating_object() -> None:
         validate_semantic_legibility_contract(contract)
 
 
+def test_rejects_electrical_connection_to_unmodeled_fixture() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["electrical_topology"]["nodes"][0][
+        "declared_state"
+    ] = "source"
+    contract["semantic_legibility"]["electrical_topology"]["connections"] = [
+        {
+            "connection_id": "panel_f.false_fixture_bias",
+            "from_object": "panel_f.cantilever",
+            "to_object": "panel_f.mechanical_jig",
+            "declared_role": "electrical_contact",
+        }
+    ]
+    with pytest.raises(
+        SemanticLegibilityContractError,
+        match="electrically_unmodeled_object_connected",
+    ):
+        validate_semantic_legibility_contract(contract)
+
+
 def test_rejects_visible_electrical_connector_omitted_from_topology() -> None:
     contract = valid_contract()
     contract["semantic_legibility"]["visible_connectors"].append(
-        {
-            "connector_id": "panel_f.hidden_sample_lead",
-            "from_object": "panel_f.cantilever",
-            "to_object": "panel_f.mechanical_jig",
-            "declared_role": "electrical_lead",
-        }
+            {
+                "connector_id": "panel_f.hidden_sample_lead",
+                "from_object": "panel_f.cantilever",
+                "to_object": "panel_f.mechanical_jig",
+                "declared_role": "electrical_lead",
+                "render_style": "electrical_bias_lead",
+            }
     )
     with pytest.raises(
         SemanticLegibilityContractError,

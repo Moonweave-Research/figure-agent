@@ -71,22 +71,27 @@ semantic_legibility:
       from_object: panel_f.mechanical_jig
       to_object: panel_f.cantilever
       declared_role: mechanical_attachment
+      render_style: mechanical_structural
     - connector_id: panel_f.air_gap_separates_members
       from_object: panel_f.cantilever
       to_object: panel_f.electrode
       declared_role: separation_by_air_gap
+      render_style: separation_dimension
     - connector_id: panel_f.force_acts_on_cantilever
       from_object: panel_f.coulomb_force
       to_object: panel_f.cantilever
       declared_role: force_direction
+      render_style: force_directional
     - connector_id: panel_f.source_drives_electrode
       from_object: panel_f.voltage_source
       to_object: panel_f.electrode
       declared_role: electrical_bias_lead
+      render_style: electrical_bias_lead
     - connector_id: panel_f.source_returns_to_ground
       from_object: panel_f.voltage_source
       to_object: panel_f.ground_reference
       declared_role: grounded_source_return
+      render_style: electrical_ground_return
   forbidden_connectors:
     - from_object: panel_f.mechanical_jig
       to_object: panel_f.cantilever
@@ -112,7 +117,7 @@ semantic_legibility:
   electrical_topology:
     nodes:
       - object_id: panel_f.mechanical_jig
-        declared_state: non_electrical
+        declared_state: electrically_unmodeled
       - object_id: panel_f.cantilever
         declared_state: floating
       - object_id: panel_f.electrode
