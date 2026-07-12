@@ -125,6 +125,9 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.plugin-install-freshness.v1` | plugin install diagnostics | `plugin_install_freshness.py` | operators | Read-only source-vs-cache check; never mutates install state |
 | `figure-agent.release-gate.v1` | package/release gate | `release_gate.py` | operators, CI | Builds and audits Cowork ZIP; skips missing host validators explicitly |
 | `figure-agent.quality-defect-ledger.v1` | quality improvement loop | `quality_defect_ledger.py` | `quality_patch_plan.py`, MCP quality tools | Read-only defect ledger; no source mutation |
+| `figure-agent.promotion-queue.v1` / `figure-agent.promotion-triage.v1` | G4 promotion wiring | `promotion_wiring.py`, `status.py` | `quality_defect_ledger.py`, `fig-agent promotion-queue`, `fig-agent triage`, `fig-agent status`, `fig-agent next` | `visual_clash` stays human-review queued; triage acceptance synthesizes bounded ledger fields with provenance, while status only exposes count/top-N |
+| `figure-agent.tex-assertions.v1` | deterministic TeX assertion audit | `check_tex_assertions.py`, `promotion_wiring.py` | `quality_defect_ledger.py`, compile/export gates | Auto-promotable only because zero-match and multi-match fail loud; still deterministic declaration evidence, not visual or aesthetic judgment |
+| `figure-agent.vector-clearance.v1` | deterministic declared vector geometry audit | `vector_clearance.py`, `promotion_wiring.py` | `quality_defect_ledger.py`, compile gate | Declaration-gated only; selector zero/multi-match fails loud; curve/circle/marker envelope violations remain non-auto-promotable |
 | `figure-agent.quality-patch-policy.v1` | quality improvement loop | `quality_patch_policy.py` | `quality_defect_ledger.py`, `quality_patch_plan.py` | Classifies patchability; `may_edit` remains false |
 | `figure-agent.quality-patch-plan.v1` | quality improvement loop | `quality_patch_plan.py` | `quality_patch_apply.py`, MCP quality tools | Proposal evidence only until explicit apply |
 | `figure-agent.quality-patch-result.v1` | quality improvement loop | `quality_patch_apply.py` | operators, MCP quality tools | Records explicit apply/dry-run result and rollback path |
@@ -209,7 +212,7 @@ but should not decide host-vision verdicts.
 - `check_collisions.py`, `check_visual_clash.py`,
   `check_visual_clash_budget.py`
 - `check_text_boundary_clash.py`, `check_label_path_proximity.py`,
-  `check_undeclared_geometry.py`
+  `check_undeclared_geometry.py`, `vector_clearance.py`
 - `perception_pack.py`, `reference_aesthetic_metrics.py`
 
 Add here when the output is a deterministic detector artifact under

@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import aesthetic_objective
+import candidate_generator
 import candidate_rank
 import candidate_render
 import candidate_review_packet
@@ -909,6 +910,16 @@ def _unlinked_micro_defect_ids(driver: dict[str, Any]) -> list[str]:
     return [item for item in ids if isinstance(item, str) and item.strip()]
 
 
+def _search_classified_unlinked_micro_defect_ids(driver: dict[str, Any]) -> list[str]:
+    ids = _unlinked_micro_defect_ids(driver)
+    classified: list[str] = []
+    for item in ids:
+        normalized = item.upper()
+        if "QTR" in normalized or "DENSITY" in normalized:
+            classified.append(item)
+    return classified
+
+
 def _allows_stale_critique_search(
     driver: dict[str, Any],
     *,
@@ -1036,6 +1047,9 @@ def _step_out_hypotheses(
         "rollback_condition": "candidate worsens compile, semantics, or print-legibility evidence",
     }
     if signal_value == "print_typography_authority":
+        density_micro_defect_ids = [
+            item for item in _unlinked_micro_defect_ids(driver) if "DENSITY" in item.upper()
+        ]
         density_panels = [
             panel
             for panel in ("C", "E", "F")
@@ -1118,6 +1132,7 @@ def _step_out_hypotheses(
                 "target_scope": "panel",
                 "target_hint": {
                     "panels": ["F"],
+                    "micro_defect_ids": density_micro_defect_ids,
                     "reason": (
                         "Panel F remains the densest mechanism zone after label-route "
                         "finish; reduce field-line, hatch, and force-label dominance"
@@ -1208,6 +1223,9 @@ def _goal_requests_panel_f_apparatus(goal: str) -> bool:
         "electrode",
         "air gap",
         "coulomb",
+        "clearance",
+        "geometry",
+        "label",
         "mechanical",
         "overlap",
         "readable",
@@ -2189,26 +2207,35 @@ def _tool_defect_candidates(driver: dict[str, Any], ledger: dict[str, Any]) -> l
     audit = driver.get("audit_evidence")
     feedback = audit.get("detector_feedback") if isinstance(audit, dict) else None
     if isinstance(feedback, dict) and int(feedback.get("unlinked_micro_defect_count") or 0) > 0:
-        candidates.append(
-            {
-                "id": f"TD{len(candidates) + 1:03d}",
-                "symptom": (
-                    "critique contains unlinked micro defects after detector accounting passed"
-                ),
-                "expected_behavior": (
-                    "quality search should classify unlinked micro defects as search "
-                    "targets or accounting gaps"
-                ),
-                "actual_behavior": {
-                    "unlinked_micro_defect_ids": feedback.get("unlinked_micro_defect_ids", [])
-                },
-                "minimal_reproduction": "fig-agent drive <fixture> --mode review --dry-run --json",
-                "recommended_fix": (
-                    "surface unlinked micro defects in quality-map or a separate "
-                    "aesthetic-target ledger"
-                ),
-            }
-        )
+        raw_ids = feedback.get("unlinked_micro_defect_ids", [])
+        all_ids = [item for item in raw_ids if isinstance(item, str) and item.strip()]
+        classified_ids = set(_search_classified_unlinked_micro_defect_ids(driver))
+        unsupported_ids = [item for item in all_ids if item not in classified_ids]
+        if unsupported_ids:
+            candidates.append(
+                {
+                    "id": f"TD{len(candidates) + 1:03d}",
+                    "symptom": (
+                        "critique contains unclassified unlinked micro defects after "
+                        "detector accounting passed"
+                    ),
+                    "expected_behavior": (
+                        "quality search should classify unlinked micro defects as search "
+                        "targets or accounting gaps"
+                    ),
+                    "actual_behavior": {
+                        "unlinked_micro_defect_ids": unsupported_ids,
+                        "classified_unlinked_micro_defect_ids": sorted(classified_ids),
+                    },
+                    "minimal_reproduction": (
+                        "fig-agent drive <fixture> --mode review --dry-run --json"
+                    ),
+                    "recommended_fix": (
+                        "surface unsupported unlinked micro defects in quality-map or a "
+                        "separate aesthetic-target ledger"
+                    ),
+                }
+            )
     return candidates
 
 
@@ -4753,6 +4780,20 @@ def _panel_f_current_label_sanitize_template_applied(block: str) -> bool:
     return all(fragment in block for fragment in required_fragments)
 
 
+def _panel_f_later_label_clearance_template_applied(block: str) -> bool:
+    later_markers = (
+        "% quality-search F post-boundary force balance: separate force labels",
+        "% quality-search F post-force spacing finish: align force label rail",
+        "% quality-search F post-spacing source finish: soften source lead",
+        "% quality-search F post-source trap hierarchy: separate trap labels",
+        "% quality-search F post-trap gap readability: quiet electrode and gap",
+        "% quality-search F post-gap label relief: clear label backgrounds",
+        "% quality-search F post-label relief source settle: subordinate source lead",
+        "% quality-search F trap label left rail: park trap labels in margin",
+    )
+    return any(marker in block for marker in later_markers)
+
+
 def _panel_f_current_label_sanitize_replacement(
     *,
     lines: list[str],
@@ -5968,6 +6009,10 @@ def _candidate_operation_for_spec(
                 "replacement": new_text,
             }
             return operation, None
+        line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+        original = "".join(lines[line_range[0] - 1 : line_range[1]]) if line_range else ""
+        if _panel_f_later_label_clearance_template_applied(original):
+            return None, None
         return None, {
             "code": "no_panel_f_boundary_polish_block",
             "candidate_id": str(spec.get("id")),
@@ -6385,6 +6430,13 @@ def _candidate_operation_for_spec(
                 "replacement": new_text,
             }
             return operation, None
+        line_range = _panel_f_overlay_range(lines=lines, selector=selector)
+        original = "".join(lines[line_range[0] - 1 : line_range[1]]) if line_range else ""
+        if (
+            _panel_f_boundary_polish_geometry_applied(original)
+            or _panel_f_later_label_clearance_template_applied(original)
+        ):
+            return None, None
         return None, {
             "code": "no_panel_f_current_label_sanitize_block",
             "candidate_id": str(spec.get("id")),
@@ -6745,6 +6797,115 @@ def _candidate_set_from_specs(
         "base": base,
         "candidates": candidates,
         "refusals": refusals,
+    }
+
+
+def _detector_candidate_specs(candidate_set: dict[str, Any]) -> list[dict[str, Any]]:
+    specs: list[dict[str, Any]] = []
+    for candidate in candidate_set.get("candidates", []):
+        if not isinstance(candidate, dict):
+            continue
+        candidate_id = str(candidate.get("id") or "")
+        if not candidate_id:
+            continue
+        family = str(candidate.get("family") or candidate.get("edit_family") or "")
+        if not family:
+            continue
+        target = candidate.get("target") if isinstance(candidate.get("target"), dict) else {}
+        panel = str(target.get("panel") or "")
+        operation = (
+            candidate["operations"][0]
+            if isinstance(candidate.get("operations"), list)
+            and candidate["operations"]
+            and isinstance(candidate["operations"][0], dict)
+            else {}
+        )
+        expected_delta = candidate.get("expected_delta")
+        expected_visual_movement = (
+            "; ".join(str(item) for item in expected_delta)
+            if isinstance(expected_delta, list)
+            else str(candidate.get("expected_visual_movement") or "")
+        )
+        specs.append(
+            {
+                "id": candidate_id,
+                "fixture": candidate_set.get("fixture"),
+                "family": family,
+                "registry_schema": FAMILY_REGISTRY_SCHEMA,
+                "builder": "detector_candidate_generator",
+                "source": "detector_candidate_generator",
+                "source_defect": (
+                    candidate.get("source_defect")
+                    if isinstance(candidate.get("source_defect"), dict)
+                    else {}
+                ),
+                "target_scope": "detector_candidate",
+                "target_hint": {"target": target},
+                "target_panels": [panel] if panel else [],
+                "source_selectors": (
+                    candidate.get("selectors")
+                    if isinstance(candidate.get("selectors"), list)
+                    else []
+                ),
+                "protected_labels": [],
+                "design_moves": [],
+                "render_targets": ["full", f"panel_{panel}"] if panel else ["full"],
+                "apply_authority": candidate.get("apply_authority") or "review_only",
+                "operation_scale": (
+                    candidate.get("operation_scale")
+                    or operation.get("operation_scale")
+                    or "detector_candidate"
+                ),
+                "template_id": candidate.get("template_id") or operation.get("template_id") or "",
+                "structural_impact": {
+                    "schema": "figure-agent.candidate-structural-impact.v0",
+                    "scope": candidate.get("operation_scale") or "detector_candidate",
+                    "risk_level": candidate.get("risk") or "low",
+                    "direct_targets": [panel] if panel else [],
+                    "possible_ripples": [],
+                    "guard_checks": ["detector_recheck"],
+                },
+                "operations": (
+                    candidate.get("operations")
+                    if isinstance(candidate.get("operations"), list)
+                    else []
+                ),
+                "operation_state": "generated_by_detector_candidate_generator",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search execute v0 is dry witness mode",
+                "expected_detector_movement": expected_visual_movement,
+                "expected_visual_movement": expected_visual_movement,
+                "rollback_condition": "detector recheck or semantic verification regresses",
+                "witness": {
+                    "state": "detector_candidate_generator",
+                    "evidence_inputs": ["candidate_generator", "quality_defect_ledger"],
+                },
+            }
+        )
+    return specs
+
+
+def _merge_candidate_sets(
+    quality_candidate_set: dict[str, Any],
+    detector_candidate_set: dict[str, Any],
+) -> dict[str, Any]:
+    quality_candidates = [
+        item for item in quality_candidate_set.get("candidates", []) if isinstance(item, dict)
+    ]
+    detector_candidates = [
+        item for item in detector_candidate_set.get("candidates", []) if isinstance(item, dict)
+    ]
+    quality_refusals = [
+        item for item in quality_candidate_set.get("refusals", []) if isinstance(item, dict)
+    ]
+    detector_refusals = [
+        item for item in detector_candidate_set.get("refusals", []) if isinstance(item, dict)
+    ]
+    return {
+        **quality_candidate_set,
+        "candidates": [*quality_candidates, *detector_candidates],
+        "refusals": [*quality_refusals, *detector_refusals],
+        "detector_candidate_metrics": detector_candidate_set.get("metrics", {}),
     }
 
 
@@ -8240,6 +8401,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_post_gap_label_relief": 0.9,
             "panel_f_post_label_relief_source_settle": 0.9,
             "panel_f_trap_label_left_rail": 0.92,
+            "vector-clearance-offset": 0.91,
             "density_reduce": 0.72,
             "layout_macro_shift": 0.68,
         }
@@ -8341,6 +8503,20 @@ def _render_policy_adjustment(ranking: dict[str, Any] | None) -> tuple[float, fl
 
 
 def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
+    source_defect = score.get("source_defect")
+    if (
+        score.get("family") == "vector-clearance-offset"
+        and isinstance(source_defect, dict)
+        and source_defect.get("defect_class") == "vector_clearance_violation"
+    ):
+        for key in ("panel_changed_pixel_ratio", "full_changed_pixel_ratio"):
+            try:
+                if float(score.get(key) or 0.0) > 0.0:
+                    return True
+            except (TypeError, ValueError):
+                continue
+        return False
+
     targeted_templates = {
         "panel_f_bias_label_cleanup": PANEL_F_BIAS_LABEL_CLEANUP_TEMPLATE_ID,
         "panel_f_source_cue_readability": PANEL_F_SOURCE_CUE_READABILITY_TEMPLATE_ID,
@@ -8614,6 +8790,9 @@ def _candidate_scores(
                 "expected_visual_movement": (
                     metadata.get("expected_visual_movement") or spec.get("expected_visual_movement")
                 ),
+                "source_defect": (
+                    spec.get("source_defect") if isinstance(spec.get("source_defect"), dict) else {}
+                ),
                 "structural_impact": spec.get("structural_impact", {}),
                 "evidence_score": score,
                 "policy_score": policy["score"],
@@ -8857,6 +9036,26 @@ def _execution_decision(
     }
 
 
+def _recommendation_ready_for_experience_log(
+    selected_acceptance_recommendation: dict[str, Any] | None,
+    selected_attempt: dict[str, Any] | None,
+    convergence_decision: dict[str, Any] | None,
+) -> bool:
+    if not isinstance(selected_acceptance_recommendation, dict) or not isinstance(
+        selected_acceptance_recommendation.get("candidate_id"), str
+    ):
+        return False
+    if selected_acceptance_recommendation.get("status") == "auto_accept_recommended":
+        return True
+    return (
+        isinstance(selected_attempt, dict)
+        and isinstance(convergence_decision, dict)
+        and convergence_decision.get("decision") in {"stop", "rollback", "human_review"}
+        and selected_acceptance_recommendation.get("status") == "blocked"
+        and selected_acceptance_recommendation.get("recommendation") == "defer"
+    )
+
+
 def _selected_review_packet(
     name: str,
     decision: dict[str, Any],
@@ -8940,6 +9139,19 @@ def _selected_candidate(candidate_set: dict[str, Any], candidate_id: str) -> dic
     return None
 
 
+def _vector_clearance_source_defect(
+    candidate: dict[str, Any],
+    manifest: dict[str, Any],
+) -> dict[str, Any] | None:
+    for payload in (manifest.get("source_defect"), candidate.get("source_defect")):
+        if (
+            isinstance(payload, dict)
+            and payload.get("defect_class") == "vector_clearance_violation"
+        ):
+            return payload
+    return None
+
+
 def _write_selected_semantic_precheck(
     name: str,
     decision: dict[str, Any],
@@ -8974,13 +9186,6 @@ def _write_selected_semantic_precheck(
         for label in candidate.get("protected_labels", [])
         if isinstance(label, str) and label.strip()
     ]
-    if not protected_labels:
-        return {
-            "schema": "figure-agent.selected-semantic-precheck.v0",
-            "status": "blocked",
-            "candidate_id": candidate_id,
-            "blocking_reasons": ["protected_labels_missing"],
-        }
     example_dir = paths.examples_dir / name
     sandbox = example_dir / "build" / "candidates" / candidate_id
     manifest_path = sandbox / "candidate_manifest.json"
@@ -9009,6 +9214,14 @@ def _write_selected_semantic_precheck(
             "candidate_id": candidate_id,
             "blocking_reasons": ["render_gates_not_passed"],
         }
+    vector_source_defect = _vector_clearance_source_defect(candidate, manifest)
+    if not protected_labels and vector_source_defect is None:
+        return {
+            "schema": "figure-agent.selected-semantic-precheck.v0",
+            "status": "blocked",
+            "candidate_id": candidate_id,
+            "blocking_reasons": ["protected_labels_missing"],
+        }
     operation_text = "\n".join(
         str(operation.get("replacement") or "")
         for operation in manifest.get("operations", [])
@@ -9036,16 +9249,29 @@ def _write_selected_semantic_precheck(
                 "sha256": _file_sha256(render_manifest_path),
             }
         ],
-        "semantic_invariants": [
-            {"kind": "protected_label_present", "label": label} for label in protected_labels
-        ],
+        "semantic_invariants": (
+            [{"kind": "protected_label_present", "label": label} for label in protected_labels]
+            if protected_labels
+            else [
+                {
+                    "kind": "detector_source_defect_preserved",
+                    "defect_id": vector_source_defect.get("id"),
+                    "defect_class": vector_source_defect.get("defect_class"),
+                    "source": vector_source_defect.get("source"),
+                }
+            ]
+        ),
         "findings": [
             {
                 "kind": "deterministic_semantic_precheck",
                 "status": "pass",
                 "basis": [
                     "render_manifest_gates_passed",
-                    "protected_labels_present_in_replacement",
+                    (
+                        "protected_labels_present_in_replacement"
+                        if protected_labels
+                        else "detector_backed_vector_clearance_source_defect"
+                    ),
                     "review_only_source_mutation_boundary",
                 ],
             }
@@ -9064,6 +9290,7 @@ def _write_selected_semantic_precheck(
         "candidate_id": candidate_id,
         "review_path": _workspace_relative(paths, review_path),
         "protected_labels": protected_labels,
+        **({"source_defect": vector_source_defect} if vector_source_defect is not None else {}),
         "reviewed_artifacts": review["reviewed_artifacts"],
     }
 
@@ -9475,13 +9702,23 @@ def build_quality_search_execution(
         "source_context": source_context,
         "families": QUALITY_SEARCH_FAMILY_REGISTRY,
     }
-    candidate_specs = _candidate_specs_from_plan(plan, source_context=source_context)
-    candidate_set = _candidate_set_from_specs(
+    plan_candidate_specs = _candidate_specs_from_plan(plan, source_context=source_context)
+    detector_candidate_set = candidate_generator.build_candidate_set(
         name,
-        candidate_specs,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    candidate_specs = [
+        *plan_candidate_specs,
+        *_detector_candidate_specs(detector_candidate_set),
+    ]
+    quality_candidate_set = _candidate_set_from_specs(
+        name,
+        plan_candidate_specs,
         source_context=source_context,
         paths=paths,
     )
+    candidate_set = _merge_candidate_sets(quality_candidate_set, detector_candidate_set)
     candidate_set_path = run_dir.relative_to(paths.workspace_root) / "candidate_set_000.json"
     render_results = _render_candidate_batch(
         name,
@@ -9556,20 +9793,10 @@ def build_quality_search_execution(
         convergence_decision,
     )
     recommendation_experience = None
-    recommendation_ready_for_experience = (
-        isinstance(selected_acceptance_recommendation, dict)
-        and isinstance(selected_acceptance_recommendation.get("candidate_id"), str)
-        and (
-            selected_acceptance_recommendation.get("status") == "auto_accept_recommended"
-            or (
-                isinstance(convergence_decision, dict)
-                and convergence_decision.get("decision") != "accept"
-                and selected_acceptance_recommendation.get("status") == "blocked"
-                and selected_acceptance_recommendation.get("recommendation") == "defer"
-                and "convergence controller did not accept"
-                in str(selected_acceptance_recommendation.get("rationale") or "")
-            )
-        )
+    recommendation_ready_for_experience = _recommendation_ready_for_experience_log(
+        selected_acceptance_recommendation,
+        selected_attempt,
+        convergence_decision,
     )
     if recommendation_ready_for_experience:
         selected_candidate_id = selected_acceptance_recommendation["candidate_id"]

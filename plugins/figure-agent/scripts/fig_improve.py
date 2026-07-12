@@ -198,8 +198,10 @@ def _should_run_aggressive_candidates(
     stop_boundary = run_payload.get("final_stop_boundary")
     if stop_boundary == "basin_detected":
         return True
-    if stop_reason in {fig_run.STOP_COMPLETE, STOP_OPTIONAL_IMPROVEMENT}:
+    if stop_reason == STOP_OPTIONAL_IMPROVEMENT:
         return False
+    if stop_reason == fig_run.STOP_COMPLETE:
+        return actor == "none"
     if actor in {"release_operator", "host_llm", "svg_editor"}:
         return False
     if stop_boundary in {

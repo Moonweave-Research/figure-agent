@@ -60,7 +60,7 @@ def test_fig_agent_quality_map_outputs_json_without_writing(tmp_path: Path) -> N
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload["schema"] == "figure-agent.quality-defect-ledger.v1"
-    assert payload["defects"][0]["patchability"]["state"] == "safe_candidate"
+    assert payload["defects"][0]["patchability"]["state"] == "assisted_only"
     after = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
     assert after == before
 
@@ -76,7 +76,10 @@ def test_fig_agent_propose_outputs_patch_plan_and_rejects_unsafe_output(
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload["schema"] == "figure-agent.quality-patch-plan.v1"
-    assert payload["operations"][0]["defect_id"] == "QD001"
+    assert payload["operations"] == []
+    assert payload["refusals"] == [
+        {"code": "exact_selector_required", "defect_id": "QD001"}
+    ]
 
     rejected = _run_fig_agent(
         workspace,
@@ -86,7 +89,7 @@ def test_fig_agent_propose_outputs_patch_plan_and_rejects_unsafe_output(
     assert "plan_output_forbidden" in rejected.stderr
 
 
-def test_fig_agent_apply_plan_dry_run_uses_public_entrypoint(tmp_path: Path) -> None:
+def test_fig_agent_apply_plan_refuses_unbound_public_proposal(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _write_fixture(workspace)
     propose = _run_fig_agent(
@@ -101,8 +104,6 @@ def test_fig_agent_apply_plan_dry_run_uses_public_entrypoint(tmp_path: Path) -> 
         ["apply-plan", "quality_demo", "--plan", "build/quality/patch_plan.json", "--dry-run"],
     )
 
-    assert result.returncode == 0, result.stderr
-    payload = json.loads(result.stdout)
-    assert payload["schema"] == "figure-agent.quality-patch-result.v1"
-    assert payload["applied"] is False
+    assert result.returncode != 0
+    assert "exactly one operation is required" in result.stderr
     assert (fixture / "quality_demo.tex").read_text(encoding="utf-8") == before

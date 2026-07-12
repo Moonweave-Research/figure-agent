@@ -14,6 +14,7 @@ import audit_evidence_graph
 import audit_evidence_summary
 import critique_finding_gate
 import fixture_identity
+import promotion_wiring
 import quality_patch_policy
 import runtime_paths
 import yaml
@@ -312,6 +313,7 @@ def _undeclared_geometry_defects(
     freshness = _detector_freshness(example_dir, name, graph_hash, data)
     panel_markers = _source_panel_map(example_dir, name)
     defects: list[dict[str, Any]] = []
+    defect_by_key: dict[tuple[object, ...], dict[str, Any]] = {}
     for candidate in candidates:
         if not isinstance(candidate, dict):
             continue
@@ -323,7 +325,24 @@ def _undeclared_geometry_defects(
         source_line = candidate.get("source_line")
         if not isinstance(source_line, int) or isinstance(source_line, bool):
             continue
+        if source_line < 1:
+            continue
         candidate_id = candidate.get("id")
+        dedupe_key = (
+            source_line,
+            candidate.get("kind"),
+            candidate.get("nearest_text"),
+            tuple(candidate.get("bbox_pt") or ()),
+        )
+        existing = defect_by_key.get(dedupe_key)
+        if existing is not None:
+            existing["evidence"].append(
+                {
+                    "uri": f"figure://{name}/audit/undeclared-geometry",
+                    "node_id": candidate_id,
+                }
+            )
+            continue
         selector_hint: dict[str, Any] = {
             "kind": "line_range",
             "value": f"{source_line}:{source_line}",
@@ -360,6 +379,7 @@ def _undeclared_geometry_defects(
                 "patch": "",
             },
         }
+        defect_by_key[dedupe_key] = defect
         defects.append(defect)
     return defects
 
@@ -522,7 +542,9 @@ def _detector_defects(example_dir: Path, name: str, graph_hash: str) -> list[dic
     # from stale evidence. (The undeclared_geometry path below is self-adjudicating via
     # recommended_action and does not depend on this gate.)
     summary = audit_evidence_summary.summarize_audit_evidence(example_dir)
-    defects = _undeclared_geometry_defects(example_dir, name, graph_hash)
+    defects = promotion_wiring.auto_promoted_defects(example_dir, name)
+    defects += promotion_wiring.triage_promoted_defects(example_dir, name)
+    defects += _undeclared_geometry_defects(example_dir, name, graph_hash)
     visual_clash_defects: list[dict[str, Any]] = []
     if summary.get("detector_feedback", {}).get("visual_clash", {}).get("linked_defect_count"):
         visual_clash_defects = _visual_clash_defects(example_dir, name, graph_hash)
@@ -607,10 +629,13 @@ def _annotate_actionability(
     }
     for defect in defects:
         patchability = defect.get("patchability")
-        is_safe = isinstance(patchability, dict) and patchability.get("state") == "safe_candidate"
-        if not is_safe:
+        patchability_state = (
+            patchability.get("state") if isinstance(patchability, dict) else None
+        )
+        if patchability_state not in {"safe_candidate", "assisted_only"}:
             continue
-        metrics["safe_candidate_defect_count"] += 1
+        if patchability_state == "safe_candidate":
+            metrics["safe_candidate_defect_count"] += 1
         gaps = _actionability_gaps(defect, declared_panels)
         defect["actionability"] = {
             "state": "blocked" if gaps else "candidate_supported",

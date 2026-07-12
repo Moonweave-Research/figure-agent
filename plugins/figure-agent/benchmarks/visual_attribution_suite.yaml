@@ -104,7 +104,7 @@ reviewed_evidence:
     authority: reviewed_evidence_only
   - id: fig1-v5f-lp001-reviewed-linked-defect
     source_path: examples/fig1_overview_v5f_art_direction_001_vault/critique.md
-    source_sha256: a4c0c96dbe981ae7ef6ca7bad3c47eba7cdfb82229d11de82fb4a1642612f063
+    source_sha256: 11f46f1fb0cb87afb1a9501b187cf6096891c320774515a96eb50a7cfaf90df5
     source_locator: M_LP001
     detector_ref: LP001
     detector_kind: label_path

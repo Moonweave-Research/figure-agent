@@ -20,6 +20,7 @@ _STYLES = {
     "unbound": {"color": "#CC79A7", "pattern": "dot"},
 }
 _SAFE_FINDING_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+_SAFE_ARTIFACT_BASE = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9._-]*$")
 
 
 class VisualFindingArtifactError(ValueError):
@@ -176,7 +177,7 @@ def build_visual_finding_artifacts(
     build_dir = fixture_dir / "build"
     name = fixture_dir.name
     artifact_base = artifact_base or name
-    if not _SAFE_FINDING_ID.fullmatch(artifact_base):
+    if not _SAFE_ARTIFACT_BASE.fullmatch(artifact_base):
         raise VisualFindingArtifactError("artifact_base_invalid")
     png_path = build_dir / f"{artifact_base}.png"
     pdf_path = build_dir / f"{artifact_base}.pdf"

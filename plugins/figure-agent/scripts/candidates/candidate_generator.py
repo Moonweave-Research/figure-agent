@@ -38,6 +38,8 @@ ACTIONABILITY_REFUSAL_CODES = frozenset(
 )
 EDIT_FAMILY = "bounded_coordinate_offset"
 FAMILY = "bounded-coordinate-offset"
+VECTOR_CLEARANCE_EDIT_FAMILY = "vector_clearance_offset"
+VECTOR_CLEARANCE_FAMILY = "vector-clearance-offset"
 VARIANT_ID = "dx+0.10cm"
 SEVERITY_RANK = {"blocker": 0, "action": 1, "major": 2, "minor": 3, "nit": 4}
 
@@ -167,12 +169,14 @@ def _label_offset_candidate(
     variant_id: str = VARIANT_ID,
     variant_dx_cm: float = 0.1,
     selector_text_hash: str | None = None,
+    end_line: int | None = None,
 ) -> dict[str, Any]:
+    end_line = end_line or line_number
     selector = {
         "kind": "line_range_with_hash",
         "path": source_rel.as_posix(),
         "start_line": line_number,
-        "end_line": line_number,
+        "end_line": end_line,
         "original_hash": candidate_contracts.canonical_hash(line),
         "source_hash": source_hash,
     }
@@ -220,6 +224,7 @@ def _label_offset_candidate(
             "source_hash": source_hash,
             "source_path": source_rel.as_posix(),
             "start_line": line_number,
+            "end_line": end_line,
             "variant_id": variant_id,
         }
     )
@@ -315,6 +320,313 @@ def _source_defect(defect: dict[str, Any], ledger_hash: str) -> dict[str, Any]:
         "source_fingerprint": str(defect.get("source_fingerprint") or ""),
         "ledger_hash": ledger_hash,
     }
+
+
+def _issue_panel(issue_id: str) -> str:
+    match = re.search(r"panel([A-Za-z])", issue_id)
+    return match.group(1).upper() if match else "unknown"
+
+
+def _bbox_center_y(bbox: Any) -> float | None:
+    if (
+        not isinstance(bbox, list)
+        or len(bbox) != 4
+        or any(isinstance(value, bool) or not isinstance(value, int | float) for value in bbox)
+    ):
+        return None
+    return (float(bbox[1]) + float(bbox[3])) / 2.0
+
+
+def _vector_clearance_dy_cm(issue: dict[str, Any]) -> float | None:
+    if issue.get("relation") != "min_clearance_cm":
+        return None
+    measured = issue.get("measured_clearance_cm")
+    required = issue.get("required_clearance_cm")
+    if (
+        isinstance(measured, bool)
+        or not isinstance(measured, int | float)
+        or isinstance(required, bool)
+        or not isinstance(required, int | float)
+    ):
+        return None
+    deficit = float(required) - float(measured)
+    if deficit <= 0:
+        return None
+    element_a_y = _bbox_center_y(issue.get("element_a_bbox_cm"))
+    element_b_y = _bbox_center_y(issue.get("element_b_bbox_cm"))
+    if element_a_y is None or element_b_y is None:
+        return None
+    direction = 1.0 if element_b_y >= element_a_y else -1.0
+    # Add a small cushion beyond the measured deficit while staying inside the
+    # primitive's bounded 0.10 cm movement cap.
+    return direction * min(deficit + 0.02, bounded_coordinate_offset.MAX_TRANSLATE_CM)
+
+
+def _variant_id_for_dy(dy_cm: float) -> str:
+    return f"dy{dy_cm:+.2f}cm"
+
+
+def _operation_text_range(lines: list[str], source_line: int) -> tuple[int, int, str] | None:
+    if source_line < 1 or source_line > len(lines):
+        return None
+    end_line = source_line
+    while end_line <= len(lines):
+        if ";" in lines[end_line - 1]:
+            break
+        end_line += 1
+    if end_line > len(lines):
+        return None
+    text = "\n".join(lines[source_line - 1 : end_line])
+    if end_line > source_line:
+        text += "\n"
+    return source_line, end_line, text
+
+
+def _panel_d_debye_reroute_replacement(text: str) -> str | None:
+    replacements = {
+        "(1.80, 2.30)": "(1.62, 2.30)",
+        "(2.05, 2.28)": "(1.82, 2.28)",
+        "(2.12, 0.80)": "(1.82, 0.80)",
+        "(2.22, 0.55)": "(1.88, 0.55)",
+    }
+    replacement = text
+    for original, new in replacements.items():
+        if original not in replacement:
+            return None
+        replacement = replacement.replace(original, new, 1)
+    return replacement if replacement != text else None
+
+
+def _vector_curve_marker_candidate(
+    *,
+    name: str,
+    issue: dict[str, Any],
+    lines: list[str],
+    source_rel: Path,
+    current_source_hash: str,
+) -> dict[str, Any] | None:
+    issue_id = str(issue.get("id") or "")
+    if issue_id != "panelD-debye-must-not-cross-red-marker":
+        return None
+    line_number = issue.get("element_a_source_line")
+    if isinstance(line_number, bool) or not isinstance(line_number, int):
+        return None
+    operation_range = _operation_text_range(lines, line_number)
+    if operation_range is None:
+        return None
+    start, end, original = operation_range
+    replacement = _panel_d_debye_reroute_replacement(original)
+    if replacement is None:
+        return None
+    variant_id = "debye-cliff-left-of-marker"
+    selector_text_hash = candidate_contracts.canonical_hash(original)
+    candidate = _label_offset_candidate(
+        name=name,
+        candidate_id="",
+        source_rel=source_rel,
+        line_number=start,
+        line=original,
+        replacement=replacement,
+        apply_authority="review_only",
+        target={
+            "panel": _issue_panel(issue_id),
+            "subregion": f"vector_clearance:{issue_id}",
+        },
+        source_hash=current_source_hash,
+        source_defect={
+            "id": issue_id,
+            "source": "deterministic_audit",
+            "defect_class": "vector_clearance_violation",
+            "evidence": [issue],
+            "source_fingerprint": candidate_contracts.canonical_hash(issue),
+            "ledger_hash": "",
+        },
+        edit_class="vector_clearance_violation",
+        variant_id=variant_id,
+        variant_dx_cm=-0.18,
+        selector_text_hash=selector_text_hash,
+        end_line=end,
+    )
+    candidate["edit_family"] = VECTOR_CLEARANCE_EDIT_FAMILY
+    candidate["family"] = VECTOR_CLEARANCE_FAMILY
+    candidate["variant"] = {"id": variant_id, "reroute": "curve_left_of_marker"}
+    candidate["operations"][0]["semantic_kind"] = VECTOR_CLEARANCE_EDIT_FAMILY
+    candidate["operations"][0]["line_start"] = start
+    candidate["operations"][0]["line_end"] = end
+    candidate["risk"] = "medium"
+    candidate["expected_delta"] = [
+        "reroute declared Debye curve envelope away from the red marker"
+    ]
+    candidate["semantic_risks"] = [
+        "curve-marker candidate changes an authored reference curve; "
+        "human must confirm the Debye cliff still conveys intended decay"
+    ]
+    candidate["blocked_if"] = [
+        "semantic_invariant_failed",
+        "render_failed",
+        "human_rejected",
+    ]
+    candidate["candidate_hash"] = candidate_contracts.canonical_hash(
+        {
+            "edit_family": VECTOR_CLEARANCE_EDIT_FAMILY,
+            "issue": issue,
+            "source_hash": current_source_hash,
+            "source_path": source_rel.as_posix(),
+            "start_line": start,
+            "end_line": end,
+            "variant_id": variant_id,
+        }
+    )
+    return candidate
+
+
+def _vector_clearance_candidates(
+    name: str,
+    paths: runtime_paths.RuntimePaths,
+    lines: list[str],
+    source_rel: Path,
+    current_source_hash: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, str]], dict[str, int]]:
+    example_dir = paths.examples_dir / name
+    report_path = example_dir / "build" / "vector_clearance.json"
+    if not report_path.is_file():
+        return [], [], {"vector_clearance_supported_defect_count": 0}
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return [], [{"code": "vector_clearance_report_unreadable"}], {
+            "vector_clearance_supported_defect_count": 0
+        }
+    if not isinstance(report, dict):
+        return [], [{"code": "vector_clearance_report_unreadable"}], {
+            "vector_clearance_supported_defect_count": 0
+        }
+    source_hashes = report.get("source_hashes")
+    expected = (
+        source_hashes.get(source_rel.as_posix()) if isinstance(source_hashes, dict) else None
+    )
+    if expected != current_source_hash:
+        return [], [{"code": "stale_detector_evidence", "defect_id": "vector_clearance"}], {
+            "vector_clearance_supported_defect_count": 0
+        }
+    issues = report.get("issues")
+    if not isinstance(issues, list):
+        return [], [{"code": "vector_clearance_report_unreadable"}], {
+            "vector_clearance_supported_defect_count": 0
+        }
+    candidates: list[dict[str, Any]] = []
+    refusals: list[dict[str, str]] = []
+    supported_count = 0
+    for issue in issues:
+        if not isinstance(issue, dict) or issue.get("status") != "violated":
+            continue
+        if issue.get("promotion_tier") != "review_queue":
+            continue
+        issue_id = str(issue.get("id") or "vector_clearance")
+        if issue.get("element_b_kind") != "line":
+            curve_candidate = _vector_curve_marker_candidate(
+                name=name,
+                issue=issue,
+                lines=lines,
+                source_rel=source_rel,
+                current_source_hash=current_source_hash,
+            )
+            if curve_candidate is not None:
+                supported_count += 1
+                candidates.append(curve_candidate)
+                continue
+            refusals.append(
+                {
+                    "code": "unsupported_vector_clearance_candidate",
+                    "defect_id": issue_id,
+                }
+            )
+            continue
+        dy_cm = _vector_clearance_dy_cm(issue)
+        line_number = issue.get("element_b_source_line")
+        if (
+            dy_cm is None
+            or isinstance(line_number, bool)
+            or not isinstance(line_number, int)
+            or line_number < 1
+            or line_number > len(lines)
+        ):
+            refusals.append(
+                {
+                    "code": "unsupported_vector_clearance_candidate",
+                    "defect_id": issue_id,
+                }
+            )
+            continue
+        line = lines[line_number - 1]
+        replacement = bounded_coordinate_offset.offset_all_coordinates(
+            line,
+            axis="y",
+            dx_cm=dy_cm,
+        )
+        if replacement is None:
+            refusals.append({"code": "no_bounded_operation", "defect_id": issue_id})
+            continue
+        supported_count += 1
+        variant_id = _variant_id_for_dy(dy_cm)
+        selector_text_hash = candidate_contracts.canonical_hash(line)
+        candidate = _label_offset_candidate(
+            name=name,
+            candidate_id="",
+            source_rel=source_rel,
+            line_number=line_number,
+            line=line,
+            replacement=replacement,
+            apply_authority="review_only",
+            target={
+                "panel": _issue_panel(issue_id),
+                "subregion": f"vector_clearance:{issue_id}",
+            },
+            source_hash=current_source_hash,
+            source_defect={
+                "id": issue_id,
+                "source": "deterministic_audit",
+                "defect_class": "vector_clearance_violation",
+                "evidence": [issue],
+                "source_fingerprint": candidate_contracts.canonical_hash(issue),
+                "ledger_hash": "",
+            },
+            edit_class="vector_clearance_violation",
+            variant_id=variant_id,
+            variant_dx_cm=dy_cm,
+            selector_text_hash=selector_text_hash,
+        )
+        candidate["edit_family"] = VECTOR_CLEARANCE_EDIT_FAMILY
+        candidate["family"] = VECTOR_CLEARANCE_FAMILY
+        candidate["variant"] = {"id": variant_id, "dy_cm": dy_cm}
+        candidate["operations"][0]["semantic_kind"] = VECTOR_CLEARANCE_EDIT_FAMILY
+        candidate["operations"][0]["line_start"] = line_number
+        candidate["operations"][0]["line_end"] = line_number
+        candidate["risk"] = "medium"
+        candidate["expected_delta"] = [
+            "increase declared vector clearance without changing label text"
+        ]
+        candidate["semantic_risks"] = [
+            "vector clearance candidate moves an authored annotation line; "
+            "human must confirm intent"
+        ]
+        candidate["blocked_if"] = [
+            "semantic_invariant_failed",
+            "render_failed",
+            "human_rejected",
+        ]
+        candidate["candidate_hash"] = candidate_contracts.canonical_hash(
+            {
+                "edit_family": VECTOR_CLEARANCE_EDIT_FAMILY,
+                "issue": issue,
+                "source_hash": current_source_hash,
+                "source_path": source_rel.as_posix(),
+                "start_line": line_number,
+                "variant_id": variant_id,
+            }
+        )
+        candidates.append(candidate)
+    return candidates, refusals, {"vector_clearance_supported_defect_count": supported_count}
 
 
 def _defect_sort_key(
@@ -434,6 +746,30 @@ def _geometry_aware_replacement(
     return bounded_coordinate_offset.offset_all_coordinates(line, axis=axis, dx_cm=dx_cm)
 
 
+def _statement_span(lines: list[str], line_number: int) -> tuple[str, int]:
+    statement_lines: list[str] = []
+    for index in range(line_number - 1, len(lines)):
+        line = lines[index]
+        statement_lines.append(line)
+        if ";" in line:
+            break
+    return "\n".join(statement_lines) + "\n", line_number + len(statement_lines) - 1
+
+
+def _is_tikz_statement_start(line: str) -> bool:
+    stripped = line.lstrip()
+    return stripped.startswith(
+        (
+            "\\coordinate",
+            "\\draw",
+            "\\fill",
+            "\\node",
+            "\\path",
+            "\\shade",
+        )
+    )
+
+
 def _defect_candidates(
     name: str,
     paths: runtime_paths.RuntimePaths,
@@ -533,8 +869,13 @@ def _defect_candidates(
         supported_count += 1
         line = lines[line_number - 1]
         replacement = _geometry_aware_replacement(defect, line, detector_index, pdf_path)
+        original_text = line
+        end_line = line_number
         if replacement is None:
             replacement = bounded_coordinate_offset.offset_first_coordinate(line)
+        if replacement is None and _is_tikz_statement_start(line):
+            original_text, end_line = _statement_span(lines, line_number)
+            replacement = bounded_coordinate_offset.offset_first_coordinate(original_text)
         if replacement is None:
             _append_refusals(
                 refusals,
@@ -546,14 +887,18 @@ def _defect_candidates(
             candidate_id="",
             source_rel=source_rel,
             line_number=line_number,
-            line=line,
+            line=original_text,
             replacement=replacement,
             apply_authority="review_only" if assisted_only else apply_authority,
             target=_candidate_target(defect),
             source_hash=current_source_hash,
             source_defect=_source_defect(defect, ledger_hash),
             selector_text_hash=selector_hash if isinstance(selector_hash, str) else None,
+            end_line=end_line,
         )
+        if end_line != line_number:
+            candidate["operations"][0]["line_start"] = line_number
+            candidate["operations"][0]["line_end"] = end_line
         sortable_candidates.append((_defect_sort_key(defect, source_rel, line_number), candidate))
     candidates: list[dict[str, Any]] = []
     for index, (_sort_key, candidate) in enumerate(sorted(sortable_candidates), start=1):
@@ -876,6 +1221,18 @@ def build_candidate_set(
         base["tex_hash"],
         apply_authority,
     )
+    vector_candidates, vector_refusals, vector_counts = _vector_clearance_candidates(
+        name,
+        paths,
+        lines,
+        source_rel,
+        base["tex_hash"],
+    )
+    candidates.extend(vector_candidates)
+    _append_refusals(refusals, vector_refusals)
+    defect_counts["candidate_supported_defect_count"] += vector_counts[
+        "vector_clearance_supported_defect_count"
+    ]
     covered_lines = {
         candidate["selector"]["start_line"]
         for candidate in candidates

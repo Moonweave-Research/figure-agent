@@ -620,6 +620,175 @@ def test_candidate_offset_is_geometry_aware_for_horizontal_near_miss(
     assert op["replacement"] == "\\draw[dashed] (0.45, 6.05) -- (4.78, 6.05);"
 
 
+def test_vector_clearance_review_queue_generates_review_only_line_candidate(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = (
+        "\\draw[peak] (0,0) .. controls (0.5,1.23) and (0.7,1.23) .. (1,0);\n"
+        "\\draw[caliper] (0,1.30) -- (1,1.30);\n"
+    )
+    (fixture / "candidate_demo.tex").write_text(source, encoding="utf-8")
+    source_hash = file_sha256(fixture / "candidate_demo.tex")
+    build_dir = fixture / "build"
+    build_dir.mkdir(exist_ok=True)
+    (build_dir / "vector_clearance.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.vector-clearance.v1",
+                "source_hashes": {"examples/candidate_demo/candidate_demo.tex": source_hash},
+                "issues": [
+                    {
+                        "id": "panelE-deep-peak-caliper-min-clearance",
+                        "status": "violated",
+                        "relation": "min_clearance_cm",
+                        "element_a": "VE001",
+                        "element_b": "VE002",
+                        "element_a_kind": "curve",
+                        "element_b_kind": "line",
+                        "element_a_source_line": 1,
+                        "element_b_source_line": 2,
+                        "element_a_bbox_cm": [0.0, 0.0, 1.0, 1.23],
+                        "element_b_bbox_cm": [0.0, 1.30, 1.0, 1.30],
+                        "measured_clearance_cm": 0.07,
+                        "required_clearance_cm": 0.1,
+                        "clearance_delta_cm": -0.03,
+                        "non_auto_promotable": True,
+                        "promotion_tier": "review_queue",
+                    },
+                    {
+                        "id": "panelD-debye-must-not-cross-red-marker",
+                        "status": "violated",
+                        "relation": "must_not_cross",
+                        "element_a_kind": "curve",
+                        "element_b_kind": "marker",
+                        "promotion_tier": "review_queue",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_ledger(_name, **_kwargs):
+        return {"defects": [], "ledger_hash": "sha256:" + "0" * 64}
+
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        fake_ledger,
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["metrics"]["candidate_count"] == 1
+    candidate = payload["candidates"][0]
+    assert candidate["family"] == "vector-clearance-offset"
+    assert candidate["edit_family"] == "vector_clearance_offset"
+    assert candidate["apply_authority"] == "review_only"
+    assert candidate["target"] == {
+        "panel": "E",
+        "subregion": "vector_clearance:panelE-deep-peak-caliper-min-clearance",
+    }
+    assert candidate["variant"] == {"id": "dy+0.05cm", "dy_cm": pytest.approx(0.05)}
+    assert candidate["selector"]["start_line"] == 2
+    operation = candidate["operations"][0]
+    assert operation["line_start"] == 2
+    assert operation["semantic_kind"] == "vector_clearance_offset"
+    assert operation["replacement"] == "\\draw[caliper] (0, 1.35) -- (1, 1.35);"
+    assert candidate["source_defect"]["defect_class"] == "vector_clearance_violation"
+    assert {
+        (item["code"], item.get("defect_id")) for item in payload["refusals"]
+    } == {
+        ("unsupported_vector_clearance_candidate", "panelD-debye-must-not-cross-red-marker")
+    }
+
+
+def test_vector_clearance_curve_marker_generates_panel_d_reroute_candidate(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = (
+        "% Debye curve\n"
+        "\\draw[cGray!85!black, dashed, line width=0.65pt, line cap=round]\n"
+        "  (0.65, 2.30) -- (1.80, 2.30)\n"
+        "  .. controls (2.05, 2.28) and (2.12, 0.80) .. (2.22, 0.55);\n"
+        "\\foreach \\mx/\\my in {1.20/2.00, 2.00/1.56} {\n"
+        "  \\shade[ball color=cRed!75!black] (\\mx, \\my) circle (0.045);\n"
+        "}\n"
+    )
+    (fixture / "candidate_demo.tex").write_text(source, encoding="utf-8")
+    source_hash = file_sha256(fixture / "candidate_demo.tex")
+    build_dir = fixture / "build"
+    build_dir.mkdir(exist_ok=True)
+    (build_dir / "vector_clearance.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.vector-clearance.v1",
+                "source_hashes": {"examples/candidate_demo/candidate_demo.tex": source_hash},
+                "issues": [
+                    {
+                        "id": "panelD-debye-must-not-cross-red-marker",
+                        "status": "violated",
+                        "relation": "must_not_cross",
+                        "element_a": "VE001",
+                        "element_b": "VE002",
+                        "element_a_kind": "curve",
+                        "element_b_kind": "marker",
+                        "element_a_source_line": 2,
+                        "element_b_source_line": 6,
+                        "element_a_bbox_cm": [1.8, 0.55, 2.22, 2.3],
+                        "element_b_bbox_cm": [1.955, 1.515, 2.045, 1.605],
+                        "measured_clearance_cm": 0.0,
+                        "non_auto_promotable": True,
+                        "promotion_tier": "review_queue",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_ledger(_name, **_kwargs):
+        return {"defects": [], "ledger_hash": "sha256:" + "0" * 64}
+
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        fake_ledger,
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["refusals"] == []
+    candidate = payload["candidates"][0]
+    assert candidate["family"] == "vector-clearance-offset"
+    assert candidate["target"] == {
+        "panel": "D",
+        "subregion": "vector_clearance:panelD-debye-must-not-cross-red-marker",
+    }
+    assert candidate["variant"] == {
+        "id": "debye-cliff-left-of-marker",
+        "reroute": "curve_left_of_marker",
+    }
+    operation = candidate["operations"][0]
+    assert operation["line_start"] == 2
+    assert operation["line_end"] == 4
+    assert "(1.62, 2.30)" in operation["replacement"]
+    assert "(1.88, 0.55)" in operation["replacement"]
+    assert "(2.22, 0.55)" not in operation["replacement"]
+
+
 def test_candidate_ids_are_stable_for_identical_source_and_ledger_hashes(
     tmp_path: Path,
 ) -> None:
@@ -643,6 +812,40 @@ def test_candidate_ids_are_stable_for_identical_source_and_ledger_hashes(
         for candidate in second["candidates"]
     ]
     assert first_identity == second_identity
+
+
+def test_detector_candidate_offsets_multiline_draw_statement(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "\\draw[cGray!75!black, line width=0.28pt]\n"
+        "  (0.0, 1.0) -- (2.0, 1.0);\n",
+        encoding="utf-8",
+    )
+    _write_undeclared_candidate_defect(fixture, source_line=1)
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["refusals"] == [
+        {"code": "exact_attribution_required", "defect_id": "QD001"}
+    ]
+    candidate = payload["candidates"][0]
+    assert candidate["selector"]["start_line"] == 1
+    assert candidate["selector"]["end_line"] == 2
+    operation = candidate["operations"][0]
+    assert operation["line_start"] == 1
+    assert operation["line_end"] == 2
+    assert operation["original"] == (
+        "\\draw[cGray!75!black, line width=0.28pt]\n"
+        "  (0.0, 1.0) -- (2.0, 1.0);\n"
+    )
+    assert operation["replacement"] == (
+        "\\draw[cGray!75!black, line width=0.28pt]\n"
+        "  (0.10, 1.0) -- (2.0, 1.0);\n"
+    )
 
 
 def test_candidate_generator_refuses_source_hash_mismatch_when_ledger_claims_supported(

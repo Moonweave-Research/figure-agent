@@ -124,6 +124,20 @@ def test_explicit_artifact_base_supports_multiple_tex_variants_in_one_fixture(
     assert manifest["artifact_base"] == "variant_a"
 
 
+def test_explicit_artifact_base_accepts_compile_macro_variants(tmp_path: Path) -> None:
+    module = _module()
+    fixture = _fixture(tmp_path, [])
+    build = fixture / "build"
+    Image.new("RGB", (100, 100), "white").save(build / "_macro_smoke.png")
+
+    manifest = module.build_visual_finding_artifacts(
+        fixture,
+        artifact_base="_macro_smoke",
+    )
+
+    assert manifest["artifact_base"] == "_macro_smoke"
+
+
 def test_rejects_unsafe_finding_id_before_writing_images(tmp_path: Path) -> None:
     module = _module()
     fixture = _fixture(

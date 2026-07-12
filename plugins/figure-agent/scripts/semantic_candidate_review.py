@@ -15,6 +15,7 @@ AUTHORITY_FIELDS = {"apply_authority", "effective_apply_authority", "accepted", 
 PURE_MECHANICAL_FAMILIES = {"bounded_coordinate_offset", "coordinate_offset", "label_offset"}
 PURE_MECHANICAL_OPERATIONS = {"coordinate_offset", "bounded_coordinate_offset"}
 SPEC_BLOCKING_REASONS_KEY = "_semantic_review_blocking_reasons"
+VECTOR_CLEARANCE_FAMILIES = {"vector_clearance_offset", "vector-clearance-offset"}
 
 
 class SemanticCandidateReviewError(ValueError):
@@ -120,8 +121,15 @@ def _is_pure_mechanical(manifest: dict[str, Any]) -> bool:
         or manifest.get("family")
         or ""
     )
+    source_defect = manifest.get("source_defect")
+    detector_backed_vector_clearance = (
+        family in VECTOR_CLEARANCE_FAMILIES
+        and isinstance(source_defect, dict)
+        and source_defect.get("defect_class") == "vector_clearance_violation"
+    )
     if family not in PURE_MECHANICAL_FAMILIES:
-        return False
+        if not detector_backed_vector_clearance:
+            return False
     operations = manifest.get("operations")
     if not isinstance(operations, list) or not operations:
         return False
@@ -131,7 +139,12 @@ def _is_pure_mechanical(manifest: dict[str, Any]) -> bool:
         mechanical_kind = str(
             operation.get("semantic_kind") or operation.get("kind") or ""
         )
-        if mechanical_kind not in PURE_MECHANICAL_OPERATIONS:
+        vector_operation = (
+            detector_backed_vector_clearance
+            and mechanical_kind in VECTOR_CLEARANCE_FAMILIES
+            and operation.get("kind") == "replace_text"
+        )
+        if mechanical_kind not in PURE_MECHANICAL_OPERATIONS and not vector_operation:
             return False
     return True
 

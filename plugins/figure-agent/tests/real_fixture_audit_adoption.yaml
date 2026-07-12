@@ -1,4 +1,39 @@
 fixtures:
+  - fixture: failure_first_label_repair_demo
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: not_applicable_no_reference
+    rationale: >
+      Bounded repair control fixture carries declared semantic relations but has
+      no reference image or deterministic geometry checks to adopt.
+
+  - fixture: fig1_failure_first_panel_f_pilot
+    reference_image: false
+    text_boundary_check_ids:
+      - panel_e_hv_display_avoid_inside
+      - panel_e_vs_meter_display_avoid_inside
+      - panel_f_psu_display_avoid_inside
+      - row2_contain_text
+      - row2_de_column_rule
+      - row2_ef_column_rule
+    label_path_check_ids:
+      - panel_c_deep_escape_curve
+      - panel_c_delta_et_caliper
+      - panel_c_mobility_edge_reference
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      Failure-first Panel F pilot retains the inherited Row-2 apparatus and
+      Panel C semantic-path checks while keeping publication acceptance human-only.
+
   - fixture: fig1_hybrid_complex_panel_pilot
     reference_image: true
     text_boundary_check_ids:

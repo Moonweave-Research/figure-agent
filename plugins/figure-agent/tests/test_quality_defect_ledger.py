@@ -126,11 +126,102 @@ def test_quality_defect_ledger_ingests_undeclared_geometry_near_miss(tmp_path: P
             "node_id": "UG001",
         }
     ]
-    assert defect["patchability"]["state"] == "safe_candidate"
+    assert defect["patchability"]["state"] == "assisted_only"
     # add_spec_check hygiene noise must not become a defect.
     assert all(
         evidence["node_id"] != "UG002" for entry in defects for evidence in entry["evidence"]
     )
+
+
+def test_quality_defect_ledger_ignores_unbound_undeclared_geometry_micro_defect(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    _write_undeclared_geometry_report(
+        fixture,
+        [
+            {
+                "id": "UG001",
+                "kind": "label_crosses_horizontal_rule",
+                "recommended_action": "add_micro_defect",
+                "source_line": 0,
+                "nearest_text": "Old Label",
+                "evidence": "rendered frame/rule crosses text 'Old Label'",
+                "bbox_pt": [10.0, 20.0, 30.0, 20.0],
+                "distance_pt": 0.0,
+            }
+        ],
+        source_hashes={
+            "examples/quality_demo/quality_demo.tex": file_sha256(
+                fixture / "quality_demo.tex"
+            )
+        },
+    )
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert all(
+        evidence["node_id"] != "UG001"
+        for defect in ledger["defects"]
+        for evidence in defect.get("evidence", [])
+    )
+    assert ledger["actionability_metrics"]["missing_selector_hash_count"] == 0
+    assert ledger["actionability_metrics"]["unknown_panel_defect_count"] == 0
+
+
+def test_quality_defect_ledger_dedupes_repeated_undeclared_geometry_near_miss(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    _write_undeclared_geometry_report(
+        fixture,
+        [
+            {
+                "id": "UG001",
+                "kind": "label_endpoint_near_miss",
+                "recommended_action": "add_micro_defect",
+                "source_line": 1,
+                "nearest_text": "Old Label",
+                "evidence": "source line 1 is within 2.0 pt of text 'Old Label'",
+                "bbox_pt": [10.0, 20.0, 30.0, 20.0],
+                "distance_pt": 2.0,
+            },
+            {
+                "id": "UG002",
+                "kind": "label_endpoint_near_miss",
+                "recommended_action": "add_micro_defect",
+                "source_line": 1,
+                "nearest_text": "Old Label",
+                "evidence": "source line 1 is within 2.0 pt of text 'Old Label'",
+                "bbox_pt": [10.0, 20.0, 30.0, 20.0],
+                "distance_pt": 2.0,
+            },
+        ],
+        source_hashes={
+            "examples/quality_demo/quality_demo.tex": file_sha256(
+                fixture / "quality_demo.tex"
+            )
+        },
+    )
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert len(ledger["defects"]) == 1
+    assert [item["node_id"] for item in ledger["defects"][0]["evidence"]] == [
+        "UG001",
+        "UG002",
+    ]
+    assert ledger["actionability_metrics"]["safe_candidate_defect_count"] == 0
 
 
 def _write_visual_clash_report(fixture: Path, candidates: list[dict[str, object]]) -> None:
@@ -316,7 +407,7 @@ def test_quality_defect_ledger_ingests_kept_bounded_critique_finding(
     assert defect["selector_hint"]["kind"] == "line_range"
     assert defect["selector_hint"]["value"] == "1:1"
     assert defect["selector_hint"]["selector_text_hash"].startswith("sha256:")
-    assert defect["patchability"]["state"] == "safe_candidate"
+    assert defect["patchability"]["state"] == "assisted_only"
     assert defect["evidence"] == [
         {
             "uri": "figure://quality_demo/critique/finding/C001",
@@ -435,7 +526,7 @@ def test_quality_defect_ledger_ingests_adjudicated_visual_clash(tmp_path: Path) 
     assert defect["selector_hint"]["kind"] == "line_range"
     assert defect["selector_hint"]["value"] == "1:1"
     assert defect["selector_hint"]["selector_text_hash"].startswith("sha256:")
-    assert defect["patchability"]["state"] == "safe_candidate"
+    assert defect["patchability"]["state"] == "assisted_only"
     assert defect["evidence"] == [
         {
             "uri": "figure://quality_demo/audit/visual-clash",
@@ -619,7 +710,7 @@ def test_quality_defect_ledger_is_read_only_and_deterministic(tmp_path: Path) ->
             "node_id": "checker:text_boundary",
         }
     ]
-    assert first["defects"][0]["patchability"]["state"] == "safe_candidate"
+    assert first["defects"][0]["patchability"]["state"] == "assisted_only"
     assert first["defects"][0]["freshness"]["audit_evidence_graph_hash"].startswith("sha256:")
     after = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
     assert after == before

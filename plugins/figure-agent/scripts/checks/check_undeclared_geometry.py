@@ -36,7 +36,15 @@ DEFAULT_NEAR_MISS_PT = 4.0
 _POINT_RE = r"\((-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)\)"
 _RECT_RE = re.compile(rf"{_POINT_RE}\s*rectangle\s*{_POINT_RE}")
 _SEGMENT_RE = re.compile(rf"{_POINT_RE}\s*--\s*{_POINT_RE}")
-_COMMAND_RE = re.compile(r"\\(?P<command>draw|fill|shade)(?:\[(?P<options>[^\]]*)\])?")
+_CIRCLE_RE = re.compile(rf"{_POINT_RE}\s*circle\s*\(\s*(-?\d+(?:\.\d+)?)(cm|mm|pt)?\s*\)")
+_BEZIER_RE = re.compile(
+    rf"{_POINT_RE}\s*\.\.\s*controls\s*{_POINT_RE}\s*and\s*{_POINT_RE}\s*\.\.\s*{_POINT_RE}",
+    re.DOTALL,
+)
+_OPERATION_RE = re.compile(
+    r"\\(?P<command>draw|fill|shade)(?:\[(?P<options>[^\]]*)\])?(?P<body>.*?);",
+    re.DOTALL,
+)
 _LINE_WIDTH_RE = re.compile(r"line width\s*=\s*([0-9.]+)\s*pt")
 _CGRAY_TONE_RE = re.compile(r"cGray!(\d+(?:\.\d+)?)")
 FRAME_TONE_MAX = 35.0
@@ -88,6 +96,24 @@ def _bbox_cm_to_pt(values: list[float]) -> list[float]:
     ]
 
 
+def _point_cm_to_pt(x: float, y: float) -> list[float]:
+    return [_cm_to_pt(x), _cm_to_pt(y)]
+
+
+def _bbox_from_points_pt(points: list[list[float]]) -> list[float]:
+    xs = [point[0] for point in points]
+    ys = [point[1] for point in points]
+    return [min(xs), min(ys), max(xs), max(ys)]
+
+
+def _radius_to_pt(value: float, unit: str | None) -> float:
+    if unit == "pt":
+        return round(value, 6)
+    if unit == "mm":
+        return _cm_to_pt(value / 10.0)
+    return _cm_to_pt(value)
+
+
 def _line_pt(values: tuple[float, float, float, float]) -> dict[str, Any]:
     x0, y0, x1, y1 = values
     if abs(x0 - x1) < 0.03:
@@ -103,54 +129,222 @@ def _line_pt(values: tuple[float, float, float, float]) -> dict[str, Any]:
     }
 
 
-def _parse_tikz_geometry(tex_text: str) -> list[dict[str, Any]]:
-    geometry: list[dict[str, Any]] = []
-    current_command = ""
-    current_options = ""
-    for line_no, line in enumerate(tex_text.splitlines(), start=1):
-        if line.lstrip().startswith("%"):
+def _iter_tikz_operations(tex_text: str) -> list[dict[str, Any]]:
+    operations: list[dict[str, Any]] = []
+    for match in _OPERATION_RE.finditer(tex_text):
+        prefix = tex_text[: match.start()]
+        start_line = prefix.count("\n") + 1
+        line_start = prefix.rfind("\n") + 1
+        if tex_text[line_start : match.start()].lstrip().startswith("%"):
             continue
-        command_match = _COMMAND_RE.search(line)
-        if command_match is not None:
-            current_command = str(command_match.group("command") or "")
-            current_options = str(command_match.group("options") or "")
-        for match in _RECT_RE.finditer(line):
-            x0, y0, x1, y1 = (float(value) for value in match.groups())
+        operations.append(
+            {
+                "text": match.group(0),
+                "source_line": start_line,
+                "command": str(match.group("command") or ""),
+                "options": str(match.group("options") or ""),
+            }
+        )
+    return operations
+
+
+def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]:
+    text = str(operation["text"])
+    source_line = int(operation["source_line"])
+    command = str(operation["command"])
+    options = str(operation["options"])
+    geometry: list[dict[str, Any]] = []
+    for match in _RECT_RE.finditer(text):
+        x0, y0, x1, y1 = (float(value) for value in match.groups())
+        geometry.append(
+            {
+                "kind": "rect",
+                "bbox_pt": _bbox_cm_to_pt([x0, y0, x1, y1]),
+                "source_line": source_line,
+                "command": command,
+                "options": options,
+            }
+        )
+    for match in _SEGMENT_RE.finditer(text):
+        x0, y0, x1, y1 = (float(value) for value in match.groups())
+        if abs(x0 - x1) < 0.03 and abs(y0 - y1) >= 0.25:
             geometry.append(
                 {
-                    "kind": "rect",
-                    "bbox_pt": _bbox_cm_to_pt([x0, y0, x1, y1]),
-                    "source_line": line_no,
-                    "command": current_command,
-                    "options": current_options,
+                    "kind": "vertical_line",
+                    "line_pt": _line_pt((x0, y0, x1, y1)),
+                    "source_line": source_line,
+                    "command": command,
+                    "options": options,
                 }
             )
-        for match in _SEGMENT_RE.finditer(line):
-            x0, y0, x1, y1 = (float(value) for value in match.groups())
-            if abs(x0 - x1) < 0.03 and abs(y0 - y1) >= 0.25:
-                geometry.append(
-                    {
-                        "kind": "vertical_line",
-                        "line_pt": _line_pt((x0, y0, x1, y1)),
-                        "source_line": line_no,
-                        "command": current_command,
-                        "options": current_options,
-                    }
-                )
-            elif abs(y0 - y1) < 0.03 and abs(x0 - x1) >= 0.25:
-                geometry.append(
-                    {
-                        "kind": "horizontal_line",
-                        "line_pt": _line_pt((x0, y0, x1, y1)),
-                        "source_line": line_no,
-                        "command": current_command,
-                        "options": current_options,
-                    }
-                )
-        if ";" in line:
-            current_command = ""
-            current_options = ""
+        elif abs(y0 - y1) < 0.03 and abs(x0 - x1) >= 0.25:
+            geometry.append(
+                {
+                    "kind": "horizontal_line",
+                    "line_pt": _line_pt((x0, y0, x1, y1)),
+                    "source_line": source_line,
+                    "command": command,
+                    "options": options,
+                }
+            )
+    for match in _CIRCLE_RE.finditer(text):
+        x, y, radius, unit = match.groups()
+        center_pt = _point_cm_to_pt(float(x), float(y))
+        radius_pt = _radius_to_pt(float(radius), unit)
+        geometry.append(
+            {
+                "kind": "circle",
+                "center_pt": center_pt,
+                "radius_pt": radius_pt,
+                "bbox_pt": [
+                    round(center_pt[0] - radius_pt, 6),
+                    round(center_pt[1] - radius_pt, 6),
+                    round(center_pt[0] + radius_pt, 6),
+                    round(center_pt[1] + radius_pt, 6),
+                ],
+                "source_line": source_line,
+                "command": command,
+                "options": options,
+                "clearance_mode": "disc_envelope",
+            }
+        )
+    for match in _BEZIER_RE.finditer(text):
+        values = [float(value) for value in match.groups()]
+        points = [
+            _point_cm_to_pt(values[index], values[index + 1])
+            for index in range(0, len(values), 2)
+        ]
+        geometry.append(
+            {
+                "kind": "curve",
+                "control_hull_pt": points,
+                "bbox_pt": _bbox_from_points_pt(points),
+                "source_line": source_line,
+                "command": command,
+                "options": options,
+                "clearance_mode": "conservative_hull",
+            }
+        )
     return geometry
+
+
+def _parse_tikz_geometry(tex_text: str) -> list[dict[str, Any]]:
+    geometry: list[dict[str, Any]] = []
+    for operation in _iter_tikz_operations(tex_text):
+        geometry.extend(_parse_operation_geometry(operation))
+    return geometry
+
+
+def _operation_unknown_reasons(
+    operation: dict[str, Any],
+    parsed: list[dict[str, Any]],
+) -> list[str]:
+    text = str(operation["text"])
+    parsed_kind_counts: dict[str, int] = {}
+    for item in parsed:
+        kind = str(item["kind"])
+        parsed_kind_counts[kind] = parsed_kind_counts.get(kind, 0) + 1
+    reasons: list[str] = []
+    circle_count = len(re.findall(r"\bcircle\s*\(", text))
+    if circle_count > parsed_kind_counts.get("circle", 0):
+        reasons.append("nonliteral_circle")
+    controls_count = text.count("controls")
+    if controls_count > parsed_kind_counts.get("curve", 0):
+        reasons.append("unsupported_curve")
+    if re.search(r"\bellipse\b", text):
+        reasons.append("unsupported_ellipse")
+    if re.search(r"\barc\b", text):
+        reasons.append("unsupported_arc")
+    if re.search(r"\bplot\b", text):
+        reasons.append("unsupported_plot")
+    if re.search(r"\bto\s*\[", text):
+        reasons.append("unsupported_to_curve")
+    if not reasons and re.search(r"\([^)]*(?:\\|\{)[^)]*\)", text):
+        reasons.append("nonliteral_coordinate")
+    if not parsed and not reasons:
+        reasons.append("unsupported_geometry")
+    return sorted(set(reasons))
+
+
+def geometry_parse_coverage(tex_text: str) -> dict[str, Any]:
+    operations = _iter_tikz_operations(tex_text)
+    parsed_counts: dict[str, int] = {}
+    unknown_reasons: dict[str, int] = {}
+    unknown_samples: list[dict[str, Any]] = []
+    parsed_operations = 0
+    fully_parsed_operations = 0
+    partial_unknown_operations = 0
+    unknown_operations = 0
+    for operation in operations:
+        parsed = _parse_operation_geometry(operation)
+        reasons = _operation_unknown_reasons(operation, parsed)
+        if parsed:
+            parsed_operations += 1
+            for item in parsed:
+                kind = str(item["kind"])
+                parsed_counts[kind] = parsed_counts.get(kind, 0) + 1
+            if reasons:
+                partial_unknown_operations += 1
+            else:
+                fully_parsed_operations += 1
+        else:
+            unknown_operations += 1
+        for reason in reasons:
+            unknown_reasons[reason] = unknown_reasons.get(reason, 0) + 1
+            if len(unknown_samples) < 10:
+                unknown_samples.append(
+                    {
+                        "source_line": int(operation["source_line"]),
+                        "reason": reason,
+                        "command": str(operation["command"]),
+                        "sample": str(operation["text"]).strip()[:160],
+                    }
+                )
+    total = len(operations)
+    return {
+        "total_operations": total,
+        "parsed_operations": parsed_operations,
+        "fully_parsed_operations": fully_parsed_operations,
+        "partial_unknown_operations": partial_unknown_operations,
+        "unknown_operations": unknown_operations,
+        "coverage_ratio": None if total == 0 else round(parsed_operations / total, 6),
+        "parsed_geometry_counts": dict(sorted(parsed_counts.items())),
+        "unknown_reasons": dict(sorted(unknown_reasons.items())),
+        "unknown_samples": unknown_samples,
+        "non_auto_promotable_geometry": [
+            "circle_envelope",
+            "curve_conservative_hull",
+        ],
+    }
+
+
+def rendered_curve_coverage(curves: list[dict[str, Any]]) -> dict[str, Any]:
+    envelopes: list[dict[str, Any]] = []
+    for raw_curve in curves:
+        points = raw_curve.get("pts")
+        if not isinstance(points, list) or not points:
+            continue
+        point_values: list[list[float]] = []
+        for point in points:
+            if (
+                isinstance(point, tuple | list)
+                and len(point) == 2
+                and all(isinstance(value, int | float) for value in point)
+            ):
+                point_values.append([float(point[0]), float(point[1])])
+        if not point_values:
+            continue
+        envelopes.append(
+            {
+                "bbox_pt": [round(value, 6) for value in _bbox_from_points_pt(point_values)],
+                "clearance_mode": "rendered_curve_bbox",
+                "linewidth_pt": round(float(raw_curve.get("linewidth") or 0.0), 6),
+            }
+        )
+    return {
+        "rendered_curve_count": len(envelopes),
+        "rendered_curve_envelopes": envelopes[:25],
+    }
 
 
 def _as_bbox_pt(values: object) -> list[float] | None:
@@ -613,6 +807,13 @@ def _rendered_boundary_crossings_from_pdf(
         return candidates
 
 
+def _rendered_curves_from_pdf(pdf_path: Path) -> list[dict[str, Any]]:
+    with pdfplumber.open(pdf_path) as pdf:
+        if not pdf.pages:
+            return []
+        return list(pdf.pages[0].curves)
+
+
 def detect_undeclared_geometry(
     tex_text: str,
     words: list[dict[str, Any]],
@@ -662,6 +863,8 @@ def detect_undeclared_geometry(
                     )
                     candidate["boundary_side"] = line["side"]
                     candidates.append(candidate)
+            continue
+        if geometry["kind"] not in {"vertical_line", "horizontal_line"}:
             continue
         line = geometry["line_pt"]
         if geometry["kind"] == "vertical_line":
@@ -766,6 +969,8 @@ def undeclared_geometry_payload(
     candidates: list[dict[str, Any]],
     *,
     tex_path: Path | None = None,
+    tex_text: str | None = None,
+    rendered_curves: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
@@ -781,6 +986,11 @@ def undeclared_geometry_payload(
         payload["source_hashes"] = {
             f"examples/{fixture_name}/{tex_path.name}": file_sha256(tex_path)
         }
+    if tex_text is not None:
+        coverage = geometry_parse_coverage(tex_text)
+        if rendered_curves is not None:
+            coverage["rendered_curves"] = rendered_curve_coverage(rendered_curves)
+        payload["geometry_parse_coverage"] = coverage
     return payload
 
 
@@ -848,17 +1058,19 @@ def main(argv: list[str] | None = None) -> int:
         spec_path = args.spec or pdf_path.parent.parent / "spec.yaml"
         if not tex_path.is_file():
             raise UndeclaredGeometryError(f"missing TeX source: {tex_path}")
+        tex_text = tex_path.read_text(encoding="utf-8")
         words, page_size = extract_pdf_words_and_page(pdf_path)
         spec = _load_spec(spec_path)
         profile = _undeclared_geometry_profile(spec)
         candidates = detect_undeclared_geometry(
-            tex_path.read_text(encoding="utf-8"),
+            tex_text,
             words,
             spec,
             page_size_pt=page_size,
             source_crossings=False,
         )
         candidates.extend(_rendered_boundary_crossings_from_pdf(pdf_path, words))
+        rendered_curves = _rendered_curves_from_pdf(pdf_path)
         candidates.sort(
             key=lambda item: (
                 item["source_line"],
@@ -875,7 +1087,13 @@ def main(argv: list[str] | None = None) -> int:
         # `candidates`, so the critique undeclared-geometry accounting gate does not
         # require it to be hand-accounted. Non-schematic fixtures are unchanged.
         accounted = actionable if profile == "schematic" else candidates
-        payload = undeclared_geometry_payload(pdf_path, accounted, tex_path=tex_path)
+        payload = undeclared_geometry_payload(
+            pdf_path,
+            accounted,
+            tex_path=tex_path,
+            tex_text=tex_text,
+            rendered_curves=rendered_curves,
+        )
         if profile == "schematic":
             payload["profile"] = "schematic"
             payload["downranked"] = downranked

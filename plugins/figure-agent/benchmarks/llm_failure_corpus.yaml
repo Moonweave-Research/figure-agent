@@ -56,7 +56,7 @@ cases:
   observation_scale: zoom
   review_outcome: accepted_false_positive
   source_path: benchmarks/visual_attribution_suite.yaml
-  source_sha256: 49dcf9ba777672175a6f49ae97fd5eb1a85bc5dd646535ae1f75c4915e173c7d
+  source_sha256: 0068aac1d80c0936e5cd5045d77bd46208ade459dfb2372e64b7a14f2777d7d4
   source_locator: reviewed_evidence[id=fig1-v2-vc009-reviewed-false-positive]
   semantic_target: null
   attribution_state: unbound
