@@ -207,7 +207,9 @@ modules listed in Section 0.
   staged manifests as actual LLM runs without generation receipts. A receipt is
   `transcript_bound` only when its adjacent non-symlink transcript and both
   declared starting/generated artifacts match their SHA-256 hashes and shared
-  contract; it is an auditable execution claim, not provider authentication.
+  contract; use `scripts/quality/generation_receipt.py` to write this record.
+  The writer refuses packet/budget hash drift and transcript overwrite. This is
+  an auditable execution claim, not provider authentication.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [x] Keep ambiguous and unbound findings review-only.
 - [ ] Apply at most one smallest exact bounded repair with protected invariants,
