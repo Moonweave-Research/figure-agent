@@ -10,6 +10,7 @@ RUN_SCHEMA = "figure-agent.failure-ablation-run.v1"
 REPORT_SCHEMA = "figure-agent.failure-ablation-report.v1"
 VARIANTS = {"raw", "verified", "repaired"}
 SCIENTIFIC_CLASSES = {"semantic", "relation"}
+GENERATION_RECEIPT_SCHEMA = "figure-agent.generation-receipt.v1"
 
 
 class FailureAblationError(ValueError):
@@ -85,6 +86,25 @@ def _delta(current: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def _has_bound_generation_receipt(run: dict[str, Any]) -> bool:
+    """Return whether a run records an actual, contract-bound generation."""
+    receipt = run.get("generation_receipt")
+    if not isinstance(receipt, dict) or receipt.get("schema") != GENERATION_RECEIPT_SCHEMA:
+        return False
+    required = (
+        "model_id",
+        "source_commit",
+        "starting_artifact_sha256",
+        "generated_artifact_sha256",
+    )
+    if any(not isinstance(receipt.get(key), str) or not receipt[key] for key in required):
+        return False
+    return (
+        receipt.get("input_packet_sha256") == run.get("input_packet_hash")
+        and receipt.get("budget_contract_sha256") == run.get("budget_contract_hash")
+    )
+
+
 def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
     if set(run_paths) != VARIANTS:
         raise FailureAblationError("variant_set_invalid")
@@ -115,6 +135,9 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
     human_complete = all(
         item["human_verdict_state"] == "recorded" for item in variants.values()
     )
+    actual_generation_bound = all(
+        _has_bound_generation_receipt(runs[name]) for name in VARIANTS
+    )
     return {
         "schema": REPORT_SCHEMA,
         "variants": variants,
@@ -122,8 +145,13 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
             "verified_vs_raw": _delta(verified, raw),
             "repaired_vs_raw": _delta(repaired, raw),
         },
+        "comparison_evidence": (
+            "actual_generation_bound" if actual_generation_bound else "staged_only"
+        ),
         "product_claim": (
-            "review_eligible" if scientific_pass and human_complete else "not_authorized"
+            "review_eligible"
+            if scientific_pass and human_complete and actual_generation_bound
+            else "not_authorized"
         ),
         "publication_acceptance": "not_claimed",
     }

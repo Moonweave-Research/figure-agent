@@ -112,3 +112,11 @@ def test_recorded_human_verdict_requires_named_reviewer(tmp_path: Path) -> None:
         for variant in report["variants"].values()
     )
     assert report["product_claim"] == "not_authorized"
+
+
+def test_ablation_marks_manifests_without_bound_generation_receipts_as_staged(
+    tmp_path: Path,
+) -> None:
+    report = evaluate_ablation(write_comparable_runs(tmp_path))
+
+    assert report["comparison_evidence"] == "staged_only"
