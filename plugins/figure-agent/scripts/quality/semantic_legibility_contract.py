@@ -9,6 +9,20 @@ from typing import Any
 import yaml
 
 SCHEMA = "figure-agent.failure-first-semantic-contract.v1"
+ELECTRICAL_STATES = {
+    "source",
+    "driven",
+    "ground_reference",
+    "floating",
+    "non_electrical",
+}
+ELECTRICAL_CONNECTION_ROLES = {
+    "electrical_bias_lead",
+    "electrical_contact",
+    "electrical_lead",
+    "ground_return",
+    "grounded_source_return",
+}
 
 
 class SemanticLegibilityContractError(ValueError):
@@ -144,6 +158,92 @@ def _label_ownership(
     return values
 
 
+def _electrical_topology(
+    section: dict[str, Any],
+    required: set[str],
+    visible_connectors: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    topology = section.get("electrical_topology")
+    visible_electrical = [
+        item
+        for item in visible_connectors
+        if item["declared_role"] in ELECTRICAL_CONNECTION_ROLES
+    ]
+    if topology is None:
+        if visible_electrical:
+            raise SemanticLegibilityContractError(
+                "electrical_connector_topology_missing"
+            )
+        return [], []
+    if not isinstance(topology, dict):
+        raise SemanticLegibilityContractError("electrical_topology_invalid")
+
+    nodes = topology.get("nodes")
+    connections = topology.get("connections")
+    if not isinstance(nodes, list) or not isinstance(connections, list):
+        raise SemanticLegibilityContractError("electrical_topology_invalid")
+
+    states: dict[str, str] = {}
+    for item in nodes:
+        if not isinstance(item, dict):
+            raise SemanticLegibilityContractError("electrical_node_invalid")
+        object_id = item.get("object_id")
+        state = item.get("declared_state")
+        if (
+            not _nonempty_string(object_id)
+            or object_id not in required
+            or object_id in states
+            or state not in ELECTRICAL_STATES
+        ):
+            raise SemanticLegibilityContractError("electrical_node_invalid")
+        states[object_id] = state
+
+    seen: set[str] = set()
+    topology_records: set[tuple[str, str, str, str]] = set()
+    for item in connections:
+        if not isinstance(item, dict):
+            raise SemanticLegibilityContractError("electrical_connection_invalid")
+        _connector_endpoints(item, set(states), "electrical_connection_endpoint_invalid")
+        connection_id = item.get("connection_id")
+        if (
+            not _nonempty_string(connection_id)
+            or connection_id in seen
+            or not _nonempty_string(item.get("declared_role"))
+        ):
+            raise SemanticLegibilityContractError("electrical_connection_invalid")
+        seen.add(connection_id)
+        topology_records.add(
+            (
+                connection_id,
+                item["from_object"],
+                item["to_object"],
+                item["declared_role"],
+            )
+        )
+        endpoint_states = {
+            states[item["from_object"]],
+            states[item["to_object"]],
+        }
+        if "floating" in endpoint_states:
+            raise SemanticLegibilityContractError("floating_object_connected")
+        if "non_electrical" in endpoint_states:
+            raise SemanticLegibilityContractError("non_electrical_object_connected")
+
+    for item in visible_electrical:
+        record = (
+            item["connector_id"],
+            item["from_object"],
+            item["to_object"],
+            item["declared_role"],
+        )
+        if record not in topology_records:
+            raise SemanticLegibilityContractError(
+                "electrical_connector_topology_missing"
+            )
+
+    return nodes, connections
+
+
 def validate_semantic_legibility_contract(payload: object) -> dict[str, Any]:
     if not isinstance(payload, dict) or payload.get("schema") != SCHEMA:
         raise SemanticLegibilityContractError("schema_invalid")
@@ -159,6 +259,9 @@ def validate_semantic_legibility_contract(payload: object) -> dict[str, Any]:
     visible_connectors = _visible_connectors(section, required)
     forbidden_connectors = _forbidden_connectors(section, required)
     label_ownership = _label_ownership(section, required)
+    electrical_nodes, electrical_connections = _electrical_topology(
+        section, required, visible_connectors
+    )
 
     return {
         **payload,
@@ -167,6 +270,11 @@ def validate_semantic_legibility_contract(payload: object) -> dict[str, Any]:
             "visible_connector_count": len(visible_connectors),
             "forbidden_connector_count": len(forbidden_connectors),
             "label_ownership_count": len(label_ownership),
+            "electrical_node_count": len(electrical_nodes),
+            "electrical_connection_count": len(electrical_connections),
+            "floating_object_count": sum(
+                item["declared_state"] == "floating" for item in electrical_nodes
+            ),
             "visual_review_required": True,
         },
     }

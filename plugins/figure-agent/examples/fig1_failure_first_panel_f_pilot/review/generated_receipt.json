@@ -29,7 +29,7 @@
   },
   "publication_acceptance": "not_claimed",
   "render_geometry_hash": "sha256:8d48ad804a4e07d847c106669a3ec9d63886d12897e0d76389db179edbf3dcfd",
-  "review_input_hash": "sha256:ebd63d5f2352e3a522524ba2e8f6cee9c55339ef6592c2ee03d398e0b6a625ad",
+  "review_input_hash": "sha256:82c9e14d485b3dfc0c26eefd8c6756663c76512865bec79bbda919458e58fdb0",
   "review_inputs": [
     {
       "path": "review/evidence/raw/object_relation.png",
@@ -84,27 +84,27 @@
     {
       "path": "review/evidence/repaired/object_relation.png",
       "role": "repaired.object_relation",
-      "sha256": "sha256:201de1a3802188a4ebab83fdb3ea72239a595e25cecb7d1151465ffa332a28a8"
+      "sha256": "sha256:c14c2b2d4cf7e7b4df1ab9f3b246d44dac339f1bdcf47b8ddffbe737b6aec947"
     },
     {
       "path": "review/evidence/repaired/overlay.png",
       "role": "repaired.overlay",
-      "sha256": "sha256:a2bfcc95a3cb1a24e7e555050f9383cc8c4d40025604dad1550807fd97b429f8"
+      "sha256": "sha256:9ae060995cdbda1e88e322bdb24b56019ca9d1ffe3d0b5857f0753aa4faf3e79"
     },
     {
       "path": "review/evidence/repaired/panel.png",
       "role": "repaired.panel",
-      "sha256": "sha256:519a7176270226d0400a81d897024cd26746f7fc08273a3fb61ca458fea8b72e"
+      "sha256": "sha256:9d1e907e7c0453068cd1b3ead70108ad26383f803d84a866038cf2ec4a69fddb"
     },
     {
       "path": "review/evidence/repaired/whole.png",
       "role": "repaired.whole",
-      "sha256": "sha256:80f0f6d12cf7ce6fbdb605534fdd8f8652a6fd1a899c50bf4509098ae0326453"
+      "sha256": "sha256:9a1cb6bf364e80651f355782a2b60977bacf13617792739036a25eb8ca3faf08"
     },
     {
       "path": "review/evidence/repaired/zoom.png",
       "role": "repaired.zoom",
-      "sha256": "sha256:9b6c297433a013998d0fe0b872ef0d499add8b926e7e3940aa45d032c982cad8"
+      "sha256": "sha256:c8709796f2afad094ed033ea46b47e656b8b357d87cfdac21361020275b0eae3"
     }
   ],
   "schema": "figure-agent.review-evidence-receipt.v1",

@@ -66,6 +66,19 @@ def valid_contract() -> dict:
                     "owner": "panel_f.trapped_charge_markers",
                 }
             ],
+            "electrical_topology": {
+                "nodes": [
+                    {
+                        "object_id": "panel_f.cantilever",
+                        "declared_state": "floating",
+                    },
+                    {
+                        "object_id": "panel_f.mechanical_jig",
+                        "declared_state": "non_electrical",
+                    },
+                ],
+                "connections": [],
+            },
         },
         "publication_acceptance": "not_claimed",
     }
@@ -78,9 +91,21 @@ def test_accepts_declared_object_connector_and_label_roles() -> None:
         "visible_connector_count": 1,
         "forbidden_connector_count": 1,
         "label_ownership_count": 1,
+        "electrical_node_count": 2,
+        "electrical_connection_count": 0,
+        "floating_object_count": 1,
         "visual_review_required": True,
     }
     assert result["publication_acceptance"] == "not_claimed"
+
+
+def test_accepts_non_electrical_figure_without_topology_section() -> None:
+    contract = valid_contract()
+    del contract["semantic_legibility"]["electrical_topology"]
+    result = validate_semantic_legibility_contract(contract)
+    assert result["summary"]["electrical_node_count"] == 0
+    assert result["summary"]["electrical_connection_count"] == 0
+    assert result["summary"]["floating_object_count"] == 0
 
 
 def test_rejects_required_object_without_declared_role() -> None:
@@ -122,6 +147,52 @@ def test_rejects_declared_role_as_its_own_forbidden_reading() -> None:
     with pytest.raises(
         SemanticLegibilityContractError,
         match="object_role_contradiction",
+    ):
+        validate_semantic_legibility_contract(contract)
+
+
+def test_rejects_electrical_connection_to_floating_object() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["electrical_topology"]["connections"] = [
+        {
+            "connection_id": "panel_f.false_sample_ground",
+            "from_object": "panel_f.cantilever",
+            "to_object": "panel_f.mechanical_jig",
+            "declared_role": "ground_return",
+        }
+    ]
+    with pytest.raises(
+        SemanticLegibilityContractError,
+        match="floating_object_connected",
+    ):
+        validate_semantic_legibility_contract(contract)
+
+
+def test_rejects_visible_electrical_connector_omitted_from_topology() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["visible_connectors"].append(
+        {
+            "connector_id": "panel_f.hidden_sample_lead",
+            "from_object": "panel_f.cantilever",
+            "to_object": "panel_f.mechanical_jig",
+            "declared_role": "electrical_lead",
+        }
+    )
+    with pytest.raises(
+        SemanticLegibilityContractError,
+        match="electrical_connector_topology_missing",
+    ):
+        validate_semantic_legibility_contract(contract)
+
+
+def test_rejects_unknown_electrical_state() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["electrical_topology"]["nodes"][0][
+        "declared_state"
+    ] = "probably_grounded"
+    with pytest.raises(
+        SemanticLegibilityContractError,
+        match="electrical_node_invalid",
     ):
         validate_semantic_legibility_contract(contract)
 

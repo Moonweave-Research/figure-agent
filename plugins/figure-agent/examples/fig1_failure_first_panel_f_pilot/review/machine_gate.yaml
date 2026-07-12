@@ -11,7 +11,7 @@ strict_compile:
     generated, but the machine gate remains non-accepting.
 bounded_repair_checks:
   exact_attribution: passed
-  false_ground_removed: passed
+  source_ground_separated_from_floating_sample: passed
   protected_relations: passed
 human_review_state: pending
 failure_corpus_admission: deferred_pending_named_human_verdict

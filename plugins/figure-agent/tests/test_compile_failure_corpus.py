@@ -48,7 +48,7 @@ def test_installed_corpus_matches_compiled_bytes(tmp_path: Path) -> None:
     apparatus = next(
         case for case in installed["cases"] if case["id"] == "panel-f-apparatus-001"
     )
-    assert apparatus["repair_family"] == "clarify_voltage_application"
+    assert apparatus["repair_family"] == "clarify_electrical_topology"
 
 
 def write_index(root: Path, source_path: str, locator: str = "verdict") -> Path:

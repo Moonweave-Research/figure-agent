@@ -8,9 +8,11 @@ required_objects:
   - panel_f.air_gap
   - panel_f.trapped_charge_markers
   - panel_f.applied_voltage_cue
+  - panel_f.voltage_source
+  - panel_f.ground_reference
 forbidden_implications:
-  - panel_f.ground_symbol
-  - panel_f.grounded_electrode
+  - panel_f.grounded_sample
+  - panel_f.grounded_cantilever
   - panel_f.second_contact
   - panel_f.electrical_contact_at_jig
 repair:
@@ -21,7 +23,9 @@ protected_relations:
   - mechanical_jig_holds_cantilever
   - cantilever_separated_from_electrode_by_air_gap
   - coulomb_force_points_away_from_electrode
-  - applied_voltage_cue_labels_electrode
+  - voltage_source_drives_electrode
+  - voltage_source_returns_to_ground
+  - cantilever_remains_electrically_floating
 semantic_legibility:
   object_roles:
     - object_id: panel_f.mechanical_jig
@@ -49,10 +53,19 @@ semantic_legibility:
       forbidden_readings:
         - decorative_bead
     - object_id: panel_f.applied_voltage_cue
-      declared_role: electrode_state_annotation
+      declared_role: voltage_parameter_annotation
       forbidden_readings:
-        - ground_reference
-        - complete_circuit_topology
+        - floating_label
+    - object_id: panel_f.voltage_source
+      declared_role: compact_voltage_source
+      forbidden_readings:
+        - instrument_display
+        - sample_contact
+    - object_id: panel_f.ground_reference
+      declared_role: source_return_ground
+      forbidden_readings:
+        - sample_ground
+        - cantilever_ground
   visible_connectors:
     - connector_id: panel_f.jig_holds_cantilever
       from_object: panel_f.mechanical_jig
@@ -66,6 +79,14 @@ semantic_legibility:
       from_object: panel_f.coulomb_force
       to_object: panel_f.cantilever
       declared_role: force_direction
+    - connector_id: panel_f.source_drives_electrode
+      from_object: panel_f.voltage_source
+      to_object: panel_f.electrode
+      declared_role: electrical_bias_lead
+    - connector_id: panel_f.source_returns_to_ground
+      from_object: panel_f.voltage_source
+      to_object: panel_f.ground_reference
+      declared_role: grounded_source_return
   forbidden_connectors:
     - from_object: panel_f.mechanical_jig
       to_object: panel_f.cantilever
@@ -73,6 +94,12 @@ semantic_legibility:
     - from_object: panel_f.mechanical_jig
       to_object: panel_f.electrode
       declared_role: electrical_lead
+    - from_object: panel_f.cantilever
+      to_object: panel_f.ground_reference
+      declared_role: ground_return
+    - from_object: panel_f.cantilever
+      to_object: panel_f.voltage_source
+      declared_role: electrical_bias_lead
   label_ownership:
     - label_id: panel_f.trapped_charge_label
       owner: panel_f.trapped_charge_markers
@@ -82,4 +109,25 @@ semantic_legibility:
       owner: panel_f.coulomb_force
     - label_id: panel_f.applied_voltage_label
       owner: panel_f.applied_voltage_cue
+  electrical_topology:
+    nodes:
+      - object_id: panel_f.mechanical_jig
+        declared_state: non_electrical
+      - object_id: panel_f.cantilever
+        declared_state: floating
+      - object_id: panel_f.electrode
+        declared_state: driven
+      - object_id: panel_f.voltage_source
+        declared_state: source
+      - object_id: panel_f.ground_reference
+        declared_state: ground_reference
+    connections:
+      - connection_id: panel_f.source_drives_electrode
+        from_object: panel_f.voltage_source
+        to_object: panel_f.electrode
+        declared_role: electrical_bias_lead
+      - connection_id: panel_f.source_returns_to_ground
+        from_object: panel_f.voltage_source
+        to_object: panel_f.ground_reference
+        declared_role: grounded_source_return
 publication_acceptance: not_claimed

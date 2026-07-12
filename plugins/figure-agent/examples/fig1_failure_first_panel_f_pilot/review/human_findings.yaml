@@ -5,6 +5,13 @@ reviewed_source:
   variant: repaired
   receipt_sha256: 2895ff9d57d19b083e7df313343f3a883e5aa9a20b5258c8ca92268c68b3729a
   review_input_hash: sha256:e28ada69677a60706505a9195f17a54a0b38ba8c9a8310f61bb02c7b5c79b877
+scientific_clarification:
+  reviewer: moon
+  recorded_date: "2026-07-12"
+  voltage_source_return: grounded
+  sample_state: floating
+  cantilever_state: floating
+  revised_artifact_acceptance: pending
 findings:
   - id: PF-ROLE-001
     failure_class: semantic
@@ -22,9 +29,9 @@ findings:
     semantic_target: panel_f.source_box
     attribution_state: exact
     defect: apparatus_box_role_and_state_are_incoherent
-    evidence_summary: The equipment box and its displayed state read as strange rather than as a coherent part of the setup.
-    required_correction: retain_an_applied_voltage_cue_without_the_incoherent_equipment_box
-    repair_family: clarify_voltage_application
+    evidence_summary: The equipment box and its displayed state read as strange, but voltage application still requires a real source-to-electrode relation; the source return is grounded while the sample remains floating.
+    required_correction: show_a_grounded_voltage_source_driving_the_electrode_while_the_sample_remains_floating
+    repair_family: clarify_electrical_topology
   - id: PF-CHARGE-001
     failure_class: style
     observation_scale: zoom

@@ -2022,8 +2022,8 @@
 % ============================================================
 % v5f Panel F art-direction redraw overlay.
 % Covers the v5e apparatus-heavy mechanical panel and redraws it as a single
-% result-first mechanism scene: jig, applied-voltage cue, electrode, air gap,
-% trapped-charge family, and Coulomb repulsion without invented circuit closure.
+% result-first mechanism scene: jig, compact grounded voltage source, driven
+% electrode, floating sample, air gap, trapped charge, and Coulomb repulsion.
 % ============================================================
 \fill[white] (9.52, 0.18) rectangle (13.92, 4.34);
 \draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
@@ -2075,12 +2075,32 @@
   at (13.62, 1.62) {electrode};
 \fill[white] (13.12, 0.10) rectangle (13.50, 0.23);
 
-% Compact applied-voltage state cue. Direct adjacency binds it to the electrode
-% without inventing an instrument enclosure or circuit closure.
-\node[anchor=south, fill=white, fill opacity=0.96, text opacity=1,
-      inner xsep=0.85pt, inner ysep=0.38pt,
-      font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont, text=cBlue!72!black]
-  at (13.30, 2.94) {$V_{\mathrm{app}}$};
+% Compact voltage source with explicit source-to-electrode lead and grounded
+% source return. The sample and cantilever remain electrically floating: no
+% electrical connector terminates on the jig, cantilever, or trapped charge.
+\fill[cBlue!5, rounded corners=0.55mm] (12.60,3.24) rectangle (13.08,3.62);
+\draw[cBlue!64!black, line width=0.38pt, rounded corners=0.55mm]
+  (12.60,3.24) rectangle (13.08,3.62);
+\node[font=\sffamily\bfseries\fontsize{4.4}{5.2}\selectfont,
+      text=cBlue!70!black] at (12.84,3.43) {HV};
+
+% Source-to-electrode lead (lower source terminal).
+\fill[cBlue!70!black] (13.08,3.34) circle (0.025);
+\draw[cBlue!70!black, line width=0.36pt, rounded corners=0.3mm]
+  (13.08,3.34) -- (13.30,3.34) -- (13.30,2.82);
+\node[anchor=east, fill=white, fill opacity=0.96, text opacity=1,
+      inner xsep=0.75pt, inner ysep=0.32pt,
+      font=\sffamily\bfseries\fontsize{4.7}{5.7}\selectfont, text=cBlue!72!black]
+  at (12.54, 3.43) {$V_{\mathrm{app}}$};
+
+% Grounded source return (upper source terminal); this ground belongs to the
+% voltage source, never to the sample or cantilever.
+\fill[cBlue!70!black] (13.08,3.52) circle (0.025);
+\draw[cBlue!58!black, line width=0.34pt, rounded corners=0.3mm]
+  (13.08,3.52) -- (13.58,3.52) -- (13.58,3.23);
+\draw[cBlue!58!black, line width=0.34pt] (13.45,3.23) -- (13.71,3.23);
+\draw[cBlue!58!black, line width=0.34pt] (13.49,3.17) -- (13.67,3.17);
+\draw[cBlue!58!black, line width=0.34pt] (13.53,3.11) -- (13.63,3.11);
 
 % Flat trapped-charge markers: consistent scientific symbols, not glossy beads.
 \foreach \cx/\cy/\rr in {11.62/2.28/0.075,11.43/1.86/0.082,11.10/1.36/0.088,10.72/0.94/0.082} {

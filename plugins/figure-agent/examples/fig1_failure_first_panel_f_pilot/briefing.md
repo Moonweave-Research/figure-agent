@@ -9,18 +9,20 @@ checks establish publication quality.
 ## §3. Correctness rules
 
 - Panel F must show one understated mechanical jig holding the cantilever.
-- Panel F must show an applied-voltage cue bound clearly to the right electrode.
-- The cue does not require a full instrument box or a long electrical lead.
-- The cue must not imply a ground or complete return path.
-- Panel F must not imply that the right electrode is grounded.
+- Panel F must show a compact voltage source driving the right electrode.
+- The source return must terminate at ground; the ground belongs to the source
+  circuit, not to the sample.
+- The sample and cantilever must remain electrically floating, with no
+  electrical connector at the mechanical jig.
+- A compact source symbol is sufficient; a detailed instrument display is not required.
 - The historical v5f source must remain unchanged.
 
 ## §6. Physics invariants
 
 - The cantilever must remain separated from the right electrode by an air gap.
 - The Coulomb-force arrow must point away from the right electrode.
-- Removing the false ground cue must not alter charge, cantilever, electrode,
-  air-gap, or force relations.
+- Correcting the source/ground topology must not alter charge, cantilever,
+  electrode, air-gap, or force relations.
 
 ## §7. Review constraints
 

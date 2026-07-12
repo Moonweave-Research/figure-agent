@@ -82,10 +82,12 @@ def test_pilot_declares_semantics_and_bounded_repair_before_review() -> None:
         "panel_f.electrode",
         "panel_f.coulomb_force",
         "panel_f.applied_voltage_cue",
+        "panel_f.voltage_source",
+        "panel_f.ground_reference",
     }
     assert set(contract["forbidden_implications"]) >= {
-        "panel_f.ground_symbol",
-        "panel_f.grounded_electrode",
+        "panel_f.grounded_sample",
+        "panel_f.grounded_cantilever",
         "panel_f.second_contact",
         "panel_f.electrical_contact_at_jig",
     }
@@ -98,7 +100,9 @@ def test_pilot_declares_semantics_and_bounded_repair_before_review() -> None:
         "mechanical_jig_holds_cantilever",
         "cantilever_separated_from_electrode_by_air_gap",
         "coulomb_force_points_away_from_electrode",
-        "applied_voltage_cue_labels_electrode",
+        "voltage_source_drives_electrode",
+        "voltage_source_returns_to_ground",
+        "cantilever_remains_electrically_floating",
     }
 
 
@@ -108,6 +112,9 @@ def test_pilot_declares_role_connector_and_label_legibility() -> None:
     assert result["summary"]["visible_connector_count"] >= 3
     assert result["summary"]["forbidden_connector_count"] >= 2
     assert result["summary"]["label_ownership_count"] >= 2
+    assert result["summary"]["electrical_node_count"] == 5
+    assert result["summary"]["electrical_connection_count"] == 2
+    assert result["summary"]["floating_object_count"] == 1
     assert result["summary"]["visual_review_required"] is True
     assert result["publication_acceptance"] == "not_claimed"
 
@@ -126,6 +133,14 @@ def test_named_human_findings_bind_reviewed_revision_without_accepting_repair() 
             "sha256:e28ada69677a60706505a9195f17a54a0b38ba8c9a8310f61bb02c7b5c79b877"
         ),
     }
+    assert findings["scientific_clarification"] == {
+        "reviewer": "moon",
+        "recorded_date": "2026-07-12",
+        "voltage_source_return": "grounded",
+        "sample_state": "floating",
+        "cantilever_state": "floating",
+        "revised_artifact_acceptance": "pending",
+    }
     assert {item["id"] for item in findings["findings"]} == {
         "PF-ROLE-001",
         "PF-APPARATUS-001",
@@ -141,14 +156,14 @@ def test_named_human_findings_bind_reviewed_revision_without_accepting_repair() 
         item for item in findings["findings"] if item["id"] == "PF-APPARATUS-001"
     )
     assert apparatus["required_correction"] == (
-        "retain_an_applied_voltage_cue_without_the_incoherent_equipment_box"
+        "show_a_grounded_voltage_source_driving_the_electrode_while_the_sample_remains_floating"
     )
-    assert apparatus["repair_family"] == "clarify_voltage_application"
+    assert apparatus["repair_family"] == "clarify_electrical_topology"
     assert findings["revised_variant_acceptance"] == "pending"
     assert findings["publication_acceptance"] == "not_claimed"
 
 
-def test_repaired_source_has_one_exact_jig_block_and_clear_voltage_cue() -> None:
+def test_repaired_source_has_grounded_source_and_floating_sample() -> None:
     source = (FIXTURE / "fig1_failure_first_panel_f_pilot.tex").read_text(
         encoding="utf-8"
     )
@@ -158,13 +173,14 @@ def test_repaired_source_has_one_exact_jig_block_and_clear_voltage_cue() -> None
     assert source.count(end) == 1
     block = source.split(start, 1)[1].split(end, 1)[0]
     assert "small neutral mechanical jig" in block
-    assert "ground" not in block.lower()
     assert "V_{\\mathrm{active}}" not in block
     assert "{bias}" not in block
     assert block.count("V_{\\mathrm{app}}") == 1
-    assert "applied-voltage state cue" in block
-    assert "source box" not in block.lower()
-    assert "return path" not in block.lower()
+    assert "compact voltage source" in block.lower()
+    assert "source-to-electrode lead" in block.lower()
+    assert "grounded source return" in block.lower()
+    assert "sample and cantilever remain electrically floating" in block.lower()
+    assert "sample ground" not in block.lower()
     assert "(13.24, 3.76) -- (13.20, 3.38)" not in block
     assert "ball color" not in block
     assert "(11.08,2.48) .. controls" not in block
@@ -176,14 +192,15 @@ def test_repaired_source_has_one_exact_jig_block_and_clear_voltage_cue() -> None
     assert "(13.23, 0.40) -- (13.37, 0.40)" not in source
 
 
-def test_pilot_docs_require_voltage_application_without_false_circuit() -> None:
+def test_pilot_docs_require_grounded_source_and_floating_sample() -> None:
     briefing = (FIXTURE / "briefing.md").read_text(encoding="utf-8")
     caption = (FIXTURE / "caption.md").read_text(encoding="utf-8")
-    assert "must show an applied-voltage cue" in briefing
-    assert "does not require a full instrument box" in briefing
-    assert "must not imply a ground or complete return path" in briefing
+    assert "must show a compact voltage source" in briefing
+    assert "source return must terminate at ground" in briefing
+    assert "sample and cantilever must remain electrically floating" in briefing
     assert "applied voltage" in caption
-    assert "does not assert a grounded or complete circuit" in caption
+    assert "source return is grounded" in caption
+    assert "sample and cantilever remain floating" in caption
 
 
 def test_ablation_contract_is_comparable_and_stops_at_human_boundary() -> None:

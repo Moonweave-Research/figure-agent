@@ -80,7 +80,7 @@ cases:
     review_outcome: confirmed_defect
     semantic_target: panel_f.source_box
     attribution_state: exact
-    repair_family: clarify_voltage_application
+    repair_family: clarify_electrical_topology
   - id: panel-f-charge-001
     source_id: panel-f-moon-reviewed-findings
     source_locator: findings[id=PF-CHARGE-001]

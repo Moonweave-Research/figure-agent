@@ -254,6 +254,12 @@ render remains pending until named human or independent visual review records
 the observed reading. Machine-valid declarations therefore cannot authorize
 publication acceptance.
 
+When electrical topology is scientifically relevant, the contract also declares
+electrical object states and source/return connections. An object declared
+floating cannot be an endpoint of an electrical connection; a ground reference
+must identify the circuit node it actually belongs to rather than merely appear
+near the apparatus.
+
 ## 8. Bounded repair contract
 
 The primary execution capability is controlled local repair, not complete

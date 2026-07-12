@@ -59,7 +59,7 @@ panels:
   - 11.07
   reference_image: reference/row2_apparatus/apparatus2_ref01_NatComm2024_surfacecharge_p2-02.png
 - id: F
-  caption: "Column F \u2014 trapped-charge Coulomb repulsion with a floating cantilever contact"
+  caption: "Column F \u2014 trapped-charge Coulomb repulsion with a grounded voltage-source return and floating cantilever"
   bbox_pdf_cm:
   - 12.199
   - 5.926
