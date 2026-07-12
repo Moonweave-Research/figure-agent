@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -30,6 +32,7 @@ def _load_run(path: Path, *, expected_variant: str) -> dict[str, Any]:
         not isinstance(item, dict) for item in findings
     ):
         raise FailureAblationError("run_findings_invalid")
+    payload["_run_path"] = path
     return payload
 
 
@@ -87,7 +90,7 @@ def _delta(current: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
 
 
 def _has_bound_generation_receipt(run: dict[str, Any]) -> bool:
-    """Return whether a run records an actual, contract-bound generation."""
+    """Return whether a run has a contract-bound, hash-verified transcript."""
     receipt = run.get("generation_receipt")
     if not isinstance(receipt, dict) or receipt.get("schema") != GENERATION_RECEIPT_SCHEMA:
         return False
@@ -99,9 +102,48 @@ def _has_bound_generation_receipt(run: dict[str, Any]) -> bool:
     )
     if any(not isinstance(receipt.get(key), str) or not receipt[key] for key in required):
         return False
-    return (
+    if not (
         receipt.get("input_packet_sha256") == run.get("input_packet_hash")
         and receipt.get("budget_contract_sha256") == run.get("budget_contract_hash")
+    ):
+        return False
+
+    declared_path = receipt.get("transcript_path")
+    declared_hash = receipt.get("transcript_sha256")
+    run_path = run.get("_run_path")
+    if (
+        not isinstance(declared_path, str)
+        or not declared_path
+        or not isinstance(declared_hash, str)
+        or not isinstance(run_path, Path)
+    ):
+        return False
+    transcript_path = Path(declared_path)
+    if transcript_path.is_absolute() or len(transcript_path.parts) != 1:
+        return False
+    transcript = run_path.parent / transcript_path
+    if transcript.is_symlink() or not transcript.is_file():
+        return False
+    transcript_bytes = transcript.read_bytes()
+    actual_hash = f"sha256:{hashlib.sha256(transcript_bytes).hexdigest()}"
+    if actual_hash != declared_hash:
+        return False
+    try:
+        transcript_payload = json.loads(transcript_bytes)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return False
+    if not isinstance(transcript_payload, dict):
+        return False
+    return all(
+        transcript_payload.get(key) == receipt.get(key)
+        for key in (
+            "model_id",
+            "input_packet_sha256",
+            "budget_contract_sha256",
+            "source_commit",
+            "starting_artifact_sha256",
+            "generated_artifact_sha256",
+        )
     )
 
 

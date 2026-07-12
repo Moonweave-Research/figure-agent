@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import sys
 from pathlib import Path
 
@@ -46,6 +48,28 @@ def write_comparable_runs(root: Path) -> dict[str, Path]:
         "verified": _write_run(root, "verified", [typography]),
         "repaired": _write_run(root, "repaired", []),
     }
+
+
+def add_generation_receipt(path: Path, *, model_id: str = "test-model") -> None:
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    transcript = {
+        "model_id": model_id,
+        "input_packet_sha256": payload["input_packet_hash"],
+        "budget_contract_sha256": payload["budget_contract_hash"],
+        "source_commit": "0123456789abcdef",
+        "starting_artifact_sha256": "sha256:" + "4" * 64,
+        "generated_artifact_sha256": "sha256:" + "5" * 64,
+    }
+    transcript_path = path.with_suffix(".transcript.json")
+    transcript_bytes = json.dumps(transcript, sort_keys=True).encode("utf-8")
+    transcript_path.write_bytes(transcript_bytes)
+    payload["generation_receipt"] = {
+        "schema": "figure-agent.generation-receipt.v1",
+        **transcript,
+        "transcript_path": transcript_path.name,
+        "transcript_sha256": "sha256:" + hashlib.sha256(transcript_bytes).hexdigest(),
+    }
+    path.write_text(yaml.safe_dump(payload), encoding="utf-8")
 
 
 def test_ablation_requires_exactly_raw_verified_repaired(tmp_path: Path) -> None:
@@ -125,17 +149,7 @@ def test_ablation_marks_manifests_without_bound_generation_receipts_as_staged(
 def test_ablation_accepts_runs_with_matching_generation_receipts(tmp_path: Path) -> None:
     paths = write_comparable_runs(tmp_path)
     for path in paths.values():
-        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
-        payload["generation_receipt"] = {
-            "schema": "figure-agent.generation-receipt.v1",
-            "model_id": "test-model",
-            "input_packet_sha256": payload["input_packet_hash"],
-            "budget_contract_sha256": payload["budget_contract_hash"],
-            "source_commit": "0123456789abcdef",
-            "starting_artifact_sha256": "sha256:" + "4" * 64,
-            "generated_artifact_sha256": "sha256:" + "5" * 64,
-        }
-        path.write_text(yaml.safe_dump(payload), encoding="utf-8")
+        add_generation_receipt(path)
 
     report = evaluate_ablation(paths)
 
@@ -145,10 +159,20 @@ def test_ablation_accepts_runs_with_matching_generation_receipts(tmp_path: Path)
 def test_ablation_rejects_generation_receipts_from_different_models(tmp_path: Path) -> None:
     paths = write_comparable_runs(tmp_path)
     for variant, path in paths.items():
+        add_generation_receipt(path, model_id=f"test-model-{variant}")
+
+    report = evaluate_ablation(paths)
+
+    assert report["comparison_evidence"] == "staged_only"
+
+
+def test_ablation_requires_a_hash_bound_generation_transcript(tmp_path: Path) -> None:
+    paths = write_comparable_runs(tmp_path)
+    for path in paths.values():
         payload = yaml.safe_load(path.read_text(encoding="utf-8"))
         payload["generation_receipt"] = {
             "schema": "figure-agent.generation-receipt.v1",
-            "model_id": f"test-model-{variant}",
+            "model_id": "test-model",
             "input_packet_sha256": payload["input_packet_hash"],
             "budget_contract_sha256": payload["budget_contract_hash"],
             "source_commit": "0123456789abcdef",
