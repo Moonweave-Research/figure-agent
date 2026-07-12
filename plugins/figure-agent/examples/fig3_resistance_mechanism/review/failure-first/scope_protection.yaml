@@ -8,6 +8,17 @@ allowed_review_paths:
   - review/failure-first/semantic_object_relation_boundary.yaml
   - review/failure-first/scope_protection.yaml
   - review/failure-first/render_receipt.yaml
+  - review/failure-first/model_contract.yaml
+  - review/failure-first/budget_contract.yaml
+  - review/failure-first/raw_authoring_prompt.md
+  - review/failure-first/raw_authority_packet.yaml
+  - review/failure-first/raw_generated.tex
+  - review/failure-first/raw_generated.pdf
+  - review/failure-first/raw_generated.png
+  - review/failure-first/raw_render_receipt.yaml
+  - review/failure-first/raw_selector_registry.yaml
+  - review/failure-first/raw.yaml
+  - review/failure-first/raw.transcript.json
 allowed_repository_paths:
   - plugins/figure-agent/docs/execution-plan.md
   - plugins/figure-agent/scripts/visual_finding_artifacts.py

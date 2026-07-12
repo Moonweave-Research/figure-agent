@@ -1,0 +1,28 @@
+schema: figure-agent.raw-render-receipt.v1
+fixture: fig3_resistance_mechanism
+input_authority_packet_sha256: sha256:e1f2dd79ba8c492feea72376de6364b45c69829e5d3c6cbd499e9d05d8432789
+source_path: raw_generated.tex
+source_sha256: sha256:c21602ae6e297a6c5455c654af9ee0388bf6c7f71f41fa0bdbc2b7ab7f6b360f
+compile_command:
+  - lualatex
+  - -interaction=nonstopmode
+  - -halt-on-error
+  - raw_generated.tex
+raster_command:
+  - pdftocairo
+  - -png
+  - -singlefile
+  - -r
+  - "220"
+  - raw_generated.pdf
+  - raw_generated
+toolchain:
+  latex_engine: LuaHBTeX 1.24.0 (TeX Live 2026)
+  rasterizer: pdftocairo 26.03.0
+outputs:
+  - path: raw_generated.pdf
+    sha256: sha256:b713a9807761ab0e9b69d98898ce777d24c6839e16f0f9a38893957505d6d1d4
+  - path: raw_generated.png
+    sha256: sha256:4eac7cb14b265ee7d05a8665493a8d6d3ab72beb3c6fcb2a838618c08ddac6c3
+render_contract: standalone_raw_baseline_not_project_style_lock_compliant
+publication_acceptance: not_claimed

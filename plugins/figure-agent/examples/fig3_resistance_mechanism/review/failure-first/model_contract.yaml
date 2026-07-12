@@ -1,0 +1,11 @@
+schema: figure-agent.model-contract.v1
+model_id: codex-gpt-5.5
+authoring_mode: clean_room_authority_only_tikz
+output_kind: standalone_tikz_source
+forbidden_import_patterns:
+  - examples/fig1_
+  - experiments/python_svg_semantic_fig1
+  - fig1_hybrid_complex_panel_pilot
+  - fig3_trap_schematic_v97
+  - fig3_trapping_concept
+publication_acceptance: not_claimed

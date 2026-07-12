@@ -1,0 +1,18 @@
+schema: figure-agent.finding-selector-registry.v1
+fixture: fig3_resistance_mechanism
+source_path: raw_generated.tex
+source_sha256: sha256:c21602ae6e297a6c5455c654af9ee0388bf6c7f71f41fa0bdbc2b7ab7f6b360f
+selectors:
+  - id: document.preamble_and_palette
+    evidence_kind: source_line_range
+    lines: [1, 19]
+    rationale: standalone preamble and local colour declarations violate the project style contract
+  - id: panel_b.s60_single_deep_state
+    evidence_kind: source_line_range
+    lines: [58, 67]
+    rationale: S60 is called discrete and narrow, but never single deep
+  - id: whole.layout_text_extents
+    evidence_kind: rendered_image
+    paths: [raw_generated.png]
+    rationale: title, bias, causal bridge, and right magnitude label collide or overflow at rendered scale
+publication_acceptance: not_claimed

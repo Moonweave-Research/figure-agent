@@ -1,0 +1,55 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: raw
+model_contract_hash: sha256:9d969e65514446c9ea822e099c48372d1bead7bde2d38787b3e1fbf9c9cb2545
+input_packet_hash: sha256:e1f2dd79ba8c492feea72376de6364b45c69829e5d3c6cbd499e9d05d8432789
+budget_contract_hash: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+figure_family: fig3_resistance_mechanism
+findings:
+- id: RAW_STYLE_CONTRACT_MISSING
+  failure_class: style
+  observation_scale: whole
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: document.preamble_and_palette
+- id: RAW_SINGLE_DEEP_STATE_OMITTED
+  failure_class: semantic
+  observation_scale: panel
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: panel_b.s60_single_deep_state
+- id: RAW_TEXT_AND_LABEL_OVERFLOW
+  failure_class: geometry
+  observation_scale: whole
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: whole.layout_text_extents
+human_correction_minutes: null
+intervention_count: 0
+clean_reproduction: false
+selector_registry_hash: sha256:16cb9dd9551140054264a92a6728cfd0a798549fdd177f843058f98d17a8202e
+render_receipt_hash: sha256:d73b2bae79c6cfafe47b9cfbf5011bfa33a82ad7f8681e7de8135a2e4686a448
+reproduction:
+  project_compile:
+    command:
+    - bash
+    - scripts/compile.sh
+    - examples/fig3_resistance_mechanism/review/failure-first/raw_generated.tex
+    working_directory: plugins/figure-agent
+    result: blocked_by_style_lock
+    observed_failure: polymer-paper-preamble absent; local non-palette colors declared
+  standalone_render: bound_in_raw_render_receipt
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed
+generation_receipt:
+  schema: figure-agent.generation-receipt.v1
+  model_id: codex-gpt-5.5
+  input_packet_sha256: sha256:e1f2dd79ba8c492feea72376de6364b45c69829e5d3c6cbd499e9d05d8432789
+  budget_contract_sha256: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+  source_commit: eb1e1506c5ed5520aff952041f783e8ae1a9458e
+  starting_artifact_path: raw_authoring_prompt.md
+  starting_artifact_sha256: sha256:f4239d9d8367ab7b0f34cbef679a747aae549277970f0633286f7220d4dd9872
+  generated_artifact_path: raw_generated.tex
+  generated_artifact_sha256: sha256:c21602ae6e297a6c5455c654af9ee0388bf6c7f71f41fa0bdbc2b7ab7f6b360f
+  transcript_path: raw.transcript.json
+  transcript_sha256: sha256:905ac672bfb0639bd4a265ac1161a3f484c6055691d9ae5f2c6c0baa8931309c

@@ -13,6 +13,14 @@ REVIEW = FIXTURE / "review" / "failure-first"
 PACKET = REVIEW / "input_packet.yaml"
 BOUNDARY = REVIEW / "semantic_object_relation_boundary.yaml"
 RENDER_RECEIPT = REVIEW / "render_receipt.yaml"
+RAW_RUN = REVIEW / "raw.yaml"
+RAW_PROMPT = REVIEW / "raw_authoring_prompt.md"
+RAW_SOURCE = REVIEW / "raw_generated.tex"
+RAW_MODEL_CONTRACT = REVIEW / "model_contract.yaml"
+RAW_BUDGET_CONTRACT = REVIEW / "budget_contract.yaml"
+RAW_AUTHORITY_PACKET = REVIEW / "raw_authority_packet.yaml"
+RAW_RENDER_RECEIPT = REVIEW / "raw_render_receipt.yaml"
+RAW_SELECTOR_REGISTRY = REVIEW / "raw_selector_registry.yaml"
 
 
 def _sha256(path: Path) -> str:
@@ -191,6 +199,17 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/semantic_object_relation_boundary.yaml",
         "review/failure-first/scope_protection.yaml",
         "review/failure-first/render_receipt.yaml",
+        "review/failure-first/model_contract.yaml",
+        "review/failure-first/budget_contract.yaml",
+        "review/failure-first/raw_authoring_prompt.md",
+        "review/failure-first/raw_authority_packet.yaml",
+        "review/failure-first/raw_generated.tex",
+        "review/failure-first/raw_generated.pdf",
+        "review/failure-first/raw_generated.png",
+        "review/failure-first/raw_render_receipt.yaml",
+        "review/failure-first/raw_selector_registry.yaml",
+        "review/failure-first/raw.yaml",
+        "review/failure-first/raw.transcript.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/docs/execution-plan.md",
@@ -220,6 +239,87 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
     )
     assert receipt_item["path"] == "review/failure-first/render_receipt.yaml"
     assert receipt_item["sha256"] == _sha256(RENDER_RECEIPT)
+
+
+def test_fig3_raw_clean_room_baseline_is_hash_bound_but_not_publication_accepted() -> None:
+    run = yaml.safe_load(RAW_RUN.read_text(encoding="utf-8"))
+    receipt = run["generation_receipt"]
+
+    assert run["schema"] == "figure-agent.failure-ablation-run.v1"
+    assert run["variant"] == "raw"
+    assert run["figure_family"] == "fig3_resistance_mechanism"
+    assert run["model_contract_hash"] == _sha256(RAW_MODEL_CONTRACT)
+    assert run["input_packet_hash"] == _sha256(RAW_AUTHORITY_PACKET)
+    assert run["budget_contract_hash"] == _sha256(RAW_BUDGET_CONTRACT)
+    assert run["clean_reproduction"] is False
+    assert run["reproduction"]["project_compile"]["result"] == "blocked_by_style_lock"
+    assert run["selector_registry_hash"] == _sha256(RAW_SELECTOR_REGISTRY)
+    assert run["render_receipt_hash"] == _sha256(RAW_RENDER_RECEIPT)
+    assert run["human_verdict"] == {"state": "pending"}
+    assert run["publication_acceptance"] == "not_claimed"
+    assert run["findings"] == [
+        {
+            "id": "RAW_STYLE_CONTRACT_MISSING",
+            "failure_class": "style",
+            "observation_scale": "whole",
+            "review_outcome": "confirmed_defect",
+            "attribution_state": "exact",
+            "selector_id": "document.preamble_and_palette",
+        },
+        {
+            "id": "RAW_SINGLE_DEEP_STATE_OMITTED",
+            "failure_class": "semantic",
+            "observation_scale": "panel",
+            "review_outcome": "confirmed_defect",
+            "attribution_state": "exact",
+            "selector_id": "panel_b.s60_single_deep_state",
+        },
+        {
+            "id": "RAW_TEXT_AND_LABEL_OVERFLOW",
+            "failure_class": "geometry",
+            "observation_scale": "whole",
+            "review_outcome": "confirmed_defect",
+            "attribution_state": "exact",
+            "selector_id": "whole.layout_text_extents",
+        },
+    ]
+    assert receipt["starting_artifact_path"] == RAW_PROMPT.name
+    assert receipt["generated_artifact_path"] == RAW_SOURCE.name
+    for kind, path in (("starting", RAW_PROMPT), ("generated", RAW_SOURCE)):
+        assert receipt[f"{kind}_artifact_sha256"] == _sha256(path)
+    transcript = RAW_RUN.with_suffix(".transcript.json")
+    assert receipt["transcript_path"] == transcript.name
+    assert receipt["transcript_sha256"] == _sha256(transcript)
+    model_contract = yaml.safe_load(RAW_MODEL_CONTRACT.read_text(encoding="utf-8"))
+    authority_packet = yaml.safe_load(RAW_AUTHORITY_PACKET.read_text(encoding="utf-8"))
+    raw_source = RAW_SOURCE.read_text(encoding="utf-8")
+    assert authority_packet["schema"] == "figure-agent.raw-authority-packet.v1"
+    assert [item["role"] for item in authority_packet["authoritative_inputs"]] == [
+        "briefing",
+        "specification",
+        "authoring_contract",
+        "panel_goals",
+    ]
+    for item in authority_packet["authoritative_inputs"]:
+        path = FIXTURE / item["path"]
+        assert item["sha256"] == _sha256(path)
+        for forbidden in model_contract["forbidden_import_patterns"]:
+            assert forbidden not in item["path"]
+            assert forbidden not in path.read_text(encoding="utf-8")
+    for forbidden in model_contract["forbidden_import_patterns"]:
+        assert forbidden not in raw_source
+
+    selectors = yaml.safe_load(RAW_SELECTOR_REGISTRY.read_text(encoding="utf-8"))
+    assert selectors["source_sha256"] == _sha256(RAW_SOURCE)
+    selector_ids = {item["id"] for item in selectors["selectors"]}
+    assert selector_ids == {item["selector_id"] for item in run["findings"]}
+
+    render = yaml.safe_load(RAW_RENDER_RECEIPT.read_text(encoding="utf-8"))
+    assert render["input_authority_packet_sha256"] == _sha256(RAW_AUTHORITY_PACKET)
+    assert render["source_sha256"] == _sha256(RAW_SOURCE)
+    for output in render["outputs"]:
+        assert output["sha256"] == _sha256(REVIEW / output["path"])
+    assert render["publication_acceptance"] == "not_claimed"
 
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:

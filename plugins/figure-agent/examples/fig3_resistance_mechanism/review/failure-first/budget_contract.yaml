@@ -1,0 +1,8 @@
+schema: figure-agent.generation-budget-contract.v1
+fixture: fig3_resistance_mechanism
+variants: [raw, verified, repaired]
+authoring_attempts_per_variant: 1
+raw_authoring_boundary: clean_room_authority_only
+verified_authoring_boundary: style_contract_injection_only
+repaired_authoring_boundary: one_exact_review_bound_repair
+publication_acceptance: not_claimed

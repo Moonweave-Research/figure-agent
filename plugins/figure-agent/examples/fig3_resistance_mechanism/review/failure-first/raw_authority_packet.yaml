@@ -1,0 +1,17 @@
+schema: figure-agent.raw-authority-packet.v1
+fixture: fig3_resistance_mechanism
+authoring_mode: clean_room_authority_only_tikz
+authoritative_inputs:
+  - role: briefing
+    path: briefing.md
+    sha256: sha256:3ab181e525baa09611b70140c82b58b8776e994379f1544f9e0a58d263b94592
+  - role: specification
+    path: spec.yaml
+    sha256: sha256:21762edd4599990dd3dce8c1a3a7df6c58c75e55a20d4c12a51851b015358c4a
+  - role: authoring_contract
+    path: authoring_contract.md
+    sha256: sha256:ab51187e94662e1fc4c7a742862b201e33d7f47c7c6bb69a86c69faa57f8ae2e
+  - role: panel_goals
+    path: panel_goals.md
+    sha256: sha256:84a232dd5e6cb401cd2597f4b589bd6da1f9f810843478038d23070efe30b1f2
+publication_acceptance: not_claimed
