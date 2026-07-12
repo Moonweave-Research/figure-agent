@@ -108,21 +108,53 @@ def test_both_fixtures_input_and_invoke_the_same_motif_inside_selector() -> None
 def test_transfer_receipt_binds_sources_and_records_non_publication_evidence() -> None:
     receipt = yaml.safe_load(TRANSFER_RECEIPT.read_text(encoding="utf-8"))
 
+    expected_shared_bindings = {
+        str(path.relative_to(PLUGIN_ROOT)): "sha256:" + sha256(path.read_bytes()).hexdigest()
+        for path in (SNIPPET, CONTRACT)
+    }
     expected_bindings = {
         str(fixture.relative_to(PLUGIN_ROOT)): "sha256:" + sha256(fixture.read_bytes()).hexdigest()
         for fixture in FIXTURES
     }
     assert receipt["motif"] == "panel-f-floating-cantilever"
+    assert receipt["shared_bindings"] == expected_shared_bindings
     assert receipt["source_bindings"] == expected_bindings
     assert receipt["compile_results"] == {
         path: "passed" for path in expected_bindings
     }
-    assert receipt["crop_comparison"] == {
+    comparison = receipt["crop_comparison"]
+    assert {
+        key: comparison[key]
+        for key in (
+            "status",
+            "scope",
+            "geometry",
+            "absolute_error_pixels",
+            "absolute_error_fraction",
+        )
+    } == {
         "status": "passed_with_fixture_local_differences",
         "scope": "same_family_reuse_only",
         "geometry": "1000x1100+3150+1650",
         "absolute_error_pixels": 4049,
         "absolute_error_fraction": 0.00368091,
     }
+    expected_render_paths = {
+        str(
+            (fixture.parent / "build" / f"{fixture.stem}.png").relative_to(PLUGIN_ROOT)
+        )
+        for fixture in FIXTURES
+    }
+    assert set(comparison["render_bindings"]) == expected_render_paths
+    assert set(comparison["crop_bindings"]) == {"pilot", "v5f"}
+    for value in (
+        *comparison["render_bindings"].values(),
+        *comparison["crop_bindings"].values(),
+        comparison["diff_sha256"],
+    ):
+        assert value.startswith("sha256:")
+        assert len(value) == 71
+    assert "1000x1100+3150+1650" in comparison["reproduce"]
+    assert "compare -metric AE" in comparison["reproduce"]
     assert receipt["strict_review_evidence"] == "generated_not_passed"
     assert receipt["publication_acceptance"] == "not_claimed"

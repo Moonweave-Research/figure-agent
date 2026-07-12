@@ -1,5 +1,8 @@
 schema_version: 1
 motif: panel-f-floating-cantilever
+shared_bindings:
+  styles/snippets/panel-f-floating-cantilever.tex: sha256:f3e6a7f8b01af515f8afa99f08341c2aff46abba409c404584d513956b80b4ee
+  styles/snippets/panel-f-floating-cantilever.contract.yaml: sha256:0ddcf5e652ff2049c943c0b78195c85f540484240ae42a37368c300871550eba
 source_bindings:
   examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex: sha256:f9dceb6c01971a642a703a33808296521e91d66d7d82a2c7c0b4a4ed84511682
   examples/fig1_overview_v5f_art_direction_001_vault/fig1_overview_v5f_art_direction_001_vault.tex: sha256:789d49ffd9a68c149c3aab30f1e5a4bcd55259c36a2aefac7051cc2fef679545
@@ -12,5 +15,16 @@ crop_comparison:
   geometry: 1000x1100+3150+1650
   absolute_error_pixels: 4049
   absolute_error_fraction: 0.00368091
+  render_bindings:
+    examples/fig1_failure_first_panel_f_pilot/build/fig1_failure_first_panel_f_pilot.png: sha256:2739a1a81d441452ce919b7576c047ac09a47492ebc02d3acac3e5ef6e3b7d8e
+    examples/fig1_overview_v5f_art_direction_001_vault/build/fig1_overview_v5f_art_direction_001_vault.png: sha256:4ced8bd20678bbbe559f93b839fd8489364131abe697e43162ee9001ae2b4928
+  crop_bindings:
+    pilot: sha256:0fcdbef8655deb7cfa4b4d73ab8ff7d1ae766da650762468b196c9c98ce638d2
+    v5f: sha256:6f7ce174315c1e70e5d151f13a024aa6b8418276aaf1abbb8b5348ce5bd98e17
+  diff_sha256: sha256:aa4d86ea783d43a7a9a052f2761ea8faa68631d7c575afbbe221cb1259d911eb
+  reproduce: >-
+    magick PILOT.png -crop 1000x1100+3150+1650 +repage pilot-crop.png;
+    magick V5F.png -crop 1000x1100+3150+1650 +repage v5f-crop.png;
+    compare -metric AE pilot-crop.png v5f-crop.png crop-diff.png
 strict_review_evidence: generated_not_passed
 publication_acceptance: not_claimed
