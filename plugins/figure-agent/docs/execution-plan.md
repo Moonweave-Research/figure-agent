@@ -1511,3 +1511,76 @@ The first plan is complete only when:
 8. its actual human state is recorded without publication overclaim.
 
 This plan does not promote SVG, retire TikZ, generalize from one fixture, or authorize another illustration grammar. A second materially different figure family is a later plan, opened only when the real Panel F pilot shows a reusable failure reduction rather than a fixture-specific polish win.
+
+## Task 8: Extract the approved Panel F motif without reviving a full grammar
+
+**Files:**
+
+- Create: `styles/snippets/panel-f-floating-cantilever.tex`
+- Create: `styles/snippets/panel-f-floating-cantilever.contract.yaml`
+- Create: `tests/test_panel_f_semantic_motif.py`
+- Modify: `examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex`
+- Modify: `examples/fig1_overview_v5f_art_direction_001_vault/fig1_overview_v5f_art_direction_001_vault.tex`
+
+This task begins only after the named Panel F development-baseline verdict. It
+extracts the reviewed apparatus geometry as one reusable TikZ motif with a
+renderer-neutral semantic contract. It does not revive the rejected sulfur-trap
+illustration grammar, add an SVG backend, or claim cross-family generalization.
+
+- [ ] **Step 1: Write RED tests for shared consumption and semantic safety**
+
+Require both Fig1 fixtures to input the same snippet and invoke the same motif
+macro. Require the contract to declare the fixed mechanical boundary, floating
+cantilever, driven electrode, source return, trapped-charge ownership, distinct
+connector roles, and forbidden sample-ground connection. Require the snippet to
+expose stable semantic anchors and reject fixture names.
+
+- [ ] **Step 2: Run the focused test and verify RED**
+
+Run:
+
+~~~bash
+uv run pytest tests/test_panel_f_semantic_motif.py -q
+~~~
+
+Expected: FAIL because the shared motif and contract do not exist and both
+fixtures still embed their own apparatus geometry.
+
+- [ ] **Step 3: Extract the smallest reviewed TikZ motif**
+
+Move only the fixed boundary, floating cantilever, driven electrode, voltage
+source/return, gap guides, and trapped-charge markers into
+`styles/snippets/panel-f-floating-cantilever.tex`. Keep force arrows, panel
+labels, and whole-panel composition in each fixture. The macro accepts an origin
+and uses a local TikZ scope; it must not contain either fixture name.
+
+- [ ] **Step 4: Bind both fixtures to the shared motif**
+
+Replace duplicated apparatus source with the shared macro call while preserving
+the existing `panel_f.mechanism_scene` selector boundary and local visual result.
+
+- [ ] **Step 5: Verify source, semantics, and renders**
+
+Run from `plugins/figure-agent`:
+
+~~~bash
+uv run pytest tests/test_panel_f_semantic_motif.py \
+  tests/test_fig1_failure_first_panel_f_pilot.py \
+  tests/test_semantic_legibility_contract.py -q
+bash scripts/compile.sh \
+  examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex
+FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
+  examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex
+bash scripts/compile.sh \
+  examples/fig1_overview_v5f_art_direction_001_vault/fig1_overview_v5f_art_direction_001_vault.tex
+uv run ruff check tests/test_panel_f_semantic_motif.py
+git diff --check
+~~~
+
+Expected: focused tests and normal compiles pass. Strict results remain evidence
+and do not authorize publication acceptance.
+
+- [ ] **Step 6: Record transfer evidence and commit**
+
+Record whether the two fixtures render the same motif without semantic or finish
+regression. Treat this as same-family reuse evidence only.
