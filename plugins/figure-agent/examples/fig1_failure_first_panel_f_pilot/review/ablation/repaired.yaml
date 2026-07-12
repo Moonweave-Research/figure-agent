@@ -1,0 +1,12 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: repaired
+model_contract_hash: sha256:8472a7ed2d498f3c45fd25eb3e5f269fdf3cc412b07a99855dbb68d87fd4bf89
+input_packet_hash: sha256:a39ad5210e0d0052f3a433d08442fd49b915d6f4e5873035ec6b0ed28d7f13e2
+budget_contract_hash: sha256:72f41cd3130a011369271af4ad1c431bedf60afc56b3001909d132f4f27b5d9e
+figure_family: fig1_failure_first_panel_f_pilot
+findings: []
+human_correction_minutes: null
+intervention_count: 1
+clean_reproduction: true
+human_verdict:
+  state: pending

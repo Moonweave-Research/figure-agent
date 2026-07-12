@@ -1,0 +1,35 @@
+schema: figure-agent.failure-first-comparison-protocol.v1
+predeclared: true
+same_clean_environment: true
+raw_source: review/states/raw.tex
+verified_source: review/states/raw.tex
+repaired_source: fig1_failure_first_panel_f_pilot.tex
+repaired_render_pdf: review/render/repaired.pdf
+variants:
+  - raw
+  - verified
+  - repaired
+review_inputs:
+  raw:
+    whole: review/evidence/raw/whole.png
+    panel: review/evidence/raw/panel.png
+    object_relation: review/evidence/raw/object_relation.png
+    zoom: review/evidence/raw/zoom.png
+    overlay: review/evidence/raw/overlay.png
+  verified:
+    whole: review/evidence/verified/whole.png
+    panel: review/evidence/verified/panel.png
+    object_relation: review/evidence/verified/object_relation.png
+    zoom: review/evidence/verified/zoom.png
+    overlay: review/evidence/verified/overlay.png
+  repaired:
+    whole: review/evidence/repaired/whole.png
+    panel: review/evidence/repaired/panel.png
+    object_relation: review/evidence/repaired/object_relation.png
+    zoom: review/evidence/repaired/zoom.png
+    overlay: review/evidence/repaired/overlay.png
+toolchain:
+  compiler: lualatex
+  rasterizer: pdftoppm
+  evidence_builder: figure-agent-review-evidence-v1
+publication_acceptance: not_claimed

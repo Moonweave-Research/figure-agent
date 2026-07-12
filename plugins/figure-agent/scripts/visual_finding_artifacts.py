@@ -76,6 +76,20 @@ def _draw_patterned_box(
         draw.line((x1, start, x1, min(start + length, y1)), fill=color, width=4)
 
 
+def draw_attribution_box(
+    draw: ImageDraw.ImageDraw, bbox: list[int], *, attribution_state: str
+) -> None:
+    """Draw the shared exact/ambiguous/unbound visual-attribution grammar."""
+    state = attribution_state if attribution_state in _STYLES else "unbound"
+    style = _STYLES[state]
+    _draw_patterned_box(
+        draw,
+        bbox,
+        color=style["color"],
+        pattern=style["pattern"],
+    )
+
+
 def _write_overlay(
     source: Image.Image,
     output: Path,

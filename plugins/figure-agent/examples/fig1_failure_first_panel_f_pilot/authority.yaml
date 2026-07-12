@@ -1,0 +1,17 @@
+schema: figure-agent.failure-first-pilot-authority.v1
+source:
+  fixture: fig1_overview_v5f_art_direction_001_vault
+  commit: 7b159232959dc36ab63b08ce66e646a64bd139dd
+  tree: 2e3696dbb04bdafacc0ba1adef334a3f7fe71f70
+  review_state: human_reviewed_revise
+  historical_source_unchanged: true
+selector:
+  selector_id: panel_f.metal_contact
+  anchor_start: "% figure-agent:start panel_f.metal_contact"
+  anchor_end: "% figure-agent:end panel_f.metal_contact"
+  coordinate_space: pdf_cm
+  page_index: 0
+  render_geometry_hash: null
+  review_input_hash: null
+  hash_authority: generated_receipt
+  publication_acceptance: not_claimed

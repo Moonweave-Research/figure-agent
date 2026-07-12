@@ -1,0 +1,21 @@
+schema: figure-agent.failure-first-semantic-contract.v1
+selector_id: panel_f.metal_contact
+required_objects:
+  - panel_f.metal_contact
+  - panel_f.cantilever
+  - panel_f.electrode
+  - panel_f.coulomb_force
+  - panel_f.air_gap
+forbidden_implications:
+  - panel_f.ground_symbol
+  - panel_f.grounded_electrode
+  - panel_f.second_contact
+repair:
+  family: simplify_metal_contact_and_remove_false_ground
+  selector_id: panel_f.metal_contact
+  max_source_blocks: 1
+protected_relations:
+  - metal_contact_attached_to_cantilever
+  - cantilever_separated_from_electrode_by_air_gap
+  - coulomb_force_points_away_from_electrode
+publication_acceptance: not_claimed

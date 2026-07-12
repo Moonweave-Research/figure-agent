@@ -1,0 +1,18 @@
+schema: figure-agent.failure-first-machine-gate.v1
+normal_compile:
+  exit: 0
+  state: passed
+strict_compile:
+  exit: 1
+  state: review_ready_with_inherited_findings
+  reason: >-
+    The fork preserves inherited whole-figure collision and undeclared-geometry
+    findings outside the bounded Panel F contact repair. Strict evidence was
+    generated, but the machine gate remains non-accepting.
+bounded_repair_checks:
+  exact_attribution: passed
+  false_ground_removed: passed
+  protected_relations: passed
+human_review_state: pending
+failure_corpus_admission: deferred_pending_named_human_verdict
+publication_acceptance: not_claimed

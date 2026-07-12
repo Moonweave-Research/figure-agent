@@ -1,0 +1,13 @@
+schema: figure-agent.failure-first-human-verdict.v1
+reviewer: null
+state: pending
+scientific_fidelity: null
+defect_presence: null
+correction_minutes: null
+visual_verdict: null
+required_views:
+  - whole
+  - panel
+  - object_relation
+  - zoom
+publication_acceptance: not_claimed

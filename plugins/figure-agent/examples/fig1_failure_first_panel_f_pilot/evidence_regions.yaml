@@ -1,0 +1,9 @@
+schema: figure-agent.review-evidence-pack.v1
+coordinate_space: normalized_top_left
+raw_render: review/states/build/raw.png
+repaired_render: build/fig1_failure_first_panel_f_pilot.png
+regions:
+  panel: [0.665, 0.47, 0.995, 0.995]
+  object_relation: [0.69, 0.55, 0.965, 0.965]
+  zoom: [0.76, 0.57, 0.90, 0.79]
+publication_acceptance: not_claimed

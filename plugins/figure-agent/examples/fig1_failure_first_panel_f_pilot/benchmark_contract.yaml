@@ -1,0 +1,21 @@
+schema: figure-agent.benchmark-contract.v1
+fixture: fig1_failure_first_panel_f_pilot
+defect_class: false_scientific_implication
+candidate_families:
+  - semantic-contact-repair
+candidate_edit_classes:
+  - simplify_metal_contact_and_remove_false_ground
+required_detectors:
+  - tex_geometry_assertions
+expected_movement:
+  confirmed_semantic_defects: decrease
+hard_regressions:
+  - source_compile_failure
+  - protected_relation_changed
+  - publication_acceptance_claimed
+reference_policy:
+  kind: tracked_human_reviewed_source_fork
+  external_images_allowed: false
+  golden_target_allowed: false
+release:
+  release_blocking: false
