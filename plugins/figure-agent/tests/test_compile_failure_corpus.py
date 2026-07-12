@@ -45,6 +45,10 @@ def test_installed_corpus_matches_compiled_bytes(tmp_path: Path) -> None:
         PLUGIN_ROOT / "benchmarks" / "llm_failure_corpus.yaml"
     )
     assert installed["cases"] == expected["cases"]
+    apparatus = next(
+        case for case in installed["cases"] if case["id"] == "panel-f-apparatus-001"
+    )
+    assert apparatus["repair_family"] == "clarify_voltage_application"
 
 
 def write_index(root: Path, source_path: str, locator: str = "verdict") -> Path:

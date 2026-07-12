@@ -64,19 +64,19 @@
     {
       "path": "review/evidence/repaired/whole.png",
       "role": "whole",
-      "sha256": "sha256:c72f3fbdebaf11e2b905773cb05dd136634f836949ce5e99162f8d0bc65b86a2",
+      "sha256": "sha256:80f0f6d12cf7ce6fbdb605534fdd8f8652a6fd1a899c50bf4509098ae0326453",
       "variant": "repaired"
     },
     {
       "path": "review/evidence/repaired/panel.png",
       "role": "panel",
-      "sha256": "sha256:7526bdf31d94725d413a6ea43d963222fbb7e7d2bc0ade2ad9862a25fc807cc9",
+      "sha256": "sha256:519a7176270226d0400a81d897024cd26746f7fc08273a3fb61ca458fea8b72e",
       "variant": "repaired"
     },
     {
       "path": "review/evidence/repaired/object_relation.png",
       "role": "object_relation",
-      "sha256": "sha256:32171ab8163dd48da68c57e86f16df40dd2cd801e360c9ac29dde394fb9cb2dc",
+      "sha256": "sha256:201de1a3802188a4ebab83fdb3ea72239a595e25cecb7d1151465ffa332a28a8",
       "variant": "repaired"
     },
     {
@@ -88,7 +88,7 @@
     {
       "path": "review/evidence/repaired/overlay.png",
       "role": "overlay",
-      "sha256": "sha256:be7b438609775717051dd281daaf2be2522eb99d3e16ff7166f9d3c3d2a39968",
+      "sha256": "sha256:a2bfcc95a3cb1a24e7e555050f9383cc8c4d40025604dad1550807fd97b429f8",
       "variant": "repaired"
     }
   ],

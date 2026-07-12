@@ -2,10 +2,10 @@
 
 This packet compares the tracked historical raw fork, an attribution-only
 verified state with identical pixels, and one bounded repaired state. The
-repaired state removes the false grounded-electrode implication, source box,
-voltage label, and ambiguous lead, then replaces the oversized fixed clamp with
-one understated mechanical jig. It does not change the cantilever, electrode,
-air-gap, or Coulomb force relations.
+repaired state removes the false grounded-electrode implication, incoherent
+source box, and ambiguous lead, then replaces them with one understated
+mechanical jig and one compact electrode-bound applied-voltage cue. It does not
+change the cantilever, electrode, air-gap, or Coulomb force relations.
 
 The tracked `generated_receipt.json` binds the actual PDF page geometry and all
 whole/panel/object-relation/zoom/overlay inputs. The hashes remain `null` in

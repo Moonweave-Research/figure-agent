@@ -81,6 +81,7 @@ def test_pilot_declares_semantics_and_bounded_repair_before_review() -> None:
         "panel_f.cantilever",
         "panel_f.electrode",
         "panel_f.coulomb_force",
+        "panel_f.applied_voltage_cue",
     }
     assert set(contract["forbidden_implications"]) >= {
         "panel_f.ground_symbol",
@@ -97,6 +98,7 @@ def test_pilot_declares_semantics_and_bounded_repair_before_review() -> None:
         "mechanical_jig_holds_cantilever",
         "cantilever_separated_from_electrode_by_air_gap",
         "coulomb_force_points_away_from_electrode",
+        "applied_voltage_cue_labels_electrode",
     }
 
 
@@ -135,11 +137,18 @@ def test_named_human_findings_bind_reviewed_revision_without_accepting_repair() 
         item["review_outcome"] == "confirmed_defect"
         for item in findings["findings"]
     )
+    apparatus = next(
+        item for item in findings["findings"] if item["id"] == "PF-APPARATUS-001"
+    )
+    assert apparatus["required_correction"] == (
+        "retain_an_applied_voltage_cue_without_the_incoherent_equipment_box"
+    )
+    assert apparatus["repair_family"] == "clarify_voltage_application"
     assert findings["revised_variant_acceptance"] == "pending"
     assert findings["publication_acceptance"] == "not_claimed"
 
 
-def test_repaired_source_has_one_exact_jig_block_and_no_false_electrical_cues() -> None:
+def test_repaired_source_has_one_exact_jig_block_and_clear_voltage_cue() -> None:
     source = (FIXTURE / "fig1_failure_first_panel_f_pilot.tex").read_text(
         encoding="utf-8"
     )
@@ -152,6 +161,10 @@ def test_repaired_source_has_one_exact_jig_block_and_no_false_electrical_cues() 
     assert "ground" not in block.lower()
     assert "V_{\\mathrm{active}}" not in block
     assert "{bias}" not in block
+    assert block.count("V_{\\mathrm{app}}") == 1
+    assert "applied-voltage state cue" in block
+    assert "source box" not in block.lower()
+    assert "return path" not in block.lower()
     assert "(13.24, 3.76) -- (13.20, 3.38)" not in block
     assert "ball color" not in block
     assert "(11.08,2.48) .. controls" not in block
@@ -161,6 +174,16 @@ def test_repaired_source_has_one_exact_jig_block_and_no_false_electrical_cues() 
     assert "panelFCoulombRepulsionArrow" in source
     assert "{air gap}" in source
     assert "(13.23, 0.40) -- (13.37, 0.40)" not in source
+
+
+def test_pilot_docs_require_voltage_application_without_false_circuit() -> None:
+    briefing = (FIXTURE / "briefing.md").read_text(encoding="utf-8")
+    caption = (FIXTURE / "caption.md").read_text(encoding="utf-8")
+    assert "must show an applied-voltage cue" in briefing
+    assert "does not require a full instrument box" in briefing
+    assert "must not imply a ground or complete return path" in briefing
+    assert "applied voltage" in caption
+    assert "does not assert a grounded or complete circuit" in caption
 
 
 def test_ablation_contract_is_comparable_and_stops_at_human_boundary() -> None:

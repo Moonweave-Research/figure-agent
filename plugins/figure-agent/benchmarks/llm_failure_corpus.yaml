@@ -68,11 +68,11 @@ cases:
   observation_scale: panel
   review_outcome: confirmed_defect
   source_path: examples/fig1_failure_first_panel_f_pilot/review/human_findings.yaml
-  source_sha256: d1472c8b85ddca52cb4323912013bd50cbb80f0c6023979a18a13694fdfbad7c
+  source_sha256: 25088e90efe4e9dc8abc518bb55cf4c504f0c73a44234dc80a063dc37c9133f5
   source_locator: findings[id=PF-APPARATUS-001]
   semantic_target: panel_f.source_box
   attribution_state: exact
-  repair_family: simplify_apparatus_role
+  repair_family: clarify_voltage_application
   human_correction_minutes: null
 - id: panel-f-charge-001
   figure_family: fig1_tikz
@@ -80,7 +80,7 @@ cases:
   observation_scale: zoom
   review_outcome: confirmed_defect
   source_path: examples/fig1_failure_first_panel_f_pilot/review/human_findings.yaml
-  source_sha256: d1472c8b85ddca52cb4323912013bd50cbb80f0c6023979a18a13694fdfbad7c
+  source_sha256: 25088e90efe4e9dc8abc518bb55cf4c504f0c73a44234dc80a063dc37c9133f5
   source_locator: findings[id=PF-CHARGE-001]
   semantic_target: panel_f.trapped_charge_markers
   attribution_state: exact
@@ -92,7 +92,7 @@ cases:
   observation_scale: object_relation
   review_outcome: confirmed_defect
   source_path: examples/fig1_failure_first_panel_f_pilot/review/human_findings.yaml
-  source_sha256: d1472c8b85ddca52cb4323912013bd50cbb80f0c6023979a18a13694fdfbad7c
+  source_sha256: 25088e90efe4e9dc8abc518bb55cf4c504f0c73a44234dc80a063dc37c9133f5
   source_locator: findings[id=PF-CONNECTOR-001]
   semantic_target: panel_f.charge_annotation_connector
   attribution_state: ambiguous
@@ -104,7 +104,7 @@ cases:
   observation_scale: object_relation
   review_outcome: confirmed_defect
   source_path: examples/fig1_failure_first_panel_f_pilot/review/human_findings.yaml
-  source_sha256: d1472c8b85ddca52cb4323912013bd50cbb80f0c6023979a18a13694fdfbad7c
+  source_sha256: 25088e90efe4e9dc8abc518bb55cf4c504f0c73a44234dc80a063dc37c9133f5
   source_locator: findings[id=PF-LABEL-001]
   semantic_target: panel_f.annotations
   attribution_state: ambiguous
@@ -116,7 +116,7 @@ cases:
   observation_scale: object_relation
   review_outcome: confirmed_defect
   source_path: examples/fig1_failure_first_panel_f_pilot/review/human_findings.yaml
-  source_sha256: d1472c8b85ddca52cb4323912013bd50cbb80f0c6023979a18a13694fdfbad7c
+  source_sha256: 25088e90efe4e9dc8abc518bb55cf4c504f0c73a44234dc80a063dc37c9133f5
   source_locator: findings[id=PF-ROLE-001]
   semantic_target: panel_f.mechanical_jig
   attribution_state: exact

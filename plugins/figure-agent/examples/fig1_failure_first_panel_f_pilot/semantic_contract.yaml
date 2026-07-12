@@ -7,6 +7,7 @@ required_objects:
   - panel_f.coulomb_force
   - panel_f.air_gap
   - panel_f.trapped_charge_markers
+  - panel_f.applied_voltage_cue
 forbidden_implications:
   - panel_f.ground_symbol
   - panel_f.grounded_electrode
@@ -20,6 +21,7 @@ protected_relations:
   - mechanical_jig_holds_cantilever
   - cantilever_separated_from_electrode_by_air_gap
   - coulomb_force_points_away_from_electrode
+  - applied_voltage_cue_labels_electrode
 semantic_legibility:
   object_roles:
     - object_id: panel_f.mechanical_jig
@@ -46,6 +48,11 @@ semantic_legibility:
       declared_role: scientific_symbol
       forbidden_readings:
         - decorative_bead
+    - object_id: panel_f.applied_voltage_cue
+      declared_role: electrode_state_annotation
+      forbidden_readings:
+        - ground_reference
+        - complete_circuit_topology
   visible_connectors:
     - connector_id: panel_f.jig_holds_cantilever
       from_object: panel_f.mechanical_jig
@@ -73,4 +80,6 @@ semantic_legibility:
       owner: panel_f.air_gap
     - label_id: panel_f.coulomb_repulsion_label
       owner: panel_f.coulomb_force
+    - label_id: panel_f.applied_voltage_label
+      owner: panel_f.applied_voltage_cue
 publication_acceptance: not_claimed

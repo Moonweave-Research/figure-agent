@@ -23,7 +23,8 @@ findings:
     attribution_state: exact
     defect: apparatus_box_role_and_state_are_incoherent
     evidence_summary: The equipment box and its displayed state read as strange rather than as a coherent part of the setup.
-    repair_family: simplify_apparatus_role
+    required_correction: retain_an_applied_voltage_cue_without_the_incoherent_equipment_box
+    repair_family: clarify_voltage_application
   - id: PF-CHARGE-001
     failure_class: style
     observation_scale: zoom

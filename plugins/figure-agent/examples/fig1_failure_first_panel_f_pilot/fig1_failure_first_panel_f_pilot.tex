@@ -2022,15 +2022,15 @@
 % ============================================================
 % v5f Panel F art-direction redraw overlay.
 % Covers the v5e apparatus-heavy mechanical panel and redraws it as a single
-% result-first mechanism scene: jig, electrode, air gap, trapped-charge family,
-% and Coulomb repulsion, without an invented circuit topology.
+% result-first mechanism scene: jig, applied-voltage cue, electrode, air gap,
+% trapped-charge family, and Coulomb repulsion without invented circuit closure.
 % ============================================================
 \fill[white] (9.52, 0.18) rectangle (13.92, 4.34);
 \draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
 
 % figure-agent:start panel_f.mechanism_scene
 % A small neutral mechanical jig holds the cantilever root. Its matte geometry
-% is deliberately non-electrical: no contact pad, terminal, source box, or lead.
+% is deliberately non-electrical: no contact pad or terminal.
 \fill[cGray!12, rounded corners=0.35mm]
   (11.72, 2.84) rectangle (11.96, 2.94);
 \draw[cGray!68!black, line width=0.30pt, rounded corners=0.35mm]
@@ -2074,6 +2074,13 @@
       font=\sffamily\fontsize{5.2}{6.3}\selectfont, text=cGray!68!black]
   at (13.62, 1.62) {electrode};
 \fill[white] (13.12, 0.10) rectangle (13.50, 0.23);
+
+% Compact applied-voltage state cue. Direct adjacency binds it to the electrode
+% without inventing an instrument enclosure or circuit closure.
+\node[anchor=south, fill=white, fill opacity=0.96, text opacity=1,
+      inner xsep=0.85pt, inner ysep=0.38pt,
+      font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont, text=cBlue!72!black]
+  at (13.30, 2.94) {$V_{\mathrm{app}}$};
 
 % Flat trapped-charge markers: consistent scientific symbols, not glossy beads.
 \foreach \cx/\cy/\rr in {11.62/2.28/0.075,11.43/1.86/0.082,11.10/1.36/0.088,10.72/0.94/0.082} {
