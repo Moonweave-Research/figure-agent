@@ -25,6 +25,7 @@
 \documentclass[border=4pt]{standalone}
 \usepackage{polymer-paper-preamble}
 \usetikzlibrary{decorations.pathmorphing}
+\input{snippets/panel-f-floating-cantilever.tex}
 
 \begin{document}
 \resizebox{178mm}{!}{%
@@ -2033,99 +2034,14 @@
 \draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
 
 % figure-agent:start panel_f.mechanism_scene
-% A small neutral mechanical jig is reduced to a fixed mechanical boundary:
-% a rigid support rail, a short structural stem, and a shallow root jaw. The
-% material and conductivity of the real holder remain deliberately unmodeled;
-% the heavy neutral connector encodes mechanical attachment, never a wire.
-% Rigid support rail with restrained fixed-boundary hatching.
-\draw[panelFMechanicalAttachment] (11.58, 3.18) -- (12.10, 3.18);
-\foreach \hx in {11.62,11.76,11.90,12.04} {
-  \draw[cGray!48!black, line width=0.30pt]
-    (\hx,3.18) -- ({\hx+0.07},3.26);
-}
-% Short structural stem connects the fixed rail to the shallow root jaw.
-\draw[panelFMechanicalAttachment] (11.84,3.18) -- (11.84,2.98);
-\fill[cGray!12, rounded corners=0.22mm]
-  (11.68, 2.84) rectangle (12.00, 2.98);
-\draw[panelFMechanicalAttachment, rounded corners=0.22mm]
-  (11.68, 2.84) rectangle (12.00, 2.98);
-\draw[cGray!56!black, line width=0.34pt]
-  (11.72, 2.84) -- (11.72, 2.78);
-\draw[cGray!56!black, line width=0.34pt]
-  (11.96, 2.84) -- (11.96, 2.78);
-
-\shade[top color=cAmber!18, bottom color=cAmber!46, rounded corners=0.5mm]
-  (11.70, 2.84) .. controls (11.82, 2.10) and (11.35, 1.30) ..
-  (10.47, 0.80) -- (10.62, 0.64) .. controls (11.56, 1.12) and
-  (12.08, 2.06) .. (11.98, 2.84) -- cycle;
-\draw[cAmber!82!black, line width=0.62pt, rounded corners=0.5mm]
-  (11.70, 2.84) .. controls (11.82, 2.10) and (11.35, 1.30) ..
-  (10.47, 0.80) -- (10.62, 0.64) .. controls (11.56, 1.12) and
-  (12.08, 2.06) .. (11.98, 2.84) -- cycle;
-\draw[cAmber!60!black, line width=0.28pt, opacity=0.42]
-  (11.78, 2.68) .. controls (11.82, 2.08) and (11.28, 1.30) .. (10.55, 0.78);
-\draw[cAmber!60!black, line width=0.28pt, opacity=0.35]
-  (11.88, 2.72) .. controls (11.98, 2.02) and (11.45, 1.12) .. (10.68, 0.68);
-
-% Right electrode and explicit gap field.
-% quality-search F post-trap gap readability: quiet electrode and gap
-\shade[left color=cGray!30, right color=cGray!16] (13.18, 0.46) rectangle (13.42, 2.82);
-\draw[cGray!82!black, line width=0.62pt] (13.18, 0.46) rectangle (13.42, 2.82);
-\draw[cGray!45!black, line width=0.25pt] (13.23, 0.50) -- (13.23, 2.78);
-\foreach \hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {
-  \draw[cGray!48!black, line width=0.20pt] (13.42, \hy) -- (13.18, {\hy-0.05});
-}
-% Gap guides begin just beyond the curved cantilever edge at each height.
-% They must not run behind the sample or charge markers, where they can be
-% misread as electrical connectors or a plotting grid.
-\foreach \yy/\xstart in {0.96/10.88,1.34/11.17,1.72/11.40,2.10/11.62} {
-  \draw[cGray!23, line width=0.30pt, dash pattern=on 1.3pt off 1.2pt]
-    (\xstart,\yy) -- (13.18,\yy);
-}
-\draw[cGray!19, line width=0.22pt, dash pattern=on 1.2pt off 1.5pt]
-  (12.92,2.42) -- (13.18,2.42);
-\node[labelMute, anchor=south, rotate=270, fill=white, fill opacity=0.96, text opacity=1,
-      inner xsep=1.0pt, inner ysep=0.66pt,
-      font=\sffamily\fontsize{5.2}{6.3}\selectfont, text=cGray!68!black]
-  at (13.62, 1.62) {electrode};
-\fill[white] (13.12, 0.10) rectangle (13.50, 0.23);
-
-% Compact voltage source with explicit source-to-electrode lead and grounded
-% source return. The sample and cantilever remain electrically floating: no
-% electrical connector terminates on the jig, cantilever, or trapped charge.
-\fill[cBlue!5, rounded corners=0.55mm] (12.60,3.24) rectangle (13.08,3.62);
-\draw[cBlue!64!black, line width=0.38pt, rounded corners=0.55mm]
-  (12.60,3.24) rectangle (13.08,3.62);
-\node[font=\sffamily\bfseries\fontsize{4.4}{5.2}\selectfont,
-      text=cBlue!70!black] at (12.84,3.43) {HV};
-
-% Source-to-electrode lead (lower source terminal).
-\fill[cBlue!70!black] (13.08,3.34) circle (0.025);
-\draw[panelFElectricalLead]
-  (13.08,3.34) -- (13.30,3.34) -- (13.30,2.82);
-\node[anchor=south, fill=white, fill opacity=0.96, text opacity=1,
-      inner xsep=0.75pt, inner ysep=0.32pt,
-      font=\sffamily\bfseries\fontsize{4.4}{5.3}\selectfont, text=cBlue!72!black]
-  at (12.84, 3.66) {$V_{\mathrm{app}}$};
-
-% Grounded source return (upper source terminal); this ground belongs to the
-% voltage source, never to the sample or cantilever.
-\fill[cBlue!70!black] (13.08,3.52) circle (0.025);
-\draw[panelFElectricalLead, cBlue!58!black, line width=0.34pt]
-  (13.08,3.52) -- (13.58,3.52) -- (13.58,3.23);
-\draw[cBlue!58!black, line width=0.34pt] (13.45,3.23) -- (13.71,3.23);
-\draw[cBlue!58!black, line width=0.34pt] (13.49,3.17) -- (13.67,3.17);
-\draw[cBlue!58!black, line width=0.34pt] (13.53,3.11) -- (13.63,3.11);
-
-% Flat trapped-charge markers: consistent scientific symbols, not glossy beads.
-\foreach \cx/\cy/\rr in {11.62/2.28/0.075,11.43/1.86/0.082,11.10/1.36/0.088,10.72/0.94/0.082} {
-  \fill[cRed!68!black] (\cx,\cy) circle (\rr);
-  \draw[cRed!88!black, line width=0.25pt] (\cx,\cy) circle (\rr);
-}
-\node[anchor=east, fill=white, fill opacity=0.94, text opacity=1,
-      inner xsep=0.75pt, inner ysep=0.30pt,
-      font=\sffamily\bfseries\fontsize{4.1}{4.9}\selectfont, text=cRed!68!black]
-  at (11.48, 2.50) {trapped charge};
+% Shared motif semantics: a small neutral mechanical jig uses a rigid support rail,
+% short structural stem, and shallow root jaw as a fixed mechanical boundary.
+% Its compact voltage source shows $V_{\mathrm{app}}$, a
+% source-to-electrode lead, and a grounded source return.
+% The sample and cantilever remain electrically floating.
+% Flat trapped-charge markers retain
+% the fixture-local reading {trapped charge} while staying electrically isolated.
+\PanelFFloatingCantilever{11.84,2.84}
 % figure-agent:end panel_f.mechanism_scene
 
 % Coulomb-only response, intentionally stronger than the apparatus.

@@ -1,0 +1,22 @@
+schema_version: 1
+motif: panel-f-floating-cantilever
+renderer: neutral
+owns:
+  - fixed_mechanical_boundary
+  - floating_cantilever
+  - driven_electrode
+  - source_return
+  - gap_guides
+  - trapped_charge
+connectors:
+  mechanical_attachment:
+    role: mechanical
+    connects: [fixed_mechanical_boundary, floating_cantilever]
+  electrode_drive:
+    role: electrical
+    connects: [voltage_source, driven_electrode]
+  source_return:
+    role: electrical
+    connects: [voltage_source, ground]
+forbidden_connections:
+  - [floating_cantilever, ground]
