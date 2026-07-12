@@ -1,0 +1,124 @@
+% Fresh Slice 3 raw authoring candidate; authority inputs are bound in input_packet.yaml.
+\documentclass[border=6pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{183mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\sffamily\fontsize{7}{8.5}\selectfont},
+  panel/.style={draw=cLGray!70, rounded corners=1.4mm, line width=.35pt},
+  axis/.style={-{Stealth[length=2.8pt,width=2pt]}, cGray!85!black, line width=.55pt},
+  chain/.style={cTeal!70!black, line width=1.0pt},
+  trap/.style={cAmber!85!black, line width=1.3pt},
+  electron/.style={circle, fill=cBlue, draw=cBlue!70!black, inner sep=0pt, minimum size=1.8mm},
+  sulfur/.style={circle, fill=cAmberSphere, draw=cAmber!75!black, inner sep=0pt, minimum size=2.25mm,
+                 font=\sffamily\bfseries\fontsize{5.8}{6.5}\selectfont},
+]
+
+% Consistent 3 by 2 panel rhythm; headers remain outside dense drawing areas.
+\draw[panel] (0,6.1) rectangle (5.85,12.0);
+\draw[panel] (6.15,6.1) rectangle (12.0,12.0);
+\draw[panel] (12.30,6.1) rectangle (18.15,12.0);
+\draw[panel] (0,0) rectangle (5.85,5.8);
+\draw[panel] (6.15,0) rectangle (12.0,5.8);
+\draw[panel] (12.30,0) rectangle (18.15,5.8);
+\node[anchor=west,font=\sffamily\bfseries\fontsize{8.5}{10}\selectfont] at (.25,11.65) {(a)};
+\node[anchor=west, cGray!85!black] at (.82,11.65) {measurement setup};
+\node[anchor=west,font=\sffamily\bfseries\fontsize{8.5}{10}\selectfont] at (6.4,11.65) {(b)};
+\node[anchor=west, cGray!85!black] at (6.97,11.65) {power-law signature};
+\node[anchor=west,font=\sffamily\bfseries\fontsize{8.5}{10}\selectfont] at (12.55,11.65) {(c)};
+\node[anchor=west, cGray!85!black] at (13.12,11.65) {trapping index $n$};
+\node[anchor=west,font=\sffamily\bfseries\fontsize{8.5}{10}\selectfont] at (.25,5.45) {(d)};
+\node[anchor=west, cGray!85!black] at (.82,5.45) {chemical origin};
+\node[anchor=west,font=\sffamily\bfseries\fontsize{8.5}{10}\selectfont] at (6.4,5.45) {(e)};
+\node[anchor=west, cGray!85!black] at (6.97,5.45) {structural origin};
+\node[anchor=west,font=\sffamily\bfseries\fontsize{8.5}{10}\selectfont] at (12.55,5.45) {(f)};
+\node[anchor=west, cGray!85!black] at (13.12,5.45) {multi-modal convergence};
+
+% (a) Bias setup: polymer film between two electrodes, explicit meter and voltage bias.
+\begin{scope}[shift={(0,6.1)}]
+  \fill[cLGray!35,draw=cGray!80!black] (1.25,4.25) rectangle (4.60,4.50);
+  \fill[cLGray!35,draw=cGray!80!black] (1.25,1.25) rectangle (4.60,1.50);
+  \fill[cAmberSphere!14,draw=cAmber!45!black] (1.38,1.50) rectangle (4.47,4.25);
+  \node[anchor=south,cGray] at (2.92,4.55) {top electrode};
+  \node[anchor=north,cGray] at (2.92,1.20) {bottom electrode};
+  \foreach \x/\y in {1.8/3.6,2.6/2.6,3.45/3.45,4.0/2.15} {\node[sulfur] at (\x,\y) {S};}
+  \node[electron] at (2.95,3.75) {};
+  \draw[axis,dashed,cBlue] (2.95,3.55) -- (2.95,1.85);
+  \draw[cGray!85!black] (.72,4.38) -- (.72,1.38) -- (1.25,1.38);
+  \draw[cGray!85!black] (.72,4.38) -- (1.25,4.38);
+  \draw[cGray!85!black,line width=1pt] (.50,3.15) -- (.94,3.15);
+  \draw[cGray!85!black,line width=1pt] (.58,2.88) -- (.86,2.88);
+  \node[cRed,anchor=east] at (.42,3.15) {$+$};
+  \node[cBlue,anchor=east] at (.42,2.88) {$-$};
+  \node[anchor=east,cGray] at (.42,2.35) {bias};
+  \draw[cGray!85!black] (4.60,4.38) -- (5.15,4.38) -- (5.15,3.25);
+  \draw[cGray!85!black] (4.60,1.38) -- (5.15,1.38) -- (5.15,2.28);
+  \draw[cGray!85!black,fill=white] (5.15,2.75) circle (.34);
+  \node[font=\sffamily\itshape\fontsize{9}{10}\selectfont] at (5.15,2.75) {$I$};
+  \node[anchor=north,cGray] at (5.15,2.30) {current};
+\end{scope}
+
+% (b) Log-log contrast: straight power law versus downward-bending Debye relaxation.
+\begin{scope}[shift={(6.15,6.1)}]
+  \draw[axis] (.85,1.25) -- (5.15,1.25); \draw[axis] (.85,1.25) -- (.85,4.75);
+  \node[anchor=north,cGray] at (5.10,1.18) {$\log t$};
+  \node[rotate=90,anchor=south,cGray] at (.77,4.5) {$\log I(t)$};
+  \draw[cBlue,line width=1.2pt] (1.2,4.35) -- (4.92,1.55);
+  \node[cBlue,anchor=west] at (1.22,4.62) {$I(t)\propto t^{-n}$};
+  \draw[cRed,line width=1.2pt] plot[smooth,domain=0:1,samples=40] ({1.2+\x*3.72},{3.95-.12*\x-2.4*\x*\x*\x*\x});
+  \node[cRed,anchor=west] at (1.20,2.15) {Debye $\exp(-t/\tau)$};
+\end{scope}
+
+% (c) Shared axes make the slope and curvature distinction explicit.
+\begin{scope}[shift={(12.30,6.1)}]
+  \draw[axis] (.85,1.25) -- (5.15,1.25); \draw[axis] (.85,1.25) -- (.85,4.75);
+  \node[anchor=north,cGray] at (5.10,1.18) {$\log t$};
+  \node[rotate=90,anchor=south,cGray] at (.77,4.5) {$\log I(t)$};
+  \draw[cBlue,line width=1.2pt] (1.2,4.35) -- (4.90,1.55);
+  \node[cBlue,anchor=west] at (3.65,4.15) {high $n$};
+  \draw[cBlue!55,line width=1.1pt] (1.2,3.45) -- (4.90,2.25);
+  \node[cBlue!55,anchor=west] at (3.65,2.90) {low $n$};
+  \draw[cRed,line width=1.15pt] plot[smooth,domain=0:1,samples=40] ({1.2+\x*3.70},{2.85-.05*\x-1.55*\x*\x*\x*\x});
+  \node[cRed,anchor=west] at (3.05,1.72) {no-trap (Debye)};
+\end{scope}
+
+% (d) Sulfur-rich chemistry yields a localized, occupied trap in the bandgap.
+\begin{scope}
+  \draw[chain] (.65,3.20)--(1.05,3.52)--(1.45,3.20)--(1.85,3.52)--(2.25,3.20)--(2.65,3.52)--(3.05,3.20);
+  \foreach \x/\y in {1.05/4.05,1.85/4.05,2.18/4.05,2.92/4.05} {\node[sulfur] at (\x,\y) {S}; \draw[cGray!70!black] (\x,3.52)--(\x,3.85);}
+  \draw[cAmber!85!black,line width=1.5pt] (1.85,4.05)--(2.18,4.05);
+  \node[cAmber!70!black,anchor=south] at (2.02,4.45) {S--S rich site};
+  \draw[axis] (3.72,1.15)--(3.72,4.55);
+  \draw[cBlue,line width=1.25pt] (4.05,4.05)--(5.20,4.05); \node[cBlue,anchor=west] at (5.25,4.05) {CB};
+  \draw[cRed,line width=1.25pt] (4.05,1.55)--(5.20,1.55); \node[cRed,anchor=west] at (5.25,1.55) {VB};
+  \draw[trap] (4.35,2.75)--(4.95,2.75); \node[electron] at (4.65,2.75) {};
+  \node[cAmber!80!black,anchor=west] at (5.05,2.75) {$E_t$};
+  \draw[axis,cAmber!75!black] (3.05,3.35) .. controls (3.45,3.20) and (3.78,2.95) .. (4.25,2.80);
+  \node[cAmber!75!black,anchor=south] at (3.45,3.28) {creates};
+\end{scope}
+
+% (e) Several independent linear chains carry shared sulfur-region halos, never cross-links.
+\begin{scope}[shift={(6.15,0)}]
+  \foreach \y/\phase in {4.25/0,3.15/140,2.05/280} {\draw[chain] plot[smooth,domain=0:1,samples=50] ({.55+\x*4.9},{\y+.20*sin(\x*540+\phase)});}
+  \foreach \x/\y in {1.55/4.25,3.85/3.15,2.65/2.05} {\fill[cAmber!18] (\x,\y) circle (.52); \node[sulfur] at (\x-.15,\y+.10) {S}; \node[sulfur] at (\x+.18,\y-.08) {S}; \draw[trap] (\x+.28,\y)--(\x+.67,\y); \node[electron] at (\x+.47,\y) {};}
+  \node[cGray,anchor=west] at (.62,.72) {linear chains};
+  \node[cAmber!75!black,anchor=west] at (3.35,.72) {sulfur-rich regions};
+\end{scope}
+
+% (f) Three metrics point to a common two-lobe trap-depth distribution.
+\begin{scope}[shift={(12.30,0)}]
+  \foreach \x/\label/\color in {.55/$n$/cBlue,2.35/$g(E_t)$/cTeal!70!black,4.15/$\tau_d$/cRed} {\draw[cLGray!70,rounded corners=.5mm] (\x,3.50) rectangle +(1.35,1.15); \node[\color,anchor=south] at (\x+.68,4.72) {\label};}
+  \draw[cBlue,line width=.85pt] (.72,4.38)--(1.73,3.72);
+  \draw[cTeal!70!black,line width=.85pt] plot[smooth,domain=0:1,samples=30] ({2.52+\x*1.00},{3.65+.50*exp(-((\x-.28)*5)^2)+.42*exp(-((\x-.74)*5)^2)});
+  \draw[cRed,line width=.85pt] plot[smooth,domain=0:1,samples=30] ({4.32+\x*1.00},{3.68+.72*exp(-((\x-.50)*5)^2)});
+  \foreach \x/\target/\color in {1.22/2.00/cBlue,3.02/3.02/cTeal!70!black,4.82/4.02/cRed} {\draw[axis,\color] (\x,3.35)--(\target,2.78);}
+  \draw[cTeal!70!black,rounded corners=1mm,line width=.7pt] (.82,.72) rectangle (5.15,2.68);
+  \node[cTeal!70!black,anchor=south] at (2.98,2.65) {consistent trap depth distribution};
+  \draw[axis] (1.28,1.08)--(4.68,1.08); \draw[axis] (1.28,1.08)--(1.28,2.25);
+  \draw[cTeal!70!black,line width=1.15pt] plot[smooth,domain=0:1,samples=45] ({1.40+\x*3.05},{1.10+.78*exp(-((\x-.30)*5)^2)+.68*exp(-((\x-.75)*5)^2)});
+  \node[cTeal!70!black,anchor=south] at (2.25,1.88) {shallow}; \node[cTeal!70!black,anchor=south] at (3.72,1.78) {deep};
+\end{scope}
+\end{tikzpicture}%
+}
+\end{document}

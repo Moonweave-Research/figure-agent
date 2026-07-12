@@ -1,0 +1,16 @@
+schema: figure-agent.generation-budget-contract.v1
+figure_family: fig3_trap_schematic_slice3_semantic
+variants: [raw, verified, repaired]
+authoring_attempts_per_variant: 1
+permitted_source_mutations:
+  raw: fresh_standalone_tikz_source
+  verified: none
+  repaired: one_exact_bounded_repair
+required_preserved_invariants:
+  - linear polymer chains have no cross-links
+  - localized trap levels sit inside the bandgap
+  - trapped carriers sit on trap levels
+  - log-log power-law is straight and Debye is concave-down
+  - panel f preserves two-lobe trap-depth distribution
+  - panels d and e share the sulfur-rich-region relation
+publication_acceptance: not_claimed

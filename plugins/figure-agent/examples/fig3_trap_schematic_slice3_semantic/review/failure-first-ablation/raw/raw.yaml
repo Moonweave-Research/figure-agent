@@ -1,0 +1,33 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: raw
+model_contract_hash: sha256:5c522fc4455972e7e998ddd2af5528fe340b561807dbe6c83d7be9cb4711f7bc
+input_packet_hash: sha256:d133a9536c369fe19f5fb3107d696d70b62febd91212e2970ead73da6c291d3f
+budget_contract_hash: sha256:e279d8fec7d4664f9904d77c40deb1fc4a3c18d84cdc6203d43a22ff14b4393d
+figure_family: fig3_trap_schematic_slice3_semantic
+findings:
+- id: F_METRIC_TITLE_STYLE_LITERAL
+  failure_class: typography
+  observation_scale: panel
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: panel_f.metric_title_style
+  evidence: raw compile reports four title collisions; rendered panel f exposes literal
+    color-key text
+human_correction_minutes: null
+intervention_count: 0
+clean_reproduction: true
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed
+generation_receipt:
+  schema: figure-agent.generation-receipt.v1
+  model_id: codex-gpt-5.5
+  input_packet_sha256: sha256:d133a9536c369fe19f5fb3107d696d70b62febd91212e2970ead73da6c291d3f
+  budget_contract_sha256: sha256:e279d8fec7d4664f9904d77c40deb1fc4a3c18d84cdc6203d43a22ff14b4393d
+  source_commit: fbc2d66cafb981dcbcd8ad6efedf421dffa376a1
+  starting_artifact_path: authoring_prompt.md
+  starting_artifact_sha256: sha256:f8e5953b01a3ee2103505fbe6067fd86543b645e0049d65d20a34a79f72abf27
+  generated_artifact_path: fig3_slice3_raw.tex
+  generated_artifact_sha256: sha256:a06842628e1fd1830439add27a89ea4f3aef24526db1482a1dc1acadd726d108
+  transcript_path: raw.transcript.json
+  transcript_sha256: sha256:622df2646a72cc45c220dc0f9534f5ce5e2744ded5db09391fea7e235d209d4a

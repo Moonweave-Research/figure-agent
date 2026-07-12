@@ -1,0 +1,9 @@
+schema: figure-agent.model-contract.v1
+model_id: codex-gpt-5.5
+authoring_mode: interactive_fresh_tikz_authoring
+output_kind: standalone_tikz_source
+forbidden_import_patterns:
+  - examples/fig1_
+  - experiments/python_svg_semantic_fig1
+  - fig1_hybrid_complex_panel_pilot
+publication_acceptance: not_claimed
