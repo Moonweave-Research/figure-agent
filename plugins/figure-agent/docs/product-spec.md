@@ -319,6 +319,20 @@ Each attempt records the input authority, model and tool receipt, source and
 render hashes, findings before and after, applied repair family, protected
 invariants, rollback state, and human outcome.
 
+The minimum source binding is a tracked editable source plus its source commit
+and tree hash. A selector snapshot records `selector_id`, `anchor_start`, and
+the selected content hash; line numbers are informative only. Render evidence
+binds the page hash, full-render hash, crop rectangle and coordinate space, crop
+hash, and aggregate `review_input_hash`.
+
+TikZ-to-SVG export packets remain derived evidence. They bind unchanged-source,
+PDF, SVG, and sidecar-mapping hashes plus the conversion receipt; conversion may
+not silently rewrite the editable TikZ source. Such a packet always records
+`publication_acceptance: not_claimed`. Clean-room tasks preserve the historical
+`target_crop_forbidden` boundary and remain
+`blocked_pending_independent_semantic_packet` until an independently authored,
+hash-bound semantic packet exists.
+
 The learning unit is not "this image looked better." It is:
 
 ```text
@@ -433,8 +447,10 @@ Current repository evidence supports these conclusions:
   or actionable;
 - raw semantic SVG and the first paired illustration grammar preserved useful
   structure but did not meet the human visual-quality bar;
-- direct LLM SVG authoring demonstrated useful expressive potential, while the
-  final human direction remained unresolved or fixture-limited;
+- direct LLM SVG authoring demonstrated useful expressive potential, but the
+  bound Fig3 artifact was rejected for primitive geometry, visual density, and
+  cross-panel illustration quality; this does not reject SVG as a derived QA
+  surface;
 - recent Panel F refinement exposed reusable concepts such as semantic salience,
   contact simplification, and forbidden implications, but much of the final
   geometry was still manually tuned; and
@@ -454,7 +470,8 @@ Legacy experiment runtime remains parseable under
 artifact ownership only. They do not reopen direct-SVG or illustration-grammar
 development in the active plan.
 
-The next execution plan must therefore begin with a failure corpus and A/B/C
-baseline, then build the smallest observation and repair capabilities that move
-measured failures. It must not begin by adding another renderer, motif family, or
-fixture-specific polish rule.
+The failure corpus and first A/B/C baseline now exist. The active execution plan
+therefore closes the incomplete Fig1 human-review boundary, tests the same
+failure-first loop on the materially different Fig3 family, and only then makes
+a two-family capability decision. It must not add another renderer, motif
+family, or fixture-specific polish rule.

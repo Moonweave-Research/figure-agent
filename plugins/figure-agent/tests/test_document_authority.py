@@ -105,6 +105,18 @@ def test_canonical_docs_close_known_attribution_and_provenance_edge_cases() -> N
         "separately hashed input packet",
         "two independent cold-reproduction tasks",
         "author either the semantic packet or clean-room SVG artifacts",
+        "tracked editable source",
+        "source commit",
+        "tree hash",
+        "selector_id",
+        "anchor_start",
+        "page hash",
+        "full-render hash",
+        "conversion receipt",
+        "sidecar-mapping hashes",
+        "publication_acceptance: not_claimed",
+        "target_crop_forbidden",
+        "blocked_pending_independent_semantic_packet",
     ):
         assert required in product
 
@@ -152,10 +164,40 @@ def test_active_plan_contains_only_remaining_work() -> None:
     ):
         assert completed_or_retired not in execution
 
-    assert not (
+
+
+def test_active_plan_is_executable_against_current_fig3_artifacts() -> None:
+    execution = _read(PLUGIN_ROOT / EXECUTION_DOC)
+    normalized = " ".join(execution.split())
+
+    for required in (
+        "integration target is `main`",
+        "git rev-list --left-right --count main...HEAD",
+        "tests/test_fig3_failure_first_cross_family.py",
+        "fig3_trap_schematic_slice3_semantic.tex",
+        "existing artifact rejection",
+        "Retrospective correction time must not be estimated",
+        "preserve the existing panel verdict",
+        "review_input_hash",
+        "source_commit",
+        "starting_artifact_sha256",
+    ):
+        assert required in normalized
+
+    assert "examples/fig3_trap_schematic_v97/fig3_trap_schematic_v97.tex" not in execution
+    assert (
         PLUGIN_ROOT
-        / "docs/superpowers/specs/2026-07-12-tikz-first-svg-assisted-design.md"
-    ).exists()
+        / "examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex"
+    ).is_file()
+    assert (PLUGIN_ROOT / "examples/fig3_trap_schematic_slice3_semantic/source").is_dir()
+
+
+def test_product_authority_describes_completed_baseline_and_active_next_step() -> None:
+    product = _read(PLUGIN_ROOT / PRODUCT_DOC)
+    normalized = " ".join(product.split())
+
+    assert "The active execution plan therefore closes" in normalized
+    assert "The next execution plan must therefore begin" not in product
 
 
 def test_product_authority_defines_current_renderer_boundaries() -> None:

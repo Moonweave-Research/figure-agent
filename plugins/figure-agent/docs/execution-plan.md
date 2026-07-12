@@ -27,10 +27,11 @@ product specification. Completed tasks, superseded plans, experiment designs,
 and generated review packets remain evidence in Git history and their existing
 artifact directories; they do not set the next action.
 
-Before editing any implementation:
+Before editing any implementation, the integration target is `main`:
 
 1. verify the active worktree, branch, common Git directory, and clean state;
-2. compare the integration branch and this branch because they have diverged;
+2. compare `main` and this branch because they have diverged, using the exact
+   read-only preflight below;
 3. preserve accepted, historical, and user-owned artifacts;
 4. resolve integration in a dedicated clean worktree without force, reset,
    checkout-discard, or clean;
@@ -41,6 +42,24 @@ Before editing any implementation:
    coordinates to reusable modules;
 9. do not create another active specification, roadmap, or execution plan; and
 10. never equate machine-valid or review-ready with publication acceptance.
+
+```bash
+git status --short
+git branch --show-current
+git rev-parse --git-common-dir
+git rev-list --left-right --count main...HEAD
+git diff --stat main...HEAD
+```
+
+If `main` cannot be resolved locally, stop as `integration_base_missing`; do not
+silently substitute another branch. Integration conflict resolution belongs in
+a separate clean worktree and is not part of the figure-evidence slices below.
+
+Every A/B/C manifest must bind at least `model_id`, `input_packet_sha256`,
+`budget_contract`, `source_commit`, `starting_artifact_sha256`, selectors or
+declared regions, toolchain versions, and an aggregate `review_input_hash`.
+Generated outputs must carry their own hashes and provenance. A manifest without
+an actual generation receipt is staged evidence, not a comparable model run.
 
 Existing implementation surfaces to reuse:
 
@@ -91,10 +110,13 @@ silently upgrading its current development-baseline verdict.
 - [ ] Reproduce the tracked figure and review packet from a clean checkout.
 - [ ] Prove that the current render, semantic contract, selector state, and
   review-input hashes match the packet presented to the reviewer.
-- [ ] Present and record the whole, panel, object/relation, and zoom views as
-  separate human decisions.
+- [ ] Present and record the still-pending whole, object/relation, and zoom views
+  as separate human decisions; preserve the existing panel verdict unless its
+  bound `review_input_hash` changes.
 - [ ] Record correction minutes and intervention count; do not infer either from
   commit count or elapsed agent time.
+- [ ] Retrospective correction time must not be estimated. For the existing Fig1
+  work, record `unavailable` plus a reason; measure Fig3 prospectively.
 - [ ] Keep strict inherited findings visible instead of suppressing them to
   obtain a green state.
 - [ ] Admit only named confirmed defects or accepted false positives to the
@@ -105,8 +127,12 @@ silently upgrading its current development-baseline verdict.
 ```bash
 bash scripts/compile.sh \
   examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex
+set +e
 FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
   examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex
+strict_exit=$?
+set -e
+test "$strict_exit" -ne 0
 uv run pytest tests/test_fig1_failure_first_panel_f_pilot.py \
   tests/test_failure_first_vertical_slice.py \
   tests/test_failure_corpus.py -q
@@ -133,11 +159,20 @@ sulfur-polymer narrative rather than extending the successful Fig1 fixture.
 
 ### Target and boundaries
 
-The target family is `examples/fig3_trap_schematic_v97`. Historical Fig3 source,
-reference, briefing, specification, coordinate hints, and review artifacts are
-read-only authority inputs. New evidence lives under
+The historical target family is `fig3_trap_schematic_v97`, preserved inside the
+tracked derivative at `examples/fig3_trap_schematic_slice3_semantic/source/`.
+Historical Fig3 source, reference, briefing, specification, coordinate hints,
+and review artifacts are read-only authority inputs. The executable derivative
+is `examples/fig3_trap_schematic_slice3_semantic/`; new evidence lives under
 `examples/fig3_trap_schematic_slice3_semantic/review/failure-first-ablation/`;
 historical files are not overwritten.
+
+The current bound artifact verdict is already `rejected` for publication
+quality, while the scaffold verdict is `pending`. Preserve that existing
+artifact rejection. This slice tests the control loop and obtains the missing
+scaffold decision; it does not relabel the rejected artifact as a fresh approval
+candidate. The slice numbering in this plan is execution order, not the legacy
+artifact's `slice3_semantic` version name.
 
 Fig1-specific snippets, coordinates, selectors, detector thresholds, labels,
 and repair templates are forbidden. Reuse only renderer-neutral schemas and the
@@ -146,52 +181,58 @@ modules listed in Section 0.
 
 ### Files
 
-- Read: `examples/fig3_trap_schematic_v97/`
+- Read historical authority only:
+  `examples/fig3_trap_schematic_slice3_semantic/source/`
+- Verify executable source:
+  `examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex`
 - Create:
   `examples/fig3_trap_schematic_slice3_semantic/review/failure-first-ablation/`
 - Modify only if a bounded exact repair is authorized: a copied editable Fig3
   source owned by the new slice
-- Test: `tests/test_slice3_cohort_dogfood.py`
-- Create or modify: one focused Fig3 failure-first test file
+- Create: `tests/test_fig3_failure_first_cross_family.py`
 - Modify when reviewed evidence is added: `benchmarks/llm_failure_sources.yaml`
 - Regenerate: `benchmarks/llm_failure_corpus.yaml`
 
 ### Steps
 
+- [ ] Create `tests/test_fig3_failure_first_cross_family.py` as the first RED
+  change. It intentionally does not exist at plan-authoring time; do not replace
+  it with the unrelated cohort test or add a placeholder that passes.
 - [ ] Bind reference, briefing, specification, coordinate hints, editable source,
   and review history to explicit hashes and authority roles.
 - [ ] Declare the six-panel narrative, required objects and relations, forbidden
   implications, and stable source selectors without importing Fig1 declarations.
 - [ ] Produce comparable `raw`, `verified`, and `repaired` manifests using the
-  same model, input packet, budget, and starting artifact.
+  same model, input packet, budget, and starting artifact; do not treat manually
+  staged manifests as actual LLM runs without generation receipts.
 - [ ] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [ ] Apply at most one smallest exact bounded repair with protected invariants,
   change budget, receipt, and rollback evidence.
-- [ ] Obtain named scientific and visual review and record correction minutes.
+- [ ] Obtain the missing named scaffold review, preserve the existing artifact
+  rejection, and record prospectively measured correction minutes.
 
 ### Verification
 
 ```bash
 bash scripts/compile.sh \
-  examples/fig3_trap_schematic_v97/fig3_trap_schematic_v97.tex
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
-  examples/fig3_trap_schematic_v97/fig3_trap_schematic_v97.tex
-uv run pytest tests/test_slice3_cohort_dogfood.py \
+  examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex
+uv run pytest tests/test_fig3_failure_first_cross_family.py \
   tests/test_failure_ablation.py \
   tests/test_quality_patch_policy.py \
   tests/test_quality_patch_plan.py \
   tests/test_quality_patch_apply.py -q
-uv run ruff check scripts/quality tests/test_slice3_cohort_dogfood.py
+uv run ruff check tests/test_fig3_failure_first_cross_family.py
 git diff --check
 ```
 
 ### Exit condition
 
-The Fig3 packet is cleanly reproducible, contains no Fig1-specific dependency,
-reports exact/ambiguous/unbound attribution honestly, preserves scientific
-relations across any repair, and has a named human outcome. A passing machine
-gate without human scaffold review is not completion.
+Slice 3 begins only after all three ablation manifests and their bound generation
+receipts exist. The Fig3 packet is cleanly reproducible, contains no
+Fig1-specific dependency, reports exact/ambiguous/unbound attribution honestly,
+preserves scientific relations across any repair, and has a named human outcome.
+A passing machine gate without human scaffold review is not completion.
 
 ## Slice 3: Two-family A/B/C decision
 
@@ -204,8 +245,8 @@ and Fig3 evidence, rather than starting another implementation lane.
 
 - Verify: `benchmarks/llm_failure_corpus.yaml`
 - Verify: the Fig1 and Fig3 raw/verified/repaired manifests
-- Modify: one existing benchmark decision or status surface selected by the
-  current CLI contract; do not create a new roadmap
+- Create or update the machine-readable decision artifact:
+  `benchmarks/failure_first_capability_decision.yaml`; do not create a roadmap
 - Test: `tests/test_failure_ablation.py`
 - Test: `tests/test_failure_first_cli.py`
 - Test: `tests/test_document_authority.py`
