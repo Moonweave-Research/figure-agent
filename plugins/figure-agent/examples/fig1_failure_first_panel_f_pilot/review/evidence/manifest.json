@@ -64,31 +64,31 @@
     {
       "path": "review/evidence/repaired/whole.png",
       "role": "whole",
-      "sha256": "sha256:d31cbfc697c62ec41ffb862257905693d9e75d6952f9e6bd8930e99a89ddd9ab",
+      "sha256": "sha256:c4dd2c2b4cbd86b27b4cf68e527a9455da76849f5331de8fec20d46bf8695966",
       "variant": "repaired"
     },
     {
       "path": "review/evidence/repaired/panel.png",
       "role": "panel",
-      "sha256": "sha256:767fe80d3abc5aa67e3aaba73d6d762efb7db35ab9c6f6984c69a57bd9937819",
+      "sha256": "sha256:06118313e02a090df96b3a3a5f855a8dfcb4deb1a451da881ffc228696df34fa",
       "variant": "repaired"
     },
     {
       "path": "review/evidence/repaired/object_relation.png",
       "role": "object_relation",
-      "sha256": "sha256:697183ee64a7cc8d0b29ee09a8d2b3d3d3ae41a056a1eb02421a697d0cecb447",
+      "sha256": "sha256:d4d1354b4583afc982c42557911aa953a6c68c7f4be07e1b3006d5e0879d55c4",
       "variant": "repaired"
     },
     {
       "path": "review/evidence/repaired/zoom.png",
       "role": "zoom",
-      "sha256": "sha256:cb385f2f897c8dc2530091746f9a3514a9f27cc01f6d8be994d6e5e81d01aa6a",
+      "sha256": "sha256:4bc965c7c852b7abf41edb84fa8b235f22132f4e7f1523310fd2e7903f7b2c31",
       "variant": "repaired"
     },
     {
       "path": "review/evidence/repaired/overlay.png",
       "role": "overlay",
-      "sha256": "sha256:cc225bf16d4f2ffa6135da9b3156b01e7ed6bb2704a428235a272886c79ce95e",
+      "sha256": "sha256:c9ec40d4c563982f96a4b893863654d4b9f53ce60def4279a5548e7211804b4d",
       "variant": "repaired"
     }
   ],

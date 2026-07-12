@@ -2029,16 +2029,17 @@
 \draw[cGray!12, line width=0.25pt] (9.47, 0.14) -- (9.47, 4.36);
 
 % figure-agent:start panel_f.mechanism_scene
-% A small neutral mechanical jig holds the cantilever root. Its matte geometry
-% is deliberately non-electrical: no contact pad or terminal.
-\fill[cGray!12, rounded corners=0.35mm]
-  (11.72, 2.84) rectangle (11.96, 2.94);
-\draw[cGray!68!black, line width=0.30pt, rounded corners=0.35mm]
-  (11.72, 2.84) rectangle (11.96, 2.94);
+% A compact neutral saddle clamp holds the cantilever root. The short top jaw
+% and two side lips read as a fixture without the rotor-and-mast silhouette of
+% the previous jig. Its matte geometry remains deliberately non-electrical.
+\fill[cGray!12, rounded corners=0.25mm]
+  (11.66, 2.84) rectangle (12.02, 2.95);
+\draw[cGray!68!black, line width=0.30pt, rounded corners=0.25mm]
+  (11.66, 2.84) rectangle (12.02, 2.95);
 \draw[cGray!58!black, line width=0.30pt]
-  (11.66, 3.02) -- (12.02, 3.02);
+  (11.70, 2.84) -- (11.70, 2.77);
 \draw[cGray!58!black, line width=0.30pt]
-  (11.84, 2.94) -- (11.84, 3.02);
+  (11.98, 2.84) -- (11.98, 2.77);
 
 \shade[top color=cAmber!18, bottom color=cAmber!46, rounded corners=0.5mm]
   (11.70, 2.84) .. controls (11.82, 2.10) and (11.35, 1.30) ..
@@ -2117,7 +2118,7 @@
 % Coulomb-only response, intentionally stronger than the apparatus.
 % quality-search F post-force spacing finish: align force label rail
 \draw[panelFCoulombRepulsionArrow, -{Stealth[length=6.2pt,width=4.2pt]}, cRed!72!black, line width=0.62pt]
-  (10.52, 1.02) -- (9.68, 1.02);
+  (10.52, 0.84) -- (9.68, 0.84);
 \node[anchor=south west, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=0.92pt, inner ysep=0.44pt,
       font=\sffamily\bfseries\fontsize{4.8}{5.8}\selectfont, text=cRed!72!black]

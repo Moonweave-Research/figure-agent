@@ -13,6 +13,8 @@ bounded_repair_checks:
   exact_attribution: passed
   source_ground_separated_from_floating_sample: passed
   protected_relations: passed
+  rendered_force_arrow_label_crossing: passed
+  rendered_arrow_detection_regression: passed
 human_review_state: pending
 failure_corpus_admission: deferred_pending_named_human_verdict
 publication_acceptance: not_claimed

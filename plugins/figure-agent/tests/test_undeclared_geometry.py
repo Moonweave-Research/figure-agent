@@ -12,6 +12,7 @@ from check_undeclared_geometry import (  # noqa: E402
     UndeclaredGeometryError,
     _undeclared_geometry_profile,
     detect_rendered_boundary_crossings,
+    detect_rendered_semantic_path_crossings,
     detect_undeclared_geometry,
     partition_candidates_by_profile,
     undeclared_geometry_payload,
@@ -233,6 +234,60 @@ def test_rendered_boundary_crossing_ignores_colored_plot_lines() -> None:
     ]
 
     assert detect_rendered_boundary_crossings(words, rendered_lines, []) == []
+
+
+def test_rendered_semantic_arrow_crossing_uses_pdf_path_coordinates() -> None:
+    words = [_word("repulsion", 354.0, 302.0, 388.0, 310.0)]
+    rendered_lines = [
+        {
+            "x0": 354.8,
+            "x1": 380.2,
+            "top": 306.8,
+            "bottom": 306.8,
+            "linewidth": 0.78,
+            "stroking_color": (0.576, 0.288, 0.336),
+        }
+    ]
+    rendered_curves = [
+        {
+            "x0": 351.1,
+            "x1": 356.4,
+            "top": 305.0,
+            "bottom": 308.7,
+            "linewidth": 0.78,
+            "stroking_color": (0.576, 0.288, 0.336),
+            "fill": True,
+        }
+    ]
+
+    candidates = detect_rendered_semantic_path_crossings(
+        words,
+        rendered_lines,
+        rendered_curves,
+    )
+
+    assert [candidate["kind"] for candidate in candidates] == [
+        "label_crosses_semantic_path"
+    ]
+    assert candidates[0]["nearest_text"] == "repulsion"
+    assert candidates[0]["distance_pt"] == 0.0
+    assert candidates[0]["evidence"].startswith("rendered semantic arrow crosses text")
+
+
+def test_rendered_colored_line_without_arrowhead_is_not_semantic_path() -> None:
+    words = [_word("shallow", 468.0, 69.0, 499.0, 77.0)]
+    rendered_lines = [
+        {
+            "x0": 484.0,
+            "x1": 484.0,
+            "top": 45.0,
+            "bottom": 128.0,
+            "linewidth": 0.6,
+            "stroking_color": (0.6, 0.3, 0.35),
+        }
+    ]
+
+    assert detect_rendered_semantic_path_crossings(words, rendered_lines, []) == []
 
 
 def test_label_crossing_ignores_non_frame_like_geometry() -> None:

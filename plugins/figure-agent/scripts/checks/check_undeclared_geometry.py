@@ -50,6 +50,11 @@ RENDERED_FRAME_RECT_MIN_WIDTH_PT = 4.0 * CM_TO_PT
 RENDERED_FRAME_RECT_MIN_HEIGHT_PT = 3.0 * CM_TO_PT
 RENDERED_FRAME_GRAY_MIN = 0.55
 RENDERED_FRAME_NEUTRAL_DELTA_MAX = 0.04
+RENDERED_ARROW_COLOR_DELTA_MIN = 0.08
+RENDERED_ARROW_COLOR_MATCH_MAX = 0.04
+RENDERED_ARROW_HEAD_MAX_SIZE_PT = 12.0
+RENDERED_ARROW_HEAD_ENDPOINT_TOLERANCE_PT = 4.0
+RENDERED_ARROW_SHAFT_MIN_LENGTH_PT = 8.0
 
 # Conceptual-geometry kinds a pure schematic declares on purpose: axes, dividers,
 # region rectangles, and plot frames are intentional, not layout regions to police.
@@ -384,6 +389,34 @@ def _is_light_neutral_stroke(color: object) -> bool:
     )
 
 
+def _color_channels(color: object) -> tuple[float, ...] | None:
+    if isinstance(color, int | float):
+        return (float(color),)
+    if not isinstance(color, tuple) or not color:
+        return None
+    channels = tuple(float(value) for value in color if isinstance(value, int | float))
+    return channels or None
+
+
+def _is_chromatic_stroke(color: object) -> bool:
+    channels = _color_channels(color)
+    return bool(
+        channels is not None
+        and len(channels) >= 3
+        and max(channels) - min(channels) >= RENDERED_ARROW_COLOR_DELTA_MIN
+    )
+
+
+def _colors_close(left: object, right: object) -> bool:
+    left_channels = _color_channels(left)
+    right_channels = _color_channels(right)
+    if left_channels is None or right_channels is None or len(left_channels) != len(right_channels):
+        return False
+    return max(abs(a - b) for a, b in zip(left_channels, right_channels, strict=True)) <= (
+        RENDERED_ARROW_COLOR_MATCH_MAX
+    )
+
+
 def _rendered_line_from_pdf_line(raw_line: dict[str, Any]) -> dict[str, Any] | None:
     if float(raw_line.get("linewidth") or 0.0) > RENDERED_FRAME_LINE_WIDTH_MAX_PT:
         return None
@@ -482,6 +515,89 @@ def detect_rendered_boundary_crossings(
     return candidates
 
 
+def _rendered_axis_aligned_line(raw_line: dict[str, Any]) -> dict[str, Any] | None:
+    x0 = float(raw_line["x0"])
+    x1 = float(raw_line["x1"])
+    top = float(raw_line["top"])
+    bottom = float(raw_line["bottom"])
+    if abs(x0 - x1) < 0.5 and abs(bottom - top) >= RENDERED_ARROW_SHAFT_MIN_LENGTH_PT:
+        return {"kind": "vertical_line", "x": x0, "y_range": sorted([top, bottom])}
+    if abs(top - bottom) < 0.5 and abs(x1 - x0) >= RENDERED_ARROW_SHAFT_MIN_LENGTH_PT:
+        return {"kind": "horizontal_line", "y": top, "x_range": sorted([x0, x1])}
+    return None
+
+
+def _line_endpoints(line: dict[str, Any]) -> tuple[tuple[float, float], tuple[float, float]]:
+    if line["kind"] == "vertical_line":
+        return (float(line["x"]), float(line["y_range"][0])), (
+            float(line["x"]),
+            float(line["y_range"][1]),
+        )
+    return (float(line["x_range"][0]), float(line["y"])), (
+        float(line["x_range"][1]),
+        float(line["y"]),
+    )
+
+
+def _curve_is_matching_arrowhead(
+    raw_curve: dict[str, Any],
+    raw_line: dict[str, Any],
+    line: dict[str, Any],
+) -> bool:
+    if not raw_curve.get("fill"):
+        return False
+    if not _colors_close(raw_curve.get("stroking_color"), raw_line.get("stroking_color")):
+        return False
+    x0 = float(raw_curve["x0"])
+    x1 = float(raw_curve["x1"])
+    top = float(raw_curve["top"])
+    bottom = float(raw_curve["bottom"])
+    if abs(x1 - x0) > RENDERED_ARROW_HEAD_MAX_SIZE_PT:
+        return False
+    if abs(bottom - top) > RENDERED_ARROW_HEAD_MAX_SIZE_PT:
+        return False
+    head_bbox = (min(x0, x1), min(top, bottom), max(x0, x1), max(top, bottom))
+    return any(
+        _point_rect_distance(x, y, head_bbox) <= RENDERED_ARROW_HEAD_ENDPOINT_TOLERANCE_PT
+        for x, y in _line_endpoints(line)
+    )
+
+
+def detect_rendered_semantic_path_crossings(
+    words: list[dict[str, Any]],
+    rendered_lines: list[dict[str, Any]],
+    rendered_curves: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Return text crossings for rendered chromatic arrows in PDF coordinates."""
+    candidates: list[dict[str, Any]] = []
+    for raw_line in rendered_lines:
+        if not _is_chromatic_stroke(raw_line.get("stroking_color")):
+            continue
+        line = _rendered_axis_aligned_line(raw_line)
+        if line is None:
+            continue
+        if not any(
+            _curve_is_matching_arrowhead(raw_curve, raw_line, line)
+            for raw_curve in rendered_curves
+        ):
+            continue
+        for word in words:
+            if not _semantic_path_label_candidate(word) or not _line_crosses_word(line, word):
+                continue
+            candidates.append(
+                _base_candidate(
+                    kind="label_crosses_semantic_path",
+                    evidence=f"rendered semantic arrow crosses text {word.get('text', '')!r}",
+                    bbox_pt=_line_bbox(line),
+                    source_line=0,
+                    nearest_text=str(word.get("text", "")),
+                    distance_pt=0.0,
+                    recommended_action="add_micro_defect",
+                )
+            )
+    return candidates
+
+
 def _rendered_boundary_crossings_from_pdf(
     pdf_path: Path,
     words: list[dict[str, Any]],
@@ -490,7 +606,11 @@ def _rendered_boundary_crossings_from_pdf(
         if not pdf.pages:
             return []
         page = pdf.pages[0]
-        return detect_rendered_boundary_crossings(words, page.lines, page.rects)
+        candidates = detect_rendered_boundary_crossings(words, page.lines, page.rects)
+        candidates.extend(
+            detect_rendered_semantic_path_crossings(words, page.lines, page.curves)
+        )
+        return candidates
 
 
 def detect_undeclared_geometry(
