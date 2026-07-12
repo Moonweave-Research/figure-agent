@@ -1,1387 +1,1508 @@
 <!-- FIGURE_AGENT:EXECUTION_AUTHORITY -->
-# Figure Agent Execution Plan
+# Figure Agent Failure-First Implementation Plan
 
-**Transition status (2026-07-12):** The completed and pending tasks below are
-retained as execution evidence for the previous TikZ/SVG/illustration-grammar
-direction. They are not authorization to begin another grammar or direct-SVG
-slice. The active product direction is now defined by docs/product-spec.md:
-measure and reduce the recurrent failures of the same LLM through contracts,
-multi-scale observation, actionable attribution, bounded repair, provenance,
-and human review.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
-This document remains the single execution-authority location while the new
-failure-first plan is written. Until that replacement is reviewed, forward
-implementation is paused; only verification and preservation of existing
-artifacts are authorized. The historical task detail stays in this file so the
-repository does not lose provenance or pretend unfinished human review was
-completed.
+**Goal:** Prove that Figure Agent reduces recurrent scientific-figure failures produced by the same LLM by adding reviewed failure evidence, multi-scale attribution, and bounded repair without expanding fixture-specific drawing logic.
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use
-> `superpowers:test-driven-development` for each implementation task and
-> `superpowers:verification-before-completion` before any completion claim.
+**Architecture:** Keep LLM authoring freeform and renderer-neutral. Add a small reviewed failure-corpus layer, an A/B/C evaluator for raw versus verified versus repaired runs, and stricter bounded-repair contracts around the existing quality ledger and patch pipeline. Do not add behavior to the 9,849-line quality_search.py; new logic lives in focused modules and reuses existing attribution, benchmark, provenance, and human-gate surfaces.
 
-**Goal:** Make Figure Agent reduce the correction cost of visual errors and
-complex panels while preserving or exceeding the accepted TikZ quality
-benchmark, with illustration quality represented as an explicit reusable
-contract rather than hidden renderer code.
-
-**Architecture:** Keep TikZ as the production composition baseline. Preserve
-the declaration-driven attribution path from rendered findings to panels,
-semantic objects, and source selectors. Put a narrow scientific illustration
-grammar between semantics and TikZ/SVG backends, beginning with one
-`sulfur_trap_domain` motif. Machine evidence and human publication acceptance
-remain separate gates.
-
-**Tech Stack:** Python 3.11+, pytest, PyYAML, existing figure-agent CLI/helpers,
-TikZ/LuaLaTeX, dvisvgm, deterministic SVG/PDF/PNG artifacts. Add no dependency
-without explicit approval.
+**Tech Stack:** Python 3.11+, pytest, PyYAML, existing Figure Agent CLI and quality modules, TikZ/LuaLaTeX and deterministic SVG/PNG evidence. Add no dependency.
 
 ---
 
 ## 0. Execution rules
 
-This is the single active forward plan. `docs/product-spec.md` defines the
-product boundary. Architecture notes, roadmaps, milestones, issue ledgers,
-fixture plans, and experiments may provide evidence but do not reorder this
-plan.
+This file is the single active forward plan. docs/product-spec.md is the single product authority. Historical architecture notes, milestones, fixture plans, and the prior TikZ/SVG/illustration-grammar task list remain evidence in Git history and decision records; they do not reorder this plan.
 
 For every task:
 
-1. work in a clean dedicated worktree and `codex/` branch;
-2. preserve historical fixtures and accepted artifacts;
+1. work in a clean dedicated worktree and codex/ branch based on commit 8fdc110f or its integrated descendant;
+2. preserve accepted, historical, and user-owned artifacts;
 3. write the smallest failing test first;
 4. implement only enough general behavior to pass it;
-5. run the targeted test, then the affected suite;
-6. run `git diff --check` and `uv run ruff check` on changed Python;
-7. commit a small, reviewable slice with the evidence named in the message; and
-8. never equate a machine gate with publication acceptance.
+5. run focused tests before affected-suite tests;
+6. run git diff --check and Ruff on changed Python;
+7. commit one reviewable task at a time;
+8. never equate machine-valid or review-ready with human-accepted; and
+9. do not modify scripts/quality/quality_search.py or scripts/quality/panel_block_edits.yaml in this plan.
 
-All commands below run from `plugins/figure-agent/` unless stated otherwise.
-The plan names intended files; an implementer must inspect current code first
-and reuse an existing module when it already owns the responsibility.
+All commands run from plugins/figure-agent unless explicitly stated otherwise.
 
-## Task 0: Establish the two-document authority contract
+## 1. File ownership map
+
+| File | Responsibility |
+| --- | --- |
+| docs/product-spec.md | Product identity, boundaries, promotion rules |
+| docs/execution-plan.md | This task sequence and completion boundary |
+| scripts/quality/failure_corpus.py | Validate reviewed failure classes and provenance |
+| benchmarks/llm_failure_sources.yaml | Human-authored index of reviewed evidence to compile |
+| benchmarks/llm_failure_corpus.yaml | Hash-bound normalized failure corpus |
+| scripts/quality/compile_failure_corpus.py | Compile only declared reviewed evidence into the corpus |
+| scripts/quality/failure_ablation.py | Validate and compare raw, verified, and repaired run manifests |
+| scripts/quality/quality_patch_policy.py | Decide whether a normalized defect may produce a bounded repair candidate |
+| scripts/quality/quality_patch_plan.py | Build a repair operation with selectors, invariants, budgets, and rollback |
+| scripts/quality/quality_patch_apply.py | Fail closed before mutation and record a rollback/result receipt |
+| bin/fig-agent | Expose read-only corpus and ablation commands |
+| tests/test_failure_corpus.py | Corpus schema, provenance, taxonomy, and fixture-independence tests |
+| tests/test_compile_failure_corpus.py | Deterministic real-evidence compilation tests |
+| tests/test_failure_ablation.py | A/B/C comparability and non-compensating evaluation tests |
+| tests/test_quality_patch_policy.py | Patchability boundary tests |
+| tests/test_quality_patch_plan.py | Bounded repair-plan contract tests |
+| tests/test_quality_patch_apply.py | Apply/rollback and protected-invariant tests |
+| tests/test_failure_first_cli.py | CLI read-only and JSON contract tests |
+| tests/test_document_authority.py | Guard the new product and plan language |
+
+## Task 0: Lock the failure-first authority boundary
 
 **Files:**
 
-- Create: `docs/product-spec.md`
-- Create: `docs/execution-plan.md`
-- Create: `tests/test_document_authority.py`
-- Modify: `README.md`
-- Modify: `AGENTS.md`
-- Modify: `skills/figure-agent/SKILL.md`
-- Modify: `docs/architecture-overview.md`
-- Modify: repository root `README.md`
-- Modify: prior product-direction and execution-plan documents listed in
-  `tests/test_document_authority.py`
+- Modify: tests/test_document_authority.py
+- Verify: docs/product-spec.md
+- Verify: docs/execution-plan.md
 
-- [x] Write a failing test that requires exactly one product-authority marker
-  and one execution-authority marker, requires every agent entry point to link
-  both canonical documents, and requires superseded documents to declare
-  themselves non-authoritative.
-- [x] Add the canonical documents and redirect entry points.
-- [x] Preserve old documents in place as evidence; add only an unambiguous
-  status banner and canonical pointers.
-- [x] Update any release-contract test that treats an old direction document as
-  active.
-- [x] Verify:
+- [ ] **Step 1: Write the failing authority test**
 
-```bash
-uv run pytest tests/test_document_authority.py tests/test_readme_identity.py \
-  tests/test_release_contract.py tests/test_command_contract_docs.py \
-  tests/test_doc_rot_architecture.py -q
-uv run ruff check .
+Add:
+
+~~~python
+def test_canonical_docs_define_failure_first_llm_control() -> None:
+    product = _read(PLUGIN_ROOT / PRODUCT_DOC)
+    execution = _read(PLUGIN_ROOT / EXECUTION_DOC)
+
+    for required in (
+        "Let the LLM propose freely",
+        "Failure ontology",
+        "Bounded repair contract",
+        "Figure production is not Figure Agent product development.",
+        "A: raw LLM authoring",
+        "B: the same LLM plus Figure Agent contracts and verification",
+        "C: the same LLM plus contracts, verification, and bounded repair",
+    ):
+        assert required in product
+
+    for required in (
+        "Failure-First Implementation Plan",
+        "failure_corpus.py",
+        "failure_ablation.py",
+        "quality_search.py or scripts/quality/panel_block_edits.yaml",
+    ):
+        assert required in execution
+
+    assert "determine whether an LLM can directly author SVG" not in product
+~~~
+
+- [ ] **Step 2: Run the test and verify RED**
+
+Run:
+
+~~~bash
+uv run pytest tests/test_document_authority.py::test_canonical_docs_define_failure_first_llm_control -q
+~~~
+
+Expected: FAIL because the product specification does not yet contain the exact
+figure-production boundary sentence.
+
+- [ ] **Step 3: Make the authority wording exact**
+
+Add this sentence at the end of Section 3.3 of docs/product-spec.md:
+
+> Figure production is not Figure Agent product development.
+
+Do not change the meaning of docs/product-spec.md merely to satisfy the test.
+
+- [ ] **Step 4: Run authority and release-contract tests**
+
+Run:
+
+~~~bash
+uv run pytest tests/test_document_authority.py tests/test_release_contract.py -q
+uv run ruff check tests/test_document_authority.py
 git diff --check
-```
+~~~
 
-- [x] Commit: `docs: establish single product and execution authority`
+Expected: PASS.
 
-## Task 1: Freeze the TikZ benchmark and defect corpus
+- [ ] **Step 5: Commit**
 
-**Files:**
+~~~bash
+git add tests/test_document_authority.py docs/product-spec.md
+git commit -m "test: lock failure-first product authority"
+~~~
 
-- Create: `benchmarks/visual_attribution_suite.yaml`
-- Create: `tests/fixtures/visual_attribution/`
-- Create: `tests/test_visual_attribution_suite.py`
-- Modify: `benchmarks/quality_suites.yaml`
-- Modify: `scripts/quality/quality_benchmark.py`
-
-- [x] Define a small corpus containing true collision/clash findings, accepted
-  false positives, panel boundaries, semantic region declarations, and expected
-  attribution states (`exact`, `ambiguous`, `unbound`). Use synthetic fixtures
-  for contract edge cases and immutable copies of reviewed evidence for realism.
-- [x] Record baseline metrics: finding count, reviewed true positives, reviewed
-  false positives, exact attribution rate, ambiguous rate, unbound rate, and
-  human correction minutes. Unknown measurements are represented as `null`, not
-  invented estimates.
-- [x] Add a test proving that a fixture-specific name or hard-coded coordinate
-  cannot determine the expected result.
-- [x] Integrate the suite as an opt-in benchmark; do not add publication claims
-  to the machine output.
-- [x] Verify:
-
-```bash
-uv run pytest tests/test_visual_attribution_suite.py tests/test_quality_benchmark.py -q
-bin/fig-agent benchmark-run --suite visual-attribution --json
-```
-
-- [x] Commit: `test: lock visual attribution benchmark corpus`
-
-## Task 2: Declare semantic regions and source selectors
+## Task 1: Define the reviewed failure-corpus contract
 
 **Files:**
 
-- Create: `scripts/semantic_region_contract.py`
-- Create: `tests/test_semantic_region_contract.py`
-- Modify: `scripts/inputs.py`
-- Modify: `README.md`
-- Modify: `docs/architecture-overview.md`
-
-- [x] Write RED tests for a fixture-local `semantic_regions.yaml` contract with
-  this minimum shape:
-
-```yaml
-schema: figure-agent.semantic-regions.v1
-page_geometry:
-  coordinate_space: pdf_cm
-  page_index: 0
-  origin: bottom_left
-  media_box_pdf_cm: [0.0, 0.0, 17.8, 10.0]
-  crop_box_pdf_cm: [0.0, 0.0, 17.8, 10.0]
-  rotation_deg: 0
-  render_geometry_hash: sha256:<hash>
-regions:
-  - id: target_panel.complex_region
-    panel_id: TARGET
-    role: potential_profile
-    bbox_pdf_cm: [10.1, 0.8, 12.9, 3.2]
-    source:
-      path: fig1_hybrid_complex_panel_pilot.tex
-      selector_id: target_panel.complex_region
-      anchor_start: "% figure-agent:start target_panel.complex_region"
-      anchor_end: "% figure-agent:end target_panel.complex_region"
-      source_sha256: sha256:<hash>
-      line_start: 210
-      line_end: 248
-    provenance: declared_by_author
-```
-
-- [x] Reject duplicate IDs or anchors, invalid boxes, unsafe paths, reversed
-  line ranges, unknown panels, out-of-page boxes, selectors outside the named
-  source, and page/render geometry that does not match the detector render.
-- [x] Treat line ranges as regenerated review snapshots. Resolve identity from
-  `selector_id` plus unique anchors; missing, duplicated, or stale anchors are
-  `ambiguous`/`unbound` and never silently relocated by line proximity.
-- [x] Normalize coordinates without fixture-specific offsets. Reuse existing
-  `bbox_pdf_cm` parsing and page-geometry helpers where possible.
-- [x] Emit stable normalized JSON and source/input hashes for downstream tools.
-- [x] Verify:
-
-```bash
-uv run pytest tests/test_semantic_region_contract.py tests/test_inputs.py \
-  tests/test_spec_bbox_helper.py -q
-```
-
-- [x] Commit: `feat: validate declared semantic regions and source selectors`
-
-## Task 3: Attribute visual findings without guessing
-
-**Files:**
-
-- Create: `scripts/visual_finding_attribution.py`
-- Create: `tests/test_visual_finding_attribution.py`
-- Modify: the existing collision/clash result assembly module discovered by
-  tracing the current output schema
-- Modify: `scripts/critique_schema_validator.py` only if the public critique
-  schema must carry the new attribution block
-
-- [x] Write RED tests for bbox intersection with panel and semantic regions.
-- [x] Return `exact` only when one valid region wins through an explicitly
-  declared containment/priority relationship. Area, nearest-center, and DOM
-  order are not implicit tie-breakers. Return `ambiguous` with every candidate
-  for undeclared overlap; return `unbound` when no declaration applies.
-- [x] Copy the declared source selector into the finding only after validating
-  the source hash. Never synthesize `tex_lines` from spatial proximity alone.
-- [x] Preserve the original detector bbox and confidence so attribution cannot
-  hide detector uncertainty.
-- [x] Add regression tests for top-left pixel versus bottom-left PDF origins,
-  DPI changes, MediaBox/CropBox differences, page rotation, page index, fragment
-  transforms, boundary-touching boxes, nested regions, missing declarations,
-  stale source/render-geometry hashes, and malformed detector output.
-- [x] Verify:
-
-```bash
-uv run pytest tests/test_visual_finding_attribution.py \
-  tests/test_visual_attribution_suite.py tests/test_critique_schema_validator.py -q
-```
-
-- [x] Commit: `feat: map visual findings to declared source regions`
-
-## Task 4: Always produce attribution overlays and crops
-
-**Files:**
-
-- Create: `scripts/visual_finding_artifacts.py`
-- Create: `tests/test_visual_finding_artifacts.py`
-- Modify: `scripts/compile.sh`
-- Modify: the perception-pack manifest writer that currently owns
-  `build/perception/`
-
-- [x] Write RED tests requiring, for every detector finding, a deterministic
-  overlay image, focused crop, and manifest record containing finding ID,
-  attribution state, input render hash, pixel bbox, PDF bbox, and output hashes.
-- [x] Render distinct, accessible styles for exact, ambiguous, and unbound
-  attribution without changing the manuscript artifact.
-- [x] Generate artifacts in ordinary compile mode even when findings are
-  report-only. Strict mode may change the exit code but not the evidence set.
-- [x] Ensure a no-finding compile creates a valid empty manifest and no fake
-  crop.
-- [x] Verify:
-
-```bash
-uv run pytest tests/test_visual_finding_artifacts.py tests/test_strict_mode.py -q
-bash scripts/compile.sh examples/<synthetic-fixture>/<synthetic-fixture>.tex
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
-  examples/<synthetic-fixture>/<synthetic-fixture>.tex
-```
-
-- [x] Commit: `feat: emit review overlays and crops for visual findings`
-
-## Task 5: Improve detector precision from reviewed evidence
-
-**Files:**
-
-- Modify: `scripts/detector_feedback_ledger.py`
-- Modify: the smallest detector module responsible for the dominant reviewed
-  false-positive family
-- Create or modify: the matching focused detector test module
-- Modify: `benchmarks/visual_attribution_suite.yaml`
-
-- [x] Use the reviewed ledger to select one dominant false-positive family.
-  Do not tune against raw finding volume.
-- [x] Write a RED regression test for that family while preserving every known
-  true positive in the benchmark corpus.
-- [x] Make one detector-level repair. Do not add fixture-name checks, accepted
-  artifact hashes, or coordinate exceptions.
-- [x] Compare before/after reviewed precision, recall, and unbound attribution.
-  A lower finding count alone is not success.
-- [x] Verify:
-
-```bash
-uv run pytest tests/test_detector_feedback_ledger.py \
-  tests/test_visual_attribution_suite.py <focused-detector-test> -q
-bin/fig-agent helper detector_feedback_ledger.py --json
-```
-
-- [x] Commit: `fix: reduce reviewed visual detector false positives`
-
-## Task 6: Build one semantic SVG fragment pilot
-
-**Source authority gate:** The locally observed
-`fig1_overview_v5f_v013_dogfood_001_vault` directory contains generated
-`build/` and `exports/` evidence but no tracked editable source in this branch or
-its visible Git history. It is a visual comparison artifact, not a fork source.
-Do not import it from a user worktree or reconstruct source from its PDF/SVG.
-
-Before implementation, select a tracked Fig1-family editable source and record
-its source commit and tree hash in `benchmarks/hybrid_pilot_source.yaml`. The source
-package must contain TeX, briefing, spec, declared reference inputs, and a
-reproducible baseline render. If no candidate satisfies this provenance gate,
-Task 6 is blocked and the pilot fixture must not be created. Fork the verified
-source into `examples/fig1_hybrid_complex_panel_pilot`; never edit the
-benchmark in place.
-
-**Files:**
-
-- Create: `scripts/hybrid/fragment_contract.py`
-- Create: `scripts/hybrid/render_fragment.py`
-- Create: `tests/test_hybrid_fragment_contract.py`
-- Create: `tests/test_hybrid_fragment_render.py`
-- Create: `benchmarks/hybrid_pilot_source.yaml`
-- Create inside the forked fixture: `fragments/complex_panel_fragment.py`
-- Create inside the forked fixture: `fragments/complex_panel_fragment.svg`
-- Create inside the forked fixture: `fragments/complex_panel_fragment.pdf`
-- Create inside the forked fixture: `fragments/fragment_manifest.json`
-- Modify only inside the forked fixture: its `.tex`, `spec.yaml`, briefing,
-  authoring plan, and review artifacts
-
-- [x] RED-test a general fragment manifest containing schema version, semantic
-  IDs, declared relations, deterministic view box, generator path/hash, input
-  hashes, SVG hash, PDF hash, toolchain versions, and TikZ ownership boundary.
-- [x] Implement deterministic generation with existing dependencies. Fail with
-  a clear prerequisite error when the SVG-to-PDF renderer is unavailable.
-- [x] Require the SVG to expose stable IDs used by the manifest; reject orphaned
-  manifest IDs and undeclared SVG IDs that claim semantic status.
-- [x] Reject scripts, event handlers, external URLs, absolute paths, ambient
-  fonts/CSS, and unhashed linked or embedded assets. Rendering runs with network
-  access disabled and a declared asset allowlist.
-- [x] Compare deterministic rasterizations of SVG and PDF at fixed dimensions;
-  reject unexplained geometry, clipping, view-box, or visual-equivalence drift.
-- [x] Select the target panel only after source provenance passes. Place only
-  its complex geometry in the fragment. Keep global
-  panel composition, text, labels, and inter-panel arrows in TikZ.
-- [x] Compile from the plugin root using the mandated command:
-
-```bash
-bash scripts/compile.sh \
-  examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
-  examples/fig1_hybrid_complex_panel_pilot/fig1_hybrid_complex_panel_pilot.tex
-```
-
-- [x] Store compile logs, manifests, overlays, crops, and hashes as new pilot
-  artifacts. Do not overwrite historical Fig1 outputs.
-- [ ] Commit: `feat: pilot semantic SVG fragment in forked TikZ fixture`
-
-## Task 7: Compare TikZ-only and hybrid correction cost
-
-**Files:**
-
-- Create: `docs/trials/<date>-hybrid-complex-panel-comparison.md`
-- Create inside the pilot fixture: `review/human_scaffold_verdict.yaml`
-- Modify: `benchmarks/visual_attribution_suite.yaml`
-
-- [x] Render both variants in one clean environment and record source hashes,
-  tool versions, compile commands, output hashes, and failures.
-- [x] Write a predeclared comparison protocol with identical starting inputs and
-  task boundaries. Count preparation, failed attempts, detector diagnosis,
-  rendering, and repair time; do not compare selectively trimmed successful
-  runs.
-- [x] Compare visual quality, scientific fidelity, source edit size, correction
-  minutes, detector findings, actionable attribution rate, and artifact
-  reproducibility. Report missing measurements explicitly.
-- [x] Require a human scaffold verdict for object relations and a separate
-  human artifact verdict for publication quality. Each verdict records a
-  `review_input_hash` aggregating the exact artifact, semantic manifest,
-  reference-authority manifest, briefing/spec, relations, and toolchain.
-- [x] Mark the verdict stale when any bound input changes, even if output bytes
-  happen to remain identical.
-- [x] Keep the task open when either verdict is absent. Machine gates may mark
-  the package `review-ready`, never `publication-accepted`.
-- [x] Verify the comparison report against a schema test added beside the
-  existing trial/report contract tests.
-- [ ] Commit: `docs: record human-reviewed TikZ versus hybrid pilot`
-
-## Task 8: Cross-figure generalization on sulfur-polymer Fig3
-
-**Status:** Machine-complete at clean archive commit `95e29908`; scaffold and
-artifact verdicts remain pending, so Slice 3 is open and no publication
-acceptance is claimed.
-
-**Fixture:** Recover `examples/fig3_trap_schematic_v97` from source commit
-`eaed8fb165e801e13cea3078f832496a011fa2f9`, fixture tree
-`6966d9cf193a34debc1ecfcd5d2a1d1aff1845e5`, into a new Slice 3 output
-fixture. Record that commit, tree, and every imported file hash before
-implementation. Preserve the reference, briefing, spec, coordinate hints,
-editable TeX, and review history as immutable inputs. Do not modify or
-overwrite the historical Fig3 artifact.
-
-**Files:**
-
-- Create: a new Slice 3 fixture directory with an explicit source-fixture link
-- Create: `reference_authority_manifest.yaml`
-- Create: `semantic_regions.yaml`
-- Create: Slice 3 provenance, clean-reproduction, and human-verdict artifacts
-- Modify: general contracts only when a failing cross-figure test proves a real
-  abstraction gap
-
-- [x] Declare which facts are authoritative in the reference, briefing, spec,
-  coordinate hints, editable source, and review history.
-- [x] Exercise the same region, attribution, overlay/crop, and fragment contracts
-  against the six-panel narrative without importing Fig1-specific coordinates,
-  panel names, templates, or private helpers.
-- [x] Add one cross-figure test that runs the contract on both Fig1 and Fig3.
-- [x] Reproduce from a clean tracked checkout using only declared inputs.
-- [x] Preserve the distinction between machine-valid, review-ready, and
-  human-accepted. Slice 3 closes only when both human verdicts exist.
-- [x] Compile from `plugins/figure-agent/`:
-
-```bash
-bash scripts/compile.sh examples/<slice3-name>/<slice3-name>.tex
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
-  examples/<slice3-name>/<slice3-name>.tex
-```
-
-- [x] Commit: `feat: prove semantic attribution across Fig1 and Fig3 families`
-
-## Task 9: Bind the raw semantic-SVG non-promotion decision
-
-The current human observation is that the Fig3 primitive SVG artifact has lower
-basic illustration quality than the TikZ benchmark. Record that artifact
-rejection against the already-bound review inputs. Do not infer a scaffold
-verdict, close Slice 3, or claim that all SVG backends are rejected.
-
-**Files:**
-
-- Modify: `examples/fig3_trap_schematic_slice3_semantic/review/human_scaffold_verdict.yaml`
-- Create: `docs/decision-records/2026-07-11-raw-semantic-svg-non-promotion.md`
-- Modify: `tests/test_hybrid_comparison_report.py`
-
-- [x] **Step 1: Write the failing bound-verdict test**
-
-```python
-def test_fig3_records_artifact_rejection_without_inventing_scaffold_acceptance() -> None:
-    fixture = PLUGIN_ROOT / "examples" / "fig3_trap_schematic_slice3_semantic"
-    verdict_path = fixture / "review" / "human_scaffold_verdict.yaml"
-    verdict = yaml.safe_load(verdict_path.read_text(encoding="utf-8"))
-    binding = validate_human_verdict_bindings(verdict_path, fixture)
-
-    assert binding["stale"] is False
-    assert verdict["scaffold_verdict"]["status"] == "pending"
-    assert verdict["artifact_verdict"]["status"] == "rejected"
-    assert verdict["publication_acceptance"] == "not_claimed"
-```
-
-- [x] **Step 2: Run the test and verify RED**
-
-Run:
-
-```bash
-uv run pytest \
-  tests/test_hybrid_comparison_report.py::test_fig3_records_artifact_rejection_without_inventing_scaffold_acceptance -q
-```
-
-Expected: FAIL because the artifact verdict is still `pending`.
-
-- [x] **Step 3: Record only the supplied human artifact judgment**
-
-Set `artifact_verdict.status: rejected`, `reviewer: choemun-yeong`, and an
-execution-time ISO-8601 `reviewed_at` timestamp. Record that the primitive
-geometry, visual density, and cross-panel illustration language fall below the
-TikZ comparator.
-Leave every scaffold field unchanged and pending. The decision record must say:
-
-```yaml
-outcome: retain_experimental
-applies_to: raw_semantic_svg_pilot
-does_not_reject:
-  - semantic SVG as a QA surface
-  - grammar-driven SVG backends not yet tested
-  - TikZ production composition
-publication_acceptance: not_claimed
-```
-
-- [x] **Step 4: Re-run binding and comparison tests**
-
-Run:
-
-```bash
-uv run pytest tests/test_hybrid_comparison_report.py -q
-```
-
-Expected: PASS with the exact review-input hash still fresh.
-
-- [x] **Step 5: Commit the bounded decision**
-
-```bash
-git add examples/fig3_trap_schematic_slice3_semantic/review/human_scaffold_verdict.yaml \
-  docs/decision-records/2026-07-11-raw-semantic-svg-non-promotion.md \
-  tests/test_hybrid_comparison_report.py
-git commit -m "docs: retain raw semantic SVG as experimental"
-```
-
-## Task 10: Add the renderer-neutral illustration grammar contract
-
-This is a rendering contract, not the existing `aesthetic_intent.yaml` review
-grammar. The existing aesthetic levers may identify `line_weight_rhythm`,
-`hand_craft`, or `cross_panel_grammar` failures, but they must not contain path
-geometry or mutate a backend.
-
-**Files:**
-
-- Create: `scripts/illustration_grammar.py`
-- Create: `tests/test_illustration_grammar.py`
-- Create: `styles/illustration-grammar/sulfur_trap_domain.v1.yaml`
-
-- [x] **Step 1: Write failing contract tests**
-
-```python
-def test_loads_sulfur_trap_domain_with_closed_visual_contract() -> None:
-    grammar = load_illustration_grammar(
-        PLUGIN_ROOT / "styles/illustration-grammar/sulfur_trap_domain.v1.yaml"
-    )
-    assert grammar["schema"] == "figure-agent.illustration-grammar.v1"
-    assert grammar["motif_family"] == "sulfur_trap_domain"
-    assert set(grammar["semantic_slots"]) == {
-        "chain.backbones", "sulfur.regions", "sulfur.sites",
-        "trap.levels", "trapped.carriers",
+- Create: scripts/quality/failure_corpus.py
+- Create: tests/test_failure_corpus.py
+
+- [ ] **Step 1: Write RED tests for the closed taxonomy**
+
+Create tests/test_failure_corpus.py:
+
+~~~python
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+import yaml
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "quality"))
+
+from failure_corpus import FailureCorpusError, load_failure_corpus
+
+FAILURE_CLASSES = {
+    "semantic",
+    "relation",
+    "geometry",
+    "composition",
+    "typography",
+    "style",
+    "finish",
+    "reproducibility",
+}
+SCALES = {"whole", "panel", "object_relation", "zoom"}
+
+
+def write_source(root: Path) -> tuple[Path, str]:
+    import hashlib
+
+    source = root / "review.yaml"
+    source.write_text("verdict: confirmed\n", encoding="utf-8")
+    return source, hashlib.sha256(source.read_bytes()).hexdigest()
+
+
+def write_corpus(root: Path) -> Path:
+    source, digest = write_source(root)
+    payload = {
+        "schema": "figure-agent.llm-failure-corpus.v1",
+        "authority": "reviewed_evidence_only",
+        "source_root": "corpus_parent",
+        "cases": [
+            {
+                "id": "reviewed-finish-001",
+                "figure_family": "synthetic-a",
+                "failure_class": "finish",
+                "observation_scale": "zoom",
+                "review_outcome": "confirmed_defect",
+                "source_path": source.name,
+                "source_sha256": digest,
+                "source_locator": "verdict",
+                "semantic_target": "panel_f.contact",
+                "attribution_state": "exact",
+                "repair_family": "align_or_simplify_contact",
+                "human_correction_minutes": 3.0,
+            }
+        ],
     }
-    assert grammar["layer_order"] == [
-        "sulfur.regions", "chain.backbones", "sulfur.sites",
-        "trap.levels", "trapped.carriers",
-    ]
+    path = root / "corpus.yaml"
+    path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    return path
 
-@pytest.mark.parametrize("mutation,error", [
-    (("schema", "figure-agent.illustration-grammar.v2"), "schema_unsupported"),
-    (("motif_family", ""), "motif_family_invalid"),
-    (("layer_order", ["chain.backbones"]), "layer_order_incomplete"),
-])
-def test_grammar_fails_closed(
-    tmp_path: Path,
-    mutation: tuple[str, object],
-    error: str,
-) -> None:
-    payload = yaml.safe_load(GRAMMAR_PATH.read_text(encoding="utf-8"))
-    payload[mutation[0]] = mutation[1]
-    candidate = tmp_path / "grammar.yaml"
-    candidate.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
-    with pytest.raises(IllustrationGrammarError, match=error):
-        load_illustration_grammar(candidate)
-```
 
-- [x] **Step 2: Run the tests and verify RED**
+def test_loads_closed_reviewed_failure_taxonomy(tmp_path: Path) -> None:
+    corpus = load_failure_corpus(write_corpus(tmp_path))
+    assert corpus["schema"] == "figure-agent.llm-failure-corpus.v1"
+    assert set(corpus["summary"]["failure_class_counts"]) <= FAILURE_CLASSES
+    assert set(corpus["summary"]["observation_scale_counts"]) <= SCALES
+    assert corpus["summary"]["confirmed_defect_count"] == 1
 
-Run: `uv run pytest tests/test_illustration_grammar.py -q`
 
-Expected: FAIL because the loader and grammar file do not exist.
+def test_rejects_unknown_failure_class(tmp_path: Path) -> None:
+    path = write_corpus(tmp_path)
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    payload["cases"][0]["failure_class"] = "looks_bad"
+    path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    with pytest.raises(FailureCorpusError, match="failure_class_invalid"):
+        load_failure_corpus(path)
 
-- [x] **Step 3: Implement the minimal loader and closed motif file**
 
-`scripts/illustration_grammar.py` defines
-`IllustrationGrammarError(ValueError)` and
-`load_illustration_grammar(path: Path) -> dict[str, Any]`. The loader returns a
-normalized mapping only after validating every required slot, relation, visual
-token group, layer entry, optical rule, and ownership field.
+def test_rejects_unreviewed_or_hash_drifted_evidence(tmp_path: Path) -> None:
+    path = write_corpus(tmp_path)
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    payload["cases"][0]["review_outcome"] = "model_guess"
+    payload["cases"][0]["source_sha256"] = "0" * 64
+    path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    with pytest.raises(
+        FailureCorpusError,
+        match="review_outcome_invalid|source_hash_mismatch",
+    ):
+        load_failure_corpus(path)
+~~~
 
-The motif YAML must declare the five semantic slots, the five-item layer order
-above, and these four relations already used by the Fig3 fragment manifest:
-
-```yaml
-relations:
-  - [sulfur.sites, attached_to, chain.backbones]
-  - [sulfur.sites, located_in, sulfur.regions]
-  - [trap.levels, co_located_with, sulfur.regions]
-  - [trapped.carriers, sits_on, trap.levels]
-```
-
-It must also declare these closed token groups:
-
-```yaml
-visual_tokens:
-  stroke_families: [support, primary, focal]
-  color_roles: [polymer, sulfur, carrier, neutral]
-  curvature: [organic_backbone]
-  joins: [round]
-  caps: [round]
-  emphasis: [background, structure, focal]
-optical_rules:
-  minimum_clearance_em: 0.35
-  carrier_centering: optical
-  repeated_site_variation: controlled
-role_bindings:
-  global: {curvature: organic_backbone, join: round, cap: round}
-  slots:
-    sulfur.regions: {stroke_family: support, color_role: sulfur, emphasis: background}
-    chain.backbones: {stroke_family: primary, color_role: polymer, emphasis: structure}
-    sulfur.sites: {stroke_family: primary, color_role: sulfur, emphasis: structure}
-    trap.levels: {stroke_family: support, color_role: neutral, emphasis: structure}
-    trapped.carriers: {stroke_family: focal, color_role: carrier, emphasis: focal}
-ownership:
-  grammar: [motif_contract, layer_order, visual_tokens, role_bindings]
-  tikz: [global_panel_composition, typography, labels, inter_panel_arrows]
-```
-
-Reject `aesthetic_levers`, route fields, freeform effects, filters, arbitrary
-fonts, and unknown required token groups.
-
-- [x] **Step 4: Run contract tests and Ruff**
-
-```bash
-uv run pytest tests/test_illustration_grammar.py -q
-uv run ruff check scripts/illustration_grammar.py tests/test_illustration_grammar.py
-```
-
-Expected: PASS.
-
-- [x] **Step 5: Commit the grammar contract**
-
-```bash
-git add scripts/illustration_grammar.py tests/test_illustration_grammar.py \
-  styles/illustration-grammar/sulfur_trap_domain.v1.yaml
-git commit -m "feat: define sulfur trap illustration grammar"
-```
-
-## Task 11: Compile a backend-neutral motif scene
-
-The grammar owns appearance rules; a fixture-local instance owns normalized
-geometry and semantic membership. The compiled scene must contain neither SVG
-tags nor TikZ commands.
-
-**Files:**
-
-- Create: `scripts/illustration_scene.py`
-- Create: `tests/test_illustration_scene.py`
-- Create: `examples/fig3_trap_schematic_slice4_illustration_grammar/motif_instance.yaml`
-- Create: `examples/fig3_trap_schematic_slice4_illustration_grammar/provenance.yaml`
-
-- [x] **Step 1: Write the failing neutral-scene test**
-
-```python
-def test_scene_preserves_slots_layers_and_has_no_backend_syntax() -> None:
-    scene = compile_illustration_scene(GRAMMAR_PATH, INSTANCE_PATH)
-    serialized = json.dumps(scene, sort_keys=True)
-
-    assert scene["motif_family"] == "sulfur_trap_domain"
-    assert [layer["semantic_id"] for layer in scene["layers"]] == [
-        "sulfur.regions", "chain.backbones", "sulfur.sites",
-        "trap.levels", "trapped.carriers",
-    ]
-    assert "<svg" not in serialized
-    assert "\\draw" not in serialized
-    assert "fig3_trap_schematic" not in serialized
-```
-
-- [x] **Step 2: Run the test and verify RED**
-
-Run: `uv run pytest tests/test_illustration_scene.py -q`
-
-Expected: FAIL because `compile_illustration_scene` does not exist.
-
-- [x] **Step 3: Implement normalized scene compilation**
-
-`scripts/illustration_scene.py` defines
-`IllustrationSceneError(ValueError)` and
-`compile_illustration_scene(grammar_path: Path, instance_path: Path) ->
-dict[str, Any]`. The compiler returns normalized `semantic_ids`, `relations`,
-`layers`, and `resolved_tokens` fields without backend syntax. The resolved
-tokens come only from the grammar's explicit semantic-slot role bindings; the
-scene compiler and renderers may not invent those assignments.
-
-The instance uses a unit-square coordinate system, contains four non-crossing
-backbone splines and three sulfur-rich domains, and binds every visible site,
-trap level, and carrier to one declared relation. Reject an unknown slot,
-crossing relation, point outside `[0, 1]`, missing domain membership, or carrier
-without a trap level. Do not import Fig1 coordinates, panel names, templates, or
-helpers.
-
-- [x] **Step 4: Run scene and cross-figure regression tests**
-
-```bash
-uv run pytest tests/test_illustration_scene.py \
-  tests/test_hybrid_fragment_contract.py -q
-uv run ruff check scripts/illustration_scene.py tests/test_illustration_scene.py
-```
-
-Expected: PASS.
-
-- [x] **Step 5: Commit the neutral scene**
-
-```bash
-git add scripts/illustration_scene.py tests/test_illustration_scene.py \
-  examples/fig3_trap_schematic_slice4_illustration_grammar/motif_instance.yaml \
-  examples/fig3_trap_schematic_slice4_illustration_grammar/provenance.yaml
-git commit -m "feat: compile backend-neutral sulfur trap scenes"
-```
-
-## Task 12: Lower one scene into TikZ and SVG backends
-
-**Files:**
-
-- Create: `scripts/illustration_backend_tikz.py`
-- Create: `scripts/illustration_backend_svg.py`
-- Create: `scripts/illustration_backend.py`
-- Create: `scripts/render_illustration_motif.py`
-- Create: `tests/test_illustration_backends.py`
-- Create: `styles/illustration-grammar/backends/polymer-tikz.v1.yaml`
-- Create: `styles/illustration-grammar/backends/polymer-svg.v1.yaml`
-
-- [x] **Step 1: Write failing paired-backend tests**
-
-```python
-def test_backends_preserve_the_same_semantic_slots() -> None:
-    scene = compile_illustration_scene(GRAMMAR_PATH, INSTANCE_PATH)
-    tikz = render_tikz(scene, TIKZ_PROFILE_PATH)
-    svg = render_svg(scene, SVG_PROFILE_PATH)
-    for semantic_id in scene["semantic_ids"]:
-        assert f"figure-agent:start {semantic_id}" in tikz
-        assert f'id="{semantic_id}"' in svg
-
-def test_unsupported_token_fails_instead_of_falling_back() -> None:
-    scene = copy.deepcopy(compile_illustration_scene(GRAMMAR_PATH, INSTANCE_PATH))
-    scene["resolved_tokens"]["curvature"] = "airbrush_blob"
-    with pytest.raises(IllustrationBackendError, match="token_unsupported"):
-        render_svg(scene, SVG_PROFILE_PATH)
-
-def test_backend_profiles_cover_identical_visual_roles() -> None:
-    tikz_profile = load_backend_profile(TIKZ_PROFILE_PATH, backend="tikz")
-    svg_profile = load_backend_profile(SVG_PROFILE_PATH, backend="svg")
-    assert set(tikz_profile["color_roles"]) == set(svg_profile["color_roles"])
-    assert set(tikz_profile["stroke_families"]) == set(svg_profile["stroke_families"])
-```
-
-The paired profile tests also convert TeX points to SVG view-box units and
-require equivalent physical stroke weights. Equal role names with visibly
-different line weight are not backend parity.
-
-- [x] **Step 2: Run the tests and verify RED**
-
-Run: `uv run pytest tests/test_illustration_backends.py -q`
-
-Expected: FAIL because neither backend exists.
-
-- [x] **Step 3: Implement deterministic backend lowering**
-
-`scripts/illustration_backend.py` defines
-`IllustrationBackendError(ValueError)` and
-`load_backend_profile(path: Path, backend: str) -> dict[str, Any]`.
-`illustration_backend_tikz.py` exposes
-`render_tikz(scene: dict[str, Any], profile_path: Path) -> str`;
-`illustration_backend_svg.py` exposes
-`render_svg(scene: dict[str, Any], profile_path: Path) -> str`; and
-`render_illustration_motif.py` exposes
-`render_pair(grammar: Path, instance: Path, tikz_profile: Path,
-svg_profile: Path, output_dir: Path) -> dict[str, Any]`.
-
-The two backend profile files map the same grammar roles to existing TikZ style
-tokens and canonical SVG values; a renderer may not invent an undeclared role.
-The TikZ output contains geometry only and uses the existing polymer style
-palette through its profile. The SVG output contains geometry only, stable semantic group IDs, no
-text, scripts, ambient CSS/fonts, external URLs, filters, or raster assets.
-`render_pair` runs twice, requires byte-identical TikZ/SVG outputs, writes a
-manifest with grammar/instance/source/toolchain hashes, and sets
-`publication_acceptance: not_claimed`.
-
-- [x] **Step 4: Run backend, fragment-security, and lint tests**
-
-```bash
-uv run pytest tests/test_illustration_backends.py \
-  tests/test_hybrid_fragment_contract.py \
-  tests/test_hybrid_fragment_render.py -q
-uv run ruff check scripts/illustration_backend_tikz.py \
-  scripts/illustration_backend_svg.py scripts/illustration_backend.py \
-  scripts/render_illustration_motif.py \
-  tests/test_illustration_backends.py
-```
-
-Expected: PASS.
-
-- [x] **Step 5: Commit both backends**
-
-```bash
-git add scripts/illustration_backend_tikz.py \
-  scripts/illustration_backend_svg.py scripts/illustration_backend.py \
-  scripts/render_illustration_motif.py tests/test_illustration_backends.py \
-  styles/illustration-grammar/backends/polymer-tikz.v1.yaml \
-  styles/illustration-grammar/backends/polymer-svg.v1.yaml
-git commit -m "feat: render illustration grammar through TikZ and SVG"
-```
-
-## Task 13: Build the paired Fig3 grammar review fixture
-
-Fork the tracked Slice 3 derivative into
-`examples/fig3_trap_schematic_slice4_illustration_grammar`. Preserve the source
-commit/tree and raw SVG review artifact as immutable comparison inputs. Do not
-modify the Slice 3 fixture.
-
-**Files:**
-
-- Create: `examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_tikz.tex`
-- Create: `examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_svg.tex`
-- Create: generated `fragments/sulfur_trap_domain.tikz.tex`
-- Create: generated `fragments/sulfur_trap_domain.svg`
-- Create: generated `fragments/render_manifest.yaml`
-- Create: immutable `comparators/raw_svg_slice3/` snapshot plus source receipt
-- Create: fixture-local reference, briefing, spec, authority manifest, and semantic boundary files
-- Create: `review/comparison_manifest.yaml`
-- Create: `review/human_illustration_verdict.yaml`
-- Create: review renders, equal-boundary crops, difference image, compile logs, and clean-reproduction receipts
-- Modify: `tests/test_illustration_backends.py`
-
-- [x] **Step 1: Write the failing fixture-boundary test**
-
-```python
-def test_slice4_fixture_binds_three_comparable_artifacts() -> None:
-    comparison = yaml.safe_load(COMPARISON_MANIFEST.read_text(encoding="utf-8"))
-    assert set(comparison["variants"]) == {
-        "raw_svg_slice3", "grammar_tikz", "grammar_svg"
-    }
-    assert comparison["grammar_pair_same_scene"] is True
-    assert comparison["raw_svg_comparator_basis"] == "same_semantic_boundary"
-    assert comparison["slice3_source_immutable"] is True
-    assert comparison["publication_acceptance"] == "not_claimed"
-
-def test_slice4_pending_verdict_is_fresh_and_does_not_claim_acceptance() -> None:
-    fixture = PLUGIN_ROOT / "examples" / SLICE4_NAME
-    verdict_path = fixture / "review" / "human_illustration_verdict.yaml"
-    verdict = yaml.safe_load(verdict_path.read_text(encoding="utf-8"))
-    binding = validate_human_verdict_bindings(verdict_path, fixture)
-
-    assert binding["stale"] is False
-    assert verdict["raw_svg_vs_grammar_svg"] == "pending"
-    assert verdict["grammar_svg_vs_tikz_language"] == "pending"
-    assert verdict["publication_acceptance"] == "not_claimed"
-```
-
-- [x] **Step 2: Run the test and verify RED**
+- [ ] **Step 2: Run the tests and verify RED**
 
 Run:
 
-```bash
-uv run pytest \
-  tests/test_illustration_backends.py::test_slice4_fixture_binds_three_comparable_artifacts -q
-```
+~~~bash
+uv run pytest tests/test_failure_corpus.py -q
+~~~
 
-Expected: FAIL because the paired fixture and manifest do not exist.
+Expected: FAIL because failure_corpus.py does not exist.
 
-- [x] **Step 3: Generate and compile both grammar variants**
+- [ ] **Step 3: Implement the minimal loader**
 
-Run from `plugins/figure-agent/`:
+Create scripts/quality/failure_corpus.py with these public contracts:
 
-```bash
-uv run python scripts/render_illustration_motif.py \
-  --grammar styles/illustration-grammar/sulfur_trap_domain.v1.yaml \
-  --instance examples/fig3_trap_schematic_slice4_illustration_grammar/motif_instance.yaml \
-  --tikz-profile styles/illustration-grammar/backends/polymer-tikz.v1.yaml \
-  --svg-profile styles/illustration-grammar/backends/polymer-svg.v1.yaml \
-  --output-dir examples/fig3_trap_schematic_slice4_illustration_grammar/fragments
+~~~python
+from __future__ import annotations
 
-bash scripts/compile.sh \
-  examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_tikz.tex
-bash scripts/compile.sh \
-  examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_svg.tex
-```
+import hashlib
+from collections import Counter
+from pathlib import Path
+from typing import Any
 
-Expected: both ordinary compiles exit 0. Run strict for both and record its
-actual exit and findings without treating strict success as publication
-acceptance.
+import yaml
 
-```bash
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
-  examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_tikz.tex
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
-  examples/fig3_trap_schematic_slice4_illustration_grammar/fig3_trap_schematic_slice4_svg.tex
-```
-
-- [x] **Step 4: Produce equal-boundary review evidence**
-
-First copy the already-bound Slice 3 raw SVG render and Panel e crop into
-`comparators/raw_svg_slice3/`; record their original paths, source commit, and
-SHA-256 values, and assert the copied bytes match those receipts. Never write
-back to the Slice 3 fixture. Then create full renders, identical Panel e crops,
-fixed-size grammar-fragment rasters, a grammar-TikZ/grammar-SVG difference
-image, source hashes, toolchain versions, compile logs, and clean-archive
-two-run receipts. The human verdict begins with:
-
-```yaml
-raw_svg_vs_grammar_svg: pending
-grammar_svg_vs_tikz_language: pending
-grammar_tikz_artifact: pending
-grammar_svg_artifact: pending
-publication_acceptance: not_claimed
-```
-
-Bind all three artifacts, the grammar, instance, compiled grammar scene,
-historical raw-SVG comparator receipt, reference, briefing/spec, comparison
-manifest, and toolchain under one aggregate review input hash. Reuse the
-existing review-binding validator contract so any changed input makes the
-verdict stale. The manifest must distinguish the identical neutral scene shared
-by grammar TikZ/SVG from the raw SVG's same-semantic-boundary comparison basis.
-
-- [x] **Step 5: Re-run tests, compile, Ruff, and diff checks**
-
-```bash
-uv run pytest tests/test_illustration_grammar.py \
-  tests/test_illustration_scene.py tests/test_illustration_backends.py \
-  tests/test_hybrid_fragment_contract.py tests/test_hybrid_fragment_render.py -q
-uv run ruff check scripts/illustration_*.py \
-  scripts/render_illustration_motif.py tests/test_illustration_*.py
-git diff --check
-```
-
-Expected: machine tests pass and the review packet remains explicitly pending.
-
-- [x] **Step 6: Commit the review-ready fixture**
-
-```bash
-git add examples/fig3_trap_schematic_slice4_illustration_grammar \
-  tests/test_illustration_backends.py
-git commit -m "feat: prepare paired sulfur trap grammar review"
-```
-
-## Task 14: Decide whether the grammar improves the product
-
-- [x] Require a named human to compare all three bound Panel e crops and record
-  whether grammar-SVG improves on raw SVG and whether both grammar outputs share
-  the surrounding TikZ illustration language.
-- [x] Reject the grammar implementation if it merely adds schema complexity,
-  if TikZ and SVG require different semantic/visual-role definitions, or if the
-  SVG result remains visibly inferior to raw or TikZ comparators.
-- [x] Retain the grammar experimentally when it improves raw SVG but does not
-  yet match TikZ. When both backends pass the paired human review and clean
-  reproduction, advance the motif only to a second materially different figure
-  family; one-family evidence cannot promote a production default.
-- [x] Record the decision in `docs/decision-records/`, update this single plan,
-  run `tests/test_document_authority.py`, and commit with a message that names
-  the actual outcome rather than assuming promotion.
-- [x] Commit the decision record, verdict, and plan update together. Allowed
-  messages are `docs: reject sulfur trap illustration grammar`,
-  `docs: retain sulfur trap illustration grammar experiment`, or
-  `docs: advance sulfur trap grammar to second-family review`.
-
-**Recorded outcome:** The named review found that the grammar SVG is worse than
-the historical raw SVG. The two grammar backends do share one neutral scene and
-the surrounding TikZ illustration language, but both rendered artifacts remain
-below the production-quality bar. The current grammar implementation is
-rejected; its backend-neutral compiler and paired-review infrastructure remain
-experimental foundations for a richer illustration grammar.
-
-The repeatable work is automated: paired renders, equal-boundary crops, hashes,
-toolchain receipts, clean-environment reproduction, stale-verdict detection,
-and machine findings. A named human still owns the final visual verdict;
-automation may prepare evidence and a provisional recommendation but cannot
-claim publication acceptance.
-
-## Task 15: Validate clean-room direct-SVG input packets
-
-Create one fail-closed contract shared by Test A reconstruction and Test B
-semantic synthesis. This task validates already-authored input bytes; it does
-not create or sanitize scientific content.
-
-**Files:**
-
-- Create: `scripts/direct_svg_packet.py`
-- Create: `tests/test_direct_svg_packet.py`
-
-- [x] **Step 1: Write RED tests for the packet boundary**
-
-```python
-def test_reconstruction_requires_target_crops(packet_factory) -> None:
-    packet_path = packet_factory(
-        test_kind="reconstruction", include_target_crops=False
-    )
-    with pytest.raises(DirectSvgPacketError, match="target_crop_required"):
-        validate_packet(packet_path)
+SCHEMA = "figure-agent.llm-failure-corpus.v1"
+FAILURE_CLASSES = {
+    "semantic",
+    "relation",
+    "geometry",
+    "composition",
+    "typography",
+    "style",
+    "finish",
+    "reproducibility",
+}
+OBSERVATION_SCALES = {"whole", "panel", "object_relation", "zoom"}
+REVIEW_OUTCOMES = {"confirmed_defect", "accepted_false_positive"}
+ATTRIBUTION_STATES = {"exact", "ambiguous", "unbound"}
 
 
-def test_synthesis_rejects_target_or_geometry_derivatives(packet_factory) -> None:
-    packet_path = packet_factory(test_kind="synthesis", include_target_crops=True)
-    with pytest.raises(DirectSvgPacketError, match="target_crop_forbidden"):
-        validate_packet(packet_path)
-
-
-@pytest.mark.parametrize(
-    "family",
-    ["tex", "whole_figure_svg", "candidate_patch", "experience_log", "illustration_grammar"],
-)
-def test_packet_requires_every_denied_source_family(packet_factory, family: str) -> None:
-    packet_path = packet_factory()
-    packet = yaml.safe_load(packet_path.read_text(encoding="utf-8"))
-    packet["denied_source_families"].remove(family)
-    packet_path.write_text(yaml.safe_dump(packet), encoding="utf-8")
-    with pytest.raises(DirectSvgPacketError, match="denied_source_families_incomplete"):
-        validate_packet(packet_path)
-```
-
-The test factory writes real files under `tmp_path` and includes exactly panels
-`C` and `F`, `publication_acceptance: not_claimed`, the utility/ceiling budgets,
-model/tool contract fields, a semantic packet, and a hash-pinned licensed font.
-
-- [x] **Step 2: Run the focused test and verify RED**
-
-```bash
-uv run pytest tests/test_direct_svg_packet.py -q
-```
-
-Expected: import failure because `direct_svg_packet.py` does not exist.
-
-- [x] **Step 3: Implement the minimal validator**
-
-```python
-class DirectSvgPacketError(ValueError):
+class FailureCorpusError(ValueError):
     pass
 
 
-DENIED_SOURCE_FAMILIES = {
-    "tex",
-    "whole_figure_svg",
-    "candidate_patch",
-    "experience_log",
-    "illustration_grammar",
-}
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def validate_packet(path: Path) -> dict[str, Any]:
-    root = path.parent.resolve()
-    packet = _mapping(yaml.safe_load(path.read_text(encoding="utf-8")), "packet")
-    if packet.get("schema") != "figure-agent.direct-svg-packet.v1":
-        raise DirectSvgPacketError("unsupported_schema")
-    if packet.get("test_kind") not in {"reconstruction", "synthesis"}:
-        raise DirectSvgPacketError("invalid_test_kind")
-    if set(packet.get("panels", [])) != {"C", "F"}:
-        raise DirectSvgPacketError("panels_must_be_C_and_F")
-    if set(packet.get("denied_source_families", [])) != DENIED_SOURCE_FAMILIES:
-        raise DirectSvgPacketError("denied_source_families_incomplete")
-    if packet.get("publication_acceptance") != "not_claimed":
-        raise DirectSvgPacketError("publication_acceptance_must_not_be_claimed")
-    roles = {item["role"] for item in packet.get("allowed_inputs", [])}
-    has_target = {"panel_c_target_crop", "panel_f_target_crop"}.issubset(roles)
-    if packet["test_kind"] == "reconstruction" and not has_target:
-        raise DirectSvgPacketError("target_crop_required")
-    if packet["test_kind"] == "synthesis" and has_target:
-        raise DirectSvgPacketError("target_crop_forbidden")
-    for item in packet.get("allowed_inputs", []):
-        relative = Path(item["path"])
-        candidate = (root / relative).resolve()
-        if relative.is_absolute() or not candidate.is_relative_to(root):
-            raise DirectSvgPacketError("unsafe_input_path")
-        if not candidate.is_file() or _sha256(candidate) != item["sha256"]:
-            raise DirectSvgPacketError("input_hash_mismatch")
-    _validate_budgets(packet["budgets"])
-    _validate_model_contract(packet["model_contract"])
-    return packet
-```
+def _safe_source(root: Path, value: object) -> Path:
+    relative = Path(str(value or ""))
+    candidate = (root / relative).resolve()
+    if relative.is_absolute() or ".." in relative.parts:
+        raise FailureCorpusError("source_path_invalid")
+    if not candidate.is_relative_to(root.resolve()):
+        raise FailureCorpusError("source_path_invalid")
+    if candidate.is_symlink() or not candidate.is_file():
+        raise FailureCorpusError("source_missing")
+    return candidate
 
-`_validate_budgets` requires utility `{cycles: 3, wall_minutes_per_panel: 30}`
-and ceiling `{cycles: 8, wall_minutes_per_panel: 120}`. The model contract
-requires provider, model/snapshot, reasoning, prompt paths, tools, and
-token/compute cap keys; unavailable values are explicitly `null`.
 
-- [x] **Step 4: Verify and commit**
+def load_failure_corpus(
+    path: Path,
+    *,
+    source_root: Path | None = None,
+) -> dict[str, Any]:
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or payload.get("schema") != SCHEMA:
+        raise FailureCorpusError("schema_invalid")
+    if payload.get("authority") != "reviewed_evidence_only":
+        raise FailureCorpusError("authority_invalid")
+    cases = payload.get("cases")
+    if not isinstance(cases, list) or not cases:
+        raise FailureCorpusError("cases_missing")
 
-```bash
-uv run pytest tests/test_direct_svg_packet.py -q
-uv run ruff check scripts/direct_svg_packet.py tests/test_direct_svg_packet.py
+    root_kind = payload.get("source_root")
+    if source_root is None:
+        if root_kind == "corpus_parent":
+            source_root = path.parent
+        elif root_kind == "plugin_root" and path.parent.name == "benchmarks":
+            source_root = path.parent.parent
+        else:
+            raise FailureCorpusError("source_root_invalid")
+
+    seen: set[str] = set()
+    normalized: list[dict[str, Any]] = []
+    for raw in cases:
+        if not isinstance(raw, dict):
+            raise FailureCorpusError("case_invalid")
+        case_id = str(raw.get("id") or "")
+        if not case_id or case_id in seen:
+            raise FailureCorpusError("case_id_invalid")
+        seen.add(case_id)
+        if raw.get("failure_class") not in FAILURE_CLASSES:
+            raise FailureCorpusError("failure_class_invalid")
+        if raw.get("observation_scale") not in OBSERVATION_SCALES:
+            raise FailureCorpusError("observation_scale_invalid")
+        if raw.get("review_outcome") not in REVIEW_OUTCOMES:
+            raise FailureCorpusError("review_outcome_invalid")
+        if raw.get("attribution_state") not in ATTRIBUTION_STATES:
+            raise FailureCorpusError("attribution_state_invalid")
+        source = _safe_source(source_root, raw.get("source_path"))
+        if _sha256(source) != raw.get("source_sha256"):
+            raise FailureCorpusError("source_hash_mismatch")
+        normalized.append(dict(raw))
+
+    class_counts = Counter(item["failure_class"] for item in normalized)
+    scale_counts = Counter(item["observation_scale"] for item in normalized)
+    return {
+        **payload,
+        "cases": normalized,
+        "summary": {
+            "case_count": len(normalized),
+            "confirmed_defect_count": sum(
+                item["review_outcome"] == "confirmed_defect" for item in normalized
+            ),
+            "failure_class_counts": dict(sorted(class_counts.items())),
+            "observation_scale_counts": dict(sorted(scale_counts.items())),
+        },
+    }
+~~~
+
+- [ ] **Step 4: Run focused verification**
+
+~~~bash
+uv run pytest tests/test_failure_corpus.py -q
+uv run ruff check scripts/quality/failure_corpus.py tests/test_failure_corpus.py
 git diff --check
-git add scripts/direct_svg_packet.py tests/test_direct_svg_packet.py
-git commit -m "feat: validate clean-room direct svg packets"
-```
+~~~
 
-## Task 16: Bind the immutable benchmark and canonical Panel C/F crops
+Expected: PASS.
 
-The user-supplied Fig1 PNG is a benchmark input, not editable source. Snapshot
-its bytes into a new fixture and derive crops only through a hash-bound manifest.
+- [ ] **Step 5: Commit**
+
+~~~bash
+git add scripts/quality/failure_corpus.py tests/test_failure_corpus.py
+git commit -m "feat: define reviewed LLM failure corpus"
+~~~
+
+## Task 2: Compile the first real reviewed corpus without inventing labels
 
 **Files:**
 
-- Create: `scripts/direct_svg_crop_authority.py`
-- Create: `tests/test_direct_svg_crop_authority.py`
-- Create under `examples/fig1_direct_svg_cleanroom_baseline/reference/`:
-  source receipt, crop manifest, immutable benchmark PNG, and generated C/F crops
+- Create: benchmarks/llm_failure_sources.yaml
+- Create: benchmarks/llm_failure_corpus.yaml
+- Create: scripts/quality/compile_failure_corpus.py
+- Create: tests/test_compile_failure_corpus.py
+- Modify: tests/test_failure_corpus.py
 
-- [x] **Step 1: Write RED tests for deterministic, bounded crops**
+The first corpus is intentionally small. It compiles only already-reviewed evidence from:
 
-```python
-def test_crop_manifest_binds_source_geometry_and_output_hashes(tmp_path: Path) -> None:
-    source = write_test_png(tmp_path, width=120, height=80)
-    manifest = write_manifest(
-        tmp_path,
-        source,
-        crops={"C": [40, 0, 120, 40], "F": [80, 40, 120, 80]},
-    )
-    first = create_authority_crops(manifest)
-    second = create_authority_crops(manifest)
+- examples/fig1_direct_svg_cleanroom_baseline/review/distributions/review-v3-08cc4280c1e69e77/response.yaml
+- benchmarks/visual_attribution_suite.yaml
+
+It must include at least one confirmed case in typography, geometry, finish, and style, plus one accepted false positive. It must not manufacture a scientific verdict from comments that explicitly say no definite scientific error was identified.
+
+- [ ] **Step 1: Write the source-index file**
+
+Create benchmarks/llm_failure_sources.yaml:
+
+~~~yaml
+schema: figure-agent.llm-failure-sources.v1
+authority: reviewed_evidence_only
+sources:
+  - id: fig1-direct-svg-primary-review
+    path: examples/fig1_direct_svg_cleanroom_baseline/review/distributions/review-v3-08cc4280c1e69e77/response.yaml
+    reviewer: moon
+  - id: visual-attribution-reviewed-ledger
+    path: benchmarks/visual_attribution_suite.yaml
+    reviewer: repository_review_records
+cases:
+  - id: fig1-c-trap-band-overlap
+    source_id: fig1-direct-svg-primary-review
+    source_locator: responses[0].panels.C.scientific_fidelity.evidence
+    figure_family: fig1_direct_svg
+    failure_class: geometry
+    observation_scale: object_relation
+    review_outcome: confirmed_defect
+    semantic_target: panel_c.trap_bands
+    attribution_state: exact
+    repair_family: restore_declared_relation
+  - id: fig1-f-equipment-label-overlap
+    source_id: fig1-direct-svg-primary-review
+    source_locator: responses[0].panels.F.composition.evidence
+    figure_family: fig1_direct_svg
+    failure_class: typography
+    observation_scale: panel
+    review_outcome: confirmed_defect
+    semantic_target: panel_f.equipment_labels
+    attribution_state: exact
+    repair_family: label_reflow
+  - id: fig1-f-cantilever-shape
+    source_id: fig1-direct-svg-primary-review
+    source_locator: responses[0].panels.F.scientific_fidelity.evidence
+    figure_family: fig1_direct_svg
+    failure_class: finish
+    observation_scale: object_relation
+    review_outcome: confirmed_defect
+    semantic_target: panel_f.cantilever
+    attribution_state: exact
+    repair_family: close_or_complete_contour
+  - id: fig1-c-visual-language
+    source_id: fig1-direct-svg-primary-review
+    source_locator: responses[0].panels.C.illustration_quality.evidence
+    figure_family: fig1_direct_svg
+    failure_class: style
+    observation_scale: panel
+    review_outcome: confirmed_defect
+    semantic_target: panel_c
+    attribution_state: exact
+    repair_family: normalize_stroke_and_color_roles
+  - id: fig1-v2-vc009
+    source_id: visual-attribution-reviewed-ledger
+    source_locator: reviewed_evidence[id=fig1-v2-vc009-reviewed-false-positive]
+    figure_family: fig1_tikz
+    failure_class: typography
+    observation_scale: zoom
+    review_outcome: accepted_false_positive
+    semantic_target: null
+    attribution_state: unbound
+    repair_family: null
+~~~
+
+- [ ] **Step 2: Write the failing compiler test**
+
+Create tests/test_compile_failure_corpus.py:
+
+~~~python
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "quality"))
+
+from compile_failure_corpus import compile_failure_corpus
+from failure_corpus import load_failure_corpus
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_compiles_real_reviewed_sources_deterministically(tmp_path: Path) -> None:
+    source_index = PLUGIN_ROOT / "benchmarks" / "llm_failure_sources.yaml"
+    first = compile_failure_corpus(source_index, tmp_path / "first.yaml")
+    second = compile_failure_corpus(source_index, tmp_path / "second.yaml")
     assert first == second
-    assert set(first["crops"]) == {"C", "F"}
+    assert {case["failure_class"] for case in first["cases"]} >= {
+        "typography",
+        "geometry",
+        "finish",
+        "style",
+    }
+    assert all(len(case["source_sha256"]) == 64 for case in first["cases"])
+    assert load_failure_corpus(
+        tmp_path / "first.yaml", source_root=PLUGIN_ROOT
+    )["summary"]["case_count"] == 5
 
 
-def test_crop_manifest_rejects_source_hash_mismatch(tmp_path: Path) -> None:
-    manifest = write_valid_manifest(tmp_path)
-    manifest.parent.joinpath("benchmark.png").write_bytes(b"changed")
-    with pytest.raises(CropAuthorityError, match="source_hash_mismatch"):
-        create_authority_crops(manifest)
-
-
-def test_crop_manifest_rejects_out_of_bounds_bbox(tmp_path: Path) -> None:
-    with pytest.raises(CropAuthorityError, match="crop_out_of_bounds"):
-        create_authority_crops(write_manifest_with_invalid_bbox(tmp_path))
-```
-
-- [x] **Step 2: Verify RED, then implement crop creation**
-
-```bash
-uv run pytest tests/test_direct_svg_crop_authority.py -q
-```
-
-`create_authority_crops(path)` validates schema
-`figure-agent.direct-svg-crop-authority.v1`, source path/hash/width/height, exact
-panel set `C`/`F`, integer `[left, top, right, bottom]` boxes inside the source,
-and `algorithm: pillow.crop.v1`. It writes fixed-mode RGB PNGs without metadata,
-persists output hashes, and must be byte-identical on a second run. It never
-infers or adjusts a crop boundary.
-
-- [x] **Step 3: Snapshot and visually verify the real authority**
-
-Copy the exact user-supplied PNG from the named
-`fig1_overview_v5f_v013_dogfood_001_vault/build/` path. Record original path,
-SHA-256, dimensions, copy hash, panel declaration source, and render geometry.
-Generate C/F crops and inspect them at original resolution. If a box cuts a
-panel-owned label or includes an adjacent panel, repair the manifest declaration
-before accepting it—never post-crop the generated output.
-
-- [x] **Step 4: Verify and commit**
-
-```bash
-uv run pytest tests/test_direct_svg_crop_authority.py -q
-uv run ruff check scripts/direct_svg_crop_authority.py tests/test_direct_svg_crop_authority.py
-git diff --check
-git add scripts/direct_svg_crop_authority.py tests/test_direct_svg_crop_authority.py \
-  examples/fig1_direct_svg_cleanroom_baseline/reference
-git commit -m "test: bind direct svg benchmark crops"
-```
-
-## Task 17: Validate candidates and record bounded authoring iterations
-
-**Files:**
-
-- Create: `scripts/direct_svg_candidate.py`
-- Create: `tests/test_direct_svg_candidate.py`
-
-- [x] **Step 1: Write RED candidate-contract tests**
-
-```python
-def test_candidate_requires_live_text_viewbox_and_semantic_ids(tmp_path: Path) -> None:
-    svg = write_svg(tmp_path, semantic_ids={"panel_c.real_space"}, live_text=False)
-    with pytest.raises(DirectSvgCandidateError, match="live_text_required"):
-        validate_candidate(svg, required_ids={"panel_c.real_space", "panel_c.energy"})
-
-
-@pytest.mark.parametrize("forbidden", ["script", "image", "foreignObject"])
-def test_candidate_rejects_unsafe_elements(tmp_path: Path, forbidden: str) -> None:
-    svg = write_svg(tmp_path, extra_element=forbidden)
-    with pytest.raises(DirectSvgCandidateError, match="forbidden_svg_element"):
-        validate_candidate(svg, required_ids=set())
-
-
-def test_candidate_allows_only_fragment_local_gradient_urls(tmp_path: Path) -> None:
-    assert validate_candidate(write_local_gradient_svg(tmp_path), required_ids=set())
-    with pytest.raises(DirectSvgCandidateError, match="external_url_forbidden"):
-        validate_candidate(write_external_url_svg(tmp_path), required_ids=set())
-
-
-def test_iteration_ledger_enforces_cycle_budget(tmp_path: Path) -> None:
-    ledger = begin_ledger(utility_budget(), started_at="2026-07-11T00:00:00Z")
-    for cycle in range(1, 4):
-        ledger = record_iteration(ledger, iteration_receipt(tmp_path, cycle))
-    with pytest.raises(DirectSvgCandidateError, match="cycle_budget_exceeded"):
-        record_iteration(ledger, iteration_receipt(tmp_path, 4))
-```
-
-- [x] **Step 2: Verify RED, then implement the harness**
-
-```bash
-uv run pytest tests/test_direct_svg_candidate.py -q
-```
-
-Use `xml.etree.ElementTree` to require an explicit `viewBox`, live `text`, every
-required unique semantic group ID, no scripts/images/`foreignObject`, and no URL
-except `url(#local-id)`. Render through `rsvg-convert` with the packet's isolated
-font configuration, white background, and authority dimensions. Record
-source/render hashes, command, tool/model receipt, cycle, elapsed time,
-correction reason, and `publication_acceptance: not_claimed`. Unchanged SVG
-bytes that produce a different PNG hash fail `nondeterministic_render`.
-
-- [x] **Step 3: Verify and commit**
-
-```bash
-uv run pytest tests/test_direct_svg_candidate.py tests/test_svg_to_png.py -q
-uv run ruff check scripts/direct_svg_candidate.py tests/test_direct_svg_candidate.py
-git diff --check
-git add scripts/direct_svg_candidate.py tests/test_direct_svg_candidate.py
-git commit -m "feat: record bounded direct svg authoring runs"
-```
-
-## Task 18: Build blinded review packets and non-compensating verdicts
-
-**Files:**
-
-- Create: `scripts/direct_svg_review.py`
-- Create: `tests/test_direct_svg_review.py`
-
-- [x] **Step 1: Write RED tests for blinding and verdict aggregation**
-
-```python
-def test_review_packet_uses_opaque_options(tmp_path: Path) -> None:
-    packet = build_review_packet(comparator_png(), candidate_png(), tmp_path, seed="run-01")
-    assert set(packet["public_options"]) == {"A", "B"}
-    assert "tikz" not in json.dumps(packet["public_manifest"]).lower()
-    assert packet["blinding_key"]["A"] != packet["blinding_key"]["B"]
-
-
-def test_scientific_failure_cannot_be_compensated_by_visual_scores() -> None:
-    verdict = panel_verdict(
-        scientific_fidelity="fail",
-        composition="better",
-        illustration_quality="better",
-        typography="better",
+def test_installed_corpus_matches_compiled_bytes(tmp_path: Path) -> None:
+    expected = compile_failure_corpus(
+        PLUGIN_ROOT / "benchmarks" / "llm_failure_sources.yaml",
+        tmp_path / "expected.yaml",
     )
-    assert classify_panel_verdict(verdict) == "rejected_scientific_fidelity"
-
-
-def test_panel_is_better_only_when_no_visual_dimension_is_worse() -> None:
-    verdict = panel_verdict(
-        scientific_fidelity="pass",
-        composition="better",
-        illustration_quality="equivalent",
-        typography="worse",
+    installed = load_failure_corpus(
+        PLUGIN_ROOT / "benchmarks" / "llm_failure_corpus.yaml"
     )
-    assert classify_panel_verdict(verdict) == "worse"
+    assert installed["cases"] == expected["cases"]
+~~~
 
+- [ ] **Step 3: Run the compiler test and verify RED**
 
-def test_quality_pass_requires_both_panels_no_worse_and_one_better() -> None:
-    assert classify_quality_hypothesis({"C": "equivalent", "F": "better"}) == "passed"
-    assert classify_quality_hypothesis({"C": "worse", "F": "better"}) == "failed"
-```
+~~~bash
+uv run pytest tests/test_compile_failure_corpus.py -q
+~~~
 
-- [x] **Step 2: Verify RED, then implement the review contract**
+Expected: FAIL because compile_failure_corpus.py and the installed corpus do not exist.
 
-```bash
-uv run pytest tests/test_direct_svg_review.py -q
-```
+- [ ] **Step 4: Implement deterministic compilation**
 
-Normalize images to authority dimensions/background, strip metadata, randomize
-left/right using a recorded seed, and write opaque option files, a public
-manifest, and a separately bound blinding key. Difference/flicker outputs carry
-`diagnostic_only: true` and never appear in score inputs. Reuse
-`hybrid.comparison_report.aggregate_review_input_hash`. The verdict schema
-records named reviewer(s), scientific hard-gate evidence, the three visual
-dimensions, separate editability/cost evidence, borderline state, second-review
-requirement, cold-run count, and `publication_acceptance: not_claimed`.
+Create scripts/quality/compile_failure_corpus.py. It must:
 
-- [x] **Step 3: Verify and commit**
+- require schema figure-agent.llm-failure-sources.v1;
+- resolve every source beneath the plugin root;
+- reject symlinks, absolute paths, parent traversal, and an empty source_locator field;
+- calculate source_sha256 from actual bytes;
+- copy only declared case metadata;
+- sort cases by ID;
+- write via yaml.safe_dump(payload, sort_keys=False);
+- validate the emitted file with load_failure_corpus before returning.
 
-```bash
-uv run pytest tests/test_direct_svg_review.py tests/test_illustration_backends.py -q
-uv run ruff check scripts/direct_svg_review.py tests/test_direct_svg_review.py
+The public signature is:
+
+~~~python
+def compile_failure_corpus(source_index: Path, output_path: Path) -> dict[str, Any]:
+    plugin_root = source_index.resolve().parents[1]
+    index = yaml.safe_load(source_index.read_text(encoding="utf-8"))
+    if not isinstance(index, dict) or index.get("schema") != SOURCES_SCHEMA:
+        raise FailureCorpusCompileError("source_schema_invalid")
+    raw_sources = index.get("sources")
+    raw_cases = index.get("cases")
+    if not isinstance(raw_sources, list) or not isinstance(raw_cases, list):
+        raise FailureCorpusCompileError("source_index_invalid")
+
+    sources: dict[str, Path] = {}
+    for item in raw_sources:
+        source_id = str(item.get("id") or "")
+        relative = Path(str(item.get("path") or ""))
+        candidate = (plugin_root / relative).resolve()
+        if (
+            not source_id
+            or relative.is_absolute()
+            or ".." in relative.parts
+            or not candidate.is_relative_to(plugin_root)
+            or candidate.is_symlink()
+            or not candidate.is_file()
+        ):
+            raise FailureCorpusCompileError("source_path_invalid")
+        sources[source_id] = candidate
+
+    cases: list[dict[str, Any]] = []
+    for raw in raw_cases:
+        source_id = str(raw.get("source_id") or "")
+        locator = str(raw.get("source_locator") or "")
+        if source_id not in sources or not locator:
+            raise FailureCorpusCompileError("source_locator_invalid")
+        source = sources[source_id]
+        cases.append(
+            {
+                "id": str(raw["id"]),
+                "figure_family": str(raw["figure_family"]),
+                "failure_class": str(raw["failure_class"]),
+                "observation_scale": str(raw["observation_scale"]),
+                "review_outcome": str(raw["review_outcome"]),
+                "source_path": source.relative_to(plugin_root).as_posix(),
+                "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+                "source_locator": locator,
+                "semantic_target": raw.get("semantic_target"),
+                "attribution_state": str(raw["attribution_state"]),
+                "repair_family": raw.get("repair_family"),
+                "human_correction_minutes": raw.get("human_correction_minutes"),
+            }
+        )
+    payload = {
+        "schema": "figure-agent.llm-failure-corpus.v1",
+        "authority": "reviewed_evidence_only",
+        "source_root": "plugin_root",
+        "cases": sorted(cases, key=lambda item: item["id"]),
+    }
+    output_path.write_text(
+        yaml.safe_dump(payload, sort_keys=False), encoding="utf-8"
+    )
+    return load_failure_corpus(output_path, source_root=plugin_root)
+~~~
+
+Locator validation is conservative: require a non-empty locator bound to the
+full source hash. The compiler does not interpret free-form review text, resolve
+an ad hoc query language, or generate failure classes with an LLM.
+
+- [ ] **Step 5: Materialize and verify the installed corpus**
+
+Run:
+
+~~~bash
+uv run python scripts/quality/compile_failure_corpus.py   benchmarks/llm_failure_sources.yaml   benchmarks/llm_failure_corpus.yaml
+uv run pytest tests/test_failure_corpus.py tests/test_compile_failure_corpus.py -q
+uv run ruff check scripts/quality/failure_corpus.py   scripts/quality/compile_failure_corpus.py   tests/test_failure_corpus.py tests/test_compile_failure_corpus.py
 git diff --check
-git add scripts/direct_svg_review.py tests/test_direct_svg_review.py
-git commit -m "feat: build blinded direct svg review packets"
-```
+~~~
 
-## Task 19: Stage the real experiment without leaking semantics
+Expected: five hash-bound cases, tests PASS.
+
+- [ ] **Step 6: Commit**
+
+~~~bash
+git add benchmarks/llm_failure_sources.yaml benchmarks/llm_failure_corpus.yaml   scripts/quality/failure_corpus.py scripts/quality/compile_failure_corpus.py   tests/test_failure_corpus.py tests/test_compile_failure_corpus.py
+git commit -m "test: bind first reviewed LLM failure corpus"
+~~~
+
+## Task 3: Add the non-compensating A/B/C evaluator
 
 **Files:**
 
-- Create under `examples/fig1_direct_svg_cleanroom_baseline/`:
-  `contract/`, `packets/`, `runs/`, and `review/` artifacts
-- Create: `tests/test_direct_svg_fixture.py`
-- Modify: `tests/test_document_authority.py`
+- Create: scripts/quality/failure_ablation.py
+- Create: tests/test_failure_ablation.py
 
-- [x] **Step 1: Add a fixture-boundary RED test**
+The evaluator reads evidence produced elsewhere. It does not call an LLM, generate a figure, or accept publication quality.
 
-The test requires immutable source/crop receipts, separate Test A/Test B packet
-schemas, distinct output roots, all denied source families, fixed budgets, font
-license/hash, and this honest initial state:
+- [ ] **Step 1: Write RED tests for comparability and scientific hard failure**
 
-```yaml
-semantic_packet_authority:
-  prepared_by_current_session: false
-  implementation_details_observed: false
-run_state: blocked_pending_independent_semantic_packet
+Create tests/test_failure_ablation.py with a helper that writes three manifests using schema figure-agent.failure-ablation-run.v1. Each manifest contains variant, model_contract_hash, input_packet_hash, budget_contract_hash, figure_family, findings, human_correction_minutes, intervention_count, clean_reproduction, and human_verdict.
+
+Use this concrete helper:
+
+~~~python
+def _write_run(root: Path, variant: str, findings: list[dict[str, str]]) -> Path:
+    path = root / f"{variant}.yaml"
+    path.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "figure-agent.failure-ablation-run.v1",
+                "variant": variant,
+                "model_contract_hash": "sha256:" + "1" * 64,
+                "input_packet_hash": "sha256:" + "2" * 64,
+                "budget_contract_hash": "sha256:" + "3" * 64,
+                "figure_family": "synthetic-ablation",
+                "findings": findings,
+                "human_correction_minutes": None,
+                "intervention_count": 0,
+                "clean_reproduction": True,
+                "human_verdict": {"state": "pending"},
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def write_comparable_runs(root: Path) -> dict[str, Path]:
+    typography = {
+        "id": "TYPO001",
+        "failure_class": "typography",
+        "review_outcome": "confirmed_defect",
+    }
+    return {
+        "raw": _write_run(root, "raw", [typography]),
+        "verified": _write_run(root, "verified", [typography]),
+        "repaired": _write_run(root, "repaired", []),
+    }
+~~~
+
+Add these tests:
+
+~~~python
+def test_ablation_requires_exactly_raw_verified_repaired(tmp_path: Path) -> None:
+    paths = write_comparable_runs(tmp_path)
+    paths.pop("repaired")
+    with pytest.raises(FailureAblationError, match="variant_set_invalid"):
+        evaluate_ablation(paths)
+
+
+def test_ablation_rejects_mismatched_model_input_or_budget(tmp_path: Path) -> None:
+    paths = write_comparable_runs(tmp_path)
+    payload = yaml.safe_load(paths["verified"].read_text(encoding="utf-8"))
+    payload["model_contract_hash"] = "sha256:" + "9" * 64
+    paths["verified"].write_text(yaml.safe_dump(payload), encoding="utf-8")
+    with pytest.raises(FailureAblationError, match="comparison_contract_mismatch"):
+        evaluate_ablation(paths)
+
+
+def test_scientific_failure_cannot_be_compensated_by_visual_improvement(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    payload = yaml.safe_load(paths["repaired"].read_text(encoding="utf-8"))
+    payload["findings"].append(
+        {
+            "id": "SEM001",
+            "failure_class": "semantic",
+            "review_outcome": "confirmed_defect",
+        }
+    )
+    paths["repaired"].write_text(yaml.safe_dump(payload), encoding="utf-8")
+    report = evaluate_ablation(paths)
+    assert report["variants"]["repaired"]["scientific_gate"] == "failed"
+    assert report["product_claim"] == "not_authorized"
+
+
+def test_reports_failure_reduction_without_claiming_acceptance(tmp_path: Path) -> None:
+    report = evaluate_ablation(write_comparable_runs(tmp_path))
+    assert report["schema"] == "figure-agent.failure-ablation-report.v1"
+    assert report["deltas"]["verified_vs_raw"]["confirmed_defect_count"] <= 0
+    assert report["deltas"]["repaired_vs_raw"]["confirmed_defect_count"] < 0
+    assert report["publication_acceptance"] == "not_claimed"
+~~~
+
+- [ ] **Step 2: Run tests and verify RED**
+
+~~~bash
+uv run pytest tests/test_failure_ablation.py -q
+~~~
+
+Expected: FAIL because failure_ablation.py does not exist.
+
+- [ ] **Step 3: Implement the evaluator**
+
+Create scripts/quality/failure_ablation.py with:
+
+~~~python
+RUN_SCHEMA = "figure-agent.failure-ablation-run.v1"
+REPORT_SCHEMA = "figure-agent.failure-ablation-report.v1"
+VARIANTS = {"raw", "verified", "repaired"}
+SCIENTIFIC_CLASSES = {"semantic", "relation"}
+
+
+class FailureAblationError(ValueError):
+    pass
+
+
+def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
+    if set(run_paths) != VARIANTS:
+        raise FailureAblationError("variant_set_invalid")
+    runs = {name: _load_run(path, expected_variant=name) for name, path in run_paths.items()}
+    keys = ("model_contract_hash", "input_packet_hash", "budget_contract_hash", "figure_family")
+    if any(len({runs[name][key] for name in VARIANTS}) != 1 for key in keys):
+        raise FailureAblationError("comparison_contract_mismatch")
+
+    variants = {name: _summarize_run(runs[name]) for name in sorted(VARIANTS)}
+    raw = variants["raw"]
+    verified = variants["verified"]
+    repaired = variants["repaired"]
+    scientific_pass = all(
+        item["scientific_gate"] == "passed" for item in variants.values()
+    )
+    human_complete = all(
+        item["human_verdict_state"] == "recorded" for item in variants.values()
+    )
+    return {
+        "schema": REPORT_SCHEMA,
+        "variants": variants,
+        "deltas": {
+            "verified_vs_raw": _delta(verified, raw),
+            "repaired_vs_raw": _delta(repaired, raw),
+        },
+        "product_claim": (
+            "review_eligible" if scientific_pass and human_complete else "not_authorized"
+        ),
+        "publication_acceptance": "not_claimed",
+    }
+~~~
+
+Helper rules:
+
+- _load_run rejects symlinks and wrong schemas.
+- _summarize_run counts confirmed defects by failure class.
+- semantic or relation confirmed defects set scientific_gate to failed.
+- missing named human verdict sets human_verdict_state to pending.
+- null correction minutes remain null and never become zero.
+- _delta subtracts only comparable numeric fields.
+- no score may offset a scientific failure.
+
+- [ ] **Step 4: Run focused verification**
+
+~~~bash
+uv run pytest tests/test_failure_ablation.py -q
+uv run ruff check scripts/quality/failure_ablation.py tests/test_failure_ablation.py
+git diff --check
+~~~
+
+Expected: PASS.
+
+- [ ] **Step 5: Commit**
+
+~~~bash
+git add scripts/quality/failure_ablation.py tests/test_failure_ablation.py
+git commit -m "feat: compare raw verified and repaired figure runs"
+~~~
+
+## Task 4: Expose read-only corpus and ablation commands
+
+**Files:**
+
+- Modify: bin/fig-agent
+- Create: tests/test_failure_first_cli.py
+
+Commands:
+
+~~~text
+fig-agent failure-corpus --json
+fig-agent failure-ablation --raw review/raw.yaml --verified review/verified.yaml --repaired review/repaired.yaml --json
+~~~
+
+Both commands are read-only. They write only when an explicit --output path beneath the current workspace is supplied. They never mutate figure source.
+
+- [ ] **Step 1: Write failing CLI tests**
+
+Create tests/test_failure_first_cli.py:
+
+~~~python
+from __future__ import annotations
+
+import json
+import subprocess
+from pathlib import Path
+
+import yaml
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+CLI = PLUGIN_ROOT / "bin" / "fig-agent"
+
+
+def test_failure_corpus_cli_is_read_only() -> None:
+    before = {
+        path.relative_to(PLUGIN_ROOT): path.stat().st_mtime_ns
+        for path in PLUGIN_ROOT.rglob("*")
+        if path.is_file()
+    }
+    result = subprocess.run(
+        [str(CLI), "failure-corpus", "--json"],
+        cwd=PLUGIN_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(result.stdout)
+    assert payload["schema"] == "figure-agent.llm-failure-corpus.v1"
+    after = {
+        path.relative_to(PLUGIN_ROOT): path.stat().st_mtime_ns
+        for path in PLUGIN_ROOT.rglob("*")
+        if path.is_file()
+    }
+    assert after == before
+~~~
+
+Add this second test and helper in the same file:
+
+~~~python
+def _write_run(root: Path, variant: str, defect_count: int) -> Path:
+    path = root / f"{variant}.yaml"
+    payload = {
+        "schema": "figure-agent.failure-ablation-run.v1",
+        "variant": variant,
+        "model_contract_hash": "sha256:" + "1" * 64,
+        "input_packet_hash": "sha256:" + "2" * 64,
+        "budget_contract_hash": "sha256:" + "3" * 64,
+        "figure_family": "synthetic-cli",
+        "findings": [
+            {
+                "id": f"TYPO-{index}",
+                "failure_class": "typography",
+                "review_outcome": "confirmed_defect",
+            }
+            for index in range(defect_count)
+        ],
+        "human_correction_minutes": None,
+        "intervention_count": 0,
+        "clean_reproduction": True,
+        "human_verdict": {"state": "pending"},
+    }
+    path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    return path
+
+
+def test_failure_ablation_cli_keeps_acceptance_unclaimed(tmp_path: Path) -> None:
+    paths = {
+        "raw": _write_run(tmp_path, "raw", 2),
+        "verified": _write_run(tmp_path, "verified", 2),
+        "repaired": _write_run(tmp_path, "repaired", 1),
+    }
+    result = subprocess.run(
+        [
+            str(CLI),
+            "failure-ablation",
+            "--raw", str(paths["raw"]),
+            "--verified", str(paths["verified"]),
+            "--repaired", str(paths["repaired"]),
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(result.stdout)
+    assert payload["schema"] == "figure-agent.failure-ablation-report.v1"
+    assert payload["publication_acceptance"] == "not_claimed"
+~~~
+
+- [ ] **Step 2: Run tests and verify RED**
+
+~~~bash
+uv run pytest tests/test_failure_first_cli.py -q
+~~~
+
+Expected: FAIL because the CLI does not recognize failure-corpus.
+
+- [ ] **Step 3: Add focused command adapters**
+
+In bin/fig-agent, add adapters that import from scripts/quality using the existing module-path setup:
+
+~~~python
+def _failure_corpus(rest: list[str]) -> int:
+    import argparse
+    import json
+    import failure_corpus
+
+    parser = argparse.ArgumentParser(prog="fig-agent failure-corpus")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(rest)
+    payload = failure_corpus.load_failure_corpus(
+        _paths().plugin_root / "benchmarks" / "llm_failure_corpus.yaml"
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+~~~
+
+Add the analogous _failure_ablation adapter and dispatch branches:
+
+~~~python
+def _failure_ablation(rest: list[str]) -> int:
+    import argparse
+    import json
+    import failure_ablation
+
+    parser = argparse.ArgumentParser(prog="fig-agent failure-ablation")
+    parser.add_argument("--raw", type=Path, required=True)
+    parser.add_argument("--verified", type=Path, required=True)
+    parser.add_argument("--repaired", type=Path, required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(rest)
+    payload = failure_ablation.evaluate_ablation(
+        {
+            "raw": args.raw,
+            "verified": args.verified,
+            "repaired": args.repaired,
+        }
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+if command == "failure-corpus":
+    return _failure_corpus(rest)
+if command == "failure-ablation":
+    return _failure_ablation(rest)
+~~~
+
+The ablation adapter requires --raw, --verified, and --repaired Path arguments and passes them directly to evaluate_ablation.
+
+- [ ] **Step 4: Verify CLI and existing benchmark routing**
+
+~~~bash
+uv run pytest tests/test_failure_first_cli.py tests/test_quality_benchmark.py   tests/test_command_contract_docs.py -q
+uv run ruff check bin/fig-agent tests/test_failure_first_cli.py
+git diff --check
+~~~
+
+Expected: PASS.
+
+- [ ] **Step 5: Commit**
+
+~~~bash
+git add bin/fig-agent tests/test_failure_first_cli.py
+git commit -m "feat: expose failure-first evidence commands"
+~~~
+
+## Task 5: Harden bounded repair around exact attribution and invariants
+
+**Files:**
+
+- Modify: scripts/quality/quality_patch_policy.py
+- Modify: scripts/quality/quality_patch_plan.py
+- Modify: scripts/quality/quality_patch_apply.py
+- Modify: tests/test_quality_patch_policy.py
+- Modify: tests/test_quality_patch_plan.py
+- Modify: tests/test_quality_patch_apply.py
+
+The current planner always writes selector confidence exact and semantic_guard allowed true. This task removes those invented assurances.
+
+- [ ] **Step 1: Write RED policy tests**
+
+Add to tests/test_quality_patch_policy.py:
+
+~~~python
+def test_safe_class_requires_exact_attribution_and_stable_selector() -> None:
+    defect = safe_defect("text_overlap")
+    defect["attribution"] = {"state": "ambiguous"}
+    defect["selector_hint"] = {"kind": "line_range", "value": "4:4"}
+    result = quality_patch_policy.classify_patchability(defect)
+    assert result["state"] == "assisted_only"
+    assert "exact_attribution_required" in result["blocked_codes"]
+
+
+def test_safe_class_requires_protected_invariants() -> None:
+    defect = safe_defect("text_overlap")
+    defect["attribution"] = {"state": "exact"}
+    defect["selector_hint"] = {
+        "kind": "semantic_anchor",
+        "selector_id": "panel_f.label.repulsion",
+        "anchor_start": "% figure-agent:start panel_f.label.repulsion",
+        "anchor_end": "% figure-agent:end panel_f.label.repulsion",
+        "source_hash": "sha256:" + "1" * 64,
+    }
+    defect["protected_invariants"] = []
+    result = quality_patch_policy.classify_patchability(defect)
+    assert result["state"] == "assisted_only"
+    assert "protected_invariants_required" in result["blocked_codes"]
+~~~
+
+- [ ] **Step 2: Run focused policy tests and verify RED**
+
+~~~bash
+uv run pytest tests/test_quality_patch_policy.py -q
+~~~
+
+Expected: FAIL because classify_patchability ignores attribution and invariants.
+
+- [ ] **Step 3: Tighten policy classification**
+
+In quality_patch_policy.py:
+
+- retain all existing path/evidence checks;
+- require attribution.state == exact for safe_candidate;
+- require selector_hint.kind == semantic_anchor;
+- require selector_id, anchor_start, anchor_end, and source_hash;
+- require a non-empty protected_invariants list;
+- leave may_edit false;
+- return assisted_only, not human_required, for repairable but unbound defects.
+
+Do not add SVG or TikZ coordinates to the policy.
+
+- [ ] **Step 4: Write RED plan tests**
+
+Add to tests/test_quality_patch_plan.py:
+
+~~~python
+def exact_anchor_fixture(workspace: Path) -> Path:
+    fixture = workspace / "examples" / "quality_demo"
+    fixture.mkdir(parents=True)
+    (fixture / "quality_demo.tex").write_text(
+        "% figure-agent:start panel_f.label.repulsion\n"
+        "\\node at (0,0) {Coulomb repulsion};\n"
+        "\\node at (2,0) {electrode separation};\n"
+        "% figure-agent:end panel_f.label.repulsion\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
+def exact_anchor_ledger(fixture: Path) -> dict:
+    source = fixture / "quality_demo.tex"
+    return {
+        "schema": "figure-agent.quality-defect-ledger.v1",
+        "fixture": fixture.name,
+        "ledger_hash": "sha256:" + "1" * 64,
+        "defects": [
+            {
+                "id": "QD001",
+                "defect_class": "text_overlap",
+                "repair_family": "label_reflow",
+                "affected_files": ["examples/quality_demo/quality_demo.tex"],
+                "evidence": [{"uri": "figure://quality_demo/zoom/repulsion"}],
+                "attribution": {"state": "exact"},
+                "selector_hint": {
+                    "kind": "semantic_anchor",
+                    "selector_id": "panel_f.label.repulsion",
+                    "anchor_start": "% figure-agent:start panel_f.label.repulsion",
+                    "anchor_end": "% figure-agent:end panel_f.label.repulsion",
+                    "source_hash": file_sha256(source),
+                },
+                "protected_invariants": [
+                    "panel_f.coulomb_direction",
+                    "panel_f.electrode_relation",
+                ],
+                "patchability": {"state": "safe_candidate"},
+                "suggested_change": {
+                    "operation_type": "tikz_coordinate_adjust",
+                    "summary": "separate the repulsion label",
+                    "patch": "",
+                },
+                "freshness": {
+                    "audit_evidence_graph_hash": "sha256:" + "2" * 64,
+                    "source_hashes": {
+                        "examples/quality_demo/quality_demo.tex": file_sha256(source)
+                    },
+                },
+            }
+        ],
+    }
+
+
+def test_plan_preserves_selector_invariants_and_change_budget(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = exact_anchor_fixture(workspace)
+    ledger = exact_anchor_ledger(fixture)
+    plan = quality_patch_plan.build_quality_patch_plan(
+        fixture.name,
+        ledger,
+        workspace_root=workspace,
+    )
+    operation = plan["operations"][0]
+    assert operation["selector"]["selector_id"] == "panel_f.label.repulsion"
+    assert operation["protected_invariants"] == [
+        "panel_f.coulomb_direction",
+        "panel_f.electrode_relation",
+    ]
+    assert operation["change_budget"] == {
+        "max_source_blocks": 1,
+        "max_changed_lines": 6,
+        "max_rendered_pixel_ratio": 0.03,
+    }
+    assert operation["semantic_guard"]["allowed"] is False
+    assert operation["semantic_guard"]["state"] == "pending_post_render_verification"
+
+
+def test_plan_does_not_upgrade_line_range_to_exact(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _multiline_fixture(workspace)
+    ledger = _multiline_ledger(fixture)
+    ledger["defects"][0]["patchability"]["state"] = "assisted_only"
+    plan = quality_patch_plan.build_quality_patch_plan(
+        "quality_demo",
+        ledger,
+        workspace_root=workspace,
+    )
+    assert plan["operations"] == []
+    assert plan["refusals"][0]["code"] == "exact_selector_required"
+~~~
+
+- [ ] **Step 5: Implement the stricter plan contract**
+
+In quality_patch_plan.py:
+
+- copy selector fields without inventing confidence;
+- refuse non-semantic_anchor selectors;
+- copy protected_invariants;
+- emit repair_family from the defect;
+- emit the fixed initial change budget shown above;
+- set semantic_guard to pending_post_render_verification;
+- retain required compile and status commands;
+- retain reverse_patch rollback.
+
+The initial implementation remains TikZ-source-only. SVG repair is a later slice only after the same contract passes the first real pilot.
+
+- [ ] **Step 6: Write RED apply tests**
+
+Add to tests/test_quality_patch_apply.py:
+
+~~~python
+def exact_anchor_fixture(workspace: Path) -> Path:
+    fixture = workspace / "examples" / "quality_demo"
+    fixture.mkdir(parents=True)
+    (fixture / "quality_demo.tex").write_text(
+        "% figure-agent:start panel_f.label.repulsion\n"
+        "\\node (label-a) at (0,0) {Old Label};\n"
+        "\\node at (1,0) {Coulomb repulsion};\n"
+        "\\node at (2,0) {electrode separation};\n"
+        "% figure-agent:end panel_f.label.repulsion\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
+def exact_anchor_plan(fixture: Path) -> dict:
+    plan = _plan(fixture)
+    operation = plan["operations"][0]
+    relative = f"examples/{fixture.name}/{fixture.name}.tex"
+    operation["proposed_change"]["patch"] = (
+        f"--- {relative}\n"
+        f"+++ {relative}\n"
+        "@@ -2 +2 @@\n"
+        "-\\node (label-a) at (0,0) {Old Label};\n"
+        "+\\node (label-a) at (0.2,0) {Old Label};\n"
+    )
+    operation["selector"] = {
+        "kind": "semantic_anchor",
+        "selector_id": "panel_f.label.repulsion",
+        "anchor_start": "% figure-agent:start panel_f.label.repulsion",
+        "anchor_end": "% figure-agent:end panel_f.label.repulsion",
+        "source_hash": file_sha256(fixture / f"{fixture.name}.tex"),
+    }
+    operation["repair_family"] = "label_reflow"
+    operation["protected_invariants"] = [
+        "Coulomb repulsion",
+        "electrode separation",
+    ]
+    operation["change_budget"] = {
+        "max_source_blocks": 1,
+        "max_changed_lines": 6,
+        "max_rendered_pixel_ratio": 0.03,
+    }
+    operation["semantic_guard"] = {
+        "allowed": False,
+        "state": "pending_post_render_verification",
+    }
+    return plan
+
+
+def patch_that_changes_relation_label(fixture: Path) -> str:
+    relative = f"examples/{fixture.name}/{fixture.name}.tex"
+    return (
+        f"--- {relative}\n"
+        f"+++ {relative}\n"
+        "@@ -3 +3 @@\n"
+        "-\\node at (1,0) {Coulomb repulsion};\n"
+        "+\\node at (1,0) {changed relation};\n"
+    )
+
+
+def test_apply_refuses_changed_protected_invariant(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = exact_anchor_fixture(workspace)
+    plan = exact_anchor_plan(fixture)
+    plan["operations"][0]["proposed_change"]["patch"] = patch_that_changes_relation_label(
+        fixture
+    )
+    path = _write_plan(fixture, plan)
+    with pytest.raises(
+        quality_patch_apply.QualityPatchApplyError,
+        match="protected_invariant_changed",
+    ):
+        quality_patch_apply.apply_quality_patch_plan(
+            fixture.name,
+            plan_path=path,
+            workspace_root=workspace,
+            apply=True,
+        )
+
+
+def test_apply_receipt_keeps_acceptance_unclaimed(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = exact_anchor_fixture(workspace)
+    path = _write_plan(fixture, exact_anchor_plan(fixture))
+    result = quality_patch_apply.apply_quality_patch_plan(
+        fixture.name,
+        plan_path=path,
+        workspace_root=workspace,
+        apply=True,
+    )
+    assert result["publication_acceptance"] == "not_claimed"
+    assert result["post_render_verification"] == "pending"
+~~~
+
+- [ ] **Step 7: Implement invariant-preserving apply**
+
+Before writing source:
+
+- resolve the declared anchor block exactly once;
+- confirm its source hash;
+- apply the patch in memory;
+- reject edits outside the one anchor block;
+- reject any change to literal protected invariant tokens declared in the operation;
+- reject more than max_changed_lines;
+- write source and rollback only after all preflight checks pass.
+
+The apply receipt records publication_acceptance not_claimed and post_render_verification pending. It never marks the repair successful before compile, render, detector recheck, and human review.
+
+- [ ] **Step 8: Run repair regression tests**
+
+~~~bash
+uv run pytest tests/test_quality_patch_policy.py tests/test_quality_patch_plan.py   tests/test_quality_patch_apply.py -q
+uv run ruff check scripts/quality/quality_patch_policy.py   scripts/quality/quality_patch_plan.py scripts/quality/quality_patch_apply.py   tests/test_quality_patch_policy.py tests/test_quality_patch_plan.py   tests/test_quality_patch_apply.py
+git diff --check
+~~~
+
+Expected: PASS.
+
+- [ ] **Step 9: Commit**
+
+~~~bash
+git add scripts/quality/quality_patch_policy.py   scripts/quality/quality_patch_plan.py scripts/quality/quality_patch_apply.py   tests/test_quality_patch_policy.py tests/test_quality_patch_plan.py   tests/test_quality_patch_apply.py
+git commit -m "fix: require exact bounded figure repairs"
+~~~
+
+## Task 6: Run the first complete failure-first vertical slice
+
+**Files:**
+
+- Create: examples/failure_first_label_repair_demo/spec.yaml
+- Create: examples/failure_first_label_repair_demo/briefing.md
+- Create: examples/failure_first_label_repair_demo/failure_first_label_repair_demo.tex
+- Create: examples/failure_first_label_repair_demo/semantic_regions.yaml
+- Create: examples/failure_first_label_repair_demo/benchmark_contract.yaml
+- Create: examples/failure_first_label_repair_demo/review/ablation/
+- Create: tests/test_failure_first_vertical_slice.py
+- Modify: benchmarks/quality_suites.yaml
+
+This fixture tests the control system, not drawing quality. It contains one deliberate label/leader collision inside a stable semantic anchor and two protected relation labels. The three variants use identical source, model/input/budget receipts:
+
+- raw: collision present;
+- verified: collision detected and exactly attributed, source unchanged;
+- repaired: one bounded label reflow, protected relations unchanged.
+
+- [ ] **Step 1: Write the RED fixture test**
+
+Create tests/test_failure_first_vertical_slice.py:
+
+~~~python
+def test_vertical_slice_has_comparable_raw_verified_repaired_evidence() -> None:
+    fixture = PLUGIN_ROOT / "examples" / "failure_first_label_repair_demo"
+    report = evaluate_ablation(
+        {
+            name: fixture / "review" / "ablation" / f"{name}.yaml"
+            for name in ("raw", "verified", "repaired")
+        }
+    )
+    assert report["variants"]["raw"]["confirmed_defect_count"] == 1
+    assert report["variants"]["verified"]["confirmed_defect_count"] == 1
+    assert report["variants"]["repaired"]["confirmed_defect_count"] == 0
+    assert report["deltas"]["repaired_vs_raw"]["confirmed_defect_count"] == -1
+    assert report["publication_acceptance"] == "not_claimed"
+
+
+def test_repaired_source_preserves_declared_relations() -> None:
+    fixture = PLUGIN_ROOT / "examples" / "failure_first_label_repair_demo"
+    source = (fixture / "failure_first_label_repair_demo.tex").read_text(encoding="utf-8")
+    assert "Coulomb repulsion" in source
+    assert "electrode separation" in source
+~~~
+
+- [ ] **Step 2: Run the test and verify RED**
+
+~~~bash
+uv run pytest tests/test_failure_first_vertical_slice.py -q
+~~~
+
+Expected: FAIL because the fixture does not exist.
+
+- [ ] **Step 3: Create the smallest semantic fixture**
+
+The TeX source uses one semantic block:
+
+~~~tex
+% figure-agent:start panel_a.label.repulsion
+\node[draw, rounded corners=1pt] (electrode) at (0,0) {electrode};
+\node (sample) at (3,0) {sample};
+\draw[->] (electrode) -- node[above] {electrode separation} (sample);
+\draw[->] (sample) -- ++(0,1.2) node[right] {Coulomb repulsion};
+\node[anchor=west] at (2.95,1.2) {repulsion label};
+% figure-agent:end panel_a.label.repulsion
+~~~
+
+The raw evidence marks the intentional label/leader collision. The verified evidence adds exact attribution and a repair candidate without changing source. The repaired source moves only repulsion label within the anchor block.
+
+Do not add publication acceptance, a taste score, or a claim that this synthetic figure proves general quality improvement.
+
+- [ ] **Step 4: Compile and generate evidence**
+
+Run:
+
+~~~bash
+bash scripts/compile.sh   examples/failure_first_label_repair_demo/failure_first_label_repair_demo.tex
+FIGURE_AGENT_STRICT=1 bash scripts/compile.sh   examples/failure_first_label_repair_demo/failure_first_label_repair_demo.tex
+fig-agent failure-ablation   --raw examples/failure_first_label_repair_demo/review/ablation/raw.yaml   --verified examples/failure_first_label_repair_demo/review/ablation/verified.yaml   --repaired examples/failure_first_label_repair_demo/review/ablation/repaired.yaml   --json
+~~~
+
+Expected: compile PASS, strict PASS, report shows one defect removed only in repaired, publication_acceptance not_claimed.
+
+- [ ] **Step 5: Add the suite and run affected tests**
+
+Add failure_first_label_repair_demo to a new failure-first-smoke suite in benchmarks/quality_suites.yaml.
+
+Run:
+
+~~~bash
+uv run pytest tests/test_failure_corpus.py tests/test_compile_failure_corpus.py   tests/test_failure_ablation.py tests/test_failure_first_cli.py   tests/test_quality_patch_policy.py tests/test_quality_patch_plan.py   tests/test_quality_patch_apply.py tests/test_failure_first_vertical_slice.py   tests/test_quality_benchmark.py tests/test_document_authority.py   tests/test_release_contract.py -q
+uv run ruff check scripts/quality/failure_corpus.py   scripts/quality/compile_failure_corpus.py scripts/quality/failure_ablation.py   scripts/quality/quality_patch_policy.py scripts/quality/quality_patch_plan.py   scripts/quality/quality_patch_apply.py bin/fig-agent tests/test_failure_*.py   tests/test_quality_patch_policy.py tests/test_quality_patch_plan.py   tests/test_quality_patch_apply.py
+uv run python -m compileall -q scripts/quality tests
+git diff --check
+~~~
+
+Expected: PASS.
+
+- [ ] **Step 6: Commit**
+
+~~~bash
+git add examples/failure_first_label_repair_demo benchmarks/quality_suites.yaml   tests/test_failure_first_vertical_slice.py
+git commit -m "test: prove first failure-first repair slice"
+~~~
+
+## Task 7: Bind a real complex-panel pilot without claiming success
+
+**Files:**
+
+- Create: examples/fig1_failure_first_panel_f_pilot/
+- Create: tests/test_fig1_failure_first_panel_f_pilot.py
+- Modify: benchmarks/llm_failure_sources.yaml
+- Modify: benchmarks/llm_failure_corpus.yaml
+
+Fork tracked editable source from the latest accepted or human-reviewed Fig1-family artifact only after recording its source commit and tree hash. Do not read user untracked files or another worktree build directory. The pilot must use a tracked Fig1-family editable source and a predeclared comparison protocol.
+
+- [ ] **Step 1: Pin authority and geometry**
+
+The pilot authority manifest includes:
+
+~~~yaml
+selector_id: panel_f.metal_contact
+anchor_start: "% figure-agent:start panel_f.metal_contact"
+anchor_end: "% figure-agent:end panel_f.metal_contact"
+coordinate_space: pdf_cm
+page_index: 0
+render_geometry_hash: null
+review_input_hash: null
 publication_acceptance: not_claimed
-```
+~~~
 
-It rejects any Test B packet containing target pixels, target hashes, or
-geometry derivatives.
+Before validation, render_geometry_hash and review_input_hash are null with
+hash_authority: generated_receipt. The validator computes both hashes and writes
+them into a generated receipt. The committed source manifest records source
+commit and tree hash. Do not hand-type hashes into the tracked manifest.
 
-- [x] **Step 2: Verify RED, then stage non-semantic infrastructure only**
+- [ ] **Step 2: Write RED tests before importing the pilot**
 
-Create comparator authority, schemas, font receipt, output roots, and the
-explicit blocked state. Do not create fake or current-session-authored semantic
-content to make the test pass. The fixture test passes while the run honestly
-remains blocked.
+Tests require:
 
-- [x] **Step 3: Verify and commit**
+- exact attribution to panel_f.metal_contact;
+- required objects and forbidden implications, including no invented ground;
+- one bounded repair family;
+- protected cantilever/electrode/force relations;
+- raw, verified, and repaired manifests with identical model/input/budget hashes;
+- a focused crop and overlay for each state;
+- human correction minutes left null until measured;
+- publication acceptance not claimed.
 
-```bash
-uv run pytest tests/test_direct_svg_fixture.py tests/test_document_authority.py -q
+- [ ] **Step 3: Build evidence without extending fixture-specific search**
+
+Use failure_corpus.py, failure_ablation.py, visual_finding_attribution.py, visual_finding_artifacts.py, quality_patch_policy.py, quality_patch_plan.py, and quality_patch_apply.py. Do not add a template, coordinate constant, or branch to quality_search.py.
+
+- [ ] **Step 4: Compile and verify from a clean checkout**
+
+Run from plugins/figure-agent:
+
+~~~bash
+bash scripts/compile.sh examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex
+FIGURE_AGENT_STRICT=1 bash scripts/compile.sh   examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex
+uv run pytest tests/test_fig1_failure_first_panel_f_pilot.py   tests/test_failure_first_vertical_slice.py tests/test_failure_ablation.py -q
 git diff --check
-git add examples/fig1_direct_svg_cleanroom_baseline \
-  tests/test_direct_svg_fixture.py tests/test_document_authority.py
-git commit -m "test: stage clean-room direct svg experiment"
-```
+~~~
 
-**Recorded state:** The packet, crop, candidate, and blinded-review contracts
-are implemented. The immutable C/F comparator, licensed isolated font, Test A
-and Test B templates, separate output roots, and non-semantic run states are
-bound under `examples/fig1_direct_svg_cleanroom_baseline/`. The experiment is
-honestly `blocked_pending_independent_semantic_packet`; no clean-room candidate
-or human quality verdict has been claimed.
+Expected: machine-valid or review-ready only.
 
-Schema ownership introduced by this plan remains in the canonical execution
-authority rather than the historical Issue 100H/I map:
+- [ ] **Step 5: Stop at the human boundary**
 
-- `figure-agent.illustration-grammar.v1` — `scripts/illustration_grammar.py`;
-- `figure-agent.illustration-instance.v1` — `scripts/illustration_scene.py`;
-- `figure-agent.illustration-backend-profile.v1` — `scripts/illustration_backend.py`;
-- `figure-agent.direct-svg-packet.v1` — `scripts/direct_svg_packet.py`;
-- `figure-agent.direct-svg-crop-authority.v1` — `scripts/direct_svg_crop_authority.py`;
-- `figure-agent.direct-svg-task20-status.v1` —
-  `examples/fig1_direct_svg_cleanroom_baseline/review/task20-status.yaml`.
+A named human reviews whole figure, Panel F, object/relation crop, and contact zoom. Record scientific fidelity, defect presence, correction minutes, and visual verdict separately. A machine gate cannot fill these values.
 
-## Task 20: Run independent authoring and decide the next product path
+Commit only the actual state:
 
-This task cannot run in the current contaminated session. A fresh task receives
-only a validated standalone packet. No subagent or new user-owned task is
-created without explicit user authorization.
+~~~bash
+git add examples/fig1_failure_first_panel_f_pilot   benchmarks/llm_failure_sources.yaml benchmarks/llm_failure_corpus.yaml   tests/test_fig1_failure_first_panel_f_pilot.py
+git commit -m "test: stage real failure-first Panel F review"
+~~~
 
-- [x] **Step 1: Bind an independently authored semantic packet**
+## Legacy evidence boundaries retained
 
-Require a named preparer, timestamp, source-authority hashes, and a declaration
-that the preparer did not inspect target implementation details. Validate with
-Task 15 before changing `run_state` from `blocked` to `ready`.
+The previous plan completed or staged important contracts that remain valid evidence:
 
-- [x] **Step 2: Execute Test A and Test B in separate clean tasks**
+- tracked editable source and tracked Fig1-family editable source requirements;
+- reference source commit and tree hash;
+- stable selector fields such as selector_id: and anchor_start:;
+- coordinate_space: pdf_cm, page_index:, and render_geometry_hash:;
+- rejection of network access and external URLs;
+- bound review_input_hash and aggregate review-input hash;
+- the predeclared comparison protocol;
+- Task 15: Validate clean-room direct-SVG input packets;
+- target_crop_forbidden and blocked_pending_independent_semantic_packet;
+- Run two cold reproductions only for a passing claim.
 
-Each task preserves the three-cycle utility checkpoint, then may continue to
-the eight-cycle ceiling checkpoint. Test B receives no Test A history. Any
-denied-path access changes the run state to `invalidated`.
+These are retained boundaries, not the new task order. Historical direct-SVG and grammar artifacts remain immutable evidence. No unfinished human verdict is converted into success.
 
-- [ ] **Step 3: Produce blinded packets and record named verdicts**
+Legacy schema ownership remains unchanged for
+figure-agent.direct-svg-crop-authority.v1,
+figure-agent.direct-svg-packet.v1,
+figure-agent.direct-svg-task20-status.v1,
+figure-agent.illustration-backend-profile.v1,
+figure-agent.illustration-grammar.v1,
+figure-agent.illustration-grammar.v2,
+figure-agent.illustration-instance.v1, and
+figure-agent.semantic-regions.v1. Their implementation modules and historical
+tests remain the runtime authority for those artifacts.
 
-Run the scientific hard gate first. Require a second named reviewer for a
-borderline or disputed result. Do not reveal the blinding key until scores are
-fixed.
+## Completion boundary for this plan
 
-**Recorded state:** The named primary reviewer completed the scientific and
-visual gates and marked both panels borderline or disputed. A distinct second
-human reviewer was unavailable. The independent AI advisory remains explicitly
-supplemental, the response remains `primary_visual_fixed`, and the blinding key
-remains unrevealed. This step is therefore intentionally incomplete.
+The first plan is complete only when:
 
-- [x] **Step 4: Run two cold reproductions only for a passing claim**
+1. the failure-first authority test passes;
+2. a hash-bound reviewed corpus covers at least typography, geometry, finish, style, and one accepted false positive;
+3. the A/B/C evaluator rejects incomparable runs and non-compensating scientific failures;
+4. exact attribution and protected invariants are required before a repair candidate can be applied;
+5. the synthetic vertical slice proves the evidence and rollback machinery;
+6. the real Panel F pilot is reproducible from tracked inputs;
+7. whole, panel, object/relation, and zoom evidence exist for the real pilot; and
+8. its actual human state is recorded without publication overclaim.
 
-Both use the same packet, model snapshot, prompt, tools, and budget without the
-reviewed candidate or history. Both must pass scientific fidelity and produce
-C/F panels that are no worse.
-
-**Recorded state:** No passing claim exists. Zero cold reproductions were run,
-as required by the conditional gate.
-
-- [ ] **Step 5: Record and commit the narrow outcome**
-
-Allowed outcomes are `reconstruction_only`, `grammar_hypothesis_strengthened`,
-`control_and_reproduction_priority`, or `defer_fig1_grammar_investment`. The
-decision must state that one Fig1 family cannot reject grammar globally or
-promote direct SVG. Update this plan and commit with a message naming the actual
-outcome. Machine-valid and review-ready remain distinct from publication
-acceptance.
-
-**Recorded blocked state:** No product-direction outcome is authorized yet. The
-primary human review marked both panels borderline or disputed, and the required
-distinct second human review is unavailable. The response therefore remains
-`primary_visual_fixed`, the blinding key remains unrevealed, and no cold
-reproduction or publication claim is allowed. The bound interim artifact is
-`examples/fig1_direct_svg_cleanroom_baseline/review/task20-status.yaml`.
-
-## Completion boundary
-
-The plan is complete only when:
-
-- visual findings are reviewable and source-actionable without guessed mapping;
-- one hybrid complex-panel pilot is reproducible;
-- the contracts generalize across Fig1 and sulfur-polymer Fig3;
-- the raw SVG non-promotion judgment is bound without inventing a scaffold
-  verdict;
-- one `sulfur_trap_domain` grammar lowers through TikZ and SVG from the same
-  neutral scene;
-- the three-way raw-SVG/grammar-TikZ/grammar-SVG human verdict is recorded; and
-- the grammar decision is recorded with clean-reproduction evidence;
-- Test A reconstruction and Test B synthesis remain independently authored,
-  isolated, and hash-bound;
-- both direct-SVG panels receive named scientific and blinded visual verdicts;
-  and
-- any product-direction claim has the required cold reproductions and remains
-  limited to the tested Fig1 family.
-
-Passing tests, strict compile, or machine gates alone cannot satisfy this
-completion boundary.
+This plan does not promote SVG, retire TikZ, generalize from one fixture, or authorize another illustration grammar. A second materially different figure family is a later plan, opened only when the real Panel F pilot shows a reusable failure reduction rather than a fixture-specific polish win.
