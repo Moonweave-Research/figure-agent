@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
@@ -12,6 +14,9 @@ from semantic_legibility_contract import (  # noqa: E402
     SemanticLegibilityContractError,
     validate_semantic_legibility_contract,
 )
+
+SCRIPT = PLUGIN_ROOT / "scripts" / "quality" / "semantic_legibility_contract.py"
+COMPILE_SCRIPT = PLUGIN_ROOT / "scripts" / "compile.sh"
 
 
 def valid_contract() -> dict:
@@ -119,3 +124,26 @@ def test_rejects_declared_role_as_its_own_forbidden_reading() -> None:
         match="object_role_contradiction",
     ):
         validate_semantic_legibility_contract(contract)
+
+
+def test_contract_cli_fails_closed_on_missing_role(tmp_path: Path) -> None:
+    path = tmp_path / "semantic_contract.yaml"
+    contract = valid_contract()
+    contract["semantic_legibility"]["object_roles"].pop()
+    path.write_text(yaml.safe_dump(contract, sort_keys=False), encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(path)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    assert "required_object_role_missing" in result.stderr
+
+
+def test_compile_pipeline_runs_opt_in_contract_gate_before_tex_lint() -> None:
+    script = COMPILE_SCRIPT.read_text(encoding="utf-8")
+    contract_gate = script.index("semantic_legibility_contract.py")
+    tex_lint = script.index("scripts/lint_tex.py")
+    assert contract_gate < tex_lint
+    assert 'if [[ -f "$SEMANTIC_CONTRACT" ]]' in script

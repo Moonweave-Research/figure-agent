@@ -29,6 +29,14 @@ if [[ ! -f "$TEX_INPUT" ]]; then
   exit 1
 fi
 
+SEMANTIC_CONTRACT="$(dirname "$TEX_INPUT")/semantic_contract.yaml"
+if [[ -f "$SEMANTIC_CONTRACT" ]]; then
+  echo 'Gate: Semantic role, connector, and label contract...' >&2
+  "${UV_RUN[@]}" python3 \
+    "$WORKFLOW_DIR/scripts/quality/semantic_legibility_contract.py" \
+    "$SEMANTIC_CONTRACT"
+fi
+
 echo 'Lint: Style Lock check (BLOCKER fails, WARN reports)...' >&2
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/lint_tex.py" "$TEX_INPUT"
 

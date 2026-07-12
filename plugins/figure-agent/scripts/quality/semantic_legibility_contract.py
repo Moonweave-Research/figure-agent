@@ -1,6 +1,12 @@
 from __future__ import annotations
 
+import argparse
+import json
+import sys
+from pathlib import Path
 from typing import Any
+
+import yaml
 
 SCHEMA = "figure-agent.failure-first-semantic-contract.v1"
 
@@ -164,3 +170,41 @@ def validate_semantic_legibility_contract(payload: object) -> dict[str, Any]:
             "visual_review_required": True,
         },
     }
+
+
+def load_semantic_legibility_contract(path: Path) -> dict[str, Any]:
+    try:
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, yaml.YAMLError) as exc:
+        raise SemanticLegibilityContractError("contract_file_invalid") from exc
+    return validate_semantic_legibility_contract(payload)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Validate an opt-in semantic legibility contract."
+    )
+    parser.add_argument("contract", type=Path)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    try:
+        payload = load_semantic_legibility_contract(args.contract)
+    except SemanticLegibilityContractError as exc:
+        print(f"ERROR semantic_legibility_contract: {exc}", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        summary = payload["summary"]
+        print(
+            "OK semantic_legibility_contract: "
+            f"objects={summary['object_role_count']} "
+            f"connectors={summary['visible_connector_count']} "
+            f"labels={summary['label_ownership_count']} "
+            "visual_review_required=true"
+        )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
