@@ -1,0 +1,6 @@
+schema: figure-agent.panel-f-svg-human-review.v1
+comparison_artifact: comparison.png
+semantic_legibility_verdict: pending
+visual_quality_vs_tikz: pending
+backend_promotion: not_authorized
+publication_acceptance: not_claimed

@@ -1,0 +1,16 @@
+{
+  "canvas": {
+    "height": 640,
+    "width": 960
+  },
+  "comparison_boundary": "equal_pixel_canvas",
+  "comparison_sha256": "c4323537b6a99152f417717629bf52fe9b59b0e87af7edfea2f3f9d8ce64ee1a",
+  "png_pixel_sha256": "07fe0800e6cbe66b72ac1bd5d57cc7f86af0cd0ba11610714f155873aa199dca",
+  "png_sha256": "9679fb7b7fb32525421b4e56d75386135bc01b751c35db90bbfec13e4f1a110c",
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.panel-f-svg-receipt.v1",
+  "semantic_legibility_verdict": "pending",
+  "svg_sha256": "a786390c415ca991adcd4e546d497a4573cf10a7562490be782a91398c462984",
+  "tikz_pixel_sha256": "62b71600406fa1ea5cce92927c574c1ec6c4e543a358209f10fb9760645a57ff",
+  "visual_quality_vs_tikz": "pending"
+}

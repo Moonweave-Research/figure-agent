@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" width="960" height="640" data-fragment-role="panel-f-motif">
+  <title>Floating cantilever and driven electrode motif</title>
+  <desc>Editable semantic SVG fragment; the cantilever is electrically floating and the voltage-source return is grounded.</desc>
+  <g id="panel-f-svg-fixed-boundary" data-object="fixed_mechanical_boundary">
+    <rect x="94" y="116" width="70" height="304" rx="8" fill="#d9dde3" stroke="#343a40" stroke-width="6"/>
+    <path d="M108 146l42-24M108 196l42-24M108 246l42-24M108 296l42-24M108 346l42-24M108 396l42-24" fill="none" stroke="#77808b" stroke-width="4"/>
+  </g>
+  <g id="panel-f-svg-floating-cantilever" data-object="floating_cantilever" data-electrical-state="floating">
+    <path d="M164 244 C330 244 450 250 604 276 L604 326 C450 300 330 294 164 294 Z" fill="#e5a449" stroke="#4a3422" stroke-width="6"/>
+  </g>
+  <g id="panel-f-svg-driven-electrode" data-object="driven_electrode" data-electrical-state="driven">
+    <rect x="580" y="420" width="246" height="34" rx="8" fill="#78a8d8" stroke="#274d73" stroke-width="6"/>
+  </g>
+  <g id="panel-f-svg-voltage-source" data-object="voltage_source" data-electrical-state="driven">
+    <circle cx="768" cy="160" r="55" fill="#fff" stroke="#27323d" stroke-width="6"/>
+    <path d="M748 142h40M768 122v40M750 184h36" stroke="#27323d" stroke-width="5"/>
+  </g>
+  <g id="panel-f-svg-source-ground" data-object="ground" data-electrical-state="reference">
+    <path d="M768 540v30M730 570h76M740 584h56M752 598h32" fill="none" stroke="#27323d" stroke-width="6"/>
+  </g>
+  <g id="panel-f-svg-electrical-leads" data-object="electrical_leads">
+    <path d="M768 215v84h-64v121" fill="none" stroke="#315d8a" stroke-width="6"/>
+    <path d="M823 160h42v380h-97" fill="none" stroke="#315d8a" stroke-width="6"/>
+  </g>
+  <g id="panel-f-svg-gap-guides" data-object="gap_guides">
+    <path d="M540 340v64M526 340h28M526 404h28" fill="none" stroke="#6c757d" stroke-width="3" stroke-dasharray="8 7"/>
+  </g>
+  <g id="panel-f-svg-trapped-charge" data-object="trapped_charge" data-electrical-state="trapped">
+    <circle cx="410" cy="270" r="9" fill="#b73535"/><circle cx="448" cy="276" r="9" fill="#b73535"/><circle cx="486" cy="283" r="9" fill="#b73535"/>
+  </g>
+  <g id="panel-f-svg-mechanical-attachment" data-relation="mechanical_attachment" data-from="panel-f-svg-fixed-boundary" data-to="panel-f-svg-floating-cantilever" data-connector-role="mechanical">
+    <rect x="154" y="230" width="28" height="78" rx="5" fill="#6f7780" stroke="#343a40" stroke-width="4"/>
+  </g>
+  <g id="panel-f-svg-electrode-drive" data-relation="electrode_drive" data-from="panel-f-svg-voltage-source" data-to="panel-f-svg-driven-electrode" data-connector-role="electrical-drive"/>
+  <g id="panel-f-svg-source-return" data-relation="source_return" data-from="panel-f-svg-voltage-source" data-to="panel-f-svg-source-ground" data-connector-role="electrical-return"/>
+  <g id="panel-f-svg-charge-ownership" data-relation="trapped_charge_ownership" data-from="panel-f-svg-trapped-charge" data-to="panel-f-svg-floating-cantilever" data-connector-role="ownership"/>
+</svg>
