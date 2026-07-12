@@ -3,522 +3,405 @@
 
 **Status:** Active product authority
 
-**Effective date:** 2026-07-11
+**Effective date:** 2026-07-12
 
-**Companion authority:** `docs/execution-plan.md`
+**Companion authority:** docs/execution-plan.md
 
 ## 1. Authority contract
 
-This file is the single active product specification for Figure Agent. It
-defines the product goal, system boundary, architecture, acceptance model, and
-promotion rules. `docs/execution-plan.md` is the single active forward execution
-plan. An agent starting product work must read these two files before any
-roadmap, architecture note, milestone, experiment, or fixture-local plan.
+This is the single active product specification for Figure Agent. It defines
+the product identity, durable boundaries, architecture, evidence model, and
+promotion rules. The only active forward execution authority is
+docs/execution-plan.md.
 
-All other documents are one of the following:
+All other roadmaps, architecture notes, milestone records, experiments, and
+fixture-local plans are operational references or historical evidence. They may
+explain how the product reached the current state, but they do not set product
+direction. Code, tests, manifests, and generated artifacts remain the authority
+for what is implemented now.
 
-- an operational reference that explains shipped commands or code;
-- historical evidence that records a past decision, experiment, or branch;
-- a fixture-local contract whose authority is limited to that fixture; or
-- a review artifact that supplies evidence but cannot change product direction.
+The previous product question -- whether Figure Agent should replace TikZ with
+SVG or build a complete drawing grammar -- is closed as the top-level framing.
+TikZ, SVG, PDF, and PNG are representations in a larger control system. None of
+them is the product identity.
 
-Code, tests, manifests, and generated artifacts remain the authority for what is
-implemented now. These two documents do not turn planned behavior into shipped
-behavior. When prose and runtime disagree, report the disagreement and repair
-the appropriate authority; never silently claim that the prose is operational.
+## 2. Product identity
 
-## 2. Product north star
+Figure Agent is not a model that competes with an LLM at drawing. It uses an LLM
+and therefore must not claim an independent general drawing intelligence.
 
-Figure Agent helps an agent and a human produce publication-quality scientific
-schematics with less correction cost than a TikZ-only workflow, while retaining
-or exceeding the best verified TikZ visual quality.
+Figure Agent exists to convert unconstrained LLM-authored scientific figures
+into artifacts that are:
 
-The product does **not** discard TikZ. TikZ is currently the strongest proven
-assembly and typography path in this repository and therefore remains both the
-production baseline and the benchmark to beat. Figure Agent earns a broader
-authoring role only when measured evidence shows that it improves visual
-quality, editability, or iteration cost without weakening scientific fidelity,
-reproducibility, or human control.
+- scientifically constrained;
+- visually inspectable at whole, panel, object, and zoom scales;
+- attributable from a rendered defect to a semantic object and editable source;
+- locally repairable without uncontrolled regeneration;
+- reproducible from declared inputs;
+- provenance-complete; and
+- explicitly bounded by human scientific and publication review.
 
-The immediate product focus is:
+The operating sentence is:
 
-1. make visual findings actionable by connecting rendered defects back to
-   panels, semantic objects, and source selectors;
-2. determine whether an LLM can directly author SVG at the accepted TikZ
-   quality level before investing further in a drawing grammar;
-3. locate the durable product value in direct drawing, reproducibility,
-   verification, provenance, or correction-cost reduction from that evidence;
-   and
-4. expand a scientific illustration grammar only when the direct-authoring
-   baseline exposes a repeated visual-control problem that simpler tooling does
-   not solve.
+> Let the LLM propose freely. Make Figure Agent constrain, observe, localize,
+> repair, reproduce, and prove.
 
-## 3. Current truth and target architecture
+The product succeeds when LLM plus Figure Agent produces fewer scientific and
+visual defects, requires less human correction, and preserves more editability
+than the same LLM working without Figure Agent. It does not succeed merely
+because Figure Agent can generate a figure or pass machine checks.
 
-### 3.1 Current truth
+## 3. Strategic premise
 
-- **TikZ is the primary editable composition source and quality benchmark.**
-- **Python is the implementation language** for orchestration, manifests,
-  geometry, detectors, candidate generation, verification, and provenance.
-- **SVG is a vector representation, not a replacement for Python.** Semantic SVG
-  may serve as an inspectable fragment IR and QA surface when it carries stable
-  object identities and provenance.
-- **Semantic structure alone does not create illustration quality.** The Fig3
-  hybrid pilot preserved object identities and relations, but its bound human
-  verdict rejected the primitive SVG artifact as a production-quality
-  rendering.
-- **The first paired illustration grammar did not solve the quality gap.** Its
-  TikZ and SVG backends shared one neutral scene and surrounding illustration
-  language, yet both sulfur-trap artifacts were rejected for production and the
-  grammar SVG remained worse than the historical raw SVG comparator.
-- **A grammar layer is a hypothesis, not an assumed product requirement.** It
-  may be needed for motifs, strokes, curvature, layering, spacing, emphasis,
-  and optical correction, but Figure Agent must first measure whether an LLM
-  can author a comparable SVG directly from a reference and scientific brief.
-- **PDF, annotated SVG, PNG, overlays, and crops are evidence artifacts.** They
-  serve different inspection and export purposes; no single render format is the
-  whole source of truth.
-- The shipped plugin has deterministic TikZ compile/export and multiple quality
-  checks. A general built-in semantic-SVG authoring and polish executor is not
-  yet a production capability.
-- Machine gates can establish contract compliance and reproducibility. They do
-  not establish publication acceptance.
+### 3.1 What remains with the LLM
 
-### 3.2 Target flow
+The LLM remains the primary source of open-ended visual synthesis:
 
-The flow below is the retained hybrid architecture when evidence justifies a
-grammar. The clean-room direct-SVG baseline in Section 4.5 is a diagnostic
-branch used to decide whether further grammar investment is warranted; it is
-not silently inserted into the production flow.
+- narrative interpretation;
+- analogy and metaphor;
+- composition proposals;
+- stylistic exploration;
+- freeform TikZ or SVG authoring;
+- alternative generation; and
+- high-level repair hypotheses.
+
+Figure Agent must not reproduce these general capabilities with a rigid internal
+illustrator language unless repeated evidence proves that a narrow contract is
+necessary.
+
+### 3.2 What Figure Agent owns
+
+Figure Agent owns the failure classes for which unconstrained LLM behavior is
+persistently unreliable:
+
+1. scientific object and relation preservation;
+2. cross-panel and cross-iteration consistency;
+3. paper-scale typography, stroke, spacing, and collision checks;
+4. visual hierarchy and semantic salience constraints;
+5. multi-scale defect observation and localization;
+6. source attribution without invented mappings;
+7. bounded repair with protected invariants and rollback;
+8. deterministic reproduction and provenance;
+9. evidence-backed learning from accepted and rejected repairs; and
+10. an explicit boundary between machine evidence and human acceptance.
+
+### 3.3 Durable value test
+
+Every product change must answer at least one of these questions:
+
+- Does it detect a recurring defect that the LLM commonly misses?
+- Does it bind that defect to the correct object, relation, or source selector?
+- Does it prevent a scientifically invalid or visually incoherent edit?
+- Does it repair a bounded region while preserving declared invariants?
+- Does it reduce human correction time on a later figure?
+- Does it make the result reproducible or its uncertainty more honest?
+
+A fixture-specific coordinate adjustment that answers none of these questions is
+figure production, not Figure Agent development. It may be useful evidence, but
+it must not be promoted as a product capability.
+
+## 4. Constraint-sandwich architecture
+
+Figure Agent surrounds, rather than replaces, LLM authoring.
 
 ```text
-intent + references + declared semantics
-                  |
-                  v
-       semantic regions / object relations
-                  |
-                  v
-      scientific illustration grammar
-                  |
-          +-------+--------+
-          |                |
-          v                v
-   TikZ backend       optional SVG backend
-          |                |
-          +-------+--------+
-                  |
-                  v
-       deterministic TikZ assembly
-                  |
-                  v
- PDF + annotated SVG + PNG + overlay/crops + manifests
-                  |
-                  v
-       quality kernel and human review
-                  |
-                  v
- bbox -> panel -> semantic object -> source selector
-                  |
-                  v
-        bounded edit candidates and decision
+references + scientific intent + declared invariants
+                         |
+                         v
+              pre-authoring context contract
+                         |
+                         v
+        free LLM authoring in TikZ, SVG, or hybrid form
+                         |
+                         v
+       deterministic render + semantic observation model
+                         |
+                         v
+ whole -> panel -> object/relation -> contact/edge/label zoom
+                         |
+                         v
+      defect localization -> bounded repair candidates
+                         |
+                         v
+       regression proof + reproducibility + provenance
+                         |
+                         v
+              named human review and decision
 ```
 
-The default remains TikZ-only when it is the cheaper and higher-quality path.
-The hybrid path is selected at a panel or object boundary, never by rewriting an
-entire accepted figure merely to change technology.
+The pre-authoring contract must remain smaller than the generated artifact. It
+states scientific facts, protected relations, forbidden implications, panel
+roles, salience roles, and output constraints. It must not prescribe every path
+or coordinate and thereby suppress the LLM's useful expressive ability.
 
-### 3.3 Representation roles
+Read-only authoring context packs remain durable paper-specific knowledge
+compilation. They are not LLM prompt plumbing, not prompt-loop revival, and not
+automatic physics detection. They may expose declared facts to an authoring
+agent, but they do not call a model, invent scientific truth, or authorize a
+generation executor.
 
-| Surface | Product role | Must not be treated as |
-| --- | --- | --- |
-| TikZ/TeX | Primary composition, typography, labels, arrows, panel assembly, editable benchmark | A technology that must be removed |
-| Python | Orchestration, deterministic geometry, detectors, contracts, manifests, source attribution | A final visual format |
-| Scientific illustration grammar | Renderer-neutral motif, stroke, layer, spacing, and optical-correction contract | A full Illustrator clone, arbitrary style generator, or renderer |
-| Semantic SVG | Optional complex-fragment IR with stable IDs, relations, and inspectable geometry | Semantic merely because it has an `.svg` suffix |
-| PDF | Deterministic vector assembly and manuscript artifact | Sufficient proof of semantic correctness |
-| PNG | Raster review and vision input | Editable source |
-| Overlay/crops | Localized visual-error evidence | Publication output |
-| Human scaffold/review | Scientific and publication acceptance boundary | A machine gate that can be inferred from exit code |
+The post-authoring system must not merely produce a score. It must make failures
+observable, attributable, and repairable.
 
-## 4. Product capabilities
+## 5. Canonical model
 
-### 4.1 Quality kernel
+### 5.1 Intent and authority
 
-The durable kernel owns:
+Each active figure declares authoritative inputs and their roles. Reference
+pixels, briefing text, specification, editable source, review history, and
+coordinate hints do not have interchangeable authority.
 
-- style-lock enforcement;
-- deterministic compile and export;
-- stale-artifact and provenance detection;
-- visual and semantic QA evidence;
-- status and next-action routing; and
-- explicit acceptance boundaries.
+Declared scientific truth includes required objects, required relations,
+forbidden objects or implications, narrative role, and uncertainty. Inferred
+truth from OCR, vision, DOM grouping, or pixel similarity remains evidence until
+a deterministic declaration or named human decision promotes it.
 
-The kernel may evaluate artifacts authored by a human, an agent, TikZ, Python,
-or another tool. It must report uncertainty and unbound findings honestly.
+### 5.2 Semantic visual object model
 
-### 4.2 Actionable visual-error detection
+Figure Agent uses a small renderer-neutral model, not a complete scene graph.
+Each declared object or relation may carry:
 
-A detector finding is actionable only when the system can preserve this chain:
+- stable semantic ID;
+- panel and narrative role;
+- scientific meaning;
+- relation endpoints and direction;
+- visual salience role;
+- layer and occlusion ownership;
+- source ownership and stable selector ID;
+- render geometry and coordinate-space binding;
+- protected invariants;
+- review state and provenance.
+
+Line ranges are review snapshots, not durable identity. A durable selector uses
+a stable selector ID plus explicit anchors and a source hash.
+
+### 5.3 Representation roles
+
+| Surface | Role |
+| --- | --- |
+| TikZ/TeX | Current strongest composition, typography, and manuscript assembly baseline |
+| SVG | Inspectable vector authoring or fragment surface with stable semantic IDs |
+| Python | Contracts, geometry, detectors, attribution, repair planning, manifests, and provenance |
+| PDF | Deterministic vector assembly and manuscript artifact |
+| PNG | Canonical raster review and vision input |
+| overlays and crops | Localized diagnostic evidence |
+| LLM | Open-ended proposal, authoring, and repair-hypothesis generation |
+| human review | Scientific meaning and publication-quality acceptance |
+
+TikZ is retained whenever it is the cheaper or better production path. SVG is
+used whenever inspectable geometry, freeform illustration, or complex fragments
+make it advantageous. Backend selection is local to a panel or object boundary.
+
+No fragment may depend on network access, mutable external URLs, ambient fonts,
+or unhashed local assets.
+
+## 6. Failure ontology
+
+The product organizes reviewed failures into eight non-interchangeable classes:
+
+1. semantic -- missing, invented, or misrepresented scientific meaning;
+2. relation -- incorrect attachment, direction, containment, overlap, or causal link;
+3. geometry -- broken contours, crossings, clipping, malformed shapes, or alignment;
+4. composition -- incorrect panel orientation, hierarchy, density, or narrative flow;
+5. typography -- collision, illegibility, inconsistent scale, or unsuitable hierarchy;
+6. style -- incoherent stroke, color role, curvature, corner, cap, join, or repetition;
+7. finish -- dangling endpoints, incomplete outlines, awkward contacts, or optical misalignment;
+8. reproducibility -- stale, unbound, nondeterministic, or provenance-incomplete artifacts.
+
+Every finding records its observation scale, confidence, evidence source, and
+attribution state. A detector that cannot distinguish these classes must not
+silently collapse them into one quality score.
+
+## 7. Multi-scale observation and actionable attribution
+
+The canonical review ladder is:
+
+```text
+whole figure -> panel -> semantic object/relation -> zoomed finish region
+```
+
+Whole-figure review owns narrative and hierarchy. Panel review owns local
+composition and density. Object/relation review owns scientific fidelity and
+attachment. Zoom review owns contacts, contours, labels, stroke termination,
+and micro-finish.
+
+A machine finding becomes actionable only when this chain is preserved:
 
 ```text
 rendered bbox -> panel -> declared semantic object/relation -> source selector
 ```
 
-The attribution result is one of `exact`, `ambiguous`, or `unbound`. The system
-must not invent a source location when declarations are missing or regions
-overlap. Every actionable finding produces a review overlay and focused crop so
-the human can verify the attribution before accepting an edit.
+Attribution is exact, ambiguous, or unbound. Missing, duplicated, overlapping,
+or stale declarations must degrade to ambiguous or unbound. Figure Agent must
+never guess a source location merely to enable automation.
 
-A durable source selector has a stable selector ID and explicit structural or
-author-provided anchors. Line ranges are review snapshots, not durable identity:
-they may be emitted for a human, but they cannot remain authoritative after the
-source hash or anchor resolution changes. Missing, duplicated, or stale anchors
-degrade attribution to `ambiguous` or `unbound` rather than triggering a guessed
-edit.
+Every actionable finding produces a focused crop, an overlay, the relevant
+semantic declaration, the selector snapshot, and a render-geometry hash.
 
-### 4.3 Scientific illustration grammar
+## 8. Bounded repair contract
 
-The grammar is the narrow contract between declared scientific semantics and a
-rendering backend. It makes the visual decisions that raw circles, paths, and
-coordinates do not express. TikZ and SVG may implement the contract, but
-neither backend owns the grammar.
+The primary execution capability is controlled local repair, not complete
+regeneration. A repair candidate declares:
 
-A versioned motif definition contains only:
+- target defect, object, relation, and source selector;
+- preconditions and source hashes;
+- allowed files, semantic blocks, and parameters;
+- protected objects, relations, labels, and styles;
+- expected defect movement;
+- source and rendered-change budgets;
+- required verification;
+- rollback operation; and
+- human-review requirement.
 
-- a motif-family ID and the semantic object/relation slots it must preserve;
-- stroke, fill, color-role, curvature, corner, cap, and join families;
-- layer and occlusion order, including foreground/background ownership;
-- spacing, repetition, controlled-variation, and optical-alignment rules;
-- label and composition ownership boundaries retained by TikZ;
-- deterministic backend parameters and provenance; and
-- review assertions that can be inspected in a paired TikZ/backend crop.
+Initial reusable repair families should remain small:
 
-The first implemented motif family is `sulfur_trap_domain`: polymer backbone,
-sulfur-rich region, sulfur sites, localized trap levels, and trapped carriers.
-Its paired TikZ/SVG experiment preserved the neutral scene and shared visual
-roles, but the bound human review rejected both artifacts and found the grammar
-SVG worse than the raw Fig3 SVG comparator. The implementation remains
-experimental infrastructure and does not justify another motif family.
-Matching schemas, hashes, or semantic relations was necessary but insufficient.
+- label reflow and scale correction;
+- close or complete a contour;
+- align or simplify a contact;
+- restore a declared relation;
+- reduce or increase semantic salience;
+- normalize stroke and color roles;
+- repair clipping or view-box ownership;
+- rebalance a declared panel subregion.
 
-Grammar loading fails closed on an unknown schema version, motif family,
-semantic slot, relation, or required visual token. A backend must report an
-unsupported capability explicitly; it may not silently omit a layer, substitute
-a default motif, or change semantic roles. Contract tests verify schema and slot
-preservation, backend tests verify deterministic structural output, and paired
-render tests produce crops for human comparison. Raster similarity may detect
-drift but cannot decide publication quality.
+The LLM may propose candidate parameters or source edits. Figure Agent validates
+the repair boundary before application and proves semantic and visual regression
+conditions afterward. An unbound finding is review-only and cannot trigger an
+automatic edit.
 
-The grammar is not a general-purpose scene graph or complete vector-design
-application. It does not include arbitrary brushes, freeform effects, filters,
-page layout, typography engines, or unconstrained style synthesis. New motif
-families are added one at a time only after a real figure exposes a repeated
-need and a human accepts the resulting paired review.
+## 9. Evidence and learning loop
 
-### 4.4 Complex-panel hybrid authoring
+Each attempt records the input authority, model and tool receipt, source and
+render hashes, findings before and after, applied repair family, protected
+invariants, rollback state, and human outcome.
 
-Python-generated semantic SVG fragments are allowed for sub-regions where they
-materially reduce complexity or improve geometry: dense molecular structures,
-organic freeform shapes, repeated objects, spatial fields, and other geometry
-that is awkward to maintain directly in TikZ.
-
-SVG is not allowed merely because a region is complex. A new fragment must
-either implement an approved illustration motif or remain an experimental QA
-or direct-authoring artifact with an explicit non-promotion verdict. Raw
-backend-specific polish rules may be prototyped to discover grammar
-requirements, but they cannot become the product contract.
-
-Each fragment must provide:
-
-- stable semantic object IDs and declared object relations;
-- a deterministic view box and coordinate transform;
-- the generator and input hash;
-- an SVG source for inspection and a deterministic PDF-compatible render for
-  TikZ assembly;
-- a manifest tying both renders to the same fragment source; and
-- a clear boundary showing which labels, arrows, and panel relationships remain
-  owned by TikZ.
-
-No fragment may depend on network access, mutable external URLs, ambient fonts,
-or unhashed local assets. Scripts are forbidden. Embedded raster assets, when a
-scientifically necessary exception is declared, carry content hashes and an
-explicit license/provenance record. SVG and its PDF-compatible render must pass
-a deterministic geometry and visual-equivalence check, including view-box and
-clipping checks.
-
-TikZ remains responsible for figure-wide composition unless a later promotion
-gate explicitly changes that policy.
-
-### 4.5 Clean-room direct-SVG capability baseline
-
-Before expanding the rejected illustration grammar, Figure Agent measures the
-quality ceiling and repeatability of direct LLM-authored SVG. This is a
-diagnostic experiment, not a production-path promotion. It asks two different
-questions that must not be collapsed into one result:
-
-- **Test A — reference reconstruction:** can an LLM convert an exact target PNG
-  into an editable SVG of equal or better quality?
-- **Test B — semantic synthesis:** can an LLM design an equal or better SVG from
-  scientific requirements and non-target style constraints when the target
-  panel pixels are withheld?
-
-A Test A pass establishes raster-to-vector reconstruction ability only. It
-cannot show that a drawing grammar is unnecessary for authoring a new figure.
-Only Test B can inform that question, and only within the tested figure family.
-
-The first challenge uses two demanding and materially different regions of the
-six-panel Fig1 benchmark:
-
-- Panel C: thin-film real-space trap structure plus the related energy diagram;
-- Panel F: biased apparatus, bent polymer cantilever, trapped charges,
-  electrode separation, and Coulomb-repulsion direction.
-
-Each test uses a separately hashed input packet. Test A receives immutable
-equal-boundary target PNG crops, panel dimensions, required scientific
-objects/relations, and the rendering contract. Test B receives the same
-scientific objects/relations, dimensions, palette, typography constraints, and
-non-target style references, but neither target crop nor any derivative that
-reveals its geometry. The review harness retains the withheld target for later
-comparison.
-
-The crop authority manifest records the full benchmark PNG hash, pixel-space
-bounding box, crop algorithm/version, output dimensions, and crop hash for each
-panel. No reviewer or author may substitute a manually resized or differently
-bounded crop. The semantic packet contains no source coordinates, drawing
-commands, backend-specific implementation hints, existing `.tex`, whole-figure
-SVG export, candidate patch, experience log, or illustration-grammar artifact.
-
-Clean-room isolation is an evidence requirement, not a prompt promise. A named
-human or a separate preparation task that has never inspected the target
-implementation authors the semantic packet. A contaminated session may build a
-deterministic packager only after the packet bytes are fixed; it may not select,
-paraphrase, or add free-form authoring guidance. The author task starts in a
-standalone directory containing only the allowed packet and output skeleton.
-Its tool log is retained, and any read outside the packet or any access to a
-denied source family invalidates the run rather than becoming a warning.
-
-Test A and Test B use independent clean author tasks. Test B may not inherit the
-Test A prompt, SVG, render, critique, or iteration history. Each task writes
-editable `panel_c.svg` and `panel_f.svg` candidates and follows two predeclared
-budgets:
-
-- **Utility checkpoint:** at most three complete render-inspect-revise cycles
-  and 30 minutes wall time per panel;
-- **Quality-ceiling checkpoint:** continuation to at most eight total cycles
-  and 120 minutes wall time per panel.
-
-One cycle contains one complete SVG source revision followed by one canonical
-render and inspection. Model token/compute limits are fixed before the run and
-cannot be increased after seeing quality. The receipt records model/provider,
-model version or snapshot, reasoning setting, sampling/seed when exposed,
-system and user prompts, available tools, tool versions, token usage, wall time,
-and every correction reason. Unknown fields are `null`, never reconstructed
-from memory.
-
-The SVG candidates use stable semantic group IDs, explicit view boxes, vector
-paths/shapes, and live text. They may use declared gradients when they improve
-material readability, but may not use scripts, network access, external URLs,
-embedded raster images, or unbound local assets. Typography uses a
-license-recorded, hash-pinned font asset shipped in the clean packet and loaded
-through an isolated render configuration; ambient font substitution is a
-failure. An optional outlined-text review/export copy may be derived from the
-live-text source, but it cannot replace the editable authoring artifact.
-
-Each iteration automatically produces the canonical comparator crop, SVG crop,
-anonymized side-by-side image, SVG safety report, semantic-object inventory,
-deterministic render receipt, and correction-cost ledger. Difference and
-flicker images are diagnostic evidence for clipping, alignment, or missing
-content only; pixel similarity cannot rank a deliberate redesign. Machine gates
-establish safety, structure, and reproducibility, not visual superiority.
-
-Human comparison uses opaque A/B identifiers, randomized left/right order,
-equal dimensions, background, and rasterization, and stripped format metadata.
-Scientific fidelity is a non-compensating hard gate: every required object and
-relation must be present and correct, with no scientifically material invented
-object. Any failure rejects that panel regardless of visual polish. After that
-gate, a named human records `better`, `equivalent`, or `worse` separately for
-composition, illustration quality, and typography/scale readability.
-
-A panel is **no worse** only when all three visual dimensions are at least
-`equivalent`. It is **better** only when at least one dimension is `better` and
-none is `worse`. The direct-SVG quality hypothesis passes only when Panels C and
-F are both no worse and at least one is better. Editability and correction cost
-are reported as a separate utility verdict; they cannot compensate for failed
-scientific or visual quality, and they cannot support a TikZ cost comparison
-until a matched TikZ task has comparable timing evidence. A borderline or
-disputed human result requires a second named review before it changes product
-direction.
-
-A passing author artifact becomes **reviewed gold** only after that verdict;
-before review it remains a candidate. Any passing result used to support a
-product-direction claim then requires two independent cold-reproduction tasks
-using the same allowed packet, model snapshot, prompt, tool contract, and fixed
-budget without the candidate SVG or iteration history. Both cold runs must pass
-the scientific hard gate and produce Panels C and F that are no worse than the
-benchmark. One successful retry is insufficient evidence of repeatability.
-
-The result changes product direction narrowly:
-
-- Test A passes but Test B fails: direct SVG can reconstruct existing art, but
-  the experiment says nothing favorable about new semantic authoring;
-- Test B quality fails: a richer illustrator language or grammar has stronger
-  justification, but is not proven necessary by one failure;
-- Test B passes but cold reproduction fails: Figure Agent should prioritize
-  control, reproducibility, and bounded correction for Fig1-like panels;
-- Test B and both cold runs pass: defer further grammar investment for
-  Fig1-like panels and prioritize verification, provenance, visual-error
-  detection, and review automation.
-
-No result from Panels C and F alone rejects illustration grammar globally or
-promotes direct SVG as a production default. A materially different second
-figure family remains required for either broader conclusion.
-
-The accepted TikZ figure, historical exports, and prior experiments remain
-immutable. Because the current design session observed historical Panel F TikZ
-implementation details while inspecting the repository, it is not eligible to
-author either the semantic packet or clean-room SVG artifacts. It may implement
-the deterministic packet schema, packager, render harness, and review tooling
-after independently prepared input bytes are fixed.
-
-### 4.6 Reference-conditioned authoring
-
-The active reference workflow remains:
+The learning unit is not "this image looked better." It is:
 
 ```text
-reference PNG -> OCR + palette clusters + optional vtracer structural hints
-coordinate_hints.yaml -> semantic TikZ authoring
+figure context + failure class + repair family + measured movement + human verdict
 ```
 
-Structural extraction is authoring evidence, not final source. SVG-to-TikZ path
-conversion is not the active workflow. A reference authority manifest must say
-which visual facts come from the reference, briefing, spec, coordinate hints,
-editable source, and review history.
+Rejected and neutral attempts are retained as evidence. They prevent repeated
+micro-patches, reveal false-positive detectors, and show when the system needs a
+new observation or repair primitive rather than another LLM retry.
 
-Read-only authoring context packs are durable paper-specific knowledge
-compilation. They are not LLM prompt plumbing, prompt-loop revival, generation
-execution, or automatic physics detection.
+## 10. Benchmark and proof model
 
-## 5. Declared semantic boundary
+Figure Agent is evaluated by an ablation with fixed model, input, budget, and
+starting artifact:
 
-Semantics used for editing or acceptance must be declared in versioned,
-machine-readable fixture artifacts. At minimum, a declaration identifies:
+- A: raw LLM authoring;
+- B: the same LLM plus Figure Agent contracts and verification;
+- C: the same LLM plus contracts, verification, and bounded repair.
 
-- panel ID;
-- semantic object or relation ID;
-- role and scientific meaning;
-- page index, named coordinate space, origin/axis convention, crop/media box,
-  page rotation, and PDF-space bounding box or deterministic transform;
-- render-geometry hash tying detector pixels, DPI, page geometry, and fragment
-  transforms to the reviewed render;
-- source path, stable selector ID, anchors, source hash, and optional line-range
-  snapshot;
-- provenance of the declaration; and
-- ambiguity when a one-to-one mapping is not possible.
+Evaluation must cover at least two materially different scientific figure
+families and include complex panels. Metrics remain separate:
 
-Pixel similarity, DOM grouping, OCR, or vision inference may propose a mapping,
-but cannot silently become declared semantic truth. Inference stays evidence
-until a deterministic contract or a human verdict promotes it.
+- scientific fidelity failures;
+- verified visual defects by failure class;
+- actionable attribution rate;
+- repair success and regression rate;
+- human correction minutes and intervention count;
+- clean reproduction rate;
+- editability and provenance completeness; and
+- named human blinded quality verdict.
 
-## 6. Acceptance model
+Scores cannot compensate for scientific failure. A candidate with a missing or
+invented material relation fails regardless of aesthetic quality.
+
+Historical clean-room Test A — reference reconstruction and
+Test B — semantic synthesis remain useful evidence, but they no longer define
+the product north star. Each uses a separately hashed input packet. A passing
+product-direction claim still requires two independent cold-reproduction tasks.
+Any session that observed protected implementation details remains ineligible to
+author either the semantic packet or clean-room SVG artifacts for that benchmark.
+
+## 11. Illustration grammar policy
+
+A full drawing grammar is not the default strategy. The previous sulfur-trap
+grammar demonstrated deterministic semantic lowering but did not achieve the
+required artifact quality. That result is retained as evidence.
+
+New grammar work is allowed only when the failure corpus proves that:
+
+1. the same visual-control failure recurs across materially different figures;
+2. prompting, bounded repair, and simpler style constraints do not solve it;
+3. a narrow renderer-neutral contract can express the missing control;
+4. at least two backends preserve the same semantic and visual roles; and
+5. human review shows an actual quality or correction-cost improvement.
+
+Grammar should encode reusable invariants such as semantic salience, layer
+ownership, stroke roles, curvature families, controlled repetition, and optical
+alignment. It must not become an Illustrator clone or prescribe arbitrary page
+geometry.
+
+## 12. Acceptance model
 
 Figure Agent separates three states:
 
-1. **Machine-valid:** schemas, hashes, compilation, manifests, and deterministic
-   checks pass.
-2. **Review-ready:** required overlays, crops, semantic evidence, source
-   attribution, and comparison artifacts exist.
-3. **Human-accepted:** a named human scaffold/review verdict accepts scientific
-   meaning and publication quality.
+1. Machine-valid: schemas, compilation, hashes, manifests, safety, and declared checks pass.
+2. Review-ready: overlays, crops, attribution, provenance, and comparisons exist.
+3. Human-accepted: a named human accepts scientific meaning and publication quality.
 
-Machine-valid is not publication-accepted. A slice, fixture, or release that
-requires human review stays open until the verdict artifact exists and names the
-reviewed artifact hashes. Absence of a human verdict is `pending`, not success.
-The verdict binds an aggregate review-input hash covering the rendered artifact,
-semantic and reference-authority manifests, briefing/spec, object relations, and
-toolchain. Any bound-input change makes the verdict stale even when the final
-render bytes happen to remain unchanged.
+Machine-valid is not publication-accepted. Review-ready is not publication-
+accepted. Missing human review is pending, not success.
 
-## 7. Promotion rules
+A verdict binds an aggregate review-input hash covering the exact rendered
+artifact, semantic declarations, reference authority, briefing/specification,
+object relations, source state, and toolchain. Any bound-input change makes the
+verdict stale.
 
-A new authoring representation becomes a production default only after all of
-the following are demonstrated on at least two materially different figure
-families:
+## 13. Promotion rules
 
-- visual quality matches or exceeds the strongest accepted TikZ benchmark;
-- measured correction or iteration cost is lower;
-- semantic and source attribution survives clean-environment reproduction;
-- artifacts remain editable and provenance-complete;
-- detector precision does not improve by hiding or suppressing real defects;
-- a human review accepts both scientific meaning and publication quality; and
-- the path does not depend on fixture-name-specific patches.
+A detector, repair family, representation, or grammar becomes a general product
+capability only when:
 
-An illustration grammar or backend has an additional promotion requirement:
-the same motif contract must lower into at least two backends without changing
-its semantic slots or visual-role definitions. Backend outputs need not be
-pixel-identical, but both must pass the same declared relation checks and a
-paired human quality review. A lower-quality SVG implementation does not weaken
-the TikZ baseline and cannot be promoted by averaging machine scores.
+- it addresses a named recurring failure class;
+- it passes cross-fixture tests without fixture-name or coordinate special cases;
+- it improves the A/B/C benchmark on at least two materially different families;
+- it does not hide real defects or weaken scientific fidelity;
+- it preserves editability, provenance, and clean reproduction;
+- its uncertainty and review boundary are explicit; and
+- a named human accepts the relevant scientific and visual evidence.
 
-Correction-cost evidence follows a predeclared comparison protocol with the
-same starting contract, task boundary, and timing rules. Preparation, failed
-attempts, rendering, diagnosis, and repair time are included; missing or
-non-comparable measurements cannot support promotion.
+Passing tests or generating files is insufficient. One successful figure is
+evidence, not generalization.
 
-Until then, semantic SVG is an experimental hybrid fragment path and TikZ is the
-production baseline.
+## 14. Non-goals
 
-## 8. Non-goals and hard boundaries
+- Building a frontier drawing model inside Figure Agent.
+- Replacing TikZ or forcing SVG as the universal authoring source.
+- Building a full vector editor, arbitrary style language, or hidden taste oracle.
+- Treating semantic IDs, schemas, or pixel similarity as illustration quality.
+- Automatically mutating unbound findings.
+- Using fixture-specific coordinates as reusable product logic.
+- Letting a numerical score claim publication acceptance.
+- Overwriting accepted or historical artifacts during an experiment.
+- Conflating data plotting with scientific schematic authoring.
 
-- Replacing TikZ merely because SVG is easier to inspect.
-- Recreating Adobe Illustrator, a general vector editor, or an unrestricted
-  style language inside Figure Agent.
-- Hiding illustration decisions in SVG-only helpers when they belong to a
-  renderer-neutral motif contract.
-- Treating arbitrary SVG groups as semantic objects without a declaration.
-- Building a hidden autonomous taste judge or claiming that a numerical score
-  proves publication quality.
-- Generating fixture-specific dictionaries, coordinates, or patch templates as
-  a substitute for general contracts.
-- Modifying or overwriting historical accepted artifacts during experiments.
-- Conflating quantitative data plotting with schematic authoring; measured data
-  plots remain outside the core Figure Agent authoring scope.
-- Importing Fig1-specific implementation into another fixture without an
-  explicit general contract and a cross-fixture test.
+## 15. Current evidence and gaps
 
-## 9. Artifact and provenance policy
+Current repository evidence supports these conclusions:
 
-- Historical references, sources, reviews, and accepted outputs are immutable
-  evidence. New work uses a forked fixture or a new slice output directory.
-- Generated artifacts name their source hashes, tool versions, and relevant
-  environment details.
-- Clean-environment reproduction must begin from a clean tracked checkout and
-  may not depend on user untracked files or another worktree's build products.
-- Worktrees and branches isolate slices. Destructive Git cleanup is not part of
-  the product workflow.
-- Exported artifact success does not overwrite the acceptance state.
+- deterministic compile, export, provenance, candidate isolation, and human-gate
+  infrastructure are substantial product assets;
+- visual findings can be produced in volume, but not all are semantically bound
+  or actionable;
+- raw semantic SVG and the first paired illustration grammar preserved useful
+  structure but did not meet the human visual-quality bar;
+- direct LLM SVG authoring demonstrated useful expressive potential, while the
+  final human direction remained unresolved or fixture-limited;
+- recent Panel F refinement exposed reusable concepts such as semantic salience,
+  contact simplification, and forbidden implications, but much of the final
+  geometry was still manually tuned; and
+- the repository does not yet prove that Figure Agent reduces correction cost
+  relative to the same LLM without the system.
 
-## 10. Evidence snapshot and known gaps
+The existing direct-SVG review path owns the active schema
+figure-agent.three-way-review-unblinding.v1. This is retained implementation
+evidence, not a reason to keep direct SVG as the product north star.
 
-This section records orientation evidence, not evergreen runtime claims. Verify
-it against the named branch or artifact before relying on exact counts.
-
-- The accepted Fig1 TikZ dogfood remains the current visual-quality benchmark.
-- The latest inspected Fig1 visual-clash evidence emitted many bbox candidates
-  without usable panel/source binding, demonstrating that detection volume alone
-  is not actionable quality improvement.
-- Slice 3 selected the six-panel sulfur-polymer Fig3 family because it applies a
-  different composition and semantic pressure than Fig1 and carries reference,
-  briefing, spec, coordinate hints, editable TeX, and review history.
-- The Fig3 semantic-SVG pilot is reproducible and source-attributable. The
-  bound human verdict rejects its basic illustration quality for production.
-- The paired sulfur-trap grammar proved deterministic neutral-scene lowering
-  into TikZ and SVG, but the named review rejected both artifacts and found its
-  SVG worse than the raw SVG comparator. The infrastructure remains
-  experimental; the current grammar implementation does not advance.
-- The next unresolved question is whether a clean LLM can directly author
-  Panels C and F at the accepted TikZ level. Until the clean-room baseline and,
-  if eligible, cold reproduction are reviewed, the repository lacks evidence
-  that another drawing grammar is the right next product investment.
-
-The active work needed to close these gaps is defined only in
-`docs/execution-plan.md`.
+The next execution plan must therefore begin with a failure corpus and A/B/C
+baseline, then build the smallest observation and repair capabilities that move
+measured failures. It must not begin by adding another renderer, motif family, or
+fixture-specific polish rule.

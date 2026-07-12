@@ -1,6 +1,21 @@
 <!-- FIGURE_AGENT:EXECUTION_AUTHORITY -->
 # Figure Agent Execution Plan
 
+**Transition status (2026-07-12):** The completed and pending tasks below are
+retained as execution evidence for the previous TikZ/SVG/illustration-grammar
+direction. They are not authorization to begin another grammar or direct-SVG
+slice. The active product direction is now defined by docs/product-spec.md:
+measure and reduce the recurrent failures of the same LLM through contracts,
+multi-scale observation, actionable attribution, bounded repair, provenance,
+and human review.
+
+This document remains the single execution-authority location while the new
+failure-first plan is written. Until that replacement is reviewed, forward
+implementation is paused; only verification and preservation of existing
+artifacts are authorized. The historical task detail stays in this file so the
+repository does not lose provenance or pretend unfinished human review was
+completed.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > `superpowers:test-driven-development` for each implementation task and
 > `superpowers:verification-before-completion` before any completion claim.
