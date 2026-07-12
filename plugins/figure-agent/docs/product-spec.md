@@ -100,6 +100,8 @@ A fixture-specific coordinate adjustment that answers none of these questions is
 figure production, not Figure Agent development. It may be useful evidence, but
 it must not be promoted as a product capability.
 
+Figure production is not Figure Agent product development.
+
 ## 4. Constraint-sandwich architecture
 
 Figure Agent surrounds, rather than replaces, LLM authoring.

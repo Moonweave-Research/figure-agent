@@ -132,6 +132,32 @@ def test_canonical_docs_close_known_attribution_and_provenance_edge_cases() -> N
     assert "panel_f_fragment" not in execution
 
 
+def test_canonical_docs_define_failure_first_llm_control() -> None:
+    product = _read(PLUGIN_ROOT / PRODUCT_DOC)
+    execution = _read(PLUGIN_ROOT / EXECUTION_DOC)
+
+    for required in (
+        "Let the LLM propose freely",
+        "Failure ontology",
+        "Bounded repair contract",
+        "Figure production is not Figure Agent product development.",
+        "A: raw LLM authoring",
+        "B: the same LLM plus Figure Agent contracts and verification",
+        "C: the same LLM plus contracts, verification, and bounded repair",
+    ):
+        assert required in product
+
+    for required in (
+        "Failure-First Implementation Plan",
+        "failure_corpus.py",
+        "failure_ablation.py",
+        "quality_search.py or scripts/quality/panel_block_edits.yaml",
+    ):
+        assert required in execution
+
+    assert "determine whether an LLM can directly author SVG" not in product
+
+
 def test_canonical_authority_docs_ship_in_cowork_package(tmp_path: Path) -> None:
     zip_path = build_zip(tmp_path)
     with zipfile.ZipFile(zip_path) as archive:
