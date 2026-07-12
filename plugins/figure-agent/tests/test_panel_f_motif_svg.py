@@ -108,6 +108,17 @@ def test_render_svg_declares_relation_endpoints_and_connector_roles() -> None:
             "connector roles",
         ),
         (lambda data: data["relations"].clear(), "required relations"),
+        (
+            lambda data: data["relations"].update(
+                unexpected={
+                    "subject": "ground",
+                    "role": "near",
+                    "object": "driven_electrode",
+                }
+            ),
+            "relation set",
+        ),
+        (lambda data: data["owns"].append("unexpected_object"), "owns set"),
         (lambda data: data.update(forbidden_connections=[]), "forbidden connection"),
         (
             lambda data: data["objects"]["voltage_source"].update(electrical_state="floating"),

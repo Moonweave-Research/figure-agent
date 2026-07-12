@@ -70,7 +70,12 @@ def _validate_contract(path: Path) -> dict:
     ):
         raise ContractError("connector roles or endpoints drifted")
 
-    relation = data.get("relations", {}).get("trapped_charge_ownership", {})
+    relations = data.get("relations", {})
+    if "trapped_charge_ownership" not in relations:
+        raise ContractError("required relations drifted")
+    if set(relations) != {"trapped_charge_ownership"}:
+        raise ContractError("relation set drifted")
+    relation = relations.get("trapped_charge_ownership", {})
     if relation != {
         "subject": "trapped_charge",
         "role": "owned_by",
@@ -85,8 +90,8 @@ def _validate_contract(path: Path) -> dict:
         "gap_guides",
         "trapped_charge",
     }
-    if not required_owns <= set(data.get("owns", [])):
-        raise ContractError("required objects are absent from owns")
+    if set(data.get("owns", [])) != required_owns:
+        raise ContractError("owns set drifted")
     return data
 
 
