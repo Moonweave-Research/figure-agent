@@ -1413,6 +1413,39 @@ def _bounded_tikz_apply(argv: list[str]) -> int:
     return 0 if result.get("status") in {"ready", "applied"} else 1
 
 
+def _failure_corpus(argv: list[str]) -> int:
+    import failure_corpus
+
+    parser = argparse.ArgumentParser(prog="fig-agent failure-corpus")
+    parser.add_argument("--json", action="store_true")
+    parser.parse_args(argv)
+    payload = failure_corpus.load_failure_corpus(
+        _paths().plugin_root / "benchmarks" / "llm_failure_corpus.yaml"
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _failure_ablation(argv: list[str]) -> int:
+    import failure_ablation
+
+    parser = argparse.ArgumentParser(prog="fig-agent failure-ablation")
+    parser.add_argument("--raw", type=Path, required=True)
+    parser.add_argument("--verified", type=Path, required=True)
+    parser.add_argument("--repaired", type=Path, required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    payload = failure_ablation.evaluate_ablation(
+        {
+            "raw": args.raw,
+            "verified": args.verified,
+            "repaired": args.repaired,
+        }
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         _maybe_reexec_with_uv_project()
@@ -1478,6 +1511,10 @@ def main(argv: list[str] | None = None) -> int:
         return _loop_metrics(rest)
     if command == "quality-search":
         return _quality_search(rest)
+    if command == "failure-corpus":
+        return _failure_corpus(rest)
+    if command == "failure-ablation":
+        return _failure_ablation(rest)
     if command == "next":
         return _next(rest)
     if command == "benchmark-detectors":
