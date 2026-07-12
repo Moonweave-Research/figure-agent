@@ -107,7 +107,10 @@ def test_candidates_include_required_provenance_fields(tmp_path: Path) -> None:
         "fig-agent compile candidate_demo --strict",
         "fig-agent status candidate_demo --json",
     ]
-    assert candidate["apply_authority"] == "apply_eligible"
+    assert candidate["apply_authority"] == "review_only"
+    assert payload["refusals"] == [
+        {"code": "exact_attribution_required", "defect_id": "QD001"}
+    ]
     source_defect = candidate["source_defect"]
     assert source_defect.pop("source_fingerprint").startswith("sha256:")
     assert source_defect.pop("ledger_hash").startswith("sha256:")
@@ -279,7 +282,7 @@ def test_candidate_targets_ledger_defect_line_not_first_offsettable(tmp_path: Pa
         workspace_root=workspace,
     )
     first_defect = ledger["defects"][0]
-    assert first_defect["patchability"]["state"] == "safe_candidate"
+    assert first_defect["patchability"]["state"] == "assisted_only"
     assert first_defect["selector_hint"]["kind"] == "line_range"
     assert first_defect["selector_hint"]["value"] == "3:3"
     assert first_defect["selector_hint"]["selector_text_hash"].startswith("sha256:")
@@ -415,7 +418,9 @@ def test_candidate_generator_refuses_stale_detector_defect(
     )
 
     assert payload["candidates"] == []
-    assert {item["code"] for item in payload["refusals"]} == {"stale_detector_evidence"}
+    assert {item["code"] for item in payload["refusals"]} == {
+        "stale_detector_evidence"
+    }
 
 
 def test_candidate_generator_refuses_real_stale_detector_source_hash(
@@ -435,7 +440,10 @@ def test_candidate_generator_refuses_real_stale_detector_source_hash(
     )
 
     assert payload["candidates"] == []
-    assert {item["code"] for item in payload["refusals"]} == {"stale_detector_evidence"}
+    assert {item["code"] for item in payload["refusals"]} == {
+        "exact_attribution_required",
+        "stale_detector_evidence",
+    }
 
 
 def test_candidate_generator_skips_unsupported_defect_and_reaches_supported(
@@ -543,10 +551,10 @@ def test_multi_candidate_generation_enumerates_supported_defects_with_metrics(
         assert candidate["source_defect"]["ledger_hash"].startswith("sha256:")
         assert candidate["candidate_hash"].startswith("sha256:")
     assert payload["metrics"] == {
-        "safe_candidate_defect_count": 2,
+        "safe_candidate_defect_count": 0,
         "candidate_count": 2,
         "candidate_defect_coverage": 1.0,
-        "refusal_count": 0,
+        "refusal_count": 2,
         "candidate_with_panel_count": 2,
         "candidate_with_family_count": 2,
         "candidate_with_source_hash_count": 2,

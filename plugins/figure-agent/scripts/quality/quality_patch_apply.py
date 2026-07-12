@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import os
 import subprocess
 import sys
+import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -70,11 +72,25 @@ def _operation(plan: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(operation, dict):
         raise QualityPatchApplyError("invalid_plan: operation must be a mapping")
     selector = operation.get("selector")
-    if isinstance(selector, dict) and selector.get("confidence") == "ambiguous":
-        raise QualityPatchApplyError("selector_ambiguous: ambiguous selector blocks apply")
+    required_selector_fields = (
+        "selector_id",
+        "anchor_start",
+        "anchor_end",
+        "source_hash",
+    )
+    if (
+        not isinstance(selector, dict)
+        or selector.get("kind") != "semantic_anchor"
+        or any(not selector.get(field) for field in required_selector_fields)
+    ):
+        raise QualityPatchApplyError("exact_selector_required")
     guard = operation.get("semantic_guard")
-    if not isinstance(guard, dict) or guard.get("allowed") is not True:
-        raise QualityPatchApplyError("unsafe_patch: semantic guard is not allowed")
+    if (
+        not isinstance(guard, dict)
+        or guard.get("allowed") is not False
+        or guard.get("state") != "pending_post_render_verification"
+    ):
+        raise QualityPatchApplyError("unsafe_patch: semantic guard contract invalid")
     return operation
 
 
@@ -131,6 +147,102 @@ def _run_patch(
         raise QualityPatchApplyError(f"unsafe_patch: patch command failed: {detail}")
 
 
+def _candidate_text(target_rel: str, original: str, patch_text: str) -> str:
+    with tempfile.TemporaryDirectory(prefix="figure-agent-patch-") as temp_dir:
+        root = Path(temp_dir)
+        candidate = root / target_rel
+        candidate.parent.mkdir(parents=True, exist_ok=True)
+        candidate.write_text(original, encoding="utf-8")
+        _run_patch(root, patch_text, dry_run=False)
+        return candidate.read_text(encoding="utf-8")
+
+
+def _anchor_bounds(text: str, selector: dict[str, Any]) -> tuple[int, int]:
+    start_marker = str(selector["anchor_start"])
+    end_marker = str(selector["anchor_end"])
+    lines = text.splitlines()
+    starts = [index for index, line in enumerate(lines) if line == start_marker]
+    ends = [index for index, line in enumerate(lines) if line == end_marker]
+    if len(starts) != 1 or len(ends) != 1 or starts[0] >= ends[0]:
+        raise QualityPatchApplyError("exact_selector_required")
+    return starts[0], ends[0]
+
+
+def _changed_line_count(patch_text: str) -> int:
+    return sum(
+        line.startswith(("+", "-"))
+        and not line.startswith(("+++", "---"))
+        for line in patch_text.splitlines()
+    )
+
+
+def _preflight_candidate(
+    operation: dict[str, Any],
+    target_rel: str,
+    target: Path,
+    patch_text: str,
+) -> str:
+    selector = operation["selector"]
+    if file_sha256(target) != selector["source_hash"]:
+        raise QualityPatchApplyError("source_hash_mismatch: selector source changed")
+    original = target.read_text(encoding="utf-8")
+    start, end = _anchor_bounds(original, selector)
+
+    budget = operation.get("change_budget")
+    max_changed_lines = budget.get("max_changed_lines") if isinstance(budget, dict) else None
+    max_source_blocks = budget.get("max_source_blocks") if isinstance(budget, dict) else None
+    old_headers = [
+        line.removeprefix("--- ").split("\t", 1)[0]
+        for line in patch_text.splitlines()
+        if line.startswith("--- ")
+    ]
+    new_headers = [
+        line.removeprefix("+++ ").split("\t", 1)[0]
+        for line in patch_text.splitlines()
+        if line.startswith("+++ ")
+    ]
+    if (
+        not isinstance(max_changed_lines, int)
+        or max_changed_lines < 1
+        or not isinstance(max_source_blocks, int)
+        or max_source_blocks != 1
+        or len(old_headers) != 1
+        or len(new_headers) != 1
+        or _changed_line_count(patch_text) > max_changed_lines
+    ):
+        raise QualityPatchApplyError("change_budget_exceeded")
+    if old_headers[0] != target_rel or new_headers[0] != target_rel:
+        raise QualityPatchApplyError("patch_outside_anchor")
+
+    candidate = _candidate_text(target_rel, original, patch_text)
+    try:
+        _anchor_bounds(candidate, selector)
+    except QualityPatchApplyError as exc:
+        raise QualityPatchApplyError("patch_outside_anchor") from exc
+    original_lines = original.splitlines()
+    candidate_lines = candidate.splitlines()
+    matcher = difflib.SequenceMatcher(a=original_lines, b=candidate_lines, autojunk=False)
+    for tag, old_start, old_end, _new_start, _new_end in matcher.get_opcodes():
+        if tag == "equal":
+            continue
+        if old_start == old_end:
+            inside = start < old_start <= end
+        else:
+            inside = start < old_start and old_end <= end
+        if not inside:
+            raise QualityPatchApplyError("patch_outside_anchor")
+
+    invariants = operation.get("protected_invariants")
+    if not isinstance(invariants, list) or not invariants:
+        raise QualityPatchApplyError("protected_invariants_required")
+    for token in invariants:
+        if not isinstance(token, str) or not token:
+            raise QualityPatchApplyError("protected_invariants_required")
+        if original.count(token) != candidate.count(token):
+            raise QualityPatchApplyError("protected_invariant_changed")
+    return candidate
+
+
 def _write_rollback_patch(fixture: Path, plan_id: str, patch_text: str) -> Path:
     rollback_dir = fixture / "build" / "quality" / "rollback"
     rollback_dir.mkdir(parents=True, exist_ok=True)
@@ -180,6 +292,8 @@ def apply_quality_patch_plan(
         "applied": False,
         "changed_files": [target_rel],
         "outcome": "unchanged",
+        "publication_acceptance": "not_claimed",
+        "post_render_verification": "pending",
         "rollback_patch": "",
         "verification_commands": [
             {"command": command, "returncode": None}
@@ -187,15 +301,16 @@ def apply_quality_patch_plan(
         ],
     }
     if not apply:
-        _run_patch(workspace_root, patch_text, dry_run=True)
+        _preflight_candidate(operation, target_rel, target, patch_text)
         return result
 
     with _mutation_lock(fixture):
-        _run_patch(workspace_root, patch_text, dry_run=True)
-        _run_patch(workspace_root, patch_text, dry_run=False)
+        _check_source_hash(plan, target_rel, target)
+        candidate = _preflight_candidate(operation, target_rel, target, patch_text)
+        target.write_text(candidate, encoding="utf-8")
         rollback = _write_rollback_patch(fixture, str(plan.get("plan_id")), patch_text)
         result["applied"] = True
-        result["outcome"] = "verification_failed"
+        result["outcome"] = "verification_pending"
         result["rollback_patch"] = rollback.relative_to(workspace_root).as_posix()
         output = fixture / "build" / "quality" / "patch_result.json"
         output.parent.mkdir(parents=True, exist_ok=True)

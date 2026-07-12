@@ -343,7 +343,7 @@ def test_dogfood_render_benchmark_exposes_attribution_or_refusal_details(
     assert result["candidate_count"] == 2
     assert result["rendered_count"] == 2
     assert result["ranked_count"] == 2
-    assert result["metrics"]["refusal_count"] == 1
+    assert result["metrics"]["refusal_count"] == 4
     best_score = result["scores"][0]
     assert best_score["rank_basis"] == "candidate_specific_render"
     assert best_score["render_manifest_path"] == (
@@ -356,7 +356,7 @@ def test_dogfood_render_benchmark_exposes_attribution_or_refusal_details(
         if isinstance(score.get("source_defect"), dict) and score["source_defect"].get("id")
     )
     refusal_details = result.get("candidate_refusals")
-    assert attributed_score_count >= 2 or (
+    assert attributed_score_count >= 1 or (
         result["metrics"]["refusal_count"] > 0
         and isinstance(refusal_details, list)
         and len(refusal_details) > 0
@@ -576,7 +576,7 @@ def test_benchmark_render_missing_fixture_uses_blocked_mode_not_none(
     assert "none" not in json.dumps(payload)
 
 
-def test_benchmark_candidate_specific_rank_rate_counts_partial_render_basis(
+def test_benchmark_counts_partial_render_basis_for_review_only_candidates(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -613,6 +613,7 @@ def test_benchmark_candidate_specific_rank_rate_counts_partial_render_basis(
     assert result["rank_basis_counts"]["candidate_specific_render"] == 1
     assert result["rank_basis_counts"]["blocked"] == 1
     assert result["metrics"]["candidate_specific_rank_rate"] == 0.5
+    assert result["metrics"]["refusal_count"] == 2
 
 
 def test_benchmark_run_fails_release_blocking_missing_detector_report(tmp_path: Path) -> None:

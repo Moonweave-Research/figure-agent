@@ -530,13 +530,30 @@ def _build_contract_candidate_set(
     panel = _first_panel_id(example_dir) if family is not None else None
     if family is None or panel is None:
         return default_set
-    return candidate_generator.build_candidate_set(
+    family_set = candidate_generator.build_candidate_set(
         fixture,
         plugin_root=paths.plugin_root,
         workspace_root=paths.workspace_root,
         panel=panel,
         family=family,
     )
+    default_refusals = default_set.get("refusals")
+    family_refusals = family_set.get("refusals")
+    merged_refusals = [
+        item
+        for collection in (default_refusals, family_refusals)
+        if isinstance(collection, list)
+        for item in collection
+        if isinstance(item, dict)
+    ]
+    metrics = family_set.get("metrics")
+    merged_metrics = dict(metrics) if isinstance(metrics, dict) else {}
+    merged_metrics["refusal_count"] = len(merged_refusals)
+    return {
+        **family_set,
+        "refusals": merged_refusals,
+        "metrics": merged_metrics,
+    }
 
 
 def _load_fixture_json(example_dir: Path, relative: str | None) -> dict[str, Any] | None:

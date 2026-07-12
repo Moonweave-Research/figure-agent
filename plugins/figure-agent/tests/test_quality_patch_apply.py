@@ -16,7 +16,11 @@ def _fixture(workspace: Path, name: str = "quality_demo") -> Path:
     fixture = workspace / "examples" / name
     fixture.mkdir(parents=True)
     (fixture / f"{name}.tex").write_text(
-        "\\node (label-a) at (0,0) {Old Label};\n",
+        "% figure-agent:start panel_f.label.repulsion\n"
+        "\\node (label-a) at (0,0) {Old Label};\n"
+        "\\node at (1,0) {Coulomb repulsion};\n"
+        "\\node at (2,0) {electrode separation};\n"
+        "% figure-agent:end panel_f.label.repulsion\n",
         encoding="utf-8",
     )
     return fixture
@@ -40,18 +44,37 @@ def _plan(fixture: Path) -> dict:
                 "defect_id": "QD001",
                 "file": source_rel,
                 "operation_type": "tikz_coordinate_adjust",
-                "selector": {"kind": "node_name", "value": "label-a", "confidence": "exact"},
+                "repair_family": "label_reflow",
+                "selector": {
+                    "kind": "semantic_anchor",
+                    "selector_id": "panel_f.label.repulsion",
+                    "anchor_start": "% figure-agent:start panel_f.label.repulsion",
+                    "anchor_end": "% figure-agent:end panel_f.label.repulsion",
+                    "source_hash": file_sha256(fixture / f"{name}.tex"),
+                },
                 "proposed_change": {
                     "summary": "move label",
                     "patch": (
                         f"--- {source_rel}\n"
                         f"+++ {source_rel}\n"
-                        "@@ -1 +1 @@\n"
+                        "@@ -2 +2 @@\n"
                         "-\\node (label-a) at (0,0) {Old Label};\n"
                         "+\\node (label-a) at (0.2,0) {Old Label};\n"
                     ),
                 },
-                "semantic_guard": {"allowed": True, "reason": "mechanical"},
+                "protected_invariants": [
+                    "Coulomb repulsion",
+                    "electrode separation",
+                ],
+                "change_budget": {
+                    "max_source_blocks": 1,
+                    "max_changed_lines": 6,
+                    "max_rendered_pixel_ratio": 0.03,
+                },
+                "semantic_guard": {
+                    "allowed": False,
+                    "state": "pending_post_render_verification",
+                },
             }
         ],
         "verification": {
@@ -137,6 +160,113 @@ def test_apply_plan_refuses_when_mutation_lock_exists(tmp_path: Path) -> None:
         quality_patch_apply.apply_quality_patch_plan(
             "quality_demo",
             plan_path=plan_path,
+            workspace_root=workspace,
+            apply=True,
+        )
+
+
+def test_apply_refuses_changed_protected_invariant(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    plan = _plan(fixture)
+    relative = "examples/quality_demo/quality_demo.tex"
+    plan["operations"][0]["proposed_change"]["patch"] = (
+        f"--- {relative}\n"
+        f"+++ {relative}\n"
+        "@@ -3 +3 @@\n"
+        "-\\node at (1,0) {Coulomb repulsion};\n"
+        "+\\node at (1,0) {changed relation};\n"
+    )
+    path = _write_plan(fixture, plan)
+    with pytest.raises(
+        quality_patch_apply.QualityPatchApplyError,
+        match="protected_invariant_changed",
+    ):
+        quality_patch_apply.apply_quality_patch_plan(
+            fixture.name,
+            plan_path=path,
+            workspace_root=workspace,
+            apply=True,
+        )
+
+
+def test_apply_receipt_keeps_acceptance_unclaimed(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    path = _write_plan(fixture, _plan(fixture))
+    result = quality_patch_apply.apply_quality_patch_plan(
+        fixture.name,
+        plan_path=path,
+        workspace_root=workspace,
+        apply=True,
+    )
+    assert result["publication_acceptance"] == "not_claimed"
+    assert result["post_render_verification"] == "pending"
+
+
+def test_apply_refuses_patch_outside_declared_anchor(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    plan = _plan(fixture)
+    relative = "examples/quality_demo/quality_demo.tex"
+    plan["operations"][0]["proposed_change"]["patch"] = (
+        f"--- {relative}\n"
+        f"+++ {relative}\n"
+        "@@ -5 +5 @@\n"
+        "-% figure-agent:end panel_f.label.repulsion\n"
+        "+% changed end marker\n"
+    )
+    path = _write_plan(fixture, plan)
+    with pytest.raises(
+        quality_patch_apply.QualityPatchApplyError,
+        match="patch_outside_anchor",
+    ):
+        quality_patch_apply.apply_quality_patch_plan(
+            fixture.name,
+            plan_path=path,
+            workspace_root=workspace,
+            apply=True,
+        )
+
+
+def test_apply_refuses_change_budget_overrun(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    plan = _plan(fixture)
+    plan["operations"][0]["change_budget"]["max_changed_lines"] = 1
+    path = _write_plan(fixture, plan)
+    with pytest.raises(
+        quality_patch_apply.QualityPatchApplyError,
+        match="change_budget_exceeded",
+    ):
+        quality_patch_apply.apply_quality_patch_plan(
+            fixture.name,
+            plan_path=path,
+            workspace_root=workspace,
+            apply=True,
+        )
+
+
+def test_apply_refuses_multiple_source_blocks(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    plan = _plan(fixture)
+    relative = "examples/quality_demo/quality_demo.tex"
+    plan["operations"][0]["proposed_change"]["patch"] += (
+        f"--- {relative}\n"
+        f"+++ {relative}\n"
+        "@@ -3 +3 @@\n"
+        "-\\node at (1,0) {Coulomb repulsion};\n"
+        "+\\node at (1.1,0) {Coulomb repulsion};\n"
+    )
+    path = _write_plan(fixture, plan)
+    with pytest.raises(
+        quality_patch_apply.QualityPatchApplyError,
+        match="change_budget_exceeded",
+    ):
+        quality_patch_apply.apply_quality_patch_plan(
+            fixture.name,
+            plan_path=path,
             workspace_root=workspace,
             apply=True,
         )

@@ -40,6 +40,7 @@ def classify_patchability(defect: dict[str, Any]) -> dict[str, Any]:
     evidence = defect.get("evidence")
     affected_files = defect.get("affected_files")
     blocked_codes: list[str] = []
+    binding_codes: list[str] = []
 
     if not isinstance(evidence, list) or not evidence:
         blocked_codes.append("missing_evidence")
@@ -51,6 +52,28 @@ def classify_patchability(defect: dict[str, Any]) -> dict[str, Any]:
                 blocked_codes.append("path_escape")
                 break
 
+    attribution = defect.get("attribution")
+    if not isinstance(attribution, dict) or attribution.get("state") != "exact":
+        binding_codes.append("exact_attribution_required")
+    selector = defect.get("selector_hint")
+    required_selector_fields = (
+        "selector_id",
+        "anchor_start",
+        "anchor_end",
+        "source_hash",
+    )
+    if (
+        not isinstance(selector, dict)
+        or selector.get("kind") != "semantic_anchor"
+        or any(not selector.get(field) for field in required_selector_fields)
+    ):
+        binding_codes.append("stable_selector_required")
+    invariants = defect.get("protected_invariants")
+    if not isinstance(invariants, list) or not invariants:
+        binding_codes.append("protected_invariants_required")
+
+    blocked_codes.extend(binding_codes)
+
     if defect_class in HUMAN_CLASSES:
         blocked_codes.append(defect_class)
         state = "human_required"
@@ -58,6 +81,12 @@ def classify_patchability(defect: dict[str, Any]) -> dict[str, Any]:
     elif defect_class in SAFE_CLASSES and not blocked_codes:
         state = "safe_candidate"
         reasons = [SAFE_CLASSES[defect_class]]
+    elif defect_class in SAFE_CLASSES and binding_codes and not any(
+        code in blocked_codes
+        for code in ("missing_evidence", "missing_affected_file", "path_escape")
+    ):
+        state = "assisted_only"
+        reasons = []
     elif blocked_codes:
         state = "unsupported"
         reasons = []

@@ -471,9 +471,23 @@ def _defect_candidates(
     for defect in defects:
         if not isinstance(defect, dict):
             continue
-        if (defect.get("patchability") or {}).get("state") != "safe_candidate":
+        patchability = defect.get("patchability") or {}
+        patchability_state = patchability.get("state")
+        assisted_only = patchability_state == "assisted_only"
+        if patchability_state not in {"safe_candidate", "assisted_only"}:
             continue
-        safe_count += 1
+        if assisted_only:
+            _append_refusals(
+                refusals,
+                [
+                    {
+                        "code": "exact_attribution_required",
+                        "defect_id": str(defect.get("id") or ""),
+                    }
+                ],
+            )
+        else:
+            safe_count += 1
         defect_class = str(defect.get("defect_class") or "")
         if defect_class not in COORDINATE_OFFSET_DEFECT_CLASSES:
             unsupported_count += 1
@@ -534,7 +548,7 @@ def _defect_candidates(
             line_number=line_number,
             line=line,
             replacement=replacement,
-            apply_authority=apply_authority,
+            apply_authority="review_only" if assisted_only else apply_authority,
             target=_candidate_target(defect),
             source_hash=current_source_hash,
             source_defect=_source_defect(defect, ledger_hash),

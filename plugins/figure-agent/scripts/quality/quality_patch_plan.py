@@ -96,21 +96,30 @@ def _operation_from_defect(
     if not isinstance(suggested, dict):
         suggested = {}
     selector = defect.get("selector_hint")
-    if not isinstance(selector, dict):
-        selector = {"kind": "line_range", "value": "1:1"}
-    patch = suggested.get("patch") or _patch_from_selector(workspace_root, source_file, selector)
+    if not isinstance(selector, dict) or selector.get("kind") != "semantic_anchor":
+        return None
+    required_selector_fields = (
+        "selector_id",
+        "anchor_start",
+        "anchor_end",
+        "source_hash",
+    )
+    if any(not selector.get(field) for field in required_selector_fields):
+        return None
+    protected_invariants = defect.get("protected_invariants")
+    if not isinstance(protected_invariants, list) or not protected_invariants:
+        return None
+    patch = suggested.get("patch") or ""
     if patch:
         proposed_change = {
             "summary": suggested.get("summary") or f"Address {defect['id']}",
             "patch": patch,
         }
     else:
-        line_number = _selector_line(selector)
-        location = f"{source_file}:{line_number}" if line_number else source_file
         proposed_change = {
             "summary": (
                 suggested.get("summary")
-                or f"Manual edit required at {location} to address {defect['id']}"
+                or f"Manual edit required at {source_file} to address {defect['id']}"
             ),
             "patch": "",
             "manual_only": True,
@@ -120,16 +129,19 @@ def _operation_from_defect(
         "defect_id": defect["id"],
         "file": source_file,
         "operation_type": suggested.get("operation_type") or "tikz_coordinate_adjust",
-        "selector": {
-            "kind": selector.get("kind") or "line_range",
-            "value": selector.get("value") or "1:1",
-            "confidence": "exact",
-        },
+        "repair_family": defect.get("repair_family"),
+        "selector": {field: selector[field] for field in ("kind", *required_selector_fields)},
         "proposed_change": proposed_change,
         "bounds": {"max_translate_px": 10, "allowed_style_names": []},
+        "protected_invariants": list(protected_invariants),
+        "change_budget": {
+            "max_source_blocks": 1,
+            "max_changed_lines": 6,
+            "max_rendered_pixel_ratio": 0.03,
+        },
         "semantic_guard": {
-            "allowed": True,
-            "reason": "mechanical layout/style operation only",
+            "allowed": False,
+            "state": "pending_post_render_verification",
         },
     }
 
@@ -149,6 +161,15 @@ def build_quality_patch_plan(
 
     for defect in defects:
         if not isinstance(defect, dict):
+            continue
+        selector = defect.get("selector_hint")
+        if not isinstance(selector, dict) or selector.get("kind") != "semantic_anchor":
+            refusals.append(
+                {
+                    "defect_id": str(defect.get("id")),
+                    "code": "exact_selector_required",
+                }
+            )
             continue
         if (defect.get("patchability") or {}).get("state") != "safe_candidate":
             refusals.append({"defect_id": str(defect.get("id")), "code": "unsupported_defect"})
