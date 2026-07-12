@@ -2,19 +2,26 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import numpy as np
 import pytest
 import yaml
-from PIL import Image
+from PIL import Image, ImageChops
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 
-from panel_f_motif_svg import ContractError, render_pilot, render_svg  # noqa: E402
+from panel_f_motif_svg import (  # noqa: E402
+    ContractError,
+    render_pilot,
+    render_svg,
+    verify_pilot,
+)
 
 CONTRACT = PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.contract.yaml"
 PILOT = PLUGIN_ROOT / "examples/fig1_panel_f_svg_backend_pilot"
@@ -102,6 +109,36 @@ def test_render_svg_declares_relation_endpoints_and_connector_roles() -> None:
         ),
         (lambda data: data["relations"].clear(), "required relations"),
         (lambda data: data.update(forbidden_connections=[]), "forbidden connection"),
+        (
+            lambda data: data["objects"]["voltage_source"].update(electrical_state="floating"),
+            "object states",
+        ),
+        (
+            lambda data: data["objects"]["ground"].update(electrical_state="driven"),
+            "object states",
+        ),
+        (
+            lambda data: data["objects"]["trapped_charge"].update(electrical_state="floating"),
+            "object states",
+        ),
+        (
+            lambda data: data["connectors"].update(
+                unexpected={
+                    "role": "electrical",
+                    "connects": ["ground", "driven_electrode"],
+                }
+            ),
+            "connector set",
+        ),
+        (
+            lambda data: data["connectors"].update(
+                sample_ground={
+                    "role": "electrical",
+                    "connects": ["ground", "floating_cantilever"],
+                }
+            ),
+            "forbidden connection",
+        ),
     ],
 )
 def test_contract_drift_fails_closed(tmp_path: Path, mutation, message: str) -> None:
@@ -139,9 +176,8 @@ def test_committed_pilot_is_complete_and_verifiable() -> None:
     assert required <= {path.name for path in PILOT.iterdir()}
     authority = yaml.safe_load((PILOT / "authority.yaml").read_text(encoding="utf-8"))
     assert authority["contract"] == "styles/snippets/panel-f-floating-cantilever.contract.yaml"
-    assert authority["tikz_baseline"] == (
-        "examples/fig1_failure_first_panel_f_pilot/build/panel_crops/F.png"
-    )
+    assert authority["tikz_baseline"] == "isolated_approved_snippet_render"
+    assert authority["tikz_snippet"] == ("styles/snippets/panel-f-floating-cantilever.tex")
     review = yaml.safe_load((PILOT / "human_review.yaml").read_text(encoding="utf-8"))
     assert review["semantic_legibility_verdict"] == "pending"
     assert review["visual_quality_vs_tikz"] == "pending"
@@ -158,3 +194,53 @@ def test_committed_pilot_is_complete_and_verifiable() -> None:
     )
     assert result.returncode == 0, result.stderr
     assert "verified" in result.stdout.lower()
+
+
+def _foreground_bbox(path: Path) -> tuple[int, int, int, int] | None:
+    with Image.open(path) as image:
+        rgb = image.convert("RGB")
+        background = Image.new("RGB", rgb.size, "white")
+        difference = ImageChops.difference(rgb, background).convert("L")
+        return difference.point(lambda value: 255 if value > 7 else 0).getbbox()
+
+
+def test_tikz_baseline_is_isolated_to_the_same_content_boundary(tmp_path: Path) -> None:
+    render_pilot(tmp_path)
+    assert _foreground_bbox(tmp_path / "tikz_baseline.png") == (48, 48, 912, 592)
+    assert _foreground_bbox(tmp_path / "motif.png") == (48, 48, 912, 592)
+    with Image.open(tmp_path / "motif.png") as image:
+        rgb = image.convert("RGB")
+        assert rgb.getpixel((0, 0)) == (255, 255, 255)
+        assert int(np.all(np.asarray(rgb) == 0, axis=2).sum()) < 100
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        "authority.yaml",
+        "contract.snapshot.yaml",
+        "tikz_baseline.png",
+        "comparison.png",
+        "human_review.yaml",
+    ],
+)
+def test_verify_rejects_missing_or_tampered_bound_artifacts(
+    tmp_path: Path, relative_path: str
+) -> None:
+    packet = tmp_path / "packet"
+    shutil.copytree(PILOT, packet)
+    target = packet / relative_path
+    target.write_bytes(target.read_bytes() + b"tampered")
+    with pytest.raises(ContractError):
+        verify_pilot(packet)
+
+
+def test_verify_rejects_review_claim_drift(tmp_path: Path) -> None:
+    packet = tmp_path / "packet"
+    shutil.copytree(PILOT, packet)
+    review_path = packet / "human_review.yaml"
+    review = yaml.safe_load(review_path.read_text(encoding="utf-8"))
+    review["backend_promotion"] = "authorized"
+    review_path.write_text(yaml.safe_dump(review), encoding="utf-8")
+    with pytest.raises(ContractError, match="backend promotion"):
+        verify_pilot(packet)

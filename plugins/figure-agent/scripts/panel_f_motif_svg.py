@@ -9,18 +9,20 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 
 import yaml
-from PIL import Image, ImageOps
+from PIL import Image
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONTRACT = PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.contract.yaml"
-TIKZ_BASELINE = PLUGIN_ROOT / "examples/fig1_failure_first_panel_f_pilot/build/panel_crops/F.png"
+APPROVED_SNIPPET = PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.tex"
 CANVAS = (960, 640)
+CONTENT_BOX = (48, 48, 912, 592)
 
 
 class ContractError(ValueError):
@@ -29,11 +31,19 @@ class ContractError(ValueError):
 
 def _validate_contract(path: Path) -> dict:
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    required_objects = {"voltage_source", "ground", "floating_cantilever", "trapped_charge"}
-    if not isinstance(data, dict) or not required_objects <= set(data.get("objects", {})):
+    expected_states = {
+        "voltage_source": "driven",
+        "ground": "reference",
+        "floating_cantilever": "floating",
+        "trapped_charge": "trapped",
+    }
+    if not isinstance(data, dict) or set(data.get("objects", {})) != set(expected_states):
         raise ContractError("required objects are missing")
-    if data.get("objects", {}).get("floating_cantilever", {}).get("electrical_state") != "floating":
-        raise ContractError("required objects have invalid electrical state")
+    if any(
+        data["objects"][name].get("electrical_state") != state
+        for name, state in expected_states.items()
+    ):
+        raise ContractError("object states drifted")
 
     connectors = data.get("connectors", {})
     expected_connectors = {
@@ -44,6 +54,15 @@ def _validate_contract(path: Path) -> dict:
         "electrode_drive": ("electrical", ["voltage_source", "driven_electrode"]),
         "source_return": ("electrical", ["voltage_source", "ground"]),
     }
+    forbidden = {frozenset(connection) for connection in data.get("forbidden_connections", [])}
+    if frozenset(("floating_cantilever", "ground")) not in forbidden:
+        raise ContractError("forbidden connection floating_cantilever-to-ground is missing")
+    for connector in connectors.values():
+        endpoints = connector.get("connects", [])
+        if len(endpoints) == 2 and frozenset(endpoints) in forbidden:
+            raise ContractError("actual connector matches forbidden connection")
+    if set(connectors) != set(expected_connectors):
+        raise ContractError("connector set drifted")
     if any(
         connectors.get(name, {}).get("role") != role
         or connectors.get(name, {}).get("connects") != endpoints
@@ -58,8 +77,6 @@ def _validate_contract(path: Path) -> dict:
         "object": "floating_cantilever",
     }:
         raise ContractError("required relations drifted")
-    if ["floating_cantilever", "ground"] not in data.get("forbidden_connections", []):
-        raise ContractError("forbidden connection floating_cantilever-to-ground is missing")
     required_owns = {
         "fixed_mechanical_boundary",
         "floating_cantilever",
@@ -134,14 +151,58 @@ def _pixel_hash(path: Path) -> str:
         return hashlib.sha256(header + rgba.tobytes()).hexdigest()
 
 
-def _fit_canvas(source: Path, destination: Path) -> None:
+def _normalize_content_boundary(source: Path, destination: Path) -> None:
     with Image.open(source) as image:
-        normalized = ImageOps.contain(image.convert("RGBA"), CANVAS)
-        canvas = Image.new("RGBA", CANVAS, "white")
-        canvas.alpha_composite(
-            normalized, ((CANVAS[0] - normalized.width) // 2, (CANVAS[1] - normalized.height) // 2)
+        rgba = image.convert("RGBA")
+        white = Image.new("RGBA", rgba.size, "white")
+        white.alpha_composite(rgba)
+        rgb = white.convert("RGB")
+        mask = rgb.convert("L").point(lambda value: 255 if value < 248 else 0)
+        bbox = mask.getbbox()
+        if bbox is None:
+            raise ContractError(f"render has no foreground content: {source}")
+        content = rgb.crop(bbox).resize(
+            (CONTENT_BOX[2] - CONTENT_BOX[0], CONTENT_BOX[3] - CONTENT_BOX[1]),
+            Image.Resampling.LANCZOS,
         )
-        canvas.convert("RGB").save(destination, format="PNG", optimize=False)
+        canvas = Image.new("RGB", CANVAS, "white")
+        canvas.paste(content, CONTENT_BOX[:2])
+        canvas.save(destination, format="PNG", optimize=False)
+
+
+def _render_tikz_motif(destination: Path) -> None:
+    source = rf"""\documentclass[border=0pt]{{standalone}}
+\usepackage{{polymer-paper-preamble}}
+\input{{{APPROVED_SNIPPET.as_posix()}}}
+\begin{{document}}
+\begin{{tikzpicture}}
+\PanelFFloatingCantilever{{baseline}}{{0,0}}
+\end{{tikzpicture}}
+\end{{document}}
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        work = Path(tmp)
+        (work / "motif.tex").write_text(source, encoding="utf-8")
+        env = os.environ.copy()
+        env["TEXINPUTS"] = f"{PLUGIN_ROOT / 'styles'}:{env.get('TEXINPUTS', '')}"
+        try:
+            subprocess.run(
+                ["lualatex", "-interaction=nonstopmode", "-halt-on-error", "motif.tex"],
+                cwd=work,
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except subprocess.CalledProcessError as error:
+            raise ContractError(f"isolated TikZ motif failed to compile: {error.stdout}") from error
+        subprocess.run(
+            ["pdftoppm", "-singlefile", "-png", "-r", "300", "motif.pdf", "motif"],
+            cwd=work,
+            check=True,
+            capture_output=True,
+        )
+        _normalize_content_boundary(work / "motif.png", destination)
 
 
 def render_pilot(output_dir: Path) -> dict:
@@ -165,9 +226,9 @@ def render_pilot(output_dir: Path) -> dict:
         check=True,
         capture_output=True,
     )
-    _fit_canvas(raw_png, output_dir / "motif.png")
+    _normalize_content_boundary(raw_png, output_dir / "motif.png")
     raw_png.unlink()
-    _fit_canvas(TIKZ_BASELINE, output_dir / "tikz_baseline.png")
+    _render_tikz_motif(output_dir / "tikz_baseline.png")
 
     with (
         Image.open(output_dir / "tikz_baseline.png") as tikz,
@@ -183,8 +244,14 @@ def render_pilot(output_dir: Path) -> dict:
         "schema": "figure-agent.panel-f-svg-authority.v1",
         "contract": "styles/snippets/panel-f-floating-cantilever.contract.yaml",
         "contract_sha256": _sha256(DEFAULT_CONTRACT),
-        "tikz_baseline": "examples/fig1_failure_first_panel_f_pilot/build/panel_crops/F.png",
-        "tikz_baseline_sha256": _sha256(TIKZ_BASELINE),
+        "tikz_baseline": "isolated_approved_snippet_render",
+        "tikz_snippet": "styles/snippets/panel-f-floating-cantilever.tex",
+        "tikz_snippet_sha256": _sha256(APPROVED_SNIPPET),
+        "comparison_boundary": {
+            "canvas": list(CANVAS),
+            "content_box": list(CONTENT_BOX),
+            "normalization": "foreground_crop_resampled_to_equal_box",
+        },
         "approved_tikz_snippet_unchanged": True,
         "publication_acceptance": "not_claimed",
     }
@@ -211,6 +278,11 @@ def render_pilot(output_dir: Path) -> dict:
         "png_pixel_sha256": _pixel_hash(output_dir / "motif.png"),
         "tikz_pixel_sha256": _pixel_hash(output_dir / "tikz_baseline.png"),
         "comparison_sha256": _sha256(output_dir / "comparison.png"),
+        "authority_sha256": _sha256(output_dir / "authority.yaml"),
+        "contract_snapshot_sha256": _sha256(output_dir / "contract.snapshot.yaml"),
+        "tikz_baseline_sha256": _sha256(output_dir / "tikz_baseline.png"),
+        "human_review_sha256": _sha256(output_dir / "human_review.yaml"),
+        "backend_promotion": "not_authorized",
         "semantic_legibility_verdict": "pending",
         "visual_quality_vs_tikz": "pending",
         "publication_acceptance": "not_claimed",
@@ -224,10 +296,23 @@ def render_pilot(output_dir: Path) -> dict:
 def verify_pilot(pilot_dir: Path) -> dict:
     """Fail closed unless a packet matches two fresh deterministic replays."""
     pilot_dir = Path(pilot_dir)
-    receipt = json.loads((pilot_dir / "receipt.json").read_text(encoding="utf-8"))
+    try:
+        receipt = json.loads((pilot_dir / "receipt.json").read_text(encoding="utf-8"))
+        authority = yaml.safe_load((pilot_dir / "authority.yaml").read_text(encoding="utf-8"))
+        review = yaml.safe_load((pilot_dir / "human_review.yaml").read_text(encoding="utf-8"))
+        _validate_contract(pilot_dir / "contract.snapshot.yaml")
+    except (OSError, ValueError, yaml.YAMLError, json.JSONDecodeError) as error:
+        raise ContractError(f"invalid or missing pilot artifact: {error}") from error
     if receipt.get("publication_acceptance") != "not_claimed":
         raise ContractError("publication acceptance must remain not_claimed")
-    review = yaml.safe_load((pilot_dir / "human_review.yaml").read_text(encoding="utf-8"))
+    if receipt.get("backend_promotion") != "not_authorized":
+        raise ContractError("backend promotion must remain not_authorized")
+    if authority.get("publication_acceptance") != "not_claimed":
+        raise ContractError("authority publication acceptance drifted")
+    if review.get("backend_promotion") != "not_authorized":
+        raise ContractError("backend promotion must remain not_authorized")
+    if review.get("publication_acceptance") != "not_claimed":
+        raise ContractError("review publication acceptance drifted")
     if (
         review.get("semantic_legibility_verdict") != "pending"
         or review.get("visual_quality_vs_tikz") != "pending"
@@ -247,6 +332,16 @@ def verify_pilot(pilot_dir: Path) -> dict:
             raise ContractError("committed PNG differs from fresh replay")
         if receipt != first:
             raise ContractError("committed receipt differs from fresh replay")
+        bound_hashes = {
+            "authority_sha256": "authority.yaml",
+            "contract_snapshot_sha256": "contract.snapshot.yaml",
+            "tikz_baseline_sha256": "tikz_baseline.png",
+            "comparison_sha256": "comparison.png",
+            "human_review_sha256": "human_review.yaml",
+        }
+        for field, filename in bound_hashes.items():
+            if receipt.get(field) != _sha256(pilot_dir / filename):
+                raise ContractError(f"bound artifact hash mismatch: {filename}")
     return receipt
 
 

@@ -1,16 +1,21 @@
 {
+  "authority_sha256": "22ea068ee62f528ba57c8dc73cb862c6bf51e689ab678202e389667ce1f62346",
+  "backend_promotion": "not_authorized",
   "canvas": {
     "height": 640,
     "width": 960
   },
   "comparison_boundary": "equal_pixel_canvas",
-  "comparison_sha256": "c4323537b6a99152f417717629bf52fe9b59b0e87af7edfea2f3f9d8ce64ee1a",
-  "png_pixel_sha256": "07fe0800e6cbe66b72ac1bd5d57cc7f86af0cd0ba11610714f155873aa199dca",
-  "png_sha256": "9679fb7b7fb32525421b4e56d75386135bc01b751c35db90bbfec13e4f1a110c",
+  "comparison_sha256": "f8d0da22f565a1c2bce64a87d31a53a1b6610cd77b9e417e788d1b01200ed20a",
+  "contract_snapshot_sha256": "0ddcf5e652ff2049c943c0b78195c85f540484240ae42a37368c300871550eba",
+  "human_review_sha256": "07e0dcf7898142f85e04551ee433b75cb9f3e4943078c6908a5333a225c8c2f3",
+  "png_pixel_sha256": "2edf03068d881bd7ef48b8be5049e12a60cd94bbcb4070774f0f2db870066474",
+  "png_sha256": "9c011156c7f3faa87ec370a9813e213f2ec151560582cf404ba97db2dd95fb84",
   "publication_acceptance": "not_claimed",
   "schema": "figure-agent.panel-f-svg-receipt.v1",
   "semantic_legibility_verdict": "pending",
   "svg_sha256": "a786390c415ca991adcd4e546d497a4573cf10a7562490be782a91398c462984",
-  "tikz_pixel_sha256": "62b71600406fa1ea5cce92927c574c1ec6c4e543a358209f10fb9760645a57ff",
+  "tikz_baseline_sha256": "f75a20f9bcb6e1cf1cc2d2aec9b9e94c328b787ed39f36cbd1a642675261942d",
+  "tikz_pixel_sha256": "55537390b4d5f874f92e9bba7112e9f27dbc15ccd97f75628a6c26d52bc3fbff",
   "visual_quality_vs_tikz": "pending"
 }

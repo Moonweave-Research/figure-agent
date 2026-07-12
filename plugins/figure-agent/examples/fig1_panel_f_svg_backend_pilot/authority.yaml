@@ -1,7 +1,18 @@
 schema: figure-agent.panel-f-svg-authority.v1
 contract: styles/snippets/panel-f-floating-cantilever.contract.yaml
 contract_sha256: 0ddcf5e652ff2049c943c0b78195c85f540484240ae42a37368c300871550eba
-tikz_baseline: examples/fig1_failure_first_panel_f_pilot/build/panel_crops/F.png
-tikz_baseline_sha256: ec53a553f9a5fb4c60c03b3fb03eacbf7d0fd32e93dd3e8941caecb2ccf482e6
+tikz_baseline: isolated_approved_snippet_render
+tikz_snippet: styles/snippets/panel-f-floating-cantilever.tex
+tikz_snippet_sha256: 2e0b39f3e4c20daa9987a80218702be48b263bbac149de2df80d7cc582695c49
+comparison_boundary:
+  canvas:
+  - 960
+  - 640
+  content_box:
+  - 48
+  - 48
+  - 912
+  - 592
+  normalization: foreground_crop_resampled_to_equal_box
 approved_tikz_snippet_unchanged: true
 publication_acceptance: not_claimed
