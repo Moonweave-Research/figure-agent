@@ -4,20 +4,30 @@ state: development_baseline_approved
 scientific_fidelity: accepted_for_development_baseline
 defect_presence: no_blocking_panel_f_defect_observed
 correction_minutes: null
-visual_verdict: baseline
+correction_minutes_status: unavailable
+correction_minutes_reason: retrospective timing was not measured, so no correction-time estimate is claimed
+visual_verdict: baseline_with_aesthetic_debt
 reviewed_source:
   commit: 9f0d5e42370fa9dae7628e7342201eeac20aa130
   variant: repaired
   panel_render_sha256: 6367a0ba8e1580af6ca9af58b1ecf099c1e673609356ddc0214df61161ac93ba
 reviewed_views:
+  - whole
   - panel
+  - object_relation
+  - zoom
 required_views:
   - whole
   - panel
   - object_relation
   - zoom
-remaining_required_views:
-  - whole
-  - object_relation
-  - zoom
+remaining_required_views: []
+review_outcomes:
+  whole: no_blocking_defect_observed
+  object_relation: no_blocking_defect_observed
+  zoom: no_blocking_defect_observed
+aesthetic_debt: >-
+  The panel is technically coherent at the reviewed scales, but its visual language
+  remains somewhat old-fashioned or juvenile and does not yet establish a modern,
+  publication-grade scientific illustration standard.
 publication_acceptance: not_claimed

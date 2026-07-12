@@ -198,14 +198,24 @@ def test_human_verdict_separates_baseline_approval_from_publication_review() -> 
     verdict = _yaml("review/human_verdict.yaml")
     assert verdict["reviewer"] == "moon"
     assert verdict["state"] == "development_baseline_approved"
-    assert verdict["reviewed_views"] == ["panel"]
-    assert verdict["remaining_required_views"] == [
+    assert verdict["reviewed_views"] == [
         "whole",
+        "panel",
         "object_relation",
         "zoom",
     ]
+    assert verdict["remaining_required_views"] == []
     assert verdict["scientific_fidelity"] == "accepted_for_development_baseline"
-    assert verdict["visual_verdict"] == "baseline"
+    assert verdict["visual_verdict"] == "baseline_with_aesthetic_debt"
+    assert verdict["correction_minutes"] is None
+    assert verdict["correction_minutes_status"] == "unavailable"
+    assert "retrospective" in verdict["correction_minutes_reason"]
+    assert verdict["review_outcomes"] == {
+        "whole": "no_blocking_defect_observed",
+        "object_relation": "no_blocking_defect_observed",
+        "zoom": "no_blocking_defect_observed",
+    }
+    assert "old-fashioned" in verdict["aesthetic_debt"]
     assert verdict["publication_acceptance"] == "not_claimed"
 
 
