@@ -52,13 +52,23 @@ def write_comparable_runs(root: Path) -> dict[str, Path]:
 
 def add_generation_receipt(path: Path, *, model_id: str = "test-model") -> None:
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    starting_artifact_path = path.with_name("starting.tex")
+    generated_artifact_path = path.with_name(f"{path.stem}.generated.tex")
+    starting_artifact_path.write_text("starting artifact\n", encoding="utf-8")
+    generated_artifact_path.write_text(
+        f"generated {path.stem} artifact\n", encoding="utf-8"
+    )
     transcript = {
         "model_id": model_id,
         "input_packet_sha256": payload["input_packet_hash"],
         "budget_contract_sha256": payload["budget_contract_hash"],
         "source_commit": "0123456789abcdef",
-        "starting_artifact_sha256": "sha256:" + "4" * 64,
-        "generated_artifact_sha256": "sha256:" + "5" * 64,
+        "starting_artifact_path": starting_artifact_path.name,
+        "starting_artifact_sha256": "sha256:"
+        + hashlib.sha256(starting_artifact_path.read_bytes()).hexdigest(),
+        "generated_artifact_path": generated_artifact_path.name,
+        "generated_artifact_sha256": "sha256:"
+        + hashlib.sha256(generated_artifact_path.read_bytes()).hexdigest(),
     }
     transcript_path = path.with_suffix(".transcript.json")
     transcript_bytes = json.dumps(transcript, sort_keys=True).encode("utf-8")
@@ -160,6 +170,19 @@ def test_ablation_rejects_generation_receipts_from_different_models(tmp_path: Pa
     paths = write_comparable_runs(tmp_path)
     for variant, path in paths.items():
         add_generation_receipt(path, model_id=f"test-model-{variant}")
+
+    report = evaluate_ablation(paths)
+
+    assert report["comparison_evidence"] == "staged_only"
+
+
+def test_ablation_rejects_generation_receipts_with_changed_artifacts(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    for path in paths.values():
+        add_generation_receipt(path)
+    (tmp_path / "raw.generated.tex").write_text("changed artifact\n", encoding="utf-8")
 
     report = evaluate_ablation(paths)
 

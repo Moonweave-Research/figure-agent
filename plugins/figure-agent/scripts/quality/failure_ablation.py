@@ -128,6 +128,19 @@ def _has_bound_generation_receipt(run: dict[str, Any]) -> bool:
     actual_hash = f"sha256:{hashlib.sha256(transcript_bytes).hexdigest()}"
     if actual_hash != declared_hash:
         return False
+    for artifact_kind in ("starting", "generated"):
+        artifact_path_value = receipt.get(f"{artifact_kind}_artifact_path")
+        artifact_hash = receipt.get(f"{artifact_kind}_artifact_sha256")
+        if not isinstance(artifact_path_value, str) or not isinstance(artifact_hash, str):
+            return False
+        artifact_path = Path(artifact_path_value)
+        if artifact_path.is_absolute() or len(artifact_path.parts) != 1:
+            return False
+        artifact = run_path.parent / artifact_path
+        if artifact.is_symlink() or not artifact.is_file():
+            return False
+        if f"sha256:{hashlib.sha256(artifact.read_bytes()).hexdigest()}" != artifact_hash:
+            return False
     try:
         transcript_payload = json.loads(transcript_bytes)
     except (UnicodeDecodeError, json.JSONDecodeError):
@@ -141,7 +154,9 @@ def _has_bound_generation_receipt(run: dict[str, Any]) -> bool:
             "input_packet_sha256",
             "budget_contract_sha256",
             "source_commit",
+            "starting_artifact_path",
             "starting_artifact_sha256",
+            "generated_artifact_path",
             "generated_artifact_sha256",
         )
     )
