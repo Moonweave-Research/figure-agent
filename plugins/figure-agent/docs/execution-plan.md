@@ -154,25 +154,31 @@ available, Slice 1 stops as `pending_human_review`.
 
 ### Purpose
 
-Test the same failure-first control loop on a materially different six-panel
-sulfur-polymer narrative rather than extending the successful Fig1 fixture.
+Test the same failure-first control loop on the current main-text Fig3
+mechanism schematic rather than extending the successful Fig1 fixture or
+reviving an older abandoned Fig3 composition.
 
 ### Target and boundaries
 
-The historical target family is `fig3_trap_schematic_v97`, preserved inside the
-tracked derivative at `examples/fig3_trap_schematic_slice3_semantic/source/`.
-Historical Fig3 source, reference, briefing, specification, coordinate hints,
-and review artifacts are read-only authority inputs. The executable derivative
-is `examples/fig3_trap_schematic_slice3_semantic/`; new evidence lives under
-`examples/fig3_trap_schematic_slice3_semantic/review/failure-first-ablation/`;
-historical files are not overwritten.
+The target is `examples/fig3_resistance_mechanism/`: the current main-text Fig3
+schematic that connects Fig2's material design space to Fig4's quantified trap
+spectra. It has a maintained editable TikZ source, briefing, specification,
+authoring contract, panel goals, critique history, and current render. Its two
+dense panels test a different failure profile from Fig1: repeated,
+sign-agnostic trap/release transport in panel A and the separate `n = breadth`
+and `rho_60s = magnitude` relations in panel B.
 
-The current bound artifact verdict is already `rejected` for publication
-quality, while the scaffold verdict is `pending`. Preserve that existing
-artifact rejection. This slice tests the control loop and obtains the missing
-scaffold decision; it does not relabel the rejected artifact as a fresh approval
-candidate. The slice numbering in this plan is execution order, not the legacy
-artifact's `slice3_semantic` version name.
+`fig3_trap_schematic_v97` and its derivative
+`examples/fig3_trap_schematic_slice3_semantic/` are historical rejected/raw
+evidence. Preserve them exactly and do not use them as the active target,
+baseline, or acceptance candidate. `fig3_trapping_concept` is an older reset
+fixture. `fig3_floating_clip_protocol` is a distinct SI/methods protocol
+fixture; it remains useful later only after its experiment-specific physics
+authority is reopened. Neither is part of this slice.
+
+New failure-first evidence is additive under
+`examples/fig3_resistance_mechanism/review/failure-first/`. It must not alter
+the existing source figure or reinterpret its prior critique artifacts.
 
 Fig1-specific snippets, coordinates, selectors, detector thresholds, labels,
 and repair templates are forbidden. Reuse only renderer-neutral schemas and the
@@ -181,27 +187,28 @@ modules listed in Section 0.
 
 ### Files
 
-- Read historical authority only:
-  `examples/fig3_trap_schematic_slice3_semantic/source/`
-- Verify executable source:
-  `examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex`
-- Create:
-  `examples/fig3_trap_schematic_slice3_semantic/review/failure-first-ablation/`
-- Modify only if a bounded exact repair is authorized: a copied editable Fig3
-  source owned by the new slice
-- Create: `tests/test_fig3_failure_first_cross_family.py`
+- Read authority: `examples/fig3_resistance_mechanism/{briefing.md,spec.yaml,authoring_contract.md,panel_goals.md,critique.md,critique_adjudication.yaml}`
+- Verify source: `examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex`
+- Create: `examples/fig3_resistance_mechanism/review/failure-first/`
+- Modify only if a bounded exact repair is authorized: a copied TikZ source
+  owned by the new failure-first review directory
+- Create: `tests/test_fig3_resistance_failure_first.py`
 - Modify when reviewed evidence is added: `benchmarks/llm_failure_sources.yaml`
 - Regenerate: `benchmarks/llm_failure_corpus.yaml`
 
 ### Steps
 
-- [x] Create `tests/test_fig3_failure_first_cross_family.py` as the first RED
-  change. It intentionally does not exist at plan-authoring time; do not replace
-  it with the unrelated cohort test or add a placeholder that passes.
-- [x] Bind reference, briefing, specification, coordinate hints, editable source,
-  and review history to explicit hashes and authority roles.
-- [x] Declare the six-panel narrative, required objects and relations, forbidden
-  implications, and stable source selectors without importing Fig1 declarations.
+- [ ] Create `tests/test_fig3_resistance_failure_first.py` as the first RED
+  change. Do not reuse a test, packet, selector, coordinate hint, or verdict
+  from the retired Fig3 target.
+- [ ] Bind the maintained briefing, specification, authoring contract, panel
+  goals, editable source, render, and critique history to explicit hashes and
+  authority roles.
+- [ ] Declare the two-panel narrative, required objects and relations,
+  forbidden implications, and stable source selectors without importing Fig1
+  declarations. In particular, preserve sign-agnostic repeated trapping in A,
+  discrete-to-continuous distribution evolution in B, and the distinction
+  between `n` (breadth) and `rho_60s` (magnitude).
 - [ ] Produce comparable `raw`, `verified`, and `repaired` manifests using the
   same model, input packet, budget, and starting artifact; do not treat manually
   staged manifests as actual LLM runs without generation receipts. A receipt is
@@ -210,34 +217,34 @@ modules listed in Section 0.
   contract; use `scripts/quality/generation_receipt.py` to write this record.
   The writer refuses packet/budget hash drift and transcript overwrite. This is
   an auditable execution claim, not provider authentication.
-- [x] Generate whole, panel, object/relation, and zoom crops and overlays.
-- [x] Keep ambiguous and unbound findings review-only.
+- [ ] Generate whole, panel, object/relation, and zoom crops and overlays.
+- [ ] Keep ambiguous and unbound findings review-only.
 - [ ] Apply at most one smallest exact bounded repair with protected invariants,
   change budget, receipt, and rollback evidence.
-- [ ] Obtain the missing named scaffold review, preserve the existing artifact
-  rejection, and record prospectively measured correction minutes.
+- [ ] Obtain a named human review and record prospectively measured correction
+  minutes. A machine result is never a publication verdict.
 
 ### Verification
 
 ```bash
 bash scripts/compile.sh \
-  examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex
-uv run pytest tests/test_fig3_failure_first_cross_family.py \
+  examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+uv run pytest tests/test_fig3_resistance_failure_first.py \
   tests/test_failure_ablation.py \
   tests/test_quality_patch_policy.py \
   tests/test_quality_patch_plan.py \
   tests/test_quality_patch_apply.py -q
-uv run ruff check tests/test_fig3_failure_first_cross_family.py
+uv run ruff check tests/test_fig3_resistance_failure_first.py
 git diff --check
 ```
 
 ### Exit condition
 
 This cross-family proof advances only after all three ablation manifests and
-their bound generation receipts exist. The Fig3 packet is cleanly reproducible, contains no
-Fig1-specific dependency, reports exact/ambiguous/unbound attribution honestly,
-preserves scientific relations across any repair, and has a named human outcome.
-A passing machine gate without human scaffold review is not completion.
+their bound generation receipts exist. The Fig3 packet is cleanly reproducible,
+contains no Fig1-specific dependency, reports exact/ambiguous/unbound
+attribution honestly, preserves scientific relations across any repair, and has
+a named human outcome. A passing machine gate is not publication acceptance.
 
 ## Slice 3: Two-family A/B/C decision
 
@@ -283,9 +290,9 @@ uv run python bin/fig-agent failure-ablation \
   --repaired examples/fig1_failure_first_panel_f_pilot/review/ablation/repaired.yaml \
   --json
 uv run python bin/fig-agent failure-ablation \
-  --raw examples/fig3_trap_schematic_slice3_semantic/review/failure-first-ablation/raw.yaml \
-  --verified examples/fig3_trap_schematic_slice3_semantic/review/failure-first-ablation/verified.yaml \
-  --repaired examples/fig3_trap_schematic_slice3_semantic/review/failure-first-ablation/repaired.yaml \
+  --raw examples/fig3_resistance_mechanism/review/failure-first/raw.yaml \
+  --verified examples/fig3_resistance_mechanism/review/failure-first/verified.yaml \
+  --repaired examples/fig3_resistance_mechanism/review/failure-first/repaired.yaml \
   --json
 uv run pytest tests/test_failure_ablation.py \
   tests/test_failure_first_cli.py \

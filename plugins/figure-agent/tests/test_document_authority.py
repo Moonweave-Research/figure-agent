@@ -173,9 +173,10 @@ def test_active_plan_is_executable_against_current_fig3_artifacts() -> None:
     for required in (
         "integration target is `main`",
         "git rev-list --left-right --count main...HEAD",
-        "tests/test_fig3_failure_first_cross_family.py",
-        "fig3_trap_schematic_slice3_semantic.tex",
-        "existing artifact rejection",
+        "tests/test_fig3_resistance_failure_first.py",
+        "fig3_resistance_mechanism.tex",
+        "current main-text Fig3",
+        "historical rejected/raw evidence",
         "Retrospective correction time must not be estimated",
         "preserve the existing panel verdict",
         "review_input_hash",
@@ -185,6 +186,9 @@ def test_active_plan_is_executable_against_current_fig3_artifacts() -> None:
         assert required in normalized
 
     assert "examples/fig3_trap_schematic_v97/fig3_trap_schematic_v97.tex" not in execution
+    assert (PLUGIN_ROOT / "examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex").is_file()
+    assert (PLUGIN_ROOT / "examples/fig3_resistance_mechanism/briefing.md").is_file()
+    assert (PLUGIN_ROOT / "examples/fig3_resistance_mechanism/spec.yaml").is_file()
     assert (
         PLUGIN_ROOT
         / "examples/fig3_trap_schematic_slice3_semantic/fig3_trap_schematic_slice3_semantic.tex"
