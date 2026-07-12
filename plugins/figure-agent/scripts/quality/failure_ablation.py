@@ -193,7 +193,7 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
         item["human_verdict_state"] == "recorded" for item in variants.values()
     )
     receipts = [runs[name].get("generation_receipt") for name in VARIANTS]
-    actual_generation_bound = all(
+    transcript_bound = all(
         _has_bound_generation_receipt(runs[name]) for name in VARIANTS
     ) and all(
         len({receipt[field] for receipt in receipts if isinstance(receipt, dict)}) == 1
@@ -207,11 +207,11 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
             "repaired_vs_raw": _delta(repaired, raw),
         },
         "comparison_evidence": (
-            "actual_generation_bound" if actual_generation_bound else "staged_only"
+            "transcript_bound" if transcript_bound else "staged_only"
         ),
         "product_claim": (
             "review_eligible"
-            if scientific_pass and human_complete and actual_generation_bound
+            if scientific_pass and human_complete and transcript_bound
             else "not_authorized"
         ),
         "publication_acceptance": "not_claimed",

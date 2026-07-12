@@ -163,7 +163,7 @@ def test_ablation_accepts_runs_with_matching_generation_receipts(tmp_path: Path)
 
     report = evaluate_ablation(paths)
 
-    assert report["comparison_evidence"] == "actual_generation_bound"
+    assert report["comparison_evidence"] == "transcript_bound"
 
 
 def test_ablation_rejects_generation_receipts_from_different_models(tmp_path: Path) -> None:

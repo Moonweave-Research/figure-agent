@@ -205,8 +205,9 @@ modules listed in Section 0.
 - [ ] Produce comparable `raw`, `verified`, and `repaired` manifests using the
   same model, input packet, budget, and starting artifact; do not treat manually
   staged manifests as actual LLM runs without generation receipts. A receipt is
-  evidence-bound only when its adjacent non-symlink transcript and both declared
-  starting/generated artifacts match their SHA-256 hashes and shared contract.
+  `transcript_bound` only when its adjacent non-symlink transcript and both
+  declared starting/generated artifacts match their SHA-256 hashes and shared
+  contract; it is an auditable execution claim, not provider authentication.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [x] Keep ambiguous and unbound findings review-only.
 - [ ] Apply at most one smallest exact bounded repair with protected invariants,
