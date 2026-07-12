@@ -1,0 +1,31 @@
+schema: figure-agent.failure-first-input-packet.v1
+fixture: fig3_trap_schematic_slice3_semantic
+generation_status: not_run
+panels: [a, b, c, d, e, f]
+forbidden_import_patterns:
+  - examples/fig1_
+  - experiments/python_svg_semantic_fig1
+  - fig1_hybrid_complex_panel_pilot
+authoritative_inputs:
+  - role: reference
+    path: source/reference/codex_v01.png
+    sha256: sha256:0c8bc4bd77d3ff51c700ee2b7b6e8e564611ff58a5ade8e952e1d5248033d7fb
+  - role: briefing
+    path: source/briefing.md
+    sha256: sha256:b1a4fe04f03f0b147e1809ef129ae8b3776a5830ec82d051da252eb136b18a2e
+  - role: specification
+    path: source/spec.yaml
+    sha256: sha256:5d8aa7958d70236d7b815c6ca477d4415434d2cf04ac5cdc4b6b99e6647e54da
+  - role: coordinate_hints
+    path: source/coordinate_hints.yaml
+    sha256: sha256:56dcf37f415af6251d21b049d0bf41fa85d9b647f6fa060e1d0099205ff6d77b
+  - role: editable_source
+    path: fig3_trap_schematic_slice3_semantic.tex
+    sha256: sha256:3fae482eadba01b6e27123a8184596acaffd788dc894d19177ac463e8eea96dd
+  - role: review_history
+    path: source/REVIEW.md
+    sha256: sha256:cfb3a2f19ae57f6f192e54608b7203c3657a2a5bd0cab79b7badfa73052d9a2a
+  - role: semantic_regions
+    path: semantic_regions.yaml
+    sha256: sha256:1b2f2eb07004c0f0611c1479ad31eb9bb1f5b1c1b41d262ca349091491f4e136
+publication_acceptance: not_claimed
