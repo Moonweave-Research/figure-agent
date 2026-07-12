@@ -405,7 +405,7 @@ sources:
 cases:
   - id: fig1-c-trap-band-overlap
     source_id: fig1-direct-svg-primary-review
-    source_locator: responses[0].panels.C.scientific_fidelity.evidence
+    source_locator: primary_review.panels.C.scientific.B.evidence
     figure_family: fig1_direct_svg
     failure_class: geometry
     observation_scale: object_relation
@@ -415,7 +415,7 @@ cases:
     repair_family: restore_declared_relation
   - id: fig1-f-equipment-label-overlap
     source_id: fig1-direct-svg-primary-review
-    source_locator: responses[0].panels.F.composition.evidence
+    source_locator: primary_review.panels.F.scientific.A.evidence
     figure_family: fig1_direct_svg
     failure_class: typography
     observation_scale: panel
@@ -425,7 +425,7 @@ cases:
     repair_family: label_reflow
   - id: fig1-f-cantilever-shape
     source_id: fig1-direct-svg-primary-review
-    source_locator: responses[0].panels.F.scientific_fidelity.evidence
+    source_locator: primary_review.panels.F.scientific.B.evidence
     figure_family: fig1_direct_svg
     failure_class: finish
     observation_scale: object_relation
@@ -435,7 +435,7 @@ cases:
     repair_family: close_or_complete_contour
   - id: fig1-c-visual-language
     source_id: fig1-direct-svg-primary-review
-    source_locator: responses[0].panels.C.illustration_quality.evidence
+    source_locator: primary_review.panels.C.scientific.A.evidence
     figure_family: fig1_direct_svg
     failure_class: style
     observation_scale: panel

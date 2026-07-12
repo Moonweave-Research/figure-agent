@@ -33,12 +33,13 @@ def _sha256(path: Path) -> str:
 
 def _safe_source(root: Path, value: object) -> Path:
     relative = Path(str(value or ""))
-    candidate = (root / relative).resolve()
+    unresolved = root / relative
+    candidate = unresolved.resolve()
     if relative.is_absolute() or ".." in relative.parts:
         raise FailureCorpusError("source_path_invalid")
     if not candidate.is_relative_to(root.resolve()):
         raise FailureCorpusError("source_path_invalid")
-    if candidate.is_symlink() or not candidate.is_file():
+    if unresolved.is_symlink() or not candidate.is_file():
         raise FailureCorpusError("source_missing")
     return candidate
 

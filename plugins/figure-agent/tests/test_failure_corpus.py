@@ -86,3 +86,15 @@ def test_rejects_unreviewed_or_hash_drifted_evidence(tmp_path: Path) -> None:
         match="review_outcome_invalid|source_hash_mismatch",
     ):
         load_failure_corpus(path)
+
+
+def test_rejects_symlinked_review_source(tmp_path: Path) -> None:
+    path = write_corpus(tmp_path)
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    source = tmp_path / payload["cases"][0]["source_path"]
+    link = tmp_path / "linked-review.yaml"
+    link.symlink_to(source)
+    payload["cases"][0]["source_path"] = link.name
+    path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    with pytest.raises(FailureCorpusError, match="source_missing"):
+        load_failure_corpus(path)

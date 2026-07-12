@@ -1,0 +1,60 @@
+schema: figure-agent.llm-failure-sources.v1
+authority: reviewed_evidence_only
+sources:
+  - id: fig1-direct-svg-primary-review
+    path: examples/fig1_direct_svg_cleanroom_baseline/review/distributions/review-v3-08cc4280c1e69e77/response.yaml
+    reviewer: moon
+  - id: visual-attribution-reviewed-ledger
+    path: benchmarks/visual_attribution_suite.yaml
+    reviewer: repository_review_records
+cases:
+  - id: fig1-c-trap-band-overlap
+    source_id: fig1-direct-svg-primary-review
+    source_locator: primary_review.panels.C.scientific.B.evidence
+    figure_family: fig1_direct_svg
+    failure_class: geometry
+    observation_scale: object_relation
+    review_outcome: confirmed_defect
+    semantic_target: panel_c.trap_bands
+    attribution_state: exact
+    repair_family: restore_declared_relation
+  - id: fig1-f-equipment-label-overlap
+    source_id: fig1-direct-svg-primary-review
+    source_locator: primary_review.panels.F.scientific.A.evidence
+    figure_family: fig1_direct_svg
+    failure_class: typography
+    observation_scale: panel
+    review_outcome: confirmed_defect
+    semantic_target: panel_f.equipment_labels
+    attribution_state: exact
+    repair_family: label_reflow
+  - id: fig1-f-cantilever-shape
+    source_id: fig1-direct-svg-primary-review
+    source_locator: primary_review.panels.F.scientific.B.evidence
+    figure_family: fig1_direct_svg
+    failure_class: finish
+    observation_scale: object_relation
+    review_outcome: confirmed_defect
+    semantic_target: panel_f.cantilever
+    attribution_state: exact
+    repair_family: close_or_complete_contour
+  - id: fig1-c-visual-language
+    source_id: fig1-direct-svg-primary-review
+    source_locator: primary_review.panels.C.scientific.A.evidence
+    figure_family: fig1_direct_svg
+    failure_class: style
+    observation_scale: panel
+    review_outcome: confirmed_defect
+    semantic_target: panel_c
+    attribution_state: exact
+    repair_family: normalize_stroke_and_color_roles
+  - id: fig1-v2-vc009
+    source_id: visual-attribution-reviewed-ledger
+    source_locator: reviewed_evidence[id=fig1-v2-vc009-reviewed-false-positive]
+    figure_family: fig1_tikz
+    failure_class: typography
+    observation_scale: zoom
+    review_outcome: accepted_false_positive
+    semantic_target: null
+    attribution_state: unbound
+    repair_family: null
