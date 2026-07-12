@@ -1,44 +1,50 @@
 schema: figure-agent.three-way-review-response.v2
-state: scientific_gate_pending
+state: primary_visual_fixed
 primary_review:
   reviewer:
-    name: null
-    reviewed_at: null
+    name: moon
+    reviewed_at: '2026-07-12T09:53:56+09:00'
   panels:
     C:
       scientific:
         A:
-          verdict: null
-          evidence: null
+          verdict: pass
+          evidence: No definite scientific or semantic error identified; concerns
+            were limited to the sample illustration feeling somewhat childish.
         B:
-          verdict: null
-          evidence: null
+          verdict: fail
+          evidence: Trap-band geometry is clearly abnormal because the bands overlap;
+            mathematical-model expression also appears insufficient.
         C:
-          verdict: null
-          evidence: null
+          verdict: pass
+          evidence: Reconstruction fidelity is acceptable and the energy-band dip
+            is only slightly awkward, not a definite scientific error.
       visual:
-        composition_preference: null
-        illustration_quality_preference: null
-        typography_preference: null
-        borderline_or_disputed: null
+        composition_preference: tie
+        illustration_quality_preference: C
+        typography_preference: tie
+        borderline_or_disputed: true
     F:
       scientific:
         A:
-          verdict: null
-          evidence: null
+          verdict: pass
+          evidence: No definite scientific error identified; observed defects are
+            overlapping equipment and repulsion labels.
         B:
-          verdict: null
-          evidence: null
+          verdict: pass
+          evidence: No definite scientific error identified; the cantilever shape
+            and typography are awkward but were not judged scientifically wrong.
         C:
-          verdict: null
-          evidence: null
+          verdict: fail
+          evidence: The experimental setup is fundamentally composed in the wrong
+            orientation, shown horizontally although the apparatus is vertical.
       visual:
-        composition_preference: null
-        illustration_quality_preference: null
-        typography_preference: null
-        borderline_or_disputed: null
+        composition_preference: A
+        illustration_quality_preference: A
+        typography_preference: tie
+        borderline_or_disputed: true
 second_review:
-  required: null
+  required: true
   reviewer:
     name: null
     reviewed_at: null

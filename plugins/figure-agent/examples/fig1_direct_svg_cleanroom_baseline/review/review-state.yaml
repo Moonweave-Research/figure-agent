@@ -27,8 +27,8 @@ generator:
     resampling: Pillow.Image.Resampling.LANCZOS
   receipt_sha256: sha256:b2a86256adc3c80ed4c9034fdeedf3d3c55be67f9ae95d144c385ffd0fae4140
 response_schema: figure-agent.three-way-review-response.v2
-response_state: scientific_gate_pending
-response_sha256: sha256:fb86f7f37a7112c0e44ebfc223765073a8cb74d8ca4591d3c1927ec58a485df9
+response_state: primary_visual_fixed
+response_sha256: sha256:ec23de12b18f9aba35971714025e7f4b20a5eec16cb6618fbf8397b5ec441d90
 finalized_response_sha256: null
 normalization_policy: contain_white_pad_authority_size.v1
 perceptual_duplicate_policy:
