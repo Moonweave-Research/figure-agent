@@ -1,13 +1,13 @@
 % Reusable Panel F apparatus motif. The caller owns labels, force arrows,
 % panel framing, and whole-panel composition.
-\newcommand{\PanelFFloatingCantilever}[1]{%
-  \begin{scope}[shift={(#1)}]
+\newcommand{\PanelFFloatingCantilever}[2]{%
+  \begin{scope}[shift={(#2)}]
     % Stable anchors for semantic overlays and downstream inspection.
-    \coordinate (panelFFixedBoundary) at (0,0.34);
-    \coordinate (panelFFloatingCantilever) at (-0.26,0);
-    \coordinate (panelFDrivenElectrode) at (1.34,-1.40);
-    \coordinate (panelFSourceReturn) at (1.74,0.39);
-    \coordinate (panelFTrappedCharge) at (-0.22,-0.56);
+    \coordinate (#1FixedBoundary) at (0,0.34);
+    \coordinate (#1FloatingCantilever) at (-0.26,0);
+    \coordinate (#1DrivenElectrode) at (1.34,-1.40);
+    \coordinate (#1SourceReturn) at (1.74,0.39);
+    \coordinate (#1TrappedCharge) at (-0.22,-0.56);
 
     % Fixed mechanical boundary and shallow root jaw.
     \draw[cGray!62!black, line width=0.72pt, line cap=round, line join=round]

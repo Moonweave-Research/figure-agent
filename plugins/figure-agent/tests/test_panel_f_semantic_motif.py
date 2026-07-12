@@ -1,3 +1,4 @@
+import subprocess
 from hashlib import sha256
 from pathlib import Path
 
@@ -9,6 +10,7 @@ CONTRACT = PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.contract.y
 TRANSFER_RECEIPT = (
     PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.transfer.yaml"
 )
+TRANSFER_HELPER = PLUGIN_ROOT / "scripts/quality/panel_f_transfer_receipt.py"
 FIXTURES = (
     PLUGIN_ROOT
     / "examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex",
@@ -25,8 +27,8 @@ SELECTOR_END = "% figure-agent:end panel_f.mechanism_scene"
 def test_shared_motif_exposes_stable_semantic_anchors_without_fixture_names() -> None:
     source = SNIPPET.read_text(encoding="utf-8")
 
-    assert rf"\newcommand{{{MACRO}}}[1]" in source
-    assert r"\begin{scope}[shift={(#1)}]" in source
+    assert rf"\newcommand{{{MACRO}}}[2]" in source
+    assert r"\begin{scope}[shift={(#2)}]" in source
     for anchor in (
         "panelFFixedBoundary",
         "panelFFloatingCantilever",
@@ -34,7 +36,7 @@ def test_shared_motif_exposes_stable_semantic_anchors_without_fixture_names() ->
         "panelFSourceReturn",
         "panelFTrappedCharge",
     ):
-        assert rf"\coordinate ({anchor})" in source
+        assert rf"\coordinate (#1{anchor.removeprefix('panelF')})" in source
     assert "fig1_failure_first_panel_f_pilot" not in source
     assert "fig1_overview_v5f_art_direction_001_vault" not in source
 
@@ -101,7 +103,7 @@ def test_both_fixtures_input_and_invoke_the_same_motif_inside_selector() -> None
         assert source.count(SELECTOR_END) == 1
 
         selected = source.split(SELECTOR_START, 1)[1].split(SELECTOR_END, 1)[0]
-        assert MACRO + "{" in selected
+        assert rf"{MACRO}{{panelF}}{{11.84,2.84}}" in selected
         assert "panelFCoulombRepulsionArrow" not in selected
 
 
@@ -154,7 +156,20 @@ def test_transfer_receipt_binds_sources_and_records_non_publication_evidence() -
     ):
         assert value.startswith("sha256:")
         assert len(value) == 71
-    assert "1000x1100+3150+1650" in comparison["reproduce"]
-    assert "compare -metric AE" in comparison["reproduce"]
+    assert comparison["reproduce"] == (
+        "uv run python scripts/quality/panel_f_transfer_receipt.py refresh"
+    )
+    assert TRANSFER_HELPER.is_file()
+
+    rendered = [PLUGIN_ROOT / path for path in comparison["render_bindings"]]
+    if all(path.is_file() for path in rendered):
+        result = subprocess.run(
+            ["uv", "run", "python", str(TRANSFER_HELPER), "verify"],
+            cwd=PLUGIN_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
     assert receipt["strict_review_evidence"] == "generated_not_passed"
     assert receipt["publication_acceptance"] == "not_claimed"
