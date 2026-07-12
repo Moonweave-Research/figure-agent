@@ -135,8 +135,12 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
     human_complete = all(
         item["human_verdict_state"] == "recorded" for item in variants.values()
     )
+    receipts = [runs[name].get("generation_receipt") for name in VARIANTS]
     actual_generation_bound = all(
         _has_bound_generation_receipt(runs[name]) for name in VARIANTS
+    ) and all(
+        len({receipt[field] for receipt in receipts if isinstance(receipt, dict)}) == 1
+        for field in ("model_id", "source_commit", "starting_artifact_sha256")
     )
     return {
         "schema": REPORT_SCHEMA,
