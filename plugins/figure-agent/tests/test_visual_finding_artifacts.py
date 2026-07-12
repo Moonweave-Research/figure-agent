@@ -4,6 +4,7 @@ import importlib
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from PIL import Image
@@ -105,6 +106,26 @@ def test_no_finding_report_emits_empty_manifest_without_fake_images(tmp_path: Pa
     assert (artifact_dir / "manifest.json").is_file()
     assert list((artifact_dir / "overlays").iterdir()) == []
     assert list((artifact_dir / "crops").iterdir()) == []
+
+
+def test_fallback_pdf_bbox_uses_installed_pdfinfo_without_pdfplumber(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _module()
+
+    monkeypatch.setattr(
+        module.subprocess,
+        "run",
+        lambda *args, **kwargs: SimpleNamespace(
+            returncode=0,
+            stdout="Pages: 1\nPage size: 200 x 100 pts\n",
+            stderr="",
+        ),
+    )
+
+    assert module._fallback_pdf_bbox(
+        Path("render.pdf"), [0, 0, 100, 50], (100, 100)
+    ) == [0.0, 1.763889, 7.055556, 3.527778]
 
 
 def test_explicit_artifact_base_supports_multiple_tex_variants_in_one_fixture(

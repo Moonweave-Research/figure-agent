@@ -1,6 +1,7 @@
 name: fig3_resistance_mechanism
 title: "Fig 3 — Trapping-during-conduction mechanism: transient I(t) power-law (CvS) and composition-tunable trap-energy breadth (schematic)"
 style_profile: polymer-paper
+undeclared_geometry_profile: schematic
 visual_clash_cap: 10
 panels:
   - id: A

@@ -79,17 +79,20 @@
 \draw[line width=0.35pt, cRed!60!black] (1.2,-0.25) -- (3.8,-0.25);
 \draw[line width=0.35pt, cRed!60!black] (1.2,-0.14) -- (1.2,-0.36);
 \draw[line width=0.35pt, cRed!60!black] (3.8,-0.14) -- (3.8,-0.36);
-\node[lbl, cRed!60!black] at (2.5,-0.55) {$n$ = breadth};
+  \node[sub, cRed!60!black] at (2.5,-0.52) {$n$ = breadth};
   % fig-agent:end object=n_breadth
   % rho60s = magnitude (separate, vertical/orthogonal)
-  \draw[{Stealth[length=1.0mm]}-{Stealth[length=1.0mm]}, line width=0.35pt, cGray!40!black] (4.45,0.22) -- (4.45,2.2);
-  \node[sub, cGray!40!black, anchor=west] at (4.5,1.55) {$\rho_{60\mathrm{s}}$};
-  % curve labels (direct, separated to avoid collision)
-  \node[sub, cBlue!60!black, anchor=west] at (3.45,2.75) {S60:\\discrete\\(single deep)};
-  \node[sub, cRed!65!black, anchor=east] at (1.15,2.55) {S80:\\continuous\\broad};
-  % evolution arrow (low S peak -> broad), label clearly below the arrow
-  \draw[-{Stealth[length=1.5mm]}, line width=0.55pt] (3.05,2.15) .. controls (2.5,2.0) and (1.9,1.95) .. (1.5,1.85);
-  \node[sub, anchor=west] at (0.15,1.05) {disorder $\uparrow$\\(sulfur $\uparrow$)};
+  \draw[{Stealth[length=0.7mm]}-{Stealth[length=0.7mm]}, line width=0.3pt, cGray!40!black] (4.55,0.42) -- (4.55,1.52);
+  \node[font=\fontsize{5.3}{6.3}\selectfont, text=cGray!55!black, anchor=south]
+    at (4.55,1.68) {$\rho_{60\mathrm{s}}$};
+  % Curve labels stay close to their visual referents; the colour and line style
+  % are redundant cues, not the only encoding of discrete versus continuous traps.
+  \node[font=\fontsize{5.3}{6.3}\selectfont, text=cBlue!60!black, align=left, anchor=west]
+    at (3.48,2.54) {S60\\single deep};
+  \node[font=\fontsize{5.3}{6.3}\selectfont, text=cRed!65!black, align=left, anchor=west]
+    at (0.72,2.48) {S80\\continuous broad};
+  % The two directly labelled distributions carry the comparison; an extra
+  % cross-plot arrow would add visual weight without adding a second relation.
 \end{scope}
 \end{tikzpicture}
 \end{document}

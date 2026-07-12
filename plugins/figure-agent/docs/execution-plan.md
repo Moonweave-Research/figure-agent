@@ -190,21 +190,22 @@ modules listed in Section 0.
 - Read authority: `examples/fig3_resistance_mechanism/{briefing.md,spec.yaml,authoring_contract.md,panel_goals.md,critique.md,critique_adjudication.yaml}`
 - Verify source: `examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex`
 - Create: `examples/fig3_resistance_mechanism/review/failure-first/`
-- Modify only if a bounded exact repair is authorized: a copied TikZ source
-  owned by the new failure-first review directory
+- Modify only when one bounded exact repair is authorized: the current TikZ
+  source plus its hash-bound receipt, with the maintained briefing, semantic
+  boundary, and historical Fig3 artifacts protected
 - Create: `tests/test_fig3_resistance_failure_first.py`
 - Modify when reviewed evidence is added: `benchmarks/llm_failure_sources.yaml`
 - Regenerate: `benchmarks/llm_failure_corpus.yaml`
 
 ### Steps
 
-- [ ] Create `tests/test_fig3_resistance_failure_first.py` as the first RED
+- [x] Create `tests/test_fig3_resistance_failure_first.py` as the first RED
   change. Do not reuse a test, packet, selector, coordinate hint, or verdict
   from the retired Fig3 target.
-- [ ] Bind the maintained briefing, specification, authoring contract, panel
+- [x] Bind the maintained briefing, specification, authoring contract, panel
   goals, editable source, render, and critique history to explicit hashes and
   authority roles.
-- [ ] Declare the two-panel narrative, required objects and relations,
+- [x] Declare the two-panel narrative, required objects and relations,
   forbidden implications, and stable source selectors without importing Fig1
   declarations. In particular, preserve sign-agnostic repeated trapping in A,
   discrete-to-continuous distribution evolution in B, and the distinction
@@ -217,10 +218,12 @@ modules listed in Section 0.
   contract; use `scripts/quality/generation_receipt.py` to write this record.
   The writer refuses packet/budget hash drift and transcript overwrite. This is
   an auditable execution claim, not provider authentication.
-- [ ] Generate whole, panel, object/relation, and zoom crops and overlays.
+- [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
-- [ ] Apply at most one smallest exact bounded repair with protected invariants,
-  change budget, receipt, and rollback evidence.
+- [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot
+  transition arrow, attach concise labels to the two distributions, and keep
+  `n` breadth and `rho_60s` magnitude orthogonal. The source and render receipt
+  are hash-bound; its visual outcome remains review-ready, not accepted.
 - [ ] Obtain a named human review and record prospectively measured correction
   minutes. A machine result is never a publication verdict.
 

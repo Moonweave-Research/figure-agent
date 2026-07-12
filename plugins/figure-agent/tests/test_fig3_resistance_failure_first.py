@@ -177,24 +177,29 @@ def test_fig3_resistance_declares_two_panel_semantic_object_relation_boundary() 
     ]
 
 
-def test_fig3_resistance_failure_first_scope_is_additive_and_historically_protected() -> None:
+def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_history() -> None:
     packet = yaml.safe_load(PACKET.read_text(encoding="utf-8"))
     scope = yaml.safe_load((REVIEW / "scope_protection.yaml").read_text(encoding="utf-8"))
 
     assert scope["schema"] == "figure-agent.failure-first-scope-protection.v1"
     assert scope["fixture"] == "fig3_resistance_mechanism"
-    assert scope["authorized_change_mode"] == "additive_review_artifacts_only"
+    assert scope["authorized_change_mode"] == "bounded_source_repair_and_review_artifacts"
     assert scope["allowed_review_paths"] == [
+        "fig3_resistance_mechanism.tex",
+        "spec.yaml",
         "review/failure-first/input_packet.yaml",
         "review/failure-first/semantic_object_relation_boundary.yaml",
         "review/failure-first/scope_protection.yaml",
         "review/failure-first/render_receipt.yaml",
     ]
-    assert all(path.startswith("review/failure-first/") for path in scope["allowed_review_paths"])
+    assert scope["allowed_repository_paths"] == [
+        "plugins/figure-agent/docs/execution-plan.md",
+        "plugins/figure-agent/scripts/visual_finding_artifacts.py",
+        "plugins/figure-agent/tests/test_fig3_resistance_failure_first.py",
+        "plugins/figure-agent/tests/test_visual_finding_artifacts.py",
+    ]
     assert scope["protected_paths"] == [
-        "fig3_resistance_mechanism.tex",
         "briefing.md",
-        "spec.yaml",
         "authoring_contract.md",
         "panel_goals.md",
         "critique.md",
@@ -222,13 +227,13 @@ def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None
     repo_root = PLUGIN_ROOT.parents[1]
     fixture_prefix = "plugins/figure-agent/examples/fig3_resistance_mechanism/"
     allowed_paths = {
-        "plugins/figure-agent/tests/test_fig3_resistance_failure_first.py",
         *(fixture_prefix + path for path in scope["allowed_review_paths"]),
+        *scope["allowed_repository_paths"],
     }
 
-    assert _scope_violations(
-        {fixture_prefix + "fig3_resistance_mechanism.tex"}, allowed_paths
-    ) == {fixture_prefix + "fig3_resistance_mechanism.tex"}
+    assert _scope_violations({fixture_prefix + "briefing.md"}, allowed_paths) == {
+        fixture_prefix + "briefing.md"
+    }
     assert _scope_violations(_git_pending_paths(repo_root), allowed_paths) == set()
 
 

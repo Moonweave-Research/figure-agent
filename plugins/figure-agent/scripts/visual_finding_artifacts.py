@@ -8,6 +8,7 @@ import hashlib
 import json
 import re
 import shutil
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -127,16 +128,27 @@ def _fallback_pdf_bbox(
     bbox_px: list[int],
     image_size: tuple[int, int],
 ) -> list[float]:
+    """Map rendered pixels to PDF centimetres using the installed Poppler tool."""
     try:
-        import pdfplumber
-    except ImportError as exc:  # pragma: no cover - runtime dependency contract
-        raise VisualFindingArtifactError("pdfplumber_required") from exc
-    with pdfplumber.open(pdf_path) as pdf:
-        if not pdf.pages:
-            raise VisualFindingArtifactError("render_pdf_empty")
-        page = pdf.pages[0]
-        width_cm = float(page.width) * 2.54 / 72.0
-        height_cm = float(page.height) * 2.54 / 72.0
+        result = subprocess.run(
+            ["pdfinfo", str(pdf_path)],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as exc:  # pragma: no cover - environment failure
+        raise VisualFindingArtifactError("pdfinfo_unavailable") from exc
+    if result.returncode:
+        raise VisualFindingArtifactError("render_pdf_unreadable")
+    match = re.search(
+        r"^Page size:\s*([0-9.]+)\s+x\s+([0-9.]+)\s+pts",
+        result.stdout,
+        flags=re.MULTILINE,
+    )
+    if not match:
+        raise VisualFindingArtifactError("render_pdf_page_size_unknown")
+    width_cm = float(match.group(1)) * 2.54 / 72.0
+    height_cm = float(match.group(2)) * 2.54 / 72.0
     width_px, height_px = image_size
     return [
         round(bbox_px[0] / width_px * width_cm, 6),

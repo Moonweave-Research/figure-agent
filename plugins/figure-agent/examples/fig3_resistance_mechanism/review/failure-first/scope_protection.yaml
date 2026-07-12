@@ -1,15 +1,20 @@
 schema: figure-agent.failure-first-scope-protection.v1
 fixture: fig3_resistance_mechanism
-authorized_change_mode: additive_review_artifacts_only
+authorized_change_mode: bounded_source_repair_and_review_artifacts
 allowed_review_paths:
+  - fig3_resistance_mechanism.tex
+  - spec.yaml
   - review/failure-first/input_packet.yaml
   - review/failure-first/semantic_object_relation_boundary.yaml
   - review/failure-first/scope_protection.yaml
   - review/failure-first/render_receipt.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/docs/execution-plan.md
+  - plugins/figure-agent/scripts/visual_finding_artifacts.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+  - plugins/figure-agent/tests/test_visual_finding_artifacts.py
 protected_paths:
-  - fig3_resistance_mechanism.tex
   - briefing.md
-  - spec.yaml
   - authoring_contract.md
   - panel_goals.md
   - critique.md

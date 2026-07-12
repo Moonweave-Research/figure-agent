@@ -12,7 +12,7 @@ authoritative_inputs:
     sha256: sha256:3ab181e525baa09611b70140c82b58b8776e994379f1544f9e0a58d263b94592
   - role: specification
     path: spec.yaml
-    sha256: sha256:88a6e9d940fcc850fb36b4281356b9a12737ed3c518534215125b415a0d53118
+    sha256: sha256:21762edd4599990dd3dce8c1a3a7df6c58c75e55a20d4c12a51851b015358c4a
   - role: authoring_contract
     path: authoring_contract.md
     sha256: sha256:ab51187e94662e1fc4c7a742862b201e33d7f47c7c6bb69a86c69faa57f8ae2e
@@ -21,16 +21,16 @@ authoritative_inputs:
     sha256: sha256:84a232dd5e6cb401cd2597f4b589bd6da1f9f810843478038d23070efe30b1f2
   - role: editable_source
     path: fig3_resistance_mechanism.tex
-    sha256: sha256:359b54d05e8482a80d400f02b81e83db0c84d590f84d4063f6ed60ffa3049c11
+    sha256: sha256:b52b45e286af8c6084420d26b694e0b71aeacfa0ae8a5e73fa4dcda618008970
   - role: rendered_png
     path: build/fig3_resistance_mechanism.png
-    sha256: sha256:f1b00e3192d1f2d73e831338b1f23774f24c867a1f0bbf0c1a5b395fdcec6473
+    sha256: sha256:9929e9a2e9ee3f565b7ec4a8a6dec5dfe86c91fc85c80babfc8e092e07840ee9
   - role: rendered_pdf
     path: build/fig3_resistance_mechanism.pdf
     content_signature:
       schema: figure-agent.pdf-content-signature.v1
       extraction: pdftotext-layout-trim-right-lines-v1
-      normalized_text_sha256: sha256:9e31be8061f7ecf42864912d3fdad196df817ff63f7f094768f9f29f87864c36
+      normalized_text_sha256: sha256:e8d531c36b6382a9f2470f26df892d8c2948404ddc30fce94f6cf6f1ead14bfc
       page_count: 1
   - role: critique
     path: critique.md
@@ -43,8 +43,8 @@ authoritative_inputs:
     sha256: sha256:17770ca96d744bc27a90e074c03028263399a61669febdb86807176a91d7c0e5
   - role: scope_protection
     path: review/failure-first/scope_protection.yaml
-    sha256: sha256:ac1aeacf7b1d79f9182dd7233e56c3bae0e3de9ee55c3f0a2b7ab5772db49162
+    sha256: sha256:214dbfd0dc3e3ffcb1c6ba37f6949f09d6ece22455b4d36653ee0fae29bde024
   - role: render_receipt
     path: review/failure-first/render_receipt.yaml
-    sha256: sha256:70107ad1f944c8942988d4da29b464ec7a6c63b46fcb08947b977a266900453c
+    sha256: sha256:6e8f26d2d771c5d8bc7617722efbb8cf0e99a38ed7bd6fbc79d79936a4ef6208
 publication_acceptance: not_claimed
