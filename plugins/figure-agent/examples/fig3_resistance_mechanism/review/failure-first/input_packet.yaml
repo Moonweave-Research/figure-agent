@@ -1,0 +1,50 @@
+schema: figure-agent.failure-first-input-packet.v1
+fixture: fig3_resistance_mechanism
+generation_status: not_run
+panels: [A, B]
+forbidden_import_patterns:
+  - examples/fig1_
+  - experiments/python_svg_semantic_fig1
+  - fig1_hybrid_complex_panel_pilot
+authoritative_inputs:
+  - role: briefing
+    path: briefing.md
+    sha256: sha256:3ab181e525baa09611b70140c82b58b8776e994379f1544f9e0a58d263b94592
+  - role: specification
+    path: spec.yaml
+    sha256: sha256:88a6e9d940fcc850fb36b4281356b9a12737ed3c518534215125b415a0d53118
+  - role: authoring_contract
+    path: authoring_contract.md
+    sha256: sha256:ab51187e94662e1fc4c7a742862b201e33d7f47c7c6bb69a86c69faa57f8ae2e
+  - role: panel_goals
+    path: panel_goals.md
+    sha256: sha256:84a232dd5e6cb401cd2597f4b589bd6da1f9f810843478038d23070efe30b1f2
+  - role: editable_source
+    path: fig3_resistance_mechanism.tex
+    sha256: sha256:359b54d05e8482a80d400f02b81e83db0c84d590f84d4063f6ed60ffa3049c11
+  - role: rendered_png
+    path: build/fig3_resistance_mechanism.png
+    sha256: sha256:f1b00e3192d1f2d73e831338b1f23774f24c867a1f0bbf0c1a5b395fdcec6473
+  - role: rendered_pdf
+    path: build/fig3_resistance_mechanism.pdf
+    content_signature:
+      schema: figure-agent.pdf-content-signature.v1
+      extraction: pdftotext-layout-trim-right-lines-v1
+      normalized_text_sha256: sha256:9e31be8061f7ecf42864912d3fdad196df817ff63f7f094768f9f29f87864c36
+      page_count: 1
+  - role: critique
+    path: critique.md
+    sha256: sha256:efcbb97f6440fa41ac16d2a6118236634834ff79d0d4e609c2fcf3c112eb3926
+  - role: critique_adjudication
+    path: critique_adjudication.yaml
+    sha256: sha256:1bf876bfc0511c190e9d829411066a8ba49ecf6fcdabae8b5e928ee048ed63b0
+  - role: semantic_boundary
+    path: review/failure-first/semantic_object_relation_boundary.yaml
+    sha256: sha256:17770ca96d744bc27a90e074c03028263399a61669febdb86807176a91d7c0e5
+  - role: scope_protection
+    path: review/failure-first/scope_protection.yaml
+    sha256: sha256:ac1aeacf7b1d79f9182dd7233e56c3bae0e3de9ee55c3f0a2b7ab5772db49162
+  - role: render_receipt
+    path: review/failure-first/render_receipt.yaml
+    sha256: sha256:70107ad1f944c8942988d4da29b464ec7a6c63b46fcb08947b977a266900453c
+publication_acceptance: not_claimed

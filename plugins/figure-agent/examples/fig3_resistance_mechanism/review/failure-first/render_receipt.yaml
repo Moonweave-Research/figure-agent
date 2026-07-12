@@ -1,0 +1,23 @@
+schema: figure-agent.compile-render-receipt.v1
+fixture: fig3_resistance_mechanism
+compile_command:
+  - bash
+  - scripts/compile.sh
+  - examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+working_directory: plugins/figure-agent
+source_path: fig3_resistance_mechanism.tex
+source_sha256: sha256:359b54d05e8482a80d400f02b81e83db0c84d590f84d4063f6ed60ffa3049c11
+pdf_path: build/fig3_resistance_mechanism.pdf
+raw_pdf_sha256: sha256:68fb652a1018e84fc35cdc50359a2d8f596d73273252c10cc0b9d2972db63b0a
+raw_pdf_sha256_status: snapshot_only_nondeterministic
+pdf_content_signature:
+  schema: figure-agent.pdf-content-signature.v1
+  extraction: pdftotext-layout-trim-right-lines-v1
+  normalized_text_sha256: sha256:9e31be8061f7ecf42864912d3fdad196df817ff63f7f094768f9f29f87864c36
+  page_count: 1
+png_path: build/fig3_resistance_mechanism.png
+png_sha256: sha256:f1b00e3192d1f2d73e831338b1f23774f24c867a1f0bbf0c1a5b395fdcec6473
+toolchain:
+  latex_engine: lualatex
+  lualatex_version: "This is LuaHBTeX, Version 1.24.0 (TeX Live 2026)"
+  pdftocairo_version: "pdftocairo version 26.03.0"

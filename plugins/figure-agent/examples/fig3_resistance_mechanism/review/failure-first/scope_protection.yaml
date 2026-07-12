@@ -1,0 +1,20 @@
+schema: figure-agent.failure-first-scope-protection.v1
+fixture: fig3_resistance_mechanism
+authorized_change_mode: additive_review_artifacts_only
+allowed_review_paths:
+  - review/failure-first/input_packet.yaml
+  - review/failure-first/semantic_object_relation_boundary.yaml
+  - review/failure-first/scope_protection.yaml
+  - review/failure-first/render_receipt.yaml
+protected_paths:
+  - fig3_resistance_mechanism.tex
+  - briefing.md
+  - spec.yaml
+  - authoring_contract.md
+  - panel_goals.md
+  - critique.md
+  - critique_adjudication.yaml
+  - ../fig3_trap_schematic_slice3_semantic/**
+  - ../fig1_*/**
+  - ../fig1_direct_svg_cleanroom_baseline/**
+  - ../../experiments/python_svg_semantic_fig1/**
