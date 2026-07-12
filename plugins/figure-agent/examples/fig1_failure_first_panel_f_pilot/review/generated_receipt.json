@@ -7,7 +7,7 @@
     "zoom"
   ],
   "fixture": "fig1_failure_first_panel_f_pilot",
-  "human_review_state": "pending",
+  "human_review_state": "development_baseline_approved",
   "page_geometry": {
     "coordinate_space": "pdf_cm",
     "crop_box_pdf_cm": [

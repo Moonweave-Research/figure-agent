@@ -15,6 +15,10 @@ bounded_repair_checks:
   protected_relations: passed
   rendered_force_arrow_label_crossing: passed
   rendered_arrow_detection_regression: passed
-human_review_state: pending
-failure_corpus_admission: deferred_pending_named_human_verdict
+human_review_state: development_baseline_approved
+remaining_human_review:
+  - whole
+  - object_relation
+  - zoom
+failure_corpus_admission: eligible_from_named_baseline_verdict
 publication_acceptance: not_claimed

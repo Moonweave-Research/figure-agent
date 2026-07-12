@@ -137,7 +137,7 @@ def test_pilot_declares_role_connector_and_label_legibility() -> None:
     assert result["publication_acceptance"] == "not_claimed"
 
 
-def test_named_human_findings_bind_reviewed_revision_without_accepting_repair() -> None:
+def test_named_human_findings_bind_the_approved_development_baseline() -> None:
     findings = _yaml("review/human_findings.yaml")
     assert findings["schema"] == "figure-agent.human-reviewed-findings.v1"
     assert findings["reviewer"] == "moon"
@@ -157,7 +157,7 @@ def test_named_human_findings_bind_reviewed_revision_without_accepting_repair() 
         "voltage_source_return": "grounded",
         "sample_state": "floating",
         "cantilever_state": "floating",
-        "revised_artifact_acceptance": "pending",
+        "revised_artifact_acceptance": "development_baseline_approved",
     }
     assert {item["id"] for item in findings["findings"]} == {
         "PF-ROLE-001",
@@ -177,8 +177,36 @@ def test_named_human_findings_bind_reviewed_revision_without_accepting_repair() 
         "show_a_grounded_voltage_source_driving_the_electrode_while_the_sample_remains_floating"
     )
     assert apparatus["repair_family"] == "clarify_electrical_topology"
-    assert findings["revised_variant_acceptance"] == "pending"
+    assert findings["baseline_decision"] == {
+        "reviewer": "moon",
+        "recorded_date": "2026-07-12",
+        "scope": "panel_f_development_baseline",
+        "reviewed_source_commit": "9f0d5e42370fa9dae7628e7342201eeac20aa130",
+        "reviewed_variant": "repaired",
+        "reviewed_views": ["panel"],
+        "panel_render_sha256": (
+            "6367a0ba8e1580af6ca9af58b1ecf099c1e673609356ddc0214df61161ac93ba"
+        ),
+        "decision": "approved",
+        "remaining_human_review": ["whole", "object_relation", "zoom"],
+    }
+    assert findings["revised_variant_acceptance"] == "development_baseline_approved"
     assert findings["publication_acceptance"] == "not_claimed"
+
+
+def test_human_verdict_separates_baseline_approval_from_publication_review() -> None:
+    verdict = _yaml("review/human_verdict.yaml")
+    assert verdict["reviewer"] == "moon"
+    assert verdict["state"] == "development_baseline_approved"
+    assert verdict["reviewed_views"] == ["panel"]
+    assert verdict["remaining_required_views"] == [
+        "whole",
+        "object_relation",
+        "zoom",
+    ]
+    assert verdict["scientific_fidelity"] == "accepted_for_development_baseline"
+    assert verdict["visual_verdict"] == "baseline"
+    assert verdict["publication_acceptance"] == "not_claimed"
 
 
 def test_repaired_source_has_grounded_source_and_floating_sample() -> None:
@@ -269,7 +297,7 @@ def test_generated_receipt_binds_multiscale_pixel_evidence(tmp_path: Path) -> No
         "zoom",
     ]
     assert receipt["variants"] == ["raw", "verified", "repaired"]
-    assert receipt["human_review_state"] == "pending"
+    assert receipt["human_review_state"] == "development_baseline_approved"
     assert receipt["publication_acceptance"] == "not_claimed"
     assert json.loads((tmp_path / "receipt.json").read_text(encoding="utf-8")) == receipt
     assert json.loads(

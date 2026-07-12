@@ -29,8 +29,13 @@ The strict compile currently exits 1 on inherited whole-figure detector
 findings. This is recorded in `machine_gate.yaml`; it is not rewritten as a
 publication or human acceptance claim.
 
+Moon approved the current repaired Panel F panel view as the development
+baseline on 2026-07-12. That bounded decision is hash-bound in
+`human_verdict.yaml`; whole, object/relation, and zoom review remain pending.
+The baseline decision is not publication acceptance.
+
 The named human findings from the pre-revision repaired packet are recorded in
 `human_findings.yaml` and admitted to `benchmarks/llm_failure_corpus.yaml` with
-their source commit and review-input hash. The later revised packet remains
-pending human acceptance; defect evidence is not converted into approval of
-the repair.
+their source commit and review-input hash. The later repaired panel is approved
+only as a development baseline; defect evidence and machine gates are not
+converted into publication acceptance.

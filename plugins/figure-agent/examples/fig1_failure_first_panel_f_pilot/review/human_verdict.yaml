@@ -1,13 +1,23 @@
 schema: figure-agent.failure-first-human-verdict.v1
-reviewer: null
-state: pending
-scientific_fidelity: null
-defect_presence: null
+reviewer: moon
+state: development_baseline_approved
+scientific_fidelity: accepted_for_development_baseline
+defect_presence: no_blocking_panel_f_defect_observed
 correction_minutes: null
-visual_verdict: null
+visual_verdict: baseline
+reviewed_source:
+  commit: 9f0d5e42370fa9dae7628e7342201eeac20aa130
+  variant: repaired
+  panel_render_sha256: 6367a0ba8e1580af6ca9af58b1ecf099c1e673609356ddc0214df61161ac93ba
+reviewed_views:
+  - panel
 required_views:
   - whole
   - panel
+  - object_relation
+  - zoom
+remaining_required_views:
+  - whole
   - object_relation
   - zoom
 publication_acceptance: not_claimed

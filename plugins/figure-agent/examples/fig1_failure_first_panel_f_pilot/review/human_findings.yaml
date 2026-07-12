@@ -11,7 +11,7 @@ scientific_clarification:
   voltage_source_return: grounded
   sample_state: floating
   cantilever_state: floating
-  revised_artifact_acceptance: pending
+  revised_artifact_acceptance: development_baseline_approved
 findings:
   - id: PF-ROLE-001
     failure_class: semantic
@@ -59,6 +59,20 @@ findings:
     defect: line_endpoint_and_purpose_are_unclear
     evidence_summary: A line appears to point toward the charge, but whether it is an arrow, leader, or another relation is unclear.
     repair_family: clarify_connector_purpose
-revised_variant_acceptance: pending
+baseline_decision:
+  reviewer: moon
+  recorded_date: "2026-07-12"
+  scope: panel_f_development_baseline
+  reviewed_source_commit: 9f0d5e42370fa9dae7628e7342201eeac20aa130
+  reviewed_variant: repaired
+  reviewed_views:
+    - panel
+  panel_render_sha256: 6367a0ba8e1580af6ca9af58b1ecf099c1e673609356ddc0214df61161ac93ba
+  decision: approved
+  remaining_human_review:
+    - whole
+    - object_relation
+    - zoom
+revised_variant_acceptance: development_baseline_approved
 correction_minutes: null
 publication_acceptance: not_claimed
