@@ -5,6 +5,25 @@ source:
   tree: 2e3696dbb04bdafacc0ba1adef334a3f7fe71f70
   review_state: human_reviewed_revise
   historical_source_unchanged: true
+reference_inputs:
+  - panel_id: D
+    local_path: reference/row2_apparatus/apparatus1_ref04_NatComm2022_tribo_p3-03.png
+    source_fixture: fig1_hybrid_complex_panel_pilot
+    source_commit: e3a61a1b3d63f2911539ea8ab4760b9b7d307dd5
+    source_path: plugins/figure-agent/examples/fig1_hybrid_complex_panel_pilot/reference/row2_apparatus/apparatus1_ref04_NatComm2022_tribo_p3-03.png
+    sha256: 3e0c34b1d323f15c6d8d46e597f3a987fba116b47da2d2b8c8e6ea22e07a0763
+  - panel_id: E
+    local_path: reference/row2_apparatus/apparatus2_ref01_NatComm2024_surfacecharge_p2-02.png
+    source_fixture: fig1_hybrid_complex_panel_pilot
+    source_commit: e3a61a1b3d63f2911539ea8ab4760b9b7d307dd5
+    source_path: plugins/figure-agent/examples/fig1_hybrid_complex_panel_pilot/reference/row2_apparatus/apparatus2_ref01_NatComm2024_surfacecharge_p2-02.png
+    sha256: f9a7e7d56e7a442dc9b3ea70da55e3e4373db02cdd1360c9537aaa530d93750e
+  - panel_id: F
+    local_path: reference/row2_apparatus/apparatus3_ref01_NatComm2016_microactuator-2.png
+    source_fixture: fig1_hybrid_complex_panel_pilot
+    source_commit: e3a61a1b3d63f2911539ea8ab4760b9b7d307dd5
+    source_path: plugins/figure-agent/examples/fig1_hybrid_complex_panel_pilot/reference/row2_apparatus/apparatus3_ref01_NatComm2016_microactuator-2.png
+    sha256: 9a173bb6501413545ef40a3c77d0875c91c1500e36ad24cd5ce07c005f08a70f
 selector:
   selector_id: panel_f.mechanism_scene
   anchor_start: "% figure-agent:start panel_f.mechanism_scene"

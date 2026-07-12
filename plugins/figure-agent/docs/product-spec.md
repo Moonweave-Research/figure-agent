@@ -245,6 +245,9 @@ never guess a source location merely to enable automation.
 
 Every actionable finding produces a focused crop, an overlay, the relevant
 semantic declaration, the selector snapshot, and a render-geometry hash.
+An audit-crop hash is insufficient by itself: if its manifest predates the
+current build render, the crop is stale and must degrade to unbound until the
+evidence pack is regenerated.
 
 A declarative contract does not prove rendered semantic legibility. A
 deterministic gate can require every salient object to declare a role, every

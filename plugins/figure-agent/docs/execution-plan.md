@@ -1418,6 +1418,10 @@ review_input_hash: null
 publication_acceptance: not_claimed
 ~~~
 
+Every panel reference used by the pilot must also bind a tracked source path,
+source commit, local path, and exact byte hash. A same-named untracked copy is
+not reference authority even when its pixels appear identical.
+
 Before validation, render_geometry_hash and review_input_hash are null with
 hash_authority: generated_receipt. The validator computes both hashes and writes
 them into a generated receipt. The committed source manifest records source
@@ -1433,6 +1437,7 @@ Tests require:
 - protected cantilever/electrode/force relations;
 - raw, verified, and repaired manifests with identical model/input/budget hashes;
 - a focused crop and overlay for each state;
+- stale audit-crop manifests rejected when a newer build render exists;
 - human correction minutes left null until measured;
 - publication acceptance not claimed.
 

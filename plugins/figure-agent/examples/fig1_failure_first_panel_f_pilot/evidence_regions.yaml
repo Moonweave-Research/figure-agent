@@ -4,6 +4,6 @@ raw_render: review/states/build/raw.png
 repaired_render: build/fig1_failure_first_panel_f_pilot.png
 regions:
   panel: [0.665, 0.47, 0.995, 0.995]
-  object_relation: [0.69, 0.55, 0.965, 0.965]
-  zoom: [0.76, 0.57, 0.90, 0.79]
+  object_relation: [0.665, 0.55, 0.995, 0.995]
+  zoom: [0.70, 0.57, 0.85, 0.78]
 publication_acceptance: not_claimed

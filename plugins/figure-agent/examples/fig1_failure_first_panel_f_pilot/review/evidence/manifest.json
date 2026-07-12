@@ -16,19 +16,19 @@
     {
       "path": "review/evidence/raw/object_relation.png",
       "role": "object_relation",
-      "sha256": "sha256:8ef1390722af7f9974641b9e1e3005c031329697915106de3ae101c84e5f13b2",
+      "sha256": "sha256:ca29cfbacabed34198953a5c542e5fb9b59e8777ea114975aa87922d9e1ae276",
       "variant": "raw"
     },
     {
       "path": "review/evidence/raw/zoom.png",
       "role": "zoom",
-      "sha256": "sha256:6dbce95f4e1562ce2973c5db9655e5ee67312210ec97ecae4d56b878070efbf9",
+      "sha256": "sha256:cbcecef6deeffa267bf3b88374b73cd25b95b9e4da6e277991fde65ec42a6cfa",
       "variant": "raw"
     },
     {
       "path": "review/evidence/raw/overlay.png",
       "role": "overlay",
-      "sha256": "sha256:911c03387697e901f8479f1f2b17b30f475a478e240acbea8c2ec2f306c2597b",
+      "sha256": "sha256:836a948de1da99bf95c05ed2b29a93fb17b851fd0b91e8b4eced820d2cfb3630",
       "variant": "raw"
     },
     {
@@ -46,49 +46,49 @@
     {
       "path": "review/evidence/verified/object_relation.png",
       "role": "object_relation",
-      "sha256": "sha256:8ef1390722af7f9974641b9e1e3005c031329697915106de3ae101c84e5f13b2",
+      "sha256": "sha256:ca29cfbacabed34198953a5c542e5fb9b59e8777ea114975aa87922d9e1ae276",
       "variant": "verified"
     },
     {
       "path": "review/evidence/verified/zoom.png",
       "role": "zoom",
-      "sha256": "sha256:6dbce95f4e1562ce2973c5db9655e5ee67312210ec97ecae4d56b878070efbf9",
+      "sha256": "sha256:cbcecef6deeffa267bf3b88374b73cd25b95b9e4da6e277991fde65ec42a6cfa",
       "variant": "verified"
     },
     {
       "path": "review/evidence/verified/overlay.png",
       "role": "overlay",
-      "sha256": "sha256:911c03387697e901f8479f1f2b17b30f475a478e240acbea8c2ec2f306c2597b",
+      "sha256": "sha256:836a948de1da99bf95c05ed2b29a93fb17b851fd0b91e8b4eced820d2cfb3630",
       "variant": "verified"
     },
     {
       "path": "review/evidence/repaired/whole.png",
       "role": "whole",
-      "sha256": "sha256:9a1cb6bf364e80651f355782a2b60977bacf13617792739036a25eb8ca3faf08",
+      "sha256": "sha256:d31cbfc697c62ec41ffb862257905693d9e75d6952f9e6bd8930e99a89ddd9ab",
       "variant": "repaired"
     },
     {
       "path": "review/evidence/repaired/panel.png",
       "role": "panel",
-      "sha256": "sha256:9d1e907e7c0453068cd1b3ead70108ad26383f803d84a866038cf2ec4a69fddb",
+      "sha256": "sha256:767fe80d3abc5aa67e3aaba73d6d762efb7db35ab9c6f6984c69a57bd9937819",
       "variant": "repaired"
     },
     {
       "path": "review/evidence/repaired/object_relation.png",
       "role": "object_relation",
-      "sha256": "sha256:c14c2b2d4cf7e7b4df1ab9f3b246d44dac339f1bdcf47b8ddffbe737b6aec947",
+      "sha256": "sha256:697183ee64a7cc8d0b29ee09a8d2b3d3d3ae41a056a1eb02421a697d0cecb447",
       "variant": "repaired"
     },
     {
       "path": "review/evidence/repaired/zoom.png",
       "role": "zoom",
-      "sha256": "sha256:c8709796f2afad094ed033ea46b47e656b8b357d87cfdac21361020275b0eae3",
+      "sha256": "sha256:cb385f2f897c8dc2530091746f9a3514a9f27cc01f6d8be994d6e5e81d01aa6a",
       "variant": "repaired"
     },
     {
       "path": "review/evidence/repaired/overlay.png",
       "role": "overlay",
-      "sha256": "sha256:9ae060995cdbda1e88e322bdb24b56019ca9d1ffe3d0b5857f0753aa4faf3e79",
+      "sha256": "sha256:cc225bf16d4f2ffa6135da9b3156b01e7ed6bb2704a428235a272886c79ce95e",
       "variant": "repaired"
     }
   ],
@@ -96,10 +96,10 @@
   "publication_acceptance": "not_claimed",
   "regions": {
     "object_relation": [
-      0.69,
+      0.665,
       0.55,
-      0.965,
-      0.965
+      0.995,
+      0.995
     ],
     "panel": [
       0.665,
@@ -108,10 +108,10 @@
       0.995
     ],
     "zoom": [
-      0.76,
+      0.7,
       0.57,
-      0.9,
-      0.79
+      0.85,
+      0.78
     ]
   },
   "schema": "figure-agent.review-evidence-pack.v1"

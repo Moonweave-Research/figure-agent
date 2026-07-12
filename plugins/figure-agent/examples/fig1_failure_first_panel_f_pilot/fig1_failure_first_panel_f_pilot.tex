@@ -2061,12 +2061,13 @@
 \foreach \hy in {0.62,0.86,1.10,1.34,1.58,1.82,2.06,2.30,2.54} {
   \draw[cGray!48!black, line width=0.20pt] (13.42, \hy) -- (13.18, {\hy-0.05});
 }
-\foreach \yy in {0.96,1.34,1.72,2.10} {
+% Gap guides begin just beyond the curved cantilever edge at each height.
+% They must not run behind the sample or charge markers, where they can be
+% misread as electrical connectors or a plotting grid.
+\foreach \yy/\xstart in {0.96/10.88,1.34/11.17,1.72/11.40,2.10/11.62} {
   \draw[cGray!23, line width=0.30pt, dash pattern=on 1.3pt off 1.2pt]
-    (10.62,\yy) -- (13.18,\yy);
+    (\xstart,\yy) -- (13.18,\yy);
 }
-\draw[cGray!19, line width=0.22pt, dash pattern=on 1.2pt off 1.5pt]
-  (11.08,2.42) -- (11.88,2.42);
 \draw[cGray!19, line width=0.22pt, dash pattern=on 1.2pt off 1.5pt]
   (12.92,2.42) -- (13.18,2.42);
 \node[labelMute, anchor=south, rotate=270, fill=white, fill opacity=0.96, text opacity=1,
@@ -2088,10 +2089,10 @@
 \fill[cBlue!70!black] (13.08,3.34) circle (0.025);
 \draw[cBlue!70!black, line width=0.36pt, rounded corners=0.3mm]
   (13.08,3.34) -- (13.30,3.34) -- (13.30,2.82);
-\node[anchor=east, fill=white, fill opacity=0.96, text opacity=1,
+\node[anchor=south, fill=white, fill opacity=0.96, text opacity=1,
       inner xsep=0.75pt, inner ysep=0.32pt,
-      font=\sffamily\bfseries\fontsize{4.7}{5.7}\selectfont, text=cBlue!72!black]
-  at (12.54, 3.43) {$V_{\mathrm{app}}$};
+      font=\sffamily\bfseries\fontsize{4.4}{5.3}\selectfont, text=cBlue!72!black]
+  at (12.84, 3.66) {$V_{\mathrm{app}}$};
 
 % Grounded source return (upper source terminal); this ground belongs to the
 % voltage source, never to the sample or cantilever.
@@ -2110,7 +2111,7 @@
 \node[anchor=east, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=0.75pt, inner ysep=0.30pt,
       font=\sffamily\bfseries\fontsize{4.1}{4.9}\selectfont, text=cRed!68!black]
-  at (11.30, 2.58) {trapped charge};
+  at (11.48, 2.50) {trapped charge};
 % figure-agent:end panel_f.mechanism_scene
 
 % Coulomb-only response, intentionally stronger than the apparatus.
@@ -2120,13 +2121,13 @@
 \node[anchor=south west, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=0.92pt, inner ysep=0.44pt,
       font=\sffamily\bfseries\fontsize{4.8}{5.8}\selectfont, text=cRed!72!black]
-  at (9.58, 1.66) {Coulomb};
+  at (9.62, 1.40) {Coulomb};
 \node[labelMute, anchor=north west, fill=white, fill opacity=0.95, text opacity=1,
       inner xsep=1.02pt, inner ysep=0.50pt,
       font=\sffamily\fontsize{4.6}{5.6}\selectfont,
-      text=cRed!70!black] at (9.58, 1.34) {repulsion};
+      text=cRed!70!black] at (9.62, 1.22) {repulsion};
 
-\draw[<->, cGray!62!black, line width=0.68pt]
+\draw[<->, cGray!62!black, line width=0.42pt]
   (10.20, 0.54) -- (13.18, 0.54);
 \node[labelMute, anchor=north, fill=white, fill opacity=0.94, text opacity=1,
       inner xsep=1.4pt, inner ysep=0.9pt,

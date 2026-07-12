@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -72,6 +73,23 @@ def test_pilot_pins_reviewed_source_and_exact_jig_authority() -> None:
         "% figure-agent:start panel_f.mechanism_scene\n", ""
     ).replace("% figure-agent:end panel_f.mechanism_scene\n", "")
     assert raw_without_anchors == historical
+
+
+def test_pilot_reference_inputs_are_tracked_historical_bytes() -> None:
+    authority = _yaml("authority.yaml")
+    references = authority["reference_inputs"]
+    assert {item["panel_id"] for item in references} == {"D", "E", "F"}
+    for item in references:
+        local = FIXTURE / item["local_path"]
+        assert local.is_file()
+        assert hashlib.sha256(local.read_bytes()).hexdigest() == item["sha256"]
+        historical = subprocess.run(
+            ["git", "show", f"{item['source_commit']}:{item['source_path']}"],
+            cwd=PLUGIN_ROOT,
+            check=True,
+            capture_output=True,
+        ).stdout
+        assert local.read_bytes() == historical
 
 
 def test_pilot_declares_semantics_and_bounded_repair_before_review() -> None:

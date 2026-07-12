@@ -53,6 +53,25 @@ def test_manifest_bound_crop_is_authoritative_when_hash_matches(tmp_path: Path) 
     assert result["manifest_crop_id"] == "full_q1"
 
 
+def test_manifest_bound_crop_is_stale_when_render_is_newer(tmp_path: Path) -> None:
+    example_dir = _write_fixture(tmp_path)
+    render = example_dir / "build/demo.png"
+    crop = example_dir / "build/audit_crops/full_q1.png"
+    manifest = example_dir / "build/audit_crops/manifest.json"
+
+    import os
+
+    os.utime(crop, (100, 100))
+    os.utime(manifest, (100, 100))
+    os.utime(render, (200, 200))
+
+    result = classify_artifact(example_dir, crop)
+
+    assert result["classification"] == "stale_or_unbound"
+    assert result["authoritative"] is False
+    assert result["reason"] == "audit crop manifest predates current build render"
+
+
 def test_build_render_is_authoritative_artifact_but_points_to_status_freshness(
     tmp_path: Path,
 ) -> None:

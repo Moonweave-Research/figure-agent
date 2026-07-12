@@ -107,6 +107,19 @@ def classify_artifact(example_dir: Path, artifact_path: Path) -> dict[str, Any]:
 
     manifest_crop = _manifest_crops(example_dir).get(path)
     if manifest_crop is not None:
+        manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+        latest_build_mtime = _latest_build_render_mtime(example_dir)
+        if (
+            latest_build_mtime is not None
+            and manifest_path.is_file()
+            and manifest_path.stat().st_mtime < latest_build_mtime
+        ):
+            return {
+                **record,
+                "classification": "stale_or_unbound",
+                "manifest_crop_id": manifest_crop.get("id"),
+                "reason": "audit crop manifest predates current build render",
+            }
         expected_hash = manifest_crop.get("sha256")
         record["manifest_crop_id"] = manifest_crop.get("id")
         record["manifest_expected_sha256"] = expected_hash
