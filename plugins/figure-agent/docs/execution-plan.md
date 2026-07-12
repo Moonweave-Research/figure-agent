@@ -1584,3 +1584,73 @@ and do not authorize publication acceptance.
 
 Record whether the two fixtures render the same motif without semantic or finish
 regression. Treat this as same-family reuse evidence only.
+
+## Task 9: Compare one semantic SVG backend against the approved TikZ motif
+
+**Files:**
+
+- Create: `scripts/panel_f_motif_svg.py`
+- Create: `tests/test_panel_f_motif_svg.py`
+- Create: `examples/fig1_panel_f_svg_backend_pilot/`
+
+This task is an experimental backend comparison, not a production promotion.
+It consumes the existing Panel F semantic contract and leaves the approved TikZ
+snippet unchanged. It must not import or modify the rejected sulfur-trap grammar
+implementation.
+
+- [ ] **Step 1: Write RED tests for the SVG artifact contract**
+
+Require deterministic editable SVG with instance-prefixed semantic groups for
+the fixed boundary, floating cantilever, driven electrode, voltage source,
+source ground, electrical leads, gap guides, and trapped charge. Require the SVG
+to declare relation endpoints, contain no raster image/script/filter/external
+URL, and omit force arrows, Coulomb labels, panel letters, and whole-panel
+composition.
+
+- [ ] **Step 2: Run the focused test and verify RED**
+
+Run:
+
+~~~bash
+uv run pytest tests/test_panel_f_motif_svg.py -q
+~~~
+
+Expected: FAIL because the focused renderer and pilot artifacts do not exist.
+
+- [ ] **Step 3: Implement the smallest contract-bound SVG renderer**
+
+Create `scripts/panel_f_motif_svg.py` with a pure render function and a CLI that
+writes into a caller-supplied output directory. Read and validate
+`panel-f-floating-cantilever.contract.yaml`; fail closed if required objects,
+relations, connector roles, or the forbidden floating-sample ground relation
+drift. Emit editable vector primitives and explicit semantic metadata.
+
+- [ ] **Step 4: Generate deterministic review evidence**
+
+Create the pilot directory with authority bindings, SVG, raster PNG,
+TikZ-baseline crop, equal-boundary comparison sheet, receipt, and human review
+packet. Replay twice in fresh temporary directories and require identical SVG
+bytes and pixel-normalized PNG hashes.
+
+- [ ] **Step 5: Run semantic, artifact, and regression checks**
+
+Run from `plugins/figure-agent`:
+
+~~~bash
+uv run pytest tests/test_panel_f_motif_svg.py \
+  tests/test_panel_f_semantic_motif.py \
+  tests/test_semantic_legibility_contract.py -q
+uv run python scripts/panel_f_motif_svg.py verify \
+  examples/fig1_panel_f_svg_backend_pilot
+uv run ruff check scripts/panel_f_motif_svg.py tests/test_panel_f_motif_svg.py
+git diff --check
+~~~
+
+Expected: machine checks and clean replay pass while human verdicts remain
+pending and publication acceptance remains not claimed.
+
+- [ ] **Step 6: Stop at the bound human comparison**
+
+Present the equal-boundary TikZ/SVG comparison. Record semantic legibility and
+visual quality versus TikZ separately. Do not promote the SVG backend while
+either field is pending or negative.
