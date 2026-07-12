@@ -13,10 +13,11 @@ import os
 import shutil
 import subprocess
 import tempfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import yaml
-from PIL import Image
+from PIL import Image, ImageDraw
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONTRACT = PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.contract.yaml"
@@ -31,13 +32,19 @@ class ContractError(ValueError):
 
 def _validate_contract(path: Path) -> dict:
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict) or (
+        data.get("schema_version") != 1
+        or data.get("motif") != "panel-f-floating-cantilever"
+        or data.get("renderer") != "neutral"
+    ):
+        raise ContractError("contract envelope drifted")
     expected_states = {
         "voltage_source": "driven",
         "ground": "reference",
         "floating_cantilever": "floating",
         "trapped_charge": "trapped",
     }
-    if not isinstance(data, dict) or set(data.get("objects", {})) != set(expected_states):
+    if set(data.get("objects", {})) != set(expected_states):
         raise ContractError("required objects are missing")
     if any(
         data["objects"][name].get("electrical_state") != state
@@ -54,9 +61,10 @@ def _validate_contract(path: Path) -> dict:
         "electrode_drive": ("electrical", ["voltage_source", "driven_electrode"]),
         "source_return": ("electrical", ["voltage_source", "ground"]),
     }
-    forbidden = {frozenset(connection) for connection in data.get("forbidden_connections", [])}
-    if frozenset(("floating_cantilever", "ground")) not in forbidden:
-        raise ContractError("forbidden connection floating_cantilever-to-ground is missing")
+    forbidden_connections = data.get("forbidden_connections", [])
+    if forbidden_connections != [["floating_cantilever", "ground"]]:
+        raise ContractError("forbidden connection set drifted")
+    forbidden = {frozenset(connection) for connection in forbidden_connections}
     for connector in connectors.values():
         endpoints = connector.get("connects", [])
         if len(endpoints) == 2 and frozenset(endpoints) in forbidden:
@@ -125,7 +133,7 @@ def render_svg(contract_path: Path = DEFAULT_CONTRACT, *, instance_id: str = "pa
   <g id="{prefix}-source-ground" data-object="ground" data-electrical-state="reference">
     <path d="M768 540v30M730 570h76M740 584h56M752 598h32" fill="none" stroke="#27323d" stroke-width="6"/>
   </g>
-  <g id="{prefix}-electrical-leads" data-object="electrical_leads">
+  <g id="{prefix}-electrical-leads" data-visual-role="electrical_leads">
     <path d="M768 215v84h-64v121" fill="none" stroke="#315d8a" stroke-width="6"/>
     <path d="M823 160h42v380h-97" fill="none" stroke="#315d8a" stroke-width="6"/>
   </g>
@@ -138,11 +146,47 @@ def render_svg(contract_path: Path = DEFAULT_CONTRACT, *, instance_id: str = "pa
   <g id="{prefix}-mechanical-attachment" data-relation="mechanical_attachment" data-from="{prefix}-fixed-boundary" data-to="{prefix}-floating-cantilever" data-connector-role="mechanical">
     <rect x="154" y="230" width="28" height="78" rx="5" fill="#6f7780" stroke="#343a40" stroke-width="4"/>
   </g>
-  <g id="{prefix}-electrode-drive" data-relation="electrode_drive" data-from="{prefix}-voltage-source" data-to="{prefix}-driven-electrode" data-connector-role="electrical-drive"/>
-  <g id="{prefix}-source-return" data-relation="source_return" data-from="{prefix}-voltage-source" data-to="{prefix}-source-ground" data-connector-role="electrical-return"/>
-  <g id="{prefix}-charge-ownership" data-relation="trapped_charge_ownership" data-from="{prefix}-trapped-charge" data-to="{prefix}-floating-cantilever" data-connector-role="ownership"/>
+  <g id="{prefix}-electrode-drive" data-relation="electrode_drive" data-from="{prefix}-voltage-source" data-to="{prefix}-driven-electrode" data-connector-role="electrical" data-style-role="electrical-drive"/>
+  <g id="{prefix}-source-return" data-relation="source_return" data-from="{prefix}-voltage-source" data-to="{prefix}-source-ground" data-connector-role="electrical" data-style-role="electrical-return"/>
+  <g id="{prefix}-charge-ownership" data-relation="trapped_charge_ownership" data-from="{prefix}-trapped-charge" data-to="{prefix}-floating-cantilever" data-relation-role="owned_by"/>
 </svg>
 '''
+
+
+def audit_svg_semantics(svg: str, contract_path: Path = DEFAULT_CONTRACT) -> dict:
+    """Validate the renderer's semantic groups against the closed motif contract."""
+    contract = _validate_contract(Path(contract_path))
+    root = ET.fromstring(svg)
+    namespace = {"svg": "http://www.w3.org/2000/svg"}
+    rendered_objects = {
+        group.attrib["data-object"]
+        for group in root.findall(".//svg:g[@data-object]", namespace)
+    }
+    expected_objects = set(contract["owns"]) - {"source_return"}
+    expected_objects |= set(contract["objects"])
+    if rendered_objects != expected_objects:
+        raise ContractError("semantic object mapping drifted")
+    rendered_roles = {
+        group.attrib["data-relation"]: group.attrib["data-connector-role"]
+        for group in root.findall(".//svg:g[@data-connector-role]", namespace)
+    }
+    expected_roles = {
+        "mechanical_attachment": "mechanical",
+        "electrode_drive": "electrical",
+        "source_return": "electrical",
+    }
+    if rendered_roles != expected_roles:
+        raise ContractError("connector role mapping drifted")
+    rendered_relations = {
+        group.attrib["data-relation"]: group.attrib["data-relation-role"]
+        for group in root.findall(".//svg:g[@data-relation-role]", namespace)
+    }
+    expected_relations = {
+        name: relation["role"] for name, relation in contract["relations"].items()
+    }
+    if rendered_relations != expected_relations:
+        raise ContractError("relation role mapping drifted")
+    return {"state": "passed", "object_count": len(rendered_objects)}
 
 
 def _sha256(path: Path) -> str:
@@ -166,12 +210,17 @@ def _normalize_content_boundary(source: Path, destination: Path) -> None:
         bbox = mask.getbbox()
         if bbox is None:
             raise ContractError(f"render has no foreground content: {source}")
-        content = rgb.crop(bbox).resize(
+        content = rgb.crop(bbox)
+        content.thumbnail(
             (CONTENT_BOX[2] - CONTENT_BOX[0], CONTENT_BOX[3] - CONTENT_BOX[1]),
             Image.Resampling.LANCZOS,
         )
         canvas = Image.new("RGB", CANVAS, "white")
-        canvas.paste(content, CONTENT_BOX[:2])
+        position = (
+            CONTENT_BOX[0] + (CONTENT_BOX[2] - CONTENT_BOX[0] - content.width) // 2,
+            CONTENT_BOX[1] + (CONTENT_BOX[3] - CONTENT_BOX[1] - content.height) // 2,
+        )
+        canvas.paste(content, position)
         canvas.save(destination, format="PNG", optimize=False)
 
 
@@ -216,6 +265,7 @@ def render_pilot(output_dir: Path) -> dict:
     output_dir.mkdir(parents=True, exist_ok=True)
     svg_path = output_dir / "motif.svg"
     svg_path.write_text(render_svg(DEFAULT_CONTRACT, instance_id="panel-f-svg"), encoding="utf-8")
+    audit_svg_semantics(svg_path.read_text(encoding="utf-8"), DEFAULT_CONTRACT)
     raw_png = output_dir / ".motif-raw.png"
     subprocess.run(
         [
@@ -239,9 +289,12 @@ def render_pilot(output_dir: Path) -> dict:
         Image.open(output_dir / "tikz_baseline.png") as tikz,
         Image.open(output_dir / "motif.png") as svg,
     ):
-        sheet = Image.new("RGB", (CANVAS[0] * 2, CANVAS[1]), "white")
-        sheet.paste(tikz.convert("RGB"), (0, 0))
-        sheet.paste(svg.convert("RGB"), (CANVAS[0], 0))
+        sheet = Image.new("RGB", (CANVAS[0] * 2, CANVAS[1] + 60), "white")
+        draw = ImageDraw.Draw(sheet)
+        draw.text((CANVAS[0] // 2, 30), "TikZ", fill="black", anchor="mm")
+        draw.text((CANVAS[0] + CANVAS[0] // 2, 30), "SVG", fill="black", anchor="mm")
+        sheet.paste(tikz.convert("RGB"), (0, 60))
+        sheet.paste(svg.convert("RGB"), (CANVAS[0], 60))
         sheet.save(output_dir / "comparison.png", format="PNG", optimize=False)
 
     shutil.copy2(DEFAULT_CONTRACT, output_dir / "contract.snapshot.yaml")
@@ -255,24 +308,13 @@ def render_pilot(output_dir: Path) -> dict:
         "comparison_boundary": {
             "canvas": list(CANVAS),
             "content_box": list(CONTENT_BOX),
-            "normalization": "foreground_crop_resampled_to_equal_box",
+            "normalization": "foreground_crop_uniform_contain_centered",
         },
         "approved_tikz_snippet_unchanged": True,
         "publication_acceptance": "not_claimed",
     }
     (output_dir / "authority.yaml").write_text(
         yaml.safe_dump(authority, sort_keys=False), encoding="utf-8"
-    )
-    review = {
-        "schema": "figure-agent.panel-f-svg-human-review.v1",
-        "comparison_artifact": "comparison.png",
-        "semantic_legibility_verdict": "pending",
-        "visual_quality_vs_tikz": "pending",
-        "backend_promotion": "not_authorized",
-        "publication_acceptance": "not_claimed",
-    }
-    (output_dir / "human_review.yaml").write_text(
-        yaml.safe_dump(review, sort_keys=False), encoding="utf-8"
     )
     receipt = {
         "schema": "figure-agent.panel-f-svg-receipt.v1",
@@ -283,17 +325,32 @@ def render_pilot(output_dir: Path) -> dict:
         "png_pixel_sha256": _pixel_hash(output_dir / "motif.png"),
         "tikz_pixel_sha256": _pixel_hash(output_dir / "tikz_baseline.png"),
         "comparison_sha256": _sha256(output_dir / "comparison.png"),
+        "comparison_labels": {
+            "tikz": [0, 0, 960, 60],
+            "svg": [960, 0, 1920, 60],
+            "pane_top": 60,
+        },
         "authority_sha256": _sha256(output_dir / "authority.yaml"),
         "contract_snapshot_sha256": _sha256(output_dir / "contract.snapshot.yaml"),
         "tikz_baseline_sha256": _sha256(output_dir / "tikz_baseline.png"),
-        "human_review_sha256": _sha256(output_dir / "human_review.yaml"),
         "backend_promotion": "not_authorized",
-        "semantic_legibility_verdict": "pending",
-        "visual_quality_vs_tikz": "pending",
         "publication_acceptance": "not_claimed",
     }
     (output_dir / "receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    review = {
+        "schema": "figure-agent.panel-f-svg-human-review.v1",
+        "comparison_artifact": "comparison.png",
+        "machine_receipt_sha256": _sha256(output_dir / "receipt.json"),
+        "comparison_sha256": receipt["comparison_sha256"],
+        "semantic_legibility_verdict": "pending",
+        "visual_quality_vs_tikz": "pending",
+        "backend_promotion": "not_authorized",
+        "publication_acceptance": "not_claimed",
+    }
+    (output_dir / "human_review.yaml").write_text(
+        yaml.safe_dump(review, sort_keys=False), encoding="utf-8"
     )
     return receipt
 
@@ -314,15 +371,36 @@ def verify_pilot(pilot_dir: Path) -> dict:
         raise ContractError("backend promotion must remain not_authorized")
     if authority.get("publication_acceptance") != "not_claimed":
         raise ContractError("authority publication acceptance drifted")
-    if review.get("backend_promotion") != "not_authorized":
-        raise ContractError("backend promotion must remain not_authorized")
+    if review.get("schema") != "figure-agent.panel-f-svg-human-review.v1" or review.get(
+        "comparison_artifact"
+    ) != "comparison.png":
+        raise ContractError("human review binding drifted")
+    if review.get("machine_receipt_sha256") != _sha256(pilot_dir / "receipt.json") or review.get(
+        "comparison_sha256"
+    ) != receipt.get("comparison_sha256"):
+        raise ContractError("human review binding drifted")
+    semantic_verdict = review.get("semantic_legibility_verdict")
+    visual_verdict = review.get("visual_quality_vs_tikz")
+    if semantic_verdict not in {"pending", "accepted", "rejected"} or visual_verdict not in {
+        "pending",
+        "better",
+        "equivalent",
+        "worse",
+    }:
+        raise ContractError("human comparison verdict vocabulary is invalid")
+    promotion = review.get("backend_promotion")
+    promotion_supported = semantic_verdict == "accepted" and visual_verdict in {
+        "better",
+        "equivalent",
+    }
+    if promotion not in {"not_authorized", "authorized"}:
+        raise ContractError("backend promotion state is invalid")
+    if promotion == "authorized" and not promotion_supported:
+        raise ContractError("backend promotion requires both verdicts accepted")
     if review.get("publication_acceptance") != "not_claimed":
         raise ContractError("review publication acceptance drifted")
-    if (
-        review.get("semantic_legibility_verdict") != "pending"
-        or review.get("visual_quality_vs_tikz") != "pending"
-    ):
-        raise ContractError("human comparison fields must remain pending")
+    if _sha256(pilot_dir / "motif.png") != receipt.get("png_sha256"):
+        raise ContractError("committed PNG byte hash differs from receipt")
     with tempfile.TemporaryDirectory() as first_tmp, tempfile.TemporaryDirectory() as second_tmp:
         first = render_pilot(Path(first_tmp))
         second = render_pilot(Path(second_tmp))
@@ -342,7 +420,6 @@ def verify_pilot(pilot_dir: Path) -> dict:
             "contract_snapshot_sha256": "contract.snapshot.yaml",
             "tikz_baseline_sha256": "tikz_baseline.png",
             "comparison_sha256": "comparison.png",
-            "human_review_sha256": "human_review.yaml",
         }
         for field, filename in bound_hashes.items():
             if receipt.get(field) != _sha256(pilot_dir / filename):

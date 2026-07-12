@@ -1,5 +1,7 @@
 schema: figure-agent.panel-f-svg-human-review.v1
 comparison_artifact: comparison.png
+machine_receipt_sha256: 739710abdd2848510b5efc01802237769e3f671f27110b132397f85c79fb7322
+comparison_sha256: b42fb5a6f934475e268623708689c2d077f2d7ee8da995422ca8c3b3888128d1
 semantic_legibility_verdict: pending
 visual_quality_vs_tikz: pending
 backend_promotion: not_authorized

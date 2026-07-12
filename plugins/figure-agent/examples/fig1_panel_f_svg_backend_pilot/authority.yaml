@@ -13,6 +13,6 @@ comparison_boundary:
   - 48
   - 912
   - 592
-  normalization: foreground_crop_resampled_to_equal_box
+  normalization: foreground_crop_uniform_contain_centered
 approved_tikz_snippet_unchanged: true
 publication_acceptance: not_claimed

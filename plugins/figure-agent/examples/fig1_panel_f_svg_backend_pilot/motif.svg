@@ -18,7 +18,7 @@
   <g id="panel-f-svg-source-ground" data-object="ground" data-electrical-state="reference">
     <path d="M768 540v30M730 570h76M740 584h56M752 598h32" fill="none" stroke="#27323d" stroke-width="6"/>
   </g>
-  <g id="panel-f-svg-electrical-leads" data-object="electrical_leads">
+  <g id="panel-f-svg-electrical-leads" data-visual-role="electrical_leads">
     <path d="M768 215v84h-64v121" fill="none" stroke="#315d8a" stroke-width="6"/>
     <path d="M823 160h42v380h-97" fill="none" stroke="#315d8a" stroke-width="6"/>
   </g>
@@ -31,7 +31,7 @@
   <g id="panel-f-svg-mechanical-attachment" data-relation="mechanical_attachment" data-from="panel-f-svg-fixed-boundary" data-to="panel-f-svg-floating-cantilever" data-connector-role="mechanical">
     <rect x="154" y="230" width="28" height="78" rx="5" fill="#6f7780" stroke="#343a40" stroke-width="4"/>
   </g>
-  <g id="panel-f-svg-electrode-drive" data-relation="electrode_drive" data-from="panel-f-svg-voltage-source" data-to="panel-f-svg-driven-electrode" data-connector-role="electrical-drive"/>
-  <g id="panel-f-svg-source-return" data-relation="source_return" data-from="panel-f-svg-voltage-source" data-to="panel-f-svg-source-ground" data-connector-role="electrical-return"/>
-  <g id="panel-f-svg-charge-ownership" data-relation="trapped_charge_ownership" data-from="panel-f-svg-trapped-charge" data-to="panel-f-svg-floating-cantilever" data-connector-role="ownership"/>
+  <g id="panel-f-svg-electrode-drive" data-relation="electrode_drive" data-from="panel-f-svg-voltage-source" data-to="panel-f-svg-driven-electrode" data-connector-role="electrical" data-style-role="electrical-drive"/>
+  <g id="panel-f-svg-source-return" data-relation="source_return" data-from="panel-f-svg-voltage-source" data-to="panel-f-svg-source-ground" data-connector-role="electrical" data-style-role="electrical-return"/>
+  <g id="panel-f-svg-charge-ownership" data-relation="trapped_charge_ownership" data-from="panel-f-svg-trapped-charge" data-to="panel-f-svg-floating-cantilever" data-relation-role="owned_by"/>
 </svg>
