@@ -93,7 +93,6 @@ def test_no_other_document_can_claim_active_product_or_plan_authority() -> None:
 
 def test_canonical_docs_close_known_attribution_and_provenance_edge_cases() -> None:
     product = _read(PLUGIN_ROOT / PRODUCT_DOC)
-    execution = _read(PLUGIN_ROOT / EXECUTION_DOC)
 
     for required in (
         "stable selector ID",
@@ -108,28 +107,6 @@ def test_canonical_docs_close_known_attribution_and_provenance_edge_cases() -> N
         "author either the semantic packet or clean-room SVG artifacts",
     ):
         assert required in product
-
-    for required in (
-        "tracked editable source",
-        "tracked Fig1-family editable source",
-        "source commit and tree hash",
-        "selector_id:",
-        "anchor_start:",
-        "coordinate_space: pdf_cm",
-        "page_index:",
-        "render_geometry_hash:",
-        "external URLs",
-        "review_input_hash",
-        "predeclared comparison protocol",
-        "Task 15: Validate clean-room direct-SVG input packets",
-        "target_crop_forbidden",
-        "blocked_pending_independent_semantic_packet",
-        "Run two cold reproductions only for a passing claim",
-    ):
-        assert required in execution
-
-    assert "fig1_overview_v5f_hybrid_panel_f_pilot" not in execution
-    assert "panel_f_fragment" not in execution
 
 
 def test_canonical_docs_define_failure_first_llm_control() -> None:
@@ -151,11 +128,47 @@ def test_canonical_docs_define_failure_first_llm_control() -> None:
         "Failure-First Implementation Plan",
         "failure_corpus.py",
         "failure_ablation.py",
-        "quality_search.py or scripts/quality/panel_block_edits.yaml",
+        "Panel F review closure",
+        "Fig3 cross-family proof",
+        "Two-family A/B/C decision",
     ):
         assert required in execution
 
     assert "determine whether an LLM can directly author SVG" not in product
+
+
+def test_active_plan_contains_only_remaining_work() -> None:
+    execution_path = PLUGIN_ROOT / EXECUTION_DOC
+    execution = _read(execution_path)
+
+    assert len(execution.splitlines()) < 450
+    assert execution.count("## Slice ") == 3
+    for completed_or_retired in (
+        "## Task 0:",
+        "## Task 9:",
+        "Task 15: Validate clean-room direct-SVG input packets",
+        "Implement the smallest contract-bound SVG renderer",
+        "Legacy evidence boundaries retained",
+    ):
+        assert completed_or_retired not in execution
+
+    assert not (
+        PLUGIN_ROOT
+        / "docs/superpowers/specs/2026-07-12-tikz-first-svg-assisted-design.md"
+    ).exists()
+
+
+def test_product_authority_defines_current_renderer_boundaries() -> None:
+    product = _read(PLUGIN_ROOT / PRODUCT_DOC)
+    normalized = " ".join(product.split())
+    for required in (
+        "TikZ/TeX is the default publication-authoring path",
+        "SVG is a derived export, inspection, interchange, or bounded fragment surface",
+        "Python is the control plane",
+        "fixture-specific handcrafted SVG coordinates",
+        "does not reopen backend selection",
+    ):
+        assert required in normalized
 
 
 def test_product_authority_owns_semantic_legibility_misses() -> None:

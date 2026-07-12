@@ -196,9 +196,24 @@ a stable selector ID plus explicit anchors and a source hash.
 | LLM | Open-ended proposal, authoring, and repair-hypothesis generation |
 | human review | Scientific meaning and publication-quality acceptance |
 
-TikZ is retained whenever it is the cheaper or better production path. SVG is
-used whenever inspectable geometry, freeform illustration, or complex fragments
-make it advantageous. Backend selection is local to a panel or object boundary.
+TikZ/TeX is the default publication-authoring path because it is the strongest
+current baseline for manuscript composition, typography, mathematical geometry,
+and reproducibility. This operating default does not make TikZ the product
+identity and does not prevent a bounded alternative from earning promotion with
+cross-family human evidence.
+
+SVG is a derived export, inspection, interchange, or bounded fragment surface.
+It may carry stable semantic IDs when the originating renderer can prove the
+mapping. It is not a co-equal default publication backend, and editability or a
+passing schema does not establish visual quality. The existing TikZ-to-SVG
+export remains an output path; this product direction does not reopen backend
+selection or create a second SVG-polish engine.
+
+Python is the control plane for contracts, orchestration, geometry, detectors,
+attribution, bounded repair, rollback, manifests, provenance, and review
+artifacts. It is not the default drawing language. In particular,
+fixture-specific handcrafted SVG coordinates are figure-production evidence and
+must not accumulate as reusable Python product logic.
 
 No fragment may depend on network access, mutable external URLs, ambient fonts,
 or unhashed local assets.
@@ -429,6 +444,15 @@ Current repository evidence supports these conclusions:
 The existing direct-SVG review path owns the active schema
 figure-agent.three-way-review-unblinding.v1. This is retained implementation
 evidence, not a reason to keep direct SVG as the product north star.
+
+Legacy experiment runtime remains parseable under
+`figure-agent.direct-svg-crop-authority.v1`,
+`figure-agent.direct-svg-packet.v1`,
+`figure-agent.illustration-backend-profile.v1`,
+`figure-agent.illustration-grammar.v1`, and
+`figure-agent.illustration-instance.v1`. These schema names preserve existing
+artifact ownership only. They do not reopen direct-SVG or illustration-grammar
+development in the active plan.
 
 The next execution plan must therefore begin with a failure corpus and A/B/C
 baseline, then build the smallest observation and repair capabilities that move
