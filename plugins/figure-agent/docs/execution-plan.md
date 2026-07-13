@@ -227,7 +227,10 @@ modules listed in Section 0.
   cross-artifact layout-lane contract is now recorded separately: it detects
   the Panel A narrative/bias-marker collision in both raw and feedback-guided
   verified renders, but it is diagnostic evidence rather than an ablation
-  outcome or publication gate.
+  outcome or publication gate. A selected layout-lane contract can also be
+  injected into `fig-agent context-pack` as explicit authoring directives;
+  selection is per generation attempt so fixture-specific geometry does not
+  leak into unrelated figures.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot

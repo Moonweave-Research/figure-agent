@@ -250,6 +250,92 @@ def test_context_pack_accepts_format_json_spelling(tmp_path: Path) -> None:
     assert json.loads(result.stdout)["name"] == "context_demo"
 
 
+def test_context_pack_injects_selected_layout_lane_contract_as_authoring_directive(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    review = fixture / "review"
+    review.mkdir()
+    (review / "layout_lanes.yaml").write_text(
+        """
+schema: figure-agent.layout-lanes.v1
+label_groups:
+  - id: narrative
+    required_terms: [applied, trapping, during, conduction]
+  - id: bias
+    required_terms: [V]
+rules:
+  - id: narrative_clear_of_bias
+    kind: minimum_clearance
+    first: narrative
+    second: bias
+    minimum_normalized_clearance: 0.015
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--layout-contract",
+            "review/layout_lanes.yaml",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["sources"]["layout_lanes"].endswith(
+        "examples/context_demo/review/layout_lanes.yaml"
+    )
+    assert payload["layout_constraints"]["schema"] == "figure-agent.layout-lanes.v1"
+    assert payload["layout_constraints"]["authoring_directives"] == [
+        "Keep text group [applied, trapping, during, conduction] at least 0.015 "
+        "page-diagonal units clear of text group [V]."
+    ]
+
+
+def test_context_pack_rejects_layout_contract_through_symlinked_parent(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "layout_lanes.yaml").write_text(
+        "schema: figure-agent.layout-lanes.v1\nlabel_groups: []\nrules: []\n",
+        encoding="utf-8",
+    )
+    (fixture / "review").symlink_to(outside, target_is_directory=True)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--layout-contract",
+            "review/layout_lanes.yaml",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "layout contract must remain inside the fixture" in result.stdout
+
+
 def test_context_pack_injects_project_scope_conventions(tmp_path: Path) -> None:
     # cross-figure conventions (e.g. vertical cantilever) must reach every figure's
     # context pack, not stay locked to the fig1 pilot catalog

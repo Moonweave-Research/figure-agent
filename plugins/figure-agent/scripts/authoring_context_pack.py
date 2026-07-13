@@ -16,6 +16,7 @@ from inputs import parse_spec
 from semantic_contracts import SemanticContractError, collect_semantic_contracts
 
 SCHEMA = "figure-agent.authoring-context-pack.v1"
+LAYOUT_LANES_SCHEMA = "figure-agent.layout-lanes.v1"
 SAFE_CATALOG_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
@@ -66,6 +67,79 @@ def _paper_context(example_dir: Path) -> dict[str, str]:
         key: _read_optional_text(path)
         for key, path in files.items()
         if path.is_file() and _read_optional_text(path)
+    }
+
+
+def _layout_constraints(
+    example_dir: Path,
+    selector: str | None,
+) -> tuple[Path | None, dict[str, Any] | None]:
+    if selector is None:
+        return None, None
+    relative = Path(selector)
+    if relative.is_absolute() or not relative.parts or any(
+        part in {"", ".", ".."} for part in relative.parts
+    ):
+        raise AuthoringContextPackError(
+            "layout contract must be a fixture-relative safe path"
+        )
+    contract_path = example_dir / relative
+    try:
+        resolved_contract = contract_path.resolve(strict=True)
+    except OSError as exc:
+        raise AuthoringContextPackError("layout contract not found or symlinked") from exc
+    if not resolved_contract.is_relative_to(example_dir.resolve()):
+        raise AuthoringContextPackError("layout contract must remain inside the fixture")
+    if contract_path.is_symlink() or not contract_path.is_file():
+        raise AuthoringContextPackError("layout contract not found or symlinked")
+    payload = yaml.safe_load(resolved_contract.read_text(encoding="utf-8")) or {}
+    if not isinstance(payload, dict) or payload.get("schema") != LAYOUT_LANES_SCHEMA:
+        raise AuthoringContextPackError(f"layout contract must use {LAYOUT_LANES_SCHEMA}")
+    raw_groups = payload.get("label_groups")
+    raw_rules = payload.get("rules")
+    if not isinstance(raw_groups, list) or not isinstance(raw_rules, list):
+        raise AuthoringContextPackError("layout contract requires label_groups and rules")
+    groups: dict[str, list[str]] = {}
+    for group in raw_groups:
+        if not isinstance(group, dict):
+            raise AuthoringContextPackError("layout label group must be an object")
+        group_id = group.get("id")
+        terms = group.get("required_terms")
+        if (
+            not isinstance(group_id, str)
+            or not isinstance(terms, list)
+            or not terms
+            or not all(isinstance(term, str) and term.strip() for term in terms)
+        ):
+            raise AuthoringContextPackError("layout label group is invalid")
+        groups[group_id] = terms
+    directives: list[str] = []
+    for rule in raw_rules:
+        if not isinstance(rule, dict) or rule.get("kind") != "minimum_clearance":
+            raise AuthoringContextPackError("layout rule is invalid")
+        first = rule.get("first")
+        second = rule.get("second")
+        minimum = rule.get("minimum_normalized_clearance")
+        if (
+            not isinstance(first, str)
+            or not isinstance(second, str)
+            or first not in groups
+            or second not in groups
+            or not isinstance(minimum, int | float)
+            or float(minimum) < 0
+        ):
+            raise AuthoringContextPackError("layout clearance rule is invalid")
+        first_terms = ", ".join(groups[first])
+        second_terms = ", ".join(groups[second])
+        directives.append(
+            f"Keep text group [{first_terms}] at least {float(minimum):g} "
+            f"page-diagonal units clear of text group [{second_terms}]."
+        )
+    return contract_path, {
+        "schema": LAYOUT_LANES_SCHEMA,
+        "label_groups": raw_groups,
+        "rules": raw_rules,
+        "authoring_directives": directives,
     }
 
 
@@ -127,6 +201,7 @@ def build_context_pack(
     *,
     plugin_root: Path | None = None,
     workspace_root: Path | None = None,
+    layout_contract: str | None = None,
 ) -> dict[str, Any]:
     paths = runtime_paths.resolve_runtime_paths(
         plugin_root=plugin_root,
@@ -158,6 +233,7 @@ def build_context_pack(
     )
     philosophy_path = paths.plugin_root / "docs" / "figure-design-philosophy.md"
     style_path = paths.styles_dir / "polymer-paper-preamble.sty"
+    layout_path, layout_constraints = _layout_constraints(example_dir, layout_contract)
     return {
         "schema": SCHEMA,
         "name": name,
@@ -174,6 +250,9 @@ def build_context_pack(
             ),
             "project_rule_catalog": (
                 _relative(paths.plugin_root, project_catalog_path) if project_catalog else ""
+            ),
+            "layout_lanes": (
+                _relative(paths.workspace_root, layout_path) if layout_path is not None else ""
             ),
         },
         "fixture": {
@@ -200,6 +279,7 @@ def build_context_pack(
             spec=spec,
         ),
         "paper_context": _paper_context(example_dir),
+        "layout_constraints": layout_constraints,
         "scope_boundary": {
             "generation_executor": False,
             "prompt_loop": False,
@@ -240,6 +320,11 @@ def render_text(payload: dict[str, Any]) -> str:
         lines.extend(["", "## Fig1 Rule Catalog"])
         for rule in fixture_catalog["rules"]:
             lines.append(f"- {rule['id']} ({rule['category']}): {rule['rule']}")
+    layout_constraints = payload.get("layout_constraints")
+    if layout_constraints:
+        lines.extend(["", "## Declared Layout Constraints"])
+        for directive in layout_constraints["authoring_directives"]:
+            lines.append(f"- {directive}")
     return "\n".join(lines) + "\n"
 
 
@@ -253,12 +338,14 @@ def main(
     parser.add_argument("name")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument("--layout-contract")
     args = parser.parse_args(argv)
     try:
         payload = build_context_pack(
             args.name,
             plugin_root=plugin_root,
             workspace_root=workspace_root,
+            layout_contract=args.layout_contract,
         )
     except (ValueError, OSError, yaml.YAMLError) as exc:
         print(f"fig-agent context-pack: {exc}", flush=True)

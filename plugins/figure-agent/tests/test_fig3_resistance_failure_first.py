@@ -238,9 +238,12 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/verified_layout_lane_report.json",
     ]
     assert scope["allowed_repository_paths"] == [
+        "plugins/figure-agent/bin/fig-agent",
         "plugins/figure-agent/docs/execution-plan.md",
+        "plugins/figure-agent/scripts/authoring_context_pack.py",
         "plugins/figure-agent/scripts/checks/check_layout_drift.py",
         "plugins/figure-agent/scripts/visual_finding_artifacts.py",
+        "plugins/figure-agent/tests/test_authoring_context_pack.py",
         "plugins/figure-agent/tests/test_check_layout_drift.py",
         "plugins/figure-agent/tests/test_fig3_resistance_failure_first.py",
         "plugins/figure-agent/tests/test_visual_finding_artifacts.py",
