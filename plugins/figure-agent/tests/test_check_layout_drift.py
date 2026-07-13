@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -143,3 +144,130 @@ def test_main_checks_coordinate_hints_fixture_instead_of_skipping(
 
     assert exit_code == 0
     assert capsys.readouterr().out.strip() == "OK layout drift Energy: 0.007"
+
+
+def test_layout_lane_contract_flags_narrative_group_overlapping_bias_marker() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {
+                "id": "narrative",
+                "required_terms": ["applied", "trapping", "during", "conduction"],
+            },
+            {"id": "bias", "required_terms": ["V"]},
+        ],
+        "rules": [
+            {
+                "id": "narrative_clear_of_bias",
+                "kind": "minimum_clearance",
+                "first": "narrative",
+                "second": "bias",
+                "minimum_normalized_clearance": 0.015,
+            }
+        ],
+    }
+    words = [
+        _word("applied", 20, 20, 60, 30),
+        _word("V", 65, 20, 75, 30),
+        _word("trapping", 80, 20, 120, 30),
+        _word("during", 125, 20, 165, 30),
+        _word("conduction", 170, 20, 230, 30),
+    ]
+
+    results = check_layout_drift.evaluate_layout_lanes(contract, words, (400.0, 200.0))
+
+    assert len(results) == 1
+    assert results[0].rule_id == "narrative_clear_of_bias"
+    assert results[0].status == "violation"
+    assert results[0].clearance == 0.0
+
+
+def test_layout_lane_contract_accepts_separated_groups_and_reports_missing_terms() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {"id": "title", "required_terms": ["applied", "conduction"]},
+            {"id": "bias", "required_terms": ["V"]},
+        ],
+        "rules": [
+            {
+                "id": "title_clear_of_bias",
+                "kind": "minimum_clearance",
+                "first": "title",
+                "second": "bias",
+                "minimum_normalized_clearance": 0.05,
+            }
+        ],
+    }
+
+    clear = check_layout_drift.evaluate_layout_lanes(
+        contract,
+        [
+            _word("applied", 20, 20, 60, 30),
+            _word("conduction", 70, 20, 120, 30),
+            _word("V", 250, 20, 260, 30),
+        ],
+        (400.0, 200.0),
+    )
+    missing = check_layout_drift.evaluate_layout_lanes(
+        contract,
+        [_word("applied", 20, 20, 60, 30), _word("V", 250, 20, 260, 30)],
+        (400.0, 200.0),
+    )
+
+    assert clear[0].status == "ok"
+    assert clear[0].clearance is not None and clear[0].clearance > 0.05
+    assert missing[0].status == "missing_label_group"
+    assert missing[0].missing_groups == ("title",)
+
+
+def test_direct_layout_lane_cli_writes_machine_readable_failure_evidence(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    contract = tmp_path / "layout_lanes.yaml"
+    contract.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "figure-agent.layout-lanes.v1",
+                "label_groups": [
+                    {"id": "title", "required_terms": ["applied"]},
+                    {"id": "bias", "required_terms": ["V"]},
+                ],
+                "rules": [
+                    {
+                        "id": "title_clear_of_bias",
+                        "kind": "minimum_clearance",
+                        "first": "title",
+                        "second": "bias",
+                        "minimum_normalized_clearance": 0.01,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    output = tmp_path / "layout_report.json"
+    monkeypatch.setattr(
+        check_layout_drift,
+        "extract_pdf_words_and_page",
+        lambda _path: (
+            [_word("applied", 20, 20, 60, 30), _word("V", 40, 20, 50, 30)],
+            (100.0, 100.0),
+        ),
+    )
+
+    exit_code = check_layout_drift.main(
+        [
+            "--pdf",
+            str(tmp_path / "render.pdf"),
+            "--layout-contract",
+            str(contract),
+            "--json-output",
+            str(output),
+            "--strict",
+        ]
+    )
+
+    assert exit_code == 1
+    assert json.loads(output.read_text(encoding="utf-8"))["results"][0]["status"] == "violation"

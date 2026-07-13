@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import re
 import sys
@@ -20,6 +21,7 @@ from check_visual_clash import extract_pdf_words_and_page  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 
 DEFAULT_DRIFT_THRESHOLD = 0.05
+LAYOUT_LANES_SCHEMA = "figure-agent.layout-lanes.v1"
 
 LabelSpec = str | list[str]
 
@@ -32,6 +34,17 @@ class DriftResult:
     ref_center: tuple[float, float] | None
     pdf_center: tuple[float, float] | None
     drift: float | None
+
+
+@dataclass(frozen=True)
+class LayoutLaneResult:
+    """A declared text-group clearance result in page-normalized units."""
+
+    rule_id: str
+    status: str
+    clearance: float | None
+    minimum_clearance: float
+    missing_groups: tuple[str, ...]
 
 
 def _normalize_token(text: str) -> str:
@@ -76,6 +89,145 @@ def _word_bbox(word: dict[str, Any]) -> tuple[float, float, float, float]:
         float(word["xmax"]),
         float(word["ymax"]),
     )
+
+
+def _bbox_clearance(
+    first: tuple[float, float, float, float],
+    second: tuple[float, float, float, float],
+) -> float:
+    """Return Euclidean separation between two axis-aligned boxes in page units."""
+    horizontal = max(first[0] - second[2], second[0] - first[2], 0.0)
+    vertical = max(first[1] - second[3], second[1] - first[3], 0.0)
+    return math.hypot(horizontal, vertical)
+
+
+def _group_bbox(
+    group: dict[str, Any],
+    words: list[dict[str, Any]],
+) -> tuple[float, float, float, float] | None:
+    terms = group.get("required_terms")
+    if not isinstance(terms, list) or not terms:
+        raise ValueError("layout lane label group requires non-empty required_terms")
+    selected: list[dict[str, Any]] = []
+    normalized_words = [_compact_text(str(word.get("text", ""))) for word in words]
+    for term in terms:
+        normalized_term = _compact_text(str(term))
+        if not normalized_term:
+            raise ValueError("layout lane required term is empty")
+        try:
+            index = normalized_words.index(normalized_term)
+        except ValueError:
+            return None
+        selected.append(words[index])
+    return _union_bbox(selected)
+
+
+def evaluate_layout_lanes(
+    contract: dict[str, Any],
+    pdf_words: list[dict[str, Any]],
+    pdf_page_size: tuple[float, float],
+) -> list[LayoutLaneResult]:
+    """Evaluate declared text-group clearance rules against the rendered PDF."""
+    if contract.get("schema") != LAYOUT_LANES_SCHEMA:
+        raise ValueError(f"expected {LAYOUT_LANES_SCHEMA}")
+    raw_groups = contract.get("label_groups")
+    raw_rules = contract.get("rules")
+    if not isinstance(raw_groups, list) or not isinstance(raw_rules, list):
+        raise ValueError("layout lane contract requires label_groups and rules lists")
+    groups: dict[str, tuple[float, float, float, float] | None] = {}
+    for group in raw_groups:
+        if not isinstance(group, dict) or not isinstance(group.get("id"), str):
+            raise ValueError("layout lane label group requires string id")
+        group_id = group["id"]
+        if group_id in groups:
+            raise ValueError(f"duplicate layout lane label group: {group_id}")
+        groups[group_id] = _group_bbox(group, pdf_words)
+
+    page_diagonal = math.hypot(*pdf_page_size)
+    if page_diagonal <= 0:
+        raise ValueError("layout lane page size must be positive")
+    results: list[LayoutLaneResult] = []
+    for rule in raw_rules:
+        if not isinstance(rule, dict):
+            raise ValueError("layout lane rule must be an object")
+        rule_id = rule.get("id")
+        first_id = rule.get("first")
+        second_id = rule.get("second")
+        minimum = rule.get("minimum_normalized_clearance")
+        if (
+            not isinstance(rule_id, str)
+            or rule.get("kind") != "minimum_clearance"
+            or not isinstance(first_id, str)
+            or not isinstance(second_id, str)
+            or not isinstance(minimum, int | float)
+            or float(minimum) < 0
+        ):
+            raise ValueError("layout lane rule is invalid")
+        missing = tuple(
+            group_id
+            for group_id in (first_id, second_id)
+            if group_id not in groups or groups[group_id] is None
+        )
+        if missing:
+            results.append(
+                LayoutLaneResult(
+                    rule_id=rule_id,
+                    status="missing_label_group",
+                    clearance=None,
+                    minimum_clearance=float(minimum),
+                    missing_groups=missing,
+                )
+            )
+            continue
+        clearance = _bbox_clearance(groups[first_id], groups[second_id]) / page_diagonal  # type: ignore[arg-type]
+        results.append(
+            LayoutLaneResult(
+                rule_id=rule_id,
+                status="ok" if clearance >= float(minimum) else "violation",
+                clearance=round(clearance, 6),
+                minimum_clearance=float(minimum),
+                missing_groups=(),
+            )
+        )
+    return results
+
+
+def layout_lane_payload(
+    contract: dict[str, Any],
+    pdf_words: list[dict[str, Any]],
+    pdf_page_size: tuple[float, float],
+) -> dict[str, Any]:
+    results = evaluate_layout_lanes(contract, pdf_words, pdf_page_size)
+    return {
+        "schema": "figure-agent.layout-lane-report.v1",
+        "contract_schema": LAYOUT_LANES_SCHEMA,
+        "page_size_pt": list(pdf_page_size),
+        "failure_count": sum(result.status != "ok" for result in results),
+        "results": [
+            {
+                "rule_id": result.rule_id,
+                "status": result.status,
+                "clearance": result.clearance,
+                "minimum_clearance": result.minimum_clearance,
+                "missing_groups": list(result.missing_groups),
+            }
+            for result in results
+        ],
+    }
+
+
+def _layout_lane_line(
+    rule_id: str,
+    status: str,
+    clearance: float | None,
+    minimum: float,
+    missing_groups: tuple[str, ...] | list[str],
+) -> str:
+    if status == "ok":
+        return f"OK layout lane {rule_id}: {clearance:.3f} >= {minimum:.3f}"
+    if status == "violation":
+        return f"WARN layout lane {rule_id}: {clearance:.3f} < {minimum:.3f}"
+    return f"WARN layout lane {rule_id}: missing label groups {', '.join(missing_groups)}"
 
 
 def _find_phrase_bbox(
@@ -212,42 +364,64 @@ def run_check(
     name = _fixture_name(fixture_dir)
     spec_path = fixture_dir / "spec.yaml"
     hints_path = fixture_dir / "coordinate_hints.yaml"
+    lanes_path = fixture_dir / "layout_lanes.yaml"
     pdf_path = fixture_dir / "build" / f"{name}.pdf"
     if not spec_path.is_file():
         return 1, [f"ERROR missing spec.yaml: {spec_path}"]
     spec = parse_spec(spec_path.read_text(encoding="utf-8"))
     required_labels = _required_labels(spec)
-    if not required_labels:
-        return 0, [f"SKIP layout drift: no golden_contract.required_labels in {spec_path}"]
-    if not hints_path.is_file():
-        return 0, [f"SKIP layout drift: missing coordinate_hints.yaml in {fixture_dir}"]
-    if not pdf_path.is_file():
-        return 1, [f"ERROR missing build PDF: {pdf_path}"]
-
-    hints = yaml.safe_load(hints_path.read_text(encoding="utf-8")) or {}
-    if not isinstance(hints, dict):
-        return 1, [f"ERROR invalid coordinate_hints.yaml: {hints_path}"]
-    pdf_words, page_size = extract_pdf_words_and_page(pdf_path)
-    results = evaluate_drift(required_labels, hints, pdf_words, page_size)
-
     lines: list[str] = []
     failures = 0
-    for result in results:
-        if result.drift is not None:
-            if result.drift > threshold:
+    needs_pdf = hints_path.is_file() or lanes_path.is_file()
+    if needs_pdf and not pdf_path.is_file():
+        return 1, [f"ERROR missing build PDF: {pdf_path}"]
+    pdf_words: list[dict[str, Any]] = []
+    page_size: tuple[float, float] = (0.0, 0.0)
+    if needs_pdf:
+        pdf_words, page_size = extract_pdf_words_and_page(pdf_path)
+
+    if not required_labels:
+        lines.append(f"SKIP layout drift: no golden_contract.required_labels in {spec_path}")
+    elif not hints_path.is_file():
+        lines.append(f"SKIP layout drift: missing coordinate_hints.yaml in {fixture_dir}")
+    else:
+        hints = yaml.safe_load(hints_path.read_text(encoding="utf-8")) or {}
+        if not isinstance(hints, dict):
+            return 1, [f"ERROR invalid coordinate_hints.yaml: {hints_path}"]
+        results = evaluate_drift(required_labels, hints, pdf_words, page_size)
+        for result in results:
+            if result.drift is not None:
+                if result.drift > threshold:
+                    failures += 1
+                    lines.append(
+                        f"WARN layout drift {result.label}: {result.drift:.3f} > {threshold:.3f}"
+                    )
+                else:
+                    lines.append(f"OK layout drift {result.label}: {result.drift:.3f}")
+            elif result.status != "uncovered_ref":
                 failures += 1
-                lines.append(
-                    f"WARN layout drift {result.label}: {result.drift:.3f} > {threshold:.3f}"
-                )
+                lines.append(f"WARN layout drift {result.label}: {result.status}")
             else:
-                lines.append(f"OK layout drift {result.label}: {result.drift:.3f}")
-        elif result.status != "uncovered_ref":
-            failures += 1
-            lines.append(f"WARN layout drift {result.label}: {result.status}")
-        else:
-            lines.append(f"SKIP layout drift {result.label}: {result.status}")
-    if not results:
-        lines.append("SKIP layout drift: no comparable labels")
+                lines.append(f"SKIP layout drift {result.label}: {result.status}")
+        if not results:
+            lines.append("SKIP layout drift: no comparable labels")
+
+    if lanes_path.is_file():
+        lanes = yaml.safe_load(lanes_path.read_text(encoding="utf-8")) or {}
+        if not isinstance(lanes, dict):
+            return 1, [f"ERROR invalid layout_lanes.yaml: {lanes_path}"]
+        for result in evaluate_layout_lanes(lanes, pdf_words, page_size):
+            if result.status != "ok":
+                failures += 1
+            lines.append(
+                _layout_lane_line(
+                    result.rule_id,
+                    result.status,
+                    result.clearance,
+                    result.minimum_clearance,
+                    result.missing_groups,
+                )
+            )
     return failures, lines
 
 
@@ -255,14 +429,57 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "fixture",
+        nargs="?",
         help="fixture name, examples/<fixture>, absolute fixture path, or .",
     )
     parser.add_argument("--threshold", type=float, default=DEFAULT_DRIFT_THRESHOLD)
+    parser.add_argument(
+        "--pdf",
+        type=Path,
+        help="rendered PDF for a direct layout-lane check",
+    )
+    parser.add_argument(
+        "--layout-contract",
+        type=Path,
+        help="layout_lanes.yaml contract for a direct layout-lane check",
+    )
+    parser.add_argument("--json-output", type=Path)
     parser.add_argument("--strict", action="store_true")
     args = parser.parse_args(argv)
 
     try:
-        failures, lines = run_check(_resolve_fixture_dir(args.fixture), threshold=args.threshold)
+        if args.pdf is not None or args.layout_contract is not None:
+            if args.pdf is None or args.layout_contract is None:
+                parser.error("--pdf and --layout-contract must be provided together")
+            contract = yaml.safe_load(args.layout_contract.read_text(encoding="utf-8")) or {}
+            if not isinstance(contract, dict):
+                raise ValueError(f"invalid layout contract: {args.layout_contract}")
+            words, page_size = extract_pdf_words_and_page(args.pdf)
+            payload = layout_lane_payload(contract, words, page_size)
+            failures = int(payload["failure_count"])
+            lines = []
+            for result in payload["results"]:
+                lines.append(
+                    _layout_lane_line(
+                        str(result["rule_id"]),
+                        str(result["status"]),
+                        result["clearance"],
+                        float(result["minimum_clearance"]),
+                        list(result["missing_groups"]),
+                    )
+                )
+            if args.json_output is not None:
+                args.json_output.parent.mkdir(parents=True, exist_ok=True)
+                args.json_output.write_text(
+                    json.dumps(payload, indent=2, sort_keys=True) + "\n",
+                    encoding="utf-8",
+                )
+        else:
+            if args.fixture is None:
+                parser.error("fixture is required unless --pdf and --layout-contract are used")
+            failures, lines = run_check(
+                _resolve_fixture_dir(args.fixture), threshold=args.threshold
+            )
     except (OSError, ValueError, yaml.YAMLError) as exc:
         print(f"ERROR layout drift: {exc}", file=sys.stderr)
         return 1

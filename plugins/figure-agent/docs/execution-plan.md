@@ -223,7 +223,11 @@ modules listed in Section 0.
   injection but is not an LLM run; verified attempt 1 is preserved as a nested
   preamble-path failure; verified attempt 2 is receipt-bound but explicitly
   marked `feedback_guided_not_equal_input`. None may be presented as a fair
-  raw/verified/repaired comparison or publication acceptance.
+  raw/verified/repaired comparison or publication acceptance. The first
+  cross-artifact layout-lane contract is now recorded separately: it detects
+  the Panel A narrative/bias-marker collision in both raw and feedback-guided
+  verified renders, but it is diagnostic evidence rather than an ablation
+  outcome or publication gate.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot

@@ -1,0 +1,17 @@
+schema: figure-agent.layout-lanes.v1
+fixture: fig3_resistance_mechanism
+purpose: >-
+  Detect the failure-mode where a generated Panel A narrative occupies the
+  same reading lane as its applied-bias marker.
+label_groups:
+  - id: panel_a_narrative
+    required_terms: [applied, trapping, during, conduction]
+  - id: panel_a_bias_marker
+    required_terms: [V]
+rules:
+  - id: panel_a_narrative_clear_of_bias_marker
+    kind: minimum_clearance
+    first: panel_a_narrative
+    second: panel_a_bias_marker
+    minimum_normalized_clearance: 0.015
+publication_acceptance: not_claimed
