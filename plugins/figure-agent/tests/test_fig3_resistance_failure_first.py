@@ -89,6 +89,8 @@ EXECUTION_BINDING_V6 = REVIEW / "execution-binding-v6"
 EXECUTION_SCAFFOLD_EVALUATION = REVIEW / "execution-scaffold-evaluation-v1"
 COMPARABLE_V1 = REVIEW / "comparable-v1"
 COMPARISON_CONTRACT = COMPARABLE_V1 / "comparison_contract.yaml"
+COMPARABLE_V2 = REVIEW / "comparable-v2"
+COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
 
 
 def _sha256(path: Path) -> str:
@@ -178,6 +180,84 @@ def test_fig3_comparable_v1_is_transcript_bound_but_nonrenderable() -> None:
     assert report["deltas"]["repaired_vs_raw"][
         "confirmed_defect_occurrence_count"
     ] == 30
+    assert report["product_claim"] == "not_authorized"
+    assert report["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_comparable_v2_binds_pre_authoring_contract_interventions() -> None:
+    contract = yaml.safe_load(COMPARISON_CONTRACT_V2.read_text(encoding="utf-8"))
+
+    assert contract["comparison_eligibility"] == "eligible_equal_input"
+    assert contract["shared_contract"]["starting_artifact_sha256"] == _sha256(
+        COMPARABLE_V2 / "blank_start.txt"
+    )
+    assert contract["shared_contract"]["authoring_attempts_per_condition"] == 1
+    assert contract["shared_contract"]["feedback_rounds"] == 0
+    assert contract["shared_contract"]["manual_repairs"] == 0
+    assert contract["conditions"]["raw"]["intervention"] == (
+        "free_authoring_without_figure_agent_contract"
+    )
+    assert contract["conditions"]["verified"]["intervention"] == (
+        "figure_agent_style_contract_injected_before_authoring"
+    )
+    assert "declared_layout_lane" in contract["conditions"]["repaired"][
+        "intervention"
+    ]
+    for variant, condition in contract["conditions"].items():
+        assert condition["prompt_sha256"] == _sha256(
+            COMPARABLE_V2 / condition["prompt_path"]
+        )
+        if variant != "raw":
+            packet = json.loads(
+                (COMPARABLE_V2 / condition["packet_path"]).read_text(encoding="utf-8")
+            )
+            assert packet["packet_sha256"] == condition["packet_sha256"]
+            assert packet["feedback_rounds"] == 0
+            assert packet["manual_repairs"] == 0
+    assert contract["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_comparable_v2_is_reproducible_but_still_requires_human_review() -> None:
+    runs = {
+        variant: COMPARABLE_V2 / f"{variant}.yaml"
+        for variant in ("raw", "verified", "repaired")
+    }
+    for variant, path in runs.items():
+        run = yaml.safe_load(path.read_text(encoding="utf-8"))
+        receipt = run["generation_receipt"]
+        assert run["clean_reproduction"] is True
+        assert run["human_verdict"] == {"state": "pending"}
+        assert run["publication_acceptance"] == "not_claimed"
+        assert receipt["generated_artifact_sha256"] == _sha256(
+            COMPARABLE_V2 / f"{variant}_generated.tex"
+        )
+        assert receipt["transcript_sha256"] == _sha256(
+            COMPARABLE_V2 / receipt["transcript_path"]
+        )
+
+    assert yaml.safe_load(runs["raw"].read_text(encoding="utf-8"))[
+        "compile_outcome"
+    ]["state"] == "blocked_before_render_by_style_lock"
+    for variant in ("verified", "repaired"):
+        run = yaml.safe_load(runs[variant].read_text(encoding="utf-8"))
+        assert run["compile_outcome"]["exit"] == 0
+        assert run["layout_gate"]["state"] == "failed"
+        assert run["render_receipt"]["pdf_sha256"] == _sha256(
+            COMPARABLE_V2 / run["render_receipt"]["pdf_path"]
+        )
+        assert run["render_receipt"]["png_sha256"] == _sha256(
+            COMPARABLE_V2 / run["render_receipt"]["png_path"]
+        )
+
+    report = evaluate_ablation(runs)
+    assert report == json.loads(
+        (COMPARABLE_V2 / "ablation_report.json").read_text(encoding="utf-8")
+    )
+    assert report["comparison_evidence"] == "transcript_bound"
+    assert report["reproduction_gate"] == "passed"
+    assert report["variants"]["raw"]["confirmed_defect_occurrence_count"] == 26
+    assert report["variants"]["verified"]["confirmed_defect_occurrence_count"] == 6
+    assert report["variants"]["repaired"]["confirmed_defect_occurrence_count"] == 3
     assert report["product_claim"] == "not_authorized"
     assert report["publication_acceptance"] == "not_claimed"
 

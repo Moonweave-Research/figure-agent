@@ -1,0 +1,71 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: repaired
+comparison_eligibility: eligible_equal_input
+model_contract_hash: sha256:9d969e65514446c9ea822e099c48372d1bead7bde2d38787b3e1fbf9c9cb2545
+input_packet_hash: sha256:dc301d15cb39fd431f48098b5f07c5b66e8bde35152729a48567b6005fd15dfb
+budget_contract_hash: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+comparison_contract_hash: sha256:ae087b7142025984b14b158d04c26ebd1613ee0f53904defd567b05b015aa78b
+condition_prompt_hash: sha256:531d825a0b634e3565576ba6ba82a4b33c9ae3ccdf6c7786ecc8ecfb5cda8560
+review_input_hash: sha256:be1b51c2fee6c168a00a17010720d57bb3ba4ed43f9bc511e308e6fd783e1d9a
+figure_family: fig3_resistance_mechanism
+findings:
+  - id: REPAIRED_RENDERED_COLLISIONS
+    failure_class: geometry
+    observation_scale: page
+    review_outcome: confirmed_defect
+    attribution_state: exact
+    selector_id: collision.panel_b_top_labels
+    occurrences: 2
+  - id: REPAIRED_LAYOUT_LANE_VIOLATION
+    failure_class: geometry
+    observation_scale: page
+    review_outcome: confirmed_defect
+    attribution_state: exact
+    selector_id: panel_a_narrative_clear_of_bias_marker
+    occurrences: 1
+  - id: REPAIRED_SCAFFOLD_FINISH_RISK
+    failure_class: composition
+    observation_scale: page
+    review_outcome: requires_human_review
+    attribution_state: scaffold
+    selector_id: panel_b_header_and_distribution_labels
+    occurrences: 2
+human_correction_minutes: null
+intervention_count: 2
+clean_reproduction: true
+compile_outcome:
+  command:
+    - bash
+    - scripts/compile.sh
+    - examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/repaired_generated.tex
+  exit: 0
+  state: rendered_with_warnings
+  blocker_count: 0
+  style_warning_count: 1
+  collision_count: 2
+layout_gate:
+  report_path: repaired_layout_report.json
+  state: failed
+  clearance: 0.0
+  required_clearance: 0.015
+semantic_evaluation: pending_human_review
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed
+render_receipt:
+  pdf_path: repaired_generated.pdf
+  pdf_sha256: sha256:8717d5b82828ecd5bc7d95e46f56556041486dcd04976475466ca4e87497d6b2
+  png_path: repaired_generated.png
+  png_sha256: sha256:36b404ebe9e20cfb3ea97a351fbc104804cd3eb2f53d96bc80931f08c340be38
+generation_receipt:
+  schema: figure-agent.generation-receipt.v1
+  model_id: codex-gpt-5.5
+  input_packet_sha256: sha256:dc301d15cb39fd431f48098b5f07c5b66e8bde35152729a48567b6005fd15dfb
+  budget_contract_sha256: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+  source_commit: 2d838812
+  starting_artifact_path: blank_start.txt
+  starting_artifact_sha256: sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+  generated_artifact_path: repaired_generated.tex
+  generated_artifact_sha256: sha256:be1b51c2fee6c168a00a17010720d57bb3ba4ed43f9bc511e308e6fd783e1d9a
+  transcript_path: repaired.transcript.json
+  transcript_sha256: sha256:dd8c45256272e44f47b3c8c6475143544fa8b67389ac43455d765809d75725bf

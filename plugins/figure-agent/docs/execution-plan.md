@@ -224,6 +224,18 @@ modules listed in Section 0.
   three arms fail before render because the abstract `polymer-paper` style
   profile was not converted into an executable preamble and palette contract.
   Its reproduction gate failed and no product or publication claim is allowed.
+  The additive `comparable-v2/` run closes that integration gap: `raw` remains
+  free authoring, `verified` receives the executable preamble/palette/type
+  contract, and `repaired` receives the same contract plus one declared Panel A
+  layout lane. In a clean committed worktree, raw reproducibly stops at 20
+  Style Lock blockers while verified and repaired render with zero blockers.
+  Confirmed defect occurrences fall from 26 to 6 and 3 respectively. This is
+  not acceptance: both rendered arms still fail the declared layout lane
+  (`0.000 < 0.015`), verified has one detected collision and four label-order
+  risks, repaired has two detected collisions, and scaffold inspection exposes
+  unfinished label placement. The result proves that pre-authoring style
+  injection removes a broad class of avoidable source defects; it also proves
+  that prompt-only layout injection is not enforcement or repair.
   Historical evidence for this unchecked comparison remains under
   `review/failure-first/` and is non-prescriptive:
 
@@ -269,10 +281,12 @@ modules listed in Section 0.
   minutes. A machine result is never a publication verdict.
 
 **Current next executable step:** Slice 1 remains `pending_human_review` on the
-four current hash-bound views. In Slice 2, convert the declared style profile
-into an executable pre-authoring preamble and palette contract, then repeat the
-same additive three-arm protocol as `comparable-v2/`. Preserve `comparable-v1/`
-as failed evidence; do not start a new renderer, fixture, or polish lane.
+four current hash-bound views. Slice 2 `comparable-v2/` is transcript-bound and
+cleanly reproducible, but its product claim remains unauthorized. Obtain a
+named human scaffold verdict on the two rendered v2 images and record measured
+correction minutes. Then implement the smallest renderer-neutral change that
+turns the failed declared layout lane into a fail-closed generate-check-repair
+boundary; do not start a new renderer, fixture, or manual polish lane.
 
 ### Verification
 

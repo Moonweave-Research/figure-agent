@@ -1,0 +1,78 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: verified
+comparison_eligibility: eligible_equal_input
+model_contract_hash: sha256:9d969e65514446c9ea822e099c48372d1bead7bde2d38787b3e1fbf9c9cb2545
+input_packet_hash: sha256:dc301d15cb39fd431f48098b5f07c5b66e8bde35152729a48567b6005fd15dfb
+budget_contract_hash: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+comparison_contract_hash: sha256:ae087b7142025984b14b158d04c26ebd1613ee0f53904defd567b05b015aa78b
+condition_prompt_hash: sha256:5433460f1d13cef1fe00f622b19f49272433590b8d553c8b26018a479dbd8346
+review_input_hash: sha256:dc9e386c96660134ec58cc6831055b59c38c17ebeecaaff20f29eb734ace3d37
+figure_family: fig3_resistance_mechanism
+findings:
+  - id: VERIFIED_LABEL_SOURCE_ORDER_RISK
+    failure_class: geometry
+    observation_scale: source
+    review_outcome: confirmed_defect
+    attribution_state: exact
+    selector_id: document.filled_label_order
+    occurrences: 4
+  - id: VERIFIED_RENDERED_COLLISION
+    failure_class: geometry
+    observation_scale: page
+    review_outcome: confirmed_defect
+    attribution_state: exact
+    selector_id: collision.sulfur_gE
+    occurrences: 1
+  - id: VERIFIED_LAYOUT_LANE_VIOLATION
+    failure_class: geometry
+    observation_scale: page
+    review_outcome: confirmed_defect
+    attribution_state: exact
+    selector_id: panel_a_narrative_clear_of_bias_marker
+    occurrences: 1
+  - id: VERIFIED_SCAFFOLD_FINISH_RISK
+    failure_class: composition
+    observation_scale: page
+    review_outcome: requires_human_review
+    attribution_state: scaffold
+    selector_id: panel_a_clipped_labels_and_panel_b_arrow_text
+    occurrences: 2
+human_correction_minutes: null
+intervention_count: 1
+clean_reproduction: true
+compile_outcome:
+  command:
+    - bash
+    - scripts/compile.sh
+    - examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/verified_generated.tex
+  exit: 0
+  state: rendered_with_warnings
+  blocker_count: 0
+  style_warning_count: 5
+  collision_count: 1
+layout_gate:
+  report_path: verified_layout_report.json
+  state: failed
+  clearance: 0.0
+  required_clearance: 0.015
+semantic_evaluation: pending_human_review
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed
+render_receipt:
+  pdf_path: verified_generated.pdf
+  pdf_sha256: sha256:88eb4acc33c7e916ca6a1a69013d5e53fe7b16df4226f702362bcdf2bb32c3eb
+  png_path: verified_generated.png
+  png_sha256: sha256:de8001a4515977efca5e4ba8391aa6ce3e9b422d0a40700f143657b9093f8a9e
+generation_receipt:
+  schema: figure-agent.generation-receipt.v1
+  model_id: codex-gpt-5.5
+  input_packet_sha256: sha256:dc301d15cb39fd431f48098b5f07c5b66e8bde35152729a48567b6005fd15dfb
+  budget_contract_sha256: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+  source_commit: 2d838812
+  starting_artifact_path: blank_start.txt
+  starting_artifact_sha256: sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+  generated_artifact_path: verified_generated.tex
+  generated_artifact_sha256: sha256:dc9e386c96660134ec58cc6831055b59c38c17ebeecaaff20f29eb734ace3d37
+  transcript_path: verified.transcript.json
+  transcript_sha256: sha256:0d4554824c65b5f2a53071bd602838d9ab58ec83a308640833e5d9edb176de60

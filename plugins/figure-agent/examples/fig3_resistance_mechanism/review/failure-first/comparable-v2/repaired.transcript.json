@@ -1,0 +1,12 @@
+{
+  "authoring_packet_sha256": "sha256:872e16ecffeeef6c387f07caacc835a302dfd5974e2c47aa700b29c9165b333f",
+  "budget_contract_sha256": "sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f",
+  "condition_prompt_sha256": "sha256:531d825a0b634e3565576ba6ba82a4b33c9ae3ccdf6c7786ecc8ecfb5cda8560",
+  "generated_artifact_path": "repaired_generated.tex",
+  "generated_artifact_sha256": "sha256:be1b51c2fee6c168a00a17010720d57bb3ba4ed43f9bc511e308e6fd783e1d9a",
+  "input_packet_sha256": "sha256:dc301d15cb39fd431f48098b5f07c5b66e8bde35152729a48567b6005fd15dfb",
+  "model_id": "codex-gpt-5.5",
+  "source_commit": "2d838812",
+  "starting_artifact_path": "blank_start.txt",
+  "starting_artifact_sha256": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+}
