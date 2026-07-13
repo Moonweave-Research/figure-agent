@@ -1,0 +1,11 @@
+{
+  "decision": "exact_repair_resolved_structural_gate_still_failed",
+  "repair_result": "sample title clear of electrodes and retained label",
+  "text_text_after": 0,
+  "text_on_path_or_fill_after": 5,
+  "semantic_path_crossing_after": 0,
+  "remaining_priority": "panel_a_sign_agnostic_label_boundary_clash",
+  "band_shape_authority": "blocked_pending_physics_math_review",
+  "human_review": "not_requested_structural_gate_failed",
+  "publication_acceptance": "not_claimed"
+}

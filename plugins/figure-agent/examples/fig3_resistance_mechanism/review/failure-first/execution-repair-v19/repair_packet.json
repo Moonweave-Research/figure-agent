@@ -1,0 +1,95 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "bbox_px": [
+        124,
+        317,
+        379,
+        367
+      ],
+      "id": "VC014",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.167,
+        "edge": 0.006
+      },
+      "tex_lines": null,
+      "text": "disordered"
+    },
+    "finding_id": "VC014",
+    "protected_invariants": [
+      "disordered",
+      "sulfur--polymer film",
+      "electrode",
+      "retained"
+    ],
+    "repair_family": "label_reflow",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v19/visual_clash.before.json",
+    "selector": {
+      "anchor_end": "\\draw[draw=cGray, line width=0.45pt]",
+      "anchor_start": "  at (3.515,2.44) {electrode};",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-sample-title",
+      "source_hash": "sha256:b09c048d3df3ba59525ae6f07f485c8ffc157cecaa8802d753d62ab2cb074c54"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v19/visual_clash.before.json",
+      "schema": "figure-agent.visual-clash.v1",
+      "sha256": "sha256:f6c6a3c48b44b6366c3b6b9dfea618690519c1462587529aa7c1a82a4ce1dbef"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v19/repaired_generated.tex",
+  "packet_sha256": "sha256:a7eb480d3f59cbb46216c667728b3ffdd1c775c8658826f66ee7317a8b9284f3",
+  "prompt": {
+    "sha256": "sha256:d0d41107ab282d593adae79120a042e193aab211b2f815fd604edbfb5b297e08",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v19/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v18/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: label_reflow\n- Machine finding: {\"bbox_px\": [124, 317, 379, 367], \"id\": \"VC014\", \"kind\": \"text_on_path\", \"metric\": {\"dark\": 0.167, \"edge\": 0.006}, \"tex_lines\": null, \"text\": \"disordered\"}\n- Change content only between the exact anchor lines [  at (3.515,2.44) {electrode};] and [\\draw[draw=cGray, line width=0.45pt]].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [disordered].\n- Preserve the exact token [sulfur--polymer film].\n- Preserve the exact token [electrode].\n- Preserve the exact token [retained].\n\n## Bound editable source bytes\n```tex\n\\node[compact label, anchor=north] at (1.92,3.61)\n  {disordered sulfur--polymer film};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v19/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [
+    {
+      "attribution": "unbound",
+      "finding_id": "VC015"
+    }
+  ],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v18/repaired_generated.tex",
+    "sha256": "sha256:b09c048d3df3ba59525ae6f07f485c8ffc157cecaa8802d753d62ab2cb074c54"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v19/repair_targets.json",
+    "sha256": "sha256:b8f674083b978f5ef01b3638ba275d426a9ebb8c4b86d20216b3197489120fdd"
+  },
+  "verification": "external_sequential_compile_required"
+}

@@ -98,6 +98,8 @@ EXECUTION_REPAIR_V15 = REVIEW / "execution-repair-v15"
 EXECUTION_REPAIR_V16 = REVIEW / "execution-repair-v16"
 EXECUTION_REPAIR_V17 = REVIEW / "execution-repair-v17"
 EXECUTION_REPAIR_V18 = REVIEW / "execution-repair-v18"
+EXECUTION_REPAIR_V19 = REVIEW / "execution-repair-v19"
+EXECUTION_REPAIR_V20 = REVIEW / "execution-repair-v20"
 
 
 def _sha256(path: Path) -> str:
@@ -208,6 +210,55 @@ def test_fig3_v18_removes_retained_regression_without_claiming_acceptance() -> N
     assert gate["structural_pass"] is False
     assert review["repair_result"] == (
         "retained label clear of title path and electrode"
+    )
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v19_preserves_failed_sample_title_reflow() -> None:
+    gate = json.loads(
+        (EXECUTION_REPAIR_V19 / "structural_gate.json").read_text(encoding="utf-8")
+    )
+    visual = json.loads(
+        (EXECUTION_REPAIR_V19 / "visual_clash.json").read_text(encoding="utf-8")
+    )
+    review = json.loads(
+        (EXECUTION_REPAIR_V19 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert gate["blocking_counts"]["semantic_path_crossing"] == 0
+    assert gate["blocking_counts"]["text_text"] == 2
+    assert gate["state"] == "failed"
+    assert review["decision"] == "failed_exact_repair"
+    assert review["repair_result"] == (
+        "sample title cleared electrodes but collided with retained label"
+    )
+    assert any(candidate.get("text") == "film" for candidate in visual["candidates"])
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v20_places_sample_title_in_clear_upper_safe_area() -> None:
+    gate = json.loads(
+        (EXECUTION_REPAIR_V20 / "structural_gate.json").read_text(encoding="utf-8")
+    )
+    visual = json.loads(
+        (EXECUTION_REPAIR_V20 / "visual_clash.json").read_text(encoding="utf-8")
+    )
+    review = json.loads(
+        (EXECUTION_REPAIR_V20 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    title_tokens = {"disordered", "sulfur–polymer", "film"}
+    assert not any(
+        candidate.get("kind") in {"text_on_path", "text_on_fill"}
+        and candidate.get("text") in title_tokens
+        for candidate in visual["candidates"]
+    )
+    assert gate["blocking_counts"]["semantic_path_crossing"] == 0
+    assert gate["blocking_counts"]["text_text"] == 0
+    assert gate["blocking_counts"]["text_on_path_or_fill"] < 7
+    assert gate["state"] == "failed"
+    assert review["repair_result"] == (
+        "sample title clear of electrodes and retained label"
     )
     assert review["publication_acceptance"] == "not_claimed"
 

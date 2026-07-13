@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\node[compact label, align=center, anchor=north] at (1.92,3.83)\n  {disordered\\\\sulfur--polymer film};",
+  "change_summary": "Raised the two-line sample title into the film's upper safe area to preserve electrode clearance and clear the retained label."
+}

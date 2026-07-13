@@ -260,7 +260,7 @@ modules listed in Section 0.
     `execution-binding-v6/` preserve respectively a non-renderable preamble
     failure, undeclared treatment reads, and a timed-out treatment proof with
     continuing strict findings. All pairs remain comparison-ineligible.
-  - `execution-repair-v1/` through `execution-repair-v18/` preserve the move to
+  - `execution-repair-v1/` through `execution-repair-v20/` preserve the move to
     exact replacement blocks, transactional additive materialization, detector
     reruns, and bounded repaired artifacts. V13 removes the verified arm's one
     text-text collision but exposes the previous false-success boundary:
@@ -273,9 +273,14 @@ modules listed in Section 0.
     band-shape authority. V17 then proves that an exact path-clash repair can
     regress into a new text-text collision and preserves that failed attempt.
     V18 repairs the regression: text-text and semantic-path crossings are both
-    zero and rendered text/path candidates fall from eight to seven. The
-    structural gate remains failed, so none of these attempts constitutes a
-    fair ablation, scaffold approval, or human publication verdict.
+    zero and rendered text/path candidates fall from eight to seven. V19
+    preserves a failed two-line title reflow that introduced two collisions
+    with the retained-carrier label. V20 adds the missing vertical-clearance
+    condition: the sample title clears both electrodes and the retained label,
+    text-text returns to zero, and rendered text/path candidates fall from
+    seven to five. The structural gate remains failed, so none of these
+    attempts constitutes a fair ablation, scaffold approval, or human
+    publication verdict.
   - Commits `771c339d`, `a30ff450`, `3d16305e`, and `5a2e895f` bind the v12
     renderer-neutral semantic packet, fail-closed authority and selector checks,
     transactional version publishing, and authenticated page evidence at
@@ -305,10 +310,11 @@ modules listed in Section 0.
 **Current next executable step:** Slice 1 remains `pending_human_review` on the
 four current hash-bound views. Slice 2 `comparable-v2/` is transcript-bound,
 cleanly reproducible, human-rejected, and product-unauthorized. Continue from
-the verified-derived v18 source. Bind only visually confirmed Panel A
-label/path defects before another bounded repair; detector-only `V`, `t`, and
-metric-label candidates remain review-only until their intended axis or wiring
-relations are adjudicated. Keep all band-energy shape changes blocked until
+the verified-derived v20 source. The next visually confirmed Panel A defect is
+the `sign-agnostic carrier` label crossing the left electrode and panel edge;
+bind that exact label/path defect before another bounded repair. Detector-only
+`V`, `t`, and metric-label candidates remain review-only until their intended
+axis or wiring relations are adjudicated. Keep all band-energy shape changes blocked until
 their physical and mathematical authority is reviewed. Do not start a new
 renderer, fixture, or manual polish lane, and do not request a human scaffold
 verdict while the structural gate remains failed.

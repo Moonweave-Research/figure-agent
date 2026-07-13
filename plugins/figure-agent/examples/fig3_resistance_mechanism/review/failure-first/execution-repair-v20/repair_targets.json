@@ -1,0 +1,27 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v19/repaired_generated.tex",
+  "source_sha256": "sha256:5578cf356365b2f4378f44f9834ee04ff35beae380d27471450e562380a25ac3",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v20/collisions.before.json",
+        "id": "TC001"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-sample-title-vertical-clearance",
+        "anchor_start": "  at (3.515,2.44) {electrode};",
+        "anchor_end": "\\draw[draw=cGray, line width=0.45pt]"
+      },
+      "repair_family": "local_reposition",
+      "protected_invariants": [
+        "disordered",
+        "sulfur--polymer film",
+        "electrode",
+        "retained"
+      ]
+    }
+  ]
+}
