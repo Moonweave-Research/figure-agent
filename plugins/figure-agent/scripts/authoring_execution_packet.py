@@ -29,6 +29,14 @@ ALLOWED_REPOSITORY_READ_PATHS = (
 )
 ATTEMPT_ROOT = Path("review/failure-first")
 ATTEMPT_NAME = re.compile(r"execution-binding-v[1-9][0-9]*")
+COMPARISON_NAME = re.compile(r"comparable-v[1-9][0-9]*")
+COMPARISON_OUTPUT_NAMES = frozenset(
+    {
+        "raw_generated.tex",
+        "verified_generated.tex",
+        "repaired_generated.tex",
+    }
+)
 ORRO_LANE_ID = re.compile(r"[a-z0-9][a-z0-9-]*")
 
 
@@ -319,12 +327,22 @@ def _resolve_regular_file(workspace_root: Path, value: str, *, label: str) -> Pa
 def _validate_output_path(workspace_root: Path, name: str, value: str) -> Path:
     relative = _safe_relative_path(value, label="output path")
     required_root = Path("examples") / name / ATTEMPT_ROOT
-    if (
-        relative.parent.parent != required_root
-        or not ATTEMPT_NAME.fullmatch(relative.parent.name)
-    ):
+    if relative.parent.parent != required_root:
         raise AuthoringExecutionPacketError(
-            "output path must remain inside a versioned execution-binding-v directory"
+            "output path must remain inside a versioned execution-binding-v or "
+            "comparable-v directory"
+        )
+    directory_name = relative.parent.name
+    is_execution_attempt = bool(ATTEMPT_NAME.fullmatch(directory_name))
+    is_comparison = bool(COMPARISON_NAME.fullmatch(directory_name))
+    if not is_execution_attempt and not is_comparison:
+        raise AuthoringExecutionPacketError(
+            "output path must remain inside a versioned execution-binding-v or "
+            "comparable-v directory"
+        )
+    if is_comparison and relative.name not in COMPARISON_OUTPUT_NAMES:
+        raise AuthoringExecutionPacketError(
+            "output path must name a declared comparable arm"
         )
     if relative.suffix != ".tex":
         raise AuthoringExecutionPacketError("output path must end in .tex")

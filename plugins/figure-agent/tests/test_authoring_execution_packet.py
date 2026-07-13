@@ -293,6 +293,46 @@ def test_accepts_a_new_versioned_attempt_directory(tmp_path: Path) -> None:
     assert packet["output_path"].endswith("execution-binding-v2/control_generated.tex")
 
 
+def test_accepts_declared_comparable_arm_output(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    packet, prompt = _compile(
+        workspace,
+        output_path=(
+            "examples/context_demo/review/failure-first/comparable-v2/"
+            "verified_generated.tex"
+        ),
+    )
+
+    assert packet["output_path"].endswith(
+        "comparable-v2/verified_generated.tex"
+    )
+    assert "Use only the preamble palette tokens" in prompt
+    assert (
+        "Write exactly one new source to "
+        "[examples/context_demo/review/failure-first/comparable-v2/"
+        "verified_generated.tex]."
+    ) in prompt
+
+
+def test_rejects_undeclared_comparable_output_name(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    with pytest.raises(
+        authoring_execution_packet.AuthoringExecutionPacketError,
+        match="declared comparable arm",
+    ):
+        _compile(
+            workspace,
+            output_path=(
+                "examples/context_demo/review/failure-first/comparable-v2/"
+                "invented_generated.tex"
+            ),
+        )
+
+
 def test_rejects_duplicate_mandatory_requirements() -> None:
     prompt = "\n".join(
         [
