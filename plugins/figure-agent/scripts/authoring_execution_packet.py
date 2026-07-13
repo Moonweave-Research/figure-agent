@@ -37,6 +37,11 @@ COMPARISON_OUTPUT_NAMES = frozenset(
         "repaired_generated.tex",
     }
 )
+COMPARISON_ARTIFACT_NAMES = frozenset(
+    f"{arm}_{kind}{suffix}"
+    for arm in ("raw", "verified", "repaired")
+    for kind, suffix in (("packet", ".json"), ("prompt", ".md"))
+)
 ORRO_LANE_ID = re.compile(r"[a-z0-9][a-z0-9-]*")
 
 
@@ -367,13 +372,22 @@ def resolve_attempt_artifact_path(
     """Resolve a new packet-side artifact inside the fixture attempt directory."""
     relative = _safe_relative_path(value, label="attempt artifact")
     required_root = Path("examples") / name / ATTEMPT_ROOT
-    if (
-        relative.parent.parent != required_root
-        or not ATTEMPT_NAME.fullmatch(relative.parent.name)
-        or relative.suffix != suffix
-    ):
+    if relative.parent.parent != required_root or relative.suffix != suffix:
         raise AuthoringExecutionPacketError(
-            f"attempt artifact must be a {suffix} file inside execution-binding-vN"
+            f"attempt artifact must be a {suffix} file inside execution-binding-vN "
+            "or comparable-vN"
+        )
+    directory_name = relative.parent.name
+    is_execution_attempt = bool(ATTEMPT_NAME.fullmatch(directory_name))
+    is_comparison = bool(COMPARISON_NAME.fullmatch(directory_name))
+    if not is_execution_attempt and not is_comparison:
+        raise AuthoringExecutionPacketError(
+            f"attempt artifact must be a {suffix} file inside execution-binding-vN "
+            "or comparable-vN"
+        )
+    if is_comparison and relative.name not in COMPARISON_ARTIFACT_NAMES:
+        raise AuthoringExecutionPacketError(
+            "attempt artifact must name a declared comparable artifact"
         )
     path = workspace_root.resolve() / relative
     current = workspace_root.resolve()

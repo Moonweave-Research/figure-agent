@@ -1,0 +1,61 @@
+schema: figure-agent.failure-ablation-comparison.v1
+fixture: fig3_resistance_mechanism
+comparison_eligibility: eligible_equal_input
+comparison_question: >-
+  Does pre-authoring Figure Agent contract injection reduce machine-detectable
+  defects relative to free LLM authoring, and does one declared layout lane add
+  value beyond the style contract?
+shared_contract:
+  model_contract_path: ../model_contract.yaml
+  model_contract_sha256: sha256:9d969e65514446c9ea822e099c48372d1bead7bde2d38787b3e1fbf9c9cb2545
+  input_packet_path: ../input_packet.yaml
+  input_packet_sha256: sha256:dc301d15cb39fd431f48098b5f07c5b66e8bde35152729a48567b6005fd15dfb
+  budget_contract_path: ../budget_contract.yaml
+  budget_contract_sha256: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+  starting_artifact_path: blank_start.txt
+  starting_artifact_sha256: sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+  authoring_attempts_per_condition: 1
+  feedback_rounds: 0
+  manual_repairs: 0
+conditions:
+  raw:
+    condition_id: raw
+    intervention: free_authoring_without_figure_agent_contract
+    prompt_path: raw_prompt.md
+    prompt_sha256: sha256:ccbf9a871570487b4e63ad7dcc91ee2f120a9e51c1ec78706f108414f88c9c35
+    authoring_attempts: 1
+    starting_artifact_path: blank_start.txt
+  verified:
+    condition_id: verified
+    intervention: figure_agent_style_contract_injected_before_authoring
+    packet_path: verified_packet.json
+    packet_sha256: sha256:18063d2693569cfafb70bc02841af2725fc4efef4cf0007f869edde332c532ad
+    prompt_path: verified_prompt.md
+    prompt_sha256: sha256:5433460f1d13cef1fe00f622b19f49272433590b8d553c8b26018a479dbd8346
+    authoring_attempts: 1
+    starting_artifact_path: blank_start.txt
+  repaired:
+    condition_id: repaired
+    intervention: >-
+      figure_agent_style_contract_and_declared_layout_lane_injected_before_authoring
+    packet_path: repaired_packet.json
+    packet_sha256: sha256:872e16ecffeeef6c387f07caacc835a302dfd5974e2c47aa700b29c9165b333f
+    prompt_path: repaired_prompt.md
+    prompt_sha256: sha256:531d825a0b634e3565576ba6ba82a4b33c9ae3ccdf6c7786ecc8ecfb5cda8560
+    authoring_attempts: 1
+    starting_artifact_path: blank_start.txt
+forbidden_authoring_inputs:
+  - ../../fig3_resistance_mechanism.tex
+  - ../raw_generated.tex
+  - ../verified_generated.tex
+  - ../repaired_generated.tex
+  - ../execution-binding-v*/
+  - ../execution-repair-v*/
+  - ../comparable-v1/
+  - examples/fig1_*/
+interpretation_boundary:
+  - Machine gates measure declared defect classes, not publication quality.
+  - No condition may inspect another condition output before authoring completes.
+  - The repaired label denotes pre-authoring layout injection, not post-hoc repair.
+  - Human scaffold and review verdicts remain required for Slice closure.
+publication_acceptance: not_claimed

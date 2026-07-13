@@ -333,6 +333,46 @@ def test_rejects_undeclared_comparable_output_name(tmp_path: Path) -> None:
         )
 
 
+def test_resolves_declared_comparable_packet_artifact(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    path = authoring_execution_packet.resolve_attempt_artifact_path(
+        workspace,
+        "context_demo",
+        (
+            "examples/context_demo/review/failure-first/comparable-v2/"
+            "verified_packet.json"
+        ),
+        suffix=".json",
+    )
+
+    assert path == (
+        workspace
+        / "examples/context_demo/review/failure-first/comparable-v2/"
+        "verified_packet.json"
+    )
+
+
+def test_rejects_undeclared_comparable_packet_artifact(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    with pytest.raises(
+        authoring_execution_packet.AuthoringExecutionPacketError,
+        match="declared comparable artifact",
+    ):
+        authoring_execution_packet.resolve_attempt_artifact_path(
+            workspace,
+            "context_demo",
+            (
+                "examples/context_demo/review/failure-first/comparable-v2/"
+                "invented_packet.json"
+            ),
+            suffix=".json",
+        )
+
+
 def test_rejects_duplicate_mandatory_requirements() -> None:
     prompt = "\n".join(
         [
