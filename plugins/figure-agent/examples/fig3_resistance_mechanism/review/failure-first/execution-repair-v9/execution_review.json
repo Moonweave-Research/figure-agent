@@ -1,0 +1,42 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "attempt": "execution-repair-v9",
+  "decision": "machine_target_resolved_human_pending",
+  "target_finding": "UG001",
+  "repair_family": "semantic_row_reposition",
+  "repair_strategy": "lower_composition_arrow_row_below_panel_title",
+  "source": {
+    "path": "review/failure-first/execution-repair-v9/repaired_generated.tex",
+    "sha256": "sha256:4ba0d4ddb5c6af2a521f724a64c68abc73c57dc1d6ecf44cabd611537e257b49",
+    "based_on": "review/failure-first/execution-repair-v8/repaired_generated.tex"
+  },
+  "before": {
+    "evidence_path": "review/failure-first/execution-detector-evaluation-v1/evaluation_review.json",
+    "evidence_sha256": "sha256:98a965b9bfcf91431033e69bbea14effe8fcb689249961ed7a576f1ecc35cfb2",
+    "actionable_candidates": 1,
+    "target": "rendered semantic arrow crosses text 'landscape'"
+  },
+  "after": {
+    "report_path": "review/failure-first/execution-repair-v9/undeclared_geometry.json",
+    "report_sha256": "sha256:b8d1a91b45411837bc9f015b4e7746ab81917341fcea1cb793519acdf65b1f30",
+    "actionable_candidates": 0,
+    "downranked_conceptual_geometry": 10
+  },
+  "changed_source_lines": 2,
+  "protected_semantics": [
+    "increasing sulfur content",
+    "S60 $\\rightarrow$ S80",
+    "trap-energy landscape"
+  ],
+  "verification": {
+    "normal_compile": "pass",
+    "target_detector": "pass_zero_actionable_candidates",
+    "strict_compile": "fail_existing_visual_clash_candidates",
+    "human_review": "pending"
+  },
+  "remaining_blockers": [
+    "visual_clash_candidates_require_separate_adjudication",
+    "human_scaffold_review_pending"
+  ],
+  "publication_acceptance": "not_claimed"
+}

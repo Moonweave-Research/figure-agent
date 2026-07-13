@@ -413,6 +413,9 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/execution-repair-v8/source_selector_registry.json",
         "review/failure-first/execution-detector-evaluation-v1/evaluation_review.json",
         "review/failure-first/execution-detector-evaluation-v1/undeclared_geometry.json",
+        "review/failure-first/execution-repair-v9/execution_review.json",
+        "review/failure-first/execution-repair-v9/repaired_generated.tex",
+        "review/failure-first/execution-repair-v9/undeclared_geometry.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "examples/fig3_resistance_mechanism/review/failure-first/"
@@ -1280,6 +1283,28 @@ def test_detector_evaluation_keeps_one_rendered_semantic_crossing_actionable() -
         "label_crosses_semantic_path"
     ]
     assert report["candidates"][0]["nearest_text"] == "landscape"
+    assert review["verification"]["human_review"] == "pending"
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_execution_repair_v9_resolves_rendered_landscape_crossing() -> None:
+    attempt_root = REVIEW / "execution-repair-v9"
+    review = json.loads(
+        (attempt_root / "execution_review.json").read_text(encoding="utf-8")
+    )
+    report = json.loads(
+        (attempt_root / "undeclared_geometry.json").read_text(encoding="utf-8")
+    )
+
+    assert review["decision"] == "machine_target_resolved_human_pending"
+    assert review["before"]["actionable_candidates"] == 1
+    assert review["after"]["actionable_candidates"] == 0
+    assert review["after"]["report_sha256"] == _sha256(
+        attempt_root / "undeclared_geometry.json"
+    )
+    assert report["profile"] == "schematic"
+    assert report["total"] == 0
+    assert report["candidates"] == []
     assert review["verification"]["human_review"] == "pending"
     assert review["publication_acceptance"] == "not_claimed"
 

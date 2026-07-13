@@ -154,6 +154,9 @@ allowed_review_paths:
   - review/failure-first/execution-repair-v8/source_selector_registry.json
   - review/failure-first/execution-detector-evaluation-v1/evaluation_review.json
   - review/failure-first/execution-detector-evaluation-v1/undeclared_geometry.json
+  - review/failure-first/execution-repair-v9/execution_review.json
+  - review/failure-first/execution-repair-v9/repaired_generated.tex
+  - review/failure-first/execution-repair-v9/undeclared_geometry.json
 allowed_repository_paths:
   - examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v5/control_generated.tex
   - plugins/figure-agent/bin/fig-agent
