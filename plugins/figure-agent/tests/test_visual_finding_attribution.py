@@ -316,6 +316,24 @@ def test_page_index_mismatch_is_unbound(tmp_path: Path) -> None:
     assert result["reason"] == "page_index_mismatch"
 
 
+def test_cross_semantic_source_selector_id_is_unbound(tmp_path: Path) -> None:
+    module = _module()
+    fixture, selector = _source(tmp_path)
+    selector["selector_id"] = "other.region"
+    contract = _contract(selector)
+
+    result = module.attribute_visual_finding(
+        {"id": "VC001", "bbox_px": [100, 700, 300, 900], "confidence": 0.1},
+        detector_render=_render(contract["page_geometry"]),
+        semantic_contract=contract,
+        fixture_dir=fixture,
+    )
+
+    assert result["state"] == "unbound"
+    assert result["reason"] == "source_selector_id_mismatch"
+    assert result["region_candidates"] == ["target.region"]
+
+
 def test_visual_clash_result_assembly_can_attach_attribution(tmp_path: Path) -> None:
     fixture, selector = _source(tmp_path)
     contract = _contract(selector)

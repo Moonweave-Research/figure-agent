@@ -175,12 +175,16 @@ def _winning_region(candidates: list[dict[str, Any]]) -> dict[str, Any] | None:
 def _fresh_source_selector(
     fixture_dir: Path,
     source: object,
+    *,
+    expected_selector_id: str,
 ) -> tuple[dict[str, Any] | None, str | None]:
     if not isinstance(source, dict):
         return None, "source_binding_missing"
     binding_state = source.get("binding_state")
     if binding_state != "exact":
         return None, f"source_binding_{binding_state or 'missing'}"
+    if source.get("selector_id") != expected_selector_id:
+        return None, "source_selector_id_mismatch"
     relative = Path(str(source.get("path") or ""))
     if relative.is_absolute() or ".." in relative.parts or not relative.parts:
         return None, "source_path_unsafe"
@@ -335,7 +339,11 @@ def attribute_visual_finding(
             "region_candidates": sorted(str(region.get("id")) for region in candidates),
         }
     region_id = str(winner.get("id"))
-    selector, source_error = _fresh_source_selector(fixture_dir, winner.get("source"))
+    selector, source_error = _fresh_source_selector(
+        fixture_dir,
+        winner.get("source"),
+        expected_selector_id=region_id,
+    )
     if source_error is not None:
         state = "ambiguous" if "ambiguous" in source_error else "unbound"
         return {

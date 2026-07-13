@@ -59,6 +59,7 @@ bindings:
     binding_state: exact
     full_render_sha256: sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947
     page_render_sha256: sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947
+    page_index: 0
   - <<: *exact_voltage
     semantic_id: trap_site
     region_id: trap_site

@@ -139,6 +139,7 @@ def _binding_failure(
     *,
     full_render_sha256: str,
     page_render_sha256: str,
+    page_index: int,
 ) -> str | None:
     if not records:
         return "binding_missing"
@@ -152,7 +153,23 @@ def _binding_failure(
         return "full_render_hash_mismatch"
     if binding.get("page_render_sha256") != page_render_sha256:
         return "page_render_hash_mismatch"
+    if binding.get("page_index") != page_index:
+        return "page_index_mismatch"
     return None
+
+
+def _page_render_size(path: Path) -> tuple[int, int]:
+    try:
+        with Image.open(path) as opened:
+            if opened.format != "PNG":
+                raise SemanticLegibilityEvidenceError("page_render_format_unsupported")
+            size = opened.size
+            opened.verify()
+    except SemanticLegibilityEvidenceError:
+        raise
+    except (OSError, SyntaxError, ValueError) as exc:
+        raise SemanticLegibilityEvidenceError("page_render_invalid") from exc
+    return size
 
 
 def _reject_symlink_outputs(
@@ -345,6 +362,10 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
         global_hash_failure = "full_render_hash_mismatch"
     elif declared_page_render_hash != page_render_sha256:
         global_hash_failure = "page_render_hash_mismatch"
+    page_render_size = _page_render_size(page_render_path)
+    page_index = render.get("page_index")
+    if not isinstance(page_index, int) or isinstance(page_index, bool) or page_index < 0:
+        raise SemanticLegibilityEvidenceError("page_index_invalid")
 
     subjects = payload.get("subjects")
     if not isinstance(subjects, list) or not subjects:
@@ -373,6 +394,20 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
     image_size_failure = None
     if list(source_image.size) != declared_image_size:
         image_size_failure = "render_image_size_mismatch"
+    elif list(page_render_size) != declared_image_size:
+        image_size_failure = "page_render_image_size_mismatch"
+    detector_geometry = (
+        detector_render.get("page_geometry") if isinstance(detector_render, dict) else None
+    )
+    semantic_geometry = semantic_regions.get("page_geometry")
+    page_index_failure = None
+    if (
+        not isinstance(detector_geometry, dict)
+        or not isinstance(semantic_geometry, dict)
+        or page_index != detector_geometry.get("page_index")
+        or page_index != semantic_geometry.get("page_index")
+    ):
+        page_index_failure = "page_index_mismatch"
 
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     staging = tempfile.TemporaryDirectory(prefix=".semantic-legibility-", dir=output_dir.parent)
@@ -450,7 +485,7 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
         declarations = declared_objects if kind == "object" else declared_relations
         declaration = declarations.get(semantic_id)
         declared = declaration is not None
-        reason = global_hash_failure or image_size_failure
+        reason = global_hash_failure or image_size_failure or page_index_failure
         if not declared:
             reason = "semantic_declaration_missing"
         if reason is None:
@@ -458,6 +493,7 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
                 binding_index.get(semantic_id, []),
                 full_render_sha256=full_render_sha256,
                 page_render_sha256=page_render_sha256,
+                page_index=page_index,
             )
         if reason is not None:
             records.append(
@@ -501,6 +537,16 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
                     "state": "unbound",
                     "review_disposition": "review_only",
                     "reason": attribution.get("reason", "region_binding_mismatch"),
+                }
+            )
+            continue
+        if attribution.get("source_selector", {}).get("selector_id") != semantic_id:
+            records.append(
+                {
+                    **base_record,
+                    "state": "unbound",
+                    "review_disposition": "review_only",
+                    "reason": "source_selector_subject_mismatch",
                 }
             )
             continue

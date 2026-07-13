@@ -46,7 +46,7 @@
   "human_verdict": "pending",
   "input_hashes": {
     "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
-    "input_sha256": "sha256:e6f48ca86b36a13796ca851a30391e1640770d46b3fe48937a9663934afcfbed",
+    "input_sha256": "sha256:c90526917e81924c15447af728cfa64e0b0bc7bb252d631374510982214a151b",
     "page_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
     "semantic_contract_sha256": "sha256:2b3b9831f27a65ff586d9977ad3fab74153bd903fbfc2bc7ec44aaa2c95c901d",
     "semantic_regions_sha256": "sha256:e043fc409ccac06fe44572307e212e100d0fd6e36fa9f700b3561979653698ee"
@@ -63,7 +63,7 @@
       "sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947"
     }
   },
-  "review_input_hash": "sha256:f7cbd6e5a62b1409c6348e228a1d369b427ad25ce9a44a20f892eea547f163cc",
+  "review_input_hash": "sha256:b286706e1dfca39ce3be26cfc58281155ceac75ddf31031567523331f1d6b96f",
   "schema": "figure-agent.semantic-legibility-evidence.v1",
   "semantic_preservation": "not_claimed_pending_human_review",
   "subjects": [
@@ -96,7 +96,7 @@
           1162,
           362
         ],
-        "path": "generated/e1b21ff13c3db7076677d3f1ce5f23fa22e4bbac846ce1a63bc0678559ec5941/crops/voltage_relation.png"
+        "path": "generated/6616ad262c42e97951c9fab2c5a612b843140c7b539832a3be25050c8df62e4c/crops/voltage_relation.png"
       },
       "expected_readings": [
         "V is connected to both electrodes"
@@ -166,7 +166,7 @@
           867,
           447
         ],
-        "path": "generated/e1b21ff13c3db7076677d3f1ce5f23fa22e4bbac846ce1a63bc0678559ec5941/crops/trap_site.png"
+        "path": "generated/6616ad262c42e97951c9fab2c5a612b843140c7b539832a3be25050c8df62e4c/crops/trap_site.png"
       },
       "expected_readings": [
         "gray cross is an available trap site"
@@ -237,7 +237,7 @@
           502,
           512
         ],
-        "path": "generated/e1b21ff13c3db7076677d3f1ce5f23fa22e4bbac846ce1a63bc0678559ec5941/crops/capture_event.png"
+        "path": "generated/6616ad262c42e97951c9fab2c5a612b843140c7b539832a3be25050c8df62e4c/crops/capture_event.png"
       },
       "expected_readings": [
         "red ring is a carrier capture event"
@@ -308,7 +308,7 @@
           3282,
           832
         ],
-        "path": "generated/e1b21ff13c3db7076677d3f1ce5f23fa22e4bbac846ce1a63bc0678559ec5941/crops/n_breadth.png"
+        "path": "generated/6616ad262c42e97951c9fab2c5a612b843140c7b539832a3be25050c8df62e4c/crops/n_breadth.png"
       },
       "expected_readings": [
         "n encodes horizontal distribution breadth"
@@ -379,7 +379,7 @@
           2772,
           562
         ],
-        "path": "generated/e1b21ff13c3db7076677d3f1ce5f23fa22e4bbac846ce1a63bc0678559ec5941/crops/rho60s_magnitude.png"
+        "path": "generated/6616ad262c42e97951c9fab2c5a612b843140c7b539832a3be25050c8df62e4c/crops/rho60s_magnitude.png"
       },
       "expected_readings": [
         "rho60s encodes vertical distribution magnitude"

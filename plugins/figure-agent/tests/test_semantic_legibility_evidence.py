@@ -215,6 +215,7 @@ def _input(tmp_path: Path) -> tuple[Path, dict]:
             "binding_state": "exact",
             "full_render_sha256": full_hash,
             "page_render_sha256": page_render_hash,
+            "page_index": 0,
             "page_sha256": legacy_page_hash,
         }
         for item in subjects
@@ -306,6 +307,7 @@ def test_conflicting_normalized_authority_claims_block_subject(tmp_path: Path) -
         ("stale", "binding_stale"),
         ("duplicate", "binding_duplicate"),
         ("render_hash", "full_render_hash_mismatch"),
+        ("page_index", "page_index_mismatch"),
     ],
 )
 def test_invalid_render_object_selector_bindings_fail_closed(
@@ -320,6 +322,8 @@ def test_invalid_render_object_selector_bindings_fail_closed(
         binding["binding_state"] = "stale"
     elif mutation == "duplicate":
         payload["bindings"].append(dict(binding))
+    elif mutation == "page_index":
+        binding["page_index"] = 1
     else:
         binding["full_render_sha256"] = "sha256:" + "0" * 64
     _write_yaml(input_path, payload)
@@ -460,6 +464,76 @@ def test_declared_detector_image_size_must_match_actual_raster(tmp_path: Path) -
 
     assert {subject["state"] for subject in packet["subjects"]} == {"unbound"}
     assert {subject["reason"] for subject in packet["subjects"]} == {"render_image_size_mismatch"}
+
+
+def test_duplicate_cross_semantic_selector_id_is_unbound(tmp_path: Path) -> None:
+    module = _module()
+    input_path, _ = _input(tmp_path)
+    regions_path = input_path.parent / "semantic_regions.yaml"
+    regions = yaml.safe_load(regions_path.read_text(encoding="utf-8"))
+    trap_source = regions["regions"][0]["source"]
+    capture_source = regions["regions"][1]["source"]
+    trap_source.clear()
+    trap_source.update(capture_source)
+    _write_yaml(regions_path, regions)
+
+    packet = module.compile_semantic_legibility_evidence(input_path, tmp_path / "packet")
+
+    trap = next(item for item in packet["subjects"] if item["semantic_id"] == "trap_site")
+    assert trap["state"] == "unbound"
+    assert trap["review_disposition"] == "review_only"
+    assert trap["reason"] == "source_selector_id_mismatch"
+    assert "crop" not in trap
+
+
+def test_invalid_page_render_bytes_are_rejected_with_controlled_error(
+    tmp_path: Path,
+) -> None:
+    module = _module()
+    input_path, payload = _input(tmp_path)
+    page_render = input_path.parent / "page-render.png"
+    page_render.write_bytes(b"not a raster image")
+    changed_hash = _sha256(page_render)
+    payload["render"]["page_render_sha256"] = changed_hash
+    for binding in payload["bindings"]:
+        binding["page_render_sha256"] = changed_hash
+    _write_yaml(input_path, payload)
+
+    with pytest.raises(module.SemanticLegibilityEvidenceError, match="page_render_invalid"):
+        module.compile_semantic_legibility_evidence(input_path, tmp_path / "packet")
+
+
+def test_page_render_dimensions_must_match_detector_raster(tmp_path: Path) -> None:
+    module = _module()
+    input_path, payload = _input(tmp_path)
+    page_render = input_path.parent / "page-render.png"
+    Image.new("RGB", (99, 100), "white").save(page_render)
+    changed_hash = _sha256(page_render)
+    payload["render"]["page_render_sha256"] = changed_hash
+    for binding in payload["bindings"]:
+        binding["page_render_sha256"] = changed_hash
+    _write_yaml(input_path, payload)
+
+    packet = module.compile_semantic_legibility_evidence(input_path, tmp_path / "packet")
+
+    assert {subject["state"] for subject in packet["subjects"]} == {"unbound"}
+    assert {subject["reason"] for subject in packet["subjects"]} == {
+        "page_render_image_size_mismatch"
+    }
+
+
+def test_explicit_page_index_must_match_semantic_and_detector_geometry(
+    tmp_path: Path,
+) -> None:
+    module = _module()
+    input_path, payload = _input(tmp_path)
+    payload["render"]["page_index"] = 1
+    _write_yaml(input_path, payload)
+
+    packet = module.compile_semantic_legibility_evidence(input_path, tmp_path / "packet")
+
+    assert {subject["state"] for subject in packet["subjects"]} == {"unbound"}
+    assert {subject["reason"] for subject in packet["subjects"]} == {"page_index_mismatch"}
 
 
 def test_mid_compile_failure_preserves_prior_packet_generated_crops_and_human_note(
