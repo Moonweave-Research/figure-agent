@@ -40,15 +40,17 @@
   \path[draw=cGray!85!black, fill=cAmberSphere!20, line width=0.45pt]
     (0.80,1.15) rectangle (3.80,2.93);
   \draw[draw=cBlue, line width=0.55pt]
-    (0.66,3.06) -- (0.66,3.40) -- (2.12,3.40);
+    (0.66,2.04) -- (0.66,3.08) -- (1.80,3.24);
   \draw[draw=cBlue, line width=0.55pt]
-    (4.08,3.06) -- (4.08,3.40) -- (2.48,3.40);
+    (3.94,2.04) -- (3.94,3.08) -- (2.80,3.24);
+  \draw[draw=cBlue, fill=white, line width=0.42pt] (1.80,3.24) circle (0.04cm);
+  \draw[draw=cBlue, fill=white, line width=0.42pt] (2.80,3.24) circle (0.04cm);
   \node[
-    font=\sffamily\bfseries\fontsize{7.2}{8.6}\selectfont,
+    font=\sffamily\fontsize{7.2}{8.6}\selectfont,
     text=cBlue,
     fill=white,
     inner sep=1.5pt
-  ] at (2.30,3.40) {$V$};
+  ] at (2.30,3.42) {V};
   \node[small note, text=cBrown, fill=white, inner xsep=3.0pt, inner ysep=3.0pt]
     at (2.30,3.02) {disordered sulfur-polymer film};
 
@@ -93,10 +95,10 @@
     (0.96,2.18) -- (1.24,2.43) -- (1.58,2.08) -- (1.92,2.54)
     -- (2.18,1.82) -- (2.48,2.02) -- (2.78,1.56) -- (3.10,1.88)
     -- (3.36,1.52);
-  \foreach \x/\y in {1.24/2.43,1.92/2.54,2.48/2.02,3.10/1.88}{
-    \draw[cRed, line width=0.35pt] (\x-0.10,\y-0.10) -- (\x+0.10,\y+0.10); % red capture mark
-    \draw[cRed, line width=0.35pt] (\x-0.10,\y+0.10) -- (\x+0.10,\y-0.10);
-  }
+  \draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring
+  \draw[cRed, line width=0.42pt] (1.92,2.54) circle (0.12cm); % red capture ring
+  \draw[cRed, line width=0.42pt] (2.48,2.02) circle (0.12cm); % red capture ring
+  \draw[cRed, line width=0.42pt] (3.10,1.88) circle (0.12cm); % red capture ring
   \node[circle, draw=cBlue!85!black, fill=cBlue!55, minimum size=2.0mm, inner sep=0pt, line width=0.35pt]
     at (0.96,2.18) {};
   \node[circle, draw=cRed!85!black, fill=cRed!45, minimum size=2.3mm, inner sep=0pt, line width=0.35pt]

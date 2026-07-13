@@ -1,0 +1,55 @@
+{
+  "candidates": [
+    {
+      "bbox_px": [
+        1851,
+        153,
+        1899,
+        214
+      ],
+      "id": "VC001",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.027,
+        "edge": 0.008
+      },
+      "tex_lines": null,
+      "text": "B"
+    },
+    {
+      "bbox_px": [
+        876,
+        302,
+        944,
+        342
+      ],
+      "id": "VC002",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.016,
+        "edge": 0.007
+      },
+      "tex_lines": null,
+      "text": "film"
+    },
+    {
+      "bbox_px": [
+        1161,
+        545,
+        1197,
+        642
+      ],
+      "id": "VC003",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.02,
+        "edge": 0.009
+      },
+      "tex_lines": null,
+      "text": "I(t)"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "build/repaired_generated.pdf",
+  "total": 3
+}

@@ -7,11 +7,12 @@
     "panel_a_text_budget",
     "panel_b_text_budget"
   ],
-  "repair_family": "semantic_editorial_compression",
-  "repair_strategy": "replace textual trap glyphs with vectors and remove only redundant labels while preserving protected scientific semantics",
+  "repair_family": "density_compliance_with_visual_semantics_pending",
+  "repair_strategy": "meet machine density budgets while retaining source relations for human semantic review",
+  "semantic_preservation": "not_claimed_pending_human_review",
   "source": {
     "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
-    "sha256": "sha256:044f11b7131a056172ea95793a022a83eb9e947dd13c6eb41ffb7eb6551353c9",
+    "sha256": "sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e",
     "based_on": "review/failure-first/execution-repair-v11/repaired_generated.tex",
     "based_on_sha256": "sha256:2fe58ef91197e876f6f565d5d3cb83b04252abdb573cde41d7a233a76d97eb5f"
   },
@@ -34,6 +35,8 @@
   "after": {
     "layout_report_path": "review/failure-first/execution-repair-v12/layout_report.json",
     "layout_report_sha256": "sha256:001612e43ded1df764b298b47295f8291572aa6da520456ed08532661aec257a",
+    "raw_visual_clash_path": "review/failure-first/execution-repair-v12/raw_visual_clash.json",
+    "raw_visual_clash_sha256": "sha256:374597d523b3b1d5ea6617a0bc6c55708eaa3ef7ba5af38348bee993fa6be802",
     "visual_clash_path": "review/failure-first/execution-repair-v12/visual_clash.json",
     "visual_clash_sha256": "sha256:26e7494dac1e3e6a0447a998a229f506d9d9d90dfd49e45d736a19763d1c4371",
     "findings": 0,
@@ -62,9 +65,11 @@
     "layout_command": "python3 scripts/checks/check_layout_drift.py --pdf examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v12/build/repaired_generated.pdf --layout-contract examples/fig3_resistance_mechanism/review/failure-first/execution-scaffold-evaluation-v1/layout_contract.yaml --json-output /tmp/fig3-execution-repair-v12-layout-report.json --strict"
   },
   "agent_visual_review": {
-    "voltage_cue": "nonpolar_bracket_connected_to_both_electrodes",
+    "voltage_cue_geometry": "compact_nonpolar_connected_candidate",
+    "voltage_ownership": "human_pending",
     "film_label": "single_line_unhyphenated",
-    "trap_marks": "nine_gray_vector_crosses_distinct_from_four_red_capture_marks",
+    "trap_marks": "nine_gray_vector_crosses_and_four_red_open_rings_present",
+    "capture_release_glyph_grammar": "human_pending",
     "magnitude_ownership": "human_pending",
     "s60_shallow_deep_nuance": "human_review_item",
     "publication_quality": "not_established"
@@ -74,11 +79,17 @@
     "layout_strict": "pass",
     "layout_boundary_rules": "pass_five_of_five",
     "visual_clash_candidates": 0,
+    "raw_visual_clash_candidates": 3,
+    "raw_visual_clash_v_candidates": 0,
+    "v12_voltage_suppression_used": false,
+    "historical_voltage_suppression_status": "not_used_for_v12_raw_evidence",
     "undeclared_geometry_candidates": 0,
     "human_review": "pending"
   },
   "boundary_authority": "pending_human_confirmation",
   "remaining_blockers": [
+    "voltage_ownership_human_review_pending",
+    "capture_release_glyph_grammar_human_review_pending",
     "magnitude_ownership_human_review_pending",
     "s60_shallow_deep_nuance_human_review_pending",
     "human_scaffold_review_pending"
