@@ -204,6 +204,29 @@ def test_context_pack_maps_invalid_shape_profile_to_controlled_error(tmp_path: P
         )
 
 
+@pytest.mark.parametrize("yaml_payload", ["[]\n", "shape-profile\n", "null\n"])
+def test_context_pack_maps_non_mapping_shape_profile_payload_to_controlled_error(
+    tmp_path: Path,
+    yaml_payload: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    profile = fixture / "attempts" / "a1" / "shape.yaml"
+    profile.parent.mkdir(parents=True)
+    profile.write_text(yaml_payload, encoding="utf-8")
+
+    with pytest.raises(
+        authoring_context_pack.AuthoringContextPackError,
+        match="payload must be a mapping",
+    ):
+        authoring_context_pack.build_context_pack(
+            "context_demo",
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+            shape_profile="attempts/a1/shape.yaml",
+        )
+
+
 @pytest.mark.parametrize(
     "selector",
     [

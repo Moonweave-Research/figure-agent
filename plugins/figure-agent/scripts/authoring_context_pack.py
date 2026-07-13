@@ -267,7 +267,7 @@ def _shape_profile(
     if not profile_path.is_file():
         raise AuthoringContextPackError("shape profile not found or symlinked")
     raw_bytes = resolved_profile.read_bytes()
-    raw_payload = yaml.safe_load(raw_bytes) or {}
+    raw_payload = yaml.safe_load(raw_bytes)
     try:
         compiled = shape_profile_compiler.compile_shape_profile(raw_payload)
     except shape_profile_compiler.ShapeProfileError as exc:
