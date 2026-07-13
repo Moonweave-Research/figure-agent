@@ -447,6 +447,78 @@ def _authoring_preflight(argv: list[str]) -> int:
     return 0
 
 
+def _authoring_orro_plan(argv: list[str]) -> int:
+    import authoring_execution_packet
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-orro-plan")
+    parser.add_argument("--packet", required=True)
+    parser.add_argument("--goal", required=True)
+    parser.add_argument("--lane-id", required=True)
+    parser.add_argument("--workflow-out", required=True)
+    parser.add_argument("--role-lane-out", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    workspace_root = _paths().workspace_root.resolve()
+    try:
+        repository_root = Path(
+            subprocess.run(
+                ["git", "-C", str(workspace_root), "rev-parse", "--show-toplevel"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        ).resolve()
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        repository_root = workspace_root
+
+    def safe_path(root: Path, value: str, *, label: str) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError(f"{label} must be repository-relative and safe")
+        resolved = (root / relative).resolve(strict=False)
+        if not resolved.is_relative_to(root):
+            raise ValueError(f"{label} must remain inside its root")
+        return resolved
+
+    try:
+        packet_path = safe_path(workspace_root, args.packet, label="packet path")
+        packet = json.loads(packet_path.read_text(encoding="utf-8"))
+        workflow, role_lanes = authoring_execution_packet.compile_orro_execution_plans(
+            packet,
+            goal=args.goal,
+            lane_id=args.lane_id,
+        )
+        workflow_path = safe_path(
+            repository_root, args.workflow_out, label="workflow output"
+        )
+        role_lane_path = safe_path(
+            repository_root, args.role_lane_out, label="role-lane output"
+        )
+        authoring_execution_packet.write_orro_execution_plans(
+            workflow_path,
+            role_lane_path,
+            workflow=workflow,
+            role_lanes=role_lanes,
+        )
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"fig-agent authoring-orro-plan: {exc}", file=sys.stderr)
+        return 1
+    print(
+        json.dumps(
+            {
+                "workflow_plan": workflow,
+                "role_lane_plan": role_lanes,
+                "publication_acceptance": "not_claimed",
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
 def _authoring_receipt(argv: list[str]) -> int:
     import authoring_execution_receipt
 
@@ -1726,6 +1798,8 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_packet(rest)
     if command == "authoring-preflight":
         return _authoring_preflight(rest)
+    if command == "authoring-orro-plan":
+        return _authoring_orro_plan(rest)
     if command == "authoring-receipt":
         return _authoring_receipt(rest)
     if command == "authoring-input-audit":

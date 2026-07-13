@@ -29,6 +29,7 @@ ALLOWED_REPOSITORY_READ_PATHS = (
 )
 ATTEMPT_ROOT = Path("review/failure-first")
 ATTEMPT_NAME = re.compile(r"execution-binding-v[1-9][0-9]*")
+ORRO_LANE_ID = re.compile(r"[a-z0-9][a-z0-9-]*")
 
 
 class AuthoringExecutionPacketError(ValueError):
@@ -56,6 +57,232 @@ def canonical_packet_sha256(packet: dict[str, object]) -> str:
     """Hash canonical packet fields without recursively hashing the hash field."""
     payload = {key: value for key, value in packet.items() if key != "packet_sha256"}
     return _sha256_bytes(_canonical_json_bytes(payload))
+
+
+def _canonical_sha256(payload: object) -> str:
+    return hashlib.sha256(_canonical_json_bytes(payload)).hexdigest()
+
+
+def _validate_bound_packet(packet: dict[str, object]) -> None:
+    if packet.get("schema") != SCHEMA:
+        raise AuthoringExecutionPacketError("packet schema invalid")
+    if packet.get("packet_sha256") != canonical_packet_sha256(packet):
+        raise AuthoringExecutionPacketError("packet hash drift")
+    prompt = packet.get("prompt")
+    if not isinstance(prompt, dict):
+        raise AuthoringExecutionPacketError("packet prompt invalid")
+    prompt_text = prompt.get("utf8")
+    if not isinstance(prompt_text, str) or prompt.get("sha256") != _sha256_text(
+        prompt_text
+    ):
+        raise AuthoringExecutionPacketError("prompt hash drift")
+    _validate_prompt_requirements(prompt_text)
+
+
+def compile_orro_execution_plans(
+    packet: dict[str, object],
+    *,
+    goal: str,
+    lane_id: str,
+) -> tuple[dict[str, object], dict[str, object]]:
+    """Compile ORRO plans from one already byte-bound authoring packet."""
+    _validate_bound_packet(packet)
+    if not goal.strip():
+        raise AuthoringExecutionPacketError("ORRO goal must be non-empty")
+    if not ORRO_LANE_ID.fullmatch(lane_id):
+        raise AuthoringExecutionPacketError("ORRO lane id is invalid")
+    execution_cwd = Path(_safe_execution_cwd(str(packet.get("execution_cwd", "."))))
+    output_path = _safe_relative_path(str(packet["output_path"]), label="output path")
+    write_scope = [(execution_cwd / output_path).as_posix()]
+    model_id = str(packet["model_id"])
+    prompt = packet["prompt"]
+    assert isinstance(prompt, dict)
+    prompt_text = str(prompt["utf8"])
+    workflow: dict[str, object] = {
+        "boundary": {
+            "depone_verifies": True,
+            "orro_exposes_workflow": True,
+            "orro_is_third_engine": False,
+            "witnessd_executes": True,
+        },
+        "engine_calls": [
+            {
+                "command": "orro scout",
+                "engine": "witnessd",
+                "executes": False,
+                "phase": "scout",
+                "verifies": False,
+            },
+            {
+                "command": "orro flowplan",
+                "engine": "ORRO",
+                "executes": False,
+                "phase": "flowplan",
+                "verifies": False,
+            },
+            {
+                "command": "orro proofrun",
+                "engine": "witnessd",
+                "executes": True,
+                "phase": "proofrun",
+                "verifies": False,
+            },
+            {
+                "command": "orro proofcheck",
+                "engine": "Depone",
+                "executes": False,
+                "phase": "proofcheck",
+                "verifies": True,
+            },
+            {
+                "command": "orro handoff",
+                "engine": "ORRO",
+                "executes": False,
+                "phase": "handoff",
+                "verifies": False,
+            },
+        ],
+        "flow": ["scout", "flowplan", "proofrun", "proofcheck", "handoff"],
+        "forbidden_assurance_sources": [
+            "skill text",
+            "session transcript",
+            "model confidence",
+            "MCP output alone",
+            "engine-lock",
+            "doctor readiness",
+            "handoff prose",
+        ],
+        "goal": goal.strip(),
+        "kind": "orro-workflow-plan",
+        "profile": "code-change",
+        "required_gates": [
+            "proofrun emits evidence",
+            "proofcheck writes proofcheck-verdict.json",
+            "handoff requires passing bound proofcheck verdict",
+        ],
+        "roles": [
+            {
+                "engine": "ORRO/witnessd",
+                "may_execute": False,
+                "may_verify": False,
+                "phase": "scout",
+                "purpose": "collect repository context before planning",
+                "raises_assurance": False,
+                "role_id": "scout",
+            },
+            {
+                "engine": "ORRO/witnessd",
+                "may_execute": False,
+                "may_verify": False,
+                "phase": "flowplan",
+                "purpose": "compile an execution plan without running workers",
+                "raises_assurance": False,
+                "role_id": "planner",
+            },
+            {
+                "engine": "witnessd",
+                "may_execute": True,
+                "may_verify": False,
+                "phase": "proofrun",
+                "purpose": "execute the planned work and emit evidence",
+                "raises_assurance": False,
+                "role_id": "runner",
+            },
+            {
+                "engine": "Depone",
+                "may_execute": False,
+                "may_verify": True,
+                "phase": "proofcheck",
+                "purpose": "verify persisted evidence bytes",
+                "raises_assurance": False,
+                "role_id": "verifier",
+            },
+            {
+                "engine": "ORRO/witnessd",
+                "may_execute": False,
+                "may_verify": False,
+                "phase": "handoff",
+                "purpose": "package review references after proofcheck",
+                "raises_assurance": False,
+                "role_id": "handoff",
+            },
+        ],
+        "schema_version": "0.1",
+    }
+    capability = {
+        "adapters": ["codex"],
+        "capability": "execute",
+        "model": model_id,
+        "role_id": "runner",
+        "schema_version": "0.2",
+        "tools": {"allow": [], "mcp": []},
+        "write_scope": write_scope,
+    }
+    lane = {
+        "adapter": "codex",
+        "budget": {"max_depth": 1, "max_tokens": 0, "max_usd": 0.0},
+        "engine": "witnessd",
+        "granted_adapters": ["codex"],
+        "granted_tools": {"allow": [], "mcp": []},
+        "granted_write_scope": write_scope,
+        "lane_id": lane_id,
+        "may_execute": True,
+        "may_verify": False,
+        "model": model_id,
+        "model_source": "rolepack",
+        "phase": "proofrun",
+        "prompt": prompt_text,
+        "raises_assurance": False,
+        "region": write_scope,
+        "role_capability": capability,
+        "role_id": "runner",
+        "role_purpose": "execute the planned work and emit evidence",
+        "tier": "frontier",
+    }
+    role_lanes: dict[str, object] = {
+        "boundary": {
+            "approves_merge": False,
+            "depone_verifies": True,
+            "orro_exposes_workflow": True,
+            "raises_assurance": False,
+            "role_lane_plan_is_proof": False,
+            "witnessd_executes": True,
+        },
+        "execution_allowed": True,
+        "goal": goal.strip(),
+        "kind": "orro-role-lane-plan",
+        "lanes": [lane],
+        "schema_version": "0.1",
+        "workflow_plan_hash": _canonical_sha256(workflow),
+        "workflow_profile": "code-change",
+    }
+    return workflow, role_lanes
+
+
+def write_orro_execution_plans(
+    workflow_path: Path,
+    role_lane_path: Path,
+    *,
+    workflow: dict[str, object],
+    role_lanes: dict[str, object],
+) -> None:
+    """Persist a compiled ORRO plan pair once without weakening its binding."""
+    if workflow_path.exists() or workflow_path.is_symlink():
+        raise AuthoringExecutionPacketError("workflow plan already exists")
+    if role_lane_path.exists() or role_lane_path.is_symlink():
+        raise AuthoringExecutionPacketError("role-lane plan already exists")
+    if role_lanes.get("workflow_plan_hash") != _canonical_sha256(workflow):
+        raise AuthoringExecutionPacketError("workflow plan hash drift")
+    workflow_path.parent.mkdir(parents=True, exist_ok=True)
+    role_lane_path.parent.mkdir(parents=True, exist_ok=True)
+    workflow_path.write_text(
+        json.dumps(workflow, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    role_lane_path.write_text(
+        json.dumps(role_lanes, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _safe_relative_path(value: str, *, label: str) -> Path:

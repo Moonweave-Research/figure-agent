@@ -132,6 +132,62 @@ def test_binds_repo_relative_execution_cwd_into_packet_and_prompt(tmp_path: Path
     ) in prompt
 
 
+def test_compiles_orro_plan_from_bound_packet_without_prompt_or_scope_drift(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    packet, prompt = _compile(workspace, execution_cwd="plugins/figure-agent")
+
+    workflow, role_lanes = authoring_execution_packet.compile_orro_execution_plans(
+        packet,
+        goal="Execute the control packet once without repair.",
+        lane_id="context-control-v1-author",
+    )
+
+    assert workflow["kind"] == "orro-workflow-plan"
+    assert workflow["goal"] == "Execute the control packet once without repair."
+    assert role_lanes["kind"] == "orro-role-lane-plan"
+    assert role_lanes["workflow_plan_hash"] == hashlib.sha256(
+        json.dumps(
+            workflow,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+    ).hexdigest()
+    lane = role_lanes["lanes"][0]
+    expected_scope = [
+        "plugins/figure-agent/examples/context_demo/review/failure-first/"
+        "execution-binding-v1/control_generated.tex"
+    ]
+    assert lane["prompt"] == prompt
+    assert lane["model"] == "gpt-5.5"
+    assert lane["granted_write_scope"] == expected_scope
+    assert lane["region"] == expected_scope
+    assert lane["role_capability"]["write_scope"] == expected_scope
+    assert lane["may_execute"] is True
+    assert lane["may_verify"] is False
+    assert role_lanes["boundary"]["role_lane_plan_is_proof"] is False
+
+
+def test_orro_plan_rejects_packet_hash_drift(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    packet, _ = _compile(workspace)
+    packet["model_id"] = "different-model"
+
+    with pytest.raises(
+        authoring_execution_packet.AuthoringExecutionPacketError,
+        match="packet hash drift",
+    ):
+        authoring_execution_packet.compile_orro_execution_plans(
+            packet,
+            goal="Execute once.",
+            lane_id="context-control-v1-author",
+        )
+
+
 def test_rejects_unsafe_execution_cwd(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _write_context_fixture(workspace)
@@ -463,3 +519,39 @@ def test_authoring_packet_and_preflight_cli(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["decision"] == "pass"
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-orro-plan",
+            "--packet",
+            f"{attempt_rel}/control_packet.json",
+            "--goal",
+            "Execute the control packet once without repair.",
+            "--lane-id",
+            "context-control-v1-author",
+            "--workflow-out",
+            ".witnessd/plans/control-workflow.json",
+            "--role-lane-out",
+            ".witnessd/plans/control-role-lanes.json",
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["publication_acceptance"] == "not_claimed"
+    assert (
+        payload["role_lane_plan"]["lanes"][0]["prompt"]
+        == json.loads(
+            (workspace / attempt_rel / "control_packet.json").read_text(
+                encoding="utf-8"
+            )
+        )["prompt"]["utf8"]
+    )
+    assert (workspace / ".witnessd/plans/control-workflow.json").is_file()
+    assert (workspace / ".witnessd/plans/control-role-lanes.json").is_file()
