@@ -1,0 +1,17 @@
+{
+  "issues": [
+    {
+      "id": "LH001",
+      "message": "hyphenated line break 're-': a fixed-width node wrapped a word; widen text width or reword the label",
+      "source_mapping": null,
+      "text": "re-",
+      "xmax": 112.71808,
+      "xmin": 105.412281,
+      "ymax": 103.245292,
+      "ymin": 97.710053
+    }
+  ],
+  "render_pdf": "build/repaired_generated.pdf",
+  "schema": "figure-agent.label-hyphenation.v1",
+  "total": 1
+}

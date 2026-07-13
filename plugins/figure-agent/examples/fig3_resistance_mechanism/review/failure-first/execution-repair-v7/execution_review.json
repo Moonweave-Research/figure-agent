@@ -1,0 +1,34 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "attempt": "execution-repair-v7",
+  "decision": "machine_target_unresolved_human_not_requested",
+  "target_finding": "LH001",
+  "repair_family": "label_reflow",
+  "repair_strategy": "local_hyphenpenalty_10000",
+  "attribution": {
+    "target_state": "exact",
+    "selected_selector_id": "panel-a-carrier-label",
+    "source_attribution_sha256": "sha256:352ecbb2075d978acb98e9a580b043b8b515d02d1770e0ef37d4f8824c15ae14",
+    "target_contract_sha256": "sha256:4094fd7a38d2ad0eed27527b3083412366db0ee517fc1db6ed45b1a3e9253c08"
+  },
+  "before": {
+    "text_collisions": 0,
+    "label_hyphenation": 1
+  },
+  "after": {
+    "text_collisions": 0,
+    "label_hyphenation": 1
+  },
+  "target_resolved": false,
+  "normal_compile": "pass",
+  "strict_compile": "not_run_target_unresolved",
+  "packet_id": "sha256:1b076884caf24cdbabf7fee04c4d1bd90f7b534db5c6e8a29c2261977f25e738",
+  "packet_file_sha256": "sha256:8bc8a943f85be40c8113c11c23758fec0fcdfbce57a1162d1e9554d193a7bf09",
+  "prompt_sha256": "sha256:64ced1f423972a328164c1764521765f048b64f0f2d181e9662cc5bd2f7ac97f",
+  "response_sha256": "sha256:4a02c5ef1a4b83c9eb4c9cd6812c3d2b965a00b73a100d74d1e66e7d070bd2be",
+  "materialization_receipt_sha256": "sha256:9d97ac27b0f5337e2bb3a10c3a72e0df3d73f362166f5c9191b85a2bbb4d86b4",
+  "generated_source_sha256": "sha256:38f68e8dbe437fe67eb64f7e839af0c61ebe1f520a81cbb54bd9d6c8fb0f28e1",
+  "label_hyphenation_report_sha256": "sha256:99bebb52a6912f4bca22e80235264e595f12589fde23b26aa22975c95aec986b",
+  "human_review": "not_requested_target_unresolved",
+  "publication_acceptance": "not_claimed"
+}

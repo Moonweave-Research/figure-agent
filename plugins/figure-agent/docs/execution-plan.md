@@ -63,14 +63,14 @@ Existing implementation surfaces to reuse:
 | --- | --- |
 | `scripts/quality/failure_corpus.py` | Reviewed failure taxonomy and provenance |
 | `scripts/quality/failure_ablation.py` | Comparable raw/verified/repaired evaluation |
-| `scripts/visual_finding_attribution.py` | Render-to-panel/object/source attribution |
+| `scripts/visual_finding_attribution.py` | Geometry-first render-to-region attribution |
+| `scripts/finding_source_attribution.py` | Token-first text-to-source attribution |
 | `scripts/visual_finding_artifacts.py` | Deterministic overlays and crops |
 | `scripts/quality/quality_patch_policy.py` | Human-required versus patchable boundary |
 | `scripts/quality/quality_patch_plan.py` | Protected, budgeted repair plan |
 | `scripts/quality/quality_patch_apply.py` | Preflight, application, receipt, rollback |
 | `styles/snippets/panel-f-floating-cantilever.tex` | Reviewed same-family TikZ motif evidence |
 | `bin/fig-agent` | Existing corpus, ablation, compile, export, and review surfaces |
-
 The direct Panel F SVG renderer is retained only as non-promoted experiment
 evidence. Do not polish, generalize, import, or delete it during these slices.
 

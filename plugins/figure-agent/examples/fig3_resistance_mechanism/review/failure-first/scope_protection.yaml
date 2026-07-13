@@ -123,16 +123,47 @@ allowed_review_paths:
   - review/failure-first/execution-repair-v5/repaired_generated.tex
   - review/failure-first/execution-repair-v5/source_attribution.json
   - review/failure-first/execution-repair-v5/source_selector_registry.json
+  - review/failure-first/execution-binding-v8/binding_receipt.json
+  - review/failure-first/execution-binding-v8/treatment_generated.tex
+  - review/failure-first/execution-repair-v6/execution_review.json
+  - review/failure-first/execution-repair-v6/label_hyphenation.before.json
+  - review/failure-first/execution-repair-v6/materialization_receipt.json
+  - review/failure-first/execution-repair-v6/repair_packet.json
+  - review/failure-first/execution-repair-v6/repair_prompt.md
+  - review/failure-first/execution-repair-v6/repair_response.json
+  - review/failure-first/execution-repair-v6/repair_targets.json
+  - review/failure-first/execution-repair-v6/repaired_generated.tex
+  - review/failure-first/execution-repair-v6/source_attribution.json
+  - review/failure-first/execution-repair-v6/source_selector_registry.json
+  - review/failure-first/execution-repair-v7/execution_review.json
+  - review/failure-first/execution-repair-v7/materialization_receipt.json
+  - review/failure-first/execution-repair-v7/repair_packet.json
+  - review/failure-first/execution-repair-v7/repair_prompt.md
+  - review/failure-first/execution-repair-v7/repair_response.json
+  - review/failure-first/execution-repair-v7/repair_targets.json
+  - review/failure-first/execution-repair-v7/repaired_generated.tex
+  - review/failure-first/execution-repair-v7/source_attribution.json
+  - review/failure-first/execution-repair-v8/execution_review.json
+  - review/failure-first/execution-repair-v8/materialization_receipt.json
+  - review/failure-first/execution-repair-v8/repair_packet.json
+  - review/failure-first/execution-repair-v8/repair_prompt.md
+  - review/failure-first/execution-repair-v8/repair_response.json
+  - review/failure-first/execution-repair-v8/repair_targets.json
+  - review/failure-first/execution-repair-v8/repaired_generated.tex
+  - review/failure-first/execution-repair-v8/source_attribution.json
+  - review/failure-first/execution-repair-v8/source_selector_registry.json
 allowed_repository_paths:
   - examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v5/control_generated.tex
   - plugins/figure-agent/bin/fig-agent
   - plugins/figure-agent/docs/architecture-overview.md
   - plugins/figure-agent/docs/execution-plan.md
   - plugins/figure-agent/docs/product-spec.md
+  - plugins/figure-agent/docs/superpowers/issues/2026-06-01-issue-100hi-schema-module-map.md
   - plugins/figure-agent/scripts/compile.sh
   - plugins/figure-agent/scripts/authoring_context_pack.py
   - plugins/figure-agent/scripts/authoring_execution_input_audit.py
   - plugins/figure-agent/scripts/authoring_execution_packet.py
+  - plugins/figure-agent/scripts/authoring_repair_packet.py
   - plugins/figure-agent/scripts/checks/check_label_hyphenation.py
   - plugins/figure-agent/scripts/finding_source_attribution.py
   - plugins/figure-agent/scripts/checks/check_layout_drift.py
@@ -140,6 +171,7 @@ allowed_repository_paths:
   - plugins/figure-agent/tests/test_authoring_context_pack.py
   - plugins/figure-agent/tests/test_authoring_execution_input_audit.py
   - plugins/figure-agent/tests/test_authoring_execution_packet.py
+  - plugins/figure-agent/tests/test_authoring_repair_packet.py
   - plugins/figure-agent/tests/test_finding_source_attribution.py
   - plugins/figure-agent/tests/test_label_hyphenation.py
   - plugins/figure-agent/tests/test_check_layout_drift.py

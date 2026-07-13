@@ -382,6 +382,35 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/execution-repair-v5/repaired_generated.tex",
         "review/failure-first/execution-repair-v5/source_attribution.json",
         "review/failure-first/execution-repair-v5/source_selector_registry.json",
+        "review/failure-first/execution-binding-v8/binding_receipt.json",
+        "review/failure-first/execution-binding-v8/treatment_generated.tex",
+        "review/failure-first/execution-repair-v6/execution_review.json",
+        "review/failure-first/execution-repair-v6/label_hyphenation.before.json",
+        "review/failure-first/execution-repair-v6/materialization_receipt.json",
+        "review/failure-first/execution-repair-v6/repair_packet.json",
+        "review/failure-first/execution-repair-v6/repair_prompt.md",
+        "review/failure-first/execution-repair-v6/repair_response.json",
+        "review/failure-first/execution-repair-v6/repair_targets.json",
+        "review/failure-first/execution-repair-v6/repaired_generated.tex",
+        "review/failure-first/execution-repair-v6/source_attribution.json",
+        "review/failure-first/execution-repair-v6/source_selector_registry.json",
+        "review/failure-first/execution-repair-v7/execution_review.json",
+        "review/failure-first/execution-repair-v7/materialization_receipt.json",
+        "review/failure-first/execution-repair-v7/repair_packet.json",
+        "review/failure-first/execution-repair-v7/repair_prompt.md",
+        "review/failure-first/execution-repair-v7/repair_response.json",
+        "review/failure-first/execution-repair-v7/repair_targets.json",
+        "review/failure-first/execution-repair-v7/repaired_generated.tex",
+        "review/failure-first/execution-repair-v7/source_attribution.json",
+        "review/failure-first/execution-repair-v8/execution_review.json",
+        "review/failure-first/execution-repair-v8/materialization_receipt.json",
+        "review/failure-first/execution-repair-v8/repair_packet.json",
+        "review/failure-first/execution-repair-v8/repair_prompt.md",
+        "review/failure-first/execution-repair-v8/repair_response.json",
+        "review/failure-first/execution-repair-v8/repair_targets.json",
+        "review/failure-first/execution-repair-v8/repaired_generated.tex",
+        "review/failure-first/execution-repair-v8/source_attribution.json",
+        "review/failure-first/execution-repair-v8/source_selector_registry.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "examples/fig3_resistance_mechanism/review/failure-first/"
@@ -390,10 +419,13 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "plugins/figure-agent/docs/architecture-overview.md",
         "plugins/figure-agent/docs/execution-plan.md",
         "plugins/figure-agent/docs/product-spec.md",
+        "plugins/figure-agent/docs/superpowers/issues/"
+        "2026-06-01-issue-100hi-schema-module-map.md",
         "plugins/figure-agent/scripts/compile.sh",
         "plugins/figure-agent/scripts/authoring_context_pack.py",
         "plugins/figure-agent/scripts/authoring_execution_input_audit.py",
         "plugins/figure-agent/scripts/authoring_execution_packet.py",
+        "plugins/figure-agent/scripts/authoring_repair_packet.py",
         "plugins/figure-agent/scripts/checks/check_label_hyphenation.py",
         "plugins/figure-agent/scripts/finding_source_attribution.py",
         "plugins/figure-agent/scripts/checks/check_layout_drift.py",
@@ -401,6 +433,7 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "plugins/figure-agent/tests/test_authoring_context_pack.py",
         "plugins/figure-agent/tests/test_authoring_execution_input_audit.py",
         "plugins/figure-agent/tests/test_authoring_execution_packet.py",
+        "plugins/figure-agent/tests/test_authoring_repair_packet.py",
         "plugins/figure-agent/tests/test_finding_source_attribution.py",
         "plugins/figure-agent/tests/test_label_hyphenation.py",
         "plugins/figure-agent/tests/test_check_layout_drift.py",
@@ -1184,6 +1217,42 @@ def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None
         fixture_prefix + "briefing.md"
     }
     assert _scope_violations(_git_pending_paths(repo_root), allowed_paths) == set()
+
+
+def test_lh001_repair_history_preserves_failures_and_binds_resolved_attempt() -> None:
+    attempts = {
+        version: REVIEW / f"execution-repair-v{version}" for version in (6, 7, 8)
+    }
+    reviews = {
+        version: json.loads(
+            (root / "execution_review.json").read_text(encoding="utf-8")
+        )
+        for version, root in attempts.items()
+    }
+
+    assert reviews[6]["decision"] == (
+        "machine_target_unresolved_human_not_requested"
+    )
+    assert reviews[7]["decision"] == (
+        "machine_target_unresolved_human_not_requested"
+    )
+    assert reviews[8]["decision"] == (
+        "machine_target_resolved_strict_failed_human_pending"
+    )
+    assert [reviews[version]["after"]["label_hyphenation"] for version in (6, 7, 8)] == [
+        1,
+        1,
+        0,
+    ]
+    assert reviews[8]["strict_compile"] == "fail"
+    assert reviews[8]["human_review"] == "pending"
+    assert reviews[8]["publication_acceptance"] == "not_claimed"
+    assert reviews[8]["generated_source_sha256"] == _sha256(
+        attempts[8] / "repaired_generated.tex"
+    )
+    assert reviews[8]["materialization_receipt_sha256"] == _sha256(
+        attempts[8] / "materialization_receipt.json"
+    )
 
 
 def test_fig3_resistance_render_receipt_reproduces_current_source_outputs() -> None:

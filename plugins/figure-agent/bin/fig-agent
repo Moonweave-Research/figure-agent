@@ -1924,7 +1924,7 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_repair_packet(rest)
     if command == "authoring-repair-materialize":
         return _authoring_repair_materialize(rest)
-    if command == "finding-attribution":
+    if command in {"text-finding-attribution", "finding-attribution"}:
         return _finding_attribution(rest)
     if command == "authoring-orro-plan":
         return _authoring_orro_plan(rest)

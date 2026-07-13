@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[note, anchor=north, text width=3.40cm] at (2.32,0.82)\n    {sign-agnostic carrier: \\mbox{repeated} dispersive trapping};",
+  "change_summary": "Prevented the single rendered word repeated from hyphenating while preserving the label wording and geometry."
+}

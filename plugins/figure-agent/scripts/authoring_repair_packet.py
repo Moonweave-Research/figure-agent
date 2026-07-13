@@ -466,6 +466,38 @@ def materialize_repair_candidate(
         raise RepairExecutionPacketError("replacement must not contain anchor lines")
 
     original_lines = original.splitlines()
+    editable_lines = original_lines[original_start + 1 : original_end]
+    leading_padding = next(
+        (index for index, line in enumerate(editable_lines) if line.strip()),
+        len(editable_lines),
+    )
+    trailing_padding = next(
+        (
+            index
+            for index, line in enumerate(reversed(editable_lines))
+            if line.strip()
+        ),
+        len(editable_lines),
+    )
+    replacement_leading = next(
+        (index for index, line in enumerate(replacement_lines) if line.strip()),
+        len(replacement_lines),
+    )
+    replacement_trailing = next(
+        (
+            index
+            for index, line in enumerate(reversed(replacement_lines))
+            if line.strip()
+        ),
+        len(replacement_lines),
+    )
+    added_leading = max(0, leading_padding - replacement_leading)
+    added_trailing = max(0, trailing_padding - replacement_trailing)
+    replacement_lines = [
+        *([""] * added_leading),
+        *replacement_lines,
+        *([""] * added_trailing),
+    ]
     candidate_lines = [
         *original_lines[: original_start + 1],
         *replacement_lines,
@@ -529,6 +561,7 @@ def materialize_repair_candidate(
         "output_sha256": _sha256_bytes(output.read_bytes()),
         "changed_source_blocks": 1,
         "changed_lines": changed_lines,
+        "preserved_boundary_blank_lines": added_leading + added_trailing,
         "change_summary": summary.strip(),
         "external_compile": "pending",
         "human_review": "pending",

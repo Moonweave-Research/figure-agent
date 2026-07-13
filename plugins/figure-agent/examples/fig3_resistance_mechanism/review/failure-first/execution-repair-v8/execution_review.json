@@ -1,0 +1,50 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "attempt": "execution-repair-v8",
+  "decision": "machine_target_resolved_strict_failed_human_pending",
+  "target_finding": "LH001",
+  "repair_family": "label_reflow",
+  "repair_strategy": "protect_single_word_with_mbox",
+  "attribution": {
+    "target_state": "exact",
+    "selected_selector_id": "panel-a-carrier-label",
+    "source_attribution_sha256": "sha256:352ecbb2075d978acb98e9a580b043b8b515d02d1770e0ef37d4f8824c15ae14",
+    "target_contract_sha256": "sha256:8e484d0a054ce53493f94ee0849864600e3fa938773c240d9610cb9eedb9b4dc"
+  },
+  "before": {
+    "text_collisions": 0,
+    "label_hyphenation": 1
+  },
+  "after": {
+    "text_collisions": 0,
+    "label_hyphenation": 0
+  },
+  "target_resolved": true,
+  "normal_compile": "pass",
+  "strict_compile": "fail",
+  "remaining_blockers": [
+    "fifteen_undeclared_geometry_candidates",
+    "human_scaffold_review_pending"
+  ],
+  "agent_visual_review": {
+    "target_hyphenation": "not_visible",
+    "label_wording": "rendered_unchanged",
+    "publication_quality": "not_established",
+    "remaining_visible_defects": [
+      "bottom annotations approach or cross the panel boundary",
+      "composition, distribution shapes, color, and typography remain outside this bounded repair"
+    ]
+  },
+  "packet_id": "sha256:339140f6750d28f4f3309da5a00fe8747ea64bfeed2b4fa162ee205be2e0ae09",
+  "packet_file_sha256": "sha256:1f0b1af3890ba9bc183b7ae678c28c4f9e3b5ac5da9c5732eb5a0373ff117382",
+  "prompt_sha256": "sha256:0d7cf32c37dd1123720750e3d4c3bb1bf471c5ed2ae831691bf2103df8a91bea",
+  "response_sha256": "sha256:375bf21bdcf7e338173e56f27f2e81a0fa81d601add7770c5eb785285a5b594a",
+  "materialization_receipt_sha256": "sha256:1f31ae87834f7f41b9788d4216ca2ee8077a851b7769f38298f5aaa56604f256",
+  "selector_registry_sha256": "sha256:154ede2dc61191d614e052136b15c9d89203c99dec42875af7101f39fd2d376f",
+  "generated_source_sha256": "sha256:c1f20118178235d03137c3d0b5490516324eb6c32bbf95dd234d1729acf0779d",
+  "collision_report_sha256": "sha256:664b91ddbeb634cb31e9ea8267428ca61e028178af760eb0467e0700155fa158",
+  "label_hyphenation_report_sha256": "sha256:5b40161534ae9269dec44aed8b5ab0ac3987485538603bc8965b07e0bccd2b04",
+  "render_png_sha256": "sha256:8682d13c4470b6804bdb3ec17e229584c19a7011756a9e09247bc0d9d0e1f38d",
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

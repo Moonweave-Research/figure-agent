@@ -1,0 +1,15 @@
+{
+  "change_summary": "Prevented the single rendered word repeated from hyphenating while preserving the label wording and geometry.",
+  "changed_lines": 2,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v8/repaired_generated.tex",
+  "output_sha256": "sha256:c1f20118178235d03137c3d0b5490516324eb6c32bbf95dd234d1729acf0779d",
+  "packet_sha256": "sha256:339140f6750d28f4f3309da5a00fe8747ea64bfeed2b4fa162ee205be2e0ae09",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:43dd310dd9f8d30bbed8d5661ddb3e909172c5a2355c8fe23295f0cb97234c39"
+}

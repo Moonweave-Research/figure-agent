@@ -1,0 +1,26 @@
+{
+  "schema": "figure-agent.source-selector-registry.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v8/treatment_generated.tex",
+  "source_sha256": "sha256:43dd310dd9f8d30bbed8d5661ddb3e909172c5a2355c8fe23295f0cb97234c39",
+  "selectors": [
+    {
+      "selector_id": "panel-a-carrier-label",
+      "anchor_start": "    at (3.36,1.52) {};",
+      "anchor_end": "  \\begin{scope}[shift={(4.78,0.84)}]",
+      "rendered_aliases": [
+        "re-"
+      ],
+      "repair_role": "movable",
+      "repair_family": "label_reflow",
+      "protected_invariants": [
+        "sign-agnostic carrier: repeated dispersive trapping",
+        "applied trapping\\\\during conduction",
+        "disordered sulfur polymer film",
+        "$I \\propto t^{-n}$",
+        "S60 $\\rightarrow$ S80",
+        "$n$ = breadth",
+        "$\\rho_{60s}$\\\\magnitude"
+      ]
+    }
+  ]
+}

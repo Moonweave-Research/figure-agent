@@ -240,6 +240,45 @@ def test_fig_agent_routes_finding_attribution_command(tmp_path: Path) -> None:
     assert target_path.is_file()
 
 
+def test_fig_agent_routes_canonical_text_finding_attribution_command(
+    tmp_path: Path,
+) -> None:
+    source, report, registry = _fixture(tmp_path)
+    report_path = tmp_path / "collisions.json"
+    registry_path = tmp_path / "selectors.json"
+    attribution_path = tmp_path / "attribution.json"
+    target_path = tmp_path / "targets.json"
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            str(Path(__file__).resolve().parents[1] / "bin" / "fig-agent"),
+            "text-finding-attribution",
+            "--report",
+            str(report_path),
+            "--registry",
+            str(registry_path),
+            "--source",
+            str(source),
+            "--finding-id",
+            "TC001",
+            "--attribution-out",
+            str(attribution_path),
+            "--target-contract-out",
+            str(target_path),
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert attribution_path.is_file()
+    assert target_path.is_file()
+
+
 def test_cli_refuses_to_overwrite_existing_attribution_artifact(tmp_path: Path) -> None:
     source, report, registry = _fixture(tmp_path)
     report_path = tmp_path / "collisions.json"

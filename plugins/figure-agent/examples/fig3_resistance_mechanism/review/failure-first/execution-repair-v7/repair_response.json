@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[note, anchor=north, text width=3.40cm] at (2.32,0.82)\n    {\\hyphenpenalty=10000\\relax sign-agnostic carrier: repeated dispersive trapping};",
+  "change_summary": "Disabled automatic word hyphenation only inside the Panel A carrier label while preserving its text, geometry, and scientific wording."
+}

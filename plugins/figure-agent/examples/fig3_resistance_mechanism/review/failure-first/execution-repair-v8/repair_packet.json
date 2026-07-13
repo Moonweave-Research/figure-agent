@@ -1,0 +1,88 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "id": "LH001",
+      "message": "hyphenated line break 're-': a fixed-width node wrapped a word; widen text width or reword the label",
+      "source_mapping": null,
+      "text": "re-",
+      "xmax": 112.71808,
+      "xmin": 105.412281,
+      "ymax": 103.245292,
+      "ymin": 97.710053
+    },
+    "finding_id": "LH001",
+    "protected_invariants": [
+      "sign-agnostic carrier:",
+      "dispersive trapping",
+      "applied trapping\\\\during conduction",
+      "disordered sulfur polymer film",
+      "$I \\propto t^{-n}$",
+      "S60 $\\rightarrow$ S80",
+      "$n$ = breadth",
+      "$\\rho_{60s}$\\\\magnitude"
+    ],
+    "repair_family": "label_reflow",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v6/label_hyphenation.before.json",
+    "selector": {
+      "anchor_end": "  \\begin{scope}[shift={(4.78,0.84)}]",
+      "anchor_start": "    at (3.36,1.52) {};",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-carrier-label",
+      "source_hash": "sha256:43dd310dd9f8d30bbed8d5661ddb3e909172c5a2355c8fe23295f0cb97234c39"
+    }
+  },
+  "execution_cwd": "plugins/figure-agent",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v6/label_hyphenation.before.json",
+      "schema": "figure-agent.label-hyphenation.v1",
+      "sha256": "sha256:99bebb52a6912f4bca22e80235264e595f12589fde23b26aa22975c95aec986b"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v8/repaired_generated.tex",
+  "packet_sha256": "sha256:339140f6750d28f4f3309da5a00fe8747ea64bfeed2b4fa162ee205be2e0ae09",
+  "prompt": {
+    "sha256": "sha256:0d7cf32c37dd1123720750e3d4c3bb1bf471c5ed2ae831691bf2103df8a91bea",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v8/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v8/treatment_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: label_reflow\n- Machine finding: {\"id\": \"LH001\", \"message\": \"hyphenated line break 're-': a fixed-width node wrapped a word; widen text width or reword the label\", \"source_mapping\": null, \"text\": \"re-\", \"xmax\": 112.71808, \"xmin\": 105.412281, \"ymax\": 103.245292, \"ymin\": 97.710053}\n- Change content only between the exact anchor lines [    at (3.36,1.52) {};] and [  \\begin{scope}[shift={(4.78,0.84)}]].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [sign-agnostic carrier:].\n- Preserve the exact token [dispersive trapping].\n- Preserve the exact token [applied trapping\\\\during conduction].\n- Preserve the exact token [disordered sulfur polymer film].\n- Preserve the exact token [$I \\propto t^{-n}$].\n- Preserve the exact token [S60 $\\rightarrow$ S80].\n- Preserve the exact token [$n$ = breadth].\n- Preserve the exact token [$\\rho_{60s}$\\\\magnitude].\n\n## Bound editable source bytes\n```tex\n  \\node[note, anchor=north, text width=3.40cm] at (2.32,0.82)\n    {sign-agnostic carrier: repeated dispersive trapping};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v8/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v8/treatment_generated.tex",
+    "sha256": "sha256:43dd310dd9f8d30bbed8d5661ddb3e909172c5a2355c8fe23295f0cb97234c39"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v8/repair_targets.json",
+    "sha256": "sha256:8e484d0a054ce53493f94ee0849864600e3fa938773c240d9610cb9eedb9b4dc"
+  },
+  "verification": "external_sequential_compile_required"
+}

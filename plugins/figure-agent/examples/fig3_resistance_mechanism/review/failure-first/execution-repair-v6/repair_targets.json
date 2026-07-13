@@ -1,0 +1,32 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v8/treatment_generated.tex",
+  "source_sha256": "sha256:43dd310dd9f8d30bbed8d5661ddb3e909172c5a2355c8fe23295f0cb97234c39",
+  "targets": [
+    {
+      "attribution": {
+        "state": "exact"
+      },
+      "finding": {
+        "id": "LH001",
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v6/label_hyphenation.before.json"
+      },
+      "protected_invariants": [
+        "sign-agnostic carrier: repeated dispersive trapping",
+        "applied trapping\\\\during conduction",
+        "disordered sulfur polymer film",
+        "$I \\propto t^{-n}$",
+        "S60 $\\rightarrow$ S80",
+        "$n$ = breadth",
+        "$\\rho_{60s}$\\\\magnitude"
+      ],
+      "repair_family": "label_reflow",
+      "selector": {
+        "anchor_end": "  \\begin{scope}[shift={(4.78,0.84)}]",
+        "anchor_start": "    at (3.36,1.52) {};",
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-carrier-label"
+      }
+    }
+  ]
+}

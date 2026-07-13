@@ -209,6 +209,47 @@ def test_materializes_valid_candidate_only_after_controller_validation(
     assert receipt["publication_acceptance"] == "not_claimed"
 
 
+def test_materializer_preserves_boundary_blank_padding(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    source.write_text(
+        source.read_text(encoding="utf-8").replace(
+            "% repair:label:end",
+            "\n% repair:label:end",
+        ),
+        encoding="utf-8",
+    )
+    contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+    contract_payload["source_sha256"] = _sha256(source.read_bytes())
+    contract.write_text(json.dumps(contract_payload), encoding="utf-8")
+    packet, _ = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+
+    receipt = authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        {
+            "replacement_utf8": r"\node[text width=4cm] {repeated dispersive trapping};",
+            "change_summary": "Widen the label without changing block padding.",
+        },
+        workspace_root=workspace,
+    )
+
+    output = workspace / packet["output_path"]
+    assert (
+        r"\node[text width=4cm] {repeated dispersive trapping};"
+        "\n\n% repair:label:end"
+    ) in output.read_text(encoding="utf-8")
+    assert receipt["preserved_boundary_blank_lines"] == 1
+
+
 def test_materializer_rejects_change_outside_exact_anchor(tmp_path: Path) -> None:
     workspace, source, contract = _fixture(tmp_path)
     packet, _ = authoring_repair_packet.compile_repair_execution_packet(

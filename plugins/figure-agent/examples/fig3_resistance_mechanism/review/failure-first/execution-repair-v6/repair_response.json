@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[note, anchor=north, text width=4.00cm] at (2.32,0.82)\n    {sign-agnostic carrier: repeated dispersive trapping};",
+  "change_summary": "Widened only the Panel A carrier-label text box so the protected word repeated can wrap without a mid-word hyphen."
+}

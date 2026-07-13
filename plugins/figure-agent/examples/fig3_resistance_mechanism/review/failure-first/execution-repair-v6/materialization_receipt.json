@@ -1,0 +1,15 @@
+{
+  "change_summary": "Widened only the Panel A carrier-label text box so the protected word repeated can wrap without a mid-word hyphen.",
+  "changed_lines": 2,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v6/repaired_generated.tex",
+  "output_sha256": "sha256:b69c10cd31cc7e8825df464cb9b8f238b7d01d82fc3540e71d3613ed118982fd",
+  "packet_sha256": "sha256:7eca22a0ae10f8ada1e7ef80d44ea5dcac6f4848be46b951542d5cf06ffb1d84",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:43dd310dd9f8d30bbed8d5661ddb3e909172c5a2355c8fe23295f0cb97234c39"
+}

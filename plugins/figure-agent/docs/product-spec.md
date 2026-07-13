@@ -319,6 +319,10 @@ The fail-closed source-binding path uses
 `figure-agent.repair-target-contract.v1`. Rendered text must match a declared
 selector alias, and exactly one matching selector must be declared movable;
 otherwise attribution remains ambiguous or unbound.
+The canonical CLI is `fig-agent text-finding-attribution`; the shorter
+`finding-attribution` spelling is a compatibility alias. This token-first path
+does not replace geometry-first region attribution in
+`visual_finding_attribution.py`.
 
 The active authoring control plane also preserves
 `figure-agent.layout-lanes.v1`,

@@ -1,0 +1,30 @@
+{
+  "findings": [
+    {
+      "finding_id": "LH001",
+      "matched_selectors": [
+        {
+          "matched_texts": [
+            "re-"
+          ],
+          "repair_role": "movable",
+          "selector_id": "panel-a-carrier-label"
+        }
+      ],
+      "reason_code": "one_declared_movable_selector",
+      "selected_selector_id": "panel-a-carrier-label",
+      "state": "exact"
+    }
+  ],
+  "fixture": null,
+  "schema": "figure-agent.finding-source-attribution.v1",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v8/treatment_generated.tex",
+    "sha256": "sha256:43dd310dd9f8d30bbed8d5661ddb3e909172c5a2355c8fe23295f0cb97234c39"
+  },
+  "summary": {
+    "ambiguous": 0,
+    "exact": 1,
+    "unbound": 0
+  }
+}
