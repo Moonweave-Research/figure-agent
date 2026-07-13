@@ -80,6 +80,7 @@ EXECUTION_BINDING_V1 = REVIEW / "execution-binding-v1"
 EXECUTION_BINDING = REVIEW / "execution-binding-v2"
 EXECUTION_BINDING_V4 = REVIEW / "execution-binding-v4"
 EXECUTION_BINDING_V5 = REVIEW / "execution-binding-v5"
+EXECUTION_BINDING_V6 = REVIEW / "execution-binding-v6"
 
 
 def _sha256(path: Path) -> str:
@@ -1357,6 +1358,7 @@ def test_fig3_execution_binding_v5_records_path_routing_failure() -> None:
         "execution-binding-v5/control_generated.tex"
     ).exists()
 
+
 def test_fig3_execution_binding_v5_preflight_binds_repository_read_allowlist() -> None:
     control = json.loads(
         (EXECUTION_BINDING_V5 / "control_packet.json").read_text(encoding="utf-8")
@@ -1381,3 +1383,41 @@ def test_fig3_execution_binding_v5_preflight_binds_repository_read_allowlist() -
     assert preflight["treatment"]["packet_sha256"] == treatment["packet_sha256"]
     assert control["shape_profile"] is None
     assert treatment["shape_profile"]["path"] == "shape_profile_panel_b.yaml"
+
+
+def test_fig3_execution_binding_v6_uses_one_repository_coordinate_system() -> None:
+    control = json.loads(
+        (EXECUTION_BINDING_V6 / "control_packet.json").read_text(encoding="utf-8")
+    )
+    treatment = json.loads(
+        (EXECUTION_BINDING_V6 / "treatment_packet.json").read_text(encoding="utf-8")
+    )
+    preflight = json.loads(
+        (EXECUTION_BINDING_V6 / "preflight.json").read_text(encoding="utf-8")
+    )
+
+    for arm, packet in (("control", control), ("treatment", treatment)):
+        expected_output = (
+            "plugins/figure-agent/examples/fig3_resistance_mechanism/review/"
+            f"failure-first/execution-binding-v6/{arm}_generated.tex"
+        )
+        assert packet["repository_output_path"] == expected_output
+        assert packet["allowed_repository_read_paths"] == [
+            "plugins/figure-agent/AGENTS.md",
+            "plugins/figure-agent/styles/polymer-paper-preamble.sty",
+        ]
+        assert f"Write exactly one new source to [{expected_output}]." in packet[
+            "prompt"
+        ]["utf8"]
+        assert "Do not change directory before resolving paths." in packet["prompt"][
+            "utf8"
+        ]
+        assert "Before resolving the output path, change directory" not in packet[
+            "prompt"
+        ]["utf8"]
+    assert control["context_pack"]["base_sha256"] == treatment["context_pack"][
+        "base_sha256"
+    ]
+    assert control["shape_profile"] is None
+    assert treatment["shape_profile"]["path"] == "shape_profile_panel_b.yaml"
+    assert preflight["decision"] == "pass"
