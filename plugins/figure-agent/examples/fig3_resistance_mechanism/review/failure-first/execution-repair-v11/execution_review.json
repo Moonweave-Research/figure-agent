@@ -1,0 +1,82 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "attempt": "execution-repair-v11",
+  "decision": "boundary_targets_resolved_density_human_pending",
+  "target_findings": [
+    "panel_a_decay_outcome_contained",
+    "panel_b_s60_caption_contained",
+    "panel_b_s80_caption_contained",
+    "panel_b_sulfur_progression_contained",
+    "panel_b_magnitude_label_contained"
+  ],
+  "repair_family": "contained_label_geometry",
+  "repair_strategy": "preserve_all_visible_phrases_and_move_labels_inside_declared_panel_regions",
+  "source": {
+    "path": "review/failure-first/execution-repair-v11/repaired_generated.tex",
+    "sha256": "sha256:4ad703b5e77814d1cff2b7f5e8f37d54923e83135261659ae67dca051c90e8de",
+    "based_on": "review/failure-first/execution-repair-v10/repaired_generated.tex",
+    "based_on_sha256": "sha256:d55002e5c6a1f3cf6dc404fc637ad66bc81063f97e50d7757b96ff7eb9de09a9"
+  },
+  "contract": {
+    "path": "review/failure-first/execution-scaffold-evaluation-v1/layout_contract.yaml",
+    "sha256": "sha256:c87b398684271ebcbacebc5d414104bf2f899dad27b4f2e7edc59d9c7355df21"
+  },
+  "before": {
+    "evidence_path": "review/failure-first/execution-scaffold-evaluation-v1/layout_report.json",
+    "evidence_sha256": "sha256:384f9bd22f99629c5b10fc6f5cc2edcfd861ec2be5f928b922c944c0c094297c",
+    "findings": 7,
+    "boundary_findings": 5,
+    "density_findings": 2
+  },
+  "after": {
+    "layout_report_path": "review/failure-first/execution-repair-v11/layout_report.json",
+    "layout_report_sha256": "sha256:e37aec2593357a62efaf50b8da41a47c69b1a20935435e67bd80aa595282964f",
+    "visual_clash_path": "review/failure-first/execution-repair-v11/visual_clash.json",
+    "visual_clash_sha256": "sha256:26e7494dac1e3e6a0447a998a229f506d9d9d90dfd49e45d736a19763d1c4371",
+    "findings": 3,
+    "boundary_findings": 0,
+    "density_findings": 3,
+    "text_budgets": {
+      "figure": 65,
+      "panel_a": 39,
+      "panel_b": 26
+    },
+    "newly_exposed_density_debt": "panel_b_ownership_restoration_raises_count_from_18_to_26"
+  },
+  "render_evidence": {
+    "resolved_runtime_path": "review/failure-first/execution-repair-v11/build/repaired_generated.pdf",
+    "tracking": "generated_runtime_artifact_not_tracked",
+    "raw_sha256_status": "snapshot_only_nondeterministic",
+    "content_signature": {
+      "schema": "figure-agent.pdf-content-signature.v1",
+      "extraction": "pdftotext-layout-trim-right-lines-v1",
+      "normalized_text_sha256": "sha256:64c84745640e47283ab0171d071cb4fa25626fe4655e77fc3f78b0c923423f5e",
+      "page_count": 1
+    }
+  },
+  "reproduction": {
+    "working_directory": "plugins/figure-agent",
+    "strict_compile_command": "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v11/repaired_generated.tex",
+    "layout_command": "python3 scripts/checks/check_layout_drift.py --pdf examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v11/build/repaired_generated.pdf --layout-contract examples/fig3_resistance_mechanism/review/failure-first/execution-scaffold-evaluation-v1/layout_contract.yaml --json-output /tmp/fig3-execution-repair-v11-layout-report.json --strict"
+  },
+  "agent_visual_review": {
+    "magnitude_label": "compact_center_rail_clear_of_broad_distribution",
+    "visible_phrase_preservation": "confirmed",
+    "scientific_semantics": "preserved",
+    "publication_quality": "not_established"
+  },
+  "verification": {
+    "strict_compile": "pass",
+    "layout_boundary_rules": "pass_five_of_five",
+    "visual_clash_candidates": 0,
+    "human_review": "pending"
+  },
+  "boundary_authority": "pending_human_confirmation",
+  "remaining_blockers": [
+    "figure_text_budget_violation_65_over_45",
+    "panel_a_text_budget_violation_39_over_22",
+    "panel_b_text_budget_violation_26_over_23",
+    "human_scaffold_review_pending"
+  ],
+  "publication_acceptance": "not_claimed"
+}

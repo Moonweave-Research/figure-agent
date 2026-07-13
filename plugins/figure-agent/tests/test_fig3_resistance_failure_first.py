@@ -430,6 +430,10 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/execution-repair-v10/execution_review.json",
         "review/failure-first/execution-repair-v10/repaired_generated.tex",
         "review/failure-first/execution-repair-v10/visual_clash.json",
+        "review/failure-first/execution-repair-v11/execution_review.json",
+        "review/failure-first/execution-repair-v11/layout_report.json",
+        "review/failure-first/execution-repair-v11/repaired_generated.tex",
+        "review/failure-first/execution-repair-v11/visual_clash.json",
         "review/failure-first/execution-visual-clash-evaluation-v2/evaluation_review.json",
         "review/failure-first/execution-visual-clash-evaluation-v2/visual_clash.json",
         "review/failure-first/execution-scaffold-evaluation-v1/evaluation_review.json",
@@ -1537,6 +1541,100 @@ def test_execution_scaffold_v1_exposes_boundary_and_density_failures(
     )
     assert layout_result.returncode == 1
     assert json.loads(reproduced_report.read_text(encoding="utf-8")) == report
+
+
+def test_execution_repair_v11_contains_labels_without_reducing_text(
+    tmp_path: Path,
+) -> None:
+    attempt_root = REVIEW / "execution-repair-v11"
+    source = attempt_root / "repaired_generated.tex"
+    report_path = attempt_root / "layout_report.json"
+    visual_path = attempt_root / "visual_clash.json"
+    review = json.loads(
+        (attempt_root / "execution_review.json").read_text(encoding="utf-8")
+    )
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    visual = json.loads(visual_path.read_text(encoding="utf-8"))
+
+    assert review["decision"] == "boundary_targets_resolved_density_human_pending"
+    assert review["source"]["based_on"] == (
+        "review/failure-first/execution-repair-v10/repaired_generated.tex"
+    )
+    assert review["source"]["sha256"] == _sha256(source)
+    assert {
+        key: review["before"][key]
+        for key in ("findings", "boundary_findings", "density_findings")
+    } == {"findings": 7, "boundary_findings": 5, "density_findings": 2}
+    assert review["after"]["findings"] == 3
+    assert review["after"]["boundary_findings"] == 0
+    assert review["after"]["density_findings"] == 3
+    assert review["after"]["newly_exposed_density_debt"] == (
+        "panel_b_ownership_restoration_raises_count_from_18_to_26"
+    )
+    assert review["after"]["layout_report_sha256"] == _sha256(report_path)
+    assert review["after"]["visual_clash_sha256"] == _sha256(visual_path)
+    assert review["verification"]["strict_compile"] == "pass"
+    assert review["verification"]["human_review"] == "pending"
+    assert review["boundary_authority"] == "pending_human_confirmation"
+    assert review["publication_acceptance"] == "not_claimed"
+    assert visual["total"] == 0
+    assert visual["candidates"] == []
+
+    assert report["failure_count"] == 3
+    assert {result["status"] for result in report["results"]} == {"ok"}
+    assert {
+        result["budget_id"]: (result["word_count"], result["status"])
+        for result in report["text_budget_results"]
+    } == {
+        "figure_text_budget": (65, "violation"),
+        "panel_a_text_budget": (39, "violation"),
+        "panel_b_text_budget": (26, "violation"),
+    }
+
+    render_path = attempt_root / "build" / "repaired_generated.pdf"
+    source_from_plugin = source.relative_to(PLUGIN_ROOT)
+    compile_result = subprocess.run(
+        ["bash", "scripts/compile.sh", str(source_from_plugin)],
+        cwd=PLUGIN_ROOT,
+        env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
+        capture_output=True,
+        text=True,
+    )
+    assert compile_result.returncode == 0, compile_result.stdout + compile_result.stderr
+    assert review["render_evidence"]["content_signature"] == (
+        _pdf_content_signature(render_path)
+    )
+    assert review["reproduction"]["strict_compile_command"] == (
+        "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh " f"{source_from_plugin}"
+    )
+
+    reproduced_report = tmp_path / "layout_report.json"
+    layout_result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/checks/check_layout_drift.py",
+            "--pdf",
+            str(render_path),
+            "--layout-contract",
+            str(EXECUTION_SCAFFOLD_EVALUATION / "layout_contract.yaml"),
+            "--json-output",
+            str(reproduced_report),
+            "--strict",
+        ],
+        cwd=PLUGIN_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert layout_result.returncode == 1
+    assert json.loads(reproduced_report.read_text(encoding="utf-8")) == report
+    assert review["reproduction"]["layout_command"] == (
+        "python3 scripts/checks/check_layout_drift.py --pdf "
+        "examples/fig3_resistance_mechanism/review/failure-first/"
+        "execution-repair-v11/build/repaired_generated.pdf --layout-contract "
+        "examples/fig3_resistance_mechanism/review/failure-first/"
+        "execution-scaffold-evaluation-v1/layout_contract.yaml --json-output "
+        "/tmp/fig3-execution-repair-v11-layout-report.json --strict"
+    )
 
 
 def test_fig3_resistance_render_receipt_reproduces_current_source_outputs() -> None:
