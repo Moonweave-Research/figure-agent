@@ -328,3 +328,70 @@ def test_layout_lane_contract_flags_annotation_too_close_to_plot_region() -> Non
 
     assert results[0].status == "violation"
     assert results[0].clearance == 0.01118
+
+
+def test_layout_contract_flags_panel_and_figure_text_budget_overflow() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [],
+        "regions": [
+            {"id": "page", "normalized_bbox": [0.0, 0.0, 1.0, 1.0]},
+            {"id": "panel_a", "normalized_bbox": [0.0, 0.0, 0.5, 1.0]},
+        ],
+        "text_budgets": [
+            {"id": "figure_text", "region": "page", "maximum_words": 4},
+            {"id": "panel_a_text", "region": "panel_a", "maximum_words": 2},
+        ],
+        "rules": [],
+    }
+    words = [
+        _word("Applied", 10, 10, 40, 20),
+        _word("bias", 42, 10, 60, 20),
+        _word("trapping", 62, 10, 100, 20),
+        _word("S60", 220, 10, 245, 20),
+        _word("broad", 250, 10, 280, 20),
+    ]
+
+    results = check_layout_drift.evaluate_text_budgets(
+        contract, words, (400.0, 200.0)
+    )
+
+    assert [(result.budget_id, result.status) for result in results] == [
+        ("figure_text", "violation"),
+        ("panel_a_text", "violation"),
+    ]
+    assert [(result.word_count, result.maximum_words) for result in results] == [
+        (5, 4),
+        (3, 2),
+    ]
+
+
+def test_layout_lane_payload_includes_text_budget_failures() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [],
+        "regions": [
+            {"id": "page", "normalized_bbox": [0.0, 0.0, 1.0, 1.0]}
+        ],
+        "text_budgets": [
+            {"id": "figure_text", "region": "page", "maximum_words": 1}
+        ],
+        "rules": [],
+    }
+
+    payload = check_layout_drift.layout_lane_payload(
+        contract,
+        [_word("too", 10, 10, 20, 20), _word("many", 22, 10, 40, 20)],
+        (100.0, 100.0),
+    )
+
+    assert payload["failure_count"] == 1
+    assert payload["text_budget_results"] == [
+        {
+            "budget_id": "figure_text",
+            "status": "violation",
+            "word_count": 2,
+            "maximum_words": 1,
+            "region": "page",
+        }
+    ]

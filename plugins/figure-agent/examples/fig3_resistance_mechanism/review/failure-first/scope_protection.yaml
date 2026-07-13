@@ -62,8 +62,11 @@ allowed_review_paths:
   - review/failure-first/region_guided_adversarial_review.yaml
   - review/failure-first/region_guided_attempt.yaml
   - review/failure-first/region_guided_render_receipt.yaml
+  - review/failure-first/region_guided_text_inventory_contract.yaml
+  - review/failure-first/region_guided_text_inventory_report.json
 allowed_repository_paths:
   - plugins/figure-agent/bin/fig-agent
+  - plugins/figure-agent/docs/architecture-overview.md
   - plugins/figure-agent/docs/execution-plan.md
   - plugins/figure-agent/scripts/authoring_context_pack.py
   - plugins/figure-agent/scripts/checks/check_layout_drift.py

@@ -135,6 +135,30 @@ def _layout_constraints(
             raise AuthoringContextPackError("layout region is invalid")
         regions.add(region_id)
     directives: list[str] = []
+    raw_text_budgets = payload.get("text_budgets", [])
+    if not isinstance(raw_text_budgets, list):
+        raise AuthoringContextPackError("layout text_budgets must be a list")
+    budget_ids: set[str] = set()
+    for budget in raw_text_budgets:
+        if not isinstance(budget, dict):
+            raise AuthoringContextPackError("layout text budget must be an object")
+        budget_id = budget.get("id")
+        region = budget.get("region")
+        maximum = budget.get("maximum_words")
+        if (
+            not isinstance(budget_id, str)
+            or budget_id in budget_ids
+            or not isinstance(region, str)
+            or region not in regions
+            or not isinstance(maximum, int)
+            or isinstance(maximum, bool)
+            or maximum < 0
+        ):
+            raise AuthoringContextPackError("layout text budget is invalid")
+        budget_ids.add(budget_id)
+        directives.append(
+            f"Keep region [{region}] at or below {maximum} rendered words."
+        )
     for rule in raw_rules:
         if not isinstance(rule, dict):
             raise AuthoringContextPackError("layout rule is invalid")
@@ -193,6 +217,7 @@ def _layout_constraints(
         "schema": LAYOUT_LANES_SCHEMA,
         "label_groups": raw_groups,
         "regions": raw_regions,
+        "text_budgets": raw_text_budgets,
         "rules": raw_rules,
         "authoring_directives": directives,
     }

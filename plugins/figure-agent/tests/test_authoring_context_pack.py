@@ -364,6 +364,56 @@ rules:
     ]
 
 
+def test_context_pack_injects_declared_text_budget_directives(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    review = fixture / "review"
+    review.mkdir()
+    (review / "layout_lanes.yaml").write_text(
+        """
+schema: figure-agent.layout-lanes.v1
+label_groups: []
+regions:
+  - id: page
+    normalized_bbox: [0.0, 0.0, 1.0, 1.0]
+  - id: panel_a
+    normalized_bbox: [0.0, 0.0, 0.5, 1.0]
+text_budgets:
+  - id: figure_text
+    region: page
+    maximum_words: 45
+  - id: panel_a_text
+    region: panel_a
+    maximum_words: 22
+rules: []
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--layout-contract",
+            "review/layout_lanes.yaml",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout
+    payload = json.loads(result.stdout)
+    assert payload["layout_constraints"]["authoring_directives"] == [
+        "Keep region [page] at or below 45 rendered words.",
+        "Keep region [panel_a] at or below 22 rendered words.",
+    ]
+
+
 def test_context_pack_rejects_layout_contract_through_symlinked_parent(
     tmp_path: Path,
 ) -> None:

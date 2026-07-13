@@ -161,10 +161,12 @@ visual correctness, publication acceptance, or authority to mutate source.
 `figure-agent.layout-lanes.v1` is an optional attempt-scoped geometry contract.
 It can declare text groups, normalized page regions, and three measurable rule
 types: text-to-text minimum clearance, text containment inside a panel region,
-and text clearance from a plot or illustration region. `context-pack` converts
+text clearance from a plot or illustration region, and declared per-region
+rendered-word budgets. `context-pack` converts
 the selected rules into authoring directives before generation, while
 `check_layout_drift.py` evaluates the same rules against PDF word boxes after
-rendering. Regions remain explicitly declared; the checker does not infer panel
+rendering. Text budgets are human editorial targets scoped to an attempt, not
+journal-wide limits. Regions remain explicitly declared; the checker does not infer panel
 ownership or scientific meaning from pixels. A passing report is layout
 evidence only, never publication acceptance.
 

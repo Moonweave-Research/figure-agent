@@ -264,6 +264,13 @@ modules listed in Section 0.
   into the caption, use one declared distribution-shape grammar and one palette
   role system, and satisfy panel-owned text, mutual-clearance, and page-boundary
   contracts before aesthetic comparison is meaningful.
+  The first text-inventory slice is now implemented as attempt-scoped region
+  budgets injected before generation and counted from PDF words after render.
+  Applied post hoc to the rejected attempt, it measures `75 > 45` words for the
+  whole figure, `33 > 22` for Panel A, and `42 > 23` for Panel B. These limits
+  are explicitly bound to the human editorial verdict and are not claimed as
+  universal journal rules. This closes the text-density measurement gap; page
+  clipping and required-label ownership remain the next structural slice.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot

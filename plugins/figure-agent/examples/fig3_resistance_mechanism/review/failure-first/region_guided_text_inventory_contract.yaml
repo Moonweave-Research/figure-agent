@@ -1,0 +1,46 @@
+schema: figure-agent.layout-lanes.v1
+fixture: fig3_resistance_mechanism
+attempt: region_guided_001
+evaluation_mode: posthoc_human_declared_editorial_budget
+purpose: >-
+  Measure the rejected render against an attempt-specific text budget. These
+  limits are editorial targets for this experiment, not journal-wide rules.
+label_groups:
+  - id: panel_a_title
+    required_terms: [Applied, bias, trapping, during, conduction]
+  - id: panel_a_decay_note
+    required_terms: [current, decays]
+regions:
+  - id: page
+    normalized_bbox: [0.0, 0.0, 1.0, 1.0]
+  - id: panel_a
+    normalized_bbox: [0.0, 0.0, 0.5, 1.0]
+  - id: panel_b
+    normalized_bbox: [0.5, 0.0, 1.0, 1.0]
+  - id: panel_a_plot_with_axes
+    normalized_bbox: [0.34, 0.28, 0.52, 0.82]
+text_budgets:
+  - id: figure_text_budget
+    region: page
+    maximum_words: 45
+  - id: panel_a_text_budget
+    region: panel_a
+    maximum_words: 22
+  - id: panel_b_text_budget
+    region: panel_b
+    maximum_words: 23
+rules:
+  - id: panel_a_title_contained
+    kind: contained_in_region
+    group: panel_a_title
+    region: panel_a
+    minimum_normalized_inset: 0.005
+  - id: panel_a_decay_note_clear_of_plot
+    kind: minimum_clearance_from_region
+    group: panel_a_decay_note
+    region: panel_a_plot_with_axes
+    minimum_normalized_clearance: 0.01
+human_authority:
+  reviewer: moon
+  source: rejected_region_guided_attempt_feedback
+publication_acceptance: rejected

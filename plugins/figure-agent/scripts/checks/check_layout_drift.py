@@ -47,6 +47,17 @@ class LayoutLaneResult:
     missing_groups: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class TextBudgetResult:
+    """Rendered-word budget for one declared page region."""
+
+    budget_id: str
+    status: str
+    word_count: int
+    maximum_words: int
+    region: str
+
+
 def _normalize_token(text: str) -> str:
     return text.strip(" \t\n\r.,;:()[]{}'\"!?+").lower()
 
@@ -133,6 +144,79 @@ def _normalized_inset(
     )
 
 
+def _declared_regions(
+    contract: dict[str, Any],
+    page_size: tuple[float, float],
+) -> dict[str, tuple[float, float, float, float]]:
+    raw_regions = contract.get("regions", [])
+    if not isinstance(raw_regions, list):
+        raise ValueError("layout lane regions must be a list")
+    regions: dict[str, tuple[float, float, float, float]] = {}
+    for region in raw_regions:
+        if not isinstance(region, dict) or not isinstance(region.get("id"), str):
+            raise ValueError("layout lane region requires string id")
+        region_id = region["id"]
+        if region_id in regions:
+            raise ValueError(f"duplicate layout lane region: {region_id}")
+        regions[region_id] = _normalized_region_bbox(region, page_size)
+    return regions
+
+
+def _bbox_center_inside(
+    bbox: tuple[float, float, float, float],
+    region: tuple[float, float, float, float],
+) -> bool:
+    center_x, center_y = _center(bbox)
+    return region[0] <= center_x <= region[2] and region[1] <= center_y <= region[3]
+
+
+def evaluate_text_budgets(
+    contract: dict[str, Any],
+    pdf_words: list[dict[str, Any]],
+    pdf_page_size: tuple[float, float],
+) -> list[TextBudgetResult]:
+    """Count rendered PDF words inside explicitly declared regions."""
+    if contract.get("schema") != LAYOUT_LANES_SCHEMA:
+        raise ValueError(f"expected {LAYOUT_LANES_SCHEMA}")
+    raw_budgets = contract.get("text_budgets", [])
+    if not isinstance(raw_budgets, list):
+        raise ValueError("layout lane text_budgets must be a list")
+    regions = _declared_regions(contract, pdf_page_size)
+    results: list[TextBudgetResult] = []
+    seen: set[str] = set()
+    for budget in raw_budgets:
+        if not isinstance(budget, dict):
+            raise ValueError("layout lane text budget must be an object")
+        budget_id = budget.get("id")
+        region_id = budget.get("region")
+        maximum = budget.get("maximum_words")
+        if (
+            not isinstance(budget_id, str)
+            or budget_id in seen
+            or not isinstance(region_id, str)
+            or region_id not in regions
+            or not isinstance(maximum, int)
+            or isinstance(maximum, bool)
+            or maximum < 0
+        ):
+            raise ValueError("layout lane text budget is invalid")
+        seen.add(budget_id)
+        word_count = sum(
+            _bbox_center_inside(_word_bbox(word), regions[region_id])
+            for word in pdf_words
+        )
+        results.append(
+            TextBudgetResult(
+                budget_id=budget_id,
+                status="ok" if word_count <= maximum else "violation",
+                word_count=word_count,
+                maximum_words=maximum,
+                region=region_id,
+            )
+        )
+    return results
+
+
 def _group_bbox(
     group: dict[str, Any],
     words: list[dict[str, Any]],
@@ -178,17 +262,7 @@ def evaluate_layout_lanes(
     page_diagonal = math.hypot(*pdf_page_size)
     if page_diagonal <= 0:
         raise ValueError("layout lane page size must be positive")
-    raw_regions = contract.get("regions", [])
-    if not isinstance(raw_regions, list):
-        raise ValueError("layout lane regions must be a list")
-    regions: dict[str, tuple[float, float, float, float]] = {}
-    for region in raw_regions:
-        if not isinstance(region, dict) or not isinstance(region.get("id"), str):
-            raise ValueError("layout lane region requires string id")
-        region_id = region["id"]
-        if region_id in regions:
-            raise ValueError(f"duplicate layout lane region: {region_id}")
-        regions[region_id] = _normalized_region_bbox(region, pdf_page_size)
+    regions = _declared_regions(contract, pdf_page_size)
 
     results: list[LayoutLaneResult] = []
     for rule in raw_rules:
@@ -290,11 +364,13 @@ def layout_lane_payload(
     pdf_page_size: tuple[float, float],
 ) -> dict[str, Any]:
     results = evaluate_layout_lanes(contract, pdf_words, pdf_page_size)
+    budget_results = evaluate_text_budgets(contract, pdf_words, pdf_page_size)
     return {
         "schema": "figure-agent.layout-lane-report.v1",
         "contract_schema": LAYOUT_LANES_SCHEMA,
         "page_size_pt": list(pdf_page_size),
-        "failure_count": sum(result.status != "ok" for result in results),
+        "failure_count": sum(result.status != "ok" for result in results)
+        + sum(result.status != "ok" for result in budget_results),
         "results": [
             {
                 "rule_id": result.rule_id,
@@ -304,6 +380,16 @@ def layout_lane_payload(
                 "missing_groups": list(result.missing_groups),
             }
             for result in results
+        ],
+        "text_budget_results": [
+            {
+                "budget_id": result.budget_id,
+                "status": result.status,
+                "word_count": result.word_count,
+                "maximum_words": result.maximum_words,
+                "region": result.region,
+            }
+            for result in budget_results
         ],
     }
 
@@ -320,6 +406,24 @@ def _layout_lane_line(
     if status == "violation":
         return f"WARN layout lane {rule_id}: {clearance:.3f} < {minimum:.3f}"
     return f"WARN layout lane {rule_id}: missing label groups {', '.join(missing_groups)}"
+
+
+def _text_budget_line(result: TextBudgetResult | dict[str, Any]) -> str:
+    status = str(result.status if isinstance(result, TextBudgetResult) else result["status"])
+    budget_id = str(
+        result.budget_id if isinstance(result, TextBudgetResult) else result["budget_id"]
+    )
+    count = int(
+        result.word_count if isinstance(result, TextBudgetResult) else result["word_count"]
+    )
+    maximum = int(
+        result.maximum_words
+        if isinstance(result, TextBudgetResult)
+        else result["maximum_words"]
+    )
+    prefix = "OK" if status == "ok" else "WARN"
+    comparator = "<=" if status == "ok" else ">"
+    return f"{prefix} text budget {budget_id}: {count} {comparator} {maximum} words"
 
 
 def _find_phrase_bbox(
@@ -514,6 +618,10 @@ def run_check(
                     result.missing_groups,
                 )
             )
+        for result in evaluate_text_budgets(lanes, pdf_words, page_size):
+            if result.status != "ok":
+                failures += 1
+            lines.append(_text_budget_line(result))
     return failures, lines
 
 
@@ -560,6 +668,9 @@ def main(argv: list[str] | None = None) -> int:
                         list(result["missing_groups"]),
                     )
                 )
+            lines.extend(
+                _text_budget_line(result) for result in payload["text_budget_results"]
+            )
             if args.json_output is not None:
                 args.json_output.parent.mkdir(parents=True, exist_ok=True)
                 args.json_output.write_text(

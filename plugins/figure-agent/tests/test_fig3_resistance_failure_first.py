@@ -44,6 +44,8 @@ REGION_GUIDED_PROMPT = REVIEW / "region_guided_authoring_prompt.md"
 REGION_GUIDED_SOURCE = REVIEW / "region_guided_generated.tex"
 REGION_GUIDED_RENDER_RECEIPT = REVIEW / "region_guided_render_receipt.yaml"
 REGION_GUIDED_REVIEW = REVIEW / "region_guided_adversarial_review.yaml"
+REGION_GUIDED_TEXT_CONTRACT = REVIEW / "region_guided_text_inventory_contract.yaml"
+REGION_GUIDED_TEXT_REPORT = REVIEW / "region_guided_text_inventory_report.json"
 
 
 def _sha256(path: Path) -> str:
@@ -276,9 +278,12 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/region_guided_adversarial_review.yaml",
         "review/failure-first/region_guided_attempt.yaml",
         "review/failure-first/region_guided_render_receipt.yaml",
+        "review/failure-first/region_guided_text_inventory_contract.yaml",
+        "review/failure-first/region_guided_text_inventory_report.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/bin/fig-agent",
+        "plugins/figure-agent/docs/architecture-overview.md",
         "plugins/figure-agent/docs/execution-plan.md",
         "plugins/figure-agent/scripts/authoring_context_pack.py",
         "plugins/figure-agent/scripts/checks/check_layout_drift.py",
@@ -619,6 +624,27 @@ def test_fig3_region_guided_attempt_passes_selected_rules_but_fails_strict_gate(
         "cross_panel_visual_language_is_inconsistent",
         "excessive_figure_text",
     }
+
+
+def test_fig3_region_guided_text_budget_quantifies_human_density_rejection() -> None:
+    contract = yaml.safe_load(REGION_GUIDED_TEXT_CONTRACT.read_text(encoding="utf-8"))
+    report = json.loads(REGION_GUIDED_TEXT_REPORT.read_text(encoding="utf-8"))
+
+    assert contract["evaluation_mode"] == "posthoc_human_declared_editorial_budget"
+    assert contract["human_authority"] == {
+        "reviewer": "moon",
+        "source": "rejected_region_guided_attempt_feedback",
+    }
+    assert report["failure_count"] == 3
+    assert {
+        item["budget_id"]: (item["word_count"], item["maximum_words"], item["status"])
+        for item in report["text_budget_results"]
+    } == {
+        "figure_text_budget": (75, 45, "violation"),
+        "panel_a_text_budget": (33, 22, "violation"),
+        "panel_b_text_budget": (42, 23, "violation"),
+    }
+    assert contract["publication_acceptance"] == "rejected"
 
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
