@@ -1,0 +1,14 @@
+{
+  "change_summary": "Moved the sulfur-content note slightly upward within the local scope to separate it from the trap-energy label.",
+  "changed_lines": 2,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v4/repaired_generated.tex",
+  "output_sha256": "sha256:3a10e4abd6f1f41d6108f12a2539e118c4b131df1648e7c1d169baadddda86b2",
+  "packet_sha256": "sha256:d781e56a6bc8c3268e764d4a7bf4f353250674987928deaa61ed7e38790c24bb",
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:e07c10f57a16f8dbfe3b4991feca260027f45ced8f9834e0bf9ee7caa3df7749"
+}

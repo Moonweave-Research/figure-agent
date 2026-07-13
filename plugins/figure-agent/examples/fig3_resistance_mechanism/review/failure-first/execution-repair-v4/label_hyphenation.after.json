@@ -1,0 +1,15 @@
+{
+  "schema": "figure-agent.label-hyphenation.v1",
+  "render_pdf": "build/repaired_generated.pdf",
+  "issues": [
+    {
+      "text": "re-",
+      "xmin": 105.412281,
+      "ymin": 97.710053,
+      "xmax": 112.71808,
+      "ymax": 103.245292,
+      "message": "hyphenated line break 're-': a fixed-width node wrapped a word; widen text width or reword the label"
+    }
+  ],
+  "total": 1
+}

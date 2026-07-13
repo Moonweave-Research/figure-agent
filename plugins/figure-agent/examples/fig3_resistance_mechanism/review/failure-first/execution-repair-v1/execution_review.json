@@ -1,0 +1,22 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "attempt": "execution-repair-v1",
+  "decision": "completed_wrong_path_ineligible",
+  "reason_codes": [
+    "repository_output_path_not_bound",
+    "wrong_workspace_output_path",
+    "output_outside_plugin_workspace"
+  ],
+  "packet_sha256": "sha256:b2062ce61ba44c6f5e9a405971cf598d28c665f14e4b955ff2bf56a3c26f4a93",
+  "prompt_sha256": "sha256:e1ebee7284d7f1ea1a05480a3e89243dc48d89be9b9f592d1d8ec89b42410798",
+  "transcript_sha256": "sha256:eaacccd749e2bc3f07f8f1f6ebb2c83250679a3e679e6ad674e7f99e4f4acda5",
+  "generated_source": {
+    "removed_from_wrong_path_after_hash_capture": true,
+    "wrong_path": "repository-root:examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v1/repaired_generated.tex",
+    "sha256": "sha256:74d6affadb6470821841e4186f8cd4c10f7f84c57122ee1766677aeabf713e68"
+  },
+  "compile_attempted": false,
+  "machine_gate": "not_applicable",
+  "human_review": "ineligible",
+  "publication_acceptance": "not_claimed"
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "attempt": "execution-repair-v2",
+  "decision": "late_completed_unverified_superseded",
+  "reason_codes": [
+    "completion_after_controller_observation_window",
+    "filesystem_author_has_no_materialization_receipt",
+    "superseded_by_controller_materialization"
+  ],
+  "packet_sha256": "sha256:a3f15f9ceee729289caa63cf939a75942e765f5da0e1916a6e4a053a372e8437",
+  "prompt_sha256": "sha256:67ca7730e178460cee223878422bd68353b9ac21eed91dedc2752aeb2655b363",
+  "transcript_sha256": "sha256:b489688fd1fcbafab624e26c4dd6ffe7ee73d8bed72d56579e01b732efd502c3",
+  "generated_source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v2/repaired_generated.tex",
+    "sha256": "sha256:5542a5ce29d37bf2224633c5aabefe1d12230aef03460f71b4818f38f1427ca8"
+  },
+  "compile_attempted": false,
+  "machine_gate": "not_applicable",
+  "human_review": "not_requested_superseded",
+  "publication_acceptance": "not_claimed"
+}

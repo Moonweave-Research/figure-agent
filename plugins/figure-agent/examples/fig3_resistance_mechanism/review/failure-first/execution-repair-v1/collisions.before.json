@@ -1,0 +1,50 @@
+{
+  "schema": "figure-agent.text-collisions.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "review/failure-first/execution-binding-v6/build/treatment_generated.pdf",
+  "iou_threshold": 0.05,
+  "word_count": 66,
+  "collisions": [
+    {
+      "id": "TC001",
+      "texts": ["increasing", "trap-energy"],
+      "iou": 0.409135,
+      "a": {"text": "increasing", "bbox_pdf": [236.544, 13.302712, 260.15911, 18.09992]},
+      "b": {"text": "trap-energy", "bbox_pdf": [232.292, 12.670397, 272.851721, 19.497193]},
+      "source_mapping": null
+    },
+    {
+      "id": "TC002",
+      "texts": ["content", "landscape"],
+      "iou": 0.331173,
+      "a": {"text": "content", "bbox_pdf": [275.702893, 13.302712, 292.697234, 18.09992]},
+      "b": {"text": "landscape", "bbox_pdf": [274.893862, 12.670397, 310.9535, 19.497193]},
+      "source_mapping": null
+    },
+    {
+      "id": "TC003",
+      "texts": ["disordered", "conduction"],
+      "iou": 0.253223,
+      "a": {"text": "disordered", "bbox_pdf": [45.13, 24.925712, 69.610265, 29.72292]},
+      "b": {"text": "conduction", "bbox_pdf": [46.089996, 21.437397, 85.812218, 28.264193]},
+      "source_mapping": null
+    },
+    {
+      "id": "TC004",
+      "texts": ["sulfur", "trap-energy"],
+      "iou": 0.190385,
+      "a": {"text": "sulfur", "bbox_pdf": [261.594128, 13.302712, 274.262694, 18.09992]},
+      "b": {"text": "trap-energy", "bbox_pdf": [232.292, 12.670397, 272.851721, 19.497193]},
+      "source_mapping": null
+    },
+    {
+      "id": "TC005",
+      "texts": ["conduction", "sulfur"],
+      "iou": 0.146014,
+      "a": {"text": "conduction", "bbox_pdf": [46.089996, 21.437397, 85.812218, 28.264193]},
+      "b": {"text": "sulfur", "bbox_pdf": [71.045283, 24.925712, 83.713849, 29.72292]},
+      "source_mapping": null
+    }
+  ],
+  "total": 5
+}

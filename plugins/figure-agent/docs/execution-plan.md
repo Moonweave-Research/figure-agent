@@ -323,8 +323,17 @@ modules listed in Section 0.
      its machine reports. Only exact source mappings may become editable repair
      targets; ambiguous and unbound findings remain review-only.
   3. Bind one repair attempt, one declared source block, protected scientific
-     relations, and an additive output path. The author lane may write the new
-     source but may not compile or overwrite any historical attempt.
+     relations, and an additive output path. Two preserved filesystem-author
+     trials exposed separate orchestration failures: v1 lacked a repository
+     execution-cwd binding and eventually wrote outside the plugin workspace;
+     v2 eventually wrote the correct source, but only after the controller's
+     observation window and without a deterministic materialization receipt.
+     A v3 structured full-source response also arrived late and spent tokens
+     reproducing unchanged source. The repair lane must therefore return only
+     the exact replacement block without filesystem write authority. Figure
+     Agent, not the LLM, reconstructs and validates the full source bytes,
+     exact anchor, protected tokens, and line budget before materializing the
+     additive output. Superseded trials may not be retried or repaired in place.
   4. Compile the repaired source sequentially outside the author lane, rerun
      the same gates, and persist before/after detector movement plus regression
      evidence. A named human verdict remains required for visual or publication

@@ -456,6 +456,7 @@ def _authoring_repair_packet(argv: list[str]) -> int:
     parser.add_argument("--source", required=True)
     parser.add_argument("--target-contract", required=True)
     parser.add_argument("--output-path", required=True)
+    parser.add_argument("--execution-cwd", default=".")
     parser.add_argument("--packet-out", required=True)
     parser.add_argument("--prompt-out", required=True)
     parser.add_argument("--json", action="store_true")
@@ -491,6 +492,7 @@ def _authoring_repair_packet(argv: list[str]) -> int:
             source_path=args.source,
             target_contract=args.target_contract,
             output_path=args.output_path,
+            execution_cwd=args.execution_cwd,
         )
         packet_path = repair_artifact(args.packet_out, suffix=".json")
         prompt_path = repair_artifact(args.prompt_out, suffix=".md")
@@ -506,6 +508,58 @@ def _authoring_repair_packet(argv: list[str]) -> int:
         print(f"fig-agent authoring-repair-packet: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(packet, indent=2, sort_keys=True))
+    return 0
+
+
+def _authoring_repair_materialize(argv: list[str]) -> int:
+    import authoring_repair_packet
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-repair-materialize")
+    parser.add_argument("--packet", required=True)
+    parser.add_argument("--response", required=True)
+    parser.add_argument("--receipt-out", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    workspace_root = _paths().workspace_root.resolve()
+
+    def workspace_path(value: str, *, must_exist: bool) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError("repair evidence path must be workspace-relative and safe")
+        path = workspace_root / relative
+        if not path.resolve(strict=False).is_relative_to(workspace_root):
+            raise ValueError("repair evidence path must remain inside the workspace")
+        if must_exist and not path.is_file():
+            raise ValueError("repair evidence input must be a regular file")
+        if not must_exist and (path.exists() or path.is_symlink()):
+            raise ValueError("repair receipt already exists")
+        return path
+
+    try:
+        packet_path = workspace_path(args.packet, must_exist=True)
+        response_path = workspace_path(args.response, must_exist=True)
+        receipt_path = workspace_path(args.receipt_out, must_exist=False)
+        if not (
+            packet_path.parent == response_path.parent == receipt_path.parent
+        ):
+            raise ValueError("repair packet, response, and receipt must be adjacent")
+        packet = json.loads(packet_path.read_text(encoding="utf-8"))
+        response = json.loads(response_path.read_text(encoding="utf-8"))
+        receipt = authoring_repair_packet.materialize_repair_candidate(
+            packet,
+            response,
+            workspace_root=workspace_root,
+        )
+        receipt_path.write_text(
+            json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    except (ValueError, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        print(f"fig-agent authoring-repair-materialize: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(receipt, indent=2, sort_keys=True))
     return 0
 
 
@@ -1862,6 +1916,8 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_preflight(rest)
     if command == "authoring-repair-packet":
         return _authoring_repair_packet(rest)
+    if command == "authoring-repair-materialize":
+        return _authoring_repair_materialize(rest)
     if command == "authoring-orro-plan":
         return _authoring_orro_plan(rest)
     if command == "authoring-receipt":

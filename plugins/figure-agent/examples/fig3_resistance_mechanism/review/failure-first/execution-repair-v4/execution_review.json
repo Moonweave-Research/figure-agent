@@ -1,0 +1,31 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "attempt": "execution-repair-v4",
+  "decision": "machine_improved_strict_failed_human_pending",
+  "target_finding": "TC001",
+  "repair_family": "local_reposition",
+  "before": {
+    "text_collisions": 5,
+    "label_hyphenation": 1
+  },
+  "after": {
+    "text_collisions": 2,
+    "label_hyphenation": 1
+  },
+  "target_resolved": true,
+  "normal_compile": "pass",
+  "strict_compile": "fail",
+  "remaining_blockers": [
+    "two_text_collisions",
+    "one_label_hyphenation"
+  ],
+  "packet_id": "sha256:d781e56a6bc8c3268e764d4a7bf4f353250674987928deaa61ed7e38790c24bb",
+  "packet_file_sha256": "sha256:2d2a322f75a5d03113ed12b6addb83fde9c23dd65cfbecb80472d4c7b5c6142f",
+  "prompt_sha256": "sha256:db56d3904c26c6cd858e38a44e3c8ecea0bc0f213de37efa39bba2dc0b4a2de1",
+  "response_sha256": "sha256:37d69712bd7cf492aec868e9cb799b568cf2e0a2114a267adf63422d777e5c0b",
+  "transcript_sha256": "sha256:77d77ed813c6369a56946531b653e0fb01f0805723609fd40d062a90c69a8a6f",
+  "materialization_receipt_sha256": "sha256:68c3d6ee43153313758e25d7ee6e77d7233cc183d2a0d2b4cef054b591f891f3",
+  "generated_source_sha256": "sha256:3a10e4abd6f1f41d6108f12a2539e118c4b131df1648e7c1d169baadddda86b2",
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

@@ -1,0 +1,117 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "a": {
+        "bbox_pdf": [
+          236.544,
+          13.302712,
+          260.15911,
+          18.09992
+        ],
+        "text": "increasing"
+      },
+      "b": {
+        "bbox_pdf": [
+          232.292,
+          12.670397,
+          272.851721,
+          19.497193
+        ],
+        "text": "trap-energy"
+      },
+      "id": "TC001",
+      "iou": 0.409135,
+      "source_mapping": null,
+      "texts": [
+        "increasing",
+        "trap-energy"
+      ]
+    },
+    "finding_id": "TC001",
+    "protected_invariants": [
+      "S60 $\\rightarrow$ S80",
+      "$n$ = breadth",
+      "$\\rho_{60s}$\\\\magnitude"
+    ],
+    "repair_family": "local_reposition",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v1/collisions.before.json",
+    "selector": {
+      "anchor_end": "  \\draw[draw=cAmber, line width=0.48pt, -{Stealth[length=3.0pt,width=2.2pt]}]",
+      "anchor_start": "\\begin{scope}[shift={(7.82,0.35)}]",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-b-content-label",
+      "source_hash": "sha256:e07c10f57a16f8dbfe3b4991feca260027f45ced8f9834e0bf9ee7caa3df7749"
+    }
+  },
+  "execution_cwd": "plugins/figure-agent",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v1/collisions.before.json",
+      "schema": "figure-agent.text-collisions.v1",
+      "sha256": "sha256:a5463c42f28694a7d6099420c7c281289a7fa78a251f72f0b51c3b3ed164e8fc"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v4/repaired_generated.tex",
+  "packet_sha256": "sha256:d781e56a6bc8c3268e764d4a7bf4f353250674987928deaa61ed7e38790c24bb",
+  "prompt": {
+    "sha256": "sha256:db56d3904c26c6cd858e38a44e3c8ecea0bc0f213de37efa39bba2dc0b4a2de1",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v4/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/treatment_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: local_reposition\n- Machine finding: {\"a\": {\"bbox_pdf\": [236.544, 13.302712, 260.15911, 18.09992], \"text\": \"increasing\"}, \"b\": {\"bbox_pdf\": [232.292, 12.670397, 272.851721, 19.497193], \"text\": \"trap-energy\"}, \"id\": \"TC001\", \"iou\": 0.409135, \"source_mapping\": null, \"texts\": [\"increasing\", \"trap-energy\"]}\n- Change content only between the exact anchor lines [\\begin{scope}[shift={(7.82,0.35)}]] and [  \\draw[draw=cAmber, line width=0.48pt, -{Stealth[length=3.0pt,width=2.2pt]}]].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [S60 $\\rightarrow$ S80].\n- Preserve the exact token [$n$ = breadth].\n- Preserve the exact token [$\\rho_{60s}$\\\\magnitude].\n\n## Bound editable source bytes\n```tex\n  \\node[small note, anchor=west] at (0.26,3.50) {increasing sulfur content};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v4/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [
+    {
+      "attribution": "unbound",
+      "finding_id": "TC002"
+    },
+    {
+      "attribution": "unbound",
+      "finding_id": "TC003"
+    },
+    {
+      "attribution": "unbound",
+      "finding_id": "TC004"
+    },
+    {
+      "attribution": "unbound",
+      "finding_id": "TC005"
+    }
+  ],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/treatment_generated.tex",
+    "sha256": "sha256:e07c10f57a16f8dbfe3b4991feca260027f45ced8f9834e0bf9ee7caa3df7749"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v4/repair_targets.json",
+    "sha256": "sha256:decf422172451bded0b49c454b66efa3fa87777d5c2b3dc86f9069b3f04c3a7f"
+  },
+  "verification": "external_sequential_compile_required"
+}

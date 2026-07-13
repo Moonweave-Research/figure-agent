@@ -212,6 +212,29 @@ def test_check_collisions_writes_deterministic_json_output(
     }
 
 
+def test_collision_payload_preserves_fixture_identity_for_nested_attempt() -> None:
+    pdf = Path(
+        "examples/demo/review/failure-first/execution-binding-v6/build/"
+        "treatment_generated.pdf"
+    )
+
+    report = check_collisions.collision_payload(pdf, [], [], 0.05)
+
+    assert report["fixture"] == "demo"
+    assert report["render_pdf"] == (
+        "review/failure-first/execution-binding-v6/build/treatment_generated.pdf"
+    )
+
+
+def test_collision_payload_accepts_bound_fixture_after_compile_changes_cwd() -> None:
+    report = check_collisions.collision_payload(
+        Path("build/treatment_generated.pdf"), [], [], 0.05, fixture="demo"
+    )
+
+    assert report["fixture"] == "demo"
+    assert report["render_pdf"] == "build/treatment_generated.pdf"
+
+
 def test_check_visual_clash_default_exits_zero(monkeypatch) -> None:
     _require_golden_pdf()
     monkeypatch.setattr(sys, "argv", ["check_visual_clash.py", str(GOLDEN_PDF)])
@@ -344,6 +367,7 @@ def test_compile_strict_flag_is_documented_in_script() -> None:
     assert "--ignore-known-fp" in compile_sh
     assert "--json-output" in compile_sh
     assert "collisions.json" in compile_sh
+    assert 'COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")' in compile_sh
     assert "visual_clash.json" in compile_sh
     assert "check_text_boundary_clash.py" in compile_sh
     assert "text_boundary_clash.json" in compile_sh

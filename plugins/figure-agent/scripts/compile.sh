@@ -24,6 +24,16 @@ fi
 
 TEX_INPUT="$1"
 
+FIXTURE_NAME=""
+FIXTURE_TAIL="${TEX_INPUT#*examples/}"
+if [[ "$FIXTURE_TAIL" != "$TEX_INPUT" ]]; then
+  FIXTURE_NAME="${FIXTURE_TAIL%%/*}"
+fi
+COLLISION_FIXTURE_ARGS=()
+if [[ -n "$FIXTURE_NAME" ]]; then
+  COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")
+fi
+
 if [[ ! -f "$TEX_INPUT" ]]; then
   echo "Error: file not found: $TEX_INPUT" >&2
   exit 1
@@ -138,6 +148,7 @@ run_report_check() {
 }
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${COLLISION_FIXTURE_ARGS[@]+"${COLLISION_FIXTURE_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/collisions.json" \
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visual_clash.py" \

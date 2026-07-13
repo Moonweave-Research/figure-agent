@@ -115,7 +115,7 @@ def test_compiles_one_hash_bound_exact_repair_packet(tmp_path: Path) -> None:
         ),
     )
 
-    assert packet["schema"] == "figure-agent.repair-execution-packet.v1"
+    assert packet["schema"] == "figure-agent.repair-execution-packet.v3"
     assert packet["source"]["sha256"] == _sha256(source.read_bytes())
     assert packet["editable_target"]["finding_id"] == "TC001"
     assert packet["editable_target"]["selector"]["source_hash"] == _sha256(
@@ -133,10 +133,107 @@ def test_compiles_one_hash_bound_exact_repair_packet(tmp_path: Path) -> None:
     assert packet["packet_sha256"] == authoring_repair_packet.canonical_packet_sha256(
         packet
     )
-    assert "Do not compile, render, or run a gate" in prompt
+    assert "Do not use filesystem or shell tools" in prompt
+    assert packet["response_schema"]["required"] == [
+        "replacement_utf8",
+        "change_summary",
+    ]
     assert "Change content only between the exact anchor lines" in prompt
     assert "S60 -> S80" in prompt
-    assert source.read_text(encoding="utf-8") in prompt
+    assert r"\node {repeated dispersive trapping};" in prompt
+    assert r"\documentclass" not in prompt
+
+
+def test_binds_repository_execution_cwd_into_repair_output(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+
+    packet, prompt = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+        execution_cwd="plugins/figure-agent",
+    )
+
+    assert packet["execution_cwd"] == "plugins/figure-agent"
+    assert packet["repository_output_path"] == (
+        "plugins/figure-agent/examples/demo/review/failure-first/"
+        "execution-repair-v1/repaired_generated.tex"
+    )
+    assert (
+        "The controller will materialize a validated candidate at "
+        "[plugins/figure-agent/examples/demo/review/failure-first/"
+        "execution-repair-v1/repaired_generated.tex]."
+    ) in prompt
+
+
+def test_materializes_valid_candidate_only_after_controller_validation(
+    tmp_path: Path,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    packet, _ = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+    replacement = r"\node[yshift=-2mm] {repeated dispersive trapping};"
+
+    receipt = authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        {
+            "replacement_utf8": replacement,
+            "change_summary": "Lower the colliding label.",
+        },
+        workspace_root=workspace,
+    )
+
+    output = workspace / packet["output_path"]
+    candidate = source.read_text(encoding="utf-8").replace(
+        r"\node {repeated dispersive trapping};", replacement
+    )
+    assert output.read_text(encoding="utf-8") == candidate
+    assert receipt["decision"] == "materialized_verification_pending"
+    assert receipt["changed_source_blocks"] == 1
+    assert receipt["changed_lines"] == 2
+    assert receipt["publication_acceptance"] == "not_claimed"
+
+
+def test_materializer_rejects_change_outside_exact_anchor(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    packet, _ = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="replacement must not contain anchor lines",
+    ):
+        authoring_repair_packet.materialize_repair_candidate(
+            packet,
+            {
+                "replacement_utf8": "% repair:label:end",
+                "change_summary": "Unsafe edit.",
+            },
+            workspace_root=workspace,
+        )
 
 
 def test_rejects_ambiguous_or_unbound_repair_target(tmp_path: Path) -> None:
@@ -235,3 +332,37 @@ def test_cli_writes_additive_repair_packet_and_prompt(tmp_path: Path) -> None:
     assert (workspace / repair_root / "repair_packet.json").is_file()
     assert (workspace / repair_root / "repair_prompt.md").is_file()
     assert not (workspace / repair_root / "repaired_generated.tex").exists()
+
+    response = workspace / repair_root / "repair_response.json"
+    response.write_text(
+        json.dumps(
+            {
+                "replacement_utf8": (
+                    r"\node[yshift=-2mm] {repeated dispersive trapping};"
+                ),
+                "change_summary": "Lower the colliding label.",
+            }
+        ),
+        encoding="utf-8",
+    )
+    materialize = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-repair-materialize",
+            "--packet",
+            f"{repair_root}/repair_packet.json",
+            "--response",
+            f"{repair_root}/repair_response.json",
+            "--receipt-out",
+            f"{repair_root}/materialization_receipt.json",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert materialize.returncode == 0, materialize.stderr
+    assert (workspace / repair_root / "repaired_generated.tex").is_file()
+    assert (workspace / repair_root / "materialization_receipt.json").is_file()

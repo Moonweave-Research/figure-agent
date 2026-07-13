@@ -1,0 +1,1 @@
+{"change_summary":"Moved the sulfur-content note slightly upward within the local scope to separate it from the trap-energy label.","replacement_utf8":"  \\node[small note, anchor=west] at (0.26,3.70) {increasing sulfur content};"}

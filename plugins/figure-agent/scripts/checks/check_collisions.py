@@ -94,6 +94,8 @@ def collision_payload(
     words: list[dict],
     collisions: list[tuple],
     iou_thresh: float,
+    *,
+    fixture: str | None = None,
 ) -> dict:
     ordered = sorted(
         collisions,
@@ -105,10 +107,14 @@ def collision_payload(
             item[0]["ymin"],
         ),
     )
-    fixture_dir = pdf_path.parent.parent
+    try:
+        examples_index = pdf_path.parts.index("examples")
+        fixture_dir = Path(*pdf_path.parts[: examples_index + 2])
+    except (ValueError, IndexError):
+        fixture_dir = pdf_path.parent.parent
     return {
         "schema": "figure-agent.text-collisions.v1",
-        "fixture": fixture_dir.name,
+        "fixture": fixture or fixture_dir.name,
         "render_pdf": str(pdf_path.relative_to(fixture_dir)),
         "iou_threshold": iou_thresh,
         "word_count": len(words),
@@ -147,10 +153,16 @@ def main() -> int:
         type=Path,
         help="구조화된 충돌 보고서를 기록할 JSON 경로",
     )
+    parser.add_argument(
+        "--fixture",
+        help="compile.sh가 cwd를 변경한 경우 보존할 fixture 이름",
+    )
     args = parser.parse_args()
 
     if not args.pdf.exists():
         raise FileNotFoundError(f"PDF not found: {args.pdf}")
+    if args.fixture and len(Path(args.fixture).parts) != 1:
+        parser.error("fixture must be one safe path component")
 
     words = extract_word_bboxes(args.pdf)
     collisions = find_collisions(words, args.iou_thresh)
@@ -158,7 +170,13 @@ def main() -> int:
         args.json_output.parent.mkdir(parents=True, exist_ok=True)
         args.json_output.write_text(
             json.dumps(
-                collision_payload(args.pdf, words, collisions, args.iou_thresh),
+                collision_payload(
+                    args.pdf,
+                    words,
+                    collisions,
+                    args.iou_thresh,
+                    fixture=args.fixture,
+                ),
                 indent=2,
                 ensure_ascii=False,
             )

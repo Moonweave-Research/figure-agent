@@ -1,0 +1,26 @@
+{
+  "schema": "figure-agent.text-collisions.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "build/repaired_generated.pdf",
+  "iou_threshold": 0.05,
+  "word_count": 66,
+  "collisions": [
+    {
+      "id": "TC001",
+      "texts": ["disordered", "conduction"],
+      "iou": 0.253223,
+      "a": {"text": "disordered", "bbox_pdf": [45.13, 24.925712, 69.610265, 29.72292]},
+      "b": {"text": "conduction", "bbox_pdf": [46.089996, 21.437397, 85.812218, 28.264193]},
+      "source_mapping": null
+    },
+    {
+      "id": "TC002",
+      "texts": ["conduction", "sulfur"],
+      "iou": 0.146014,
+      "a": {"text": "conduction", "bbox_pdf": [46.089996, 21.437397, 85.812218, 28.264193]},
+      "b": {"text": "sulfur", "bbox_pdf": [71.045283, 24.925712, 83.713849, 29.72292]},
+      "source_mapping": null
+    }
+  ],
+  "total": 2
+}

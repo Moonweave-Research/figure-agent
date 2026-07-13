@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import difflib
 import hashlib
 import json
 import re
 from pathlib import Path
 from typing import Any
 
-SCHEMA = "figure-agent.repair-execution-packet.v1"
+SCHEMA = "figure-agent.repair-execution-packet.v3"
 CONTRACT_SCHEMA = "figure-agent.repair-target-contract.v1"
 SOURCE_ATTEMPT = re.compile(r"execution-binding-v[1-9][0-9]*")
 REPAIR_ATTEMPT = re.compile(r"execution-repair-v[1-9][0-9]*")
@@ -25,6 +26,15 @@ ALLOWED_REPAIR_FAMILIES = {
     "relation_restore",
     "salience_adjustment",
     "style_normalization",
+}
+RESPONSE_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["replacement_utf8", "change_summary"],
+    "properties": {
+        "replacement_utf8": {"type": "string", "minLength": 1},
+        "change_summary": {"type": "string", "minLength": 1},
+    },
 }
 
 
@@ -57,6 +67,12 @@ def _safe_relative(value: str, *, label: str) -> Path:
     ):
         raise RepairExecutionPacketError(f"{label} must be repository-relative and safe")
     return path
+
+
+def _safe_execution_cwd(value: str) -> str:
+    if value == ".":
+        return value
+    return _safe_relative(value, label="execution cwd").as_posix()
 
 
 def _regular_file(workspace_root: Path, value: str, *, label: str) -> Path:
@@ -143,9 +159,9 @@ def _render_prompt(
     *,
     fixture: str,
     model_id: str,
-    output_path: str,
+    repository_output_path: str,
     source_path: str,
-    source_text: str,
+    editable_source: str,
     target: dict[str, Any],
 ) -> str:
     selector = target["selector"]
@@ -156,7 +172,13 @@ def _render_prompt(
             f"# Bound repair execution: {fixture}",
             "",
             "## Single-attempt boundary",
-            f"- Write exactly one new source to [{output_path}].",
+            "- Return one JSON object matching the bound response schema.",
+            "- Do not use filesystem or shell tools.",
+            "- Put only the replacement content between the anchors in the "
+            "replacement_utf8 field.",
+            "- Put a concise factual description in the change_summary field.",
+            "- The controller will materialize a validated candidate at "
+            f"[{repository_output_path}].",
             f"- Reproduce the complete bound source from [{source_path}] below.",
             "- Perform one repair attempt only.",
             "- Do not compile, render, or run a gate.",
@@ -175,9 +197,9 @@ def _render_prompt(
             "## Protected scientific invariants",
             *[f"- Preserve the exact token [{token}]." for token in invariants],
             "",
-            "## Bound source bytes",
+            "## Bound editable source bytes",
             "```tex",
-            source_text.rstrip("\n"),
+            editable_source.rstrip("\n"),
             "```",
             "",
             "## Provenance boundary",
@@ -198,6 +220,7 @@ def compile_repair_execution_packet(
     source_path: str,
     target_contract: str,
     output_path: str,
+    execution_cwd: str = ".",
 ) -> tuple[dict[str, object], str]:
     """Compile one packet without executing an authoring model or a renderer."""
     if not model_id.strip():
@@ -272,10 +295,6 @@ def compile_repair_execution_packet(
             attempt_pattern=REPAIR_ATTEMPT,
             label="finding report",
         )
-        if report_relative.parent != output_relative.parent:
-            raise RepairExecutionPacketError(
-                "finding report must be adjacent to the declared output"
-            )
         report_key = report_relative.as_posix()
         if report_key not in reports:
             report_path = _regular_file(
@@ -329,6 +348,13 @@ def compile_repair_execution_packet(
         raise RepairExecutionPacketError("exact attribution required for one repair target")
 
     editable = exact_targets[0]
+    source_lines = source_text.splitlines()
+    editable_start, editable_end = _anchor_indexes(source_text, editable["selector"])
+    editable_source = "\n".join(source_lines[editable_start + 1 : editable_end]) + "\n"
+    bound_execution_cwd = _safe_execution_cwd(execution_cwd)
+    repository_output_path = (
+        Path(bound_execution_cwd) / output_relative
+    ).as_posix()
     report_records = [
         {
             "path": path,
@@ -340,9 +366,9 @@ def compile_repair_execution_packet(
     prompt = _render_prompt(
         fixture=fixture,
         model_id=model_id.strip(),
-        output_path=output_relative.as_posix(),
+        repository_output_path=repository_output_path,
         source_path=source_relative.as_posix(),
-        source_text=source_text,
+        editable_source=editable_source,
         target=editable,
     )
     packet: dict[str, object] = {
@@ -360,18 +386,154 @@ def compile_repair_execution_packet(
             review_only, key=lambda item: (item["finding_id"], item["attribution"])
         ),
         "output_path": output_relative.as_posix(),
+        "repository_output_path": repository_output_path,
+        "execution_cwd": bound_execution_cwd,
         "change_budget": {
             "max_attempts": 1,
             "max_source_blocks": 1,
             "max_changed_lines": 6,
         },
         "author_may_compile": False,
+        "author_may_write_files": False,
         "verification": "external_sequential_compile_required",
         "publication_acceptance": "not_claimed",
+        "response_schema": RESPONSE_SCHEMA,
         "prompt": {"utf8": prompt, "sha256": _sha256_bytes(prompt.encode("utf-8"))},
     }
     packet["packet_sha256"] = canonical_packet_sha256(packet)
     return packet, prompt
+
+
+def _anchor_indexes(text: str, selector: dict[str, Any]) -> tuple[int, int]:
+    lines = text.splitlines()
+    start_marker = str(selector["anchor_start"])
+    end_marker = str(selector["anchor_end"])
+    starts = [index for index, line in enumerate(lines) if line == start_marker]
+    ends = [index for index, line in enumerate(lines) if line == end_marker]
+    if len(starts) != 1 or len(ends) != 1 or starts[0] >= ends[0]:
+        raise RepairExecutionPacketError("candidate exact anchor drift")
+    return starts[0], ends[0]
+
+
+def materialize_repair_candidate(
+    packet: dict[str, object],
+    response: dict[str, object],
+    *,
+    workspace_root: Path,
+) -> dict[str, object]:
+    """Validate an LLM response and materialize its additive source once."""
+    if packet.get("schema") != SCHEMA:
+        raise RepairExecutionPacketError("packet schema invalid")
+    if packet.get("packet_sha256") != canonical_packet_sha256(packet):
+        raise RepairExecutionPacketError("packet hash drift")
+    if set(response) != {"replacement_utf8", "change_summary"}:
+        raise RepairExecutionPacketError("candidate response schema invalid")
+    replacement = response.get("replacement_utf8")
+    summary = response.get("change_summary")
+    if (
+        not isinstance(replacement, str)
+        or not replacement
+        or not isinstance(summary, str)
+        or not summary.strip()
+    ):
+        raise RepairExecutionPacketError("candidate response schema invalid")
+
+    workspace_root = workspace_root.resolve()
+    source_record = packet.get("source")
+    if not isinstance(source_record, dict):
+        raise RepairExecutionPacketError("packet source invalid")
+    source_path = _regular_file(
+        workspace_root, str(source_record.get("path") or ""), label="source path"
+    )
+    source_bytes = source_path.read_bytes()
+    if source_record.get("sha256") != _sha256_bytes(source_bytes):
+        raise RepairExecutionPacketError("source hash drift")
+    original = source_bytes.decode("utf-8")
+
+    editable = packet.get("editable_target")
+    selector = editable.get("selector") if isinstance(editable, dict) else None
+    invariants = editable.get("protected_invariants") if isinstance(editable, dict) else None
+    if not isinstance(selector, dict) or not isinstance(invariants, list):
+        raise RepairExecutionPacketError("packet editable target invalid")
+    if selector.get("source_hash") != source_record.get("sha256"):
+        raise RepairExecutionPacketError("selector source hash drift")
+    original_start, original_end = _anchor_indexes(original, selector)
+    replacement_lines = replacement.splitlines()
+    if any(
+        line in {selector["anchor_start"], selector["anchor_end"]}
+        for line in replacement_lines
+    ):
+        raise RepairExecutionPacketError("replacement must not contain anchor lines")
+
+    original_lines = original.splitlines()
+    candidate_lines = [
+        *original_lines[: original_start + 1],
+        *replacement_lines,
+        *original_lines[original_end:],
+    ]
+    candidate = "\n".join(candidate_lines) + ("\n" if original.endswith("\n") else "")
+    candidate_start, candidate_end = _anchor_indexes(candidate, selector)
+    changes = [
+        opcode
+        for opcode in difflib.SequenceMatcher(
+            a=original_lines, b=candidate_lines, autojunk=False
+        ).get_opcodes()
+        if opcode[0] != "equal"
+    ]
+    if len(changes) != 1:
+        raise RepairExecutionPacketError("candidate must change one source block")
+    _tag, old_start, old_end, new_start, new_end = changes[0]
+    old_inside = (
+        original_start < old_start <= original_end
+        if old_start == old_end
+        else original_start < old_start and old_end <= original_end
+    )
+    new_inside = (
+        candidate_start < new_start <= candidate_end
+        if new_start == new_end
+        else candidate_start < new_start and new_end <= candidate_end
+    )
+    if not old_inside or not new_inside:
+        raise RepairExecutionPacketError("candidate changed outside exact anchor")
+
+    budget = packet.get("change_budget")
+    max_changed_lines = budget.get("max_changed_lines") if isinstance(budget, dict) else None
+    changed_lines = (old_end - old_start) + (new_end - new_start)
+    if not isinstance(max_changed_lines, int) or changed_lines > max_changed_lines:
+        raise RepairExecutionPacketError("candidate change budget exceeded")
+    for token in invariants:
+        if (
+            not isinstance(token, str)
+            or not token
+            or original.count(token) != candidate.count(token)
+        ):
+            raise RepairExecutionPacketError("protected invariant changed")
+
+    output_relative = _safe_relative(str(packet.get("output_path") or ""), label="output path")
+    output = workspace_root / output_relative
+    if output.exists() or output.is_symlink():
+        raise RepairExecutionPacketError("output path already exists")
+    current = workspace_root
+    for part in output_relative.parent.parts:
+        current = current / part
+        if current.is_symlink():
+            raise RepairExecutionPacketError("output path must not traverse a symlink")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(candidate, encoding="utf-8")
+    return {
+        "schema": "figure-agent.repair-materialization-receipt.v1",
+        "decision": "materialized_verification_pending",
+        "packet_sha256": packet["packet_sha256"],
+        "source_sha256": source_record["sha256"],
+        "output_path": output_relative.as_posix(),
+        "output_sha256": _sha256_bytes(output.read_bytes()),
+        "changed_source_blocks": 1,
+        "changed_lines": changed_lines,
+        "change_summary": summary.strip(),
+        "external_compile": "pending",
+        "human_review": "pending",
+        "publication_acceptance": "not_claimed",
+    }
 
 
 def write_repair_execution_packet(

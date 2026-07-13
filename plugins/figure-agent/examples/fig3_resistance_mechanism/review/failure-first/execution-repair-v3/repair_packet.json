@@ -1,0 +1,116 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "a": {
+        "bbox_pdf": [
+          236.544,
+          13.302712,
+          260.15911,
+          18.09992
+        ],
+        "text": "increasing"
+      },
+      "b": {
+        "bbox_pdf": [
+          232.292,
+          12.670397,
+          272.851721,
+          19.497193
+        ],
+        "text": "trap-energy"
+      },
+      "id": "TC001",
+      "iou": 0.409135,
+      "source_mapping": null,
+      "texts": [
+        "increasing",
+        "trap-energy"
+      ]
+    },
+    "finding_id": "TC001",
+    "protected_invariants": [
+      "S60 $\\rightarrow$ S80",
+      "$n$ = breadth",
+      "$\\rho_{60s}$\\\\magnitude"
+    ],
+    "repair_family": "local_reposition",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v1/collisions.before.json",
+    "selector": {
+      "anchor_end": "  \\draw[draw=cAmber, line width=0.48pt, -{Stealth[length=3.0pt,width=2.2pt]}]",
+      "anchor_start": "\\begin{scope}[shift={(7.82,0.35)}]",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-b-content-label",
+      "source_hash": "sha256:e07c10f57a16f8dbfe3b4991feca260027f45ced8f9834e0bf9ee7caa3df7749"
+    }
+  },
+  "execution_cwd": "plugins/figure-agent",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v1/collisions.before.json",
+      "schema": "figure-agent.text-collisions.v1",
+      "sha256": "sha256:a5463c42f28694a7d6099420c7c281289a7fa78a251f72f0b51c3b3ed164e8fc"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v3/repaired_generated.tex",
+  "packet_sha256": "sha256:1d198b2f4b10e55dd9fbc40df3192751f4fadb3fb2768829eba382e9d58987a5",
+  "prompt": {
+    "sha256": "sha256:eebb04bfb2666694429f0f5092f6d5e94dcf6284cd53cfcf45d4bbfee0d96284",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put the complete repaired TeX source in the source_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v3/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/treatment_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: local_reposition\n- Machine finding: {\"a\": {\"bbox_pdf\": [236.544, 13.302712, 260.15911, 18.09992], \"text\": \"increasing\"}, \"b\": {\"bbox_pdf\": [232.292, 12.670397, 272.851721, 19.497193], \"text\": \"trap-energy\"}, \"id\": \"TC001\", \"iou\": 0.409135, \"source_mapping\": null, \"texts\": [\"increasing\", \"trap-energy\"]}\n- Change content only between the exact anchor lines [\\begin{scope}[shift={(7.82,0.35)}]] and [  \\draw[draw=cAmber, line width=0.48pt, -{Stealth[length=3.0pt,width=2.2pt]}]].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [S60 $\\rightarrow$ S80].\n- Preserve the exact token [$n$ = breadth].\n- Preserve the exact token [$\\rho_{60s}$\\\\magnitude].\n\n## Bound source bytes\n```tex\n\\documentclass[tikz,border=4pt]{standalone}\n\\usepackage{tikz}\n\\usepackage{polymer-paper-preamble}\n\n\\begin{document}\n\\begin{tikzpicture}[\n  font=\\sffamily\\fontsize{7.0}{8.4}\\selectfont,\n  >=Stealth,\n  panel/.style={draw=cLGray, fill=white, line width=0.35pt, rounded corners=2pt},\n  panel label/.style={font=\\sffamily\\bfseries\\fontsize{8.0}{9.6}\\selectfont, text=black},\n  title/.style={font=\\sffamily\\bfseries\\fontsize{7.4}{8.8}\\selectfont, text=black},\n  note/.style={font=\\sffamily\\fontsize{6.0}{7.2}\\selectfont, text=cGray, align=center},\n  small note/.style={font=\\sffamily\\fontsize{5.2}{6.2}\\selectfont, text=cGray, align=center},\n  axis/.style={draw=cGray, line width=0.38pt, -{Stealth[length=3.0pt,width=2.2pt]}},\n  field arrow/.style={draw=cBlue, line width=0.55pt, -{Stealth[length=3.2pt,width=2.4pt]}},\n  walk/.style={draw=cBlue, line width=0.55pt, rounded corners=2pt},\n  trap/.style={draw=cGray, line width=0.35pt},\n  dist/.style={draw=cGray, line width=0.45pt, fill=cAmberSphere!45},\n  guide/.style={draw=cGray!75, line width=0.32pt, dashed},\n  measure/.style={draw=cRed, line width=0.42pt, -{Stealth[length=2.6pt,width=2.0pt]}},\n]\n\n% Compact two-block canvas for schematic half of Fig. 3.\n\\node[panel, minimum width=7.20cm, minimum height=4.25cm, anchor=south west] (Abox) at (0,0) {};\n\\node[panel, minimum width=5.85cm, minimum height=4.25cm, anchor=south west] (Bbox) at (7.45,0) {};\n\n\\node[panel label, anchor=north west] at (0.12,4.12) {A};\n\\node[panel label, anchor=north west] at (7.57,4.12) {B};\n\\node[title, anchor=north west, align=left] at (0.48,4.08) {applied trapping\\\\during conduction};\n\\node[title, anchor=north west, align=left] at (7.93,4.08) {trap-energy landscape};\n\n% --- Panel A: biased cell, sign-agnostic multiple trapping, and transient decay.\n\\begin{scope}[shift={(0.35,0.26)}]\n  \\node[small note, anchor=west] at (4.98,3.72) {applied $V$};\n  \\draw[field arrow] (5.45,3.45) -- (6.38,3.45);\n  \\node[font=\\sffamily\\bfseries\\fontsize{7.2}{8.6}\\selectfont, text=cBlue] at (6.62,3.45) {$V$};\n\n  \\path[draw=cGray!85!black, fill=cLGray!34, line width=0.55pt, rounded corners=1pt]\n    (0.52,1.02) rectangle (0.80,3.06);\n  \\path[draw=cGray!85!black, fill=cLGray!34, line width=0.55pt, rounded corners=1pt]\n    (3.80,1.02) rectangle (4.08,3.06);\n  \\path[draw=cGray!85!black, fill=cAmberSphere!20, line width=0.45pt]\n    (0.80,1.15) rectangle (3.80,2.93);\n  \\node[small note, rotate=90] at (0.66,2.04) {electrode};\n  \\node[small note, rotate=90] at (3.94,2.04) {electrode};\n  \\node[small note, text=cBrown] at (2.30,3.18) {disordered sulfur polymer film};\n\n  \\foreach \\x/\\y/\\r in {\n    1.04/1.42/10, 1.30/2.55/-8, 1.62/1.86/6, 1.92/2.72/-12,\n    2.18/1.35/8, 2.48/2.20/-4, 2.84/2.66/11, 3.10/1.63/-7,\n    3.42/2.32/5\n  }{\n    \\node[trap, rotate=\\r, text=cGray, font=\\sffamily\\fontsize{7.0}{8.4}\\selectfont]\n      at (\\x,\\y) {$\\times$};\n  }\n\n  \\draw[walk]\n    (0.96,2.18) -- (1.24,2.43) -- (1.58,2.08) -- (1.92,2.54)\n    -- (2.18,1.82) -- (2.48,2.02) -- (2.78,1.56) -- (3.10,1.88)\n    -- (3.36,1.52);\n  \\foreach \\x/\\y in {1.24/2.43,1.92/2.54,2.48/2.02,3.10/1.88}{\n    \\draw[cRed, line width=0.35pt] (\\x-0.10,\\y-0.10) -- (\\x+0.10,\\y+0.10);\n    \\draw[cRed, line width=0.35pt] (\\x-0.10,\\y+0.10) -- (\\x+0.10,\\y-0.10);\n  }\n  \\node[circle, draw=cBlue!85!black, fill=cBlue!55, minimum size=2.0mm, inner sep=0pt, line width=0.35pt]\n    at (0.96,2.18) {};\n  \\node[circle, draw=cRed!85!black, fill=cRed!45, minimum size=2.3mm, inner sep=0pt, line width=0.35pt]\n    at (3.36,1.52) {};\n  \\node[note, anchor=north, text width=3.40cm] at (2.32,0.82)\n    {sign-agnostic carrier: repeated dispersive trapping};\n\n  \\begin{scope}[shift={(4.78,0.84)}]\n    \\draw[axis] (0,0) -- (1.95,0);\n    \\draw[axis] (0,0) -- (0,1.18);\n    \\draw[cBlue, line width=0.78pt]\n      plot[smooth] coordinates {(0.10,0.98) (0.34,0.72) (0.70,0.50) (1.14,0.34) (1.70,0.23)};\n    \\node[small note, anchor=north] at (1.04,-0.18) {$t$};\n    \\node[small note, rotate=90] at (-0.28,0.63) {$I(t)$};\n    \\node[font=\\sffamily\\fontsize{6.4}{7.7}\\selectfont, text=black, anchor=west]\n      at (0.33,1.05) {$I \\propto t^{-n}$};\n    \\node[note, anchor=north, text width=2.32cm] at (1.04,-0.50)\n      {current decays\\\\$\\Rightarrow R$ rises};\n  \\end{scope}\n\\end{scope}\n\n% --- Panel B: distribution breadth and magnitude are separate encodings.\n\\begin{scope}[shift={(7.82,0.35)}]\n  \\node[small note, anchor=west] at (0.26,3.50) {increasing sulfur content};\n  \\draw[draw=cAmber, line width=0.48pt, -{Stealth[length=3.0pt,width=2.2pt]}]\n    (2.28,3.50) -- (4.96,3.50);\n  \\node[small note, text=cAmber, anchor=west] at (5.10,3.50) {S60 $\\rightarrow$ S80};\n\n  \\begin{scope}[shift={(0.32,0.58)}]\n    \\draw[axis] (0,0) -- (4.90,0);\n    \\draw[axis] (0,0) -- (0,2.35);\n    \\node[small note, anchor=north] at (2.48,-0.24) {trap energy $E$};\n    \\node[small note, rotate=90] at (-0.36,1.18) {$g(E)$};\n\n    \\path[dist]\n      (0.86,0) .. controls (0.93,0.06) and (0.96,0.80) .. (1.10,1.82)\n      .. controls (1.22,0.80) and (1.25,0.06) .. (1.34,0) -- cycle;\n    \\node[small note, anchor=south, text=cBrown] at (1.10,1.90) {S60};\n    \\node[small note, anchor=north, text width=1.30cm] at (1.10,-0.54)\n      {discrete\\\\single deep};\n\n    \\path[dist]\n      (2.48,0) .. controls (2.78,0.34) and (3.05,1.42) .. (3.52,1.45)\n      .. controls (4.00,1.47) and (4.34,0.36) .. (4.64,0) -- cycle;\n    \\node[small note, anchor=south, text=cBrown] at (3.55,1.56) {S80};\n    \\node[small note, anchor=north, text width=1.65cm] at (3.55,-0.54)\n      {continuous\\\\broad};\n\n    \\draw[guide] (0.86,0.24) -- (1.34,0.24);\n    \\draw[measure] (2.48,0.42) -- (4.64,0.42);\n    \\draw[measure] (4.64,0.42) -- (2.48,0.42);\n    \\node[small note, fill=white, inner sep=1.0pt, text=cRed] at (3.56,0.62)\n      {$n$ = breadth};\n\n    \\draw[measure] (4.86,0) -- (4.86,1.45);\n    \\node[small note, fill=white, inner sep=1.0pt, text=cRed, anchor=west]\n      at (4.96,0.78) {$\\rho_{60s}$\\\\magnitude};\n  \\end{scope}\n\\end{scope}\n\n\\end{tikzpicture}\n\\end{document}\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v3/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "source_utf8": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "source_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [
+    {
+      "attribution": "unbound",
+      "finding_id": "TC002"
+    },
+    {
+      "attribution": "unbound",
+      "finding_id": "TC003"
+    },
+    {
+      "attribution": "unbound",
+      "finding_id": "TC004"
+    },
+    {
+      "attribution": "unbound",
+      "finding_id": "TC005"
+    }
+  ],
+  "schema": "figure-agent.repair-execution-packet.v2",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/treatment_generated.tex",
+    "sha256": "sha256:e07c10f57a16f8dbfe3b4991feca260027f45ced8f9834e0bf9ee7caa3df7749"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v3/repair_targets.json",
+    "sha256": "sha256:decf422172451bded0b49c454b66efa3fa87777d5c2b3dc86f9069b3f04c3a7f"
+  },
+  "verification": "external_sequential_compile_required"
+}
