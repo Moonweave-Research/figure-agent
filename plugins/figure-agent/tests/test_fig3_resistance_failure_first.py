@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 
 import yaml
@@ -145,6 +146,17 @@ def _pdf_content_signature(path: Path) -> dict[str, object]:
         "normalized_text_sha256": "sha256:" + hashlib.sha256(normalized_text.encode()).hexdigest(),
         "page_count": page_count,
     }
+
+
+def _pdf_normalized_token_inventory(path: Path) -> Counter[str]:
+    """Bind visible wording while ignoring layout-only text repositioning."""
+    result = subprocess.run(
+        ["pdftotext", "-layout", str(path), "-"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return Counter(token.casefold() for token in result.stdout.split())
 
 
 def test_fig3_resistance_failure_first_packet_hash_binds_current_authority() -> None:
@@ -1560,7 +1572,15 @@ def test_execution_repair_v11_contains_labels_without_reducing_text(
     assert review["source"]["based_on"] == (
         "review/failure-first/execution-repair-v10/repaired_generated.tex"
     )
+    based_on_source = _declared_fixture_path(review["source"]["based_on"])
+    assert review["source"]["based_on_sha256"] == _sha256(based_on_source)
     assert review["source"]["sha256"] == _sha256(source)
+    assert review["contract"]["sha256"] == _sha256(
+        EXECUTION_SCAFFOLD_EVALUATION / "layout_contract.yaml"
+    )
+    assert review["before"]["evidence_sha256"] == _sha256(
+        EXECUTION_SCAFFOLD_EVALUATION / "layout_report.json"
+    )
     assert {
         key: review["before"][key]
         for key in ("findings", "boundary_findings", "density_findings")
@@ -1592,6 +1612,18 @@ def test_execution_repair_v11_contains_labels_without_reducing_text(
     }
 
     render_path = attempt_root / "build" / "repaired_generated.pdf"
+    based_on_render_path = based_on_source.parent / "build" / "repaired_generated.pdf"
+    based_on_source_from_plugin = based_on_source.relative_to(PLUGIN_ROOT)
+    based_on_compile_result = subprocess.run(
+        ["bash", "scripts/compile.sh", str(based_on_source_from_plugin)],
+        cwd=PLUGIN_ROOT,
+        env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
+        capture_output=True,
+        text=True,
+    )
+    assert based_on_compile_result.returncode == 0, (
+        based_on_compile_result.stdout + based_on_compile_result.stderr
+    )
     source_from_plugin = source.relative_to(PLUGIN_ROOT)
     compile_result = subprocess.run(
         ["bash", "scripts/compile.sh", str(source_from_plugin)],
@@ -1603,6 +1635,9 @@ def test_execution_repair_v11_contains_labels_without_reducing_text(
     assert compile_result.returncode == 0, compile_result.stdout + compile_result.stderr
     assert review["render_evidence"]["content_signature"] == (
         _pdf_content_signature(render_path)
+    )
+    assert _pdf_normalized_token_inventory(render_path) == (
+        _pdf_normalized_token_inventory(based_on_render_path)
     )
     assert review["reproduction"]["strict_compile_command"] == (
         "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh " f"{source_from_plugin}"
