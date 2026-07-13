@@ -582,7 +582,12 @@ def test_fig3_region_guided_attempt_passes_selected_rules_but_fails_strict_gate(
     assert attempt["source_sha256"] == _sha256(REGION_GUIDED_SOURCE)
     assert attempt["selected_region_rules"] == "passed_two_of_two"
     assert attempt["strict_compile"] == "failed_three_text_collisions"
-    assert attempt["publication_acceptance"] == "not_claimed"
+    assert attempt["human_verdict"] == {
+        "reviewer": "moon",
+        "state": "rejected",
+        "reason": "structural_and_visual_quality_insufficient",
+    }
+    assert attempt["publication_acceptance"] == "rejected"
 
     assert receipt["source_sha256"] == _sha256(REGION_GUIDED_SOURCE)
     assert receipt["strict_compile_result"] == "failed_detector_gate_after_render"
@@ -596,8 +601,24 @@ def test_fig3_region_guided_attempt_passes_selected_rules_but_fails_strict_gate(
     for evidence in receipt["evidence"]:
         assert evidence["sha256"] == _sha256(REVIEW / evidence["path"])
     assert receipt["adversarial_review_sha256"] == _sha256(REGION_GUIDED_REVIEW)
-    assert receipt["human_verdict"] == {"state": "pending"}
-    assert receipt["publication_acceptance"] == "not_claimed"
+    assert receipt["human_verdict"] == {
+        "reviewer": "moon",
+        "state": "rejected",
+        "reason": "structural_and_visual_quality_insufficient",
+    }
+    assert receipt["publication_acceptance"] == "rejected"
+
+    review = yaml.safe_load(REGION_GUIDED_REVIEW.read_text(encoding="utf-8"))
+    assert review["human_feedback"]["reviewer"] == "moon"
+    assert review["human_feedback"]["verdict"] == "rejected"
+    assert set(review["human_feedback"]["confirmed_defects"]) == {
+        "residual_text_overlap",
+        "trap_energy_distribution_shape_is_unnatural",
+        "color_system_is_unrefined",
+        "figure_aspect_ratio_is_inappropriate",
+        "cross_panel_visual_language_is_inconsistent",
+        "excessive_figure_text",
+    }
 
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:

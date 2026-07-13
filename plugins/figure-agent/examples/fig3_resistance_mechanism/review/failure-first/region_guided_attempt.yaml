@@ -22,5 +22,7 @@ capability_conclusion: >-
   a complete panel-owned text inventory with mutual-clearance and page-boundary
   rules, not manual polishing of this attempt.
 human_verdict:
-  state: pending
-publication_acceptance: not_claimed
+  reviewer: moon
+  state: rejected
+  reason: structural_and_visual_quality_insufficient
+publication_acceptance: rejected

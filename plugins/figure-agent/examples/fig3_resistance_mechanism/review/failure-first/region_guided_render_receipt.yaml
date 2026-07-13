@@ -34,7 +34,9 @@ evidence:
   - path: region_guided_label_hyphenation.json
     sha256: sha256:d11bbf34e6b1879ba0db17a08a44774afe275af2f7caf69fc3c4c8ba6dea06e6
 adversarial_review_path: region_guided_adversarial_review.yaml
-adversarial_review_sha256: sha256:c1e20696e5d5a34b6689084ffeb89813bd0757ab64d2e63799334dd1e9ef4a93
+adversarial_review_sha256: sha256:e90359e5d8f1aa8e61c856cfca80a6d1ac78af193eb6091beefa8455d3f903cf
 human_verdict:
-  state: pending
-publication_acceptance: not_claimed
+  reviewer: moon
+  state: rejected
+  reason: structural_and_visual_quality_insufficient
+publication_acceptance: rejected

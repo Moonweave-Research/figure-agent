@@ -11,4 +11,41 @@ human_review_only_issues:
   - panel_titles_disproportionately_dominate_scientific_content
   - panel_a_lower_reading_sequence_is_ambiguous
   - central_divider_competes_with_scientific_marks
-publication_acceptance: not_claimed
+human_feedback:
+  reviewer: moon
+  verdict: rejected
+  confirmed_defects:
+    - residual_text_overlap
+    - trap_energy_distribution_shape_is_unnatural
+    - color_system_is_unrefined
+    - figure_aspect_ratio_is_inappropriate
+    - cross_panel_visual_language_is_inconsistent
+    - excessive_figure_text
+expanded_adversarial_findings:
+  composition:
+    - canvas_is_too_wide_and_shallow_for_the_content
+    - panel_a_cell_and_panel_b_distribution_have_unbalanced_visual_mass
+    - no_single_clear_hero_or_stable_reading_order
+    - whitespace_is_fragmented_rather_than_composed
+  scientific_shape_language:
+    - s60_peak_and_s80_lobe_do_not_share_a_coherent_distribution_grammar
+    - s80_curve_is_visually_truncated_at_the_axis_boundary
+    - energy_depth_or_reference_direction_is_not_visually_grounded
+    - filled_s80_lobe_and_unfilled_s60_curve_encode_an_unexplained_difference
+  color_and_finish:
+    - saturated_primary_blue_red_and_pale_yellow_read_as_generic
+    - raw_blue_red_yellow_tokens_are_mixed_with_project_palette_tokens
+    - color_roles_do_not_form_a_consistent_cross_panel_semantic_system
+    - gray_opacity_levels_and_line_weights_are_visually_inconsistent
+  typography_and_density:
+    - approximately_75_rendered_words_and_14_text_nodes_overload_the_figure
+    - title_internal_labels_and_bottom_sentence_repeat_the_same_claims
+    - math_serif_and_arial_sans_substitution_look_inconsistent
+    - rotated_rho_label_and_small_axis_labels_reduce_readability
+    - explanatory_prose_should_move_to_the_caption
+  graphical_grammar:
+    - panel_a_illustration_and_panel_b_plot_look_like_different_design_systems
+    - arrow_scale_anchor_style_and_label_attachment_are_inconsistent
+    - applied_voltage_arrow_can_be_misread_as_transport_direction
+    - divider_is_decorative_structure_without_sufficient_explanatory_value
+publication_acceptance: rejected

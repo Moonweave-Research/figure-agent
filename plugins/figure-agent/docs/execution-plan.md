@@ -255,6 +255,15 @@ modules listed in Section 0.
   causal value without demonstrating overall quality. The next capability
   target is a panel-owned text inventory with mutual-clearance and page-boundary
   rules; the failed attempt remains evidence, not a polishing target.
+  Human review by `moon` rejects the attempt beyond those machine findings:
+  the trap-energy shapes are unnatural, the palette and finish are unrefined,
+  the `2.42:1` canvas is poorly proportioned, the two panels use inconsistent
+  graphical grammar, and roughly 75 rendered words across 14 text nodes make
+  the figure read like prose laid over a diagram. These are now recorded as
+  distinct failure classes. The next generation must reduce explanatory prose
+  into the caption, use one declared distribution-shape grammar and one palette
+  role system, and satisfy panel-owned text, mutual-clearance, and page-boundary
+  contracts before aesthetic comparison is meaningful.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot
