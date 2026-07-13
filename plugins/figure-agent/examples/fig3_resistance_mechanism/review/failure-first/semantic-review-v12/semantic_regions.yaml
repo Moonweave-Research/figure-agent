@@ -15,13 +15,14 @@ regions:
     source:
       path: review/failure-first/execution-repair-v12/repaired_generated.tex
       selector_id: voltage_relation
-      anchor_start: '\draw[draw=cBlue, line width=0.55pt]'
-      anchor_end: '] at (2.30,3.42) {V};'
+      anchor_start: '    (0.66,2.04) -- (0.66,3.08) -- (1.80,3.24);'
+      anchor_end: '  ] at (2.30,3.42) {V};'
       source_sha256: sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e
-      line_start: 42
+      line_start: 43
       line_end: 53
-      resolved_line_start: 42
+      resolved_line_start: 43
       resolved_line_end: 53
+      selected_content_sha256: sha256:3104c2a642a9228f23623ef9cd6475636e7c7b3ec0b41c43ce58a9a6adb275f6
       binding_state: exact
       binding_reason: anchors_and_snapshot_match
     provenance: declared_by_reviewer
@@ -32,13 +33,14 @@ regions:
     source:
       path: review/failure-first/execution-repair-v12/repaired_generated.tex
       selector_id: trap_site
-      anchor_start: '\begin{scope}[shift={(2.84,2.66)},rotate=11] % vector trap cross'
-      anchor_end: '  \end{scope}'
+      anchor_start: '  \begin{scope}[shift={(2.84,2.66)},rotate=11] % vector trap cross'
+      anchor_end: '  \begin{scope}[shift={(2.84,2.66)},rotate=11] % vector trap cross'
       source_sha256: sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e
       line_start: 81
-      line_end: 84
+      line_end: 81
       resolved_line_start: 81
-      resolved_line_end: 84
+      resolved_line_end: 81
+      selected_content_sha256: sha256:e56937e5c04cdadbdc06a5cfbf557a6d5bd5357b88c62fd7c5664983a2a9c515
       binding_state: exact
       binding_reason: anchors_and_snapshot_match
     provenance: declared_by_reviewer
@@ -49,13 +51,14 @@ regions:
     source:
       path: review/failure-first/execution-repair-v12/repaired_generated.tex
       selector_id: capture_event
-      anchor_start: '\draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring'
-      anchor_end: '\draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring'
+      anchor_start: '  \draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring'
+      anchor_end: '  \draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring'
       source_sha256: sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e
       line_start: 98
       line_end: 98
       resolved_line_start: 98
       resolved_line_end: 98
+      selected_content_sha256: sha256:1458d50c77d32f08c538afb65474cfc32d0cdbe8f88b9ea5a95941ae8341a6af
       binding_state: exact
       binding_reason: anchors_and_snapshot_match
     provenance: declared_by_reviewer
@@ -66,13 +69,14 @@ regions:
     source:
       path: review/failure-first/execution-repair-v12/repaired_generated.tex
       selector_id: n_breadth
-      anchor_start: '\draw[measure] (2.48,0.42) -- (4.64,0.42);'
-      anchor_end: '{$n$ = breadth};'
+      anchor_start: '    \draw[measure] (2.48,0.42) -- (4.64,0.42);'
+      anchor_end: '      {$n$ = breadth};'
       source_sha256: sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e
       line_start: 160
       line_end: 163
       resolved_line_start: 160
       resolved_line_end: 163
+      selected_content_sha256: sha256:5fb3bbbe12d753819e60dcdbf6077a70bd237c35ee6d8cdab57add7549298ac1
       binding_state: exact
       binding_reason: anchors_and_snapshot_match
     provenance: declared_by_reviewer
@@ -84,12 +88,13 @@ regions:
       path: review/failure-first/execution-repair-v12/repaired_generated.tex
       selector_id: rho60s_magnitude
       anchor_start: '    \draw['
-      anchor_end: 'at (1.88,1.75) {$\rho_{60s}$\\magnitude};'
+      anchor_end: '      at (1.88,1.75) {$\rho_{60s}$\\magnitude};'
       source_sha256: sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e
       line_start: 165
       line_end: 171
       resolved_line_start: 165
       resolved_line_end: 171
+      selected_content_sha256: sha256:381e2bb727d98538bcf8d611cde3ee81d76a548d6d38c9e6f7dbfacebb978ac3
       binding_state: exact
       binding_reason: anchors_and_snapshot_match
     provenance: declared_by_reviewer
@@ -107,6 +112,7 @@ regions:
       line_end: 149
       resolved_line_start: 144
       resolved_line_end: 149
+      selected_content_sha256: sha256:f0a1a5f92841eb6896607ca3684a971f392dd7d7341b4836d1a31e121669be22
       binding_state: exact
       binding_reason: anchors_and_snapshot_match
     provenance: declared_by_reviewer

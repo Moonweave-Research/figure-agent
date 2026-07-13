@@ -6,9 +6,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
-import shutil
 import sys
+import tempfile
 import unicodedata
 from pathlib import Path
 from typing import Any
@@ -78,10 +79,10 @@ def _normalized_claim(value: object) -> str:
     return " ".join(normalized.split()).casefold()
 
 
-def _authority_claims(payload: object) -> dict[str, list[str]]:
+def _authority_claims(payload: object) -> dict[str, dict[str, Any]]:
     if not isinstance(payload, list):
         raise SemanticLegibilityEvidenceError("authority_claims_invalid")
-    claims: dict[str, set[str]] = {}
+    claims: dict[str, dict[str, Any]] = {}
     for item in payload:
         if not isinstance(item, dict):
             raise SemanticLegibilityEvidenceError("authority_claim_invalid")
@@ -94,8 +95,22 @@ def _authority_claims(payload: object) -> dict[str, list[str]]:
             or not authority_id.strip()
         ):
             raise SemanticLegibilityEvidenceError("authority_claim_invalid")
-        claims.setdefault(semantic_id, set()).add(_normalized_claim(item.get("claim")))
-    return {semantic_id: sorted(values) for semantic_id, values in claims.items()}
+        entry = claims.setdefault(
+            semantic_id,
+            {"normalized_claims": set(), "authority_ids": [], "duplicate": False},
+        )
+        if authority_id in entry["authority_ids"]:
+            entry["duplicate"] = True
+        entry["authority_ids"].append(authority_id)
+        entry["normalized_claims"].add(_normalized_claim(item.get("claim")))
+    return {
+        semantic_id: {
+            "normalized_claims": sorted(entry["normalized_claims"]),
+            "authority_ids": sorted(entry["authority_ids"]),
+            "duplicate": entry["duplicate"],
+        }
+        for semantic_id, entry in claims.items()
+    }
 
 
 def _bindings(payload: object) -> dict[str, list[dict[str, Any]]]:
@@ -122,7 +137,7 @@ def _binding_failure(
     records: list[dict[str, Any]],
     *,
     full_render_sha256: str,
-    page_sha256: str,
+    page_render_sha256: str,
 ) -> str | None:
     if not records:
         return "binding_missing"
@@ -134,9 +149,16 @@ def _binding_failure(
         return f"binding_{state or 'missing'}"
     if binding.get("full_render_sha256") != full_render_sha256:
         return "full_render_hash_mismatch"
-    if binding.get("page_sha256") != page_sha256:
-        return "page_hash_mismatch"
+    if binding.get("page_render_sha256") != page_render_sha256:
+        return "page_render_hash_mismatch"
     return None
+
+
+def _reject_symlink_outputs(output_dir: Path, crop_names: list[str]) -> None:
+    paths = [output_dir, output_dir / "packet.json", output_dir / "crops"]
+    paths.extend(output_dir / "crops" / name for name in crop_names)
+    if any(path.is_symlink() for path in paths):
+        raise SemanticLegibilityEvidenceError("output_symlink")
 
 
 def _crop_box(bbox: list[float], size: tuple[int, int], padding: int = 12) -> list[int]:
@@ -229,19 +251,19 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
     if not isinstance(render, dict):
         raise SemanticLegibilityEvidenceError("render_invalid")
     full_render_path = _resolve(base, render.get("full_render_path"), label="full_render_path")
-    page_path = _resolve(base, render.get("page_path"), label="page_path")
+    page_render_path = _resolve(base, render.get("page_render_path"), label="page_render_path")
     try:
         full_render_sha256 = _sha256(full_render_path)
-        page_sha256 = _sha256(page_path)
+        page_render_sha256 = _sha256(page_render_path)
     except OSError as exc:
         raise SemanticLegibilityEvidenceError("render_input_missing") from exc
     declared_full_hash = render.get("full_render_sha256")
-    declared_page_hash = render.get("page_sha256")
+    declared_page_render_hash = render.get("page_render_sha256")
     global_hash_failure = None
     if declared_full_hash != full_render_sha256:
         global_hash_failure = "full_render_hash_mismatch"
-    elif declared_page_hash != page_sha256:
-        global_hash_failure = "page_hash_mismatch"
+    elif declared_page_render_hash != page_render_sha256:
+        global_hash_failure = "page_render_hash_mismatch"
 
     subjects = payload.get("subjects")
     if not isinstance(subjects, list) or not subjects:
@@ -250,13 +272,31 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
     claims = _authority_claims(payload.get("authority_claims"))
     declared_objects, declared_relations = _declared_subjects(semantic_contract)
 
-    output_dir = output_dir.resolve()
+    output_dir = output_dir.absolute()
     crops_dir = output_dir / "crops"
-    if crops_dir.exists():
-        shutil.rmtree(crops_dir)
-    crops_dir.mkdir(parents=True, exist_ok=True)
+    crop_names = [
+        f"{subject.get('semantic_id')}.png"
+        for subject in subjects
+        if isinstance(subject, dict)
+        and isinstance(subject.get("semantic_id"), str)
+        and _SAFE_ID.fullmatch(subject["semantic_id"])
+    ]
+    _reject_symlink_outputs(output_dir, crop_names)
     with Image.open(full_render_path) as opened:
         source_image = opened.convert("RGB")
+    detector_render = render.get("detector_render")
+    declared_image_size = (
+        detector_render.get("image_size_px") if isinstance(detector_render, dict) else None
+    )
+    image_size_failure = None
+    if list(source_image.size) != declared_image_size:
+        image_size_failure = "render_image_size_mismatch"
+
+    output_dir.parent.mkdir(parents=True, exist_ok=True)
+    staging = tempfile.TemporaryDirectory(prefix=".semantic-legibility-", dir=output_dir.parent)
+    staging_dir = Path(staging.name)
+    staging_crops_dir = staging_dir / "crops"
+    staging_crops_dir.mkdir()
 
     records: list[dict[str, Any]] = []
     seen_subjects: set[str] = set()
@@ -289,7 +329,30 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
             "expected_readings": expected,
             "forbidden_readings": forbidden,
         }
-        normalized_claims = claims.get(semantic_id, [])
+        claim_set = claims.get(semantic_id)
+        if claim_set is None:
+            records.append(
+                {
+                    **base_record,
+                    "state": "unbound",
+                    "review_disposition": "review_only",
+                    "reason": "authority_claim_missing",
+                }
+            )
+            continue
+        normalized_claims = claim_set["normalized_claims"]
+        if claim_set["duplicate"]:
+            records.append(
+                {
+                    **base_record,
+                    "state": "blocked_authority_conflict",
+                    "review_disposition": "review_only",
+                    "reason": "authority_provenance_duplicate",
+                    "normalized_authority_claims": normalized_claims,
+                    "authority_ids": claim_set["authority_ids"],
+                }
+            )
+            continue
         if len(normalized_claims) > 1:
             records.append(
                 {
@@ -304,14 +367,14 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
         declarations = declared_objects if kind == "object" else declared_relations
         declaration = declarations.get(semantic_id)
         declared = declaration is not None
-        reason = global_hash_failure
+        reason = global_hash_failure or image_size_failure
         if not declared:
             reason = "semantic_declaration_missing"
         if reason is None:
             reason = _binding_failure(
                 binding_index.get(semantic_id, []),
                 full_render_sha256=full_render_sha256,
-                page_sha256=page_sha256,
+                page_render_sha256=page_render_sha256,
             )
         if reason is not None:
             records.append(
@@ -368,7 +431,7 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
         )
         crop_box = _crop_box(bbox, image.size)
         crop_relative = Path("crops") / f"{semantic_id}.png"
-        crop_path = output_dir / crop_relative
+        crop_path = staging_dir / crop_relative
         image.crop(crop_box).save(crop_path, format="PNG", optimize=False)
         records.append(
             {
@@ -376,6 +439,8 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
                 "state": "exact",
                 "review_disposition": "human_review_required",
                 "human_verdict": "pending",
+                "normalized_authority_claim": normalized_claims[0],
+                "authority_ids": claim_set["authority_ids"],
                 "panel_id": region_index[binding["region_id"]].get("panel_id"),
                 "semantic_declaration": declaration,
                 "selector_snapshot": attribution["source_selector"],
@@ -390,7 +455,7 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
                 "crop": {"path": crop_relative.as_posix(), "bbox_px": crop_box},
                 "hashes": {
                     "full_render_sha256": full_render_sha256,
-                    "page_sha256": page_sha256,
+                    "page_render_sha256": page_render_sha256,
                     "crop_sha256": _sha256(crop_path),
                     "render_geometry_hash": semantic_regions["page_geometry"][
                         "render_geometry_hash"
@@ -400,9 +465,30 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
         )
 
     subject_states = {item["semantic_id"]: item["state"] for item in records}
+    authority_diagnostics = [
+        {
+            "semantic_id": semantic_id,
+            "state": "unbound",
+            "review_disposition": "review_only",
+            "reason": "authority_claim_subject_unknown",
+        }
+        for semantic_id in sorted(set(claims) - seen_subjects)
+    ]
     packet = {
         "schema": OUTPUT_SCHEMA,
         "subjects": records,
+        "authority_diagnostics": authority_diagnostics,
+        "render_evidence": {
+            "full_render": {
+                "role": "canonical_full_figure_raster",
+                "sha256": full_render_sha256,
+            },
+            "page_render": {
+                "role": "canonical_page_raster",
+                "page_index": semantic_regions["page_geometry"]["page_index"],
+                "sha256": page_render_sha256,
+            },
+        },
         "human_review_questions": _review_questions(payload, subject_states),
         "human_verdict": "pending",
         "semantic_preservation": "not_claimed_pending_human_review",
@@ -412,14 +498,23 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
             "semantic_contract_sha256": _sha256(semantic_contract_path),
             "semantic_regions_sha256": _sha256(semantic_regions_path),
             "full_render_sha256": full_render_sha256,
-            "page_sha256": page_sha256,
+            "page_render_sha256": page_render_sha256,
         },
     }
     packet["review_input_hash"] = _canonical_hash(packet)
-    (output_dir / "packet.json").write_text(
+    staged_packet = staging_dir / "packet.json"
+    staged_packet.write_text(
         json.dumps(packet, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    _reject_symlink_outputs(output_dir, crop_names)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    crops_dir.mkdir(exist_ok=True)
+    _reject_symlink_outputs(output_dir, crop_names)
+    for staged_crop in sorted(staging_crops_dir.glob("*.png")):
+        os.replace(staged_crop, crops_dir / staged_crop.name)
+    os.replace(staged_packet, output_dir / "packet.json")
+    staging.cleanup()
     return packet
 
 

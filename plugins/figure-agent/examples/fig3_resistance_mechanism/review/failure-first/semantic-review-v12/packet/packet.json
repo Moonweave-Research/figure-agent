@@ -1,4 +1,5 @@
 {
+  "authority_diagnostics": [],
   "human_review_questions": [
     {
       "question": "Are gray crosses visually distinct from red rings as trap sites versus capture events?",
@@ -45,17 +46,31 @@
   "human_verdict": "pending",
   "input_hashes": {
     "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
-    "input_sha256": "sha256:8f1b1e186ce84af2c8bd6f0259690d009855eb951a987687e6c46fe95197da6f",
-    "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+    "input_sha256": "sha256:e6f48ca86b36a13796ca851a30391e1640770d46b3fe48937a9663934afcfbed",
+    "page_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
     "semantic_contract_sha256": "sha256:2b3b9831f27a65ff586d9977ad3fab74153bd903fbfc2bc7ec44aaa2c95c901d",
-    "semantic_regions_sha256": "sha256:7a6acdbfc3778f810012aa5688b9fddb9f3df39b87791c36fd98f0b197da6a07"
+    "semantic_regions_sha256": "sha256:e043fc409ccac06fe44572307e212e100d0fd6e36fa9f700b3561979653698ee"
   },
   "publication_acceptance": "not_claimed",
-  "review_input_hash": "sha256:a2000b2691cf883c177d0a9df72150db267a2898b4e0f942165afd9eb2554894",
+  "render_evidence": {
+    "full_render": {
+      "role": "canonical_full_figure_raster",
+      "sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947"
+    },
+    "page_render": {
+      "page_index": 0,
+      "role": "canonical_page_raster",
+      "sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947"
+    }
+  },
+  "review_input_hash": "sha256:3893a42f9ba27086867637ac501fd8201903c0bd49bfd807f85b6de3f226dd62",
   "schema": "figure-agent.semantic-legibility-evidence.v1",
   "semantic_preservation": "not_claimed_pending_human_review",
   "subjects": [
     {
+      "authority_ids": [
+        "maintained_v12_source"
+      ],
       "coordinate_space": {
         "bbox_pdf_cm": [
           1.05809926686217,
@@ -92,21 +107,23 @@
       "hashes": {
         "crop_sha256": "sha256:5bac5ee6eba16e8ca11bd9c4617936eda6dd7157e4e90ff95fe24add067c427f",
         "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
-        "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+        "page_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
         "render_geometry_hash": "sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf"
       },
       "human_verdict": "pending",
       "kind": "relation",
+      "normalized_authority_claim": "v is connected to both electrodes",
       "panel_id": "A",
       "review_disposition": "human_review_required",
       "selector_snapshot": {
-        "anchor_end": "] at (2.30,3.42) {V};",
-        "anchor_start": "\\draw[draw=cBlue, line width=0.55pt]",
+        "anchor_end": "  ] at (2.30,3.42) {V};",
+        "anchor_start": "    (0.66,2.04) -- (0.66,3.08) -- (1.80,3.24);",
         "line_end": 53,
-        "line_start": 42,
+        "line_start": 43,
         "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
         "resolved_line_end": 53,
-        "resolved_line_start": 42,
+        "resolved_line_start": 43,
+        "selected_content_sha256": "sha256:3104c2a642a9228f23623ef9cd6475636e7c7b3ec0b41c43ce58a9a6adb275f6",
         "selector_id": "voltage_relation",
         "source_sha256": "sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e"
       },
@@ -121,6 +138,9 @@
       "state": "exact"
     },
     {
+      "authority_ids": [
+        "maintained_v12_source"
+      ],
       "coordinate_space": {
         "bbox_pdf_cm": [
           3.3435936832844573,
@@ -157,21 +177,23 @@
       "hashes": {
         "crop_sha256": "sha256:f07a287625aa90cd19a4783d5d7c4ad6bdf28a7f456e64c9d7870a5a319d7aa0",
         "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
-        "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+        "page_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
         "render_geometry_hash": "sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf"
       },
       "human_verdict": "pending",
       "kind": "object",
+      "normalized_authority_claim": "gray cross is an available trap site",
       "panel_id": "A",
       "review_disposition": "human_review_required",
       "selector_snapshot": {
-        "anchor_end": "  \\end{scope}",
-        "anchor_start": "\\begin{scope}[shift={(2.84,2.66)},rotate=11] % vector trap cross",
-        "line_end": 84,
+        "anchor_end": "  \\begin{scope}[shift={(2.84,2.66)},rotate=11] % vector trap cross",
+        "anchor_start": "  \\begin{scope}[shift={(2.84,2.66)},rotate=11] % vector trap cross",
+        "line_end": 81,
         "line_start": 81,
         "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
-        "resolved_line_end": 84,
+        "resolved_line_end": 81,
         "resolved_line_start": 81,
+        "selected_content_sha256": "sha256:e56937e5c04cdadbdc06a5cfbf557a6d5bd5357b88c62fd7c5664983a2a9c515",
         "selector_id": "trap_site",
         "source_sha256": "sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e"
       },
@@ -187,6 +209,9 @@
       "state": "exact"
     },
     {
+      "authority_ids": [
+        "maintained_v12_source"
+      ],
       "coordinate_space": {
         "bbox_pdf_cm": [
           1.6717968416422286,
@@ -223,21 +248,23 @@
       "hashes": {
         "crop_sha256": "sha256:3bfbba97159812eecd0d22febfe51cd64c70bc62824cf7651d1c6f9935d3b60c",
         "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
-        "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+        "page_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
         "render_geometry_hash": "sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf"
       },
       "human_verdict": "pending",
       "kind": "object",
+      "normalized_authority_claim": "red ring is a carrier capture event",
       "panel_id": "A",
       "review_disposition": "human_review_required",
       "selector_snapshot": {
-        "anchor_end": "\\draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring",
-        "anchor_start": "\\draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring",
+        "anchor_end": "  \\draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring",
+        "anchor_start": "  \\draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring",
         "line_end": 98,
         "line_start": 98,
         "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
         "resolved_line_end": 98,
         "resolved_line_start": 98,
+        "selected_content_sha256": "sha256:1458d50c77d32f08c538afb65474cfc32d0cdbe8f88b9ea5a95941ae8341a6af",
         "selector_id": "capture_event",
         "source_sha256": "sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e"
       },
@@ -253,6 +280,9 @@
       "state": "exact"
     },
     {
+      "authority_ids": [
+        "briefing.rule_2"
+      ],
       "coordinate_space": {
         "bbox_pdf_cm": [
           11.469796052785922,
@@ -289,21 +319,23 @@
       "hashes": {
         "crop_sha256": "sha256:57ca34c911ab8ac87f1566502c9c35d6603b6f65a0cd8d4eafb1363fdd6c66b2",
         "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
-        "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+        "page_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
         "render_geometry_hash": "sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf"
       },
       "human_verdict": "pending",
       "kind": "object",
+      "normalized_authority_claim": "n encodes horizontal distribution breadth",
       "panel_id": "B",
       "review_disposition": "human_review_required",
       "selector_snapshot": {
-        "anchor_end": "{$n$ = breadth};",
-        "anchor_start": "\\draw[measure] (2.48,0.42) -- (4.64,0.42);",
+        "anchor_end": "      {$n$ = breadth};",
+        "anchor_start": "    \\draw[measure] (2.48,0.42) -- (4.64,0.42);",
         "line_end": 163,
         "line_start": 160,
         "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
         "resolved_line_end": 163,
         "resolved_line_start": 160,
+        "selected_content_sha256": "sha256:5fb3bbbe12d753819e60dcdbf6077a70bd237c35ee6d8cdab57add7549298ac1",
         "selector_id": "n_breadth",
         "source_sha256": "sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e"
       },
@@ -319,6 +351,9 @@
       "state": "exact"
     },
     {
+      "authority_ids": [
+        "briefing.rule_2"
+      ],
       "coordinate_space": {
         "bbox_pdf_cm": [
           10.45402075659824,
@@ -355,21 +390,23 @@
       "hashes": {
         "crop_sha256": "sha256:53c4baa9ff556f530f721e7ae0512c5424335a3a89aaf60eccd29150940dfc4d",
         "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
-        "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+        "page_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
         "render_geometry_hash": "sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf"
       },
       "human_verdict": "pending",
       "kind": "object",
+      "normalized_authority_claim": "rho60s encodes vertical distribution magnitude",
       "panel_id": "B",
       "review_disposition": "human_review_required",
       "selector_snapshot": {
-        "anchor_end": "at (1.88,1.75) {$\\rho_{60s}$\\\\magnitude};",
+        "anchor_end": "      at (1.88,1.75) {$\\rho_{60s}$\\\\magnitude};",
         "anchor_start": "    \\draw[",
         "line_end": 171,
         "line_start": 165,
         "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
         "resolved_line_end": 171,
         "resolved_line_start": 165,
+        "selected_content_sha256": "sha256:381e2bb727d98538bcf8d611cde3ee81d76a548d6d38c9e6f7dbfacebb978ac3",
         "selector_id": "rho60s_magnitude",
         "source_sha256": "sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e"
       },

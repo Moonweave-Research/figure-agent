@@ -60,6 +60,7 @@ def _source(tmp_path: Path) -> tuple[Path, dict]:
         "anchor_start": "% figure-agent:start target.region",
         "anchor_end": "% figure-agent:end target.region",
         "source_sha256": f"sha256:{hashlib.sha256(source_text.encode()).hexdigest()}",
+        "selected_content_sha256": (f"sha256:{hashlib.sha256(source_text.encode()).hexdigest()}"),
         "line_start": 1,
         "line_end": 3,
         "binding_state": "exact",

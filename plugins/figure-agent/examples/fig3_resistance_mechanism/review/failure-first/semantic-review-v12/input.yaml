@@ -5,8 +5,9 @@ semantic_regions: semantic_regions.yaml
 render:
   full_render_path: ../execution-repair-v12/build/repaired_generated.png
   full_render_sha256: sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947
-  page_path: ../execution-repair-v12/build/repaired_generated.pdf
-  page_sha256: sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb
+  page_render_path: ../execution-repair-v12/build/repaired_generated.png
+  page_render_sha256: sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947
+  page_index: 0
   detector_render:
     page_geometry:
       coordinate_space: pdf_cm
@@ -57,7 +58,7 @@ bindings:
     region_id: voltage_relation
     binding_state: exact
     full_render_sha256: sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947
-    page_sha256: sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb
+    page_render_sha256: sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947
   - <<: *exact_voltage
     semantic_id: trap_site
     region_id: trap_site

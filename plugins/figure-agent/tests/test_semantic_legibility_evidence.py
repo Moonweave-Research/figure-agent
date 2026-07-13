@@ -31,6 +31,12 @@ def _sha256(path: Path) -> str:
     return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
 
 
+def _selected_sha256(path: Path, line_start: int, line_end: int) -> str:
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    selected = "".join(lines[line_start - 1 : line_end]).encode()
+    return f"sha256:{hashlib.sha256(selected).hexdigest()}"
+
+
 def _write_yaml(path: Path, payload: object) -> None:
     path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
@@ -53,8 +59,10 @@ def _input(tmp_path: Path) -> tuple[Path, dict]:
     )
     render = fixture / "render.png"
     Image.new("RGB", (100, 100), "white").save(render)
-    page = fixture / "page.pdf"
-    page.write_bytes(b"immutable page bytes")
+    page_render = fixture / "page-render.png"
+    Image.new("RGB", (100, 100), "white").save(page_render)
+    nondeterministic_pdf = fixture / "page.pdf"
+    nondeterministic_pdf.write_bytes(b"first nondeterministic PDF serialization")
 
     geometry = {
         "coordinate_space": "pdf_cm",
@@ -83,6 +91,7 @@ def _input(tmp_path: Path) -> tuple[Path, dict]:
                 "line_end": lines[1],
                 "resolved_line_start": lines[0],
                 "resolved_line_end": lines[1],
+                "selected_content_sha256": _selected_sha256(source, lines[0], lines[1]),
                 "binding_state": "exact",
                 "binding_reason": "anchors_and_snapshot_match",
             },
@@ -166,7 +175,8 @@ def _input(tmp_path: Path) -> tuple[Path, dict]:
     _write_yaml(fixture / "semantic_contract.yaml", semantic_contract)
 
     full_hash = _sha256(render)
-    page_hash = _sha256(page)
+    page_render_hash = _sha256(page_render)
+    legacy_page_hash = _sha256(nondeterministic_pdf)
     subjects = [
         {
             "semantic_id": "trap_site",
@@ -196,7 +206,8 @@ def _input(tmp_path: Path) -> tuple[Path, dict]:
             "region_id": item["semantic_id"],
             "binding_state": "exact",
             "full_render_sha256": full_hash,
-            "page_sha256": page_hash,
+            "page_render_sha256": page_render_hash,
+            "page_sha256": legacy_page_hash,
         }
         for item in subjects
     ]
@@ -208,8 +219,11 @@ def _input(tmp_path: Path) -> tuple[Path, dict]:
         "render": {
             "full_render_path": "render.png",
             "full_render_sha256": full_hash,
+            "page_render_path": "page-render.png",
+            "page_render_sha256": page_render_hash,
+            "page_index": 0,
             "page_path": "page.pdf",
-            "page_sha256": page_hash,
+            "page_sha256": legacy_page_hash,
             "detector_render": {
                 "page_geometry": geometry,
                 "image_size_px": [100, 100],
@@ -327,6 +341,17 @@ def test_exact_bindings_emit_deterministic_human_review_evidence(
     assert first["human_verdict"] == "pending"
     assert first["semantic_preservation"] == "not_claimed_pending_human_review"
     assert first["publication_acceptance"] == "not_claimed"
+    assert first["render_evidence"] == {
+        "full_render": {
+            "role": "canonical_full_figure_raster",
+            "sha256": first["input_hashes"]["full_render_sha256"],
+        },
+        "page_render": {
+            "role": "canonical_page_raster",
+            "page_index": 0,
+            "sha256": first["input_hashes"]["page_render_sha256"],
+        },
+    }
     assert {item["kind"] for item in first["subjects"]} == {"object", "relation"}
     for subject in first["subjects"]:
         assert subject["state"] == "exact"
@@ -335,7 +360,7 @@ def test_exact_bindings_emit_deterministic_human_review_evidence(
         assert subject["semantic_declaration"]
         assert subject["selector_snapshot"]["selector_id"] == subject["semantic_id"]
         assert subject["hashes"]["full_render_sha256"].startswith("sha256:")
-        assert subject["hashes"]["page_sha256"].startswith("sha256:")
+        assert subject["hashes"]["page_render_sha256"].startswith("sha256:")
         assert subject["hashes"]["crop_sha256"].startswith("sha256:")
         assert subject["coordinate_space"]["name"] == "pdf_cm"
         assert subject["expected_readings"]
@@ -351,6 +376,185 @@ def test_exact_bindings_emit_deterministic_human_review_evidence(
     assert distinction["status"] == "pending"
     assert distinction["semantic_ids"] == ["trap_site", "capture_event"]
     assert json.loads((output_dir / "packet.json").read_text(encoding="utf-8")) == first
+
+
+def test_stable_page_raster_keeps_bindings_fresh_across_pdf_regeneration(
+    tmp_path: Path,
+) -> None:
+    module = _module()
+    input_path, _ = _input(tmp_path)
+    output_dir = tmp_path / "packet"
+
+    first = module.compile_semantic_legibility_evidence(input_path, output_dir)
+    (input_path.parent / "page.pdf").write_bytes(
+        b"second nondeterministic PDF serialization with different metadata"
+    )
+    second = module.compile_semantic_legibility_evidence(input_path, output_dir)
+
+    assert {subject["state"] for subject in first["subjects"]} == {"exact"}
+    assert second == first
+    assert second["input_hashes"]["page_render_sha256"] == _sha256(
+        input_path.parent / "page-render.png"
+    )
+
+
+@pytest.mark.parametrize(
+    ("mutation", "reason"),
+    [
+        ("missing_anchor", "source_anchor_missing"),
+        ("duplicate_anchor", "source_anchor_duplicate"),
+        ("stale_lines", "source_line_snapshot_stale"),
+        ("stale_content", "source_selected_content_hash_mismatch"),
+    ],
+)
+def test_exact_binding_validates_source_selector_snapshot(
+    tmp_path: Path, mutation: str, reason: str
+) -> None:
+    module = _module()
+    input_path, payload = _input(tmp_path)
+    regions_path = input_path.parent / "semantic_regions.yaml"
+    regions = yaml.safe_load(regions_path.read_text(encoding="utf-8"))
+    source = input_path.parent / "figure.tex"
+    selector = regions["regions"][0]["source"]
+    if mutation == "missing_anchor":
+        selector["anchor_start"] = "% absent anchor"
+    elif mutation == "duplicate_anchor":
+        source.write_text(
+            source.read_text(encoding="utf-8") + "% figure-agent:start trap_site\n",
+            encoding="utf-8",
+        )
+        new_hash = _sha256(source)
+        for region in regions["regions"]:
+            region["source"]["source_sha256"] = new_hash
+    elif mutation == "stale_lines":
+        selector["line_start"] = 2
+    else:
+        selector["selected_content_sha256"] = "sha256:" + "0" * 64
+    _write_yaml(regions_path, regions)
+    _write_yaml(input_path, payload)
+
+    packet = module.compile_semantic_legibility_evidence(input_path, tmp_path / "packet")
+
+    subject = next(item for item in packet["subjects"] if item["semantic_id"] == "trap_site")
+    assert subject["state"] == "unbound"
+    assert subject["review_disposition"] == "review_only"
+    assert subject["reason"] == reason
+    assert "crop" not in subject
+
+
+def test_declared_detector_image_size_must_match_actual_raster(tmp_path: Path) -> None:
+    module = _module()
+    input_path, payload = _input(tmp_path)
+    payload["render"]["detector_render"]["image_size_px"] = [101, 100]
+    _write_yaml(input_path, payload)
+
+    packet = module.compile_semantic_legibility_evidence(input_path, tmp_path / "packet")
+
+    assert {subject["state"] for subject in packet["subjects"]} == {"unbound"}
+    assert {subject["reason"] for subject in packet["subjects"]} == {"render_image_size_mismatch"}
+
+
+def test_mid_compile_failure_preserves_prior_packet_generated_crops_and_human_note(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _module()
+    input_path, _ = _input(tmp_path)
+    output_dir = tmp_path / "packet"
+    first = module.compile_semantic_legibility_evidence(input_path, output_dir)
+    note = output_dir / "crops" / "reviewer-note.txt"
+    note.write_text("human-owned", encoding="utf-8")
+    prior_packet = (output_dir / "packet.json").read_bytes()
+    prior_crops = {
+        subject["crop"]["path"]: (output_dir / subject["crop"]["path"]).read_bytes()
+        for subject in first["subjects"]
+    }
+    calls = 0
+    original = module.draw_attribution_box
+
+    def fail_on_second(*args: object, **kwargs: object) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("injected staging failure")
+        original(*args, **kwargs)
+
+    monkeypatch.setattr(module, "draw_attribution_box", fail_on_second)
+
+    with pytest.raises(RuntimeError, match="injected staging failure"):
+        module.compile_semantic_legibility_evidence(input_path, output_dir)
+
+    assert (output_dir / "packet.json").read_bytes() == prior_packet
+    assert note.read_text(encoding="utf-8") == "human-owned"
+    assert {path: (output_dir / path).read_bytes() for path in prior_crops} == prior_crops
+
+
+def test_symlink_output_is_rejected_without_touching_target(tmp_path: Path) -> None:
+    module = _module()
+    input_path, _ = _input(tmp_path)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    sentinel = outside / "sentinel.txt"
+    sentinel.write_text("untouched", encoding="utf-8")
+    output_dir = tmp_path / "packet"
+    output_dir.mkdir()
+    (output_dir / "crops").symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(module.SemanticLegibilityEvidenceError, match="output_symlink"):
+        module.compile_semantic_legibility_evidence(input_path, output_dir)
+
+    assert sentinel.read_text(encoding="utf-8") == "untouched"
+
+
+@pytest.mark.parametrize(
+    ("mutation", "state", "reason"),
+    [
+        ("missing", "unbound", "authority_claim_missing"),
+        ("duplicate_id", "blocked_authority_conflict", "authority_provenance_duplicate"),
+    ],
+)
+def test_exact_subject_requires_unique_authority_provenance(
+    tmp_path: Path, mutation: str, state: str, reason: str
+) -> None:
+    module = _module()
+    input_path, payload = _input(tmp_path)
+    if mutation == "missing":
+        payload["authority_claims"] = [
+            claim for claim in payload["authority_claims"] if claim["semantic_id"] != "trap_site"
+        ]
+    else:
+        payload["authority_claims"].append(dict(payload["authority_claims"][0]))
+    _write_yaml(input_path, payload)
+
+    packet = module.compile_semantic_legibility_evidence(input_path, tmp_path / "packet")
+
+    subject = next(item for item in packet["subjects"] if item["semantic_id"] == "trap_site")
+    assert subject["state"] == state
+    assert subject["review_disposition"] == "review_only"
+    assert subject["reason"] == reason
+
+
+def test_unknown_authority_claim_subject_emits_unbound_diagnostic(tmp_path: Path) -> None:
+    module = _module()
+    input_path, payload = _input(tmp_path)
+    payload["authority_claims"].append(
+        {
+            "semantic_id": "not_a_declared_subject",
+            "authority_id": "maintained_contract",
+            "claim": "unknown claim",
+        }
+    )
+    _write_yaml(input_path, payload)
+
+    packet = module.compile_semantic_legibility_evidence(input_path, tmp_path / "packet")
+
+    assert packet["authority_diagnostics"] == [
+        {
+            "semantic_id": "not_a_declared_subject",
+            "state": "unbound",
+            "review_disposition": "review_only",
+            "reason": "authority_claim_subject_unknown",
+        }
+    ]
 
 
 def test_cli_writes_packet_and_preserves_non_acceptance_boundary(tmp_path: Path) -> None:
@@ -399,8 +603,8 @@ def test_fig3_v12_packet_is_hash_bound_and_blocks_s60_conflict() -> None:
     assert packet["input_hashes"]["full_render_sha256"] == (
         "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947"
     )
-    assert packet["input_hashes"]["page_sha256"] == (
-        "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb"
+    assert packet["input_hashes"]["page_render_sha256"] == (
+        "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947"
     )
     source_hashes = {
         subject.get("selector_snapshot", {}).get("source_sha256")

@@ -127,9 +127,9 @@ def _bbox_pdf_cm(
 
 
 def _intersects(first: list[float], second: list[float]) -> bool:
-    return min(first[2], second[2]) > max(first[0], second[0]) and min(
-        first[3], second[3]
-    ) > max(first[1], second[1])
+    return min(first[2], second[2]) > max(first[0], second[0]) and min(first[3], second[3]) > max(
+        first[1], second[1]
+    )
 
 
 def _panel_candidates(fixture_dir: Path, bbox: list[float]) -> list[str]:
@@ -162,8 +162,7 @@ def _winning_region(candidates: list[dict[str, Any]]) -> dict[str, Any] | None:
         return specific[0]
     priorities = [region.get("priority") for region in candidates]
     if priorities and all(
-        isinstance(priority, int) and not isinstance(priority, bool)
-        for priority in priorities
+        isinstance(priority, int) and not isinstance(priority, bool) for priority in priorities
     ):
         highest = max(priorities)
         winners = [region for region in candidates if region.get("priority") == highest]
@@ -188,11 +187,45 @@ def _fresh_source_selector(
     path = fixture_dir / relative
     try:
         path.resolve().relative_to(fixture_dir.resolve())
-        actual_hash = f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
-    except (FileNotFoundError, ValueError):
+        source_bytes = path.read_bytes()
+        actual_hash = f"sha256:{hashlib.sha256(source_bytes).hexdigest()}"
+        source_text = source_bytes.decode("utf-8")
+    except (FileNotFoundError, UnicodeError, ValueError):
         return None, "source_missing"
     if actual_hash != source.get("source_sha256"):
         return None, "source_hash_mismatch"
+    anchor_start = source.get("anchor_start")
+    anchor_end = source.get("anchor_end")
+    if not isinstance(anchor_start, str) or not isinstance(anchor_end, str):
+        return None, "source_anchor_missing"
+    lines = source_text.splitlines(keepends=True)
+    line_values = [line.rstrip("\r\n") for line in lines]
+    starts = [index for index, line in enumerate(line_values, start=1) if line == anchor_start]
+    ends = [index for index, line in enumerate(line_values, start=1) if line == anchor_end]
+    if not starts or not ends:
+        return None, "source_anchor_missing"
+    if len(starts) != 1 or len(ends) != 1:
+        return None, "source_anchor_duplicate"
+    resolved_start, resolved_end = starts[0], ends[0]
+    if resolved_start > resolved_end:
+        return None, "source_anchor_order_invalid"
+    declared_lines = (
+        source.get("line_start"),
+        source.get("line_end"),
+        source.get("resolved_line_start"),
+        source.get("resolved_line_end"),
+    )
+    if declared_lines != (
+        resolved_start,
+        resolved_end,
+        resolved_start,
+        resolved_end,
+    ):
+        return None, "source_line_snapshot_stale"
+    selected_bytes = "".join(lines[resolved_start - 1 : resolved_end]).encode("utf-8")
+    selected_hash = f"sha256:{hashlib.sha256(selected_bytes).hexdigest()}"
+    if source.get("selected_content_sha256") != selected_hash:
+        return None, "source_selected_content_hash_mismatch"
     keys = (
         "path",
         "selector_id",
@@ -203,6 +236,7 @@ def _fresh_source_selector(
         "line_end",
         "resolved_line_start",
         "resolved_line_end",
+        "selected_content_sha256",
     )
     return {key: source[key] for key in keys if key in source}, None
 
