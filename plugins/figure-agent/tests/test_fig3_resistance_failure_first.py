@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -81,6 +82,7 @@ EXECUTION_BINDING = REVIEW / "execution-binding-v2"
 EXECUTION_BINDING_V4 = REVIEW / "execution-binding-v4"
 EXECUTION_BINDING_V5 = REVIEW / "execution-binding-v5"
 EXECUTION_BINDING_V6 = REVIEW / "execution-binding-v6"
+EXECUTION_SCAFFOLD_EVALUATION = REVIEW / "execution-scaffold-evaluation-v1"
 
 
 def _sha256(path: Path) -> str:
@@ -430,6 +432,9 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/execution-repair-v10/visual_clash.json",
         "review/failure-first/execution-visual-clash-evaluation-v2/evaluation_review.json",
         "review/failure-first/execution-visual-clash-evaluation-v2/visual_clash.json",
+        "review/failure-first/execution-scaffold-evaluation-v1/evaluation_review.json",
+        "review/failure-first/execution-scaffold-evaluation-v1/layout_contract.yaml",
+        "review/failure-first/execution-scaffold-evaluation-v1/layout_report.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "examples/fig3_resistance_mechanism/review/failure-first/"
@@ -1406,7 +1411,6 @@ def test_visual_clash_evaluation_v2_rejects_neighbor_text_luma_noise() -> None:
         "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh " f"{source_from_plugin}"
     )
     if render_path.exists():
-        assert review["render_evidence"]["sha256"] == _sha256(render_path)
         assert review["render_evidence"]["content_signature"] == (
             _pdf_content_signature(render_path)
         )
@@ -1415,6 +1419,124 @@ def test_visual_clash_evaluation_v2_rejects_neighbor_text_luma_noise() -> None:
     assert review["verification"]["strict_compile"] == "pass"
     assert review["verification"]["human_review"] == "pending"
     assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_execution_scaffold_v1_exposes_boundary_and_density_failures(
+    tmp_path: Path,
+) -> None:
+    contract = yaml.safe_load(
+        (EXECUTION_SCAFFOLD_EVALUATION / "layout_contract.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+    report = json.loads(
+        (EXECUTION_SCAFFOLD_EVALUATION / "layout_report.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    review = json.loads(
+        (EXECUTION_SCAFFOLD_EVALUATION / "evaluation_review.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert contract["evaluation_mode"] == "posthoc_current_render_review_scaffold"
+    assert contract["editorial_budget_authority"] == {
+        "reviewer": "moon",
+        "source": "rejected_region_guided_attempt_feedback",
+    }
+    assert contract["boundary_authority"] == {
+        "source": "agent_v10_visual_audit",
+        "status": "pending_human_confirmation",
+        "proposed_minimum_normalized_inset": 0.01,
+    }
+    assert report["failure_count"] == 7
+    assert {
+        result["rule_id"]: result["status"] for result in report["results"]
+    } == {
+        "panel_a_decay_outcome_contained": "violation",
+        "panel_b_s60_caption_contained": "violation",
+        "panel_b_s80_caption_contained": "violation",
+        "panel_b_sulfur_progression_contained": "violation",
+        "panel_b_magnitude_label_contained": "violation",
+    }
+    assert {
+        result["budget_id"]: (
+            result["word_count"],
+            result["maximum_words"],
+            result["status"],
+        )
+        for result in report["text_budget_results"]
+    } == {
+        "figure_text_budget": (65, 45, "violation"),
+        "panel_a_text_budget": (39, 22, "violation"),
+        "panel_b_text_budget": (18, 23, "ok"),
+    }
+    assert review["decision"] == (
+        "machine_visible_scaffold_failures_human_pending"
+    )
+    assert review["source"]["sha256"] == _sha256(
+        _declared_fixture_path(review["source"]["path"])
+    )
+    assert review["contract"]["sha256"] == _sha256(
+        EXECUTION_SCAFFOLD_EVALUATION / "layout_contract.yaml"
+    )
+    assert review["report"]["sha256"] == _sha256(
+        EXECUTION_SCAFFOLD_EVALUATION / "layout_report.json"
+    )
+    assert review["report"]["failure_count"] == report["failure_count"]
+    assert review["report"]["reproduction_command"] == (
+        "python3 scripts/checks/check_layout_drift.py --pdf "
+        "examples/fig3_resistance_mechanism/review/failure-first/"
+        "execution-repair-v10/build/repaired_generated.pdf --layout-contract "
+        "examples/fig3_resistance_mechanism/review/failure-first/"
+        "execution-scaffold-evaluation-v1/layout_contract.yaml --json-output "
+        "/tmp/fig3-execution-scaffold-layout-report.json --strict"
+    )
+    assert review["interpretation"]["universal_rule_claim"] == "not_claimed"
+    assert review["interpretation"]["boundary_authority"] == (
+        "pending_human_confirmation"
+    )
+    assert review["verification"]["strict_compile"] == "pass"
+    assert review["verification"]["human_review"] == "pending"
+    assert review["publication_acceptance"] == "not_claimed"
+
+    source_path = _declared_fixture_path(review["source"]["path"])
+    source_from_plugin = source_path.relative_to(PLUGIN_ROOT)
+    compile_result = subprocess.run(
+        ["bash", "scripts/compile.sh", str(source_from_plugin)],
+        cwd=PLUGIN_ROOT,
+        env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
+        capture_output=True,
+        text=True,
+    )
+    assert compile_result.returncode == 0, compile_result.stdout + compile_result.stderr
+    render_path = _declared_fixture_path(
+        review["render_evidence"]["resolved_runtime_path"]
+    )
+    assert _pdf_content_signature(render_path) == review["render_evidence"][
+        "content_signature"
+    ]
+
+    reproduced_report = tmp_path / "layout_report.json"
+    layout_result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/checks/check_layout_drift.py",
+            "--pdf",
+            str(render_path),
+            "--layout-contract",
+            str(EXECUTION_SCAFFOLD_EVALUATION / "layout_contract.yaml"),
+            "--json-output",
+            str(reproduced_report),
+            "--strict",
+        ],
+        cwd=PLUGIN_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert layout_result.returncode == 1
+    assert json.loads(reproduced_report.read_text(encoding="utf-8")) == report
 
 
 def test_fig3_resistance_render_receipt_reproduces_current_source_outputs() -> None:

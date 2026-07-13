@@ -1,0 +1,49 @@
+{
+  "schema": "figure-agent.execution-scaffold-evaluation.v1",
+  "evaluation": "execution-scaffold-evaluation-v1",
+  "decision": "machine_visible_scaffold_failures_human_pending",
+  "source": {
+    "path": "review/failure-first/execution-repair-v10/repaired_generated.tex",
+    "sha256": "sha256:d55002e5c6a1f3cf6dc404fc637ad66bc81063f97e50d7757b96ff7eb9de09a9"
+  },
+  "render_evidence": {
+    "resolved_runtime_path": "review/failure-first/execution-repair-v10/build/repaired_generated.pdf",
+    "sha256": "sha256:913be09524f0d6217c76061d5103eaf4c5a0edd128e3bb3f02ae57303ec6c723",
+    "raw_sha256_status": "snapshot_only_nondeterministic",
+    "content_signature": {
+      "schema": "figure-agent.pdf-content-signature.v1",
+      "extraction": "pdftotext-layout-trim-right-lines-v1",
+      "normalized_text_sha256": "sha256:2b866b14001974c016519e7fe81de9932cca25e4c13d1299ab1e69e7c514cb4a",
+      "page_count": 1
+    },
+    "tracking": "generated_runtime_artifact_not_tracked",
+    "working_directory": "plugins/figure-agent",
+    "reproduction_command": "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v10/repaired_generated.tex"
+  },
+  "contract": {
+    "path": "review/failure-first/execution-scaffold-evaluation-v1/layout_contract.yaml",
+    "sha256": "sha256:c87b398684271ebcbacebc5d414104bf2f899dad27b4f2e7edc59d9c7355df21"
+  },
+  "report": {
+    "path": "review/failure-first/execution-scaffold-evaluation-v1/layout_report.json",
+    "sha256": "sha256:384f9bd22f99629c5b10fc6f5cc2edcfd861ec2be5f928b922c944c0c094297c",
+    "failure_count": 7,
+    "boundary_failures": 5,
+    "density_failures": 2,
+    "working_directory": "plugins/figure-agent",
+    "reproduction_command": "python3 scripts/checks/check_layout_drift.py --pdf examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v10/build/repaired_generated.pdf --layout-contract examples/fig3_resistance_mechanism/review/failure-first/execution-scaffold-evaluation-v1/layout_contract.yaml --json-output /tmp/fig3-execution-scaffold-layout-report.json --strict"
+  },
+  "interpretation": {
+    "machine_gate": "the v10 strict compile passes",
+    "review_scaffold": "five labels cross or crowd agent-proposed panel boundaries and two human-derived fixture-specific text budgets fail",
+    "next_bounded_repair": "restore panel containment before reducing Panel A and whole-figure text density",
+    "boundary_authority": "pending_human_confirmation",
+    "universal_rule_claim": "not_claimed"
+  },
+  "verification": {
+    "strict_compile": "pass",
+    "layout_scaffold": "fail_seven_declared_findings",
+    "human_review": "pending"
+  },
+  "publication_acceptance": "not_claimed"
+}

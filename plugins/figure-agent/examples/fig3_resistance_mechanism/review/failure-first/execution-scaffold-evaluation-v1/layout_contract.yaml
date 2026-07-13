@@ -1,0 +1,70 @@
+schema: figure-agent.layout-lanes.v1
+fixture: fig3_resistance_mechanism
+attempt: execution_scaffold_evaluation_v1
+evaluation_mode: posthoc_current_render_review_scaffold
+purpose: >-
+  Measure the current strict-passing v10 render against fixture-specific panel
+  containment and editorial-density expectations. These limits are review
+  scaffold for this Fig3 experiment, not journal-wide publication rules.
+label_groups:
+  - id: panel_a_decay_outcome
+    required_terms: [current, decays, R, rises]
+  - id: panel_b_s60_caption
+    required_terms: [discrete, single, deep]
+  - id: panel_b_s80_caption
+    required_terms: [continuous, broad]
+  - id: panel_b_sulfur_progression
+    required_phrase: S60 → S80
+  - id: panel_b_magnitude_label
+    required_phrase: ρ 60s magnitude
+regions:
+  - id: page
+    normalized_bbox: [0.0, 0.0, 1.0, 1.0]
+  - id: panel_a
+    normalized_bbox: [0.0095, 0.0290, 0.5095, 0.9200]
+  - id: panel_b
+    normalized_bbox: [0.5255, 0.0290, 0.9320, 0.9200]
+text_budgets:
+  - id: figure_text_budget
+    region: page
+    maximum_words: 45
+  - id: panel_a_text_budget
+    region: panel_a
+    maximum_words: 22
+  - id: panel_b_text_budget
+    region: panel_b
+    maximum_words: 23
+rules:
+  - id: panel_a_decay_outcome_contained
+    kind: contained_in_region
+    group: panel_a_decay_outcome
+    region: panel_a
+    minimum_normalized_inset: 0.01
+  - id: panel_b_s60_caption_contained
+    kind: contained_in_region
+    group: panel_b_s60_caption
+    region: panel_b
+    minimum_normalized_inset: 0.01
+  - id: panel_b_s80_caption_contained
+    kind: contained_in_region
+    group: panel_b_s80_caption
+    region: panel_b
+    minimum_normalized_inset: 0.01
+  - id: panel_b_sulfur_progression_contained
+    kind: contained_in_region
+    group: panel_b_sulfur_progression
+    region: panel_b
+    minimum_normalized_inset: 0.01
+  - id: panel_b_magnitude_label_contained
+    kind: contained_in_region
+    group: panel_b_magnitude_label
+    region: panel_b
+    minimum_normalized_inset: 0.01
+editorial_budget_authority:
+  reviewer: moon
+  source: rejected_region_guided_attempt_feedback
+boundary_authority:
+  source: agent_v10_visual_audit
+  status: pending_human_confirmation
+  proposed_minimum_normalized_inset: 0.01
+publication_acceptance: not_claimed

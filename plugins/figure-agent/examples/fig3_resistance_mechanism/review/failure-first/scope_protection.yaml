@@ -165,6 +165,9 @@ allowed_review_paths:
   - review/failure-first/execution-repair-v10/visual_clash.json
   - review/failure-first/execution-visual-clash-evaluation-v2/evaluation_review.json
   - review/failure-first/execution-visual-clash-evaluation-v2/visual_clash.json
+  - review/failure-first/execution-scaffold-evaluation-v1/evaluation_review.json
+  - review/failure-first/execution-scaffold-evaluation-v1/layout_contract.yaml
+  - review/failure-first/execution-scaffold-evaluation-v1/layout_report.json
 allowed_repository_paths:
   - examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v5/control_generated.tex
   - plugins/figure-agent/_known_false_positives.yaml
