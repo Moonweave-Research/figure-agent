@@ -332,6 +332,8 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/shape_profiled_authoring_prompt.md",
         "review/failure-first/shape_control_generated.tex",
         "review/failure-first/shape_profiled_generated.tex",
+        "review/failure-first/shape_control_execution_receipt.yaml",
+        "review/failure-first/shape_profiled_execution_receipt.yaml",
         "review/failure-first/shape_profile_comparison.yaml",
         "review/failure-first/shape_profile_adversarial_review.yaml",
         "review/failure-first/shape_profile_handoff.md",
@@ -970,10 +972,13 @@ def test_fig3_shape_profile_outcome_binds_failed_render_attempt() -> None:
     comparison = yaml.safe_load(SHAPE_COMPARISON.read_text(encoding="utf-8"))
 
     assert comparison["schema"] == "figure-agent.shape-profile-comparison.v1"
-    assert comparison["comparison_eligibility"] == (
+    assert comparison["intended_experiment_class"] == (
         "controlled_shape_profile_experiment_not_product_ablation"
     )
-    assert comparison["comparison_status"] == "ineligible_not_renderable"
+    assert comparison["comparison_eligibility"] == "execution_unbound"
+    assert comparison["comparison_status"] == (
+        "ineligible_execution_unbound_and_not_renderable"
+    )
     assert comparison["shape_naturalness"] == (
         "blocked_not_applicable_until_new_renderable_experiment"
     )
@@ -989,12 +994,21 @@ def test_fig3_shape_profile_outcome_binds_failed_render_attempt() -> None:
     )
 
     expected_arm_files = {
-        "shape_control": (SHAPE_CONTROL_PROMPT, SHAPE_CONTROL_SOURCE),
-        "shape_profiled": (SHAPE_PROFILED_PROMPT, SHAPE_PROFILED_SOURCE),
+        "shape_control": (
+            SHAPE_CONTROL_PROMPT,
+            SHAPE_CONTROL_SOURCE,
+            "41b49492dd40345ed9d74831e05b939704288190c2b24fdc958ec6d2c02b0afb",
+        ),
+        "shape_profiled": (
+            SHAPE_PROFILED_PROMPT,
+            SHAPE_PROFILED_SOURCE,
+            "a0bfc63c5de41278b77f6d60170a9ce52db3d18ca8027652f7e0cebe74ffc6ad",
+        ),
     }
-    for arm_id, (prompt, source) in expected_arm_files.items():
+    for arm_id, (prompt, source, executed_prompt_hash) in expected_arm_files.items():
         arm = comparison["arms"][arm_id]
-        assert arm["prompt_sha256"] == _sha256(prompt)
+        assert arm["executed_prompt_sha256"] == f"sha256:{executed_prompt_hash}"
+        assert arm["declared_prompt_file_sha256"] == _sha256(prompt)
         assert arm["generated_source_sha256"] == _sha256(source)
         assert arm["compile"] == {
             "normal_exit": 1,
@@ -1010,6 +1024,31 @@ def test_fig3_shape_profile_outcome_binds_failed_render_attempt() -> None:
             "png": "not_created",
         }
         assert arm["layout_report"] == "not_created_render_unavailable"
+
+
+def test_fig3_shape_profile_execution_receipts_bind_actual_runtime_bytes() -> None:
+    receipt_paths = {
+        "shape_control": REVIEW / "shape_control_execution_receipt.yaml",
+        "shape_profiled": REVIEW / "shape_profiled_execution_receipt.yaml",
+    }
+    expected_transcripts = {
+        "shape_control": "sha256:d310f2801b77ee9c1a89c3986f16cda11801b9abcc22047214e8d302d29e92f2",
+        "shape_profiled": "sha256:b87f2736900e1c73ad804db3fa4ceecb4778eb8879081b9ef6eb21dbbfa1628e",
+    }
+    for arm_id, receipt_path in receipt_paths.items():
+        receipt = yaml.safe_load(receipt_path.read_text(encoding="utf-8"))
+        assert receipt["schema"] == "figure-agent.shape-experiment-execution-receipt.v1"
+        assert receipt["arm_id"] == arm_id
+        assert receipt["prompt_binding_status"] == (
+            "mismatch_executed_inline_prompt_not_declared_prompt_file"
+        )
+        assert receipt["transcript_sha256"] == expected_transcripts[arm_id]
+        assert receipt["actual_token_usage_or_unavailable_with_reason"] == (
+            "unavailable_witnessd_codex_adapter_did_not_report_actual_usage"
+        )
+        assert receipt["feedback_rounds"] == 0
+        assert receipt["manual_repairs"] == 0
+        assert receipt["experiment_eligibility"] == "execution_unbound"
 
 
 def test_fig3_shape_profile_outcome_binds_external_execution_evidence() -> None:
@@ -1068,7 +1107,7 @@ def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
     )
     assert review["publication_acceptance"] == "not_claimed"
 
-    assert "ineligible_not_renderable" in handoff
+    assert "ineligible_execution_unbound_and_not_renderable" in handoff
     assert "missing_polymer_paper_preamble" in handoff
     assert "persisted execution evidence only" in handoff
     assert "Publication acceptance is not claimed" in handoff

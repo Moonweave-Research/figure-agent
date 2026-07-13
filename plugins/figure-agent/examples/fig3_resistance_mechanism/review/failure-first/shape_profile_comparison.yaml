@@ -1,9 +1,11 @@
 schema: figure-agent.shape-profile-comparison.v1
 fixture: fig3_resistance_mechanism
 experiment: bounded_panel_b_distribution_shape_profile
-comparison_eligibility: controlled_shape_profile_experiment_not_product_ablation
-comparison_status: ineligible_not_renderable
+intended_experiment_class: controlled_shape_profile_experiment_not_product_ablation
+comparison_eligibility: execution_unbound
+comparison_status: ineligible_execution_unbound_and_not_renderable
 ineligibility_reasons:
+  - executed_inline_prompts_do_not_match_declared_prompt_files
   - both_arms_failed_before_render
   - no_pdf_or_png_outputs
   - no_layout_reports
@@ -16,7 +18,9 @@ shared_contracts:
 treatment_overlay_sha256: sha256:ba23409f0f2c1268c5810fbaf7c524807e523fc22f313f3befc5b200eb11f08f
 arms:
   shape_control:
-    prompt_sha256: sha256:ecaf28ee4d5e8c1b05ad098cba5747391620ea5e981b4c5877c47c46f32a13a7
+    execution_receipt: shape_control_execution_receipt.yaml
+    executed_prompt_sha256: sha256:41b49492dd40345ed9d74831e05b939704288190c2b24fdc958ec6d2c02b0afb
+    declared_prompt_file_sha256: sha256:ecaf28ee4d5e8c1b05ad098cba5747391620ea5e981b4c5877c47c46f32a13a7
     generated_source_sha256: sha256:46e58f500368471a491b9cf5cfbf36dc2fdad3b1a5013ba7cd6e43b445dddfc2
     compile:
       normal_exit: 1
@@ -26,7 +30,9 @@ arms:
     render_outputs: {pdf: not_created, png: not_created}
     layout_report: not_created_render_unavailable
   shape_profiled:
-    prompt_sha256: sha256:c1554202da35fdee1702c275b930463bf6055b10a2f51b9eb5cfbfcebf6b2944
+    execution_receipt: shape_profiled_execution_receipt.yaml
+    executed_prompt_sha256: sha256:a0bfc63c5de41278b77f6d60170a9ce52db3d18ca8027652f7e0cebe74ffc6ad
+    declared_prompt_file_sha256: sha256:c1554202da35fdee1702c275b930463bf6055b10a2f51b9eb5cfbfcebf6b2944
     generated_source_sha256: sha256:0314182b8f2bbbcf107000d4d806934368ab49f00b5e14f54a1deefeafa5c2a9
     compile:
       normal_exit: 1
@@ -46,5 +52,5 @@ execution_evidence:
   handoff_report_sequence_limitation: report_recorded_binding_mismatch_before_final_proofcheck_rerun
   runtime_read_isolation: unavailable
   transcript_audit: no_repository_artifact_reads_observed_global_skill_reads_only
-machine_gate_interpretation: generation_persisted_compile_failed_no_visual_comparison
+machine_gate_interpretation: generation_persisted_execution_unbound_compile_failed_no_visual_comparison
 publication_acceptance: not_claimed

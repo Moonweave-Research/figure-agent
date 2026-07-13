@@ -1,9 +1,14 @@
 # Fig3 shape-profile experiment handoff
 
-This attempt is `ineligible_not_renderable`. ORRO produced both exact one-pass
+This attempt is `ineligible_execution_unbound_and_not_renderable`. ORRO produced both exact one-pass
 TikZ sources, but normal and strict compilation both exited 1 for each arm at
 `missing_polymer_paper_preamble`. The generated sources were preserved without
 manual repair. No PDF, PNG, or layout report exists.
+
+The executed ORRO inline prompts do not byte-match the declared Markdown prompt
+files, so this is not a hash-bound controlled comparison. Per-arm execution
+receipts bind the actual prompt, transcript, and source hashes and record the
+mismatch; the next run must execute the declared prompt bytes directly.
 
 The external evidence root is
 `.witnessd/runs/fig3-shape-profile-20260713-sequential`. Its final Depone
