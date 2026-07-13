@@ -61,10 +61,10 @@ authoritative_inputs:
     sha256: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
   - role: shape_experiment_control_packet
     path: review/failure-first/shape_experiment_control_packet.yaml
-    sha256: sha256:45e982c68a5282518c7a5a03716bc971d4806dc396b91a91eae22fab2e7b9e11
+    sha256: sha256:364dc63aa6ed31b184e0d66b3b642ad1827d4e3ffefb98d0d79cdd567307242a
   - role: shape_profile_treatment_overlay
     path: review/failure-first/shape_profile_treatment_overlay.yaml
-    sha256: sha256:eaf547532c90f5e74a81fc24dcddd950ca886989b66e8be81207d741457677d4
+    sha256: sha256:4711bd26a4c20d1097a80ef65673bec4549b0953eee632347c575ccec33c232a
   - role: shape_control_authoring_prompt
     path: review/failure-first/shape_control_authoring_prompt.md
     sha256: sha256:6b9267e2240a9d2a0a461801046c3bd7e0dfad58d1d99f9fc2ebfedde500450d

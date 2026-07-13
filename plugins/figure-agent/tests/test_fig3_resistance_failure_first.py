@@ -416,13 +416,17 @@ def test_shape_experiment_treatment_is_exact_compiled_profile_only_delta() -> No
         "schema": "figure-agent.shape-profile-treatment-overlay.v1",
         "arm_id": "shape_profiled",
         "control_packet_sha256": _sha256(SHAPE_CONTROL_PACKET),
-        "shape_profile": {
-            "path": SHAPE_PROFILE.name,
-            "sha256": _sha256(SHAPE_PROFILE),
-        },
-        "compiled_profile": compiled,
+        "profile_path": SHAPE_PROFILE.name,
+        "profile_sha256": _sha256(SHAPE_PROFILE),
         "authoring_directives": compiled["authoring_directives"],
-        "publication_acceptance": "not_claimed",
+    }
+    assert set(overlay) == {
+        "schema",
+        "arm_id",
+        "control_packet_sha256",
+        "profile_path",
+        "profile_sha256",
+        "authoring_directives",
     }
 
     control_prompt = SHAPE_CONTROL_PROMPT.read_text(encoding="utf-8")
@@ -473,6 +477,7 @@ def test_shape_experiment_packet_hashes_roles_forbidden_imports_and_boundary() -
         "authoring_contract",
         "panel_goals",
         "semantic_boundary",
+        "repaired_region_contract",
         "text_inventory_contract",
         "label_ownership_contract",
         "mutual_clearance_contract",

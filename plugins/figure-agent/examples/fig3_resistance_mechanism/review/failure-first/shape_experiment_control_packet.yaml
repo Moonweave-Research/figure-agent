@@ -17,6 +17,9 @@ authoritative_inputs:
   - role: semantic_boundary
     path: review/failure-first/semantic_object_relation_boundary.yaml
     sha256: sha256:17770ca96d744bc27a90e074c03028263399a61669febdb86807176a91d7c0e5
+  - role: repaired_region_contract
+    path: review/failure-first/repaired_posthoc_region_contract.yaml
+    sha256: sha256:a4d4824e88368f5fbfa7d19e5c682a6c3ba641b00558da0a53c4bf43750f0d01
   - role: text_inventory_contract
     path: review/failure-first/region_guided_text_inventory_contract.yaml
     sha256: sha256:1458f31b8c8167050f6927fbc321425e84e090225d177a815428736871395860
