@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import subprocess
 from pathlib import Path
 
 import authoring_execution_packet
+import authoring_execution_preflight
 import pytest
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
@@ -260,3 +263,138 @@ def test_write_persists_canonical_json_and_rejects_second_write(tmp_path: Path) 
             packet=packet,
             prompt=prompt,
         )
+
+
+def _write_arm(
+    workspace: Path,
+    arm: str,
+    *,
+    model_id: str = "gpt-5.5",
+) -> tuple[Path, Path]:
+    output = (
+        "examples/context_demo/review/failure-first/execution-binding-v1/"
+        f"{arm}_generated.tex"
+    )
+    packet, prompt = authoring_execution_packet.compile_authoring_execution_packet(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+        model_id=model_id,
+        budget_contract="examples/context_demo/review/budget.yaml",
+        blank_start="examples/context_demo/review/blank.txt",
+        output_path=output,
+    )
+    attempt = workspace / "examples/context_demo/review/failure-first/execution-binding-v1"
+    packet_path = attempt / f"{arm}_packet.json"
+    prompt_path = attempt / f"{arm}_prompt.md"
+    authoring_execution_packet.write_authoring_execution_packet(
+        packet_path,
+        prompt_path,
+        packet=packet,
+        prompt=prompt,
+    )
+    return packet_path, prompt_path
+
+
+def test_preflight_accepts_equal_contracts_with_disjoint_outputs(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    control, _ = _write_arm(workspace, "control")
+    treatment, _ = _write_arm(workspace, "treatment")
+
+    result = authoring_execution_preflight.preflight_authoring_pair(
+        control,
+        treatment,
+    )
+
+    assert result["schema"] == "figure-agent.authoring-execution-preflight.v1"
+    assert result["decision"] == "pass"
+    assert result["filesystem_read_isolation"] == "unavailable"
+    assert result["control"]["packet_sha256"] != result["treatment"]["packet_sha256"]
+
+
+def test_preflight_rejects_unequal_model_contract(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    control, _ = _write_arm(workspace, "control")
+    treatment, _ = _write_arm(workspace, "treatment", model_id="other-model")
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="model_id mismatch",
+    ):
+        authoring_execution_preflight.preflight_authoring_pair(control, treatment)
+
+
+def test_preflight_rejects_prompt_byte_drift(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    control, control_prompt = _write_arm(workspace, "control")
+    treatment, _ = _write_arm(workspace, "treatment")
+    control_prompt.write_text("drifted\n", encoding="utf-8")
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="prompt byte drift",
+    ):
+        authoring_execution_preflight.preflight_authoring_pair(control, treatment)
+
+
+def test_authoring_packet_and_preflight_cli(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    attempt_rel = "examples/context_demo/review/failure-first/execution-binding-v1"
+    env = os.environ.copy()
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+    for arm in ("control", "treatment"):
+        result = subprocess.run(
+            [
+                str(PLUGIN_ROOT / "bin" / "fig-agent"),
+                "authoring-packet",
+                "context_demo",
+                "--model-id",
+                "gpt-5.5",
+                "--budget-contract",
+                "examples/context_demo/review/budget.yaml",
+                "--blank-start",
+                "examples/context_demo/review/blank.txt",
+                "--output-path",
+                f"{attempt_rel}/{arm}_generated.tex",
+                "--packet-out",
+                f"{attempt_rel}/{arm}_packet.json",
+                "--prompt-out",
+                f"{attempt_rel}/{arm}_prompt.md",
+                "--json",
+            ],
+            cwd=PLUGIN_ROOT,
+            env=env,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+        payload = json.loads(result.stdout)
+        prompt = workspace / attempt_rel / f"{arm}_prompt.md"
+        assert payload["prompt"]["utf8"] == prompt.read_text(encoding="utf-8")
+        assert payload["prompt"]["sha256"] == _sha256_text(
+            prompt.read_text(encoding="utf-8")
+        )
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-preflight",
+            "--control",
+            f"{attempt_rel}/control_packet.json",
+            "--treatment",
+            f"{attempt_rel}/treatment_packet.json",
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["decision"] == "pass"

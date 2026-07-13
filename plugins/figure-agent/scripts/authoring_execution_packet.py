@@ -90,6 +90,31 @@ def _validate_output_path(workspace_root: Path, name: str, value: str) -> Path:
     return relative
 
 
+def resolve_attempt_artifact_path(
+    workspace_root: Path,
+    name: str,
+    value: str,
+    *,
+    suffix: str,
+) -> Path:
+    """Resolve a new packet-side artifact inside the fixture attempt directory."""
+    relative = _safe_relative_path(value, label="attempt artifact")
+    required_parent = Path("examples") / name / ATTEMPT_DIRECTORY
+    if relative.parent != required_parent or relative.suffix != suffix:
+        raise AuthoringExecutionPacketError(
+            f"attempt artifact must be a {suffix} file inside execution-binding-v1"
+        )
+    path = workspace_root.resolve() / relative
+    current = workspace_root.resolve()
+    for part in relative.parent.parts:
+        current = current / part
+        if current.is_symlink():
+            raise AuthoringExecutionPacketError(
+                "attempt artifact must not traverse a symlink"
+            )
+    return path
+
+
 def _validate_prompt_requirements(prompt: str) -> None:
     for requirement in MANDATORY_SOURCE_REQUIREMENTS:
         count = prompt.count(requirement)
@@ -201,6 +226,9 @@ def compile_authoring_execution_packet(
         shape_profile=shape_profile,
     )
     context_hash = _sha256_bytes(_canonical_json_bytes(context_pack))
+    base_context_pack = {
+        key: value for key, value in context_pack.items() if key != "shape_profile"
+    }
     prompt = render_authoring_prompt(
         name=name,
         output_path=relative_output.as_posix(),
@@ -213,6 +241,7 @@ def compile_authoring_execution_packet(
         "context_pack": {
             "schema": context_pack["schema"],
             "sha256": context_hash,
+            "base_sha256": _sha256_bytes(_canonical_json_bytes(base_context_pack)),
         },
         "model_id": model_id.strip(),
         "budget_contract": {

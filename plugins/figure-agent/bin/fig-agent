@@ -358,6 +358,93 @@ def _context_pack(argv: list[str]) -> int:
     )
 
 
+def _authoring_packet(argv: list[str]) -> int:
+    import authoring_execution_packet
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-packet")
+    parser.add_argument("name")
+    parser.add_argument("--model-id", required=True)
+    parser.add_argument("--budget-contract", required=True)
+    parser.add_argument("--blank-start", required=True)
+    parser.add_argument("--output-path", required=True)
+    parser.add_argument("--packet-out", required=True)
+    parser.add_argument("--prompt-out", required=True)
+    parser.add_argument("--layout-contract")
+    parser.add_argument("--shape-profile")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    try:
+        packet, prompt = authoring_execution_packet.compile_authoring_execution_packet(
+            name,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+            model_id=args.model_id,
+            budget_contract=args.budget_contract,
+            blank_start=args.blank_start,
+            output_path=args.output_path,
+            layout_contract=args.layout_contract,
+            shape_profile=args.shape_profile,
+        )
+        packet_path = authoring_execution_packet.resolve_attempt_artifact_path(
+            paths.workspace_root,
+            name,
+            args.packet_out,
+            suffix=".json",
+        )
+        prompt_path = authoring_execution_packet.resolve_attempt_artifact_path(
+            paths.workspace_root,
+            name,
+            args.prompt_out,
+            suffix=".md",
+        )
+        authoring_execution_packet.write_authoring_execution_packet(
+            packet_path,
+            prompt_path,
+            packet=packet,
+            prompt=prompt,
+        )
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"fig-agent authoring-packet: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(packet, indent=2, sort_keys=True))
+    return 0
+
+
+def _authoring_preflight(argv: list[str]) -> int:
+    import authoring_execution_preflight
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-preflight")
+    parser.add_argument("--control", required=True)
+    parser.add_argument("--treatment", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    workspace_root = _paths().workspace_root.resolve()
+
+    def packet_path(value: str) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError("packet path must be repository-relative and safe")
+        resolved = (workspace_root / relative).resolve(strict=False)
+        if not resolved.is_relative_to(workspace_root):
+            raise ValueError("packet path must remain inside the workspace")
+        return resolved
+
+    try:
+        payload = authoring_execution_preflight.preflight_authoring_pair(
+            packet_path(args.control),
+            packet_path(args.treatment),
+        )
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"fig-agent authoring-preflight: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _memory_log(argv: list[str]) -> int:
     import quality_memory_events
 
@@ -1511,6 +1598,10 @@ def main(argv: list[str] | None = None) -> int:
         return _quality_map(rest)
     if command == "context-pack":
         return _context_pack(rest)
+    if command == "authoring-packet":
+        return _authoring_packet(rest)
+    if command == "authoring-preflight":
+        return _authoring_preflight(rest)
     if command == "memory-log":
         return _memory_log(rest)
     if command == "memory-index":
