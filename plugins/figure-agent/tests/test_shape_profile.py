@@ -73,6 +73,21 @@ def test_compile_shape_profile_normalizes_collection_order() -> None:
     assert result["forbidden_claims"] == _valid_payload()["forbidden_claims"]
 
 
+def test_compile_shape_profile_returns_isolated_relation_members() -> None:
+    first_result = shape_profile.compile_shape_profile(_valid_payload())
+    first_relations = first_result["relations"]
+    assert isinstance(first_relations, list)
+    encoding_relation = first_relations[1]
+    assert isinstance(encoding_relation, dict)
+    members = encoding_relation["members"]
+    assert isinstance(members, list)
+    members.append("contaminated")
+
+    second_result = shape_profile.compile_shape_profile(_valid_payload())
+
+    assert second_result["relations"] == _valid_payload()["relations"]
+
+
 def _invalid_cases() -> list[tuple[str, dict[str, object], str]]:
     cases: list[tuple[str, dict[str, object], str]] = []
 

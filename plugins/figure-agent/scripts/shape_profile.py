@@ -140,7 +140,10 @@ def compile_shape_profile(payload: dict[str, object]) -> dict[str, object]:
         "schema": SCHEMA,
         "status": STATUS,
         "objects": [dict(item) for item in _OBJECTS],
-        "relations": [dict(item) for item in _RELATIONS],
+        "relations": [
+            {"kind": "wider_than", "subject": "s80", "object": "s60"},
+            {"kind": "same_encoding_family", "members": ["s60", "s80"]},
+        ],
         "forbidden_claims": list(_FORBIDDEN_CLAIMS),
         "composition_header": _COMPOSITION_HEADER,
         "authoring_directives": list(_DIRECTIVES),
