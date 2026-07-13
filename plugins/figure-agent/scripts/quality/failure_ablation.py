@@ -13,6 +13,7 @@ REPORT_SCHEMA = "figure-agent.failure-ablation-report.v1"
 VARIANTS = {"raw", "verified", "repaired"}
 SCIENTIFIC_CLASSES = {"semantic", "relation"}
 GENERATION_RECEIPT_SCHEMA = "figure-agent.generation-receipt.v1"
+COMPARISON_ELIGIBLE = "eligible_equal_input"
 
 
 class FailureAblationError(ValueError):
@@ -162,6 +163,11 @@ def _has_bound_generation_receipt(run: dict[str, Any]) -> bool:
     )
 
 
+def _is_explicitly_comparison_ineligible(run: dict[str, Any]) -> bool:
+    eligibility = run.get("comparison_eligibility")
+    return eligibility is not None and eligibility != COMPARISON_ELIGIBLE
+
+
 def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
     if set(run_paths) != VARIANTS:
         raise FailureAblationError("variant_set_invalid")
@@ -193,11 +199,14 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
         item["human_verdict_state"] == "recorded" for item in variants.values()
     )
     receipts = [runs[name].get("generation_receipt") for name in VARIANTS]
-    transcript_bound = all(
-        _has_bound_generation_receipt(runs[name]) for name in VARIANTS
-    ) and all(
-        len({receipt[field] for receipt in receipts if isinstance(receipt, dict)}) == 1
-        for field in ("model_id", "source_commit", "starting_artifact_sha256")
+    transcript_bound = (
+        not any(_is_explicitly_comparison_ineligible(runs[name]) for name in VARIANTS)
+        and all(_has_bound_generation_receipt(runs[name]) for name in VARIANTS)
+        and all(
+            len({receipt[field] for receipt in receipts if isinstance(receipt, dict)})
+            == 1
+            for field in ("model_id", "source_commit", "starting_artifact_sha256")
+        )
     )
     return {
         "schema": REPORT_SCHEMA,

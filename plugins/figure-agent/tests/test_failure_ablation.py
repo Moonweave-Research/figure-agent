@@ -176,6 +176,25 @@ def test_ablation_rejects_generation_receipts_from_different_models(tmp_path: Pa
     assert report["comparison_evidence"] == "staged_only"
 
 
+def test_ablation_rejects_explicitly_ineligible_run_even_with_bound_receipts(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    for path in paths.values():
+        add_generation_receipt(path)
+
+    verified = yaml.safe_load(paths["verified"].read_text(encoding="utf-8"))
+    verified["comparison_eligibility"] = "feedback_guided_not_equal_input"
+    paths["verified"].write_text(
+        yaml.safe_dump(verified, sort_keys=False), encoding="utf-8"
+    )
+
+    report = evaluate_ablation(paths)
+
+    assert report["comparison_evidence"] == "staged_only"
+    assert report["product_claim"] == "not_authorized"
+
+
 def test_ablation_rejects_generation_receipts_with_changed_artifacts(
     tmp_path: Path,
 ) -> None:
