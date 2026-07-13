@@ -1,0 +1,45 @@
+schema: figure-agent.shape-experiment-control-packet.v1
+fixture: fig3_resistance_mechanism
+arm_id: shape_control
+authoritative_inputs:
+  - role: briefing
+    path: briefing.md
+    sha256: sha256:3ab181e525baa09611b70140c82b58b8776e994379f1544f9e0a58d263b94592
+  - role: specification
+    path: spec.yaml
+    sha256: sha256:21762edd4599990dd3dce8c1a3a7df6c58c75e55a20d4c12a51851b015358c4a
+  - role: authoring_contract
+    path: authoring_contract.md
+    sha256: sha256:ab51187e94662e1fc4c7a742862b201e33d7f47c7c6bb69a86c69faa57f8ae2e
+  - role: panel_goals
+    path: panel_goals.md
+    sha256: sha256:84a232dd5e6cb401cd2597f4b589bd6da1f9f810843478038d23070efe30b1f2
+  - role: semantic_boundary
+    path: review/failure-first/semantic_object_relation_boundary.yaml
+    sha256: sha256:17770ca96d744bc27a90e074c03028263399a61669febdb86807176a91d7c0e5
+  - role: text_inventory_contract
+    path: review/failure-first/region_guided_text_inventory_contract.yaml
+    sha256: sha256:1458f31b8c8167050f6927fbc321425e84e090225d177a815428736871395860
+  - role: label_ownership_contract
+    path: review/failure-first/region_guided_label_ownership_contract.yaml
+    sha256: sha256:8950929bf4dd9f88ef067e29bb9c0fae3cee594cd94f31993dc0230bffb50e3f
+  - role: mutual_clearance_contract
+    path: review/failure-first/region_guided_mutual_clearance_contract.yaml
+    sha256: sha256:d169cdd593f7857bc691088ed8364ba723482326081f7356fda24babb4ce8c4a
+model_contract_sha256: sha256:9523be6f958e9c30d3e8f304f6cd25dee6497216781014f773537aae71171258
+budget_contract_sha256: sha256:d5d21d7b8453ca9fa1e7f765e587d1295c4caf75209f62f0aa096a446901e9a5
+blank_start:
+  path: shape_experiment_blank_start.txt
+  sha256: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  identical_for_arms: [shape_control, shape_profiled]
+authority_conflicts:
+  - s60_peak_count_unresolved
+  - n_and_decay_direction_unresolved
+control_arm_profile_directives: none
+forbidden_import_patterns:
+  - review/failure-first/*generated*
+  - review/failure-first/*render*
+  - docs/historical/fig3*
+  - examples/fig1_*
+  - experiments/python_svg_semantic_fig1
+publication_acceptance: not_claimed

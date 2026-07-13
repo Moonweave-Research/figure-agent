@@ -43,8 +43,32 @@ authoritative_inputs:
     sha256: sha256:17770ca96d744bc27a90e074c03028263399a61669febdb86807176a91d7c0e5
   - role: scope_protection
     path: review/failure-first/scope_protection.yaml
-    sha256: sha256:891617541c2a5d28cbedc0fa60948d7d54e5f1e71a1b608bc2270f1512a77359
+    sha256: sha256:b03254f6f1398cc6fd9da8c61ea3def0adb19f0d8deca553255adf0878edc498
   - role: render_receipt
     path: review/failure-first/render_receipt.yaml
     sha256: sha256:6e8f26d2d771c5d8bc7617722efbb8cf0e99a38ed7bd6fbc79d79936a4ef6208
+  - role: shape_profile
+    path: shape_profile_panel_b.yaml
+    sha256: sha256:7efed454ab937c4a131e23a879d006cfb01349ff1c5c471cdaad27e191d1069f
+  - role: shape_experiment_model_contract
+    path: review/failure-first/shape_experiment_model_contract.yaml
+    sha256: sha256:9523be6f958e9c30d3e8f304f6cd25dee6497216781014f773537aae71171258
+  - role: shape_experiment_budget_contract
+    path: review/failure-first/shape_experiment_budget_contract.yaml
+    sha256: sha256:d5d21d7b8453ca9fa1e7f765e587d1295c4caf75209f62f0aa096a446901e9a5
+  - role: shape_experiment_blank_start
+    path: review/failure-first/shape_experiment_blank_start.txt
+    sha256: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  - role: shape_experiment_control_packet
+    path: review/failure-first/shape_experiment_control_packet.yaml
+    sha256: sha256:45e982c68a5282518c7a5a03716bc971d4806dc396b91a91eae22fab2e7b9e11
+  - role: shape_profile_treatment_overlay
+    path: review/failure-first/shape_profile_treatment_overlay.yaml
+    sha256: sha256:eaf547532c90f5e74a81fc24dcddd950ca886989b66e8be81207d741457677d4
+  - role: shape_control_authoring_prompt
+    path: review/failure-first/shape_control_authoring_prompt.md
+    sha256: sha256:6b9267e2240a9d2a0a461801046c3bd7e0dfad58d1d99f9fc2ebfedde500450d
+  - role: shape_profiled_authoring_prompt
+    path: review/failure-first/shape_profiled_authoring_prompt.md
+    sha256: sha256:ef05c06b80683d9f44f9fcdeddf672dd758f0ee324054d973dc5b43246024a5e
 publication_acceptance: not_claimed

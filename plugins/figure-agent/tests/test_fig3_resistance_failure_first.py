@@ -3,11 +3,16 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
+
+import authoring_context_pack  # noqa: E402
+
 FIXTURE = PLUGIN_ROOT / "examples" / "fig3_resistance_mechanism"
 REVIEW = FIXTURE / "review" / "failure-first"
 PACKET = REVIEW / "input_packet.yaml"
@@ -58,6 +63,14 @@ REGION_GUIDED_MUTUAL_CLEARANCE_CONTRACT = (
 REGION_GUIDED_MUTUAL_CLEARANCE_REPORT = (
     REVIEW / "region_guided_mutual_clearance_report.json"
 )
+SHAPE_PROFILE = FIXTURE / "shape_profile_panel_b.yaml"
+SHAPE_MODEL_CONTRACT = REVIEW / "shape_experiment_model_contract.yaml"
+SHAPE_BUDGET_CONTRACT = REVIEW / "shape_experiment_budget_contract.yaml"
+SHAPE_BLANK_START = REVIEW / "shape_experiment_blank_start.txt"
+SHAPE_CONTROL_PACKET = REVIEW / "shape_experiment_control_packet.yaml"
+SHAPE_TREATMENT_OVERLAY = REVIEW / "shape_profile_treatment_overlay.yaml"
+SHAPE_CONTROL_PROMPT = REVIEW / "shape_control_authoring_prompt.md"
+SHAPE_PROFILED_PROMPT = REVIEW / "shape_profiled_authoring_prompt.md"
 
 
 def _sha256(path: Path) -> str:
@@ -145,6 +158,14 @@ def test_fig3_resistance_failure_first_packet_hash_binds_current_authority() -> 
         "semantic_boundary",
         "scope_protection",
         "render_receipt",
+        "shape_profile",
+        "shape_experiment_model_contract",
+        "shape_experiment_budget_contract",
+        "shape_experiment_blank_start",
+        "shape_experiment_control_packet",
+        "shape_profile_treatment_overlay",
+        "shape_control_authoring_prompt",
+        "shape_profiled_authoring_prompt",
     ]
     assert len(roles) == len(set(roles))
     for item in packet["authoritative_inputs"]:
@@ -296,6 +317,14 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/region_guided_label_ownership_report.json",
         "review/failure-first/region_guided_mutual_clearance_contract.yaml",
         "review/failure-first/region_guided_mutual_clearance_report.json",
+        "shape_profile_panel_b.yaml",
+        "review/failure-first/shape_experiment_model_contract.yaml",
+        "review/failure-first/shape_experiment_budget_contract.yaml",
+        "review/failure-first/shape_experiment_blank_start.txt",
+        "review/failure-first/shape_experiment_control_packet.yaml",
+        "review/failure-first/shape_profile_treatment_overlay.yaml",
+        "review/failure-first/shape_control_authoring_prompt.md",
+        "review/failure-first/shape_profiled_authoring_prompt.md",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/bin/fig-agent",
@@ -331,6 +360,135 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
     )
     assert receipt_item["path"] == "review/failure-first/render_receipt.yaml"
     assert receipt_item["sha256"] == _sha256(RENDER_RECEIPT)
+
+
+def test_shape_experiment_contracts_bind_identical_one_pass_clean_room_arms() -> None:
+    model = yaml.safe_load(SHAPE_MODEL_CONTRACT.read_text(encoding="utf-8"))
+    budget = yaml.safe_load(SHAPE_BUDGET_CONTRACT.read_text(encoding="utf-8"))
+    control = yaml.safe_load(SHAPE_CONTROL_PACKET.read_text(encoding="utf-8"))
+
+    assert model == {
+        "schema": "figure-agent.shape-experiment-model-contract.v1",
+        "model_id": "codex-gpt-5.5",
+        "authoring_mode": "clean_room_authority_only_tikz",
+        "output_kind": "standalone_tikz_source",
+        "forbidden_import_classes": [
+            "prior_generated_sources",
+            "prior_generated_renders",
+            "historical_fig3_artifacts",
+            "fig1_artifacts",
+        ],
+        "publication_acceptance": "not_claimed",
+    }
+    assert budget["schema"] == "figure-agent.shape-experiment-budget-contract.v1"
+    assert budget["variants"] == ["shape_control", "shape_profiled"]
+    assert budget["authoring_attempts_per_variant"] == 1
+    assert budget["max_tokens_per_attempt"] == 12000
+    assert budget["feedback_between_attempts"] == "none"
+    assert budget["manual_repair"] == "forbidden"
+    assert SHAPE_BLANK_START.read_bytes() == b""
+    assert control["model_contract_sha256"] == _sha256(SHAPE_MODEL_CONTRACT)
+    assert control["budget_contract_sha256"] == _sha256(SHAPE_BUDGET_CONTRACT)
+    assert control["blank_start"] == {
+        "path": SHAPE_BLANK_START.name,
+        "sha256": _sha256(SHAPE_BLANK_START),
+        "identical_for_arms": ["shape_control", "shape_profiled"],
+    }
+    assert control["authority_conflicts"] == [
+        "s60_peak_count_unresolved",
+        "n_and_decay_direction_unresolved",
+    ]
+    assert control["publication_acceptance"] == "not_claimed"
+
+
+def test_shape_experiment_treatment_is_exact_compiled_profile_only_delta() -> None:
+    profile = yaml.safe_load(SHAPE_PROFILE.read_text(encoding="utf-8"))
+    overlay = yaml.safe_load(SHAPE_TREATMENT_OVERLAY.read_text(encoding="utf-8"))
+    compiled = authoring_context_pack.build_context_pack(
+        "fig3_resistance_mechanism",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=PLUGIN_ROOT,
+        shape_profile=SHAPE_PROFILE.name,
+    )["shape_profile"]
+
+    assert profile["schema"] == "figure-agent.shape-profile.v1"
+    assert overlay == {
+        "schema": "figure-agent.shape-profile-treatment-overlay.v1",
+        "arm_id": "shape_profiled",
+        "control_packet_sha256": _sha256(SHAPE_CONTROL_PACKET),
+        "shape_profile": {
+            "path": SHAPE_PROFILE.name,
+            "sha256": _sha256(SHAPE_PROFILE),
+        },
+        "compiled_profile": compiled,
+        "authoring_directives": compiled["authoring_directives"],
+        "publication_acceptance": "not_claimed",
+    }
+
+    control_prompt = SHAPE_CONTROL_PROMPT.read_text(encoding="utf-8")
+    treatment_prompt = SHAPE_PROFILED_PROMPT.read_text(encoding="utf-8")
+    normalized_control = control_prompt.replace("shape_control", "ARM").replace(
+        "shape_control_generated.tex", "OUTPUT.tex"
+    ).replace("TREATMENT_BLOCK: none", "TREATMENT_BLOCK: PROFILE")
+    normalized_treatment = treatment_prompt.replace("shape_profiled", "ARM").replace(
+        "shape_profiled_generated.tex", "OUTPUT.tex"
+    ).replace(
+        "TREATMENT_BLOCK: review/failure-first/shape_profile_treatment_overlay.yaml",
+        "TREATMENT_BLOCK: PROFILE",
+    )
+    assert normalized_control == normalized_treatment
+    assert "shape profile" not in control_prompt.lower()
+    assert "authoring_directives" not in control_prompt
+    for prompt in (control_prompt, treatment_prompt):
+        assert "one authoring attempt" in prompt
+        assert "TikZ only" in prompt
+        assert "publication claim" in prompt
+        assert "Do not assert a fixed S60 peak count" in prompt
+        assert "Do not assert a monotonic disorder trend" in prompt
+        assert "Do not assert decay direction" in prompt
+
+
+def test_shape_experiment_packet_hashes_roles_forbidden_imports_and_boundary() -> None:
+    packet = yaml.safe_load(PACKET.read_text(encoding="utf-8"))
+    control = yaml.safe_load(SHAPE_CONTROL_PACKET.read_text(encoding="utf-8"))
+    roles = [item["role"] for item in packet["authoritative_inputs"]]
+    for role in (
+        "shape_profile",
+        "shape_experiment_model_contract",
+        "shape_experiment_budget_contract",
+        "shape_experiment_blank_start",
+        "shape_experiment_control_packet",
+        "shape_profile_treatment_overlay",
+        "shape_control_authoring_prompt",
+        "shape_profiled_authoring_prompt",
+    ):
+        assert roles.count(role) == 1
+    for item in packet["authoritative_inputs"]:
+        if item["role"].startswith("shape_"):
+            assert item["sha256"] == _sha256(FIXTURE / item["path"])
+
+    assert [item["role"] for item in control["authoritative_inputs"]] == [
+        "briefing",
+        "specification",
+        "authoring_contract",
+        "panel_goals",
+        "semantic_boundary",
+        "text_inventory_contract",
+        "label_ownership_contract",
+        "mutual_clearance_contract",
+    ]
+    for item in control["authoritative_inputs"]:
+        assert item["sha256"] == _sha256(FIXTURE / item["path"])
+    forbidden = control["forbidden_import_patterns"]
+    assert forbidden == [
+        "review/failure-first/*generated*",
+        "review/failure-first/*render*",
+        "docs/historical/fig3*",
+        "examples/fig1_*",
+        "experiments/python_svg_semantic_fig1",
+    ]
+    assert control["control_arm_profile_directives"] == "none"
+    assert control["publication_acceptance"] == "not_claimed"
 
 
 def test_fig3_raw_clean_room_baseline_is_hash_bound_but_not_publication_accepted() -> None:

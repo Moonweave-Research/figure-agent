@@ -1,0 +1,38 @@
+schema: figure-agent.shape-profile-treatment-overlay.v1
+arm_id: shape_profiled
+control_packet_sha256: sha256:45e982c68a5282518c7a5a03716bc971d4806dc396b91a91eae22fab2e7b9e11
+shape_profile:
+  path: shape_profile_panel_b.yaml
+  sha256: sha256:7efed454ab937c4a131e23a879d006cfb01349ff1c5c471cdaad27e191d1069f
+compiled_profile:
+  path: shape_profile_panel_b.yaml
+  sha256: sha256:7efed454ab937c4a131e23a879d006cfb01349ff1c5c471cdaad27e191d1069f
+  schema: figure-agent.shape-profile.v1
+  status: experimental_attempt_scoped
+  objects:
+    - id: s60
+      role: discrete_distribution
+    - id: s80
+      role: continuous_broad_distribution
+  relations:
+    - kind: wider_than
+      subject: s80
+      object: s60
+    - kind: same_encoding_family
+      members: [s60, s80]
+  forbidden_claims:
+    - fixed_peak_count
+    - monotonic_disorder
+    - decay_direction
+  composition_header: increasing sulfur content
+  authoring_directives:
+    - Render [s80] visibly wider in energy than [s60].
+    - Use one shared outline, fill, and stroke encoding family for [s60, s80].
+    - Use composition header [increasing sulfur content] without a curve-to-curve causal arrow.
+    - Do not assert unresolved claims [fixed_peak_count, monotonic_disorder, decay_direction].
+authoring_directives:
+  - Render [s80] visibly wider in energy than [s60].
+  - Use one shared outline, fill, and stroke encoding family for [s60, s80].
+  - Use composition header [increasing sulfur content] without a curve-to-curve causal arrow.
+  - Do not assert unresolved claims [fixed_peak_count, monotonic_disorder, decay_direction].
+publication_acceptance: not_claimed

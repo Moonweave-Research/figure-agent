@@ -1,0 +1,9 @@
+schema: figure-agent.shape-experiment-budget-contract.v1
+fixture: fig3_resistance_mechanism
+variants: [shape_control, shape_profiled]
+authoring_attempts_per_variant: 1
+max_tokens_per_attempt: 12000
+budget_basis: conservative_standalone_tikz_one_pass_fixture_authoring
+feedback_between_attempts: none
+manual_repair: forbidden
+publication_acceptance: not_claimed

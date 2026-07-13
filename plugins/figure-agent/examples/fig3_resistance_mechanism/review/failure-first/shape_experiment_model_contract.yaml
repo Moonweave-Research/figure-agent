@@ -1,0 +1,10 @@
+schema: figure-agent.shape-experiment-model-contract.v1
+model_id: codex-gpt-5.5
+authoring_mode: clean_room_authority_only_tikz
+output_kind: standalone_tikz_source
+forbidden_import_classes:
+  - prior_generated_sources
+  - prior_generated_renders
+  - historical_fig3_artifacts
+  - fig1_artifacts
+publication_acceptance: not_claimed

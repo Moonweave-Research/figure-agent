@@ -1,0 +1,18 @@
+schema: figure-agent.shape-profile.v1
+status: experimental_attempt_scoped
+objects:
+  - id: s60
+    role: discrete_distribution
+  - id: s80
+    role: continuous_broad_distribution
+relations:
+  - kind: wider_than
+    subject: s80
+    object: s60
+  - kind: same_encoding_family
+    members: [s60, s80]
+forbidden_claims:
+  - fixed_peak_count
+  - monotonic_disorder
+  - decay_direction
+composition_header: increasing sulfur content
