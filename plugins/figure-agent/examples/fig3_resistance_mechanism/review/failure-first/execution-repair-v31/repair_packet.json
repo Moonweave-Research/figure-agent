@@ -1,0 +1,78 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "retained and repeated capture release labels float over the carrier path without a consistent state-transition grammar",
+      "id": "HF013",
+      "subject": "panel_a_transition_label_arrow_grammar"
+    },
+    "finding_id": "HF013",
+    "protected_invariants": [
+      "sign-agnostic carrier",
+      "retained",
+      "applied $V$"
+    ],
+    "repair_family": "label_reflow",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v31/human_findings.before.json",
+    "selector": {
+      "anchor_end": "\\node[compact label, align=center, fill=white, inner sep=1pt] at (1.70,2.18)",
+      "anchor_start": "\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-carrier-legend",
+      "source_hash": "sha256:4abccb279c36943178e06a235d8a1e0f751ed89579f4b5869dee47d9e180f424"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v31/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:5f5cf5678e376175813d5b2d4a74c3144b409a26cfe9078d0c718a40e6933ea5"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v31/repaired_generated.tex",
+  "packet_sha256": "sha256:4bd444f21e7d3f06fcffa75da51bab57cae2f4ff1c348a2a9a34832b7d6cd1e8",
+  "prompt": {
+    "sha256": "sha256:4d671fd3b39c0171c3525f223eea1bd6617ef9a280736edfa524f5dd5e48a490",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v31/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v30/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: label_reflow\n- Machine finding: {\"finding\": \"retained and repeated capture release labels float over the carrier path without a consistent state-transition grammar\", \"id\": \"HF013\", \"subject\": \"panel_a_transition_label_arrow_grammar\"}\n- Change content only between the exact anchor lines [\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};] and [\\node[compact label, align=center, fill=white, inner sep=1pt] at (1.70,2.18)].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [sign-agnostic carrier].\n- Preserve the exact token [retained].\n- Preserve the exact token [applied $V$].\n\n## Bound editable source bytes\n```tex\n\\node[compact label, anchor=south, fill=cAmberSphere!22,\n      inner xsep=1.5pt, inner ysep=2pt] at (2.05,1.16)\n  {sign-agnostic carrier};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v31/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v30/repaired_generated.tex",
+    "sha256": "sha256:4abccb279c36943178e06a235d8a1e0f751ed89579f4b5869dee47d9e180f424"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v31/repair_targets.json",
+    "sha256": "sha256:d876aed30e268d129005542d0892af98ed66b49d8946bb58ce521102a23a5460"
+  },
+  "verification": "external_sequential_compile_required"
+}

@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\draw[draw=cBlue, line width=0.75pt, -{Stealth}] (1.27,2.65)--(1.52,2.93);",
+  "change_summary": "Reversed the upper-left arrow segment so every arrow follows the declared carrier path order from the initial carrier toward the retained terminal state."
+}

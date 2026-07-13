@@ -1,0 +1,15 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v5.yaml
+extends_sha256: sha256:5ed477299a540b234f2d5f0af150cddbb4e2d73181278dfade7d70df1f7bb613
+reason: authorize additive Panel A transition-grammar repair evidence
+allowed_review_prefixes:
+  - review/failure-first/execution-repair-v31/
+  - review/failure-first/execution-repair-v32/
+  - review/failure-first/execution-repair-v33/
+allowed_review_paths:
+  - review/failure-first/scope_extension_v6.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/docs/execution-plan.md
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

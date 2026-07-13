@@ -1,0 +1,15 @@
+{
+  "change_summary": "Reversed the upper-left arrow segment so every arrow follows the declared carrier path order from the initial carrier toward the retained terminal state.",
+  "changed_lines": 2,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v33/repaired_generated.tex",
+  "output_sha256": "sha256:48c9f3225f909853b570fa3c0475e90b55384d5cef2e924b63c407ef025b51a2",
+  "packet_sha256": "sha256:5d01e804ce4a4c65ef84acaca899ce604f27843c641805f1ba322149cdb4e9ba",
+  "preserved_boundary_blank_lines": 0,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:c4a74be300d37451cf73638c0637daadb57b33a8abe1253ec317443996c27113"
+}

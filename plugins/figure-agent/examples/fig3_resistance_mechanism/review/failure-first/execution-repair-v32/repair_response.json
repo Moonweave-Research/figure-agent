@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "% Transition semantics are carried by the external carrier key.",
+  "change_summary": "Removed the two duplicated capture and release boxes so the carrier path remains visible and the external key is the single semantic owner."
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v30/repaired_generated.tex",
+  "source_sha256": "sha256:4abccb279c36943178e06a235d8a1e0f751ed89579f4b5869dee47d9e180f424",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v31/human_findings.before.json",
+        "id": "HF013"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-carrier-legend",
+        "anchor_start": "\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};",
+        "anchor_end": "\\node[compact label, align=center, fill=white, inner sep=1pt] at (1.70,2.18)"
+      },
+      "repair_family": "label_reflow",
+      "protected_invariants": [
+        "sign-agnostic carrier",
+        "retained",
+        "applied $V$"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "change_summary": "Removed the two duplicated capture and release boxes so the carrier path remains visible and the external key is the single semantic owner.",
+  "changed_lines": 5,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v32/repaired_generated.tex",
+  "output_sha256": "sha256:c4a74be300d37451cf73638c0637daadb57b33a8abe1253ec317443996c27113",
+  "packet_sha256": "sha256:49cfd881ec558c474d24bf6c3dba5e40019b64e91267ec48f8c439c2160b1ed3",
+  "preserved_boundary_blank_lines": 0,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:193ee3ab936d77f864b803db1e4618a9312491eb5c0feeeb95d43afd85a322c6"
+}

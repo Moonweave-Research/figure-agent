@@ -1,0 +1,26 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v32/repaired_generated.tex",
+  "source_sha256": "sha256:c4a74be300d37451cf73638c0637daadb57b33a8abe1253ec317443996c27113",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v33/human_findings.before.json",
+        "id": "HF015"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-upper-left-direction-arrow",
+        "anchor_start": "\\draw[draw=cBlue, line width=0.75pt, -{Stealth}] (1.12,1.69)--(1.29,1.95);",
+        "anchor_end": "\\draw[draw=cBlue, line width=0.75pt, -{Stealth}] (2.37,2.48)--(2.12,2.25);"
+      },
+      "repair_family": "relation_restore",
+      "protected_invariants": [
+        "sign-agnostic carrier\\\\repeated capture $\\leftrightarrow$ release",
+        "retained",
+        "applied $V$"
+      ]
+    }
+  ]
+}
