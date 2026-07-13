@@ -195,6 +195,28 @@ def test_ablation_rejects_explicitly_ineligible_run_even_with_bound_receipts(
     assert report["product_claim"] == "not_authorized"
 
 
+def test_nonreproducible_run_blocks_product_claim_with_human_verdicts(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    for path in paths.values():
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload["human_verdict"] = {"state": "recorded", "reviewer": "moon"}
+        path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+        add_generation_receipt(path)
+
+    repaired = yaml.safe_load(paths["repaired"].read_text(encoding="utf-8"))
+    repaired["clean_reproduction"] = False
+    paths["repaired"].write_text(
+        yaml.safe_dump(repaired, sort_keys=False), encoding="utf-8"
+    )
+
+    report = evaluate_ablation(paths)
+
+    assert report["comparison_evidence"] == "transcript_bound"
+    assert report["product_claim"] == "not_authorized"
+
+
 def test_ablation_rejects_generation_receipts_with_changed_artifacts(
     tmp_path: Path,
 ) -> None:

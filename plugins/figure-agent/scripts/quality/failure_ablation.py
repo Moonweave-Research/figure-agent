@@ -198,6 +198,9 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
     human_complete = all(
         item["human_verdict_state"] == "recorded" for item in variants.values()
     )
+    reproduction_complete = all(
+        item["clean_reproduction"] for item in variants.values()
+    )
     receipts = [runs[name].get("generation_receipt") for name in VARIANTS]
     transcript_bound = (
         not any(_is_explicitly_comparison_ineligible(runs[name]) for name in VARIANTS)
@@ -218,9 +221,15 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
         "comparison_evidence": (
             "transcript_bound" if transcript_bound else "staged_only"
         ),
+        "reproduction_gate": "passed" if reproduction_complete else "failed",
         "product_claim": (
             "review_eligible"
-            if scientific_pass and human_complete and transcript_bound
+            if (
+                scientific_pass
+                and human_complete
+                and reproduction_complete
+                and transcript_bound
+            )
             else "not_authorized"
         ),
         "publication_acceptance": "not_claimed",
