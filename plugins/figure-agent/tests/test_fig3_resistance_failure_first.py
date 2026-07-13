@@ -370,7 +370,7 @@ def test_shape_experiment_contracts_bind_identical_one_pass_clean_room_arms() ->
     assert model == {
         "schema": "figure-agent.shape-experiment-model-contract.v1",
         "model_id": "codex-gpt-5.5",
-        "authoring_mode": "clean_room_authority_only_tikz",
+        "authoring_mode": "feedback_derived_controlled_constraints_tikz",
         "output_kind": "standalone_tikz_source",
         "forbidden_import_classes": [
             "prior_generated_sources",
@@ -398,6 +398,11 @@ def test_shape_experiment_contracts_bind_identical_one_pass_clean_room_arms() ->
         "s60_peak_count_unresolved",
         "n_and_decay_direction_unresolved",
     ]
+    assert control["provenance_status"] == (
+        "feedback_derived_controlled_constraints_tikz"
+    )
+    assert control["execution_status"] == "not_run"
+    assert control["execution_receipt_status"] == "not_created"
     assert control["publication_acceptance"] == "not_claimed"
 
 
@@ -432,17 +437,25 @@ def test_shape_experiment_treatment_is_exact_compiled_profile_only_delta() -> No
     control_prompt = SHAPE_CONTROL_PROMPT.read_text(encoding="utf-8")
     treatment_prompt = SHAPE_PROFILED_PROMPT.read_text(encoding="utf-8")
     normalized_control = control_prompt.replace("shape_control", "ARM").replace(
-        "shape_control_generated.tex", "OUTPUT.tex"
-    ).replace("TREATMENT_BLOCK: none", "TREATMENT_BLOCK: PROFILE")
-    normalized_treatment = treatment_prompt.replace("shape_profiled", "ARM").replace(
-        "shape_profiled_generated.tex", "OUTPUT.tex"
+        "AUTHORIZED_INPUTS: control packet only",
+        "AUTHORIZED_INPUTS: ARM_INPUTS",
     ).replace(
-        "TREATMENT_BLOCK: review/failure-first/shape_profile_treatment_overlay.yaml",
-        "TREATMENT_BLOCK: PROFILE",
+        "ARM_INSTRUCTION: Apply the control packet constraints. No treatment overlay or profile directives are authorized.",
+        "ARM_INSTRUCTION: ARM_ACTION",
+    )
+    normalized_treatment = treatment_prompt.replace("shape_profiled", "ARM").replace(
+        "AUTHORIZED_INPUTS: control packet and treatment overlay",
+        "AUTHORIZED_INPUTS: ARM_INPUTS",
+    ).replace(
+        "ARM_INSTRUCTION: Read the treatment overlay and apply every authoring_directive exactly once in addition to the control packet constraints.",
+        "ARM_INSTRUCTION: ARM_ACTION",
     )
     assert normalized_control == normalized_treatment
-    assert "shape profile" not in control_prompt.lower()
+    assert "AUTHORIZED_INPUTS: control packet only" in control_prompt
     assert "authoring_directives" not in control_prompt
+    assert "control packet and treatment overlay" in treatment_prompt
+    assert "apply every authoring_directive exactly once" in treatment_prompt
+    assert "control packet only" in control_prompt
     for prompt in (control_prompt, treatment_prompt):
         assert "one authoring attempt" in prompt
         assert "TikZ only" in prompt
@@ -450,6 +463,9 @@ def test_shape_experiment_treatment_is_exact_compiled_profile_only_delta() -> No
         assert "Do not assert a fixed S60 peak count" in prompt
         assert "Do not assert a monotonic disorder trend" in prompt
         assert "Do not assert decay direction" in prompt
+        assert "feedback-derived" in prompt
+        assert "declared posthoc and layout contracts" in prompt
+        assert "clean-room" not in prompt.lower()
 
 
 def test_shape_experiment_packet_hashes_roles_forbidden_imports_and_boundary() -> None:
@@ -493,6 +509,66 @@ def test_shape_experiment_packet_hashes_roles_forbidden_imports_and_boundary() -
         "experiments/python_svg_semantic_fig1",
     ]
     assert control["control_arm_profile_directives"] == "none"
+    assert control["forbidden_input_enforcement"] == "pending_runner_preflight"
+    assert control["forbidden_input_matching"] == {
+        "path_basis": "repository_relative",
+        "absolute_paths": "rejected",
+        "dotdot_segments": "rejected",
+        "symlinks": "rejected",
+        "pattern_kind": "glob_interpreted_by_runner",
+        "current_packet_claims_enforcement": False,
+    }
+    assert control["execution_receipt_requirements"] == {
+        "schema": "figure-agent.shape-experiment-execution-receipt.v1",
+        "receipt_location": "external_to_control_packet",
+        "control_packet_binding": "receipt_must_record_control_packet_sha256",
+        "arms": {
+            "shape_control": {
+                "required_fields": [
+                    "arm_id",
+                    "model_contract_sha256",
+                    "budget_contract_sha256",
+                    "blank_start_sha256",
+                    "control_packet_sha256",
+                    "prompt_sha256",
+                    "transcript_sha256",
+                    "generated_source_sha256",
+                    "actual_token_usage_or_unavailable_with_reason",
+                    "feedback_rounds",
+                    "manual_repairs",
+                    "forbidden_input_preflight",
+                ],
+                "fixed_values": {
+                    "arm_id": "shape_control",
+                    "feedback_rounds": 0,
+                    "manual_repairs": 0,
+                },
+            },
+            "shape_profiled": {
+                "required_fields": [
+                    "arm_id",
+                    "model_contract_sha256",
+                    "budget_contract_sha256",
+                    "blank_start_sha256",
+                    "control_packet_sha256",
+                    "treatment_overlay_sha256",
+                    "prompt_sha256",
+                    "transcript_sha256",
+                    "generated_source_sha256",
+                    "actual_token_usage_or_unavailable_with_reason",
+                    "feedback_rounds",
+                    "manual_repairs",
+                    "forbidden_input_preflight",
+                ],
+                "fixed_values": {
+                    "arm_id": "shape_profiled",
+                    "feedback_rounds": 0,
+                    "manual_repairs": 0,
+                },
+            },
+        },
+    }
+    assert "execution_receipt" not in control
     assert control["publication_acceptance"] == "not_claimed"
 
 

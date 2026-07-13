@@ -1,6 +1,6 @@
 schema: figure-agent.shape-profile-treatment-overlay.v1
 arm_id: shape_profiled
-control_packet_sha256: sha256:364dc63aa6ed31b184e0d66b3b642ad1827d4e3ffefb98d0d79cdd567307242a
+control_packet_sha256: sha256:a128ae8c962af6eedb6c94eccd8f9ad37b4db1fc3cb7fd19a3b055d5b3cbdced
 profile_path: shape_profile_panel_b.yaml
 profile_sha256: sha256:7efed454ab937c4a131e23a879d006cfb01349ff1c5c471cdaad27e191d1069f
 authoring_directives:

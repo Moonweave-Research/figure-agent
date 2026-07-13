@@ -1,10 +1,11 @@
-# Fig3 clean-room shape experiment
+# Fig3 controlled-constraints shape experiment
 
 ARM_ID: shape_profiled
 OUTPUT_FILENAME: shape_profiled_generated.tex
-TREATMENT_BLOCK: review/failure-first/shape_profile_treatment_overlay.yaml
+AUTHORIZED_INPUTS: control packet and treatment overlay
+ARM_INSTRUCTION: Read the treatment overlay and apply every authoring_directive exactly once in addition to the control packet constraints.
 
-Perform exactly one authoring attempt using codex-gpt-5.5. Produce one standalone source file at the output filename. Use authority inputs named by the control packet only. Start from the identical hash-bound blank artifact.
+Perform exactly one authoring attempt using codex-gpt-5.5. Produce one standalone source file at the output filename. This is feedback-derived controlled-constraints authoring, not a clean baseline: declared posthoc and layout contracts in the control packet are authorized feedback-derived inputs. Start from the identical hash-bound blank artifact.
 
 Use TikZ only. Do not inspect any prior artifact. Do not import source or render artifacts. Do not use prior generated sources or renders, historical Fig3 artifacts, or any Fig1 artifact. Do not request or apply feedback or manual fixes. Make no publication claim.
 

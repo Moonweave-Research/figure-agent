@@ -1,6 +1,9 @@
 schema: figure-agent.shape-experiment-control-packet.v1
 fixture: fig3_resistance_mechanism
 arm_id: shape_control
+provenance_status: feedback_derived_controlled_constraints_tikz
+execution_status: not_run
+execution_receipt_status: not_created
 authoritative_inputs:
   - role: briefing
     path: briefing.md
@@ -29,7 +32,7 @@ authoritative_inputs:
   - role: mutual_clearance_contract
     path: review/failure-first/region_guided_mutual_clearance_contract.yaml
     sha256: sha256:d169cdd593f7857bc691088ed8364ba723482326081f7356fda24babb4ce8c4a
-model_contract_sha256: sha256:9523be6f958e9c30d3e8f304f6cd25dee6497216781014f773537aae71171258
+model_contract_sha256: sha256:2d2f85f3cf833cdb335d1e770808150883f9816bccfea78414eb028bec0f08ad
 budget_contract_sha256: sha256:d5d21d7b8453ca9fa1e7f765e587d1295c4caf75209f62f0aa096a446901e9a5
 blank_start:
   path: shape_experiment_blank_start.txt
@@ -39,10 +42,60 @@ authority_conflicts:
   - s60_peak_count_unresolved
   - n_and_decay_direction_unresolved
 control_arm_profile_directives: none
+forbidden_input_enforcement: pending_runner_preflight
+forbidden_input_matching:
+  path_basis: repository_relative
+  absolute_paths: rejected
+  dotdot_segments: rejected
+  symlinks: rejected
+  pattern_kind: glob_interpreted_by_runner
+  current_packet_claims_enforcement: false
 forbidden_import_patterns:
   - review/failure-first/*generated*
   - review/failure-first/*render*
   - docs/historical/fig3*
   - examples/fig1_*
   - experiments/python_svg_semantic_fig1
+execution_receipt_requirements:
+  schema: figure-agent.shape-experiment-execution-receipt.v1
+  receipt_location: external_to_control_packet
+  control_packet_binding: receipt_must_record_control_packet_sha256
+  arms:
+    shape_control:
+      required_fields:
+        - arm_id
+        - model_contract_sha256
+        - budget_contract_sha256
+        - blank_start_sha256
+        - control_packet_sha256
+        - prompt_sha256
+        - transcript_sha256
+        - generated_source_sha256
+        - actual_token_usage_or_unavailable_with_reason
+        - feedback_rounds
+        - manual_repairs
+        - forbidden_input_preflight
+      fixed_values:
+        arm_id: shape_control
+        feedback_rounds: 0
+        manual_repairs: 0
+    shape_profiled:
+      required_fields:
+        - arm_id
+        - model_contract_sha256
+        - budget_contract_sha256
+        - blank_start_sha256
+        - control_packet_sha256
+        - treatment_overlay_sha256
+        - prompt_sha256
+        - transcript_sha256
+        - generated_source_sha256
+        - actual_token_usage_or_unavailable_with_reason
+        - feedback_rounds
+        - manual_repairs
+        - forbidden_input_preflight
+      fixed_values:
+        arm_id: shape_profiled
+        feedback_rounds: 0
+        manual_repairs: 0
 publication_acceptance: not_claimed
