@@ -11,11 +11,21 @@ from typing import Any
 
 SCHEMA = "figure-agent.repair-execution-packet.v3"
 CONTRACT_SCHEMA = "figure-agent.repair-target-contract.v1"
-SOURCE_ATTEMPT = re.compile(r"execution-binding-v[1-9][0-9]*")
+SOURCE_ATTEMPT = re.compile(
+    r"(?:execution-binding|comparable|execution-repair)-v[1-9][0-9]*"
+)
+COMPARISON_ATTEMPT = re.compile(r"comparable-v[1-9][0-9]*")
+COMPARISON_SOURCE_NAMES = {
+    "raw_generated.tex",
+    "verified_generated.tex",
+    "repaired_generated.tex",
+}
+REPAIR_SOURCE_NAMES = {"repaired_generated.tex"}
 REPAIR_ATTEMPT = re.compile(r"execution-repair-v[1-9][0-9]*")
 REPORT_COLLECTIONS = {
     "figure-agent.text-collisions.v1": "collisions",
     "figure-agent.label-hyphenation.v1": "issues",
+    "figure-agent.undeclared-geometry.v1": "candidates",
 }
 ALLOWED_REPAIR_FAMILIES = {
     "clipping_repair",
@@ -100,7 +110,7 @@ def _fixture_attempt_path(
         or not attempt_pattern.fullmatch(relative.parent.name)
     ):
         attempt_name = (
-            "execution-binding-vN"
+            "execution-binding-vN, comparable-vN, or execution-repair-vN"
             if attempt_pattern is SOURCE_ATTEMPT
             else "execution-repair-vN"
         )
@@ -233,6 +243,20 @@ def compile_repair_execution_packet(
         attempt_pattern=SOURCE_ATTEMPT,
         label="source path",
     )
+    if (
+        COMPARISON_ATTEMPT.fullmatch(source_relative.parent.name)
+        and source_relative.name not in COMPARISON_SOURCE_NAMES
+    ):
+        raise RepairExecutionPacketError(
+            "source path must name a declared comparable arm"
+        )
+    if (
+        REPAIR_ATTEMPT.fullmatch(source_relative.parent.name)
+        and source_relative.name not in REPAIR_SOURCE_NAMES
+    ):
+        raise RepairExecutionPacketError(
+            "source path must name a materialized repair output"
+        )
     source = _regular_file(workspace_root, source_path, label="source path")
     source_bytes = source.read_bytes()
     source_hash = _sha256_bytes(source_bytes)
@@ -268,6 +292,8 @@ def compile_repair_execution_packet(
     output = workspace_root / output_relative
     if output.exists() or output.is_symlink():
         raise RepairExecutionPacketError("output path already exists")
+    if source_relative.parent == output_relative.parent:
+        raise RepairExecutionPacketError("repair output must use a later additive attempt")
     if contract_relative.parent != output_relative.parent:
         raise RepairExecutionPacketError(
             "target contract must be adjacent to the declared output"

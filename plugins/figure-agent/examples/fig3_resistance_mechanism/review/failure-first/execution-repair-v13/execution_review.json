@@ -1,0 +1,16 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "decision": "failed_structural_gate",
+  "source_arm": "comparable-v2/verified_generated.tex",
+  "normal_compile_exit_code": 0,
+  "repair_result": "removed_one_text_text_collision",
+  "structural_gate": {
+    "state": "failed",
+    "text_text": 0,
+    "text_on_path_or_fill": 9,
+    "semantic_path_crossing": 4,
+    "coverage_gaps": ["label_path", "panel_boundary"]
+  },
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

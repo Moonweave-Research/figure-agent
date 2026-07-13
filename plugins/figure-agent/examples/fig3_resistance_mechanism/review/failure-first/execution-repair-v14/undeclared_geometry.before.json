@@ -1,0 +1,19 @@
+{
+  "schema": "figure-agent.undeclared-geometry.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "review/failure-first/execution-repair-v13/build/repaired_generated.pdf",
+  "source": "tikz-source:auto-discovery",
+  "candidates": [
+    {
+      "bbox_pt": [259.75765, 22.5664, 322.34943, 22.5664],
+      "distance_pt": 0.0,
+      "evidence": "rendered semantic arrow crosses text 'increases'",
+      "id": "UG004",
+      "kind": "label_crosses_semantic_path",
+      "nearest_text": "increases",
+      "recommended_action": "add_micro_defect",
+      "source_line": 0
+    }
+  ],
+  "total": 1
+}

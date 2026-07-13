@@ -1,0 +1,20 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_protection.yaml
+extends_sha256: sha256:5c94b8437d48f0cd875407dfaf06c6162a93f7b4715bbfe9fc4449578da075f7
+reason: preserve the transcript-bound input packet while authorizing additive post-review evidence
+allowed_review_prefixes:
+  - review/failure-first/execution-repair-v13/
+  - review/failure-first/execution-repair-v14/
+  - review/failure-first/execution-repair-v15/
+allowed_review_paths:
+  - review/failure-first/scope_extension_v2.yaml
+  - review/failure-first/comparable-v2/ablation_report.json
+  - review/failure-first/comparable-v2/repaired.yaml
+  - review/failure-first/comparable-v2/verified.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/scripts/quality/failure_ablation.py
+  - plugins/figure-agent/scripts/quality/structural_collision_gate.py
+  - plugins/figure-agent/tests/test_failure_ablation.py
+  - plugins/figure-agent/tests/test_structural_collision_gate.py
+publication_acceptance: not_claimed

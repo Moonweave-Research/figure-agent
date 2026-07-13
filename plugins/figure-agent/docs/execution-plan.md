@@ -236,6 +236,14 @@ modules listed in Section 0.
   unfinished label placement. The result proves that pre-authoring style
   injection removes a broad class of avoidable source defects; it also proves
   that prompt-only layout injection is not enforcement or repair.
+  Moon subsequently rejected both rendered arms. The verified arm remains the
+  repair seed because the repaired arm made the Panel B band-energy shapes
+  worse. The rejection names major label/path collisions, unnatural arrows and
+  endpoints, insufficient sample rendering, and unresolved physical or
+  mathematical authority for the band-energy curves; color and aesthetic
+  polish are explicitly deferred. The ablation product gate now requires an
+  `accepted` named decision, so a named rejection cannot authorize a product
+  claim.
   Historical evidence for this unchecked comparison remains under
   `review/failure-first/` and is non-prescriptive:
 
@@ -252,10 +260,17 @@ modules listed in Section 0.
     `execution-binding-v6/` preserve respectively a non-renderable preamble
     failure, undeclared treatment reads, and a timed-out treatment proof with
     continuing strict findings. All pairs remain comparison-ineligible.
-  - `execution-repair-v1/` through `execution-repair-v12/` preserve the move to
+  - `execution-repair-v1/` through `execution-repair-v15/` preserve the move to
     exact replacement blocks, transactional additive materialization, detector
-    reruns, and bounded repaired artifacts. They do not constitute a fair
-    ablation or human publication verdict.
+    reruns, and bounded repaired artifacts. V13 removes the verified arm's one
+    text-text collision but exposes the previous false-success boundary:
+    text-text zero still contains nine rendered text/path candidates and four
+    semantic-arrow crossings. The renderer-neutral structural gate therefore
+    remains failed. V14 records an insufficient coordinate repair without
+    overwriting it; v15 uses the measured PDF word boundary and removes the two
+    upper progression-arrow crossings, leaving two lower breadth/distribution
+    crossings. These attempts do not constitute a fair ablation or human
+    publication verdict.
   - Commits `771c339d`, `a30ff450`, `3d16305e`, and `5a2e895f` bind the v12
     renderer-neutral semantic packet, fail-closed authority and selector checks,
     transactional version publishing, and authenticated page evidence at
@@ -277,16 +292,19 @@ modules listed in Section 0.
   and voltage connection to both electrodes. The S60 authority question is
   blocked. This is machine evidence only; semantic preservation and publication
   acceptance are not claimed.
-- [ ] Obtain a named human review and record prospectively measured correction
-  minutes. A machine result is never a publication verdict.
+- [x] Obtain a named human scaffold review. Both rendered v2 arms are rejected;
+  this does not transfer to a publication verdict or authorize a product claim.
+- [ ] Record prospectively measured correction minutes. A machine result is
+  never a publication verdict.
 
 **Current next executable step:** Slice 1 remains `pending_human_review` on the
-four current hash-bound views. Slice 2 `comparable-v2/` is transcript-bound and
-cleanly reproducible, but its product claim remains unauthorized. Obtain a
-named human scaffold verdict on the two rendered v2 images and record measured
-correction minutes. Then implement the smallest renderer-neutral change that
-turns the failed declared layout lane into a fail-closed generate-check-repair
-boundary; do not start a new renderer, fixture, or manual polish lane.
+four current hash-bound views. Slice 2 `comparable-v2/` is transcript-bound,
+cleanly reproducible, human-rejected, and product-unauthorized. Continue from
+the verified-derived v15 source: first bind declared label/path and panel
+boundary coverage, then repair the exact lower breadth/distribution arrow
+crossing. Keep band-energy shape changes blocked until their physical and
+mathematical authority is reviewed; do not start a new renderer, fixture, or
+manual polish lane.
 
 ### Verification
 

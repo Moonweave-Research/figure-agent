@@ -1,0 +1,23 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "decision": "partial_repair_structural_gate_failed",
+  "source_attempt": "execution-repair-v14",
+  "normal_compile_exit_code": 0,
+  "target": "upper progression arrow crossing increases",
+  "measurement": {
+    "word_xmax_pt": 296.987738,
+    "new_arrow_xmin_pt": 302.84485
+  },
+  "repair_result": "upper content and increases crossings removed",
+  "structural_gate": {
+    "state": "failed",
+    "text_text": 0,
+    "text_on_path_or_fill": 9,
+    "semantic_path_crossing": 2,
+    "coverage_gaps": ["label_path", "panel_boundary"]
+  },
+  "next_exact_target": "lower breadth and distribution arrow crossing",
+  "band_shape_authority": "blocked_pending_physics_math_review",
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

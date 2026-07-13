@@ -91,10 +91,52 @@ COMPARABLE_V1 = REVIEW / "comparable-v1"
 COMPARISON_CONTRACT = COMPARABLE_V1 / "comparison_contract.yaml"
 COMPARABLE_V2 = REVIEW / "comparable-v2"
 COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
+SCOPE_EXTENSION_V2 = REVIEW / "scope_extension_v2.yaml"
+EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
+EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
+EXECUTION_REPAIR_V15 = REVIEW / "execution-repair-v15"
 
 
 def _sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_fig3_exact_repairs_do_not_mistake_text_text_zero_for_structural_pass() -> None:
+    v13 = json.loads(
+        (EXECUTION_REPAIR_V13 / "structural_gate.json").read_text(encoding="utf-8")
+    )
+    v14 = json.loads(
+        (EXECUTION_REPAIR_V14 / "execution_review.json").read_text(encoding="utf-8")
+    )
+    v15 = json.loads(
+        (EXECUTION_REPAIR_V15 / "structural_gate.json").read_text(encoding="utf-8")
+    )
+    v15_review = json.loads(
+        (EXECUTION_REPAIR_V15 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert v13["state"] == "failed"
+    assert v13["structural_pass"] is False
+    assert v13["blocking_counts"] == {
+        "semantic_path_crossing": 4,
+        "text_on_path_or_fill": 9,
+        "text_text": 0,
+    }
+    assert v14["decision"] == "failed_exact_repair"
+    assert v14["semantic_path_crossing_after"] == 3
+    assert v15["state"] == "failed"
+    assert v15["blocking_counts"] == {
+        "semantic_path_crossing": 2,
+        "text_on_path_or_fill": 9,
+        "text_text": 0,
+    }
+    assert v15_review["repair_result"] == (
+        "upper content and increases crossings removed"
+    )
+    assert v15_review["band_shape_authority"] == (
+        "blocked_pending_physics_math_review"
+    )
+    assert v15_review["publication_acceptance"] == "not_claimed"
 
 
 def test_fig3_comparable_v1_declares_one_shared_contract_and_three_conditions() -> None:
@@ -226,7 +268,6 @@ def test_fig3_comparable_v2_is_reproducible_but_still_requires_human_review() ->
         run = yaml.safe_load(path.read_text(encoding="utf-8"))
         receipt = run["generation_receipt"]
         assert run["clean_reproduction"] is True
-        assert run["human_verdict"] == {"state": "pending"}
         assert run["publication_acceptance"] == "not_claimed"
         assert receipt["generated_artifact_sha256"] == _sha256(
             COMPARABLE_V2 / f"{variant}_generated.tex"
@@ -234,6 +275,18 @@ def test_fig3_comparable_v2_is_reproducible_but_still_requires_human_review() ->
         assert receipt["transcript_sha256"] == _sha256(
             COMPARABLE_V2 / receipt["transcript_path"]
         )
+
+    assert yaml.safe_load(runs["raw"].read_text(encoding="utf-8"))[
+        "human_verdict"
+    ] == {"state": "pending"}
+    for variant in ("verified", "repaired"):
+        verdict = yaml.safe_load(runs[variant].read_text(encoding="utf-8"))[
+            "human_verdict"
+        ]
+        assert verdict["state"] == "recorded"
+        assert verdict["reviewer"] == "moon"
+        assert verdict["decision"] == "rejected"
+        assert verdict["aesthetic_review_deferred"] is True
 
     assert yaml.safe_load(runs["raw"].read_text(encoding="utf-8"))[
         "compile_outcome"
@@ -1428,17 +1481,27 @@ def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
     scope = yaml.safe_load((REVIEW / "scope_protection.yaml").read_text(encoding="utf-8"))
+    extension = yaml.safe_load(SCOPE_EXTENSION_V2.read_text(encoding="utf-8"))
     repo_root = PLUGIN_ROOT.parents[1]
     fixture_prefix = "plugins/figure-agent/examples/fig3_resistance_mechanism/"
     allowed_paths = {
         *(fixture_prefix + path for path in scope["allowed_review_paths"]),
+        *(fixture_prefix + path for path in extension["allowed_review_paths"]),
         *scope["allowed_repository_paths"],
+        *extension["allowed_repository_paths"],
     }
+    pending_paths = _git_pending_paths(repo_root)
+    for prefix in extension["allowed_review_prefixes"]:
+        allowed_paths.update(
+            path for path in pending_paths if path.startswith(fixture_prefix + prefix)
+        )
 
     assert _scope_violations({fixture_prefix + "briefing.md"}, allowed_paths) == {
         fixture_prefix + "briefing.md"
     }
-    assert _scope_violations(_git_pending_paths(repo_root), allowed_paths) == set()
+    assert extension["extends_sha256"] == _sha256(REVIEW / extension["extends"])
+    assert extension["publication_acceptance"] == "not_claimed"
+    assert _scope_violations(pending_paths, allowed_paths) == set()
 
 
 def test_lh001_repair_history_preserves_failures_and_binds_resolved_attempt() -> None:

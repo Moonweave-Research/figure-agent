@@ -1,0 +1,15 @@
+{
+  "change_summary": "Placed the progression arrow start beyond the measured 296.99 pt label edge with a small clearance.",
+  "changed_lines": 2,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v15/repaired_generated.tex",
+  "output_sha256": "sha256:4a02302c81adf66b04ce3e10a7e06a73cc7a89be00a0c699e9eb82e87a0e6c52",
+  "packet_sha256": "sha256:138a9db15774aeaa45966b97300ecf853e03b65a9f8ca3ca8068b44999457beb",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:66601ea8cb800d29f4e4b993a696c8d41ad6674b042bf4ac23086500396a6579"
+}

@@ -172,6 +172,113 @@ def test_binds_repository_execution_cwd_into_repair_output(tmp_path: Path) -> No
     ) in prompt
 
 
+def test_accepts_hash_bound_comparable_source_as_repair_seed(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    comparable = (
+        workspace
+        / "examples/demo/review/failure-first/comparable-v2/verified_generated.tex"
+    )
+    comparable.parent.mkdir(parents=True)
+    comparable.write_bytes(source.read_bytes())
+    contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+    contract_payload["source_path"] = comparable.relative_to(workspace).as_posix()
+    contract_payload["source_sha256"] = _sha256(comparable.read_bytes())
+    contract.write_text(json.dumps(contract_payload), encoding="utf-8")
+
+    packet, _ = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=comparable.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+
+    assert packet["source"]["path"].endswith(
+        "comparable-v2/verified_generated.tex"
+    )
+
+
+def test_accepts_prior_repair_output_as_hash_bound_next_repair_seed(
+    tmp_path: Path,
+) -> None:
+    workspace, source, old_contract = _fixture(tmp_path)
+    prior_source = old_contract.parent / "repaired_generated.tex"
+    prior_source.write_bytes(source.read_bytes())
+    next_attempt = old_contract.parent.parent / "execution-repair-v2"
+    next_attempt.mkdir()
+    next_report = next_attempt / "collisions.json"
+    next_report.write_bytes((old_contract.parent / "collisions.json").read_bytes())
+    contract_payload = json.loads(old_contract.read_text(encoding="utf-8"))
+    contract_payload["source_path"] = prior_source.relative_to(workspace).as_posix()
+    contract_payload["source_sha256"] = _sha256(prior_source.read_bytes())
+    contract_payload["targets"][0]["finding"]["report_path"] = (
+        next_report.relative_to(workspace).as_posix()
+    )
+    next_contract = next_attempt / "repair_targets.json"
+    next_contract.write_text(json.dumps(contract_payload), encoding="utf-8")
+
+    packet, _ = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=prior_source.relative_to(workspace).as_posix(),
+        target_contract=next_contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v2/"
+            "repaired_generated.tex"
+        ),
+    )
+
+    assert packet["source"]["path"].endswith(
+        "execution-repair-v1/repaired_generated.tex"
+    )
+
+
+def test_accepts_exact_undeclared_geometry_finding_as_repair_target(
+    tmp_path: Path,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    report = contract.parent / "collisions.json"
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.undeclared-geometry.v1",
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "kind": "label_crosses_semantic_path",
+                        "nearest_text": "trapping",
+                    }
+                ],
+                "total": 1,
+            }
+        ),
+        encoding="utf-8",
+    )
+    payload = json.loads(contract.read_text(encoding="utf-8"))
+    payload["targets"] = [payload["targets"][0]]
+    payload["targets"][0]["finding"]["id"] = "UG001"
+    contract.write_text(json.dumps(payload), encoding="utf-8")
+
+    packet, _ = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+
+    assert packet["editable_target"]["finding_id"] == "UG001"
+
+
 def test_materializes_valid_candidate_only_after_controller_validation(
     tmp_path: Path,
 ) -> None:

@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\node[panel title] at (6.37,4.42) {(b) Trap-energy landscape};\n\\node[label, anchor=west] at (7.25,4.03) {sulfur content increases};\n\\draw[draw=cAmber, line width=0.55pt, -{Stealth}] (9.78,4.03)--(11.36,4.03);",
+  "change_summary": "Moved only the progression arrow start beyond the rendered label so the arrow no longer crosses the word increases."
+}
