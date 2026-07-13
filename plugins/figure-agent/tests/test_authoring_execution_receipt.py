@@ -137,6 +137,18 @@ def test_rejects_repository_root_that_does_not_contain_workspace(tmp_path: Path)
         _record(paths, repository_root=tmp_path / "other-repository")
 
 
+def test_touched_scope_is_repository_relative_when_execution_cwd_is_nested() -> None:
+    packet = {
+        "execution_cwd": "plugins/figure-agent",
+        "output_path": "examples/demo/review/failure-first/execution-binding-v1/out.tex",
+    }
+
+    assert authoring_execution_receipt._expected_touched_files(packet) == [
+        "plugins/figure-agent/examples/demo/review/failure-first/"
+        "execution-binding-v1/out.tex"
+    ]
+
+
 def test_rejects_model_mismatch(tmp_path: Path) -> None:
     paths = _evidence(tmp_path)
     with pytest.raises(

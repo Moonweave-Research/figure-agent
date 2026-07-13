@@ -57,6 +57,13 @@ def _load_packet(path: Path) -> dict[str, Any]:
     return payload
 
 
+def _expected_touched_files(packet: dict[str, Any]) -> list[str]:
+    """Return the one-file write scope in repository-relative coordinates."""
+    execution_cwd = Path(str(packet.get("execution_cwd", ".")))
+    output_path = Path(str(packet["output_path"]))
+    return [(execution_cwd / output_path).as_posix()]
+
+
 def record_authoring_execution_receipt(
     *,
     workspace_root: Path,
@@ -107,7 +114,7 @@ def record_authoring_execution_receipt(
     if generated_source_path != expected_source:
         raise AuthoringExecutionReceiptError("generated source path mismatch")
     touched_files = json.loads(touched_files_path.read_text(encoding="utf-8"))
-    expected_touched = [str(packet["output_path"])]
+    expected_touched = _expected_touched_files(packet)
     if touched_files != expected_touched:
         raise AuthoringExecutionReceiptError("touched files differ from one-file scope")
     if actual_token_usage is not None:
