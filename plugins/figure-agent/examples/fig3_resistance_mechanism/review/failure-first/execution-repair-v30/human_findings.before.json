@@ -1,0 +1,15 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:8bedae73e7d2112ab6ec51f1494a7ffc7c9552e55b29bd29320c97c1f98ba8dd",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF012",
+      "subject": "panel_b_magnitude_label",
+      "finding": "horizontal one-line retry overlaps continuous broad; retain horizontal reading but reduce the key width"
+    }
+  ],
+  "prior_rejected_attempt": "execution-repair-v29",
+  "publication_acceptance": "not_claimed"
+}

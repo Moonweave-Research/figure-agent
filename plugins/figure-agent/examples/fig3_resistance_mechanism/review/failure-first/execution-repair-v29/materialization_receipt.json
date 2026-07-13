@@ -1,0 +1,15 @@
+{
+  "change_summary": "Reflowed the magnitude key horizontally above its vertical measure arrow so the label and metric relation read as one unit without rotation.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v29/repaired_generated.tex",
+  "output_sha256": "sha256:8bedae73e7d2112ab6ec51f1494a7ffc7c9552e55b29bd29320c97c1f98ba8dd",
+  "packet_sha256": "sha256:4aa61eb41fd4b818898a6b22b6bf9c6805a2eb1627999dba816d39820573f9cc",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:6da9ec0561c2ce13b5f708048ccf11c38f97ff33830322af6de48781f6860a34"
+}

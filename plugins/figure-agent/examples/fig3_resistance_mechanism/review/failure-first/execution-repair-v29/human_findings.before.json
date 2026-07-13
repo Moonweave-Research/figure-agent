@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:6da9ec0561c2ce13b5f708048ccf11c38f97ff33830322af6de48781f6860a34",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF012",
+      "subject": "panel_b_magnitude_label",
+      "finding": "rotated magnitude label is cramped against its vertical measure arrow and does not read as a clean metric key"
+    }
+  ],
+  "publication_acceptance": "not_claimed"
+}

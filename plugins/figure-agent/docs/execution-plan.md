@@ -260,7 +260,7 @@ modules listed in Section 0.
     `execution-binding-v6/` preserve respectively a non-renderable preamble
     failure, undeclared treatment reads, and a timed-out treatment proof with
     continuing strict findings. All pairs remain comparison-ineligible.
-  - `execution-repair-v1/` through `execution-repair-v28/` preserve the move to
+  - `execution-repair-v1/` through `execution-repair-v30/` preserve the move to
     exact replacement blocks, transactional additive materialization, detector
     reruns, and bounded repaired artifacts. V13 removes the verified arm's one
     text-text collision but exposes the previous false-success boundary:
@@ -289,8 +289,13 @@ modules listed in Section 0.
     preserves a two-line `single discrete state` reflow that created three
     text-text collisions, and v27 records the change-budget rejection of an
     overlarge retry. V28 stays within the same budget and clears both the y-axis
-    and `S60`, returning text-text to zero. Four unrelated rendered text/path
-    candidates remain, the next named target is `magnitude`, and publication
+    and `S60`, returning text-text to zero. V29 preserves a visually and
+    detector-confirmed failed one-line magnitude-key reflow: it created two
+    collisions with `continuous broad`. V30 narrows the same key to two lines,
+    clears those collisions, and keeps the vertical magnitude cue orthogonal
+    to horizontal breadth. Three unrelated rendered text/path candidates
+    remain. The next named target is the coordinated Panel A
+    `retained`/`capture`/`release` label-and-arrow grammar; publication
     acceptance remains unclaimed.
   - Commits `771c339d`, `a30ff450`, `3d16305e`, and `5a2e895f` bind the v12
     renderer-neutral semantic packet, fail-closed authority and selector checks,
@@ -321,14 +326,14 @@ modules listed in Section 0.
 **Current next executable step:** Slice 1 remains `pending_human_review` on the
 four current hash-bound views. Slice 2 `comparable-v2/` is transcript-bound,
 cleanly reproducible, human-rejected, and product-unauthorized. Continue from
-the verified-derived v20 source. The next visually confirmed Panel A defect is
-the `sign-agnostic carrier` label crossing the left electrode and panel edge;
-bind that exact label/path defect before another bounded repair. Detector-only
-`V`, `t`, and metric-label candidates remain review-only until their intended
-axis or wiring relations are adjudicated. Keep all band-energy shape changes blocked until
-their physical and mathematical authority is reviewed. Do not start a new
-renderer, fixture, or manual polish lane, and do not request a human scaffold
-verdict while the structural gate remains failed.
+the verified-derived v30 source. Treat Panel A's repeated `retained`, `capture`,
+and `release` labels plus their arrow endpoints as one transition-grammar
+problem; do not make another isolated coordinate nudge that can move a defect
+between labels. Detector-only `V` and `t` candidates remain review-only until
+their intended axis or wiring relations are adjudicated. Keep all band-energy
+shape changes blocked until their physical and mathematical authority is
+reviewed. Do not start a new renderer, fixture, or manual polish lane, and do
+not request a human scaffold verdict while the structural gate remains failed.
 
 ### Verification
 

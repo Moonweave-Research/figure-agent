@@ -1,0 +1,15 @@
+{
+  "change_summary": "Reduced the horizontal magnitude key to two centered lines above the vertical measure arrow, preserving metric ownership while clearing the distribution descriptor.",
+  "changed_lines": 2,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v30/repaired_generated.tex",
+  "output_sha256": "sha256:4abccb279c36943178e06a235d8a1e0f751ed89579f4b5869dee47d9e180f424",
+  "packet_sha256": "sha256:73904e39b4282c25d5b95705278d14bb73579098270c26ac68519fec718e1d1b",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:8bedae73e7d2112ab6ec51f1494a7ffc7c9552e55b29bd29320c97c1f98ba8dd"
+}

@@ -1,0 +1,13 @@
+{
+  "decision": "candidate_rejected_collision_persisted",
+  "repair_result": "horizontal magnitude key collided with continuous broad label",
+  "external_compile": "passed",
+  "blocking_counts": {
+    "text_text": 2,
+    "text_on_path_or_fill": 4,
+    "semantic_path_crossing": 0
+  },
+  "next_human_target": "panel_b_magnitude_label",
+  "human_review": "corrections_required",
+  "publication_acceptance": "not_claimed"
+}
