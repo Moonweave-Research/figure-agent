@@ -24,19 +24,27 @@ fi
 
 TEX_INPUT="$1"
 
+if [[ ! -f "$TEX_INPUT" ]]; then
+  echo "Error: file not found: $TEX_INPUT" >&2
+  exit 1
+fi
+
 FIXTURE_NAME=""
 FIXTURE_TAIL="${TEX_INPUT#*examples/}"
 if [[ "$FIXTURE_TAIL" != "$TEX_INPUT" ]]; then
   FIXTURE_NAME="${FIXTURE_TAIL%%/*}"
 fi
 COLLISION_FIXTURE_ARGS=()
+UNDECLARED_GEOMETRY_SPEC_ARGS=()
 if [[ -n "$FIXTURE_NAME" ]]; then
   COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")
-fi
-
-if [[ ! -f "$TEX_INPUT" ]]; then
-  echo "Error: file not found: $TEX_INPUT" >&2
-  exit 1
+  FIGURE_SPEC="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}/spec.yaml"
+  FIXTURE_ROOT="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}"
+  TEX_INPUT_DIR="$(cd "$(dirname "$TEX_INPUT")" && pwd)"
+  TEX_INPUT_ABS="${TEX_INPUT_DIR}/$(basename "$TEX_INPUT")"
+  if [[ "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/"* && -f "$FIGURE_SPEC" ]]; then
+    UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+  fi
 fi
 
 SEMANTIC_CONTRACT="$(dirname "$TEX_INPUT")/semantic_contract.yaml"
@@ -165,6 +173,7 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_labe
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_undeclared_geometry.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${UNDECLARED_GEOMETRY_SPEC_ARGS[@]+"${UNDECLARED_GEOMETRY_SPEC_ARGS[@]}"} \
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/undeclared_geometry.json" \
   "$PDF_OUT"

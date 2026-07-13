@@ -1,0 +1,482 @@
+{
+  "candidates": [
+    {
+      "bbox_pt": [
+        290.28793,
+        15.67062,
+        364.44006,
+        15.67062
+      ],
+      "distance_pt": 0.0,
+      "evidence": "rendered semantic arrow crosses text 'landscape'",
+      "id": "UG001",
+      "kind": "label_crosses_semantic_path",
+      "nearest_text": "landscape",
+      "recommended_action": "add_micro_defect",
+      "source_line": 0
+    }
+  ],
+  "downranked": [
+    {
+      "bbox_pt": [
+        164.409449,
+        105.165354,
+        190.771654,
+        105.165354
+      ],
+      "distance_pt": null,
+      "evidence": "source line 35 line lacks text_boundary_check",
+      "id": "UG002",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 35
+    },
+    {
+      "bbox_pt": [
+        145.417323,
+        31.181102,
+        200.692913,
+        31.181102
+      ],
+      "distance_pt": null,
+      "evidence": "source line 72 line lacks text_boundary_check",
+      "id": "UG003",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 72
+    },
+    {
+      "bbox_pt": [
+        145.417323,
+        31.181102,
+        145.417323,
+        64.629921
+      ],
+      "distance_pt": null,
+      "evidence": "source line 73 line lacks text_boundary_check",
+      "id": "UG004",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 73
+    },
+    {
+      "bbox_pt": [
+        286.299213,
+        109.133858,
+        362.267717,
+        109.133858
+      ],
+      "distance_pt": null,
+      "evidence": "source line 88 line lacks text_boundary_check",
+      "id": "UG005",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 88
+    },
+    {
+      "bbox_pt": [
+        230.740157,
+        26.362205,
+        369.637795,
+        26.362205
+      ],
+      "distance_pt": null,
+      "evidence": "source line 93 line lacks text_boundary_check",
+      "id": "UG006",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 93
+    },
+    {
+      "bbox_pt": [
+        230.740157,
+        26.362205,
+        230.740157,
+        92.976378
+      ],
+      "distance_pt": null,
+      "evidence": "source line 94 line lacks text_boundary_check",
+      "id": "UG007",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 94
+    },
+    {
+      "bbox_pt": [
+        255.11811,
+        33.165354,
+        268.724409,
+        33.165354
+      ],
+      "distance_pt": null,
+      "evidence": "source line 112 line lacks text_boundary_check",
+      "id": "UG008",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 112
+    },
+    {
+      "bbox_pt": [
+        301.03937,
+        38.267717,
+        362.267717,
+        38.267717
+      ],
+      "distance_pt": null,
+      "evidence": "source line 113 line lacks text_boundary_check",
+      "id": "UG009",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 113
+    },
+    {
+      "bbox_pt": [
+        301.03937,
+        38.267717,
+        362.267717,
+        38.267717
+      ],
+      "distance_pt": null,
+      "evidence": "source line 114 line lacks text_boundary_check",
+      "id": "UG010",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 114
+    },
+    {
+      "bbox_pt": [
+        368.503937,
+        26.362205,
+        368.503937,
+        67.464567
+      ],
+      "distance_pt": null,
+      "evidence": "source line 118 line lacks text_boundary_check",
+      "id": "UG011",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 118
+    }
+  ],
+  "fixture": "execution-repair-v8",
+  "geometry_parse_coverage": {
+    "coverage_ratio": 0.714286,
+    "fully_parsed_operations": 10,
+    "non_auto_promotable_geometry": [
+      "circle_envelope",
+      "curve_conservative_hull"
+    ],
+    "parsed_geometry_counts": {
+      "horizontal_line": 7,
+      "vertical_line": 3
+    },
+    "parsed_operations": 10,
+    "partial_unknown_operations": 0,
+    "rendered_curves": {
+      "rendered_curve_count": 28,
+      "rendered_curve_envelopes": [
+        {
+          "bbox_pt": [
+            4.15935,
+            4.15768,
+            208.25636,
+            124.63165
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            215.34297,
+            4.15768,
+            381.17206,
+            124.63165
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            192.43983,
+            19.04825,
+            193.99325,
+            20.23095
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.53798
+        },
+        {
+          "bbox_pt": [
+            28.647,
+            30.69482,
+            36.58408,
+            88.52214
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.54794
+        },
+        {
+          "bbox_pt": [
+            121.6245,
+            30.69482,
+            129.56157,
+            88.52214
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.54794
+        },
+        {
+          "bbox_pt": [
+            36.0273,
+            70.26155,
+            50.74678,
+            84.10559
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            43.56587,
+            38.4192,
+            57.94913,
+            51.88388
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            52.81346,
+            58.17642,
+            66.84299,
+            71.24538
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            60.81352,
+            33.22945,
+            75.85124,
+            47.43584
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            68.51074,
+            72.43529,
+            82.89401,
+            85.89996
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            77.37709,
+            48.74437,
+            91.03592,
+            61.40186
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            86.97095,
+            35.01973,
+            101.85179,
+            49.04704
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            94.67747,
+            64.59608,
+            108.88618,
+            77.86508
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            103.92947,
+            45.23863,
+            117.77571,
+            58.10376
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            41.11967,
+            47.03758,
+            109.15184,
+            74.34872
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.54794
+        },
+        {
+          "bbox_pt": [
+            38.285,
+            52.8055,
+            43.95435,
+            58.47484
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            105.89195,
+            71.08884,
+            112.41173,
+            77.60861
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3487
+        },
+        {
+          "bbox_pt": [
+            202.31175,
+            92.9518,
+            204.13058,
+            94.29778
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.37859
+        },
+        {
+          "bbox_pt": [
+            148.73128,
+            60.72564,
+            150.07726,
+            62.54447
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.37859
+        },
+        {
+          "bbox_pt": [
+            152.2391,
+            65.84505,
+            197.59373,
+            87.10515
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.77708
+        },
+        {
+          "bbox_pt": [
+            364.05209,
+            15.10893,
+            365.56308,
+            16.23231
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.4782
+        },
+        {
+          "bbox_pt": [
+            371.25891,
+            97.77026,
+            373.07774,
+            99.11624
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.37859
+        },
+        {
+          "bbox_pt": [
+            234.05543,
+            32.37795,
+            235.40141,
+            34.19678
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.37859
+        },
+        {
+          "bbox_pt": [
+            259.10669,
+            46.85185,
+            272.71304,
+            98.44325
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.44832
+        },
+        {
+          "bbox_pt": [
+            305.02837,
+            57.34048,
+            366.2576,
+            98.44325
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.44832
+        }
+      ]
+    },
+    "total_operations": 14,
+    "unknown_operations": 4,
+    "unknown_reasons": {
+      "nonliteral_coordinate": 2,
+      "unsupported_geometry": 1,
+      "unsupported_plot": 1
+    },
+    "unknown_samples": [
+      {
+        "command": "draw",
+        "reason": "unsupported_geometry",
+        "sample": "\\draw[walk]\n    (0.96,2.18) -- (1.24,2.43) -- (1.58,2.08) -- (1.92,2.54)\n    -- (2.18,1.82) -- (2.48,2.02) -- (2.78,1.56) -- (3.10,1.88)\n    -- (3.36,1.52);",
+        "source_line": 56
+      },
+      {
+        "command": "draw",
+        "reason": "nonliteral_coordinate",
+        "sample": "\\draw[cRed, line width=0.35pt] (\\x-0.10,\\y-0.10) -- (\\x+0.10,\\y+0.10);",
+        "source_line": 61
+      },
+      {
+        "command": "draw",
+        "reason": "nonliteral_coordinate",
+        "sample": "\\draw[cRed, line width=0.35pt] (\\x-0.10,\\y+0.10) -- (\\x+0.10,\\y-0.10);",
+        "source_line": 62
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_plot",
+        "sample": "\\draw[cBlue, line width=0.78pt]\n      plot[smooth] coordinates {(0.10,0.98) (0.34,0.72) (0.70,0.50) (1.14,0.34) (1.70,0.23)};",
+        "source_line": 74
+      }
+    ]
+  },
+  "profile": "schematic",
+  "render_pdf": "build/repaired_generated.pdf",
+  "schema": "figure-agent.undeclared-geometry.v1",
+  "source": "tikz-source:auto-discovery",
+  "source_hashes": {
+    "examples/execution-repair-v8/repaired_generated.tex": "sha256:c1f20118178235d03137c3d0b5490516324eb6c32bbf95dd234d1729acf0779d"
+  },
+  "total": 1
+}

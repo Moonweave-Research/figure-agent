@@ -26,6 +26,14 @@ def test_compile_script_pins_uv_project_after_changing_to_workspace_fixture() ->
     assert '--artifact-base "$BASE"' in script
 
 
+def test_compile_passes_top_level_fixture_spec_to_nested_source_checker() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'FIGURE_SPEC="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}/spec.yaml"' in script
+    assert 'UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")' in script
+    assert '${UNDECLARED_GEOMETRY_SPEC_ARGS[@]+"${UNDECLARED_GEOMETRY_SPEC_ARGS[@]}"}' in script
+
+
 def test_compile_serializes_shared_fixture_reports() -> None:
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 

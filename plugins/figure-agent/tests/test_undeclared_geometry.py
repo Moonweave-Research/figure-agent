@@ -472,7 +472,7 @@ def test_label_crossing_semantic_arrow_is_reported_even_when_not_frame_like() ->
     assert candidates[1]["recommended_action"] == "add_micro_defect"
 
 
-def test_label_crossing_semantic_arrow_is_reported_when_source_crossings_disabled() -> None:
+def test_semantic_arrow_source_crossing_is_deferred_when_source_crossings_disabled() -> None:
     tex = (
         r"\draw[-{Stealth[length=3pt,width=2pt]}, cRed!75!black, "
         r"line width=0.50pt] (2.0,1.0) -- (2.0,3.0);"
@@ -481,10 +481,28 @@ def test_label_crossing_semantic_arrow_is_reported_when_source_crossings_disable
 
     candidates = detect_undeclared_geometry(tex, words, {}, source_crossings=False)
 
+    assert [candidate["kind"] for candidate in candidates] == ["undeclared_column_rule"]
+
+
+def test_shifted_semantic_arrow_does_not_cross_word_in_unshifted_panel() -> None:
+    tex = "\n".join(
+        [
+            r"\begin{scope}[shift={(7.82,0.35)}]",
+            (
+                r"\draw[-{Stealth[length=3pt,width=2pt]}, cRed!75!black, "
+                r"line width=0.50pt] (2.0,1.0) -- (3.0,1.0);"
+            ),
+            r"\end{scope}",
+        ]
+    )
+    words = [_word("carrier", 58.0, 26.0, 88.0, 34.0)]
+
+    candidates = detect_undeclared_geometry(tex, words, {}, source_crossings=False)
+
     assert [candidate["kind"] for candidate in candidates] == [
-        "undeclared_column_rule",
-        "label_crosses_semantic_path",
+        "undeclared_horizontal_rule"
     ]
+    assert candidates[0]["bbox_pt"] == [278.362205, 38.267717, 306.708661, 38.267717]
 
 
 def test_label_crossing_semantic_arrow_ignores_single_character_ocr_fragments() -> None:

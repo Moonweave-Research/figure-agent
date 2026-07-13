@@ -411,6 +411,8 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/execution-repair-v8/repaired_generated.tex",
         "review/failure-first/execution-repair-v8/source_attribution.json",
         "review/failure-first/execution-repair-v8/source_selector_registry.json",
+        "review/failure-first/execution-detector-evaluation-v1/evaluation_review.json",
+        "review/failure-first/execution-detector-evaluation-v1/undeclared_geometry.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "examples/fig3_resistance_mechanism/review/failure-first/"
@@ -427,6 +429,7 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "plugins/figure-agent/scripts/authoring_execution_packet.py",
         "plugins/figure-agent/scripts/authoring_repair_packet.py",
         "plugins/figure-agent/scripts/checks/check_label_hyphenation.py",
+        "plugins/figure-agent/scripts/checks/check_undeclared_geometry.py",
         "plugins/figure-agent/scripts/finding_source_attribution.py",
         "plugins/figure-agent/scripts/checks/check_layout_drift.py",
         "plugins/figure-agent/scripts/visual_finding_artifacts.py",
@@ -436,6 +439,7 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "plugins/figure-agent/tests/test_authoring_repair_packet.py",
         "plugins/figure-agent/tests/test_finding_source_attribution.py",
         "plugins/figure-agent/tests/test_label_hyphenation.py",
+        "plugins/figure-agent/tests/test_undeclared_geometry.py",
         "plugins/figure-agent/tests/test_check_layout_drift.py",
         "plugins/figure-agent/tests/test_compile_contract.py",
         "plugins/figure-agent/tests/test_fig3_resistance_failure_first.py",
@@ -1253,6 +1257,31 @@ def test_lh001_repair_history_preserves_failures_and_binds_resolved_attempt() ->
     assert reviews[8]["materialization_receipt_sha256"] == _sha256(
         attempts[8] / "materialization_receipt.json"
     )
+
+
+def test_detector_evaluation_keeps_one_rendered_semantic_crossing_actionable() -> None:
+    evaluation_root = REVIEW / "execution-detector-evaluation-v1"
+    review = json.loads(
+        (evaluation_root / "evaluation_review.json").read_text(encoding="utf-8")
+    )
+    report = json.loads(
+        (evaluation_root / "undeclared_geometry.json").read_text(encoding="utf-8")
+    )
+
+    assert review["decision"] == "detector_noise_reduced_actual_defect_remains"
+    assert review["before"]["actionable_candidates"] == 15
+    assert review["after"]["actionable_candidates"] == 1
+    assert review["after"]["report_sha256"] == _sha256(
+        evaluation_root / "undeclared_geometry.json"
+    )
+    assert report["profile"] == "schematic"
+    assert report["total"] == 1
+    assert [candidate["kind"] for candidate in report["candidates"]] == [
+        "label_crosses_semantic_path"
+    ]
+    assert report["candidates"][0]["nearest_text"] == "landscape"
+    assert review["verification"]["human_review"] == "pending"
+    assert review["publication_acceptance"] == "not_claimed"
 
 
 def test_fig3_resistance_render_receipt_reproduces_current_source_outputs() -> None:

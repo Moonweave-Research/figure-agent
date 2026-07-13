@@ -1,0 +1,42 @@
+{
+  "schema": "figure-agent.detector-evaluation-review.v1",
+  "evaluation": "execution-detector-evaluation-v1",
+  "decision": "detector_noise_reduced_actual_defect_remains",
+  "source": {
+    "path": "review/failure-first/execution-repair-v8/repaired_generated.tex",
+    "sha256": "sha256:c1f20118178235d03137c3d0b5490516324eb6c32bbf95dd234d1729acf0779d"
+  },
+  "authority": {
+    "path": "spec.yaml",
+    "sha256": "sha256:21762edd4599990dd3dce8c1a3a7df6c58c75e55a20d4c12a51851b015358c4a",
+    "undeclared_geometry_profile": "schematic"
+  },
+  "before": {
+    "evidence_path": "review/failure-first/execution-repair-v8/execution_review.json",
+    "evidence_sha256": "sha256:a8ae1051dd028f02145b2fd0a02cc9d761b8fbb84ab9facd6dd4f3a77b9cccd0",
+    "actionable_candidates": 15
+  },
+  "after": {
+    "report_path": "review/failure-first/execution-detector-evaluation-v1/undeclared_geometry.json",
+    "report_sha256": "sha256:dbbc637326d5d39963868b9ff9dd4d7deb50caeb7eac148fbfb18cd7fa884a64",
+    "actionable_candidates": 1,
+    "downranked_conceptual_geometry": 10,
+    "remaining_finding": {
+      "id": "UG001",
+      "kind": "label_crosses_semantic_path",
+      "nearest_text": "landscape",
+      "evidence": "rendered semantic arrow crosses text 'landscape'"
+    }
+  },
+  "controller_changes": [
+    "nested attempt compiles inherit the top-level fixture spec",
+    "literal geometry receives cumulative TikZ scope shifts",
+    "source-coordinate semantic crossings are deferred when rendered-coordinate crossing detection is active"
+  ],
+  "verification": {
+    "normal_compile": "not_required_detector_only_reanalysis",
+    "strict_detector": "fail_one_actual_candidate",
+    "human_review": "pending"
+  },
+  "publication_acceptance": "not_claimed"
+}

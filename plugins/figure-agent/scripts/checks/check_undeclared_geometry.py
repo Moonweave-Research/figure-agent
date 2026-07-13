@@ -45,6 +45,13 @@ _OPERATION_RE = re.compile(
     r"\\(?P<command>draw|fill|shade)(?:\[(?P<options>[^\]]*)\])?(?P<body>.*?);",
     re.DOTALL,
 )
+_SCOPE_TOKEN_RE = re.compile(
+    r"\\begin\{scope\}(?:\[(?P<options>[^\]]*)\])?|(?P<end>\\end\{scope\})"
+)
+_SCOPE_SHIFT_RE = re.compile(
+    r"(?:^|,)\s*shift\s*=\s*\{\s*\(\s*"
+    r"(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)\s*\}"
+)
 _LINE_WIDTH_RE = re.compile(r"line width\s*=\s*([0-9.]+)\s*pt")
 _CGRAY_TONE_RE = re.compile(r"cGray!(\d+(?:\.\d+)?)")
 FRAME_TONE_MAX = 35.0
@@ -129,6 +136,24 @@ def _line_pt(values: tuple[float, float, float, float]) -> dict[str, Any]:
     }
 
 
+def _scope_shift_cm(tex_text: str, position: int) -> tuple[float, float]:
+    stack: list[tuple[float, float]] = []
+    for match in _SCOPE_TOKEN_RE.finditer(tex_text, 0, position):
+        if match.group("end"):
+            if stack:
+                stack.pop()
+            continue
+        parent_x, parent_y = stack[-1] if stack else (0.0, 0.0)
+        shift = _SCOPE_SHIFT_RE.search(str(match.group("options") or ""))
+        own_x, own_y = (
+            (float(shift.group(1)), float(shift.group(2)))
+            if shift is not None
+            else (0.0, 0.0)
+        )
+        stack.append((parent_x + own_x, parent_y + own_y))
+    return stack[-1] if stack else (0.0, 0.0)
+
+
 def _iter_tikz_operations(tex_text: str) -> list[dict[str, Any]]:
     operations: list[dict[str, Any]] = []
     for match in _OPERATION_RE.finditer(tex_text):
@@ -143,6 +168,7 @@ def _iter_tikz_operations(tex_text: str) -> list[dict[str, Any]]:
                 "source_line": start_line,
                 "command": str(match.group("command") or ""),
                 "options": str(match.group("options") or ""),
+                "scope_shift_cm": _scope_shift_cm(tex_text, match.start()),
             }
         )
     return operations
@@ -153,9 +179,12 @@ def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]
     source_line = int(operation["source_line"])
     command = str(operation["command"])
     options = str(operation["options"])
+    shift_x, shift_y = operation.get("scope_shift_cm", (0.0, 0.0))
     geometry: list[dict[str, Any]] = []
     for match in _RECT_RE.finditer(text):
         x0, y0, x1, y1 = (float(value) for value in match.groups())
+        x0, y0 = x0 + shift_x, y0 + shift_y
+        x1, y1 = x1 + shift_x, y1 + shift_y
         geometry.append(
             {
                 "kind": "rect",
@@ -167,6 +196,8 @@ def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]
         )
     for match in _SEGMENT_RE.finditer(text):
         x0, y0, x1, y1 = (float(value) for value in match.groups())
+        x0, y0 = x0 + shift_x, y0 + shift_y
+        x1, y1 = x1 + shift_x, y1 + shift_y
         if abs(x0 - x1) < 0.03 and abs(y0 - y1) >= 0.25:
             geometry.append(
                 {
@@ -189,7 +220,7 @@ def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]
             )
     for match in _CIRCLE_RE.finditer(text):
         x, y, radius, unit = match.groups()
-        center_pt = _point_cm_to_pt(float(x), float(y))
+        center_pt = _point_cm_to_pt(float(x) + shift_x, float(y) + shift_y)
         radius_pt = _radius_to_pt(float(radius), unit)
         geometry.append(
             {
@@ -211,7 +242,10 @@ def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]
     for match in _BEZIER_RE.finditer(text):
         values = [float(value) for value in match.groups()]
         points = [
-            _point_cm_to_pt(values[index], values[index + 1])
+            _point_cm_to_pt(
+                values[index] + shift_x,
+                values[index + 1] + shift_y,
+            )
             for index in range(0, len(values), 2)
         ]
         geometry.append(
@@ -885,10 +919,7 @@ def detect_undeclared_geometry(
         )
         for word in words:
             semantic_path_like = _is_semantic_path_like_geometry(geometry)
-            line_crosses_word = (
-                (source_crossings or semantic_path_like)
-                and _line_crosses_word(line, word)
-            )
+            line_crosses_word = source_crossings and _line_crosses_word(line, word)
             if line_crosses_word and _is_frame_like_geometry(geometry):
                 candidates.append(
                     _base_candidate(
