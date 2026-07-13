@@ -1,0 +1,144 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\begin{tikzpicture}[
+  x=1cm,y=1cm,
+  >=Stealth,
+  panel/.style={draw=cLGray, line width=0.45pt, rounded corners=2pt, fill=white},
+  title/.style={font=\sffamily\bfseries\fontsize{7.4}{8.8}\selectfont, text=black},
+  label/.style={font=\sffamily\fontsize{6.1}{7.3}\selectfont, text=cGray},
+  smalllabel/.style={font=\sffamily\fontsize{5.2}{6.2}\selectfont, text=cGray},
+  micro/.style={font=\sffamily\fontsize{4.7}{5.6}\selectfont, text=cGray},
+  axis/.style={-{Stealth[length=3pt,width=2.2pt]}, cGray, line width=0.42pt},
+  arrow/.style={-{Stealth[length=3pt,width=2.2pt]}, cGray, line width=0.42pt},
+  film/.style={draw=cGray, line width=0.45pt, fill=cAmberSphere!28},
+  electrode/.style={draw=cGray, line width=0.45pt, fill=cLGray!55},
+  trap/.style={draw=cRed, line width=0.42pt},
+  carrier/.style={circle, draw=cBlue, fill=white, line width=0.42pt, inner sep=0pt, minimum size=2.0mm},
+]
+
+% ---------- Panel A: applied-V cell, multiple trapping, transient decay ----------
+\node[panel, minimum width=7.05cm, minimum height=4.25cm, anchor=south west] (pa) at (0,0) {};
+\node[title, anchor=west] at (0.22,3.94) {[A] Cell under applied $V$};
+\node[label, anchor=west] at (0.66,3.58) {dispersive repeated trapping during conduction};
+
+\begin{scope}[shift={(0.34,0.42)}]
+  % Cell stack.
+  \path[electrode] (0.24,0.54) rectangle (0.56,2.72);
+  \path[film] (0.56,0.54) rectangle (3.52,2.72);
+  \path[electrode] (3.52,0.54) rectangle (3.84,2.72);
+  \node[micro, rotate=90] at (0.40,1.63) {electrode};
+  \node[micro, rotate=90] at (3.68,1.63) {electrode};
+  \node[smalllabel] at (2.04,2.96) {disordered sulfur polymer film};
+
+  % Applied voltage fixture, kept clear of the transport text line.
+  \draw[arrow, cBlue] (0.34,3.23) -- (3.74,3.23);
+  \node[label, text=cBlue, fill=white, inner sep=1pt] at (2.04,3.43) {$V$};
+  \node[micro, anchor=east, text=cBlue] at (0.28,3.23) {applied};
+
+  % Unlabeled trap marks in the film.
+  \foreach \x/\y/\r in {0.92/2.28/12,1.35/1.78/-18,1.04/1.05/36,1.85/2.46/-30,
+    2.26/1.46/18,2.67/2.12/40,3.02/0.92/-28,1.62/0.72/12,2.94/1.68/-8} {
+    \begin{scope}[shift={(\x,\y)}, rotate=\r]
+      \draw[trap] (-0.055,-0.055) -- (0.055,0.055);
+      \draw[trap] (-0.055,0.055) -- (0.055,-0.055);
+    \end{scope}
+  }
+
+  % Sign-agnostic carrier walk: tortuous, local trapping, final caught.
+  \draw[cBlue, line width=0.70pt, rounded corners=3pt,
+    postaction={decorate},
+    decoration={markings,
+      mark=at position 0.22 with {\arrow{Stealth[length=2.8pt,width=2pt]}},
+      mark=at position 0.48 with {\arrow{Stealth[length=2.8pt,width=2pt]}},
+      mark=at position 0.76 with {\arrow{Stealth[length=2.8pt,width=2pt]}}}]
+    (0.74,1.44) .. controls (1.02,2.22) and (1.33,1.82) .. (1.34,1.78)
+    .. controls (1.43,1.28) and (1.98,1.17) .. (2.25,1.46)
+    .. controls (2.55,1.88) and (2.76,2.18) .. (2.67,2.12)
+    .. controls (2.46,1.46) and (3.04,1.14) .. (3.02,0.92);
+  \node[carrier] at (0.74,1.44) {};
+  \node[carrier, fill=cBlue!18] at (1.34,1.78) {};
+  \node[carrier, fill=cBlue!18] at (2.25,1.46) {};
+  \node[carrier, fill=cBlue!35] at (3.02,0.92) {};
+  \draw[cBlue, line width=0.42pt] (2.94,0.84) -- (3.10,1.00);
+  \draw[cBlue, line width=0.42pt] (2.94,1.00) -- (3.10,0.84);
+  \node[micro, anchor=west] at (3.13,0.92) {caught};
+
+  % Compact transient-current inset.
+  \begin{scope}[shift={(4.30,0.70)}]
+    \node[smalllabel, anchor=west] at (0.04,2.20) {transient current};
+    \draw[axis] (0.12,0.34) -- (2.02,0.34);
+    \draw[axis] (0.12,0.34) -- (0.12,1.82);
+    \node[micro] at (1.08,0.03) {$t$};
+    \node[micro, rotate=90] at (-0.14,1.06) {$I$};
+    \draw[cRed, line width=0.78pt]
+      plot[smooth] coordinates {
+        (0.22,1.64) (0.42,1.30) (0.66,1.03) (0.95,0.82)
+        (1.28,0.66) (1.64,0.55) (1.92,0.49)
+      };
+    \node[micro, text=cRed, anchor=west] at (0.46,1.53) {$I(t)\propto t^{-n}$};
+    \draw[arrow, cGray] (0.52,-0.32) -- (1.62,-0.32);
+    \node[micro, anchor=west] at (1.72,-0.32) {$I\downarrow\Rightarrow R\uparrow$};
+    \node[micro, anchor=west] at (0.04,-0.62) {absorption current from traps};
+  \end{scope}
+\end{scope}
+
+% ---------- Panel B: trap energy distribution evolution ----------
+\node[panel, minimum width=7.05cm, minimum height=4.25cm, anchor=south west] (pb) at (7.35,0) {};
+\node[title, anchor=west] at (7.57,3.94) {[B] Trap-energy distribution $g(E)$};
+\node[label, anchor=west] at (7.74,3.58) {sulfur-rich disorder: discrete $\rightarrow$ continuous broad};
+
+\begin{scope}[shift={(7.74,0.40)}]
+  % Shared distribution axes.
+  \draw[axis] (0.20,0.50) -- (6.02,0.50);
+  \draw[axis] (0.20,0.50) -- (0.20,2.76);
+  \node[smalllabel] at (3.10,0.08) {trap energy $E$};
+  \node[smalllabel, rotate=90] at (-0.12,1.68) {$g(E)$};
+
+  % S60: narrow discrete deep peak.
+  \draw[cBlue, line width=0.78pt]
+    (1.30,0.50) -- (1.30,2.00);
+  \filldraw[draw=cBlue, fill=cBlue!16, line width=0.42pt]
+    (1.30,2.00) circle (0.055);
+  \node[smalllabel, text=cBlue, anchor=south] at (1.30,2.10) {S60};
+  \node[micro, anchor=south] at (1.30,2.38) {discrete single deep};
+
+  % S80: broad continuous distribution, encoded by breadth rather than depth.
+  \path[draw=cAmber, fill=cAmberSphere!35, line width=0.58pt]
+    (2.58,0.50)
+    .. controls (2.92,0.58) and (3.02,1.12) .. (3.36,1.48)
+    .. controls (3.78,1.96) and (4.24,2.08) .. (4.70,1.68)
+    .. controls (5.16,1.28) and (5.48,0.74) .. (5.82,0.50)
+    -- cycle;
+  \draw[cBrown, line width=0.42pt] (2.58,0.50) -- (5.82,0.50);
+  \node[smalllabel, text=cAmber, anchor=south] at (4.26,2.14) {S80};
+  \node[micro, anchor=south] at (4.26,2.42) {continuous broad};
+
+  % Breadth metric n and independent magnitude rho_60s.
+  \draw[{Stealth[length=2.6pt,width=2pt]}-{Stealth[length=2.6pt,width=2pt]},
+    cTeal, line width=0.46pt] (2.58,0.85) -- (5.82,0.85);
+  \node[micro, text=cTeal, fill=white, inner sep=1pt] at (4.20,0.85) {$n=$ breadth};
+
+  \draw[arrow, cRed] (0.86,0.50) -- (0.86,2.00);
+  \node[micro, text=cRed, anchor=east] at (0.78,1.24) {$\rho_{60s}$};
+  \node[micro, anchor=east] at (0.78,1.00) {magnitude};
+
+  % Composition/disorder evolution cue.
+  \draw[arrow, cGray] (1.62,2.88) -- (5.42,2.88);
+  \node[micro, anchor=south] at (3.52,2.94) {disorder$\uparrow$ / sulfur$\uparrow$};
+  \node[micro, anchor=north] at (1.62,2.82) {discrete};
+  \node[micro, anchor=north] at (5.42,2.82) {continuous broad};
+
+  % Low-profile tick marks without quantitative scale.
+  \foreach \x in {1.30,2.58,5.82} {
+    \draw[cGray, line width=0.25pt] (\x,0.50) -- (\x,0.42);
+  }
+  \foreach \y in {1.0,1.5,2.0} {
+    \draw[cGray, line width=0.25pt] (0.20,\y) -- (0.12,\y);
+  }
+\end{scope}
+
+\end{tikzpicture}
+\end{document}
