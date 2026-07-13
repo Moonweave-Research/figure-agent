@@ -60,6 +60,7 @@ def _load_packet(path: Path) -> dict[str, Any]:
 def record_authoring_execution_receipt(
     *,
     workspace_root: Path,
+    repository_root: Path | None = None,
     packet_path: Path,
     prompt_path: Path,
     transcript_path: Path,
@@ -73,10 +74,15 @@ def record_authoring_execution_receipt(
 ) -> dict[str, object]:
     """Validate actual runtime bytes and persist a one-write receipt."""
     workspace_root = workspace_root.resolve()
+    repository_root = (repository_root or workspace_root).resolve()
+    if not workspace_root.is_relative_to(repository_root):
+        raise AuthoringExecutionReceiptError(
+            "repository root must contain the Figure Agent workspace"
+        )
     packet_path = _regular_repo_file(workspace_root, packet_path, label="packet")
     prompt_path = _regular_repo_file(workspace_root, prompt_path, label="prompt")
     transcript_path = _regular_repo_file(
-        workspace_root, transcript_path, label="transcript"
+        repository_root, transcript_path, label="transcript"
     )
     generated_source_path = _regular_repo_file(
         workspace_root, generated_source_path, label="generated source"
@@ -131,7 +137,10 @@ def record_authoring_execution_receipt(
         "declared_packet_sha256": packet["packet_sha256"],
         "prompt_path": prompt_path.relative_to(workspace_root).as_posix(),
         "prompt_sha256": _sha256_bytes(prompt_bytes),
-        "transcript_path": transcript_path.relative_to(workspace_root).as_posix(),
+        "transcript_root": (
+            "workspace" if repository_root == workspace_root else "repository"
+        ),
+        "transcript_path": transcript_path.relative_to(repository_root).as_posix(),
         "transcript_sha256": _sha256_bytes(transcript_path.read_bytes()),
         "generated_source_path": generated_source_path.relative_to(
             workspace_root

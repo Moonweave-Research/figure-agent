@@ -105,6 +105,38 @@ def test_records_bound_runtime_evidence(tmp_path: Path) -> None:
     assert json.loads(paths["receipt"].read_text(encoding="utf-8")) == receipt
 
 
+def test_records_transcript_from_ancestor_repository_root(tmp_path: Path) -> None:
+    paths = _evidence(tmp_path)
+    repository_root = tmp_path / "repository"
+    workspace = repository_root / "plugins/figure-agent"
+    workspace.parent.mkdir(parents=True)
+    paths["workspace"].rename(workspace)
+    for key in ("packet", "prompt", "source", "transcript", "touched", "receipt"):
+        paths[key] = workspace / paths[key].relative_to(paths["workspace"])
+    paths["workspace"] = workspace
+    transcript = repository_root / ".witnessd/runs/control/adapter-transcript.txt"
+    transcript.parent.mkdir(parents=True)
+    transcript.write_text('{"event":"completed"}\n', encoding="utf-8")
+    paths["transcript"] = transcript
+
+    receipt = _record(paths, repository_root=repository_root)
+
+    assert receipt["transcript_root"] == "repository"
+    assert receipt["transcript_path"] == (
+        ".witnessd/runs/control/adapter-transcript.txt"
+    )
+
+
+def test_rejects_repository_root_that_does_not_contain_workspace(tmp_path: Path) -> None:
+    paths = _evidence(tmp_path)
+
+    with pytest.raises(
+        authoring_execution_receipt.AuthoringExecutionReceiptError,
+        match="repository root",
+    ):
+        _record(paths, repository_root=tmp_path / "other-repository")
+
+
 def test_rejects_model_mismatch(tmp_path: Path) -> None:
     paths = _evidence(tmp_path)
     with pytest.raises(

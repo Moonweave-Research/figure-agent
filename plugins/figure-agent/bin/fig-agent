@@ -464,6 +464,17 @@ def _authoring_receipt(argv: list[str]) -> int:
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     workspace_root = _paths().workspace_root.resolve()
+    try:
+        repository_root = Path(
+            subprocess.run(
+                ["git", "-C", str(workspace_root), "rev-parse", "--show-toplevel"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        ).resolve()
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        repository_root = workspace_root
 
     def repo_path(value: str) -> Path:
         relative = Path(value)
@@ -476,12 +487,24 @@ def _authoring_receipt(argv: list[str]) -> int:
             raise ValueError("evidence path must remain inside the workspace")
         return resolved
 
+    def repository_path(value: str) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError("transcript path must be repository-relative and safe")
+        resolved = (repository_root / relative).resolve(strict=False)
+        if not resolved.is_relative_to(repository_root):
+            raise ValueError("transcript path must remain inside the repository")
+        return resolved
+
     try:
         payload = authoring_execution_receipt.record_authoring_execution_receipt(
             workspace_root=workspace_root,
+            repository_root=repository_root,
             packet_path=repo_path(args.packet),
             prompt_path=repo_path(args.prompt),
-            transcript_path=repo_path(args.transcript),
+            transcript_path=repository_path(args.transcript),
             generated_source_path=repo_path(args.generated_source),
             touched_files_path=repo_path(args.touched_files),
             receipt_path=repo_path(args.receipt_out),
