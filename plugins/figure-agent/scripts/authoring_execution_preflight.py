@@ -77,6 +77,7 @@ def preflight_authoring_pair(
     treatment, treatment_prompt = _load_packet(treatment_packet_path)
     for field in (
         "model_id",
+        "execution_cwd",
         "budget_contract",
         "blank_start",
         "mandatory_source_requirements",

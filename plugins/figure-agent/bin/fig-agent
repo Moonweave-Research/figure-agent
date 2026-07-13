@@ -367,6 +367,7 @@ def _authoring_packet(argv: list[str]) -> int:
     parser.add_argument("--budget-contract", required=True)
     parser.add_argument("--blank-start", required=True)
     parser.add_argument("--output-path", required=True)
+    parser.add_argument("--execution-cwd", default=".")
     parser.add_argument("--packet-out", required=True)
     parser.add_argument("--prompt-out", required=True)
     parser.add_argument("--layout-contract")
@@ -384,6 +385,7 @@ def _authoring_packet(argv: list[str]) -> int:
             budget_contract=args.budget_contract,
             blank_start=args.blank_start,
             output_path=args.output_path,
+            execution_cwd=args.execution_cwd,
             layout_contract=args.layout_contract,
             shape_profile=args.shape_profile,
         )

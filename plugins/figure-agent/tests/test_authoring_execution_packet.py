@@ -63,6 +63,7 @@ def _compile(
         "examples/context_demo/review/failure-first/execution-binding-v1/"
         "control_generated.tex"
     ),
+    execution_cwd: str = ".",
 ) -> tuple[dict[str, object], str]:
     return authoring_execution_packet.compile_authoring_execution_packet(
         "context_demo",
@@ -72,6 +73,7 @@ def _compile(
         budget_contract=budget_contract,
         blank_start=blank_start,
         output_path=output_path,
+        execution_cwd=execution_cwd,
     )
 
 
@@ -98,6 +100,30 @@ def test_compiles_canonical_packet_and_prompt(tmp_path: Path) -> None:
     assert "publication_acceptance: not_claimed" in prompt
     assert "Trap energy diagram" in prompt
     assert "Charge trapping" in prompt
+
+
+def test_binds_repo_relative_execution_cwd_into_packet_and_prompt(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    packet, prompt = _compile(workspace, execution_cwd="plugins/figure-agent")
+
+    assert packet["execution_cwd"] == "plugins/figure-agent"
+    assert (
+        "Before resolving the output path, change directory from the repository root "
+        "to [plugins/figure-agent]."
+    ) in prompt
+
+
+def test_rejects_unsafe_execution_cwd(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    with pytest.raises(
+        authoring_execution_packet.AuthoringExecutionPacketError,
+        match="execution cwd",
+    ):
+        _compile(workspace, execution_cwd="../figure-agent")
 
 
 @pytest.mark.parametrize(

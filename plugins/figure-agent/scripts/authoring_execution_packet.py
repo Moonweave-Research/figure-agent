@@ -56,6 +56,12 @@ def _safe_relative_path(value: str, *, label: str) -> Path:
     return path
 
 
+def _safe_execution_cwd(value: str) -> str:
+    if value == ".":
+        return value
+    return _safe_relative_path(value, label="execution cwd").as_posix()
+
+
 def _resolve_regular_file(workspace_root: Path, value: str, *, label: str) -> Path:
     relative = _safe_relative_path(value, label=label)
     current = workspace_root
@@ -170,12 +176,19 @@ def render_authoring_prompt(
     output_path: str,
     context_pack: dict[str, Any],
     model_id: str,
+    execution_cwd: str = ".",
 ) -> str:
     """Render the sole authoring prompt authority in a deterministic order."""
     lines = [
         f"# Bound authoring execution: {name}",
         "",
         "## Output and attempt boundary",
+        (
+            "- Resolve the output path from the repository root."
+            if execution_cwd == "."
+            else "- Before resolving the output path, change directory from the "
+            f"repository root to [{execution_cwd}]."
+        ),
         f"- Write exactly one new source to [{output_path}].",
         "- Start from the declared blank artifact; perform one attempt only.",
         "- Do not inspect or repair historical generated sources.",
@@ -229,6 +242,7 @@ def compile_authoring_execution_packet(
     budget_contract: str,
     blank_start: str,
     output_path: str,
+    execution_cwd: str = ".",
     layout_contract: str | None = None,
     shape_profile: str | None = None,
 ) -> tuple[dict[str, object], str]:
@@ -241,6 +255,7 @@ def compile_authoring_execution_packet(
     )
     blank_path = _resolve_regular_file(workspace_root, blank_start, label="blank start")
     relative_output = _validate_output_path(workspace_root, name, output_path)
+    bound_execution_cwd = _safe_execution_cwd(execution_cwd)
     context_pack = authoring_context_pack.build_context_pack(
         name,
         plugin_root=plugin_root,
@@ -257,6 +272,7 @@ def compile_authoring_execution_packet(
         output_path=relative_output.as_posix(),
         context_pack=context_pack,
         model_id=model_id.strip(),
+        execution_cwd=bound_execution_cwd,
     )
     packet: dict[str, object] = {
         "schema": SCHEMA,
@@ -276,6 +292,7 @@ def compile_authoring_execution_packet(
             "sha256": _sha256_bytes(blank_path.read_bytes()),
         },
         "output_path": relative_output.as_posix(),
+        "execution_cwd": bound_execution_cwd,
         "layout_contract": (
             {
                 "path": context_pack["sources"]["layout_lanes"],
