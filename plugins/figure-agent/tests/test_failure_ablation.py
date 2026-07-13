@@ -124,6 +124,23 @@ def test_reports_failure_reduction_without_claiming_acceptance(tmp_path: Path) -
     assert report["publication_acceptance"] == "not_claimed"
 
 
+def test_reports_defect_occurrences_separately_from_finding_kinds(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    raw = yaml.safe_load(paths["raw"].read_text(encoding="utf-8"))
+    raw["findings"][0]["occurrences"] = 3
+    paths["raw"].write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    report = evaluate_ablation(paths)
+
+    assert report["variants"]["raw"]["confirmed_defect_count"] == 1
+    assert report["variants"]["raw"]["confirmed_defect_occurrence_count"] == 3
+    assert report["deltas"]["repaired_vs_raw"][
+        "confirmed_defect_occurrence_count"
+    ] == -3
+
+
 def test_ablation_rejects_missing_comparison_contract(tmp_path: Path) -> None:
     paths = write_comparable_runs(tmp_path)
     for path in paths.values():

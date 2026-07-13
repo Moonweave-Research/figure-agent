@@ -30,7 +30,16 @@ def _load_run(path: Path, *, expected_variant: str) -> dict[str, Any]:
         raise FailureAblationError("run_variant_invalid")
     findings = payload.get("findings")
     if not isinstance(findings, list) or any(
-        not isinstance(item, dict) for item in findings
+        not isinstance(item, dict)
+        or (
+            "occurrences" in item
+            and (
+                not isinstance(item["occurrences"], int)
+                or isinstance(item["occurrences"], bool)
+                or item["occurrences"] < 1
+            )
+        )
+        for item in findings
     ):
         raise FailureAblationError("run_findings_invalid")
     payload["_run_path"] = path
@@ -60,6 +69,9 @@ def _summarize_run(run: dict[str, Any]) -> dict[str, Any]:
     )
     return {
         "confirmed_defect_count": len(confirmed),
+        "confirmed_defect_occurrence_count": sum(
+            item.get("occurrences", 1) for item in confirmed
+        ),
         "confirmed_defect_counts": dict(sorted(class_counts.items())),
         "scientific_gate": "failed" if scientific_failed else "passed",
         "human_correction_minutes": run.get("human_correction_minutes"),
@@ -73,6 +85,7 @@ def _delta(current: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for key in (
         "confirmed_defect_count",
+        "confirmed_defect_occurrence_count",
         "human_correction_minutes",
         "intervention_count",
     ):
