@@ -304,9 +304,31 @@ modules listed in Section 0.
   collisions do not establish a shape-profile or publication-quality gain.
   Figure Agent now exposes `authoring-input-audit`, and new authoring packets
   bind the only allowed repository content reads. The next equal-input attempt
-  must pass that audit before visual comparison, then obtain a named human
-  verdict on composition, label density, distribution-shape naturalness, and
-  finish rather than adding another manual polish pass.
+  must pass that audit before visual comparison. The preserved v6 attempt now
+  does so for both arms. Both sources compile normally; strict compilation
+  reports eleven control collisions and five treatment collisions plus one
+  treatment hyphenation finding. The control execution proof passes. The
+  treatment proof is explicitly blocked only because its isolated LuaTeX font
+  cache timed out after writing the declared source; the source was compiled
+  successfully outside that authoring run. The pair remains comparison-
+  ineligible and has no human publication verdict, so the lower treatment
+  collision count is evidence of detector movement only, not acceptance.
+
+  The next implementation slice is the first bounded machine-finding repair
+  loop, not another clean-room generation and not manual SVG/TikZ polishing:
+
+  1. Persist text collisions as deterministic structured evidence alongside
+     the existing visual, boundary, proximity, and hyphenation reports.
+  2. Compile a hash-bound repair execution packet from one source snapshot and
+     its machine reports. Only exact source mappings may become editable repair
+     targets; ambiguous and unbound findings remain review-only.
+  3. Bind one repair attempt, one declared source block, protected scientific
+     relations, and an additive output path. The author lane may write the new
+     source but may not compile or overwrite any historical attempt.
+  4. Compile the repaired source sequentially outside the author lane, rerun
+     the same gates, and persist before/after detector movement plus regression
+     evidence. A named human verdict remains required for visual or publication
+     acceptance.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot
