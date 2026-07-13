@@ -1,0 +1,18 @@
+{
+  "allowed_repository_reads": [
+    "AGENTS.md",
+    "styles/polymer-paper-preamble.sty"
+  ],
+  "audit_boundary": "shell_visible_cat_grep_head_rg_sed_tail_reads_only",
+  "audited_command_count": 9,
+  "decision": "pass",
+  "filesystem_read_isolation": "unavailable",
+  "observed_repository_reads": [
+    "AGENTS.md",
+    "styles/polymer-paper-preamble.sty"
+  ],
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.authoring-execution-input-audit.v1",
+  "transcript_sha256": "sha256:4091e4eeaef6adc57709f4392d15bae3c6bafa9404a7ca205a026f147b1dfc59",
+  "undeclared_repository_reads": []
+}

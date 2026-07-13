@@ -1,0 +1,61 @@
+{
+  "comparison_eligibility": "ineligible",
+  "control": {
+    "actual_repository_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v5/control_generated.tex",
+    "actual_source_sha256": "sha256:50192bc5180acc1e43cead97fe5a7468bc347bc3027b073807d4e01ddb538187",
+    "compile": "not_run_expected_packet_path_missing",
+    "expected_repository_path": "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v5/control_generated.tex",
+    "input_audit": {
+      "artifact": "control_input_audit_v2.json",
+      "decision": "blocked",
+      "undeclared_repository_reads": [
+        "AGENTS.md",
+        "styles/polymer-paper-preamble.sty"
+      ]
+    },
+    "orro": {
+      "adapter_exit_code": 124,
+      "decision": "blocked-explicit",
+      "proofcheck_decision": "blocked-explicit",
+      "proofcheck_sha256": "sha256:c664056208fe9f30e296cad05e6ce904f4af836b04a9a3d912bafe6eb926cac9",
+      "run": ".witnessd/runs/fig3-execution-binding-v5-control-c-20260713",
+      "transcript_sha256": "sha256:4091e4eeaef6adc57709f4392d15bae3c6bafa9404a7ca205a026f147b1dfc59"
+    },
+    "routing_decision": "blocked_wrong_output_and_read_coordinate_system"
+  },
+  "decision": "blocked",
+  "machine_conclusion": "The cd-plus-relative-path prompt is ambiguous to an authoring model and the original input auditor missed compound shell reads after cd.",
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.authoring-routing-review.v1",
+  "treatment": {
+    "actual_repository_path": "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v5/treatment_generated.tex",
+    "actual_source_sha256": "sha256:bdbfd12eff38a9f4c9bccf19833f3f6a40bc722e028127b3a0079e228fd59b21",
+    "compile": {
+      "normal_exit_code": 0,
+      "strict_collision_count": 3,
+      "strict_exit_code": 1
+    },
+    "input_audit": {
+      "artifact": "treatment_input_audit_v2.json",
+      "decision": "pass",
+      "observed_repository_reads": [
+        "plugins/figure-agent/AGENTS.md",
+        "plugins/figure-agent/styles/polymer-paper-preamble.sty"
+      ],
+      "undeclared_repository_reads": []
+    },
+    "orro": {
+      "adapter_exit_code": 124,
+      "decision": "blocked-explicit",
+      "proofcheck_decision": "blocked-explicit",
+      "proofcheck_sha256": "sha256:2a44a9a06be094854c7e8c391131f862f19adbc64a36b5590f6f9153a0b7e845",
+      "run": ".witnessd/runs/fig3-execution-binding-v5-treatment-c-20260713",
+      "transcript_sha256": "sha256:c683924747ba50df26c2024bac498c9cb38d3d6591422978ce7a52779dbe6a8c"
+    },
+    "render": {
+      "png_height": 1092,
+      "png_width": 4027
+    }
+  },
+  "visual_review_boundary": "No visual treatment gain can be inferred because the control arm violated its bound coordinate system; machine gates do not establish publication acceptance."
+}

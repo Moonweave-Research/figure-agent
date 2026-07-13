@@ -126,10 +126,21 @@ def test_binds_repo_relative_execution_cwd_into_packet_and_prompt(tmp_path: Path
     packet, prompt = _compile(workspace, execution_cwd="plugins/figure-agent")
 
     assert packet["execution_cwd"] == "plugins/figure-agent"
+    assert packet["repository_output_path"] == (
+        "plugins/figure-agent/examples/context_demo/review/failure-first/"
+        "execution-binding-v1/control_generated.tex"
+    )
+    assert packet["allowed_repository_read_paths"] == [
+        "plugins/figure-agent/AGENTS.md",
+        "plugins/figure-agent/styles/polymer-paper-preamble.sty",
+    ]
+    assert "Do not change directory before resolving paths." in prompt
     assert (
-        "Before resolving the output path, change directory from the repository root "
-        "to [plugins/figure-agent]."
+        "Write exactly one new source to "
+        "[plugins/figure-agent/examples/context_demo/review/failure-first/"
+        "execution-binding-v1/control_generated.tex]."
     ) in prompt
+    assert "Before resolving the output path, change directory" not in prompt
 
 
 def test_compiles_orro_plan_from_bound_packet_without_prompt_or_scope_drift(

@@ -42,6 +42,21 @@ def _shell_tokens(command: str) -> list[str]:
         ) from exc
 
 
+def _command_segments(tokens: list[str]) -> list[list[str]]:
+    segments: list[list[str]] = []
+    current: list[str] = []
+    for token in tokens:
+        if token in {"&&", ";", "||"}:
+            if current:
+                segments.append(current)
+                current = []
+            continue
+        current.append(token)
+    if current:
+        segments.append(current)
+    return segments
+
+
 def _looks_like_repository_path(token: str) -> bool:
     if token.startswith(("/", "~", "-")):
         return False
@@ -57,22 +72,30 @@ def _looks_like_repository_path(token: str) -> bool:
 
 def _content_read_paths(command: str) -> list[str]:
     tokens = _shell_tokens(command)
-    if not tokens:
-        return []
-    executable = Path(tokens[0]).name
-    if executable not in _CONTENT_READ_COMMANDS:
-        return []
-    if executable == "rg" and "--files" in tokens:
-        return []
-
-    candidates = [token for token in tokens[1:] if _looks_like_repository_path(token)]
-    if executable in {"rg", "grep"} and candidates:
-        # The first positional argument can be a path-like search pattern. A real
-        # path follows it in the bounded authoring commands this audit supports.
-        positional = [token for token in tokens[1:] if not token.startswith("-")]
-        if candidates and positional and candidates[0] == positional[0]:
-            candidates = candidates[1:]
-    return candidates
+    working_directory = Path()
+    observed: list[str] = []
+    for segment in _command_segments(tokens):
+        executable = Path(segment[0]).name
+        if executable == "cd" and len(segment) == 2:
+            working_directory = Path(
+                _safe_relative_path(segment[1], label="transcript cd path")
+            )
+            continue
+        if executable not in _CONTENT_READ_COMMANDS:
+            continue
+        if executable == "rg" and "--files" in segment:
+            continue
+        candidates = [
+            token for token in segment[1:] if _looks_like_repository_path(token)
+        ]
+        if executable in {"rg", "grep"} and candidates:
+            # The first positional argument can be a path-like search pattern. A real
+            # path follows it in the bounded authoring commands this audit supports.
+            positional = [token for token in segment[1:] if not token.startswith("-")]
+            if candidates and positional and candidates[0] == positional[0]:
+                candidates = candidates[1:]
+        observed.extend((working_directory / candidate).as_posix() for candidate in candidates)
+    return observed
 
 
 def audit_authoring_transcript(

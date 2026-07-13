@@ -349,17 +349,33 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/execution-binding-v5/treatment_packet.json",
         "review/failure-first/execution-binding-v5/treatment_prompt.md",
         "review/failure-first/execution-binding-v5/preflight.json",
+        "review/failure-first/execution-binding-v5/control_generated.tex",
+        "review/failure-first/execution-binding-v5/treatment_generated.tex",
+        "review/failure-first/execution-binding-v5/control_input_audit.json",
+        "review/failure-first/execution-binding-v5/treatment_input_audit.json",
+        "review/failure-first/execution-binding-v5/control_input_audit_v2.json",
+        "review/failure-first/execution-binding-v5/treatment_input_audit_v2.json",
+        "review/failure-first/execution-binding-v5/routing_review.json",
+        "review/failure-first/execution-binding-v6/control_packet.json",
+        "review/failure-first/execution-binding-v6/control_prompt.md",
+        "review/failure-first/execution-binding-v6/treatment_packet.json",
+        "review/failure-first/execution-binding-v6/treatment_prompt.md",
+        "review/failure-first/execution-binding-v6/preflight.json",
     ]
     assert scope["allowed_repository_paths"] == [
+        "examples/fig3_resistance_mechanism/review/failure-first/"
+        "execution-binding-v5/control_generated.tex",
         "plugins/figure-agent/bin/fig-agent",
         "plugins/figure-agent/docs/architecture-overview.md",
         "plugins/figure-agent/docs/execution-plan.md",
         "plugins/figure-agent/docs/product-spec.md",
         "plugins/figure-agent/scripts/authoring_context_pack.py",
+        "plugins/figure-agent/scripts/authoring_execution_input_audit.py",
         "plugins/figure-agent/scripts/authoring_execution_packet.py",
         "plugins/figure-agent/scripts/checks/check_layout_drift.py",
         "plugins/figure-agent/scripts/visual_finding_artifacts.py",
         "plugins/figure-agent/tests/test_authoring_context_pack.py",
+        "plugins/figure-agent/tests/test_authoring_execution_input_audit.py",
         "plugins/figure-agent/tests/test_authoring_execution_packet.py",
         "plugins/figure-agent/tests/test_check_layout_drift.py",
         "plugins/figure-agent/tests/test_fig3_resistance_failure_first.py",
@@ -1297,6 +1313,49 @@ def test_fig3_execution_binding_v4_blocks_comparison_and_visual_acceptance() -> 
         "docs/product-spec.md",
     ]
 
+
+def test_fig3_execution_binding_v5_records_path_routing_failure() -> None:
+    review = json.loads(
+        (EXECUTION_BINDING_V5 / "routing_review.json").read_text(encoding="utf-8")
+    )
+    control_audit = json.loads(
+        (EXECUTION_BINDING_V5 / "control_input_audit_v2.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    treatment_audit = json.loads(
+        (EXECUTION_BINDING_V5 / "treatment_input_audit_v2.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert review["comparison_eligibility"] == "ineligible"
+    assert review["decision"] == "blocked"
+    assert review["control"]["routing_decision"] == (
+        "blocked_wrong_output_and_read_coordinate_system"
+    )
+    assert review["control"]["compile"] == "not_run_expected_packet_path_missing"
+    assert review["treatment"]["compile"] == {
+        "normal_exit_code": 0,
+        "strict_collision_count": 3,
+        "strict_exit_code": 1,
+    }
+    assert control_audit["decision"] == "blocked"
+    assert control_audit["undeclared_repository_reads"] == [
+        "AGENTS.md",
+        "styles/polymer-paper-preamble.sty",
+    ]
+    assert treatment_audit["decision"] == "pass"
+    assert treatment_audit["observed_repository_reads"] == [
+        "plugins/figure-agent/AGENTS.md",
+        "plugins/figure-agent/styles/polymer-paper-preamble.sty",
+    ]
+    assert review["publication_acceptance"] == "not_claimed"
+    assert not (
+        PLUGIN_ROOT.parents[1]
+        / "examples/fig3_resistance_mechanism/review/failure-first/"
+        "execution-binding-v5/control_generated.tex"
+    ).exists()
 
 def test_fig3_execution_binding_v5_preflight_binds_repository_read_allowlist() -> None:
     control = json.loads(

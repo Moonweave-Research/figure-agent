@@ -411,29 +411,25 @@ def _fixture_briefing_lines(context_pack: dict[str, Any]) -> list[str]:
 def render_authoring_prompt(
     *,
     name: str,
-    output_path: str,
+    repository_output_path: str,
+    allowed_repository_read_paths: tuple[str, ...],
     context_pack: dict[str, Any],
     model_id: str,
-    execution_cwd: str = ".",
 ) -> str:
     """Render the sole authoring prompt authority in a deterministic order."""
     lines = [
         f"# Bound authoring execution: {name}",
         "",
         "## Output and attempt boundary",
-        (
-            "- Resolve the output path from the repository root."
-            if execution_cwd == "."
-            else "- Before resolving the output path, change directory from the "
-            f"repository root to [{execution_cwd}]."
-        ),
-        f"- Write exactly one new source to [{output_path}].",
+        "- Resolve every repository path from the repository root.",
+        "- Do not change directory before resolving paths.",
+        f"- Write exactly one new source to [{repository_output_path}].",
         "- Do not create an intermediate subdirectory beneath "
-        f"[{Path(output_path).parent.as_posix()}].",
+        f"[{Path(repository_output_path).parent.as_posix()}].",
         "- Start from the declared blank artifact; perform one attempt only.",
         "- Do not inspect or repair historical generated sources.",
         "- Read repository file content only from "
-        + " and ".join(f"[{path}]" for path in ALLOWED_REPOSITORY_READ_PATHS)
+        + " and ".join(f"[{path}]" for path in allowed_repository_read_paths)
         + "; all other required authoring context is already bound below.",
         "",
         "## Mandatory standalone TikZ source requirements",
@@ -502,6 +498,13 @@ def compile_authoring_execution_packet(
     blank_path = _resolve_regular_file(workspace_root, blank_start, label="blank start")
     relative_output = _validate_output_path(workspace_root, name, output_path)
     bound_execution_cwd = _safe_execution_cwd(execution_cwd)
+    repository_output_path = (
+        Path(bound_execution_cwd) / relative_output
+    ).as_posix()
+    allowed_repository_read_paths = tuple(
+        (Path(bound_execution_cwd) / path).as_posix()
+        for path in ALLOWED_REPOSITORY_READ_PATHS
+    )
     context_pack = authoring_context_pack.build_context_pack(
         name,
         plugin_root=plugin_root,
@@ -515,10 +518,10 @@ def compile_authoring_execution_packet(
     }
     prompt = render_authoring_prompt(
         name=name,
-        output_path=relative_output.as_posix(),
+        repository_output_path=repository_output_path,
+        allowed_repository_read_paths=allowed_repository_read_paths,
         context_pack=context_pack,
         model_id=model_id.strip(),
-        execution_cwd=bound_execution_cwd,
     )
     packet: dict[str, object] = {
         "schema": SCHEMA,
@@ -538,6 +541,7 @@ def compile_authoring_execution_packet(
             "sha256": _sha256_bytes(blank_path.read_bytes()),
         },
         "output_path": relative_output.as_posix(),
+        "repository_output_path": repository_output_path,
         "execution_cwd": bound_execution_cwd,
         "layout_contract": (
             {
@@ -562,7 +566,7 @@ def compile_authoring_execution_packet(
         ),
         "mandatory_source_requirements": list(MANDATORY_SOURCE_REQUIREMENTS),
         "style_lock_authoring_requirements": list(STYLE_LOCK_AUTHORING_REQUIREMENTS),
-        "allowed_repository_read_paths": list(ALLOWED_REPOSITORY_READ_PATHS),
+        "allowed_repository_read_paths": list(allowed_repository_read_paths),
         "forbidden_import_classes": [
             "fig1_fixture_artifacts",
             "historical_generated_sources",
