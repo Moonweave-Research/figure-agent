@@ -1,0 +1,31 @@
+schema: figure-agent.constraint-guided-authority-packet.v1
+fixture: fig3_resistance_mechanism
+attempt: region_guided_001
+authoring_mode: clean_room_authority_plus_declared_region_constraints
+authoritative_inputs:
+  - role: briefing
+    path: ../../briefing.md
+    sha256: sha256:3ab181e525baa09611b70140c82b58b8776e994379f1544f9e0a58d263b94592
+  - role: specification
+    path: ../../spec.yaml
+    sha256: sha256:21762edd4599990dd3dce8c1a3a7df6c58c75e55a20d4c12a51851b015358c4a
+  - role: authoring_contract
+    path: ../../authoring_contract.md
+    sha256: sha256:ab51187e94662e1fc4c7a742862b201e33d7f47c7c6bb69a86c69faa57f8ae2e
+  - role: panel_goals
+    path: ../../panel_goals.md
+    sha256: sha256:84a232dd5e6cb401cd2597f4b589bd6da1f9f810843478038d23070efe30b1f2
+  - role: layout_region_contract
+    path: repaired_posthoc_region_contract.yaml
+    sha256: sha256:a4d4824e88368f5fbfa7d19e5c682a6c3ba641b00558da0a53c4bf43750f0d01
+forbidden_inputs:
+  - ../../fig3_resistance_mechanism.tex
+  - repaired_generated.*
+  - raw_generated.*
+  - style_control_generated.*
+  - verified_generated.*
+  - ../fig3_trap_schematic_slice3_semantic/**
+  - ../fig1_*/**
+  - ../../../experiments/python_svg_semantic_fig1/**
+comparison_eligibility: region_guided_not_equal_input
+publication_acceptance: not_claimed

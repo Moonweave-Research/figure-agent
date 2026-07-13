@@ -50,6 +50,18 @@ allowed_review_paths:
   - review/failure-first/repaired_posthoc_region_contract.yaml
   - review/failure-first/repaired_posthoc_region_report.json
   - review/failure-first/repaired_posthoc_region_evaluation.yaml
+  - review/failure-first/region_guided_authoring_prompt.md
+  - review/failure-first/region_guided_authority_packet.yaml
+  - review/failure-first/region_guided_generated.tex
+  - review/failure-first/region_guided_generated.pdf
+  - review/failure-first/region_guided_generated.png
+  - review/failure-first/region_guided_layout_report.json
+  - review/failure-first/region_guided_visual_clash.json
+  - review/failure-first/region_guided_undeclared_geometry.json
+  - review/failure-first/region_guided_label_hyphenation.json
+  - review/failure-first/region_guided_adversarial_review.yaml
+  - review/failure-first/region_guided_attempt.yaml
+  - review/failure-first/region_guided_render_receipt.yaml
 allowed_repository_paths:
   - plugins/figure-agent/bin/fig-agent
   - plugins/figure-agent/docs/execution-plan.md

@@ -1,0 +1,26 @@
+schema: figure-agent.region-guided-attempt.v1
+fixture: fig3_resistance_mechanism
+attempt: region_guided_001
+authoring_medium: tikz_latex
+comparison_eligibility: region_guided_not_ablation
+authority_packet_sha256: sha256:ad352461f848d22473012726d9fc54cf2131c5e516858d4b08c333443e1e5ba4
+prompt_sha256: sha256:94c53f0d24fd31e071ac42ce242cd90513a0d7a652e96f74a848a6b4933b47d3
+source_sha256: sha256:f4e247b24d5f530638ac20db0eb96e5653d3134c3c52d52f8444bfedcd3815b7
+authoring_trace:
+  role: clean_room_subagent
+  source_commit: d07feb3a
+  bounded_compile_fixes:
+    - replace_nonpalette_red_fill_with_cRed
+    - load_required_decorations_markings_library
+  provider_authentication: not_claimed
+selected_region_rules: passed_two_of_two
+strict_compile: failed_three_text_collisions
+capability_conclusion: >-
+  The two explicit region directives changed the clean-room composition enough
+  to pass their corresponding PDF checks, but they did not prevent unrelated
+  text collisions, clipping, or weak hierarchy. The next capability target is
+  a complete panel-owned text inventory with mutual-clearance and page-boundary
+  rules, not manual polishing of this attempt.
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed

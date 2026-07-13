@@ -38,6 +38,12 @@ REPAIRED_RENDER_RECEIPT = REVIEW / "repaired_render_receipt.yaml"
 REPAIRED_REGION_CONTRACT = REVIEW / "repaired_posthoc_region_contract.yaml"
 REPAIRED_REGION_REPORT = REVIEW / "repaired_posthoc_region_report.json"
 REPAIRED_REGION_EVALUATION = REVIEW / "repaired_posthoc_region_evaluation.yaml"
+REGION_GUIDED_ATTEMPT = REVIEW / "region_guided_attempt.yaml"
+REGION_GUIDED_AUTHORITY_PACKET = REVIEW / "region_guided_authority_packet.yaml"
+REGION_GUIDED_PROMPT = REVIEW / "region_guided_authoring_prompt.md"
+REGION_GUIDED_SOURCE = REVIEW / "region_guided_generated.tex"
+REGION_GUIDED_RENDER_RECEIPT = REVIEW / "region_guided_render_receipt.yaml"
+REGION_GUIDED_REVIEW = REVIEW / "region_guided_adversarial_review.yaml"
 
 
 def _sha256(path: Path) -> str:
@@ -258,6 +264,18 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/repaired_posthoc_region_contract.yaml",
         "review/failure-first/repaired_posthoc_region_report.json",
         "review/failure-first/repaired_posthoc_region_evaluation.yaml",
+        "review/failure-first/region_guided_authoring_prompt.md",
+        "review/failure-first/region_guided_authority_packet.yaml",
+        "review/failure-first/region_guided_generated.tex",
+        "review/failure-first/region_guided_generated.pdf",
+        "review/failure-first/region_guided_generated.png",
+        "review/failure-first/region_guided_layout_report.json",
+        "review/failure-first/region_guided_visual_clash.json",
+        "review/failure-first/region_guided_undeclared_geometry.json",
+        "review/failure-first/region_guided_label_hyphenation.json",
+        "review/failure-first/region_guided_adversarial_review.yaml",
+        "review/failure-first/region_guided_attempt.yaml",
+        "review/failure-first/region_guided_render_receipt.yaml",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/bin/fig-agent",
@@ -547,6 +565,39 @@ def test_fig3_repaired_render_exposes_panel_and_plot_region_failures() -> None:
     assert evaluation["machine_outcome"] == "failed_two_declared_region_rules"
     assert evaluation["human_verdict"] == {"state": "pending"}
     assert evaluation["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_region_guided_attempt_passes_selected_rules_but_fails_strict_gate() -> None:
+    attempt = yaml.safe_load(REGION_GUIDED_ATTEMPT.read_text(encoding="utf-8"))
+    receipt = yaml.safe_load(
+        REGION_GUIDED_RENDER_RECEIPT.read_text(encoding="utf-8")
+    )
+
+    assert attempt["schema"] == "figure-agent.region-guided-attempt.v1"
+    assert attempt["comparison_eligibility"] == "region_guided_not_ablation"
+    assert attempt["authority_packet_sha256"] == _sha256(
+        REGION_GUIDED_AUTHORITY_PACKET
+    )
+    assert attempt["prompt_sha256"] == _sha256(REGION_GUIDED_PROMPT)
+    assert attempt["source_sha256"] == _sha256(REGION_GUIDED_SOURCE)
+    assert attempt["selected_region_rules"] == "passed_two_of_two"
+    assert attempt["strict_compile"] == "failed_three_text_collisions"
+    assert attempt["publication_acceptance"] == "not_claimed"
+
+    assert receipt["source_sha256"] == _sha256(REGION_GUIDED_SOURCE)
+    assert receipt["strict_compile_result"] == "failed_detector_gate_after_render"
+    assert receipt["machine_findings"]["collision_candidates"] == 3
+    assert receipt["machine_findings"]["layout_region_rules"] == {
+        "failure_count": 0,
+        "result": "passed",
+    }
+    for output in receipt["outputs"]:
+        assert output["sha256"] == _sha256(REVIEW / output["path"])
+    for evidence in receipt["evidence"]:
+        assert evidence["sha256"] == _sha256(REVIEW / evidence["path"])
+    assert receipt["adversarial_review_sha256"] == _sha256(REGION_GUIDED_REVIEW)
+    assert receipt["human_verdict"] == {"state": "pending"}
+    assert receipt["publication_acceptance"] == "not_claimed"
 
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:

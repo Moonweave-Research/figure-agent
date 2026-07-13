@@ -1,0 +1,25 @@
+{
+  "contract_schema": "figure-agent.layout-lanes.v1",
+  "failure_count": 0,
+  "page_size_pt": [
+    332.804,
+    140.048
+  ],
+  "results": [
+    {
+      "clearance": 0.023421,
+      "minimum_clearance": 0.005,
+      "missing_groups": [],
+      "rule_id": "panel_a_title_contained",
+      "status": "ok"
+    },
+    {
+      "clearance": 0.025608,
+      "minimum_clearance": 0.01,
+      "missing_groups": [],
+      "rule_id": "panel_a_decay_note_clear_of_plot",
+      "status": "ok"
+    }
+  ],
+  "schema": "figure-agent.layout-lane-report.v1"
+}

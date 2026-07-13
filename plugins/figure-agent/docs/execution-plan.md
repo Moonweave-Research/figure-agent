@@ -247,6 +247,14 @@ modules listed in Section 0.
   machine-visible. This establishes detector coverage only; a new clean-room
   generation is still required to test whether pre-generation directives alter
   authoring behavior.
+  The first clean-room `region_guided` attempt now provides that test: both
+  selected rules pass (`0.023` panel-title inset and `0.026` decay-note-to-plot
+  clearance), but strict compilation still fails on three other text
+  collisions. Adversarial review also confirms a clipped Panel B axis label and
+  weak hierarchy. Therefore the region directives have demonstrated narrow
+  causal value without demonstrating overall quality. The next capability
+  target is a panel-owned text inventory with mutual-clearance and page-boundary
+  rules; the failed attempt remains evidence, not a polishing target.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot

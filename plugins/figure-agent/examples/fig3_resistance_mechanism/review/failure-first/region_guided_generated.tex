@@ -1,0 +1,122 @@
+\documentclass[tikz,border=2pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\usetikzlibrary{arrows.meta,calc,decorations.pathmorphing,decorations.markings,patterns}
+
+\begin{document}
+\begin{tikzpicture}[
+  x=1cm,y=1cm,
+  line cap=round,line join=round,
+  >=Latex,
+  labeltext/.style={font=\fontsize{6.2}{7.1}\selectfont,text=black!82},
+  smalltext/.style={font=\fontsize{5.7}{6.5}\selectfont,text=black!72},
+  paneltitle/.style={font=\fontsize{7}{8}\selectfont\bfseries,text=black!88},
+  carrier/.style={circle,draw=blue!70!black,fill=blue!16,minimum size=3.2mm,
+    inner sep=0pt,line width=.45pt},
+  trap/.style={black!58,line width=.55pt},
+  axis/.style={black!62,line width=.45pt,-Latex},
+  guide/.style={black!48,line width=.45pt,densely dashed},
+]
+
+% Fixed figure footprint: two explicit 5.8 cm columns.
+\path[use as bounding box] (0,0) rectangle (11.6,4.8);
+\draw[black!12,line width=.35pt] (5.8,.16) -- (5.8,4.64);
+
+% ------------------------------------------------------------------
+% Panel A: applied-bias cell, dispersive repeated trapping, I(t) decay
+% ------------------------------------------------------------------
+\node[paneltitle,anchor=west] at (.18,4.50)
+  {\textbf{a}\quad Applied bias: trapping during conduction};
+
+% Compact electrode / disordered-film cell.
+\fill[black!72] (.34,1.16) rectangle (.54,3.72);
+\fill[black!72] (2.70,1.16) rectangle (2.90,3.72);
+\fill[yellow!18] (.54,1.16) rectangle (2.70,3.72);
+\draw[black!42,line width=.45pt] (.54,1.16) rectangle (2.70,3.72);
+\node[smalltext,rotate=90] at (.44,2.44) {electrode};
+\node[smalltext,rotate=90] at (2.80,2.44) {electrode};
+\node[labeltext,anchor=south] at (1.62,3.78) {disordered sulfur--polymer film};
+
+% Applied voltage is a cell-level stimulus, not a carrier-sign assignment.
+\draw[black!72,line width=.65pt,-Latex] (.60,4.02) -- (2.64,4.02)
+  node[midway,above=1.5pt,labeltext] {applied $V$};
+
+% Unlabeled crosses denote illustrative trap sites without chemical attribution.
+\foreach \x/\y in {.86/1.52,1.26/2.70,1.52/1.88,1.88/3.22,2.12/2.36,2.46/1.62}{
+  \draw[trap] (\x-.055,\y-.055)--(\x+.055,\y+.055)
+              (\x-.055,\y+.055)--(\x+.055,\y-.055);
+}
+
+% Tortuous, locally reversing path: repeated trapping without clean ballistic drift.
+\draw[blue!68!black,line width=.75pt,
+  decoration={markings,
+    mark=at position .32 with {\arrow{Latex}},
+    mark=at position .67 with {\arrow{Latex}}},postaction={decorate}]
+  (.72,3.22)
+  .. controls (1.05,3.34) and (1.39,3.03) .. (1.26,2.70)
+  .. controls (1.10,2.38) and (1.35,2.06) .. (1.52,1.88)
+  .. controls (1.78,1.58) and (2.25,1.94) .. (2.12,2.36)
+  .. controls (1.99,2.78) and (2.29,3.08) .. (2.46,2.86);
+\node[carrier] at (.72,3.22) {$\bullet$};
+\node[smalltext,anchor=north,align=center] at (1.66,1.05)
+  {sign-agnostic carrier\\repeated trapping};
+
+% Qualitative CvS inset only: no measured ticks or fitted parameter values.
+\begin{scope}[shift={(3.96,1.42)}]
+  \draw[axis] (0,0) -- (1.52,0) node[right=-1pt,smalltext] {$t$};
+  \draw[axis] (0,0) -- (0,1.48) node[above=-1pt,smalltext] {$I(t)$};
+  \draw[red!72!black,line width=.85pt]
+    (.10,1.32) .. controls (.30,.76) and (.72,.42) .. (1.40,.22);
+  \node[smalltext,anchor=south west] at (.40,.78) {$I(t)\propto t^{-n}$};
+  \node[smalltext,anchor=north west] at (.17,-.12) {qualitative CvS decay};
+\end{scope}
+
+% Kept below-left of the declared plot-with-axes exclusion region.
+\node[labeltext,anchor=east,align=right] (decay) at (3.72,.58)
+  {current decays\\$I\!\downarrow\ \Rightarrow\ R\!\uparrow$};
+\draw[black!62,line width=.5pt,-Latex] (3.78,.72) to[out=28,in=218] (4.18,1.16);
+
+% ------------------------------------------------------------------
+% Panel B: composition-dependent trap-energy distribution landscape
+% ------------------------------------------------------------------
+\node[paneltitle,anchor=west] at (6.02,4.50)
+  {\textbf{b}\quad Trap-energy distribution $g(E)$};
+\node[smalltext,anchor=west] at (6.34,4.12)
+  {sulfur / disorder $\uparrow$: discrete $\longrightarrow$ continuous broad};
+
+% Shared conceptual axes; no quantitative ticks.
+\draw[axis] (6.35,.72) -- (11.22,.72) node[right=-1pt,smalltext] {trap energy $E$};
+\draw[axis] (6.35,.72) -- (6.35,3.66) node[above=-1pt,smalltext] {$g(E)$};
+
+% Low-sulfur: discrete narrow state (single deep peak).
+\draw[blue!70!black,line width=.85pt]
+  (6.55,.76) .. controls (7.18,.77) and (7.36,.82) .. (7.48,1.05)
+  .. controls (7.58,1.28) and (7.62,2.82) .. (7.78,3.08)
+  .. controls (7.94,3.32) and (8.02,1.25) .. (8.20,1.02)
+  .. controls (8.36,.82) and (8.55,.77) .. (8.82,.76);
+\node[labeltext,anchor=south] at (7.78,3.26) {S60: discrete deep state};
+
+% High-sulfur: broad continuous distribution; breadth is horizontal.
+\path[fill=cRed!13]
+  (8.38,.76)
+  .. controls (8.72,.86) and (8.92,1.56) .. (9.32,2.22)
+  .. controls (9.72,2.88) and (10.17,3.16) .. (10.58,2.62)
+  .. controls (10.92,2.17) and (11.02,1.11) .. (11.10,.76) -- cycle;
+\draw[red!72!black,line width=.9pt]
+  (8.38,.76)
+  .. controls (8.72,.86) and (8.92,1.56) .. (9.32,2.22)
+  .. controls (9.72,2.88) and (10.17,3.16) .. (10.58,2.62)
+  .. controls (10.92,2.17) and (11.02,1.11) .. (11.10,.76);
+\node[labeltext,anchor=south] at (9.84,3.26) {S80: continuous broad};
+
+% Orthogonal encodings: n spans breadth; rho_60s indicates magnitude.
+\draw[black!72,line width=.55pt,Latex-Latex] (8.62,1.17) -- (10.92,1.17)
+  node[midway,above=2pt,labeltext] {$n$ = breadth};
+\draw[black!72,line width=.55pt,Latex-Latex] (11.32,.79) -- (11.32,2.72)
+  node[midway,right=2pt,labeltext,rotate=90,anchor=south] {$\rho_{60\mathrm{s}}$ = magnitude};
+
+% Cross-panel causal reading, stated without turning the schematic into data.
+\node[smalltext,anchor=south,align=center] at (8.78,.10)
+  {broader $g(E)$ $\Rightarrow$ larger $n$ $\Rightarrow$ slower decay $\Rightarrow$ increasing $R$};
+
+\end{tikzpicture}
+\end{document}

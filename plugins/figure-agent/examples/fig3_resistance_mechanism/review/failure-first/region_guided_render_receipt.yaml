@@ -1,0 +1,40 @@
+schema: figure-agent.region-guided-render-receipt.v1
+fixture: fig3_resistance_mechanism
+attempt: region_guided_001
+source_path: region_guided_generated.tex
+source_sha256: sha256:f4e247b24d5f530638ac20db0eb96e5653d3134c3c52d52f8444bfedcd3815b7
+compile_command:
+  - FIGURE_AGENT_STRICT=1
+  - bash
+  - scripts/compile.sh
+  - examples/fig3_resistance_mechanism/review/failure-first/region_guided_generated.tex
+working_directory: plugins/figure-agent
+style_lock: passed_with_warning
+strict_compile_result: failed_detector_gate_after_render
+machine_findings:
+  collision_candidates: 3
+  visual_clash_candidates: 25
+  undeclared_geometry_candidates: 6
+  label_hyphenation_candidates: 0
+  layout_region_rules:
+    failure_count: 0
+    result: passed
+outputs:
+  - path: region_guided_generated.pdf
+    sha256: sha256:064568c26bf6602b0b2d43dab43db8b22e1a6bec76fe8f138b5bd4da4fe08e6e
+  - path: region_guided_generated.png
+    sha256: sha256:0f05d2f5f3200bf7c5831aafc7ee1d2bc2f40527b71fe16f16c0c50552c6ffa0
+evidence:
+  - path: region_guided_layout_report.json
+    sha256: sha256:03d5687f53bc2a73b66e3582a26438814e0a5292169faf14ccd5d4fed6dadb3e
+  - path: region_guided_visual_clash.json
+    sha256: sha256:dd093fb42022046ec0b8abd8d602864899d0d0a50b79413c0ce5d33e5b3562f4
+  - path: region_guided_undeclared_geometry.json
+    sha256: sha256:fc0488035f5eb0ec6790c6174fa24d7d7659a46cafb94ba547db1995236eedd5
+  - path: region_guided_label_hyphenation.json
+    sha256: sha256:d11bbf34e6b1879ba0db17a08a44774afe275af2f7caf69fc3c4c8ba6dea06e6
+adversarial_review_path: region_guided_adversarial_review.yaml
+adversarial_review_sha256: sha256:c1e20696e5d5a34b6689084ffeb89813bd0757ab64d2e63799334dd1e9ef4a93
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed

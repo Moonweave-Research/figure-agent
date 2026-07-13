@@ -1,0 +1,383 @@
+{
+  "candidates": [
+    {
+      "bbox_pt": [
+        166.40456,
+        6.52584,
+        166.40456,
+        133.51942
+      ],
+      "distance_pt": 0.0,
+      "evidence": "rendered frame/rule crosses text 'decay'",
+      "id": "UG001",
+      "kind": "label_crosses_column_rule",
+      "nearest_text": "decay",
+      "recommended_action": "add_micro_defect",
+      "source_line": 0
+    },
+    {
+      "bbox_pt": [
+        76.535433,
+        32.88189,
+        82.204724,
+        105.448819
+      ],
+      "distance_pt": null,
+      "evidence": "source line 32 rectangle lacks text_boundary_check",
+      "id": "UG002",
+      "kind": "undeclared_rect_boundary",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 32
+    },
+    {
+      "bbox_pt": [
+        0.0,
+        0.0,
+        43.086614,
+        0.0
+      ],
+      "distance_pt": null,
+      "evidence": "source line 65 line lacks text_boundary_check",
+      "id": "UG003",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 65
+    },
+    {
+      "bbox_pt": [
+        0.0,
+        0.0,
+        0.0,
+        41.952756
+      ],
+      "distance_pt": null,
+      "evidence": "source line 66 line lacks text_boundary_check",
+      "id": "UG004",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 66
+    },
+    {
+      "bbox_pt": [
+        244.346457,
+        33.165354,
+        309.543307,
+        33.165354
+      ],
+      "distance_pt": 3.311036,
+      "evidence": "source line 112 is within 3.31 pt of text 'state'",
+      "id": "UG005",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "state",
+      "recommended_action": "add_micro_defect",
+      "source_line": 112
+    },
+    {
+      "bbox_pt": [
+        244.346457,
+        33.165354,
+        309.543307,
+        33.165354
+      ],
+      "distance_pt": null,
+      "evidence": "source line 112 line lacks text_boundary_check",
+      "id": "UG006",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 112
+    }
+  ],
+  "fixture": "failure-first",
+  "geometry_parse_coverage": {
+    "coverage_ratio": 0.388889,
+    "fully_parsed_operations": 4,
+    "non_auto_promotable_geometry": [
+      "circle_envelope",
+      "curve_conservative_hull"
+    ],
+    "parsed_geometry_counts": {
+      "curve": 4,
+      "horizontal_line": 2,
+      "rect": 1,
+      "vertical_line": 1
+    },
+    "parsed_operations": 7,
+    "partial_unknown_operations": 3,
+    "rendered_curves": {
+      "rendered_curve_count": 19,
+      "rendered_curve_envelopes": [
+        {
+          "bbox_pt": [
+            71.24942,
+            22.45086,
+            75.49353,
+            25.75058
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.64757
+        },
+        {
+          "bbox_pt": [
+            22.40273,
+            46.77825,
+            71.72632,
+            84.76287
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.74721
+        },
+        {
+          "bbox_pt": [
+            34.085365,
+            62.688964,
+            37.535835,
+            67.253888
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.74721
+        },
+        {
+          "bbox_pt": [
+            56.298584,
+            83.373436,
+            60.05735,
+            88.071156
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.74721
+        },
+        {
+          "bbox_pt": [
+            17.86725,
+            42.24277,
+            26.9382,
+            51.31373
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.44832
+        },
+        {
+          "bbox_pt": [
+            152.5517,
+            96.31554,
+            156.4096,
+            99.28966
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.44832
+        },
+        {
+          "bbox_pt": [
+            112.75948,
+            56.77367,
+            115.7336,
+            60.63157
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.44832
+        },
+        {
+          "bbox_pt": [
+            117.0814,
+            60.38462,
+            153.9319,
+            91.56628
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.84683
+        },
+        {
+          "bbox_pt": [
+            109.1439,
+            108.23946,
+            116.55721,
+            117.64527
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.49814
+        },
+        {
+          "bbox_pt": [
+            115.616623,
+            105.804863,
+            119.673238,
+            109.443312
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.49814
+        },
+        {
+          "bbox_pt": [
+            315.2621,
+            116.15821,
+            319.12,
+            119.13233
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.44832
+        },
+        {
+          "bbox_pt": [
+            180.50835,
+            35.22981,
+            183.48247,
+            39.08771
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.44832
+        },
+        {
+          "bbox_pt": [
+            187.66468,
+            50.74679,
+            252.01206,
+            116.5116
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.84683
+        },
+        {
+          "bbox_pt": [
+            239.5394,
+            63.78652,
+            316.64275,
+            116.5116
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            239.5394,
+            63.78652,
+            316.64275,
+            116.5116
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.89664
+        },
+        {
+          "bbox_pt": [
+            247.47199,
+            103.32082,
+            251.523,
+            106.45776
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.54794
+        },
+        {
+          "bbox_pt": [
+            306.35946,
+            103.32082,
+            310.41047,
+            106.45776
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.54794
+        },
+        {
+          "bbox_pt": [
+            321.31061,
+            110.48058,
+            324.44755,
+            114.53159
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.54794
+        },
+        {
+          "bbox_pt": [
+            321.31061,
+            62.08129,
+            324.44755,
+            66.1323
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.54794
+        }
+      ]
+    },
+    "total_operations": 18,
+    "unknown_operations": 11,
+    "unknown_reasons": {
+      "nonliteral_coordinate": 1,
+      "unsupported_curve": 4,
+      "unsupported_geometry": 8,
+      "unsupported_to_curve": 1
+    },
+    "unknown_samples": [
+      {
+        "command": "draw",
+        "reason": "unsupported_geometry",
+        "sample": "\\draw[black!12,line width=.35pt] (5.8,.16) -- (5.8,4.64);",
+        "source_line": 22
+      },
+      {
+        "command": "fill",
+        "reason": "unsupported_geometry",
+        "sample": "\\fill[black!72] (.34,1.16) rectangle (.54,3.72);",
+        "source_line": 31
+      },
+      {
+        "command": "fill",
+        "reason": "unsupported_geometry",
+        "sample": "\\fill[yellow!18] (.54,1.16) rectangle (2.70,3.72);",
+        "source_line": 33
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_geometry",
+        "sample": "\\draw[black!42,line width=.45pt] (.54,1.16) rectangle (2.70,3.72);",
+        "source_line": 34
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_geometry",
+        "sample": "\\draw[black!72,line width=.65pt,-Latex] (.60,4.02) -- (2.64,4.02)\n  node[midway,above=1.5pt,labeltext] {applied $V$};",
+        "source_line": 40
+      },
+      {
+        "command": "draw",
+        "reason": "nonliteral_coordinate",
+        "sample": "\\draw[trap] (\\x-.055,\\y-.055)--(\\x+.055,\\y+.055)\n              (\\x-.055,\\y+.055)--(\\x+.055,\\y-.055);",
+        "source_line": 45
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_curve",
+        "sample": "\\draw[blue!68!black,line width=.75pt,\n  decoration={markings,\n    mark=at position .32 with {\\arrow{Latex}},\n    mark=at position .67 with {\\arrow{Latex}}},post",
+        "source_line": 50
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_curve",
+        "sample": "\\draw[red!72!black,line width=.85pt]\n    (.10,1.32) .. controls (.30,.76) and (.72,.42) .. (1.40,.22);",
+        "source_line": 67
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_to_curve",
+        "sample": "\\draw[black!62,line width=.5pt,-Latex] (3.78,.72) to[out=28,in=218] (4.18,1.16);",
+        "source_line": 76
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_geometry",
+        "sample": "\\draw[axis] (6.35,.72) -- (11.22,.72) node[right=-1pt,smalltext] {trap energy $E$};",
+        "source_line": 87
+      }
+    ]
+  },
+  "render_pdf": "build/region_guided_generated.pdf",
+  "schema": "figure-agent.undeclared-geometry.v1",
+  "source": "tikz-source:auto-discovery",
+  "source_hashes": {
+    "examples/failure-first/region_guided_generated.tex": "sha256:f4e247b24d5f530638ac20db0eb96e5653d3134c3c52d52f8444bfedcd3815b7"
+  },
+  "total": 6
+}

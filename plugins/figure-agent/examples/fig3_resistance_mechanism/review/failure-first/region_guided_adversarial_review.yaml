@@ -1,0 +1,14 @@
+schema: figure-agent.adversarial-visual-review.v1
+fixture: fig3_resistance_mechanism
+attempt: region_guided_001
+review_scope: region_guided_generated_only
+clear_machine_addressable_defects:
+  - applied_voltage_arrow_crosses_film_label
+  - panel_b_s60_s80_labels_overlap
+  - panel_b_x_axis_label_clipped_by_figure_boundary
+  - panel_a_lower_annotation_groups_overlap
+human_review_only_issues:
+  - panel_titles_disproportionately_dominate_scientific_content
+  - panel_a_lower_reading_sequence_is_ambiguous
+  - central_divider_competes_with_scientific_marks
+publication_acceptance: not_claimed
