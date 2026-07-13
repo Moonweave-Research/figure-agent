@@ -1,0 +1,147 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import authoring_execution_packet
+import authoring_execution_receipt
+import pytest
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _evidence(tmp_path: Path) -> dict[str, Path]:
+    workspace = tmp_path / "workspace"
+    fixture = workspace / "examples/context_demo"
+    review = fixture / "review"
+    attempt = review / "failure-first/execution-binding-v1"
+    attempt.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text(
+        "name: context_demo\ntitle: Demo\nstyle_profile: polymer-paper\npanels: []\n",
+        encoding="utf-8",
+    )
+    (review / "budget.yaml").write_text("max_attempts: 1\n", encoding="utf-8")
+    (review / "blank.txt").write_text("", encoding="utf-8")
+    output_rel = (
+        "examples/context_demo/review/failure-first/execution-binding-v1/"
+        "control_generated.tex"
+    )
+    packet, prompt = authoring_execution_packet.compile_authoring_execution_packet(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        budget_contract="examples/context_demo/review/budget.yaml",
+        blank_start="examples/context_demo/review/blank.txt",
+        output_path=output_rel,
+    )
+    packet_path = attempt / "control_packet.json"
+    prompt_path = attempt / "control_prompt.md"
+    authoring_execution_packet.write_authoring_execution_packet(
+        packet_path,
+        prompt_path,
+        packet=packet,
+        prompt=prompt,
+    )
+    source_path = workspace / output_rel
+    source_path.write_text(
+        "\\documentclass[tikz,border=4pt]{standalone}\n"
+        "\\usepackage{tikz}\n"
+        "\\usepackage{polymer-paper-preamble}\n"
+        "\\begin{document}\\begin{tikzpicture}\\end{tikzpicture}\\end{document}\n",
+        encoding="utf-8",
+    )
+    transcript_path = attempt / "control.transcript.jsonl"
+    transcript_path.write_text('{"event":"completed"}\n', encoding="utf-8")
+    touched_files_path = attempt / "control.touched-files.json"
+    touched_files_path.write_text(json.dumps([output_rel]) + "\n", encoding="utf-8")
+    return {
+        "workspace": workspace,
+        "packet": packet_path,
+        "prompt": prompt_path,
+        "source": source_path,
+        "transcript": transcript_path,
+        "touched": touched_files_path,
+        "receipt": attempt / "control_receipt.json",
+    }
+
+
+def _record(paths: dict[str, Path], **overrides: object) -> dict[str, object]:
+    kwargs: dict[str, object] = {
+        "workspace_root": paths["workspace"],
+        "packet_path": paths["packet"],
+        "prompt_path": paths["prompt"],
+        "transcript_path": paths["transcript"],
+        "generated_source_path": paths["source"],
+        "touched_files_path": paths["touched"],
+        "receipt_path": paths["receipt"],
+        "actual_model_id": "gpt-5.5",
+        "actual_token_usage": None,
+        "token_usage_unavailable_reason": "adapter_did_not_report_usage",
+        "forbidden_input_audit": "no_forbidden_path_observed_in_transcript",
+    }
+    kwargs.update(overrides)
+    return authoring_execution_receipt.record_authoring_execution_receipt(**kwargs)
+
+
+def test_records_bound_runtime_evidence(tmp_path: Path) -> None:
+    paths = _evidence(tmp_path)
+
+    receipt = _record(paths)
+
+    assert receipt["schema"] == "figure-agent.authoring-execution-receipt.v1"
+    assert receipt["packet_sha256"].startswith("sha256:")
+    assert receipt["prompt_sha256"].startswith("sha256:")
+    assert receipt["transcript_sha256"].startswith("sha256:")
+    assert receipt["generated_source_sha256"].startswith("sha256:")
+    assert receipt["touched_files"] == [
+        "examples/context_demo/review/failure-first/execution-binding-v1/"
+        "control_generated.tex"
+    ]
+    assert receipt["feedback_rounds"] == 0
+    assert receipt["manual_repairs"] == 0
+    assert receipt["filesystem_read_isolation"] == "unavailable"
+    assert receipt["publication_acceptance"] == "not_claimed"
+    assert json.loads(paths["receipt"].read_text(encoding="utf-8")) == receipt
+
+
+def test_rejects_model_mismatch(tmp_path: Path) -> None:
+    paths = _evidence(tmp_path)
+    with pytest.raises(
+        authoring_execution_receipt.AuthoringExecutionReceiptError,
+        match="model mismatch",
+    ):
+        _record(paths, actual_model_id="other-model")
+
+
+def test_rejects_extra_touched_file(tmp_path: Path) -> None:
+    paths = _evidence(tmp_path)
+    paths["touched"].write_text(
+        json.dumps(
+            [
+                "examples/context_demo/review/failure-first/execution-binding-v1/"
+                "control_generated.tex",
+                "README.md",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(
+        authoring_execution_receipt.AuthoringExecutionReceiptError,
+        match="touched files differ",
+    ):
+        _record(paths)
+
+
+def test_rejects_ambiguous_token_usage(tmp_path: Path) -> None:
+    paths = _evidence(tmp_path)
+    with pytest.raises(
+        authoring_execution_receipt.AuthoringExecutionReceiptError,
+        match="token usage",
+    ):
+        _record(
+            paths,
+            actual_token_usage=123,
+            token_usage_unavailable_reason="also unavailable",
+        )

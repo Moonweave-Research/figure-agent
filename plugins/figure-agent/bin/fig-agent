@@ -445,6 +445,56 @@ def _authoring_preflight(argv: list[str]) -> int:
     return 0
 
 
+def _authoring_receipt(argv: list[str]) -> int:
+    import authoring_execution_receipt
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-receipt")
+    parser.add_argument("--packet", required=True)
+    parser.add_argument("--prompt", required=True)
+    parser.add_argument("--transcript", required=True)
+    parser.add_argument("--generated-source", required=True)
+    parser.add_argument("--touched-files", required=True)
+    parser.add_argument("--receipt-out", required=True)
+    parser.add_argument("--actual-model-id", required=True)
+    parser.add_argument("--actual-token-usage", type=int)
+    parser.add_argument("--token-usage-unavailable-reason")
+    parser.add_argument("--forbidden-input-audit", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    workspace_root = _paths().workspace_root.resolve()
+
+    def repo_path(value: str) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError("evidence path must be repository-relative and safe")
+        resolved = (workspace_root / relative).resolve(strict=False)
+        if not resolved.is_relative_to(workspace_root):
+            raise ValueError("evidence path must remain inside the workspace")
+        return resolved
+
+    try:
+        payload = authoring_execution_receipt.record_authoring_execution_receipt(
+            workspace_root=workspace_root,
+            packet_path=repo_path(args.packet),
+            prompt_path=repo_path(args.prompt),
+            transcript_path=repo_path(args.transcript),
+            generated_source_path=repo_path(args.generated_source),
+            touched_files_path=repo_path(args.touched_files),
+            receipt_path=repo_path(args.receipt_out),
+            actual_model_id=args.actual_model_id,
+            actual_token_usage=args.actual_token_usage,
+            token_usage_unavailable_reason=args.token_usage_unavailable_reason,
+            forbidden_input_audit=args.forbidden_input_audit,
+        )
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"fig-agent authoring-receipt: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _memory_log(argv: list[str]) -> int:
     import quality_memory_events
 
@@ -1602,6 +1652,8 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_packet(rest)
     if command == "authoring-preflight":
         return _authoring_preflight(rest)
+    if command == "authoring-receipt":
+        return _authoring_receipt(rest)
     if command == "memory-log":
         return _memory_log(rest)
     if command == "memory-index":
