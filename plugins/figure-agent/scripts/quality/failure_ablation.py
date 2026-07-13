@@ -67,7 +67,14 @@ def _summarize_run(run: dict[str, Any]) -> dict[str, Any]:
         )
         else "pending"
     )
-    return {
+    verdict_decision = (
+        str(verdict.get("decision"))
+        if verdict_state == "recorded"
+        and isinstance(verdict.get("decision"), str)
+        and bool(verdict["decision"].strip())
+        else "pending"
+    )
+    summary = {
         "confirmed_defect_count": len(confirmed),
         "confirmed_defect_occurrence_count": sum(
             item.get("occurrences", 1) for item in confirmed
@@ -79,6 +86,9 @@ def _summarize_run(run: dict[str, Any]) -> dict[str, Any]:
         "clean_reproduction": run.get("clean_reproduction") is True,
         "human_verdict_state": verdict_state,
     }
+    if verdict_decision != "pending":
+        summary["human_verdict_decision"] = verdict_decision
+    return summary
 
 
 def _delta(current: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
@@ -211,6 +221,10 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
     human_complete = all(
         item["human_verdict_state"] == "recorded" for item in variants.values()
     )
+    human_approved = all(
+        item.get("human_verdict_decision") == "accepted"
+        for item in variants.values()
+    )
     reproduction_complete = all(
         item["clean_reproduction"] for item in variants.values()
     )
@@ -240,6 +254,7 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
             if (
                 scientific_pass
                 and human_complete
+                and human_approved
                 and reproduction_complete
                 and transcript_bound
             )

@@ -41,7 +41,8 @@
       },
       "confirmed_defect_occurrence_count": 3,
       "human_correction_minutes": null,
-      "human_verdict_state": "pending",
+      "human_verdict_decision": "rejected",
+      "human_verdict_state": "recorded",
       "intervention_count": 2,
       "scientific_gate": "passed"
     },
@@ -53,7 +54,8 @@
       },
       "confirmed_defect_occurrence_count": 6,
       "human_correction_minutes": null,
-      "human_verdict_state": "pending",
+      "human_verdict_decision": "rejected",
+      "human_verdict_state": "recorded",
       "intervention_count": 1,
       "scientific_gate": "passed"
     }

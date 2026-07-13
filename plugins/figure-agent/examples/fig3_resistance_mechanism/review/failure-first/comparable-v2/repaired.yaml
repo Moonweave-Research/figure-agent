@@ -50,7 +50,16 @@ layout_gate:
   required_clearance: 0.015
 semantic_evaluation: pending_human_review
 human_verdict:
-  state: pending
+  state: recorded
+  reviewer: moon
+  decision: rejected
+  rationale:
+    - major_label_collisions_remain
+    - arrows_and_endpoints_are_structurally_unnatural
+    - band_energy_curve_is_worse_than_verified
+    - shallow_deep_n_and_neighboring_labels_are_overcrowded
+    - sample_rendering_quality_is_insufficient
+  aesthetic_review_deferred: true
 publication_acceptance: not_claimed
 render_receipt:
   pdf_path: repaired_generated.pdf

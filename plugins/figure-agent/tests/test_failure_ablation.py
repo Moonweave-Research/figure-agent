@@ -165,6 +165,31 @@ def test_recorded_human_verdict_requires_named_reviewer(tmp_path: Path) -> None:
     assert report["product_claim"] == "not_authorized"
 
 
+def test_named_human_rejection_blocks_product_claim(tmp_path: Path) -> None:
+    paths = write_comparable_runs(tmp_path)
+    for path in paths.values():
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload["human_verdict"] = {
+            "state": "recorded",
+            "reviewer": "moon",
+            "decision": "rejected",
+        }
+        path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+        add_generation_receipt(path)
+
+    report = evaluate_ablation(paths)
+
+    assert all(
+        variant["human_verdict_state"] == "recorded"
+        for variant in report["variants"].values()
+    )
+    assert all(
+        variant["human_verdict_decision"] == "rejected"
+        for variant in report["variants"].values()
+    )
+    assert report["product_claim"] == "not_authorized"
+
+
 def test_ablation_marks_manifests_without_bound_generation_receipts_as_staged(
     tmp_path: Path,
 ) -> None:
