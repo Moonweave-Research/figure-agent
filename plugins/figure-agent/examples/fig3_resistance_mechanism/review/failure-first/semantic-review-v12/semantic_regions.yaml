@@ -1,0 +1,112 @@
+schema: figure-agent.semantic-regions.v1
+page_geometry:
+  coordinate_space: pdf_cm
+  page_index: 0
+  origin: bottom_left
+  media_box_pdf_cm: [0.0, 0.0, 14.432474, 4.781382]
+  crop_box_pdf_cm: [0.0, 0.0, 14.432474, 4.781382]
+  rotation_deg: 0
+  render_geometry_hash: sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf
+regions:
+  - id: voltage_relation
+    panel_id: A
+    role: semantic_relation
+    bbox_pdf_cm: [1.0, 3.25, 4.92, 4.4]
+    source:
+      path: review/failure-first/execution-repair-v12/repaired_generated.tex
+      selector_id: voltage_relation
+      anchor_start: '\draw[draw=cBlue, line width=0.55pt]'
+      anchor_end: '] at (2.30,3.42) {V};'
+      source_sha256: sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e
+      line_start: 42
+      line_end: 53
+      resolved_line_start: 42
+      resolved_line_end: 53
+      binding_state: exact
+      binding_reason: anchors_and_snapshot_match
+    provenance: declared_by_reviewer
+  - id: trap_site
+    panel_id: A
+    role: semantic_object
+    bbox_pdf_cm: [3.30, 2.90, 3.66, 3.28]
+    source:
+      path: review/failure-first/execution-repair-v12/repaired_generated.tex
+      selector_id: trap_site
+      anchor_start: '\begin{scope}[shift={(2.84,2.66)},rotate=11] % vector trap cross'
+      anchor_end: '  \end{scope}'
+      source_sha256: sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e
+      line_start: 81
+      line_end: 84
+      resolved_line_start: 81
+      resolved_line_end: 84
+      binding_state: exact
+      binding_reason: anchors_and_snapshot_match
+    provenance: declared_by_reviewer
+  - id: capture_event
+    panel_id: A
+    role: semantic_object
+    bbox_pdf_cm: [1.62, 2.62, 2.12, 3.06]
+    source:
+      path: review/failure-first/execution-repair-v12/repaired_generated.tex
+      selector_id: capture_event
+      anchor_start: '\draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring'
+      anchor_end: '\draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring'
+      source_sha256: sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e
+      line_start: 98
+      line_end: 98
+      resolved_line_start: 98
+      resolved_line_end: 98
+      binding_state: exact
+      binding_reason: anchors_and_snapshot_match
+    provenance: declared_by_reviewer
+  - id: n_breadth
+    panel_id: B
+    role: semantic_object
+    bbox_pdf_cm: [11.4, 1.25, 13.9, 1.96]
+    source:
+      path: review/failure-first/execution-repair-v12/repaired_generated.tex
+      selector_id: n_breadth
+      anchor_start: '\draw[measure] (2.48,0.42) -- (4.64,0.42);'
+      anchor_end: '{$n$ = breadth};'
+      source_sha256: sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e
+      line_start: 160
+      line_end: 163
+      resolved_line_start: 160
+      resolved_line_end: 163
+      binding_state: exact
+      binding_reason: anchors_and_snapshot_match
+    provenance: declared_by_reviewer
+  - id: rho60s_magnitude
+    panel_id: B
+    role: semantic_object
+    bbox_pdf_cm: [10.4, 2.40, 11.75, 3.25]
+    source:
+      path: review/failure-first/execution-repair-v12/repaired_generated.tex
+      selector_id: rho60s_magnitude
+      anchor_start: '    \draw['
+      anchor_end: 'at (1.88,1.75) {$\rho_{60s}$\\magnitude};'
+      source_sha256: sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e
+      line_start: 165
+      line_end: 171
+      resolved_line_start: 165
+      resolved_line_end: 171
+      binding_state: exact
+      binding_reason: anchors_and_snapshot_match
+    provenance: declared_by_reviewer
+  - id: s60_distribution
+    panel_id: B
+    role: semantic_object
+    bbox_pdf_cm: [9.68, 0.88, 10.39, 3.42]
+    source:
+      path: review/failure-first/execution-repair-v12/repaired_generated.tex
+      selector_id: s60_distribution
+      anchor_start: '    \path[dist]'
+      anchor_end: '{discrete\\single deep};'
+      source_sha256: sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e
+      line_start: 144
+      line_end: 149
+      resolved_line_start: 144
+      resolved_line_end: 149
+      binding_state: exact
+      binding_reason: anchors_and_snapshot_match
+    provenance: declared_by_reviewer

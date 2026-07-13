@@ -1,0 +1,53 @@
+schema: figure-agent.failure-first-semantic-contract.v1
+fixture: fig3_resistance_mechanism.execution-repair-v12
+required_objects:
+  - electrode_left
+  - electrode_right
+  - trap_site
+  - capture_event
+  - n_breadth
+  - rho60s_magnitude
+  - s60_distribution
+semantic_legibility:
+  object_roles:
+    - object_id: electrode_left
+      declared_role: biased_electrode
+      forbidden_readings: [decorative_wall]
+    - object_id: electrode_right
+      declared_role: biased_electrode
+      forbidden_readings: [decorative_wall]
+    - object_id: trap_site
+      declared_role: available_trap_site
+      forbidden_readings: [capture_event, carrier]
+    - object_id: capture_event
+      declared_role: carrier_capture_event
+      forbidden_readings: [available_trap_site, material_particle]
+    - object_id: n_breadth
+      declared_role: trap_distribution_breadth
+      forbidden_readings: [trap_density, trap_magnitude]
+    - object_id: rho60s_magnitude
+      declared_role: trap_distribution_magnitude
+      forbidden_readings: [trap_breadth, trap_depth]
+    - object_id: s60_distribution
+      declared_role: low_sulfur_discrete_distribution
+      forbidden_readings: [continuous_broad_distribution]
+  visible_connectors:
+    - connector_id: voltage_relation
+      from_object: electrode_left
+      to_object: electrode_right
+      declared_role: electrical_bias_lead
+      render_style: electrical_bias_lead_pair
+  forbidden_connectors: []
+  label_ownership: []
+  electrical_topology:
+    nodes:
+      - object_id: electrode_left
+        declared_state: driven
+      - object_id: electrode_right
+        declared_state: driven
+    connections:
+      - connection_id: voltage_relation
+        from_object: electrode_left
+        to_object: electrode_right
+        declared_role: electrical_bias_lead
+publication_acceptance: not_claimed

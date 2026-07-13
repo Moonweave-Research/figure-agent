@@ -1,0 +1,405 @@
+{
+  "human_review_questions": [
+    {
+      "question": "Are gray crosses visually distinct from red rings as trap sites versus capture events?",
+      "question_id": "trap_sites_vs_capture_events",
+      "question_kind": "required_visual_distinction",
+      "semantic_ids": [
+        "trap_site",
+        "capture_event"
+      ],
+      "status": "pending"
+    },
+    {
+      "question": "Does n read as horizontal breadth while rho60s reads as independent vertical magnitude?",
+      "question_id": "breadth_vs_magnitude",
+      "question_kind": "required_visual_distinction",
+      "semantic_ids": [
+        "n_breadth",
+        "rho60s_magnitude"
+      ],
+      "status": "pending"
+    },
+    {
+      "question": "Does V visibly connect to both electrodes rather than float decoratively above the film?",
+      "question_id": "voltage_connected_to_both_electrodes",
+      "question_kind": "named_human_review_question",
+      "semantic_ids": [
+        "voltage_relation"
+      ],
+      "status": "pending"
+    },
+    {
+      "blocked_semantic_ids": [
+        "s60_distribution"
+      ],
+      "question": "Should S60 read as a single deep distribution or as shallow and deep discrete states?",
+      "question_id": "s60_distribution_authority",
+      "question_kind": "named_human_review_question",
+      "semantic_ids": [
+        "s60_distribution"
+      ],
+      "status": "blocked"
+    }
+  ],
+  "human_verdict": "pending",
+  "input_hashes": {
+    "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
+    "input_sha256": "sha256:8f1b1e186ce84af2c8bd6f0259690d009855eb951a987687e6c46fe95197da6f",
+    "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+    "semantic_contract_sha256": "sha256:2b3b9831f27a65ff586d9977ad3fab74153bd903fbfc2bc7ec44aaa2c95c901d",
+    "semantic_regions_sha256": "sha256:7a6acdbfc3778f810012aa5688b9fddb9f3df39b87791c36fd98f0b197da6a07"
+  },
+  "publication_acceptance": "not_claimed",
+  "review_input_hash": "sha256:a2000b2691cf883c177d0a9df72150db267a2898b4e0f942165afd9eb2554894",
+  "schema": "figure-agent.semantic-legibility-evidence.v1",
+  "semantic_preservation": "not_claimed_pending_human_review",
+  "subjects": [
+    {
+      "coordinate_space": {
+        "bbox_pdf_cm": [
+          1.05809926686217,
+          3.3004229734513273,
+          4.867256627565982,
+          4.358250849557522
+        ],
+        "bbox_px": [
+          250.0,
+          100.0,
+          1150.0,
+          350.0
+        ],
+        "name": "pdf_cm",
+        "origin": "bottom_left",
+        "page_index": 0,
+        "pixel_origin": "top_left"
+      },
+      "crop": {
+        "bbox_px": [
+          238,
+          88,
+          1162,
+          362
+        ],
+        "path": "crops/voltage_relation.png"
+      },
+      "expected_readings": [
+        "V is connected to both electrodes"
+      ],
+      "forbidden_readings": [
+        "V is decorative or attached to only one electrode"
+      ],
+      "hashes": {
+        "crop_sha256": "sha256:5bac5ee6eba16e8ca11bd9c4617936eda6dd7157e4e90ff95fe24add067c427f",
+        "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
+        "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+        "render_geometry_hash": "sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf"
+      },
+      "human_verdict": "pending",
+      "kind": "relation",
+      "panel_id": "A",
+      "review_disposition": "human_review_required",
+      "selector_snapshot": {
+        "anchor_end": "] at (2.30,3.42) {V};",
+        "anchor_start": "\\draw[draw=cBlue, line width=0.55pt]",
+        "line_end": 53,
+        "line_start": 42,
+        "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
+        "resolved_line_end": 53,
+        "resolved_line_start": 42,
+        "selector_id": "voltage_relation",
+        "source_sha256": "sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e"
+      },
+      "semantic_declaration": {
+        "connector_id": "voltage_relation",
+        "declared_role": "electrical_bias_lead",
+        "from_object": "electrode_left",
+        "render_style": "electrical_bias_lead_pair",
+        "to_object": "electrode_right"
+      },
+      "semantic_id": "voltage_relation",
+      "state": "exact"
+    },
+    {
+      "coordinate_space": {
+        "bbox_pdf_cm": [
+          3.3435936832844573,
+          2.940761495575221,
+          3.6186994926686213,
+          3.236953300884956
+        ],
+        "bbox_px": [
+          790.0,
+          365.0,
+          855.0,
+          435.0
+        ],
+        "name": "pdf_cm",
+        "origin": "bottom_left",
+        "page_index": 0,
+        "pixel_origin": "top_left"
+      },
+      "crop": {
+        "bbox_px": [
+          778,
+          353,
+          867,
+          447
+        ],
+        "path": "crops/trap_site.png"
+      },
+      "expected_readings": [
+        "gray cross is an available trap site"
+      ],
+      "forbidden_readings": [
+        "gray cross is a capture event"
+      ],
+      "hashes": {
+        "crop_sha256": "sha256:f07a287625aa90cd19a4783d5d7c4ad6bdf28a7f456e64c9d7870a5a319d7aa0",
+        "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
+        "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+        "render_geometry_hash": "sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf"
+      },
+      "human_verdict": "pending",
+      "kind": "object",
+      "panel_id": "A",
+      "review_disposition": "human_review_required",
+      "selector_snapshot": {
+        "anchor_end": "  \\end{scope}",
+        "anchor_start": "\\begin{scope}[shift={(2.84,2.66)},rotate=11] % vector trap cross",
+        "line_end": 84,
+        "line_start": 81,
+        "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
+        "resolved_line_end": 84,
+        "resolved_line_start": 81,
+        "selector_id": "trap_site",
+        "source_sha256": "sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e"
+      },
+      "semantic_declaration": {
+        "declared_role": "available_trap_site",
+        "forbidden_readings": [
+          "capture_event",
+          "carrier"
+        ],
+        "object_id": "trap_site"
+      },
+      "semantic_id": "trap_site",
+      "state": "exact"
+    },
+    {
+      "coordinate_space": {
+        "bbox_pdf_cm": [
+          1.6717968416422286,
+          2.6657262477876102,
+          2.0738745630498534,
+          3.0126937911504426
+        ],
+        "bbox_px": [
+          395.0,
+          418.0,
+          490.0,
+          500.0
+        ],
+        "name": "pdf_cm",
+        "origin": "bottom_left",
+        "page_index": 0,
+        "pixel_origin": "top_left"
+      },
+      "crop": {
+        "bbox_px": [
+          383,
+          406,
+          502,
+          512
+        ],
+        "path": "crops/capture_event.png"
+      },
+      "expected_readings": [
+        "red ring is a carrier capture event"
+      ],
+      "forbidden_readings": [
+        "red ring is an available trap site"
+      ],
+      "hashes": {
+        "crop_sha256": "sha256:3bfbba97159812eecd0d22febfe51cd64c70bc62824cf7651d1c6f9935d3b60c",
+        "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
+        "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+        "render_geometry_hash": "sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf"
+      },
+      "human_verdict": "pending",
+      "kind": "object",
+      "panel_id": "A",
+      "review_disposition": "human_review_required",
+      "selector_snapshot": {
+        "anchor_end": "\\draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring",
+        "anchor_start": "\\draw[cRed, line width=0.42pt] (1.24,2.43) circle (0.12cm); % red capture ring",
+        "line_end": 98,
+        "line_start": 98,
+        "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
+        "resolved_line_end": 98,
+        "resolved_line_start": 98,
+        "selector_id": "capture_event",
+        "source_sha256": "sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e"
+      },
+      "semantic_declaration": {
+        "declared_role": "carrier_capture_event",
+        "forbidden_readings": [
+          "available_trap_site",
+          "material_particle"
+        ],
+        "object_id": "capture_event"
+      },
+      "semantic_id": "capture_event",
+      "state": "exact"
+    },
+    {
+      "coordinate_space": {
+        "bbox_pdf_cm": [
+          11.469796052785922,
+          1.3117065663716814,
+          13.839938410557185,
+          1.9040901769911502
+        ],
+        "bbox_px": [
+          2710.0,
+          680.0,
+          3270.0,
+          820.0
+        ],
+        "name": "pdf_cm",
+        "origin": "bottom_left",
+        "page_index": 0,
+        "pixel_origin": "top_left"
+      },
+      "crop": {
+        "bbox_px": [
+          2698,
+          668,
+          3282,
+          832
+        ],
+        "path": "crops/n_breadth.png"
+      },
+      "expected_readings": [
+        "n encodes horizontal distribution breadth"
+      ],
+      "forbidden_readings": [
+        "n encodes trap density or magnitude"
+      ],
+      "hashes": {
+        "crop_sha256": "sha256:57ca34c911ab8ac87f1566502c9c35d6603b6f65a0cd8d4eafb1363fdd6c66b2",
+        "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
+        "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+        "render_geometry_hash": "sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf"
+      },
+      "human_verdict": "pending",
+      "kind": "object",
+      "panel_id": "B",
+      "review_disposition": "human_review_required",
+      "selector_snapshot": {
+        "anchor_end": "{$n$ = breadth};",
+        "anchor_start": "\\draw[measure] (2.48,0.42) -- (4.64,0.42);",
+        "line_end": 163,
+        "line_start": 160,
+        "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
+        "resolved_line_end": 163,
+        "resolved_line_start": 160,
+        "selector_id": "n_breadth",
+        "source_sha256": "sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e"
+      },
+      "semantic_declaration": {
+        "declared_role": "trap_distribution_breadth",
+        "forbidden_readings": [
+          "trap_density",
+          "trap_magnitude"
+        ],
+        "object_id": "n_breadth"
+      },
+      "semantic_id": "n_breadth",
+      "state": "exact"
+    },
+    {
+      "coordinate_space": {
+        "bbox_pdf_cm": [
+          10.45402075659824,
+          2.454160672566372,
+          11.681415906158357,
+          3.194640185840708
+        ],
+        "bbox_px": [
+          2470.0,
+          375.0,
+          2760.0,
+          550.0
+        ],
+        "name": "pdf_cm",
+        "origin": "bottom_left",
+        "page_index": 0,
+        "pixel_origin": "top_left"
+      },
+      "crop": {
+        "bbox_px": [
+          2458,
+          363,
+          2772,
+          562
+        ],
+        "path": "crops/rho60s_magnitude.png"
+      },
+      "expected_readings": [
+        "rho60s encodes vertical distribution magnitude"
+      ],
+      "forbidden_readings": [
+        "rho60s encodes distribution breadth or trap depth"
+      ],
+      "hashes": {
+        "crop_sha256": "sha256:53c4baa9ff556f530f721e7ae0512c5424335a3a89aaf60eccd29150940dfc4d",
+        "full_render_sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947",
+        "page_sha256": "sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb",
+        "render_geometry_hash": "sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf"
+      },
+      "human_verdict": "pending",
+      "kind": "object",
+      "panel_id": "B",
+      "review_disposition": "human_review_required",
+      "selector_snapshot": {
+        "anchor_end": "at (1.88,1.75) {$\\rho_{60s}$\\\\magnitude};",
+        "anchor_start": "    \\draw[",
+        "line_end": 171,
+        "line_start": 165,
+        "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
+        "resolved_line_end": 171,
+        "resolved_line_start": 165,
+        "selector_id": "rho60s_magnitude",
+        "source_sha256": "sha256:0eba215c153011ef1c2ea3af47c183c6a37be8358abcad251a568fd2f998a85e"
+      },
+      "semantic_declaration": {
+        "declared_role": "trap_distribution_magnitude",
+        "forbidden_readings": [
+          "trap_breadth",
+          "trap_depth"
+        ],
+        "object_id": "rho60s_magnitude"
+      },
+      "semantic_id": "rho60s_magnitude",
+      "state": "exact"
+    },
+    {
+      "expected_readings": [
+        "S60 is a discrete low-sulfur trap distribution"
+      ],
+      "forbidden_readings": [
+        "S60 is a continuous broad distribution"
+      ],
+      "kind": "object",
+      "normalized_authority_claims": [
+        "s60 is a discrete shallow and deep distribution",
+        "s60 is a discrete single deep distribution"
+      ],
+      "reason": "conflicting_normalized_authority_claims",
+      "review_disposition": "review_only",
+      "semantic_id": "s60_distribution",
+      "state": "blocked_authority_conflict"
+    }
+  ]
+}

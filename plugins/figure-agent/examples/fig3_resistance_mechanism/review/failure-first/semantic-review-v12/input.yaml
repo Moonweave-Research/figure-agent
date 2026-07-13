@@ -1,0 +1,113 @@
+schema: figure-agent.semantic-legibility-evidence-input.v1
+fixture_dir: ../../..
+semantic_contract: semantic_contract.yaml
+semantic_regions: semantic_regions.yaml
+render:
+  full_render_path: ../execution-repair-v12/build/repaired_generated.png
+  full_render_sha256: sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947
+  page_path: ../execution-repair-v12/build/repaired_generated.pdf
+  page_sha256: sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb
+  detector_render:
+    page_geometry:
+      coordinate_space: pdf_cm
+      page_index: 0
+      origin: bottom_left
+      media_box_pdf_cm: [0.0, 0.0, 14.432474, 4.781382]
+      crop_box_pdf_cm: [0.0, 0.0, 14.432474, 4.781382]
+      rotation_deg: 0
+      render_geometry_hash: sha256:9141b98610879752b546274ebb28101d9850b8e50d8ef7430bf22c18f7d49dcf
+    image_size_px: [3410, 1130]
+    pixel_origin: top_left
+    raster_box: media_box
+    fragment_transform: [1, 0, 0, 1, 0, 0]
+subjects:
+  - semantic_id: voltage_relation
+    kind: relation
+    bbox_px: [250, 100, 1150, 350]
+    expected_readings: [V is connected to both electrodes]
+    forbidden_readings: [V is decorative or attached to only one electrode]
+  - semantic_id: trap_site
+    kind: object
+    bbox_px: [790, 365, 855, 435]
+    expected_readings: [gray cross is an available trap site]
+    forbidden_readings: [gray cross is a capture event]
+  - semantic_id: capture_event
+    kind: object
+    bbox_px: [395, 418, 490, 500]
+    expected_readings: [red ring is a carrier capture event]
+    forbidden_readings: [red ring is an available trap site]
+  - semantic_id: n_breadth
+    kind: object
+    bbox_px: [2710, 680, 3270, 820]
+    expected_readings: [n encodes horizontal distribution breadth]
+    forbidden_readings: [n encodes trap density or magnitude]
+  - semantic_id: rho60s_magnitude
+    kind: object
+    bbox_px: [2470, 375, 2760, 550]
+    expected_readings: [rho60s encodes vertical distribution magnitude]
+    forbidden_readings: [rho60s encodes distribution breadth or trap depth]
+  - semantic_id: s60_distribution
+    kind: object
+    bbox_px: [2300, 335, 2450, 910]
+    expected_readings: [S60 is a discrete low-sulfur trap distribution]
+    forbidden_readings: [S60 is a continuous broad distribution]
+bindings:
+  - &exact_voltage
+    semantic_id: voltage_relation
+    region_id: voltage_relation
+    binding_state: exact
+    full_render_sha256: sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947
+    page_sha256: sha256:f1b75edf06aca9619a22532d96136d5878c9eb51f3d2bd659589cc3ba5ce7bdb
+  - <<: *exact_voltage
+    semantic_id: trap_site
+    region_id: trap_site
+  - <<: *exact_voltage
+    semantic_id: capture_event
+    region_id: capture_event
+  - <<: *exact_voltage
+    semantic_id: n_breadth
+    region_id: n_breadth
+  - <<: *exact_voltage
+    semantic_id: rho60s_magnitude
+    region_id: rho60s_magnitude
+  - <<: *exact_voltage
+    semantic_id: s60_distribution
+    region_id: s60_distribution
+authority_claims:
+  - semantic_id: voltage_relation
+    authority_id: maintained_v12_source
+    claim: V is connected to both electrodes
+  - semantic_id: trap_site
+    authority_id: maintained_v12_source
+    claim: gray cross is an available trap site
+  - semantic_id: capture_event
+    authority_id: maintained_v12_source
+    claim: red ring is a carrier capture event
+  - semantic_id: n_breadth
+    authority_id: briefing.rule_2
+    claim: n encodes horizontal distribution breadth
+  - semantic_id: rho60s_magnitude
+    authority_id: briefing.rule_2
+    claim: rho60s encodes vertical distribution magnitude
+  - semantic_id: s60_distribution
+    authority_id: briefing.section_2
+    claim: S60 is a discrete single deep distribution
+  - semantic_id: s60_distribution
+    authority_id: briefing.rule_4
+    claim: S60 is a discrete shallow and deep distribution
+required_distinctions:
+  - question_id: trap_sites_vs_capture_events
+    semantic_ids: [trap_site, capture_event]
+    question: Are gray crosses visually distinct from red rings as trap sites versus capture events?
+  - question_id: breadth_vs_magnitude
+    semantic_ids: [n_breadth, rho60s_magnitude]
+    question: Does n read as horizontal breadth while rho60s reads as independent vertical magnitude?
+human_review_questions:
+  - question_id: voltage_connected_to_both_electrodes
+    semantic_ids: [voltage_relation]
+    question: Does V visibly connect to both electrodes rather than float decoratively above the film?
+  - question_id: s60_distribution_authority
+    semantic_ids: [s60_distribution]
+    question: Should S60 read as a single deep distribution or as shallow and deep discrete states?
+semantic_preservation: not_claimed_pending_human_review
+publication_acceptance: not_claimed
