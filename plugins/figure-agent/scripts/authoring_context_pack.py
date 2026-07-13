@@ -113,9 +113,63 @@ def _layout_constraints(
         ):
             raise AuthoringContextPackError("layout label group is invalid")
         groups[group_id] = terms
+    raw_regions = payload.get("regions", [])
+    if not isinstance(raw_regions, list):
+        raise AuthoringContextPackError("layout regions must be a list")
+    regions: set[str] = set()
+    for region in raw_regions:
+        if not isinstance(region, dict):
+            raise AuthoringContextPackError("layout region must be an object")
+        region_id = region.get("id")
+        bbox = region.get("normalized_bbox")
+        if (
+            not isinstance(region_id, str)
+            or region_id in regions
+            or not isinstance(bbox, list)
+            or len(bbox) != 4
+            or not all(isinstance(value, int | float) for value in bbox)
+            or not (
+                0 <= bbox[0] < bbox[2] <= 1 and 0 <= bbox[1] < bbox[3] <= 1
+            )
+        ):
+            raise AuthoringContextPackError("layout region is invalid")
+        regions.add(region_id)
     directives: list[str] = []
     for rule in raw_rules:
-        if not isinstance(rule, dict) or rule.get("kind") != "minimum_clearance":
+        if not isinstance(rule, dict):
+            raise AuthoringContextPackError("layout rule is invalid")
+        kind = rule.get("kind")
+        if kind in {"contained_in_region", "minimum_clearance_from_region"}:
+            group = rule.get("group")
+            region = rule.get("region")
+            minimum_key = (
+                "minimum_normalized_inset"
+                if kind == "contained_in_region"
+                else "minimum_normalized_clearance"
+            )
+            minimum = rule.get(minimum_key)
+            if (
+                not isinstance(group, str)
+                or group not in groups
+                or not isinstance(region, str)
+                or region not in regions
+                or not isinstance(minimum, int | float)
+                or float(minimum) < 0
+            ):
+                raise AuthoringContextPackError("layout region rule is invalid")
+            terms = ", ".join(groups[group])
+            if kind == "contained_in_region":
+                directives.append(
+                    f"Keep text group [{terms}] inside region [{region}] with at least "
+                    f"{float(minimum):g} normalized page inset."
+                )
+            else:
+                directives.append(
+                    f"Keep text group [{terms}] at least {float(minimum):g} "
+                    f"page-diagonal units clear of region [{region}]."
+                )
+            continue
+        if kind != "minimum_clearance":
             raise AuthoringContextPackError("layout rule is invalid")
         first = rule.get("first")
         second = rule.get("second")
@@ -138,6 +192,7 @@ def _layout_constraints(
     return contract_path, {
         "schema": LAYOUT_LANES_SCHEMA,
         "label_groups": raw_groups,
+        "regions": raw_regions,
         "rules": raw_rules,
         "authoring_directives": directives,
     }

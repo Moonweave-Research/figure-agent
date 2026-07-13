@@ -271,3 +271,60 @@ def test_direct_layout_lane_cli_writes_machine_readable_failure_evidence(
 
     assert exit_code == 1
     assert json.loads(output.read_text(encoding="utf-8"))["results"][0]["status"] == "violation"
+
+
+def test_layout_lane_contract_flags_text_outside_declared_panel_region() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [{"id": "panel_a_title", "required_terms": ["Mechanism"]}],
+        "regions": [
+            {"id": "panel_a", "normalized_bbox": [0.0, 0.0, 0.5, 1.0]}
+        ],
+        "rules": [
+            {
+                "id": "panel_a_title_contained",
+                "kind": "contained_in_region",
+                "group": "panel_a_title",
+                "region": "panel_a",
+                "minimum_normalized_inset": 0.01,
+            }
+        ],
+    }
+
+    results = check_layout_drift.evaluate_layout_lanes(
+        contract,
+        [_word("Mechanism", 195, 20, 215, 30)],
+        (400.0, 200.0),
+    )
+
+    assert results[0].status == "violation"
+    assert results[0].clearance == -0.0375
+    assert results[0].minimum_clearance == 0.01
+
+
+def test_layout_lane_contract_flags_annotation_too_close_to_plot_region() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [{"id": "decay_note", "required_terms": ["decays"]}],
+        "regions": [
+            {"id": "decay_plot", "normalized_bbox": [0.1, 0.2, 0.5, 0.8]}
+        ],
+        "rules": [
+            {
+                "id": "decay_note_clear_of_plot",
+                "kind": "minimum_clearance_from_region",
+                "group": "decay_note",
+                "region": "decay_plot",
+                "minimum_normalized_clearance": 0.02,
+            }
+        ],
+    }
+
+    results = check_layout_drift.evaluate_layout_lanes(
+        contract,
+        [_word("decays", 205, 100, 225, 110)],
+        (400.0, 200.0),
+    )
+
+    assert results[0].status == "violation"
+    assert results[0].clearance == 0.01118

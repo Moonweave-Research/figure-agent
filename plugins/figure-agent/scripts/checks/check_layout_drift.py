@@ -101,6 +101,38 @@ def _bbox_clearance(
     return math.hypot(horizontal, vertical)
 
 
+def _normalized_region_bbox(
+    region: dict[str, Any],
+    page_size: tuple[float, float],
+) -> tuple[float, float, float, float]:
+    bbox = region.get("normalized_bbox")
+    if (
+        not isinstance(bbox, list | tuple)
+        or len(bbox) != 4
+        or not all(isinstance(value, int | float) for value in bbox)
+    ):
+        raise ValueError("layout lane region requires normalized_bbox")
+    x0, y0, x1, y1 = (float(value) for value in bbox)
+    if not (0.0 <= x0 < x1 <= 1.0 and 0.0 <= y0 < y1 <= 1.0):
+        raise ValueError("layout lane normalized_bbox must be ordered within [0, 1]")
+    width, height = page_size
+    return (x0 * width, y0 * height, x1 * width, y1 * height)
+
+
+def _normalized_inset(
+    inner: tuple[float, float, float, float],
+    outer: tuple[float, float, float, float],
+    page_size: tuple[float, float],
+) -> float:
+    width, height = page_size
+    return min(
+        (inner[0] - outer[0]) / width,
+        (outer[2] - inner[2]) / width,
+        (inner[1] - outer[1]) / height,
+        (outer[3] - inner[3]) / height,
+    )
+
+
 def _group_bbox(
     group: dict[str, Any],
     words: list[dict[str, Any]],
@@ -146,17 +178,77 @@ def evaluate_layout_lanes(
     page_diagonal = math.hypot(*pdf_page_size)
     if page_diagonal <= 0:
         raise ValueError("layout lane page size must be positive")
+    raw_regions = contract.get("regions", [])
+    if not isinstance(raw_regions, list):
+        raise ValueError("layout lane regions must be a list")
+    regions: dict[str, tuple[float, float, float, float]] = {}
+    for region in raw_regions:
+        if not isinstance(region, dict) or not isinstance(region.get("id"), str):
+            raise ValueError("layout lane region requires string id")
+        region_id = region["id"]
+        if region_id in regions:
+            raise ValueError(f"duplicate layout lane region: {region_id}")
+        regions[region_id] = _normalized_region_bbox(region, pdf_page_size)
+
     results: list[LayoutLaneResult] = []
     for rule in raw_rules:
         if not isinstance(rule, dict):
             raise ValueError("layout lane rule must be an object")
         rule_id = rule.get("id")
+        if not isinstance(rule_id, str):
+            raise ValueError("layout lane rule is invalid")
+        kind = rule.get("kind")
+        if kind in {"contained_in_region", "minimum_clearance_from_region"}:
+            group_id = rule.get("group")
+            region_id = rule.get("region")
+            minimum_key = (
+                "minimum_normalized_inset"
+                if kind == "contained_in_region"
+                else "minimum_normalized_clearance"
+            )
+            minimum = rule.get(minimum_key)
+            if (
+                not isinstance(group_id, str)
+                or not isinstance(region_id, str)
+                or region_id not in regions
+                or not isinstance(minimum, int | float)
+                or float(minimum) < 0
+            ):
+                raise ValueError("layout lane region rule is invalid")
+            if group_id not in groups or groups[group_id] is None:
+                results.append(
+                    LayoutLaneResult(
+                        rule_id=rule_id,
+                        status="missing_label_group",
+                        clearance=None,
+                        minimum_clearance=float(minimum),
+                        missing_groups=(group_id,),
+                    )
+                )
+                continue
+            if kind == "contained_in_region":
+                clearance = _normalized_inset(
+                    groups[group_id], regions[region_id], pdf_page_size  # type: ignore[arg-type]
+                )
+            else:
+                clearance = _bbox_clearance(
+                    groups[group_id], regions[region_id]  # type: ignore[arg-type]
+                ) / page_diagonal
+            results.append(
+                LayoutLaneResult(
+                    rule_id=rule_id,
+                    status="ok" if clearance >= float(minimum) else "violation",
+                    clearance=round(clearance, 6),
+                    minimum_clearance=float(minimum),
+                    missing_groups=(),
+                )
+            )
+            continue
         first_id = rule.get("first")
         second_id = rule.get("second")
         minimum = rule.get("minimum_normalized_clearance")
         if (
-            not isinstance(rule_id, str)
-            or rule.get("kind") != "minimum_clearance"
+            kind != "minimum_clearance"
             or not isinstance(first_id, str)
             or not isinstance(second_id, str)
             or not isinstance(minimum, int | float)

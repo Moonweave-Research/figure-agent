@@ -158,6 +158,16 @@ spec, normalized payload, and declared sources for downstream tools. These
 machine checks establish attribution readiness only; they do not establish
 visual correctness, publication acceptance, or authority to mutate source.
 
+`figure-agent.layout-lanes.v1` is an optional attempt-scoped geometry contract.
+It can declare text groups, normalized page regions, and three measurable rule
+types: text-to-text minimum clearance, text containment inside a panel region,
+and text clearance from a plot or illustration region. `context-pack` converts
+the selected rules into authoring directives before generation, while
+`check_layout_drift.py` evaluates the same rules against PDF word boxes after
+rendering. Regions remain explicitly declared; the checker does not infer panel
+ownership or scientific meaning from pixels. A passing report is layout
+evidence only, never publication acceptance.
+
 ### Layer 2.5 — Reference Analysis
 
 **Files**: `scripts/reference_extract.py`, `commands/fig_extract.md`,

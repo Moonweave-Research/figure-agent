@@ -303,6 +303,67 @@ rules:
     ]
 
 
+def test_context_pack_injects_region_containment_and_plot_clearance_directives(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    review = fixture / "review"
+    review.mkdir()
+    (review / "layout_lanes.yaml").write_text(
+        """
+schema: figure-agent.layout-lanes.v1
+label_groups:
+  - id: title
+    required_terms: [Mechanism]
+  - id: note
+    required_terms: [decays]
+regions:
+  - id: panel_a
+    normalized_bbox: [0.0, 0.0, 0.5, 1.0]
+  - id: decay_plot
+    normalized_bbox: [0.1, 0.2, 0.5, 0.8]
+rules:
+  - id: title_in_panel
+    kind: contained_in_region
+    group: title
+    region: panel_a
+    minimum_normalized_inset: 0.01
+  - id: note_clear_of_plot
+    kind: minimum_clearance_from_region
+    group: note
+    region: decay_plot
+    minimum_normalized_clearance: 0.02
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--layout-contract",
+            "review/layout_lanes.yaml",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["layout_constraints"]["authoring_directives"] == [
+        "Keep text group [Mechanism] inside region [panel_a] with at least 0.01 "
+        "normalized page inset.",
+        "Keep text group [decays] at least 0.02 page-diagonal units clear of "
+        "region [decay_plot].",
+    ]
+
+
 def test_context_pack_rejects_layout_contract_through_symlinked_parent(
     tmp_path: Path,
 ) -> None:
