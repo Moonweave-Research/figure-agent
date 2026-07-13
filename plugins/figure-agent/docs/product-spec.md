@@ -319,6 +319,13 @@ Each attempt records the input authority, model and tool receipt, source and
 render hashes, findings before and after, applied repair family, protected
 invariants, rollback state, and human outcome.
 
+When filesystem read isolation is unavailable, a clean-room authoring claim
+also binds an allowlist of repository content reads into the authoring packet
+and audits the execution transcript. An undeclared repository content read
+makes that run comparison-ineligible even if its output path, source hash, and
+compile are otherwise valid. Transcript auditing is bounded evidence, not an
+attestation that unobserved reads were impossible.
+
 The minimum source binding is a tracked editable source plus its source commit
 and tree hash. A selector snapshot records `selector_id`, `anchor_start`, and
 the selected content hash; line numbers are informative only. Render evidence
@@ -454,6 +461,12 @@ Current repository evidence supports these conclusions:
 - recent Panel F refinement exposed reusable concepts such as semantic salience,
   contact simplification, and forbidden implications, but much of the final
   geometry was still manually tuned; and
+- the first renderable bound Fig3 control/treatment authoring pair removed the
+  prior palette, local-font-size, and thin-stroke blockers by moving Style Lock
+  rules into the pre-authoring contract, but both outputs still fail strict
+  collision checks; the treatment run is also comparison-ineligible because
+  its transcript contains undeclared reads of the product specification and
+  execution plan; and
 - the repository does not yet prove that Figure Agent reduces correction cost
   relative to the same LLM without the system.
 

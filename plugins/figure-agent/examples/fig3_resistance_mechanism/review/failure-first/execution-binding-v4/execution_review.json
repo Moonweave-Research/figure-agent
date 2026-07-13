@@ -35,6 +35,11 @@
     },
     "execution_state": "bound_output_path_but_machine_blocked",
     "forbidden_input_audit": "no_forbidden_figure_artifact_path_observed_in_transcript",
+    "input_audit": {
+      "artifact": "control_input_audit.json",
+      "decision": "pass",
+      "undeclared_repository_reads": []
+    },
     "orro": {
       "adapter_exit_code": 124,
       "decision": "blocked-explicit",
@@ -84,6 +89,14 @@
     },
     "execution_state": "bound_output_path_but_input_contaminated_and_machine_blocked",
     "forbidden_input_audit": "forbidden historical Fig3 paths were exposed when the author read docs/execution-plan.md",
+    "input_audit": {
+      "artifact": "treatment_input_audit.json",
+      "decision": "blocked",
+      "undeclared_repository_reads": [
+        "docs/execution-plan.md",
+        "docs/product-spec.md"
+      ]
+    },
     "orro": {
       "adapter_exit_code": 124,
       "decision": "blocked-explicit",

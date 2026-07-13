@@ -293,7 +293,20 @@ modules listed in Section 0.
   run before proofcheck was rerun. Preserve both generated sources without
   repair. The next step is a new equal-input experiment with the shared
   preamble contract repaired before generation, not post-hoc polishing and not
-  promotion of the shape profile.
+  promotion of the shape profile. That repaired v4 experiment is now preserved:
+  both arms write to the declared plugin-relative paths and compile normally,
+  and pre-authoring Style Lock rules eliminate the prior palette, local-font,
+  and thin-stroke blockers. Strict compilation still fails on three control
+  collisions and two treatment collisions, so neither arm is machine-valid.
+  Moreover, transcript audit passes for control but blocks treatment because it
+  read `docs/product-spec.md` and `docs/execution-plan.md` outside the declared
+  authoring inputs. The pair is therefore comparison-ineligible; fewer reported
+  collisions do not establish a shape-profile or publication-quality gain.
+  Figure Agent now exposes `authoring-input-audit`, and new authoring packets
+  bind the only allowed repository content reads. The next equal-input attempt
+  must pass that audit before visual comparison, then obtain a named human
+  verdict on composition, label density, distribution-shape naturalness, and
+  finish rather than adding another manual polish pass.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot

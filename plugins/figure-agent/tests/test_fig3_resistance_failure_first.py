@@ -340,11 +340,15 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/shape_profile_comparison.yaml",
         "review/failure-first/shape_profile_adversarial_review.yaml",
         "review/failure-first/shape_profile_handoff.md",
+        "review/failure-first/execution-binding-v4/execution_review.json",
+        "review/failure-first/execution-binding-v4/control_input_audit.json",
+        "review/failure-first/execution-binding-v4/treatment_input_audit.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/bin/fig-agent",
         "plugins/figure-agent/docs/architecture-overview.md",
         "plugins/figure-agent/docs/execution-plan.md",
+        "plugins/figure-agent/docs/product-spec.md",
         "plugins/figure-agent/scripts/authoring_context_pack.py",
         "plugins/figure-agent/scripts/checks/check_layout_drift.py",
         "plugins/figure-agent/scripts/visual_finding_artifacts.py",
@@ -1256,5 +1260,31 @@ def test_fig3_execution_binding_v4_blocks_comparison_and_visual_acceptance() -> 
     assert review["control"]["compile"]["style_lock_blockers"] == []
     assert review["treatment"]["compile"]["style_lock_blockers"] == []
     assert "input_contaminated" in review["treatment"]["execution_state"]
+    assert review["control"]["input_audit"]["decision"] == "pass"
+    assert review["treatment"]["input_audit"] == {
+        "artifact": "treatment_input_audit.json",
+        "decision": "blocked",
+        "undeclared_repository_reads": [
+            "docs/execution-plan.md",
+            "docs/product-spec.md",
+        ],
+    }
     assert review["shape_naturalness"] == "pending_human_review"
     assert review["publication_acceptance"] == "not_claimed"
+
+    control_audit = json.loads(
+        (EXECUTION_BINDING_V4 / "control_input_audit.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    treatment_audit = json.loads(
+        (EXECUTION_BINDING_V4 / "treatment_input_audit.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert control_audit["decision"] == "pass"
+    assert treatment_audit["decision"] == "blocked"
+    assert treatment_audit["undeclared_repository_reads"] == [
+        "docs/execution-plan.md",
+        "docs/product-spec.md",
+    ]
