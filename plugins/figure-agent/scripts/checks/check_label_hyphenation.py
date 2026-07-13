@@ -50,11 +50,15 @@ def detect_label_hyphenation(words: list[dict[str, Any]]) -> list[dict[str, Any]
 
 
 def label_hyphenation_payload(pdf_path: Path, issues: list[dict[str, Any]]) -> dict[str, Any]:
+    identified_issues = [
+        {"id": f"LH{index:03d}", **issue, "source_mapping": None}
+        for index, issue in enumerate(issues, start=1)
+    ]
     return {
         "schema": SCHEMA,
         "render_pdf": f"build/{pdf_path.name}",
-        "issues": issues,
-        "total": len(issues),
+        "issues": identified_issues,
+        "total": len(identified_issues),
     }
 
 

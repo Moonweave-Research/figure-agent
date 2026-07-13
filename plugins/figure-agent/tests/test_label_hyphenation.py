@@ -50,4 +50,6 @@ def test_payload_structure():
     assert payload["schema"] == "figure-agent.label-hyphenation.v1"
     assert payload["total"] == 1
     assert payload["render_pdf"] == "build/fig.pdf"
+    assert payload["issues"][0]["id"] == "LH001"
     assert payload["issues"][0]["text"] == "in-"
+    assert payload["issues"][0]["source_mapping"] is None

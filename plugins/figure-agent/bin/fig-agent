@@ -563,6 +563,12 @@ def _authoring_repair_materialize(argv: list[str]) -> int:
     return 0
 
 
+def _finding_attribution(argv: list[str]) -> int:
+    import finding_source_attribution
+
+    return finding_source_attribution.main(argv)
+
+
 def _authoring_orro_plan(argv: list[str]) -> int:
     import authoring_execution_packet
 
@@ -1918,6 +1924,8 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_repair_packet(rest)
     if command == "authoring-repair-materialize":
         return _authoring_repair_materialize(rest)
+    if command == "finding-attribution":
+        return _finding_attribution(rest)
     if command == "authoring-orro-plan":
         return _authoring_orro_plan(rest)
     if command == "authoring-receipt":

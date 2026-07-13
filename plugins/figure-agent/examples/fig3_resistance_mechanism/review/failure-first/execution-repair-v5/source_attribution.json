@@ -1,0 +1,59 @@
+{
+  "findings": [
+    {
+      "finding_id": "TC001",
+      "matched_selectors": [
+        {
+          "matched_texts": [
+            "disordered"
+          ],
+          "repair_role": "movable",
+          "selector_id": "panel-a-material-label"
+        },
+        {
+          "matched_texts": [
+            "conduction"
+          ],
+          "repair_role": "fixed",
+          "selector_id": "panel-a-title"
+        }
+      ],
+      "reason_code": "one_declared_movable_selector",
+      "selected_selector_id": "panel-a-material-label",
+      "state": "exact"
+    },
+    {
+      "finding_id": "TC002",
+      "matched_selectors": [
+        {
+          "matched_texts": [
+            "sulfur"
+          ],
+          "repair_role": "movable",
+          "selector_id": "panel-a-material-label"
+        },
+        {
+          "matched_texts": [
+            "conduction"
+          ],
+          "repair_role": "fixed",
+          "selector_id": "panel-a-title"
+        }
+      ],
+      "reason_code": "one_declared_movable_selector",
+      "selected_selector_id": "panel-a-material-label",
+      "state": "exact"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "schema": "figure-agent.finding-source-attribution.v1",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v7/treatment_generated.tex",
+    "sha256": "sha256:3a10e4abd6f1f41d6108f12a2539e118c4b131df1648e7c1d169baadddda86b2"
+  },
+  "summary": {
+    "ambiguous": 0,
+    "exact": 2,
+    "unbound": 0
+  }
+}

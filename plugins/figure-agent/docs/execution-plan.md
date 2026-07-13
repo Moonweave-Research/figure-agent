@@ -1,21 +1,17 @@
 <!-- FIGURE_AGENT:EXECUTION_AUTHORITY -->
 # Figure Agent Failure-First Implementation Plan
 
-> **For agentic workers:** Execute this plan in order with tests first. Do not
-> open another renderer, grammar, roadmap, or fixture-specific polish lane.
+> **For agentic workers:** Execute this plan in order with tests first. Do not open another renderer, grammar, roadmap, or fixture-specific polish lane.
 
-**Goal:** Prove on two materially different complex figure families that the
-same LLM plus Figure Agent detects and safely reduces recurring scientific and
+**Goal:** Prove on two materially different complex figure families that the same LLM plus Figure Agent detects and safely reduces recurring scientific and
 visual failures better than the same LLM alone.
 
-**Architecture:** Keep TikZ as the current default publication-authoring path.
-Use the existing Python control plane for reviewed failure evidence, multi-scale
+**Architecture:** Keep TikZ as the current default publication-authoring path. Use the existing Python control plane for reviewed failure evidence, multi-scale
 observation, exact attribution, bounded repair, rollback, provenance, and human
 review. SVG remains a derived export or bounded diagnostic surface and is not an
 active backend-development target.
 
-**Tech stack:** Python 3.11+, pytest, PyYAML, existing Figure Agent CLI and
-quality modules, TikZ/LuaLaTeX, PDF/PNG review evidence, existing dvisvgm export.
+**Tech stack:** Python 3.11+, pytest, PyYAML, existing Figure Agent CLI and quality modules, TikZ/LuaLaTeX, PDF/PNG review evidence, existing dvisvgm export.
 Add no dependency.
 
 ---

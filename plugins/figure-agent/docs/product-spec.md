@@ -313,6 +313,23 @@ the repair boundary before application and proves semantic and visual regression
 conditions afterward. An unbound finding is review-only and cannot trigger an
 automatic edit.
 
+The fail-closed source-binding path uses
+`figure-agent.source-selector-registry.v1`,
+`figure-agent.finding-source-attribution.v1`, and
+`figure-agent.repair-target-contract.v1`. Rendered text must match a declared
+selector alias, and exactly one matching selector must be declared movable;
+otherwise attribution remains ambiguous or unbound.
+
+The active authoring control plane also preserves
+`figure-agent.layout-lanes.v1`,
+`figure-agent.authoring-execution-input-audit.v1`,
+`figure-agent.authoring-execution-packet.v1`,
+`figure-agent.authoring-execution-preflight.v1`,
+`figure-agent.authoring-execution-receipt.v1`,
+`figure-agent.repair-execution-packet.v3`, and
+`figure-agent.shape-profile.v1` as evidence contracts. Their machine-valid
+state remains subordinate to rendered and human review.
+
 ## 9. Evidence and learning loop
 
 Each attempt records the input authority, model and tool receipt, source and

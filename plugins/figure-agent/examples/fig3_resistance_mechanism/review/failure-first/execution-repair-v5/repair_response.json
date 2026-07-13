@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[small note, text=cBrown] at (2.30,3.02) {disordered sulfur polymer film};",
+  "change_summary": "Moved the Panel A material label downward into the clear gap above the film so it no longer intersects the fixed two-line panel title."
+}

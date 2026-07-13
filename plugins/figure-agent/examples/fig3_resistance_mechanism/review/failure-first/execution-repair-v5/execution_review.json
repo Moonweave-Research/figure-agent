@@ -1,0 +1,57 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "attempt": "execution-repair-v5",
+  "decision": "machine_improved_strict_failed_human_pending",
+  "target_finding": "TC001",
+  "repair_family": "local_reposition",
+  "attribution": {
+    "schema": "figure-agent.finding-source-attribution.v1",
+    "target_state": "exact",
+    "selected_selector_id": "panel-a-material-label",
+    "collision_findings": {
+      "exact": 2,
+      "ambiguous": 0,
+      "unbound": 0
+    }
+  },
+  "before": {
+    "text_collisions": 2,
+    "label_hyphenation": 1
+  },
+  "after": {
+    "text_collisions": 0,
+    "label_hyphenation": 1
+  },
+  "target_resolved": true,
+  "collateral_finding_resolved": "TC002",
+  "normal_compile": "pass",
+  "strict_compile": "fail",
+  "agent_visual_review": {
+    "target_overlap": "not_visible",
+    "publication_quality": "not_established",
+    "remaining_visible_defects": [
+      "Panel A carrier label still hyphenates repeated as re- / peated",
+      "bottom annotations remain too close to or beyond panel boundaries",
+      "overall composition, distribution shapes, color, and typography still require human quality judgment"
+    ]
+  },
+  "remaining_blockers": [
+    "one_label_hyphenation",
+    "undeclared_geometry_candidates",
+    "human_scaffold_review_pending"
+  ],
+  "packet_id": "sha256:4ba90ec0aa1a35cf01258f2f5440f5ca7d56c7c7d3253d34dd44960bef524ed1",
+  "packet_file_sha256": "sha256:03e3083c6f4754249f883c8a9cc631e60ab228d0be536ec5e05478b928d9b88b",
+  "prompt_sha256": "sha256:d2411962b0511da61575612e72829600acf7e4d09d2c9f782fbf77473e4eff20",
+  "response_sha256": "sha256:f24eba6df4c2867013a8ee399f16c5d3867fedccd69b10900703f4b358536d94",
+  "materialization_receipt_sha256": "sha256:4cab18a115201fcb965fad74ccc0c7660e89151c768632640529bad383e997f0",
+  "selector_registry_sha256": "sha256:ba515390a8477b80ed6d683265b0ffe792d9f755856e0e02c8ed9a2cf125f179",
+  "source_attribution_sha256": "sha256:2fe3a8235f6a6ceb96bbe772f6fa628d8ea4eb83e93401f378f772b5c77a9e82",
+  "target_contract_sha256": "sha256:04f661f83fab62949284b8c9a1748ce483944e06fecaf72815eb0a12a75c73c3",
+  "generated_source_sha256": "sha256:43dd310dd9f8d30bbed8d5661ddb3e909172c5a2355c8fe23295f0cb97234c39",
+  "collision_report_sha256": "sha256:a07a29fd8a0411fcd5722d60034df04dea2fc9e789a670d497039042c9624c20",
+  "label_hyphenation_report_sha256": "sha256:99bebb52a6912f4bca22e80235264e595f12589fde23b26aa22975c95aec986b",
+  "render_png_sha256": "sha256:d7b398bd2301a8b41fe6d1026b3bde334e081773edba48f754060e10f5de21b6",
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

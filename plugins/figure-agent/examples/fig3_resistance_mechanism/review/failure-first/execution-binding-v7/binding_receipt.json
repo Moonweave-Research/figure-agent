@@ -1,0 +1,9 @@
+{
+  "schema": "figure-agent.repair-source-binding.v1",
+  "source": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v7/treatment_generated.tex",
+  "source_sha256": "sha256:3a10e4abd6f1f41d6108f12a2539e118c4b131df1648e7c1d169baadddda86b2",
+  "derived_from": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v4/repaired_generated.tex",
+  "derived_from_sha256": "sha256:3a10e4abd6f1f41d6108f12a2539e118c4b131df1648e7c1d169baadddda86b2",
+  "mutation": "none",
+  "publication_acceptance": "not_claimed"
+}

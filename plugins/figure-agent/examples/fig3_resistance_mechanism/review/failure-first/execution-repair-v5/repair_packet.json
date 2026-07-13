@@ -1,0 +1,107 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "a": {
+        "bbox_pdf": [
+          45.13,
+          24.925712,
+          69.610265,
+          29.72292
+        ],
+        "text": "disordered"
+      },
+      "b": {
+        "bbox_pdf": [
+          46.089996,
+          21.437397,
+          85.812218,
+          28.264193
+        ],
+        "text": "conduction"
+      },
+      "id": "TC001",
+      "iou": 0.253223,
+      "source_mapping": null,
+      "texts": [
+        "disordered",
+        "conduction"
+      ]
+    },
+    "finding_id": "TC001",
+    "protected_invariants": [
+      "applied trapping\\\\during conduction",
+      "sign-agnostic carrier: repeated dispersive trapping",
+      "S60 $\\rightarrow$ S80",
+      "$n$ = breadth",
+      "$\\rho_{60s}$\\\\magnitude"
+    ],
+    "repair_family": "local_reposition",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v4/collisions.after.json",
+    "selector": {
+      "anchor_end": "  \\foreach \\x/\\y/\\r in {",
+      "anchor_start": "  \\node[small note, rotate=90] at (3.94,2.04) {electrode};",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-material-label",
+      "source_hash": "sha256:3a10e4abd6f1f41d6108f12a2539e118c4b131df1648e7c1d169baadddda86b2"
+    }
+  },
+  "execution_cwd": "plugins/figure-agent",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v4/collisions.after.json",
+      "schema": "figure-agent.text-collisions.v1",
+      "sha256": "sha256:d376701a05226316b33c3233919859abf4087b2508db945b7fd75261a3c8dc2b"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v5/repaired_generated.tex",
+  "packet_sha256": "sha256:4ba90ec0aa1a35cf01258f2f5440f5ca7d56c7c7d3253d34dd44960bef524ed1",
+  "prompt": {
+    "sha256": "sha256:d2411962b0511da61575612e72829600acf7e4d09d2c9f782fbf77473e4eff20",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v5/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v7/treatment_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: local_reposition\n- Machine finding: {\"a\": {\"bbox_pdf\": [45.13, 24.925712, 69.610265, 29.72292], \"text\": \"disordered\"}, \"b\": {\"bbox_pdf\": [46.089996, 21.437397, 85.812218, 28.264193], \"text\": \"conduction\"}, \"id\": \"TC001\", \"iou\": 0.253223, \"source_mapping\": null, \"texts\": [\"disordered\", \"conduction\"]}\n- Change content only between the exact anchor lines [  \\node[small note, rotate=90] at (3.94,2.04) {electrode};] and [  \\foreach \\x/\\y/\\r in {].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [applied trapping\\\\during conduction].\n- Preserve the exact token [sign-agnostic carrier: repeated dispersive trapping].\n- Preserve the exact token [S60 $\\rightarrow$ S80].\n- Preserve the exact token [$n$ = breadth].\n- Preserve the exact token [$\\rho_{60s}$\\\\magnitude].\n\n## Bound editable source bytes\n```tex\n  \\node[small note, text=cBrown] at (2.30,3.18) {disordered sulfur polymer film};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v5/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [
+    {
+      "attribution": "unbound",
+      "finding_id": "TC002"
+    }
+  ],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v7/treatment_generated.tex",
+    "sha256": "sha256:3a10e4abd6f1f41d6108f12a2539e118c4b131df1648e7c1d169baadddda86b2"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v5/repair_targets.json",
+    "sha256": "sha256:04f661f83fab62949284b8c9a1748ce483944e06fecaf72815eb0a12a75c73c3"
+  },
+  "verification": "external_sequential_compile_required"
+}

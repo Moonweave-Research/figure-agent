@@ -1,0 +1,14 @@
+{
+  "change_summary": "Moved the Panel A material label downward into the clear gap above the film so it no longer intersects the fixed two-line panel title.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v5/repaired_generated.tex",
+  "output_sha256": "sha256:43dd310dd9f8d30bbed8d5661ddb3e909172c5a2355c8fe23295f0cb97234c39",
+  "packet_sha256": "sha256:4ba90ec0aa1a35cf01258f2f5440f5ca7d56c7c7d3253d34dd44960bef524ed1",
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:3a10e4abd6f1f41d6108f12a2539e118c4b131df1648e7c1d169baadddda86b2"
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v7/treatment_generated.tex",
+  "source_sha256": "sha256:3a10e4abd6f1f41d6108f12a2539e118c4b131df1648e7c1d169baadddda86b2",
+  "targets": [
+    {
+      "attribution": {
+        "state": "exact"
+      },
+      "finding": {
+        "id": "TC001",
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v4/collisions.after.json"
+      },
+      "protected_invariants": [
+        "applied trapping\\\\during conduction",
+        "sign-agnostic carrier: repeated dispersive trapping",
+        "S60 $\\rightarrow$ S80",
+        "$n$ = breadth",
+        "$\\rho_{60s}$\\\\magnitude"
+      ],
+      "repair_family": "local_reposition",
+      "selector": {
+        "anchor_end": "  \\foreach \\x/\\y/\\r in {",
+        "anchor_start": "  \\node[small note, rotate=90] at (3.94,2.04) {electrode};",
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-material-label"
+      }
+    }
+  ]
+}

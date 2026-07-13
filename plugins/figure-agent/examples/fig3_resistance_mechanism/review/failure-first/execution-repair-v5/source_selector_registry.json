@@ -1,0 +1,39 @@
+{
+  "schema": "figure-agent.source-selector-registry.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v7/treatment_generated.tex",
+  "source_sha256": "sha256:3a10e4abd6f1f41d6108f12a2539e118c4b131df1648e7c1d169baadddda86b2",
+  "selectors": [
+    {
+      "selector_id": "panel-a-title",
+      "anchor_start": "\\node[panel label, anchor=north west] at (0.12,4.12) {A};",
+      "anchor_end": "\\node[title, anchor=north west, align=left] at (7.93,4.08) {trap-energy landscape};",
+      "rendered_aliases": [
+        "applied",
+        "trapping",
+        "during",
+        "conduction"
+      ],
+      "repair_role": "fixed"
+    },
+    {
+      "selector_id": "panel-a-material-label",
+      "anchor_start": "  \\node[small note, rotate=90] at (3.94,2.04) {electrode};",
+      "anchor_end": "  \\foreach \\x/\\y/\\r in {",
+      "rendered_aliases": [
+        "disordered",
+        "sulfur",
+        "polymer",
+        "film"
+      ],
+      "repair_role": "movable",
+      "repair_family": "local_reposition",
+      "protected_invariants": [
+        "applied trapping\\\\during conduction",
+        "sign-agnostic carrier: repeated dispersive trapping",
+        "S60 $\\rightarrow$ S80",
+        "$n$ = breadth",
+        "$\\rho_{60s}$\\\\magnitude"
+      ]
+    }
+  ]
+}
