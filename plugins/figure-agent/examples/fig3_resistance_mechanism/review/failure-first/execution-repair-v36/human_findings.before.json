@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:5ee4eeb0be71d586b8e1026c36555fcfbddff5a1b95ec13e2355674cbafa1a60",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF018",
+      "subject": "panel_a_external_key_proportion",
+      "finding": "the three-line filled external key is structurally safe but visually too heavy relative to the Panel A sample"
+    }
+  ],
+  "publication_acceptance": "not_claimed"
+}

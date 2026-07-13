@@ -1,0 +1,8 @@
+{
+  "decision": "repair_rejected_new_blockers",
+  "repair_result": "removing the white box improved local styling but shifted retained into the sample title and created new text collisions",
+  "external_compile": "passed_with_new_structural_blockers",
+  "next_human_target": "panel_a_retained_ownership_external_key_retry",
+  "human_review": "corrections_required",
+  "publication_acceptance": "not_claimed"
+}

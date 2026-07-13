@@ -1,0 +1,78 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "the three-line filled external key is structurally safe but visually too heavy relative to the Panel A sample",
+      "id": "HF018",
+      "subject": "panel_a_external_key_proportion"
+    },
+    "finding_id": "HF018",
+    "protected_invariants": [
+      "capture $\\leftrightarrow$ release repeats",
+      "filled endpoint: retained",
+      "(3.02,3.02)"
+    ],
+    "repair_family": "label_reflow",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/human_findings.before.json",
+    "selector": {
+      "anchor_end": "% Qualitative inset only: no ticks, values, or sampled data markers.",
+      "anchor_start": "\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-external-key-proportion",
+      "source_hash": "sha256:5ee4eeb0be71d586b8e1026c36555fcfbddff5a1b95ec13e2355674cbafa1a60"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:8d33c9f2d61996c7e5aff71f32cc553801b0418e59f93e14d98cfc27e8cb3df4"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/repaired_generated.tex",
+  "packet_sha256": "sha256:0f91720463a7c4e47d230e194037a05b828135ebbd3c19f2852d620b355df385",
+  "prompt": {
+    "sha256": "sha256:d36c60b9312a45df9ad0a8ca3d1f5dbdefbb8bec50588807aa89b91ac1871bcf",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v35/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: label_reflow\n- Machine finding: {\"finding\": \"the three-line filled external key is structurally safe but visually too heavy relative to the Panel A sample\", \"id\": \"HF018\", \"subject\": \"panel_a_external_key_proportion\"}\n- Change content only between the exact anchor lines [\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};] and [% Qualitative inset only: no ticks, values, or sampled data markers.].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [capture $\\leftrightarrow$ release repeats].\n- Preserve the exact token [filled endpoint: retained].\n- Preserve the exact token [(3.02,3.02)].\n\n## Bound editable source bytes\n```tex\n\\node[compact label, align=center, anchor=north, fill=cAmberSphere!22,\n      inner xsep=1.5pt, inner ysep=2pt] at (1.92,1.03)\n  {sign-agnostic carrier path\\\\capture $\\leftrightarrow$ release repeats\\\\filled endpoint: retained};\n% Transition and endpoint semantics share one external key.\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v35/repaired_generated.tex",
+    "sha256": "sha256:5ee4eeb0be71d586b8e1026c36555fcfbddff5a1b95ec13e2355674cbafa1a60"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/repair_targets.json",
+    "sha256": "sha256:e5db88926d92473e584272f382c978117b207c48d67977a0b813a7ac38d6a3ba"
+  },
+  "verification": "external_sequential_compile_required"
+}

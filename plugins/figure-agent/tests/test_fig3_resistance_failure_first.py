@@ -91,7 +91,7 @@ COMPARABLE_V1 = REVIEW / "comparable-v1"
 COMPARISON_CONTRACT = COMPARABLE_V1 / "comparison_contract.yaml"
 COMPARABLE_V2 = REVIEW / "comparable-v2"
 COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
-SCOPE_EXTENSION_V6 = REVIEW / "scope_extension_v6.yaml"
+SCOPE_EXTENSION_V7 = REVIEW / "scope_extension_v7.yaml"
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
 EXECUTION_REPAIR_V15 = REVIEW / "execution-repair-v15"
@@ -114,6 +114,9 @@ EXECUTION_REPAIR_V30 = REVIEW / "execution-repair-v30"
 EXECUTION_REPAIR_V31 = REVIEW / "execution-repair-v31"
 EXECUTION_REPAIR_V32 = REVIEW / "execution-repair-v32"
 EXECUTION_REPAIR_V33 = REVIEW / "execution-repair-v33"
+EXECUTION_REPAIR_V34 = REVIEW / "execution-repair-v34"
+EXECUTION_REPAIR_V35 = REVIEW / "execution-repair-v35"
+EXECUTION_REPAIR_V36 = REVIEW / "execution-repair-v36"
 
 
 def _sha256(path: Path) -> str:
@@ -643,6 +646,103 @@ def test_fig3_v33_aligns_arrow_with_path_direction_without_new_blockers() -> Non
     assert regression["regression"]["state"] == "no_new_blockers"
     assert regression["regression"]["new_blockers"] == []
     assert review["next_human_target"] == "panel_a_retained_label_ownership"
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v34_rejects_retained_label_shift_that_creates_new_collisions() -> None:
+    findings = json.loads(
+        (EXECUTION_REPAIR_V34 / "human_findings.before.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    packet = json.loads(
+        (EXECUTION_REPAIR_V34 / "repair_packet.json").read_text(encoding="utf-8")
+    )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V34 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+    review = json.loads(
+        (EXECUTION_REPAIR_V34 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V33 / "repaired_generated.tex"
+    )
+    assert findings["findings"][0]["id"] == "HF016"
+    assert packet["editable_target"]["finding_id"] == "HF016"
+    assert packet["editable_target"]["repair_family"] == "label_reflow"
+    assert regression["regression"]["state"] == "regressed"
+    signatures = {
+        blocker["signature"] for blocker in regression["regression"]["new_blockers"]
+    }
+    assert "text_text:film|retained" in signatures
+    assert "text_text:retained|sulfur–polymer" in signatures
+    assert review["decision"] == "repair_rejected_new_blockers"
+    assert review["next_human_target"] == "panel_a_retained_ownership_external_key_retry"
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v35_moves_retained_ownership_to_external_key_without_regression() -> None:
+    findings = json.loads(
+        (EXECUTION_REPAIR_V35 / "human_findings.before.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    packet = json.loads(
+        (EXECUTION_REPAIR_V35 / "repair_packet.json").read_text(encoding="utf-8")
+    )
+    collisions = json.loads(
+        (EXECUTION_REPAIR_V35 / "collisions.json").read_text(encoding="utf-8")
+    )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V35 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+    review = json.loads(
+        (EXECUTION_REPAIR_V35 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V33 / "repaired_generated.tex"
+    )
+    assert findings["findings"][0]["id"] == "HF017"
+    assert packet["editable_target"]["finding_id"] == "HF017"
+    assert packet["editable_target"]["repair_family"] == "label_reflow"
+    assert collisions["collisions"] == []
+    assert regression["regression"]["state"] == "no_new_blockers"
+    assert regression["regression"]["new_blockers"] == []
+    assert review["next_human_target"] == "panel_a_external_key_proportion"
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v36_reduces_external_key_without_new_blockers() -> None:
+    findings = json.loads(
+        (EXECUTION_REPAIR_V36 / "human_findings.before.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    packet = json.loads(
+        (EXECUTION_REPAIR_V36 / "repair_packet.json").read_text(encoding="utf-8")
+    )
+    collisions = json.loads(
+        (EXECUTION_REPAIR_V36 / "collisions.json").read_text(encoding="utf-8")
+    )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V36 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+    review = json.loads(
+        (EXECUTION_REPAIR_V36 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V35 / "repaired_generated.tex"
+    )
+    assert findings["findings"][0]["id"] == "HF018"
+    assert packet["editable_target"]["finding_id"] == "HF018"
+    assert packet["editable_target"]["repair_family"] == "label_reflow"
+    assert collisions["collisions"] == []
+    assert regression["regression"]["state"] == "no_new_blockers"
+    assert regression["regression"]["new_blockers"] == []
+    assert review["next_human_target"] == "panel_a_transition_grammar_scaffold_review"
     assert review["publication_acceptance"] == "not_claimed"
 
 
@@ -1988,7 +2088,7 @@ def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
     scope = yaml.safe_load((REVIEW / "scope_protection.yaml").read_text(encoding="utf-8"))
-    extension = yaml.safe_load(SCOPE_EXTENSION_V6.read_text(encoding="utf-8"))
+    extension = yaml.safe_load(SCOPE_EXTENSION_V7.read_text(encoding="utf-8"))
     repo_root = PLUGIN_ROOT.parents[1]
     fixture_prefix = "plugins/figure-agent/examples/fig3_resistance_mechanism/"
     allowed_paths = {

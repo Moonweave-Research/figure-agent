@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:48c9f3225f909853b570fa3c0475e90b55384d5cef2e924b63c407ef025b51a2",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF017",
+      "subject": "panel_a_retained_ownership_external_key_retry",
+      "finding": "the rejected local shift proves retained ownership must move to the external key instead of competing with the sample title and path"
+    }
+  ],
+  "publication_acceptance": "not_claimed"
+}

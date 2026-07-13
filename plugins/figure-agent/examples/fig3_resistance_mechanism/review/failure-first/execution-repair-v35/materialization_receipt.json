@@ -1,0 +1,15 @@
+{
+  "change_summary": "Remove the competing local label and assign retained to the filled endpoint in the external carrier key.",
+  "changed_lines": 6,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v35/repaired_generated.tex",
+  "output_sha256": "sha256:5ee4eeb0be71d586b8e1026c36555fcfbddff5a1b95ec13e2355674cbafa1a60",
+  "packet_sha256": "sha256:2a90cc50d0c4016040bfbaabaa27bca9fcbeed098caafab96f6c5a619fb29c41",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:48c9f3225f909853b570fa3c0475e90b55384d5cef2e924b63c407ef025b51a2"
+}

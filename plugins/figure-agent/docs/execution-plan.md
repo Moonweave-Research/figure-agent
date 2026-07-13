@@ -260,7 +260,7 @@ modules listed in Section 0.
     `execution-binding-v6/` preserve respectively a non-renderable preamble
     failure, undeclared treatment reads, and a timed-out treatment proof with
     continuing strict findings. All pairs remain comparison-ineligible.
-  - `execution-repair-v1/` through `execution-repair-v33/` preserve the move to
+  - `execution-repair-v1/` through `execution-repair-v36/` preserve the move to
     exact replacement blocks, transactional additive materialization, detector
     reruns, and bounded repaired artifacts. V13 removes the verified arm's one
     text-text collision but exposes the previous false-success boundary:
@@ -309,6 +309,13 @@ modules listed in Section 0.
     declared path order. All three record `no_new_blockers`; the external key
     and `retained` label still require human-visible refinement, and the overall
     structural gate remains failed.
+    V34 then proves the relocation hazard directly: moving `retained` upward
+    creates two new title collisions and is rejected by the regression gate.
+    V35 retries from v33 rather than compounding the failed artifact, moving
+    retained ownership into the external key with no new blocker. V36 reduces
+    that key from a heavy three-line filled plate to two unboxed lines, again
+    with no new blocker. This resolves the named transition-grammar scaffold
+    target but still requires a human visual verdict.
   - Commits `771c339d`, `a30ff450`, `3d16305e`, and `5a2e895f` bind the v12
     renderer-neutral semantic packet, fail-closed authority and selector checks,
     transactional version publishing, and authenticated page evidence at
@@ -338,9 +345,9 @@ modules listed in Section 0.
 **Current next executable step:** Slice 1 remains `pending_human_review` on the
 four current hash-bound views. Slice 2 `comparable-v2/` is transcript-bound,
 cleanly reproducible, human-rejected, and product-unauthorized. Continue from
-the verified-derived v33 source. Continue the same Panel A grammar initiative
-with `retained` label ownership and external-key proportion; do not make an
-isolated coordinate nudge that can move a defect between labels. Detector-only
+the verified-derived v36 source. Request the human scaffold verdict on the
+Panel A transition grammar before further polishing; v34 is the preserved
+counterexample showing why another isolated coordinate nudge is unsafe. Detector-only
 `V` and `t` candidates remain review-only until
 their intended axis or wiring relations are adjudicated. Keep all band-energy
 shape changes blocked until their physical and mathematical authority is

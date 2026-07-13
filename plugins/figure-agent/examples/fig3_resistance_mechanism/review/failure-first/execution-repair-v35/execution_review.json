@@ -1,0 +1,8 @@
+{
+  "decision": "human_target_resolved_overall_review_required",
+  "repair_result": "retained ownership moved out of the crowded sample interior without a new structural blocker",
+  "external_compile": "passed",
+  "next_human_target": "panel_a_external_key_proportion",
+  "human_review": "corrections_required",
+  "publication_acceptance": "not_claimed"
+}

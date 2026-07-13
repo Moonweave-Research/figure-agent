@@ -1,0 +1,26 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v33/repaired_generated.tex",
+  "source_sha256": "sha256:48c9f3225f909853b570fa3c0475e90b55384d5cef2e924b63c407ef025b51a2",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v34/human_findings.before.json",
+        "id": "HF016"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-retained-endpoint-label",
+        "anchor_start": "\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};",
+        "anchor_end": "% Qualitative inset only: no ticks, values, or sampled data markers."
+      },
+      "repair_family": "label_reflow",
+      "protected_invariants": [
+        "sign-agnostic carrier\\\\repeated capture $\\leftrightarrow$ release",
+        "applied $V$",
+        "(3.02,3.02)"
+      ]
+    }
+  ]
+}
