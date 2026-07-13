@@ -96,6 +96,28 @@ def _invalid_cases() -> list[tuple[str, dict[str, object], str]]:
     ]
     cases.append(("missing relation", missing_relation, "relations must be exactly"))
 
+    extra_relation = deepcopy(_valid_payload())
+    relations = extra_relation["relations"]
+    assert isinstance(relations, list)
+    extra_relation["relations"] = [
+        *relations,
+        {"kind": "wider_than", "subject": "s80", "object": "s60"},
+    ]
+    cases.append(("extra relation", extra_relation, "relations must be exactly"))
+
+    duplicate_relation_kind = deepcopy(_valid_payload())
+    duplicate_relation_kind["relations"] = [
+        {"kind": "wider_than", "subject": "s80", "object": "s60"},
+        {"kind": "wider_than", "subject": "s80", "object": "s60"},
+    ]
+    cases.append(
+        ("duplicate relation kind", duplicate_relation_kind, "relations must be exactly")
+    )
+
+    malformed_relations = deepcopy(_valid_payload())
+    malformed_relations["relations"] = "wider_than"
+    cases.append(("malformed relations", malformed_relations, "relations must be a list"))
+
     extra_claim = deepcopy(_valid_payload())
     extra_claim["forbidden_claims"] = [
         "fixed_peak_count",
@@ -104,6 +126,14 @@ def _invalid_cases() -> list[tuple[str, dict[str, object], str]]:
         "causal_order",
     ]
     cases.append(("extra claim", extra_claim, "forbidden_claims must be exactly"))
+
+    missing_claim = deepcopy(_valid_payload())
+    missing_claim["forbidden_claims"] = ["fixed_peak_count", "monotonic_disorder"]
+    cases.append(("missing claim", missing_claim, "forbidden_claims must be exactly"))
+
+    malformed_claims = deepcopy(_valid_payload())
+    malformed_claims["forbidden_claims"] = "fixed_peak_count"
+    cases.append(("malformed claims", malformed_claims, "forbidden_claims must be exactly"))
 
     wrong_header = deepcopy(_valid_payload())
     wrong_header["composition_header"] = "increasing temperature"
@@ -126,6 +156,22 @@ def _invalid_cases() -> list[tuple[str, dict[str, object], str]]:
     malformed_objects = deepcopy(_valid_payload())
     malformed_objects["objects"] = "s60,s80"
     cases.append(("malformed objects", malformed_objects, "objects must be a list"))
+
+    wrong_schema = deepcopy(_valid_payload())
+    wrong_schema["schema"] = "figure-agent.shape-profile.v2"
+    cases.append(("wrong schema", wrong_schema, "schema must equal"))
+
+    wrong_status = deepcopy(_valid_payload())
+    wrong_status["status"] = "publication_ready"
+    cases.append(("wrong status", wrong_status, "status must equal"))
+
+    missing_top_level_key = deepcopy(_valid_payload())
+    del missing_top_level_key["composition_header"]
+    cases.append(("missing top-level key", missing_top_level_key, "payload keys must be exactly"))
+
+    extra_top_level_key = deepcopy(_valid_payload())
+    extra_top_level_key["renderer"] = "tikz"
+    cases.append(("extra top-level key", extra_top_level_key, "payload keys must be exactly"))
 
     forbidden_nested_key = deepcopy(_valid_payload())
     forbidden_nested_key["metadata"] = {"nested": [{"coordinates": [0, 1]}]}
