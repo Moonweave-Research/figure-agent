@@ -7,7 +7,16 @@
     "zoom"
   ],
   "fixture": "fig1_failure_first_panel_f_pilot",
-  "human_review_state": "development_baseline_approved",
+  "human_review_binding": {
+    "current_panel_sha256": "sha256:f1cde15d5f38ed5593657aa473dc9aa5a9ea0734dd4927b3e3d353dcc692e300",
+    "current_review_input_hash": "sha256:238fc8286ada29bf3152b319d6d12dfda22d78aba838c6aae0a43bb921099cab",
+    "matches": false,
+    "panel_matches": false,
+    "review_input_matches": false,
+    "reviewed_panel_sha256": "sha256:6367a0ba8e1580af6ca9af58b1ecf099c1e673609356ddc0214df61161ac93ba",
+    "reviewed_review_input_hash": "sha256:66d6f581dab6fc46fd137d4f5a009643b9ebde22db42fd90d231efca40413bf2"
+  },
+  "human_review_state": "pending_revalidation",
   "page_geometry": {
     "coordinate_space": "pdf_cm",
     "crop_box_pdf_cm": [
@@ -29,7 +38,7 @@
   },
   "publication_acceptance": "not_claimed",
   "render_geometry_hash": "sha256:8d48ad804a4e07d847c106669a3ec9d63886d12897e0d76389db179edbf3dcfd",
-  "review_input_hash": "sha256:66d6f581dab6fc46fd137d4f5a009643b9ebde22db42fd90d231efca40413bf2",
+  "review_input_hash": "sha256:238fc8286ada29bf3152b319d6d12dfda22d78aba838c6aae0a43bb921099cab",
   "review_inputs": [
     {
       "path": "review/evidence/raw/object_relation.png",
@@ -84,31 +93,32 @@
     {
       "path": "review/evidence/repaired/object_relation.png",
       "role": "repaired.object_relation",
-      "sha256": "sha256:b77ba44f528820aadbad3dee548eafa831706336c58484e54b3de594f344e06f"
+      "sha256": "sha256:875cd460a9cac4f34754f6a518ce28c0d0c529aea21d45ef685a3f7762bcf44e"
     },
     {
       "path": "review/evidence/repaired/overlay.png",
       "role": "repaired.overlay",
-      "sha256": "sha256:6862db7ed09cddd0ff5e2e15654d07df6c4539053a94620500a23a3d5e0fce3a"
+      "sha256": "sha256:92ebcba02f544a6fa4d9419670dd021b250e756f06225f0909cd840967cf17aa"
     },
     {
       "path": "review/evidence/repaired/panel.png",
       "role": "repaired.panel",
-      "sha256": "sha256:6367a0ba8e1580af6ca9af58b1ecf099c1e673609356ddc0214df61161ac93ba"
+      "sha256": "sha256:f1cde15d5f38ed5593657aa473dc9aa5a9ea0734dd4927b3e3d353dcc692e300"
     },
     {
       "path": "review/evidence/repaired/whole.png",
       "role": "repaired.whole",
-      "sha256": "sha256:9f3498a56e7cf07342c65cc89e1f51e8513568bede57461dedabe0fbc88ad288"
+      "sha256": "sha256:1f8ce266ccff25b1cc198eb7f48210ae469abb23ff265ec139c8870cc2e18de2"
     },
     {
       "path": "review/evidence/repaired/zoom.png",
       "role": "repaired.zoom",
-      "sha256": "sha256:80980ebde941fea0f156aa18bf550332346cbb60854ba5a3c750000f0321f67e"
+      "sha256": "sha256:ec2d287a3fa08548b48f93525dbba11a1e0cdc07050a52461ad08fadaf466e11"
     }
   ],
   "schema": "figure-agent.review-evidence-receipt.v1",
   "selector_id": "panel_f.mechanism_scene",
+  "source_sha256": "sha256:89e1f03152a53b3acc5983826625702bdacc770335d4dd833fb804c7a2fdef3b",
   "variants": [
     "raw",
     "verified",

@@ -83,8 +83,13 @@ silently upgrading its current development-baseline verdict.
 
 ### Current state
 
-- the Panel F panel view has a named development-baseline approval;
-- whole, object/relation, and zoom views remain unreviewed;
+- the pre-extraction Panel F packet has a named development-baseline approval;
+- clean-checkout reproduction exposed that shared-primitive extraction had
+  removed three visible labels and left the tracked review evidence stale;
+- the labels are restored and the current source, render, evidence manifest,
+  and generated receipt now reproduce together;
+- the primitive-derived packet has a small pixel delta from the historically
+  reviewed packet, so all four current views are `pending_revalidation`;
 - normal compilation passes;
 - strict compilation remains non-accepting because inherited whole-figure
   collision and undeclared-geometry findings remain outside the bounded repair;
@@ -103,19 +108,20 @@ silently upgrading its current development-baseline verdict.
 
 ### Steps
 
-- [ ] Reproduce the tracked figure and review packet from a clean checkout.
-- [ ] Prove that the current render, semantic contract, selector state, and
-  review-input hashes match the packet presented to the reviewer.
-- [ ] Present and record the still-pending whole, object/relation, and zoom views
-  as separate human decisions; preserve the existing panel verdict unless its
-  bound `review_input_hash` changes.
-- [ ] Record correction minutes and intervention count; do not infer either from
+- [x] Reproduce the tracked figure and review packet from a clean checkout.
+- [x] Bind the current render, source, semantic contract, selector state, and
+  review-input hashes, then compare them with the packet presented to the
+  reviewer; record any mismatch instead of transferring the verdict.
+- [ ] Present and record the current whole, panel, object/relation, and zoom
+  views as separate human decisions; preserve the existing panel verdict as
+  historical evidence, but do not transfer it because the bound panel hash changed.
+- [x] Record correction minutes and intervention count; do not infer either from
   commit count or elapsed agent time.
 - [ ] Retrospective correction time must not be estimated. For the existing Fig1
   work, record `unavailable` plus a reason; measure Fig3 prospectively.
-- [ ] Keep strict inherited findings visible instead of suppressing them to
+- [x] Keep strict inherited findings visible instead of suppressing them to
   obtain a green state.
-- [ ] Admit only named confirmed defects or accepted false positives to the
+- [x] Admit only named confirmed defects or accepted false positives to the
   reviewed failure corpus.
 
 ### Verification

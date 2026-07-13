@@ -72,9 +72,38 @@ def _page_geometry(pdf_path: Path, page_index: int) -> dict[str, Any]:
     return {**geometry, "render_geometry_hash": render_geometry_hash(geometry)}
 
 
-def build_review_evidence_receipt(
-    fixture_dir: Path, output_path: Path
+def human_review_binding(
+    verdict: dict[str, Any], current_panel_hash: str, current_review_hash: str
 ) -> dict[str, Any]:
+    reviewed_source = verdict.get("reviewed_source")
+    reviewed_panel_hash = (
+        str(reviewed_source.get("panel_render_sha256") or "")
+        if isinstance(reviewed_source, dict)
+        else ""
+    )
+    if reviewed_panel_hash and not reviewed_panel_hash.startswith("sha256:"):
+        reviewed_panel_hash = "sha256:" + reviewed_panel_hash
+    reviewed_review_hash = (
+        str(reviewed_source.get("review_input_hash") or "")
+        if isinstance(reviewed_source, dict)
+        else ""
+    )
+    if reviewed_review_hash and not reviewed_review_hash.startswith("sha256:"):
+        reviewed_review_hash = "sha256:" + reviewed_review_hash
+    panel_matches = reviewed_panel_hash == current_panel_hash
+    review_input_matches = reviewed_review_hash == current_review_hash
+    return {
+        "reviewed_panel_sha256": reviewed_panel_hash or None,
+        "current_panel_sha256": current_panel_hash,
+        "panel_matches": panel_matches,
+        "reviewed_review_input_hash": reviewed_review_hash or None,
+        "current_review_input_hash": current_review_hash,
+        "review_input_matches": review_input_matches,
+        "matches": panel_matches and review_input_matches,
+    }
+
+
+def build_review_evidence_receipt(fixture_dir: Path, output_path: Path) -> dict[str, Any]:
     fixture = fixture_dir.resolve()
     authority = _load_yaml(fixture / "authority.yaml")
     protocol = _load_yaml(fixture / "comparison_protocol.yaml")
@@ -122,16 +151,18 @@ def build_review_evidence_receipt(
             )
     toolchain = protocol.get("toolchain")
     if not isinstance(toolchain, dict) or not all(
-        isinstance(key, str) and isinstance(value, str)
-        for key, value in toolchain.items()
+        isinstance(key, str) and isinstance(value, str) for key, value in toolchain.items()
     ):
         raise ReviewEvidenceReceiptError("toolchain_invalid")
     review_hash = aggregate_review_input_hash(inputs, toolchain)
+    current_panel_hash = next(item["sha256"] for item in inputs if item["role"] == "repaired.panel")
+    review_binding = human_review_binding(verdict, current_panel_hash, review_hash)
 
     receipt = {
         "schema": SCHEMA,
         "fixture": fixture.name,
         "selector_id": selector_id,
+        "source_sha256": _sha256(source_path),
         "attribution_state": "exact",
         "page_geometry": geometry,
         "render_geometry_hash": geometry["render_geometry_hash"],
@@ -139,11 +170,12 @@ def build_review_evidence_receipt(
         "review_input_hash": review_hash,
         "evidence_scales": list(SCALES),
         "variants": list(VARIANTS),
-        "human_review_state": verdict.get("state"),
+        "human_review_state": (
+            verdict.get("state") if review_binding["matches"] else "pending_revalidation"
+        ),
+        "human_review_binding": review_binding,
         "publication_acceptance": "not_claimed",
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(
-        json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    output_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return receipt

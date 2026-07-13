@@ -6,6 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 from PIL import Image
 
@@ -14,8 +15,15 @@ FIXTURE = PLUGIN_ROOT / "examples" / "fig1_failure_first_panel_f_pilot"
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
 from failure_ablation import evaluate_ablation  # noqa: E402
-from review_evidence_pack import build_review_evidence_pack  # noqa: E402
-from review_evidence_receipt import build_review_evidence_receipt  # noqa: E402
+from review_evidence_pack import (  # noqa: E402
+    ReviewEvidencePackError,
+    build_review_evidence_pack,
+    verify_review_evidence_pack,
+)
+from review_evidence_receipt import (  # noqa: E402
+    build_review_evidence_receipt,
+    human_review_binding,
+)
 from semantic_legibility_contract import (  # noqa: E402
     validate_semantic_legibility_contract,
 )
@@ -69,9 +77,9 @@ def test_pilot_pins_reviewed_source_and_exact_jig_authority() -> None:
         text=True,
     ).stdout
     raw = (FIXTURE / "review" / "states" / "raw.tex").read_text(encoding="utf-8")
-    raw_without_anchors = raw.replace(
-        "% figure-agent:start panel_f.mechanism_scene\n", ""
-    ).replace("% figure-agent:end panel_f.mechanism_scene\n", "")
+    raw_without_anchors = raw.replace("% figure-agent:start panel_f.mechanism_scene\n", "").replace(
+        "% figure-agent:end panel_f.mechanism_scene\n", ""
+    )
     assert raw_without_anchors == historical
 
 
@@ -144,9 +152,7 @@ def test_named_human_findings_bind_the_approved_development_baseline() -> None:
     assert findings["reviewed_source"] == {
         "commit": "432a9573a188a79c720c204ceb3138aa29a7b5e2",
         "variant": "repaired",
-        "receipt_sha256": (
-            "2895ff9d57d19b083e7df313343f3a883e5aa9a20b5258c8ca92268c68b3729a"
-        ),
+        "receipt_sha256": ("2895ff9d57d19b083e7df313343f3a883e5aa9a20b5258c8ca92268c68b3729a"),
         "review_input_hash": (
             "sha256:e28ada69677a60706505a9195f17a54a0b38ba8c9a8310f61bb02c7b5c79b877"
         ),
@@ -166,13 +172,8 @@ def test_named_human_findings_bind_the_approved_development_baseline() -> None:
         "PF-LABEL-001",
         "PF-CONNECTOR-001",
     }
-    assert all(
-        item["review_outcome"] == "confirmed_defect"
-        for item in findings["findings"]
-    )
-    apparatus = next(
-        item for item in findings["findings"] if item["id"] == "PF-APPARATUS-001"
-    )
+    assert all(item["review_outcome"] == "confirmed_defect" for item in findings["findings"])
+    apparatus = next(item for item in findings["findings"] if item["id"] == "PF-APPARATUS-001")
     assert apparatus["required_correction"] == (
         "show_a_grounded_voltage_source_driving_the_electrode_while_the_sample_remains_floating"
     )
@@ -184,9 +185,7 @@ def test_named_human_findings_bind_the_approved_development_baseline() -> None:
         "reviewed_source_commit": "9f0d5e42370fa9dae7628e7342201eeac20aa130",
         "reviewed_variant": "repaired",
         "reviewed_views": ["panel"],
-        "panel_render_sha256": (
-            "6367a0ba8e1580af6ca9af58b1ecf099c1e673609356ddc0214df61161ac93ba"
-        ),
+        "panel_render_sha256": ("6367a0ba8e1580af6ca9af58b1ecf099c1e673609356ddc0214df61161ac93ba"),
         "decision": "approved",
         "remaining_human_review": ["whole", "object_relation", "zoom"],
     }
@@ -207,6 +206,9 @@ def test_human_verdict_separates_baseline_approval_from_publication_review() -> 
     assert verdict["remaining_required_views"] == []
     assert verdict["scientific_fidelity"] == "accepted_for_development_baseline"
     assert verdict["visual_verdict"] == "baseline_with_aesthetic_debt"
+    assert verdict["reviewed_source"]["review_input_hash"] == (
+        "sha256:66d6f581dab6fc46fd137d4f5a009643b9ebde22db42fd90d231efca40413bf2"
+    )
     assert verdict["correction_minutes"] is None
     assert verdict["correction_minutes_status"] == "unavailable"
     assert "retrospective" in verdict["correction_minutes_reason"]
@@ -220,9 +222,7 @@ def test_human_verdict_separates_baseline_approval_from_publication_review() -> 
 
 
 def test_repaired_source_has_grounded_source_and_floating_sample() -> None:
-    source = (FIXTURE / "fig1_failure_first_panel_f_pilot.tex").read_text(
-        encoding="utf-8"
-    )
+    source = (FIXTURE / "fig1_failure_first_panel_f_pilot.tex").read_text(encoding="utf-8")
     start = "% figure-agent:start panel_f.mechanism_scene"
     end = "% figure-agent:end panel_f.mechanism_scene"
     assert source.count(start) == 1
@@ -231,7 +231,7 @@ def test_repaired_source_has_grounded_source_and_floating_sample() -> None:
     assert "small neutral mechanical jig" in block
     assert "V_{\\mathrm{active}}" not in block
     assert "{bias}" not in block
-    assert block.count("V_{\\mathrm{app}}") == 1
+    assert block.count("{$V_{\\mathrm{app}}$}") == 1
     assert "compact voltage source" in block.lower()
     assert "source-to-electrode lead" in block.lower()
     assert "grounded source return" in block.lower()
@@ -242,16 +242,16 @@ def test_repaired_source_has_grounded_source_and_floating_sample() -> None:
     assert "(11.08,2.48) .. controls" not in block
     assert "$q_{\\mathrm{tr}}$" not in block
     assert "flat trapped-charge markers" in block.lower()
-    assert "{trapped charge}" in block
+    assert "at (13.62, 1.62) {electrode};" in block
+    assert "at (12.84, 3.66) {$V_{\\mathrm{app}}$};" in block
+    assert "at (11.48, 2.50) {trapped charge};" in block
     assert "panelFCoulombRepulsionArrow" in source
     assert "{air gap}" in source
     assert "(13.23, 0.40) -- (13.37, 0.40)" not in source
 
 
 def test_repaired_source_uses_a_fixed_boundary_not_a_floating_cap() -> None:
-    source = (FIXTURE / "fig1_failure_first_panel_f_pilot.tex").read_text(
-        encoding="utf-8"
-    )
+    source = (FIXTURE / "fig1_failure_first_panel_f_pilot.tex").read_text(encoding="utf-8")
     start = "% figure-agent:start panel_f.mechanism_scene"
     end = "% figure-agent:end panel_f.mechanism_scene"
     block = source.split(start, 1)[1].split(end, 1)[0]
@@ -295,8 +295,10 @@ def test_ablation_contract_is_comparable_and_stops_at_human_boundary() -> None:
 
 
 def test_generated_receipt_binds_multiscale_pixel_evidence(tmp_path: Path) -> None:
+    verify_review_evidence_pack(FIXTURE)
     receipt = build_review_evidence_receipt(FIXTURE, tmp_path / "receipt.json")
     assert receipt["selector_id"] == "panel_f.mechanism_scene"
+    assert receipt["source_sha256"].startswith("sha256:")
     assert receipt["attribution_state"] == "exact"
     assert receipt["render_geometry_hash"].startswith("sha256:")
     assert receipt["review_input_hash"].startswith("sha256:")
@@ -307,12 +309,73 @@ def test_generated_receipt_binds_multiscale_pixel_evidence(tmp_path: Path) -> No
         "zoom",
     ]
     assert receipt["variants"] == ["raw", "verified", "repaired"]
-    assert receipt["human_review_state"] == "development_baseline_approved"
+    assert receipt["human_review_state"] == "pending_revalidation"
+    assert receipt["human_review_binding"] == {
+        "current_panel_sha256": (
+            "sha256:f1cde15d5f38ed5593657aa473dc9aa5a9ea0734dd4927b3e3d353dcc692e300"
+        ),
+        "current_review_input_hash": (
+            "sha256:238fc8286ada29bf3152b319d6d12dfda22d78aba838c6aae0a43bb921099cab"
+        ),
+        "matches": False,
+        "panel_matches": False,
+        "reviewed_panel_sha256": (
+            "sha256:6367a0ba8e1580af6ca9af58b1ecf099c1e673609356ddc0214df61161ac93ba"
+        ),
+        "reviewed_review_input_hash": (
+            "sha256:66d6f581dab6fc46fd137d4f5a009643b9ebde22db42fd90d231efca40413bf2"
+        ),
+        "review_input_matches": False,
+    }
     assert receipt["publication_acceptance"] == "not_claimed"
     assert json.loads((tmp_path / "receipt.json").read_text(encoding="utf-8")) == receipt
-    assert json.loads(
-        (FIXTURE / "review" / "generated_receipt.json").read_text(encoding="utf-8")
-    ) == receipt
+    assert (
+        json.loads((FIXTURE / "review" / "generated_receipt.json").read_text(encoding="utf-8"))
+        == receipt
+    )
+
+
+def test_human_review_binding_can_clear_revalidation_with_both_hashes() -> None:
+    panel_hash = "sha256:" + "a" * 64
+    review_hash = "sha256:" + "b" * 64
+
+    binding = human_review_binding(
+        {
+            "reviewed_source": {
+                "panel_render_sha256": panel_hash,
+                "review_input_hash": review_hash,
+            }
+        },
+        panel_hash,
+        review_hash,
+    )
+
+    assert binding["panel_matches"] is True
+    assert binding["review_input_matches"] is True
+    assert binding["matches"] is True
+
+
+def test_evidence_pack_rejects_render_inputs_outside_fixture(tmp_path: Path) -> None:
+    fixture = tmp_path / "pilot"
+    fixture.mkdir()
+    outside = tmp_path / "outside.png"
+    Image.new("RGB", (10, 10), "white").save(outside)
+    (fixture / "evidence_regions.yaml").write_text(
+        """schema: figure-agent.review-evidence-pack.v1
+raw_render: ../outside.png
+repaired_render: ../outside.png
+regions:
+  panel: [0.1, 0.1, 0.9, 0.9]
+  object_relation: [0.2, 0.2, 0.8, 0.8]
+  zoom: [0.3, 0.3, 0.7, 0.7]
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ReviewEvidencePackError, match="evidence_render_unsafe"):
+        build_review_evidence_pack(fixture)
+    with pytest.raises(ReviewEvidencePackError, match="evidence_render_unsafe"):
+        verify_review_evidence_pack(fixture)
 
 
 def test_evidence_pack_keeps_verified_pixels_equal_to_raw(tmp_path: Path) -> None:
@@ -320,9 +383,7 @@ def test_evidence_pack_keeps_verified_pixels_equal_to_raw(tmp_path: Path) -> Non
     (fixture / "raw").mkdir(parents=True)
     (fixture / "repaired").mkdir()
     Image.new("RGB", (100, 80), "white").save(fixture / "raw" / "render.png")
-    Image.new("RGB", (100, 80), "gray").save(
-        fixture / "repaired" / "render.png"
-    )
+    Image.new("RGB", (100, 80), "gray").save(fixture / "repaired" / "render.png")
     (fixture / "evidence_regions.yaml").write_text(
         """schema: figure-agent.review-evidence-pack.v1
 raw_render: raw/render.png
@@ -337,14 +398,28 @@ regions:
 
     manifest = build_review_evidence_pack(fixture)
 
-    records = {
-        (item["variant"], item["role"]): item for item in manifest["artifacts"]
-    }
+    records = {(item["variant"], item["role"]): item for item in manifest["artifacts"]}
     for role in ("whole", "panel", "object_relation", "zoom", "overlay"):
-        assert records[("raw", role)]["sha256"] == records[("verified", role)][
-            "sha256"
-        ]
-        assert records[("raw", role)]["sha256"] != records[("repaired", role)][
-            "sha256"
-        ]
+        assert records[("raw", role)]["sha256"] == records[("verified", role)]["sha256"]
+        assert records[("raw", role)]["sha256"] != records[("repaired", role)]["sha256"]
     assert manifest["publication_acceptance"] == "not_claimed"
+    assert verify_review_evidence_pack(fixture) == manifest
+
+    manifest_path = fixture / "review" / "evidence" / "manifest.json"
+    invalid_manifest = {**manifest, "publication_acceptance": "claimed"}
+    manifest_path.write_text(json.dumps(invalid_manifest), encoding="utf-8")
+    with pytest.raises(ReviewEvidencePackError, match="evidence_manifest_contract_mismatch"):
+        verify_review_evidence_pack(fixture)
+
+    duplicate_manifest = {
+        **manifest,
+        "artifacts": [*manifest["artifacts"], manifest["artifacts"][0]],
+    }
+    manifest_path.write_text(json.dumps(duplicate_manifest), encoding="utf-8")
+    with pytest.raises(ReviewEvidencePackError, match="evidence_manifest_artifact_set_invalid"):
+        verify_review_evidence_pack(fixture)
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    Image.new("RGB", (100, 80), "black").save(fixture / "repaired" / "render.png")
+    with pytest.raises(ReviewEvidencePackError, match=r"review_evidence_stale: repaired\.whole"):
+        verify_review_evidence_pack(fixture)

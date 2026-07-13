@@ -15,8 +15,11 @@ bounded_repair_checks:
   protected_relations: passed
   rendered_force_arrow_label_crossing: passed
   rendered_arrow_detection_regression: passed
-human_review_state: development_baseline_approved
+human_review_state: pending_revalidation
+historical_human_review_state: development_baseline_approved
+human_review_reason: current repaired panel hash differs and the historical verdict lacks the current aggregate review-input hash
 remaining_human_review:
+  - panel
   - whole
   - object_relation
   - zoom
