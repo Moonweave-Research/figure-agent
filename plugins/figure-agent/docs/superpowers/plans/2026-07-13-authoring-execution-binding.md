@@ -21,7 +21,7 @@
 - `tests/test_authoring_execution_packet.py`: packet, path, hash, prompt, and CLI contract tests.
 - `tests/test_authoring_execution_receipt.py`: post-run evidence binding and negative tests.
 - `tests/test_fig3_resistance_failure_first.py`: additive fixture-level experiment invariants.
-- `examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/`: new packets, prompts, generated sources, receipts, and review artifacts; historical sibling files remain immutable.
+- `examples/fig3_resistance_mechanism/review/failure-first/execution-binding-vN/`: versioned packets, prompts, generated sources, receipts, and review artifacts; every prior attempt remains immutable.
 
 ### Task 1: Compile an immutable byte-exact authoring packet
 
@@ -96,7 +96,7 @@ def canonical_packet_sha256(packet: dict[str, object]) -> str:
 All selected files must be repository-relative regular files. Reject absolute
 paths, empty or `.`/`..` components, symlinks at any path component, missing
 files, and resolved paths outside `workspace_root`. Require the output under
-`examples/<fixture>/review/failure-first/execution-binding-v1/`, ending in
+`examples/<fixture>/review/failure-first/execution-binding-vN/`, ending in
 `.tex`, and absent when the packet is written.
 
 - [ ] **Step 4: Render the prompt in one fixed order**
@@ -400,14 +400,20 @@ git commit -m "test: bind fresh Fig3 authoring prompts"
 
 ### Task 5: Execute exact prompt bytes through ORRO and stop at human review
 
+**Execution amendment:** The v1 packet passed byte/hash preflight but was
+blocked before model execution because the rendered prompt omitted the binding
+fixture briefing and panel narrative. Preserve v1 as negative control-plane
+evidence. Task 5 executes the corrected, additive `execution-binding-v2`
+packet only.
+
 **Files:**
 - Create locally: `.witnessd/plans/fig3-execution-binding.roles.json`
 - Create locally: `.witnessd/plans/fig3-execution-binding.workflow.json`
 - Create locally: `.witnessd/runs/fig3-execution-binding-*`
-- Create: `plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/control_generated.tex`
-- Create: `plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/treatment_generated.tex`
+- Create: `plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2/control_generated.tex`
+- Create: `plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2/treatment_generated.tex`
 - Create: per-arm transcript, touched-files JSON, receipt, compile logs, PDF, and PNG in the same additive directory
-- Create: `plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/review_handoff.md`
+- Create: `plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2/review_handoff.md`
 - Modify: `plugins/figure-agent/tests/test_fig3_resistance_failure_first.py`
 
 - [ ] **Step 1: Initialize and compile the ORRO workflow**
@@ -449,10 +455,10 @@ clean transcript after the fact.
 From `plugins/figure-agent` run:
 
 ```bash
-bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/control_generated.tex
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/control_generated.tex
-bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/treatment_generated.tex
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/treatment_generated.tex
+bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2/control_generated.tex
+FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2/control_generated.tex
+bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2/treatment_generated.tex
+FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2/treatment_generated.tex
 ```
 
 Preserve normal and strict exit codes/logs. A generated source missing the
@@ -513,7 +519,7 @@ state. Stage only source-controlled code/tests and the additive Fig3 artifacts
 whose hashes are bound in receipts.
 
 ```bash
-git add plugins/figure-agent/bin/fig-agent plugins/figure-agent/scripts plugins/figure-agent/tests plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1
+git add plugins/figure-agent/bin/fig-agent plugins/figure-agent/scripts plugins/figure-agent/tests plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2
 git commit -m "test: execute bound Fig3 authoring experiment"
 ```
 

@@ -1,0 +1,8 @@
+{
+  "decision": "blocked",
+  "model_execution_started": false,
+  "publication_acceptance": "not_claimed",
+  "reason": "binding_fixture_briefing_omitted_from_prompt",
+  "schema": "figure-agent.authoring-prompt-context-review.v1",
+  "superseded_by": "execution-binding-v2"
+}

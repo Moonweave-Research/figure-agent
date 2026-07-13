@@ -60,7 +60,7 @@ combines, in fixed order:
 
 1. the exact output path and one-attempt/no-repair instruction;
 2. mandatory standalone TikZ source requirements;
-3. semantic contracts and forbidden implications;
+3. binding fixture briefing, panel captions, semantic contracts, and forbidden implications;
 4. declared layout directives;
 5. optional shape-profile directives; and
 6. provenance and publication boundaries.
@@ -69,6 +69,10 @@ The packet writer writes the prompt file once. ORRO receives that file's bytes
 directly. No role-plan generator may summarize, interpolate, or append arm
 instructions after hashing. Control and treatment packets differ only in the
 declared treatment overlay and its emitted directives.
+
+Packet attempts are versioned and append-only. A packet that passes byte/hash
+preflight but omits binding narrative context is blocked before model execution
+and superseded by a new version; it is never overwritten in place.
 
 ## Execution and receipts
 

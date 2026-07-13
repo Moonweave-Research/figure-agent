@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +16,8 @@ MANDATORY_SOURCE_REQUIREMENTS = (
     r"\usepackage{tikz}",
     r"\usepackage{polymer-paper-preamble}",
 )
-ATTEMPT_DIRECTORY = Path("review/failure-first/execution-binding-v1")
+ATTEMPT_ROOT = Path("review/failure-first")
+ATTEMPT_NAME = re.compile(r"execution-binding-v[1-9][0-9]*")
 
 
 class AuthoringExecutionPacketError(ValueError):
@@ -72,10 +74,13 @@ def _resolve_regular_file(workspace_root: Path, value: str, *, label: str) -> Pa
 
 def _validate_output_path(workspace_root: Path, name: str, value: str) -> Path:
     relative = _safe_relative_path(value, label="output path")
-    required_parent = Path("examples") / name / ATTEMPT_DIRECTORY
-    if relative.parent != required_parent:
+    required_root = Path("examples") / name / ATTEMPT_ROOT
+    if (
+        relative.parent.parent != required_root
+        or not ATTEMPT_NAME.fullmatch(relative.parent.name)
+    ):
         raise AuthoringExecutionPacketError(
-            "output path must remain inside review/failure-first/execution-binding-v1"
+            "output path must remain inside a versioned execution-binding-v directory"
         )
     if relative.suffix != ".tex":
         raise AuthoringExecutionPacketError("output path must end in .tex")
@@ -99,10 +104,14 @@ def resolve_attempt_artifact_path(
 ) -> Path:
     """Resolve a new packet-side artifact inside the fixture attempt directory."""
     relative = _safe_relative_path(value, label="attempt artifact")
-    required_parent = Path("examples") / name / ATTEMPT_DIRECTORY
-    if relative.parent != required_parent or relative.suffix != suffix:
+    required_root = Path("examples") / name / ATTEMPT_ROOT
+    if (
+        relative.parent.parent != required_root
+        or not ATTEMPT_NAME.fullmatch(relative.parent.name)
+        or relative.suffix != suffix
+    ):
         raise AuthoringExecutionPacketError(
-            f"attempt artifact must be a {suffix} file inside execution-binding-v1"
+            f"attempt artifact must be a {suffix} file inside execution-binding-vN"
         )
     path = workspace_root.resolve() / relative
     current = workspace_root.resolve()
@@ -143,6 +152,18 @@ def _contract_lines(context_pack: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _fixture_briefing_lines(context_pack: dict[str, Any]) -> list[str]:
+    lines = ["- Required panels:"]
+    for panel in context_pack.get("fixture", {}).get("panels", []):
+        lines.append(f"  - [{panel['id']}] {panel['caption']}")
+    briefing = context_pack.get("paper_context", {}).get("briefing", "")
+    if briefing:
+        lines.extend(["- Binding fixture briefing (verbatim):", "", briefing])
+    else:
+        lines.append("- No fixture briefing was provided.")
+    return lines
+
+
 def render_authoring_prompt(
     *,
     name: str,
@@ -163,6 +184,8 @@ def render_authoring_prompt(
         *[f"- {requirement}" for requirement in MANDATORY_SOURCE_REQUIREMENTS],
         "",
         "## Semantic contracts and forbidden implications",
+        *_fixture_briefing_lines(context_pack),
+        "",
         *_contract_lines(context_pack),
         "- Do not imply physics or quantitative relations absent from the declared contracts.",
         "",

@@ -96,6 +96,8 @@ def test_compiles_canonical_packet_and_prompt(tmp_path: Path) -> None:
     assert "feedback_rounds: 0" in prompt
     assert "manual_repairs: 0" in prompt
     assert "publication_acceptance: not_claimed" in prompt
+    assert "Trap energy diagram" in prompt
+    assert "Charge trapping" in prompt
 
 
 @pytest.mark.parametrize(
@@ -107,7 +109,7 @@ def test_compiles_canonical_packet_and_prompt(tmp_path: Path) -> None:
         (
             "output_path",
             "examples/context_demo/review/other/control_generated.tex",
-            "execution-binding-v1",
+            "execution-binding-v",
         ),
         (
             "output_path",
@@ -164,6 +166,21 @@ def test_rejects_existing_generated_output(tmp_path: Path) -> None:
         match="output path already exists",
     ):
         _compile(workspace)
+
+
+def test_accepts_a_new_versioned_attempt_directory(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    packet, _ = _compile(
+        workspace,
+        output_path=(
+            "examples/context_demo/review/failure-first/execution-binding-v2/"
+            "control_generated.tex"
+        ),
+    )
+
+    assert packet["output_path"].endswith("execution-binding-v2/control_generated.tex")
 
 
 def test_rejects_duplicate_mandatory_requirements() -> None:

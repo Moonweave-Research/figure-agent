@@ -76,7 +76,8 @@ SHAPE_PROFILED_SOURCE = REVIEW / "shape_profiled_generated.tex"
 SHAPE_COMPARISON = REVIEW / "shape_profile_comparison.yaml"
 SHAPE_ADVERSARIAL_REVIEW = REVIEW / "shape_profile_adversarial_review.yaml"
 SHAPE_HANDOFF = REVIEW / "shape_profile_handoff.md"
-EXECUTION_BINDING = REVIEW / "execution-binding-v1"
+EXECUTION_BINDING_V1 = REVIEW / "execution-binding-v1"
+EXECUTION_BINDING = REVIEW / "execution-binding-v2"
 
 
 def _sha256(path: Path) -> str:
@@ -1196,3 +1197,23 @@ def test_fig3_execution_binding_packets_are_additive_and_equal_input() -> None:
     assert preflight["schema"] == "figure-agent.authoring-execution-preflight.v1"
     assert preflight["decision"] == "pass"
     assert preflight["filesystem_read_isolation"] == "unavailable"
+
+
+def test_fig3_execution_binding_v1_was_blocked_before_model_execution() -> None:
+    review = json.loads(
+        (EXECUTION_BINDING_V1 / "prompt_context_review.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert review["decision"] == "blocked"
+    assert review["reason"] == "binding_fixture_briefing_omitted_from_prompt"
+    assert review["model_execution_started"] is False
+    assert review["superseded_by"] == "execution-binding-v2"
+
+
+def test_fig3_execution_binding_prompt_carries_the_binding_briefing() -> None:
+    prompt = (EXECUTION_BINDING / "treatment_prompt.md").read_text(encoding="utf-8")
+    assert "n = the BREADTH of the trap energy distribution" in prompt
+    assert "Carrier is sign-agnostic" in prompt
+    assert "(a) cell + transport + decay" in prompt
+    assert "(b) g(E) evolution" in prompt
