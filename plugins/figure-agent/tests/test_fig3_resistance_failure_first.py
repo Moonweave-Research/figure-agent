@@ -13,8 +13,10 @@ import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
+sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
 import authoring_context_pack  # noqa: E402
+from failure_ablation import evaluate_ablation  # noqa: E402
 
 FIXTURE = PLUGIN_ROOT / "examples" / "fig3_resistance_mechanism"
 REVIEW = FIXTURE / "review" / "failure-first"
@@ -126,6 +128,58 @@ def test_fig3_comparable_v1_declares_one_shared_contract_and_three_conditions() 
         "examples/fig1_*/",
     ]
     assert contract["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_comparable_v1_is_transcript_bound_but_nonrenderable() -> None:
+    contract = yaml.safe_load(COMPARISON_CONTRACT.read_text(encoding="utf-8"))
+    runs: dict[str, Path] = {}
+    receipts: list[dict[str, str]] = []
+
+    for variant, condition in contract["conditions"].items():
+        run_path = COMPARABLE_V1 / f"{variant}.yaml"
+        run = yaml.safe_load(run_path.read_text(encoding="utf-8"))
+        source = COMPARABLE_V1 / f"{variant}_generated.tex"
+        receipt = run["generation_receipt"]
+        runs[variant] = run_path
+        receipts.append(receipt)
+
+        assert run["comparison_eligibility"] == "eligible_equal_input"
+        assert run["comparison_contract_hash"] == _sha256(COMPARISON_CONTRACT)
+        assert run["condition_prompt_hash"] == condition["prompt_sha256"]
+        assert run["compile_outcome"]["exit"] == 1
+        assert run["compile_outcome"]["state"] == (
+            "blocked_before_render_by_style_lock"
+        )
+        assert run["semantic_evaluation"] == "unavailable_nonrenderable"
+        assert run["clean_reproduction"] is False
+        assert run["human_verdict"] == {"state": "pending"}
+        assert run["publication_acceptance"] == "not_claimed"
+        assert receipt["generated_artifact_sha256"] == _sha256(source)
+        assert receipt["transcript_sha256"] == _sha256(
+            COMPARABLE_V1 / receipt["transcript_path"]
+        )
+
+    assert {receipt["model_id"] for receipt in receipts} == {"codex-gpt-5.5"}
+    assert {receipt["source_commit"] for receipt in receipts} == {"59e64de8"}
+    assert {receipt["starting_artifact_sha256"] for receipt in receipts} == {
+        contract["shared_contract"]["starting_artifact_sha256"]
+    }
+
+    report = evaluate_ablation(runs)
+    tracked_report = json.loads(
+        (COMPARABLE_V1 / "ablation_report.json").read_text(encoding="utf-8")
+    )
+    assert report == tracked_report
+    assert report["comparison_evidence"] == "transcript_bound"
+    assert report["reproduction_gate"] == "failed"
+    assert report["deltas"]["verified_vs_raw"][
+        "confirmed_defect_occurrence_count"
+    ] == 21
+    assert report["deltas"]["repaired_vs_raw"][
+        "confirmed_defect_occurrence_count"
+    ] == 30
+    assert report["product_claim"] == "not_authorized"
+    assert report["publication_acceptance"] == "not_claimed"
 
 
 def _declared_fixture_path(relative_path: str) -> Path:

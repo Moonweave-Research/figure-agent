@@ -212,7 +212,7 @@ modules listed in Section 0.
   declarations. In particular, preserve sign-agnostic repeated trapping in A,
   discrete-to-continuous distribution evolution in B, and the distinction
   between `n` (breadth) and `rho_60s` (magnitude).
-- [ ] Produce comparable `raw`, `verified`, and `repaired` manifests using the
+- [x] Produce comparable `raw`, `verified`, and `repaired` manifests using the
   same model, input packet, budget, and starting artifact; do not treat manually
   staged manifests as actual LLM runs without generation receipts. A receipt is
   `transcript_bound` only when its adjacent non-symlink transcript and both
@@ -220,6 +220,10 @@ modules listed in Section 0.
   contract; use `scripts/quality/generation_receipt.py` to write this record.
   The writer refuses packet/budget hash drift and transcript overwrite. This is
   an auditable execution claim, not provider authentication.
+  The additive `comparable-v1/` run is transcript-bound and equal-input, but all
+  three arms fail before render because the abstract `polymer-paper` style
+  profile was not converted into an executable preamble and palette contract.
+  Its reproduction gate failed and no product or publication claim is allowed.
   Historical evidence for this unchecked comparison remains under
   `review/failure-first/` and is non-prescriptive:
 
@@ -264,11 +268,11 @@ modules listed in Section 0.
 - [ ] Obtain a named human review and record prospectively measured correction
   minutes. A machine result is never a publication verdict.
 
-**Current next executable step:** Slice 1 is `pending_human_review` on the four
-current hash-bound views. While that named review is unavailable, continue only
-the already-open Slice 2 comparison step: produce genuinely comparable raw,
-verified, and repaired manifests with bound generation receipts. Do not start a
-new renderer, fixture, or polish lane.
+**Current next executable step:** Slice 1 remains `pending_human_review` on the
+four current hash-bound views. In Slice 2, convert the declared style profile
+into an executable pre-authoring preamble and palette contract, then repeat the
+same additive three-arm protocol as `comparable-v2/`. Preserve `comparable-v1/`
+as failed evidence; do not start a new renderer, fixture, or polish lane.
 
 ### Verification
 

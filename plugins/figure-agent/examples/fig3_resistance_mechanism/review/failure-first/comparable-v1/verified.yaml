@@ -1,0 +1,67 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: verified
+comparison_eligibility: eligible_equal_input
+model_contract_hash: sha256:9d969e65514446c9ea822e099c48372d1bead7bde2d38787b3e1fbf9c9cb2545
+input_packet_hash: sha256:dc301d15cb39fd431f48098b5f07c5b66e8bde35152729a48567b6005fd15dfb
+budget_contract_hash: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+comparison_contract_hash: sha256:c98e94e48c02ec0b583f9685f2dd1337dd51b29e4bf166ed4b16219122aad775
+condition_prompt_hash: sha256:c088c01522d96dd043a28804ebb7e194885b1df135ab0be29b33f77f9635f785
+review_input_hash: sha256:437ca5169edd50a10a3b8851d367bee1f91790b61b96b64a0a675f36caf205f9
+figure_family: fig3_resistance_mechanism
+findings:
+- id: VERIFIED_MISSING_STYLE_PREAMBLE
+  failure_class: style
+  observation_scale: source
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: document.preamble
+  occurrences: 1
+- id: VERIFIED_FORBIDDEN_LOCAL_PALETTE
+  failure_class: style
+  observation_scale: source
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: document.local_color_definitions
+  occurrences: 29
+- id: VERIFIED_EXTREME_LOCAL_TYPE
+  failure_class: typography
+  observation_scale: source
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: document.local_font_sizes
+  occurrences: 17
+- id: VERIFIED_LABEL_SOURCE_ORDER_RISK
+  failure_class: geometry
+  observation_scale: source
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: document.filled_label_order
+  occurrences: 2
+human_correction_minutes: null
+intervention_count: 0
+clean_reproduction: false
+compile_outcome:
+  command:
+  - bash
+  - scripts/compile.sh
+  - examples/fig3_resistance_mechanism/review/failure-first/comparable-v1/verified_generated.tex
+  exit: 1
+  state: blocked_before_render_by_style_lock
+  blocker_count: 30
+  warning_count: 20
+semantic_evaluation: unavailable_nonrenderable
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed
+generation_receipt:
+  schema: figure-agent.generation-receipt.v1
+  model_id: codex-gpt-5.5
+  input_packet_sha256: sha256:dc301d15cb39fd431f48098b5f07c5b66e8bde35152729a48567b6005fd15dfb
+  budget_contract_sha256: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+  source_commit: 59e64de8
+  starting_artifact_path: blank_start.txt
+  starting_artifact_sha256: sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+  generated_artifact_path: verified_generated.tex
+  generated_artifact_sha256: sha256:3a123b70ee1c033a8967148e220bd880b37a460005603ecfec914902a1d26cd3
+  transcript_path: verified.transcript.json
+  transcript_sha256: sha256:271e6f2d284080b3b780ab4d6d7f62fc09f0a5cc625641fa4ccf48a4694156f6
