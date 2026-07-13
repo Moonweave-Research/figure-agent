@@ -362,6 +362,15 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/execution-binding-v6/treatment_packet.json",
         "review/failure-first/execution-binding-v6/treatment_prompt.md",
         "review/failure-first/execution-binding-v6/preflight.json",
+        "review/failure-first/execution-binding-v6/control_generated.tex",
+        "review/failure-first/execution-binding-v6/treatment_generated.tex",
+        "review/failure-first/execution-binding-v6/control_input_audit.json",
+        "review/failure-first/execution-binding-v6/treatment_input_audit.json",
+        "review/failure-first/execution-binding-v6/control.touched-files.json",
+        "review/failure-first/execution-binding-v6/treatment.touched-files.json",
+        "review/failure-first/execution-binding-v6/control_receipt.json",
+        "review/failure-first/execution-binding-v6/treatment_receipt.json",
+        "review/failure-first/execution-binding-v6/execution_review.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "examples/fig3_resistance_mechanism/review/failure-first/"
