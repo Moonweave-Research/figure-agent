@@ -1,0 +1,19 @@
+{
+  "control": {
+    "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v3/control_generated.tex",
+    "packet_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v3/control_packet.json",
+    "packet_sha256": "sha256:536ae48b75c2ae3df3bef70330d0e490dcd33bde6892557af2a63f4a8d3d85f3",
+    "prompt_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v3/control_prompt.md",
+    "prompt_sha256": "sha256:9bfd2d62eb596791fe26ace1b9e0b4f193853c816a6938db021d49220e0a085c"
+  },
+  "decision": "pass",
+  "filesystem_read_isolation": "unavailable",
+  "schema": "figure-agent.authoring-execution-preflight.v1",
+  "treatment": {
+    "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v3/treatment_generated.tex",
+    "packet_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v3/treatment_packet.json",
+    "packet_sha256": "sha256:da6140da89e72e5bcbaec5813d8e749770a82bae8897b22840ca0884a10fa984",
+    "prompt_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v3/treatment_prompt.md",
+    "prompt_sha256": "sha256:660e602aad0e62d1c5cbc34ad31df04cad8fca1b2e56d097a09fb27e895b6dcb"
+  }
+}
