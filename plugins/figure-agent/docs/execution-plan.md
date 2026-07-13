@@ -214,108 +214,30 @@ modules listed in Section 0.
   contract; use `scripts/quality/generation_receipt.py` to write this record.
   The writer refuses packet/budget hash drift and transcript overwrite. This is
   an auditable execution claim, not provider authentication.
-  Current evidence is deliberately not yet eligible for this checkbox: the raw
-  run is receipt-bound; the deterministic `style_control` isolates style-token
-  injection but is not an LLM run; verified attempt 1 is preserved as a nested
-  preamble-path failure; verified attempt 2 is receipt-bound but explicitly
-  marked `feedback_guided_not_equal_input`. None may be presented as a fair
-  raw/verified/repaired comparison or publication acceptance. The first
-  cross-artifact layout-lane contract is now recorded separately: it detects
-  the Panel A narrative/bias-marker collision in both raw and feedback-guided
-  verified renders, but it is diagnostic evidence rather than an ablation
-  outcome or publication gate. A selected layout-lane contract can also be
-  injected into `fig-agent context-pack` as explicit authoring directives;
-  selection is per generation attempt so fixture-specific geometry does not
-  leak into unrelated figures. A subsequent clean-room, constraint-guided
-  iterative attempt is also preserved as negative evidence rather than folded
-  into the comparison: after four review-feedback rounds it still failed the
-  strict detector gate, and improved the declared lane only from `0.000` to
-  `0.013`, below the required `0.015`. Its visible cross-panel title collision,
-  annotation-to-plot collision, and forced label hyphenation demonstrate that
-  one selected text-clearance directive is not a sufficient authoring system.
-  This attempt is neither an ablation result nor publication acceptance. The
-  next general capability target is panel-region containment plus
-  annotation-to-plot clearance, not further manual polishing of this render.
-  That capability is now implemented and evaluated post hoc against the
-  preserved attempt without rewriting its generation inputs. The declared
-  panel-title containment rule measures `-0.1316` normalized inset and the
-  decay-note-to-plot rule measures `0.0` clearance, so both known failures are
-  machine-visible. This establishes detector coverage only; a new clean-room
-  generation is still required to test whether pre-generation directives alter
-  authoring behavior.
-  The first clean-room `region_guided` attempt now provides that test: both
-  selected rules pass (`0.023` panel-title inset and `0.026` decay-note-to-plot
-  clearance), but strict compilation still fails on three other text
-  collisions. Adversarial review also confirms a clipped Panel B axis label and
-  weak hierarchy. Therefore the region directives have demonstrated narrow
-  causal value without demonstrating overall quality. The next capability
-  target is a panel-owned text inventory with mutual-clearance and page-boundary
-  rules; the failed attempt remains evidence, not a polishing target.
-  Human review by `moon` rejects the attempt beyond those machine findings:
-  the trap-energy shapes are unnatural, the palette and finish are unrefined,
-  the `2.42:1` canvas is poorly proportioned, the two panels use inconsistent
-  graphical grammar, and roughly 75 rendered words across 14 text nodes make
-  the figure read like prose laid over a diagram. These are now recorded as
-  distinct failure classes. The next generation must reduce explanatory prose
-  into the caption, use one declared distribution-shape grammar and one palette
-  role system, and satisfy panel-owned text, mutual-clearance, and page-boundary
-  contracts before aesthetic comparison is meaningful.
-  The first text-inventory slice is now implemented as attempt-scoped region
-  budgets injected before generation and counted from PDF words after render.
-  Applied post hoc to the rejected attempt, it measures `75 > 45` words for the
-  whole figure, `33 > 22` for Panel A, and `42 > 23` for Panel B. These limits
-  are explicitly bound to the human editorial verdict and are not claimed as
-  universal journal rules. This closes the text-density measurement gap.
-  Required label groups can now declare one exact phrase and an owning region;
-  words count only when their full PDF boxes remain inside that region. Applied
-  post hoc to the same rejected render, the required Panel B phrase
-  `trap energy E` is reported as missing because the render preserves only the
-  clipped edge word `trap`. This closes the required-label ownership and page-
-  boundary detection gap without claiming aesthetic quality. A second post hoc
-  inventory binds the complete `S60: discrete deep state` and
-  `S80: continuous broad` phrases to Panel B and measures `0.0` mutual
-  clearance against the declared `0.01` minimum, exposing their visible
-  overlap. This closes the first declared mutual-clearance slice. The next
-  structural target is a bounded distribution-shape grammar experiment; it
-  must be tested through a new generation rather than by polishing this rejected
-  artifact. That controlled two-arm generation has now run once through ORRO.
-  Both exact TikZ sources and their persisted execution evidence exist, but both
-  normal and strict compilation stop before render because the shared authoring
-  packet did not provide `polymer-paper-preamble`. No PDF, PNG, or layout report
-  exists, so the attempt is `ineligible_not_renderable`; human shape and
-  contemporary-paper review is blocked and not applicable. The final Depone
-  proofcheck passes only for persisted execution evidence. Its preceding ORRO
-  report records a binding mismatch because handoff/report creation mutated the
-  run before proofcheck was rerun. Preserve both generated sources without
-  repair. The next step is a new equal-input experiment with the shared
-  preamble contract repaired before generation, not post-hoc polishing and not
-  promotion of the shape profile. That repaired v4 experiment is now preserved:
-  both arms write to the declared plugin-relative paths and compile normally,
-  and pre-authoring Style Lock rules eliminate the prior palette, local-font,
-  and thin-stroke blockers. Strict compilation still fails on three control
-  collisions and two treatment collisions, so neither arm is machine-valid.
-  Moreover, transcript audit passes for control but blocks treatment because it
-  read `docs/product-spec.md` and `docs/execution-plan.md` outside the declared
-  authoring inputs. The pair is therefore comparison-ineligible; fewer reported
-  collisions do not establish a shape-profile or publication-quality gain.
-  Figure Agent now exposes `authoring-input-audit`, and new authoring packets
-  bind the only allowed repository content reads. The next equal-input attempt
-  must pass that audit before visual comparison. The preserved v6 attempt now
-  does so for both arms. Both sources compile normally; strict compilation
-  reports eleven control collisions and five treatment collisions plus one
-  treatment hyphenation finding. The control execution proof passes. The
-  treatment proof is explicitly blocked only because its isolated LuaTeX font
-  cache timed out after writing the declared source; the source was compiled
-  successfully outside that authoring run. The pair remains comparison-
-  ineligible and has no human publication verdict, so the lower treatment
-  collision count is evidence of detector movement only, not acceptance.
+  Historical evidence for this unchecked comparison remains under
+  `review/failure-first/` and is non-prescriptive:
 
-  The bounded machine-finding repair loop now persists deterministic reports,
-  compiles exact hash-bound targets, accepts only replacement blocks from the
-  author lane, materializes additive sources transactionally, and reruns the
-  same gates. Superseded filesystem-author trials remain immutable negative
-  evidence. This implementation evidence does not complete the equal-input
-  ablation or replace a named human verdict.
+  - `raw.yaml`, `style_control.yaml`, `verified.yaml`, and their receipts show a
+    bound raw run, a deterministic non-LLM style control, one preamble failure,
+    and one feedback-guided run that is not equal-input.
+  - The `region_guided_*` artifacts show narrow containment gains but continuing
+    strict collisions, a clipped label, weak hierarchy, and Moon's rejection of
+    the shapes, palette, proportion, grammar consistency, and prose density.
+    The bound inventory records `75 > 45`, `33 > 22`, and `42 > 23` words plus
+    missing-label and zero-clearance findings; these are fixture evidence, not
+    universal publication rules.
+  - `execution-binding-v3/`, `execution-binding-v4/`, and
+    `execution-binding-v6/` preserve respectively a non-renderable preamble
+    failure, undeclared treatment reads, and a timed-out treatment proof with
+    continuing strict findings. All pairs remain comparison-ineligible.
+  - `execution-repair-v1/` through `execution-repair-v12/` preserve the move to
+    exact replacement blocks, transactional additive materialization, detector
+    reruns, and bounded repaired artifacts. They do not constitute a fair
+    ablation or human publication verdict.
+  - Commits `771c339d`, `a30ff450`, `3d16305e`, and `5a2e895f` bind the v12
+    renderer-neutral semantic packet, fail-closed authority and selector checks,
+    transactional version publishing, and authenticated page evidence at
+    `semantic-review-v12/packet/packet.json`.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [x] Keep ambiguous and unbound findings review-only. The renderer-neutral
   `figure-agent.semantic-legibility-evidence.v1` packet binds full/page rasters,
@@ -328,13 +250,16 @@ modules listed in Section 0.
   `n` breadth and `rho_60s` magnitude orthogonal. The source and render receipt
   are hash-bound; its visual outcome remains review-ready, not accepted.
 - [x] Compile v12 semantic review evidence: five subjects are exact and the S60
-  distribution is blocked by an authority conflict. Named questions remain
-  pending for trap-site versus capture-event distinction, breadth versus
-  magnitude, voltage connection to both electrodes, and S60 authority. This is
-  machine evidence only; semantic preservation and publication acceptance are
-  not claimed.
+  distribution is blocked by an authority conflict. Exactly three questions are
+  pending: trap-site versus capture-event distinction, breadth versus magnitude,
+  and voltage connection to both electrodes. The S60 authority question is
+  blocked. This is machine evidence only; semantic preservation and publication
+  acceptance are not claimed.
 - [ ] Obtain a named human review and record prospectively measured correction
   minutes. A machine result is never a publication verdict.
+
+**Current next executable step:** Complete Slice 1's first unchecked item by
+reproducing its tracked figure and review packet from a clean checkout.
 
 ### Verification
 
