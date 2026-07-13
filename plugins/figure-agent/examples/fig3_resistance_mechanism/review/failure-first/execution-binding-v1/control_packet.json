@@ -1,0 +1,42 @@
+{
+  "blank_start": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/blank_start.txt",
+    "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "budget_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/budget_contract.yaml",
+    "sha256": "sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762"
+  },
+  "context_pack": {
+    "base_sha256": "sha256:b64fc2a56210668f4faf88bfc3d65337ae4d596bea6bad65a4a33f9cd5962b21",
+    "schema": "figure-agent.authoring-context-pack.v1",
+    "sha256": "sha256:b64fc2a56210668f4faf88bfc3d65337ae4d596bea6bad65a4a33f9cd5962b21"
+  },
+  "feedback_rounds": 0,
+  "filesystem_read_isolation": "unavailable",
+  "fixture": "fig3_resistance_mechanism",
+  "forbidden_import_classes": [
+    "fig1_fixture_artifacts",
+    "historical_generated_sources"
+  ],
+  "layout_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/layout_lane_contract.yaml",
+    "sha256": "sha256:eeed14640ac9974b0e8376e9745fd6861fbcb19b689c7b0c3348103e0a113adc"
+  },
+  "mandatory_source_requirements": [
+    "\\documentclass[tikz,border=4pt]{standalone}",
+    "\\usepackage{tikz}",
+    "\\usepackage{polymer-paper-preamble}"
+  ],
+  "manual_repairs": 0,
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/control_generated.tex",
+  "packet_sha256": "sha256:c739f7434ac56aeb74a774bee65dba7a6f4de9680a579c82171d55df411d1d18",
+  "prompt": {
+    "sha256": "sha256:c58856af819b0015d0c4faf12c538bbee2d48000ae3914e7310c415528d45882",
+    "utf8": "# Bound authoring execution: fig3_resistance_mechanism\n\n## Output and attempt boundary\n- Write exactly one new source to [examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v1/control_generated.tex].\n- Start from the declared blank artifact; perform one attempt only.\n- Do not inspect or repair historical generated sources.\n\n## Mandatory standalone TikZ source requirements\n- \\documentclass[tikz,border=4pt]{standalone}\n- \\usepackage{tikz}\n- \\usepackage{polymer-paper-preamble}\n\n## Semantic contracts and forbidden implications\n- No fixture semantic contracts are enabled.\n- Do not imply physics or quantitative relations absent from the declared contracts.\n\n## Declared layout directives\n- Keep text group [applied, trapping, during, conduction] at least 0.015 page-diagonal units clear of text group [V].\n\n## Optional shape-profile directives\n- No optional shape profile selected.\n\n## Provenance and publication boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 0\n- manual_repairs: 0\n- filesystem_read_isolation: unavailable\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.authoring-execution-packet.v1",
+  "shape_profile": null
+}

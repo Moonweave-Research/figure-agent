@@ -76,6 +76,7 @@ SHAPE_PROFILED_SOURCE = REVIEW / "shape_profiled_generated.tex"
 SHAPE_COMPARISON = REVIEW / "shape_profile_comparison.yaml"
 SHAPE_ADVERSARIAL_REVIEW = REVIEW / "shape_profile_adversarial_review.yaml"
 SHAPE_HANDOFF = REVIEW / "shape_profile_handoff.md"
+EXECUTION_BINDING = REVIEW / "execution-binding-v1"
 
 
 def _sha256(path: Path) -> str:
@@ -1158,3 +1159,40 @@ def test_fig3_resistance_render_receipt_reproduces_current_source_outputs() -> N
     assert png_path.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
     assert _pdf_content_signature(pdf_path) == receipt["pdf_content_signature"]
     assert _sha256(png_path) == receipt["png_sha256"]
+
+
+def test_fig3_execution_binding_packets_are_additive_and_equal_input() -> None:
+    historical_hashes = {
+        SHAPE_CONTROL_SOURCE: "sha256:46e58f500368471a491b9cf5cfbf36dc2fdad3b1a5013ba7cd6e43b445dddfc2",
+        SHAPE_PROFILED_SOURCE: "sha256:0314182b8f2bbbcf107000d4d806934368ab49f00b5e14f54a1deefeafa5c2a9",
+        SHAPE_CONTROL_PROMPT: "sha256:ecaf28ee4d5e8c1b05ad098cba5747391620ea5e981b4c5877c47c46f32a13a7",
+        SHAPE_PROFILED_PROMPT: "sha256:c1554202da35fdee1702c275b930463bf6055b10a2f51b9eb5cfbfcebf6b2944",
+    }
+    assert {path: _sha256(path) for path in historical_hashes} == historical_hashes
+
+    control = json.loads((EXECUTION_BINDING / "control_packet.json").read_text())
+    treatment = json.loads((EXECUTION_BINDING / "treatment_packet.json").read_text())
+    preflight = json.loads((EXECUTION_BINDING / "preflight.json").read_text())
+    for field in (
+        "model_id",
+        "budget_contract",
+        "blank_start",
+        "mandatory_source_requirements",
+        "feedback_rounds",
+        "manual_repairs",
+        "publication_acceptance",
+    ):
+        assert control[field] == treatment[field]
+    assert control["context_pack"]["base_sha256"] == treatment["context_pack"][
+        "base_sha256"
+    ]
+    assert control["shape_profile"] is None
+    assert treatment["shape_profile"]["path"] == "shape_profile_panel_b.yaml"
+    assert control["output_path"] != treatment["output_path"]
+    for arm in ("control", "treatment"):
+        prompt = (EXECUTION_BINDING / f"{arm}_prompt.md").read_text(encoding="utf-8")
+        assert r"\usepackage{polymer-paper-preamble}" in prompt
+        assert prompt == (control if arm == "control" else treatment)["prompt"]["utf8"]
+    assert preflight["schema"] == "figure-agent.authoring-execution-preflight.v1"
+    assert preflight["decision"] == "pass"
+    assert preflight["filesystem_read_isolation"] == "unavailable"
