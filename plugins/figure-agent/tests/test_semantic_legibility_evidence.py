@@ -41,6 +41,14 @@ def _write_yaml(path: Path, payload: object) -> None:
     path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
 
+def _output_files(output_dir: Path) -> dict[str, bytes]:
+    return {
+        path.relative_to(output_dir).as_posix(): path.read_bytes()
+        for path in output_dir.rglob("*")
+        if path.is_file()
+    }
+
+
 def _input(tmp_path: Path) -> tuple[Path, dict]:
     fixture = tmp_path / "fixture"
     fixture.mkdir()
@@ -461,6 +469,7 @@ def test_mid_compile_failure_preserves_prior_packet_generated_crops_and_human_no
     input_path, _ = _input(tmp_path)
     output_dir = tmp_path / "packet"
     first = module.compile_semantic_legibility_evidence(input_path, output_dir)
+    (output_dir / "crops").mkdir(exist_ok=True)
     note = output_dir / "crops" / "reviewer-note.txt"
     note.write_text("human-owned", encoding="utf-8")
     prior_packet = (output_dir / "packet.json").read_bytes()
@@ -486,6 +495,64 @@ def test_mid_compile_failure_preserves_prior_packet_generated_crops_and_human_no
     assert (output_dir / "packet.json").read_bytes() == prior_packet
     assert note.read_text(encoding="utf-8") == "human-owned"
     assert {path: (output_dir / path).read_bytes() for path in prior_crops} == prior_crops
+
+
+def test_publish_failure_preserves_prior_packet_and_generated_crop_set(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _module()
+    input_path, payload = _input(tmp_path)
+    output_dir = tmp_path / "packet"
+    module.compile_semantic_legibility_evidence(input_path, output_dir)
+    prior_files = _output_files(output_dir)
+
+    render_path = input_path.parent / "render.png"
+    Image.new("RGB", (100, 100), "lightgray").save(render_path)
+    changed_hash = _sha256(render_path)
+    payload["render"]["full_render_sha256"] = changed_hash
+    for binding in payload["bindings"]:
+        binding["full_render_sha256"] = changed_hash
+    _write_yaml(input_path, payload)
+    original_replace = module.os.replace
+
+    def fail_packet_switch(source: object, destination: object) -> None:
+        if Path(destination) == output_dir / "packet.json":
+            raise OSError("injected packet switch failure")
+        original_replace(source, destination)
+
+    monkeypatch.setattr(module.os, "replace", fail_packet_switch)
+
+    with pytest.raises(OSError, match="injected packet switch failure"):
+        module.compile_semantic_legibility_evidence(input_path, output_dir)
+
+    assert _output_files(output_dir) == prior_files
+
+
+def test_successful_manifest_switch_removes_only_obsolete_generated_crops(
+    tmp_path: Path,
+) -> None:
+    module = _module()
+    input_path, payload = _input(tmp_path)
+    output_dir = tmp_path / "packet"
+    first = module.compile_semantic_legibility_evidence(input_path, output_dir)
+    prior_crop_paths = {subject["crop"]["path"] for subject in first["subjects"]}
+    (output_dir / "crops").mkdir(exist_ok=True)
+    note = output_dir / "crops" / "reviewer-note.txt"
+    note.write_text("human-owned", encoding="utf-8")
+    payload["authority_claims"] = [
+        claim for claim in payload["authority_claims"] if claim["semantic_id"] != "trap_site"
+    ]
+    _write_yaml(input_path, payload)
+
+    second = module.compile_semantic_legibility_evidence(input_path, output_dir)
+
+    new_crop_paths = {
+        subject["crop"]["path"] for subject in second["subjects"] if "crop" in subject
+    }
+    assert len(new_crop_paths) == 2
+    assert all((output_dir / path).is_file() for path in new_crop_paths)
+    assert all(not (output_dir / path).exists() for path in prior_crop_paths)
+    assert note.read_text(encoding="utf-8") == "human-owned"
 
 
 def test_symlink_output_is_rejected_without_touching_target(tmp_path: Path) -> None:

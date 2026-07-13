@@ -63,7 +63,7 @@
       "sha256": "sha256:5a87f8028a20439fecab2491c7114163dec33d77e05290ad80003f830e331947"
     }
   },
-  "review_input_hash": "sha256:3893a42f9ba27086867637ac501fd8201903c0bd49bfd807f85b6de3f226dd62",
+  "review_input_hash": "sha256:f7cbd6e5a62b1409c6348e228a1d369b427ad25ce9a44a20f892eea547f163cc",
   "schema": "figure-agent.semantic-legibility-evidence.v1",
   "semantic_preservation": "not_claimed_pending_human_review",
   "subjects": [
@@ -96,7 +96,7 @@
           1162,
           362
         ],
-        "path": "crops/voltage_relation.png"
+        "path": "generated/e1b21ff13c3db7076677d3f1ce5f23fa22e4bbac846ce1a63bc0678559ec5941/crops/voltage_relation.png"
       },
       "expected_readings": [
         "V is connected to both electrodes"
@@ -166,7 +166,7 @@
           867,
           447
         ],
-        "path": "crops/trap_site.png"
+        "path": "generated/e1b21ff13c3db7076677d3f1ce5f23fa22e4bbac846ce1a63bc0678559ec5941/crops/trap_site.png"
       },
       "expected_readings": [
         "gray cross is an available trap site"
@@ -237,7 +237,7 @@
           502,
           512
         ],
-        "path": "crops/capture_event.png"
+        "path": "generated/e1b21ff13c3db7076677d3f1ce5f23fa22e4bbac846ce1a63bc0678559ec5941/crops/capture_event.png"
       },
       "expected_readings": [
         "red ring is a carrier capture event"
@@ -308,7 +308,7 @@
           3282,
           832
         ],
-        "path": "crops/n_breadth.png"
+        "path": "generated/e1b21ff13c3db7076677d3f1ce5f23fa22e4bbac846ce1a63bc0678559ec5941/crops/n_breadth.png"
       },
       "expected_readings": [
         "n encodes horizontal distribution breadth"
@@ -379,7 +379,7 @@
           2772,
           562
         ],
-        "path": "crops/rho60s_magnitude.png"
+        "path": "generated/e1b21ff13c3db7076677d3f1ce5f23fa22e4bbac846ce1a63bc0678559ec5941/crops/rho60s_magnitude.png"
       },
       "expected_readings": [
         "rho60s encodes vertical distribution magnitude"

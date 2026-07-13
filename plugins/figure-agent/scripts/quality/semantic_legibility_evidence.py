@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import sys
 import tempfile
 import unicodedata
@@ -154,11 +155,91 @@ def _binding_failure(
     return None
 
 
-def _reject_symlink_outputs(output_dir: Path, crop_names: list[str]) -> None:
-    paths = [output_dir, output_dir / "packet.json", output_dir / "crops"]
+def _reject_symlink_outputs(
+    output_dir: Path,
+    crop_names: list[str],
+    managed_paths: set[Path] | None = None,
+) -> None:
+    paths = [
+        output_dir,
+        output_dir / "packet.json",
+        output_dir / "crops",
+        output_dir / "generated",
+    ]
     paths.extend(output_dir / "crops" / name for name in crop_names)
+    for relative in managed_paths or set():
+        path = output_dir / relative
+        paths.append(path)
+        while path.parent != output_dir:
+            path = path.parent
+            paths.append(path)
     if any(path.is_symlink() for path in paths):
         raise SemanticLegibilityEvidenceError("output_symlink")
+
+
+def _manifest_crop_paths(packet_path: Path) -> set[Path]:
+    if not packet_path.exists():
+        return set()
+    try:
+        packet = json.loads(packet_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise SemanticLegibilityEvidenceError("prior_packet_invalid") from exc
+    subjects = packet.get("subjects") if isinstance(packet, dict) else None
+    if not isinstance(subjects, list):
+        raise SemanticLegibilityEvidenceError("prior_packet_invalid")
+    paths: set[Path] = set()
+    for subject in subjects:
+        crop = subject.get("crop") if isinstance(subject, dict) else None
+        value = crop.get("path") if isinstance(crop, dict) else None
+        if value is None:
+            continue
+        relative = Path(value) if isinstance(value, str) else Path("..")
+        parts = relative.parts
+        legacy = len(parts) == 2 and parts[0] == "crops"
+        versioned = (
+            len(parts) == 4
+            and parts[0] == "generated"
+            and re.fullmatch(r"[0-9a-f]{64}", parts[1]) is not None
+            and parts[2] == "crops"
+        )
+        if (
+            relative.is_absolute()
+            or ".." in parts
+            or not (legacy or versioned)
+            or not _SAFE_ID.fullmatch(Path(parts[-1]).stem)
+            or Path(parts[-1]).suffix != ".png"
+        ):
+            raise SemanticLegibilityEvidenceError("prior_packet_crop_path_invalid")
+        paths.add(relative)
+    return paths
+
+
+def _same_generated_version(staged: Path, existing: Path) -> bool:
+    staged_files = {
+        path.relative_to(staged): path.read_bytes() for path in staged.rglob("*") if path.is_file()
+    }
+    if any(path.is_symlink() for path in existing.rglob("*")):
+        raise SemanticLegibilityEvidenceError("output_symlink")
+    existing_files = {
+        path.relative_to(existing): path.read_bytes()
+        for path in existing.rglob("*")
+        if path.is_file()
+    }
+    return staged_files == existing_files
+
+
+def _remove_obsolete_generated_paths(output_dir: Path, paths: set[Path]) -> None:
+    for relative in sorted(paths, reverse=True):
+        path = output_dir / relative
+        if path.exists():
+            path.unlink()
+        parent = path.parent
+        while parent != output_dir:
+            try:
+                parent.rmdir()
+            except OSError:
+                break
+            parent = parent.parent
 
 
 def _crop_box(bbox: list[float], size: tuple[int, int], padding: int = 12) -> list[int]:
@@ -273,7 +354,6 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
     declared_objects, declared_relations = _declared_subjects(semantic_contract)
 
     output_dir = output_dir.absolute()
-    crops_dir = output_dir / "crops"
     crop_names = [
         f"{subject.get('semantic_id')}.png"
         for subject in subjects
@@ -282,6 +362,8 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
         and _SAFE_ID.fullmatch(subject["semantic_id"])
     ]
     _reject_symlink_outputs(output_dir, crop_names)
+    prior_crop_paths = _manifest_crop_paths(output_dir / "packet.json")
+    _reject_symlink_outputs(output_dir, crop_names, prior_crop_paths)
     with Image.open(full_render_path) as opened:
         source_image = opened.convert("RGB")
     detector_render = render.get("detector_render")
@@ -295,8 +377,9 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     staging = tempfile.TemporaryDirectory(prefix=".semantic-legibility-", dir=output_dir.parent)
     staging_dir = Path(staging.name)
-    staging_crops_dir = staging_dir / "crops"
-    staging_crops_dir.mkdir()
+    staging_version_dir = staging_dir / "version"
+    staging_crops_dir = staging_version_dir / "crops"
+    staging_crops_dir.mkdir(parents=True)
 
     records: list[dict[str, Any]] = []
     seen_subjects: set[str] = set()
@@ -431,7 +514,7 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
         )
         crop_box = _crop_box(bbox, image.size)
         crop_relative = Path("crops") / f"{semantic_id}.png"
-        crop_path = staging_dir / crop_relative
+        crop_path = staging_version_dir / crop_relative
         image.crop(crop_box).save(crop_path, format="PNG", optimize=False)
         records.append(
             {
@@ -464,6 +547,23 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
             }
         )
 
+    input_hashes = {
+        "input_sha256": _sha256(input_path),
+        "semantic_contract_sha256": _sha256(semantic_contract_path),
+        "semantic_regions_sha256": _sha256(semantic_regions_path),
+        "full_render_sha256": full_render_sha256,
+        "page_render_sha256": page_render_sha256,
+    }
+    generation_id = _canonical_hash(
+        {"subjects": records, "input_hashes": input_hashes}
+    ).removeprefix("sha256:")
+    for record in records:
+        crop = record.get("crop")
+        if isinstance(crop, dict):
+            crop["path"] = (
+                Path("generated") / generation_id / "crops" / Path(crop["path"]).name
+            ).as_posix()
+    new_crop_paths = {Path(record["crop"]["path"]) for record in records if "crop" in record}
     subject_states = {item["semantic_id"]: item["state"] for item in records}
     authority_diagnostics = [
         {
@@ -493,13 +593,7 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
         "human_verdict": "pending",
         "semantic_preservation": "not_claimed_pending_human_review",
         "publication_acceptance": "not_claimed",
-        "input_hashes": {
-            "input_sha256": _sha256(input_path),
-            "semantic_contract_sha256": _sha256(semantic_contract_path),
-            "semantic_regions_sha256": _sha256(semantic_regions_path),
-            "full_render_sha256": full_render_sha256,
-            "page_render_sha256": page_render_sha256,
-        },
+        "input_hashes": input_hashes,
     }
     packet["review_input_hash"] = _canonical_hash(packet)
     staged_packet = staging_dir / "packet.json"
@@ -507,13 +601,29 @@ def compile_semantic_legibility_evidence(input_path: Path, output_dir: Path) -> 
         json.dumps(packet, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    _reject_symlink_outputs(output_dir, crop_names)
+    managed_paths = prior_crop_paths | new_crop_paths
+    _reject_symlink_outputs(output_dir, crop_names, managed_paths)
     output_dir.mkdir(parents=True, exist_ok=True)
-    crops_dir.mkdir(exist_ok=True)
-    _reject_symlink_outputs(output_dir, crop_names)
-    for staged_crop in sorted(staging_crops_dir.glob("*.png")):
-        os.replace(staged_crop, crops_dir / staged_crop.name)
-    os.replace(staged_packet, output_dir / "packet.json")
+    generated_dir = output_dir / "generated"
+    generated_dir.mkdir(exist_ok=True)
+    version_dir = generated_dir / generation_id
+    _reject_symlink_outputs(output_dir, crop_names, managed_paths)
+    installed_version = False
+    if version_dir.exists():
+        if not version_dir.is_dir() or not _same_generated_version(
+            staging_version_dir, version_dir
+        ):
+            raise SemanticLegibilityEvidenceError("generated_version_collision")
+    else:
+        os.replace(staging_version_dir, version_dir)
+        installed_version = True
+    try:
+        os.replace(staged_packet, output_dir / "packet.json")
+    except OSError:
+        if installed_version:
+            shutil.rmtree(version_dir)
+        raise
+    _remove_obsolete_generated_paths(output_dir, prior_crop_paths - new_crop_paths)
     staging.cleanup()
     return packet
 
