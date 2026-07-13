@@ -62,6 +62,28 @@ COMPILE_FILE="$FILE"
 
 mkdir -p "$BUILD_DIR"
 
+# All detector reports and review artifacts below are fixture-scoped rather
+# than BASE-scoped. Serialize compiles in the same fixture so two variants
+# cannot overwrite visual_clash.json or visual_findings while either run is
+# still consuming them. File descriptor 9 keeps the advisory lock for the
+# lifetime of this shell and releases it automatically on exit.
+COMPILE_LOCK="${BUILD_DIR}/.figure-agent-compile.lock"
+exec 9>"$COMPILE_LOCK"
+if command -v lockf >/dev/null 2>&1; then
+  if ! lockf -s -t 0 9; then
+    echo "ERROR: another figure-agent compile is active for this fixture" >&2
+    exit 75
+  fi
+elif command -v flock >/dev/null 2>&1; then
+  if ! flock -n 9; then
+    echo "ERROR: another figure-agent compile is active for this fixture" >&2
+    exit 75
+  fi
+else
+  echo "ERROR: figure-agent compile requires lockf or flock" >&2
+  exit 69
+fi
+
 if ! grep -q '\\documentclass' "$FILE"; then
   cat > "$WRAPPED_FILE" <<EOF
 \documentclass[border=8pt]{standalone}

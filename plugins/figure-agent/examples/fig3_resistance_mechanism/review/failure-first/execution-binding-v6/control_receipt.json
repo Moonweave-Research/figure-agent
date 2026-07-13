@@ -1,0 +1,28 @@
+{
+  "actual_model_id": "gpt-5.5",
+  "actual_token_usage": null,
+  "declared_packet_sha256": "sha256:50f7f19240c0f8dc6578c8cf564c025aa2038d49b1dd24669357d6c6cc08574d",
+  "feedback_rounds": 0,
+  "filesystem_read_isolation": "unavailable",
+  "forbidden_input_audit": "pass_declared_repository_reads_only",
+  "generated_source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/control_generated.tex",
+  "generated_source_sha256": "sha256:21f9224f742ce2d9c9521cdcf8300040eac6e33d42f5a090bce84bece268b5a8",
+  "manual_repairs": 0,
+  "packet_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/control_packet.json",
+  "packet_sha256": "sha256:6c15f396fe9091a2f38760eaa3be889aae8f50713c047bfa7ed2286962c364f5",
+  "prompt_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/control_prompt.md",
+  "prompt_sha256": "sha256:f6c60f61671a6f24de7b5632db5fe2828280474ef3084872ae0ac169b4740dc5",
+  "publication_acceptance": "not_claimed",
+  "receipt_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/control_receipt.json",
+  "receipt_sha256": "sha256:225f1f62b898a740efb560b32597840f05451e32bd8ea42634cf90a369626973",
+  "schema": "figure-agent.authoring-execution-receipt.v1",
+  "token_usage_unavailable_reason": "witnessd_codex_adapter_did_not_report_actual_token_usage",
+  "touched_files": [
+    "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/control_generated.tex"
+  ],
+  "touched_files_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/control.touched-files.json",
+  "touched_files_sha256": "sha256:5a3c82e89fbfa03e126f8ec68fe46f4dfc4a9fce027554d5e35f411f153ce864",
+  "transcript_path": ".witnessd/runs/fig3-execution-binding-v6-control-20260713/adapter-transcript.txt",
+  "transcript_root": "repository",
+  "transcript_sha256": "sha256:b32f92c21b22d92e8a116b4905e5cbcba36784bd852593174fa53083c6f983fc"
+}

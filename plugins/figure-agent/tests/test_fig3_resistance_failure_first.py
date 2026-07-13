@@ -379,6 +379,7 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "plugins/figure-agent/docs/architecture-overview.md",
         "plugins/figure-agent/docs/execution-plan.md",
         "plugins/figure-agent/docs/product-spec.md",
+        "plugins/figure-agent/scripts/compile.sh",
         "plugins/figure-agent/scripts/authoring_context_pack.py",
         "plugins/figure-agent/scripts/authoring_execution_input_audit.py",
         "plugins/figure-agent/scripts/authoring_execution_packet.py",
@@ -388,6 +389,7 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "plugins/figure-agent/tests/test_authoring_execution_input_audit.py",
         "plugins/figure-agent/tests/test_authoring_execution_packet.py",
         "plugins/figure-agent/tests/test_check_layout_drift.py",
+        "plugins/figure-agent/tests/test_compile_contract.py",
         "plugins/figure-agent/tests/test_fig3_resistance_failure_first.py",
         "plugins/figure-agent/tests/test_visual_finding_artifacts.py",
     ]
@@ -1430,3 +1432,76 @@ def test_fig3_execution_binding_v6_uses_one_repository_coordinate_system() -> No
     assert control["shape_profile"] is None
     assert treatment["shape_profile"]["path"] == "shape_profile_panel_b.yaml"
     assert preflight["decision"] == "pass"
+
+
+def test_fig3_execution_binding_v6_receipts_bind_clean_inputs_and_exact_outputs() -> None:
+    expected_reads = [
+        "plugins/figure-agent/AGENTS.md",
+        "plugins/figure-agent/styles/polymer-paper-preamble.sty",
+    ]
+    for arm in ("control", "treatment"):
+        source = EXECUTION_BINDING_V6 / f"{arm}_generated.tex"
+        receipt = json.loads(
+            (EXECUTION_BINDING_V6 / f"{arm}_receipt.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        audit = json.loads(
+            (EXECUTION_BINDING_V6 / f"{arm}_input_audit.json").read_text(
+                encoding="utf-8"
+            )
+        )
+
+        assert receipt["schema"] == "figure-agent.authoring-execution-receipt.v1"
+        assert receipt["transcript_root"] == "repository"
+        assert receipt["generated_source_sha256"] == _sha256(source)
+        assert receipt["touched_files"] == [
+            "plugins/figure-agent/examples/fig3_resistance_mechanism/review/"
+            f"failure-first/execution-binding-v6/{arm}_generated.tex"
+        ]
+        assert receipt["actual_model_id"] == "gpt-5.5"
+        assert receipt["feedback_rounds"] == 0
+        assert receipt["manual_repairs"] == 0
+        assert receipt["forbidden_input_audit"] == (
+            "pass_declared_repository_reads_only"
+        )
+        assert receipt["publication_acceptance"] == "not_claimed"
+        assert audit["decision"] == "pass"
+        assert audit["observed_repository_reads"] == expected_reads
+        assert audit["undeclared_repository_reads"] == []
+
+
+def test_fig3_execution_binding_v6_records_machine_limits_and_human_gate() -> None:
+    review = json.loads(
+        (EXECUTION_BINDING_V6 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert review["comparison_eligibility"] == "ineligible"
+    assert review["decision"] == "blocked"
+    assert review["control"]["orro"]["decision"] == "pass"
+    assert review["treatment"]["orro"]["decision"] == "blocked-explicit"
+    assert review["control"]["compile"] == {
+        "label_hyphenation_count": 0,
+        "normal_exit_code": 0,
+        "strict_collision_count": 11,
+        "strict_exit_code": 1,
+        "style_lock_blockers": [],
+        "style_lock_warnings": [
+            "flagship_macros_unused",
+            "label_fill_source_order",
+        ],
+    }
+    assert review["treatment"]["compile"] == {
+        "label_hyphenation_count": 1,
+        "normal_exit_code": 0,
+        "strict_collision_count": 5,
+        "strict_exit_code": 1,
+        "style_lock_blockers": [],
+        "style_lock_warnings": [
+            "flagship_macros_unused",
+            "label_fill_source_order",
+        ],
+    }
+    assert review["parallel_compile_incident"]["invalid_results"] == "discarded"
+    assert review["shape_naturalness"] == "pending_human_review"
+    assert review["publication_acceptance"] == "not_claimed"

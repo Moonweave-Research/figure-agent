@@ -1,0 +1,28 @@
+{
+  "actual_model_id": "gpt-5.5",
+  "actual_token_usage": null,
+  "declared_packet_sha256": "sha256:502d9e81d00df83f44b67a0b48840c78de2fefeb46771fbec28d8604546eb0f5",
+  "feedback_rounds": 0,
+  "filesystem_read_isolation": "unavailable",
+  "forbidden_input_audit": "pass_declared_repository_reads_only",
+  "generated_source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/treatment_generated.tex",
+  "generated_source_sha256": "sha256:e07c10f57a16f8dbfe3b4991feca260027f45ced8f9834e0bf9ee7caa3df7749",
+  "manual_repairs": 0,
+  "packet_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/treatment_packet.json",
+  "packet_sha256": "sha256:ab4c0192635d43cc133ff7217a0ea6a78c9514ed5f0091378a91fe9331d07470",
+  "prompt_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/treatment_prompt.md",
+  "prompt_sha256": "sha256:7514a10f9dd89902f7900c463b6809d11adaef1a4eb2dae1aa5079e11206924c",
+  "publication_acceptance": "not_claimed",
+  "receipt_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/treatment_receipt.json",
+  "receipt_sha256": "sha256:77c7ab61ec58bf7f455c4d38ab1b2214b4581c4e8537129f8d4c34ce50102f98",
+  "schema": "figure-agent.authoring-execution-receipt.v1",
+  "token_usage_unavailable_reason": "witnessd_codex_adapter_did_not_report_actual_token_usage",
+  "touched_files": [
+    "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/treatment_generated.tex"
+  ],
+  "touched_files_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v6/treatment.touched-files.json",
+  "touched_files_sha256": "sha256:85adebb51c380ac1ed94b0abd550ba510e4e0b6a509b156b30217085f53469d0",
+  "transcript_path": ".witnessd/runs/fig3-execution-binding-v6-treatment-20260713/adapter-transcript.txt",
+  "transcript_root": "repository",
+  "transcript_sha256": "sha256:329895ae723b3e749d850a12ced763ca54b08ad2a915711ff897d27b370d0496"
+}

@@ -118,6 +118,7 @@ allowed_repository_paths:
   - plugins/figure-agent/docs/architecture-overview.md
   - plugins/figure-agent/docs/execution-plan.md
   - plugins/figure-agent/docs/product-spec.md
+  - plugins/figure-agent/scripts/compile.sh
   - plugins/figure-agent/scripts/authoring_context_pack.py
   - plugins/figure-agent/scripts/authoring_execution_input_audit.py
   - plugins/figure-agent/scripts/authoring_execution_packet.py
@@ -127,6 +128,7 @@ allowed_repository_paths:
   - plugins/figure-agent/tests/test_authoring_execution_input_audit.py
   - plugins/figure-agent/tests/test_authoring_execution_packet.py
   - plugins/figure-agent/tests/test_check_layout_drift.py
+  - plugins/figure-agent/tests/test_compile_contract.py
   - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
   - plugins/figure-agent/tests/test_visual_finding_artifacts.py
 protected_paths:

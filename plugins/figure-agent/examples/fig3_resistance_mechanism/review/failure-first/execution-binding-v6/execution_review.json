@@ -1,0 +1,91 @@
+{
+  "comparison_eligibility": "ineligible",
+  "control": {
+    "compile": {
+      "label_hyphenation_count": 0,
+      "normal_exit_code": 0,
+      "strict_collision_count": 11,
+      "strict_exit_code": 1,
+      "style_lock_blockers": [],
+      "style_lock_warnings": [
+        "flagship_macros_unused",
+        "label_fill_source_order"
+      ]
+    },
+    "execution_state": "bound_and_orro_verified_but_strict_qa_blocked",
+    "input_audit": {
+      "artifact": "control_input_audit.json",
+      "decision": "pass",
+      "observed_repository_reads": [
+        "plugins/figure-agent/AGENTS.md",
+        "plugins/figure-agent/styles/polymer-paper-preamble.sty"
+      ],
+      "undeclared_repository_reads": []
+    },
+    "orro": {
+      "decision": "pass",
+      "proofcheck_decision": "pass",
+      "proofcheck_sha256": "sha256:4a0cc032bdf42150b76ac1233d4bc704c04135ab9a464bc83e1721af4a831e71",
+      "run": ".witnessd/runs/fig3-execution-binding-v6-control-20260713",
+      "transcript_sha256": "sha256:b32f92c21b22d92e8a116b4905e5cbcba36784bd852593174fa53083c6f983fc",
+      "verdict_sha256": "sha256:06dc88335745c8849c51093588ffb59428a9341f2a3ce706ace87a59254f82fb"
+    },
+    "render": {
+      "pdf_sha256": "sha256:5fdb27de1713b6af8d608057d85405b1eb7865c85ee1cc7782194627b2ef7843",
+      "png_height": 861,
+      "png_sha256": "sha256:1cbc3f2cd88e41fe3d95acf73a8d9aaf6a946e774ecf465585d5b8e28c8ae264",
+      "png_width": 3009
+    },
+    "source_sha256": "sha256:21f9224f742ce2d9c9521cdcf8300040eac6e33d42f5a090bce84bece268b5a8"
+  },
+  "decision": "blocked",
+  "machine_conclusion": "The repository-coordinate and declared-input boundary now work for both arms. The treatment has fewer detector collisions than the control (5 versus 11), but it introduces one hyphenated label, uses a different render proportion, and its ORRO lane timed out during isolated LuaTeX cache verification. No treatment gain or publication-quality claim is justified.",
+  "parallel_compile_incident": {
+    "invalid_results": "discarded",
+    "root_cause": "fixture-scoped QA reports were overwritten when control and treatment variants compiled concurrently",
+    "safeguard": "scripts/compile.sh now rejects a concurrent compile in the same fixture with exit 75",
+    "verification": "all reported compile results were regenerated sequentially"
+  },
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.authoring-execution-review.v1",
+  "shape_naturalness": "pending_human_review",
+  "treatment": {
+    "compile": {
+      "label_hyphenation_count": 1,
+      "normal_exit_code": 0,
+      "strict_collision_count": 5,
+      "strict_exit_code": 1,
+      "style_lock_blockers": [],
+      "style_lock_warnings": [
+        "flagship_macros_unused",
+        "label_fill_source_order"
+      ]
+    },
+    "execution_state": "bound_and_input_clean_but_orro_timeout_and_strict_qa_blocked",
+    "input_audit": {
+      "artifact": "treatment_input_audit.json",
+      "decision": "pass",
+      "observed_repository_reads": [
+        "plugins/figure-agent/AGENTS.md",
+        "plugins/figure-agent/styles/polymer-paper-preamble.sty"
+      ],
+      "undeclared_repository_reads": []
+    },
+    "orro": {
+      "decision": "blocked-explicit",
+      "proofcheck_decision": "blocked-explicit",
+      "proofcheck_sha256": "sha256:e71400ab1ee4672066651f5f0087e940ce110875d675125026b7a98aeffff6cc",
+      "run": ".witnessd/runs/fig3-execution-binding-v6-treatment-20260713",
+      "transcript_sha256": "sha256:329895ae723b3e749d850a12ced763ca54b08ad2a915711ff897d27b370d0496",
+      "verdict_sha256": "sha256:e71400ab1ee4672066651f5f0087e940ce110875d675125026b7a98aeffff6cc"
+    },
+    "render": {
+      "pdf_sha256": "sha256:dde2b5b7ea56fe23cfb91dd4ba6b234f31796d465122a2a37780e98388016bb0",
+      "png_height": 1130,
+      "png_sha256": "sha256:6947822376c5939fbff06616419f12450ed0d37a8c1ddb876a341ded9cf74c5f",
+      "png_width": 3410
+    },
+    "source_sha256": "sha256:e07c10f57a16f8dbfe3b4991feca260027f45ced8f9834e0bf9ee7caa3df7749"
+  },
+  "visual_review_boundary": "Machine gates can identify collisions, wrapping, provenance, and execution contamination, but they do not establish shape naturalness, composition quality, modern finish, or publication acceptance. A named human scaffold/review verdict remains required."
+}

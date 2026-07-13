@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -23,6 +24,65 @@ def test_compile_script_pins_uv_project_after_changing_to_workspace_fixture() ->
         in script
     )
     assert '--artifact-base "$BASE"' in script
+
+
+def test_compile_serializes_shared_fixture_reports() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'COMPILE_LOCK="${BUILD_DIR}/.figure-agent-compile.lock"' in script
+    assert 'exec 9>"$COMPILE_LOCK"' in script
+    assert 'lockf -s -t 0 9' in script
+    assert 'flock -n 9' in script
+    assert "another figure-agent compile is active for this fixture" in script
+
+
+@pytest.mark.skipif(
+    shutil.which("lockf") is None and shutil.which("flock") is None,
+    reason="requires lockf or flock",
+)
+def test_compile_rejects_a_second_process_in_the_same_fixture(tmp_path: Path) -> None:
+    tex_path = tmp_path / "locked.tex"
+    tex_path.write_text(
+        "\\documentclass{standalone}\n"
+        "\\usepackage{polymer-paper-preamble}\n"
+        "\\begin{document}locked\\end{document}\n",
+        encoding="utf-8",
+    )
+    build = tmp_path / "build"
+    build.mkdir()
+    lock_path = build / ".figure-agent-compile.lock"
+    if shutil.which("lockf"):
+        holder_command = ["lockf", "-k", str(lock_path), "sleep", "30"]
+        probe_command = ["lockf", "-s", "-t", "0", str(lock_path), "true"]
+    else:
+        holder_command = ["flock", str(lock_path), "sleep", "30"]
+        probe_command = ["flock", "-n", str(lock_path), "true"]
+
+    holder = subprocess.Popen(holder_command)
+    try:
+        for _ in range(100):
+            probe = subprocess.run(probe_command, check=False)
+            if probe.returncode != 0:
+                break
+            time.sleep(0.01)
+        else:
+            pytest.fail("lock holder did not acquire fixture lock")
+
+        result = subprocess.run(
+            ["bash", "scripts/compile.sh", str(tex_path)],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    finally:
+        holder.terminate()
+        holder.wait(timeout=5)
+
+    assert result.returncode == 75
+    assert "another figure-agent compile is active for this fixture" in result.stderr
+    assert not (build / "locked.pdf").exists()
+    assert not (build / "locked.png").exists()
 
 
 @pytest.mark.skipif(
