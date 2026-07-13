@@ -78,6 +78,7 @@ SHAPE_ADVERSARIAL_REVIEW = REVIEW / "shape_profile_adversarial_review.yaml"
 SHAPE_HANDOFF = REVIEW / "shape_profile_handoff.md"
 EXECUTION_BINDING_V1 = REVIEW / "execution-binding-v1"
 EXECUTION_BINDING = REVIEW / "execution-binding-v2"
+EXECUTION_BINDING_V4 = REVIEW / "execution-binding-v4"
 
 
 def _sha256(path: Path) -> str:
@@ -1217,3 +1218,43 @@ def test_fig3_execution_binding_prompt_carries_the_binding_briefing() -> None:
     assert "Carrier is sign-agnostic" in prompt
     assert "(a) cell + transport + decay" in prompt
     assert "(b) g(E) evolution" in prompt
+
+
+def test_fig3_execution_binding_v4_receipts_bind_repository_transcripts() -> None:
+    for arm in ("control", "treatment"):
+        receipt = json.loads(
+            (EXECUTION_BINDING_V4 / f"{arm}_receipt.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        source = EXECUTION_BINDING_V4 / f"{arm}_generated.tex"
+
+        assert receipt["schema"] == "figure-agent.authoring-execution-receipt.v1"
+        assert receipt["transcript_root"] == "repository"
+        assert receipt["generated_source_sha256"] == _sha256(source)
+        assert receipt["touched_files"] == [
+            "plugins/figure-agent/examples/fig3_resistance_mechanism/review/"
+            f"failure-first/execution-binding-v4/{arm}_generated.tex"
+        ]
+        assert receipt["actual_model_id"] == "gpt-5.5"
+        assert receipt["feedback_rounds"] == 0
+        assert receipt["manual_repairs"] == 0
+        assert receipt["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_execution_binding_v4_blocks_comparison_and_visual_acceptance() -> None:
+    review = json.loads(
+        (EXECUTION_BINDING_V4 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert review["comparison_eligibility"] == "ineligible"
+    assert review["decision"] == "blocked"
+    assert review["control"]["compile"]["normal_exit_code"] == 0
+    assert review["control"]["compile"]["strict_exit_code"] == 1
+    assert review["treatment"]["compile"]["normal_exit_code"] == 0
+    assert review["treatment"]["compile"]["strict_exit_code"] == 1
+    assert review["control"]["compile"]["style_lock_blockers"] == []
+    assert review["treatment"]["compile"]["style_lock_blockers"] == []
+    assert "input_contaminated" in review["treatment"]["execution_state"]
+    assert review["shape_naturalness"] == "pending_human_review"
+    assert review["publication_acceptance"] == "not_claimed"

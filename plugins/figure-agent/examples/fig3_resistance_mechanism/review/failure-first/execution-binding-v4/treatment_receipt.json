@@ -1,0 +1,28 @@
+{
+  "actual_model_id": "gpt-5.5",
+  "actual_token_usage": null,
+  "declared_packet_sha256": "sha256:499fb7e775b244d989ff3c0bc973de4a353e0ad5616975e2c952af0428515396",
+  "feedback_rounds": 0,
+  "filesystem_read_isolation": "unavailable",
+  "forbidden_input_audit": "forbidden_historical_fig3_paths_observed_when_agent_read_docs_execution_plan",
+  "generated_source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/treatment_generated.tex",
+  "generated_source_sha256": "sha256:49b00ca196f3338f2bdbc8aa5a8d8eb8401051d61b9caa5146a238ca0f912c2b",
+  "manual_repairs": 0,
+  "packet_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/treatment_packet.json",
+  "packet_sha256": "sha256:4574ea4fb03f1ba85cc2fcf1cf3fd30fdf0657a49204a126d5a29165bc8c15a5",
+  "prompt_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/treatment_prompt.md",
+  "prompt_sha256": "sha256:c5e2b0a1e3042cd372820e8301be376bf273651d5e0e580bbaaadf5e690ea9b0",
+  "publication_acceptance": "not_claimed",
+  "receipt_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/treatment_receipt.json",
+  "receipt_sha256": "sha256:31f5ef187186751bc668df10e1dc3000103769d75ebdbed516e0e6440b8e1fe3",
+  "schema": "figure-agent.authoring-execution-receipt.v1",
+  "token_usage_unavailable_reason": "witnessd_codex_adapter_did_not_report_token_usage",
+  "touched_files": [
+    "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/treatment_generated.tex"
+  ],
+  "touched_files_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/treatment.touched-files.json",
+  "touched_files_sha256": "sha256:3b9ad546b6cfcc3819df012e32099ef1b5244e48a2bff3ca6d064cad491d79b1",
+  "transcript_path": ".witnessd/runs/fig3-execution-binding-v4-treatment-20260713/adapter-transcript.txt",
+  "transcript_root": "repository",
+  "transcript_sha256": "sha256:797c3e19b5284399b9680c9227e160684e6a9a8104bfd1f895de8b04b0234c0b"
+}

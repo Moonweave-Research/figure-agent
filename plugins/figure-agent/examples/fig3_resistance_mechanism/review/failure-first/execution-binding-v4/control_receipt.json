@@ -1,0 +1,28 @@
+{
+  "actual_model_id": "gpt-5.5",
+  "actual_token_usage": null,
+  "declared_packet_sha256": "sha256:43f4faf70f4710e6c2642eb1bda64d1b4b25b5b0fb0d3f2f221ebd164212155f",
+  "feedback_rounds": 0,
+  "filesystem_read_isolation": "unavailable",
+  "forbidden_input_audit": "no_forbidden_figure_artifact_path_observed_in_transcript",
+  "generated_source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/control_generated.tex",
+  "generated_source_sha256": "sha256:37a44cb4af36fa0ff2115022ed04364f5e4d146973443b7fc29cb3b3d2c7c043",
+  "manual_repairs": 0,
+  "packet_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/control_packet.json",
+  "packet_sha256": "sha256:fd2e338e28d9442d82a2b655f9dc41f0ca736d8aeefbcef0d8656e0bdd8a35ba",
+  "prompt_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/control_prompt.md",
+  "prompt_sha256": "sha256:637c69912332c2679cbeff7f9f03e94b27252165539be61348980a8c316c75dc",
+  "publication_acceptance": "not_claimed",
+  "receipt_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/control_receipt.json",
+  "receipt_sha256": "sha256:d90c2a769d44f717aa8c42ac9b1dfd6fb78649bca7a0ac3a3840be250da5c1ea",
+  "schema": "figure-agent.authoring-execution-receipt.v1",
+  "token_usage_unavailable_reason": "witnessd_codex_adapter_did_not_report_token_usage",
+  "touched_files": [
+    "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/control_generated.tex"
+  ],
+  "touched_files_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v4/control.touched-files.json",
+  "touched_files_sha256": "sha256:357af8c262e54b28c87955368f5e870315e242b3dc625ead7c20f4d2d1e26a81",
+  "transcript_path": ".witnessd/runs/fig3-execution-binding-v4-control-20260713/adapter-transcript.txt",
+  "transcript_root": "repository",
+  "transcript_sha256": "sha256:3b3d1e3efb20c127abd94f7b6b60e2150286d7042906ad1ce9aa397587550fc0"
+}

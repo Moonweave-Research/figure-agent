@@ -1,0 +1,104 @@
+{
+  "comparison_eligibility": "ineligible",
+  "control": {
+    "compile": {
+      "normal_exit_code": 0,
+      "strict_exit_code": 1,
+      "style_lock_blockers": [],
+      "style_lock_warnings": [
+        "flagship_macros_unused"
+      ],
+      "strict_collision_count": 3,
+      "strict_collisions": [
+        {
+          "iou": 0.194,
+          "labels": [
+            "single",
+            "S60"
+          ]
+        },
+        {
+          "iou": 0.067,
+          "labels": [
+            "t",
+            "↓⇒"
+          ]
+        },
+        {
+          "iou": 0.062,
+          "labels": [
+            "×",
+            "sulfur-rich"
+          ]
+        }
+      ]
+    },
+    "execution_state": "bound_output_path_but_machine_blocked",
+    "forbidden_input_audit": "no_forbidden_figure_artifact_path_observed_in_transcript",
+    "orro": {
+      "adapter_exit_code": 124,
+      "decision": "blocked-explicit",
+      "proofcheck_decision": "blocked-explicit",
+      "run": ".witnessd/runs/fig3-execution-binding-v4-control-20260713",
+      "transcript_sha256": "sha256:3b3d1e3efb20c127abd94f7b6b60e2150286d7042906ad1ce9aa397587550fc0",
+      "verdict_sha256": "sha256:6afc7b5e873e40405f9f4ee4e2757181595583f7c4122e68a0e1c64d09c47691"
+    },
+    "render": {
+      "pdf_sha256": "sha256:e59ef6205021cd5334e78782b6433281d6a078c64f4456a329526f661184cdda",
+      "png_height": 1078,
+      "png_sha256": "sha256:73deba0f5343554ad19429e34ad150943d869dca0972c333b19e2ccf6673773f",
+      "png_width": 3519
+    },
+    "source_sha256": "sha256:37a44cb4af36fa0ff2115022ed04364f5e4d146973443b7fc29cb3b3d2c7c043"
+  },
+  "decision": "blocked",
+  "machine_conclusion": "Style Lock prompt constraints removed the v3 palette, local-font-size, and thin-stroke blockers, but strict collision findings remain.",
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.authoring-execution-review.v1",
+  "shape_naturalness": "pending_human_review",
+  "treatment": {
+    "compile": {
+      "normal_exit_code": 0,
+      "strict_exit_code": 1,
+      "style_lock_blockers": [],
+      "style_lock_warnings": [
+        "flagship_macros_unused"
+      ],
+      "strict_collision_count": 2,
+      "strict_collisions": [
+        {
+          "iou": 0.212,
+          "labels": [
+            "landscape",
+            "increasing"
+          ]
+        },
+        {
+          "iou": 0.103,
+          "labels": [
+            "disordered",
+            "dispersive"
+          ]
+        }
+      ]
+    },
+    "execution_state": "bound_output_path_but_input_contaminated_and_machine_blocked",
+    "forbidden_input_audit": "forbidden historical Fig3 paths were exposed when the author read docs/execution-plan.md",
+    "orro": {
+      "adapter_exit_code": 124,
+      "decision": "blocked-explicit",
+      "proofcheck_decision": "blocked-explicit",
+      "run": ".witnessd/runs/fig3-execution-binding-v4-treatment-20260713",
+      "transcript_sha256": "sha256:797c3e19b5284399b9680c9227e160684e6a9a8104bfd1f895de8b04b0234c0b",
+      "verdict_sha256": "sha256:0606e5d8feab43b944cf41e4ca2afcb03d83930ef86797a57f0e4993feca171d"
+    },
+    "render": {
+      "pdf_sha256": "sha256:3c58511f188a26d7744eebabfe4bb061865f54918f62761c4077ebfec5f1fb93",
+      "png_height": 1217,
+      "png_sha256": "sha256:d89ab168dfd7d3554443f228fd0b660e5aae8fb27032051fa9ed202c4b1096e2",
+      "png_width": 3495
+    },
+    "source_sha256": "sha256:49b00ca196f3338f2bdbc8aa5a8d8eb8401051d61b9caa5146a238ca0f912c2b"
+  },
+  "visual_review_boundary": "Collision count does not establish publication quality or a treatment gain; composition, label density, shape naturalness, and finish require a named human verdict."
+}
