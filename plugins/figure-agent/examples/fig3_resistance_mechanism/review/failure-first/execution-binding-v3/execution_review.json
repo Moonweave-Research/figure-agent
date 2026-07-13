@@ -1,0 +1,46 @@
+{
+  "comparison_eligibility": "ineligible",
+  "control": {
+    "compile": {
+      "decision": "blocked",
+      "blockers": [
+        "non_palette_color:orange"
+      ],
+      "warnings": [
+        "flagship_macros_unused",
+        "extreme_local_font_size:scriptsize",
+        "extreme_local_font_size:tiny",
+        "thin_stroke:0.2pt"
+      ]
+    },
+    "declared_output_path": "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v3/control_generated.tex",
+    "execution_state": "bound_output_path_but_machine_blocked",
+    "orro_decision": "blocked-explicit",
+    "orro_exit_code": 124,
+    "source_sha256": "sha256:e76c08d445e0d90566811aee8c284bd30ec0e6efa5aaea79cf21fa6d0c1491dc",
+    "witnessd": {
+      "adapter_transcript_sha256": "sha256:aba27c0c5ca59e51d2b7a55e450e3b98d1bacf6afe784a33e2f36a6d0f079f0b",
+      "run": ".witnessd/runs/fig3-execution-binding-v3-control-20260713",
+      "team_ledger_sha256": "sha256:fdfb48167d5fd0cf93b4b5b96b8b11a2a47e1bb1de2676c058052a47f12b42c0",
+      "team_ledger_verdict_sha256": "sha256:6be691cd6bde38ddb9379cec0a4d2e4aea2d8ac135ca0878d61f83b6592afd6f"
+    }
+  },
+  "decision": "blocked",
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.authoring-execution-review.v1",
+  "treatment": {
+    "actual_output_path": "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v3/treatment/treatment_generated.tex",
+    "actual_output_sha256": "sha256:9ec214d1b037dec3eb8e3f15a940d5ad2267cee6b1f2b63a47b6874d7fea6118",
+    "declared_output_path": "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v3/treatment_generated.tex",
+    "execution_state": "execution_unbound",
+    "failure": "intermediate_subdirectory_created",
+    "orro_decision": "blocked-explicit",
+    "orro_exit_code": 124,
+    "witnessd": {
+      "adapter_transcript_sha256": "sha256:6d55e99df19bfbe1f0ee2697f688559b51e0df035751c453e197d3d44489a6f3",
+      "run": ".witnessd/runs/fig3-execution-binding-v3-treatment-20260713",
+      "team_ledger_sha256": "sha256:347f7cf4aabb9177147a1340ac8f969fa329fd3e048f99e04edab7c5fab59832",
+      "team_ledger_verdict_sha256": "sha256:d25fd2bd9283ab6bb7d2aa3b20f08469d8db8fa73190c8c7b65a6a818978b665"
+    }
+  }
+}
