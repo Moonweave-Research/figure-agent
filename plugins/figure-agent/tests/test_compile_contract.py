@@ -115,6 +115,7 @@ compile smoke
     assert result.returncode == 0, result.stderr + result.stdout
     assert (tmp_path / "build" / "smoke.pdf").exists()
     assert (tmp_path / "build" / "smoke.png").exists()
+    assert (tmp_path / "build" / "collisions.json").exists()
     assert (tmp_path / "build" / "label_path_proximity.json").exists()
     assert not (tmp_path / "smoke.pdf").exists()
     assert not (tmp_path / "smoke.png").exists()

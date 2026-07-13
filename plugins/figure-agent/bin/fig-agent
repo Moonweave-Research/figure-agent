@@ -447,6 +447,68 @@ def _authoring_preflight(argv: list[str]) -> int:
     return 0
 
 
+def _authoring_repair_packet(argv: list[str]) -> int:
+    import authoring_repair_packet
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-repair-packet")
+    parser.add_argument("name")
+    parser.add_argument("--model-id", required=True)
+    parser.add_argument("--source", required=True)
+    parser.add_argument("--target-contract", required=True)
+    parser.add_argument("--output-path", required=True)
+    parser.add_argument("--packet-out", required=True)
+    parser.add_argument("--prompt-out", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    workspace_root = _paths().workspace_root.resolve()
+
+    def repair_artifact(value: str, *, suffix: str) -> Path:
+        relative = Path(value)
+        required_root = Path("examples") / name / "review" / "failure-first"
+        if (
+            relative.is_absolute()
+            or any(part in {"", ".", ".."} for part in relative.parts)
+            or relative.parent.parent != required_root
+            or not authoring_repair_packet.REPAIR_ATTEMPT.fullmatch(
+                relative.parent.name
+            )
+            or relative.suffix != suffix
+        ):
+            raise ValueError(
+                f"repair artifact must be a {suffix} file inside execution-repair-vN"
+            )
+        path = workspace_root / relative
+        if not path.resolve(strict=False).is_relative_to(workspace_root):
+            raise ValueError("repair artifact must remain inside the workspace")
+        return path
+
+    try:
+        packet, prompt = authoring_repair_packet.compile_repair_execution_packet(
+            name,
+            workspace_root=workspace_root,
+            model_id=args.model_id,
+            source_path=args.source,
+            target_contract=args.target_contract,
+            output_path=args.output_path,
+        )
+        packet_path = repair_artifact(args.packet_out, suffix=".json")
+        prompt_path = repair_artifact(args.prompt_out, suffix=".md")
+        if packet_path.parent != Path(workspace_root / args.output_path).parent:
+            raise ValueError("repair packet must be adjacent to the declared output")
+        authoring_repair_packet.write_repair_execution_packet(
+            packet_path,
+            prompt_path,
+            packet=packet,
+            prompt=prompt,
+        )
+    except (ValueError, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        print(f"fig-agent authoring-repair-packet: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(packet, indent=2, sort_keys=True))
+    return 0
+
+
 def _authoring_orro_plan(argv: list[str]) -> int:
     import authoring_execution_packet
 
@@ -1798,6 +1860,8 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_packet(rest)
     if command == "authoring-preflight":
         return _authoring_preflight(rest)
+    if command == "authoring-repair-packet":
+        return _authoring_repair_packet(rest)
     if command == "authoring-orro-plan":
         return _authoring_orro_plan(rest)
     if command == "authoring-receipt":

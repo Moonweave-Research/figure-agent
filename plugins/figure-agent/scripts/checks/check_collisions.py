@@ -8,6 +8,7 @@ Output: WARN lines for overlapping labels. Default is report-only exit 0;
 
 import argparse
 import html
+import json
 import re
 import subprocess
 import tempfile
@@ -81,6 +82,51 @@ def find_collisions(words: list[dict], iou_thresh: float) -> list[tuple]:
     return collisions
 
 
+def _bbox_payload(word: dict) -> dict:
+    return {
+        "text": word["text"],
+        "bbox_pdf": [word["xmin"], word["ymin"], word["xmax"], word["ymax"]],
+    }
+
+
+def collision_payload(
+    pdf_path: Path,
+    words: list[dict],
+    collisions: list[tuple],
+    iou_thresh: float,
+) -> dict:
+    ordered = sorted(
+        collisions,
+        key=lambda item: (
+            -item[2],
+            item[0]["text"],
+            item[1]["text"],
+            item[0]["xmin"],
+            item[0]["ymin"],
+        ),
+    )
+    fixture_dir = pdf_path.parent.parent
+    return {
+        "schema": "figure-agent.text-collisions.v1",
+        "fixture": fixture_dir.name,
+        "render_pdf": str(pdf_path.relative_to(fixture_dir)),
+        "iou_threshold": iou_thresh,
+        "word_count": len(words),
+        "collisions": [
+            {
+                "id": f"TC{index:03d}",
+                "texts": [a["text"], b["text"]],
+                "iou": round(score, 6),
+                "a": _bbox_payload(a),
+                "b": _bbox_payload(b),
+                "source_mapping": None,
+            }
+            for index, (a, b, score) in enumerate(ordered, start=1)
+        ],
+        "total": len(ordered),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="PDF 텍스트 레이블 충돌 감지기")
     parser.add_argument("pdf", type=Path, help="컴파일된 PDF 경로")
@@ -96,6 +142,11 @@ def main() -> int:
         default=False,
         help="exit 1 when any collision is found (default: report-only, exit 0)",
     )
+    parser.add_argument(
+        "--json-output",
+        type=Path,
+        help="구조화된 충돌 보고서를 기록할 JSON 경로",
+    )
     args = parser.parse_args()
 
     if not args.pdf.exists():
@@ -103,6 +154,17 @@ def main() -> int:
 
     words = extract_word_bboxes(args.pdf)
     collisions = find_collisions(words, args.iou_thresh)
+    if args.json_output is not None:
+        args.json_output.parent.mkdir(parents=True, exist_ok=True)
+        args.json_output.write_text(
+            json.dumps(
+                collision_payload(args.pdf, words, collisions, args.iou_thresh),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
 
     if not collisions:
         print(f"OK: no collisions found in {args.pdf.name} ({len(words)} words)")

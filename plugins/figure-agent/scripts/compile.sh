@@ -136,7 +136,10 @@ run_report_check() {
   fi
   return 0
 }
-run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} "$PDF_OUT"
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  --json-output "${BUILD_DIR}/collisions.json" \
+  "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visual_clash.py" \
   ${VISUAL_CLASH_ARGS[@]+"${VISUAL_CLASH_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/visual_clash.json" \

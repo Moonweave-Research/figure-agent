@@ -162,6 +162,56 @@ def test_check_collisions_strict_exits_zero_when_no_collisions(monkeypatch) -> N
     assert check_collisions.main() == 0
 
 
+def test_check_collisions_writes_deterministic_json_output(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    pdf = tmp_path / "demo_fixture" / "build" / "demo_fixture.pdf"
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"%PDF-1.4\n")
+    output = pdf.parent / "collisions.json"
+    words = [
+        {"text": "low", "xmin": 2.0, "ymin": 2.0, "xmax": 12.0, "ymax": 12.0},
+        {"text": "high", "xmin": 0.0, "ymin": 0.0, "xmax": 10.0, "ymax": 10.0},
+        {"text": "peak", "xmin": 1.0, "ymin": 1.0, "xmax": 9.0, "ymax": 9.0},
+    ]
+    monkeypatch.setattr(check_collisions, "extract_word_bboxes", lambda _pdf: words)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "check_collisions.py",
+            str(pdf),
+            "--iou-thresh",
+            "0.05",
+            "--json-output",
+            str(output),
+        ],
+    )
+
+    assert check_collisions.main() == 0
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["schema"] == "figure-agent.text-collisions.v1"
+    assert report["fixture"] == "demo_fixture"
+    assert report["render_pdf"] == "build/demo_fixture.pdf"
+    assert report["iou_threshold"] == 0.05
+    assert report["word_count"] == 3
+    assert report["total"] == 3
+    assert [finding["id"] for finding in report["collisions"]] == [
+        "TC001",
+        "TC002",
+        "TC003",
+    ]
+    assert report["collisions"][0] == {
+        "id": "TC001",
+        "texts": ["high", "peak"],
+        "iou": 0.64,
+        "a": {"text": "high", "bbox_pdf": [0.0, 0.0, 10.0, 10.0]},
+        "b": {"text": "peak", "bbox_pdf": [1.0, 1.0, 9.0, 9.0]},
+        "source_mapping": None,
+    }
+
+
 def test_check_visual_clash_default_exits_zero(monkeypatch) -> None:
     _require_golden_pdf()
     monkeypatch.setattr(sys, "argv", ["check_visual_clash.py", str(GOLDEN_PDF)])
@@ -293,6 +343,7 @@ def test_compile_strict_flag_is_documented_in_script() -> None:
     assert "--strict" in compile_sh
     assert "--ignore-known-fp" in compile_sh
     assert "--json-output" in compile_sh
+    assert "collisions.json" in compile_sh
     assert "visual_clash.json" in compile_sh
     assert "check_text_boundary_clash.py" in compile_sh
     assert "text_boundary_clash.json" in compile_sh
