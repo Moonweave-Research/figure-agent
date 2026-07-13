@@ -1,0 +1,28 @@
+schema: figure-agent.layout-lanes.v1
+fixture: fig3_resistance_mechanism
+attempt: region_guided_001
+evaluation_mode: posthoc_required_label_clearance
+purpose: >-
+  Check whether the two required Panel B distribution labels remain mutually
+  legible. This binds a human-confirmed overlap to rendered label geometry and
+  does not establish publication quality.
+label_groups:
+  - id: s60_distribution_label
+    required_phrase: "S60: discrete deep state"
+    region: panel_b
+  - id: s80_distribution_label
+    required_phrase: "S80: continuous broad"
+    region: panel_b
+regions:
+  - id: panel_b
+    normalized_bbox: [0.5, 0.0, 1.0, 1.0]
+rules:
+  - id: distribution_labels_separated
+    kind: minimum_clearance
+    first: s60_distribution_label
+    second: s80_distribution_label
+    minimum_normalized_clearance: 0.01
+human_authority:
+  reviewer: moon
+  source: rejected_region_guided_attempt_feedback
+publication_acceptance: rejected

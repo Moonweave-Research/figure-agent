@@ -66,6 +66,8 @@ allowed_review_paths:
   - review/failure-first/region_guided_text_inventory_report.json
   - review/failure-first/region_guided_label_ownership_contract.yaml
   - review/failure-first/region_guided_label_ownership_report.json
+  - review/failure-first/region_guided_mutual_clearance_contract.yaml
+  - review/failure-first/region_guided_mutual_clearance_report.json
 allowed_repository_paths:
   - plugins/figure-agent/bin/fig-agent
   - plugins/figure-agent/docs/architecture-overview.md

@@ -52,6 +52,12 @@ REGION_GUIDED_LABEL_OWNERSHIP_CONTRACT = (
 REGION_GUIDED_LABEL_OWNERSHIP_REPORT = (
     REVIEW / "region_guided_label_ownership_report.json"
 )
+REGION_GUIDED_MUTUAL_CLEARANCE_CONTRACT = (
+    REVIEW / "region_guided_mutual_clearance_contract.yaml"
+)
+REGION_GUIDED_MUTUAL_CLEARANCE_REPORT = (
+    REVIEW / "region_guided_mutual_clearance_report.json"
+)
 
 
 def _sha256(path: Path) -> str:
@@ -288,6 +294,8 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/region_guided_text_inventory_report.json",
         "review/failure-first/region_guided_label_ownership_contract.yaml",
         "review/failure-first/region_guided_label_ownership_report.json",
+        "review/failure-first/region_guided_mutual_clearance_contract.yaml",
+        "review/failure-first/region_guided_mutual_clearance_report.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/bin/fig-agent",
@@ -679,6 +687,28 @@ def test_fig3_region_guided_label_ownership_detects_clipped_panel_b_axis() -> No
             "missing_groups": ["panel_b_x_axis_label"],
             "rule_id": "panel_b_x_axis_label_owned",
             "status": "missing_label_group",
+        }
+    ]
+    assert contract["publication_acceptance"] == "rejected"
+
+
+def test_fig3_region_guided_inventory_detects_overlapping_distribution_labels() -> None:
+    contract = yaml.safe_load(
+        REGION_GUIDED_MUTUAL_CLEARANCE_CONTRACT.read_text(encoding="utf-8")
+    )
+    report = json.loads(
+        REGION_GUIDED_MUTUAL_CLEARANCE_REPORT.read_text(encoding="utf-8")
+    )
+
+    assert contract["evaluation_mode"] == "posthoc_required_label_clearance"
+    assert report["failure_count"] == 1
+    assert report["results"] == [
+        {
+            "clearance": 0.0,
+            "minimum_clearance": 0.01,
+            "missing_groups": [],
+            "rule_id": "distribution_labels_separated",
+            "status": "violation",
         }
     ]
     assert contract["publication_acceptance"] == "rejected"

@@ -275,9 +275,14 @@ modules listed in Section 0.
   post hoc to the same rejected render, the required Panel B phrase
   `trap energy E` is reported as missing because the render preserves only the
   clipped edge word `trap`. This closes the required-label ownership and page-
-  boundary detection gap without claiming aesthetic quality. The next
-  structural slice is a declared mutual-clearance inventory, followed by a
-  bounded distribution-shape grammar experiment.
+  boundary detection gap without claiming aesthetic quality. A second post hoc
+  inventory binds the complete `S60: discrete deep state` and
+  `S80: continuous broad` phrases to Panel B and measures `0.0` mutual
+  clearance against the declared `0.01` minimum, exposing their visible
+  overlap. This closes the first declared mutual-clearance slice. The next
+  structural target is a bounded distribution-shape grammar experiment; it
+  must be tested through a new generation rather than by polishing this rejected
+  artifact.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot
