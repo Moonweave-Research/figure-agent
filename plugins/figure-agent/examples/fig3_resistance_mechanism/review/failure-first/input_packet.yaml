@@ -43,7 +43,7 @@ authoritative_inputs:
     sha256: sha256:17770ca96d744bc27a90e074c03028263399a61669febdb86807176a91d7c0e5
   - role: scope_protection
     path: review/failure-first/scope_protection.yaml
-    sha256: sha256:bd90a318119fefefdfcc0857d37dff94255badf18233bd0cff11e89fe7cfaac3
+    sha256: sha256:135a7f33c305c97933e7d8f3abacb9af1333b6e2eef9c84e59c2f23b35f81c0e
   - role: render_receipt
     path: review/failure-first/render_receipt.yaml
     sha256: sha256:6e8f26d2d771c5d8bc7617722efbb8cf0e99a38ed7bd6fbc79d79936a4ef6208

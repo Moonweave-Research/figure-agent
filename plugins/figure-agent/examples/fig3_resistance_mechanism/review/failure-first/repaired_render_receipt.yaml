@@ -1,0 +1,38 @@
+schema: figure-agent.constraint-guided-render-receipt.v1
+fixture: fig3_resistance_mechanism
+attempt: repaired_layout_lane_001
+source_path: repaired_generated.tex
+source_sha256: sha256:a590dd7782d056222cc61adea34616cd078cafcebe0a58f8b96f9a6c0095e9c1
+compile_command:
+  - FIGURE_AGENT_STRICT=1
+  - bash
+  - scripts/compile.sh
+  - examples/fig3_resistance_mechanism/review/failure-first/repaired_generated.tex
+working_directory: plugins/figure-agent
+style_lock: passed_with_warnings
+strict_compile_result: failed_detector_gate_after_render
+machine_findings:
+  collision_candidates: 3
+  visual_clash_candidates: 17
+  undeclared_geometry_candidates: 22
+  label_hyphenation_candidates: 1
+  layout_lane:
+    rule_id: panel_a_narrative_clear_of_bias_marker
+    measured_clearance: 0.013
+    required_clearance: 0.015
+    result: failed
+outputs:
+  - path: repaired_generated.pdf
+    sha256: sha256:edc0f5f64791b914536d29c078de675860f23cb43e8336cb9c116675f216ef98
+  - path: repaired_generated.png
+    sha256: sha256:70fc4180785b0c8fc84aeb48b5ab9a18dc2c9e5550426c2ff3f9c798f4b07337
+evidence:
+  - path: repaired_layout_lane_report.json
+    sha256: sha256:061cecf0f47cc50adf93b1b31ae21c717ff067f9e140e144646015abc3b0f88d
+  - path: repaired_visual_clash.json
+    sha256: sha256:a2abea0d5fcbf8295256d6a368cf519022bb44f69fac607e81346c3ec49d85fd
+  - path: repaired_undeclared_geometry.json
+    sha256: sha256:575aea695251a3b58477c2f3e978db8223bebc8c2329d5bd1e65a5513ec221b9
+  - path: repaired_label_hyphenation.json
+    sha256: sha256:82aa6cf8bd0a3bdf307d10289ca7bdd9ceddc51aa58d242c340068e56701f7ba
+publication_acceptance: not_claimed

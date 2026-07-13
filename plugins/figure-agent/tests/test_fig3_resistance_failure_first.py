@@ -30,6 +30,11 @@ VERIFIED_RENDER_RECEIPT = REVIEW / "verified_render_receipt.yaml"
 VERIFIED_SELECTOR_REGISTRY = REVIEW / "verified_selector_registry.yaml"
 VERIFIED_ATTEMPT1_SOURCE = REVIEW / "verified_attempt1_style_path_failed.tex"
 VERIFIED_ATTEMPT1_RECORD = REVIEW / "verified_attempt1_style_path_failed.yaml"
+REPAIRED_ATTEMPT = REVIEW / "repaired_layout_lane_attempt.yaml"
+REPAIRED_AUTHORITY_PACKET = REVIEW / "repaired_authority_packet.yaml"
+REPAIRED_PROMPT = REVIEW / "repaired_authoring_prompt.md"
+REPAIRED_SOURCE = REVIEW / "repaired_generated.tex"
+REPAIRED_RENDER_RECEIPT = REVIEW / "repaired_render_receipt.yaml"
 
 
 def _sha256(path: Path) -> str:
@@ -236,6 +241,17 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/layout_lane_contract.yaml",
         "review/failure-first/raw_layout_lane_report.json",
         "review/failure-first/verified_layout_lane_report.json",
+        "review/failure-first/repaired_authoring_prompt.md",
+        "review/failure-first/repaired_authority_packet.yaml",
+        "review/failure-first/repaired_generated.tex",
+        "review/failure-first/repaired_generated.pdf",
+        "review/failure-first/repaired_generated.png",
+        "review/failure-first/repaired_layout_lane_report.json",
+        "review/failure-first/repaired_visual_clash.json",
+        "review/failure-first/repaired_undeclared_geometry.json",
+        "review/failure-first/repaired_label_hyphenation.json",
+        "review/failure-first/repaired_render_receipt.yaml",
+        "review/failure-first/repaired_layout_lane_attempt.yaml",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/bin/fig-agent",
@@ -464,6 +480,41 @@ def test_fig3_first_verified_retry_preserves_the_style_path_failure() -> None:
         },
         "publication_acceptance": "not_claimed",
     }
+
+
+def test_fig3_constraint_guided_repaired_attempt_records_failure_without_ablation_claim() -> None:
+    attempt = yaml.safe_load(REPAIRED_ATTEMPT.read_text(encoding="utf-8"))
+    render = yaml.safe_load(REPAIRED_RENDER_RECEIPT.read_text(encoding="utf-8"))
+
+    assert attempt["schema"] == "figure-agent.constraint-guided-attempt.v1"
+    assert attempt["comparison_eligibility"] == "constraint_guided_iterative_not_ablation"
+    assert attempt["input_authority_packet_sha256"] == _sha256(
+        REPAIRED_AUTHORITY_PACKET
+    )
+    assert attempt["starting_prompt"]["sha256"] == _sha256(REPAIRED_PROMPT)
+    assert attempt["generated_source"]["sha256"] == _sha256(REPAIRED_SOURCE)
+    assert attempt["authoring_trace"]["feedback_rounds"] == 4
+    assert attempt["machine_outcome"]["strict_compile"] == (
+        "failed_detector_gate_after_render"
+    )
+    assert attempt["machine_outcome"]["declared_layout_lane"] == (
+        "failed_0.013_lt_0.015"
+    )
+    assert attempt["publication_acceptance"] == "not_claimed"
+
+    assert render["source_sha256"] == _sha256(REPAIRED_SOURCE)
+    assert render["machine_findings"]["layout_lane"] == {
+        "rule_id": "panel_a_narrative_clear_of_bias_marker",
+        "measured_clearance": 0.013,
+        "required_clearance": 0.015,
+        "result": "failed",
+    }
+    assert render["strict_compile_result"] == "failed_detector_gate_after_render"
+    for output in render["outputs"]:
+        assert output["sha256"] == _sha256(REVIEW / output["path"])
+    for evidence in render["evidence"]:
+        assert evidence["sha256"] == _sha256(REVIEW / evidence["path"])
+    assert render["publication_acceptance"] == "not_claimed"
 
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:

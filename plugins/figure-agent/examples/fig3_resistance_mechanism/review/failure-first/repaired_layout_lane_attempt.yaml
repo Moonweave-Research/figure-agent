@@ -1,0 +1,37 @@
+schema: figure-agent.constraint-guided-attempt.v1
+fixture: fig3_resistance_mechanism
+attempt: repaired_layout_lane_001
+authoring_medium: tikz_latex
+comparison_eligibility: constraint_guided_iterative_not_ablation
+input_authority_packet_sha256: sha256:2a5a71f56958f6d7885a24d518cf6cbeaba55ffb5ede925de77a7064475ebe33
+starting_prompt:
+  path: repaired_authoring_prompt.md
+  sha256: sha256:b24702d6ac2faabed97689032d0eadccdbde0afe344af90554fdea5eddbdc98f
+generated_source:
+  path: repaired_generated.tex
+  sha256: sha256:a590dd7782d056222cc61adea34616cd078cafcebe0a58f8b96f9a6c0095e9c1
+authoring_trace:
+  model_id: codex-gpt-5.5
+  role: clean_room_subagent
+  source_commit: 5a04cb565b74f181c90763a6103dfd3d1c708e20
+  feedback_rounds: 4
+  provider_authentication: not_claimed
+reviews:
+  spec_compliance: approved_after_two_semantic_fixes
+  precompile_quality: approved_after_geometry_and_hierarchy_fixes
+machine_outcome:
+  style_lock: passed_with_warnings
+  strict_compile: failed_detector_gate_after_render
+  declared_layout_lane: failed_0.013_lt_0.015
+  confirmed_visible_failures:
+    - cross_panel_title_collision
+    - bottom_annotation_plot_collision
+    - forced_label_hyphenation
+capability_conclusion: >-
+  A single declared narrative-to-bias clearance constraint changed the authoring
+  context but did not produce a compliant or publication-ready composition.
+  The next implementation target is panel-region containment and annotation-to-
+  plot clearance, not further manual polishing of this artifact.
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed

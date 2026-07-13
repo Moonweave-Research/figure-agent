@@ -230,7 +230,16 @@ modules listed in Section 0.
   outcome or publication gate. A selected layout-lane contract can also be
   injected into `fig-agent context-pack` as explicit authoring directives;
   selection is per generation attempt so fixture-specific geometry does not
-  leak into unrelated figures.
+  leak into unrelated figures. A subsequent clean-room, constraint-guided
+  iterative attempt is also preserved as negative evidence rather than folded
+  into the comparison: after four review-feedback rounds it still failed the
+  strict detector gate, and improved the declared lane only from `0.000` to
+  `0.013`, below the required `0.015`. Its visible cross-panel title collision,
+  annotation-to-plot collision, and forced label hyphenation demonstrate that
+  one selected text-clearance directive is not a sufficient authoring system.
+  This attempt is neither an ablation result nor publication acceptance. The
+  next general capability target is panel-region containment plus
+  annotation-to-plot clearance, not further manual polishing of this render.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot

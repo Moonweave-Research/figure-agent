@@ -1,0 +1,15 @@
+{
+  "issues": [
+    {
+      "message": "hyphenated line break 'in-': a fixed-width node wrapped a word; widen text width or reword the label",
+      "text": "in-",
+      "xmax": 330.620482,
+      "xmin": 323.977,
+      "ymax": 125.940292,
+      "ymin": 120.405053
+    }
+  ],
+  "render_pdf": "build/repaired_generated.pdf",
+  "schema": "figure-agent.label-hyphenation.v1",
+  "total": 1
+}

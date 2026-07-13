@@ -1,0 +1,278 @@
+{
+  "candidates": [
+    {
+      "bbox_px": [
+        190,
+        49,
+        281,
+        118
+      ],
+      "id": "VC001",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.019,
+        "edge": 0.005
+      },
+      "tex_lines": null,
+      "text": "(a)"
+    },
+    {
+      "bbox_px": [
+        1622,
+        49,
+        1717,
+        118
+      ],
+      "id": "VC002",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.178,
+        "edge": 0.024
+      },
+      "tex_lines": null,
+      "text": "(b)"
+    },
+    {
+      "bbox_px": [
+        1721,
+        44,
+        2196,
+        121
+      ],
+      "id": "VC003",
+      "kind": "text_on_fill",
+      "metric": {
+        "luma_std": 42.5
+      },
+      "tex_lines": null,
+      "text": "Trap-energy"
+    },
+    {
+      "bbox_px": [
+        670,
+        165,
+        719,
+        238
+      ],
+      "id": "VC004",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.037,
+        "edge": 0.007
+      },
+      "tex_lines": null,
+      "text": "V"
+    },
+    {
+      "bbox_px": [
+        1687,
+        208,
+        1814,
+        253
+      ],
+      "id": "VC005",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.017,
+        "edge": 0.006
+      },
+      "tex_lines": null,
+      "text": "g(E)"
+    },
+    {
+      "bbox_px": [
+        1055,
+        397,
+        1158,
+        442
+      ],
+      "id": "VC006",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.047,
+        "edge": 0.012
+      },
+      "tex_lines": null,
+      "text": "I(t)"
+    },
+    {
+      "bbox_px": [
+        1258,
+        535,
+        1361,
+        579
+      ],
+      "id": "VC007",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.023,
+        "edge": 0.008
+      },
+      "tex_lines": null,
+      "text": "I(t)"
+    },
+    {
+      "bbox_px": [
+        568,
+        806,
+        745,
+        852
+      ],
+      "id": "VC008",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.302,
+        "edge": 0.012
+      },
+      "tex_lines": null,
+      "text": "polymer"
+    },
+    {
+      "bbox_px": [
+        762,
+        806,
+        840,
+        852
+      ],
+      "id": "VC009",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.263,
+        "edge": 0.017
+      },
+      "tex_lines": null,
+      "text": "film"
+    },
+    {
+      "bbox_px": [
+        1923,
+        904,
+        1986,
+        978
+      ],
+      "id": "VC010",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.052,
+        "edge": 0.004
+      },
+      "tex_lines": null,
+      "text": "R"
+    },
+    {
+      "bbox_px": [
+        1996,
+        899,
+        2038,
+        978
+      ],
+      "id": "VC011",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.099,
+        "edge": 0.01
+      },
+      "tex_lines": null,
+      "text": "\u2191"
+    },
+    {
+      "bbox_px": [
+        2178,
+        803,
+        2228,
+        877
+      ],
+      "id": "VC012",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.727,
+        "edge": 0.012
+      },
+      "tex_lines": null,
+      "text": "n"
+    },
+    {
+      "bbox_px": [
+        2251,
+        802,
+        2300,
+        879
+      ],
+      "id": "VC013",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.72,
+        "edge": 0.013
+      },
+      "tex_lines": null,
+      "text": "="
+    },
+    {
+      "bbox_px": [
+        2323,
+        802,
+        2627,
+        879
+      ],
+      "id": "VC014",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.576,
+        "edge": 0.01
+      },
+      "tex_lines": null,
+      "text": "breadth"
+    },
+    {
+      "bbox_px": [
+        1062,
+        903,
+        1242,
+        949
+      ],
+      "id": "VC015",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.084,
+        "edge": 0.008
+      },
+      "tex_lines": null,
+      "text": "trapping"
+    },
+    {
+      "bbox_px": [
+        1815,
+        1005,
+        1942,
+        1049
+      ],
+      "id": "VC016",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.019,
+        "edge": 0.005
+      },
+      "tex_lines": null,
+      "text": "g(E)"
+    },
+    {
+      "bbox_px": [
+        2623,
+        1002,
+        2684,
+        1049
+      ],
+      "id": "VC017",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.083,
+        "edge": 0.011
+      },
+      "tex_lines": null,
+      "text": "\u2192"
+    }
+  ],
+  "fixture": "",
+  "render_pdf": "build/repaired_generated.pdf",
+  "total": 17
+}
