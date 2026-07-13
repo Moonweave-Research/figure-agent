@@ -1,0 +1,75 @@
+{
+  "baseline_reports": {
+    "collisions": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v28/collisions.json",
+      "sha256": "sha256:a5441b3e7442c0fb6cde72de5fa3adf99c8ab89b5094a07ddeecdce8e38fb1d9"
+    },
+    "undeclared_geometry": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v28/undeclared_geometry.json",
+      "sha256": "sha256:4b69ae783a512be659782fcfb45cd5d917946afaebd1671b2caabd944b16070b"
+    },
+    "visual_clash": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v28/visual_clash.json",
+      "sha256": "sha256:273450683c258f65d0147b49233bac9821d2df8f644cfea4c881f9aff20f69d0"
+    }
+  },
+  "blocking_counts": {
+    "semantic_path_crossing": 0,
+    "text_on_path_or_fill": 4,
+    "text_text": 2
+  },
+  "coverage_gaps": [
+    "label_path",
+    "panel_boundary"
+  ],
+  "declared_coverage": {
+    "label_path": false,
+    "panel_boundary": false
+  },
+  "publication_acceptance": "not_claimed",
+  "regression": {
+    "new_blockers": [
+      {
+        "count_delta": 1,
+        "signature": "text_text:60|broad"
+      },
+      {
+        "count_delta": 1,
+        "signature": "text_text:broad|\u03c1"
+      },
+      {
+        "count_delta": 1,
+        "signature": "visual:text_on_path:broad"
+      }
+    ],
+    "publication_acceptance": "not_claimed",
+    "resolved_blockers": [
+      {
+        "count_delta": 1,
+        "signature": "visual:text_on_path:\u03c1"
+      }
+    ],
+    "schema": "figure-agent.structural-regression-gate.v1",
+    "state": "regressed"
+  },
+  "review_counts": {
+    "visual_near_miss": 11
+  },
+  "schema": "figure-agent.structural-collision-gate.v1",
+  "source_reports": {
+    "collisions": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v29/collisions.json",
+      "sha256": "sha256:f83d30c338b71c0d314786404f78f08d84e85e040209a981c973c04355a7ff52"
+    },
+    "undeclared_geometry": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v29/undeclared_geometry.json",
+      "sha256": "sha256:f641dfdb41aca4b24f04a9cad69e9edb64adcdaf12a92366eb7ff82c5172f32c"
+    },
+    "visual_clash": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v29/visual_clash.json",
+      "sha256": "sha256:66eeb09a62c3750ba3776cdef4eab883c5736e7a21b44daa77f5b463bb952d29"
+    }
+  },
+  "state": "regressed",
+  "structural_pass": false
+}

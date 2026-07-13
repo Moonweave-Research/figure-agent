@@ -91,7 +91,7 @@ COMPARABLE_V1 = REVIEW / "comparable-v1"
 COMPARISON_CONTRACT = COMPARABLE_V1 / "comparison_contract.yaml"
 COMPARABLE_V2 = REVIEW / "comparable-v2"
 COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
-SCOPE_EXTENSION_V4 = REVIEW / "scope_extension_v4.yaml"
+SCOPE_EXTENSION_V5 = REVIEW / "scope_extension_v5.yaml"
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
 EXECUTION_REPAIR_V15 = REVIEW / "execution-repair-v15"
@@ -499,6 +499,9 @@ def test_fig3_v29_binds_magnitude_ownership_to_v28_source() -> None:
     review = json.loads(
         (EXECUTION_REPAIR_V29 / "execution_review.json").read_text(encoding="utf-8")
     )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V29 / "regression_gate.json").read_text(encoding="utf-8")
+    )
 
     assert findings["bound_source_sha256"] == _sha256(
         EXECUTION_REPAIR_V28 / "repaired_generated.tex"
@@ -508,6 +511,8 @@ def test_fig3_v29_binds_magnitude_ownership_to_v28_source() -> None:
     assert packet["editable_target"]["repair_family"] == "label_reflow"
     assert packet["publication_acceptance"] == "not_claimed"
     assert collisions["total"] == 2
+    assert regression["state"] == "regressed"
+    assert regression["regression"]["new_blockers"]
     assert review["decision"] == "candidate_rejected_collision_persisted"
     assert review["next_human_target"] == "panel_b_magnitude_label"
     assert review["publication_acceptance"] == "not_claimed"
@@ -528,6 +533,9 @@ def test_fig3_v30_retries_magnitude_as_compact_key() -> None:
     review = json.loads(
         (EXECUTION_REPAIR_V30 / "execution_review.json").read_text(encoding="utf-8")
     )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V30 / "regression_gate.json").read_text(encoding="utf-8")
+    )
 
     assert findings["bound_source_sha256"] == _sha256(
         EXECUTION_REPAIR_V29 / "repaired_generated.tex"
@@ -538,6 +546,8 @@ def test_fig3_v30_retries_magnitude_as_compact_key() -> None:
     assert packet["change_budget"]["max_changed_lines"] == 6
     assert packet["publication_acceptance"] == "not_claimed"
     assert collisions["collisions"] == []
+    assert regression["regression"]["state"] == "no_new_blockers"
+    assert regression["regression"]["new_blockers"] == []
     assert review["decision"] == "human_target_resolved_overall_review_required"
     assert review["next_human_target"] == "panel_a_transition_label_arrow_grammar"
     assert review["publication_acceptance"] == "not_claimed"
@@ -1885,7 +1895,7 @@ def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
     scope = yaml.safe_load((REVIEW / "scope_protection.yaml").read_text(encoding="utf-8"))
-    extension = yaml.safe_load(SCOPE_EXTENSION_V4.read_text(encoding="utf-8"))
+    extension = yaml.safe_load(SCOPE_EXTENSION_V5.read_text(encoding="utf-8"))
     repo_root = PLUGIN_ROOT.parents[1]
     fixture_prefix = "plugins/figure-agent/examples/fig3_resistance_mechanism/"
     allowed_paths = {

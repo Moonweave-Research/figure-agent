@@ -293,7 +293,12 @@ modules listed in Section 0.
     detector-confirmed failed one-line magnitude-key reflow: it created two
     collisions with `continuous broad`. V30 narrows the same key to two lines,
     clears those collisions, and keeps the vertical magnitude cue orthogonal
-    to horizontal breadth. Three unrelated rendered text/path candidates
+    to horizontal breadth. The structural gate now compares blocker identities
+    before and after each repair, not only totals: v29 is explicitly
+    `regressed` because it introduces `broad|rho`, `broad|60`, and a new
+    `broad` path clash, while v30 records `no_new_blockers` and the corresponding
+    resolved set. This prevents a local move from silently transferring a
+    collision to another label. Three unrelated rendered text/path candidates
     remain. The next named target is the coordinated Panel A
     `retained`/`capture`/`release` label-and-arrow grammar; publication
     acceptance remains unclaimed.

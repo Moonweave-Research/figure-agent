@@ -1,0 +1,16 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v4.yaml
+extends_sha256: sha256:0d2bcbaccadcd2e99e6afda02ce60f7c21756bf325612f13e1bf11d5e9f118c9
+reason: authorize additive before-after structural regression evidence and its reusable gate
+allowed_review_prefixes:
+  - review/failure-first/execution-repair-v29/
+  - review/failure-first/execution-repair-v30/
+allowed_review_paths:
+  - review/failure-first/scope_extension_v5.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/docs/execution-plan.md
+  - plugins/figure-agent/scripts/quality/structural_collision_gate.py
+  - plugins/figure-agent/tests/test_structural_collision_gate.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed
