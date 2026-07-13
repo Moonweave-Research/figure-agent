@@ -1,0 +1,29 @@
+schema: figure-agent.style-control-run.v1
+control_kind: deterministic_style_contract_injection
+figure_family: fig3_resistance_mechanism
+source_derivation:
+  from_path: raw_generated.tex
+  from_sha256: sha256:c21602ae6e297a6c5455c654af9ee0388bf6c7f71f41fa0bdbc2b7ab7f6b360f
+  permitted_transformations:
+    - paper_preamble_and_palette
+    - paper_font_hierarchy
+findings:
+  - id: VERIFIED_SINGLE_DEEP_STATE_OMITTED
+    failure_class: semantic
+    observation_scale: panel
+    review_outcome: confirmed_defect
+    attribution_state: exact
+    selector_id: panel_b.s60_single_deep_state
+  - id: VERIFIED_TEXT_AND_LABEL_OVERFLOW
+    failure_class: geometry
+    observation_scale: whole
+    review_outcome: confirmed_defect
+    attribution_state: exact
+    selector_id: whole.layout_text_extents
+human_correction_minutes: null
+intervention_count: 0
+clean_reproduction: true
+machine_visual_clash_candidates: 7
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed

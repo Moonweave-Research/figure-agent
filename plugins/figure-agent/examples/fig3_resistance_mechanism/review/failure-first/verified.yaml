@@ -1,0 +1,47 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: verified
+model_contract_hash: sha256:9d969e65514446c9ea822e099c48372d1bead7bde2d38787b3e1fbf9c9cb2545
+input_packet_hash: sha256:e1f2dd79ba8c492feea72376de6364b45c69829e5d3c6cbd499e9d05d8432789
+budget_contract_hash: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+figure_family: fig3_resistance_mechanism
+attempt_sequence: 2
+comparison_eligibility: feedback_guided_not_equal_input
+feedback_reference: verified_attempt1_style_path_failed.yaml
+selector_registry_hash: sha256:2160e58fe783587ff30ed1e19c480fe9616c8235e7cc6e29e570ed51908ad6fe
+findings:
+- id: VERIFIED_TEXT_HIERARCHY_COLLAPSE
+  failure_class: typography
+  observation_scale: whole
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: whole.unscaled_default_font_hierarchy
+- id: VERIFIED_PANEL_TEXT_AND_AXIS_COLLISIONS
+  failure_class: geometry
+  observation_scale: whole
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: whole.panel_text_axis_collisions
+- id: VERIFIED_MONOCHROME_UNDIRECTED_VISUAL_HIERARCHY
+  failure_class: style
+  observation_scale: whole
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: whole.palette_and_emphasis_hierarchy
+human_correction_minutes: null
+intervention_count: 0
+clean_reproduction: true
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed
+generation_receipt:
+  schema: figure-agent.generation-receipt.v1
+  model_id: codex-gpt-5.5
+  input_packet_sha256: sha256:e1f2dd79ba8c492feea72376de6364b45c69829e5d3c6cbd499e9d05d8432789
+  budget_contract_sha256: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+  source_commit: eb1e1506c5ed5520aff952041f783e8ae1a9458e
+  starting_artifact_path: raw_authoring_prompt.md
+  starting_artifact_sha256: sha256:f4239d9d8367ab7b0f34cbef679a747aae549277970f0633286f7220d4dd9872
+  generated_artifact_path: verified_generated.tex
+  generated_artifact_sha256: sha256:50d59362efa30b64e21dab6fe47d98cc729f79831498ba0b2673cd06099a3505
+  transcript_path: verified.transcript.json
+  transcript_sha256: sha256:d01f1856dd4ce76d2081befdc1e3102113e5d6442c9066c81bb0fd1c1831c0cb

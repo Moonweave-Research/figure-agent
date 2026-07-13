@@ -218,6 +218,12 @@ modules listed in Section 0.
   contract; use `scripts/quality/generation_receipt.py` to write this record.
   The writer refuses packet/budget hash drift and transcript overwrite. This is
   an auditable execution claim, not provider authentication.
+  Current evidence is deliberately not yet eligible for this checkbox: the raw
+  run is receipt-bound; the deterministic `style_control` isolates style-token
+  injection but is not an LLM run; verified attempt 1 is preserved as a nested
+  preamble-path failure; verified attempt 2 is receipt-bound but explicitly
+  marked `feedback_guided_not_equal_input`. None may be presented as a fair
+  raw/verified/repaired comparison or publication acceptance.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot

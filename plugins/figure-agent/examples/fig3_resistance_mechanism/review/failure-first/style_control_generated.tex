@@ -1,0 +1,76 @@
+\documentclass[border=4pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\usetikzlibrary{decorations.pathmorphing,positioning}
+\tikzset{
+  every node/.style={font=\sffamily\fontsize{6.0}{7.2}\selectfont,text=cGray!90!black},
+  panel/.style={font=\sffamily\bfseries\fontsize{7.5}{9.0}\selectfont,text=cGray!90!black},
+  electrode/.style={fill=cGray!90,draw=none},
+  film/.style={fill=cAmber!28,draw=cGray!80,line width=.35pt},
+  trapsite/.style={text=cRed,font=\sffamily\fontsize{7.0}{8.4}\selectfont},
+  transport/.style={draw=cBlue,line width=.8pt,-{Stealth[length=2.4mm]},rounded corners=1.3pt},
+  insetaxis/.style={draw=cGray!75,line width=.35pt},
+  dist/.style={draw=cBlue!85!black,fill=cBlue!18,line width=.65pt},
+  measure/.style={draw=cRed,line width=.5pt,{Stealth[length=1.8mm]}-{Stealth[length=1.8mm]}}
+}
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \node[panel,anchor=west] at (0,4.52) {(a)};
+  \node[anchor=west,font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont] at (.38,4.52)
+    {trapping during conduction};
+  \draw[electrode] (.30,.72) rectangle (.63,3.78);
+  \draw[electrode] (3.08,.72) rectangle (3.41,3.78);
+  \draw[film] (.63,.72) rectangle (3.08,3.78);
+  \node[rotate=90,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (.47,2.25) {electrode};
+  \node[rotate=90,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (3.25,2.25) {electrode};
+  \node[align=center,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (1.86,3.48) {disordered\\sulfur-polymer film};
+  \foreach \x/\y in {.95/1.30,1.28/2.66,1.69/1.88,2.05/2.97,2.47/1.39,2.72/2.36}
+    \node[trapsite] at (\x,\y) {$\times$};
+  \draw[transport] (.80,2.77) -- (1.12,2.35) -- (1.30,2.66) -- (1.66,2.25)
+    -- (1.69,1.88) -- (2.08,1.56) -- (2.47,1.39);
+  \fill[cBlue] (.80,2.77) circle (1.25pt);
+  \fill[cBlue] (2.47,1.39) circle (1.7pt);
+  \node[anchor=west,align=left] at (.77,.47) {sign-agnostic carrier\\repeatedly trapped / released};
+  \draw[draw=cGray!75,line width=.35pt] (-.05,3.98) -- (-.05,4.30) -- (3.76,4.30) -- (3.76,3.98);
+  \draw[-{Stealth[length=2mm]},draw=cGray!75,line width=.4pt] (-.05,4.14) -- (.18,4.14);
+  \node[anchor=south,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (1.86,4.31) {applied $V$};
+
+  \begin{scope}[shift={(3.98,.98)}]
+    \node[anchor=west,font=\sffamily\bfseries\fontsize{6.0}{7.2}\selectfont] at (0,2.76) {qualitative transient current};
+    \draw[insetaxis] (0,0) -- (0,2.48);
+    \draw[insetaxis] (0,0) -- (1.53,0);
+    \node[anchor=north,font=\sffamily\fontsize{5.2}{6.2}\selectfont] at (.77,-.03) {$t$};
+    \node[anchor=south,rotate=90,font=\sffamily\fontsize{5.2}{6.2}\selectfont] at (-.03,1.25) {$I(t)$};
+    \draw[cBlue,line width=.8pt] (.12,2.18) .. controls (.43,1.15) and (.82,.63) .. (1.42,.29);
+    \node[anchor=west,font=\sffamily\fontsize{5.2}{6.2}\selectfont] at (.35,1.63) {$I(t)\propto t^{-n}$};
+    \node[align=left,anchor=west,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (0,-.53)
+      {$I\downarrow\ \Rightarrow\ R\uparrow$};
+  \end{scope}
+
+  \begin{scope}[shift={(6.10,0)}]
+    \node[panel,anchor=west] at (0,4.52) {(b)};
+    \node[anchor=west,font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont] at (.38,4.52)
+      {trap-energy distribution};
+    \draw[insetaxis] (.36,.85) -- (.36,3.68);
+    \draw[insetaxis] (.36,.85) -- (4.92,.85);
+    \node[anchor=north,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (2.68,.81) {trap energy $E$};
+    \node[anchor=south,rotate=90,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (.32,2.30) {$g(E)$};
+    \draw[dist] plot[smooth] coordinates {(1.03,.85) (1.19,1.02) (1.36,2.96) (1.53,1.02) (1.68,.85)} -- cycle;
+    \node[anchor=north,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (1.36,.73) {S60};
+    \node[align=center,font=\sffamily\fontsize{5.2}{6.2}\selectfont] at (1.36,3.30) {discrete\\narrow state};
+    \draw[dist] plot[smooth] coordinates {(2.26,.85) (2.54,1.15) (2.93,1.75) (3.45,2.04) (3.95,1.75) (4.33,1.18) (4.56,.85)} -- cycle;
+    \node[anchor=north,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (3.42,.73) {S80};
+    \node[align=center,font=\sffamily\fontsize{5.2}{6.2}\selectfont] at (3.42,2.53) {continuous\\broad distribution};
+    \draw[measure] (2.28,.42) -- (4.55,.42);
+    \node[anchor=north,text=cRed,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (3.42,.34) {$n$ = breadth};
+    \draw[measure] (4.83,.86) -- (4.83,2.04);
+    \node[anchor=west,text=cRed,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (4.91,1.46) {$\rho_{60\,\mathrm{s}}$ = magnitude};
+    \draw[-{Stealth[length=2mm]},draw=cGray!80,line width=.45pt] (1.72,3.72) -- (4.39,3.72);
+    \node[anchor=south,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (3.06,3.73)
+      {sulfur $\uparrow$, disorder $\uparrow$: discrete $\rightarrow$ continuous broad};
+  \end{scope}
+
+  \draw[-{Stealth[length=2mm]},draw=cGray!75,line width=.45pt] (3.73,.20) -- (5.67,.20);
+  \node[align=center,font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (4.70,.20)
+    {broader $g(E)$ $\rightarrow$ larger $n$\\slower $I(t)$ decay $\rightarrow R\uparrow$};
+\end{tikzpicture}
+\end{document}

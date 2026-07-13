@@ -21,6 +21,15 @@ RAW_BUDGET_CONTRACT = REVIEW / "budget_contract.yaml"
 RAW_AUTHORITY_PACKET = REVIEW / "raw_authority_packet.yaml"
 RAW_RENDER_RECEIPT = REVIEW / "raw_render_receipt.yaml"
 RAW_SELECTOR_REGISTRY = REVIEW / "raw_selector_registry.yaml"
+STYLE_CONTROL_RUN = REVIEW / "style_control.yaml"
+STYLE_CONTROL_SOURCE = REVIEW / "style_control_generated.tex"
+STYLE_CONTROL_RENDER_RECEIPT = REVIEW / "style_control_render_receipt.yaml"
+VERIFIED_RUN = REVIEW / "verified.yaml"
+VERIFIED_SOURCE = REVIEW / "verified_generated.tex"
+VERIFIED_RENDER_RECEIPT = REVIEW / "verified_render_receipt.yaml"
+VERIFIED_SELECTOR_REGISTRY = REVIEW / "verified_selector_registry.yaml"
+VERIFIED_ATTEMPT1_SOURCE = REVIEW / "verified_attempt1_style_path_failed.tex"
+VERIFIED_ATTEMPT1_RECORD = REVIEW / "verified_attempt1_style_path_failed.yaml"
 
 
 def _sha256(path: Path) -> str:
@@ -210,6 +219,20 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/raw_selector_registry.yaml",
         "review/failure-first/raw.yaml",
         "review/failure-first/raw.transcript.json",
+        "review/failure-first/style_control_generated.tex",
+        "review/failure-first/style_control_generated.pdf",
+        "review/failure-first/style_control_generated.png",
+        "review/failure-first/style_control_render_receipt.yaml",
+        "review/failure-first/style_control.yaml",
+        "review/failure-first/verified_generated.tex",
+        "review/failure-first/verified_generated.pdf",
+        "review/failure-first/verified_generated.png",
+        "review/failure-first/verified_render_receipt.yaml",
+        "review/failure-first/verified.yaml",
+        "review/failure-first/verified.transcript.json",
+        "review/failure-first/verified_selector_registry.yaml",
+        "review/failure-first/verified_attempt1_style_path_failed.tex",
+        "review/failure-first/verified_attempt1_style_path_failed.yaml",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/docs/execution-plan.md",
@@ -320,6 +343,119 @@ def test_fig3_raw_clean_room_baseline_is_hash_bound_but_not_publication_accepted
     for output in render["outputs"]:
         assert output["sha256"] == _sha256(REVIEW / output["path"])
     assert render["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_style_control_injects_only_the_paper_style_contract() -> None:
+    run = yaml.safe_load(STYLE_CONTROL_RUN.read_text(encoding="utf-8"))
+    source = STYLE_CONTROL_SOURCE.read_text(encoding="utf-8")
+    render = yaml.safe_load(STYLE_CONTROL_RENDER_RECEIPT.read_text(encoding="utf-8"))
+
+    assert run["schema"] == "figure-agent.style-control-run.v1"
+    assert run["control_kind"] == "deterministic_style_contract_injection"
+    assert run["figure_family"] == "fig3_resistance_mechanism"
+    assert run["source_derivation"] == {
+        "from_path": RAW_SOURCE.name,
+        "from_sha256": _sha256(RAW_SOURCE),
+        "permitted_transformations": [
+            "paper_preamble_and_palette",
+            "paper_font_hierarchy",
+        ],
+    }
+    assert run["clean_reproduction"] is True
+    assert run["human_verdict"] == {"state": "pending"}
+    assert run["publication_acceptance"] == "not_claimed"
+    assert "\\usepackage{polymer-paper-preamble}" in source
+    assert "\\definecolor" not in source
+    assert "\\tiny" not in source
+    assert "\\scriptsize" not in source
+    for invariant in (
+        "sign-agnostic carrier",
+        "repeatedly trapped / released",
+        "I(t)\\propto t^{-n}",
+        "S60",
+        "S80",
+        "$n$ = breadth",
+        "magnitude",
+    ):
+        assert invariant in source
+    assert render["source_sha256"] == _sha256(STYLE_CONTROL_SOURCE)
+    for output in render["outputs"]:
+        assert output["sha256"] == _sha256(REVIEW / output["path"])
+    assert render["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_verified_llm_retry_is_receipt_bound_to_the_same_clean_room_inputs() -> None:
+    raw_run = yaml.safe_load(RAW_RUN.read_text(encoding="utf-8"))
+    run = yaml.safe_load(VERIFIED_RUN.read_text(encoding="utf-8"))
+    source = VERIFIED_SOURCE.read_text(encoding="utf-8")
+    receipt = run["generation_receipt"]
+    render = yaml.safe_load(VERIFIED_RENDER_RECEIPT.read_text(encoding="utf-8"))
+
+    assert run["schema"] == "figure-agent.failure-ablation-run.v1"
+    assert run["variant"] == "verified"
+    for field in (
+        "model_contract_hash",
+        "input_packet_hash",
+        "budget_contract_hash",
+        "figure_family",
+    ):
+        assert run[field] == raw_run[field]
+    assert run["comparison_eligibility"] == "feedback_guided_not_equal_input"
+    assert run["selector_registry_hash"] == _sha256(VERIFIED_SELECTOR_REGISTRY)
+    assert receipt["model_id"] == raw_run["generation_receipt"]["model_id"]
+    assert receipt["source_commit"] == raw_run["generation_receipt"]["source_commit"]
+    assert receipt["starting_artifact_path"] == RAW_PROMPT.name
+    assert receipt["starting_artifact_sha256"] == _sha256(RAW_PROMPT)
+    assert receipt["generated_artifact_path"] == VERIFIED_SOURCE.name
+    assert receipt["generated_artifact_sha256"] == _sha256(VERIFIED_SOURCE)
+    assert receipt["transcript_sha256"] == _sha256(VERIFIED_RUN.with_suffix(".transcript.json"))
+    assert run["clean_reproduction"] is True
+    assert run["human_verdict"] == {"state": "pending"}
+    assert run["publication_acceptance"] == "not_claimed"
+    assert "\\usepackage{polymer-paper-preamble}" in source
+    assert "\\definecolor" not in source
+    assert "\\tiny" not in source
+    assert "\\scriptsize" not in source
+    for invariant in (
+        "carrier (sign-agnostic)",
+        "repeated trap $\\leftrightarrow$ release",
+        "I(t)\\propto t^{-n}",
+        "S60",
+        "single deep",
+        "S80",
+        "continuous broad",
+        "$n$ = breadth",
+        "magnitude",
+    ):
+        assert invariant in source
+    assert render["source_sha256"] == _sha256(VERIFIED_SOURCE)
+    assert render["visual_clash_candidates"] == 21
+    assert render["undeclared_geometry_candidates"] == 37
+    for output in render["outputs"]:
+        assert output["sha256"] == _sha256(REVIEW / output["path"])
+    assert render["publication_acceptance"] == "not_claimed"
+    selectors = yaml.safe_load(VERIFIED_SELECTOR_REGISTRY.read_text(encoding="utf-8"))
+    assert selectors["source_sha256"] == _sha256(VERIFIED_SOURCE)
+    assert {item["id"] for item in selectors["selectors"]} == {
+        item["selector_id"] for item in run["findings"]
+    }
+
+
+def test_fig3_first_verified_retry_preserves_the_style_path_failure() -> None:
+    attempt = yaml.safe_load(VERIFIED_ATTEMPT1_RECORD.read_text(encoding="utf-8"))
+
+    assert attempt == {
+        "schema": "figure-agent.clean-room-attempt.v1",
+        "attempt": "verified_attempt1",
+        "source_path": VERIFIED_ATTEMPT1_SOURCE.name,
+        "source_sha256": _sha256(VERIFIED_ATTEMPT1_SOURCE),
+        "project_compile": {
+            "result": "failed",
+            "failure_class": "reproducibility",
+            "failure": "styles/polymer-paper-preamble.sty not found from nested review path",
+        },
+        "publication_acceptance": "not_claimed",
+    }
 
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:

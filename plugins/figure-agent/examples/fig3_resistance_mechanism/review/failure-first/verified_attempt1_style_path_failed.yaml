@@ -1,0 +1,9 @@
+schema: figure-agent.clean-room-attempt.v1
+attempt: verified_attempt1
+source_path: verified_attempt1_style_path_failed.tex
+source_sha256: sha256:bb498f47b154ba44d5cd236d70a6d15db5b19aa13611d9e7ee969cf804d5c07d
+project_compile:
+  result: failed
+  failure_class: reproducibility
+  failure: styles/polymer-paper-preamble.sty not found from nested review path
+publication_acceptance: not_claimed

@@ -1,0 +1,18 @@
+schema: figure-agent.verified-render-receipt.v1
+fixture: fig3_resistance_mechanism
+source_path: verified_generated.tex
+source_sha256: sha256:50d59362efa30b64e21dab6fe47d98cc729f79831498ba0b2673cd06099a3505
+compile_command:
+  - bash
+  - scripts/compile.sh
+  - examples/fig3_resistance_mechanism/review/failure-first/verified_generated.tex
+working_directory: plugins/figure-agent
+style_lock: passed_with_flagship_macro_warning
+visual_clash_candidates: 21
+undeclared_geometry_candidates: 37
+outputs:
+  - path: verified_generated.pdf
+    sha256: sha256:7d2d0efd99d28fd2a6af60b527be7522c801a93efefd72341339e0c76ceebd4e
+  - path: verified_generated.png
+    sha256: sha256:a86cfa05a50e9ecb8b3ec5f36845dc8be89e579a8c830f029394c1731ead24f2
+publication_acceptance: not_claimed

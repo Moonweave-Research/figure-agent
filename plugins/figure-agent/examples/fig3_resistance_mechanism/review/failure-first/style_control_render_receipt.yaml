@@ -1,0 +1,23 @@
+schema: figure-agent.style-control-render-receipt.v1
+fixture: fig3_resistance_mechanism
+source_path: style_control_generated.tex
+source_sha256: sha256:5eb84b5eb9abc7868b88dd46a576b98a39ad9c5ab9b78c8da1618e519ec797bc
+source_derivation:
+  from_path: raw_generated.tex
+  from_sha256: sha256:c21602ae6e297a6c5455c654af9ee0388bf6c7f71f41fa0bdbc2b7ab7f6b360f
+  permitted_transformations:
+    - paper_preamble_and_palette
+    - paper_font_hierarchy
+compile_command:
+  - bash
+  - scripts/compile.sh
+  - examples/fig3_resistance_mechanism/review/failure-first/style_control_generated.tex
+working_directory: plugins/figure-agent
+style_lock: passed_with_flagship_macro_warning
+visual_clash_candidates: 7
+outputs:
+  - path: style_control_generated.pdf
+    sha256: sha256:fd56a96b288a3c61a34e41a2c18babfca2c80cb3678d8db9f84fec601e6acfa4
+  - path: style_control_generated.png
+    sha256: sha256:7682e912bd3102de983ffbd75fb8882d28cdafdbc25131d8e1a664ebdea06c79
+publication_acceptance: not_claimed

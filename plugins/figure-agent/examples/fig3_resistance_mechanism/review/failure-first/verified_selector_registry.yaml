@@ -1,0 +1,20 @@
+schema: figure-agent.finding-selector-registry.v1
+fixture: fig3_resistance_mechanism
+source_path: verified_generated.tex
+source_sha256: sha256:50d59362efa30b64e21dab6fe47d98cc729f79831498ba0b2673cd06099a3505
+selectors:
+  - id: whole.unscaled_default_font_hierarchy
+    evidence_kind: source_and_rendered_image
+    lines: [5, 71]
+    paths: [verified_generated.png]
+    rationale: default and footnote-size text is not scaled to the 11.6 cm two-panel canvas
+  - id: whole.panel_text_axis_collisions
+    evidence_kind: rendered_image
+    paths: [verified_generated.png]
+    rationale: panel titles, transport labels, axes, and distribution labels overlap at final render scale
+  - id: whole.palette_and_emphasis_hierarchy
+    evidence_kind: source_and_rendered_image
+    lines: [7, 71]
+    paths: [verified_generated.png]
+    rationale: unqualified black strokes and fills leave no semantic emphasis hierarchy despite a paper palette
+publication_acceptance: not_claimed
