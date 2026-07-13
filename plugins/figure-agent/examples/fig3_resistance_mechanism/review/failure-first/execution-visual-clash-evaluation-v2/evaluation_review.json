@@ -1,0 +1,55 @@
+{
+  "schema": "figure-agent.visual-clash-detector-evaluation.v1",
+  "evaluation": "execution-visual-clash-evaluation-v2",
+  "decision": "detector_luma_noise_resolved_human_pending",
+  "source": {
+    "path": "review/failure-first/execution-repair-v10/repaired_generated.tex",
+    "sha256": "sha256:d55002e5c6a1f3cf6dc404fc637ad66bc81063f97e50d7757b96ff7eb9de09a9"
+  },
+  "render_evidence": {
+    "report_field": "build/repaired_generated.pdf",
+    "resolution_base": "review/failure-first/execution-repair-v10",
+    "resolved_runtime_path": "review/failure-first/execution-repair-v10/build/repaired_generated.pdf",
+    "sha256": "sha256:913be09524f0d6217c76061d5103eaf4c5a0edd128e3bb3f02ae57303ec6c723",
+    "raw_sha256_status": "snapshot_only_nondeterministic",
+    "content_signature": {
+      "schema": "figure-agent.pdf-content-signature.v1",
+      "extraction": "pdftotext-layout-trim-right-lines-v1",
+      "normalized_text_sha256": "sha256:2b866b14001974c016519e7fe81de9932cca25e4c13d1299ab1e69e7c514cb4a",
+      "page_count": 1
+    },
+    "tracking": "generated_runtime_artifact_not_tracked",
+    "working_directory": "plugins/figure-agent",
+    "reproduction_command": "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v10/repaired_generated.tex"
+  },
+  "before": {
+    "report_path": "review/failure-first/execution-repair-v10/visual_clash.json",
+    "report_sha256": "sha256:9280e4a35277309aa6fffd8e28e825f4719bf1c164755447a650c679709d169f",
+    "visual_clash_candidates": 1,
+    "candidate": {
+      "kind": "text_on_fill",
+      "text": "content",
+      "metric": "luma_std=44.6"
+    }
+  },
+  "after": {
+    "report_path": "review/failure-first/execution-visual-clash-evaluation-v2/visual_clash.json",
+    "report_sha256": "sha256:26e7494dac1e3e6a0447a998a229f506d9d9d90dfd49e45d736a19763d1c4371",
+    "visual_clash_candidates": 0
+  },
+  "root_cause": {
+    "class": "neighboring_text_bbox_contaminated_luma_only_ring",
+    "evidence": "the landscape word bbox intersects the content word padded ring without intersecting the content bbox",
+    "boundary": "other PDF word bbox pixels are excluded only for the luma-only fallback; original dark and edge metrics, isolated geometry, and fill-under-text signals remain actionable"
+  },
+  "controller_changes": [
+    "separate PDF word bboxes are masked only for the luma-only fallback while original dark and edge checks remain unchanged",
+    "isolated high-luma fill evidence remains covered by regression tests"
+  ],
+  "verification": {
+    "strict_compile": "pass",
+    "visual_clash_candidates": 0,
+    "human_review": "pending"
+  },
+  "publication_acceptance": "not_claimed"
+}

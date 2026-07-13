@@ -87,6 +87,12 @@ def _sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _declared_fixture_path(relative_path: str) -> Path:
+    path = (FIXTURE / relative_path).resolve()
+    assert path.is_relative_to(FIXTURE.resolve())
+    return path
+
+
 def _git_pending_paths(repo_root: Path) -> set[str]:
     commands = (
         ("diff", "--name-only", "--cached"),
@@ -422,6 +428,8 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/execution-repair-v10/execution_review.json",
         "review/failure-first/execution-repair-v10/repaired_generated.tex",
         "review/failure-first/execution-repair-v10/visual_clash.json",
+        "review/failure-first/execution-visual-clash-evaluation-v2/evaluation_review.json",
+        "review/failure-first/execution-visual-clash-evaluation-v2/visual_clash.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "examples/fig3_resistance_mechanism/review/failure-first/"
@@ -1337,6 +1345,74 @@ def test_execution_repair_v10_resolves_material_label_path_contact() -> None:
     )
     assert [candidate["text"] for candidate in report["candidates"]] == ["content"]
     assert review["verification"]["strict_compile"] == "fail_one_unclassified_candidate"
+    assert review["verification"]["human_review"] == "pending"
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_visual_clash_evaluation_v2_rejects_neighbor_text_luma_noise() -> None:
+    evaluation_root = REVIEW / "execution-visual-clash-evaluation-v2"
+    review = json.loads(
+        (evaluation_root / "evaluation_review.json").read_text(encoding="utf-8")
+    )
+    report = json.loads(
+        (evaluation_root / "visual_clash.json").read_text(encoding="utf-8")
+    )
+
+    assert review["decision"] == "detector_luma_noise_resolved_human_pending"
+    assert review["before"]["visual_clash_candidates"] == 1
+    source_path = _declared_fixture_path(review["source"]["path"])
+    before_report_path = _declared_fixture_path(review["before"]["report_path"])
+    after_report_path = _declared_fixture_path(review["after"]["report_path"])
+    assert review["source"]["sha256"] == _sha256(source_path)
+    assert review["before"]["report_sha256"] == _sha256(before_report_path)
+    before_report = json.loads(
+        before_report_path.read_text(encoding="utf-8")
+    )
+    assert [candidate["text"] for candidate in before_report["candidates"]] == [
+        "content"
+    ]
+    assert review["after"]["visual_clash_candidates"] == 0
+    assert after_report_path == evaluation_root / "visual_clash.json"
+    assert review["after"]["report_sha256"] == _sha256(after_report_path)
+    assert review["root_cause"]["class"] == (
+        "neighboring_text_bbox_contaminated_luma_only_ring"
+    )
+    assert review["render_evidence"]["resolution_base"] == (
+        "review/failure-first/execution-repair-v10"
+    )
+    assert review["render_evidence"]["resolved_runtime_path"] == (
+        "review/failure-first/execution-repair-v10/build/repaired_generated.pdf"
+    )
+    assert review["render_evidence"]["tracking"] == (
+        "generated_runtime_artifact_not_tracked"
+    )
+    assert review["render_evidence"]["raw_sha256_status"] == (
+        "snapshot_only_nondeterministic"
+    )
+    assert review["render_evidence"]["content_signature"] == {
+        "schema": "figure-agent.pdf-content-signature.v1",
+        "extraction": "pdftotext-layout-trim-right-lines-v1",
+        "normalized_text_sha256": (
+            "sha256:2b866b14001974c016519e7fe81de9932cca25e4c13d1299ab1e69e7c514cb4a"
+        ),
+        "page_count": 1,
+    }
+    render_path = _declared_fixture_path(
+        review["render_evidence"]["resolved_runtime_path"]
+    )
+    source_from_plugin = source_path.relative_to(PLUGIN_ROOT)
+    assert review["render_evidence"]["working_directory"] == "plugins/figure-agent"
+    assert review["render_evidence"]["reproduction_command"] == (
+        "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh " f"{source_from_plugin}"
+    )
+    if render_path.exists():
+        assert review["render_evidence"]["sha256"] == _sha256(render_path)
+        assert review["render_evidence"]["content_signature"] == (
+            _pdf_content_signature(render_path)
+        )
+    assert report["total"] == 0
+    assert report["candidates"] == []
+    assert review["verification"]["strict_compile"] == "pass"
     assert review["verification"]["human_review"] == "pending"
     assert review["publication_acceptance"] == "not_claimed"
 

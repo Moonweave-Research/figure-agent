@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from PIL import Image
+from PIL import Image, ImageDraw
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
@@ -424,6 +424,73 @@ def test_visual_clash_preserves_reviewed_high_luma_fill_signal(monkeypatch) -> N
     issues = check_visual_clash.detect_visual_clashes(image, words, (100, 100))
 
     assert [(issue.kind, issue.text) for issue in issues] == [("text_on_fill", "label")]
+
+
+def test_ring_stats_excludes_neighboring_word_bbox_pixels() -> None:
+    image = Image.new("RGB", (100, 100), "white")
+    ImageDraw.Draw(image).rectangle((10, 21, 29, 23), fill="black")
+    inner = (10, 10, 20, 20)
+    outer = (6, 6, 24, 24)
+
+    raw = check_visual_clash._ring_stats(image, inner, outer)
+    masked = check_visual_clash._ring_stats(
+        image,
+        inner,
+        outer,
+        [(10, 21, 30, 31)],
+    )
+
+    assert raw["dark_ratio"] > 0.0
+    assert masked == {"dark_ratio": 0.0, "luma_std": 0.0, "edge_density": 0.0}
+
+
+def test_visual_clash_uses_masked_stats_only_for_luma_fallback(monkeypatch) -> None:
+    image = Image.new("RGB", (100, 100), "white")
+    words = [
+        {"text": "content", "xmin": 10, "ymin": 10, "xmax": 20, "ymax": 20},
+        {"text": "landscape", "xmin": 10, "ymin": 21, "xmax": 30, "ymax": 31},
+    ]
+    monkeypatch.setattr(
+        check_visual_clash,
+        "_ring_stats",
+        lambda _image, _inner, _outer, excluded=None: {
+            "dark_ratio": 0.0,
+            "luma_std": 0.0 if excluded else 40.0,
+            "edge_density": 0.0,
+        },
+    )
+    monkeypatch.setattr(
+        check_visual_clash,
+        "_fill_under_text_stats",
+        lambda *_args: {
+            "mean_delta": 0.0,
+            "bbox_mean": 255.0,
+            "outer_mean": 255.0,
+            "bbox_std": 0.0,
+            "ring_std": 0.0,
+        },
+    )
+
+    issues = check_visual_clash.detect_visual_clashes(image, words, (100, 100))
+
+    assert [issue for issue in issues if issue.text == "content"] == []
+
+
+def test_visual_clash_preserves_geometry_outside_neighboring_word_bbox() -> None:
+    image = Image.new("RGB", (100, 100), "white")
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((10, 21, 29, 23), fill="black")
+    draw.line((7, 6, 7, 23), fill="black", width=2)
+    words = [
+        {"text": "content", "xmin": 10, "ymin": 10, "xmax": 20, "ymax": 20},
+        {"text": "landscape", "xmin": 10, "ymin": 21, "xmax": 30, "ymax": 31},
+    ]
+
+    issues = check_visual_clash.detect_visual_clashes(image, words, (100, 100))
+
+    assert [(issue.kind, issue.text) for issue in issues if issue.text == "content"] == [
+        ("text_on_path", "content")
+    ]
 
 
 def test_check_visual_clash_writes_json_output_without_count_banner(

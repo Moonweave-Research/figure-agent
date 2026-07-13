@@ -163,6 +163,8 @@ allowed_review_paths:
   - review/failure-first/execution-repair-v10/execution_review.json
   - review/failure-first/execution-repair-v10/repaired_generated.tex
   - review/failure-first/execution-repair-v10/visual_clash.json
+  - review/failure-first/execution-visual-clash-evaluation-v2/evaluation_review.json
+  - review/failure-first/execution-visual-clash-evaluation-v2/visual_clash.json
 allowed_repository_paths:
   - examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v5/control_generated.tex
   - plugins/figure-agent/_known_false_positives.yaml

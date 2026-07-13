@@ -160,8 +160,9 @@ def _ring_stats(
     image: Image.Image,
     inner: tuple[int, int, int, int],
     outer: tuple[int, int, int, int],
+    excluded_bboxes: list[tuple[int, int, int, int]] | None = None,
 ) -> dict:
-    """Return stats for the padded area around a text bbox, excluding the text bbox."""
+    """Return non-text pixel stats for the padded area around a text bbox."""
     ox1, oy1, ox2, oy2 = outer
     ix1, iy1, ix2, iy2 = inner
     if ox2 <= ox1 or oy2 <= oy1:
@@ -174,6 +175,13 @@ def _ring_stats(
     rel_x2 = min(arr.shape[1], ix2 - ox1)
     rel_y2 = min(arr.shape[0], iy2 - oy1)
     mask[rel_y1:rel_y2, rel_x1:rel_x2] = False
+    for bx1, by1, bx2, by2 in excluded_bboxes or []:
+        rel_x1 = max(0, bx1 - ox1)
+        rel_y1 = max(0, by1 - oy1)
+        rel_x2 = min(arr.shape[1], bx2 - ox1)
+        rel_y2 = min(arr.shape[0], by2 - oy1)
+        if rel_x2 > rel_x1 and rel_y2 > rel_y1:
+            mask[rel_y1:rel_y2, rel_x1:rel_x2] = False
     ring = arr[mask]
     if ring.size == 0:
         return {"dark_ratio": 0.0, "luma_std": 0.0, "edge_density": 0.0}
@@ -243,16 +251,23 @@ def detect_visual_clashes(
     issues: list[VisualIssue] = []
     image_size = image.size
     page_w, page_h = page_size_pt
+    word_bboxes = [bbox_pt_to_px(word, page_size_pt, image_size) for word in words]
 
-    for word in words:
+    for index, (word, bbox) in enumerate(zip(words, word_bboxes, strict=True)):
         text = word["text"]
-        bbox = bbox_pt_to_px(word, page_size_pt, image_size)
         if word["xmin"] < 0 or word["ymin"] < 0 or word["xmax"] > page_w or word["ymax"] > page_h:
             issues.append(VisualIssue("clipping", text, "bbox extends outside PDF page", bbox))
             continue
 
         padded = expand_bbox(bbox, padding_px, image_size)
+        other_word_bboxes = word_bboxes[:index] + word_bboxes[index + 1 :]
         stats = _ring_stats(image, bbox, padded)
+        non_text_stats = _ring_stats(
+            image,
+            bbox,
+            padded,
+            other_word_bboxes,
+        )
         fill_stats = _fill_under_text_stats(image, bbox, padded)
         if stats["dark_ratio"] >= 0.03 and stats["edge_density"] >= 0.004:
             issues.append(
@@ -283,12 +298,12 @@ def detect_visual_clashes(
                     bbox,
                 )
             )
-        elif stats["luma_std"] >= 36.0:
+        elif non_text_stats["luma_std"] >= 36.0:
             issues.append(
                 VisualIssue(
                     "text_on_fill",
                     text,
-                    f"luma_std={stats['luma_std']:.1f}",
+                    f"luma_std={non_text_stats['luma_std']:.1f}",
                     bbox,
                 )
             )
