@@ -16,6 +16,13 @@ MANDATORY_SOURCE_REQUIREMENTS = (
     r"\usepackage{tikz}",
     r"\usepackage{polymer-paper-preamble}",
 )
+STYLE_LOCK_AUTHORING_REQUIREMENTS = (
+    "Use only the preamble palette tokens cAmber, cBlue, cRed, cTeal, cGray, "
+    "cLGray, cBrown, cArmAmber, and cAmberSphere, plus TikZ built-in black, "
+    "white, and gray.",
+    "Keep every explicit line width at or above 0.25pt.",
+    r"Do not use local \tiny or \scriptsize font overrides.",
+)
 ATTEMPT_ROOT = Path("review/failure-first")
 ATTEMPT_NAME = re.compile(r"execution-binding-v[1-9][0-9]*")
 
@@ -190,11 +197,16 @@ def render_authoring_prompt(
             f"repository root to [{execution_cwd}]."
         ),
         f"- Write exactly one new source to [{output_path}].",
+        "- Do not create an intermediate subdirectory beneath "
+        f"[{Path(output_path).parent.as_posix()}].",
         "- Start from the declared blank artifact; perform one attempt only.",
         "- Do not inspect or repair historical generated sources.",
         "",
         "## Mandatory standalone TikZ source requirements",
         *[f"- {requirement}" for requirement in MANDATORY_SOURCE_REQUIREMENTS],
+        "",
+        "## Style Lock authoring requirements",
+        *[f"- {requirement}" for requirement in STYLE_LOCK_AUTHORING_REQUIREMENTS],
         "",
         "## Semantic contracts and forbidden implications",
         *_fixture_briefing_lines(context_pack),
@@ -315,6 +327,7 @@ def compile_authoring_execution_packet(
             else None
         ),
         "mandatory_source_requirements": list(MANDATORY_SOURCE_REQUIREMENTS),
+        "style_lock_authoring_requirements": list(STYLE_LOCK_AUTHORING_REQUIREMENTS),
         "forbidden_import_classes": [
             "fig1_fixture_artifacts",
             "historical_generated_sources",

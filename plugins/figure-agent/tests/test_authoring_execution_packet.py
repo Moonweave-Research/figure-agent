@@ -100,6 +100,17 @@ def test_compiles_canonical_packet_and_prompt(tmp_path: Path) -> None:
     assert "publication_acceptance: not_claimed" in prompt
     assert "Trap energy diagram" in prompt
     assert "Charge trapping" in prompt
+    assert "Do not create an intermediate subdirectory" in prompt
+    assert "Use only the preamble palette tokens" in prompt
+    assert "Keep every explicit line width at or above 0.25pt" in prompt
+    assert r"Do not use local \tiny or \scriptsize font overrides" in prompt
+    assert packet["style_lock_authoring_requirements"] == [
+        "Use only the preamble palette tokens cAmber, cBlue, cRed, cTeal, cGray, "
+        "cLGray, cBrown, cArmAmber, and cAmberSphere, plus TikZ built-in black, "
+        "white, and gray.",
+        "Keep every explicit line width at or above 0.25pt.",
+        r"Do not use local \tiny or \scriptsize font overrides.",
+    ]
 
 
 def test_binds_repo_relative_execution_cwd_into_packet_and_prompt(tmp_path: Path) -> None:

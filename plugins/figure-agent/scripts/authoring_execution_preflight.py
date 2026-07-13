@@ -81,6 +81,7 @@ def preflight_authoring_pair(
         "budget_contract",
         "blank_start",
         "mandatory_source_requirements",
+        "style_lock_authoring_requirements",
         "feedback_rounds",
         "manual_repairs",
         "forbidden_import_classes",
