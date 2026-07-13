@@ -85,10 +85,47 @@ EXECUTION_BINDING_V4 = REVIEW / "execution-binding-v4"
 EXECUTION_BINDING_V5 = REVIEW / "execution-binding-v5"
 EXECUTION_BINDING_V6 = REVIEW / "execution-binding-v6"
 EXECUTION_SCAFFOLD_EVALUATION = REVIEW / "execution-scaffold-evaluation-v1"
+COMPARABLE_V1 = REVIEW / "comparable-v1"
+COMPARISON_CONTRACT = COMPARABLE_V1 / "comparison_contract.yaml"
 
 
 def _sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_fig3_comparable_v1_declares_one_shared_contract_and_three_conditions() -> None:
+    contract = yaml.safe_load(COMPARISON_CONTRACT.read_text(encoding="utf-8"))
+
+    assert contract["schema"] == "figure-agent.failure-ablation-comparison.v1"
+    assert contract["fixture"] == "fig3_resistance_mechanism"
+    assert contract["comparison_eligibility"] == "eligible_equal_input"
+    assert contract["shared_contract"] == {
+        "model_contract_path": "../model_contract.yaml",
+        "model_contract_sha256": _sha256(REVIEW / "model_contract.yaml"),
+        "input_packet_path": "../input_packet.yaml",
+        "input_packet_sha256": _sha256(PACKET),
+        "budget_contract_path": "../budget_contract.yaml",
+        "budget_contract_sha256": _sha256(REVIEW / "budget_contract.yaml"),
+        "starting_artifact_path": "blank_start.txt",
+        "starting_artifact_sha256": _sha256(COMPARABLE_V1 / "blank_start.txt"),
+    }
+    assert set(contract["conditions"]) == {"raw", "verified", "repaired"}
+    for variant, condition in contract["conditions"].items():
+        prompt = COMPARABLE_V1 / condition["prompt_path"]
+        assert condition["condition_id"] == variant
+        assert condition["prompt_sha256"] == _sha256(prompt)
+        assert condition["authoring_attempts"] == 1
+        assert condition["starting_artifact_path"] == "blank_start.txt"
+    assert contract["forbidden_authoring_inputs"] == [
+        "../../fig3_resistance_mechanism.tex",
+        "../raw_generated.tex",
+        "../verified_generated.tex",
+        "../repaired_generated.tex",
+        "../execution-binding-v*/",
+        "../execution-repair-v*/",
+        "examples/fig1_*/",
+    ]
+    assert contract["publication_acceptance"] == "not_claimed"
 
 
 def _declared_fixture_path(relative_path: str) -> Path:
