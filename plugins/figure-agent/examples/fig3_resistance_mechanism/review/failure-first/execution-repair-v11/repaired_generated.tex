@@ -20,7 +20,7 @@
   measure/.style={draw=cRed, line width=0.42pt, -{Stealth[length=2.6pt,width=2.0pt]}},
 ]
 
-\useasboundingbox (0,0) rectangle (14.10,4.483);
+\useasboundingbox (0,0) rectangle (14.152435,4.500765);
 
 % Compact two-block canvas for schematic half of Fig. 3.
 \node[panel, minimum width=7.20cm, minimum height=4.25cm, anchor=south west] (Abox) at (0,0) {};
@@ -35,7 +35,12 @@
 \begin{scope}[shift={(0.35,0.26)}]
   \node[small note, anchor=west] at (4.98,3.72) {applied $V$};
   \draw[field arrow] (5.45,3.45) -- (6.38,3.45);
-  \node[font=\sffamily\bfseries\fontsize{7.2}{8.6}\selectfont, text=cBlue] at (6.62,3.45) {$V$};
+  \node[
+    font=\sffamily\bfseries\fontsize{7.2}{8.6}\selectfont,
+    text=cBlue,
+    fill=white,
+    inner sep=1.5pt
+  ] at (6.62,3.75) {$V$};
 
   \path[draw=cGray!85!black, fill=cLGray!34, line width=0.55pt, rounded corners=1pt]
     (0.52,1.02) rectangle (0.80,3.06);
@@ -91,7 +96,15 @@
   \node[small note, anchor=west] at (0.26,3.70) {increasing sulfur content};
   \draw[draw=cAmber, line width=0.48pt, -{Stealth[length=3.0pt,width=2.2pt]}]
     (2.28,3.28) -- (4.96,3.28);
-  \node[small note, text=cAmber, anchor=west] at (3.10,2.95) {S60 $\rightarrow$ S80};
+  \node[
+    small note,
+    font=\sffamily\fontsize{4.8}{5.8}\selectfont,
+    text=cAmber,
+    anchor=west,
+    fill=white,
+    inner sep=1.5pt
+  ]
+    at (0.50,3.25) {S60 $\rightarrow$\quad S80};
 
   \begin{scope}[shift={(0.32,0.58)}]
     \draw[axis] (0,0) -- (4.90,0);
@@ -109,7 +122,8 @@
     \path[dist]
       (2.48,0) .. controls (2.78,0.34) and (3.05,1.42) .. (3.52,1.45)
       .. controls (4.00,1.47) and (4.34,0.36) .. (4.64,0) -- cycle;
-    \node[small note, anchor=south, text=cBrown] at (3.55,1.56) {S80};
+    \node[small note, anchor=south, text=cBrown, fill=white, inner sep=1.5pt]
+      at (3.75,1.68) {S80};
     \node[small note, anchor=north, text width=1.65cm] at (3.55,-0.12)
       {continuous\\broad};
 
@@ -119,9 +133,13 @@
     \node[small note, fill=white, inner sep=1.0pt, text=cRed] at (3.56,0.62)
       {$n$ = breadth};
 
-    \draw[measure] (1.70,0) -- (1.70,1.45);
-    \node[small note, fill=white, inner sep=1.0pt, text=cRed]
-      at (1.95,1.72) {$\rho_{60s}$\\magnitude};
+    \draw[
+      draw=cRed,
+      line width=0.42pt,
+      {Stealth[length=2.6pt,width=2.0pt]}-{Stealth[length=2.6pt,width=2.0pt]}
+    ] (1.68,1.52) -- (1.68,1.98);
+    \node[small note, fill=white, inner sep=1.0pt, text=cRed, anchor=west]
+      at (1.88,1.75) {$\rho_{60s}$\\magnitude};
   \end{scope}
 \end{scope}
 

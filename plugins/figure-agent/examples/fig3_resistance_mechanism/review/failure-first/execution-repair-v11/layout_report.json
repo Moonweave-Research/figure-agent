@@ -2,40 +2,40 @@
   "contract_schema": "figure-agent.layout-lanes.v1",
   "failure_count": 3,
   "page_size_pt": [
-    407.655,
-    135.047
+    409.141,
+    135.551
   ],
   "results": [
     {
-      "clearance": 0.035411,
+      "clearance": 0.037133,
       "minimum_clearance": 0.01,
       "missing_groups": [],
       "rule_id": "panel_a_decay_outcome_contained",
       "status": "ok"
     },
     {
-      "clearance": 0.012213,
+      "clearance": 0.01187,
       "minimum_clearance": 0.01,
       "missing_groups": [],
       "rule_id": "panel_b_s60_caption_contained",
       "status": "ok"
     },
     {
-      "clearance": 0.012213,
+      "clearance": 0.01187,
       "minimum_clearance": 0.01,
       "missing_groups": [],
       "rule_id": "panel_b_s80_caption_contained",
       "status": "ok"
     },
     {
-      "clearance": 0.085345,
+      "clearance": 0.064812,
       "minimum_clearance": 0.01,
       "missing_groups": [],
       "rule_id": "panel_b_sulfur_progression_contained",
       "status": "ok"
     },
     {
-      "clearance": 0.156216,
+      "clearance": 0.16599,
       "minimum_clearance": 0.01,
       "missing_groups": [],
       "rule_id": "panel_b_magnitude_label_contained",

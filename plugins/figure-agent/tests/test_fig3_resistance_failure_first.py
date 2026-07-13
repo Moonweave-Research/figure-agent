@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from collections import Counter
@@ -156,7 +157,7 @@ def _pdf_normalized_token_inventory(path: Path) -> Counter[str]:
         capture_output=True,
         text=True,
     )
-    return Counter(token.casefold() for token in result.stdout.split())
+    return Counter(re.findall(r"\w+|[^\w\s]", result.stdout.casefold()))
 
 
 def test_fig3_resistance_failure_first_packet_hash_binds_current_authority() -> None:
@@ -1596,11 +1597,26 @@ def test_execution_repair_v11_contains_labels_without_reducing_text(
     assert review["verification"]["strict_compile"] == "pass"
     assert review["verification"]["human_review"] == "pending"
     assert review["boundary_authority"] == "pending_human_confirmation"
+    assert review["agent_visual_review"]["scientific_semantics"] == (
+        "visual_ownership_pending_human_confirmation"
+    )
+    assert review["agent_visual_review"]["magnitude_label"] == (
+        "detached_floating_key_clear_of_baseline_and_distributions"
+    )
+    assert "magnitude_key_visual_ownership_pending_human_confirmation" in (
+        review["remaining_blockers"]
+    )
     assert review["publication_acceptance"] == "not_claimed"
     assert visual["total"] == 0
     assert visual["candidates"] == []
 
     assert report["failure_count"] == 3
+    baseline_report = json.loads(
+        (EXECUTION_SCAFFOLD_EVALUATION / "layout_report.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert report["page_size_pt"] == baseline_report["page_size_pt"]
     assert {result["status"] for result in report["results"]} == {"ok"}
     assert {
         result["budget_id"]: (result["word_count"], result["status"])

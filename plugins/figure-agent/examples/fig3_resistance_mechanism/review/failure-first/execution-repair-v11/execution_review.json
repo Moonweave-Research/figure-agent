@@ -13,7 +13,7 @@
   "repair_strategy": "preserve_all_visible_phrases_and_move_labels_inside_declared_panel_regions",
   "source": {
     "path": "review/failure-first/execution-repair-v11/repaired_generated.tex",
-    "sha256": "sha256:4ad703b5e77814d1cff2b7f5e8f37d54923e83135261659ae67dca051c90e8de",
+    "sha256": "sha256:2fe58ef91197e876f6f565d5d3cb83b04252abdb573cde41d7a233a76d97eb5f",
     "based_on": "review/failure-first/execution-repair-v10/repaired_generated.tex",
     "based_on_sha256": "sha256:d55002e5c6a1f3cf6dc404fc637ad66bc81063f97e50d7757b96ff7eb9de09a9"
   },
@@ -30,7 +30,7 @@
   },
   "after": {
     "layout_report_path": "review/failure-first/execution-repair-v11/layout_report.json",
-    "layout_report_sha256": "sha256:e37aec2593357a62efaf50b8da41a47c69b1a20935435e67bd80aa595282964f",
+    "layout_report_sha256": "sha256:dffc26107e7a304b7b195f912bc8bd624db20154833756d1774dbc82cf647cfd",
     "visual_clash_path": "review/failure-first/execution-repair-v11/visual_clash.json",
     "visual_clash_sha256": "sha256:26e7494dac1e3e6a0447a998a229f506d9d9d90dfd49e45d736a19763d1c4371",
     "findings": 3,
@@ -50,7 +50,7 @@
     "content_signature": {
       "schema": "figure-agent.pdf-content-signature.v1",
       "extraction": "pdftotext-layout-trim-right-lines-v1",
-      "normalized_text_sha256": "sha256:64c84745640e47283ab0171d071cb4fa25626fe4655e77fc3f78b0c923423f5e",
+      "normalized_text_sha256": "sha256:ad63516bc1396ad8c9f1b792b0ac7a27ece9f7ceb4bb2c943fda54accebd64a8",
       "page_count": 1
     }
   },
@@ -60,9 +60,9 @@
     "layout_command": "python3 scripts/checks/check_layout_drift.py --pdf examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v11/build/repaired_generated.pdf --layout-contract examples/fig3_resistance_mechanism/review/failure-first/execution-scaffold-evaluation-v1/layout_contract.yaml --json-output /tmp/fig3-execution-repair-v11-layout-report.json --strict"
   },
   "agent_visual_review": {
-    "magnitude_label": "compact_center_rail_clear_of_broad_distribution",
+    "magnitude_label": "detached_floating_key_clear_of_baseline_and_distributions",
     "visible_phrase_preservation": "confirmed",
-    "scientific_semantics": "preserved",
+    "scientific_semantics": "visual_ownership_pending_human_confirmation",
     "publication_quality": "not_established"
   },
   "verification": {
@@ -76,6 +76,7 @@
     "figure_text_budget_violation_65_over_45",
     "panel_a_text_budget_violation_39_over_22",
     "panel_b_text_budget_violation_26_over_23",
+    "magnitude_key_visual_ownership_pending_human_confirmation",
     "human_scaffold_review_pending"
   ],
   "publication_acceptance": "not_claimed"
