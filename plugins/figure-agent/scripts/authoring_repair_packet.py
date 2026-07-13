@@ -27,6 +27,7 @@ REPORT_COLLECTIONS = {
     "figure-agent.label-hyphenation.v1": "issues",
     "figure-agent.undeclared-geometry.v1": "candidates",
     "figure-agent.visual-clash.v1": "candidates",
+    "figure-agent.human-correction-findings.v1": "findings",
 }
 ALLOWED_REPAIR_FAMILIES = {
     "clipping_repair",
@@ -329,6 +330,11 @@ def compile_repair_execution_packet(
             )
             reports[report_key] = _load_json(report_path, label="finding report")
         report = reports[report_key]
+        if (
+            report.get("schema") == "figure-agent.human-correction-findings.v1"
+            and report.get("bound_source_sha256") != source_hash
+        ):
+            raise RepairExecutionPacketError("human finding source hash drift")
         finding_id = str(finding_ref.get("id") or "")
         matches = [
             finding for finding in _report_findings(report) if finding.get("id") == finding_id
@@ -464,6 +470,8 @@ def materialize_repair_candidate(
         or not summary.strip()
     ):
         raise RepairExecutionPacketError("candidate response schema invalid")
+    if re.search(r"\\[nr](?:[ \t]|$)", replacement):
+        raise RepairExecutionPacketError("replacement contains literal escaped newline")
 
     workspace_root = workspace_root.resolve()
     source_record = packet.get("source")

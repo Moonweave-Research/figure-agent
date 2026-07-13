@@ -1,0 +1,91 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "bbox_px": [
+        132,
+        834,
+        451,
+        884
+      ],
+      "id": "VC003",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.09,
+        "edge": 0.004
+      },
+      "tex_lines": null,
+      "text": "sign-agnostic"
+    },
+    "finding_id": "VC003",
+    "protected_invariants": [
+      "sign-agnostic",
+      "carrier",
+      "capture",
+      "release",
+      "retained"
+    ],
+    "repair_family": "local_reposition",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v21/visual_clash.before.json",
+    "selector": {
+      "anchor_end": "\\node[compact label, align=center, fill=white, inner sep=1pt] at (1.70,2.18)",
+      "anchor_start": "\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-sign-agnostic-carrier-label",
+      "source_hash": "sha256:5732a79106c1e42572c2eaf9e3a9d6ccd33213f69bc07259bc33ca4b632595d2"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v21/visual_clash.before.json",
+      "schema": "figure-agent.visual-clash.v1",
+      "sha256": "sha256:a9de2eec7bfd1c86ac9cfaa5cc84cc47f4cf214413ee39a02fae7bb3943a72b4"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v21/repaired_generated.tex",
+  "packet_sha256": "sha256:71979ef33c7ea91d210cad4c981d303f26765e95ca557b0d055002b590bb14ef",
+  "prompt": {
+    "sha256": "sha256:22328e9ab9b49dd12e0cec8dce67e11d7e14fc88b262581aa2ff9204cc0204e6",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v21/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v20/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: local_reposition\n- Machine finding: {\"bbox_px\": [132, 834, 451, 884], \"id\": \"VC003\", \"kind\": \"text_on_path\", \"metric\": {\"dark\": 0.09, \"edge\": 0.004}, \"tex_lines\": null, \"text\": \"sign-agnostic\"}\n- Change content only between the exact anchor lines [\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};] and [\\node[compact label, align=center, fill=white, inner sep=1pt] at (1.70,2.18)].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [sign-agnostic].\n- Preserve the exact token [carrier].\n- Preserve the exact token [capture].\n- Preserve the exact token [release].\n- Preserve the exact token [retained].\n\n## Bound editable source bytes\n```tex\n\\node[compact label, align=center, anchor=north] at (1.10,1.42)\n  {sign-agnostic\\\\carrier};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v21/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v20/repaired_generated.tex",
+    "sha256": "sha256:5732a79106c1e42572c2eaf9e3a9d6ccd33213f69bc07259bc33ca4b632595d2"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v21/repair_targets.json",
+    "sha256": "sha256:dc0c642904f2184ad7c0436e8d1c7dd97ef751f1a4b53b1704d33047f9233f66"
+  },
+  "verification": "external_sequential_compile_required"
+}

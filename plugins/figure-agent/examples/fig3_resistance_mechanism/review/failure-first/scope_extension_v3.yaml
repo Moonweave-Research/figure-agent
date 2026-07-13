@@ -1,0 +1,23 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v2.yaml
+extends_sha256: sha256:186f276d374e43c7bdf3c51ef30d3f6493d364f4327dbc885fb1922c4d3140de
+reason: authorize additive human-correction repair evidence without rewriting prior attempts
+allowed_review_prefixes:
+  - review/failure-first/execution-repair-v20/
+  - review/failure-first/execution-repair-v21/
+  - review/failure-first/execution-repair-v22/
+  - review/failure-first/execution-repair-v23/
+  - review/failure-first/execution-repair-v24/
+  - review/failure-first/execution-repair-v25/
+  - review/failure-first/execution-repair-v26/
+  - review/failure-first/execution-repair-v27/
+  - review/failure-first/execution-repair-v28/
+allowed_review_paths:
+  - review/failure-first/scope_extension_v3.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/docs/execution-plan.md
+  - plugins/figure-agent/scripts/authoring_repair_packet.py
+  - plugins/figure-agent/tests/test_authoring_repair_packet.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

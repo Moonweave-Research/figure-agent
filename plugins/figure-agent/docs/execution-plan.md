@@ -260,7 +260,7 @@ modules listed in Section 0.
     `execution-binding-v6/` preserve respectively a non-renderable preamble
     failure, undeclared treatment reads, and a timed-out treatment proof with
     continuing strict findings. All pairs remain comparison-ineligible.
-  - `execution-repair-v1/` through `execution-repair-v20/` preserve the move to
+  - `execution-repair-v1/` through `execution-repair-v28/` preserve the move to
     exact replacement blocks, transactional additive materialization, detector
     reruns, and bounded repaired artifacts. V13 removes the verified arm's one
     text-text collision but exposes the previous false-success boundary:
@@ -280,7 +280,18 @@ modules listed in Section 0.
     text-text returns to zero, and rendered text/path candidates fall from
     seven to five. The structural gate remains failed, so none of these
     attempts constitutes a fair ablation, scaffold approval, or human
-    publication verdict.
+    publication verdict. V21 proves a detector-visible boundary improvement can
+    still be a human-visible carrier/trap overlap. V22 preserves a malformed
+    literal-newline response that failed TeX compilation; the controller now
+    rejects that response shape before materialization. V23 and v24 preserve
+    successively smaller disorder-dot regressions rather than overwriting them,
+    while v25 clears the `sign-agnostic carrier` label under human review. V26
+    preserves a two-line `single discrete state` reflow that created three
+    text-text collisions, and v27 records the change-budget rejection of an
+    overlarge retry. V28 stays within the same budget and clears both the y-axis
+    and `S60`, returning text-text to zero. Four unrelated rendered text/path
+    candidates remain, the next named target is `magnitude`, and publication
+    acceptance remains unclaimed.
   - Commits `771c339d`, `a30ff450`, `3d16305e`, and `5a2e895f` bind the v12
     renderer-neutral semantic packet, fail-closed authority and selector checks,
     transactional version publishing, and authenticated page evidence at

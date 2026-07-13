@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:448ef8aba763ebd1f651bd2e1340ea62227f0bbc25b7cc9cbb32ad0a3b27e06e",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF009",
+      "subject": "panel_a_sign_agnostic_carrier_label",
+      "finding": "amber disorder dot remains visible above the label hyphen"
+    }
+  ],
+  "publication_acceptance": "not_claimed"
+}

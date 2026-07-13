@@ -1,0 +1,7 @@
+{
+  "decision": "controller_rejected",
+  "repair_result": "candidate change budget exceeded before materialization",
+  "external_compile": "not_reached",
+  "human_review": "not_reached",
+  "publication_acceptance": "not_claimed"
+}

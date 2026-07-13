@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:4922003053a28d6d1959fcf6f5ddca7a43cb8a740751614bac57d8211d9f8b46",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF011",
+      "subject": "panel_b_single_discrete_state_label",
+      "finding": "two-line descriptor overlaps S60 after axis-clearance repair"
+    }
+  ],
+  "publication_acceptance": "not_claimed"
+}

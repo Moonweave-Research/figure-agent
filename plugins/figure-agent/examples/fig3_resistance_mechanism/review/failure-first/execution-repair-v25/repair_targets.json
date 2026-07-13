@@ -1,0 +1,28 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v24/repaired_generated.tex",
+  "source_sha256": "sha256:448ef8aba763ebd1f651bd2e1340ea62227f0bbc25b7cc9cbb32ad0a3b27e06e",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v25/human_findings.before.json",
+        "id": "HF009"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-sign-agnostic-carrier-label",
+        "anchor_start": "\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};",
+        "anchor_end": "\\node[compact label, align=center, fill=white, inner sep=1pt] at (1.70,2.18)"
+      },
+      "repair_family": "salience_adjustment",
+      "protected_invariants": [
+        "sign-agnostic",
+        "carrier",
+        "capture",
+        "release",
+        "retained"
+      ]
+    }
+  ]
+}

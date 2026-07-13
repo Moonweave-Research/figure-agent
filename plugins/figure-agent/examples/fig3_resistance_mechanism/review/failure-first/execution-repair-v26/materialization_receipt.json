@@ -1,0 +1,15 @@
+{
+  "change_summary": "Reflowed the S60 descriptor to two centered lines above the narrow peak, restoring clearance from the vertical axis.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v26/repaired_generated.tex",
+  "output_sha256": "sha256:4922003053a28d6d1959fcf6f5ddca7a43cb8a740751614bac57d8211d9f8b46",
+  "packet_sha256": "sha256:28b4fcf0c5c2f4a5f0f23558130d08c962fdab68267a462bba385359d95cd2c0",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:6de7a4b3aba6963317d4006bf0d3820ecf14aecbbdb854c551774804416bcd6a"
+}

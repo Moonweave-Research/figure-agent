@@ -1,0 +1,15 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:e5a4fe84eeecac61f57b9255956d5f3c28be6805f322ed32878744a92387d27a",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF007",
+      "subject": "panel_a_sign_agnostic_carrier_label",
+      "finding": "label overlaps the carrier and trap marks after boundary repair"
+    }
+  ],
+  "prior_failed_attempt": "execution-repair-v22",
+  "publication_acceptance": "not_claimed"
+}

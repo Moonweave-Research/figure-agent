@@ -1,0 +1,42 @@
+schema: figure-agent.human-correction-findings.v1
+fixture: fig3_resistance_mechanism
+attempt: execution-repair-v20
+reviewer: Moon
+recorded_date: 2026-07-14
+decision: corrections_required
+bound_source_sha256: sha256:5732a79106c1e42572c2eaf9e3a9d6ccd33213f69bc07259bc33ca4b632595d2
+findings:
+  - id: HF001
+    panel: A
+    subject: panel_a_retained_label
+    finding: retained label placement remains visually awkward
+  - id: HF002
+    panel: A
+    subject: panel_a_capture_release_labels
+    finding: repeated capture and release labels are awkwardly placed
+  - id: HF003
+    panel: A
+    subject: panel_a_sign_agnostic_carrier_label
+    finding: sign-agnostic carrier label crosses the lower panel and electrode boundary
+  - id: HF004
+    panel: A
+    subject: panel_a_direction_arrows
+    finding: direction arrows have unnatural shapes and placement
+  - id: HF005
+    panel: B
+    subject: panel_b_magnitude_label
+    finding: magnitude label position is visually inappropriate
+  - id: HF006
+    panel: B
+    subject: panel_b_single_discrete_state_label
+    finding: the word single sits too close to the vertical axis
+repair_order:
+  - panel_a_sign_agnostic_carrier_label
+  - panel_b_single_discrete_state_label
+  - panel_b_magnitude_label
+  - panel_a_capture_release_labels
+  - panel_a_retained_label
+  - panel_a_direction_arrows
+band_shape_authority: blocked_pending_physics_math_review
+human_scaffold_verdict: not_requested
+publication_acceptance: not_claimed

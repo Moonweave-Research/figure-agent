@@ -91,7 +91,7 @@ COMPARABLE_V1 = REVIEW / "comparable-v1"
 COMPARISON_CONTRACT = COMPARABLE_V1 / "comparison_contract.yaml"
 COMPARABLE_V2 = REVIEW / "comparable-v2"
 COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
-SCOPE_EXTENSION_V2 = REVIEW / "scope_extension_v2.yaml"
+SCOPE_EXTENSION_V3 = REVIEW / "scope_extension_v3.yaml"
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
 EXECUTION_REPAIR_V15 = REVIEW / "execution-repair-v15"
@@ -100,6 +100,15 @@ EXECUTION_REPAIR_V17 = REVIEW / "execution-repair-v17"
 EXECUTION_REPAIR_V18 = REVIEW / "execution-repair-v18"
 EXECUTION_REPAIR_V19 = REVIEW / "execution-repair-v19"
 EXECUTION_REPAIR_V20 = REVIEW / "execution-repair-v20"
+V20_HUMAN_FINDINGS = EXECUTION_REPAIR_V20 / "human_findings.yaml"
+EXECUTION_REPAIR_V21 = REVIEW / "execution-repair-v21"
+EXECUTION_REPAIR_V22 = REVIEW / "execution-repair-v22"
+EXECUTION_REPAIR_V23 = REVIEW / "execution-repair-v23"
+EXECUTION_REPAIR_V24 = REVIEW / "execution-repair-v24"
+EXECUTION_REPAIR_V25 = REVIEW / "execution-repair-v25"
+EXECUTION_REPAIR_V26 = REVIEW / "execution-repair-v26"
+EXECUTION_REPAIR_V27 = REVIEW / "execution-repair-v27"
+EXECUTION_REPAIR_V28 = REVIEW / "execution-repair-v28"
 
 
 def _sha256(path: Path) -> str:
@@ -260,6 +269,216 @@ def test_fig3_v20_places_sample_title_in_clear_upper_safe_area() -> None:
     assert review["repair_result"] == (
         "sample title clear of electrodes and retained label"
     )
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v20_records_named_human_correction_findings() -> None:
+    findings = yaml.safe_load(V20_HUMAN_FINDINGS.read_text(encoding="utf-8"))
+
+    assert findings["reviewer"] == "Moon"
+    assert findings["decision"] == "corrections_required"
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V20 / "repaired_generated.tex"
+    )
+    assert {item["subject"] for item in findings["findings"]} == {
+        "panel_a_retained_label",
+        "panel_a_capture_release_labels",
+        "panel_a_sign_agnostic_carrier_label",
+        "panel_a_direction_arrows",
+        "panel_b_magnitude_label",
+        "panel_b_single_discrete_state_label",
+    }
+    assert findings["band_shape_authority"] == (
+        "blocked_pending_physics_math_review"
+    )
+    assert findings["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v21_preserves_machine_passed_visual_regression() -> None:
+    gate = json.loads(
+        (EXECUTION_REPAIR_V21 / "structural_gate.json").read_text(encoding="utf-8")
+    )
+    visual = json.loads(
+        (EXECUTION_REPAIR_V21 / "visual_clash.json").read_text(encoding="utf-8")
+    )
+    review = json.loads(
+        (EXECUTION_REPAIR_V21 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert not any(
+        candidate.get("kind") in {"text_on_path", "text_on_fill"}
+        and candidate.get("text") == "sign-agnostic"
+        for candidate in visual["candidates"]
+    )
+    assert gate["blocking_counts"] == {
+        "semantic_path_crossing": 0,
+        "text_on_path_or_fill": 4,
+        "text_text": 0,
+    }
+    assert gate["state"] == "failed"
+    assert review["decision"] == "machine_target_resolved_visual_regression"
+    assert review["repair_result"] == (
+        "boundary clash removed but label overlaps carrier and trap marks"
+    )
+    assert review["human_review"] == "corrections_required"
+
+
+def test_fig3_v22_binds_human_correction_to_failed_v21_source() -> None:
+    findings = json.loads(
+        (EXECUTION_REPAIR_V22 / "human_findings.before.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    packet = json.loads(
+        (EXECUTION_REPAIR_V22 / "repair_packet.json").read_text(encoding="utf-8")
+    )
+
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V21 / "repaired_generated.tex"
+    )
+    assert findings["findings"] == [
+        {
+            "id": "HF007",
+            "subject": "panel_a_sign_agnostic_carrier_label",
+            "finding": "label overlaps the carrier and trap marks after boundary repair",
+        }
+    ]
+    assert packet["editable_target"]["finding_id"] == "HF007"
+    assert packet["editable_target"]["report_path"].endswith(
+        "execution-repair-v22/human_findings.before.json"
+    )
+    assert packet["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v23_retries_human_correction_from_last_compilable_source() -> None:
+    findings = json.loads(
+        (EXECUTION_REPAIR_V23 / "human_findings.before.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    packet = json.loads(
+        (EXECUTION_REPAIR_V23 / "repair_packet.json").read_text(encoding="utf-8")
+    )
+
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V21 / "repaired_generated.tex"
+    )
+    assert packet["source"]["path"].endswith(
+        "execution-repair-v21/repaired_generated.tex"
+    )
+    assert packet["editable_target"]["finding_id"] == "HF007"
+    assert packet["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v24_binds_disorder_dot_overlap_to_v23_source() -> None:
+    findings = json.loads(
+        (EXECUTION_REPAIR_V24 / "human_findings.before.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    packet = json.loads(
+        (EXECUTION_REPAIR_V24 / "repair_packet.json").read_text(encoding="utf-8")
+    )
+
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V23 / "repaired_generated.tex"
+    )
+    assert findings["findings"][0]["id"] == "HF008"
+    assert packet["editable_target"]["finding_id"] == "HF008"
+    assert packet["editable_target"]["repair_family"] == "salience_adjustment"
+    assert packet["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v25_binds_residual_dot_sliver_to_v24_source() -> None:
+    findings = json.loads(
+        (EXECUTION_REPAIR_V25 / "human_findings.before.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    packet = json.loads(
+        (EXECUTION_REPAIR_V25 / "repair_packet.json").read_text(encoding="utf-8")
+    )
+
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V24 / "repaired_generated.tex"
+    )
+    assert findings["findings"][0]["id"] == "HF009"
+    assert packet["editable_target"]["finding_id"] == "HF009"
+    assert packet["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v26_binds_single_state_axis_clash_to_v25_source() -> None:
+    findings = json.loads(
+        (EXECUTION_REPAIR_V26 / "human_findings.before.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    packet = json.loads(
+        (EXECUTION_REPAIR_V26 / "repair_packet.json").read_text(encoding="utf-8")
+    )
+
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V25 / "repaired_generated.tex"
+    )
+    assert findings["findings"][0]["id"] == "HF010"
+    assert packet["editable_target"]["finding_id"] == "HF010"
+    assert packet["editable_target"]["repair_family"] == "label_reflow"
+    assert packet["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v27_binds_s60_overlap_to_v26_source() -> None:
+    findings = json.loads(
+        (EXECUTION_REPAIR_V27 / "human_findings.before.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    packet = json.loads(
+        (EXECUTION_REPAIR_V27 / "repair_packet.json").read_text(encoding="utf-8")
+    )
+
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V26 / "repaired_generated.tex"
+    )
+    assert findings["findings"][0]["id"] == "HF011"
+    assert packet["editable_target"]["finding_id"] == "HF011"
+    assert packet["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v28_retries_s60_overlap_within_change_budget() -> None:
+    findings = json.loads(
+        (EXECUTION_REPAIR_V28 / "human_findings.before.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    packet = json.loads(
+        (EXECUTION_REPAIR_V28 / "repair_packet.json").read_text(encoding="utf-8")
+    )
+    collisions = json.loads(
+        (EXECUTION_REPAIR_V28 / "collisions.json").read_text(encoding="utf-8")
+    )
+    gate = json.loads(
+        (EXECUTION_REPAIR_V28 / "structural_gate.json").read_text(encoding="utf-8")
+    )
+    review = json.loads(
+        (EXECUTION_REPAIR_V28 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V26 / "repaired_generated.tex"
+    )
+    assert findings["prior_rejected_attempt"] == "execution-repair-v27"
+    assert packet["editable_target"]["finding_id"] == "HF011"
+    assert packet["change_budget"]["max_changed_lines"] == 6
+    assert packet["publication_acceptance"] == "not_claimed"
+    assert collisions["collisions"] == []
+    assert gate["blocking_counts"] == {
+        "semantic_path_crossing": 0,
+        "text_on_path_or_fill": 4,
+        "text_text": 0,
+    }
+    assert review["decision"] == "human_target_resolved_overall_review_required"
+    assert review["next_human_target"] == "panel_b_magnitude_label"
+    assert review["publication_acceptance"] == "not_claimed"
     assert review["publication_acceptance"] == "not_claimed"
 
 
@@ -1605,7 +1824,7 @@ def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
     scope = yaml.safe_load((REVIEW / "scope_protection.yaml").read_text(encoding="utf-8"))
-    extension = yaml.safe_load(SCOPE_EXTENSION_V2.read_text(encoding="utf-8"))
+    extension = yaml.safe_load(SCOPE_EXTENSION_V3.read_text(encoding="utf-8"))
     repo_root = PLUGIN_ROOT.parents[1]
     fixture_prefix = "plugins/figure-agent/examples/fig3_resistance_mechanism/"
     allowed_paths = {

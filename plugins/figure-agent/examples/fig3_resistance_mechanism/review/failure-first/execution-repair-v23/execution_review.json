@@ -1,0 +1,7 @@
+{
+  "decision": "machine_target_resolved_visual_regression",
+  "repair_result": "carrier and trap overlap removed but the one-line label crosses two disorder dots",
+  "external_compile": "passed",
+  "human_review": "corrections_required",
+  "publication_acceptance": "not_claimed"
+}

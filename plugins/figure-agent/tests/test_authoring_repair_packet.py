@@ -314,6 +314,80 @@ def test_accepts_exact_visual_clash_finding_as_repair_target(tmp_path: Path) -> 
     assert packet["editable_target"]["finding_id"] == "VC001"
 
 
+def test_accepts_exact_human_correction_as_repair_target(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    report = contract.parent / "collisions.json"
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.human-correction-findings.v1",
+                "bound_source_sha256": _sha256(source.read_bytes()),
+                "findings": [
+                    {
+                        "id": "HF001",
+                        "subject": "carrier_label",
+                        "finding": "label overlaps the carrier",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    payload = json.loads(contract.read_text(encoding="utf-8"))
+    payload["targets"] = [payload["targets"][0]]
+    payload["targets"][0]["finding"]["id"] = "HF001"
+    contract.write_text(json.dumps(payload), encoding="utf-8")
+
+    packet, _ = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+
+    assert packet["editable_target"]["finding_id"] == "HF001"
+
+
+def test_rejects_human_correction_bound_to_stale_source(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    report = contract.parent / "collisions.json"
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.human-correction-findings.v1",
+                "bound_source_sha256": "sha256:" + "0" * 64,
+                "findings": [{"id": "HF001", "finding": "stale review"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    payload = json.loads(contract.read_text(encoding="utf-8"))
+    payload["targets"] = [payload["targets"][0]]
+    payload["targets"][0]["finding"]["id"] = "HF001"
+    contract.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="human finding source hash drift",
+    ):
+        authoring_repair_packet.compile_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            source_path=source.relative_to(workspace).as_posix(),
+            target_contract=contract.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+
+
 def test_materializes_valid_candidate_only_after_controller_validation(
     tmp_path: Path,
 ) -> None:
@@ -414,6 +488,36 @@ def test_materializer_rejects_change_outside_exact_anchor(tmp_path: Path) -> Non
             {
                 "replacement_utf8": "% repair:label:end",
                 "change_summary": "Unsafe edit.",
+            },
+            workspace_root=workspace,
+        )
+
+
+def test_materializer_rejects_literal_escaped_newline(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    packet, _ = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="literal escaped newline",
+    ):
+        authoring_repair_packet.materialize_repair_candidate(
+            packet,
+            {
+                "replacement_utf8": (
+                    r"\node[yshift=-2mm] {repeated\n  dispersive trapping};"
+                ),
+                "change_summary": "Malformed serialized line break.",
             },
             workspace_root=workspace,
         )

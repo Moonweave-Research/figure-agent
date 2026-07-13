@@ -1,0 +1,8 @@
+{
+  "decision": "machine_and_human_regression",
+  "repair_result": "two-line descriptor clears the axis but overlaps S60",
+  "external_compile": "passed",
+  "text_text_after": 3,
+  "human_review": "corrections_required",
+  "publication_acceptance": "not_claimed"
+}

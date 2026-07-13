@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[compact label, align=center, anchor=south] at (0.965,1.36)\n    {single discrete\\\\state};\n",
+  "change_summary": "Reflowed the S60 descriptor to two centered lines above the narrow peak, restoring clearance from the vertical axis."
+}
