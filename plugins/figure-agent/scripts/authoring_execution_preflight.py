@@ -82,6 +82,7 @@ def preflight_authoring_pair(
         "blank_start",
         "mandatory_source_requirements",
         "style_lock_authoring_requirements",
+        "allowed_repository_read_paths",
         "feedback_rounds",
         "manual_repairs",
         "forbidden_import_classes",

@@ -23,6 +23,10 @@ STYLE_LOCK_AUTHORING_REQUIREMENTS = (
     "Keep every explicit line width at or above 0.25pt.",
     r"Do not use local \tiny or \scriptsize font overrides.",
 )
+ALLOWED_REPOSITORY_READ_PATHS = (
+    "AGENTS.md",
+    "styles/polymer-paper-preamble.sty",
+)
 ATTEMPT_ROOT = Path("review/failure-first")
 ATTEMPT_NAME = re.compile(r"execution-binding-v[1-9][0-9]*")
 
@@ -201,6 +205,9 @@ def render_authoring_prompt(
         f"[{Path(output_path).parent.as_posix()}].",
         "- Start from the declared blank artifact; perform one attempt only.",
         "- Do not inspect or repair historical generated sources.",
+        "- Read repository file content only from "
+        + " and ".join(f"[{path}]" for path in ALLOWED_REPOSITORY_READ_PATHS)
+        + "; all other required authoring context is already bound below.",
         "",
         "## Mandatory standalone TikZ source requirements",
         *[f"- {requirement}" for requirement in MANDATORY_SOURCE_REQUIREMENTS],
@@ -328,6 +335,7 @@ def compile_authoring_execution_packet(
         ),
         "mandatory_source_requirements": list(MANDATORY_SOURCE_REQUIREMENTS),
         "style_lock_authoring_requirements": list(STYLE_LOCK_AUTHORING_REQUIREMENTS),
+        "allowed_repository_read_paths": list(ALLOWED_REPOSITORY_READ_PATHS),
         "forbidden_import_classes": [
             "fig1_fixture_artifacts",
             "historical_generated_sources",

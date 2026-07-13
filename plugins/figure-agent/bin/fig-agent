@@ -520,6 +520,55 @@ def _authoring_receipt(argv: list[str]) -> int:
     return 0
 
 
+def _authoring_input_audit(argv: list[str]) -> int:
+    import authoring_execution_input_audit
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-input-audit")
+    parser.add_argument("--transcript", required=True)
+    parser.add_argument("--allowed-read", action="append", default=[])
+    parser.add_argument("--audit-out", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    workspace_root = _paths().workspace_root.resolve()
+    try:
+        repository_root = Path(
+            subprocess.run(
+                ["git", "-C", str(workspace_root), "rev-parse", "--show-toplevel"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        ).resolve()
+        transcript_relative = Path(args.transcript)
+        audit_relative = Path(args.audit_out)
+        if transcript_relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in transcript_relative.parts
+        ):
+            raise ValueError("transcript path must be repository-relative and safe")
+        if audit_relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in audit_relative.parts
+        ):
+            raise ValueError("audit path must be workspace-relative and safe")
+        transcript_path = (repository_root / transcript_relative).resolve(strict=True)
+        audit_path = (workspace_root / audit_relative).resolve(strict=False)
+        if not transcript_path.is_relative_to(repository_root):
+            raise ValueError("transcript path must remain inside the repository")
+        if not audit_path.is_relative_to(workspace_root):
+            raise ValueError("audit path must remain inside the workspace")
+        payload = authoring_execution_input_audit.audit_authoring_transcript(
+            transcript_path,
+            allowed_repository_reads=args.allowed_read,
+        )
+        authoring_execution_input_audit.write_authoring_input_audit(
+            audit_path, payload
+        )
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"fig-agent authoring-input-audit: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if payload["decision"] == "pass" else 1
+
+
 def _memory_log(argv: list[str]) -> int:
     import quality_memory_events
 
@@ -1679,6 +1728,8 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_preflight(rest)
     if command == "authoring-receipt":
         return _authoring_receipt(rest)
+    if command == "authoring-input-audit":
+        return _authoring_input_audit(rest)
     if command == "memory-log":
         return _memory_log(rest)
     if command == "memory-index":

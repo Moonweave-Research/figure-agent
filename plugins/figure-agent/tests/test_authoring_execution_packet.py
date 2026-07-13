@@ -104,6 +104,12 @@ def test_compiles_canonical_packet_and_prompt(tmp_path: Path) -> None:
     assert "Use only the preamble palette tokens" in prompt
     assert "Keep every explicit line width at or above 0.25pt" in prompt
     assert r"Do not use local \tiny or \scriptsize font overrides" in prompt
+    assert packet["allowed_repository_read_paths"] == [
+        "AGENTS.md",
+        "styles/polymer-paper-preamble.sty",
+    ]
+    assert "Read repository file content only from [AGENTS.md]" in prompt
+    assert "[styles/polymer-paper-preamble.sty]" in prompt
     assert packet["style_lock_authoring_requirements"] == [
         "Use only the preamble palette tokens cAmber, cBlue, cRed, cTeal, cGray, "
         "cLGray, cBrown, cArmAmber, and cAmberSphere, plus TikZ built-in black, "
