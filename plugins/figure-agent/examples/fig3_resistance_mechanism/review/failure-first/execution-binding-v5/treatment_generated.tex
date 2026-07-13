@@ -1,0 +1,134 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\begin{tikzpicture}[
+  x=1cm,y=1cm,
+  font=\sffamily\fontsize{7.2}{8.4}\selectfont,
+  panel/.style={draw=cLGray, fill=white, line width=0.35pt, rounded corners=2pt},
+  label/.style={font=\sffamily\bfseries\fontsize{8.2}{9.6}\selectfont, text=black},
+  note/.style={font=\sffamily\fontsize{6.0}{7.0}\selectfont, text=cGray, align=center},
+  smallnote/.style={font=\sffamily\fontsize{5.4}{6.4}\selectfont, text=cGray, align=center},
+  electrode/.style={draw=cGray!85!black, fill=cLGray!55, line width=0.45pt},
+  film/.style={draw=cGray!80!black, fill=cAmberSphere!20, line width=0.45pt},
+  trap/.style={draw=cRed!85!black, line width=0.42pt},
+  carrier/.style={circle, draw=cBlue!80!black, fill=cBlue!68, line width=0.35pt, minimum size=2.2mm, inner sep=0pt},
+  caught/.style={circle, draw=cRed!80!black, fill=cRed!62, line width=0.35pt, minimum size=2.25mm, inner sep=0pt},
+  walk/.style={draw=cBlue!88!black, line width=0.50pt, rounded corners=3pt},
+  axis/.style={-{Stealth[length=3.0pt,width=2.2pt]}, draw=cGray, line width=0.38pt},
+  dist/.style={draw=cTeal!85!black, fill=cTeal!18, line width=0.55pt},
+  guide/.style={draw=cGray!65, line width=0.30pt, dashed},
+  arrow/.style={-{Stealth[length=3.0pt,width=2.2pt]}, draw=cGray!90!black, line width=0.42pt}
+]
+
+% Panel frames
+\node[panel, minimum width=8.20cm, minimum height=4.22cm, anchor=south west] (pa) at (0,0) {};
+\node[panel, minimum width=8.20cm, minimum height=4.22cm, anchor=south west] (pb) at (8.55,0) {};
+\node[label, anchor=north west] at (0.17,4.05) {A};
+\node[label, anchor=north west] at (8.72,4.05) {B};
+
+% A: Cell, repeated trapping, current decay
+\node[note, anchor=north west, align=left] at (0.58,4.02) {applied trapping\\during conduction};
+\node[note, anchor=north east] at (7.90,4.02) {$V$};
+
+\draw[electrode] (0.72,0.83) rectangle (1.05,3.12);
+\draw[film] (1.05,0.83) rectangle (4.92,3.12);
+\draw[electrode] (4.92,0.83) rectangle (5.25,3.12);
+\node[smallnote, rotate=90] at (0.88,1.98) {electrode};
+\node[smallnote, rotate=90] at (5.08,1.98) {electrode};
+\node[note] at (2.98,3.34) {disordered sulfur polymer film};
+
+\draw[arrow] (0.70,3.45) -- (5.27,3.45)
+  node[midway, above=1pt, font=\sffamily\fontsize{5.7}{6.7}\selectfont, text=cGray] {applied field};
+\draw[arrow] (5.40,2.74) -- (5.40,1.12)
+  node[midway, right=1pt, font=\sffamily\fontsize{6.0}{7.0}\selectfont, text=cGray] {$I(t)$};
+
+% Trap marks: unlabeled crosses, deliberately not chemistry-specific
+\foreach \x/\y/\r in {1.45/2.66/10,1.92/1.18/-8,2.35/2.13/16,2.86/2.78/-12,3.32/1.54/9,3.82/2.36/-15,4.33/1.02/11,4.54/2.82/4,1.54/1.74/-18,2.62/1.02/14}
+  \draw[trap, rotate around={\r:(\x,\y)}] (\x-0.055,\y-0.055) -- (\x+0.055,\y+0.055)
+    (\x-0.055,\y+0.055) -- (\x+0.055,\y-0.055);
+
+% Dispersive multiple trapping path, without sign-specific carrier identity
+\draw[walk] (1.18,2.24)
+  .. controls (1.52,2.72) and (1.83,1.38) .. (2.08,1.60)
+  .. controls (2.38,1.86) and (2.20,2.58) .. (2.72,2.38)
+  .. controls (3.22,2.16) and (3.05,1.18) .. (3.54,1.30)
+  .. controls (4.05,1.42) and (3.88,2.35) .. (4.42,2.03);
+\foreach \x/\y in {1.18/2.24,2.08/1.60,2.72/2.38,3.54/1.30}
+  \node[carrier] at (\x,\y) {};
+\node[caught] at (4.42,2.03) {};
+\draw[draw=cRed!85!black, line width=0.38pt] (4.30,1.91) -- (4.54,2.15) (4.30,2.15) -- (4.54,1.91);
+
+\node[smallnote, anchor=north, text width=4.00cm] at (3.04,0.62)
+  {sign-agnostic carrier: repeated trapping gives dispersive transit};
+
+% Decay inset
+\draw[draw=cLGray, fill=white, line width=0.32pt, rounded corners=1.4pt] (5.70,0.78) rectangle (7.78,2.92);
+\draw[axis] (5.95,1.05) -- (7.47,1.05) node[below=1pt, font=\sffamily\fontsize{5.1}{6.0}\selectfont, text=cGray] {$t$};
+\draw[axis] (5.95,1.05) -- (5.95,2.55) node[left=1pt, font=\sffamily\fontsize{5.1}{6.0}\selectfont, text=cGray] {$I$};
+\draw[draw=cBlue!90!black, line width=0.62pt]
+  (6.02,2.36) .. controls (6.25,1.82) and (6.56,1.45) .. (7.38,1.17);
+\node[smallnote, anchor=west, align=left] at (6.10,2.60) {$I(t)\propto t^{-n}$};
+\node[smallnote, anchor=west, align=left, text width=1.54cm] at (6.10,0.55) {current decays\\$\Rightarrow R$ rises};
+
+% B: trap energy distribution evolution
+\node[note, anchor=north west, align=left] at (9.10,4.02) {trap-energy distribution $g(E)$};
+\draw[arrow] (10.15,3.54) -- (14.95,3.54)
+  node[midway, above=1pt, font=\sffamily\fontsize{5.8}{6.8}\selectfont, text=cGray] {increasing sulfur content};
+
+% Left mini-axis: S60 narrow deep peak
+\begin{scope}[shift={(9.20,0.68)}]
+  \draw[axis] (0,0) -- (2.75,0) node[below=1pt, font=\sffamily\fontsize{5.2}{6.2}\selectfont, text=cGray] {$E$};
+  \draw[axis] (0,0) -- (0,2.25) node[left=1pt, font=\sffamily\fontsize{5.2}{6.2}\selectfont, text=cGray] {$g(E)$};
+  \draw[guide] (1.72,0) -- (1.72,1.68);
+  \path[dist] (0.30,0)
+    .. controls (0.82,0.02) and (1.22,0.03) .. (1.43,0.22)
+    .. controls (1.56,0.50) and (1.58,1.33) .. (1.72,1.65)
+    .. controls (1.88,1.31) and (1.89,0.50) .. (2.02,0.20)
+    .. controls (2.22,0.03) and (2.46,0.02) .. (2.61,0)
+    -- cycle;
+  \draw[draw=cTeal!85!black, line width=0.55pt]
+    (0.30,0)
+    .. controls (0.82,0.02) and (1.22,0.03) .. (1.43,0.22)
+    .. controls (1.56,0.50) and (1.58,1.33) .. (1.72,1.65)
+    .. controls (1.88,1.31) and (1.89,0.50) .. (2.02,0.20)
+    .. controls (2.22,0.03) and (2.46,0.02) .. (2.61,0);
+  \node[note] at (1.38,2.48) {S60};
+  \node[smallnote, text width=2.25cm] at (1.48,-0.47) {discrete, single deep trap};
+  \draw[<->, draw=cGray, line width=0.32pt] (1.43,1.91) -- (2.01,1.91)
+    node[midway, above=0pt, font=\sffamily\fontsize{5.0}{6.0}\selectfont, text=cGray] {$n$};
+  \draw[<->, draw=cBrown, line width=0.34pt] (2.36,0.02) -- (2.36,1.65)
+    node[midway, right=1pt, font=\sffamily\fontsize{5.0}{6.0}\selectfont, text=cBrown] {$\rho_{60s}$};
+\end{scope}
+
+% Center transition mark: not curve-to-curve causal, just composition progression
+\draw[arrow] (12.18,1.95) -- (12.86,1.95);
+
+% Right mini-axis: S80 broad continuous distribution
+\begin{scope}[shift={(13.30,0.68)}]
+  \draw[axis] (0,0) -- (2.75,0) node[below=1pt, font=\sffamily\fontsize{5.2}{6.2}\selectfont, text=cGray] {$E$};
+  \draw[axis] (0,0) -- (0,2.25) node[left=1pt, font=\sffamily\fontsize{5.2}{6.2}\selectfont, text=cGray] {$g(E)$};
+  \path[dist] (0.20,0)
+    .. controls (0.45,0.18) and (0.55,0.72) .. (0.82,0.86)
+    .. controls (1.18,1.10) and (1.41,1.38) .. (1.72,1.23)
+    .. controls (2.05,1.10) and (2.20,0.54) .. (2.58,0.22)
+    -- (2.58,0) -- cycle;
+  \draw[draw=cTeal!85!black, line width=0.55pt]
+    (0.20,0)
+    .. controls (0.45,0.18) and (0.55,0.72) .. (0.82,0.86)
+    .. controls (1.18,1.10) and (1.41,1.38) .. (1.72,1.23)
+    .. controls (2.05,1.10) and (2.20,0.54) .. (2.58,0.22);
+  \node[note] at (1.38,2.48) {S80};
+  \node[smallnote, text width=2.35cm] at (1.43,-0.47) {continuous broad landscape};
+  \draw[<->, draw=cGray, line width=0.32pt] (0.48,1.74) -- (2.40,1.74)
+    node[midway, above=0pt, font=\sffamily\fontsize{5.0}{6.0}\selectfont, text=cGray] {$n$ = breadth};
+  \draw[<->, draw=cBrown, line width=0.34pt] (2.62,0.02) -- (2.62,1.23)
+    node[midway, right=1pt, font=\sffamily\fontsize{5.0}{6.0}\selectfont, text=cBrown] {$\rho_{60s}$};
+\end{scope}
+
+\node[smallnote, anchor=south, text width=6.58cm] at (12.68,0.18)
+  {$n$ encodes distribution breadth; $\rho_{60s}$ encodes magnitude};
+
+\end{tikzpicture}
+\end{document}
