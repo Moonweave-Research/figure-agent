@@ -1,0 +1,118 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usepackage{polymer-paper-preamble}
+
+\usetikzlibrary{arrows.meta,calc,positioning}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily,
+  >=Stealth,
+  panel/.style={draw=cGray!55, fill=white, line width=0.35pt, rounded corners=1.2pt},
+  lab/.style={font=\sffamily\bfseries\fontsize{7.2}{8.6}\selectfont, text=black},
+  ttl/.style={font=\sffamily\bfseries\fontsize{7.0}{8.4}\selectfont, text=black},
+  txt/.style={font=\sffamily\fontsize{5.6}{6.7}\selectfont, text=cGray, align=center},
+  smtxt/.style={font=\sffamily\fontsize{4.8}{5.8}\selectfont, text=cGray, align=center},
+  axis/.style={-{Stealth[length=2.6pt,width=2.0pt]}, draw=cGray, line width=0.35pt},
+  guide/.style={draw=cGray!55, line width=0.28pt, dashed},
+  arr/.style={-{Stealth[length=3.0pt,width=2.2pt]}, line width=0.38pt, draw=cGray},
+  carrier/.style={circle, draw=cBlue!80!black, fill=cBlue!18, line width=0.32pt, minimum size=2.0mm, inner sep=0pt},
+  trap/.style={draw=cRed!80!black, line width=0.42pt},
+  electrode/.style={draw=cGray!80!black, fill=cGray!22, line width=0.42pt},
+  film/.style={draw=cBrown!80!black, fill=cAmberSphere!24, line width=0.42pt},
+  peakS/.style={draw=cBlue, line width=0.65pt},
+  peakB/.style={draw=cTeal, line width=0.75pt}
+]
+
+% compact two-panel frame
+\path[panel] (0,0) rectangle (6.0,3.35);
+\path[panel] (6.25,0) rectangle (12.0,3.35);
+\node[lab, anchor=north west] at (0.16,3.18) {A};
+\node[lab, anchor=north west] at (6.41,3.18) {B};
+\node[ttl, anchor=north west] at (0.50,3.16) {applied trapping during conduction};
+\node[ttl, anchor=north west] at (6.75,3.16) {trap-energy distribution};
+
+% Panel A: cell under voltage, dispersive repeated trapping
+\begin{scope}[shift={(0.32,0.20)}]
+  \path[electrode] (0.54,0.66) rectangle (0.80,2.42);
+  \path[film] (0.80,0.78) rectangle (3.28,2.30);
+  \path[electrode] (3.28,0.66) rectangle (3.54,2.42);
+  \node[smtxt, rotate=90] at (0.67,1.54) {electrode};
+  \node[smtxt, rotate=90] at (3.41,1.54) {electrode};
+  \node[txt] at (2.04,2.05) {disordered sulfur\\polymer film};
+
+  \draw[arr] (0.67,2.68) -- (3.41,2.68);
+  \node[txt, fill=white, inner sep=0.8pt] at (2.04,2.68) {$V$};
+
+  \foreach \x/\y/\r in {1.02/1.06/0,1.20/1.76/18,1.48/1.34/-12,1.76/1.96/10,2.02/1.16/0,2.31/1.70/-16,2.61/1.23/14,2.92/1.90/-8}{
+    \begin{scope}[shift={(\x,\y)}, rotate=\r]
+      \draw[trap] (-0.045,-0.045) -- (0.045,0.045);
+      \draw[trap] (-0.045,0.045) -- (0.045,-0.045);
+    \end{scope}
+  }
+
+  \draw[cBlue!85!black, line width=0.55pt, -{Stealth[length=2.8pt,width=2.0pt]}]
+    (0.95,1.52) .. controls (1.22,1.83) and (1.29,1.02) .. (1.56,1.31)
+    .. controls (1.85,1.64) and (1.82,2.04) .. (2.14,1.74)
+    .. controls (2.39,1.49) and (2.30,1.04) .. (2.62,1.20)
+    .. controls (2.86,1.32) and (2.77,1.86) .. (3.05,1.91);
+  \foreach \x/\y in {1.18/1.76,1.50/1.34,2.02/1.16,2.61/1.23,3.04/1.91}{
+    \node[carrier] at (\x,\y) {};
+  }
+  \node[smtxt, anchor=west] at (0.92,0.46) {sign-agnostic carrier: dispersive repeated trapping};
+
+  % transient-current sparkline
+  \begin{scope}[shift={(4.10,0.76)}]
+    \draw[axis] (0,0) -- (1.28,0) node[smtxt, below left=0pt and -4pt] {$t$};
+    \draw[axis] (0,0) -- (0,1.28) node[smtxt, above=-1pt] {$I$};
+    \draw[cRed, line width=0.62pt]
+      (0.09,1.08) .. controls (0.26,0.67) and (0.50,0.43) .. (0.86,0.29)
+      .. controls (1.03,0.22) and (1.15,0.18) .. (1.25,0.15);
+    \node[smtxt, anchor=west] at (0.24,1.10) {$I(t)\propto t^{-n}$};
+    \draw[arr] (1.48,0.66) -- (1.95,0.66);
+    \node[txt, anchor=west] at (2.02,0.66) {$I\downarrow$\\$R\uparrow$};
+  \end{scope}
+\end{scope}
+
+% Panel B: trap-energy distribution, discrete to continuous broad
+\begin{scope}[shift={(6.52,0.30)}]
+  \begin{scope}[shift={(0.20,0.24)}]
+    \draw[axis] (0,0) -- (4.80,0) node[smtxt, below=1pt] {trap energy $E$};
+    \draw[axis] (0,0) -- (0,2.15) node[smtxt, above=-1pt] {$g(E)$};
+    \draw[guide] (0.58,0.52) -- (4.48,0.52);
+
+    % S60: low sulfur, discrete single deep state
+    \draw[peakS] (0.78,0.02) -- (0.78,0.58);
+    \draw[peakS] (1.34,0.02) -- (1.34,1.64);
+    \fill[cBlue] (0.78,0.58) circle[radius=0.035];
+    \fill[cBlue] (1.34,1.64) circle[radius=0.035];
+    \node[smtxt, anchor=south] at (1.34,1.74) {S60};
+    \node[smtxt, anchor=north] at (1.06,-0.18) {discrete};
+    \node[smtxt, anchor=west] at (1.42,1.38) {single deep};
+
+    % S80: continuous broad high-sulfur distribution
+    \draw[peakB]
+      (2.22,0.06) .. controls (2.52,0.24) and (2.70,0.78) .. (2.96,1.05)
+      .. controls (3.22,1.32) and (3.56,1.36) .. (3.82,1.03)
+      .. controls (4.07,0.71) and (4.24,0.28) .. (4.48,0.08);
+    \path[fill=cTeal!18, draw=none]
+      (2.22,0.06) .. controls (2.52,0.24) and (2.70,0.78) .. (2.96,1.05)
+      .. controls (3.22,1.32) and (3.56,1.36) .. (3.82,1.03)
+      .. controls (4.07,0.71) and (4.24,0.28) .. (4.48,0.08) -- (4.48,0) -- (2.22,0) -- cycle;
+    \node[smtxt, anchor=south] at (3.40,1.38) {S80};
+    \node[smtxt, anchor=north] at (3.42,-0.18) {continuous broad};
+
+    \draw[<->, draw=cTeal!85!black, line width=0.36pt] (2.45,1.58) -- (4.22,1.58);
+    \node[smtxt, text=cTeal!75!black, fill=white, inner sep=0.7pt] at (3.34,1.58) {$n$ = breadth};
+
+    \draw[<->, draw=cAmber, line width=0.36pt] (4.63,0.52) -- (4.63,1.34);
+    \node[smtxt, text=cAmber!80!black, anchor=west] at (4.70,0.94) {$\rho_{60s}$\\magnitude};
+  \end{scope}
+
+  \draw[arr] (1.12,2.60) -- (4.05,2.60);
+  \node[smtxt, fill=white, inner sep=0.9pt] at (2.58,2.60)
+    {disorder$\uparrow$ (sulfur$\uparrow$): discrete $\rightarrow$ continuous broad};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}
