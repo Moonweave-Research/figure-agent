@@ -172,6 +172,70 @@ def test_context_pack_cli_forwards_selected_shape_profile_once(tmp_path: Path) -
     )
 
 
+def test_context_pack_cli_renders_selected_shape_profile_directives_by_default(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    _write_shape_profile(fixture)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--shape-profile",
+            "attempts/a1/shape.yaml",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "## Shape Profile" in result.stdout
+    assert "- Render [s80] visibly wider in energy than [s60]." in result.stdout
+    assert (
+        "- Use one shared outline, fill, and stroke encoding family for [s60, s80]."
+        in result.stdout
+    )
+    assert (
+        "- Use composition header [increasing sulfur content] without a curve-to-curve "
+        "causal arrow." in result.stdout
+    )
+    assert (
+        "- Do not assert unresolved claims [fixed_peak_count, monotonic_disorder, "
+        "decay_direction]." in result.stdout
+    )
+
+
+def test_context_pack_outer_cli_rejects_explicit_empty_shape_profile(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--shape-profile",
+            "",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "shape profile must be a fixture-relative safe path" in result.stdout
+
+
 def test_context_pack_does_not_auto_select_shape_profile_from_spec(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _write_context_fixture(
@@ -772,3 +836,4 @@ def test_context_pack_text_renders_project_conventions(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert "Project Rule Catalog" in result.stdout
     assert "cantilever vertical" in result.stdout.lower()
+    assert "## Shape Profile" not in result.stdout

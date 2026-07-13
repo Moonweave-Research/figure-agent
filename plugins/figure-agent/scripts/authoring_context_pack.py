@@ -466,6 +466,11 @@ def render_text(payload: dict[str, Any]) -> str:
         lines.extend(["", "## Declared Layout Constraints"])
         for directive in layout_constraints["authoring_directives"]:
             lines.append(f"- {directive}")
+    selected_shape_profile = payload.get("shape_profile")
+    if selected_shape_profile:
+        lines.extend(["", "## Shape Profile"])
+        for directive in selected_shape_profile["authoring_directives"]:
+            lines.append(f"- {directive}")
     return "\n".join(lines) + "\n"
 
 

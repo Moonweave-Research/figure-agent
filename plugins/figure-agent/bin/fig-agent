@@ -349,7 +349,7 @@ def _context_pack(argv: list[str]) -> int:
         pass_args.extend(["--format", args.format])
     if args.layout_contract:
         pass_args.extend(["--layout-contract", args.layout_contract])
-    if args.shape_profile:
+    if args.shape_profile is not None:
         pass_args.extend(["--shape-profile", args.shape_profile])
     return authoring_context_pack.main(
         pass_args,
