@@ -47,6 +47,9 @@ allowed_review_paths:
   - review/failure-first/repaired_label_hyphenation.json
   - review/failure-first/repaired_render_receipt.yaml
   - review/failure-first/repaired_layout_lane_attempt.yaml
+  - review/failure-first/repaired_posthoc_region_contract.yaml
+  - review/failure-first/repaired_posthoc_region_report.json
+  - review/failure-first/repaired_posthoc_region_evaluation.yaml
 allowed_repository_paths:
   - plugins/figure-agent/bin/fig-agent
   - plugins/figure-agent/docs/execution-plan.md

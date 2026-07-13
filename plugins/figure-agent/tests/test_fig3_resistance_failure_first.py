@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import subprocess
 from pathlib import Path
 
 import yaml
-
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = PLUGIN_ROOT / "examples" / "fig3_resistance_mechanism"
@@ -35,6 +35,9 @@ REPAIRED_AUTHORITY_PACKET = REVIEW / "repaired_authority_packet.yaml"
 REPAIRED_PROMPT = REVIEW / "repaired_authoring_prompt.md"
 REPAIRED_SOURCE = REVIEW / "repaired_generated.tex"
 REPAIRED_RENDER_RECEIPT = REVIEW / "repaired_render_receipt.yaml"
+REPAIRED_REGION_CONTRACT = REVIEW / "repaired_posthoc_region_contract.yaml"
+REPAIRED_REGION_REPORT = REVIEW / "repaired_posthoc_region_report.json"
+REPAIRED_REGION_EVALUATION = REVIEW / "repaired_posthoc_region_evaluation.yaml"
 
 
 def _sha256(path: Path) -> str:
@@ -252,6 +255,9 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/repaired_label_hyphenation.json",
         "review/failure-first/repaired_render_receipt.yaml",
         "review/failure-first/repaired_layout_lane_attempt.yaml",
+        "review/failure-first/repaired_posthoc_region_contract.yaml",
+        "review/failure-first/repaired_posthoc_region_report.json",
+        "review/failure-first/repaired_posthoc_region_evaluation.yaml",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/bin/fig-agent",
@@ -515,6 +521,32 @@ def test_fig3_constraint_guided_repaired_attempt_records_failure_without_ablatio
     for evidence in render["evidence"]:
         assert evidence["sha256"] == _sha256(REVIEW / evidence["path"])
     assert render["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_repaired_render_exposes_panel_and_plot_region_failures() -> None:
+    contract = yaml.safe_load(REPAIRED_REGION_CONTRACT.read_text(encoding="utf-8"))
+    report = json.loads(REPAIRED_REGION_REPORT.read_text(encoding="utf-8"))
+    evaluation = yaml.safe_load(
+        REPAIRED_REGION_EVALUATION.read_text(encoding="utf-8")
+    )
+
+    assert contract["schema"] == "figure-agent.layout-lanes.v1"
+    assert contract["evaluation_mode"] == "posthoc_not_generation_input"
+    assert report["failure_count"] == 2
+    assert {
+        result["rule_id"]: result["status"] for result in report["results"]
+    } == {
+        "panel_a_title_contained": "violation",
+        "panel_a_decay_note_clear_of_plot": "violation",
+    }
+    assert contract["publication_acceptance"] == "not_claimed"
+    assert evaluation["schema"] == "figure-agent.posthoc-layout-evaluation.v1"
+    assert evaluation["source_sha256"] == _sha256(REPAIRED_SOURCE)
+    assert evaluation["contract_sha256"] == _sha256(REPAIRED_REGION_CONTRACT)
+    assert evaluation["report_sha256"] == _sha256(REPAIRED_REGION_REPORT)
+    assert evaluation["machine_outcome"] == "failed_two_declared_region_rules"
+    assert evaluation["human_verdict"] == {"state": "pending"}
+    assert evaluation["publication_acceptance"] == "not_claimed"
 
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:

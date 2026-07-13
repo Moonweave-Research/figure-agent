@@ -240,6 +240,13 @@ modules listed in Section 0.
   This attempt is neither an ablation result nor publication acceptance. The
   next general capability target is panel-region containment plus
   annotation-to-plot clearance, not further manual polishing of this render.
+  That capability is now implemented and evaluated post hoc against the
+  preserved attempt without rewriting its generation inputs. The declared
+  panel-title containment rule measures `-0.1316` normalized inset and the
+  decay-note-to-plot rule measures `0.0` clearance, so both known failures are
+  machine-visible. This establishes detector coverage only; a new clean-room
+  generation is still required to test whether pre-generation directives alter
+  authoring behavior.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot

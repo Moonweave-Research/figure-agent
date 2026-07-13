@@ -1,0 +1,29 @@
+schema: figure-agent.layout-lanes.v1
+fixture: fig3_resistance_mechanism
+attempt: repaired_layout_lane_001
+evaluation_mode: posthoc_not_generation_input
+purpose: >-
+  Evaluate the already-rendered constraint-guided attempt against the next
+  general layout capability without rewriting its original generation input.
+label_groups:
+  - id: panel_a_title
+    required_terms: [Applied, bias, trapping, during, conduction]
+  - id: panel_a_decay_note
+    required_terms: [current, decays]
+regions:
+  - id: panel_a
+    normalized_bbox: [0.0, 0.0, 0.5, 1.0]
+  - id: panel_a_plot_with_axes
+    normalized_bbox: [0.34, 0.28, 0.52, 0.82]
+rules:
+  - id: panel_a_title_contained
+    kind: contained_in_region
+    group: panel_a_title
+    region: panel_a
+    minimum_normalized_inset: 0.005
+  - id: panel_a_decay_note_clear_of_plot
+    kind: minimum_clearance_from_region
+    group: panel_a_decay_note
+    region: panel_a_plot_with_axes
+    minimum_normalized_clearance: 0.01
+publication_acceptance: not_claimed

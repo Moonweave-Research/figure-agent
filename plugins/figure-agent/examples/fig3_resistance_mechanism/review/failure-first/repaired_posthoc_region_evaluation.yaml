@@ -1,0 +1,28 @@
+schema: figure-agent.posthoc-layout-evaluation.v1
+fixture: fig3_resistance_mechanism
+attempt: repaired_layout_lane_001
+evaluation_mode: posthoc_not_generation_input
+source_path: repaired_generated.tex
+source_sha256: sha256:a590dd7782d056222cc61adea34616cd078cafcebe0a58f8b96f9a6c0095e9c1
+contract_path: repaired_posthoc_region_contract.yaml
+contract_sha256: sha256:a4d4824e88368f5fbfa7d19e5c682a6c3ba641b00558da0a53c4bf43750f0d01
+report_path: repaired_posthoc_region_report.json
+report_sha256: sha256:9af388989f770dc18712b981db8a7f017263fda639715349bf764fbb8d1f8c2c
+detector_source_commit: 9865f81e
+machine_outcome: failed_two_declared_region_rules
+findings:
+  - rule_id: panel_a_title_contained
+    measured_normalized_inset: -0.1316
+    required_normalized_inset: 0.005
+    result: violation
+  - rule_id: panel_a_decay_note_clear_of_plot
+    measured_normalized_clearance: 0.0
+    required_normalized_clearance: 0.01
+    result: violation
+claim_boundary: >-
+  This evaluation proves that the declared region rules detect two known layout
+  failures in the preserved render. It does not prove that a future generation
+  will obey the directives or that the figure is publication-ready.
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed
