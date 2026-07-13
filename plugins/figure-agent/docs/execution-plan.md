@@ -117,7 +117,7 @@ silently upgrading its current development-baseline verdict.
   historical evidence, but do not transfer it because the bound panel hash changed.
 - [x] Record correction minutes and intervention count; do not infer either from
   commit count or elapsed agent time.
-- [ ] Retrospective correction time must not be estimated. For the existing Fig1
+- [x] Retrospective correction time must not be estimated. For the existing Fig1
   work, record `unavailable` plus a reason; measure Fig3 prospectively.
 - [x] Keep strict inherited findings visible instead of suppressing them to
   obtain a green state.
@@ -264,8 +264,11 @@ modules listed in Section 0.
 - [ ] Obtain a named human review and record prospectively measured correction
   minutes. A machine result is never a publication verdict.
 
-**Current next executable step:** Complete Slice 1's first unchecked item by
-reproducing its tracked figure and review packet from a clean checkout.
+**Current next executable step:** Slice 1 is `pending_human_review` on the four
+current hash-bound views. While that named review is unavailable, continue only
+the already-open Slice 2 comparison step: produce genuinely comparable raw,
+verified, and repaired manifests with bound generation receipts. Do not start a
+new renderer, fixture, or polish lane.
 
 ### Verification
 
