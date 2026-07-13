@@ -1,0 +1,50 @@
+schema: figure-agent.shape-profile-comparison.v1
+fixture: fig3_resistance_mechanism
+experiment: bounded_panel_b_distribution_shape_profile
+comparison_eligibility: controlled_shape_profile_experiment_not_product_ablation
+comparison_status: ineligible_not_renderable
+ineligibility_reasons:
+  - both_arms_failed_before_render
+  - no_pdf_or_png_outputs
+  - no_layout_reports
+shape_naturalness: blocked_not_applicable_until_new_renderable_experiment
+shared_contracts:
+  model_contract_sha256: sha256:a6581a9437260158eeaf49bb1e207d9648ea2722bd590ab0c39f4f3285951db3
+  budget_contract_sha256: sha256:d5d21d7b8453ca9fa1e7f765e587d1295c4caf75209f62f0aa096a446901e9a5
+  blank_start_sha256: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  control_packet_sha256: sha256:1549a067ef7bf2df9e2cc251d1d477137ecec224fbd7cd3eed3cdc60146171b8
+treatment_overlay_sha256: sha256:ba23409f0f2c1268c5810fbaf7c524807e523fc22f313f3befc5b200eb11f08f
+arms:
+  shape_control:
+    prompt_sha256: sha256:ecaf28ee4d5e8c1b05ad098cba5747391620ea5e981b4c5877c47c46f32a13a7
+    generated_source_sha256: sha256:46e58f500368471a491b9cf5cfbf36dc2fdad3b1a5013ba7cd6e43b445dddfc2
+    compile:
+      normal_exit: 1
+      strict_exit: 1
+      blocking_finding: missing_polymer_paper_preamble
+      warnings: [flagship_macros_unused, extreme_local_font_size_scriptsize]
+    render_outputs: {pdf: not_created, png: not_created}
+    layout_report: not_created_render_unavailable
+  shape_profiled:
+    prompt_sha256: sha256:c1554202da35fdee1702c275b930463bf6055b10a2f51b9eb5cfbfcebf6b2944
+    generated_source_sha256: sha256:0314182b8f2bbbcf107000d4d806934368ab49f00b5e14f54a1deefeafa5c2a9
+    compile:
+      normal_exit: 1
+      strict_exit: 1
+      blocking_finding: missing_polymer_paper_preamble
+      warnings: [flagship_macros_unused, extreme_local_font_size_scriptsize]
+    render_outputs: {pdf: not_created, png: not_created}
+    layout_report: not_created_render_unavailable
+execution_evidence:
+  run_path: .witnessd/runs/fig3-shape-profile-20260713-sequential
+  team_ledger_sha256: cd318ea50e09ecb59de73ce578f280c9dfc7a80685cbaffc5250061b6ced58f0
+  team_ledger_verdict_sha256: a4c1571397d88bc92d0e7c34252d01fbf30860a07a8986d969baec7e54f1e582
+  proofcheck_verdict_sha256: cf519023d0ac04091aaec20f66d948fbd9266e7cd4e92fd364fbe60012bf7fe5
+  handoff_sha256: 3a46fd485521434802501dc5db43061b7568a19e2d757db0673207a7582e0fee
+  report_sha256: 44b65daa7bcee23d9c6ae6d56cf8429e4f517b1216a748c88a6d2f559b2d55a7
+  proofcheck_scope: persisted_execution_evidence_only
+  handoff_report_sequence_limitation: report_recorded_binding_mismatch_before_final_proofcheck_rerun
+  runtime_read_isolation: unavailable
+  transcript_audit: no_repository_artifact_reads_observed_global_skill_reads_only
+machine_gate_interpretation: generation_persisted_compile_failed_no_visual_comparison
+publication_acceptance: not_claimed

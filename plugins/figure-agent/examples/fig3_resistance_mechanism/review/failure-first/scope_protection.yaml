@@ -76,6 +76,11 @@ allowed_review_paths:
   - review/failure-first/shape_profile_treatment_overlay.yaml
   - review/failure-first/shape_control_authoring_prompt.md
   - review/failure-first/shape_profiled_authoring_prompt.md
+  - review/failure-first/shape_control_generated.tex
+  - review/failure-first/shape_profiled_generated.tex
+  - review/failure-first/shape_profile_comparison.yaml
+  - review/failure-first/shape_profile_adversarial_review.yaml
+  - review/failure-first/shape_profile_handoff.md
 allowed_repository_paths:
   - plugins/figure-agent/bin/fig-agent
   - plugins/figure-agent/docs/architecture-overview.md

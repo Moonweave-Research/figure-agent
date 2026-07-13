@@ -282,7 +282,18 @@ modules listed in Section 0.
   overlap. This closes the first declared mutual-clearance slice. The next
   structural target is a bounded distribution-shape grammar experiment; it
   must be tested through a new generation rather than by polishing this rejected
-  artifact.
+  artifact. That controlled two-arm generation has now run once through ORRO.
+  Both exact TikZ sources and their persisted execution evidence exist, but both
+  normal and strict compilation stop before render because the shared authoring
+  packet did not provide `polymer-paper-preamble`. No PDF, PNG, or layout report
+  exists, so the attempt is `ineligible_not_renderable`; human shape and
+  contemporary-paper review is blocked and not applicable. The final Depone
+  proofcheck passes only for persisted execution evidence. Its preceding ORRO
+  report records a binding mismatch because handoff/report creation mutated the
+  run before proofcheck was rerun. Preserve both generated sources without
+  repair. The next step is a new equal-input experiment with the shared
+  preamble contract repaired before generation, not post-hoc polishing and not
+  promotion of the shape profile.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot

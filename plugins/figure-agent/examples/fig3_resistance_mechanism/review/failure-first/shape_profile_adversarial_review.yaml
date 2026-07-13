@@ -1,0 +1,30 @@
+schema: figure-agent.shape-profile-adversarial-review.v1
+fixture: fig3_resistance_mechanism
+review_state: blocked_no_render
+comparison_status: ineligible_not_renderable
+machine_findings:
+  orro_execution_evidence: persisted_and_final_proofcheck_passed
+  compile: failed_before_render
+  blocking_finding: missing_polymer_paper_preamble
+  source_warnings: [flagship_macros_unused, extreme_local_font_size_scriptsize]
+  pdf_png_outputs: absent
+  layout_reports: absent
+unresolved_scientific_claims:
+  - s60_peak_count
+  - n_to_decay_direction
+  - monotonic_disorder
+human_visual_questions:
+  - question: Do the two distributions share one encoding family?
+    state: not_applicable_until_renderable_attempt
+  - question: Does S80 read wider without implying a measured function?
+    state: not_applicable_until_renderable_attempt
+  - question: Do n and rho_60s remain visually distinct?
+    state: not_applicable_until_renderable_attempt
+  - question: Does the panel look suitable for a contemporary paper?
+    state: not_applicable_until_renderable_attempt
+adversarial_conclusion: >-
+  Exact sources and execution evidence exist, but neither arm produced a render.
+  No visual, naturalness, layout, profile-benefit, or publication judgment is
+  admissible. Run a new controlled experiment after repairing the shared input
+  packet rather than either generated source.
+publication_acceptance: not_claimed

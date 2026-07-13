@@ -71,6 +71,11 @@ SHAPE_CONTROL_PACKET = REVIEW / "shape_experiment_control_packet.yaml"
 SHAPE_TREATMENT_OVERLAY = REVIEW / "shape_profile_treatment_overlay.yaml"
 SHAPE_CONTROL_PROMPT = REVIEW / "shape_control_authoring_prompt.md"
 SHAPE_PROFILED_PROMPT = REVIEW / "shape_profiled_authoring_prompt.md"
+SHAPE_CONTROL_SOURCE = REVIEW / "shape_control_generated.tex"
+SHAPE_PROFILED_SOURCE = REVIEW / "shape_profiled_generated.tex"
+SHAPE_COMPARISON = REVIEW / "shape_profile_comparison.yaml"
+SHAPE_ADVERSARIAL_REVIEW = REVIEW / "shape_profile_adversarial_review.yaml"
+SHAPE_HANDOFF = REVIEW / "shape_profile_handoff.md"
 
 
 def _sha256(path: Path) -> str:
@@ -325,6 +330,11 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/shape_profile_treatment_overlay.yaml",
         "review/failure-first/shape_control_authoring_prompt.md",
         "review/failure-first/shape_profiled_authoring_prompt.md",
+        "review/failure-first/shape_control_generated.tex",
+        "review/failure-first/shape_profiled_generated.tex",
+        "review/failure-first/shape_profile_comparison.yaml",
+        "review/failure-first/shape_profile_adversarial_review.yaml",
+        "review/failure-first/shape_profile_handoff.md",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/bin/fig-agent",
@@ -954,6 +964,114 @@ def test_fig3_region_guided_inventory_detects_overlapping_distribution_labels() 
         }
     ]
     assert contract["publication_acceptance"] == "rejected"
+
+
+def test_fig3_shape_profile_outcome_binds_failed_render_attempt() -> None:
+    comparison = yaml.safe_load(SHAPE_COMPARISON.read_text(encoding="utf-8"))
+
+    assert comparison["schema"] == "figure-agent.shape-profile-comparison.v1"
+    assert comparison["comparison_eligibility"] == (
+        "controlled_shape_profile_experiment_not_product_ablation"
+    )
+    assert comparison["comparison_status"] == "ineligible_not_renderable"
+    assert comparison["shape_naturalness"] == (
+        "blocked_not_applicable_until_new_renderable_experiment"
+    )
+    assert comparison["publication_acceptance"] == "not_claimed"
+    assert comparison["shared_contracts"] == {
+        "model_contract_sha256": _sha256(SHAPE_MODEL_CONTRACT),
+        "budget_contract_sha256": _sha256(SHAPE_BUDGET_CONTRACT),
+        "blank_start_sha256": _sha256(SHAPE_BLANK_START),
+        "control_packet_sha256": _sha256(SHAPE_CONTROL_PACKET),
+    }
+    assert comparison["treatment_overlay_sha256"] == _sha256(
+        SHAPE_TREATMENT_OVERLAY
+    )
+
+    expected_arm_files = {
+        "shape_control": (SHAPE_CONTROL_PROMPT, SHAPE_CONTROL_SOURCE),
+        "shape_profiled": (SHAPE_PROFILED_PROMPT, SHAPE_PROFILED_SOURCE),
+    }
+    for arm_id, (prompt, source) in expected_arm_files.items():
+        arm = comparison["arms"][arm_id]
+        assert arm["prompt_sha256"] == _sha256(prompt)
+        assert arm["generated_source_sha256"] == _sha256(source)
+        assert arm["compile"] == {
+            "normal_exit": 1,
+            "strict_exit": 1,
+            "blocking_finding": "missing_polymer_paper_preamble",
+            "warnings": [
+                "flagship_macros_unused",
+                "extreme_local_font_size_scriptsize",
+            ],
+        }
+        assert arm["render_outputs"] == {
+            "pdf": "not_created",
+            "png": "not_created",
+        }
+        assert arm["layout_report"] == "not_created_render_unavailable"
+
+
+def test_fig3_shape_profile_outcome_binds_external_execution_evidence() -> None:
+    comparison = yaml.safe_load(SHAPE_COMPARISON.read_text(encoding="utf-8"))
+    evidence = comparison["execution_evidence"]
+
+    assert evidence["run_path"] == (
+        ".witnessd/runs/fig3-shape-profile-20260713-sequential"
+    )
+    assert evidence["team_ledger_sha256"] == (
+        "cd318ea50e09ecb59de73ce578f280c9dfc7a80685cbaffc5250061b6ced58f0"
+    )
+    assert evidence["team_ledger_verdict_sha256"] == (
+        "a4c1571397d88bc92d0e7c34252d01fbf30860a07a8986d969baec7e54f1e582"
+    )
+    assert evidence["proofcheck_verdict_sha256"] == (
+        "cf519023d0ac04091aaec20f66d948fbd9266e7cd4e92fd364fbe60012bf7fe5"
+    )
+    assert evidence["handoff_sha256"] == (
+        "3a46fd485521434802501dc5db43061b7568a19e2d757db0673207a7582e0fee"
+    )
+    assert evidence["report_sha256"] == (
+        "44b65daa7bcee23d9c6ae6d56cf8429e4f517b1216a748c88a6d2f559b2d55a7"
+    )
+    assert evidence["proofcheck_scope"] == "persisted_execution_evidence_only"
+    assert evidence["handoff_report_sequence_limitation"] == (
+        "report_recorded_binding_mismatch_before_final_proofcheck_rerun"
+    )
+    assert evidence["runtime_read_isolation"] == "unavailable"
+    assert evidence["transcript_audit"] == (
+        "no_repository_artifact_reads_observed_global_skill_reads_only"
+    )
+
+
+def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
+    review = yaml.safe_load(SHAPE_ADVERSARIAL_REVIEW.read_text(encoding="utf-8"))
+    handoff = SHAPE_HANDOFF.read_text(encoding="utf-8")
+
+    assert review["schema"] == "figure-agent.shape-profile-adversarial-review.v1"
+    assert review["review_state"] == "blocked_no_render"
+    assert review["machine_findings"]["compile"] == "failed_before_render"
+    assert review["unresolved_scientific_claims"] == [
+        "s60_peak_count",
+        "n_to_decay_direction",
+        "monotonic_disorder",
+    ]
+    assert [item["question"] for item in review["human_visual_questions"]] == [
+        "Do the two distributions share one encoding family?",
+        "Does S80 read wider without implying a measured function?",
+        "Do n and rho_60s remain visually distinct?",
+        "Does the panel look suitable for a contemporary paper?",
+    ]
+    assert all(
+        item["state"] == "not_applicable_until_renderable_attempt"
+        for item in review["human_visual_questions"]
+    )
+    assert review["publication_acceptance"] == "not_claimed"
+
+    assert "ineligible_not_renderable" in handoff
+    assert "missing_polymer_paper_preamble" in handoff
+    assert "persisted execution evidence only" in handoff
+    assert "Publication acceptance is not claimed" in handoff
 
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
