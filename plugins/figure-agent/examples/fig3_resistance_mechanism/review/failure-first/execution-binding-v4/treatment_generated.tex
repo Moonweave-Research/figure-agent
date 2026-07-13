@@ -1,0 +1,122 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\begin{tikzpicture}[
+  x=1cm,
+  y=1cm,
+  >=Stealth,
+  font=\sffamily\fontsize{7.2}{8.4}\selectfont,
+  panel label/.style={font=\sffamily\bfseries\fontsize{8.6}{9.8}\selectfont, text=black},
+  title/.style={font=\sffamily\bfseries\fontsize{7.6}{8.8}\selectfont, text=black},
+  note/.style={font=\sffamily\fontsize{6.3}{7.3}\selectfont, text=cGray, align=center},
+  small note/.style={font=\sffamily\fontsize{5.5}{6.3}\selectfont, text=cGray, align=center},
+  electrode/.style={draw=cGray!85!black, fill=cLGray!42, line width=0.42pt},
+  film/.style={draw=cBrown!85!black, fill=cAmberSphere!30, line width=0.42pt},
+  trap/.style={draw=cRed!90!black, line width=0.38pt},
+  carrier/.style={circle, draw=cBlue!85!black, fill=white, minimum size=2.2mm, inner sep=0pt, line width=0.42pt},
+  pathline/.style={draw=cBlue!88!black, line width=0.64pt, rounded corners=3pt, -{Stealth[length=3.2pt,width=2.2pt]}},
+  ghost path/.style={draw=cBlue!48, line width=0.34pt, rounded corners=3pt},
+  axis/.style={draw=cGray!85!black, line width=0.42pt, -{Stealth[length=3pt,width=2pt]}},
+  curve/.style={draw=cTeal!85!black, line width=0.76pt},
+  dist/.style={draw=cAmber!90!black, fill=cAmberSphere!34, line width=0.5pt},
+  guide/.style={draw=cGray!68, line width=0.3pt},
+  callout/.style={draw=cGray!85!black, line width=0.34pt, -{Stealth[length=2.8pt,width=2pt]}},
+]
+
+% Panel frames are intentionally light to keep the schematic slim and dense.
+\node[panel label, anchor=north west] at (0,4.48) {A};
+\node[title, anchor=north west, align=left] (appliedTitle) at (0.34,4.47) {applied trapping\\during conduction};
+
+\begin{scope}[shift={(0,0)}]
+  \path[film] (1.04,0.86) rectangle (4.98,3.72);
+  \path[electrode] (0.74,0.86) rectangle (1.04,3.72);
+  \path[electrode] (4.98,0.86) rectangle (5.28,3.72);
+  \node[small note, rotate=90] at (0.89,2.29) {electrode};
+  \node[small note, rotate=90] at (5.13,2.29) {electrode};
+  \node[note] at (3.01,3.47) {disordered sulfur polymer film};
+
+  \node[title] (vlabel) at (5.82,2.98) {$V$};
+  \draw[axis] (5.40,2.86) -- (5.40,1.28);
+  \node[small note, anchor=west, align=left] at (5.62,1.22) {transient\\current};
+
+  \foreach \x/\y/\r in {
+    1.42/2.90/12, 1.72/1.62/-9, 2.08/2.28/18, 2.48/1.14/5,
+    2.86/3.00/-12, 3.22/1.80/15, 3.62/2.56/-18, 4.04/1.22/7,
+    4.44/3.08/10, 4.70/1.74/-15
+  }{
+    \draw[trap, rotate around={\r:(\x,\y)}] (\x-0.055,\y-0.055) -- (\x+0.055,\y+0.055);
+    \draw[trap, rotate around={\r:(\x,\y)}] (\x-0.055,\y+0.055) -- (\x+0.055,\y-0.055);
+  }
+
+  \draw[ghost path] (1.24,2.28) -- (1.74,2.78) -- (2.10,1.78) -- (2.62,2.18);
+  \draw[pathline] (1.24,2.28) -- (1.74,2.78) -- (2.10,1.78) -- (2.62,2.18)
+    -- (3.02,1.46) -- (3.50,2.78) -- (3.92,2.22) -- (4.52,1.56);
+  \node[carrier] at (1.24,2.28) {};
+  \node[carrier] at (2.10,1.78) {};
+  \node[carrier] at (3.02,1.46) {};
+  \node[carrier, fill=cBlue!18] at (4.52,1.56) {};
+  \draw[callout] (4.52,1.40) -- (4.84,0.96);
+  \node[small note, anchor=west, align=left] at (4.88,0.91) {caught\\after repeated\\trapping};
+
+  \draw[callout] (2.72,3.04) -- (2.17,3.23);
+  \node[small note, anchor=east, align=right] at (2.10,3.25) {dispersive\\trap/release walk};
+
+  \begin{scope}[shift={(0.88,0.12)}]
+    \draw[axis] (0,0) -- (1.72,0) node[small note, below=1pt] {$t$};
+    \draw[axis] (0,0) -- (0,0.92) node[small note, left=1pt] {$I$};
+    \draw[curve] plot[smooth] coordinates {
+      (0.08,0.78) (0.28,0.54) (0.58,0.35) (0.96,0.23) (1.36,0.16) (1.62,0.13)
+    };
+    \node[small note, anchor=west] at (0.38,0.78) {$I(t)\propto t^{-n}$};
+    \node[small note, anchor=west, text=cRed!90!black] at (0.48,-0.32) {$I\downarrow\Rightarrow R\uparrow$};
+  \end{scope}
+\end{scope}
+
+\node[panel label, anchor=north west] at (6.68,4.48) {B};
+\node[title, anchor=north west, align=left] at (7.03,4.47) {trap-energy distribution\\landscape};
+
+\begin{scope}[shift={(6.80,0)}]
+  \node[note, anchor=west] at (0.26,3.78) {increasing sulfur content};
+  \draw[axis] (2.40,3.78) -- (4.86,3.78);
+  \node[small note, anchor=west] at (4.94,3.78) {discrete to continuous broad};
+
+  \begin{scope}[shift={(0.28,2.00)}]
+    \node[title, anchor=west] at (0,1.16) {S60};
+    \draw[axis] (0,0) -- (2.42,0) node[small note, below=2pt] {$E$};
+    \draw[axis] (0,0) -- (0,1.05) node[small note, left=1pt] {$g(E)$};
+    \path[dist] (0.42,0) .. controls (0.56,0.10) and (0.65,0.52) .. (0.77,0.88)
+      .. controls (0.88,0.52) and (0.98,0.10) .. (1.12,0) -- cycle;
+    \draw[guide] (0.77,0) -- (0.77,0.88);
+    \node[small note, anchor=west] at (1.22,0.72) {single deep\\discrete peak};
+  \end{scope}
+
+  \begin{scope}[shift={(3.35,2.00)}]
+    \node[title, anchor=west] at (0,1.16) {S80};
+    \draw[axis] (0,0) -- (3.02,0) node[small note, below=2pt] {$E$};
+    \draw[axis] (0,0) -- (0,1.05) node[small note, left=1pt] {$g(E)$};
+    \path[dist] (0.30,0)
+      .. controls (0.54,0.18) and (0.78,0.44) .. (1.06,0.56)
+      .. controls (1.38,0.70) and (1.82,0.66) .. (2.18,0.48)
+      .. controls (2.52,0.31) and (2.72,0.12) .. (2.86,0) -- cycle;
+    \draw[callout] (0.58,0.18) -- (2.60,0.18);
+    \node[small note, anchor=north] at (1.59,-0.12) {$n$ = breadth};
+    \draw[callout] (2.96,0.03) -- (2.96,0.70);
+    \node[small note, anchor=west] at (3.06,0.38) {$\rho_{60s}$\\= magnitude};
+    \node[small note, anchor=west] at (1.00,0.89) {continuous broad};
+  \end{scope}
+
+  \begin{scope}[shift={(0.42,0.34)}]
+    \draw[axis] (0,0) -- (5.70,0) node[small note, below=2pt] {trap energy};
+    \draw[guide] (1.10,0.08) -- (1.10,0.50);
+    \draw[guide] (4.06,0.08) -- (4.06,0.50);
+    \node[small note, anchor=north] at (1.10,-0.09) {narrow};
+    \node[small note, anchor=north] at (4.06,-0.09) {wide};
+    \draw[callout] (1.26,0.33) -- (3.90,0.33);
+    \node[small note, anchor=south] at (2.58,0.38) {breadth encodes dispersive exponent};
+  \end{scope}
+\end{scope}
+
+\end{tikzpicture}
+\end{document}
