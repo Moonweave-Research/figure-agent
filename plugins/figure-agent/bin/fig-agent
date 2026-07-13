@@ -339,6 +339,7 @@ def _context_pack(argv: list[str]) -> int:
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument("--layout-contract")
+    parser.add_argument("--shape-profile")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
     pass_args = [name]
@@ -348,6 +349,8 @@ def _context_pack(argv: list[str]) -> int:
         pass_args.extend(["--format", args.format])
     if args.layout_contract:
         pass_args.extend(["--layout-contract", args.layout_contract])
+    if args.shape_profile:
+        pass_args.extend(["--shape-profile", args.shape_profile])
     return authoring_context_pack.main(
         pass_args,
         plugin_root=_paths().plugin_root,

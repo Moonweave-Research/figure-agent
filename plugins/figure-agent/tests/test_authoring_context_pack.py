@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
 from pathlib import Path
+
+import authoring_context_pack
+import pytest
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
@@ -64,6 +68,213 @@ def _file_snapshot(root: Path) -> dict[str, str]:
         for path in sorted(root.rglob("*"))
         if path.is_file()
     }
+
+
+def _write_shape_profile(fixture: Path, relative_path: str = "attempts/a1/shape.yaml") -> Path:
+    profile = fixture / relative_path
+    profile.parent.mkdir(parents=True, exist_ok=True)
+    profile.write_text(
+        """
+schema: figure-agent.shape-profile.v1
+status: experimental_attempt_scoped
+objects:
+  - id: s60
+    role: discrete_distribution
+  - id: s80
+    role: continuous_broad_distribution
+relations:
+  - kind: wider_than
+    subject: s80
+    object: s60
+  - kind: same_encoding_family
+    members: [s60, s80]
+forbidden_claims: [fixed_peak_count, monotonic_disorder, decay_direction]
+composition_header: increasing sulfur content
+""".lstrip(),
+        encoding="utf-8",
+    )
+    return profile
+
+
+def test_build_context_pack_injects_selected_shape_profile(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    profile = _write_shape_profile(fixture)
+
+    payload = authoring_context_pack.build_context_pack(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+        shape_profile="attempts/a1/shape.yaml",
+    )
+
+    assert payload["shape_profile"] == {
+        "path": "attempts/a1/shape.yaml",
+        "sha256": f"sha256:{hashlib.sha256(profile.read_bytes()).hexdigest()}",
+        "schema": "figure-agent.shape-profile.v1",
+        "status": "experimental_attempt_scoped",
+        "objects": [
+            {"id": "s60", "role": "discrete_distribution"},
+            {"id": "s80", "role": "continuous_broad_distribution"},
+        ],
+        "relations": [
+            {"kind": "wider_than", "subject": "s80", "object": "s60"},
+            {"kind": "same_encoding_family", "members": ["s60", "s80"]},
+        ],
+        "forbidden_claims": [
+            "fixed_peak_count",
+            "monotonic_disorder",
+            "decay_direction",
+        ],
+        "composition_header": "increasing sulfur content",
+        "authoring_directives": [
+            "Render [s80] visibly wider in energy than [s60].",
+            "Use one shared outline, fill, and stroke encoding family for [s60, s80].",
+            (
+                "Use composition header [increasing sulfur content] without a curve-to-curve "
+                "causal arrow."
+            ),
+            (
+                "Do not assert unresolved claims [fixed_peak_count, monotonic_disorder, "
+                "decay_direction]."
+            ),
+        ],
+    }
+
+
+def test_context_pack_cli_forwards_selected_shape_profile_once(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    profile = _write_shape_profile(fixture)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--shape-profile",
+            "attempts/a1/shape.yaml",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    selected = json.loads(result.stdout)["shape_profile"]
+    assert selected["path"] == "attempts/a1/shape.yaml"
+    assert selected["sha256"] == f"sha256:{hashlib.sha256(profile.read_bytes()).hexdigest()}"
+    assert selected["authoring_directives"][0] == (
+        "Render [s80] visibly wider in energy than [s60]."
+    )
+
+
+def test_context_pack_does_not_auto_select_shape_profile_from_spec(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(
+        workspace,
+        extra_spec="shape_profile: attempts/a1/shape.yaml\n",
+    )
+    _write_shape_profile(fixture)
+
+    payload = authoring_context_pack.build_context_pack(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert "shape_profile" not in payload
+
+
+def test_context_pack_maps_invalid_shape_profile_to_controlled_error(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    profile = _write_shape_profile(fixture)
+    profile.write_text(profile.read_text(encoding="utf-8").replace(".v1", ".v2"), encoding="utf-8")
+
+    with pytest.raises(authoring_context_pack.AuthoringContextPackError, match="schema must equal"):
+        authoring_context_pack.build_context_pack(
+            "context_demo",
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+            shape_profile="attempts/a1/shape.yaml",
+        )
+
+
+@pytest.mark.parametrize(
+    "selector",
+    [
+        "/tmp/shape.yaml",
+        "../shape.yaml",
+        "attempts/./shape.yaml",
+        "attempts//shape.yaml",
+        "attempts/a1/../shape.yaml",
+        "attempts/a1/shape.yaml/",
+    ],
+)
+def test_context_pack_rejects_unsafe_shape_profile_paths(
+    tmp_path: Path,
+    selector: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    with pytest.raises(authoring_context_pack.AuthoringContextPackError, match="shape profile"):
+        authoring_context_pack.build_context_pack(
+            "context_demo",
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+            shape_profile=selector,
+        )
+
+
+def test_context_pack_rejects_missing_shape_profile(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    with pytest.raises(authoring_context_pack.AuthoringContextPackError, match="not found"):
+        authoring_context_pack.build_context_pack(
+            "context_demo",
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+            shape_profile="attempts/a1/missing.yaml",
+        )
+
+
+def test_context_pack_rejects_symlinked_shape_profile_file(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    target = _write_shape_profile(fixture, "attempts/a1/target.yaml")
+    (target.parent / "shape.yaml").symlink_to(target)
+
+    with pytest.raises(authoring_context_pack.AuthoringContextPackError, match="symlinked"):
+        authoring_context_pack.build_context_pack(
+            "context_demo",
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+            shape_profile="attempts/a1/shape.yaml",
+        )
+
+
+def test_context_pack_rejects_shape_profile_through_symlinked_parent_escape(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    outside = tmp_path / "outside"
+    target = _write_shape_profile(outside, "shape.yaml")
+    (fixture / "attempts").symlink_to(target.parent, target_is_directory=True)
+
+    with pytest.raises(authoring_context_pack.AuthoringContextPackError, match="symlinked"):
+        authoring_context_pack.build_context_pack(
+            "context_demo",
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+            shape_profile="attempts/shape.yaml",
+        )
 
 
 def test_context_pack_cli_compiles_read_only_json_payload(tmp_path: Path) -> None:

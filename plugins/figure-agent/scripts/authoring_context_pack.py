@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -11,6 +12,7 @@ from typing import Any
 import authoring_rules
 import narrative_context
 import runtime_paths
+import shape_profile as shape_profile_compiler
 import yaml
 from inputs import parse_spec
 from semantic_contracts import SemanticContractError, collect_semantic_contracts
@@ -234,6 +236,49 @@ def _layout_constraints(
     }
 
 
+def _shape_profile(
+    example_dir: Path,
+    selector: str | None,
+) -> dict[str, Any] | None:
+    if selector is None:
+        return None
+    if not selector or any(part in {"", ".", ".."} for part in selector.split("/")):
+        raise AuthoringContextPackError(
+            "shape profile must be a fixture-relative safe path"
+        )
+    relative = Path(selector)
+    if relative.is_absolute() or relative.suffix not in {".yaml", ".yml"}:
+        raise AuthoringContextPackError(
+            "shape profile must be a fixture-relative YAML path"
+        )
+    profile_path = example_dir / relative
+    fixture_root = example_dir.resolve()
+    current = example_dir
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise AuthoringContextPackError("shape profile not found or symlinked")
+    try:
+        resolved_profile = profile_path.resolve(strict=True)
+    except OSError as exc:
+        raise AuthoringContextPackError("shape profile not found or symlinked") from exc
+    if not resolved_profile.is_relative_to(fixture_root):
+        raise AuthoringContextPackError("shape profile must remain inside the fixture")
+    if not profile_path.is_file():
+        raise AuthoringContextPackError("shape profile not found or symlinked")
+    raw_bytes = resolved_profile.read_bytes()
+    raw_payload = yaml.safe_load(raw_bytes) or {}
+    try:
+        compiled = shape_profile_compiler.compile_shape_profile(raw_payload)
+    except shape_profile_compiler.ShapeProfileError as exc:
+        raise AuthoringContextPackError(str(exc)) from exc
+    return {
+        "path": relative.as_posix(),
+        "sha256": f"sha256:{hashlib.sha256(raw_bytes).hexdigest()}",
+        **compiled,
+    }
+
+
 def _authoring_context_config(spec: dict[str, Any]) -> dict[str, Any]:
     config = spec.get("authoring_context_pack")
     return config if isinstance(config, dict) else {}
@@ -293,6 +338,7 @@ def build_context_pack(
     plugin_root: Path | None = None,
     workspace_root: Path | None = None,
     layout_contract: str | None = None,
+    shape_profile: str | None = None,
 ) -> dict[str, Any]:
     paths = runtime_paths.resolve_runtime_paths(
         plugin_root=plugin_root,
@@ -325,7 +371,8 @@ def build_context_pack(
     philosophy_path = paths.plugin_root / "docs" / "figure-design-philosophy.md"
     style_path = paths.styles_dir / "polymer-paper-preamble.sty"
     layout_path, layout_constraints = _layout_constraints(example_dir, layout_contract)
-    return {
+    selected_shape_profile = _shape_profile(example_dir, shape_profile)
+    payload = {
         "schema": SCHEMA,
         "name": name,
         "read_only": True,
@@ -379,6 +426,9 @@ def build_context_pack(
             "durable_paper_specific_knowledge_compilation": True,
         },
     }
+    if selected_shape_profile is not None:
+        payload["shape_profile"] = selected_shape_profile
+    return payload
 
 
 def render_text(payload: dict[str, Any]) -> str:
@@ -430,6 +480,7 @@ def main(
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument("--layout-contract")
+    parser.add_argument("--shape-profile")
     args = parser.parse_args(argv)
     try:
         payload = build_context_pack(
@@ -437,6 +488,7 @@ def main(
             plugin_root=plugin_root,
             workspace_root=workspace_root,
             layout_contract=args.layout_contract,
+            shape_profile=args.shape_profile,
         )
     except (ValueError, OSError, yaml.YAMLError) as exc:
         print(f"fig-agent context-pack: {exc}", flush=True)
