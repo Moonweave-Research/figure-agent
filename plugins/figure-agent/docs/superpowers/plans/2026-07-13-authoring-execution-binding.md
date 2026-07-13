@@ -530,3 +530,19 @@ binding, targeted tests, ORRO execution evidence, and Depone proofcheck are
 persisted. If renderable, the outcome is only `review_ready`; a named human must
 judge shape naturalness and contemporary-paper suitability before any product
 promotion or publication claim.
+
+## Execution amendment: bind the repository-to-plugin working directory
+
+The first `execution-binding-v2` control proofrun exposed a path-frame defect.
+The packet output was relative to the Figure Agent plugin workspace, while the
+ORRO lane launched the model at the repository worktree root. The model created
+exactly one source, but at repository-root `examples/...` rather than
+`plugins/figure-agent/examples/...`. The lane also reached the fixed adapter
+timeout and ORRO correctly reported `blocked-explicit`.
+
+Preserve the v2 source and evidence as immutable negative evidence. Do not move,
+repair, compile, or compare that source, and do not execute the v2 treatment arm.
+`execution-binding-v3` must add one equal-arm `execution_cwd` contract, bind it
+into the exact prompt bytes and packet hash, and instruct the model to change
+from the repository root into `plugins/figure-agent` before resolving the
+plugin-relative output path. Only v3 is eligible for execution and comparison.

@@ -1,0 +1,24 @@
+{
+  "comparison_eligibility": "ineligible",
+  "control": {
+    "actual_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2/control_generated.tex",
+    "actual_output_sha256": "sha256:91afd6cee708c8de9a1a32b04d8d6350f58450a89870851186a3fb8fa41ce7d5",
+    "declared_output_path": "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2/control_generated.tex",
+    "execution_state": "execution_unbound",
+    "orro_decision": "blocked-explicit",
+    "orro_exit_code": 124
+  },
+  "decision": "blocked",
+  "failure": "execution_cwd_not_bound",
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.authoring-execution-path-review.v1",
+  "treatment": {
+    "decision": "not_executed_after_control_preflight_failure"
+  },
+  "witnessd_evidence": {
+    "adapter_transcript_sha256": "sha256:05395df8f59dd02fd49a4396faf4479799aad2e3b2ec228e9aa02ca6afa0fea0",
+    "run": ".witnessd/runs/fig3-execution-binding-v2-control-20260713",
+    "team_ledger_sha256": "sha256:6e6b396562da5fb078cc5d1e6e091e7c4c3ef7acdb902190ce7fb84404605d33",
+    "team_ledger_verdict_sha256": "sha256:f8abd48fa6728c34e174effa1c000e8529af3fd5ccca8617549e0f3cf86470a0"
+  }
+}
