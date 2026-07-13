@@ -161,6 +161,7 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_coll
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visual_clash.py" \
   ${VISUAL_CLASH_ARGS[@]+"${VISUAL_CLASH_ARGS[@]}"} \
+  ${COLLISION_FIXTURE_ARGS[@]+"${COLLISION_FIXTURE_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/visual_clash.json" \
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_text_boundary_clash.py" \

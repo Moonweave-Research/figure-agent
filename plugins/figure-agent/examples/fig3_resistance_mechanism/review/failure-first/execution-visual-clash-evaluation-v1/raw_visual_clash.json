@@ -1,0 +1,246 @@
+{
+  "candidates": [
+    {
+      "bbox_px": [
+        2298,
+        64,
+        2439,
+        104
+      ],
+      "id": "VC001",
+      "kind": "text_on_fill",
+      "metric": {
+        "luma_std": 44.6
+      },
+      "tex_lines": null,
+      "text": "content"
+    },
+    {
+      "bbox_px": [
+        1473,
+        82,
+        1507,
+        119
+      ],
+      "id": "VC002",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.022,
+        "edge": 0.006
+      },
+      "tex_lines": null,
+      "text": "V"
+    },
+    {
+      "bbox_px": [
+        1653,
+        143,
+        1692,
+        195
+      ],
+      "id": "VC003",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.03,
+        "edge": 0.004
+      },
+      "tex_lines": null,
+      "text": "V"
+    },
+    {
+      "bbox_px": [
+        1851,
+        96,
+        1899,
+        158
+      ],
+      "id": "VC004",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.026,
+        "edge": 0.007
+      },
+      "tex_lines": null,
+      "text": "B"
+    },
+    {
+      "bbox_px": [
+        376,
+        246,
+        580,
+        286
+      ],
+      "id": "VC005",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.233,
+        "edge": 0.034
+      },
+      "tex_lines": null,
+      "text": "disordered"
+    },
+    {
+      "bbox_px": [
+        592,
+        246,
+        698,
+        286
+      ],
+      "id": "VC006",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.206,
+        "edge": 0.036
+      },
+      "tex_lines": null,
+      "text": "sulfur"
+    },
+    {
+      "bbox_px": [
+        710,
+        246,
+        863,
+        286
+      ],
+      "id": "VC007",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.208,
+        "edge": 0.033
+      },
+      "tex_lines": null,
+      "text": "polymer"
+    },
+    {
+      "bbox_px": [
+        875,
+        246,
+        942,
+        286
+      ],
+      "id": "VC008",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.188,
+        "edge": 0.039
+      },
+      "tex_lines": null,
+      "text": "film"
+    },
+    {
+      "bbox_px": [
+        541,
+        301,
+        592,
+        356
+      ],
+      "id": "VC009",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.038,
+        "edge": 0.005
+      },
+      "tex_lines": null,
+      "text": "\u00d7"
+    },
+    {
+      "bbox_px": [
+        2178,
+        311,
+        2255,
+        351
+      ],
+      "id": "VC010",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.027,
+        "edge": 0.009
+      },
+      "tex_lines": null,
+      "text": "S60"
+    },
+    {
+      "bbox_px": [
+        821,
+        561,
+        872,
+        616
+      ],
+      "id": "VC011",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.123,
+        "edge": 0.012
+      },
+      "tex_lines": null,
+      "text": "\u00d7"
+    },
+    {
+      "bbox_px": [
+        675,
+        428,
+        727,
+        483
+      ],
+      "id": "VC012",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.035,
+        "edge": 0.004
+      },
+      "tex_lines": null,
+      "text": "\u00d7"
+    },
+    {
+      "bbox_px": [
+        1161,
+        583,
+        1197,
+        680
+      ],
+      "id": "VC013",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.02,
+        "edge": 0.009
+      },
+      "tex_lines": null,
+      "text": "I(t)"
+    },
+    {
+      "bbox_px": [
+        395,
+        344,
+        447,
+        398
+      ],
+      "id": "VC014",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.053,
+        "edge": 0.006
+      },
+      "tex_lines": null,
+      "text": "\u00d7"
+    },
+    {
+      "bbox_px": [
+        3180,
+        586,
+        3210,
+        623
+      ],
+      "id": "VC015",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.018,
+        "edge": 0.005
+      },
+      "tex_lines": null,
+      "text": "\u03c1"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "build/repaired_generated.pdf",
+  "total": 15
+}

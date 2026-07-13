@@ -1,0 +1,50 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "attempt": "execution-repair-v10",
+  "decision": "machine_target_resolved_human_pending",
+  "target_finding": "material_label_contacts_film_boundary",
+  "repair_family": "label_knockout",
+  "repair_strategy": "preserve_label_position_and_interrupt_boundary_behind_text",
+  "source": {
+    "path": "review/failure-first/execution-repair-v10/repaired_generated.tex",
+    "sha256": "sha256:d55002e5c6a1f3cf6dc404fc637ad66bc81063f97e50d7757b96ff7eb9de09a9",
+    "based_on": "review/failure-first/execution-repair-v9/repaired_generated.tex"
+  },
+  "before": {
+    "evidence_path": "review/failure-first/execution-visual-clash-evaluation-v1/calibrated_visual_clash.json",
+    "evidence_sha256": "sha256:9290f026b21e6f44a39c62ade41ce3c732bae08848b184ba281c8a5251cd03e0",
+    "visual_clash_candidates": 5,
+    "material_label_candidates": 4
+  },
+  "after": {
+    "report_path": "review/failure-first/execution-repair-v10/visual_clash.json",
+    "report_sha256": "sha256:9280e4a35277309aa6fffd8e28e825f4719bf1c164755447a650c679709d169f",
+    "visual_clash_candidates": 1,
+    "material_label_candidates": 0,
+    "remaining_candidate": {
+      "text": "content",
+      "state": "unclassified_not_suppressed"
+    }
+  },
+  "changed_source_lines": 2,
+  "protected_semantics": [
+    "disordered sulfur polymer film",
+    "applied trapping during conduction"
+  ],
+  "agent_visual_review": {
+    "material_label_boundary": "cleanly_interrupted_behind_label",
+    "new_text_collision": "not_visible",
+    "publication_quality": "not_established"
+  },
+  "verification": {
+    "target_detector": "pass_zero_material_label_candidates",
+    "strict_compile": "fail_one_unclassified_candidate",
+    "human_review": "pending"
+  },
+  "remaining_blockers": [
+    "content_visual_clash_candidate_requires_safe_adjudication",
+    "bottom_annotations_and_panel_density_remain_outside_this_repair",
+    "human_scaffold_review_pending"
+  ],
+  "publication_acceptance": "not_claimed"
+}

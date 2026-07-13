@@ -1,0 +1,22 @@
+{
+  "candidates": [
+    {
+      "bbox_px": [
+        2298,
+        64,
+        2439,
+        104
+      ],
+      "id": "VC001",
+      "kind": "text_on_fill",
+      "metric": {
+        "luma_std": 44.6
+      },
+      "tex_lines": null,
+      "text": "content"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "build/repaired_generated.pdf",
+  "total": 1
+}

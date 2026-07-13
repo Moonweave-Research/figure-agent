@@ -38,6 +38,9 @@ def test_compile_sh_wires_the_physics_checks() -> None:
     assert "scripts/checks/check_tex_assertions.py" in compile_sh
     # the grounding meta-check is advisory (report-only — never fails a build).
     assert "scripts/checks/check_physics_grounding.py" in compile_sh
+    assert 'COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")' in compile_sh
+    assert 'scripts/checks/check_visual_clash.py" \\' in compile_sh
+    assert '${COLLISION_FIXTURE_ARGS[@]+"${COLLISION_FIXTURE_ARGS[@]}"}' in compile_sh
 
 
 def test_check_visual_clash_known_false_positive_registry_path_exists() -> None:
@@ -142,6 +145,102 @@ def test_check_visual_clash_registry_entries_declare_a_fixture() -> None:
     patterns = check_visual_clash.load_known_false_positive_patterns()
     unscoped = [pattern.get("id") for pattern in patterns if not pattern.get("fixture")]
     assert unscoped == []
+
+
+def test_fig3_visual_clash_registry_keeps_material_label_contact_actionable() -> None:
+    issues = [
+        check_visual_clash.VisualIssue("text_on_fill", "content", "luma_std=44.6", (0, 0, 1, 1)),
+        check_visual_clash.VisualIssue("near_miss", "V", "dark=0.022, edge=0.006", (0, 0, 1, 1)),
+        check_visual_clash.VisualIssue("text_on_path", "V", "dark=0.030, edge=0.004", (0, 0, 1, 1)),
+        check_visual_clash.VisualIssue("near_miss", "B", "dark=0.026, edge=0.007", (0, 0, 1, 1)),
+        *[
+            check_visual_clash.VisualIssue(
+                "text_on_path", text, "dark=0.200, edge=0.035", (0, 0, 1, 1)
+            )
+            for text in ("disordered", "sulfur", "polymer", "film")
+        ],
+        *[
+            check_visual_clash.VisualIssue(
+                "text_on_path", "×", "dark=0.053, edge=0.006", (0, 0, 1, 1)
+            )
+            for _ in range(4)
+        ],
+        check_visual_clash.VisualIssue("near_miss", "S60", "dark=0.027, edge=0.009", (0, 0, 1, 1)),
+        check_visual_clash.VisualIssue("near_miss", "I(t)", "dark=0.020, edge=0.009", (0, 0, 1, 1)),
+        check_visual_clash.VisualIssue("near_miss", "ρ", "dark=0.018, edge=0.005", (0, 0, 1, 1)),
+    ]
+
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        issues,
+        check_visual_clash.load_known_false_positive_patterns(),
+        "fig3_resistance_mechanism",
+    )
+
+    assert [issue.text for issue in filtered] == [
+        "content",
+        "disordered",
+        "sulfur",
+        "polymer",
+        "film",
+    ]
+    assert suppressed == 10
+
+
+def test_fig3_visual_clash_registry_accepts_repaired_material_label_knockout() -> None:
+    issues = [
+        check_visual_clash.VisualIssue(
+            "text_on_path", "disordered", "dark=0.036, edge=0.006", (0, 0, 1, 1)
+        ),
+        check_visual_clash.VisualIssue(
+            "near_miss", "film", "dark=0.016, edge=0.007", (0, 0, 1, 1)
+        ),
+    ]
+
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        issues,
+        check_visual_clash.load_known_false_positive_patterns(),
+        "fig3_resistance_mechanism",
+    )
+
+    assert filtered == []
+    assert suppressed == 2
+
+
+def test_check_visual_clash_cli_uses_explicit_fixture_for_suppression(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    pdf = tmp_path / "nested-attempt" / "build" / "figure.pdf"
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"%PDF-1.4\n")
+    issue = check_visual_clash.VisualIssue(
+        "text_on_path", "×", "dark=0.053, edge=0.006", (1, 2, 3, 4)
+    )
+    monkeypatch.setattr(check_visual_clash, "extract_pdf_words_and_page", lambda _pdf: ([], (1, 1)))
+    monkeypatch.setattr(
+        check_visual_clash,
+        "render_pdf_first_page",
+        lambda _pdf, _dpi: Image.new("RGB", (1, 1)),
+    )
+    monkeypatch.setattr(
+        check_visual_clash,
+        "detect_visual_clashes",
+        lambda *_args, **_kwargs: [issue],
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "check_visual_clash.py",
+            str(pdf),
+            "--strict",
+            "--ignore-known-fp",
+            "--fixture",
+            "fig3_resistance_mechanism",
+        ],
+    )
+
+    assert check_visual_clash.main() == 0
 
 
 def _require_golden_pdf() -> None:

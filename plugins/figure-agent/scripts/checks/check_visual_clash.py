@@ -443,6 +443,7 @@ def visual_clash_payload(
     issues: list[VisualIssue],
     *,
     attribution_context: dict | None = None,
+    fixture: str | None = None,
 ) -> dict:
     """Return the stable machine-readable visual-clash report."""
     candidates = []
@@ -464,17 +465,28 @@ def visual_clash_payload(
             )
         candidates.append(candidate)
     return {
-        "fixture": _fixture_name(pdf_path),
+        "fixture": fixture or _fixture_name(pdf_path),
         "render_pdf": _render_pdf_field(pdf_path),
         "candidates": candidates,
         "total": len(candidates),
     }
 
 
-def write_visual_clash_json(pdf_path: Path, issues: list[VisualIssue], output_path: Path) -> None:
+def write_visual_clash_json(
+    pdf_path: Path,
+    issues: list[VisualIssue],
+    output_path: Path,
+    *,
+    fixture: str | None = None,
+) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        json.dumps(visual_clash_payload(pdf_path, issues), indent=2, sort_keys=True) + "\n",
+        json.dumps(
+            visual_clash_payload(pdf_path, issues, fixture=fixture),
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
         encoding="utf-8",
     )
 
@@ -513,10 +525,16 @@ def main() -> int:
         type=Path,
         help="write machine-readable visual clash candidates to this JSON path",
     )
+    parser.add_argument(
+        "--fixture",
+        help="preserve the top-level fixture identity after compile.sh changes cwd",
+    )
     args = parser.parse_args()
 
     if not args.pdf.exists():
         raise FileNotFoundError(f"PDF not found: {args.pdf}")
+    if args.fixture and len(Path(args.fixture).parts) != 1:
+        parser.error("fixture must be one safe path component")
 
     words, page_size = extract_pdf_words_and_page(args.pdf)
     image = render_pdf_first_page(args.pdf, args.dpi)
@@ -526,10 +544,15 @@ def main() -> int:
         issues, suppressed_count = suppress_known_false_positives(
             issues,
             load_known_false_positive_patterns(),
-            _fixture_name(args.pdf),
+            args.fixture or _fixture_name(args.pdf),
         )
     if args.json_output:
-        write_visual_clash_json(args.pdf, issues, args.json_output)
+        write_visual_clash_json(
+            args.pdf,
+            issues,
+            args.json_output,
+            fixture=args.fixture,
+        )
 
     print(f"visual clash report: {args.pdf.name} ({len(words)} words)")
     if not issues:

@@ -157,8 +157,15 @@ allowed_review_paths:
   - review/failure-first/execution-repair-v9/execution_review.json
   - review/failure-first/execution-repair-v9/repaired_generated.tex
   - review/failure-first/execution-repair-v9/undeclared_geometry.json
+  - review/failure-first/execution-visual-clash-evaluation-v1/calibrated_visual_clash.json
+  - review/failure-first/execution-visual-clash-evaluation-v1/classification_review.json
+  - review/failure-first/execution-visual-clash-evaluation-v1/raw_visual_clash.json
+  - review/failure-first/execution-repair-v10/execution_review.json
+  - review/failure-first/execution-repair-v10/repaired_generated.tex
+  - review/failure-first/execution-repair-v10/visual_clash.json
 allowed_repository_paths:
   - examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v5/control_generated.tex
+  - plugins/figure-agent/_known_false_positives.yaml
   - plugins/figure-agent/bin/fig-agent
   - plugins/figure-agent/docs/architecture-overview.md
   - plugins/figure-agent/docs/execution-plan.md
@@ -171,6 +178,7 @@ allowed_repository_paths:
   - plugins/figure-agent/scripts/authoring_repair_packet.py
   - plugins/figure-agent/scripts/checks/check_label_hyphenation.py
   - plugins/figure-agent/scripts/checks/check_undeclared_geometry.py
+  - plugins/figure-agent/scripts/checks/check_visual_clash.py
   - plugins/figure-agent/scripts/finding_source_attribution.py
   - plugins/figure-agent/scripts/checks/check_layout_drift.py
   - plugins/figure-agent/scripts/visual_finding_artifacts.py
@@ -180,6 +188,7 @@ allowed_repository_paths:
   - plugins/figure-agent/tests/test_authoring_repair_packet.py
   - plugins/figure-agent/tests/test_finding_source_attribution.py
   - plugins/figure-agent/tests/test_label_hyphenation.py
+  - plugins/figure-agent/tests/test_strict_mode.py
   - plugins/figure-agent/tests/test_undeclared_geometry.py
   - plugins/figure-agent/tests/test_check_layout_drift.py
   - plugins/figure-agent/tests/test_compile_contract.py

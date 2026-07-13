@@ -1,0 +1,86 @@
+{
+  "candidates": [
+    {
+      "bbox_px": [
+        2298,
+        64,
+        2439,
+        104
+      ],
+      "id": "VC001",
+      "kind": "text_on_fill",
+      "metric": {
+        "luma_std": 44.6
+      },
+      "tex_lines": null,
+      "text": "content"
+    },
+    {
+      "bbox_px": [
+        376,
+        246,
+        580,
+        286
+      ],
+      "id": "VC002",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.233,
+        "edge": 0.034
+      },
+      "tex_lines": null,
+      "text": "disordered"
+    },
+    {
+      "bbox_px": [
+        592,
+        246,
+        698,
+        286
+      ],
+      "id": "VC003",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.206,
+        "edge": 0.036
+      },
+      "tex_lines": null,
+      "text": "sulfur"
+    },
+    {
+      "bbox_px": [
+        710,
+        246,
+        863,
+        286
+      ],
+      "id": "VC004",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.208,
+        "edge": 0.033
+      },
+      "tex_lines": null,
+      "text": "polymer"
+    },
+    {
+      "bbox_px": [
+        875,
+        246,
+        942,
+        286
+      ],
+      "id": "VC005",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.188,
+        "edge": 0.039
+      },
+      "tex_lines": null,
+      "text": "film"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "build/repaired_generated.pdf",
+  "total": 5
+}

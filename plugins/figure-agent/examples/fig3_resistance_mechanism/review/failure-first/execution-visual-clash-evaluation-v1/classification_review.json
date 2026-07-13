@@ -1,0 +1,51 @@
+{
+  "schema": "figure-agent.visual-clash-classification-review.v1",
+  "evaluation": "execution-visual-clash-evaluation-v1",
+  "decision": "ten_intended_contacts_suppressed_one_unclassified_four_actionable",
+  "source": {
+    "path": "review/failure-first/execution-repair-v9/repaired_generated.tex",
+    "sha256": "sha256:4ba0d4ddb5c6af2a521f724a64c68abc73c57dc1d6ecf44cabd611537e257b49"
+  },
+  "raw": {
+    "report_path": "review/failure-first/execution-visual-clash-evaluation-v1/raw_visual_clash.json",
+    "report_sha256": "sha256:e25c7a8f5df292f94908c11fbac0308cd239976465a04ec2c414f0c1505312ca",
+    "candidates": 15
+  },
+  "calibrated": {
+    "report_path": "review/failure-first/execution-visual-clash-evaluation-v1/calibrated_visual_clash.json",
+    "report_sha256": "sha256:9290f026b21e6f44a39c62ade41ce3c732bae08848b184ba281c8a5251cd03e0",
+    "candidates": 5,
+    "suppressed_intended_contacts": 10
+  },
+  "classification": {
+    "intended_contacts": [
+      "applied-voltage label and voltage symbol beside the field arrow",
+      "panel B label beside its frame",
+      "four trap glyphs intentionally intersecting the carrier walk",
+      "S60 peak label beside the narrow distribution",
+      "I(t) axis label beside the current axis",
+      "rho magnitude label beside its measure arrow"
+    ],
+    "unclassified_candidates": [
+      {
+        "text": "content",
+        "kind": "text_on_fill",
+        "reason": "human-visible render shows no clash, but no safe reusable suppression bound is declared"
+      }
+    ],
+    "actionable_candidates": [
+      {
+        "texts": ["disordered", "sulfur", "polymer", "film"],
+        "root_defect": "material label contacts the film top boundary",
+        "root_defect_count": 1
+      }
+    ]
+  },
+  "controller_changes": [
+    "visual clash checks inherit the top-level fixture identity in nested attempts",
+    "fixture-scoped metric-bounded suppressions preserve intended symbolic contacts",
+    "material label contacts remain actionable at their unrepaired dark and edge metrics"
+  ],
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

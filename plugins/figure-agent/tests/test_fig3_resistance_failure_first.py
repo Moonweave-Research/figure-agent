@@ -416,10 +416,17 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/execution-repair-v9/execution_review.json",
         "review/failure-first/execution-repair-v9/repaired_generated.tex",
         "review/failure-first/execution-repair-v9/undeclared_geometry.json",
+        "review/failure-first/execution-visual-clash-evaluation-v1/calibrated_visual_clash.json",
+        "review/failure-first/execution-visual-clash-evaluation-v1/classification_review.json",
+        "review/failure-first/execution-visual-clash-evaluation-v1/raw_visual_clash.json",
+        "review/failure-first/execution-repair-v10/execution_review.json",
+        "review/failure-first/execution-repair-v10/repaired_generated.tex",
+        "review/failure-first/execution-repair-v10/visual_clash.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "examples/fig3_resistance_mechanism/review/failure-first/"
         "execution-binding-v5/control_generated.tex",
+        "plugins/figure-agent/_known_false_positives.yaml",
         "plugins/figure-agent/bin/fig-agent",
         "plugins/figure-agent/docs/architecture-overview.md",
         "plugins/figure-agent/docs/execution-plan.md",
@@ -433,6 +440,7 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "plugins/figure-agent/scripts/authoring_repair_packet.py",
         "plugins/figure-agent/scripts/checks/check_label_hyphenation.py",
         "plugins/figure-agent/scripts/checks/check_undeclared_geometry.py",
+        "plugins/figure-agent/scripts/checks/check_visual_clash.py",
         "plugins/figure-agent/scripts/finding_source_attribution.py",
         "plugins/figure-agent/scripts/checks/check_layout_drift.py",
         "plugins/figure-agent/scripts/visual_finding_artifacts.py",
@@ -442,6 +450,7 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "plugins/figure-agent/tests/test_authoring_repair_packet.py",
         "plugins/figure-agent/tests/test_finding_source_attribution.py",
         "plugins/figure-agent/tests/test_label_hyphenation.py",
+        "plugins/figure-agent/tests/test_strict_mode.py",
         "plugins/figure-agent/tests/test_undeclared_geometry.py",
         "plugins/figure-agent/tests/test_check_layout_drift.py",
         "plugins/figure-agent/tests/test_compile_contract.py",
@@ -1305,6 +1314,29 @@ def test_execution_repair_v9_resolves_rendered_landscape_crossing() -> None:
     assert report["profile"] == "schematic"
     assert report["total"] == 0
     assert report["candidates"] == []
+    assert review["verification"]["human_review"] == "pending"
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_execution_repair_v10_resolves_material_label_path_contact() -> None:
+    attempt_root = REVIEW / "execution-repair-v10"
+    review = json.loads(
+        (attempt_root / "execution_review.json").read_text(encoding="utf-8")
+    )
+    report = json.loads(
+        (attempt_root / "visual_clash.json").read_text(encoding="utf-8")
+    )
+
+    assert review["decision"] == "machine_target_resolved_human_pending"
+    assert review["before"]["visual_clash_candidates"] == 5
+    assert review["before"]["material_label_candidates"] == 4
+    assert review["after"]["visual_clash_candidates"] == 1
+    assert review["after"]["material_label_candidates"] == 0
+    assert review["after"]["report_sha256"] == _sha256(
+        attempt_root / "visual_clash.json"
+    )
+    assert [candidate["text"] for candidate in report["candidates"]] == ["content"]
+    assert review["verification"]["strict_compile"] == "fail_one_unclassified_candidate"
     assert review["verification"]["human_review"] == "pending"
     assert review["publication_acceptance"] == "not_claimed"
 
