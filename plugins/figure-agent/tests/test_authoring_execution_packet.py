@@ -311,6 +311,11 @@ def test_preflight_accepts_equal_contracts_with_disjoint_outputs(tmp_path: Path)
     assert result["decision"] == "pass"
     assert result["filesystem_read_isolation"] == "unavailable"
     assert result["control"]["packet_sha256"] != result["treatment"]["packet_sha256"]
+    assert result["control"]["packet_path"] == (
+        "examples/context_demo/review/failure-first/execution-binding-v1/"
+        "control_packet.json"
+    )
+    assert not Path(result["control"]["prompt_path"]).is_absolute()
 
 
 def test_preflight_rejects_unequal_model_contract(tmp_path: Path) -> None:

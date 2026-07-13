@@ -64,6 +64,10 @@ def _equal_field(control: dict[str, Any], treatment: dict[str, Any], field: str)
         raise AuthoringExecutionPreflightError(f"{field} mismatch")
 
 
+def _artifact_reference(packet: dict[str, Any], path: Path) -> str:
+    return (Path(str(packet["output_path"])).parent / path.name).as_posix()
+
+
 def preflight_authoring_pair(
     control_packet_path: Path,
     treatment_packet_path: Path,
@@ -102,16 +106,16 @@ def preflight_authoring_pair(
         "decision": "pass",
         "filesystem_read_isolation": "unavailable",
         "control": {
-            "packet_path": control_packet_path.as_posix(),
+            "packet_path": _artifact_reference(control, control_packet_path),
             "packet_sha256": control["packet_sha256"],
-            "prompt_path": control_prompt.as_posix(),
+            "prompt_path": _artifact_reference(control, control_prompt),
             "prompt_sha256": control["prompt"]["sha256"],
             "output_path": control["output_path"],
         },
         "treatment": {
-            "packet_path": treatment_packet_path.as_posix(),
+            "packet_path": _artifact_reference(treatment, treatment_packet_path),
             "packet_sha256": treatment["packet_sha256"],
-            "prompt_path": treatment_prompt.as_posix(),
+            "prompt_path": _artifact_reference(treatment, treatment_prompt),
             "prompt_sha256": treatment["prompt"]["sha256"],
             "output_path": treatment["output_path"],
         },
