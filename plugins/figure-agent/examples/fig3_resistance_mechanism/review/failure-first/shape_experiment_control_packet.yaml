@@ -32,7 +32,7 @@ authoritative_inputs:
   - role: mutual_clearance_contract
     path: review/failure-first/region_guided_mutual_clearance_contract.yaml
     sha256: sha256:d169cdd593f7857bc691088ed8364ba723482326081f7356fda24babb4ce8c4a
-model_contract_sha256: sha256:2d2f85f3cf833cdb335d1e770808150883f9816bccfea78414eb028bec0f08ad
+model_contract_sha256: sha256:a6581a9437260158eeaf49bb1e207d9648ea2722bd590ab0c39f4f3285951db3
 budget_contract_sha256: sha256:d5d21d7b8453ca9fa1e7f765e587d1295c4caf75209f62f0aa096a446901e9a5
 blank_start:
   path: shape_experiment_blank_start.txt
@@ -42,7 +42,7 @@ authority_conflicts:
   - s60_peak_count_unresolved
   - n_and_decay_direction_unresolved
 control_arm_profile_directives: none
-forbidden_input_enforcement: pending_runner_preflight
+forbidden_input_enforcement: prompt_only_not_runtime_enforced
 forbidden_input_matching:
   path_basis: repository_relative
   absolute_paths: rejected
@@ -50,6 +50,8 @@ forbidden_input_matching:
   symlinks: rejected
   pattern_kind: glob_interpreted_by_runner
   current_packet_claims_enforcement: false
+  runtime_read_isolation: unavailable
+  transcript_audit: required
 forbidden_import_patterns:
   - review/failure-first/*generated*
   - review/failure-first/*render*

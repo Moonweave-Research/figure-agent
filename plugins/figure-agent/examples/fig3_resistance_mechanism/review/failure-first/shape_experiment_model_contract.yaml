@@ -1,5 +1,5 @@
 schema: figure-agent.shape-experiment-model-contract.v1
-model_id: codex-gpt-5.5
+model_id: gpt-5.5
 authoring_mode: feedback_derived_controlled_constraints_tikz
 output_kind: standalone_tikz_source
 forbidden_import_classes:

@@ -369,7 +369,7 @@ def test_shape_experiment_contracts_bind_identical_one_pass_clean_room_arms() ->
 
     assert model == {
         "schema": "figure-agent.shape-experiment-model-contract.v1",
-        "model_id": "codex-gpt-5.5",
+        "model_id": "gpt-5.5",
         "authoring_mode": "feedback_derived_controlled_constraints_tikz",
         "output_kind": "standalone_tikz_source",
         "forbidden_import_classes": [
@@ -462,7 +462,8 @@ def test_shape_experiment_treatment_is_exact_compiled_profile_only_delta() -> No
         assert "publication claim" in prompt
         assert "Do not assert a fixed S60 peak count" in prompt
         assert "Do not assert a monotonic disorder trend" in prompt
-        assert "Do not assert decay direction" in prompt
+        assert "Do not assert how changing `n` changes decay rate or direction" in prompt
+        assert "a qualitative current-decay cue remains authorized" in prompt
         assert "feedback-derived" in prompt
         assert "declared posthoc and layout contracts" in prompt
         assert "clean-room" not in prompt.lower()
@@ -509,7 +510,7 @@ def test_shape_experiment_packet_hashes_roles_forbidden_imports_and_boundary() -
         "experiments/python_svg_semantic_fig1",
     ]
     assert control["control_arm_profile_directives"] == "none"
-    assert control["forbidden_input_enforcement"] == "pending_runner_preflight"
+    assert control["forbidden_input_enforcement"] == "prompt_only_not_runtime_enforced"
     assert control["forbidden_input_matching"] == {
         "path_basis": "repository_relative",
         "absolute_paths": "rejected",
@@ -517,6 +518,8 @@ def test_shape_experiment_packet_hashes_roles_forbidden_imports_and_boundary() -
         "symlinks": "rejected",
         "pattern_kind": "glob_interpreted_by_runner",
         "current_packet_claims_enforcement": False,
+        "runtime_read_isolation": "unavailable",
+        "transcript_audit": "required",
     }
     assert control["execution_receipt_requirements"] == {
         "schema": "figure-agent.shape-experiment-execution-receipt.v1",

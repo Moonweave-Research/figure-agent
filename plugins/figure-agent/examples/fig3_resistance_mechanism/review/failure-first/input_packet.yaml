@@ -52,7 +52,7 @@ authoritative_inputs:
     sha256: sha256:7efed454ab937c4a131e23a879d006cfb01349ff1c5c471cdaad27e191d1069f
   - role: shape_experiment_model_contract
     path: review/failure-first/shape_experiment_model_contract.yaml
-    sha256: sha256:2d2f85f3cf833cdb335d1e770808150883f9816bccfea78414eb028bec0f08ad
+    sha256: sha256:a6581a9437260158eeaf49bb1e207d9648ea2722bd590ab0c39f4f3285951db3
   - role: shape_experiment_budget_contract
     path: review/failure-first/shape_experiment_budget_contract.yaml
     sha256: sha256:d5d21d7b8453ca9fa1e7f765e587d1295c4caf75209f62f0aa096a446901e9a5
@@ -61,14 +61,14 @@ authoritative_inputs:
     sha256: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
   - role: shape_experiment_control_packet
     path: review/failure-first/shape_experiment_control_packet.yaml
-    sha256: sha256:a128ae8c962af6eedb6c94eccd8f9ad37b4db1fc3cb7fd19a3b055d5b3cbdced
+    sha256: sha256:1549a067ef7bf2df9e2cc251d1d477137ecec224fbd7cd3eed3cdc60146171b8
   - role: shape_profile_treatment_overlay
     path: review/failure-first/shape_profile_treatment_overlay.yaml
-    sha256: sha256:323b3333ded87a927d7360f49dcc8a1a29007490b4a6f64d380970be51dd9a54
+    sha256: sha256:ba23409f0f2c1268c5810fbaf7c524807e523fc22f313f3befc5b200eb11f08f
   - role: shape_control_authoring_prompt
     path: review/failure-first/shape_control_authoring_prompt.md
-    sha256: sha256:26f562a3848b672c117cb1136d40562b198108b0d15002f16cda344483ddc803
+    sha256: sha256:ecaf28ee4d5e8c1b05ad098cba5747391620ea5e981b4c5877c47c46f32a13a7
   - role: shape_profiled_authoring_prompt
     path: review/failure-first/shape_profiled_authoring_prompt.md
-    sha256: sha256:3359b28bc9af8bc76dc7fd1784e9fa360ce18aad7aee625d9faea13b740b8a55
+    sha256: sha256:c1554202da35fdee1702c275b930463bf6055b10a2f51b9eb5cfbfcebf6b2944
 publication_acceptance: not_claimed
