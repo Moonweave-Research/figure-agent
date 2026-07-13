@@ -274,6 +274,18 @@ render remains pending until named human or independent visual review records
 the observed reading. Machine-valid declarations therefore cannot authorize
 publication acceptance.
 
+The active renderer-neutral evidence contract is
+`figure-agent.semantic-legibility-evidence.v1`. It hash-binds the full-figure
+and canonical page rasters, page geometry, focused crops, semantic declaration,
+authenticated source-selector snapshot, and aggregate `review_input_hash`.
+Authority conflict, missing or stale binding, duplicate provenance or selector,
+render-hash drift, and cross-semantic selector substitution fail closed to
+review-only rather than becoming repair authority. Publishing is transactional
+and versioned: a failed refresh preserves the prior packet, and successful
+refresh removes only obsolete generated crops while preserving human-owned
+files. An `exact` machine attribution still requires human review; it claims
+neither semantic preservation nor publication acceptance.
+
 When electrical topology is scientifically relevant, the contract also declares
 electrical object states and source/return connections. An object declared
 floating cannot be an endpoint of an electrical connection; a ground reference

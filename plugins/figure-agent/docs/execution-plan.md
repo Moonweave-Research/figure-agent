@@ -310,36 +310,29 @@ modules listed in Section 0.
   ineligible and has no human publication verdict, so the lower treatment
   collision count is evidence of detector movement only, not acceptance.
 
-  The next implementation slice is the first bounded machine-finding repair
-  loop, not another clean-room generation and not manual SVG/TikZ polishing:
-
-  1. Persist text collisions as deterministic structured evidence alongside
-     the existing visual, boundary, proximity, and hyphenation reports.
-  2. Compile a hash-bound repair execution packet from one source snapshot and
-     its machine reports. Only exact source mappings may become editable repair
-     targets; ambiguous and unbound findings remain review-only.
-  3. Bind one repair attempt, one declared source block, protected scientific
-     relations, and an additive output path. Two preserved filesystem-author
-     trials exposed separate orchestration failures: v1 lacked a repository
-     execution-cwd binding and eventually wrote outside the plugin workspace;
-     v2 eventually wrote the correct source, but only after the controller's
-     observation window and without a deterministic materialization receipt.
-     A v3 structured full-source response also arrived late and spent tokens
-     reproducing unchanged source. The repair lane must therefore return only
-     the exact replacement block without filesystem write authority. Figure
-     Agent, not the LLM, reconstructs and validates the full source bytes,
-     exact anchor, protected tokens, and line budget before materializing the
-     additive output. Superseded trials may not be retried or repaired in place.
-  4. Compile the repaired source sequentially outside the author lane, rerun
-     the same gates, and persist before/after detector movement plus regression
-     evidence. A named human verdict remains required for visual or publication
-     acceptance.
+  The bounded machine-finding repair loop now persists deterministic reports,
+  compiles exact hash-bound targets, accepts only replacement blocks from the
+  author lane, materializes additive sources transactionally, and reruns the
+  same gates. Superseded filesystem-author trials remain immutable negative
+  evidence. This implementation evidence does not complete the equal-input
+  ablation or replace a named human verdict.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
-- [ ] Keep ambiguous and unbound findings review-only.
+- [x] Keep ambiguous and unbound findings review-only. The renderer-neutral
+  `figure-agent.semantic-legibility-evidence.v1` packet binds full/page rasters,
+  geometry, crops, declarations, authenticated selectors, and the aggregate
+  review hash. Missing, stale, duplicate, hash-drifted, conflicting, or
+  cross-semantic bindings fail closed; versioned transactional publishing
+  preserves human-owned files.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot
   transition arrow, attach concise labels to the two distributions, and keep
   `n` breadth and `rho_60s` magnitude orthogonal. The source and render receipt
   are hash-bound; its visual outcome remains review-ready, not accepted.
+- [x] Compile v12 semantic review evidence: five subjects are exact and the S60
+  distribution is blocked by an authority conflict. Named questions remain
+  pending for trap-site versus capture-event distinction, breadth versus
+  magnitude, voltage connection to both electrodes, and S60 authority. This is
+  machine evidence only; semantic preservation and publication acceptance are
+  not claimed.
 - [ ] Obtain a named human review and record prospectively measured correction
   minutes. A machine result is never a publication verdict.
 
