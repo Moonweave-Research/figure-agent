@@ -1,0 +1,87 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "attempt": "execution-repair-v12",
+  "decision": "machine_density_targets_resolved_human_pending",
+  "target_findings": [
+    "figure_text_budget",
+    "panel_a_text_budget",
+    "panel_b_text_budget"
+  ],
+  "repair_family": "semantic_editorial_compression",
+  "repair_strategy": "replace textual trap glyphs with vectors and remove only redundant labels while preserving protected scientific semantics",
+  "source": {
+    "path": "review/failure-first/execution-repair-v12/repaired_generated.tex",
+    "sha256": "sha256:044f11b7131a056172ea95793a022a83eb9e947dd13c6eb41ffb7eb6551353c9",
+    "based_on": "review/failure-first/execution-repair-v11/repaired_generated.tex",
+    "based_on_sha256": "sha256:2fe58ef91197e876f6f565d5d3cb83b04252abdb573cde41d7a233a76d97eb5f"
+  },
+  "contract": {
+    "path": "review/failure-first/execution-scaffold-evaluation-v1/layout_contract.yaml",
+    "sha256": "sha256:c87b398684271ebcbacebc5d414104bf2f899dad27b4f2e7edc59d9c7355df21"
+  },
+  "before": {
+    "evidence_path": "review/failure-first/execution-repair-v11/layout_report.json",
+    "evidence_sha256": "sha256:dffc26107e7a304b7b195f912bc8bd624db20154833756d1774dbc82cf647cfd",
+    "findings": 3,
+    "boundary_findings": 0,
+    "density_findings": 3,
+    "text_budgets": {
+      "figure": 65,
+      "panel_a": 39,
+      "panel_b": 26
+    }
+  },
+  "after": {
+    "layout_report_path": "review/failure-first/execution-repair-v12/layout_report.json",
+    "layout_report_sha256": "sha256:001612e43ded1df764b298b47295f8291572aa6da520456ed08532661aec257a",
+    "visual_clash_path": "review/failure-first/execution-repair-v12/visual_clash.json",
+    "visual_clash_sha256": "sha256:26e7494dac1e3e6a0447a998a229f506d9d9d90dfd49e45d736a19763d1c4371",
+    "findings": 0,
+    "boundary_findings": 0,
+    "density_findings": 0,
+    "text_budgets": {
+      "figure": 45,
+      "panel_a": 22,
+      "panel_b": 23
+    }
+  },
+  "render_evidence": {
+    "resolved_runtime_path": "review/failure-first/execution-repair-v12/build/repaired_generated.pdf",
+    "tracking": "generated_runtime_artifact_not_tracked",
+    "raw_sha256_status": "snapshot_only_nondeterministic",
+    "content_signature": {
+      "schema": "figure-agent.pdf-content-signature.v1",
+      "extraction": "pdftotext-layout-trim-right-lines-v1",
+      "normalized_text_sha256": "sha256:45b4485c88546f2a278d78fe1b6992ebd169afe955ce6351286e78b912c9f1be",
+      "page_count": 1
+    }
+  },
+  "reproduction": {
+    "working_directory": "plugins/figure-agent",
+    "strict_compile_command": "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v12/repaired_generated.tex",
+    "layout_command": "python3 scripts/checks/check_layout_drift.py --pdf examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v12/build/repaired_generated.pdf --layout-contract examples/fig3_resistance_mechanism/review/failure-first/execution-scaffold-evaluation-v1/layout_contract.yaml --json-output /tmp/fig3-execution-repair-v12-layout-report.json --strict"
+  },
+  "agent_visual_review": {
+    "voltage_cue": "nonpolar_bracket_connected_to_both_electrodes",
+    "film_label": "single_line_unhyphenated",
+    "trap_marks": "nine_gray_vector_crosses_distinct_from_four_red_capture_marks",
+    "magnitude_ownership": "human_pending",
+    "s60_shallow_deep_nuance": "human_review_item",
+    "publication_quality": "not_established"
+  },
+  "verification": {
+    "strict_compile": "pass",
+    "layout_strict": "pass",
+    "layout_boundary_rules": "pass_five_of_five",
+    "visual_clash_candidates": 0,
+    "undeclared_geometry_candidates": 0,
+    "human_review": "pending"
+  },
+  "boundary_authority": "pending_human_confirmation",
+  "remaining_blockers": [
+    "magnitude_ownership_human_review_pending",
+    "s60_shallow_deep_nuance_human_review_pending",
+    "human_scaffold_review_pending"
+  ],
+  "publication_acceptance": "not_claimed"
+}

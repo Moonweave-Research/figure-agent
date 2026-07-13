@@ -447,6 +447,10 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/execution-repair-v11/layout_report.json",
         "review/failure-first/execution-repair-v11/repaired_generated.tex",
         "review/failure-first/execution-repair-v11/visual_clash.json",
+        "review/failure-first/execution-repair-v12/execution_review.json",
+        "review/failure-first/execution-repair-v12/layout_report.json",
+        "review/failure-first/execution-repair-v12/repaired_generated.tex",
+        "review/failure-first/execution-repair-v12/visual_clash.json",
         "review/failure-first/execution-visual-clash-evaluation-v2/evaluation_review.json",
         "review/failure-first/execution-visual-clash-evaluation-v2/visual_clash.json",
         "review/failure-first/execution-scaffold-evaluation-v1/evaluation_review.json",
@@ -1686,6 +1690,183 @@ def test_execution_repair_v11_contains_labels_without_reducing_text(
         "execution-scaffold-evaluation-v1/layout_contract.yaml --json-output "
         "/tmp/fig3-execution-repair-v11-layout-report.json --strict"
     )
+
+
+def test_execution_repair_v12_resolves_density_without_semantic_loss(
+    tmp_path: Path,
+) -> None:
+    attempt_root = REVIEW / "execution-repair-v12"
+    source = attempt_root / "repaired_generated.tex"
+    report_path = attempt_root / "layout_report.json"
+    visual_path = attempt_root / "visual_clash.json"
+    review = json.loads(
+        (attempt_root / "execution_review.json").read_text(encoding="utf-8")
+    )
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    visual = json.loads(visual_path.read_text(encoding="utf-8"))
+    tex = source.read_text(encoding="utf-8")
+
+    assert review["decision"] == "machine_density_targets_resolved_human_pending"
+    assert review["source"]["based_on"] == (
+        "review/failure-first/execution-repair-v11/repaired_generated.tex"
+    )
+    based_on_source = _declared_fixture_path(review["source"]["based_on"])
+    assert review["source"]["based_on_sha256"] == _sha256(based_on_source)
+    assert review["source"]["sha256"] == _sha256(source)
+    assert review["contract"]["sha256"] == _sha256(
+        EXECUTION_SCAFFOLD_EVALUATION / "layout_contract.yaml"
+    )
+    assert review["before"]["evidence_sha256"] == _sha256(
+        REVIEW / "execution-repair-v11/layout_report.json"
+    )
+    assert review["after"]["layout_report_sha256"] == _sha256(report_path)
+    assert review["after"]["visual_clash_sha256"] == _sha256(visual_path)
+    assert review["after"]["findings"] == 0
+    assert review["after"]["boundary_findings"] == 0
+    assert review["after"]["density_findings"] == 0
+    assert review["after"]["text_budgets"] == {
+        "figure": 45,
+        "panel_a": 22,
+        "panel_b": 23,
+    }
+    assert review["verification"]["strict_compile"] == "pass"
+    assert review["verification"]["layout_strict"] == "pass"
+    assert review["verification"]["human_review"] == "pending"
+    assert review["agent_visual_review"]["magnitude_ownership"] == "human_pending"
+    assert review["agent_visual_review"]["s60_shallow_deep_nuance"] == (
+        "human_review_item"
+    )
+    assert review["publication_acceptance"] == "not_claimed"
+
+    assert report["failure_count"] == 0
+    baseline_report = json.loads(
+        (EXECUTION_SCAFFOLD_EVALUATION / "layout_report.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert report["page_size_pt"] == baseline_report["page_size_pt"]
+    assert {result["status"] for result in report["results"]} == {"ok"}
+    assert {
+        result["budget_id"]: (result["word_count"], result["status"])
+        for result in report["text_budget_results"]
+    } == {
+        "figure_text_budget": (45, "ok"),
+        "panel_a_text_budget": (22, "ok"),
+        "panel_b_text_budget": (23, "ok"),
+    }
+    assert visual["total"] == 0
+    assert visual["candidates"] == []
+
+    assert "{$\\times$}" not in tex
+    assert "×" not in tex
+    assert tex.count("% vector trap cross") == 9
+    assert tex.count("\\draw[trap]") == 18
+    assert "{1.24/2.43,1.92/2.54,2.48/2.02,3.10/1.88}" in tex
+    assert tex.count("% red capture mark") == 1
+    assert "{electrode}" not in tex
+    assert "{trapping during conduction}" in tex
+    assert "{disordered sulfur-polymer film}" in tex
+    assert "{sign-agnostic carrier: capture/release}" in tex
+    assert "increasing sulfur content" not in tex
+    assert tex.count("{$V$}") == 1
+    voltage_cue = tex[tex.index("  \\path[draw=cGray!85!black") : tex.index(
+        "disordered sulfur-polymer film"
+    )]
+    assert "Stealth" not in voltage_cue
+    for polarity_token in ("{+}", "{-}", "{$+$}", "{$-$}"):
+        assert polarity_token not in voltage_cue
+    for source_invariant in (
+        "\\useasboundingbox (0,0) rectangle (14.152435,4.500765);",
+        "minimum width=7.20cm, minimum height=4.25cm",
+        "minimum width=5.85cm, minimum height=4.25cm",
+        "(0.96,2.18) -- (1.24,2.43) -- (1.58,2.08) -- (1.92,2.54)",
+        "-- (2.18,1.82) -- (2.48,2.02) -- (2.78,1.56) -- (3.10,1.88)",
+        "-- (3.36,1.52);",
+        "(0.66,3.06) -- (0.66,3.40) -- (2.12,3.40);",
+        "(4.08,3.06) -- (4.08,3.40) -- (2.48,3.40);",
+        "at (0.50,3.25) {S60 $\\rightarrow$\\quad S80};",
+    ):
+        assert source_invariant in tex
+    for protected in (
+        "$I(t)$",
+        "$I \\propto t^{-n}$",
+        "current decays",
+        "$\\Rightarrow R$ rises",
+        "trap-energy landscape",
+        "$g(E)$",
+        "trap energy $E$",
+        "{S60}",
+        "discrete\\\\single deep",
+        "{S80}",
+        "continuous\\\\broad",
+        "$n$ = breadth",
+        "$\\rho_{60s}$\\\\magnitude",
+    ):
+        assert protected in tex
+
+    render_path = attempt_root / "build" / "repaired_generated.pdf"
+    source_from_plugin = source.relative_to(PLUGIN_ROOT)
+    compile_result = subprocess.run(
+        ["bash", "scripts/compile.sh", str(source_from_plugin)],
+        cwd=PLUGIN_ROOT,
+        env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
+        capture_output=True,
+        text=True,
+    )
+    assert compile_result.returncode == 0, compile_result.stdout + compile_result.stderr
+    assert review["render_evidence"]["content_signature"] == (
+        _pdf_content_signature(render_path)
+    )
+    extracted_text = subprocess.run(
+        ["pdftotext", "-layout", str(render_path), "-"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert "disordered sulfur-polymer film" in extracted_text
+    assert "disordered sulfur-\npolymer film" not in extracted_text
+    assert "×" not in extracted_text
+
+    reproduced_report = tmp_path / "layout_report.json"
+    layout_result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/checks/check_layout_drift.py",
+            "--pdf",
+            str(render_path),
+            "--layout-contract",
+            str(EXECUTION_SCAFFOLD_EVALUATION / "layout_contract.yaml"),
+            "--json-output",
+            str(reproduced_report),
+            "--strict",
+        ],
+        cwd=PLUGIN_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert layout_result.returncode == 0, layout_result.stdout + layout_result.stderr
+    assert json.loads(reproduced_report.read_text(encoding="utf-8")) == report
+
+    geometry_report = tmp_path / "undeclared_geometry.json"
+    geometry_result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/checks/check_undeclared_geometry.py",
+            str(render_path),
+            "--tex",
+            str(source),
+            "--spec",
+            str(FIXTURE / "spec.yaml"),
+            "--json-output",
+            str(geometry_report),
+            "--strict",
+        ],
+        cwd=PLUGIN_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert geometry_result.returncode == 0, geometry_result.stdout + geometry_result.stderr
+    assert json.loads(geometry_report.read_text(encoding="utf-8"))["total"] == 0
 
 
 def test_fig3_resistance_render_receipt_reproduces_current_source_outputs() -> None:

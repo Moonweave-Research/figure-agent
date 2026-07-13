@@ -167,6 +167,10 @@ allowed_review_paths:
   - review/failure-first/execution-repair-v11/layout_report.json
   - review/failure-first/execution-repair-v11/repaired_generated.tex
   - review/failure-first/execution-repair-v11/visual_clash.json
+  - review/failure-first/execution-repair-v12/execution_review.json
+  - review/failure-first/execution-repair-v12/layout_report.json
+  - review/failure-first/execution-repair-v12/repaired_generated.tex
+  - review/failure-first/execution-repair-v12/visual_clash.json
   - review/failure-first/execution-visual-clash-evaluation-v2/evaluation_review.json
   - review/failure-first/execution-visual-clash-evaluation-v2/visual_clash.json
   - review/failure-first/execution-scaffold-evaluation-v1/evaluation_review.json

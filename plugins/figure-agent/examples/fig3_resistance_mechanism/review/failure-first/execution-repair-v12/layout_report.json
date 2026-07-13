@@ -1,0 +1,69 @@
+{
+  "contract_schema": "figure-agent.layout-lanes.v1",
+  "failure_count": 0,
+  "page_size_pt": [
+    409.141,
+    135.551
+  ],
+  "results": [
+    {
+      "clearance": 0.037133,
+      "minimum_clearance": 0.01,
+      "missing_groups": [],
+      "rule_id": "panel_a_decay_outcome_contained",
+      "status": "ok"
+    },
+    {
+      "clearance": 0.01187,
+      "minimum_clearance": 0.01,
+      "missing_groups": [],
+      "rule_id": "panel_b_s60_caption_contained",
+      "status": "ok"
+    },
+    {
+      "clearance": 0.01187,
+      "minimum_clearance": 0.01,
+      "missing_groups": [],
+      "rule_id": "panel_b_s80_caption_contained",
+      "status": "ok"
+    },
+    {
+      "clearance": 0.064812,
+      "minimum_clearance": 0.01,
+      "missing_groups": [],
+      "rule_id": "panel_b_sulfur_progression_contained",
+      "status": "ok"
+    },
+    {
+      "clearance": 0.16599,
+      "minimum_clearance": 0.01,
+      "missing_groups": [],
+      "rule_id": "panel_b_magnitude_label_contained",
+      "status": "ok"
+    }
+  ],
+  "schema": "figure-agent.layout-lane-report.v1",
+  "text_budget_results": [
+    {
+      "budget_id": "figure_text_budget",
+      "maximum_words": 45,
+      "region": "page",
+      "status": "ok",
+      "word_count": 45
+    },
+    {
+      "budget_id": "panel_a_text_budget",
+      "maximum_words": 22,
+      "region": "panel_a",
+      "status": "ok",
+      "word_count": 22
+    },
+    {
+      "budget_id": "panel_b_text_budget",
+      "maximum_words": 23,
+      "region": "panel_b",
+      "status": "ok",
+      "word_count": 23
+    }
+  ]
+}
