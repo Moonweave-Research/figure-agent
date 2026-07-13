@@ -1,0 +1,61 @@
+{
+  "allowed_repository_read_paths": [
+    "AGENTS.md",
+    "styles/polymer-paper-preamble.sty"
+  ],
+  "blank_start": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2/blank_start.txt",
+    "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "budget_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v2/budget_contract.yaml",
+    "sha256": "sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762"
+  },
+  "context_pack": {
+    "base_sha256": "sha256:b64fc2a56210668f4faf88bfc3d65337ae4d596bea6bad65a4a33f9cd5962b21",
+    "schema": "figure-agent.authoring-context-pack.v1",
+    "sha256": "sha256:6a2f608da7b727b6043c5fd0ec0a30c4c4187ac2dfda1ac8fdda2ddecaf52d95"
+  },
+  "execution_cwd": "plugins/figure-agent",
+  "feedback_rounds": 0,
+  "filesystem_read_isolation": "unavailable",
+  "fixture": "fig3_resistance_mechanism",
+  "forbidden_import_classes": [
+    "fig1_fixture_artifacts",
+    "historical_generated_sources"
+  ],
+  "layout_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/layout_lane_contract.yaml",
+    "sha256": "sha256:eeed14640ac9974b0e8376e9745fd6861fbcb19b689c7b0c3348103e0a113adc"
+  },
+  "mandatory_source_requirements": [
+    "\\documentclass[tikz,border=4pt]{standalone}",
+    "\\usepackage{tikz}",
+    "\\usepackage{polymer-paper-preamble}"
+  ],
+  "manual_repairs": 0,
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v5/treatment_generated.tex",
+  "packet_sha256": "sha256:767e008e91c253b7b4cba862c266ce367bc74418c079ba819590c9f72728b93c",
+  "prompt": {
+    "sha256": "sha256:1a417fcba2c0ea5eb772435cb4ce98422c559dd686f6b0460672988b7415f6ea",
+    "utf8": "# Bound authoring execution: fig3_resistance_mechanism\n\n## Output and attempt boundary\n- Before resolving the output path, change directory from the repository root to [plugins/figure-agent].\n- Write exactly one new source to [examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v5/treatment_generated.tex].\n- Do not create an intermediate subdirectory beneath [examples/fig3_resistance_mechanism/review/failure-first/execution-binding-v5].\n- Start from the declared blank artifact; perform one attempt only.\n- Do not inspect or repair historical generated sources.\n- Read repository file content only from [AGENTS.md] and [styles/polymer-paper-preamble.sty]; all other required authoring context is already bound below.\n\n## Mandatory standalone TikZ source requirements\n- \\documentclass[tikz,border=4pt]{standalone}\n- \\usepackage{tikz}\n- \\usepackage{polymer-paper-preamble}\n\n## Style Lock authoring requirements\n- Use only the preamble palette tokens cAmber, cBlue, cRed, cTeal, cGray, cLGray, cBrown, cArmAmber, and cAmberSphere, plus TikZ built-in black, white, and gray.\n- Keep every explicit line width at or above 0.25pt.\n- Do not use local \\tiny or \\scriptsize font overrides.\n\n## Semantic contracts and forbidden implications\n- Required panels:\n  - [A] Cell under applied V — charge carrier (sign-agnostic) undergoes dispersive, repeated trapping; transient current decays (I ∝ t^-n) so resistance rises\n  - [B] Trap energy distribution g(E) — discrete (S60, single deep) evolving to continuous broad (S80); n = breadth of the distribution, ρ60s = magnitude\n- Binding fixture briefing (verbatim):\n\n# Briefing — fig3_resistance_mechanism\n\n> **Genre**: Nature Communications main-text figure — clean white, schematic. This is the\n> **explanatory SCHEMATIC half** of a composite Fig 3; the real transient-current data\n> (I(t)∝t⁻ⁿ curves, composition series) come from the data pipeline (Origin / Graph Hub)\n> and are composited beside this schematic. figure-agent draws ONLY the schematic.\n> **Role (2026-06-22 figure plan)**: Fig 3 = the \"trapping during conduction\" mechanism —\n> the narrative bridge from \"the material is a tunable dielectric\" (Fig 2: ε_r + P–E) to\n> \"the traps' energies/lifetimes, quantified\" (Fig 4: ISPD decay + trap spectra).\n> **Design constraint (user, verbatim)**: 얄쌍하게 오밀조밀하게, 비대하지 않게 — slim, compact,\n> dense; explain just enough for human understanding.\n\n## §1. Topic\n저항 측정(전류를 흘려 transient current로 charge trapping을 분석)의 메커니즘을 한 그림으로:\n셀에 전압을 인가 → 전하 캐리어가 무질서한 황고분자 막을 dispersive하게 통과하며 trap에\n반복적으로 잡힘 → 전류가 시간에 따라 감쇠(흡수전류) → 저항 증가. 그리고 이 trap 분포가\n황 함량에 따라 **discrete(저황, shallow+deep)에서 continuous broad(S80)로 진화**한다.\n\n## §2. Sub-regions (2 dense blocks)\n- **(a) cell + transport + decay**: 전극/sulfur film/전극 + 인가 V; carrier의 tortuous\n  multiple-trapping walk(최종 caught); 작은 I-vs-t 감쇠 sparkline + \"current decays ⇒ R↑\".\n- **(b) g(E) evolution**: 에너지 가로축의 trap energy distribution. S60 = discrete 단일 deep\n  peak(좁음) → S80 = continuous broad(넓음). `n = breadth`(가로 화살표), `ρ60s = magnitude`\n  (세로, 별도). \"disorder↑(sulfur↑): discrete → continuous broad\" 화살표.\n\n## §3. Binding physics-correctness rules (grounded in 02_Surfur_Polymer docs; DO NOT violate)\n1. Measurement = transient current I(t) under applied V, **Curie–von Schweidler power-law\n   I(t) ∝ t⁻ⁿ** (n∈(0,2)); I=V/R so I↓ ⇒ R↑. t>~2s = pure trap-mediated absorption current.\n2. **n = the BREADTH of the trap energy distribution, NOT trap density.** Magnitude is a\n   separate metric ρ60s. (n=density would be WRONG.)\n3. **Carrier is sign-agnostic** — dispersive trap-controlled transport in a disordered solid\n   (Scher–Montroll for n>1, Jonscher for n≤1). Do NOT commit to electron vs hole; do NOT draw\n   a clean band/ballistic-drift picture (no net +→− carrier drift).\n4. Traps are a **broad continuous distribution** at high sulfur; **discrete shallow/deep at\n   low sulfur**. The discrete→continuous evolution with sulfur IS the mechanism (CvS_Analysis_\n   Strategy.md). Do NOT draw 2 fixed discrete levels for all compositions.\n5. **Do NOT encode \"stronger trapping\" as well DEPTH** (depth reads as magnitude, contradicts\n   n=breadth). Use breadth + ρ60s only.\n6. \"S–S radical / sulfur cluster\" trap chemistry is **NOT established** — illustrative only,\n   never asserted. Unlabeled × marks for trap sites are correct.\n7. Use 'trap-energy distribution / landscape', NOT 'trap network' (network asserts spatial\n   percolation, a stronger/different claim).\n\n## §4. Provenance\nPhysics from `~/Google Drive/My Drive/Research/02_Surfur_Polymer/` (저항 측정/docs/protocol_full.md;\ndocs/si_methods_S0_theoretical_framework.md; Charge trapping 측정/docs/methodology/CvS_Analysis_Strategy.md;\ndocs/manuscript/framing.md). Schematic hand-authored iter0→iter3 (2026-06-22) after a 5-lens QA\n(reader / NC-editor / physics-skeptic / alternative-methods / visual-design → refine, not pivot).\n\n- No fixture semantic contracts are enabled.\n- Do not imply physics or quantitative relations absent from the declared contracts.\n\n## Declared layout directives\n- Keep text group [applied, trapping, during, conduction] at least 0.015 page-diagonal units clear of text group [V].\n\n## Optional shape-profile directives\n- Render [s80] visibly wider in energy than [s60].\n- Use one shared outline, fill, and stroke encoding family for [s60, s80].\n- Use composition header [increasing sulfur content] without a curve-to-curve causal arrow.\n- Do not assert unresolved claims [fixed_peak_count, monotonic_disorder, decay_direction].\n\n## Provenance and publication boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 0\n- manual_repairs: 0\n- filesystem_read_isolation: unavailable\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.authoring-execution-packet.v1",
+  "shape_profile": {
+    "authoring_directives": [
+      "Render [s80] visibly wider in energy than [s60].",
+      "Use one shared outline, fill, and stroke encoding family for [s60, s80].",
+      "Use composition header [increasing sulfur content] without a curve-to-curve causal arrow.",
+      "Do not assert unresolved claims [fixed_peak_count, monotonic_disorder, decay_direction]."
+    ],
+    "path": "shape_profile_panel_b.yaml",
+    "sha256": "sha256:7efed454ab937c4a131e23a879d006cfb01349ff1c5c471cdaad27e191d1069f"
+  },
+  "style_lock_authoring_requirements": [
+    "Use only the preamble palette tokens cAmber, cBlue, cRed, cTeal, cGray, cLGray, cBrown, cArmAmber, and cAmberSphere, plus TikZ built-in black, white, and gray.",
+    "Keep every explicit line width at or above 0.25pt.",
+    "Do not use local \\tiny or \\scriptsize font overrides."
+  ]
+}

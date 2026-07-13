@@ -79,6 +79,7 @@ SHAPE_HANDOFF = REVIEW / "shape_profile_handoff.md"
 EXECUTION_BINDING_V1 = REVIEW / "execution-binding-v1"
 EXECUTION_BINDING = REVIEW / "execution-binding-v2"
 EXECUTION_BINDING_V4 = REVIEW / "execution-binding-v4"
+EXECUTION_BINDING_V5 = REVIEW / "execution-binding-v5"
 
 
 def _sha256(path: Path) -> str:
@@ -343,6 +344,11 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/execution-binding-v4/execution_review.json",
         "review/failure-first/execution-binding-v4/control_input_audit.json",
         "review/failure-first/execution-binding-v4/treatment_input_audit.json",
+        "review/failure-first/execution-binding-v5/control_packet.json",
+        "review/failure-first/execution-binding-v5/control_prompt.md",
+        "review/failure-first/execution-binding-v5/treatment_packet.json",
+        "review/failure-first/execution-binding-v5/treatment_prompt.md",
+        "review/failure-first/execution-binding-v5/preflight.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/bin/fig-agent",
@@ -1288,3 +1294,29 @@ def test_fig3_execution_binding_v4_blocks_comparison_and_visual_acceptance() -> 
         "docs/execution-plan.md",
         "docs/product-spec.md",
     ]
+
+
+def test_fig3_execution_binding_v5_preflight_binds_repository_read_allowlist() -> None:
+    control = json.loads(
+        (EXECUTION_BINDING_V5 / "control_packet.json").read_text(encoding="utf-8")
+    )
+    treatment = json.loads(
+        (EXECUTION_BINDING_V5 / "treatment_packet.json").read_text(encoding="utf-8")
+    )
+    preflight = json.loads(
+        (EXECUTION_BINDING_V5 / "preflight.json").read_text(encoding="utf-8")
+    )
+
+    for packet in (control, treatment):
+        assert packet["allowed_repository_read_paths"] == [
+            "AGENTS.md",
+            "styles/polymer-paper-preamble.sty",
+        ]
+        assert "Read repository file content only from [AGENTS.md]" in packet[
+            "prompt"
+        ]["utf8"]
+    assert preflight["decision"] == "pass"
+    assert preflight["control"]["packet_sha256"] == control["packet_sha256"]
+    assert preflight["treatment"]["packet_sha256"] == treatment["packet_sha256"]
+    assert control["shape_profile"] is None
+    assert treatment["shape_profile"]["path"] == "shape_profile_panel_b.yaml"
