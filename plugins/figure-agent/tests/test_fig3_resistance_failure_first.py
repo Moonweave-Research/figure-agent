@@ -46,6 +46,12 @@ REGION_GUIDED_RENDER_RECEIPT = REVIEW / "region_guided_render_receipt.yaml"
 REGION_GUIDED_REVIEW = REVIEW / "region_guided_adversarial_review.yaml"
 REGION_GUIDED_TEXT_CONTRACT = REVIEW / "region_guided_text_inventory_contract.yaml"
 REGION_GUIDED_TEXT_REPORT = REVIEW / "region_guided_text_inventory_report.json"
+REGION_GUIDED_LABEL_OWNERSHIP_CONTRACT = (
+    REVIEW / "region_guided_label_ownership_contract.yaml"
+)
+REGION_GUIDED_LABEL_OWNERSHIP_REPORT = (
+    REVIEW / "region_guided_label_ownership_report.json"
+)
 
 
 def _sha256(path: Path) -> str:
@@ -280,6 +286,8 @@ def test_fig3_resistance_scope_allows_one_bounded_source_repair_and_protects_his
         "review/failure-first/region_guided_render_receipt.yaml",
         "review/failure-first/region_guided_text_inventory_contract.yaml",
         "review/failure-first/region_guided_text_inventory_report.json",
+        "review/failure-first/region_guided_label_ownership_contract.yaml",
+        "review/failure-first/region_guided_label_ownership_report.json",
     ]
     assert scope["allowed_repository_paths"] == [
         "plugins/figure-agent/bin/fig-agent",
@@ -644,6 +652,35 @@ def test_fig3_region_guided_text_budget_quantifies_human_density_rejection() -> 
         "panel_a_text_budget": (33, 22, "violation"),
         "panel_b_text_budget": (42, 23, "violation"),
     }
+    assert contract["publication_acceptance"] == "rejected"
+
+
+def test_fig3_region_guided_label_ownership_detects_clipped_panel_b_axis() -> None:
+    contract = yaml.safe_load(
+        REGION_GUIDED_LABEL_OWNERSHIP_CONTRACT.read_text(encoding="utf-8")
+    )
+    report = json.loads(
+        REGION_GUIDED_LABEL_OWNERSHIP_REPORT.read_text(encoding="utf-8")
+    )
+
+    assert contract["evaluation_mode"] == "posthoc_required_label_ownership"
+    assert contract["label_groups"] == [
+        {
+            "id": "panel_b_x_axis_label",
+            "required_phrase": "trap energy E",
+            "region": "panel_b",
+        }
+    ]
+    assert report["failure_count"] == 1
+    assert report["results"] == [
+        {
+            "clearance": None,
+            "minimum_clearance": 0.005,
+            "missing_groups": ["panel_b_x_axis_label"],
+            "rule_id": "panel_b_x_axis_label_owned",
+            "status": "missing_label_group",
+        }
+    ]
     assert contract["publication_acceptance"] == "rejected"
 
 

@@ -170,6 +170,18 @@ def _bbox_center_inside(
     return region[0] <= center_x <= region[2] and region[1] <= center_y <= region[3]
 
 
+def _bbox_inside(
+    bbox: tuple[float, float, float, float],
+    region: tuple[float, float, float, float],
+) -> bool:
+    return (
+        region[0] <= bbox[0]
+        and region[1] <= bbox[1]
+        and bbox[2] <= region[2]
+        and bbox[3] <= region[3]
+    )
+
+
 def evaluate_text_budgets(
     contract: dict[str, Any],
     pdf_words: list[dict[str, Any]],
@@ -220,13 +232,27 @@ def evaluate_text_budgets(
 def _group_bbox(
     group: dict[str, Any],
     words: list[dict[str, Any]],
+    regions: dict[str, tuple[float, float, float, float]],
 ) -> tuple[float, float, float, float] | None:
     terms = group.get("required_terms")
-    if not isinstance(terms, list) or not terms:
-        raise ValueError("layout lane label group requires non-empty required_terms")
+    phrase = group.get("required_phrase")
+    has_terms = isinstance(terms, list) and bool(terms)
+    has_phrase = isinstance(phrase, str) and bool(phrase.strip())
+    if has_terms == has_phrase:
+        raise ValueError(
+            "layout lane label group requires exactly one of required_terms or "
+            "required_phrase"
+        )
+    region_id = group.get("region")
+    if region_id is not None:
+        if not isinstance(region_id, str) or region_id not in regions:
+            raise ValueError("layout lane label group region is invalid")
+        words = [word for word in words if _bbox_inside(_word_bbox(word), regions[region_id])]
+    if has_phrase:
+        return _find_phrase_bbox(phrase, words)
     selected: list[dict[str, Any]] = []
     normalized_words = [_compact_text(str(word.get("text", ""))) for word in words]
-    for term in terms:
+    for term in terms:  # type: ignore[union-attr]
         normalized_term = _compact_text(str(term))
         if not normalized_term:
             raise ValueError("layout lane required term is empty")
@@ -250,6 +276,7 @@ def evaluate_layout_lanes(
     raw_rules = contract.get("rules")
     if not isinstance(raw_groups, list) or not isinstance(raw_rules, list):
         raise ValueError("layout lane contract requires label_groups and rules lists")
+    regions = _declared_regions(contract, pdf_page_size)
     groups: dict[str, tuple[float, float, float, float] | None] = {}
     for group in raw_groups:
         if not isinstance(group, dict) or not isinstance(group.get("id"), str):
@@ -257,13 +284,11 @@ def evaluate_layout_lanes(
         group_id = group["id"]
         if group_id in groups:
             raise ValueError(f"duplicate layout lane label group: {group_id}")
-        groups[group_id] = _group_bbox(group, pdf_words)
+        groups[group_id] = _group_bbox(group, pdf_words, regions)
 
     page_diagonal = math.hypot(*pdf_page_size)
     if page_diagonal <= 0:
         raise ValueError("layout lane page size must be positive")
-    regions = _declared_regions(contract, pdf_page_size)
-
     results: list[LayoutLaneResult] = []
     for rule in raw_rules:
         if not isinstance(rule, dict):

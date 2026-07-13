@@ -1,0 +1,21 @@
+{
+  "contract_schema": "figure-agent.layout-lanes.v1",
+  "failure_count": 1,
+  "page_size_pt": [
+    332.804,
+    140.048
+  ],
+  "results": [
+    {
+      "clearance": null,
+      "minimum_clearance": 0.005,
+      "missing_groups": [
+        "panel_b_x_axis_label"
+      ],
+      "rule_id": "panel_b_x_axis_label_owned",
+      "status": "missing_label_group"
+    }
+  ],
+  "schema": "figure-agent.layout-lane-report.v1",
+  "text_budget_results": []
+}

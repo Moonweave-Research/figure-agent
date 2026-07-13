@@ -159,10 +159,13 @@ machine checks establish attribution readiness only; they do not establish
 visual correctness, publication acceptance, or authority to mutate source.
 
 `figure-agent.layout-lanes.v1` is an optional attempt-scoped geometry contract.
-It can declare text groups, normalized page regions, and three measurable rule
-types: text-to-text minimum clearance, text containment inside a panel region,
-text clearance from a plot or illustration region, and declared per-region
-rendered-word budgets. `context-pack` converts
+It can declare text groups as independent required terms or an exact required
+phrase, optionally bind that group to an owning region, declare normalized page
+regions, and evaluate text-to-text minimum clearance, text containment inside a
+panel region, text clearance from a plot or illustration region, and declared
+per-region rendered-word budgets. Region-owned phrases count only when every
+matched PDF word box is fully inside the declared region, exposing clipped or
+escaped labels as missing groups. `context-pack` converts
 the selected rules into authoring directives before generation, while
 `check_layout_drift.py` evaluates the same rules against PDF word boxes after
 rendering. Text budgets are human editorial targets scoped to an attempt, not

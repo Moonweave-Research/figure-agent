@@ -395,3 +395,45 @@ def test_layout_lane_payload_includes_text_budget_failures() -> None:
             "region": "page",
         }
     ]
+
+
+def test_layout_contract_requires_phrase_inside_its_owned_panel_region() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {
+                "id": "panel_b_x_axis_label",
+                "required_phrase": "trap energy E",
+                "region": "panel_b",
+            }
+        ],
+        "regions": [
+            {"id": "panel_b", "normalized_bbox": [0.5, 0.0, 1.0, 1.0]}
+        ],
+        "rules": [
+            {
+                "id": "panel_b_x_axis_label_owned",
+                "kind": "contained_in_region",
+                "group": "panel_b_x_axis_label",
+                "region": "panel_b",
+                "minimum_normalized_inset": 0.005,
+            }
+        ],
+    }
+    clipped = [_word("trap", 380, 180, 400, 195)]
+    complete = [
+        _word("trap", 300, 180, 320, 195),
+        _word("energy", 322, 180, 355, 195),
+        _word("E", 357, 180, 365, 195),
+    ]
+
+    missing = check_layout_drift.evaluate_layout_lanes(
+        contract, clipped, (400.0, 200.0)
+    )
+    present = check_layout_drift.evaluate_layout_lanes(
+        contract, complete, (400.0, 200.0)
+    )
+
+    assert missing[0].status == "missing_label_group"
+    assert missing[0].missing_groups == ("panel_b_x_axis_label",)
+    assert present[0].status == "ok"

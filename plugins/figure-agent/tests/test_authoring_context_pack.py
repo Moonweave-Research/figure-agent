@@ -414,6 +414,57 @@ rules: []
     ]
 
 
+def test_context_pack_injects_panel_owned_required_phrase_directive(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    review = fixture / "review"
+    review.mkdir()
+    (review / "layout_lanes.yaml").write_text(
+        """
+schema: figure-agent.layout-lanes.v1
+label_groups:
+  - id: panel_b_x_axis_label
+    required_phrase: trap energy E
+    region: panel_b
+regions:
+  - id: panel_b
+    normalized_bbox: [0.5, 0.0, 1.0, 1.0]
+rules:
+  - id: panel_b_x_axis_label_owned
+    kind: contained_in_region
+    group: panel_b_x_axis_label
+    region: panel_b
+    minimum_normalized_inset: 0.005
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--layout-contract",
+            "review/layout_lanes.yaml",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout
+    payload = json.loads(result.stdout)
+    assert payload["layout_constraints"]["authoring_directives"] == [
+        "Keep text group [trap energy E] inside region [panel_b] with at least "
+        "0.005 normalized page inset."
+    ]
+
+
 def test_context_pack_rejects_layout_contract_through_symlinked_parent(
     tmp_path: Path,
 ) -> None:

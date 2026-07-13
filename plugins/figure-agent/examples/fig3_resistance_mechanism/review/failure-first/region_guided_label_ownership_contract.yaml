@@ -1,0 +1,25 @@
+schema: figure-agent.layout-lanes.v1
+fixture: fig3_resistance_mechanism
+attempt: region_guided_001
+evaluation_mode: posthoc_required_label_ownership
+purpose: >-
+  Check whether the rejected render preserves the complete Panel B x-axis label
+  inside its declared panel. This is a structural completeness check, not a
+  publication-quality verdict.
+label_groups:
+  - id: panel_b_x_axis_label
+    required_phrase: trap energy E
+    region: panel_b
+regions:
+  - id: panel_b
+    normalized_bbox: [0.5, 0.0, 1.0, 1.0]
+rules:
+  - id: panel_b_x_axis_label_owned
+    kind: contained_in_region
+    group: panel_b_x_axis_label
+    region: panel_b
+    minimum_normalized_inset: 0.005
+human_authority:
+  reviewer: moon
+  source: rejected_region_guided_attempt_feedback
+publication_acceptance: rejected

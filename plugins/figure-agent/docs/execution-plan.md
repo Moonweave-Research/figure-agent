@@ -269,8 +269,15 @@ modules listed in Section 0.
   Applied post hoc to the rejected attempt, it measures `75 > 45` words for the
   whole figure, `33 > 22` for Panel A, and `42 > 23` for Panel B. These limits
   are explicitly bound to the human editorial verdict and are not claimed as
-  universal journal rules. This closes the text-density measurement gap; page
-  clipping and required-label ownership remain the next structural slice.
+  universal journal rules. This closes the text-density measurement gap.
+  Required label groups can now declare one exact phrase and an owning region;
+  words count only when their full PDF boxes remain inside that region. Applied
+  post hoc to the same rejected render, the required Panel B phrase
+  `trap energy E` is reported as missing because the render preserves only the
+  clipped edge word `trap`. This closes the required-label ownership and page-
+  boundary detection gap without claiming aesthetic quality. The next
+  structural slice is a declared mutual-clearance inventory, followed by a
+  bounded distribution-shape grammar experiment.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [ ] Keep ambiguous and unbound findings review-only.
 - [x] Apply one bounded Panel B hierarchy repair: remove the cross-plot

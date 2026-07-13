@@ -99,20 +99,6 @@ def _layout_constraints(
     raw_rules = payload.get("rules")
     if not isinstance(raw_groups, list) or not isinstance(raw_rules, list):
         raise AuthoringContextPackError("layout contract requires label_groups and rules")
-    groups: dict[str, list[str]] = {}
-    for group in raw_groups:
-        if not isinstance(group, dict):
-            raise AuthoringContextPackError("layout label group must be an object")
-        group_id = group.get("id")
-        terms = group.get("required_terms")
-        if (
-            not isinstance(group_id, str)
-            or not isinstance(terms, list)
-            or not terms
-            or not all(isinstance(term, str) and term.strip() for term in terms)
-        ):
-            raise AuthoringContextPackError("layout label group is invalid")
-        groups[group_id] = terms
     raw_regions = payload.get("regions", [])
     if not isinstance(raw_regions, list):
         raise AuthoringContextPackError("layout regions must be a list")
@@ -134,6 +120,31 @@ def _layout_constraints(
         ):
             raise AuthoringContextPackError("layout region is invalid")
         regions.add(region_id)
+    groups: dict[str, list[str]] = {}
+    for group in raw_groups:
+        if not isinstance(group, dict):
+            raise AuthoringContextPackError("layout label group must be an object")
+        group_id = group.get("id")
+        terms = group.get("required_terms")
+        phrase = group.get("required_phrase")
+        has_terms = (
+            isinstance(terms, list)
+            and bool(terms)
+            and all(isinstance(term, str) and term.strip() for term in terms)
+        )
+        has_phrase = isinstance(phrase, str) and bool(phrase.strip())
+        group_region = group.get("region")
+        if (
+            not isinstance(group_id, str)
+            or group_id in groups
+            or has_terms == has_phrase
+            or (
+                group_region is not None
+                and (not isinstance(group_region, str) or group_region not in regions)
+            )
+        ):
+            raise AuthoringContextPackError("layout label group is invalid")
+        groups[group_id] = terms if has_terms else [phrase]
     directives: list[str] = []
     raw_text_budgets = payload.get("text_budgets", [])
     if not isinstance(raw_text_budgets, list):
