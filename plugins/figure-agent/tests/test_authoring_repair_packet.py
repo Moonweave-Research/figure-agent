@@ -279,6 +279,41 @@ def test_accepts_exact_undeclared_geometry_finding_as_repair_target(
     assert packet["editable_target"]["finding_id"] == "UG001"
 
 
+def test_accepts_exact_visual_clash_finding_as_repair_target(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    report = contract.parent / "collisions.json"
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.visual-clash.v1",
+                "candidates": [
+                    {"id": "VC001", "kind": "text_on_path", "text": "retained"}
+                ],
+                "total": 1,
+            }
+        ),
+        encoding="utf-8",
+    )
+    payload = json.loads(contract.read_text(encoding="utf-8"))
+    payload["targets"] = [payload["targets"][0]]
+    payload["targets"][0]["finding"]["id"] = "VC001"
+    contract.write_text(json.dumps(payload), encoding="utf-8")
+
+    packet, _ = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+
+    assert packet["editable_target"]["finding_id"] == "VC001"
+
+
 def test_materializes_valid_candidate_only_after_controller_validation(
     tmp_path: Path,
 ) -> None:

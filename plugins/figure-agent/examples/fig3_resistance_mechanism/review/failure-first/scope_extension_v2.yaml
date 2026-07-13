@@ -7,6 +7,9 @@ allowed_review_prefixes:
   - review/failure-first/execution-repair-v13/
   - review/failure-first/execution-repair-v14/
   - review/failure-first/execution-repair-v15/
+  - review/failure-first/execution-repair-v16/
+  - review/failure-first/execution-repair-v17/
+  - review/failure-first/execution-repair-v18/
 allowed_review_paths:
   - review/failure-first/scope_extension_v2.yaml
   - review/failure-first/comparable-v2/ablation_report.json

@@ -95,6 +95,9 @@ SCOPE_EXTENSION_V2 = REVIEW / "scope_extension_v2.yaml"
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
 EXECUTION_REPAIR_V15 = REVIEW / "execution-repair-v15"
+EXECUTION_REPAIR_V16 = REVIEW / "execution-repair-v16"
+EXECUTION_REPAIR_V17 = REVIEW / "execution-repair-v17"
+EXECUTION_REPAIR_V18 = REVIEW / "execution-repair-v18"
 
 
 def _sha256(path: Path) -> str:
@@ -137,6 +140,76 @@ def test_fig3_exact_repairs_do_not_mistake_text_text_zero_for_structural_pass() 
         "blocked_pending_physics_math_review"
     )
     assert v15_review["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v16_removes_exact_semantic_arrow_crossings_without_claiming_acceptance() -> None:
+    gate = json.loads(
+        (EXECUTION_REPAIR_V16 / "structural_gate.json").read_text(encoding="utf-8")
+    )
+    review = json.loads(
+        (EXECUTION_REPAIR_V16 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert gate["blocking_counts"]["semantic_path_crossing"] == 0
+    assert gate["state"] == "failed"
+    assert gate["structural_pass"] is False
+    assert review["repair_result"] == "lower breadth and distribution crossings removed"
+    assert review["remaining_priority"] == "panel_a_label_and_path_collisions"
+    assert review["band_shape_authority"] == "blocked_pending_physics_math_review"
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v17_preserves_failed_retained_repair_regression() -> None:
+    gate = json.loads(
+        (EXECUTION_REPAIR_V17 / "structural_gate.json").read_text(encoding="utf-8")
+    )
+    visual = json.loads(
+        (EXECUTION_REPAIR_V17 / "visual_clash.json").read_text(encoding="utf-8")
+    )
+    review = json.loads(
+        (EXECUTION_REPAIR_V17 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert not any(
+        candidate.get("kind") == "text_on_path"
+        and candidate.get("text") == "retained"
+        for candidate in visual["candidates"]
+    )
+    assert gate["blocking_counts"]["semantic_path_crossing"] == 0
+    assert gate["blocking_counts"]["text_text"] == 1
+    assert gate["state"] == "failed"
+    assert gate["structural_pass"] is False
+    assert review["decision"] == "failed_exact_repair"
+    assert review["repair_result"] == (
+        "retained path clash removed but title collision introduced"
+    )
+    assert review["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_v18_removes_retained_regression_without_claiming_acceptance() -> None:
+    gate = json.loads(
+        (EXECUTION_REPAIR_V18 / "structural_gate.json").read_text(encoding="utf-8")
+    )
+    visual = json.loads(
+        (EXECUTION_REPAIR_V18 / "visual_clash.json").read_text(encoding="utf-8")
+    )
+    review = json.loads(
+        (EXECUTION_REPAIR_V18 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert not any(
+        candidate.get("kind") == "text_on_path"
+        and candidate.get("text") == "retained"
+        for candidate in visual["candidates"]
+    )
+    assert gate["blocking_counts"]["semantic_path_crossing"] == 0
+    assert gate["blocking_counts"]["text_text"] == 0
+    assert gate["state"] == "failed"
+    assert gate["structural_pass"] is False
+    assert review["repair_result"] == (
+        "retained label clear of title path and electrode"
+    )
+    assert review["publication_acceptance"] == "not_claimed"
 
 
 def test_fig3_comparable_v1_declares_one_shared_contract_and_three_conditions() -> None:

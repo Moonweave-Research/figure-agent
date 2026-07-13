@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\draw[draw=cTeal, line width=0.65pt, -{Stealth}] (2.75,0.28)--(2.23,0.28) (3.98,0.28)--(4.50,0.28);\n  \\node[compact label, text=cTeal, fill=white, inner sep=1.4pt] at (3.365,0.28)\n    {$n$: breadth};",
+  "change_summary": "Shortened the breadth label and split the span into two outward arrows so neither semantic path crosses the label."
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v17/repaired_generated.tex",
+  "source_sha256": "sha256:c0e0add394b38e33b190c5831e1d51eafddd1638f660fbea97b50618df21cfcd",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v18/collisions.before.json",
+        "id": "TC001"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-retained-title-clearance",
+        "anchor_start": "\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};",
+        "anchor_end": "% Qualitative inset only: no ticks, values, or sampled data markers."
+      },
+      "repair_family": "local_reposition",
+      "protected_invariants": [
+        "sign-agnostic",
+        "capture",
+        "retained",
+        "I(t)\\propto t^{-n}"
+      ]
+    }
+  ]
+}

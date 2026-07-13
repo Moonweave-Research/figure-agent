@@ -1,0 +1,11 @@
+{
+  "decision": "exact_repair_resolved_structural_gate_still_failed",
+  "repair_result": "retained label clear of title path and electrode",
+  "text_text_after": 0,
+  "text_on_path_or_fill_after": 7,
+  "semantic_path_crossing_after": 0,
+  "remaining_priority": "panel_a_confirmed_label_path_collisions",
+  "band_shape_authority": "blocked_pending_physics_math_review",
+  "human_review": "not_requested_structural_gate_failed",
+  "publication_acceptance": "not_claimed"
+}

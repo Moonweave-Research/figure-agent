@@ -1,0 +1,27 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v16/repaired_generated.tex",
+  "source_sha256": "sha256:29dd017cb1f9b6d65991f4e481ac111b9c8f76278d855522fd1eb86ba3fb8b91",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v17/visual_clash.before.json",
+        "id": "VC007"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-retained-label",
+        "anchor_start": "\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};",
+        "anchor_end": "% Qualitative inset only: no ticks, values, or sampled data markers."
+      },
+      "repair_family": "local_reposition",
+      "protected_invariants": [
+        "sign-agnostic",
+        "capture",
+        "retained",
+        "I(t)\\propto t^{-n}"
+      ]
+    }
+  ]
+}

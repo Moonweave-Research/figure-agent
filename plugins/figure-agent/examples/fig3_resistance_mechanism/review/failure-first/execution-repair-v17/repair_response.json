@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\node[compact label, align=center, anchor=north] at (1.10,1.42)\n  {sign-agnostic\\\\carrier};\n\\node[compact label, align=center, fill=white, inner sep=1pt] at (1.70,2.18)\n  {capture\\\\release};\n\\node[compact label, align=center, fill=white, inner sep=1pt] at (2.76,2.70)\n  {capture\\\\release};\n\\node[compact label, anchor=south east, fill=white, inner sep=1pt]\n  at (2.94,3.14) {retained};",
+  "change_summary": "Moved the retained label above-left of the terminal carrier so the label no longer crosses the carrier path or right electrode."
+}

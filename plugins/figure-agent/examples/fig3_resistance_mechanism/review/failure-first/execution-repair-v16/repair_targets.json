@@ -1,0 +1,28 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v15/repaired_generated.tex",
+  "source_sha256": "sha256:4a02302c81adf66b04ce3e10a7e06a73cc7a89be00a0c699e9eb82e87a0e6c52",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v16/undeclared_geometry.before.json",
+        "id": "UG001"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-b-breadth-encoding",
+        "anchor_start": "  % Orthogonal metrics: horizontal breadth and detached vertical magnitude.",
+        "anchor_end": "  \\draw[draw=cBrown, line width=0.65pt, {Stealth}-{Stealth}] (4.78,0.18)--(4.78,1.35);"
+      },
+      "repair_family": "relation_restore",
+      "protected_invariants": [
+        "I(t)\\propto t^{-n}",
+        "breadth",
+        "$\\rho_{60\\mathrm{s}}$: magnitude",
+        "S60",
+        "S80"
+      ]
+    }
+  ]
+}

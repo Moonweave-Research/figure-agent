@@ -26,6 +26,7 @@ REPORT_COLLECTIONS = {
     "figure-agent.text-collisions.v1": "collisions",
     "figure-agent.label-hyphenation.v1": "issues",
     "figure-agent.undeclared-geometry.v1": "candidates",
+    "figure-agent.visual-clash.v1": "candidates",
 }
 ALLOWED_REPAIR_FAMILIES = {
     "clipping_repair",
