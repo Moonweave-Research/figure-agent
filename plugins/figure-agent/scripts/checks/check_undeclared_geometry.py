@@ -578,7 +578,16 @@ def _flatten_cubic(
         _point_line_distance(control1, start, end),
         _point_line_distance(control2, start, end),
     )
-    if flatness <= RENDERED_CURVE_FLATNESS_PT or depth >= 14:
+    chord_length = math.dist(start, end)
+    control_polygon_length = (
+        math.dist(start, control1)
+        + math.dist(control1, control2)
+        + math.dist(control2, end)
+    )
+    if (
+        flatness <= RENDERED_CURVE_FLATNESS_PT
+        and control_polygon_length - chord_length <= RENDERED_CURVE_FLATNESS_PT
+    ) or depth >= 14:
         return [start, end]
 
     start_control = _midpoint(start, control1)
@@ -885,28 +894,16 @@ def _line_endpoints(line: dict[str, Any]) -> tuple[tuple[float, float], tuple[fl
     )
 
 
-def _curve_is_matching_arrowhead(
-    raw_curve: dict[str, Any],
-    raw_line: dict[str, Any],
-    line: dict[str, Any],
-) -> bool:
-    return _curve_is_matching_arrowhead_at_endpoints(
-        raw_curve,
-        raw_line.get("stroking_color"),
-        _line_endpoints(line),
-    )
-
-
-def _curve_is_matching_arrowhead_at_endpoints(
+def _curve_matching_arrowhead_endpoint(
     raw_curve: dict[str, Any],
     stroke_color: object,
     endpoints: tuple[tuple[float, float], tuple[float, float]],
-) -> bool:
+) -> str | None:
     if not raw_curve.get("fill"):
-        return False
+        return None
     path = raw_curve.get("path")
     if not isinstance(path, list):
-        return False
+        return None
     path_commands = [item[0] for item in path if isinstance(item, tuple) and item]
     if (
         len(path_commands) < 4
@@ -914,22 +911,41 @@ def _curve_is_matching_arrowhead_at_endpoints(
         or path_commands[-1] != "h"
         or any(command != "l" for command in path_commands[1:-1])
     ):
-        return False
+        return None
     if not _colors_close(raw_curve.get("stroking_color"), stroke_color):
-        return False
+        return None
     x0 = float(raw_curve["x0"])
     x1 = float(raw_curve["x1"])
     top = float(raw_curve["top"])
     bottom = float(raw_curve["bottom"])
     if abs(x1 - x0) > RENDERED_ARROW_HEAD_MAX_SIZE_PT:
-        return False
+        return None
     if abs(bottom - top) > RENDERED_ARROW_HEAD_MAX_SIZE_PT:
-        return False
+        return None
     head_bbox = (min(x0, x1), min(top, bottom), max(x0, x1), max(top, bottom))
-    return any(
-        _point_rect_distance(x, y, head_bbox) <= RENDERED_ARROW_HEAD_ENDPOINT_TOLERANCE_PT
-        for x, y in endpoints
-    )
+    distances = [_point_rect_distance(x, y, head_bbox) for x, y in endpoints]
+    nearest_index = min(range(len(distances)), key=distances.__getitem__)
+    if distances[nearest_index] > RENDERED_ARROW_HEAD_ENDPOINT_TOLERANCE_PT:
+        return None
+    return ("start", "end")[nearest_index]
+
+
+def _matching_arrowheads(
+    rendered_curves: list[dict[str, Any]],
+    stroke_color: object,
+    endpoints: tuple[tuple[float, float], tuple[float, float]],
+) -> list[tuple[dict[str, Any], str]]:
+    matches: list[tuple[dict[str, Any], str]] = []
+    for candidate in rendered_curves:
+        endpoint = _curve_matching_arrowhead_endpoint(candidate, stroke_color, endpoints)
+        if endpoint is not None:
+            matches.append((candidate, endpoint))
+    return matches
+
+
+def _arrowhead_endpoint_labels(matches: list[tuple[dict[str, Any], str]]) -> list[str]:
+    labels = {endpoint for _, endpoint in matches}
+    return [endpoint for endpoint in ("start", "end") if endpoint in labels]
 
 
 def _rendered_bezier_path(raw_curve: dict[str, Any]) -> dict[str, Any] | None:
@@ -1005,13 +1021,14 @@ def resolve_rendered_semantic_arrows(
         shaft = _rendered_axis_aligned_line(raw_line)
         if shaft is None:
             continue
-        arrowheads = [
-            raw_curve
-            for raw_curve in rendered_curves
-            if _curve_is_matching_arrowhead(raw_curve, raw_line, shaft)
-        ]
-        if not arrowheads:
+        arrowhead_matches = _matching_arrowheads(
+            rendered_curves,
+            raw_line.get("stroking_color"),
+            _line_endpoints(shaft),
+        )
+        if not arrowhead_matches:
             continue
+        arrowheads = [arrowhead for arrowhead, _ in arrowhead_matches]
 
         shaft_bbox = _line_bbox(shaft)
         x_values = [shaft_bbox[0], shaft_bbox[2]]
@@ -1027,6 +1044,7 @@ def resolve_rendered_semantic_arrows(
                 "orientation": ("vertical" if shaft["kind"] == "vertical_line" else "horizontal"),
                 "shaft": shaft,
                 "arrowhead_count": len(arrowheads),
+                "arrowhead_endpoints": _arrowhead_endpoint_labels(arrowhead_matches),
                 "bbox_pt": [
                     min(x_values),
                     min(y_values),
@@ -1042,17 +1060,14 @@ def resolve_rendered_semantic_arrows(
         shaft = _rendered_bezier_path(raw_curve)
         if shaft is None:
             continue
-        arrowheads = [
-            candidate
-            for candidate in rendered_curves
-            if _curve_is_matching_arrowhead_at_endpoints(
-                candidate,
-                raw_curve.get("stroking_color"),
-                _bezier_path_endpoints(shaft),
-            )
-        ]
-        if not arrowheads:
+        arrowhead_matches = _matching_arrowheads(
+            rendered_curves,
+            raw_curve.get("stroking_color"),
+            _bezier_path_endpoints(shaft),
+        )
+        if not arrowhead_matches:
             continue
+        arrowheads = [arrowhead for arrowhead, _ in arrowhead_matches]
 
         x_values = [float(raw_curve["x0"]), float(raw_curve["x1"])]
         y_values = [float(raw_curve["top"]), float(raw_curve["bottom"])]
@@ -1066,6 +1081,7 @@ def resolve_rendered_semantic_arrows(
                 "orientation": "freeform",
                 "shaft": shaft,
                 "arrowhead_count": len(arrowheads),
+                "arrowhead_endpoints": _arrowhead_endpoint_labels(arrowhead_matches),
                 "bbox_pt": [
                     min(x_values),
                     min(y_values),
@@ -1091,6 +1107,116 @@ def resolve_rendered_semantic_arrows(
     for index, arrow in enumerate(resolved, start=1):
         arrow["id"] = f"RA{index:03d}"
     return resolved
+
+
+def _semantic_path_polyline(shaft: dict[str, Any]) -> list[tuple[float, float]]:
+    if shaft["kind"] == "vertical_line":
+        return [
+            (float(shaft["x"]), float(shaft["y_range"][0])),
+            (float(shaft["x"]), float(shaft["y_range"][1])),
+        ]
+    if shaft["kind"] == "horizontal_line":
+        return [
+            (float(shaft["x_range"][0]), float(shaft["y"])),
+            (float(shaft["x_range"][1]), float(shaft["y"])),
+        ]
+
+    current = tuple(float(value) for value in shaft["start_pt"])
+    points = [current]
+    for segment in shaft["segments"]:
+        end = tuple(float(value) for value in segment["end_pt"])
+        if segment["command"] == "line_to":
+            points.append(end)
+        else:
+            control1 = tuple(float(value) for value in segment["control1_pt"])
+            control2 = tuple(float(value) for value in segment["control2_pt"])
+            points.extend(_flatten_cubic(current, control1, control2, end)[1:])
+        current = end
+    return points
+
+
+def _axis_turn_count(points: list[tuple[float, float]], axis_index: int) -> int:
+    directions: list[int] = []
+    for left, right in zip(points, points[1:]):
+        delta = right[axis_index] - left[axis_index]
+        if abs(delta) <= RENDERED_CURVE_FLATNESS_PT:
+            continue
+        direction = 1 if delta > 0.0 else -1
+        if not directions or directions[-1] != direction:
+            directions.append(direction)
+    return max(len(directions) - 1, 0)
+
+
+def measure_rendered_semantic_paths(
+    arrows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Return threshold-free geometry metrics for resolved semantic paths."""
+    measurements: list[dict[str, Any]] = []
+    for arrow in arrows:
+        points = _semantic_path_polyline(arrow["shaft"])
+        arrowhead_endpoints = list(arrow.get("arrowhead_endpoints", []))
+        endpoint_set = set(arrowhead_endpoints)
+        if endpoint_set == {"start"}:
+            points.reverse()
+        is_bidirectional = endpoint_set == {"start", "end"}
+        start = points[0]
+        end = points[-1]
+        displacement = (end[0] - start[0], end[1] - start[1])
+        net_length = math.hypot(*displacement)
+        arc_length = sum(
+            math.hypot(right[0] - left[0], right[1] - left[1])
+            for left, right in zip(points, points[1:])
+        )
+        has_net_progress = net_length > RENDERED_CURVE_FLATNESS_PT
+        dominant_index = 0 if abs(displacement[0]) >= abs(displacement[1]) else 1
+        dominant_displacement = displacement[dominant_index]
+        dominant_sign = 1.0 if dominant_displacement >= 0.0 else -1.0
+        dominant_steps = [
+            right[dominant_index] - left[dominant_index]
+            for left, right in zip(points, points[1:])
+        ]
+        dominant_travel = sum(abs(step) for step in dominant_steps)
+        backtracking = sum(max(-dominant_sign * step, 0.0) for step in dominant_steps)
+        measurements.append(
+            {
+                "path_id": str(arrow["id"]),
+                "path_kind": str(arrow["kind"]),
+                "arrowhead_endpoints": arrowhead_endpoints,
+                "net_displacement_pt": [
+                    round(displacement[0], 6),
+                    round(displacement[1], 6),
+                ],
+                "arc_length_pt": round(arc_length, 6),
+                "has_net_progress": has_net_progress,
+                "tortuosity_ratio": (
+                    round(arc_length / net_length, 6) if has_net_progress else None
+                ),
+                "dominant_axis": ("x", "y")[dominant_index]
+                if has_net_progress
+                else None,
+                "dominant_direction": (
+                    "bidirectional"
+                    if is_bidirectional
+                    else ("positive" if dominant_sign > 0.0 else "negative")
+                )
+                if has_net_progress
+                else None,
+                "backtracking_ratio": (
+                    round(
+                        backtracking / dominant_travel if dominant_travel else 0.0,
+                        6,
+                    )
+                    if has_net_progress and not is_bidirectional
+                    else None
+                ),
+                "orthogonal_turn_count": (
+                    _axis_turn_count(points, 1 - dominant_index)
+                    if has_net_progress
+                    else None
+                ),
+            }
+        )
+    return measurements
 
 
 def detect_rendered_semantic_path_crossings(
@@ -1145,6 +1271,17 @@ def _rendered_curves_from_pdf(pdf_path: Path) -> list[dict[str, Any]]:
         if not pdf.pages:
             return []
         return list(pdf.pages[0].curves)
+
+
+def _rendered_semantic_path_metrics_from_pdf(
+    pdf_path: Path,
+) -> list[dict[str, Any]]:
+    with pdfplumber.open(pdf_path) as pdf:
+        if not pdf.pages:
+            return []
+        page = pdf.pages[0]
+        arrows = resolve_rendered_semantic_arrows(page.lines, page.curves)
+        return measure_rendered_semantic_paths(arrows)
 
 
 def detect_undeclared_geometry(
@@ -1301,6 +1438,7 @@ def undeclared_geometry_payload(
     tex_path: Path | None = None,
     tex_text: str | None = None,
     rendered_curves: list[dict[str, Any]] | None = None,
+    rendered_semantic_path_metrics: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
@@ -1321,6 +1459,8 @@ def undeclared_geometry_payload(
         if rendered_curves is not None:
             coverage["rendered_curves"] = rendered_curve_coverage(rendered_curves)
         payload["geometry_parse_coverage"] = coverage
+    if rendered_semantic_path_metrics is not None:
+        payload["rendered_semantic_paths"] = rendered_semantic_path_metrics
     return payload
 
 
@@ -1401,6 +1541,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         candidates.extend(_rendered_boundary_crossings_from_pdf(pdf_path, words))
         rendered_curves = _rendered_curves_from_pdf(pdf_path)
+        rendered_semantic_path_metrics = _rendered_semantic_path_metrics_from_pdf(pdf_path)
         candidates.sort(
             key=lambda item: (
                 item["source_line"],
@@ -1423,6 +1564,7 @@ def main(argv: list[str] | None = None) -> int:
             tex_path=tex_path,
             tex_text=tex_text,
             rendered_curves=rendered_curves,
+            rendered_semantic_path_metrics=rendered_semantic_path_metrics,
         )
         if profile == "schematic":
             payload["profile"] = "schematic"

@@ -342,7 +342,13 @@ axis-aligned arrows and mixed line/cubic carrier trajectories from current PDF
 geometry, rejects tiny decorative paths and headless band curves, and uses
 adaptive curve flattening for glyph-box crossing checks. This closes a repeated
 LLM blind spot without judging whether the surviving trajectory is aesthetically
-natural or publication-ready. Detector-only applied-`V` candidates remain
+natural or publication-ready. The same report now preserves threshold-free path
+metrics before any grammar gate is declared: endpoint ownership, net progress,
+arc length, tortuosity, dominant-axis backtracking, and orthogonal turn count.
+On verified-derived v64 the carrier path has a terminal-end arrowhead, net
+progress, tortuosity `1.838436`, zero dominant-axis backtracking, and two
+orthogonal turns. These values are an observed baseline, not acceptance
+thresholds. Detector-only applied-`V` candidates remain
 review-only until wiring intent is adjudicated. Keep band-energy shape changes
 blocked until their physical and mathematical authority is reviewed. The next
 gate is a named human scaffold verdict; machine non-regression is not publication
