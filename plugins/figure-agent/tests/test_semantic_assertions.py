@@ -310,6 +310,8 @@ def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar()
     )
     assert "object=qualitative_current_decay panel=B kind=qualitative_relation" in source
     assert "object=s60_discrete_states panel=C kind=energy_landscape" in source
+    assert "($(trap_deep)+(-0.78,-0.32)$)" in source
+    assert "at (retained_label_anchor) {retained}" in source
     assert "$\\rho_{60" not in source
     assert {
         (assertion["id"], assertion["relation"], assertion["subject"], assertion["reference"])
@@ -318,6 +320,28 @@ def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar()
         ("fig3-mechanism-before-response", "left_of", "retained", "qualitative"),
         ("fig3-response-before-landscape", "left_of", "qualitative", "S60"),
     }
+
+
+def test_fig3_qualitative_current_trace_is_a_shallowing_power_law_not_a_terminal_drop() -> None:
+    plugin_root = Path(__file__).resolve().parents[1]
+    source = (
+        plugin_root
+        / "examples"
+        / "fig3_resistance_mechanism"
+        / "fig3_resistance_mechanism.tex"
+    ).read_text(encoding="utf-8")
+
+    assert "(1+2.8*(\\x-5.98)/2.82)^(-0.85)" in source
+    assert "((8.80-\\x)/2.82)^0.52" not in source
+    assert "dashed, line width=0.35pt] (5.98,1.62) -- (8.80,1.62)" not in source
+
+    def current_at(normalized_time: float) -> float:
+        return 1.18 + 2.05 * (1 + 2.8 * normalized_time) ** -0.85
+
+    values = [current_at(time) for time in (0.0, 0.25, 0.5, 0.75, 1.0)]
+    drops = [values[index] - values[index + 1] for index in range(len(values) - 1)]
+    assert all(later < earlier for earlier, later in zip(values, values[1:]))
+    assert all(later < earlier for earlier, later in zip(drops, drops[1:]))
 
 
 def test_load_spec_missing_returns_empty(tmp_path: Path) -> None:

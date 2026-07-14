@@ -104,6 +104,9 @@ SCOPE_EXTENSION_V15 = REVIEW / "scope_extension_v15.yaml"
 SCOPE_EXTENSION_V16 = REVIEW / "scope_extension_v16.yaml"
 SCOPE_EXTENSION_V17 = REVIEW / "scope_extension_v17.yaml"
 SCOPE_EXTENSION_V18 = REVIEW / "scope_extension_v18.yaml"
+SCOPE_EXTENSION_V19 = REVIEW / "scope_extension_v19.yaml"
+SCOPE_EXTENSION_V20 = REVIEW / "scope_extension_v20.yaml"
+SCOPE_EXTENSION_V21 = REVIEW / "scope_extension_v21.yaml"
 AUTHORITY_MANIFEST_V2 = REVIEW / "authority_manifest_v2.yaml"
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
@@ -2402,6 +2405,9 @@ def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None
         yaml.safe_load(SCOPE_EXTENSION_V16.read_text(encoding="utf-8")),
         yaml.safe_load(SCOPE_EXTENSION_V17.read_text(encoding="utf-8")),
         yaml.safe_load(SCOPE_EXTENSION_V18.read_text(encoding="utf-8")),
+        yaml.safe_load(SCOPE_EXTENSION_V19.read_text(encoding="utf-8")),
+        yaml.safe_load(SCOPE_EXTENSION_V20.read_text(encoding="utf-8")),
+        yaml.safe_load(SCOPE_EXTENSION_V21.read_text(encoding="utf-8")),
     ]
     extension = extensions[-1]
     repo_root = PLUGIN_ROOT.parents[1]

@@ -17,7 +17,7 @@ authoritative_inputs:
     sha256: sha256:9416740bbfd9ef40c3d02c3123850c127d19ea22fc57f08db0bd73e78a7737af
   - role: editable_source
     path: fig3_resistance_mechanism.tex
-    sha256: sha256:e5f39c9eb812cedfc1beeb606f477104a4390621c709375a290c823bcc6beed7
+    sha256: sha256:0537404b47c2b7ce5386a0ec9a55c7481fe59cfd35c803746210317e8637dc43
 semantic_boundary:
   fitted_n: Curie-von Schweidler exponent
   distribution_breadth: schematic mechanism cue

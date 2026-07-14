@@ -1,0 +1,13 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v18.yaml
+extends_sha256: sha256:6dd336fdfc37d366d54a4431987da519147f7e221734cecc6e79cb71a6d21ea0
+reason: correct the qualitative CvS trace so its shape does not imply a terminal transition or finite-current plateau
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v19.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+  - plugins/figure-agent/tests/test_semantic_assertions.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed
