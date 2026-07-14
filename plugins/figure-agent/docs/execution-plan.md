@@ -27,17 +27,14 @@ are release blockers, not publication findings:
 This update closes item 2; Q0 owns the remaining clean-checkout failures and
 the destructive-test boundary found during review.
 
-Focused safe QA additionally found that the current Fig3 normal render is fresh
-but strict is red: `visual_clash` reports 10 candidates and two layout-lane
-rules cannot find the phrases declared by the contract. Geometry coverage is
-also incomplete: 9 of 20 operations are fully parsed, while five transfer
-curves and two band plots remain unknown; `vector_clearance.checked` and
-`rendered_semantic_paths` are both zero. A zero-finding report on an uncovered
-surface is not a quality pass.
+Q0–Q3 are complete on the active Fig3 source. The strict compile is green and
+its status keeps render freshness separate from detector evidence. The geometry
+report attributes 16/20 operations (five transfer paths, two analytic plots),
+resolves five rendered curved arrows, and records non-zero layout clearances.
 
-Do not begin Slice 3 or another visual-polish loop from this state. Execute the
-ordered blocker queue in Slice 2, keep every historical source read-only, and
-regenerate evidence only in isolated temporary directories.
+This is a bounded machine result, not publication acceptance: four operations
+remain outside typed parsing; critique/export and a human scaffold verdict are
+still missing. Q4 is next; keep historical sources read-only.
 
 ## 0. Authority and execution rules
 
@@ -308,30 +305,32 @@ modules listed in Section 0.
 
 **Current next executable step:** complete Q0 before changing the figure.
 
-- [ ] **Q0 — Make QA non-destructive and clean-checkout complete.** Copy every
+- [x] **Q0 — Make QA non-destructive and clean-checkout complete.** Copy every
   historical TeX input and its required local dependencies to `tmp_path` before
   compilation; never write beside a historical source. Mark every TeX/render
   test `render`, prove `pytest -m 'not render'` invokes no TeX tool, and make the
   three remaining detached-worktree failures pass without relying on ignored
   build files.
-- [ ] **Q1 — Close semantic source-gate bypasses.** Match exact comma-delimited
+- [x] **Q1 — Close semantic source-gate bypasses.** Match exact comma-delimited
   TikZ option keys so `xfer-helper` cannot satisfy `xfer`; resolve arrowheads
   declared through named TikZ styles; make missing or bidirectional heads fail a
   unidirectional assertion; validate tex-assertion evidence schema, source hash,
   and checked counts; compare scope against the declared merge base as well as
   the pending worktree surface.
-- [ ] **Q2 — Make status and strict orchestration truthful.** Run every detector
+- [x] **Q2 — Make status and strict orchestration truthful.** Run every detector
   through deferred strict aggregation, including vector clearance. Surface
   strict outcome, critique/export freshness, and geometry coverage separately;
   `FRESH` must mean freshness only. Reconcile `layout_lanes.yaml` with current
   rendered labels without weakening the intended breadth/energy/magnitude
   relations.
-- [ ] **Q3 — Cover the geometry users actually reject.** Parse and attribute the
+- [x] **Q3 — Cover the geometry users actually reject.** Parse and attribute the
   five curved transfer paths and two band plots, then require explicit coverage
   floors before zero findings may be called clean. Establish rendered semantic
   paths and non-zero vector-clearance checks. Do not invent aesthetic or
   physical thresholds from v64 alone; band-energy shape authority remains a
-  human/scientific decision.
+  human/scientific decision. Evidence: 16/20 source operations (including five
+  `to_curve` paths and two `analytic_plot` records) map to five rendered arrows;
+  this bounds detector coverage only, not physical band-energy shape.
 - [ ] **Q4 — Refresh evidence and close human review.** Regenerate critique,
   audit crops, compile/export receipts, and review hashes in a clean environment.
   Record prospective correction minutes and obtain a named scaffold verdict.
@@ -354,7 +353,7 @@ set +e
 FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
 strict_exit=$?
 set -e
-test "$strict_exit" -ne 0
+test "$strict_exit" -eq 0
 uv run ruff check tests/test_fig3_resistance_failure_first.py
 git diff --check
 ```

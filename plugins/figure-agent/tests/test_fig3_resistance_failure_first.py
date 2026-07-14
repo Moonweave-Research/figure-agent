@@ -96,6 +96,7 @@ COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
 SCOPE_EXTENSION_V7 = REVIEW / "scope_extension_v7.yaml"
 SCOPE_EXTENSION_V8 = REVIEW / "scope_extension_v8.yaml"
 SCOPE_EXTENSION_V10 = REVIEW / "scope_extension_v10.yaml"
+SCOPE_EXTENSION_V11 = REVIEW / "scope_extension_v11.yaml"
 AUTHORITY_MANIFEST_V2 = REVIEW / "authority_manifest_v2.yaml"
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
@@ -2379,21 +2380,29 @@ def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
     scope = yaml.safe_load((REVIEW / "scope_protection.yaml").read_text(encoding="utf-8"))
-    extension = yaml.safe_load(SCOPE_EXTENSION_V10.read_text(encoding="utf-8"))
+    extensions = [
+        yaml.safe_load(SCOPE_EXTENSION_V10.read_text(encoding="utf-8")),
+        yaml.safe_load(SCOPE_EXTENSION_V11.read_text(encoding="utf-8")),
+    ]
+    extension = extensions[-1]
     repo_root = PLUGIN_ROOT.parents[1]
     fixture_prefix = "plugins/figure-agent/examples/fig3_resistance_mechanism/"
     allowed_paths = {
         *(fixture_prefix + path for path in scope["allowed_review_paths"]),
-        *(fixture_prefix + path for path in extension["allowed_review_paths"]),
         *scope["allowed_repository_paths"],
-        *extension["allowed_repository_paths"],
     }
-    pending_paths = _git_pending_paths(repo_root)
-    branch_delta_paths = _git_branch_delta_paths(repo_root, extension["scope_base_ref"])
-    for prefix in extension["allowed_review_prefixes"]:
+    for scope_extension in extensions:
         allowed_paths.update(
-            path for path in pending_paths if path.startswith(fixture_prefix + prefix)
+            fixture_prefix + path for path in scope_extension["allowed_review_paths"]
         )
+        allowed_paths.update(scope_extension["allowed_repository_paths"])
+    pending_paths = _git_pending_paths(repo_root)
+    branch_delta_paths = _git_branch_delta_paths(repo_root, extensions[0]["scope_base_ref"])
+    for scope_extension in extensions:
+        for prefix in scope_extension["allowed_review_prefixes"]:
+            allowed_paths.update(
+                path for path in pending_paths if path.startswith(fixture_prefix + prefix)
+            )
 
     assert _scope_violations({fixture_prefix + "README.md"}, allowed_paths) == {
         fixture_prefix + "README.md"

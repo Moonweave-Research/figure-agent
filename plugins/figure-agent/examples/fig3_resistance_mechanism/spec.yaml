@@ -2,6 +2,16 @@ name: fig3_resistance_mechanism
 title: "Fig 3 — Trapping-during-conduction mechanism: transient I(t) power-law (CvS) and composition-tunable trap-energy breadth (schematic)"
 style_profile: polymer-paper
 undeclared_geometry_profile: schematic
+# A zero-detector-finding result is only a bounded geometry claim. For this
+# fixture it additionally requires attribution of all five transfer paths and
+# both analytic band plots, plus rendered evidence for the five curved arrows.
+# It does not validate that the plotted energy-band shape is physically correct.
+geometry_coverage_policy:
+  minimum_parsed_ratio: 0.8
+  required_source_geometry:
+    to_curve: 5
+    analytic_plot: 2
+  minimum_rendered_curved_semantic_paths: 5
 visual_clash_cap: 10
 tex_assertions:
   - id: carrier-walk-repeated-capture

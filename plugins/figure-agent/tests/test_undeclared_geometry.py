@@ -18,6 +18,7 @@ from check_undeclared_geometry import (  # noqa: E402
     detect_rendered_boundary_crossings,
     detect_rendered_semantic_path_crossings,
     detect_undeclared_geometry,
+    geometry_coverage_gate,
     geometry_parse_coverage,
     main,
     measure_rendered_semantic_paths,
@@ -159,6 +160,34 @@ def test_bezier_controls_parse_as_conservative_curve_hull() -> None:
     ]
 
 
+def test_tikz_to_curve_is_attributed_but_requires_rendered_path_evidence() -> None:
+    tex = r"\draw[xfer] (1.48,3.18) to[out=-105,in=82] (1.55,2.52);"
+
+    geometry = _parse_tikz_geometry(tex)
+
+    assert [item["kind"] for item in geometry] == ["to_curve"]
+    assert geometry[0]["start_pt"] == [41.952756, 90.141732]
+    assert geometry[0]["end_pt"] == [43.937008, 71.433071]
+    assert geometry[0]["tikz_to_options"] == "out=-105,in=82"
+    assert geometry[0]["clearance_mode"] == "rendered_path_required"
+    assert geometry[0]["semantic_role"] == "transfer_path"
+
+
+def test_analytic_plot_is_attributed_without_claiming_its_scientific_shape() -> None:
+    tex = (
+        r"\draw[cBlue] plot[smooth, domain=2.2:4.0, samples=60] "
+        r"(\x, {2.55*exp(-((\x-3.1)^2)/0.05)});"
+    )
+
+    geometry = _parse_tikz_geometry(tex)
+
+    assert [item["kind"] for item in geometry] == ["analytic_plot"]
+    assert geometry[0]["domain_cm"] == [2.2, 4.0]
+    assert geometry[0]["samples"] == 60
+    assert geometry[0]["clearance_mode"] == "rendered_curve_required"
+    assert geometry[0]["scientific_shape_status"] == "human_review_required"
+
+
 def test_parse_coverage_reports_unknown_nonliteral_circle() -> None:
     tex = "\n".join(
         [
@@ -181,7 +210,7 @@ def test_parse_coverage_reports_unknown_nonliteral_circle() -> None:
 def test_parse_coverage_reports_specific_unknown_reasons() -> None:
     tex = "\n".join(
         [
-            r"\draw plot[smooth] coordinates {(0,0)(1,1)};",
+            r"\draw plot[smooth, domain=0:1, samples=2] (\x, {\x});",
             r"\fill[white] (7.78, 7.52) ellipse (1.8mm and 0.4mm);",
             r"\draw[xfer] (1.48,3.18) to[out=-105,in=82] (1.55,2.52);",
         ]
@@ -189,11 +218,12 @@ def test_parse_coverage_reports_specific_unknown_reasons() -> None:
 
     coverage = geometry_parse_coverage(tex)
 
-    assert coverage["unknown_operations"] == 3
-    assert coverage["unknown_reasons"] == {
-        "unsupported_ellipse": 1,
-        "unsupported_plot": 1,
-        "unsupported_to_curve": 1,
+    assert coverage["parsed_operations"] == 2
+    assert coverage["unknown_operations"] == 1
+    assert coverage["unknown_reasons"] == {"unsupported_ellipse": 1}
+    assert coverage["parsed_geometry_counts"] == {
+        "analytic_plot": 1,
+        "to_curve": 1,
     }
 
 
@@ -221,6 +251,8 @@ def test_payload_includes_geometry_parse_coverage() -> None:
     assert payload["geometry_parse_coverage"]["non_auto_promotable_geometry"] == [
         "circle_envelope",
         "curve_conservative_hull",
+        "to_curve_rendered_path_required",
+        "analytic_plot_human_review_required",
     ]
 
 
@@ -241,6 +273,38 @@ def test_payload_persists_rendered_curve_coverage() -> None:
     assert (
         payload["geometry_parse_coverage"]["rendered_curves"]["rendered_curve_count"] == 1
     )
+
+
+def test_geometry_coverage_gate_blocks_zero_finding_clean_claim_until_all_floors_pass() -> None:
+    coverage = {
+        "coverage_ratio": 0.8,
+        "parsed_geometry_counts": {"analytic_plot": 2, "to_curve": 5},
+    }
+    spec = {
+        "geometry_coverage_policy": {
+            "minimum_parsed_ratio": 0.8,
+            "required_source_geometry": {"analytic_plot": 2, "to_curve": 5},
+            "minimum_rendered_curved_semantic_paths": 5,
+        }
+    }
+
+    blocked = geometry_coverage_gate(
+        coverage,
+        [{"path_kind": "curved_arrow"}] * 4,
+        spec,
+    )
+    allowed = geometry_coverage_gate(
+        coverage,
+        [{"path_kind": "curved_arrow"}] * 5,
+        spec,
+    )
+
+    assert blocked["state"] == "failed"
+    assert blocked["clean_claim_allowed"] is False
+    assert blocked["failures"] == ["minimum_rendered_curved_semantic_paths"]
+    assert allowed["state"] == "passed"
+    assert allowed["clean_claim_allowed"] is True
+    assert allowed["scientific_shape_authority"] == "human_review_required"
 
 
 def test_payload_persists_rendered_semantic_path_metrics(tmp_path: Path) -> None:
@@ -838,6 +902,50 @@ def test_resolve_rendered_semantic_arrow_accepts_mixed_line_and_cubic_path() -> 
             "end_pt": [40.0, 20.0],
         },
     ]
+
+
+def test_resolve_rendered_semantic_arrow_accepts_neutral_curve_only_when_source_opted_in() -> None:
+    rendered_curves = [
+        {
+            "x0": 10.0,
+            "x1": 40.0,
+            "top": 10.0,
+            "bottom": 30.0,
+            "linewidth": 0.8,
+            "stroking_color": (0.2, 0.2, 0.2),
+            "fill": False,
+            "path": [
+                ("m", (10.0, 30.0)),
+                ("c", (20.0, 10.0), (35.0, 10.0), (40.0, 20.0)),
+            ],
+        },
+        {
+            "x0": 38.0,
+            "x1": 42.0,
+            "top": 18.0,
+            "bottom": 22.0,
+            "linewidth": 0.8,
+            "stroking_color": (0.2, 0.2, 0.2),
+            "fill": True,
+            "path": [
+                ("m", (42.0, 20.0)),
+                ("l", (38.0, 18.0)),
+                ("l", (39.0, 20.0)),
+                ("l", (38.0, 22.0)),
+                ("h",),
+            ],
+        },
+    ]
+
+    assert resolve_rendered_semantic_arrows([], rendered_curves) == []
+    arrows = resolve_rendered_semantic_arrows(
+        [],
+        rendered_curves,
+        allow_neutral_curved=True,
+    )
+
+    assert len(arrows) == 1
+    assert arrows[0]["kind"] == "curved_arrow"
 
 
 def test_measure_rendered_semantic_path_reports_direction_and_tortuosity() -> None:

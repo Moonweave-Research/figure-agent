@@ -41,6 +41,23 @@ _BEZIER_RE = re.compile(
     rf"{_POINT_RE}\s*\.\.\s*controls\s*{_POINT_RE}\s*and\s*{_POINT_RE}\s*\.\.\s*{_POINT_RE}",
     re.DOTALL,
 )
+_TO_CURVE_RE = re.compile(
+    r"\(\s*(?P<start_x>-?\d+(?:\.\d+)?)\s*,\s*"
+    r"(?P<start_y>-?\d+(?:\.\d+)?)\s*\)\s*"
+    r"to\s*\[(?P<to_options>[^\]]+)\]\s*"
+    r"\(\s*(?P<end_x>-?\d+(?:\.\d+)?)\s*,\s*"
+    r"(?P<end_y>-?\d+(?:\.\d+)?)\s*\)"
+)
+_ANALYTIC_PLOT_RE = re.compile(
+    r"\bplot\s*\[(?P<plot_options>[^\]]*)\]\s*"
+    r"\(\s*\\x\s*,\s*\{(?P<expression>.*?)\}\s*\)",
+    re.DOTALL,
+)
+_PLOT_DOMAIN_RE = re.compile(
+    r"(?:^|,)\s*domain\s*=\s*"
+    r"(?P<start>-?\d+(?:\.\d+)?)\s*:\s*(?P<end>-?\d+(?:\.\d+)?)\s*(?:,|$)"
+)
+_PLOT_SAMPLES_RE = re.compile(r"(?:^|,)\s*samples\s*=\s*(?P<samples>\d+)\s*(?:,|$)")
 _OPERATION_RE = re.compile(
     r"\\(?P<command>draw|fill|shade)(?:\[(?P<options>[^\]]*)\])?(?P<body>.*?);",
     re.DOTALL,
@@ -260,6 +277,51 @@ def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]
                 "clearance_mode": "conservative_hull",
             }
         )
+    for match in _TO_CURVE_RE.finditer(text):
+        start_pt = _point_cm_to_pt(
+            float(match.group("start_x")) + shift_x,
+            float(match.group("start_y")) + shift_y,
+        )
+        end_pt = _point_cm_to_pt(
+            float(match.group("end_x")) + shift_x,
+            float(match.group("end_y")) + shift_y,
+        )
+        geometry.append(
+            {
+                "kind": "to_curve",
+                "start_pt": start_pt,
+                "end_pt": end_pt,
+                "bbox_pt": _bbox_from_points_pt([start_pt, end_pt]),
+                "tikz_to_options": match.group("to_options").strip(),
+                "source_line": source_line,
+                "command": command,
+                "options": options,
+                "clearance_mode": "rendered_path_required",
+                "semantic_role": "transfer_path" if "xfer" in options else "curve",
+            }
+        )
+    for match in _ANALYTIC_PLOT_RE.finditer(text):
+        plot_options = match.group("plot_options")
+        domain_match = _PLOT_DOMAIN_RE.search(plot_options)
+        samples_match = _PLOT_SAMPLES_RE.search(plot_options)
+        if domain_match is None or samples_match is None:
+            continue
+        geometry.append(
+            {
+                "kind": "analytic_plot",
+                "domain_cm": [
+                    float(domain_match.group("start")),
+                    float(domain_match.group("end")),
+                ],
+                "samples": int(samples_match.group("samples")),
+                "source_expression": match.group("expression").strip(),
+                "source_line": source_line,
+                "command": command,
+                "options": options,
+                "clearance_mode": "rendered_curve_required",
+                "scientific_shape_status": "human_review_required",
+            }
+        )
     return geometry
 
 
@@ -290,11 +352,17 @@ def _operation_unknown_reasons(
         reasons.append("unsupported_ellipse")
     if re.search(r"\barc\b", text):
         reasons.append("unsupported_arc")
-    if re.search(r"\bplot\b", text):
+    plot_count = len(re.findall(r"\bplot\b", text))
+    if plot_count > parsed_kind_counts.get("analytic_plot", 0):
         reasons.append("unsupported_plot")
-    if re.search(r"\bto\s*\[", text):
+    to_curve_count = len(re.findall(r"\bto\s*\[", text))
+    if to_curve_count > parsed_kind_counts.get("to_curve", 0):
         reasons.append("unsupported_to_curve")
-    if not reasons and re.search(r"\([^)]*(?:\\|\{)[^)]*\)", text):
+    # The analytic plot parser deliberately owns its `\\x` coordinate and
+    # expression braces; do not reclassify that already-attributed syntax as a
+    # generic nonliteral coordinate. Other macro coordinates remain unknown.
+    unparsed_text = _ANALYTIC_PLOT_RE.sub("", text)
+    if not reasons and re.search(r"\([^)]*(?:\\|\{)[^)]*\)", unparsed_text):
         reasons.append("nonliteral_coordinate")
     if not parsed and not reasons:
         reasons.append("unsupported_geometry")
@@ -349,7 +417,100 @@ def geometry_parse_coverage(tex_text: str) -> dict[str, Any]:
         "non_auto_promotable_geometry": [
             "circle_envelope",
             "curve_conservative_hull",
+            "to_curve_rendered_path_required",
+            "analytic_plot_human_review_required",
         ],
+    }
+
+
+def _geometry_coverage_policy(spec: dict[str, Any]) -> dict[str, Any] | None:
+    raw_policy = spec.get("geometry_coverage_policy")
+    if raw_policy is None:
+        return None
+    if not isinstance(raw_policy, dict):
+        raise UndeclaredGeometryError("geometry_coverage_policy must be a mapping")
+
+    minimum_ratio = raw_policy.get("minimum_parsed_ratio")
+    if not isinstance(minimum_ratio, int | float) or not 0.0 <= float(minimum_ratio) <= 1.0:
+        raise UndeclaredGeometryError(
+            "geometry_coverage_policy.minimum_parsed_ratio must be between 0 and 1"
+        )
+    required_kinds = raw_policy.get("required_source_geometry")
+    if not isinstance(required_kinds, dict) or not required_kinds:
+        raise UndeclaredGeometryError(
+            "geometry_coverage_policy.required_source_geometry must be a non-empty mapping"
+        )
+    normalized_kinds: dict[str, int] = {}
+    for kind, count in required_kinds.items():
+        if not isinstance(kind, str) or not kind:
+            raise UndeclaredGeometryError(
+                "geometry coverage source kind must be a non-empty string"
+            )
+        if not isinstance(count, int) or count < 1:
+            raise UndeclaredGeometryError(
+                "geometry coverage source counts must be positive integers"
+            )
+        normalized_kinds[kind] = count
+    minimum_curved_paths = raw_policy.get("minimum_rendered_curved_semantic_paths")
+    if not isinstance(minimum_curved_paths, int) or minimum_curved_paths < 0:
+        raise UndeclaredGeometryError(
+            "geometry_coverage_policy.minimum_rendered_curved_semantic_paths must be an integer"
+        )
+    return {
+        "minimum_parsed_ratio": float(minimum_ratio),
+        "required_source_geometry": dict(sorted(normalized_kinds.items())),
+        "minimum_rendered_curved_semantic_paths": minimum_curved_paths,
+    }
+
+
+def geometry_coverage_gate(
+    coverage: dict[str, Any],
+    rendered_semantic_paths: list[dict[str, Any]],
+    spec: dict[str, Any],
+) -> dict[str, Any]:
+    """Evaluate declared evidence floors before a zero-finding clean claim.
+
+    The gate checks traceability and rendered path presence only. It never treats
+    a parsed analytic plot as proof that a physical energy distribution is valid.
+    """
+    policy = _geometry_coverage_policy(spec)
+    if policy is None:
+        return {
+            "configured": False,
+            "state": "not_configured",
+            "clean_claim_allowed": None,
+            "failures": [],
+        }
+
+    failures: list[str] = []
+    coverage_ratio = coverage.get("coverage_ratio")
+    if (
+        not isinstance(coverage_ratio, int | float)
+        or coverage_ratio < policy["minimum_parsed_ratio"]
+    ):
+        failures.append("minimum_parsed_ratio")
+    parsed_counts = coverage.get("parsed_geometry_counts")
+    parsed_counts = parsed_counts if isinstance(parsed_counts, dict) else {}
+    for kind, minimum in policy["required_source_geometry"].items():
+        if parsed_counts.get(kind, 0) < minimum:
+            failures.append(f"required_source_geometry:{kind}")
+    rendered_curved_count = sum(
+        1 for path in rendered_semantic_paths if path.get("path_kind") == "curved_arrow"
+    )
+    if rendered_curved_count < policy["minimum_rendered_curved_semantic_paths"]:
+        failures.append("minimum_rendered_curved_semantic_paths")
+    return {
+        "configured": True,
+        "state": "passed" if not failures else "failed",
+        "clean_claim_allowed": not failures,
+        "failures": failures,
+        "policy": policy,
+        "observed": {
+            "coverage_ratio": coverage_ratio,
+            "parsed_geometry_counts": dict(sorted(parsed_counts.items())),
+            "rendered_curved_semantic_paths": rendered_curved_count,
+        },
+        "scientific_shape_authority": "human_review_required",
     }
 
 
@@ -948,8 +1109,14 @@ def _arrowhead_endpoint_labels(matches: list[tuple[dict[str, Any], str]]) -> lis
     return [endpoint for endpoint in ("start", "end") if endpoint in labels]
 
 
-def _rendered_bezier_path(raw_curve: dict[str, Any]) -> dict[str, Any] | None:
-    if raw_curve.get("fill") or not _is_chromatic_stroke(raw_curve.get("stroking_color")):
+def _rendered_bezier_path(
+    raw_curve: dict[str, Any],
+    *,
+    allow_neutral: bool = False,
+) -> dict[str, Any] | None:
+    if raw_curve.get("fill") or (
+        not allow_neutral and not _is_chromatic_stroke(raw_curve.get("stroking_color"))
+    ):
         return None
     if max(
         abs(float(raw_curve["x1"]) - float(raw_curve["x0"])),
@@ -1012,6 +1179,8 @@ def _bezier_path_endpoints(
 def resolve_rendered_semantic_arrows(
     rendered_lines: list[dict[str, Any]],
     rendered_curves: list[dict[str, Any]],
+    *,
+    allow_neutral_curved: bool = False,
 ) -> list[dict[str, Any]]:
     """Reconstruct axis-aligned and curved semantic arrows from rendered PDF geometry."""
     resolved: list[dict[str, Any]] = []
@@ -1057,7 +1226,7 @@ def resolve_rendered_semantic_arrows(
         )
 
     for raw_curve in rendered_curves:
-        shaft = _rendered_bezier_path(raw_curve)
+        shaft = _rendered_bezier_path(raw_curve, allow_neutral=allow_neutral_curved)
         if shaft is None:
             continue
         arrowhead_matches = _matching_arrowheads(
@@ -1275,12 +1444,18 @@ def _rendered_curves_from_pdf(pdf_path: Path) -> list[dict[str, Any]]:
 
 def _rendered_semantic_path_metrics_from_pdf(
     pdf_path: Path,
+    *,
+    allow_neutral_curved: bool = False,
 ) -> list[dict[str, Any]]:
     with pdfplumber.open(pdf_path) as pdf:
         if not pdf.pages:
             return []
         page = pdf.pages[0]
-        arrows = resolve_rendered_semantic_arrows(page.lines, page.curves)
+        arrows = resolve_rendered_semantic_arrows(
+            page.lines,
+            page.curves,
+            allow_neutral_curved=allow_neutral_curved,
+        )
         return measure_rendered_semantic_paths(arrows)
 
 
@@ -1439,6 +1614,7 @@ def undeclared_geometry_payload(
     tex_text: str | None = None,
     rendered_curves: list[dict[str, Any]] | None = None,
     rendered_semantic_path_metrics: list[dict[str, Any]] | None = None,
+    spec: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
@@ -1461,6 +1637,12 @@ def undeclared_geometry_payload(
         payload["geometry_parse_coverage"] = coverage
     if rendered_semantic_path_metrics is not None:
         payload["rendered_semantic_paths"] = rendered_semantic_path_metrics
+    if tex_text is not None:
+        payload["geometry_coverage_gate"] = geometry_coverage_gate(
+            payload["geometry_parse_coverage"],
+            rendered_semantic_path_metrics or [],
+            spec or {},
+        )
     return payload
 
 
@@ -1541,7 +1723,15 @@ def main(argv: list[str] | None = None) -> int:
         )
         candidates.extend(_rendered_boundary_crossings_from_pdf(pdf_path, words))
         rendered_curves = _rendered_curves_from_pdf(pdf_path)
-        rendered_semantic_path_metrics = _rendered_semantic_path_metrics_from_pdf(pdf_path)
+        source_geometry = _parse_tikz_geometry(tex_text)
+        rendered_semantic_path_metrics = _rendered_semantic_path_metrics_from_pdf(
+            pdf_path,
+            allow_neutral_curved=any(
+                geometry["kind"] == "to_curve"
+                and geometry.get("semantic_role") == "transfer_path"
+                for geometry in source_geometry
+            ),
+        )
         candidates.sort(
             key=lambda item: (
                 item["source_line"],
@@ -1565,6 +1755,7 @@ def main(argv: list[str] | None = None) -> int:
             tex_text=tex_text,
             rendered_curves=rendered_curves,
             rendered_semantic_path_metrics=rendered_semantic_path_metrics,
+            spec=spec,
         )
         if profile == "schematic":
             payload["profile"] = "schematic"
@@ -1588,7 +1779,19 @@ def main(argv: list[str] | None = None) -> int:
         )
     if actionable:
         print(f"{len(actionable)} undeclared geometry candidate(s)", file=sys.stderr)
-    if args.strict and actionable:
+    coverage_gate = payload.get("geometry_coverage_gate", {})
+    coverage_gate_failed = (
+        not actionable
+        and coverage_gate.get("configured") is True
+        and coverage_gate.get("state") == "failed"
+    )
+    if coverage_gate_failed:
+        print(
+            "WARN geometry coverage gate: zero findings cannot be called clean "
+            f"({', '.join(coverage_gate.get('failures', []))})",
+            file=sys.stderr,
+        )
+    if args.strict and (actionable or coverage_gate_failed):
         return 1
     return 0
 

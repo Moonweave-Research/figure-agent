@@ -599,7 +599,7 @@ def _geometry_coverage_summary(path: Path) -> dict[str, Any]:
         or isinstance(ratio, bool)
     ):
         return {"state": "invalid", "path": f"build/{path.name}"}
-    return {
+    summary = {
         "state": "present",
         "path": f"build/{path.name}",
         "schema": payload.get("schema"),
@@ -609,6 +609,17 @@ def _geometry_coverage_summary(path: Path) -> dict[str, Any]:
         "unknown_operations": coverage.get("unknown_operations"),
         "partial_unknown_operations": coverage.get("partial_unknown_operations"),
     }
+    gate = payload.get("geometry_coverage_gate")
+    if isinstance(gate, dict) and gate.get("configured") is True:
+        state = gate.get("state")
+        clean_claim_allowed = gate.get("clean_claim_allowed")
+        if state in {"passed", "failed"} and isinstance(clean_claim_allowed, bool):
+            summary["zero_findings_clean_claim"] = {
+                "state": state,
+                "allowed": clean_claim_allowed,
+                "failures": gate.get("failures") if isinstance(gate.get("failures"), list) else [],
+            }
+    return summary
 
 
 def _spine_evidence_summary(example_dir: Path) -> dict[str, Any]:

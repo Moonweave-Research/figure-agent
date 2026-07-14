@@ -745,6 +745,39 @@ def test_status_separates_render_freshness_from_strict_and_geometry_evidence(
     }
 
 
+def test_geometry_coverage_status_surfaces_zero_finding_clean_claim_policy(tmp_path: Path) -> None:
+    report = tmp_path / "undeclared_geometry.json"
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.undeclared-geometry.v1",
+                "geometry_parse_coverage": {
+                    "coverage_ratio": 0.8,
+                    "parsed_operations": 16,
+                    "total_operations": 20,
+                    "unknown_operations": 4,
+                    "partial_unknown_operations": 0,
+                },
+                "geometry_coverage_gate": {
+                    "configured": True,
+                    "state": "passed",
+                    "clean_claim_allowed": True,
+                    "failures": [],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    summary = status_mod._geometry_coverage_summary(report)
+
+    assert summary["zero_findings_clean_claim"] == {
+        "state": "passed",
+        "allowed": True,
+        "failures": [],
+    }
+
+
 def test_status_cli_loads_checker_modules_without_external_pythonpath() -> None:
     completed = subprocess.run(
         [sys.executable, str(REPO_ROOT / "scripts" / "status.py"), "--json"],
