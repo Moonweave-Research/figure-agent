@@ -1304,6 +1304,8 @@ def test_fig3_resistance_failure_first_packet_hash_binds_current_authority() -> 
             "specification",
             "authoring_contract",
             "panel_goals",
+            "editable_source",
+            "rendered_png",
         }:
             assert item["sha256"].startswith("sha256:")
         else:

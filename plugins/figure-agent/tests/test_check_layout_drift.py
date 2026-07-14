@@ -144,6 +144,28 @@ def test_fig3_layout_contract_still_checks_the_live_fixture_build() -> None:
     }
 
 
+def test_fig3_live_source_exposes_the_three_layout_relation_anchors() -> None:
+    source = (FIG3_FIXTURE / "fig3_resistance_mechanism.tex").read_text(
+        encoding="utf-8"
+    )
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+    phrases = {
+        group["id"]: group["required_phrase"] for group in contract["label_groups"]
+    }
+
+    assert phrases == {
+        "breadth_descriptor": "distribution breadth",
+        "energy_axis_label": "trap energy E",
+        "magnitude_axis_label": "magnitude",
+    }
+    assert "{distribution breadth}" in source
+    assert "{trap energy, $E$}" in source
+    assert "$\\rho_{60\\mathrm{s}}$\\\\magnitude" in source
+    assert "$n$ = breadth" not in source
+
+
 def test_fig3_layout_contract_applies_to_unfamiliar_future_artifact_names() -> None:
     contract = yaml.safe_load(
         (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")

@@ -168,6 +168,19 @@ def test_fig3_visual_clash_registry_keeps_material_label_contact_actionable() ->
         check_visual_clash.VisualIssue("near_miss", "S60", "dark=0.027, edge=0.009", (0, 0, 1, 1)),
         check_visual_clash.VisualIssue("near_miss", "I(t)", "dark=0.020, edge=0.009", (0, 0, 1, 1)),
         check_visual_clash.VisualIssue("near_miss", "ρ", "dark=0.018, edge=0.005", (0, 0, 1, 1)),
+        check_visual_clash.VisualIssue("near_miss", "g(E)", "dark=0.017, edge=0.006", (0, 0, 1, 1)),
+        check_visual_clash.VisualIssue(
+            "text_on_path", "+V", "dark=0.118, edge=0.015", (0, 0, 1, 1)
+        ),
+        check_visual_clash.VisualIssue(
+            "near_miss", "S80", "dark=0.017, edge=0.005", (0, 0, 1, 1)
+        ),
+        check_visual_clash.VisualIssue(
+            "text_on_path", "broad", "dark=0.054, edge=0.005", (0, 0, 1, 1)
+        ),
+        check_visual_clash.VisualIssue(
+            "text_on_path", "60", "dark=0.082, edge=0.018", (0, 0, 1, 1)
+        ),
     ]
 
     filtered, suppressed = check_visual_clash.suppress_known_false_positives(
@@ -183,7 +196,7 @@ def test_fig3_visual_clash_registry_keeps_material_label_contact_actionable() ->
         "polymer",
         "film",
     ]
-    assert suppressed == 10
+    assert suppressed == 15
 
 
 def test_fig3_visual_clash_registry_accepts_repaired_material_label_knockout() -> None:

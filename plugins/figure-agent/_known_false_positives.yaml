@@ -66,6 +66,43 @@ patterns:
     dark_max: 0.02
     edge_max: 0.01
 
+  # The g(E) ordinate label is deliberately offset from, but still owned by,
+  # the y-axis. Restrict this suppression to the measured low-signal residue.
+  - id: fig3_resistance_dos_axis_label_near_arrow
+    fixture: fig3_resistance_mechanism
+    glyph: "g(E)"
+    kind: near_miss
+    dark_max: 0.02
+    edge_max: 0.01
+
+  - id: fig3_resistance_applied_plus_voltage_near_axis
+    fixture: fig3_resistance_mechanism
+    glyph: "+V"
+    kind: text_on_path
+    dark_max: 0.12
+    edge_max: 0.015
+
+  - id: fig3_resistance_s80_curve_label_near_miss
+    fixture: fig3_resistance_mechanism
+    glyph: S80
+    kind: near_miss
+    dark_max: 0.02
+    edge_max: 0.01
+
+  - id: fig3_resistance_broad_curve_label_near_path
+    fixture: fig3_resistance_mechanism
+    glyph: broad
+    kind: text_on_path
+    dark_max: 0.06
+    edge_max: 0.01
+
+  - id: fig3_resistance_rho_subscript_self_signal
+    fixture: fig3_resistance_mechanism
+    glyph: "60"
+    kind: text_on_path
+    dark_max: 0.09
+    edge_max: 0.02
+
   # A white knockout now interrupts the film boundary behind this label.
   # These low residual signals pass; the unrepaired dark≈0.20 contacts do not.
   - id: fig3_resistance_material_label_knockout_left
