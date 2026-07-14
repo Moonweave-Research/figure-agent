@@ -1,0 +1,12 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v30.yaml
+extends_sha256: sha256:8ccee9eb5afbbda45bbdf4ed6bd259b9d28983d0d29ddadf9cb88b9b4d6e0e8d
+reason: repair the read-only loop's stale tex-assertion count contract so named endpoint assertions are counted exactly as the strict compiler reports them
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v31.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/scripts/promotion_wiring.py
+  - plugins/figure-agent/tests/test_g4_promotion_wiring.py
+publication_acceptance: not_claimed

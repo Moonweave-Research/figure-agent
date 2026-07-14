@@ -486,6 +486,36 @@ def test_tex_assertions_checked_count_mismatch_fails_loud(tmp_path: Path) -> Non
         promotion_wiring.auto_promoted_defects(fixture, "fig_demo")
 
 
+def test_tex_assertion_count_includes_applicable_named_endpoint_contracts(
+    tmp_path: Path,
+) -> None:
+    fixture = _fixture(tmp_path)
+    (fixture / "spec.yaml").write_text(
+        (fixture / "spec.yaml").read_text(encoding="utf-8")
+        + "named_endpoint_assertions:\n"
+        + "  - id: carrier-path-endpoints\n"
+        + "    source_name: fig_demo.tex\n"
+        + "    anchor_style: forceArr\n"
+        + "    minimum_paths: 1\n"
+        + "    required_anchors: [left, right]\n"
+        + "    allowed_anchors: [left, right]\n",
+        encoding="utf-8",
+    )
+    _write_json(
+        fixture / "build" / "tex_assertions.json",
+        {
+            "schema": "figure-agent.tex-assertions.v1",
+            "source_tex": "fig_demo.tex",
+            "source_hashes": promotion_wiring._current_source_hashes(fixture, "fig_demo"),
+            "issues": [],
+            "total": 0,
+            "checked": 2,
+        },
+    )
+
+    assert promotion_wiring.auto_promoted_defects(fixture, "fig_demo") == []
+
+
 def test_tex_assertions_total_must_match_issue_count(tmp_path: Path) -> None:
     report = tmp_path / "tex_assertions.json"
     _write_json(

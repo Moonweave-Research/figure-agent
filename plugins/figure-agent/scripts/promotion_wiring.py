@@ -627,18 +627,27 @@ def _declared_tex_assertion_count(example_dir: Path, name: str) -> int:
     except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
         raise PromotionWiringError(f"tex_assertions_spec_unreadable:{spec_path}") from exc
     assertions = spec.get("tex_assertions", [])
+    named_endpoint_assertions = spec.get("named_endpoint_assertions", [])
     if not isinstance(assertions, list):
         raise PromotionWiringError("tex_assertions_spec_schema:list")
+    if not isinstance(named_endpoint_assertions, list):
+        raise PromotionWiringError("named_endpoint_assertions_spec_schema:list")
     source_name = f"{name}.tex"
     applicable = 0
-    for index, assertion in enumerate(assertions):
-        if not isinstance(assertion, dict):
-            raise PromotionWiringError(f"tex_assertions_spec_schema:item:{index}")
-        declared_source = assertion.get("source_name")
-        if declared_source is not None and not isinstance(declared_source, str):
-            raise PromotionWiringError(f"tex_assertions_spec_schema:source_name:{index}")
-        if declared_source in (None, source_name):
-            applicable += 1
+    for field_name, declared_assertions in (
+        ("tex_assertions", assertions),
+        ("named_endpoint_assertions", named_endpoint_assertions),
+    ):
+        for index, assertion in enumerate(declared_assertions):
+            if not isinstance(assertion, dict):
+                raise PromotionWiringError(f"{field_name}_spec_schema:item:{index}")
+            declared_source = assertion.get("source_name")
+            if declared_source is not None and not isinstance(declared_source, str):
+                raise PromotionWiringError(
+                    f"{field_name}_spec_schema:source_name:{index}"
+                )
+            if declared_source in (None, source_name):
+                applicable += 1
     return applicable
 
 
