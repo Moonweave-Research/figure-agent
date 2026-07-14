@@ -33,8 +33,9 @@ report attributes 16/20 operations (five transfer paths, two analytic plots),
 resolves five rendered curved arrows, and records non-zero layout clearances.
 
 This is a bounded machine result, not publication acceptance: four operations
-remain outside typed parsing; critique/export and a human scaffold verdict are
-still missing. Q4 is next; keep historical sources read-only.
+remain outside typed parsing, and the hash-bound current-render scaffold still
+awaits a named human verdict. Critique and export evidence are present. Q4 is
+next; keep historical sources read-only.
 
 ## 0. Authority and execution rules
 

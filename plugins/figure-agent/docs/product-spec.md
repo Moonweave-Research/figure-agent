@@ -508,9 +508,11 @@ Current repository evidence supports these conclusions:
   failed, 29 skipped, 5 xfailed`; the failures expose ignored-build dependencies,
   one stale historical attribution, and an overgrown execution authority rather
   than publication-quality success;
-- the current Fig3 strict state remains red, and its most important curved
-  transfer and band-plot surfaces do not yet meet a declared geometry-coverage
-  floor; therefore zero findings on those surfaces cannot support promotion; and
+- the active Fig3 source now has a fresh passing strict compile and meets its
+  declared geometry-coverage floor (21/25 operations typed; four remain outside
+  typed parsing). This supports a bounded machine clean claim only: the
+  hash-bound current-render scaffold still awaits a named human verdict, and it
+  does not decide physical band-energy shape or publication quality; and
 - the repository does not yet prove that Figure Agent reduces correction cost
   relative to the same LLM without the system.
 
