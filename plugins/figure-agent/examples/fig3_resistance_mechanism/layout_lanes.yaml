@@ -1,0 +1,13 @@
+schema: figure-agent.layout-lanes.v1
+label_groups:
+  - id: breadth_descriptor
+    required_phrase: distribution breadth
+  - id: energy_axis_label
+    required_phrase: trap energy E
+rules:
+  - id: breadth_clear_of_energy_axis
+    kind: minimum_clearance
+    first: breadth_descriptor
+    second: energy_axis_label
+    minimum_normalized_clearance: 0.01
+    missing_policy: skip_rule

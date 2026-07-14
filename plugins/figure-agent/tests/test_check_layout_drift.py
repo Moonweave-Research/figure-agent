@@ -10,10 +10,39 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+FIG3_FIXTURE = REPO_ROOT / "examples" / "fig3_resistance_mechanism"
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "checks"))
 
 import check_layout_drift  # noqa: E402
+
+
+def test_fig3_destination_lane_contract_accepts_v64_and_rejects_v66() -> None:
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+
+    def result_for(version: str) -> check_layout_drift.LayoutLaneResult:
+        pdf = (
+            FIG3_FIXTURE
+            / "review"
+            / "failure-first"
+            / f"execution-repair-{version}"
+            / "build"
+            / "repaired_generated.pdf"
+        )
+        words, page_size = check_layout_drift.extract_pdf_words_and_page(pdf)
+        return check_layout_drift.evaluate_layout_lanes(contract, words, page_size)[0]
+
+    accepted = result_for("v64")
+    transferred = result_for("v66")
+
+    assert accepted.rule_id == "breadth_clear_of_energy_axis"
+    assert accepted.status == "ok"
+    assert accepted.clearance is not None and accepted.clearance >= 0.01
+    assert transferred.rule_id == "breadth_clear_of_energy_axis"
+    assert transferred.status == "violation"
+    assert transferred.clearance is not None and transferred.clearance < 0.01
 
 
 def _word(text: str, x0: float, y0: float, x1: float, y1: float) -> dict:
@@ -219,6 +248,43 @@ def test_layout_lane_contract_accepts_separated_groups_and_reports_missing_terms
     assert clear[0].clearance is not None and clear[0].clearance > 0.05
     assert missing[0].status == "missing_label_group"
     assert missing[0].missing_groups == ("title",)
+
+
+def test_layout_lane_rule_can_explicitly_skip_when_a_group_is_not_applicable() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {"id": "breadth", "required_phrase": "distribution breadth"},
+            {"id": "axis", "required_phrase": "trap energy E"},
+        ],
+        "rules": [
+            {
+                "id": "breadth_clear_of_axis",
+                "kind": "minimum_clearance",
+                "first": "breadth",
+                "second": "axis",
+                "minimum_normalized_clearance": 0.01,
+                "missing_policy": "skip_rule",
+            }
+        ],
+    }
+
+    axis_words = [
+        _word("trap", 20, 20, 30, 30),
+        _word("energy", 32, 20, 50, 30),
+        _word("E", 52, 20, 58, 30),
+    ]
+    results = check_layout_drift.evaluate_layout_lanes(
+        contract, axis_words, (100.0, 100.0)
+    )
+
+    assert results[0].status == "not_applicable"
+    assert results[0].missing_groups == ("breadth",)
+    assert check_layout_drift.layout_lane_payload(
+        contract,
+        axis_words,
+        (100.0, 100.0),
+    )["failure_count"] == 0
 
 
 def test_direct_layout_lane_cli_writes_machine_readable_failure_evidence(

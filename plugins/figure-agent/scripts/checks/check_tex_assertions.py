@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-r"""Deterministic tex-geometry assertion check (report-only WARN).
+r"""Deterministic TeX source assertion check (report-only WARN).
 
 Directional physics facts — a force arrow points AWAY from the drive electrode, a
 cantilever bends opposite under +V vs -V — live in DRAWN elements, not in text
@@ -16,6 +16,9 @@ spec.yaml::
         anchor_style: forceArr     # tikz style naming the \draw to locate
         axis: x                    # x | y
         direction: decreasing      # increasing | decreasing
+      - id: one-carrier-path-endpoints
+        literal: '\node[carrier'
+        exact_count: 2
 
 The physics MEANING (decreasing-x = away-from-the-right-electrode = repulsion) is the
 author's interpretation, baked into the declared `direction`; the checker is purely
@@ -184,8 +187,37 @@ def parse_tex_assertions(spec: dict) -> list[dict]:
     for index, item in enumerate(raw):
         if not isinstance(item, dict):
             raise TexAssertionError(f"tex_assertions[{index}] must be a mapping")
-        out: dict = {}
-        for field in ("id", "axis", "direction"):
+        assertion_id = item.get("id")
+        if not isinstance(assertion_id, str) or not assertion_id.strip():
+            raise TexAssertionError(f"tex_assertions[{index}].id is required")
+        out: dict = {"id": assertion_id.strip()}
+
+        has_count_field = "literal" in item or "exact_count" in item
+        if has_count_field:
+            literal = item.get("literal")
+            exact_count = item.get("exact_count")
+            if not isinstance(literal, str) or not literal:
+                raise TexAssertionError(
+                    f"tex_assertions[{index}].literal must be a non-empty string"
+                )
+            if (
+                isinstance(exact_count, bool)
+                or not isinstance(exact_count, int)
+                or exact_count < 0
+            ):
+                raise TexAssertionError(
+                    f"tex_assertions[{index}].exact_count must be a non-negative integer"
+                )
+            directional_fields = {"axis", "direction", "anchor_style", "near", "tolerance_cm"}
+            if directional_fields.intersection(item):
+                raise TexAssertionError(
+                    f"tex_assertions[{index}] cannot mix literal-count and directional fields"
+                )
+            out.update({"literal": literal, "exact_count": exact_count})
+            parsed.append(out)
+            continue
+
+        for field in ("axis", "direction"):
             value = item.get(field)
             if not isinstance(value, str) or not value.strip():
                 raise TexAssertionError(f"tex_assertions[{index}].{field} is required")
@@ -228,6 +260,22 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
     missing/ambiguous. A passing assertion produces no issue."""
     issues: list[dict] = []
     for assertion in assertions:
+        if "literal" in assertion:
+            actual_count = tex_text.count(assertion["literal"])
+            expected_count = assertion["exact_count"]
+            if actual_count != expected_count:
+                issues.append(
+                    {
+                        "id": assertion["id"],
+                        "status": "count_mismatch",
+                        "message": (
+                            f"assertion {assertion['id']!r} count_mismatch: "
+                            f"literal {assertion['literal']!r} occurs {actual_count} times, "
+                            f"expected {expected_count}"
+                        ),
+                    }
+                )
+            continue
         style = assertion.get("anchor_style")
         draws = _styled_draws_raw(tex_text, style) if style else _all_draws_raw(tex_text)
         anchor = repr(style) if style else "any draw near the declared point"
@@ -278,7 +326,7 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
 # Statuses that should BLOCK export: a violated assertion is wrong physics; a
 # missing/ambiguous anchor means an authored assertion is unverified. 'indeterminate'
 # (within tolerance) is advisory, not blocking.
-BLOCKING_STATUSES = ("violated", "anchor_missing", "anchor_ambiguous")
+BLOCKING_STATUSES = ("violated", "anchor_missing", "anchor_ambiguous", "count_mismatch")
 
 
 def _gate_failure_issue(status: str, json_path, *, detail: str | None = None) -> dict:
@@ -364,9 +412,7 @@ def main() -> int:
         print(f"WARN {issue['status']}: {issue['message']}")
     if not issues:
         print("OK: no tex-geometry assertion issues")
-    violated = any(
-        i["status"] in ("violated", "anchor_missing", "anchor_ambiguous") for i in issues
-    )
+    violated = any(i["status"] in BLOCKING_STATUSES for i in issues)
     return 1 if (args.strict and violated) else 0
 
 

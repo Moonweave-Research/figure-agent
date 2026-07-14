@@ -297,6 +297,9 @@ def evaluate_layout_lanes(
         if not isinstance(rule_id, str):
             raise ValueError("layout lane rule is invalid")
         kind = rule.get("kind")
+        missing_policy = rule.get("missing_policy", "fail")
+        if missing_policy not in {"fail", "skip_rule"}:
+            raise ValueError("layout lane rule missing_policy is invalid")
         if kind in {"contained_in_region", "minimum_clearance_from_region"}:
             group_id = rule.get("group")
             region_id = rule.get("region")
@@ -318,7 +321,11 @@ def evaluate_layout_lanes(
                 results.append(
                     LayoutLaneResult(
                         rule_id=rule_id,
-                        status="missing_label_group",
+                        status=(
+                            "not_applicable"
+                            if missing_policy == "skip_rule"
+                            else "missing_label_group"
+                        ),
                         clearance=None,
                         minimum_clearance=float(minimum),
                         missing_groups=(group_id,),
@@ -363,7 +370,11 @@ def evaluate_layout_lanes(
             results.append(
                 LayoutLaneResult(
                     rule_id=rule_id,
-                    status="missing_label_group",
+                    status=(
+                        "not_applicable"
+                        if missing_policy == "skip_rule"
+                        else "missing_label_group"
+                    ),
                     clearance=None,
                     minimum_clearance=float(minimum),
                     missing_groups=missing,
@@ -394,7 +405,9 @@ def layout_lane_payload(
         "schema": "figure-agent.layout-lane-report.v1",
         "contract_schema": LAYOUT_LANES_SCHEMA,
         "page_size_pt": list(pdf_page_size),
-        "failure_count": sum(result.status != "ok" for result in results)
+        "failure_count": sum(
+            result.status not in {"ok", "not_applicable"} for result in results
+        )
         + sum(result.status != "ok" for result in budget_results),
         "results": [
             {
@@ -430,6 +443,8 @@ def _layout_lane_line(
         return f"OK layout lane {rule_id}: {clearance:.3f} >= {minimum:.3f}"
     if status == "violation":
         return f"WARN layout lane {rule_id}: {clearance:.3f} < {minimum:.3f}"
+    if status == "not_applicable":
+        return f"SKIP layout lane {rule_id}: missing label groups {', '.join(missing_groups)}"
     return f"WARN layout lane {rule_id}: missing label groups {', '.join(missing_groups)}"
 
 

@@ -93,7 +93,7 @@ COMPARABLE_V2 = REVIEW / "comparable-v2"
 COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
 SCOPE_EXTENSION_V7 = REVIEW / "scope_extension_v7.yaml"
 SCOPE_EXTENSION_V8 = REVIEW / "scope_extension_v8.yaml"
-SCOPE_EXTENSION_V9 = REVIEW / "scope_extension_v9.yaml"
+SCOPE_EXTENSION_V10 = REVIEW / "scope_extension_v10.yaml"
 AUTHORITY_MANIFEST_V2 = REVIEW / "authority_manifest_v2.yaml"
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
@@ -2353,7 +2353,7 @@ def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
     scope = yaml.safe_load((REVIEW / "scope_protection.yaml").read_text(encoding="utf-8"))
-    extension = yaml.safe_load(SCOPE_EXTENSION_V9.read_text(encoding="utf-8"))
+    extension = yaml.safe_load(SCOPE_EXTENSION_V10.read_text(encoding="utf-8"))
     repo_root = PLUGIN_ROOT.parents[1]
     fixture_prefix = "plugins/figure-agent/examples/fig3_resistance_mechanism/"
     allowed_paths = {

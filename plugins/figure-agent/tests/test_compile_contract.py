@@ -32,6 +32,17 @@ def test_compile_passes_top_level_fixture_spec_to_nested_source_checker() -> Non
     assert 'FIGURE_SPEC="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}/spec.yaml"' in script
     assert 'UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")' in script
     assert '${UNDECLARED_GEOMETRY_SPEC_ARGS[@]+"${UNDECLARED_GEOMETRY_SPEC_ARGS[@]}"}' in script
+    assert 'TEX_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")' in script
+    assert '${TEX_ASSERTION_SPEC_ARGS[@]+"${TEX_ASSERTION_SPEC_ARGS[@]}"}' in script
+
+
+def test_compile_applies_fixture_layout_contract_to_nested_repairs() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'LAYOUT_CONTRACT="${FIXTURE_ROOT}/layout_lanes.yaml"' in script
+    assert '--pdf "$PDF_OUT"' in script
+    assert '--layout-contract "$LAYOUT_CONTRACT"' in script
+    assert '--json-output "${BUILD_DIR}/layout_lanes.json"' in script
 
 
 def test_compile_serializes_shared_fixture_reports() -> None:

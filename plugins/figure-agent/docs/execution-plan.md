@@ -345,16 +345,19 @@ modules listed in Section 0.
 **Current next executable step:** Slice 1 remains `pending_human_review` on the
 four current hash-bound views. Slice 2 `comparable-v2/` is transcript-bound,
 cleanly reproducible, human-rejected, and product-unauthorized. Continue from
-the verified-derived v50 source. V37 removed redundant carrier arrow overlays;
-v38 and v41 established detached axis-label ownership; v43 and v47 separated
-the S60 descriptor and magnitude lanes. V39, v40, v42, v44-v46, v48, and v49
-remain preserved counterexamples showing why an isolated label move or an
-under-spaced span is unsafe. V50 also corrects the prior overclaim that directly
-equated fitted `n` with geometric distribution breadth; that mapping is now
-declared model-dependent. Detector-only applied-`V` candidates remain review-only
-until wiring intent is adjudicated. Keep band-energy shape changes blocked until
-their physical and mathematical authority is reviewed. The next gate is a named
-human scaffold verdict; machine non-regression is not publication acceptance.
+the verified-derived v64 source. V64 encodes one carrier trajectory with two
+temporal endpoint glyphs and keeps label ownership separate from the mechanism
+path. V66 is a preserved counterexample: moving the distribution-breadth label
+outside its plot transferred the defect onto the energy-axis lane. That failure
+is now promoted into the fixture-level `layout_lanes.yaml` relation, and nested
+repair compiles inherit fixture-level layout and TeX-source assertions
+automatically. Literal-count assertions can also block duplicated semantic
+glyphs when a fixture declares the expected cardinality. These are machine
+guardrails against repeated known failure modes, not evidence that v64 is
+publication-ready. Detector-only applied-`V` candidates remain review-only until
+wiring intent is adjudicated. Keep band-energy shape changes blocked until their
+physical and mathematical authority is reviewed. The next gate is a named human
+scaffold verdict; machine non-regression is not publication acceptance.
 
 ### Verification
 

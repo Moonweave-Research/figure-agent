@@ -81,6 +81,36 @@ def test_parse_tex_assertions_empty_when_absent():
     assert cta.parse_tex_assertions({"name": "x"}) == []
 
 
+def test_literal_count_assertion_blocks_duplicate_semantic_glyphs():
+    assertions = cta.parse_tex_assertions(
+        {
+            "tex_assertions": [
+                {
+                    "id": "one-carrier-path-endpoints",
+                    "literal": r"\node[carrier",
+                    "exact_count": 2,
+                }
+            ]
+        }
+    )
+
+    issues = cta.check_tex_assertions(
+        "\n".join([r"\node[carrier] {};" for _ in range(4)]), assertions
+    )
+
+    assert issues == [
+        {
+            "id": "one-carrier-path-endpoints",
+            "status": "count_mismatch",
+            "message": (
+                "assertion 'one-carrier-path-endpoints' count_mismatch: "
+                "literal '\\\\node[carrier' occurs 4 times, expected 2"
+            ),
+        }
+    ]
+    assert "count_mismatch" in cta.BLOCKING_STATUSES
+
+
 def test_parse_tex_assertions_rejects_missing_field():
     with pytest.raises(cta.TexAssertionError):
         cta.parse_tex_assertions({"tex_assertions": [{"id": "a", "anchor_style": "forceArr"}]})

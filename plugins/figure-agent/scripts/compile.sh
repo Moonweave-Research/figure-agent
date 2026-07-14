@@ -36,14 +36,18 @@ if [[ "$FIXTURE_TAIL" != "$TEX_INPUT" ]]; then
 fi
 COLLISION_FIXTURE_ARGS=()
 UNDECLARED_GEOMETRY_SPEC_ARGS=()
+TEX_ASSERTION_SPEC_ARGS=()
+LAYOUT_CONTRACT=""
 if [[ -n "$FIXTURE_NAME" ]]; then
   COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")
   FIGURE_SPEC="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}/spec.yaml"
   FIXTURE_ROOT="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}"
+  LAYOUT_CONTRACT="${FIXTURE_ROOT}/layout_lanes.yaml"
   TEX_INPUT_DIR="$(cd "$(dirname "$TEX_INPUT")" && pwd)"
   TEX_INPUT_ABS="${TEX_INPUT_DIR}/$(basename "$TEX_INPUT")"
   if [[ "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/"* && -f "$FIGURE_SPEC" ]]; then
     UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    TEX_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
   fi
 fi
 
@@ -195,6 +199,7 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/semantic_assertio
 # a defect no render detector catches). STRICT-gated like the other clash checkers.
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_tex_assertions.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${TEX_ASSERTION_SPEC_ARGS[@]+"${TEX_ASSERTION_SPEC_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/tex_assertions.json" \
   "$FILE"
 # Physics-intent grounding meta-check (advisory: which figures still need assertions).
@@ -202,7 +207,14 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_tex_
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_physics_grounding.py" \
   --json-output "${BUILD_DIR}/physics_grounding.json" \
   "$PWD"
-if [[ -f "coordinate_hints.yaml" ]]; then
+if [[ -n "$LAYOUT_CONTRACT" && -f "$LAYOUT_CONTRACT" ]]; then
+  run_report_check "${UV_RUN[@]}" python3 \
+    "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" \
+    ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+    --pdf "$PDF_OUT" \
+    --layout-contract "$LAYOUT_CONTRACT" \
+    --json-output "${BUILD_DIR}/layout_lanes.json"
+elif [[ -f "coordinate_hints.yaml" ]]; then
   run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" \
     ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
     .
