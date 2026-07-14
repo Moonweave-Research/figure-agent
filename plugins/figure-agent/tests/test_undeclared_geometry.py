@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -16,6 +17,7 @@ from check_undeclared_geometry import (  # noqa: E402
     detect_rendered_semantic_path_crossings,
     detect_undeclared_geometry,
     geometry_parse_coverage,
+    main,
     measure_rendered_semantic_paths,
     partition_candidates_by_profile,
     rendered_curve_coverage,
@@ -256,6 +258,52 @@ def test_payload_persists_rendered_semantic_path_metrics(tmp_path: Path) -> None
     )
 
     assert payload["rendered_semantic_paths"] == metrics
+
+
+def test_cli_persists_rendered_semantic_path_metrics_for_v64_without_mutating_history(
+    tmp_path: Path,
+) -> None:
+    plugin_root = Path(__file__).resolve().parents[1]
+    v64 = (
+        plugin_root
+        / "examples"
+        / "fig3_resistance_mechanism"
+        / "review"
+        / "failure-first"
+        / "execution-repair-v64"
+    )
+    output = tmp_path / "undeclared_geometry.json"
+    historical_pdf = v64 / "build" / "repaired_generated.pdf"
+    historical_tex = v64 / "repaired_generated.tex"
+    before_hashes = {
+        path: hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in (historical_pdf, historical_tex)
+    }
+
+    exit_code = main(
+        [
+            str(historical_pdf),
+            "--tex",
+            str(historical_tex),
+            "--spec",
+            str(plugin_root / "examples" / "fig3_resistance_mechanism" / "spec.yaml"),
+            "--json-output",
+            str(output),
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert [metric["path_id"] for metric in payload["rendered_semantic_paths"]] == [
+        "RA001",
+        "RA002",
+        "RA003",
+    ]
+    assert payload["rendered_semantic_paths"][1]["dominant_direction"] == "bidirectional"
+    assert {
+        path: hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in (historical_pdf, historical_tex)
+    } == before_hashes
 
 
 def test_circle_and_curve_do_not_emit_undeclared_geometry_candidates() -> None:
