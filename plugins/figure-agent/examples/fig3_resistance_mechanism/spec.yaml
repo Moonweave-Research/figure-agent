@@ -8,7 +8,7 @@ geometry_coverage_policy:
     to_curve: 5
     analytic_plot: 1
   minimum_rendered_curved_semantic_paths: 5
-visual_clash_cap: 10
+visual_clash_cap: 4
 tex_assertions:
   - id: carrier-sequence-repeated-capture
     source_name: fig3_resistance_mechanism.tex

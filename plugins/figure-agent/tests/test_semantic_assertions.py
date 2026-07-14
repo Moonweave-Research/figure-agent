@@ -308,6 +308,7 @@ def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar()
     assert objects["C"]["objects"]["s60_discrete_states"]["invariant"] == (
         "low_sulfur_discrete_state_set_not_spectrum_bar_chart"
     )
+    assert spec["visual_clash_cap"] == 4
     assert "object=qualitative_current_decay panel=B kind=qualitative_relation" in source
     assert "object=s60_discrete_states panel=C kind=energy_landscape" in source
     assert "($(trap_deep)+(-0.78,-0.32)$)" in source

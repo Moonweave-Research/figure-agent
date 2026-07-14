@@ -55,6 +55,24 @@ def test_summary_without_critique_surfaces_unadjudicated_detector_candidates(
     assert "unadjudicated" in feedback["summary"]
 
 
+def test_summary_with_stale_critique_never_promotes_historical_refs_as_current_blockers(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ())
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir)
+
+    summary = summarize_audit_evidence(fig_dir, critique_is_current=False)
+
+    assert summary["evaluation_state"] == "stale_or_mismatched"
+    assert summary["blocking_items"] == []
+    assert summary["next_action"] == "/fig_critique demo_fig"
+    assert "historical detector references" in summary["reason"]
+    assert summary["visual_clash"]["candidate_count"] == 0
+    assert summary["visual_clash"]["unknown_refs"] == []
+
+
 def _write_visual_clash_report(fig_dir: Path, candidate_ids: tuple[str, ...]) -> None:
     report = fig_dir / "build" / "visual_clash.json"
     report.parent.mkdir(parents=True, exist_ok=True)

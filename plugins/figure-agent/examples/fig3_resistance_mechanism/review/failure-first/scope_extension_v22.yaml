@@ -1,0 +1,15 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v21.yaml
+extends_sha256: sha256:2059f11c8d082843d58293c07bc1042f4f61527aa36df837cb692331ce6dfcab
+reason: prevent stale critique evidence from being reported as current detector blockers
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v22.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/scripts/audit_evidence_summary.py
+  - plugins/figure-agent/scripts/status.py
+  - plugins/figure-agent/tests/test_audit_evidence_summary.py
+  - plugins/figure-agent/tests/test_status.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

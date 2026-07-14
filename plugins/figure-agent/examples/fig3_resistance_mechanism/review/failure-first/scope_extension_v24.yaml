@@ -1,0 +1,11 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v23.yaml
+extends_sha256: sha256:91600e8dfc21659e3327b1ddc2a01003f9301656446fca6997c03d78ccf75dc0
+reason: replace the manually enumerated scope-extension list with a lineage-validated discovery guard
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v24.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

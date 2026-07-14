@@ -93,20 +93,6 @@ COMPARABLE_V1 = REVIEW / "comparable-v1"
 COMPARISON_CONTRACT = COMPARABLE_V1 / "comparison_contract.yaml"
 COMPARABLE_V2 = REVIEW / "comparable-v2"
 COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
-SCOPE_EXTENSION_V7 = REVIEW / "scope_extension_v7.yaml"
-SCOPE_EXTENSION_V8 = REVIEW / "scope_extension_v8.yaml"
-SCOPE_EXTENSION_V10 = REVIEW / "scope_extension_v10.yaml"
-SCOPE_EXTENSION_V11 = REVIEW / "scope_extension_v11.yaml"
-SCOPE_EXTENSION_V12 = REVIEW / "scope_extension_v12.yaml"
-SCOPE_EXTENSION_V13 = REVIEW / "scope_extension_v13.yaml"
-SCOPE_EXTENSION_V14 = REVIEW / "scope_extension_v14.yaml"
-SCOPE_EXTENSION_V15 = REVIEW / "scope_extension_v15.yaml"
-SCOPE_EXTENSION_V16 = REVIEW / "scope_extension_v16.yaml"
-SCOPE_EXTENSION_V17 = REVIEW / "scope_extension_v17.yaml"
-SCOPE_EXTENSION_V18 = REVIEW / "scope_extension_v18.yaml"
-SCOPE_EXTENSION_V19 = REVIEW / "scope_extension_v19.yaml"
-SCOPE_EXTENSION_V20 = REVIEW / "scope_extension_v20.yaml"
-SCOPE_EXTENSION_V21 = REVIEW / "scope_extension_v21.yaml"
 AUTHORITY_MANIFEST_V2 = REVIEW / "authority_manifest_v2.yaml"
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
@@ -159,6 +145,20 @@ EXECUTION_REPAIR_V66 = REVIEW / "execution-repair-v66"
 
 def _sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _scope_extension_paths() -> list[Path]:
+    """Return the complete, numerically ordered scope-extension lineage."""
+    paths = list(REVIEW.glob("scope_extension_v*.yaml"))
+    versions_by_path: dict[Path, int] = {}
+    for path in paths:
+        match = re.fullmatch(r"scope_extension_v(\d+)\.yaml", path.name)
+        assert match is not None, f"unexpected scope-extension filename: {path.name}"
+        versions_by_path[path] = int(match.group(1))
+    ordered_paths = sorted(paths, key=versions_by_path.__getitem__)
+    versions = [versions_by_path[path] for path in ordered_paths]
+    assert versions == list(range(2, versions[-1] + 1))
+    return ordered_paths
 
 
 def test_fig3_exact_repairs_do_not_mistake_text_text_zero_for_structural_pass() -> None:
@@ -2395,21 +2395,21 @@ def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
     scope = yaml.safe_load((REVIEW / "scope_protection.yaml").read_text(encoding="utf-8"))
-    extensions = [
-        yaml.safe_load(SCOPE_EXTENSION_V10.read_text(encoding="utf-8")),
-        yaml.safe_load(SCOPE_EXTENSION_V11.read_text(encoding="utf-8")),
-        yaml.safe_load(SCOPE_EXTENSION_V12.read_text(encoding="utf-8")),
-        yaml.safe_load(SCOPE_EXTENSION_V13.read_text(encoding="utf-8")),
-        yaml.safe_load(SCOPE_EXTENSION_V14.read_text(encoding="utf-8")),
-        yaml.safe_load(SCOPE_EXTENSION_V15.read_text(encoding="utf-8")),
-        yaml.safe_load(SCOPE_EXTENSION_V16.read_text(encoding="utf-8")),
-        yaml.safe_load(SCOPE_EXTENSION_V17.read_text(encoding="utf-8")),
-        yaml.safe_load(SCOPE_EXTENSION_V18.read_text(encoding="utf-8")),
-        yaml.safe_load(SCOPE_EXTENSION_V19.read_text(encoding="utf-8")),
-        yaml.safe_load(SCOPE_EXTENSION_V20.read_text(encoding="utf-8")),
-        yaml.safe_load(SCOPE_EXTENSION_V21.read_text(encoding="utf-8")),
-    ]
+    extension_paths = _scope_extension_paths()
+    extensions = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in extension_paths]
     extension = extensions[-1]
+    base_extensions = [item for item in extensions if "scope_base_ref" in item]
+    assert len(base_extensions) == 1
+    base_extension = base_extensions[0]
+    for index, scope_extension in enumerate(extensions):
+        parent = REVIEW / scope_extension["extends"]
+        expected_parent = (
+            REVIEW / "scope_protection.yaml"
+            if index == 0
+            else extension_paths[index - 1]
+        )
+        assert parent == expected_parent
+        assert scope_extension["extends_sha256"] == _sha256(parent)
     repo_root = PLUGIN_ROOT.parents[1]
     fixture_prefix = "plugins/figure-agent/examples/fig3_resistance_mechanism/"
     allowed_paths = {
@@ -2422,7 +2422,7 @@ def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None
         )
         allowed_paths.update(scope_extension["allowed_repository_paths"])
     pending_paths = _git_pending_paths(repo_root)
-    branch_delta_paths = _git_branch_delta_paths(repo_root, extensions[0]["scope_base_ref"])
+    branch_delta_paths = _git_branch_delta_paths(repo_root, base_extension["scope_base_ref"])
     for scope_extension in extensions:
         for prefix in scope_extension["allowed_review_prefixes"]:
             allowed_paths.update(
@@ -2432,7 +2432,6 @@ def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None
     assert _scope_violations({fixture_prefix + "README.md"}, allowed_paths) == {
         fixture_prefix + "README.md"
     }
-    assert extension["extends_sha256"] == _sha256(REVIEW / extension["extends"])
     assert extension["publication_acceptance"] == "not_claimed"
     assert _scope_violations(pending_paths | branch_delta_paths, allowed_paths) == set()
 

@@ -1,0 +1,14 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v22.yaml
+extends_sha256: sha256:0e29544a1d9fd8dc05fff071f79b4f2db3ef29352487d8346bc43b5f5567bd65
+reason: tighten the visual-clash warning budget to the current four-candidate baseline while strict suppresses registered known false positives
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v23.yaml
+  - review/failure-first/authority_manifest_v2.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/spec.yaml
+  - plugins/figure-agent/tests/test_semantic_assertions.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

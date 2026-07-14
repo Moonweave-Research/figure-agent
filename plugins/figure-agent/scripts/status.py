@@ -682,7 +682,10 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
             )
     _append_critique_freshness_diagnostics(result, example_dir)
     result["adjudication_state"] = _adjudication_state(example_dir, result)
-    result["audit_evidence"] = summarize_audit_evidence(example_dir)
+    result["audit_evidence"] = summarize_audit_evidence(
+        example_dir,
+        critique_is_current=result.get("critique_state") == CRITIQUE_FRESH,
+    )
     result["spine_evidence"] = _spine_evidence_summary(example_dir)
     result["promotion_queue"] = _promotion_queue_summary(example_dir)
     build_dir = example_dir / "build"
