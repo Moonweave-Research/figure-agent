@@ -372,6 +372,26 @@ def test_run_export_allows_satisfied_tex_source_without_cache(
     assert rc == 0
 
 
+def test_run_export_ignores_tex_assertion_scoped_to_another_source(tmp_path: Path) -> None:
+    repo = _make_reference_fixture(tmp_path)
+    _write_tex_assertion_fixture(
+        repo,
+        tex_body=_VIOLATING_TEX,
+        assertion_block="\n".join(
+            [
+                "tex_assertions:",
+                "  - id: historical-force-repels",
+                "    source_name: historical.tex",
+                "    anchor_style: forceArr",
+                "    axis: x",
+                "    direction: decreasing",
+            ]
+        ),
+    )
+
+    assert run_export._live_tex_blockers(repo / "examples" / "ref_fig", "ref_fig") == []
+
+
 def test_run_export_rejects_unsafe_fixture_name_before_regenerate(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:

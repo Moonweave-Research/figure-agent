@@ -4,6 +4,8 @@ import json
 import sys
 from pathlib import Path
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "checks"))
 
 import check_tex_assertions as cta  # noqa: E402
@@ -92,6 +94,27 @@ def test_parse_tex_assertions_rejects_bad_axis():
         cta.parse_tex_assertions({"tex_assertions": [bad]})
 
 
+def test_parse_tex_assertions_rejects_non_positive_minimum_matches():
+    with pytest.raises(cta.TexAssertionError, match="minimum_matches"):
+        cta.parse_tex_assertions({"tex_assertions": [{**ASSERTION, "minimum_matches": 0}]})
+
+
+def test_parse_tex_assertions_scopes_a_contract_to_its_declared_source_name():
+    spec = {"tex_assertions": [{**ASSERTION, "source_name": "current.tex"}]}
+
+    assert cta.parse_tex_assertions(spec, source_name="current.tex") == [
+        {**ASSERTION, "source_name": "current.tex"}
+    ]
+    assert cta.parse_tex_assertions(spec, source_name="historical.tex") == []
+
+
+def test_parse_tex_assertions_rejects_invalid_scoped_contract_for_other_source():
+    spec = {"tex_assertions": [{**ASSERTION, "source_name": "current.tex", "minimum_matches": 0}]}
+
+    with pytest.raises(cta.TexAssertionError, match="minimum_matches"):
+        cta.parse_tex_assertions(spec, source_name="historical.tex")
+
+
 def test_check_passes_a_correct_repulsion_figure():
     issues = cta.check_tex_assertions(FORCE_AWAY, [ASSERTION])
     assert issues == []
@@ -113,6 +136,100 @@ def test_check_reports_anchor_ambiguous_when_style_matches_twice():
     tex = FORCE_AWAY + "\n" + FORCE_TOWARD
     issues = cta.check_tex_assertions(tex, [ASSERTION])
     assert issues[0]["status"] == "anchor_ambiguous"
+
+
+def test_check_passes_repeated_curved_capture_arrows_by_semantic_style():
+    tex = "\n".join(
+        [
+            r"\draw[capture] (1.0,3.0) to[out=-100,in=80] (1.1,2.0);",
+            r"\draw[capture] (2.0,3.0) to[out=-100,in=80] (2.1,2.0);",
+        ]
+    )
+    assertion = {
+        "id": "repeated-capture",
+        "anchor_style": "capture",
+        "axis": "y",
+        "direction": "decreasing",
+        "minimum_matches": 2,
+    }
+
+    assert cta.check_tex_assertions(tex, [assertion]) == []
+
+
+def test_check_ignores_commented_out_curved_paths_for_minimum_matches():
+    tex = """
+    % \\draw[capture] (1,3) to[out=-90,in=90] (1,2);
+    % \\draw[capture] (2,3) to[out=-90,in=90] (2,2);
+    """
+    assertion = {
+        "id": "two-captures",
+        "anchor_style": "capture",
+        "axis": "y",
+        "direction": "decreasing",
+        "minimum_matches": 2,
+    }
+
+    issues = cta.check_tex_assertions(tex, [assertion])
+
+    assert issues[0]["id"] == "two-captures"
+    assert issues[0]["status"] == "insufficient_matches"
+
+
+def test_check_rejects_insufficient_repeated_curved_semantic_arrows():
+    tex = r"\draw[capture] (1.0,3.0) to[out=-100,in=80] (1.1,2.0);"
+    assertion = {
+        "id": "repeated-capture",
+        "anchor_style": "capture",
+        "axis": "y",
+        "direction": "decreasing",
+        "minimum_matches": 2,
+    }
+
+    issues = cta.check_tex_assertions(tex, [assertion])
+
+    assert issues[0]["status"] == "insufficient_matches"
+    assert issues[0]["id"] == "repeated-capture"
+
+
+def test_check_rejects_reversed_curved_semantic_arrow_in_a_repeated_role():
+    tex = "\n".join(
+        [
+            r"\draw[capture] (1.0,3.0) to[out=-100,in=80] (1.1,2.0);",
+            r"\draw[capture] (2.0,2.0) to[out=80,in=-100] (2.1,3.0);",
+        ]
+    )
+    assertion = {
+        "id": "repeated-capture",
+        "anchor_style": "capture",
+        "axis": "y",
+        "direction": "decreasing",
+        "minimum_matches": 2,
+    }
+
+    issues = cta.check_tex_assertions(tex, [assertion])
+
+    assert issues[0]["status"] == "insufficient_matches"
+
+
+def test_fig3_carrier_walk_declares_and_satisfies_repeated_capture_release_contract():
+    plugin_root = Path(__file__).resolve().parents[1]
+    fixture = plugin_root / "examples" / "fig3_resistance_mechanism"
+    assertions = cta.parse_tex_assertions(
+        yaml.safe_load((fixture / "spec.yaml").read_text(encoding="utf-8")),
+        source_name="fig3_resistance_mechanism.tex",
+    )
+
+    assert {assertion["id"] for assertion in assertions} >= {
+        "carrier-walk-repeated-capture",
+        "carrier-walk-repeated-release",
+    }
+    assert (
+        cta.check_tex_assertions(
+            (fixture / "fig3_resistance_mechanism.tex").read_text(encoding="utf-8"),
+            assertions,
+        )
+        == []
+    )
 
 
 def test_payload_has_stable_shape(tmp_path):
@@ -251,12 +368,13 @@ def test_read_blocking_issues_filters_to_blocking_statuses(tmp_path):
                     {"id": "b", "status": "indeterminate"},
                     {"id": "c", "status": "anchor_missing"},
                     {"id": "d", "status": "anchor_ambiguous"},
+                    {"id": "e", "status": "insufficient_matches"},
                 ]
             }
         ),
         encoding="utf-8",
     )
-    assert {i["id"] for i in cta.read_blocking_issues(p)} == {"a", "c", "d"}
+    assert {i["id"] for i in cta.read_blocking_issues(p)} == {"a", "c", "d", "e"}
 
 
 def test_read_blocking_issues_missing_artifact_blocks(tmp_path):
@@ -318,6 +436,37 @@ def test_cli_strict_flags_violation_and_writes_json(tmp_path):
     assert data["schema"] == "figure-agent.tex-assertions.v1"
     assert data["total"] == 1
     assert data["source_hashes"]["examples/demo/demo.tex"].startswith("sha256:")
+
+
+def test_cli_strict_rejects_commented_out_minimum_matches(tmp_path):
+    import subprocess
+
+    fixture = tmp_path / "demo"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text(
+        "name: demo\n"
+        "tex_assertions:\n"
+        "  - id: repeated-capture\n"
+        "    anchor_style: capture\n"
+        "    axis: y\n"
+        "    direction: decreasing\n"
+        "    minimum_matches: 2\n",
+        encoding="utf-8",
+    )
+    (fixture / "demo.tex").write_text(
+        "% \\draw[capture] (1,3) to[out=-90,in=90] (1,2);\n"
+        "% \\draw[capture] (2,3) to[out=-90,in=90] (2,2);\n",
+        encoding="utf-8",
+    )
+    script = Path(__file__).resolve().parents[1] / "scripts" / "checks" / "check_tex_assertions.py"
+    result = subprocess.run(
+        [sys.executable, str(script), str(fixture / "demo.tex"), "--strict"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 1
+    assert "insufficient_matches" in result.stdout
 
 
 # --- M1: direction must follow the arrowhead, not coordinate order ---

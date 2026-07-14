@@ -354,6 +354,14 @@ blocked until their physical and mathematical authority is reviewed. The next
 gate is a named human scaffold verdict; machine non-regression is not publication
 acceptance.
 
+The current Fig3 source also declares a narrow, source-scoped carrier-walk
+contract: the existing curved transfer style must include at least two
+downward capture transitions and two upward release transitions. The checker
+binds this only to `fig3_resistance_mechanism.tex`; preserved repair sources
+receive no new assertion. This catches a repeated LLM failure mode without
+freezing absolute PDF coordinates, a particular curve silhouette, or a
+publication verdict.
+
 ### Verification
 
 ```bash

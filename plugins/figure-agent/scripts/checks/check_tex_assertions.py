@@ -49,54 +49,97 @@ _ALL_DRAW_RE = re.compile(
     r"\\draw\s*(?:\[(" + _OPT_BODY + r")\])?\s*"
     rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*--\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
 )
+_STYLED_TO_RE = re.compile(
+    r"\\draw\s*\[(" + _OPT_BODY + r")\]\s*"
+    rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*to(?:\s*\["
+    + _OPT_BODY
+    + rf"\])?\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
+)
+_ALL_TO_RE = re.compile(
+    r"\\draw\s*(?:\[(" + _OPT_BODY + r")\])?\s*"
+    rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*to(?:\s*\["
+    + _OPT_BODY
+    + rf"\])?\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
+)
+
+
+def _strip_tex_comments(tex_text: str) -> str:
+    """Remove unescaped TeX comments while preserving line boundaries.
+
+    A commented-out ``\\draw`` is not rendered and must not satisfy a source
+    contract. An escaped ``\\%`` remains ordinary TeX content; an even number of
+    preceding backslashes leaves ``%`` unescaped and starts a comment.
+    """
+    stripped_lines: list[str] = []
+    for line in tex_text.splitlines(keepends=True):
+        for index, char in enumerate(line):
+            if char != "%":
+                continue
+            preceding_slashes = 0
+            for before in reversed(line[:index]):
+                if before != "\\":
+                    break
+                preceding_slashes += 1
+            if preceding_slashes % 2:
+                continue
+            line_ending = "\r\n" if line.endswith("\r\n") else "\n" if line.endswith("\n") else ""
+            stripped_lines.append(line[:index] + line_ending)
+            break
+        else:
+            stripped_lines.append(line)
+    return "".join(stripped_lines)
+
+
+def _match_raw_draws(
+    tex_text: str,
+    patterns: tuple[re.Pattern[str], ...],
+    *,
+    style: str | None = None,
+) -> list[tuple[float, float, float, float, str]]:
+    tex_text = _strip_tex_comments(tex_text)
+    style_re = re.compile(r"\b" + re.escape(style) + r"\b") if style else None
+    matches: list[tuple[int, tuple[float, float, float, float, str]]] = []
+    for pattern in patterns:
+        for match in pattern.finditer(tex_text):
+            options = match.group(1) or ""
+            if style_re is not None and not style_re.search(options):
+                continue
+            matches.append(
+                (
+                    match.start(),
+                    (
+                        float(match.group(2)),
+                        float(match.group(3)),
+                        float(match.group(4)),
+                        float(match.group(5)),
+                        options,
+                    ),
+                )
+            )
+    return [raw for _, raw in sorted(matches, key=lambda item: item[0])]
 
 
 def _styled_draws_raw(tex_text: str, style: str) -> list[tuple[float, float, float, float, str]]:
-    """Every `\\draw[…<style>…] (x1,y1) -- (x2,y2)` as (x1, y1, x2, y2, option_body).
+    """Every styled straight or `to[...]` draw as (x1, y1, x2, y2, option_body).
 
     The style token is matched word-bounded inside the option body so `forceArr`
     does not match `forceArrow`; the option body carries the arrow-tip spec.
     """
-    style_re = re.compile(r"\b" + re.escape(style) + r"\b")
-    out: list[tuple[float, float, float, float, str]] = []
-    for match in _STYLED_DRAW_RE.finditer(tex_text):
-        options = match.group(1)
-        if not style_re.search(options):
-            continue
-        out.append(
-            (
-                float(match.group(2)),
-                float(match.group(3)),
-                float(match.group(4)),
-                float(match.group(5)),
-                options,
-            )
-        )
-    return out
+    return _match_raw_draws(tex_text, (_STYLED_DRAW_RE, _STYLED_TO_RE), style=style)
 
 
 def _all_draws_raw(tex_text: str) -> list[tuple[float, float, float, float, str]]:
-    """Every straight `\\draw … (x1,y1) -- (x2,y2)` as (x1, y1, x2, y2, option_body)."""
-    return [
-        (
-            float(match.group(2)),
-            float(match.group(3)),
-            float(match.group(4)),
-            float(match.group(5)),
-            match.group(1) or "",
-        )
-        for match in _ALL_DRAW_RE.finditer(tex_text)
-    ]
+    """Every straight or `to[...]` draw as (x1, y1, x2, y2, option_body)."""
+    return _match_raw_draws(tex_text, (_ALL_DRAW_RE, _ALL_TO_RE))
 
 
 def find_styled_draws(tex_text: str, style: str) -> list[tuple[float, float, float, float]]:
-    """Coordinates of every `\\draw[…<style>…] (x1,y1) -- (x2,y2)` in the source."""
+    """Coordinates of every styled straight or `to[...]` draw in the source."""
     return [raw[:4] for raw in _styled_draws_raw(tex_text, style)]
 
 
 def find_all_draws(tex_text: str) -> list[tuple[float, float, float, float]]:
-    """Coordinates of every straight `\\draw … (x1,y1) -- (x2,y2)` regardless of
-    style. Bezier `.. controls ..` segments are not matched."""
+    """Coordinates of every straight or `to[...]` draw, excluding Bezier controls."""
     return [raw[:4] for raw in _all_draws_raw(tex_text)]
 
 
@@ -174,7 +217,11 @@ class TexAssertionError(ValueError):
     """Raised when declared tex_assertions are malformed."""
 
 
-def parse_tex_assertions(spec: dict) -> list[dict]:
+def parse_tex_assertions(
+    spec: dict,
+    *,
+    source_name: str | None = None,
+) -> list[dict]:
     raw = spec.get("tex_assertions")
     if raw is None:
         return []
@@ -195,6 +242,11 @@ def parse_tex_assertions(spec: dict) -> list[dict]:
             if not isinstance(anchor_style, str) or not anchor_style.strip():
                 raise TexAssertionError(f"tex_assertions[{index}].anchor_style must be a string")
             out["anchor_style"] = anchor_style.strip()
+        assertion_source_name = item.get("source_name")
+        if assertion_source_name is not None:
+            if not isinstance(assertion_source_name, str) or not assertion_source_name.strip():
+                raise TexAssertionError(f"tex_assertions[{index}].source_name must be a string")
+            out["source_name"] = assertion_source_name.strip()
         if out["axis"] not in AXES:
             raise TexAssertionError(f"tex_assertions[{index}].axis must be one of {AXES}")
         if out["direction"] not in DIRECTIONS:
@@ -215,10 +267,27 @@ def parse_tex_assertions(spec: dict) -> list[dict]:
             ):
                 raise TexAssertionError(f"tex_assertions[{index}].near must be [x, y] numbers")
             out["near"] = [float(near[0]), float(near[1])]
+        if "minimum_matches" in item:
+            minimum_matches = item["minimum_matches"]
+            if (
+                isinstance(minimum_matches, bool)
+                or not isinstance(minimum_matches, int)
+                or minimum_matches < 1
+            ):
+                raise TexAssertionError(
+                    f"tex_assertions[{index}].minimum_matches must be a positive integer"
+                )
+            if "near" in out:
+                raise TexAssertionError(
+                    f"tex_assertions[{index}].minimum_matches cannot be combined with near"
+                )
+            out["minimum_matches"] = minimum_matches
         if "anchor_style" not in out and "near" not in out:
             raise TexAssertionError(
                 f"tex_assertions[{index}] requires anchor_style or near to locate the draw"
             )
+        if source_name is not None and out.get("source_name") not in (None, source_name):
+            continue
         parsed.append(out)
     return parsed
 
@@ -231,6 +300,46 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
         style = assertion.get("anchor_style")
         draws = _styled_draws_raw(tex_text, style) if style else _all_draws_raw(tex_text)
         anchor = repr(style) if style else "any draw near the declared point"
+        minimum_matches = assertion.get("minimum_matches")
+        if minimum_matches is not None:
+            if len(draws) < minimum_matches:
+                issues.append(
+                    {
+                        "id": assertion["id"],
+                        "status": "insufficient_matches",
+                        "message": (
+                            f"assertion {assertion['id']!r}: {anchor} matches {len(draws)} draws; "
+                            f"requires at least {minimum_matches}"
+                        ),
+                    }
+                )
+                continue
+            matching_count = sum(
+                1
+                for draw in draws
+                if check_direction(
+                    draw[:4],
+                    axis=assertion["axis"],
+                    direction=assertion["direction"],
+                    tip=_tip_orientation(draw[4]),
+                    tol=assertion.get("tolerance_cm", DEFAULT_TOLERANCE_CM),
+                )
+                == "pass"
+            )
+            if matching_count >= minimum_matches:
+                continue
+            issues.append(
+                {
+                    "id": assertion["id"],
+                    "status": "insufficient_matches",
+                    "message": (
+                        f"assertion {assertion['id']!r}: {anchor} has {matching_count} "
+                        f"{assertion['direction']} matches on {assertion['axis']}; requires "
+                        f"at least {minimum_matches}"
+                    ),
+                }
+            )
+            continue
         status, selected = select_draw(draws, assertion.get("near"))
         if status == "missing":
             issues.append(
@@ -267,7 +376,7 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
                 "id": assertion["id"],
                 "status": result,
                 "message": (
-                    f"assertion {assertion['id']!r} {result}: {assertion['anchor_style']!r} "
+                    f"assertion {assertion['id']!r} {result}: {anchor} "
                     f"is not {assertion['direction']} on {assertion['axis']}"
                 ),
             }
@@ -278,7 +387,7 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
 # Statuses that should BLOCK export: a violated assertion is wrong physics; a
 # missing/ambiguous anchor means an authored assertion is unverified. 'indeterminate'
 # (within tolerance) is advisory, not blocking.
-BLOCKING_STATUSES = ("violated", "anchor_missing", "anchor_ambiguous")
+BLOCKING_STATUSES = ("violated", "anchor_missing", "anchor_ambiguous", "insufficient_matches")
 
 
 def _gate_failure_issue(status: str, json_path, *, detail: str | None = None) -> dict:
@@ -353,7 +462,7 @@ def main() -> int:
 
     spec_path = args.spec or args.tex.parent / "spec.yaml"
     spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) if spec_path.exists() else {}
-    assertions = parse_tex_assertions(spec or {})
+    assertions = parse_tex_assertions(spec or {}, source_name=args.tex.name)
     tex_text = args.tex.read_text(encoding="utf-8")
     issues = check_tex_assertions(tex_text, assertions)
 
