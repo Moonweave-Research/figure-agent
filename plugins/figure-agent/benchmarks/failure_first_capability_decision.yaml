@@ -1,0 +1,90 @@
+schema: figure-agent.failure-first-capability-decision.v1
+decision: insufficient_evidence
+decision_basis: two_family_ablation_and_named_human_outcomes
+shared_inputs:
+  - path: benchmarks/llm_failure_corpus.yaml
+    sha256: sha256:b2664561abb8dedfdcd1d23809a26cd780edbd7c7ac12b162f2fdde7de4a1f62
+families:
+  fig1:
+    figure_family: fig1_failure_first_panel_f_pilot
+    inputs:
+      - path: examples/fig1_failure_first_panel_f_pilot/review/ablation/raw.yaml
+        sha256: sha256:64728046842771ff78361cd6f0f94e8fb411a5b46e11cc19f9f5311b179b59a9
+      - path: examples/fig1_failure_first_panel_f_pilot/review/ablation/verified.yaml
+        sha256: sha256:d60a8170d50d0a0bdd8667389ae9adf1ff9d922df8e702789eb02d1df5c96bda
+      - path: examples/fig1_failure_first_panel_f_pilot/review/ablation/repaired.yaml
+        sha256: sha256:a1ec17670f546c95b00e1183de70ca39ef9058017ecd54081a1eb6a5d0ad33a5
+    comparison_contract: identical_model_input_budget_and_family_hashes
+    comparison_evidence: staged_only
+    metrics:
+      raw_confirmed_defects: 1
+      verified_confirmed_defects: 1
+      repaired_confirmed_defects: 0
+      repaired_vs_raw_defect_delta: -1
+      scientific_gate: raw_and_verified_failed_repaired_passed
+      clean_reproduction: true
+      human_correction_minutes: unavailable
+      human_verdict: not_recorded
+      provenance: manifests_are_hash_bound_but_generation_transcripts_are_not_bound
+    interpretation: The bounded repair removes one exact semantic defect, but the comparison cannot support a product claim without transcript-bound runs and a named outcome.
+  fig3:
+    figure_family: fig3_resistance_mechanism
+    inputs:
+      - path: examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/comparison_contract.yaml
+        sha256: sha256:ae087b7142025984b14b158d04c26ebd1613ee0f53904defd567b05b015aa78b
+      - path: examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/raw.yaml
+        sha256: sha256:90c3b3f09fc94000fc2fc706c90a283e18e0136feb00d34ab2745e27a1c86b49
+      - path: examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/verified.yaml
+        sha256: sha256:e88097ce9a84acfcc9b728dfd61c1f6b027ab8fa30d7178e9f128b2a54682e28
+      - path: examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/repaired.yaml
+        sha256: sha256:f21f73556a1db248f4aed498fb403c55b8107d36aef98449d2ac1c9b217899e9
+    comparison_contract: eligible_equal_input_with_transcript_bound_receipts
+    comparison_evidence: transcript_bound
+    metrics:
+      raw_confirmed_defects: 4
+      verified_confirmed_defects: 3
+      repaired_confirmed_defects: 2
+      raw_confirmed_defect_occurrences: 26
+      verified_confirmed_defect_occurrences: 6
+      repaired_confirmed_defect_occurrences: 3
+      repaired_vs_raw_defect_delta: -2
+      repaired_vs_raw_occurrence_delta: -23
+      scientific_gate: passed_for_all_three_conditions
+      clean_reproduction: true
+      human_correction_minutes: unavailable
+      human_verdicts:
+        raw: not_recorded
+        verified: rejected_by_moon
+        repaired: rejected_by_moon
+      provenance: bound_generation_receipts_and_equal_input_contract
+    interpretation: Contract injection reduces declared defect counts, but neither assisted condition earned human acceptance; machine improvement therefore cannot become a quality or publication claim.
+cross_family_findings:
+  semantic_or_relation_regression_policy: A visual reduction never compensates for a semantic or relation failure.
+  transferred_capabilities: []
+  non_transfer_reason: Fig1 lacks transcript-bound comparable runs and named human outcomes; Fig3 has comparable runs but both assisted outputs were human-rejected.
+  correction_minutes: unavailable_in_both_families_do_not_estimate_retrospectively
+capabilities:
+  - id: failure_first_comparison_contract
+    classification: retain_experimental
+    evidence: Fig3 comparable-v2 is transcript-bound and equal-input, but Fig1 is staged-only.
+  - id: declared_semantic_relation_guard
+    classification: retain_experimental
+    evidence: Fig1 demonstrates one exact semantic repair; independent two-family transcript-bound and human-accepted replication is absent.
+  - id: layout_and_collision_guard
+    classification: retain_experimental
+    evidence: Fig3 reduces geometry defects and occurrences, while its verified and repaired renders remain human-rejected.
+  - id: provenance_and_clean_reproduction
+    classification: retain_experimental
+    evidence: Fig3 is reproducible with bound receipts; Fig1 does not yet meet the same evidence standard.
+  - id: human_scaffold_verdict
+    classification: human_only
+    evidence: Both the Fig3 rejections and later development-baseline review are named human judgments; no machine gate substitutes for them.
+  - id: direct_svg_primary_authoring
+    classification: retire
+    evidence: The reviewed Fig1 direct-SVG baseline contains confirmed geometry, typography, finish, and style defects; SVG remains diagnostic/interchange only.
+product_rule_change: not_authorized
+publication_acceptance: not_claimed
+next_evidence_required:
+  - Run a Fig1 equal-input, transcript-bound raw/verified/repaired comparison with a named human verdict for every condition.
+  - Record prospective correction minutes during a real bounded repair.
+  - Require human acceptance in both families before any capability is promoted.

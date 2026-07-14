@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# ruff: noqa: I001
+
 import hashlib
 import json
 import sys
@@ -11,6 +13,16 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "quality"))
 
 from failure_ablation import FailureAblationError, evaluate_ablation
+
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+CAPABILITY_DECISION = (
+    PLUGIN_ROOT / "benchmarks" / "failure_first_capability_decision.yaml"
+)
+
+
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _write_run(root: Path, variant: str, findings: list[dict[str, str]]) -> Path:
@@ -290,3 +302,22 @@ def test_ablation_requires_a_hash_bound_generation_transcript(tmp_path: Path) ->
     report = evaluate_ablation(paths)
 
     assert report["comparison_evidence"] == "staged_only"
+
+
+def test_two_family_capability_decision_is_evidence_bound_and_non_promotional() -> None:
+    decision = yaml.safe_load(CAPABILITY_DECISION.read_text(encoding="utf-8"))
+
+    assert decision["schema"] == "figure-agent.failure-first-capability-decision.v1"
+    assert decision["decision"] == "insufficient_evidence"
+    assert decision["publication_acceptance"] == "not_claimed"
+    assert decision["product_rule_change"] == "not_authorized"
+    assert set(decision["families"]) == {"fig1", "fig3"}
+    for family in decision["families"].values():
+        for input_item in family["inputs"]:
+            path = PLUGIN_ROOT / input_item["path"]
+            assert input_item["sha256"] == _sha256(path)
+
+    classifications = {item["id"]: item["classification"] for item in decision["capabilities"]}
+    assert "promote" not in classifications.values()
+    assert classifications["human_scaffold_verdict"] == "human_only"
+    assert classifications["direct_svg_primary_authoring"] == "retire"

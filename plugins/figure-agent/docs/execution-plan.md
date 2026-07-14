@@ -388,20 +388,14 @@ and Fig3 evidence, rather than starting another implementation lane.
 
 ### Steps
 
-- [ ] Verify identical model, input, budget, and starting-artifact contracts
-  within each family.
-- [ ] Report scientific failures, visual defects by class, actionable attribution
-  rate, repair success, regression rate, human interventions, correction
-  minutes, reproduction, editability, and provenance as separate metrics.
-- [ ] Reject any result in which visual improvement compensates for a semantic or
-  relation failure.
-- [ ] Compare which detector and repair families transferred without fixture
-  names, coordinates, or weakened thresholds.
-- [ ] Classify each capability as `promote`, `retain_experimental`, `human_only`,
-  or `retire` with evidence links.
-- [ ] Update `docs/product-spec.md` only if the two-family evidence changes a
-  durable product rule. Remove completed work from this plan rather than
-  appending another historical task log.
+- [x] `benchmarks/failure_first_capability_decision.yaml` records separate
+  contract, defect, attribution, reproduction, provenance, human-outcome, and
+  correction-minute evidence. Its decision is `insufficient_evidence`: visual
+  improvement cannot offset semantic/relation failures, no capability promotes,
+  and `docs/product-spec.md` remains unchanged.
+
+Runtime review surfaces use `figure-agent.current-render-review-scaffold.v1`
+and `figure-agent.strict-status.v1`; neither schema is a publication verdict.
 
 ### Verification
 
@@ -413,9 +407,9 @@ uv run python bin/fig-agent failure-ablation \
   --repaired examples/fig1_failure_first_panel_f_pilot/review/ablation/repaired.yaml \
   --json
 uv run python bin/fig-agent failure-ablation \
-  --raw examples/fig3_resistance_mechanism/review/failure-first/raw.yaml \
-  --verified examples/fig3_resistance_mechanism/review/failure-first/verified.yaml \
-  --repaired examples/fig3_resistance_mechanism/review/failure-first/repaired.yaml \
+  --raw examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/raw.yaml \
+  --verified examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/verified.yaml \
+  --repaired examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/repaired.yaml \
   --json
 uv run pytest tests/test_failure_ablation.py \
   tests/test_failure_first_cli.py \
