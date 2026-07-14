@@ -10,12 +10,14 @@ tex_assertions:
     axis: y
     direction: decreasing
     minimum_matches: 2
+    require_unidirectional_arrow: true
   - id: carrier-walk-repeated-release
     source_name: fig3_resistance_mechanism.tex
     anchor_style: xfer
     axis: y
     direction: increasing
     minimum_matches: 2
+    require_unidirectional_arrow: true
 panels:
   - id: A
     caption: Cell under applied V — charge carrier (sign-agnostic) undergoes dispersive, repeated trapping; transient current decays (I ∝ t^-n) so resistance rises

@@ -65,6 +65,31 @@ _ALL_TO_RE = re.compile(
 _RAW_DRAW_PATTERN = tuple[re.Pattern[str], tuple[int, int, int, int], int | None]
 
 
+def _option_tokens(option_body: str) -> list[str]:
+    """Split TikZ options only at top-level commas."""
+    tokens: list[str] = []
+    start = brace_depth = bracket_depth = 0
+    for index, char in enumerate(option_body):
+        if char == "{":
+            brace_depth += 1
+        elif char == "}":
+            brace_depth -= 1
+        elif char == "[":
+            bracket_depth += 1
+        elif char == "]":
+            bracket_depth -= 1
+        elif char == "," and brace_depth == bracket_depth == 0:
+            tokens.append(option_body[start:index].strip())
+            start = index + 1
+    tokens.append(option_body[start:].strip())
+    return [token for token in tokens if token]
+
+
+def _has_style_token(option_body: str, style: str) -> bool:
+    """Require an exact bare style token, never a word-boundary substring."""
+    return style in _option_tokens(option_body)
+
+
 def _strip_tex_comments(tex_text: str) -> str:
     """Remove unescaped TeX comments while preserving line boundaries.
 
@@ -99,12 +124,11 @@ def _match_raw_draws(
     style: str | None = None,
 ) -> list[tuple[float, float, float, float, str]]:
     tex_text = _strip_tex_comments(tex_text)
-    style_re = re.compile(r"\b" + re.escape(style) + r"\b") if style else None
     matches: list[tuple[int, tuple[float, float, float, float, str]]] = []
     for pattern, coordinate_groups, to_options_group in patterns:
         for match in pattern.finditer(tex_text):
             draw_options = match.group(1) or ""
-            if style_re is not None and not style_re.search(draw_options):
+            if style is not None and not _has_style_token(draw_options, style):
                 continue
             to_options = match.group(to_options_group) if to_options_group else None
             options = ",".join(option for option in (draw_options, to_options) if option)
@@ -123,8 +147,8 @@ def _match_raw_draws(
 def _styled_draws_raw(tex_text: str, style: str) -> list[tuple[float, float, float, float, str]]:
     """Every styled straight or `to[...]` draw as (x1, y1, x2, y2, option_body).
 
-    The style token is matched word-bounded inside the option body so `forceArr`
-    does not match `forceArrow`; the option body carries the arrow-tip spec.
+    The style token is exact inside the comma-delimited option body, so
+    `xfer-helper` cannot satisfy an `xfer` assertion.
     """
     return _match_raw_draws(
         tex_text,
@@ -159,7 +183,7 @@ def _tip_orientation(option_body: str) -> str:
     comma/bracket does not split the option list.
     """
     masked = re.sub(r"\{(?:[^{}]|\{[^{}]*\})*\}", "T", option_body)
-    for option in masked.split(","):
+    for option in _option_tokens(masked):
         arrow = re.fullmatch(r"([<>|T]?)-([<>|T]?)", option.strip())
         if not arrow:
             continue
@@ -172,6 +196,25 @@ def _tip_orientation(option_body: str) -> str:
             return "forward"
         return "none"
     return "none"
+
+
+def _style_tip(tex_text: str, style: str) -> str:
+    """Resolve an arrowhead declared by a named TikZ style when unambiguous."""
+    pattern = re.compile(
+        rf"{re.escape(style)}/\.style\s*=\s*\{{((?:[^{{}}]|\{{[^{{}}]*\}})*)\}}"
+    )
+    matches = pattern.findall(_strip_tex_comments(tex_text))
+    tips = {_tip_orientation(body) for body in matches}
+    return tips.pop() if len(tips) == 1 else "none"
+
+
+def _resolved_tip(tex_text: str, option_body: str) -> str:
+    direct = _tip_orientation(option_body)
+    if direct != "none":
+        return direct
+    style_tips = {_style_tip(tex_text, token) for token in _option_tokens(option_body)}
+    style_tips.discard("none")
+    return style_tips.pop() if len(style_tips) == 1 else "none"
 
 
 def check_direction(
@@ -290,6 +333,13 @@ def parse_tex_assertions(
                     f"tex_assertions[{index}].minimum_matches cannot be combined with near"
                 )
             out["minimum_matches"] = minimum_matches
+        require_arrow = item.get("require_unidirectional_arrow", False)
+        if not isinstance(require_arrow, bool):
+            raise TexAssertionError(
+                f"tex_assertions[{index}].require_unidirectional_arrow must be boolean"
+            )
+        if require_arrow:
+            out["require_unidirectional_arrow"] = True
         if "anchor_style" not in out and "near" not in out:
             raise TexAssertionError(
                 f"tex_assertions[{index}] requires anchor_style or near to locate the draw"
@@ -309,6 +359,16 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
         draws = _styled_draws_raw(tex_text, style) if style else _all_draws_raw(tex_text)
         anchor = repr(style) if style else "any draw near the declared point"
         minimum_matches = assertion.get("minimum_matches")
+        require_arrow = assertion.get("require_unidirectional_arrow", False)
+        def direction_holds(draw: tuple[float, float, float, float, str]) -> bool:
+            tip = _resolved_tip(tex_text, draw[4])
+            return tip in {"forward", "reverse"} and check_direction(
+                draw[:4], axis=assertion["axis"], direction=assertion["direction"], tip=tip,
+                tol=assertion.get("tolerance_cm", DEFAULT_TOLERANCE_CM),
+            ) == "pass" if require_arrow else check_direction(
+                draw[:4], axis=assertion["axis"], direction=assertion["direction"], tip=tip,
+                tol=assertion.get("tolerance_cm", DEFAULT_TOLERANCE_CM),
+            ) == "pass"
         if minimum_matches is not None:
             if len(draws) < minimum_matches:
                 issues.append(
@@ -325,14 +385,7 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
             matching_count = sum(
                 1
                 for draw in draws
-                if check_direction(
-                    draw[:4],
-                    axis=assertion["axis"],
-                    direction=assertion["direction"],
-                    tip=_tip_orientation(draw[4]),
-                    tol=assertion.get("tolerance_cm", DEFAULT_TOLERANCE_CM),
-                )
-                == "pass"
+                if direction_holds(draw)
             )
             if matching_count >= minimum_matches:
                 continue
@@ -370,11 +423,17 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
                 }
             )
             continue
+        tip = _resolved_tip(tex_text, selected[4])
+        if require_arrow and tip not in {"forward", "reverse"}:
+            issues.append({"id": assertion["id"], "status": "arrowhead_invalid", "message": (
+                f"assertion {assertion['id']!r}: {anchor} has {tip} arrowhead"
+            )})
+            continue
         result = check_direction(
             selected[:4],
             axis=assertion["axis"],
             direction=assertion["direction"],
-            tip=_tip_orientation(selected[4]),
+            tip=tip,
             tol=assertion.get("tolerance_cm", DEFAULT_TOLERANCE_CM),
         )
         if result == "pass":
@@ -395,7 +454,9 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
 # Statuses that should BLOCK export: a violated assertion is wrong physics; a
 # missing/ambiguous anchor means an authored assertion is unverified. 'indeterminate'
 # (within tolerance) is advisory, not blocking.
-BLOCKING_STATUSES = ("violated", "anchor_missing", "anchor_ambiguous", "insufficient_matches")
+BLOCKING_STATUSES = (
+    "violated", "anchor_missing", "anchor_ambiguous", "insufficient_matches", "arrowhead_invalid"
+)
 
 
 def _gate_failure_issue(status: str, json_path, *, detail: str | None = None) -> dict:

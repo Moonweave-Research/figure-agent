@@ -32,6 +32,10 @@ def test_find_styled_draws_does_not_match_a_different_style_substring():
     assert cta.find_styled_draws("\\draw[forceArrow] (0,0) -- (1,1);", "forceArr") == []
 
 
+def test_find_styled_draws_requires_an_exact_tikz_style_token():
+    assert cta.find_styled_draws("\\draw[xfer-helper] (0,0) -- (1,1);", "xfer") == []
+
+
 def test_find_styled_draws_returns_all_matches():
     tex = FORCE_AWAY + "\n" + FORCE_TOWARD
     assert len(cta.find_styled_draws(tex, "forceArr")) == 2
@@ -531,3 +535,28 @@ def test_check_tex_assertions_matches_styled_draw_with_inline_tip_bracket():
     ]
     # forward tip, coords -x -> decreasing holds -> pass (NOT anchor_missing).
     assert cta.check_tex_assertions(tex, assertions) == []
+
+
+def test_named_style_arrowhead_satisfies_unidirectional_assertion():
+    tex = "\\tikzset{xfer/.style={-{Stealth[length=1mm]}}}\n\\draw[xfer] (0,1) -- (0,0);"
+    assertion = {
+        "id": "capture",
+        "anchor_style": "xfer",
+        "axis": "y",
+        "direction": "decreasing",
+        "require_unidirectional_arrow": True,
+    }
+    assert cta.check_tex_assertions(tex, [assertion]) == []
+
+
+def test_unidirectional_assertion_rejects_missing_or_bidirectional_arrowhead():
+    assertion = {
+        "id": "capture",
+        "anchor_style": "xfer",
+        "axis": "y",
+        "direction": "decreasing",
+        "require_unidirectional_arrow": True,
+    }
+    for options in ("xfer", "xfer,<->"):
+        issues = cta.check_tex_assertions(f"\\draw[{options}] (0,1) -- (0,0);", [assertion])
+        assert issues[0]["status"] == "arrowhead_invalid"
