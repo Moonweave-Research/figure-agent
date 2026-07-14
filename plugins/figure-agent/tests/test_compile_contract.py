@@ -48,6 +48,13 @@ def test_compile_runs_opt_in_state_field_geometry_checks_from_the_fixture_spec()
     assert '--json-output "${BUILD_DIR}/state_field_geometry.json"' in script
 
 
+def test_compile_uses_known_false_positive_allowlist_in_every_mode() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'VISUAL_CLASH_ARGS=(--ignore-known-fp)' in script
+    assert 'VISUAL_CLASH_ARGS=(--strict --ignore-known-fp)' in script
+
+
 def test_compile_applies_fixture_layout_contract_to_nested_repairs() -> None:
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 

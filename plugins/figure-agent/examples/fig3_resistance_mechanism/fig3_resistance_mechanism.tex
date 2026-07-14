@@ -75,7 +75,7 @@
 \node[label, text=cBlue!65!black, fill=white, inner sep=1.2pt, anchor=west] at (6.18,1.91)
   {$I(t)\propto t^{-n}$};
 \node[label, text=cGray!60!black] at (7.35,0.48)
-  {trapping: current falls; \quad at fixed $V$, resistance rises};
+  {at $V=\mathrm{const}$: $I\downarrow$, $R\uparrow$};
 % fig-agent:end object=qualitative_current_decay
 
 % ===================== (c) shared vertical energy-landscape grammar =====================
@@ -89,8 +89,7 @@
 \node[label, text=cGray!55!black] at (12.24,4.13) {sulfur content $\uparrow$};
 % S60 and S80 are separate comparison units, sharing the same energy orientation.
 \begin{scope}
-  \fill[cBlue!8] (10.08,1.22) rectangle (11.62,3.48);
-  \draw[cBlue!40!black, line width=0.38pt] (10.08,3.27) -- (11.62,3.27);
+  \fill[cBlue!4] (10.08,1.22) rectangle (11.62,3.48);
   \node[label, text=cBlue!60!black] at (10.85,3.55) {S60\\discrete states};
   % fig-agent:start object=s60_discrete_states panel=C kind=energy_landscape truth_bearing=true
   \foreach \y/\len in {2.64/0.64,2.21/0.44,1.76/0.76}{
@@ -99,8 +98,7 @@
   % fig-agent:end object=s60_discrete_states
 \end{scope}
 \begin{scope}
-  \fill[cRed!12] (12.18,1.22) rectangle (14.32,3.48);
-  \draw[cRed!45!black, line width=0.38pt] (12.18,3.27) -- (14.32,3.27);
+  \fill[cRed!5] (12.18,1.22) rectangle (14.32,3.48);
   \node[label, text=cRed!65!black] at (13.25,3.55) {S80\\continuous support};
   % fig-agent:start object=s80_continuous_support panel=C kind=energy_landscape truth_bearing=true
   % Dense, irregular state marks indicate continuous qualitative support;

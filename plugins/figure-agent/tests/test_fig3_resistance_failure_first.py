@@ -1318,11 +1318,13 @@ def test_fig3_resistance_failure_first_packet_hash_binds_current_authority() -> 
             "panel_goals",
             "editable_source",
             "rendered_png",
+            "critique",
+            "critique_adjudication",
             "semantic_boundary",
             "render_receipt",
         }:
             # input_packet.yaml is a preserved historical run packet, not the
-            # authority for a later live Fig3 revision.
+            # authority for later live Fig3 source, render, or review evidence.
             assert item["sha256"].startswith("sha256:")
         else:
             assert item["sha256"] == _sha256(path)
@@ -3096,7 +3098,11 @@ def test_execution_repair_v12_resolves_density_with_visual_semantics_pending(
     geometry_report = tmp_path / "undeclared_geometry.json"
     geometry_result = subprocess.run(
         [
-            sys.executable,
+            "uv",
+            "run",
+            "--project",
+            str(PLUGIN_ROOT),
+            "python3",
             "scripts/checks/check_undeclared_geometry.py",
             str(render_path),
             "--tex",

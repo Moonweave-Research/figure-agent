@@ -56,7 +56,10 @@ if [[ -n "$FIXTURE_NAME" ]]; then
   LAYOUT_CONTRACT="${FIXTURE_ROOT}/layout_lanes.yaml"
   TEX_INPUT_DIR="$(cd "$(dirname "$TEX_INPUT")" && pwd)"
   TEX_INPUT_ABS="${TEX_INPUT_DIR}/$(basename "$TEX_INPUT")"
-  if [[ ( "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/"* || -n "${FIGURE_AGENT_FIXTURE_NAME:-}" ) && -f "$FIGURE_SPEC" ]]; then
+  # An explicitly named fixture is sufficient for a live source outside the
+  # examples tree, but never turns immutable execution-repair evidence into a
+  # current-source assertion target.
+  if [[ $HISTORICAL_REPAIR_REPLAY -eq 0 && ( "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/"* || -n "${FIGURE_AGENT_FIXTURE_NAME:-}" ) && -f "$FIGURE_SPEC" ]]; then
     UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     TEX_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     STATE_FIELD_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
@@ -78,7 +81,7 @@ echo 'Lint: Style Lock check (BLOCKER fails, WARN reports)...' >&2
 # collision/clash checkers so non-zero findings fail the compile (default
 # behavior is report-only with exit 0 to preserve dogfood ergonomics).
 STRICT_ARGS=()
-VISUAL_CLASH_ARGS=()
+VISUAL_CLASH_ARGS=(--ignore-known-fp)
 if [[ "${FIGURE_AGENT_STRICT:-}" == "1" ]]; then
   STRICT_ARGS=(--strict)
   VISUAL_CLASH_ARGS=(--strict --ignore-known-fp)
