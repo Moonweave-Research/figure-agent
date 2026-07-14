@@ -1,0 +1,47 @@
+schema: figure-agent.current-render-review-scaffold.v1
+fixture: fig3_resistance_mechanism
+created_for: current_three_column_render
+source_inputs:
+  tex_sha256: sha256:0537404b47c2b7ce5386a0ec9a55c7481fe59cfd35c803746210317e8637dc43
+  briefing_sha256: sha256:93716e4a06cee50a187d2b903552b194de1bea784d02a3893c85edf699424c8d
+  spec_sha256: sha256:a1330b1c1e11e95d49cde9da63a059b007a19b4d31a9a351b6452983073ba30c
+render_evidence:
+  render_path: build/fig3_resistance_mechanism.pdf
+  audit_crop_manifest: build/audit_crops/manifest.json
+  print_proxy: build/audit_crops/print_178mm.png
+  inspection_method: full_render_plus_high_zoom_crops_plus_print_proxy
+machine_gate:
+  strict_compile: passed
+  visual_clash_strict_candidates: 0
+  geometry_coverage:
+    parsed_operations: 24
+    total_operations: 27
+    coverage_ratio: 0.888889
+  publication_acceptance: not_claimed
+agent_observations:
+  - id: OBS-001
+    status: pending_human_review
+    panel: A
+    category: label_target_association
+    observation: retained is spatially near the deep-trap outcome but has no explicit leader or target marker.
+    grounded_in_rule: Briefing §3 rule 3
+    question: Does retained unambiguously identify the terminal deep-trap state rather than the general trap-state field at print scale?
+  - id: OBS-002
+    status: pending_human_review
+    panel: C
+    category: semantic_encoding_ambiguity
+    observation: The symmetric filled S80 envelope can be read either as qualitative broad energy support or as a quantitative distribution/DOS.
+    grounded_in_rule: Briefing §3 rule 2 and rule 4
+    question: Does the current envelope preserve non-quantitative broad support without implying a measured distribution?
+  - id: OBS-003
+    status: pending_human_review
+    panel: whole_figure
+    category: print_scale_hierarchy
+    observation: The print proxy keeps all labels readable, but the small causal labels in panel A and the explanatory labels in panel C require an editorial readability verdict.
+    grounded_in_rule: briefing §1 stated intent
+    question: At manuscript scale, is the causal sequence read before secondary explanatory text?
+human_review:
+  state: pending
+  verdict: not_recorded
+  required_scope: scaffold_only_no_source_mutation
+  next_action: review current render, then record an explicit human verdict or bounded repair finding

@@ -1,0 +1,12 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v24.yaml
+extends_sha256: sha256:5f5c6a8063f25cc8ee91a2efe7ab61a5b85b0347b6bd0d9debaf08a9f633d471
+reason: preserve a current-render human-review scaffold without overwriting historical critique artifacts
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/current_render_review_scaffold_v1.yaml
+  - review/failure-first/scope_extension_v25.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

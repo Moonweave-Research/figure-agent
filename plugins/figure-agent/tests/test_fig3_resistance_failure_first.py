@@ -94,6 +94,7 @@ COMPARISON_CONTRACT = COMPARABLE_V1 / "comparison_contract.yaml"
 COMPARABLE_V2 = REVIEW / "comparable-v2"
 COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
 AUTHORITY_MANIFEST_V2 = REVIEW / "authority_manifest_v2.yaml"
+CURRENT_RENDER_REVIEW_SCAFFOLD = REVIEW / "current_render_review_scaffold_v1.yaml"
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
 EXECUTION_REPAIR_V15 = REVIEW / "execution-repair-v15"
@@ -2434,6 +2435,22 @@ def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None
     }
     assert extension["publication_acceptance"] == "not_claimed"
     assert _scope_violations(pending_paths | branch_delta_paths, allowed_paths) == set()
+
+
+def test_fig3_current_render_review_scaffold_is_bound_and_human_pending() -> None:
+    scaffold = yaml.safe_load(CURRENT_RENDER_REVIEW_SCAFFOLD.read_text(encoding="utf-8"))
+
+    assert scaffold["schema"] == "figure-agent.current-render-review-scaffold.v1"
+    assert scaffold["fixture"] == "fig3_resistance_mechanism"
+    assert scaffold["source_inputs"] == {
+        "tex_sha256": _sha256(FIXTURE / "fig3_resistance_mechanism.tex"),
+        "briefing_sha256": _sha256(FIXTURE / "briefing.md"),
+        "spec_sha256": _sha256(FIXTURE / "spec.yaml"),
+    }
+    assert scaffold["machine_gate"]["strict_compile"] == "passed"
+    assert scaffold["machine_gate"]["publication_acceptance"] == "not_claimed"
+    assert scaffold["human_review"]["state"] == "pending"
+    assert scaffold["human_review"]["verdict"] == "not_recorded"
 
 
 def test_lh001_repair_history_preserves_failures_and_binds_resolved_attempt() -> None:
