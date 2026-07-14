@@ -11,7 +11,7 @@ authoritative_inputs:
     sha256: sha256:8ea441044b0197212c8856140cac06cc610340f8118aa7d4b79dd8d78051fcb7
   - role: authoring_contract
     path: authoring_contract.md
-    sha256: sha256:09fb090c27a08ce69a4127ef1a34d0fcb482e42ad3c472737b2631512ddca873
+    sha256: sha256:ed49aa6b89cac84d7b2cc4ecd0734aa9729cc46d6cee2ac1a889ba6479888ef7
   - role: panel_goals
     path: panel_goals.md
     sha256: sha256:36f9764365b82fb3fe6b44b06489099170e050b70d928bf67eb1f1b6ae8d068a

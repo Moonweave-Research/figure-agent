@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig3_resistance_mechanism
-generated_at: '2026-07-14T14:33:57Z'
+generated_at: '2026-07-14T14:42:49Z'
 generator: critique_brief.py
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:4e90d998452664f697d20840d9f7067139feab7d91b56e88ee63fc3b4fd6e84f
+critique_input_hash: sha256:7d49022b9c0cc0138157c1b0fd21eaf08442b8bd90b5e813a40983038fd03622
 verdict: revise
 findings:
   - id: C001
@@ -287,7 +287,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:4e90d998452664f697d20840d9f7067139feab7d91b56e88ee63fc3b4fd6e84f
+  assessed_artifact_hash: sha256:7d49022b9c0cc0138157c1b0fd21eaf08442b8bd90b5e813a40983038fd03622
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:

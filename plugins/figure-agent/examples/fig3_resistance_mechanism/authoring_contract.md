@@ -23,6 +23,9 @@ data; it must not impersonate that data.
   not use a symmetric silhouette, closed contour, or hard-edged interior container to stand for it.
 - Place the Panel A terminal-state annotation as unboxed text in deliberate whitespace. A knockout
   label is only a last resort after a verified background conflict, never a default detector workaround.
+- When a leader is necessary to disambiguate a semantic annotation, name the leader target coordinate
+  and the label node, place that node at the named coordinate, and declare the relation in
+  `named_endpoint_assertions.required_node_bindings`. Do not add a leader merely as decoration.
 - Keep the schematic slim, dense, and readable at a main-figure scale.
 
 ## Must Not Infer

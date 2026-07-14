@@ -1360,6 +1360,21 @@ def test_fig3_current_authority_manifest_is_additive_and_hash_bound() -> None:
                 assert forbidden not in contents
 
 
+def test_fig3_authoring_contract_requires_named_binding_for_semantic_leaders() -> None:
+    contract = (FIXTURE / "authoring_contract.md").read_text(encoding="utf-8")
+    spec = yaml.safe_load((FIXTURE / "spec.yaml").read_text(encoding="utf-8"))
+
+    assert "named_endpoint_assertions.required_node_bindings" in contract
+    terminal_leader = next(
+        assertion
+        for assertion in spec["named_endpoint_assertions"]
+        if assertion["id"] == "terminal-state-label-binds-to-terminal-trap"
+    )
+    assert terminal_leader["required_node_bindings"] == [
+        {"node": "slow_release_label", "anchor": "slow_release_label_anchor"}
+    ]
+
+
 def test_fig3_resistance_declares_two_panel_semantic_object_relation_boundary() -> None:
     boundary = yaml.safe_load(BOUNDARY.read_text(encoding="utf-8"))
 
