@@ -335,6 +335,17 @@ def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar()
             "hard_edged_interior_container",
         ],
     }
+    assert spec["state_field_geometry_assertions"] == [
+        {
+            "id": "fig3-s80-irregular-state-field",
+            "kind": "horizontal_state_field",
+            "source_object": "s80_continuous_support",
+            "min_marks": 12,
+            "min_vertical_span_cm": 1.4,
+            "min_center_std_cm": 0.35,
+            "max_width_abs_midpoint_correlation": -0.35,
+        }
+    ]
     assert "Dense, irregular state marks indicate continuous qualitative support" in source
     assert "rounded corners=1.15mm" not in source
     assert "$\\rho_{60" not in source

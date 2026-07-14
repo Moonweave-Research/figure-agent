@@ -9,6 +9,14 @@ geometry_coverage_policy:
     analytic_plot: 1
   minimum_rendered_curved_semantic_paths: 5
 visual_clash_cap: 4
+state_field_geometry_assertions:
+  - id: fig3-s80-irregular-state-field
+    kind: horizontal_state_field
+    source_object: s80_continuous_support
+    min_marks: 12
+    min_vertical_span_cm: 1.4
+    min_center_std_cm: 0.35
+    max_width_abs_midpoint_correlation: -0.35
 tex_assertions:
   - id: carrier-sequence-repeated-capture
     source_name: fig3_resistance_mechanism.tex

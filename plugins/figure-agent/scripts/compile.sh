@@ -47,6 +47,7 @@ fi
 COLLISION_FIXTURE_ARGS=()
 UNDECLARED_GEOMETRY_SPEC_ARGS=()
 TEX_ASSERTION_SPEC_ARGS=()
+STATE_FIELD_GEOMETRY_SPEC_ARGS=()
 LAYOUT_CONTRACT=""
 if [[ -n "$FIXTURE_NAME" ]]; then
   COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")
@@ -58,6 +59,7 @@ if [[ -n "$FIXTURE_NAME" ]]; then
   if [[ ( "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/"* || -n "${FIGURE_AGENT_FIXTURE_NAME:-}" ) && -f "$FIGURE_SPEC" ]]; then
     UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     TEX_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    STATE_FIELD_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
   fi
 fi
 
@@ -197,6 +199,13 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_unde
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/undeclared_geometry.json" \
   "$PDF_OUT"
+if [[ ${#STATE_FIELD_GEOMETRY_SPEC_ARGS[@]} -ne 0 ]]; then
+  run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_state_field_geometry.py" \
+    ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+    ${STATE_FIELD_GEOMETRY_SPEC_ARGS[@]+"${STATE_FIELD_GEOMETRY_SPEC_ARGS[@]}"} \
+    --tex "$FILE" \
+    --json-output "${BUILD_DIR}/state_field_geometry.json"
+fi
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_hyphenation.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/label_hyphenation.json" \

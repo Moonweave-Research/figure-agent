@@ -2,9 +2,9 @@ schema: figure-agent.current-render-review-scaffold.v1
 fixture: fig3_resistance_mechanism
 created_for: current_three_column_render
 source_inputs:
-  tex_sha256: sha256:8da2eeee2e104229a708f2e66ae2fa062c41e74bb669a3cce5d16d6be3489bb9
+  tex_sha256: sha256:4ec94c702f00c70129e1cefe5116e30320204e158160ccc7a51ae9aebca15d6a
   briefing_sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
-  spec_sha256: sha256:b184757f6dddb252b48d00d54fffc7fbcfa2db22d5e11ce21a1fdde059802ac4
+  spec_sha256: sha256:a9ad9641c330a677c19e36501855779d90adb70d7a7b6a4f288eeec39e5f3abd
 render_evidence:
   render_path: build/fig3_resistance_mechanism.pdf
   audit_crop_manifest: build/audit_crops/manifest.json
@@ -14,9 +14,10 @@ machine_gate:
   strict_compile: passed
   visual_clash_strict_candidates: 0
   geometry_coverage:
-    parsed_operations: 24
-    total_operations: 27
-    coverage_ratio: 0.888889
+    parsed_operations: 23
+    total_operations: 26
+    coverage_ratio: 0.884615
+  state_field_geometry: passed
   publication_acceptance: not_claimed
 agent_observations:
   - id: OBS-001
@@ -30,7 +31,7 @@ agent_observations:
     status: pending_human_review
     panel: C
     category: semantic_encoding_ambiguity
-    observation: The S80 encoding is a dense, irregular field of horizontal state marks over a broader vertical span, not a symmetric fitted-envelope, closed contour, or interior container.
+    observation: The S80 encoding is a dense, irregular field of horizontal state marks over a broader vertical span, not a symmetric fitted-envelope, closed contour, or interior container. The opt-in state-field geometry gate also rejects a center-widening density silhouette.
     grounded_in_rule: Briefing §3 rule 2 and rule 4
     question: Does the dense irregular state field read as non-quantitative broad trap-energy support without implying a measured distribution/DOS or numerical state count?
   - id: OBS-003

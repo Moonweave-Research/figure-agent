@@ -36,6 +36,18 @@ def test_compile_passes_top_level_fixture_spec_to_nested_source_checker() -> Non
     assert '${TEX_ASSERTION_SPEC_ARGS[@]+"${TEX_ASSERTION_SPEC_ARGS[@]}"}' in script
 
 
+def test_compile_runs_opt_in_state_field_geometry_checks_from_the_fixture_spec() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    state_field_call = (
+        'run_report_check "${UV_RUN[@]}" python3 '
+        '"$WORKFLOW_DIR/scripts/checks/check_state_field_geometry.py"'
+    )
+    assert state_field_call in script
+    assert '--tex "$FILE"' in script
+    assert '--json-output "${BUILD_DIR}/state_field_geometry.json"' in script
+
+
 def test_compile_applies_fixture_layout_contract_to_nested_repairs() -> None:
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 
