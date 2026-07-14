@@ -1,0 +1,23 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v38.yaml
+extends_sha256: sha256:4019fd73c15f84f05caa75ccb3981f8c74275a4e3aeccb4fe7dae637d37cf812
+reason: apply the user-confirmed panel-C header-clearance repair, bind the refreshed render evidence and development-baseline scaffold verdict, and retain a fixture-scoped low-signal detector calibration after visual review
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/authority_manifest_v2.yaml
+  - review/failure-first/current_render_review_scaffold_v1.yaml
+  - review/failure-first/render_receipt.yaml
+  - review/failure-first/scope_extension_v39.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/_known_false_positives.yaml
+  - plugins/figure-agent/docs/execution-plan.md
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/authoring_contract.md
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/critique.md
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/critique_adjudication.yaml
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/layout_lanes.yaml
+  - plugins/figure-agent/tests/test_check_layout_drift.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+  - plugins/figure-agent/tests/test_strict_mode.py
+publication_acceptance: not_claimed

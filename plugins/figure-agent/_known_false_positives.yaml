@@ -59,6 +59,23 @@ patterns:
     dark_max: 0.025
     edge_max: 0.012
 
+  # Header reflow changes the PDF crop phase but not these declared label/path
+  # relations. At the bounded low signal below, the S60 and I(t) text-on-path
+  # candidates are raster self-edge residue; stronger signals remain actionable.
+  - id: fig3_resistance_s60_peak_label_raster_self_edge
+    fixture: fig3_resistance_mechanism
+    glyph: S60
+    kind: text_on_path
+    dark_max: 0.04
+    edge_max: 0.012
+
+  - id: fig3_resistance_current_equation_raster_self_edge
+    fixture: fig3_resistance_mechanism
+    glyph: I(t)
+    kind: text_on_path
+    dark_max: 0.04
+    edge_max: 0.012
+
   - id: fig3_resistance_magnitude_label_near_measure
     fixture: fig3_resistance_mechanism
     glyph: "ρ"

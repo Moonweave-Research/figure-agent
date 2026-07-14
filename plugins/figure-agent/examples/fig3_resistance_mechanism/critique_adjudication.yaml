@@ -1,9 +1,9 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig3_resistance_mechanism
-source_critique_hash: sha256:b5a332fefaaab451dcb66ec79c52f47dca6141acadad1a75ee813fcdc0919eb2
+source_critique_hash: sha256:d3f67167eaf124f07bc723df483994e766b033a7456251ba0af4586e6ba0a946
 decisions:
 - finding_id: C001
-  decision: needs_human
-  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
-  patch_target: ''
-  evidence: critique.md finding C001.
+  decision: resolved
+  reason: Moon accepted the current render as a development baseline after the bounded panel-C header-clearance repair; future editorial revision remains allowed and publication acceptance is not claimed.
+  patch_target: review/failure-first/current_render_review_scaffold_v1.yaml human_review
+  evidence: critique.md finding C001; review/failure-first/current_render_review_scaffold_v1.yaml human_review verdict.

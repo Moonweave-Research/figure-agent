@@ -11,13 +11,13 @@ authoritative_inputs:
     sha256: sha256:d74eb6d425ab0e83787d408b1859c364c6cec5b4eaac1cdd4148d396c7dc06c8
   - role: authoring_contract
     path: authoring_contract.md
-    sha256: sha256:8f7239de6b4de5c3b31c744ffa4f1f4e0b4d9a9f7c6c4e08adea66556f1211cd
+    sha256: sha256:7292289b4ab25320adc7f34304d8a67ddfcf5739a4bf1dea3ddd763583f7df04
   - role: panel_goals
     path: panel_goals.md
     sha256: sha256:36f9764365b82fb3fe6b44b06489099170e050b70d928bf67eb1f1b6ae8d068a
   - role: editable_source
     path: fig3_resistance_mechanism.tex
-    sha256: sha256:93db41ea8de05b3309ef76655feb5dba992053761aee35f32a0f0b299146edda
+    sha256: sha256:148d9bda59c6344f31a587b0b3517ee07d9c47bfff32980c21111a803d377955
 semantic_boundary:
   fitted_n: Curie-von Schweidler exponent
   distribution_breadth: schematic mechanism cue

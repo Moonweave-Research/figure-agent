@@ -93,7 +93,7 @@ def test_fig3_layout_contract_is_fail_closed_for_missing_breadth_label() -> None
     )
 
     assert payload.get("applicable", True) is True
-    assert payload["failure_count"] == 1
+    assert payload["failure_count"] == 2
     assert {result["status"] for result in payload["results"]} == {
         "missing_label_group"
     }
@@ -131,7 +131,7 @@ def test_fig3_layout_contract_still_checks_the_live_fixture_build() -> None:
     )
 
     assert payload.get("applicable", True) is True
-    assert payload["failure_count"] == 1
+    assert payload["failure_count"] == 2
     assert {result["status"] for result in payload["results"]} == {
         "missing_label_group"
     }
@@ -152,9 +152,22 @@ def test_fig3_live_source_exposes_the_live_layout_relation_anchors() -> None:
         "response_equation": "I(t)",
         "energy_axis_label": "energy, E",
         "energy_support_label": "energy support",
+        "panel_c_heading": "composition-dependent",
+        "sulfur_content_annotation": "sulfur content",
+    }
+    rules = {rule["id"]: rule for rule in contract["rules"]}
+    assert rules["panel_c_heading_clear_of_sulfur_content_annotation"] == {
+        "id": "panel_c_heading_clear_of_sulfur_content_annotation",
+        "kind": "minimum_clearance",
+        "first": "panel_c_heading",
+        "second": "sulfur_content_annotation",
+        "minimum_normalized_clearance": 0.015,
     }
     assert "qualitative CvS decay" not in source
     assert "not measured data" not in source
+    assert "at (9.53,4.60) {c};" in source
+    assert "at (9.87,4.60)" in source
+    assert "at (12.24,4.13) {sulfur content $\\uparrow$};" in source
     assert "energy, $E$" in source
     assert "$\\rho_{60" not in source
     assert "$n$ = breadth" not in source
@@ -178,7 +191,7 @@ def test_fig3_layout_contract_applies_to_unfamiliar_future_artifact_names() -> N
     )
 
     assert payload.get("applicable", True) is True
-    assert payload["failure_count"] == 1
+    assert payload["failure_count"] == 2
     assert {result["status"] for result in payload["results"]} == {
         "missing_label_group"
     }

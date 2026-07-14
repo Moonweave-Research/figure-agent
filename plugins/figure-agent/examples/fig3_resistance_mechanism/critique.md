@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig3_resistance_mechanism
-generated_at: '2026-07-14T15:32:38Z'
+generated_at: '2026-07-14T16:07:24Z'
 generator: critique_brief.py
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:13e1e0803ec4e7c1ddec2c4a22f1241d160bd2a7664850cba9da7b3e3a36be81
+critique_input_hash: sha256:dd6257868cae8b9193f9bdb1148306e208e40b76fd2a370ab0c713e098a00e30
 verdict: revise
 findings:
   - id: C001
@@ -13,8 +13,8 @@ findings:
     category: style
     tex_lines: []
     grounded_in_rule: Briefing §1 stated intent; panel A, panel B, panel C
-    observation: The current render and print-scale crops establish a coherent causal mechanism, but no human verdict yet records whether its intentionally restrained TikZ register is the intended journal art direction at manuscript scale. This explicitly links top_tier_audit.target_journal_fit and top_tier_audit.aesthetic_coherence.
-    suggested_fix: Do not auto-edit the source. Record a human art-direction verdict against current_render_review_scaffold_v1.yaml; this resolves editorial_art_direction.illustration_readiness, editorial_art_direction.reference_class_fit, editorial_art_direction.visual_identity, editorial_art_direction.aesthetic_risk, editorial_art_direction.tikz_vs_svg_polish_trigger, and editorial_art_direction.human_art_direction_gate. Open a bounded source repair only if that reviewer names a visible defect.
+    observation: The current render and print-scale crops establish a coherent causal mechanism. A named human verdict now accepts it as a development baseline, while deliberately reserving future editorial revision and any publication-level art-direction decision.
+    suggested_fix: Preserve the accepted development baseline in current_render_review_scaffold_v1.yaml. This resolves top_tier_audit.target_journal_fit and top_tier_audit.aesthetic_coherence for the baseline, and records bounded review evidence for editorial_art_direction.illustration_readiness, editorial_art_direction.reference_class_fit, editorial_art_direction.visual_identity, editorial_art_direction.aesthetic_risk, editorial_art_direction.tikz_vs_svg_polish_trigger, and editorial_art_direction.human_art_direction_gate. Do not auto-edit the source; open a bounded repair only for a newly confirmed defect or an explicit editorial decision.
 panels: []
 audit_enumeration:
   structural_completeness:
@@ -524,6 +524,6 @@ crop_audit_log:
 # Vision Critique — fig3_resistance_mechanism
 
 Fresh host-vision re-audit bound to the current render and six required audit crops.
-Machine gates and crop inspection found no confirmed local drawing defect. This is not
-publication acceptance: `current_render_review_scaffold_v1.yaml` remains the required
-human art-direction verdict, and no further source mutation is requested by this critique.
+Machine gates and crop inspection found no confirmed local drawing defect. A named human
+verdict accepts this render as a development baseline; this is not publication acceptance
+and no further source mutation is requested by this critique.

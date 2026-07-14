@@ -334,7 +334,9 @@ modules listed in Section 0.
   this bounds detector coverage only, not physical band-energy shape.
 - [ ] **Q4 — Refresh evidence and close human review.** Regenerate critique,
   audit crops, compile/export receipts, and review hashes in a clean environment.
-  Record prospective correction minutes and obtain a named scaffold verdict.
+  A named development-baseline scaffold verdict is now recorded; prospective
+  correction minutes were not captured and must not be reconstructed after the
+  fact. The critique/adjudication refresh remains open after any source repair.
   Machine-valid or review-ready remains distinct from publication acceptance.
 
 Q0–Q4 are sequential. A failed earlier gate blocks later figure polishing.

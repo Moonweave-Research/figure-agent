@@ -2,17 +2,17 @@ schema: figure-agent.current-render-review-scaffold.v1
 fixture: fig3_resistance_mechanism
 created_for: current_three_column_render
 source_inputs:
-  tex_sha256: sha256:93db41ea8de05b3309ef76655feb5dba992053761aee35f32a0f0b299146edda
+  tex_sha256: sha256:148d9bda59c6344f31a587b0b3517ee07d9c47bfff32980c21111a803d377955
   briefing_sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
   spec_sha256: sha256:d74eb6d425ab0e83787d408b1859c364c6cec5b4eaac1cdd4148d396c7dc06c8
 render_evidence:
   render_path: build/fig3_resistance_mechanism.pdf
   render_png_path: build/fig3_resistance_mechanism.png
-  render_png_sha256: sha256:0e234fa802d57949110c83a97e59834886df9776a9cac244a6f68b0da0868027
+  render_png_sha256: sha256:ca6cc671da1403bd0c9123b9eacf033206080fb34bef0e0d1072f41d84b9b8a3
   audit_crop_manifest: build/audit_crops/manifest.json
-  audit_crop_manifest_sha256: sha256:c1d6be9f0104beee65996c1bcaa4d4a63f82eac0d86d59d841d59d1cf4eae9a5
+  audit_crop_manifest_sha256: sha256:dd54dd6ff95300c4b43e7a6bea5235812d8a3783d8722917d067ad272087eebf
   print_proxy: build/audit_crops/print_178mm.png
-  print_proxy_sha256: sha256:8c73852dd9674d51f1b3d76a95fdc94e2a86f0d6706402e74d46552b12df3da8
+  print_proxy_sha256: sha256:98f00975e381b223345ba2f8be9efbc58d18cda1f3e1214893f624b0d3de5e1c
   inspection_method: full_render_plus_high_zoom_crops_plus_print_proxy
 machine_gate:
   strict_compile: passed
@@ -53,9 +53,13 @@ reviewer_feedback:
     - Trap states are a continuum rather than a hard shallow/deep partition; a deeper state can be represented as slower release without implying deep-only retention.
     - The S80 broad-support direction is acceptable; the relative merits of the surrounding box and tick treatment remain open editorial choices rather than an asserted defect.
     - The panel-B non-data disclaimer was unnecessary and has been removed; the curve, axes, and relation now carry the qualitative role.
-  acceptance_effect: No final human scaffold verdict is recorded; human_review remains pending.
+    - The current Fig3 is accepted as a development baseline, subject to future editorial revision. The observed panel-C heading-to-sulfur-content crowding was repaired and rechecked in this bound render.
+  correction_minutes:
+    state: unavailable
+    reason: No prospectively timed correction session was recorded; do not estimate it retrospectively.
+  acceptance_effect: This records a development-baseline scaffold verdict only. It does not claim publication acceptance, release readiness, or measured correction time.
 human_review:
-  state: pending
-  verdict: not_recorded
-  required_scope: scaffold_only_no_source_mutation
-  next_action: review current render, then record an explicit human verdict or bounded repair finding
+  state: recorded
+  verdict: accepted_development_baseline_subject_to_future_editorial_revision
+  required_scope: development_baseline_only_not_publication_acceptance
+  next_action: Preserve this render as the development baseline; reopen only for a newly confirmed defect or an explicit editorial decision.

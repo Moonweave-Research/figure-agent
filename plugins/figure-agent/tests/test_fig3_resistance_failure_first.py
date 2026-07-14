@@ -2454,7 +2454,7 @@ def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None
     assert _scope_violations(pending_paths | branch_delta_paths, allowed_paths) == set()
 
 
-def test_fig3_current_render_review_scaffold_is_bound_and_human_pending() -> None:
+def test_fig3_current_render_review_scaffold_is_bound_and_human_baseline_recorded() -> None:
     scaffold = yaml.safe_load(CURRENT_RENDER_REVIEW_SCAFFOLD.read_text(encoding="utf-8"))
 
     assert scaffold["schema"] == "figure-agent.current-render-review-scaffold.v1"
@@ -2472,6 +2472,9 @@ def test_fig3_current_render_review_scaffold_is_bound_and_human_pending() -> Non
         "coverage_ratio": 0.84,
     }
     assert scaffold["machine_gate"]["publication_acceptance"] == "not_claimed"
+    adjudication = yaml.safe_load((FIXTURE / "critique_adjudication.yaml").read_text())
+    c001 = next(item for item in adjudication["decisions"] if item["finding_id"] == "C001")
+    assert c001["decision"] == "resolved"
     assert scaffold["render_evidence"] == {
         "render_path": "build/fig3_resistance_mechanism.pdf",
         "render_png_path": "build/fig3_resistance_mechanism.png",
@@ -2486,8 +2489,14 @@ def test_fig3_current_render_review_scaffold_is_bound_and_human_pending() -> Non
         ),
         "inspection_method": "full_render_plus_high_zoom_crops_plus_print_proxy",
     }
-    assert scaffold["human_review"]["state"] == "pending"
-    assert scaffold["human_review"]["verdict"] == "not_recorded"
+    assert scaffold["human_review"]["state"] == "recorded"
+    assert scaffold["human_review"]["verdict"] == (
+        "accepted_development_baseline_subject_to_future_editorial_revision"
+    )
+    assert scaffold["human_review"]["required_scope"] == (
+        "development_baseline_only_not_publication_acceptance"
+    )
+    assert scaffold["machine_gate"]["publication_acceptance"] == "not_claimed"
 
 
 def test_lh001_repair_history_preserves_failures_and_binds_resolved_attempt() -> None:

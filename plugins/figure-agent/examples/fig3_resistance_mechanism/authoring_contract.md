@@ -17,6 +17,9 @@ data; it must not impersonate that data.
   fitted exponent, a composition comparison, or an experimentally sampled trace.
 - Panel C uses the same vertical energy orientation as A. S60 is a representative set of discrete
   horizontal energy states; S80 is a continuous broad energy support. They are separate units.
+- Keep the shared A/B/C header row optically above panel content. In panel C, the
+  composition-dependent heading must remain visibly clear of the sulfur-content annotation;
+  that clearance is a layout contract, not a discretionary last-pass adjustment.
 - A broader support cue is qualitative and must not equate geometric width directly with `n` or read
   as a fitted density-of-states envelope.
 - Encode S80 as a dense, irregular field of horizontal state marks over a broader vertical span; do
