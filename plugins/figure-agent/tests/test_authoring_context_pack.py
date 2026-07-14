@@ -601,6 +601,96 @@ rules:
     ]
 
 
+def test_context_pack_injects_moved_group_neighbor_clearance_directive(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    review = fixture / "review"
+    review.mkdir()
+    (review / "layout_lanes.yaml").write_text(
+        """
+schema: figure-agent.layout-lanes.v1
+label_groups:
+  - id: moved_label
+    required_phrase: distribution breadth
+  - id: axis_label
+    required_phrase: trap energy E
+  - id: magnitude_label
+    required_phrase: magnitude
+rules:
+  - id: moved_label_neighbor_clearance
+    kind: minimum_clearance_from_groups
+    group: moved_label
+    other_groups: [axis_label, magnitude_label]
+    minimum_normalized_clearance: 0.01
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--layout-contract",
+            "review/layout_lanes.yaml",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["layout_constraints"]["authoring_directives"] == [
+        "Keep text group [distribution breadth] at least 0.01 page-diagonal "
+        "units clear of each declared neighboring text group: "
+        "[trap energy E]; [magnitude]."
+    ]
+
+
+def test_context_pack_rejects_colliding_expanded_layout_result_ids(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_context_fixture(tmp_path / "workspace")
+    review = fixture / "review"
+    review.mkdir()
+    (review / "layout_lanes.yaml").write_text(
+        """
+schema: figure-agent.layout-lanes.v1
+label_groups:
+  - id: moved
+    required_phrase: distribution breadth
+  - id: axis
+    required_phrase: trap energy E
+rules:
+  - id: moved_neighbors
+    kind: minimum_clearance_from_groups
+    group: moved
+    other_groups: [axis]
+    minimum_normalized_clearance: 0.01
+  - id: moved_neighbors:axis
+    kind: minimum_clearance
+    first: moved
+    second: axis
+    minimum_normalized_clearance: 0.01
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_context_pack.AuthoringContextPackError,
+        match="duplicate layout result id",
+    ):
+        authoring_context_pack._layout_constraints(
+            fixture, "review/layout_lanes.yaml"
+        )
+
+
 def test_context_pack_injects_region_containment_and_plot_clearance_directives(
     tmp_path: Path,
 ) -> None:

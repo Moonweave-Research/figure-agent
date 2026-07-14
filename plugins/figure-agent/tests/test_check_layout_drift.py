@@ -19,12 +19,12 @@ sys.path.insert(0, str(REPO_ROOT / "scripts" / "checks"))
 import check_layout_drift  # noqa: E402
 
 
-def test_fig3_destination_lane_contract_accepts_v64_and_rejects_v66() -> None:
+def test_fig3_neighbor_contract_exposes_the_v64_to_v66_collision_transfer() -> None:
     contract = yaml.safe_load(
         (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
     )
 
-    def result_for(version: str) -> check_layout_drift.LayoutLaneResult:
+    def results_for(version: str) -> list[check_layout_drift.LayoutLaneResult]:
         pdf = (
             FIG3_FIXTURE
             / "review"
@@ -34,17 +34,21 @@ def test_fig3_destination_lane_contract_accepts_v64_and_rejects_v66() -> None:
             / "repaired_generated.pdf"
         )
         words, page_size = check_layout_drift.extract_pdf_words_and_page(pdf)
-        return check_layout_drift.evaluate_layout_lanes(contract, words, page_size)[0]
+        return check_layout_drift.evaluate_layout_lanes(contract, words, page_size)
 
-    accepted = result_for("v64")
-    transferred = result_for("v66")
+    v64 = {result.rule_id: result for result in results_for("v64")}
+    v66 = {result.rule_id: result for result in results_for("v66")}
 
-    assert accepted.rule_id == "breadth_clear_of_energy_axis"
-    assert accepted.status == "ok"
-    assert accepted.clearance is not None and accepted.clearance >= 0.01
-    assert transferred.rule_id == "breadth_clear_of_energy_axis"
-    assert transferred.status == "violation"
-    assert transferred.clearance is not None and transferred.clearance < 0.01
+    energy = "breadth_clear_of_declared_neighbors:energy_axis_label"
+    magnitude = "breadth_clear_of_declared_neighbors:magnitude_axis_label"
+    assert v64[energy].status == "ok"
+    assert v64[energy].clearance is not None and v64[energy].clearance > 0.008
+    assert v64[magnitude].status == "ok"
+    assert v64[magnitude].clearance is not None and v64[magnitude].clearance > 0.008
+    assert v66[energy].status == "violation"
+    assert v66[energy].clearance is not None and v66[energy].clearance < 0.008
+    assert v66[magnitude].status == "ok"
+    assert v66[magnitude].clearance is not None and v66[magnitude].clearance > 0.008
 
 
 def test_fig3_layout_contract_is_fail_closed_for_missing_breadth_label() -> None:
@@ -65,8 +69,10 @@ def test_fig3_layout_contract_is_fail_closed_for_missing_breadth_label() -> None
     )
 
     assert payload.get("applicable", True) is True
-    assert payload["failure_count"] == 1
-    assert payload["results"][0]["status"] == "missing_label_group"
+    assert payload["failure_count"] == 2
+    assert {result["status"] for result in payload["results"]} == {
+        "missing_label_group"
+    }
 
 
 def test_fig3_layout_contract_does_not_rejudge_pre_v64_history() -> None:
@@ -101,8 +107,10 @@ def test_fig3_layout_contract_still_checks_the_live_fixture_build() -> None:
     )
 
     assert payload.get("applicable", True) is True
-    assert payload["failure_count"] == 1
-    assert payload["results"][0]["status"] == "missing_label_group"
+    assert payload["failure_count"] == 2
+    assert {result["status"] for result in payload["results"]} == {
+        "missing_label_group"
+    }
 
 
 def test_fig3_layout_contract_applies_to_unfamiliar_future_artifact_names() -> None:
@@ -123,8 +131,10 @@ def test_fig3_layout_contract_applies_to_unfamiliar_future_artifact_names() -> N
     )
 
     assert payload.get("applicable", True) is True
-    assert payload["failure_count"] == 1
-    assert payload["results"][0]["status"] == "missing_label_group"
+    assert payload["failure_count"] == 2
+    assert {result["status"] for result in payload["results"]} == {
+        "missing_label_group"
+    }
 
 
 def test_direct_cli_reports_when_a_legacy_artifact_is_explicitly_excluded(
@@ -189,7 +199,7 @@ def test_layout_contract_preserves_v1_include_path_compatibility() -> None:
     assert payload["exclusion_reason"] == "artifact_path_outside_applies_to_path_regex"
 
 
-def test_fig3_strict_compile_reaches_layout_gate_and_distinguishes_v64_v66() -> None:
+def test_fig3_strict_compile_reports_the_v64_to_v66_collision_transfer() -> None:
     def compile_version(version: str) -> subprocess.CompletedProcess[str]:
         source = (
             "examples/fig3_resistance_mechanism/review/failure-first/"
@@ -203,16 +213,30 @@ def test_fig3_strict_compile_reaches_layout_gate_and_distinguishes_v64_v66() -> 
             text=True,
         )
 
-    accepted = compile_version("v64")
-    rejected = compile_version("v66")
+    v64 = compile_version("v64")
+    v66 = compile_version("v66")
 
     # The full strict compile still fails on pre-existing undeclared-geometry
-    # findings. This proves the compile path reaches this gate and that this
-    # gate itself distinguishes the accepted scaffold from the regression.
-    assert accepted.returncode == 1
-    assert "OK layout lane breadth_clear_of_energy_axis" in accepted.stdout
-    assert rejected.returncode == 1
-    assert "WARN layout lane breadth_clear_of_energy_axis" in rejected.stdout
+    # findings. The neighbor gate still identifies which collision was repaired
+    # and which new collision that move introduced.
+    assert v64.returncode == 1
+    assert (
+        "OK layout lane breadth_clear_of_declared_neighbors:energy_axis_label"
+        in v64.stdout
+    )
+    assert (
+        "OK layout lane breadth_clear_of_declared_neighbors:magnitude_axis_label"
+        in v64.stdout
+    )
+    assert v66.returncode == 1
+    assert (
+        "WARN layout lane breadth_clear_of_declared_neighbors:energy_axis_label"
+        in v66.stdout
+    )
+    assert (
+        "OK layout lane breadth_clear_of_declared_neighbors:magnitude_axis_label"
+        in v66.stdout
+    )
 
 
 def _word(text: str, x0: float, y0: float, x1: float, y1: float) -> dict:
@@ -418,6 +442,140 @@ def test_layout_lane_contract_accepts_separated_groups_and_reports_missing_terms
     assert clear[0].clearance is not None and clear[0].clearance > 0.05
     assert missing[0].status == "missing_label_group"
     assert missing[0].missing_groups == ("title",)
+
+
+def test_layout_contract_checks_one_moved_group_against_each_declared_neighbor() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {"id": "moved_label", "required_phrase": "distribution breadth"},
+            {"id": "axis_label", "required_phrase": "trap energy E"},
+            {"id": "magnitude_label", "required_phrase": "magnitude"},
+        ],
+        "rules": [
+            {
+                "id": "moved_label_neighbor_clearance",
+                "kind": "minimum_clearance_from_groups",
+                "group": "moved_label",
+                "other_groups": ["axis_label", "magnitude_label"],
+                "minimum_normalized_clearance": 0.01,
+            }
+        ],
+    }
+    words = [
+        _word("distribution", 100, 100, 150, 112),
+        _word("breadth", 152, 100, 182, 112),
+        _word("trap", 140, 110, 160, 122),
+        _word("energy", 162, 110, 190, 122),
+        _word("E", 192, 110, 198, 122),
+        _word("magnitude", 300, 100, 350, 112),
+    ]
+
+    results = check_layout_drift.evaluate_layout_lanes(
+        contract, words, (400.0, 200.0)
+    )
+
+    assert [(result.rule_id, result.status) for result in results] == [
+        ("moved_label_neighbor_clearance:axis_label", "violation"),
+        ("moved_label_neighbor_clearance:magnitude_label", "ok"),
+    ]
+
+
+def test_group_clearance_rule_fails_closed_or_explicitly_skips_missing_target() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {"id": "moved", "required_phrase": "distribution breadth"},
+            {"id": "axis", "required_phrase": "trap energy E"},
+            {"id": "magnitude", "required_phrase": "magnitude"},
+        ],
+        "rules": [
+            {
+                "id": "moved_neighbors",
+                "kind": "minimum_clearance_from_groups",
+                "group": "moved",
+                "other_groups": ["axis", "magnitude"],
+                "minimum_normalized_clearance": 0.01,
+            }
+        ],
+    }
+    words = [
+        _word("trap", 10, 10, 30, 20),
+        _word("energy", 32, 10, 60, 20),
+        _word("E", 62, 10, 68, 20),
+        _word("magnitude", 100, 10, 150, 20),
+    ]
+
+    failed = check_layout_drift.evaluate_layout_lanes(contract, words, (400, 200))
+    contract["rules"][0]["missing_policy"] = "skip_rule"
+    skipped = check_layout_drift.evaluate_layout_lanes(contract, words, (400, 200))
+
+    assert [result.status for result in failed] == [
+        "missing_label_group",
+        "missing_label_group",
+    ]
+    assert all(result.missing_groups == ("moved",) for result in failed)
+    assert [result.status for result in skipped] == [
+        "not_applicable",
+        "not_applicable",
+    ]
+
+
+@pytest.mark.parametrize(
+    "other_groups",
+    [["axis", "axis"], ["moved"], ["unknown"]],
+)
+def test_group_clearance_rule_rejects_invalid_neighbor_sets(
+    other_groups: list[str],
+) -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {"id": "moved", "required_phrase": "distribution breadth"},
+            {"id": "axis", "required_phrase": "trap energy E"},
+        ],
+        "rules": [
+            {
+                "id": "moved_neighbors",
+                "kind": "minimum_clearance_from_groups",
+                "group": "moved",
+                "other_groups": other_groups,
+                "minimum_normalized_clearance": 0.01,
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="group-clearance rule is invalid"):
+        check_layout_drift.evaluate_layout_lanes(contract, [], (400, 200))
+
+
+def test_layout_contract_rejects_colliding_expanded_result_ids() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {"id": "moved", "required_phrase": "distribution breadth"},
+            {"id": "axis", "required_phrase": "trap energy E"},
+        ],
+        "rules": [
+            {
+                "id": "moved_neighbors",
+                "kind": "minimum_clearance_from_groups",
+                "group": "moved",
+                "other_groups": ["axis"],
+                "minimum_normalized_clearance": 0.01,
+            },
+            {
+                "id": "moved_neighbors:axis",
+                "kind": "minimum_clearance",
+                "first": "moved",
+                "second": "axis",
+                "minimum_normalized_clearance": 0.01,
+            },
+        ],
+    }
+
+    with pytest.raises(ValueError, match="duplicate layout lane result id"):
+        check_layout_drift.evaluate_layout_lanes(contract, [], (400, 200))
 
 
 def test_layout_lane_rule_can_explicitly_skip_when_a_group_is_not_applicable() -> None:

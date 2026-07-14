@@ -172,8 +172,18 @@ def _layout_constraints(
         directives.append(
             f"Keep region [{region}] at or below {maximum} rendered words."
         )
+    result_ids: set[str] = set()
+
+    def reserve_result_ids(*candidate_ids: str) -> None:
+        if any(candidate in result_ids for candidate in candidate_ids):
+            raise AuthoringContextPackError("duplicate layout result id")
+        result_ids.update(candidate_ids)
+
     for rule in raw_rules:
         if not isinstance(rule, dict):
+            raise AuthoringContextPackError("layout rule is invalid")
+        rule_id = rule.get("id")
+        if not isinstance(rule_id, str):
             raise AuthoringContextPackError("layout rule is invalid")
         kind = rule.get("kind")
         if kind in {"contained_in_region", "minimum_clearance_from_region"}:
@@ -194,6 +204,7 @@ def _layout_constraints(
                 or float(minimum) < 0
             ):
                 raise AuthoringContextPackError("layout region rule is invalid")
+            reserve_result_ids(rule_id)
             terms = ", ".join(groups[group])
             if kind == "contained_in_region":
                 directives.append(
@@ -205,6 +216,39 @@ def _layout_constraints(
                     f"Keep text group [{terms}] at least {float(minimum):g} "
                     f"page-diagonal units clear of region [{region}]."
                 )
+            continue
+        if kind == "minimum_clearance_from_groups":
+            group = rule.get("group")
+            other_groups = rule.get("other_groups")
+            minimum = rule.get("minimum_normalized_clearance")
+            if (
+                not isinstance(group, str)
+                or group not in groups
+                or not isinstance(other_groups, list)
+                or not other_groups
+                or not all(isinstance(item, str) for item in other_groups)
+                or len(set(other_groups)) != len(other_groups)
+                or group in other_groups
+                or any(item not in groups for item in other_groups)
+                or not isinstance(minimum, int | float)
+                or isinstance(minimum, bool)
+                or float(minimum) < 0
+            ):
+                raise AuthoringContextPackError(
+                    "layout group-clearance rule is invalid"
+                )
+            reserve_result_ids(
+                *(f"{rule_id}:{other_group}" for other_group in other_groups)
+            )
+            group_terms = ", ".join(groups[group])
+            neighbor_terms = "; ".join(
+                f"[{', '.join(groups[item])}]" for item in other_groups
+            )
+            directives.append(
+                f"Keep text group [{group_terms}] at least {float(minimum):g} "
+                "page-diagonal units clear of each declared neighboring text "
+                f"group: {neighbor_terms}."
+            )
             continue
         if kind != "minimum_clearance":
             raise AuthoringContextPackError("layout rule is invalid")
@@ -220,6 +264,7 @@ def _layout_constraints(
             or float(minimum) < 0
         ):
             raise AuthoringContextPackError("layout clearance rule is invalid")
+        reserve_result_ids(rule_id)
         first_terms = ", ".join(groups[first])
         second_terms = ", ".join(groups[second])
         directives.append(

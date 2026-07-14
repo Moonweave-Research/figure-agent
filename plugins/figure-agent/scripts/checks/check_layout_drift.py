@@ -290,6 +290,13 @@ def evaluate_layout_lanes(
     if page_diagonal <= 0:
         raise ValueError("layout lane page size must be positive")
     results: list[LayoutLaneResult] = []
+    result_ids: set[str] = set()
+
+    def reserve_result_ids(*candidate_ids: str) -> None:
+        if any(candidate in result_ids for candidate in candidate_ids):
+            raise ValueError("duplicate layout lane result id")
+        result_ids.update(candidate_ids)
+
     for rule in raw_rules:
         if not isinstance(rule, dict):
             raise ValueError("layout lane rule must be an object")
@@ -317,6 +324,7 @@ def evaluate_layout_lanes(
                 or float(minimum) < 0
             ):
                 raise ValueError("layout lane region rule is invalid")
+            reserve_result_ids(rule_id)
             if group_id not in groups or groups[group_id] is None:
                 results.append(
                     LayoutLaneResult(
@@ -350,6 +358,68 @@ def evaluate_layout_lanes(
                 )
             )
             continue
+        if kind == "minimum_clearance_from_groups":
+            group_id = rule.get("group")
+            other_group_ids = rule.get("other_groups")
+            minimum = rule.get("minimum_normalized_clearance")
+            if (
+                not isinstance(group_id, str)
+                or group_id not in groups
+                or not isinstance(other_group_ids, list)
+                or not other_group_ids
+                or not all(isinstance(item, str) for item in other_group_ids)
+                or len(set(other_group_ids)) != len(other_group_ids)
+                or group_id in other_group_ids
+                or any(item not in groups for item in other_group_ids)
+                or not isinstance(minimum, int | float)
+                or isinstance(minimum, bool)
+                or float(minimum) < 0
+            ):
+                raise ValueError("layout lane group-clearance rule is invalid")
+            expanded_rule_ids = tuple(
+                f"{rule_id}:{other_group_id}"
+                for other_group_id in other_group_ids
+            )
+            reserve_result_ids(*expanded_rule_ids)
+            for other_group_id, result_rule_id in zip(
+                other_group_ids, expanded_rule_ids, strict=True
+            ):
+                missing = tuple(
+                    candidate
+                    for candidate in (group_id, other_group_id)
+                    if groups[candidate] is None
+                )
+                if missing:
+                    results.append(
+                        LayoutLaneResult(
+                            rule_id=result_rule_id,
+                            status=(
+                                "not_applicable"
+                                if missing_policy == "skip_rule"
+                                else "missing_label_group"
+                            ),
+                            clearance=None,
+                            minimum_clearance=float(minimum),
+                            missing_groups=missing,
+                        )
+                    )
+                    continue
+                clearance = (
+                    _bbox_clearance(groups[group_id], groups[other_group_id])
+                    / page_diagonal
+                )  # type: ignore[arg-type]
+                results.append(
+                    LayoutLaneResult(
+                        rule_id=result_rule_id,
+                        status=(
+                            "ok" if clearance >= float(minimum) else "violation"
+                        ),
+                        clearance=round(clearance, 6),
+                        minimum_clearance=float(minimum),
+                        missing_groups=(),
+                    )
+                )
+            continue
         first_id = rule.get("first")
         second_id = rule.get("second")
         minimum = rule.get("minimum_normalized_clearance")
@@ -361,6 +431,7 @@ def evaluate_layout_lanes(
             or float(minimum) < 0
         ):
             raise ValueError("layout lane rule is invalid")
+        reserve_result_ids(rule_id)
         missing = tuple(
             group_id
             for group_id in (first_id, second_id)

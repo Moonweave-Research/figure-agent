@@ -331,9 +331,9 @@ the verified-derived v64 source. V64 encodes one carrier trajectory with two
 temporal endpoint glyphs and keeps label ownership separate from the mechanism
 path. V66 is a preserved counterexample: moving the distribution-breadth label
 outside its plot transferred the defect onto the energy-axis lane. That failure
-is now promoted into the fixture-level `layout_lanes.yaml` relation. New nested
-repair compiles inherit it by default; only explicitly named pre-v64 historical
-artifacts are excluded, so unfamiliar future artifact names fail closed. TeX-source assertions remain limited to declared directional
+is now promoted as a multi-neighbor `layout_lanes.yaml` relation: v64 clears
+both declared neighbors while v66 exposes the transferred energy-axis clearance
+regression. New nested repair compiles inherit it by default; only explicitly named pre-v64 historical artifacts are excluded, so unfamiliar future artifact names fail closed. TeX-source assertions remain limited to declared directional
 geometry: raw source-token counts are not rendered-object counts because loops
 and macros can expand one occurrence into multiple glyphs. These are machine
 guardrails against repeated known failure modes, not evidence that v64 is
