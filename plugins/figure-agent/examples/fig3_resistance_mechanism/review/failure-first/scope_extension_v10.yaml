@@ -9,6 +9,7 @@ allowed_review_paths:
   - review/failure-first/authority_manifest_v2.yaml
 allowed_repository_paths:
   - plugins/figure-agent/docs/execution-plan.md
+  - plugins/figure-agent/docs/product-spec.md
   - plugins/figure-agent/examples/fig3_resistance_mechanism/layout_lanes.yaml
   - plugins/figure-agent/scripts/compile.sh
   - plugins/figure-agent/scripts/checks/check_label_path_proximity.py
@@ -17,6 +18,7 @@ allowed_repository_paths:
   - plugins/figure-agent/scripts/checks/check_layout_drift.py
   - plugins/figure-agent/tests/test_check_layout_drift.py
   - plugins/figure-agent/tests/test_check_tex_assertions.py
+  - plugins/figure-agent/tests/test_document_authority.py
   - plugins/figure-agent/tests/test_run_export.py
   - plugins/figure-agent/tests/test_compile_contract.py
   - plugins/figure-agent/tests/test_label_path_proximity.py

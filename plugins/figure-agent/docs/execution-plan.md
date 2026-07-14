@@ -11,6 +11,34 @@
 
 ---
 
+## Current QA stop state — 2026-07-14
+
+The reviewed baseline `09cd206a` was 32 commits ahead of `main` and had no
+commits to merge from `main`. A detached clean-worktree run collected 3,778 tests and
+finished with `3740 passed, 4 failed, 29 skipped, 5 xfailed`. The four failures
+are release blockers, not publication findings:
+
+1. a layout test requires an ignored historical v64 PDF that is absent from a
+   clean checkout;
+2. this active plan exceeded its authority-test size limit;
+3. the Fig1 evidence verifier requires an ignored `review/states/build/raw.png`;
+4. the historical hybrid Fig3 attribution test resolves `unbound`, not `exact`.
+
+This update closes item 2; Q0 owns the remaining clean-checkout failures and
+the destructive-test boundary found during review.
+
+Focused safe QA additionally found that the current Fig3 normal render is fresh
+but strict is red: `visual_clash` reports 10 candidates and two layout-lane
+rules cannot find the phrases declared by the contract. Geometry coverage is
+also incomplete: 9 of 20 operations are fully parsed, while five transfer
+curves and two band plots remain unknown; `vector_clearance.checked` and
+`rendered_semantic_paths` are both zero. A zero-finding report on an uncovered
+surface is not a quality pass.
+
+Do not begin Slice 3 or another visual-polish loop from this state. Execute the
+ordered blocker queue in Slice 2, keep every historical source read-only, and
+regenerate evidence only in isolated temporary directories.
+
 ## 0. Authority and execution rules
 
 This is the only active forward plan. `docs/product-spec.md` is the only active product specification. Completed tasks, superseded plans, experiment designs, and generated review packets remain evidence in Git history and their existing artifact directories; they do not set the next action.
@@ -18,7 +46,7 @@ This is the only active forward plan. `docs/product-spec.md` is the only active 
 Before editing any implementation, the integration target is `main`:
 
 1. verify the active worktree, branch, common Git directory, and clean state;
-2. compare `main` and this branch because they have diverged, using the exact read-only preflight below;
+2. compare the branch delta against `main` using the exact read-only preflight below;
 3. preserve accepted, historical, and user-owned artifacts;
 4. resolve integration in a dedicated clean worktree without force, reset, checkout-discard, or clean;
 5. run commands from `plugins/figure-agent` unless stated otherwise;
@@ -242,62 +270,14 @@ modules listed in Section 0.
     `execution-binding-v6/` preserve respectively a non-renderable preamble
     failure, undeclared treatment reads, and a timed-out treatment proof with
     continuing strict findings. All pairs remain comparison-ineligible.
-  - `execution-repair-v1/` through `execution-repair-v36/` preserve the move to
-    exact replacement blocks, transactional additive materialization, detector
-    reruns, and bounded repaired artifacts. V13 removes the verified arm's one
-    text-text collision but exposes the previous false-success boundary:
-    text-text zero still contains nine rendered text/path candidates and four
-    semantic-arrow crossings. The renderer-neutral structural gate therefore
-    remains failed. V14 records an insufficient coordinate repair without
-    overwriting it; v15 uses the measured PDF word boundary and removes the two
-    upper progression-arrow crossings, leaving two lower breadth/distribution
-    crossings. V16 removes both lower crossings without changing the blocked
-    band-shape authority. V17 then proves that an exact path-clash repair can
-    regress into a new text-text collision and preserves that failed attempt.
-    V18 repairs the regression: text-text and semantic-path crossings are both
-    zero and rendered text/path candidates fall from eight to seven. V19
-    preserves a failed two-line title reflow that introduced two collisions
-    with the retained-carrier label. V20 adds the missing vertical-clearance
-    condition: the sample title clears both electrodes and the retained label,
-    text-text returns to zero, and rendered text/path candidates fall from
-    seven to five. The structural gate remains failed, so none of these
-    attempts constitutes a fair ablation, scaffold approval, or human
-    publication verdict. V21 proves a detector-visible boundary improvement can
-    still be a human-visible carrier/trap overlap. V22 preserves a malformed
-    literal-newline response that failed TeX compilation; the controller now
-    rejects that response shape before materialization. V23 and v24 preserve
-    successively smaller disorder-dot regressions rather than overwriting them,
-    while v25 clears the `sign-agnostic carrier` label under human review. V26
-    preserves a two-line `single discrete state` reflow that created three
-    text-text collisions, and v27 records the change-budget rejection of an
-    overlarge retry. V28 stays within the same budget and clears both the y-axis
-    and `S60`, returning text-text to zero. V29 preserves a visually and
-    detector-confirmed failed one-line magnitude-key reflow: it created two
-    collisions with `continuous broad`. V30 narrows the same key to two lines,
-    clears those collisions, and keeps the vertical magnitude cue orthogonal
-    to horizontal breadth. The structural gate now compares blocker identities
-    before and after each repair, not only totals: v29 is explicitly
-    `regressed` because it introduces `broad|rho`, `broad|60`, and a new
-    `broad` path clash, while v30 records `no_new_blockers` and the corresponding
-    resolved set. This prevents a local move from silently transferring a
-    collision to another label. Three unrelated rendered text/path candidates
-    remain. The next named target is the coordinated Panel A
-    `retained`/`capture`/`release` label-and-arrow grammar; publication
-    acceptance remains unclaimed.
-    V31 begins that grammar repair by moving carrier semantics into a dedicated
-    external annotation lane without adding a blocker. V32 removes the two
-    duplicate `capture/release` boxes, exposing the carrier path and leaving one
-    semantic owner. V33 corrects the upper-left arrow that pointed against the
-    declared path order. All three record `no_new_blockers`; the external key
-    and `retained` label still require human-visible refinement, and the overall
-    structural gate remains failed.
-    V34 then proves the relocation hazard directly: moving `retained` upward
-    creates two new title collisions and is rejected by the regression gate.
-    V35 retries from v33 rather than compounding the failed artifact, moving
-    retained ownership into the external key with no new blocker. V36 reduces
-    that key from a heavy three-line filled plate to two unboxed lines, again
-    with no new blocker. This resolves the named transition-grammar scaffold
-    target but still requires a human visual verdict.
+  - `execution-repair-v1/` onward preserves every accepted and rejected bounded
+    attempt. The sequence established exact replacement, transactional
+    materialization, blocker-identity regression checks, multi-neighbor layout
+    checks, source-scoped transfer assertions, rendered semantic-path recovery,
+    and threshold-free path metrics. The detailed attempt history belongs to
+    those immutable artifact directories and Git history, not this forward plan.
+    V64 is the current verified-derived baseline; v66 is the preserved
+    transferred-collision counterexample. Neither is publication-accepted.
   - Commits `771c339d`, `a30ff450`, `3d16305e`, and `5a2e895f` bind the v12
     renderer-neutral semantic packet, fail-closed authority and selector checks,
     transactional version publishing, and authenticated page evidence at
@@ -324,54 +304,57 @@ modules listed in Section 0.
 - [ ] Record prospectively measured correction minutes. A machine result is
   never a publication verdict.
 
-**Current next executable step:** Slice 1 remains `pending_human_review` on the
-four current hash-bound views. Slice 2 `comparable-v2/` is transcript-bound,
-cleanly reproducible, human-rejected, and product-unauthorized. Continue from
-the verified-derived v64 source. V64 encodes one carrier trajectory with two
-temporal endpoint glyphs and keeps label ownership separate from the mechanism
-path. V66 is a preserved counterexample: moving the distribution-breadth label
-outside its plot transferred the defect onto the energy-axis lane. That failure
-is now promoted as a multi-neighbor `layout_lanes.yaml` relation: v64 clears
-both declared neighbors while v66 exposes the transferred energy-axis clearance
-regression. New nested repair compiles inherit it by default; only explicitly named pre-v64 historical artifacts are excluded, so unfamiliar future artifact names fail closed. TeX-source assertions remain limited to declared directional
-geometry: raw source-token counts are not rendered-object counts because loops
-and macros can expand one occurrence into multiple glyphs. These are machine
-guardrails against repeated known failure modes, not evidence that v64 is
-publication-ready. The rendered semantic-path resolver now reconstructs both
-axis-aligned arrows and mixed line/cubic carrier trajectories from current PDF
-geometry, rejects tiny decorative paths and headless band curves, and uses
-adaptive curve flattening for glyph-box crossing checks. This closes a repeated
-LLM blind spot without judging whether the surviving trajectory is aesthetically
-natural or publication-ready. The same report now preserves threshold-free path
-metrics before any grammar gate is declared: endpoint ownership, net progress,
-arc length, tortuosity, dominant-axis backtracking, and orthogonal turn count.
-On verified-derived v64 the carrier path has a terminal-end arrowhead, net
-progress, tortuosity `1.838436`, zero dominant-axis backtracking, and two
-orthogonal turns. These values are an observed baseline, not acceptance
-thresholds. Detector-only applied-`V` candidates remain
-review-only until wiring intent is adjudicated. Keep band-energy shape changes
-blocked until their physical and mathematical authority is reviewed. The next
-gate is a named human scaffold verdict; machine non-regression is not publication
-acceptance.
+### Ordered next execution
 
-The current Fig3 source also declares a narrow, source-scoped carrier-walk
-contract: the existing curved transfer style must include at least two
-downward capture transitions and two upward release transitions. The checker
-binds this only to `fig3_resistance_mechanism.tex`; preserved repair sources
-receive no new assertion. This catches a repeated LLM failure mode without
-freezing absolute PDF coordinates, a particular curve silhouette, or a
-publication verdict.
+**Current next executable step:** complete Q0 before changing the figure.
+
+- [ ] **Q0 — Make QA non-destructive and clean-checkout complete.** Copy every
+  historical TeX input and its required local dependencies to `tmp_path` before
+  compilation; never write beside a historical source. Mark every TeX/render
+  test `render`, prove `pytest -m 'not render'` invokes no TeX tool, and make the
+  three remaining detached-worktree failures pass without relying on ignored
+  build files.
+- [ ] **Q1 — Close semantic source-gate bypasses.** Match exact comma-delimited
+  TikZ option keys so `xfer-helper` cannot satisfy `xfer`; resolve arrowheads
+  declared through named TikZ styles; make missing or bidirectional heads fail a
+  unidirectional assertion; validate tex-assertion evidence schema, source hash,
+  and checked counts; compare scope against the declared merge base as well as
+  the pending worktree surface.
+- [ ] **Q2 — Make status and strict orchestration truthful.** Run every detector
+  through deferred strict aggregation, including vector clearance. Surface
+  strict outcome, critique/export freshness, and geometry coverage separately;
+  `FRESH` must mean freshness only. Reconcile `layout_lanes.yaml` with current
+  rendered labels without weakening the intended breadth/energy/magnitude
+  relations.
+- [ ] **Q3 — Cover the geometry users actually reject.** Parse and attribute the
+  five curved transfer paths and two band plots, then require explicit coverage
+  floors before zero findings may be called clean. Establish rendered semantic
+  paths and non-zero vector-clearance checks. Do not invent aesthetic or
+  physical thresholds from v64 alone; band-energy shape authority remains a
+  human/scientific decision.
+- [ ] **Q4 — Refresh evidence and close human review.** Regenerate critique,
+  audit crops, compile/export receipts, and review hashes in a clean environment.
+  Record prospective correction minutes and obtain a named scaffold verdict.
+  Machine-valid or review-ready remains distinct from publication acceptance.
+
+Q0–Q4 are sequential. A failed earlier gate blocks later figure polishing.
+After Q4 and the Slice 1 exit condition both pass, execute Slice 3 exactly once;
+do not start another renderer or fixture.
 
 ### Verification
 
 ```bash
-bash scripts/compile.sh \
-  examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
-uv run pytest tests/test_fig3_resistance_failure_first.py \
-  tests/test_failure_ablation.py \
-  tests/test_quality_patch_policy.py \
-  tests/test_quality_patch_plan.py \
-  tests/test_quality_patch_apply.py -q
+# Fast lane: after Q0 this must invoke no TeX/render tool.
+uv run pytest -q -m 'not render'
+# Run the complete suite in a disposable detached worktree.
+uv run pytest -q
+uv run pytest -q tests/test_check_tex_assertions.py tests/test_run_export.py tests/test_compile_contract.py tests/test_undeclared_geometry.py tests/test_check_layout_drift.py tests/test_document_authority.py
+bash scripts/compile.sh examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+set +e
+FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+strict_exit=$?
+set -e
+test "$strict_exit" -ne 0
 uv run ruff check tests/test_fig3_resistance_failure_first.py
 git diff --check
 ```
@@ -452,7 +435,7 @@ the machine report. If either family lacks comparable evidence, the decision is
 
 This plan is complete only when:
 
-1. Panel F has all required review scales and measured human effort;
+1. Panel F has all required review scales and a recorded human-effort status;
 2. Fig3 proves the same control loop without Fig1-specific imports;
 3. both families have comparable raw, verified, and repaired evidence;
 4. at least one recurring failure is exactly attributable and safely reduced
@@ -463,6 +446,4 @@ This plan is complete only when:
    fact; and
 8. machine output never claims publication acceptance.
 
-Until all conditions hold, Figure Agent remains a substantial quality-control
-system with promising bounded-repair evidence, not a proven autonomous
-publication-figure finisher.
+Until all conditions hold, Figure Agent remains a substantial quality-control system with promising bounded-repair evidence, not a proven autonomous publication-figure finisher.

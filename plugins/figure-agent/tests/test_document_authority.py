@@ -164,6 +164,16 @@ def test_active_plan_contains_only_remaining_work() -> None:
     ):
         assert completed_or_retired not in execution
 
+    for required in (
+        "Current QA stop state",
+        "3740 passed, 4 failed",
+        "Make QA non-destructive and clean-checkout complete",
+        "Close semantic source-gate bypasses",
+        "Make status and strict orchestration truthful",
+        "Cover the geometry users actually reject",
+        "Refresh evidence and close human review",
+    ):
+        assert required in execution
 
 
 def test_active_plan_is_executable_against_current_fig3_artifacts() -> None:
@@ -186,7 +196,9 @@ def test_active_plan_is_executable_against_current_fig3_artifacts() -> None:
         assert required in normalized
 
     assert "examples/fig3_trap_schematic_v97/fig3_trap_schematic_v97.tex" not in execution
-    assert (PLUGIN_ROOT / "examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex").is_file()
+    assert (
+        PLUGIN_ROOT / "examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex"
+    ).is_file()
     assert (PLUGIN_ROOT / "examples/fig3_resistance_mechanism/briefing.md").is_file()
     assert (PLUGIN_ROOT / "examples/fig3_resistance_mechanism/spec.yaml").is_file()
     assert (

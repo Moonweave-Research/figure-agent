@@ -3,7 +3,7 @@
 
 **Status:** Active product authority
 
-**Effective date:** 2026-07-12
+**Effective date:** 2026-07-14
 
 **Companion authority:** docs/execution-plan.md
 
@@ -500,6 +500,17 @@ Current repository evidence supports these conclusions:
   collision checks; the treatment run is also comparison-ineligible because
   its transcript contains undeclared reads of the product specification and
   execution plan; and
+- repeated Fig3 repair failures have produced reusable blocker-identity,
+  multi-neighbor layout, source-direction, rendered-path, and path-metric
+  machinery, but an adversarial QA pass found fail-open gaps in named-style
+  arrow resolution, option-token matching, branch scope, and evidence validation;
+- a detached clean-worktree run at commit `09cd206a` produced `3740 passed, 4
+  failed, 29 skipped, 5 xfailed`; the failures expose ignored-build dependencies,
+  one stale historical attribution, and an overgrown execution authority rather
+  than publication-quality success;
+- the current Fig3 strict state remains red, and its most important curved
+  transfer and band-plot surfaces do not yet meet a declared geometry-coverage
+  floor; therefore zero findings on those surfaces cannot support promotion; and
 - the repository does not yet prove that Figure Agent reduces correction cost
   relative to the same LLM without the system.
 
@@ -517,7 +528,7 @@ artifact ownership only. They do not reopen direct-SVG or illustration-grammar
 development in the active plan.
 
 The failure corpus and first A/B/C baseline now exist. The active execution plan
-therefore closes the incomplete Fig1 human-review boundary, tests the same
-failure-first loop on the materially different Fig3 family, and only then makes
-a two-family capability decision. It must not add another renderer, motif
-family, or fixture-specific polish rule.
+therefore closes QA integrity and coverage gaps first, then closes the incomplete
+Fig1 and Fig3 human-review boundaries, and only then makes a two-family
+capability decision. It must not add another renderer, motif family, or
+fixture-specific polish rule.
