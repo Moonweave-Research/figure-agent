@@ -283,6 +283,7 @@ def test_named_endpoint_assertion_binds_a_straight_leader_to_its_named_target():
             r"\coordinate (trap) at (1.0,2.0);",
             r"\coordinate (label_anchor) at (1.0,1.5);",
             r"\draw[terminalLabelLeader] (trap) -- (label_anchor);",
+            r"\node (label) at (label_anchor) {slow-release};",
         ]
     )
     assertion = {
@@ -291,9 +292,33 @@ def test_named_endpoint_assertion_binds_a_straight_leader_to_its_named_target():
         "minimum_paths": 1,
         "required_anchors": ["trap", "label_anchor"],
         "allowed_anchors": ["trap", "label_anchor"],
+        "required_node_bindings": [{"node": "label", "anchor": "label_anchor"}],
     }
 
     assert cta.check_named_endpoint_assertions(tex, [assertion]) == []
+
+
+def test_named_endpoint_assertion_rejects_a_leader_when_its_label_node_detaches():
+    tex = "\n".join(
+        [
+            r"\coordinate (trap) at (1.0,2.0);",
+            r"\coordinate (label_anchor) at (1.0,1.5);",
+            r"\draw[terminalLabelLeader] (trap) -- (label_anchor);",
+            r"\node (label) at (1.6,1.5) {slow-release};",
+        ]
+    )
+    assertion = {
+        "id": "terminal-label",
+        "anchor_style": "terminalLabelLeader",
+        "minimum_paths": 1,
+        "required_anchors": ["trap", "label_anchor"],
+        "allowed_anchors": ["trap", "label_anchor"],
+        "required_node_bindings": [{"node": "label", "anchor": "label_anchor"}],
+    }
+
+    issues = cta.check_named_endpoint_assertions(tex, [assertion])
+
+    assert issues[0]["status"] == "named_label_binding_missing"
 
 
 def test_payload_has_stable_shape(tmp_path):

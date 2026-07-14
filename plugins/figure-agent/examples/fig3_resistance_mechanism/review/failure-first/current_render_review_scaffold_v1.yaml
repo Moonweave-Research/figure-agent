@@ -4,7 +4,7 @@ created_for: current_three_column_render
 source_inputs:
   tex_sha256: sha256:b804a82b55bfd3f0f1d5bd30c1e5de51f678e0f88ac11c8f9171894725b3114f
   briefing_sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
-  spec_sha256: sha256:a935e73e58ffb0fdb8722103f6a440eaea491f9508c5dfb34355f60202432de3
+  spec_sha256: sha256:8ea441044b0197212c8856140cac06cc610340f8118aa7d4b79dd8d78051fcb7
 render_evidence:
   render_path: build/fig3_resistance_mechanism.pdf
   audit_crop_manifest: build/audit_crops/manifest.json
@@ -24,7 +24,7 @@ agent_observations:
     status: pending_human_review
     panel: A
     category: label_target_association
-    observation: The terminal state is labelled slow-release, not retained or deep-only. A fine vertical leader now binds the unboxed label to its representative terminal state; an opt-in named-endpoint contract rejects a detached leader.
+    observation: The terminal state is labelled slow-release, not retained or deep-only. A fine vertical leader now binds the unboxed label to its representative terminal state; an opt-in contract rejects both a detached leader and a relocated label node.
     grounded_in_rule: Briefing §3 rule 5
     question: At print scale, does slow-release unambiguously identify the terminal representative state without suggesting that only deep traps retain carriers?
   - id: OBS-002

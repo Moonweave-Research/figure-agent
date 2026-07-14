@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig3_resistance_mechanism
-generated_at: '2026-07-14T14:25:27Z'
+generated_at: '2026-07-14T14:33:57Z'
 generator: critique_brief.py
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:40129f7223741272cce440f9edcd5a0226442ca5b8e97e64a179f8283347bfc1
+critique_input_hash: sha256:4e90d998452664f697d20840d9f7067139feab7d91b56e88ee63fc3b4fd6e84f
 verdict: revise
 findings:
   - id: C001
@@ -141,7 +141,7 @@ quality_axes:
     verdict: pass
     confidence: high
     rationale: Current labels identify the film, qualitative status, slow-release state, and broader energy support without reintroducing retired deep-only or numeric-breadth claims.
-    evidence: Current render, Briefing §3 rules 2 and 5, and the opt-in terminalLabelLeader named-endpoint contract.
+    evidence: Current render, Briefing §3 rules 2 and 5, and the opt-in terminalLabelLeader contract binding both leader endpoints and its label node.
     blocking_items: []
     recommended_action: none
   journal_polish:
@@ -287,7 +287,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:40129f7223741272cce440f9edcd5a0226442ca5b8e97e64a179f8283347bfc1
+  assessed_artifact_hash: sha256:4e90d998452664f697d20840d9f7067139feab7d91b56e88ee63fc3b4fd6e84f
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:

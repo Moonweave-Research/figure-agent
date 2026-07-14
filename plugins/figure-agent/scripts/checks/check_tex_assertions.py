@@ -72,6 +72,10 @@ _STYLED_NAMED_DRAW_RE = re.compile(
     r"\\draw\s*\[(" + _OPT_BODY + r")\]\s*"
     rf"\(\s*({_NAMED_COORD})\s*\)\s*--\s*\(\s*({_NAMED_COORD})\s*\)"
 )
+_NAMED_NODE_AT_NAMED_COORD_RE = re.compile(
+    r"\\node(?:\s*\[" + _OPT_BODY + r"\])?\s*"
+    rf"\(\s*({_NAMED_COORD})\s*\)\s*at\s*\(\s*({_NAMED_COORD})\s*\)"
+)
 _NAMED_COORD_DECL_RE = re.compile(
     r"\\(?:coordinate|node)(?:\s*\[[^\]]*\])?\s*"
     rf"\(\s*({_NAMED_COORD})\s*\)\s*at\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
@@ -225,6 +229,20 @@ def find_styled_named_paths(tex_text: str, style: str) -> list[tuple[str, str]]:
 def find_styled_named_to_paths(tex_text: str, style: str) -> list[tuple[str, str]]:
     """Backward-compatible alias for :func:`find_styled_named_paths`."""
     return find_styled_named_paths(tex_text, style)
+
+
+def find_named_node_anchor_bindings(tex_text: str) -> list[tuple[str, str]]:
+    """Return named nodes placed directly at named coordinates.
+
+    A leader endpoint alone is insufficient to bind an annotation: the text node
+    can be moved away while leaving the leader in place. These bindings let an
+    opt-in source contract require the label node to share its declared leader
+    anchor.
+    """
+    return [
+        (match.group(1), match.group(2))
+        for match in _NAMED_NODE_AT_NAMED_COORD_RE.finditer(_strip_tex_comments(tex_text))
+    ]
 
 
 def _tip_orientation(option_body: str) -> str:
@@ -452,6 +470,28 @@ def parse_named_endpoint_assertions(
                 f"named_endpoint_assertions[{index}].minimum_paths must be a positive integer"
             )
         out["minimum_paths"] = minimum_paths
+        required_node_bindings = item.get("required_node_bindings")
+        if required_node_bindings is not None:
+            if not isinstance(required_node_bindings, list) or not required_node_bindings:
+                raise TexAssertionError(
+                    f"named_endpoint_assertions[{index}].required_node_bindings must be a non-empty list"
+                )
+            parsed_bindings: list[dict[str, str]] = []
+            for binding_index, binding in enumerate(required_node_bindings):
+                if not isinstance(binding, dict):
+                    raise TexAssertionError(
+                        f"named_endpoint_assertions[{index}].required_node_bindings[{binding_index}] must be a mapping"
+                    )
+                parsed_binding: dict[str, str] = {}
+                for field in ("node", "anchor"):
+                    value = binding.get(field)
+                    if not isinstance(value, str) or not value.strip():
+                        raise TexAssertionError(
+                            f"named_endpoint_assertions[{index}].required_node_bindings[{binding_index}].{field} is required"
+                        )
+                    parsed_binding[field] = value.strip()
+                parsed_bindings.append(parsed_binding)
+            out["required_node_bindings"] = parsed_bindings
         assertion_source_name = item.get("source_name")
         if assertion_source_name is not None:
             if not isinstance(assertion_source_name, str) or not assertion_source_name.strip():
@@ -508,6 +548,27 @@ def check_named_endpoint_assertions(tex_text: str, assertions: list[dict]) -> li
                     "message": (
                         f"assertion {assertion['id']!r}: required named endpoints absent "
                         f"{', '.join(missing)}"
+                    ),
+                }
+            )
+            continue
+        required_node_bindings = assertion.get("required_node_bindings", [])
+        observed_node_bindings = set(find_named_node_anchor_bindings(tex_text))
+        missing_node_bindings = [
+            binding
+            for binding in required_node_bindings
+            if (binding["node"], binding["anchor"]) not in observed_node_bindings
+        ]
+        if missing_node_bindings:
+            rendered = ", ".join(
+                f"{binding['node']} at {binding['anchor']}" for binding in missing_node_bindings
+            )
+            issues.append(
+                {
+                    "id": assertion["id"],
+                    "status": "named_label_binding_missing",
+                    "message": (
+                        f"assertion {assertion['id']!r}: required label bindings absent {rendered}"
                     ),
                 }
             )
@@ -621,6 +682,7 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
 BLOCKING_STATUSES = (
     "violated", "anchor_missing", "anchor_ambiguous", "insufficient_matches", "arrowhead_invalid",
     "insufficient_named_paths", "named_endpoint_unbound", "named_endpoint_missing",
+    "named_label_binding_missing",
 )
 
 

@@ -65,6 +65,9 @@ named_endpoint_assertions:
     allowed_anchors:
       - trap_slow_release
       - slow_release_label_anchor
+    required_node_bindings:
+      - node: slow_release_label
+        anchor: slow_release_label_anchor
 semantic_assertions:
   - id: fig3-capture-before-release
     relation: left_of

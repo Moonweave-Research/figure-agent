@@ -8,7 +8,7 @@ authoritative_inputs:
     sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
   - role: specification
     path: spec.yaml
-    sha256: sha256:a935e73e58ffb0fdb8722103f6a440eaea491f9508c5dfb34355f60202432de3
+    sha256: sha256:8ea441044b0197212c8856140cac06cc610340f8118aa7d4b79dd8d78051fcb7
   - role: authoring_contract
     path: authoring_contract.md
     sha256: sha256:09fb090c27a08ce69a4127ef1a34d0fcb482e42ad3c472737b2631512ddca873
