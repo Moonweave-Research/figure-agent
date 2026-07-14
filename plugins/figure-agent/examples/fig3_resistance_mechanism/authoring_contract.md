@@ -15,7 +15,14 @@ conduction, bridging Fig 2 dielectric response to Fig 4 trap-energy quantificati
   trap-distribution breadth, but must not equate geometric width directly with `n`
   without a declared model or calibration.
 - Keep `rho_60s` orthogonal to `n` as a magnitude cue.
+- Express `rho_60s` as a separate key unless a declared measurement supplies a real
+  scale; do not draw a pseudo-quantitative arrow without one.
 - Show low-sulfur traps as discrete and S80 as continuous broad.
+- Present S60 on the left and S80 on the right as separate comparison units. Do not overlay
+  their curves unless an explicit mixture claim is in the declared science.
+- Present panel-A capture, release, and retained states in temporal order. That order must not
+  be drawn or described as a net spatial drift through the film.
+- Give the current-decay inset visible `$I(t)$` and `$t$` axes, even when it remains qualitative.
 - Name the panel-A vertical axis `energy, E`; never leave bare `E` beside applied-voltage
   terminals where it can be read as an electric field.
 - Bind every capture/release path endpoint to a named carrier or trap-state anchor. Do not
@@ -32,9 +39,12 @@ conduction, bridging Fig 2 dielectric response to Fig 4 trap-energy quantificati
 - Do not infer the direction or magnitude of a breadth-to-`n` relation from the
   schematic alone.
 - Do not use “trap network”; the intended phrase is trap-energy distribution or landscape.
+- Do not use source comments that contradict the briefing's `n`/breadth or `deep` boundaries;
+  comments are part of the authoring context consumed by agents.
 
 ## Acceptance Gate
 
-The fixture is acceptable for this sprint when compile succeeds, the current C001
-label/curve overlap is removed, and a reader can state within 10 seconds that Fig 3
-shows trapping during conduction causing current decay and resistance increase.
+For this sprint, retain compile and semantic/geometry evidence and have a reader confirm
+within 10 seconds that Fig 3 shows trapping during conduction causing current decay and
+resistance increase. A clean machine gate is only a bounded screening result: publication
+acceptance requires an explicit human scaffold/review verdict and is never implied by it.

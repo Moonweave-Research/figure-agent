@@ -4,7 +4,7 @@ label_groups:
   - id: breadth_descriptor
     required_phrase: distribution breadth
   - id: energy_axis_label
-    required_phrase: trap energy E
+    required_phrase: g(E)
   - id: magnitude_axis_label
     required_phrase: magnitude
 rules:

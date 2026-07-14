@@ -1,0 +1,19 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v12.yaml
+extends_sha256: sha256:bf5edce98fac9d64b1a97b48d56e270f34bd05f0d10669c0572ca4f4e9efd725
+reason: authorize bounded temporal-sequence and composition-comparison semantic repair
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v13.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/authoring_contract.md
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/briefing.md
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/layout_lanes.yaml
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/spec.yaml
+  - plugins/figure-agent/tests/test_check_tex_assertions.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+  - plugins/figure-agent/tests/test_check_layout_drift.py
+  - plugins/figure-agent/tests/test_semantic_assertions.py
+publication_acceptance: not_claimed

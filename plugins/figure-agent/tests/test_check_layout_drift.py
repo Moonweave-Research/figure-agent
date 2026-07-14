@@ -157,12 +157,12 @@ def test_fig3_live_source_exposes_the_three_layout_relation_anchors() -> None:
 
     assert phrases == {
         "breadth_descriptor": "distribution breadth",
-        "energy_axis_label": "trap energy E",
+        "energy_axis_label": "g(E)",
         "magnitude_axis_label": "magnitude",
     }
     assert "{distribution breadth}" in source
-    assert "{trap energy, $E$}" in source
-    assert "$\\rho_{60\\mathrm{s}}$\\\\magnitude" in source
+    assert "{$g(E)$}" in source
+    assert "$\\rho_{60\\mathrm{s}}$ magnitude cue" in source
     assert "$n$ = breadth" not in source
 
 

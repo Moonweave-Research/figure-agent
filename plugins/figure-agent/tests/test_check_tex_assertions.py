@@ -215,7 +215,7 @@ def test_check_rejects_reversed_curved_semantic_arrow_in_a_repeated_role():
     assert issues[0]["status"] == "insufficient_matches"
 
 
-def test_fig3_carrier_walk_declares_and_satisfies_repeated_capture_release_contract():
+def test_fig3_carrier_sequence_declares_and_satisfies_repeated_capture_release_contract():
     plugin_root = Path(__file__).resolve().parents[1]
     fixture = plugin_root / "examples" / "fig3_resistance_mechanism"
     assertions = cta.parse_tex_assertions(
@@ -224,8 +224,8 @@ def test_fig3_carrier_walk_declares_and_satisfies_repeated_capture_release_contr
     )
 
     assert {assertion["id"] for assertion in assertions} >= {
-        "carrier-walk-repeated-capture",
-        "carrier-walk-repeated-release",
+        "carrier-sequence-repeated-capture",
+        "carrier-sequence-repeated-release",
     }
     assert (
         cta.check_tex_assertions(
@@ -236,7 +236,7 @@ def test_fig3_carrier_walk_declares_and_satisfies_repeated_capture_release_contr
     )
 
 
-def test_fig3_carrier_walk_binds_each_transfer_to_declared_named_states():
+def test_fig3_carrier_sequence_binds_each_transfer_to_declared_named_states():
     plugin_root = Path(__file__).resolve().parents[1]
     fixture = plugin_root / "examples" / "fig3_resistance_mechanism"
     spec = yaml.safe_load((fixture / "spec.yaml").read_text(encoding="utf-8"))
@@ -246,7 +246,7 @@ def test_fig3_carrier_walk_binds_each_transfer_to_declared_named_states():
     )
 
     assert [assertion["id"] for assertion in assertions] == [
-        "carrier-walk-binds-every-transfer-to-a-declared-state"
+        "carrier-sequence-binds-every-transfer-to-a-declared-state"
     ]
     assert cta.check_named_endpoint_assertions(
         (fixture / "fig3_resistance_mechanism.tex").read_text(encoding="utf-8"),

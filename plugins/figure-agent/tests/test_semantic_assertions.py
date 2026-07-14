@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 
@@ -271,6 +273,26 @@ def test_payload_structure():
     assert payload["schema"] == "figure-agent.semantic-assertions.v1"
     assert payload["checked"] == 3
     assert payload["total"] == 0
+
+
+def test_fig3_declares_visible_temporal_and_composition_ordering_contracts():
+    plugin_root = Path(__file__).resolve().parents[1]
+    spec = yaml.safe_load(
+        (
+            plugin_root / "examples" / "fig3_resistance_mechanism" / "spec.yaml"
+        ).read_text(encoding="utf-8")
+    )
+
+    assertions = parse_assertions(spec)
+
+    assert {
+        (assertion["id"], assertion["relation"], assertion["subject"], assertion["reference"])
+        for assertion in assertions
+    } >= {
+        ("fig3-capture-before-release", "left_of", "capture", "release"),
+        ("fig3-release-before-retained", "left_of", "release", "retained"),
+        ("fig3-s60-before-s80", "left_of", "S60", "S80"),
+    }
 
 
 def test_load_spec_missing_returns_empty(tmp_path: Path) -> None:

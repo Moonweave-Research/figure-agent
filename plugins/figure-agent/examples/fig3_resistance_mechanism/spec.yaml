@@ -14,14 +14,14 @@ geometry_coverage_policy:
   minimum_rendered_curved_semantic_paths: 5
 visual_clash_cap: 10
 tex_assertions:
-  - id: carrier-walk-repeated-capture
+  - id: carrier-sequence-repeated-capture
     source_name: fig3_resistance_mechanism.tex
     anchor_style: xfer
     axis: y
     direction: decreasing
     minimum_matches: 2
     require_unidirectional_arrow: true
-  - id: carrier-walk-repeated-release
+  - id: carrier-sequence-repeated-release
     source_name: fig3_resistance_mechanism.tex
     anchor_style: xfer
     axis: y
@@ -29,7 +29,7 @@ tex_assertions:
     minimum_matches: 2
     require_unidirectional_arrow: true
 named_endpoint_assertions:
-  - id: carrier-walk-binds-every-transfer-to-a-declared-state
+  - id: carrier-sequence-binds-every-transfer-to-a-declared-state
     source_name: fig3_resistance_mechanism.tex
     anchor_style: xfer
     minimum_paths: 5
@@ -51,6 +51,19 @@ named_endpoint_assertions:
       - trap_shallow
       - trap_mid
       - trap_deep
+semantic_assertions:
+  - id: fig3-capture-before-release
+    relation: left_of
+    subject: capture
+    reference: release
+  - id: fig3-release-before-retained
+    relation: left_of
+    subject: release
+    reference: retained
+  - id: fig3-s60-before-s80
+    relation: left_of
+    subject: S60
+    reference: S80
 panels:
   - id: A
     caption: Cell under applied V — charge carrier (sign-agnostic) undergoes dispersive, repeated trapping; transient current decays (I ∝ t^-n) so resistance rises
@@ -62,11 +75,11 @@ composition_model:
   panels:
     A:
       objects:
-        carrier_walk:
-          kind: path
+        carrier_sequence:
+          kind: state_sequence
           truth_bearing: true
-          semantic_claim: sign-agnostic carrier undergoes repeated trapping
-          invariant: carrier_sign_agnostic_repeated_trapping
+          semantic_claim: sign-agnostic carrier undergoes temporally ordered repeated trapping
+          invariant: carrier_sign_agnostic_temporal_state_sequence
           allowed_creative_ops:
             - reshape_path
             - reduce_arrowheads
@@ -75,7 +88,7 @@ composition_model:
           truth_bearing: true
           semantic_claim: transient current decays as I proportional to t^-n
           invariant: current_decay_power_law
-          anchor_target: carrier_walk
+          anchor_target: carrier_sequence
           allowed_creative_ops:
             - anchor_plot
             - consolidate_label
@@ -89,6 +102,14 @@ composition_model:
           allowed_creative_ops:
             - externalize_span
             - reduce_arrow_clutter
+        composition_comparison:
+          kind: ordered_comparison
+          truth_bearing: true
+          semantic_claim: S60 discrete traps evolve to S80 continuous broad distribution
+          invariant: s60_to_s80_left_to_right_without_overlay
+          allowed_creative_ops:
+            - separate_comparison_units
+            - avoid_peak_shift_implication
 notes: |
   figure-agent figure (the REAL paper Fig 3 per the 2026-06-22 figure plan:
   characterization -> mechanism synthesis). SCHEMATIC ONLY — this is the explanatory

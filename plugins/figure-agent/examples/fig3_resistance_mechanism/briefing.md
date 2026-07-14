@@ -18,12 +18,12 @@
 
 ## §2. Sub-regions (2 dense blocks)
 - **(a) cell + transport + decay**: 전극/sulfur film/전극 + 인가 V; carrier의 tortuous
-  multiple-trapping walk(최종 retained); 작은 I-vs-t 감쇠 sparkline + "current decays ⇒ R↑".
+  representative trapping-state sequence(최종 retained); 작은 I-vs-t 감쇠 sparkline + "current decays ⇒ R↑".
   세로축은 전기장이 아닌 **energy, E**이며, carrier-path의 모든 끝점은 실제 trap/carrier glyph에
-  결속해야 한다.
+  결속해야 한다. 좌→우 배치는 시간 순서만 나타내며 net spatial drift를 뜻하지 않는다.
 - **(b) g(E) evolution**: 에너지 가로축의 trap energy distribution. S60 = discrete
   localized trap(좁음) → S80 = continuous broad(넓음). `distribution breadth`(가로 범위), `ρ60s`
-  (세로, 별도 magnitude cue). "disorder↑(sulfur↑): discrete → continuous broad" 화살표.
+  (별도 textual magnitude cue). S60과 S80은 겹친 성분처럼 그리지 말고 좌→우 비교 단위로 분리한다.
 
 ## §3. Physics invariants (grounded in 02_Surfur_Polymer docs; DO NOT violate)
 1. Measurement = transient current I(t) under applied V, **Curie–von Schweidler power-law
