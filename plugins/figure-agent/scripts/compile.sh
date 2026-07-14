@@ -235,6 +235,16 @@ fi
 # Report-only; best-effort — must never fail the build (no FIGURE_AGENT_WORKSPACE
 # in some invocations means the fixture is unresolvable, which is fine to skip).
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/convention_receipt.py" "$BASE" --write >/dev/null || true
+STRICT_STATUS_ARGS=()
+if [[ ${#STRICT_ARGS[@]} -ne 0 ]]; then
+  STRICT_STATUS_ARGS+=(--strict-requested)
+fi
+if [[ $STRICT_CHECK_FAILURE -ne 0 ]]; then
+  STRICT_STATUS_ARGS+=(--detector-failed)
+fi
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/strict_status.py" \
+  --json-output "${BUILD_DIR}/strict_status.json" \
+  "${STRICT_STATUS_ARGS[@]}"
 trap - ERR
 
 if [[ $STRICT_CHECK_FAILURE -ne 0 ]]; then

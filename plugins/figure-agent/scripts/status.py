@@ -1,5 +1,7 @@
 """Infer figure-pipeline stage from filesystem + spec.yaml only."""
 
+# ruff: noqa: E402
+
 from __future__ import annotations
 
 import argparse
@@ -8,7 +10,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+SCRIPTS_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPTS_DIR))
+sys.path.insert(0, str(SCRIPTS_DIR / "checks"))
+sys.path.insert(0, str(SCRIPTS_DIR / "quality"))
 
 import human_decision_record
 import runtime_paths
@@ -61,6 +66,7 @@ RENDER_FRESH = "FRESH"
 _SPEC_PARSE_ERROR_KEY = "__spec_parse_error__"
 SPINE_EVIDENCE_SCHEMA = "figure-agent.spine-evidence-summary.v1"
 PROMOTION_QUEUE_SCHEMA = "figure-agent.promotion-queue.v1"
+STRICT_STATUS_SCHEMA = "figure-agent.strict-status.v1"
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -552,6 +558,59 @@ def _physics_grounding_summary(path: Path) -> dict[str, Any]:
     return {key: value for key, value in summary.items() if value is not None}
 
 
+def _strict_status_summary(path: Path) -> dict[str, Any]:
+    payload, error = _load_build_json_mapping(path)
+    if error is not None:
+        return {"state": error, "path": f"build/{path.name}"}
+    assert payload is not None
+    state = payload.get("state")
+    if payload.get("schema") != STRICT_STATUS_SCHEMA or state not in {
+        "not_requested",
+        "passed",
+        "failed",
+    }:
+        return {"state": "invalid", "path": f"build/{path.name}"}
+    return {
+        "state": state,
+        "path": f"build/{path.name}",
+        "schema": payload["schema"],
+        "strict_requested": payload.get("strict_requested") is True,
+        "detector_failed": payload.get("detector_failed") is True,
+    }
+
+
+def _geometry_coverage_summary(path: Path) -> dict[str, Any]:
+    payload, error = _load_build_json_mapping(path)
+    if error is not None:
+        return {"state": error, "path": f"build/{path.name}"}
+    assert payload is not None
+    coverage = payload.get("geometry_parse_coverage")
+    if not isinstance(coverage, dict):
+        return {"state": "invalid", "path": f"build/{path.name}"}
+    total = coverage.get("total_operations")
+    parsed = coverage.get("parsed_operations")
+    ratio = coverage.get("coverage_ratio")
+    if (
+        not isinstance(total, int)
+        or isinstance(total, bool)
+        or not isinstance(parsed, int)
+        or isinstance(parsed, bool)
+        or not isinstance(ratio, (int, float))
+        or isinstance(ratio, bool)
+    ):
+        return {"state": "invalid", "path": f"build/{path.name}"}
+    return {
+        "state": "present",
+        "path": f"build/{path.name}",
+        "schema": payload.get("schema"),
+        "coverage_ratio": ratio,
+        "parsed_operations": parsed,
+        "total_operations": total,
+        "unknown_operations": coverage.get("unknown_operations"),
+        "partial_unknown_operations": coverage.get("partial_unknown_operations"),
+    }
+
+
 def _spine_evidence_summary(example_dir: Path) -> dict[str, Any]:
     build_dir = example_dir / "build"
     sources = {
@@ -615,6 +674,11 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
     result["audit_evidence"] = summarize_audit_evidence(example_dir)
     result["spine_evidence"] = _spine_evidence_summary(example_dir)
     result["promotion_queue"] = _promotion_queue_summary(example_dir)
+    build_dir = example_dir / "build"
+    result["strict_evidence"] = _strict_status_summary(build_dir / "strict_status.json")
+    result["geometry_coverage"] = _geometry_coverage_summary(
+        build_dir / "undeclared_geometry.json"
+    )
     metrics_summary = reference_aesthetic_metrics_summary(example_dir)
     if metrics_summary is not None:
         state = metrics_summary.get("evaluation_state", "invalid")

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -676,6 +677,85 @@ def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     os.utime(pdf, (new_time, new_time))
     result = infer_stage(fig_dir)
     assert result["stage"] == 3
+
+
+def test_status_separates_render_freshness_from_strict_and_geometry_evidence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "strictfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    tex = fig_dir / "strictfig.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    pdf = build_dir / "strictfig.pdf"
+    pdf.write_bytes(b"%PDF")
+    (build_dir / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": True,
+                "detector_failed": True,
+                "state": "failed",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (build_dir / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.undeclared-geometry.v1",
+                "geometry_parse_coverage": {
+                    "coverage_ratio": 0.45,
+                    "parsed_operations": 9,
+                    "total_operations": 20,
+                    "unknown_operations": 11,
+                    "partial_unknown_operations": 0,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    for path in (tex, fig_dir / "briefing.md", fig_dir / "spec.yaml"):
+        os.utime(path, (old_time, old_time))
+    os.utime(pdf, (fresh_time, fresh_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["render_state"] == "FRESH"
+    assert result["strict_evidence"] == {
+        "state": "failed",
+        "path": "build/strict_status.json",
+        "schema": "figure-agent.strict-status.v1",
+        "strict_requested": True,
+        "detector_failed": True,
+    }
+    assert result["geometry_coverage"] == {
+        "state": "present",
+        "path": "build/undeclared_geometry.json",
+        "schema": "figure-agent.undeclared-geometry.v1",
+        "coverage_ratio": 0.45,
+        "parsed_operations": 9,
+        "total_operations": 20,
+        "unknown_operations": 11,
+        "partial_unknown_operations": 0,
+    }
+
+
+def test_status_cli_loads_checker_modules_without_external_pythonpath() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "status.py"), "--json"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout)
 
 
 def test_status_surfaces_spine_evidence_from_build_reports(tmp_path: Path) -> None:

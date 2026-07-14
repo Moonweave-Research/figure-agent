@@ -70,6 +70,16 @@ def test_compile_defers_vector_clearance_strict_failure_until_evidence_is_writte
     )
 
 
+def test_compile_writes_explicit_strict_outcome_receipt_before_final_gate() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    receipt_call = '"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/strict_status.py"'
+    final_gate = 'echo "ERROR: strict detector gate failed after review evidence generation"'
+    assert receipt_call in script
+    assert '--json-output "${BUILD_DIR}/strict_status.json"' in script
+    assert script.index(receipt_call) < script.index(final_gate)
+
+
 @pytest.mark.skipif(
     shutil.which("lockf") is None and shutil.which("flock") is None,
     reason="requires lockf or flock",
