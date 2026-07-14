@@ -1,0 +1,1 @@
+{"schema":"figure-agent.execution-review.v1","decision":"rejected_before_materialization","repair_result":"the response produced more than one diff block because unchanged endpoint glyph lines split the bounded replacement","next_human_target":"panel_a_single_carrier_temporal_path_coupled_retry","publication_acceptance":"not_claimed"}

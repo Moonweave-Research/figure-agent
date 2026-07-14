@@ -1,0 +1,1 @@
+{"schema":"figure-agent.execution-review.v1","decision":"failed_exact_repair","repair_result":"the unboxed breadth dimension removed the white patch but collided with the trap-energy axis-label lane and introduced detector blockers for E and g(E)","next_human_target":"reserve_axis_label_lane_before_external_breadth","publication_acceptance":"not_claimed"}

@@ -1,0 +1,1 @@
+{"replacement_utf8":"  \\node[label, text=cBlue, font=\\sffamily\\bfseries\\footnotesize] at (0.965,2.22) {S60};\n  % single discrete state\n  \\node[compact label, align=center] at (0.965,1.68) {single discrete\\\\state};","change_summary":"Move the S60 title upward and center a two-line descriptor in the clear lane between title and peak."}

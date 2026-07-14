@@ -1,0 +1,27 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v8.yaml
+extends_sha256: sha256:367f40453fc7c33e4d9f46b9850453f6995be8dd1fe5a1cd065113e5c7d0b5f2
+reason: authorize additive label-ownership and single-carrier trajectory repair evidence
+allowed_review_prefixes:
+  - review/failure-first/execution-repair-v51/
+  - review/failure-first/execution-repair-v52/
+  - review/failure-first/execution-repair-v53/
+  - review/failure-first/execution-repair-v54/
+  - review/failure-first/execution-repair-v55/
+  - review/failure-first/execution-repair-v56/
+  - review/failure-first/execution-repair-v57/
+  - review/failure-first/execution-repair-v58/
+  - review/failure-first/execution-repair-v59/
+  - review/failure-first/execution-repair-v60/
+  - review/failure-first/execution-repair-v61/
+  - review/failure-first/execution-repair-v62/
+  - review/failure-first/execution-repair-v63/
+  - review/failure-first/execution-repair-v64/
+  - review/failure-first/execution-repair-v65/
+  - review/failure-first/execution-repair-v66/
+allowed_review_paths:
+  - review/failure-first/scope_extension_v9.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

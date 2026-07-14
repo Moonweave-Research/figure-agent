@@ -1,0 +1,15 @@
+{
+  "change_summary": "Move the S60 title upward and center a two-line descriptor in the clear lane between title and peak.",
+  "changed_lines": 5,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v53/repaired_generated.tex",
+  "output_sha256": "sha256:38a1e4a84be346ffa23890cfc123ddc6fdf34e7f034bfdfd0806dd8d92e704d6",
+  "packet_sha256": "sha256:faca33469cf5a94aca5e852c507cabf4f993eb4a2647f41c36307429aedb39ed",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:a2342e45e070b684f562cdf764786aa2115453e5ebe7983c476ba3d3de865a8d"
+}

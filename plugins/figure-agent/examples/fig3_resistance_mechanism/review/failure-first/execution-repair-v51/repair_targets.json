@@ -1,0 +1,6 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v50/repaired_generated.tex",
+  "source_sha256": "sha256:98ce58896bf93548797d85682ec8ab6725680cc094fd655c70bcc4032e3f213d",
+  "targets": [{"finding":{"report_path":"examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v51/human_findings.before.json","id":"HF033"},"attribution":{"state":"exact"},"selector":{"kind":"semantic_anchor","selector_id":"panel-b-ge-over-axis","anchor_start":"  \\draw[axis] (0,0)--(0,2.77);","anchor_end":"  % S60 is represented as one narrow, discrete state."},"repair_family":"label_reflow","protected_invariants":["$g(E)$","(0,2.77)"]}]
+}

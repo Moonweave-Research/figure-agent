@@ -1,0 +1,15 @@
+{
+  "change_summary": "Stack the S60 descriptor on two centered lines so its left extent remains clear of the y-axis.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v52/repaired_generated.tex",
+  "output_sha256": "sha256:ab8e239966ca9954f95aa2c8424136574b849596af32974135879d9c7b5e14a6",
+  "packet_sha256": "sha256:858741f4a1f6d7e9c757a325a2352ee30baba3d84f1b3c3856d8a72d8dd05d1b",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:a2342e45e070b684f562cdf764786aa2115453e5ebe7983c476ba3d3de865a8d"
+}

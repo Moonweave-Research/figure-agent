@@ -1,0 +1,1 @@
+{"replacement_utf8":"\\node[compact label, align=center, anchor=north] at (1.92,1.03)\n  {one carrier path over time\\\\trap contacts: capture/release; solid end: retained};","change_summary":"State explicitly that the line is one carrier path over time and distinguish trap contacts from the solid retained endpoint."}

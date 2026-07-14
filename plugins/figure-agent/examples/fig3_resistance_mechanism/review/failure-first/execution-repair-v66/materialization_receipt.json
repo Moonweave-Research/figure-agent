@@ -1,0 +1,15 @@
+{
+  "change_summary": "Move breadth below the x-axis as one unboxed teal dimension with end ticks and a detached label.",
+  "changed_lines": 5,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v66/repaired_generated.tex",
+  "output_sha256": "sha256:f5e9a880bb933d22e9fdbd4fb091c91ed5f89475c3b096df93994b52ad6c9afb",
+  "packet_sha256": "sha256:7d440e18124398f7e03ad6673126f3b3efd133f1dcfb1c2b0a064f7f4cf372cc",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:014e417ca80c55714491b73f62a2e0fbab06d54cd0ffdbf90df359e09a63613f"
+}

@@ -93,6 +93,7 @@ COMPARABLE_V2 = REVIEW / "comparable-v2"
 COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
 SCOPE_EXTENSION_V7 = REVIEW / "scope_extension_v7.yaml"
 SCOPE_EXTENSION_V8 = REVIEW / "scope_extension_v8.yaml"
+SCOPE_EXTENSION_V9 = REVIEW / "scope_extension_v9.yaml"
 AUTHORITY_MANIFEST_V2 = REVIEW / "authority_manifest_v2.yaml"
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
@@ -133,6 +134,14 @@ EXECUTION_REPAIR_V47 = REVIEW / "execution-repair-v47"
 EXECUTION_REPAIR_V48 = REVIEW / "execution-repair-v48"
 EXECUTION_REPAIR_V49 = REVIEW / "execution-repair-v49"
 EXECUTION_REPAIR_V50 = REVIEW / "execution-repair-v50"
+EXECUTION_REPAIR_V53 = REVIEW / "execution-repair-v53"
+EXECUTION_REPAIR_V56 = REVIEW / "execution-repair-v56"
+EXECUTION_REPAIR_V60 = REVIEW / "execution-repair-v60"
+EXECUTION_REPAIR_V61 = REVIEW / "execution-repair-v61"
+EXECUTION_REPAIR_V62 = REVIEW / "execution-repair-v62"
+EXECUTION_REPAIR_V63 = REVIEW / "execution-repair-v63"
+EXECUTION_REPAIR_V64 = REVIEW / "execution-repair-v64"
+EXECUTION_REPAIR_V66 = REVIEW / "execution-repair-v66"
 
 
 def _sha256(path: Path) -> str:
@@ -920,6 +929,53 @@ def test_fig3_v50_separates_distribution_breadth_from_fitted_n() -> None:
     assert "must not equate geometric width directly with `n`" in contract
     assert regression["regression"]["state"] == "no_new_blockers"
     assert regression["regression"]["new_blockers"] == []
+
+
+def test_fig3_v53_keeps_single_descriptor_clear_as_a_coupled_stack() -> None:
+    source = (EXECUTION_REPAIR_V53 / "repaired_generated.tex").read_text(
+        encoding="utf-8"
+    )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V53 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+
+    assert "at (0.965,1.68) {single discrete\\\\state}" in source
+    assert regression["regression"]["state"] == "no_new_blockers"
+
+
+def test_fig3_v64_encodes_one_carrier_path_and_preserves_failed_retries() -> None:
+    source = (EXECUTION_REPAIR_V64 / "repaired_generated.tex").read_text(
+        encoding="utf-8"
+    )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V64 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+    v56 = json.loads(
+        (EXECUTION_REPAIR_V56 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    assert source.count("\\node[carrier") == 2
+    assert "one carrier path over time" in source
+    assert "trap contacts: capture/release; solid end: retained" in source
+    assert "discrete S60 $\\longrightarrow$ continuous broad S80" not in source
+    assert regression["regression"]["state"] == "no_new_blockers"
+    assert v56["decision"] == "failed_exact_repair"
+
+
+def test_fig3_v66_rejects_breadth_lane_transfer_to_axis_labels() -> None:
+    regression = json.loads(
+        (EXECUTION_REPAIR_V66 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+    review = json.loads(
+        (EXECUTION_REPAIR_V66 / "execution_review.json").read_text(encoding="utf-8")
+    )
+
+    signatures = {
+        item["signature"] for item in regression["regression"]["new_blockers"]
+    }
+    assert regression["regression"]["state"] == "regressed"
+    assert signatures == {"visual:text_on_path:E", "visual:text_on_path:g(E)"}
+    assert review["decision"] == "failed_exact_repair"
 
 
 
@@ -2297,7 +2353,7 @@ def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
     scope = yaml.safe_load((REVIEW / "scope_protection.yaml").read_text(encoding="utf-8"))
-    extension = yaml.safe_load(SCOPE_EXTENSION_V8.read_text(encoding="utf-8"))
+    extension = yaml.safe_load(SCOPE_EXTENSION_V9.read_text(encoding="utf-8"))
     repo_root = PLUGIN_ROOT.parents[1]
     fixture_prefix = "plugins/figure-agent/examples/fig3_resistance_mechanism/"
     allowed_paths = {

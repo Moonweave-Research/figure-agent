@@ -1,0 +1,76 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "the preserved final two straight segments make an artificial V-shaped kink and break the otherwise continuous trajectory",
+      "id": "HF044",
+      "subject": "panel_a_terminal_path_segment"
+    },
+    "finding_id": "HF044",
+    "protected_invariants": [
+      "3.02"
+    ],
+    "repair_family": "relation_restore",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v62/human_findings.before.json",
+    "selector": {
+      "anchor_end": "\\node[carrier] at (1.08,1.62) {};",
+      "anchor_start": "  .. controls (1.84,3.16) and (2.08,2.73) .. (2.31,2.59) .. controls (2.49,2.45) and (2.48,2.08) .. (2.68,1.98)",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-terminal-path-segment",
+      "source_hash": "sha256:66db044fde528e090ce21c40db8c45d31b9dbad9a95d08859672f52f0b5201a8"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v62/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:d06740b79e1d71095441c72698ed0fc336b6d301f982fc386133c70684d9e086"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v62/repaired_generated.tex",
+  "packet_sha256": "sha256:4fced4efd3bb007e2721c03d08b40747037f3ae5da8672c5405d1522116a4ed5",
+  "prompt": {
+    "sha256": "sha256:4823dcbbb68acec9ce14945b3fa74ae72612b8f2c7c1d39677bb18e94fa36618",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v62/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v61/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: relation_restore\n- Machine finding: {\"finding\": \"the preserved final two straight segments make an artificial V-shaped kink and break the otherwise continuous trajectory\", \"id\": \"HF044\", \"subject\": \"panel_a_terminal_path_segment\"}\n- Change content only between the exact anchor lines [  .. controls (1.84,3.16) and (2.08,2.73) .. (2.31,2.59) .. controls (2.49,2.45) and (2.48,2.08) .. (2.68,1.98)] and [\\node[carrier] at (1.08,1.62) {};].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [3.02].\n\n## Bound editable source bytes\n```tex\n  -- (2.49,1.52) -- (3.02,3.02);\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v62/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v61/repaired_generated.tex",
+    "sha256": "sha256:66db044fde528e090ce21c40db8c45d31b9dbad9a95d08859672f52f0b5201a8"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v62/repair_targets.json",
+    "sha256": "sha256:8a098354c9835145a63b1c10d00992ecec2505868f4e086e744fa5b428f9b761"
+  },
+  "verification": "external_sequential_compile_required"
+}
