@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -294,9 +295,20 @@ def test_ablation_contract_is_comparable_and_stops_at_human_boundary() -> None:
         assert run["human_verdict"]["state"] == "pending"
 
 
+@pytest.mark.render
 def test_generated_receipt_binds_multiscale_pixel_evidence(tmp_path: Path) -> None:
-    verify_review_evidence_pack(FIXTURE)
-    receipt = build_review_evidence_receipt(FIXTURE, tmp_path / "receipt.json")
+    fixture = tmp_path / FIXTURE.name
+    shutil.copytree(FIXTURE, fixture, ignore=shutil.ignore_patterns("build"))
+    for source in (fixture / "review" / "states" / "raw.tex", fixture / f"{fixture.name}.tex"):
+        result = subprocess.run(
+            ["bash", str(PLUGIN_ROOT / "scripts" / "compile.sh"), str(source)],
+            cwd=PLUGIN_ROOT,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+    verify_review_evidence_pack(fixture)
+    receipt = build_review_evidence_receipt(fixture, tmp_path / "receipt.json")
     assert receipt["selector_id"] == "panel_f.mechanism_scene"
     assert receipt["source_sha256"].startswith("sha256:")
     assert receipt["attribution_state"] == "exact"

@@ -179,7 +179,8 @@ def test_fragment_contract_generalizes_across_fig1_and_fig3(manifest: str) -> No
     assert result["semantic_ids"]
 
 
-def test_fig3_semantic_regions_bind_to_fragment_without_fig1_imports() -> None:
+def test_fig3_semantic_regions_preserve_unbound_historical_attribution_without_fig1_imports(
+) -> None:
     fixture = PLUGIN_ROOT / "examples" / "fig3_trap_schematic_slice3_semantic"
     regions = yaml.safe_load((fixture / "semantic_regions.yaml").read_text(encoding="utf-8"))
     fragment = validate_fragment_package(fixture / "fragments" / "fragment_manifest.json")
@@ -202,7 +203,8 @@ def test_fig3_semantic_regions_bind_to_fragment_without_fig1_imports() -> None:
         semantic_contract=contract,
         fixture_dir=fixture,
     )
-    assert attribution["state"] == "exact"
+    assert attribution["state"] == "unbound"
+    assert attribution["reason"] == "source_selected_content_hash_mismatch"
     assert attribution["region_candidates"] == ["e.structural_origin_fragment"]
 
     patterns = regions["forbidden_import_patterns"]

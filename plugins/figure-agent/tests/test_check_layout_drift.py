@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -19,20 +20,50 @@ sys.path.insert(0, str(REPO_ROOT / "scripts" / "checks"))
 import check_layout_drift  # noqa: E402
 
 
-def test_fig3_neighbor_contract_exposes_the_v64_to_v66_collision_transfer() -> None:
+def _compile_historical_version(
+    tmp_path: Path, version: str
+) -> tuple[subprocess.CompletedProcess[str], Path]:
+    """Compile a tracked historical source only inside the disposable test tree."""
+    source = (
+        FIG3_FIXTURE
+        / "review"
+        / "failure-first"
+        / f"execution-repair-{version}"
+        / "repaired_generated.tex"
+    )
+    copied = (
+        tmp_path
+        / "examples"
+        / "fig3_resistance_mechanism"
+        / "review"
+        / "failure-first"
+        / f"execution-repair-{version}"
+        / source.name
+    )
+    copied.parent.mkdir(parents=True)
+    shutil.copy2(source, copied)
+    result = subprocess.run(
+        ["bash", "scripts/compile.sh", str(copied)],
+        cwd=REPO_ROOT,
+        env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
+        capture_output=True,
+        text=True,
+    )
+    return result, copied.parent / "build" / "repaired_generated.pdf"
+
+
+@pytest.mark.render
+def test_fig3_neighbor_contract_exposes_the_v64_to_v66_collision_transfer(
+    tmp_path: Path,
+) -> None:
     contract = yaml.safe_load(
         (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
     )
 
     def results_for(version: str) -> list[check_layout_drift.LayoutLaneResult]:
-        pdf = (
-            FIG3_FIXTURE
-            / "review"
-            / "failure-first"
-            / f"execution-repair-{version}"
-            / "build"
-            / "repaired_generated.pdf"
-        )
+        result, pdf = _compile_historical_version(tmp_path, version)
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert pdf.is_file()
         words, page_size = check_layout_drift.extract_pdf_words_and_page(pdf)
         return check_layout_drift.evaluate_layout_lanes(contract, words, page_size)
 
@@ -199,22 +230,12 @@ def test_layout_contract_preserves_v1_include_path_compatibility() -> None:
     assert payload["exclusion_reason"] == "artifact_path_outside_applies_to_path_regex"
 
 
-def test_fig3_strict_compile_reports_the_v64_to_v66_collision_transfer() -> None:
-    def compile_version(version: str) -> subprocess.CompletedProcess[str]:
-        source = (
-            "examples/fig3_resistance_mechanism/review/failure-first/"
-            f"execution-repair-{version}/repaired_generated.tex"
-        )
-        return subprocess.run(
-            ["bash", "scripts/compile.sh", source],
-            cwd=REPO_ROOT,
-            env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
-            capture_output=True,
-            text=True,
-        )
-
-    v64 = compile_version("v64")
-    v66 = compile_version("v66")
+@pytest.mark.render
+def test_fig3_strict_compile_reports_the_v64_to_v66_collision_transfer(
+    tmp_path: Path,
+) -> None:
+    v64, _ = _compile_historical_version(tmp_path, "v64")
+    v66, _ = _compile_historical_version(tmp_path, "v66")
 
     # The full strict compile still fails on pre-existing undeclared-geometry
     # findings. The neighbor gate still identifies which collision was repaired
@@ -397,7 +418,9 @@ def test_layout_lane_contract_flags_narrative_group_overlapping_bias_marker() ->
         _word("conduction", 170, 20, 230, 30),
     ]
 
-    results = check_layout_drift.evaluate_layout_lanes(contract, words, (400.0, 200.0))
+    results = check_layout_drift.evaluate_layout_lanes(
+        contract, words, (400.0, 200.0)
+    )
 
     assert len(results) == 1
     assert results[0].rule_id == "narrative_clear_of_bias"
@@ -471,9 +494,7 @@ def test_layout_contract_checks_one_moved_group_against_each_declared_neighbor()
         _word("magnitude", 300, 100, 350, 112),
     ]
 
-    results = check_layout_drift.evaluate_layout_lanes(
-        contract, words, (400.0, 200.0)
-    )
+    results = check_layout_drift.evaluate_layout_lanes(contract, words, (400.0, 200.0))
 
     assert [(result.rule_id, result.status) for result in results] == [
         ("moved_label_neighbor_clearance:axis_label", "violation"),

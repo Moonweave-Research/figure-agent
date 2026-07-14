@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -260,6 +262,7 @@ def test_payload_persists_rendered_semantic_path_metrics(tmp_path: Path) -> None
     assert payload["rendered_semantic_paths"] == metrics
 
 
+@pytest.mark.render
 def test_cli_persists_rendered_semantic_path_metrics_for_v64_without_mutating_history(
     tmp_path: Path,
 ) -> None:
@@ -273,12 +276,27 @@ def test_cli_persists_rendered_semantic_path_metrics_for_v64_without_mutating_hi
         / "execution-repair-v64"
     )
     output = tmp_path / "undeclared_geometry.json"
-    historical_pdf = v64 / "build" / "repaired_generated.pdf"
     historical_tex = v64 / "repaired_generated.tex"
-    before_hashes = {
-        path: hashlib.sha256(path.read_bytes()).hexdigest()
-        for path in (historical_pdf, historical_tex)
-    }
+    before_hash = hashlib.sha256(historical_tex.read_bytes()).hexdigest()
+    copied_tex = (
+        tmp_path
+        / "examples"
+        / "fig3_resistance_mechanism"
+        / "review"
+        / "failure-first"
+        / "execution-repair-v64"
+        / historical_tex.name
+    )
+    copied_tex.parent.mkdir(parents=True)
+    shutil.copy2(historical_tex, copied_tex)
+    compile_result = subprocess.run(
+        ["bash", str(plugin_root / "scripts" / "compile.sh"), str(copied_tex)],
+        cwd=plugin_root,
+        capture_output=True,
+        text=True,
+    )
+    assert compile_result.returncode == 0, compile_result.stdout + compile_result.stderr
+    historical_pdf = copied_tex.parent / "build" / "repaired_generated.pdf"
 
     exit_code = main(
         [
@@ -300,10 +318,7 @@ def test_cli_persists_rendered_semantic_path_metrics_for_v64_without_mutating_hi
         "RA003",
     ]
     assert payload["rendered_semantic_paths"][1]["dominant_direction"] == "bidirectional"
-    assert {
-        path: hashlib.sha256(path.read_bytes()).hexdigest()
-        for path in (historical_pdf, historical_tex)
-    } == before_hashes
+    assert hashlib.sha256(historical_tex.read_bytes()).hexdigest() == before_hash
 
 
 def test_circle_and_curve_do_not_emit_undeclared_geometry_candidates() -> None:
