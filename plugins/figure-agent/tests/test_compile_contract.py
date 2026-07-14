@@ -55,6 +55,21 @@ def test_compile_serializes_shared_fixture_reports() -> None:
     assert "another figure-agent compile is active for this fixture" in script
 
 
+def test_compile_defers_vector_clearance_strict_failure_until_evidence_is_written() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    vector_clearance_call = (
+        'run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/vector_clearance.py"'
+    )
+    assert vector_clearance_call in script
+    assert script.index(vector_clearance_call) < script.index(
+        '"$WORKFLOW_DIR/scripts/checks/check_tex_assertions.py"'
+    )
+    assert script.index(vector_clearance_call) < script.index(
+        '"$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"'
+    )
+
+
 @pytest.mark.skipif(
     shutil.which("lockf") is None and shutil.which("flock") is None,
     reason="requires lockf or flock",

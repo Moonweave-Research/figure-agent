@@ -192,7 +192,7 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/semantic_assertio
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/semantic_assertions.json" \
   "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/vector_clearance.py" \
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/vector_clearance.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/vector_clearance.json" \
