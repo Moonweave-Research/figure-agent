@@ -3,7 +3,8 @@
 ## A — Trapping mechanism
 
 Show how applied bias, sign-agnostic dispersive transport, and repeated capture/release make
-retention plausible. The reader must not interpret the sequence as a net carrier-drift path.
+representative slow-release occupancy plausible. The reader must not interpret the sequence as a
+net carrier-drift path or as deep-only retention.
 
 ## B — Qualitative transient response
 
@@ -14,8 +15,8 @@ panel—not an experimental graph or a proxy for real data.
 ## C — Trap-energy landscape
 
 Use the same vertical energy grammar as A to compare a representative discrete S60 state set with
-continuous broad S80 support. The comparison is qualitative; no numerical width-to-`n` relation
-or trap-strength ranking is claimed.
+continuous broad S80 support. The comparison is qualitative; no numerical width-to-`n` relation,
+trap-strength ranking, or fitted density-of-states envelope is claimed.
 
 ## Cross-panel bridge
 

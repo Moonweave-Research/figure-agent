@@ -10,14 +10,15 @@ data; it must not impersonate that data.
 ## Must Preserve
 
 - Panel A uses vertical `energy, E`, sign-agnostic carrier glyphs, and temporal capture → release
-  → retained ordering. Every path endpoint attaches to a named carrier or trap anchor.
+  → representative slow-release occupancy. Every path endpoint attaches to a named carrier or trap anchor.
 - Panel B is the only `I(t)` graph. It has visible `current, I(t)` and `time, t` axes, no ticks or
   values, and the explicit qualifier `qualitative CvS decay (not measured data)`.
 - Panel B expresses only `I(t) ∝ t⁻ⁿ`, `trapping → I↓`, and `I=V/R → R↑`; it does not imply a
   fitted exponent, a composition comparison, or an experimentally sampled trace.
 - Panel C uses the same vertical energy orientation as A. S60 is a representative set of discrete
   horizontal energy states; S80 is a continuous broad energy support. They are separate units.
-- A broader support cue is qualitative and must not equate geometric width directly with `n`.
+- A broader support cue is qualitative and must not equate geometric width directly with `n` or read
+  as a fitted density-of-states envelope.
 - Keep the schematic slim, dense, and readable at a main-figure scale.
 
 ## Must Not Infer

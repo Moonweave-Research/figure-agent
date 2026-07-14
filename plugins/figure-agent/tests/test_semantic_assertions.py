@@ -290,7 +290,7 @@ def test_fig3_declares_visible_temporal_and_composition_ordering_contracts():
         for assertion in assertions
     } >= {
         ("fig3-capture-before-release", "left_of", "capture", "release"),
-        ("fig3-release-before-retained", "left_of", "release", "retained"),
+        ("fig3-release-before-slow-release", "left_of", "release", "slow-release"),
         ("fig3-s60-before-s80", "left_of", "S60", "S80"),
     }
 
@@ -311,14 +311,21 @@ def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar()
     assert spec["visual_clash_cap"] == 4
     assert "object=qualitative_current_decay panel=B kind=qualitative_relation" in source
     assert "object=s60_discrete_states panel=C kind=energy_landscape" in source
-    assert "($(trap_deep)+(-0.78,-0.32)$)" in source
-    assert "at (retained_label_anchor) {retained}" in source
+    assert "(trap_slow_release)" in source
+    assert "(slow_release_label)" in source
+    assert "{slow-release};" in source
+    assert objects["A"]["objects"]["carrier_sequence"]["invariant"] == (
+        "carrier_sign_agnostic_temporal_state_sequence_not_deep_only_retention"
+    )
+    assert objects["C"]["objects"]["s80_continuous_support"]["invariant"] == (
+        "high_sulfur_continuous_broad_support_not_width_to_n_mapping"
+    )
     assert "$\\rho_{60" not in source
     assert {
         (assertion["id"], assertion["relation"], assertion["subject"], assertion["reference"])
         for assertion in parse_assertions(spec)
     } >= {
-        ("fig3-mechanism-before-response", "left_of", "retained", "qualitative"),
+        ("fig3-mechanism-before-response", "left_of", "slow-release", "qualitative"),
         ("fig3-response-before-landscape", "left_of", "qualitative", "S60"),
     }
 

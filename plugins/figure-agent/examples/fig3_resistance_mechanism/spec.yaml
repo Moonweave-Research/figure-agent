@@ -37,7 +37,7 @@ named_endpoint_assertions:
       - carrier_deep_in
       - trap_shallow
       - trap_mid
-      - trap_deep
+      - trap_slow_release
     allowed_anchors:
       - carrier_shallow_in
       - carrier_shallow_out
@@ -46,19 +46,19 @@ named_endpoint_assertions:
       - carrier_deep_in
       - trap_shallow
       - trap_mid
-      - trap_deep
+      - trap_slow_release
 semantic_assertions:
   - id: fig3-capture-before-release
     relation: left_of
     subject: capture
     reference: release
-  - id: fig3-release-before-retained
+  - id: fig3-release-before-slow-release
     relation: left_of
     subject: release
-    reference: retained
+    reference: slow-release
   - id: fig3-mechanism-before-response
     relation: left_of
-    subject: retained
+    subject: slow-release
     reference: qualitative
   - id: fig3-response-before-landscape
     relation: left_of
@@ -85,8 +85,8 @@ composition_model:
         carrier_sequence:
           kind: state_sequence
           truth_bearing: true
-          semantic_claim: sign-agnostic carrier undergoes temporally ordered repeated trapping
-          invariant: carrier_sign_agnostic_temporal_state_sequence
+          semantic_claim: sign-agnostic carrier undergoes temporally ordered repeated trapping with a representative slow-release occupancy
+          invariant: carrier_sign_agnostic_temporal_state_sequence_not_deep_only_retention
           allowed_creative_ops: [reshape_path, reduce_arrowheads]
     B:
       objects:
@@ -104,12 +104,12 @@ composition_model:
           semantic_claim: low-sulfur S60 has a representative discrete state set
           invariant: low_sulfur_discrete_state_set_not_spectrum_bar_chart
           allowed_creative_ops: [vary_illustrative_state_count, preserve_non_quantitative_status]
-        s80_continuous_distribution:
+        s80_continuous_support:
           kind: energy_landscape
           truth_bearing: true
           semantic_claim: high-sulfur S80 has continuous broad energy support
           invariant: high_sulfur_continuous_broad_support_not_width_to_n_mapping
-          allowed_creative_ops: [reshape_qualitative_envelope, preserve_non_quantitative_status]
+          allowed_creative_ops: [reshape_support_region, preserve_non_quantitative_status]
 notes: |
   Three-column explanatory schematic only. The middle I(t) curve has no quantitative data claim.
   A clean machine gate is bounded screening evidence; publication acceptance requires human review.

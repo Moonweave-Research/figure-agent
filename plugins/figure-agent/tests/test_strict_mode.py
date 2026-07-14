@@ -96,6 +96,34 @@ def test_check_visual_clash_false_positive_matching_accepts_same_kind() -> None:
     assert suppressed == 1
 
 
+def test_slow_release_terminal_label_suppression_is_fixture_and_signal_bounded() -> None:
+    patterns = check_visual_clash.load_known_false_positive_patterns()
+    benign = check_visual_clash.VisualIssue(
+        "text_on_path",
+        "slow-release",
+        "dark=0.088, edge=0.006",
+        (1044, 670, 1250, 704),
+    )
+    real_contact = check_visual_clash.VisualIssue(
+        "text_on_path",
+        "slow-release",
+        "dark=0.101, edge=0.006",
+        (1044, 670, 1250, 704),
+    )
+
+    benign_filtered, benign_suppressed = check_visual_clash.suppress_known_false_positives(
+        [benign], patterns, "fig3_resistance_mechanism"
+    )
+    contact_filtered, contact_suppressed = check_visual_clash.suppress_known_false_positives(
+        [real_contact], patterns, "fig3_resistance_mechanism"
+    )
+
+    assert benign_filtered == []
+    assert benign_suppressed == 1
+    assert contact_filtered == [real_contact]
+    assert contact_suppressed == 0
+
+
 def test_check_visual_clash_false_positive_not_suppressed_on_foreign_fixture() -> None:
     """A PDMS clash validated on fig3_trapping_concept must NOT be silenced on
     fig2_trap_design_space, which also renders the glyph 'PDMS'. Global

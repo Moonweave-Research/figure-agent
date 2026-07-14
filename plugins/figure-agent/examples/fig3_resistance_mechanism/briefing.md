@@ -8,14 +8,14 @@
 ## §1. Topic
 
 Applied voltage drives a sign-agnostic carrier through a disordered sulfur-polymer film. Repeated
-capture and release, followed by retention in a representative trap, produces transient-current
+capture and release, followed by occupation of a representative slow-release state, produces transient-current
 decay. The qualitative Curie–von Schweidler relation is shown separately so that the reader can
 see the observable between the mechanism and the composition-dependent trap-energy landscape.
 
 ## §2. Three-column composition
 
 - **(a) mechanism**: biased sulfur-polymer film, vertical energy orientation, and a temporally
-  ordered (not spatial-drift) capture/release/retention sequence.
+  ordered (not spatial-drift) capture/release/slow-release-occupancy sequence.
 - **(b) qualitative transient response**: one clean, tick-free `I(t) ∝ t⁻ⁿ` curve. It states the
   causal relation `trapping → I↓` and, under applied V, `I=V/R → R↑`; it does not claim measured
   magnitudes, fitted parameters, a time window, or a composition series.
@@ -33,6 +33,9 @@ see the observable between the mechanism and the composition-dependent trap-ener
    states in time and never asserts net drift through the film.
 4. At low sulfur, traps are discrete; at S80, they are continuous and broad. Do not express this
    as a fixed peak count, a well-depth strength ranking, or verified trap chemistry.
+5. Long-lived occupancy is a kinetic observation-window property, not a deep-only trap label.
+   The representative terminal state therefore denotes slow release; capture and release may occur
+   across the available trap-energy support.
 
 ## §4. Provenance and acceptance
 
