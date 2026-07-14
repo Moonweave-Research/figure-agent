@@ -394,6 +394,9 @@ and Fig3 evidence, rather than starting another implementation lane.
   improvement cannot offset semantic/relation failures, no capability promotes,
   and `docs/product-spec.md` remains unchanged.
 
+- [ ] **Next evidence — additive Fig1 three-arm replay.** Preserve historical `review/ablation/` evidence and create only `review/failure-first/comparable-v1/`; before model invocation, run `./bin/fig-agent authoring-preflight-triplet --raw examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/raw_packet.json --verified examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/verified_packet.json --repaired examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/repaired_packet.json --json`.
+  A pass proves only equal-input packet binding and disjoint outputs—not execution, a receipt, review, correction time, product claim, or publication acceptance; real clean-environment runs and named human outcomes remain required.
+
 Runtime review surfaces use `figure-agent.current-render-review-scaffold.v1`
 and `figure-agent.strict-status.v1`; neither schema is a publication verdict.
 

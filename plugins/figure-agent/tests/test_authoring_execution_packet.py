@@ -525,6 +525,122 @@ def test_preflight_accepts_equal_contracts_with_disjoint_outputs(tmp_path: Path)
     assert not Path(result["control"]["prompt_path"]).is_absolute()
 
 
+def test_preflight_accepts_equal_triplet_with_disjoint_outputs(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    raw, _ = _write_arm(workspace, "raw")
+    verified, _ = _write_arm(workspace, "verified")
+    repaired, _ = _write_arm(workspace, "repaired")
+
+    result = authoring_execution_preflight.preflight_authoring_triplet(
+        raw,
+        verified,
+        repaired,
+    )
+
+    assert result["schema"] == "figure-agent.authoring-execution-preflight.v1"
+    assert result["decision"] == "pass"
+    assert result["filesystem_read_isolation"] == "unavailable"
+    assert set(result["conditions"]) == {"raw", "verified", "repaired"}
+    assert {
+        item["output_path"] for item in result["conditions"].values()
+    } == {
+        "examples/context_demo/review/failure-first/execution-binding-v1/"
+        f"{arm}_generated.tex"
+        for arm in ("raw", "verified", "repaired")
+    }
+    assert len(
+        {item["packet_sha256"] for item in result["conditions"].values()}
+    ) == 3
+
+
+def test_preflight_triplet_rejects_a_mismatched_third_model_contract(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    raw, _ = _write_arm(workspace, "raw")
+    verified, _ = _write_arm(workspace, "verified")
+    repaired, _ = _write_arm(workspace, "repaired", model_id="other-model")
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="model_id mismatch",
+    ):
+        authoring_execution_preflight.preflight_authoring_triplet(
+            raw,
+            verified,
+            repaired,
+        )
+
+
+def test_preflight_triplet_rejects_packet_to_prompt_output_path_drift(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    raw, _ = _write_arm(workspace, "raw")
+    verified, _ = _write_arm(workspace, "verified")
+    repaired, _ = _write_arm(workspace, "repaired")
+    payload = json.loads(repaired.read_text(encoding="utf-8"))
+    payload["output_path"] = (
+        "examples/context_demo/review/failure-first/execution-binding-v1/"
+        "raw_generated.tex"
+    )
+    payload["repository_output_path"] = (
+        "examples/context_demo/review/failure-first/execution-binding-v1/"
+        "raw_generated.tex"
+    )
+    payload["packet_sha256"] = authoring_execution_packet.canonical_packet_sha256(
+        payload
+    )
+    repaired.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="prompt output path drift",
+    ):
+        authoring_execution_preflight.preflight_authoring_triplet(
+            raw,
+            verified,
+            repaired,
+        )
+
+
+def test_authoring_preflight_triplet_cli(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    attempt_rel = "examples/context_demo/review/failure-first/execution-binding-v1"
+    for arm in ("raw", "verified", "repaired"):
+        _write_arm(workspace, arm)
+    env = os.environ.copy()
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-preflight-triplet",
+            "--raw",
+            f"{attempt_rel}/raw_packet.json",
+            "--verified",
+            f"{attempt_rel}/verified_packet.json",
+            "--repaired",
+            f"{attempt_rel}/repaired_packet.json",
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["decision"] == "pass"
+    assert set(payload["conditions"]) == {"raw", "verified", "repaired"}
+
+
 def test_preflight_rejects_unequal_model_contract(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _write_context_fixture(workspace)

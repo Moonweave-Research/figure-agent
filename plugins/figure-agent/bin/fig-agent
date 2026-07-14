@@ -447,6 +447,41 @@ def _authoring_preflight(argv: list[str]) -> int:
     return 0
 
 
+def _authoring_preflight_triplet(argv: list[str]) -> int:
+    import authoring_execution_preflight
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-preflight-triplet")
+    parser.add_argument("--raw", required=True)
+    parser.add_argument("--verified", required=True)
+    parser.add_argument("--repaired", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    workspace_root = _paths().workspace_root.resolve()
+
+    def packet_path(value: str) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError("packet path must be repository-relative and safe")
+        resolved = (workspace_root / relative).resolve(strict=False)
+        if not resolved.is_relative_to(workspace_root):
+            raise ValueError("packet path must remain inside the workspace")
+        return resolved
+
+    try:
+        payload = authoring_execution_preflight.preflight_authoring_triplet(
+            packet_path(args.raw),
+            packet_path(args.verified),
+            packet_path(args.repaired),
+        )
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"fig-agent authoring-preflight-triplet: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _authoring_repair_packet(argv: list[str]) -> int:
     import authoring_repair_packet
 
@@ -1920,6 +1955,8 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_packet(rest)
     if command == "authoring-preflight":
         return _authoring_preflight(rest)
+    if command == "authoring-preflight-triplet":
+        return _authoring_preflight_triplet(rest)
     if command == "authoring-repair-packet":
         return _authoring_repair_packet(rest)
     if command == "authoring-repair-materialize":
