@@ -70,6 +70,7 @@ RENDERED_ARROW_COLOR_MATCH_MAX = 0.04
 RENDERED_ARROW_HEAD_MAX_SIZE_PT = 12.0
 RENDERED_ARROW_HEAD_ENDPOINT_TOLERANCE_PT = 4.0
 RENDERED_ARROW_SHAFT_MIN_LENGTH_PT = 8.0
+RENDERED_CURVE_FLATNESS_PT = 0.05
 
 # Conceptual-geometry kinds a pure schematic declares on purpose: axes, dividers,
 # region rectangles, and plot frames are intentional, not layout regions to police.
@@ -514,6 +515,123 @@ def _line_crosses_word(line: dict[str, Any], word: dict[str, Any]) -> bool:
     return y0 <= y <= y1 and _ranges_overlap([x0, x1], [x_start, x_end], 0.0)
 
 
+def _segment_crosses_rect(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    rect: tuple[float, float, float, float],
+) -> bool:
+    x, y = start
+    dx = end[0] - x
+    dy = end[1] - y
+    x0, y0, x1, y1 = rect
+    lower = 0.0
+    upper = 1.0
+    for direction, offset in (
+        (-dx, x - x0),
+        (dx, x1 - x),
+        (-dy, y - y0),
+        (dy, y1 - y),
+    ):
+        if abs(direction) < 1e-12:
+            if offset < 0.0:
+                return False
+            continue
+        ratio = offset / direction
+        if direction < 0.0:
+            lower = max(lower, ratio)
+        else:
+            upper = min(upper, ratio)
+        if lower > upper:
+            return False
+    return True
+
+
+def _point_line_distance(
+    point: tuple[float, float],
+    start: tuple[float, float],
+    end: tuple[float, float],
+) -> float:
+    dx = end[0] - start[0]
+    dy = end[1] - start[1]
+    length = math.hypot(dx, dy)
+    if length < 1e-12:
+        return math.hypot(point[0] - start[0], point[1] - start[1])
+    return abs(dy * point[0] - dx * point[1] + end[0] * start[1] - end[1] * start[0]) / length
+
+
+def _midpoint(
+    left: tuple[float, float],
+    right: tuple[float, float],
+) -> tuple[float, float]:
+    return ((left[0] + right[0]) / 2.0, (left[1] + right[1]) / 2.0)
+
+
+def _flatten_cubic(
+    start: tuple[float, float],
+    control1: tuple[float, float],
+    control2: tuple[float, float],
+    end: tuple[float, float],
+    *,
+    depth: int = 0,
+) -> list[tuple[float, float]]:
+    flatness = max(
+        _point_line_distance(control1, start, end),
+        _point_line_distance(control2, start, end),
+    )
+    if flatness <= RENDERED_CURVE_FLATNESS_PT or depth >= 14:
+        return [start, end]
+
+    start_control = _midpoint(start, control1)
+    controls = _midpoint(control1, control2)
+    control_end = _midpoint(control2, end)
+    left_control = _midpoint(start_control, controls)
+    right_control = _midpoint(controls, control_end)
+    split = _midpoint(left_control, right_control)
+    left = _flatten_cubic(
+        start,
+        start_control,
+        left_control,
+        split,
+        depth=depth + 1,
+    )
+    right = _flatten_cubic(
+        split,
+        right_control,
+        control_end,
+        end,
+        depth=depth + 1,
+    )
+    return [*left[:-1], *right]
+
+
+def _bezier_path_crosses_word(path: dict[str, Any], word: dict[str, Any]) -> bool:
+    rect = _word_bbox(word)
+    current = tuple(float(value) for value in path["start_pt"])
+    for segment in path["segments"]:
+        end = tuple(float(value) for value in segment["end_pt"])
+        if segment["command"] == "line_to":
+            if _segment_crosses_rect(current, end, rect):
+                return True
+            current = end
+            continue
+        control1 = tuple(float(value) for value in segment["control1_pt"])
+        control2 = tuple(float(value) for value in segment["control2_pt"])
+        points = _flatten_cubic(current, control1, control2, end)
+        previous = points[0]
+        for point in points[1:]:
+            if _segment_crosses_rect(previous, point, rect):
+                return True
+            previous = point
+        current = end
+    return False
+
+
+def _semantic_arrow_crosses_word(shaft: dict[str, Any], word: dict[str, Any]) -> bool:
+    if shaft["kind"] == "bezier_path":
+        return _bezier_path_crosses_word(shaft, word)
+    return _line_crosses_word(shaft, word)
+
+
 def _rect_boundary_lines(bbox_pt: list[float]) -> list[dict[str, Any]]:
     x0, y0, x1, y1 = bbox_pt
     return [
@@ -772,6 +890,18 @@ def _curve_is_matching_arrowhead(
     raw_line: dict[str, Any],
     line: dict[str, Any],
 ) -> bool:
+    return _curve_is_matching_arrowhead_at_endpoints(
+        raw_curve,
+        raw_line.get("stroking_color"),
+        _line_endpoints(line),
+    )
+
+
+def _curve_is_matching_arrowhead_at_endpoints(
+    raw_curve: dict[str, Any],
+    stroke_color: object,
+    endpoints: tuple[tuple[float, float], tuple[float, float]],
+) -> bool:
     if not raw_curve.get("fill"):
         return False
     path = raw_curve.get("path")
@@ -785,7 +915,7 @@ def _curve_is_matching_arrowhead(
         or any(command != "l" for command in path_commands[1:-1])
     ):
         return False
-    if not _colors_close(raw_curve.get("stroking_color"), raw_line.get("stroking_color")):
+    if not _colors_close(raw_curve.get("stroking_color"), stroke_color):
         return False
     x0 = float(raw_curve["x0"])
     x1 = float(raw_curve["x1"])
@@ -798,15 +928,76 @@ def _curve_is_matching_arrowhead(
     head_bbox = (min(x0, x1), min(top, bottom), max(x0, x1), max(top, bottom))
     return any(
         _point_rect_distance(x, y, head_bbox) <= RENDERED_ARROW_HEAD_ENDPOINT_TOLERANCE_PT
-        for x, y in _line_endpoints(line)
+        for x, y in endpoints
     )
+
+
+def _rendered_bezier_path(raw_curve: dict[str, Any]) -> dict[str, Any] | None:
+    if raw_curve.get("fill") or not _is_chromatic_stroke(raw_curve.get("stroking_color")):
+        return None
+    if max(
+        abs(float(raw_curve["x1"]) - float(raw_curve["x0"])),
+        abs(float(raw_curve["bottom"]) - float(raw_curve["top"])),
+    ) < RENDERED_ARROW_SHAFT_MIN_LENGTH_PT:
+        return None
+    path = raw_curve.get("path")
+    if not isinstance(path, list) or len(path) < 2:
+        return None
+    move = path[0]
+    if not isinstance(move, tuple) or len(move) != 2 or move[0] != "m":
+        return None
+    start = move[1]
+    if not isinstance(start, tuple) or len(start) != 2:
+        return None
+
+    segments: list[dict[str, Any]] = []
+    for item in path[1:]:
+        if not isinstance(item, tuple) or not item:
+            return None
+        if item[0] == "l" and len(item) == 2:
+            end = item[1]
+            if not isinstance(end, tuple) or len(end) != 2:
+                return None
+            segments.append(
+                {
+                    "command": "line_to",
+                    "end_pt": [float(end[0]), float(end[1])],
+                }
+            )
+            continue
+        if item[0] != "c" or len(item) != 4:
+            return None
+        control1, control2, end = item[1:]
+        if not all(isinstance(point, tuple) and len(point) == 2 for point in item[1:]):
+            return None
+        segments.append(
+            {
+                "command": "cubic_to",
+                "control1_pt": [float(control1[0]), float(control1[1])],
+                "control2_pt": [float(control2[0]), float(control2[1])],
+                "end_pt": [float(end[0]), float(end[1])],
+            }
+        )
+    return {
+        "kind": "bezier_path",
+        "start_pt": [float(start[0]), float(start[1])],
+        "segments": segments,
+    }
+
+
+def _bezier_path_endpoints(
+    path: dict[str, Any],
+) -> tuple[tuple[float, float], tuple[float, float]]:
+    start = path["start_pt"]
+    end = path["segments"][-1]["end_pt"]
+    return (float(start[0]), float(start[1])), (float(end[0]), float(end[1]))
 
 
 def resolve_rendered_semantic_arrows(
     rendered_lines: list[dict[str, Any]],
     rendered_curves: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Reconstruct axis-aligned semantic arrows from rendered PDF geometry."""
+    """Reconstruct axis-aligned and curved semantic arrows from rendered PDF geometry."""
     resolved: list[dict[str, Any]] = []
     for raw_line in rendered_lines:
         if not _is_chromatic_stroke(raw_line.get("stroking_color")):
@@ -847,11 +1038,51 @@ def resolve_rendered_semantic_arrows(
             }
         )
 
+    for raw_curve in rendered_curves:
+        shaft = _rendered_bezier_path(raw_curve)
+        if shaft is None:
+            continue
+        arrowheads = [
+            candidate
+            for candidate in rendered_curves
+            if _curve_is_matching_arrowhead_at_endpoints(
+                candidate,
+                raw_curve.get("stroking_color"),
+                _bezier_path_endpoints(shaft),
+            )
+        ]
+        if not arrowheads:
+            continue
+
+        x_values = [float(raw_curve["x0"]), float(raw_curve["x1"])]
+        y_values = [float(raw_curve["top"]), float(raw_curve["bottom"])]
+        for arrowhead in arrowheads:
+            x_values.extend([float(arrowhead["x0"]), float(arrowhead["x1"])])
+            y_values.extend([float(arrowhead["top"]), float(arrowhead["bottom"])])
+        color = _color_channels(raw_curve.get("stroking_color"))
+        resolved.append(
+            {
+                "kind": "curved_arrow",
+                "orientation": "freeform",
+                "shaft": shaft,
+                "arrowhead_count": len(arrowheads),
+                "bbox_pt": [
+                    min(x_values),
+                    min(y_values),
+                    max(x_values),
+                    max(y_values),
+                ],
+                "stroke_color": list(color or ()),
+                "line_width_pt": float(raw_curve.get("linewidth") or 0.0),
+            }
+        )
+
     resolved.sort(
         key=lambda arrow: (
+            0 if arrow["kind"] == "axis_aligned_arrow" else 1,
             tuple(arrow["bbox_pt"]),
             arrow["orientation"],
-            tuple(_line_bbox(arrow["shaft"])),
+            json.dumps(arrow["shaft"], sort_keys=True),
             tuple(arrow["stroke_color"]),
             arrow["line_width_pt"],
             arrow["arrowhead_count"],
@@ -870,15 +1101,21 @@ def detect_rendered_semantic_path_crossings(
     """Return text crossings for rendered chromatic arrows in PDF coordinates."""
     candidates: list[dict[str, Any]] = []
     for arrow in resolve_rendered_semantic_arrows(rendered_lines, rendered_curves):
-        line = arrow["shaft"]
+        shaft = arrow["shaft"]
         for word in words:
-            if not _semantic_path_label_candidate(word) or not _line_crosses_word(line, word):
+            if not _semantic_path_label_candidate(word) or not _semantic_arrow_crosses_word(
+                shaft, word
+            ):
                 continue
             candidates.append(
                 _base_candidate(
                     kind="label_crosses_semantic_path",
                     evidence=f"rendered semantic arrow crosses text {word.get('text', '')!r}",
-                    bbox_pt=_line_bbox(line),
+                    bbox_pt=(
+                        arrow["bbox_pt"]
+                        if shaft["kind"] == "bezier_path"
+                        else _line_bbox(shaft)
+                    ),
                     source_line=0,
                     nearest_text=str(word.get("text", "")),
                     distance_pt=0.0,

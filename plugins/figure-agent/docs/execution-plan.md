@@ -337,10 +337,16 @@ regression. New nested repair compiles inherit it by default; only explicitly na
 geometry: raw source-token counts are not rendered-object counts because loops
 and macros can expand one occurrence into multiple glyphs. These are machine
 guardrails against repeated known failure modes, not evidence that v64 is
-publication-ready. Detector-only applied-`V` candidates remain review-only until
-wiring intent is adjudicated. Keep band-energy shape changes blocked until their
-physical and mathematical authority is reviewed. The next gate is a named human
-scaffold verdict; machine non-regression is not publication acceptance.
+publication-ready. The rendered semantic-path resolver now reconstructs both
+axis-aligned arrows and mixed line/cubic carrier trajectories from current PDF
+geometry, rejects tiny decorative paths and headless band curves, and uses
+adaptive curve flattening for glyph-box crossing checks. This closes a repeated
+LLM blind spot without judging whether the surviving trajectory is aesthetically
+natural or publication-ready. Detector-only applied-`V` candidates remain
+review-only until wiring intent is adjudicated. Keep band-energy shape changes
+blocked until their physical and mathematical authority is reviewed. The next
+gate is a named human scaffold verdict; machine non-regression is not publication
+acceptance.
 
 ### Verification
 
