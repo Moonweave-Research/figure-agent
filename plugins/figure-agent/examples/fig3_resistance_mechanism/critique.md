@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig3_resistance_mechanism
-generated_at: '2026-07-14T14:42:49Z'
+generated_at: '2026-07-14T15:32:38Z'
 generator: critique_brief.py
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:7d49022b9c0cc0138157c1b0fd21eaf08442b8bd90b5e813a40983038fd03622
+critique_input_hash: sha256:13e1e0803ec4e7c1ddec2c4a22f1241d160bd2a7664850cba9da7b3e3a36be81
 verdict: revise
 findings:
   - id: C001
@@ -126,7 +126,7 @@ quality_axes:
   scientific_plausibility:
     verdict: pass
     confidence: medium
-    rationale: The current render preserves sign-agnostic temporal ordering, qualitative CvS decay, no numeric breadth-to-n mapping, and slow-release rather than deep-only retention.
+    rationale: The current render preserves sign-agnostic temporal ordering, a qualitative CvS relation without a measured-data disclaimer, no numeric breadth-to-n mapping, and slow-release rather than deep-only retention.
     evidence: Briefing §3 rules 1-5; current rendered panels A-C.
     blocking_items: []
     recommended_action: none
@@ -140,7 +140,7 @@ quality_axes:
   label_annotation_semantics:
     verdict: pass
     confidence: high
-    rationale: Current labels identify the film, qualitative status, slow-release state, and broader energy support without reintroducing retired deep-only or numeric-breadth claims.
+    rationale: Current labels identify the film, slow-release state, and broader energy support; panel B's axes, curve, and relation communicate its qualitative role without reintroducing retired deep-only or numeric-breadth claims.
     evidence: Current render, Briefing §3 rules 2 and 5, and the opt-in terminalLabelLeader contract binding both leader endpoints and its label node.
     blocking_items: []
     recommended_action: none
@@ -200,7 +200,7 @@ top_tier_audit:
     blocks_high_impact: false
   reader_misinterpretation_risk:
     verdict: pass
-    finding: The current rendered labels explicitly call panel B qualitative and panel A slow-release, reducing the two previously salient overclaims.
+    finding: The current rendered panel-B axes, curve, and relation distinguish its qualitative role while panel A's slow-release label avoids the previously salient overclaims.
     concrete_fix: accept_simplification
     blocks_high_impact: false
   reduction_print_readability:
@@ -257,7 +257,7 @@ editorial_art_direction:
     blocks_high_impact: true
   claim_payload_fit:
     verdict: pass
-    evidence: Current panel B labels the CvS curve qualitative and panel C does not map broader support to a numerical exponent.
+    evidence: Current panel B uses an unticked CvS relation and panel C does not map broader support to a numerical exponent.
     rationale: The current artifact does not make an unsupported quantitative payload claim.
     concrete_fix: accept_simplification
     blocks_high_impact: false
@@ -287,7 +287,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:7d49022b9c0cc0138157c1b0fd21eaf08442b8bd90b5e813a40983038fd03622
+  assessed_artifact_hash: sha256:13e1e0803ec4e7c1ddec2c4a22f1241d160bd2a7664850cba9da7b3e3a36be81
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
@@ -462,7 +462,7 @@ crop_audit_log:
     linked_micro_defect_id: ''
     rationale: Current high-zoom crop inspected; no closed-set micro-defect was confirmed.
     observed_objects: [panel B upper region]
-    local_relationship: Panel B title and qualitative-status annotation remain separate from the curve.
+    local_relationship: Panel B title remains separate from the curve; no redundant qualitative-status annotation is present.
     candidate_refs: []
     unintended_visible_anomaly: none
     anomaly_rationale: No confirmed collision, fused arrow, detached label, or drawing-order anomaly.

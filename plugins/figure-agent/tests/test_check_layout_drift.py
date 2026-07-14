@@ -149,11 +149,12 @@ def test_fig3_live_source_exposes_the_live_layout_relation_anchors() -> None:
     }
 
     assert phrases == {
-        "response_qualifier": "qualitative CvS decay",
         "response_equation": "I(t)",
         "energy_axis_label": "energy, E",
+        "energy_support_label": "energy support",
     }
-    assert "qualitative CvS decay" in source
+    assert "qualitative CvS decay" not in source
+    assert "not measured data" not in source
     assert "energy, $E$" in source
     assert "$\\rho_{60" not in source
     assert "$n$ = breadth" not in source

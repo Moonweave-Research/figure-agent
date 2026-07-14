@@ -12,7 +12,7 @@ data; it must not impersonate that data.
 - Panel A uses vertical `energy, E`, sign-agnostic carrier glyphs, and temporal capture → release
   → representative slow-release occupancy. Every path endpoint attaches to a named carrier or trap anchor.
 - Panel B is the only `I(t)` graph. It has visible `current, I(t)` and `time, t` axes, no ticks or
-  values, and the explicit qualifier `qualitative CvS decay (not measured data)`.
+  values; its response curve and relation communicate that it is qualitative rather than a measured trace.
 - Panel B expresses only `I(t) ∝ t⁻ⁿ`, `trapping → I↓`, and `I=V/R → R↑`; it does not imply a
   fitted exponent, a composition comparison, or an experimentally sampled trace.
 - Panel C uses the same vertical energy orientation as A. S60 is a representative set of discrete

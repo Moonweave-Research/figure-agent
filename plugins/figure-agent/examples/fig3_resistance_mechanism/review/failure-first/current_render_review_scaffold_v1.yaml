@@ -2,17 +2,17 @@ schema: figure-agent.current-render-review-scaffold.v1
 fixture: fig3_resistance_mechanism
 created_for: current_three_column_render
 source_inputs:
-  tex_sha256: sha256:b804a82b55bfd3f0f1d5bd30c1e5de51f678e0f88ac11c8f9171894725b3114f
+  tex_sha256: sha256:93db41ea8de05b3309ef76655feb5dba992053761aee35f32a0f0b299146edda
   briefing_sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
-  spec_sha256: sha256:8ea441044b0197212c8856140cac06cc610340f8118aa7d4b79dd8d78051fcb7
+  spec_sha256: sha256:d74eb6d425ab0e83787d408b1859c364c6cec5b4eaac1cdd4148d396c7dc06c8
 render_evidence:
   render_path: build/fig3_resistance_mechanism.pdf
   render_png_path: build/fig3_resistance_mechanism.png
-  render_png_sha256: sha256:a27f7a360e0c3df19de1342c32eab972c0dc566688255d0c11db42aedb0bb717
+  render_png_sha256: sha256:0e234fa802d57949110c83a97e59834886df9776a9cac244a6f68b0da0868027
   audit_crop_manifest: build/audit_crops/manifest.json
-  audit_crop_manifest_sha256: sha256:8d44ff50f56f97c2f5c1691d8d0d8f77a416a6c6f0b3ffb4e16e3721583d85f4
+  audit_crop_manifest_sha256: sha256:c1d6be9f0104beee65996c1bcaa4d4a63f82eac0d86d59d841d59d1cf4eae9a5
   print_proxy: build/audit_crops/print_178mm.png
-  print_proxy_sha256: sha256:3746f8db070ef9abdf39ce4f647fc7886349048cd24c982404353270cdac34e7
+  print_proxy_sha256: sha256:8c73852dd9674d51f1b3d76a95fdc94e2a86f0d6706402e74d46552b12df3da8
   inspection_method: full_render_plus_high_zoom_crops_plus_print_proxy
 machine_gate:
   strict_compile: passed
@@ -45,6 +45,15 @@ agent_observations:
     observation: The print proxy keeps all labels readable, but the small causal labels in panel A and the explanatory labels in panel C require an editorial readability verdict.
     grounded_in_rule: briefing §1 stated intent
     question: At manuscript scale, is the causal sequence read before secondary explanatory text?
+reviewer_feedback:
+  reviewer: moon
+  recorded_at: '2026-07-15'
+  scope: preliminary current-render feedback
+  notes:
+    - Trap states are a continuum rather than a hard shallow/deep partition; a deeper state can be represented as slower release without implying deep-only retention.
+    - The S80 broad-support direction is acceptable; the relative merits of the surrounding box and tick treatment remain open editorial choices rather than an asserted defect.
+    - The panel-B non-data disclaimer was unnecessary and has been removed; the curve, axes, and relation now carry the qualitative role.
+  acceptance_effect: No final human scaffold verdict is recorded; human_review remains pending.
 human_review:
   state: pending
   verdict: not_recorded

@@ -80,10 +80,10 @@ semantic_assertions:
   - id: fig3-mechanism-before-response
     relation: left_of
     subject: slow-release
-    reference: qualitative
+    reference: response
   - id: fig3-response-before-landscape
     relation: left_of
-    subject: qualitative
+    subject: response
     reference: S60
   - id: fig3-s60-before-s80
     relation: left_of

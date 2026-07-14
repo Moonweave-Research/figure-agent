@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig3_resistance_mechanism
-source_critique_hash: sha256:edc6c2bb6f4a4424fc1779302f749da53b2d2ac0126f05b03c484b446ea543b9
+source_critique_hash: sha256:b5a332fefaaab451dcb66ec79c52f47dca6141acadad1a75ee813fcdc0919eb2
 decisions:
 - finding_id: C001
   decision: needs_human

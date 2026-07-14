@@ -353,8 +353,8 @@ def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar()
         (assertion["id"], assertion["relation"], assertion["subject"], assertion["reference"])
         for assertion in parse_assertions(spec)
     } >= {
-        ("fig3-mechanism-before-response", "left_of", "slow-release", "qualitative"),
-        ("fig3-response-before-landscape", "left_of", "qualitative", "S60"),
+        ("fig3-mechanism-before-response", "left_of", "slow-release", "response"),
+        ("fig3-response-before-landscape", "left_of", "response", "S60"),
     }
 
 

@@ -1,6 +1,6 @@
 % Fig3 mechanism schematic — three-column explanatory composition.
 % (a) mechanism -> (b) qualitative transient response -> (c) composition-dependent
-% trap-energy landscape. Panel (b) is not measured data: it carries no numerical scale.
+% trap-energy landscape. Panel (b) is a qualitative schematic with no numerical scale.
 \documentclass[border=6pt]{standalone}
 \usepackage{polymer-paper-preamble}
 \usetikzlibrary{arrows.meta,decorations.pathmorphing}
@@ -60,12 +60,10 @@
   (slow_release_label) at (slow_release_label_anchor) {slow-release};
 % fig-agent:end object=carrier_sequence
 
-% ===================== (b) qualitative transient response, not data =====================
+% ===================== (b) qualitative transient response =====================
 \node[pl] at (5.34,4.34) {b};
 \node[font=\bfseries\fontsize{6.5}{7.8}\selectfont, anchor=west] at (5.68,4.34)
   {transient response};
-\node[label, text=cGray!60!black] at (7.35,3.97)
-  {qualitative CvS decay\\(not measured data)};
 % fig-agent:start object=qualitative_current_decay panel=B kind=qualitative_relation truth_bearing=true
 \draw[axis] (5.84,1.05) -- (8.97,1.05) node[anchor=north, font=\fontsize{5.5}{6.6}\selectfont] {time, $t$};
 \draw[axis] (5.84,1.05) -- (5.84,3.52);
