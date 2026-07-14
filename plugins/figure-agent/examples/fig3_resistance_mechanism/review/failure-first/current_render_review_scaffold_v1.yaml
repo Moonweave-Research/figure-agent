@@ -2,7 +2,7 @@ schema: figure-agent.current-render-review-scaffold.v1
 fixture: fig3_resistance_mechanism
 created_for: current_three_column_render
 source_inputs:
-  tex_sha256: sha256:3b239e1745c76a85adee0a158902cc172114fa203413c7c2c2c85de28aae02e3
+  tex_sha256: sha256:9eaedf95d16ea7f5c72b80fb0f60b33b7220b0b26bd02fe7a4ec0df5fcd81644
   briefing_sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
   spec_sha256: sha256:a9ad9641c330a677c19e36501855779d90adb70d7a7b6a4f288eeec39e5f3abd
 render_evidence:
@@ -24,7 +24,7 @@ agent_observations:
     status: pending_human_review
     panel: A
     category: label_target_association
-    observation: The terminal state is labelled slow-release, not retained or deep-only. The unboxed label sits in deliberate lower whitespace beneath the terminal state; no detector exception is used.
+    observation: The terminal state is labelled slow-release, not retained or deep-only. A fine vertical leader now binds the unboxed label to its representative terminal state; no detector exception is used.
     grounded_in_rule: Briefing §3 rule 5
     question: At print scale, does slow-release unambiguously identify the terminal representative state without suggesting that only deep traps retain carriers?
   - id: OBS-002

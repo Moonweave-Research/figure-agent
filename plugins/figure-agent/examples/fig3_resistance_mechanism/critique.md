@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig3_resistance_mechanism
-generated_at: '2026-07-14T14:05:00Z'
+generated_at: '2026-07-14T14:18:57Z'
 generator: critique_brief.py
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:24cc8832eef120725bea04bbc2a25b6cd77bedd3a59df5145d7be041907555fc
+critique_input_hash: sha256:0a688778b6f7b50c5dae7c75e1c849e1d9a7e8c69d590bb714191d48b9a3fe56
 verdict: revise
 findings:
   - id: C001
@@ -287,7 +287,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:24cc8832eef120725bea04bbc2a25b6cd77bedd3a59df5145d7be041907555fc
+  assessed_artifact_hash: sha256:0a688778b6f7b50c5dae7c75e1c849e1d9a7e8c69d590bb714191d48b9a3fe56
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
@@ -526,4 +526,4 @@ crop_audit_log:
 Fresh host-vision re-audit bound to the current render and six required audit crops.
 Machine gates and crop inspection found no confirmed local drawing defect. This is not
 publication acceptance: `current_render_review_scaffold_v1.yaml` remains the required
-human art-direction verdict, and no source mutation is requested by this critique.
+human art-direction verdict, and no further source mutation is requested by this critique.
