@@ -173,6 +173,23 @@ def test_tikz_to_curve_is_attributed_but_requires_rendered_path_evidence() -> No
     assert geometry[0]["semantic_role"] == "transfer_path"
 
 
+def test_named_tikz_to_curve_resolves_declared_endpoint_coordinates() -> None:
+    tex = "\n".join(
+        [
+            r"\coordinate (carrier) at (1.48,3.18);",
+            r"\coordinate (trap) at (1.55,2.52);",
+            r"\draw[xfer] (carrier) to[out=-105,in=82] (trap);",
+        ]
+    )
+
+    geometry = _parse_tikz_geometry(tex)
+
+    assert [item["kind"] for item in geometry] == ["to_curve"]
+    assert geometry[0]["start_pt"] == [41.952756, 90.141732]
+    assert geometry[0]["end_pt"] == [43.937008, 71.433071]
+    assert geometry[0]["source_endpoint_names"] == ["carrier", "trap"]
+
+
 def test_analytic_plot_is_attributed_without_claiming_its_scientific_shape() -> None:
     tex = (
         r"\draw[cBlue] plot[smooth, domain=2.2:4.0, samples=60] "

@@ -61,6 +61,17 @@ _ALL_TO_RE = re.compile(
     + _OPT_BODY
     + rf")\])?\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
 )
+_NAMED_COORD = r"[A-Za-z][A-Za-z0-9_-]*"
+_STYLED_NAMED_TO_RE = re.compile(
+    r"\\draw\s*\[(" + _OPT_BODY + r")\]\s*"
+    rf"\(\s*({_NAMED_COORD})\s*\)\s*to(?:\s*\["
+    + _OPT_BODY
+    + rf"\])?\s*\(\s*({_NAMED_COORD})\s*\)"
+)
+_NAMED_COORD_DECL_RE = re.compile(
+    r"\\(?:coordinate|node)(?:\s*\[[^\]]*\])?\s*"
+    rf"\(\s*({_NAMED_COORD})\s*\)\s*at\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
+)
 
 _RAW_DRAW_PATTERN = tuple[re.Pattern[str], tuple[int, int, int, int], int | None]
 
@@ -150,11 +161,25 @@ def _styled_draws_raw(tex_text: str, style: str) -> list[tuple[float, float, flo
     The style token is exact inside the comma-delimited option body, so
     `xfer-helper` cannot satisfy an `xfer` assertion.
     """
-    return _match_raw_draws(
+    literal_paths = _match_raw_draws(
         tex_text,
         ((_STYLED_DRAW_RE, (2, 3, 4, 5), None), (_STYLED_TO_RE, (2, 3, 5, 6), 4)),
         style=style,
     )
+    stripped = _strip_tex_comments(tex_text)
+    coordinates = {
+        match.group(1): (float(match.group(2)), float(match.group(3)))
+        for match in _NAMED_COORD_DECL_RE.finditer(stripped)
+    }
+    named_paths: list[tuple[float, float, float, float, str]] = []
+    for match in _STYLED_NAMED_TO_RE.finditer(stripped):
+        if not _has_style_token(match.group(1), style):
+            continue
+        start = coordinates.get(match.group(2))
+        end = coordinates.get(match.group(3))
+        if start is not None and end is not None:
+            named_paths.append((*start, *end, match.group(1)))
+    return literal_paths + named_paths
 
 
 def _all_draws_raw(tex_text: str) -> list[tuple[float, float, float, float, str]]:
@@ -173,6 +198,21 @@ def find_styled_draws(tex_text: str, style: str) -> list[tuple[float, float, flo
 def find_all_draws(tex_text: str) -> list[tuple[float, float, float, float]]:
     """Coordinates of every straight or `to[...]` draw, excluding Bezier controls."""
     return [raw[:4] for raw in _all_draws_raw(tex_text)]
+
+
+def find_styled_named_to_paths(tex_text: str, style: str) -> list[tuple[str, str]]:
+    """Named TikZ endpoints for ``style``-tagged curved paths.
+
+    A source relation is robust only when the path ends at the named visual state
+    it claims to enter or leave. Literal coordinates cannot provide that binding:
+    moving a trap tick and forgetting an adjacent arrow would otherwise remain a
+    silent semantic defect.
+    """
+    paths: list[tuple[str, str]] = []
+    for match in _STYLED_NAMED_TO_RE.finditer(_strip_tex_comments(tex_text)):
+        if _has_style_token(match.group(1), style):
+            paths.append((match.group(2), match.group(3)))
+    return paths
 
 
 def _tip_orientation(option_body: str) -> str:
@@ -350,6 +390,118 @@ def parse_tex_assertions(
     return parsed
 
 
+def parse_named_endpoint_assertions(
+    spec: dict,
+    *,
+    source_name: str | None = None,
+) -> list[dict]:
+    """Parse source-level bindings between semantic paths and named TikZ states."""
+    raw = spec.get("named_endpoint_assertions")
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise TexAssertionError("named_endpoint_assertions must be a list")
+    parsed: list[dict] = []
+    for index, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise TexAssertionError(
+                f"named_endpoint_assertions[{index}] must be a mapping"
+            )
+        out: dict = {}
+        for field in ("id", "anchor_style"):
+            value = item.get(field)
+            if not isinstance(value, str) or not value.strip():
+                raise TexAssertionError(
+                    f"named_endpoint_assertions[{index}].{field} is required"
+                )
+            out[field] = value.strip()
+        for field in ("required_anchors", "allowed_anchors"):
+            anchors = item.get(field)
+            if (
+                not isinstance(anchors, list)
+                or not anchors
+                or any(not isinstance(anchor, str) or not anchor.strip() for anchor in anchors)
+            ):
+                raise TexAssertionError(
+                    f"named_endpoint_assertions[{index}].{field} must be a non-empty string list"
+                )
+            out[field] = [anchor.strip() for anchor in anchors]
+        if not set(out["required_anchors"]).issubset(out["allowed_anchors"]):
+            raise TexAssertionError(
+                f"named_endpoint_assertions[{index}].required_anchors must be allowed"
+            )
+        minimum_paths = item.get("minimum_paths")
+        if (
+            isinstance(minimum_paths, bool)
+            or not isinstance(minimum_paths, int)
+            or minimum_paths < 1
+        ):
+            raise TexAssertionError(
+                f"named_endpoint_assertions[{index}].minimum_paths must be a positive integer"
+            )
+        out["minimum_paths"] = minimum_paths
+        assertion_source_name = item.get("source_name")
+        if assertion_source_name is not None:
+            if not isinstance(assertion_source_name, str) or not assertion_source_name.strip():
+                raise TexAssertionError(
+                    f"named_endpoint_assertions[{index}].source_name must be a string"
+                )
+            out["source_name"] = assertion_source_name.strip()
+        if source_name is not None and out.get("source_name") not in (None, source_name):
+            continue
+        parsed.append(out)
+    return parsed
+
+
+def check_named_endpoint_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
+    """Return blocking issues when semantic paths detach from declared named states."""
+    issues: list[dict] = []
+    for assertion in assertions:
+        paths = find_styled_named_to_paths(tex_text, assertion["anchor_style"])
+        if len(paths) < assertion["minimum_paths"]:
+            issues.append(
+                {
+                    "id": assertion["id"],
+                    "status": "insufficient_named_paths",
+                    "message": (
+                        f"assertion {assertion['id']!r}: {assertion['anchor_style']!r} has "
+                        f"{len(paths)} named paths; requires at least {assertion['minimum_paths']}"
+                    ),
+                }
+            )
+            continue
+        allowed = set(assertion["allowed_anchors"])
+        unexpected = sorted(
+            {anchor for path in paths for anchor in path if anchor not in allowed}
+        )
+        if unexpected:
+            issues.append(
+                {
+                    "id": assertion["id"],
+                    "status": "named_endpoint_unbound",
+                    "message": (
+                        f"assertion {assertion['id']!r}: unexpected named endpoints "
+                        f"{', '.join(unexpected)}"
+                    ),
+                }
+            )
+            continue
+        observed = {anchor for path in paths for anchor in path}
+        missing = sorted(set(assertion["required_anchors"]) - observed)
+        if missing:
+            issues.append(
+                {
+                    "id": assertion["id"],
+                    "status": "named_endpoint_missing",
+                    "message": (
+                        f"assertion {assertion['id']!r}: required named endpoints absent "
+                        f"{', '.join(missing)}"
+                    ),
+                }
+            )
+    return issues
+
+
 def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
     """One issue per assertion that is violated, indeterminate, or whose anchor is
     missing/ambiguous. A passing assertion produces no issue."""
@@ -455,7 +607,8 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
 # missing/ambiguous anchor means an authored assertion is unverified. 'indeterminate'
 # (within tolerance) is advisory, not blocking.
 BLOCKING_STATUSES = (
-    "violated", "anchor_missing", "anchor_ambiguous", "insufficient_matches", "arrowhead_invalid"
+    "violated", "anchor_missing", "anchor_ambiguous", "insufficient_matches", "arrowhead_invalid",
+    "insufficient_named_paths", "named_endpoint_unbound", "named_endpoint_missing",
 )
 
 
@@ -532,12 +685,18 @@ def main() -> int:
     spec_path = args.spec or args.tex.parent / "spec.yaml"
     spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) if spec_path.exists() else {}
     assertions = parse_tex_assertions(spec or {}, source_name=args.tex.name)
+    named_endpoint_assertions = parse_named_endpoint_assertions(
+        spec or {}, source_name=args.tex.name
+    )
     tex_text = args.tex.read_text(encoding="utf-8")
-    issues = check_tex_assertions(tex_text, assertions)
+    issues = check_tex_assertions(tex_text, assertions) + check_named_endpoint_assertions(
+        tex_text, named_endpoint_assertions
+    )
+    assertion_count = len(assertions) + len(named_endpoint_assertions)
 
     if args.json_output:
-        write_tex_assertions_json(args.tex, issues, len(assertions), args.json_output)
-    print(f"tex assertions: {args.tex.name} ({len(assertions)} checked)")
+        write_tex_assertions_json(args.tex, issues, assertion_count, args.json_output)
+    print(f"tex assertions: {args.tex.name} ({assertion_count} checked)")
     for issue in issues:
         print(f"WARN {issue['status']}: {issue['message']}")
     if not issues:

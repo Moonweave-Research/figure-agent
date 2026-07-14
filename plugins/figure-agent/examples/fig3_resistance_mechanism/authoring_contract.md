@@ -16,6 +16,10 @@ conduction, bridging Fig 2 dielectric response to Fig 4 trap-energy quantificati
   without a declared model or calibration.
 - Keep `rho_60s` orthogonal to `n` as a magnitude cue.
 - Show low-sulfur traps as discrete and S80 as continuous broad.
+- Name the panel-A vertical axis `energy, E`; never leave bare `E` beside applied-voltage
+  terminals where it can be read as an electric field.
+- Bind every capture/release path endpoint to a named carrier or trap-state anchor. Do not
+  tune path and state coordinates independently.
 - Keep the schematic slim, compact, and dense, not bloated.
 
 ## Must Not Infer
@@ -24,6 +28,7 @@ conduction, bridging Fig 2 dielectric response to Fig 4 trap-energy quantificati
 - Do not add quantitative tick values or measured curve parameters.
 - Do not convert this schematic into the data-graph half of Fig 3.
 - Do not encode stronger trapping as well depth.
+- Do not label a distribution `deep` unless the panel declares its transport-energy reference.
 - Do not infer the direction or magnitude of a breadth-to-`n` relation from the
   schematic alone.
 - Do not use “trap network”; the intended phrase is trap-energy distribution or landscape.

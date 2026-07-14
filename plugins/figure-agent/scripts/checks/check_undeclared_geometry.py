@@ -48,6 +48,17 @@ _TO_CURVE_RE = re.compile(
     r"\(\s*(?P<end_x>-?\d+(?:\.\d+)?)\s*,\s*"
     r"(?P<end_y>-?\d+(?:\.\d+)?)\s*\)"
 )
+_NAMED_TIKZ_COORD = r"[A-Za-z][A-Za-z0-9_-]*"
+_NAMED_TO_CURVE_RE = re.compile(
+    r"\(\s*(?P<start_name>" + _NAMED_TIKZ_COORD + r")\s*\)\s*"
+    r"to\s*\[(?P<to_options>[^\]]+)\]\s*"
+    r"\(\s*(?P<end_name>" + _NAMED_TIKZ_COORD + r")\s*\)"
+)
+_NAMED_COORD_DECL_RE = re.compile(
+    r"\\(?:coordinate|node)(?:\s*\[[^\]]*\])?\s*"
+    r"\(\s*(?P<name>" + _NAMED_TIKZ_COORD + r")\s*\)\s*at\s*\(\s*"
+    r"(?P<x>-?\d+(?:\.\d+)?)\s*,\s*(?P<y>-?\d+(?:\.\d+)?)\s*\)"
+)
 _ANALYTIC_PLOT_RE = re.compile(
     r"\bplot\s*\[(?P<plot_options>[^\]]*)\]\s*"
     r"\(\s*\\x\s*,\s*\{(?P<expression>.*?)\}\s*\)",
@@ -192,7 +203,23 @@ def _iter_tikz_operations(tex_text: str) -> list[dict[str, Any]]:
     return operations
 
 
-def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]:
+def _named_coordinates_cm(tex_text: str) -> dict[str, tuple[float, float]]:
+    """Resolve named literal TikZ coordinates, including enclosing scope shifts."""
+    coordinates: dict[str, tuple[float, float]] = {}
+    for match in _NAMED_COORD_DECL_RE.finditer(tex_text):
+        shift_x, shift_y = _scope_shift_cm(tex_text, match.start())
+        coordinates[match.group("name")] = (
+            float(match.group("x")) + shift_x,
+            float(match.group("y")) + shift_y,
+        )
+    return coordinates
+
+
+def _parse_operation_geometry(
+    operation: dict[str, Any],
+    *,
+    named_coordinates: dict[str, tuple[float, float]] | None = None,
+) -> list[dict[str, Any]]:
     text = str(operation["text"])
     source_line = int(operation["source_line"])
     command = str(operation["command"])
@@ -234,6 +261,21 @@ def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]
                     "source_line": source_line,
                     "command": command,
                     "options": options,
+                }
+            )
+        else:
+            start_pt = _point_cm_to_pt(x0, y0)
+            end_pt = _point_cm_to_pt(x1, y1)
+            geometry.append(
+                {
+                    "kind": "line_segment",
+                    "start_pt": start_pt,
+                    "end_pt": end_pt,
+                    "bbox_pt": _bbox_from_points_pt([start_pt, end_pt]),
+                    "source_line": source_line,
+                    "command": command,
+                    "options": options,
+                    "clearance_mode": "segment_envelope",
                 }
             )
     for match in _CIRCLE_RE.finditer(text):
@@ -300,6 +342,28 @@ def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]
                 "semantic_role": "transfer_path" if "xfer" in options else "curve",
             }
         )
+    for match in _NAMED_TO_CURVE_RE.finditer(text):
+        start = (named_coordinates or {}).get(match.group("start_name"))
+        end = (named_coordinates or {}).get(match.group("end_name"))
+        if start is None or end is None:
+            continue
+        start_pt = _point_cm_to_pt(*start)
+        end_pt = _point_cm_to_pt(*end)
+        geometry.append(
+            {
+                "kind": "to_curve",
+                "start_pt": start_pt,
+                "end_pt": end_pt,
+                "bbox_pt": _bbox_from_points_pt([start_pt, end_pt]),
+                "tikz_to_options": match.group("to_options").strip(),
+                "source_line": source_line,
+                "command": command,
+                "options": options,
+                "clearance_mode": "rendered_path_required",
+                "semantic_role": "transfer_path" if "xfer" in options else "curve",
+                "source_endpoint_names": [match.group("start_name"), match.group("end_name")],
+            }
+        )
     for match in _ANALYTIC_PLOT_RE.finditer(text):
         plot_options = match.group("plot_options")
         domain_match = _PLOT_DOMAIN_RE.search(plot_options)
@@ -327,8 +391,11 @@ def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]
 
 def _parse_tikz_geometry(tex_text: str) -> list[dict[str, Any]]:
     geometry: list[dict[str, Any]] = []
+    named_coordinates = _named_coordinates_cm(tex_text)
     for operation in _iter_tikz_operations(tex_text):
-        geometry.extend(_parse_operation_geometry(operation))
+        geometry.extend(
+            _parse_operation_geometry(operation, named_coordinates=named_coordinates)
+        )
     return geometry
 
 
@@ -371,6 +438,7 @@ def _operation_unknown_reasons(
 
 def geometry_parse_coverage(tex_text: str) -> dict[str, Any]:
     operations = _iter_tikz_operations(tex_text)
+    named_coordinates = _named_coordinates_cm(tex_text)
     parsed_counts: dict[str, int] = {}
     unknown_reasons: dict[str, int] = {}
     unknown_samples: list[dict[str, Any]] = []
@@ -379,7 +447,7 @@ def geometry_parse_coverage(tex_text: str) -> dict[str, Any]:
     partial_unknown_operations = 0
     unknown_operations = 0
     for operation in operations:
-        parsed = _parse_operation_geometry(operation)
+        parsed = _parse_operation_geometry(operation, named_coordinates=named_coordinates)
         reasons = _operation_unknown_reasons(operation, parsed)
         if parsed:
             parsed_operations += 1

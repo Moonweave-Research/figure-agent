@@ -236,6 +236,46 @@ def test_fig3_carrier_walk_declares_and_satisfies_repeated_capture_release_contr
     )
 
 
+def test_fig3_carrier_walk_binds_each_transfer_to_declared_named_states():
+    plugin_root = Path(__file__).resolve().parents[1]
+    fixture = plugin_root / "examples" / "fig3_resistance_mechanism"
+    spec = yaml.safe_load((fixture / "spec.yaml").read_text(encoding="utf-8"))
+    assertions = cta.parse_named_endpoint_assertions(
+        spec,
+        source_name="fig3_resistance_mechanism.tex",
+    )
+
+    assert [assertion["id"] for assertion in assertions] == [
+        "carrier-walk-binds-every-transfer-to-a-declared-state"
+    ]
+    assert cta.check_named_endpoint_assertions(
+        (fixture / "fig3_resistance_mechanism.tex").read_text(encoding="utf-8"),
+        assertions,
+    ) == []
+
+
+def test_named_endpoint_assertion_rejects_a_literal_detached_transfer_path():
+    tex = "\n".join(
+        [
+            r"\coordinate (carrier) at (1.0,3.0);",
+            r"\coordinate (trap) at (1.0,2.0);",
+            r"\draw[xfer] (carrier) to[out=-90,in=90] (1.0,2.0);",
+        ]
+    )
+    assertion = {
+        "id": "named-transfer",
+        "anchor_style": "xfer",
+        "minimum_paths": 1,
+        "required_anchors": ["carrier", "trap"],
+        "allowed_anchors": ["carrier", "trap"],
+    }
+
+    issues = cta.check_named_endpoint_assertions(tex, [assertion])
+
+    assert issues[0]["id"] == "named-transfer"
+    assert issues[0]["status"] == "insufficient_named_paths"
+
+
 def test_payload_has_stable_shape(tmp_path):
     tex_path = tmp_path / "demo.tex"
     tex_path.write_text(FORCE_TOWARD, encoding="utf-8")

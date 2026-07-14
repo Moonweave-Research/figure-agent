@@ -18,12 +18,14 @@
 
 ## §2. Sub-regions (2 dense blocks)
 - **(a) cell + transport + decay**: 전극/sulfur film/전극 + 인가 V; carrier의 tortuous
-  multiple-trapping walk(최종 caught); 작은 I-vs-t 감쇠 sparkline + "current decays ⇒ R↑".
-- **(b) g(E) evolution**: 에너지 가로축의 trap energy distribution. S60 = discrete 단일 deep
-  peak(좁음) → S80 = continuous broad(넓음). `distribution breadth`(가로 범위), `ρ60s = magnitude`
-  (세로, 별도). "disorder↑(sulfur↑): discrete → continuous broad" 화살표.
+  multiple-trapping walk(최종 retained); 작은 I-vs-t 감쇠 sparkline + "current decays ⇒ R↑".
+  세로축은 전기장이 아닌 **energy, E**이며, carrier-path의 모든 끝점은 실제 trap/carrier glyph에
+  결속해야 한다.
+- **(b) g(E) evolution**: 에너지 가로축의 trap energy distribution. S60 = discrete
+  localized trap(좁음) → S80 = continuous broad(넓음). `distribution breadth`(가로 범위), `ρ60s`
+  (세로, 별도 magnitude cue). "disorder↑(sulfur↑): discrete → continuous broad" 화살표.
 
-## §3. Binding physics-correctness rules (grounded in 02_Surfur_Polymer docs; DO NOT violate)
+## §3. Physics invariants (grounded in 02_Surfur_Polymer docs; DO NOT violate)
 1. Measurement = transient current I(t) under applied V, **Curie–von Schweidler power-law
    I(t) ∝ t⁻ⁿ** (n∈(0,2)); I=V/R so I↓ ⇒ R↑. t>~2s = pure trap-mediated absorption current.
 2. **n is the fitted CvS power-law exponent.** Distribution breadth is the schematic
@@ -36,7 +38,8 @@
    low sulfur**. The discrete→continuous evolution with sulfur IS the mechanism (CvS_Analysis_
    Strategy.md). Do NOT draw 2 fixed discrete levels for all compositions.
 5. **Do NOT encode "stronger trapping" as well DEPTH** (depth reads as magnitude, contradicts
-   width-to-n mapping). Use distribution breadth + ρ60s as distinct schematic cues.
+   width-to-n mapping). With no declared transport-energy reference in panel B, do not label a
+   peak "deep". Use distribution breadth + ρ60s as distinct schematic cues.
 6. "S–S radical / sulfur cluster" trap chemistry is **NOT established** — illustrative only,
    never asserted. Unlabeled × marks for trap sites are correct.
 7. Use 'trap-energy distribution / landscape', NOT 'trap network' (network asserts spatial

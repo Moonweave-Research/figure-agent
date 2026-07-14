@@ -27,72 +27,86 @@
 \fill[cGray!10] (0.95,1.55) rectangle (4.28,2.82);
 \node[anchor=north, font=\fontsize{5.5}{6.5}\selectfont, text=cAmber!55!black] at (2.59,0.98)
   {sulfur polymer film};
-\draw[-{Stealth[length=1.0mm]}, line width=0.4pt] (0.42,0.95) -- (0.42,4.05)
-  node[above, font=\fontsize{6.5}{8}\selectfont]{$E$};
-% biased film: contacts left (+V) / right (-)
+\draw[-{Stealth[length=1.0mm]}, line width=0.4pt] (0.42,0.95) -- (0.42,4.05);
+\node[rotate=90, anchor=south, font=\fontsize{6.2}{7.5}\selectfont] at (0.20,2.35)
+  {energy, $E$};
+% biased film: contacts left (+V) / right (-V)
 \fill[cGray!70] (0.56,1.05) rectangle (0.72,3.5);
 \fill[cGray!70] (4.46,1.05) rectangle (4.62,3.5);
 \node[font=\fontsize{6}{7.4}\selectfont] at (0.64,3.74) {$+V$};
-\node[font=\fontsize{6}{7.4}\selectfont] at (4.54,3.74) {$-$};
+\node[font=\fontsize{6}{7.4}\selectfont] at (4.54,3.74) {$-V$};
 % transport level (mobility edge), tilted down by the applied field
 \draw[cAmber!60!black, line width=0.8pt] (0.72,3.4) -- (4.46,3.0);
-\node[anchor=west, font=\fontsize{5.5}{6.5}\selectfont, text=cAmber!55!black] at (1.0,3.62) {transport level};
+\node[anchor=west, font=\fontsize{5.5}{6.5}\selectfont, text=cAmber!55!black] at (1.0,3.62) {mobile transport level};
 % trap states sampling the manifold: irregular depths/spacing = a continuous distribution
-% (its spread = panel b's g(E)); the carrier dwells on four of them.
-\foreach \x/\y in {1.55/2.45, 2.75/2.18, 3.6/1.75, 1.18/2.62, 1.95/1.98, 2.12/2.6,
+% (its spread = panel b's g(E)). The named states below are the only states that
+% carrier paths may enter or leave; this prevents a visually detached arrowhead.
+\coordinate (trap_shallow) at (1.55,2.45);
+\coordinate (trap_mid) at (2.75,2.18);
+\coordinate (trap_deep) at (3.60,1.75);
+\foreach \x/\y in {1.55/2.45, 2.75/2.18, 3.60/1.75, 1.18/2.62, 1.95/1.98, 2.12/2.6,
                    2.45/2.0, 3.12/2.52, 3.32/2.05, 2.3/1.72, 1.42/2.08, 4.02/2.32}{
   \draw[cGray!55!black, line width=0.55pt] (\x-0.11,\y) -- (\x+0.11,\y);
 }
 \node[anchor=north, font=\fontsize{5.5}{6.5}\selectfont, text=cGray!55!black] at (2.5,1.46) {trap states};
 % fig-agent:start object=carrier_walk panel=A kind=path truth_bearing=true
-% carriers ride the transport level; capture (down) + thermal emission (up) repeatedly
-% exchange them with traps of widely varying depth -> no single release time -> power law,
-% not Debye; a deep trap holds one -> caught.
-\node[carrier] at (1.18,3.26) {};
-\node[carrier] at (2.34,3.12) {};
-% trap A (shallow) -- capture then quick thermal emission (reversible)
-\draw[xfer](1.48,3.18) to[out=-105,in=82] (1.55,2.52);
-\draw[xfer](1.70,2.5) to[out=82,in=-100] (1.78,3.10);
-\node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black, anchor=east] at (1.4,2.84) {trap};
-\node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black, anchor=west] at (1.86,2.84) {release};
-% trap B (mid) -- capture and emission
-\draw[xfer](2.66,3.0) to[out=-105,in=82] (2.74,2.25);
-\draw[xfer](2.9,2.23) to[out=82,in=-100] (2.98,2.92);
-% trap C (deep) -- capture, then held: caught
-\draw[xfer](3.5,2.84) to[out=-110,in=80] (3.6,1.83);
-\node[carrier] at (3.62,1.75) {};
+% Named carrier/trap endpoints bind every curved path to the state it depicts.
+\node[carrier] (carrier_shallow_in) at (1.18,3.26) {};
+\node[carrier] (carrier_shallow_out) at (1.88,3.10) {};
+\node[carrier] (carrier_mid_in) at (2.34,3.12) {};
+\node[carrier] (carrier_mid_out) at (3.06,2.92) {};
+\node[carrier] (carrier_deep_in) at (3.44,2.88) {};
+% shallow capture followed by thermal release
+\draw[xfer] (carrier_shallow_in) to[out=-22,in=82] (trap_shallow);
+\draw[xfer] (trap_shallow) to[out=82,in=-150] (carrier_shallow_out);
+\node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black, anchor=west] at (1.92,2.84) {release};
+% mid-depth capture followed by thermal release
+\draw[xfer] (carrier_mid_in) to[out=-20,in=84] (trap_mid);
+\draw[xfer] (trap_mid) to[out=82,in=-152] (carrier_mid_out);
+% deep capture; the carrier remains retained at this state in the schematic
+\draw[xfer] (carrier_deep_in) to[out=-118,in=82] (trap_deep);
 % fig-agent:end object=carrier_walk
-\node[lbl, anchor=west, font=\fontsize{6}{7.4}\selectfont] at (0.45,0.55)
-  {repeated trap / release $\Rightarrow$ $I(t)\!\propto\! t^{-n}$,\; $R\!\uparrow$};
+\node[lbl, anchor=west, font=\fontsize{5.5}{6.8}\selectfont] at (0.45,0.55)
+  {capture / release: current decays; resistance rises};
+% fig-agent:start object=current_sparkline panel=A kind=inset_plot truth_bearing=true
+\draw[-{Stealth[length=0.6mm]}, line width=0.3pt] (3.90,0.08) -- (4.34,0.08);
+\draw[-{Stealth[length=0.6mm]}, line width=0.3pt] (3.90,0.08) -- (3.90,0.48);
+\draw[cGray!72!black, line width=0.5pt] plot[smooth, domain=0:0.92, samples=32]
+  ({3.90+0.48*\x},{0.08+0.34*exp(-3.2*\x)});
+% fig-agent:end object=current_sparkline
 
 % ===================== (b) g(E): DISCRETE -> CONTINUOUS evolution =====================
 \node[pl] at (5.7,4.5) {b};
 \begin{scope}[shift={(6.3,1.05)}]
   \draw[-{Stealth[length=1.1mm]}, line width=0.4pt] (0,0) -- (5.0,0) node[right, font=\fontsize{6.5}{8}\selectfont]{trap energy, $E$};
-  \draw[-{Stealth[length=1.1mm]}, line width=0.4pt] (0,0) -- (0,3.2) node[anchor=south west, xshift=3mm, yshift=2mm, font=\fontsize{6.5}{8}\selectfont]{$g(E)$};
-  % low S = DISCRETE: a single sharp deep peak (S60 single deep trap), solid blue
+  \draw[-{Stealth[length=1.1mm]}, line width=0.4pt] (0,0) -- (0,3.2) node[rotate=90, anchor=south, xshift=-0.4mm, font=\fontsize{6.5}{8}\selectfont]{$g(E)$};
+  % A schematic distribution: it compares discrete and continuous regimes, not band shapes.
   \draw[cBlue!65!black, line width=0.95pt] plot[smooth, domain=2.2:4.0, samples=60] (\x, {2.55*exp(-((\x-3.1)^2)/0.05)});
   % S80 = CONTINUOUS broad distribution, dashed red
   \draw[cRed!70!black, line width=0.95pt, dash pattern=on 2pt off 1.4pt] plot[smooth, domain=0.4:4.7, samples=90] (\x, {2.35*exp(-((\x-2.5)^2)/1.5)});
-  % Distribution breadth is shown geometrically; it is not directly equated with n.
+  % The physical layout places S60 on the right and S80 on the left, so the
+  % composition cue must point right-to-left rather than imply S80 -> S60.
+  \draw[-{Stealth[length=0.7mm]}, line width=0.3pt, cGray!45!black] (3.45,3.00) -- (1.55,3.00);
+  \node[font=\fontsize{5.2}{6.3}\selectfont, text=cGray!55!black] at (2.50,3.16)
+    {sulfur content $\uparrow$};
+  % Distribution breadth follows the visible support of the broad distribution; it is
+  % qualitative and is not directly equated with n.
   % fig-agent:start object=n_breadth panel=B kind=measurement_span truth_bearing=true
-\draw[line width=0.35pt, cRed!60!black] (1.2,-0.25) -- (3.8,-0.25);
-\draw[line width=0.35pt, cRed!60!black] (1.2,-0.14) -- (1.2,-0.36);
-\draw[line width=0.35pt, cRed!60!black] (3.8,-0.14) -- (3.8,-0.36);
+\draw[line width=0.35pt, cRed!60!black] (0.55,-0.25) -- (4.45,-0.25);
+\draw[line width=0.35pt, cRed!60!black] (0.55,-0.12) -- (0.55,-0.38);
+\draw[line width=0.35pt, cRed!60!black] (4.45,-0.12) -- (4.45,-0.38);
   \node[sub, cRed!60!black] at (2.5,-0.52) {distribution breadth};
   % fig-agent:end object=n_breadth
-  % rho60s = magnitude (separate, vertical/orthogonal)
-  \draw[{Stealth[length=0.7mm]}-{Stealth[length=0.7mm]}, line width=0.3pt, cGray!40!black] (4.55,0.42) -- (4.55,1.52);
-  \node[font=\fontsize{5.3}{6.3}\selectfont, text=cGray!55!black, anchor=south, align=center]
-    at (4.55,1.68) {$\rho_{60\mathrm{s}}$\\magnitude};
+  % rho60s is an orthogonal vertical cue, deliberately not the height of either g(E) curve.
+  \draw[{Stealth[length=0.7mm]}-{Stealth[length=0.7mm]}, line width=0.3pt, cGray!40!black] (4.55,0.10) -- (4.55,1.30);
+  \node[font=\fontsize{5.0}{6.0}\selectfont, text=cGray!55!black, anchor=south, align=center]
+    at (4.55,1.42) {$\rho_{60\mathrm{s}}$ magnitude};
   % Curve labels stay close to their visual referents; the colour and line style
   % are redundant cues, not the only encoding of discrete versus continuous traps.
   \node[font=\fontsize{5.3}{6.3}\selectfont, text=cBlue!60!black, align=left, anchor=west]
-    at (3.48,2.54) {S60\\single deep};
+    at (3.48,2.38) {S60\\discrete trap};
   \node[font=\fontsize{5.3}{6.3}\selectfont, text=cRed!65!black, align=left, anchor=west]
-    at (0.72,2.48) {S80\\continuous broad};
-  % The two directly labelled distributions carry the comparison; an extra
-  % cross-plot arrow would add visual weight without adding a second relation.
+    at (0.56,2.34) {S80\\continuous broad};
 \end{scope}
 \end{tikzpicture}
 \end{document}

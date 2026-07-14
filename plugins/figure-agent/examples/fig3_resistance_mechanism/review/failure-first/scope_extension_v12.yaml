@@ -1,0 +1,19 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v11.yaml
+extends_sha256: sha256:f60670ea756bf7f2ae37f89bf25f4c4d3fda150d4954e0f6153f444233109d85
+reason: authorize bounded semantic-anchor repair for user-reported Fig3 relation defects
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v12.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/authoring_contract.md
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/briefing.md
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/spec.yaml
+  - plugins/figure-agent/scripts/checks/check_tex_assertions.py
+  - plugins/figure-agent/scripts/checks/check_undeclared_geometry.py
+  - plugins/figure-agent/tests/test_check_tex_assertions.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+  - plugins/figure-agent/tests/test_undeclared_geometry.py
+publication_acceptance: not_claimed
