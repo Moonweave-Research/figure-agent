@@ -211,6 +211,47 @@ def test_context_pack_cli_renders_selected_shape_profile_directives_by_default(
     )
 
 
+def test_context_pack_injects_declared_label_path_clearance_before_generation(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        extra_spec="""
+label_path_proximity_checks:
+  - id: panel_a_carrier_path
+    kind: polyline
+    role: semantic_carrier_path
+    points_pdf_cm:
+      - [1.0, 1.0]
+      - [2.0, 2.0]
+      - [3.0, 1.5]
+    clearance_pt: 4.0
+    text_phrases:
+      - id: carrier_key
+        words: [carrier, path]
+""",
+    )
+
+    payload = authoring_context_pack.build_context_pack(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert payload["path_constraints"]["schema"] == (
+        "figure-agent.label-path-proximity.v1"
+    )
+    assert payload["path_constraints"]["authoring_directives"] == [
+        "Keep text phrase [carrier path] at least 4 pt clear of declared path "
+        "[panel_a_carrier_path] (semantic_carrier_path; PDF-cm polyline "
+        "[(1, 1), (2, 2), (3, 1.5)])."
+    ]
+    rendered = authoring_context_pack.render_text(payload)
+    assert "## Declared Label-Path Constraints" in rendered
+    assert payload["path_constraints"]["authoring_directives"][0] in rendered
+
+
 def test_context_pack_outer_cli_rejects_explicit_empty_shape_profile(
     tmp_path: Path,
 ) -> None:

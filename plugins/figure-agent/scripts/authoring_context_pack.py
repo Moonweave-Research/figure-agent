@@ -14,6 +14,7 @@ import narrative_context
 import runtime_paths
 import shape_profile as shape_profile_compiler
 import yaml
+from checks import check_label_path_proximity
 from inputs import parse_spec
 from semantic_contracts import SemanticContractError, collect_semantic_contracts
 
@@ -416,6 +417,14 @@ def build_context_pack(
     philosophy_path = paths.plugin_root / "docs" / "figure-design-philosophy.md"
     style_path = paths.styles_dir / "polymer-paper-preamble.sty"
     layout_path, layout_constraints = _layout_constraints(example_dir, layout_contract)
+    label_path_checks = check_label_path_proximity.load_label_path_proximity_checks(
+        spec_path
+    )
+    path_constraints = (
+        check_label_path_proximity.authoring_context(label_path_checks)
+        if label_path_checks
+        else None
+    )
     selected_shape_profile = _shape_profile(example_dir, shape_profile)
     payload = {
         "schema": SCHEMA,
@@ -473,6 +482,8 @@ def build_context_pack(
     }
     if selected_shape_profile is not None:
         payload["shape_profile"] = selected_shape_profile
+    if path_constraints is not None:
+        payload["path_constraints"] = path_constraints
     return payload
 
 
@@ -510,6 +521,11 @@ def render_text(payload: dict[str, Any]) -> str:
     if layout_constraints:
         lines.extend(["", "## Declared Layout Constraints"])
         for directive in layout_constraints["authoring_directives"]:
+            lines.append(f"- {directive}")
+    path_constraints = payload.get("path_constraints")
+    if path_constraints:
+        lines.extend(["", "## Declared Label-Path Constraints"])
+        for directive in path_constraints["authoring_directives"]:
             lines.append(f"- {directive}")
     selected_shape_profile = payload.get("shape_profile")
     if selected_shape_profile:

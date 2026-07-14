@@ -15,7 +15,11 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from check_visual_clash import extract_pdf_words_and_page
+
+if __package__:
+    from .check_visual_clash import extract_pdf_words_and_page
+else:  # Direct script execution keeps the checks directory on sys.path.
+    from check_visual_clash import extract_pdf_words_and_page
 
 SCHEMA = "figure-agent.label-path-proximity.v1"
 CM_TO_PT = 72.0 / 2.54
@@ -291,6 +295,63 @@ def load_label_path_proximity_checks(spec_path: Path | None) -> list[dict[str, A
             )
         checks.append(check)
     return checks
+
+
+def authoring_context(checks: list[dict[str, Any]]) -> dict[str, Any]:
+    """Compile detector declarations into deterministic pre-generation guidance."""
+
+    def number(value: float | int) -> str:
+        return f"{float(value):g}"
+
+    def geometry(check: dict[str, Any]) -> str:
+        if check["kind"] == "horizontal_line":
+            x0, x1 = check["x_range_pdf_cm"]
+            return (
+                f"PDF-cm horizontal line y={number(check['y_pdf_cm'])}, "
+                f"x=[{number(x0)}, {number(x1)}]"
+            )
+        if check["kind"] == "vertical_line":
+            y0, y1 = check["y_range_pdf_cm"]
+            return (
+                f"PDF-cm vertical line x={number(check['x_pdf_cm'])}, "
+                f"y=[{number(y0)}, {number(y1)}]"
+            )
+        points = ", ".join(
+            f"({number(x)}, {number(y)})" for x, y in check["points_pdf_cm"]
+        )
+        return f"PDF-cm polyline [{points}]"
+
+    directives: list[str] = []
+    for check in sorted(checks, key=_check_sort_key):
+        _path_segments(check)
+        clearance = _non_negative_number(
+            check.get("clearance_pt"), field=f"{check['id']}.clearance_pt"
+        )
+        path = (
+            f"declared path [{check['id']}] ({check['role']}; {geometry(check)})"
+        )
+        phrases = _text_phrases(check)
+        allowlist = _text_allowlist(check)
+        for phrase in phrases:
+            directives.append(
+                f"Keep text phrase [{' '.join(phrase['words'])}] at least "
+                f"{clearance:g} pt clear of {path}."
+            )
+        if allowlist is not None:
+            for label in sorted(allowlist):
+                directives.append(
+                    f"Keep text label [{label}] at least {clearance:g} pt clear of "
+                    f"{path}."
+                )
+        if not phrases and allowlist is None:
+            directives.append(
+                f"Keep all rendered text at least {clearance:g} pt clear of {path}."
+            )
+    return {
+        "schema": SCHEMA,
+        "checks": checks,
+        "authoring_directives": directives,
+    }
 
 
 def _selected_words(check: dict[str, Any], words: list[dict[str, Any]]) -> list[dict[str, Any]]:
