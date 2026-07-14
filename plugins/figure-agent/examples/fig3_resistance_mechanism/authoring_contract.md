@@ -19,6 +19,10 @@ data; it must not impersonate that data.
   horizontal energy states; S80 is a continuous broad energy support. They are separate units.
 - A broader support cue is qualitative and must not equate geometric width directly with `n` or read
   as a fitted density-of-states envelope.
+- Encode S80 as a dense, irregular field of horizontal state marks over a broader vertical span; do
+  not use a symmetric silhouette, closed contour, or hard-edged interior container to stand for it.
+- Place the Panel A terminal-state annotation as unboxed text in deliberate whitespace. A knockout
+  label is only a last resort after a verified background conflict, never a default detector workaround.
 - Keep the schematic slim, dense, and readable at a main-figure scale.
 
 ## Must Not Infer

@@ -39,8 +39,6 @@
   2.48/1.98,3.17/2.56,3.38/2.05,2.34/1.68,1.45/2.10,4.08/2.31}{
   \draw[cGray!55!black, line width=0.55pt] (\x-0.10,\y) -- (\x+0.10,\y);
 }
-\node[anchor=north, font=\fontsize{5.2}{6.2}\selectfont, text=cGray!55!black] at (2.62,1.43)
-  {representative trap states};
 % fig-agent:start object=carrier_sequence panel=A kind=state_sequence truth_bearing=true
 % Left-to-right placement is temporal ordering, not net spatial carrier drift.
 \node[carrier] (carrier_shallow_in) at (1.22,3.28) {};
@@ -55,9 +53,8 @@
 \draw[xfer] (carrier_deep_in) to[out=-118,in=82] (trap_slow_release);
 \node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black] at (1.07,2.90) {capture};
 \node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black] at (2.08,2.90) {release};
-\node[anchor=north west, fill=white, inner sep=0.4pt,
-  font=\fontsize{4.4}{5.2}\selectfont, text=cGray!55!black]
-  (slow_release_label) at (3.96,1.96) {slow-release};
+\node[anchor=north, font=\fontsize{4.2}{5.0}\selectfont, text=cGray!55!black]
+  (slow_release_label) at (3.70,1.46) {slow-release};
 % fig-agent:end object=carrier_sequence
 
 % ===================== (b) qualitative transient response, not data =====================
@@ -104,12 +101,18 @@
 \begin{scope}
   \fill[cRed!12] (12.18,1.22) rectangle (14.32,3.48);
   \draw[cRed!45!black, line width=0.38pt] (12.18,3.27) -- (14.32,3.27);
-  \node[label, text=cRed!65!black] at (13.25,3.55) {S80\\continuous broad};
+  \node[label, text=cRed!65!black] at (13.25,3.55) {S80\\continuous support};
   % fig-agent:start object=s80_continuous_support panel=C kind=energy_landscape truth_bearing=true
-  % A continuous support region, not a fitted density-of-states envelope.
-  \fill[cRed!18, rounded corners=1.15mm] (12.52,1.46) rectangle (13.98,3.07);
-  \draw[cRed!58!black, line width=0.45pt, rounded corners=1.15mm]
-    (12.52,1.46) rectangle (13.98,3.07);
+  % Dense, irregular state marks indicate continuous qualitative support;
+  % they do not encode a fitted density-of-states envelope or numeric count.
+  \foreach \y/\x/\len in {
+    1.57/13.24/0.42,1.68/12.94/0.60,1.79/13.50/0.55,1.90/13.16/0.72,
+    2.01/12.87/0.46,2.12/13.52/0.68,2.23/13.18/0.82,2.34/12.92/0.58,
+    2.45/13.48/0.49,2.56/13.15/0.76,2.67/12.95/0.54,2.78/13.46/0.64,
+    2.89/13.18/0.46,3.00/13.42/0.38}{
+    \draw[cRed!62!black, opacity=0.78, line width=0.42pt, line cap=round]
+      (\x-\len/2,\y) -- (\x+\len/2,\y);
+  }
   % fig-agent:end object=s80_continuous_support
   \draw[cRed!60!black, line width=0.35pt] (14.54,1.46) -- (14.54,3.07);
   \draw[cRed!60!black, line width=0.35pt] (14.40,1.46) -- (14.68,1.46);

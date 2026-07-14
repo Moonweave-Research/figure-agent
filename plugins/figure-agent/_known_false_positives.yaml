@@ -96,17 +96,6 @@ patterns:
     dark_max: 0.06
     edge_max: 0.01
 
-  # The terminal-state label is deliberately adjacent to its final trap glyph.
-  # A manual full-render review found no glyph/path contact; retain only this
-  # compact residual range so a real overlap is still strict-gated.
-  - id: fig3_resistance_slow_release_terminal_adjacency
-    fixture: fig3_resistance_mechanism
-    glyph: slow-release
-    kind: text_on_path
-    dark_max: 0.10
-    edge_max: 0.01
-    bbox_height_max: 34
-
   - id: fig3_resistance_rho_subscript_self_signal
     fixture: fig3_resistance_mechanism
     glyph: "60"

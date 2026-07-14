@@ -17,6 +17,7 @@ panel—not an experimental graph or a proxy for real data.
 Use the same vertical energy grammar as A to compare a representative discrete S60 state set with
 continuous broad S80 support. The comparison is qualitative; no numerical width-to-`n` relation,
 trap-strength ranking, or fitted density-of-states envelope is claimed.
+Use a dense irregular state field for S80, rather than a closed box or smooth distribution silhouette.
 
 ## Cross-panel bridge
 

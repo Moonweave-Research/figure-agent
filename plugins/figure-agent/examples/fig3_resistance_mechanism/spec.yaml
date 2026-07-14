@@ -87,6 +87,10 @@ composition_model:
           truth_bearing: true
           semantic_claim: sign-agnostic carrier undergoes temporally ordered repeated trapping with a representative slow-release occupancy
           invariant: carrier_sign_agnostic_temporal_state_sequence_not_deep_only_retention
+          annotation_grammar:
+            terminal_state_label: slow-release
+            style: unboxed_neutral_text_in_deliberate_whitespace
+            forbidden_style: opaque_knockout_as_detector_workaround
           allowed_creative_ops: [reshape_path, reduce_arrowheads]
     B:
       objects:
@@ -108,8 +112,12 @@ composition_model:
           kind: energy_landscape
           truth_bearing: true
           semantic_claim: high-sulfur S80 has continuous broad energy support
-          invariant: high_sulfur_continuous_broad_support_not_width_to_n_mapping
-          allowed_creative_ops: [reshape_support_region, preserve_non_quantitative_status]
+          invariant: high_sulfur_dense_irregular_support_not_envelope_or_container_or_width_to_n_mapping
+          semantic_encoding:
+            primitive: dense_irregular_horizontal_state_field
+            required_visible_cues: [greater_state_density_than_s60, irregular_positions, broader_vertical_energy_span]
+            forbidden_visible_cues: [symmetric_density_silhouette, closed_contour, hard_edged_interior_container]
+          allowed_creative_ops: [vary_support_density, preserve_non_quantitative_status]
 notes: |
   Three-column explanatory schematic only. The middle I(t) curve has no quantitative data claim.
   A clean machine gate is bounded screening evidence; publication acceptance requires human review.

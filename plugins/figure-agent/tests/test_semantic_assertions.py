@@ -314,12 +314,29 @@ def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar()
     assert "(trap_slow_release)" in source
     assert "(slow_release_label)" in source
     assert "{slow-release};" in source
+    slow_release_label = source.split("(slow_release_label)", 1)[0].rsplit("\\node[", 1)[-1]
+    assert "fill=" not in slow_release_label
     assert objects["A"]["objects"]["carrier_sequence"]["invariant"] == (
         "carrier_sign_agnostic_temporal_state_sequence_not_deep_only_retention"
     )
     assert objects["C"]["objects"]["s80_continuous_support"]["invariant"] == (
-        "high_sulfur_continuous_broad_support_not_width_to_n_mapping"
+        "high_sulfur_dense_irregular_support_not_envelope_or_container_or_width_to_n_mapping"
     )
+    assert objects["C"]["objects"]["s80_continuous_support"]["semantic_encoding"] == {
+        "primitive": "dense_irregular_horizontal_state_field",
+        "required_visible_cues": [
+            "greater_state_density_than_s60",
+            "irregular_positions",
+            "broader_vertical_energy_span",
+        ],
+        "forbidden_visible_cues": [
+            "symmetric_density_silhouette",
+            "closed_contour",
+            "hard_edged_interior_container",
+        ],
+    }
+    assert "Dense, irregular state marks indicate continuous qualitative support" in source
+    assert "rounded corners=1.15mm" not in source
     assert "$\\rho_{60" not in source
     assert {
         (assertion["id"], assertion["relation"], assertion["subject"], assertion["reference"])

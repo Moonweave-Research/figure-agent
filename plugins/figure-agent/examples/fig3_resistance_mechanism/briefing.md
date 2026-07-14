@@ -20,8 +20,9 @@ see the observable between the mechanism and the composition-dependent trap-ener
   causal relation `trapping → I↓` and, under applied V, `I=V/R → R↑`; it does not claim measured
   magnitudes, fitted parameters, a time window, or a composition series.
 - **(c) trap-energy landscape**: keep the same vertical energy grammar as (a). S60 is a
-  representative discrete state set; S80 is a broad continuous support. These are separate
-  comparison units, not a spectrum, bar chart, Fourier transform, or overlaid mixture.
+  representative discrete state set; S80 is a dense, irregular state field spanning broader
+  continuous support. These are separate comparison units, not a spectrum, bar chart, Fourier
+  transform, fitted DOS envelope, or overlaid mixture.
 
 ## §3. Physics invariants
 

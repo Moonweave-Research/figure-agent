@@ -2,9 +2,9 @@ schema: figure-agent.current-render-review-scaffold.v1
 fixture: fig3_resistance_mechanism
 created_for: current_three_column_render
 source_inputs:
-  tex_sha256: sha256:ab35f1940f5388c9c69d56e59f6fdeb1dcc75ad6b40b0a8234d53da3f9817d40
-  briefing_sha256: sha256:086d1a01fd23a6a8457efc9c78b50291d11b6a35c31cc90a61ad06eb1e3dbd6f
-  spec_sha256: sha256:838a84060e66f9dbaa16b60c3be35fc2da5d72413044d01182d0bca74df10cdb
+  tex_sha256: sha256:8da2eeee2e104229a708f2e66ae2fa062c41e74bb669a3cce5d16d6be3489bb9
+  briefing_sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
+  spec_sha256: sha256:b184757f6dddb252b48d00d54fffc7fbcfa2db22d5e11ce21a1fdde059802ac4
 render_evidence:
   render_path: build/fig3_resistance_mechanism.pdf
   audit_crop_manifest: build/audit_crops/manifest.json
@@ -23,16 +23,16 @@ agent_observations:
     status: pending_human_review
     panel: A
     category: label_target_association
-    observation: The terminal state is labelled slow-release, not retained or deep-only. The label is directly adjacent to the final trap state; its compact detector exception is fixture-, glyph-, bbox-, and signal-bounded, so a larger actual overlap remains strict-gated.
+    observation: The terminal state is labelled slow-release, not retained or deep-only. The unboxed label sits in deliberate lower whitespace beneath the terminal state; no detector exception is used.
     grounded_in_rule: Briefing §3 rule 5
     question: At print scale, does slow-release unambiguously identify the terminal representative state without suggesting that only deep traps retain carriers?
   - id: OBS-002
     status: pending_human_review
     panel: C
     category: semantic_encoding_ambiguity
-    observation: The S80 encoding is now a rectangular continuous-support region, not a symmetric fitted-envelope shape.
+    observation: The S80 encoding is a dense, irregular field of horizontal state marks over a broader vertical span, not a symmetric fitted-envelope, closed contour, or interior container.
     grounded_in_rule: Briefing §3 rule 2 and rule 4
-    question: Does the continuous-support region read as non-quantitative broad trap-energy support without implying a measured distribution/DOS?
+    question: Does the dense irregular state field read as non-quantitative broad trap-energy support without implying a measured distribution/DOS or numerical state count?
   - id: OBS-003
     status: pending_human_review
     panel: whole_figure
