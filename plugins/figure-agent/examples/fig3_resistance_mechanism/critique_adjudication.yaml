@@ -1,4 +1,9 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig3_resistance_mechanism
-source_critique_hash: sha256:efcbb97f6440fa41ac16d2a6118236634834ff79d0d4e609c2fcf3c112eb3926
-decisions: []
+source_critique_hash: sha256:eb928e47db3435baae3ca3a9c65d1247db408208690fb689c7a23190589f98b7
+decisions:
+- finding_id: C001
+  decision: needs_human
+  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C001.
