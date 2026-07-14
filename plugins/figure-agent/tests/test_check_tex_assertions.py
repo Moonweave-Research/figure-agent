@@ -510,6 +510,19 @@ def test_check_tex_assertions_forward_arrowhead_passes():
     assert cta.check_tex_assertions(tex, assertions) == []
 
 
+def test_check_tex_assertions_honors_reverse_arrowhead_on_curved_to_path():
+    # The endpoint order is decreasing-x, but the head is at the start of the
+    # curved path, so the physical direction is increasing-x.
+    tex = r"\draw[forceArr] (2,0) to[{Stealth}-] (0,0);"
+    assertions = [
+        {"id": "force-away", "anchor_style": "forceArr", "axis": "x", "direction": "decreasing"}
+    ]
+
+    issues = cta.check_tex_assertions(tex, assertions)
+
+    assert issues[0]["status"] == "violated"
+
+
 def test_check_tex_assertions_matches_styled_draw_with_inline_tip_bracket():
     # C2: an inline tip spec with an inner ] must not break the styled-draw anchor.
     tex = "\\draw[forceArr,-{Stealth[length=6pt,width=4.5pt]}] (0,0) -- (-1,0);"

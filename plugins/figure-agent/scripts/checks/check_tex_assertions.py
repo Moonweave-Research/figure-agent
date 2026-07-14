@@ -51,16 +51,18 @@ _ALL_DRAW_RE = re.compile(
 )
 _STYLED_TO_RE = re.compile(
     r"\\draw\s*\[(" + _OPT_BODY + r")\]\s*"
-    rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*to(?:\s*\["
+    rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*to(?:\s*\[("
     + _OPT_BODY
-    + rf"\])?\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
+    + rf")\])?\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
 )
 _ALL_TO_RE = re.compile(
     r"\\draw\s*(?:\[(" + _OPT_BODY + r")\])?\s*"
-    rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*to(?:\s*\["
+    rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*to(?:\s*\[("
     + _OPT_BODY
-    + rf"\])?\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
+    + rf")\])?\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
 )
+
+_RAW_DRAW_PATTERN = tuple[re.Pattern[str], tuple[int, int, int, int], int | None]
 
 
 def _strip_tex_comments(tex_text: str) -> str:
@@ -92,26 +94,25 @@ def _strip_tex_comments(tex_text: str) -> str:
 
 def _match_raw_draws(
     tex_text: str,
-    patterns: tuple[re.Pattern[str], ...],
+    patterns: tuple[_RAW_DRAW_PATTERN, ...],
     *,
     style: str | None = None,
 ) -> list[tuple[float, float, float, float, str]]:
     tex_text = _strip_tex_comments(tex_text)
     style_re = re.compile(r"\b" + re.escape(style) + r"\b") if style else None
     matches: list[tuple[int, tuple[float, float, float, float, str]]] = []
-    for pattern in patterns:
+    for pattern, coordinate_groups, to_options_group in patterns:
         for match in pattern.finditer(tex_text):
-            options = match.group(1) or ""
-            if style_re is not None and not style_re.search(options):
+            draw_options = match.group(1) or ""
+            if style_re is not None and not style_re.search(draw_options):
                 continue
+            to_options = match.group(to_options_group) if to_options_group else None
+            options = ",".join(option for option in (draw_options, to_options) if option)
             matches.append(
                 (
                     match.start(),
                     (
-                        float(match.group(2)),
-                        float(match.group(3)),
-                        float(match.group(4)),
-                        float(match.group(5)),
+                        *(float(match.group(group)) for group in coordinate_groups),
                         options,
                     ),
                 )
@@ -125,12 +126,19 @@ def _styled_draws_raw(tex_text: str, style: str) -> list[tuple[float, float, flo
     The style token is matched word-bounded inside the option body so `forceArr`
     does not match `forceArrow`; the option body carries the arrow-tip spec.
     """
-    return _match_raw_draws(tex_text, (_STYLED_DRAW_RE, _STYLED_TO_RE), style=style)
+    return _match_raw_draws(
+        tex_text,
+        ((_STYLED_DRAW_RE, (2, 3, 4, 5), None), (_STYLED_TO_RE, (2, 3, 5, 6), 4)),
+        style=style,
+    )
 
 
 def _all_draws_raw(tex_text: str) -> list[tuple[float, float, float, float, str]]:
     """Every straight or `to[...]` draw as (x1, y1, x2, y2, option_body)."""
-    return _match_raw_draws(tex_text, (_ALL_DRAW_RE, _ALL_TO_RE))
+    return _match_raw_draws(
+        tex_text,
+        ((_ALL_DRAW_RE, (2, 3, 4, 5), None), (_ALL_TO_RE, (2, 3, 5, 6), 4)),
+    )
 
 
 def find_styled_draws(tex_text: str, style: str) -> list[tuple[float, float, float, float]]:
