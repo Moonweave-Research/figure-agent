@@ -2465,6 +2465,12 @@ def test_fig3_current_render_review_scaffold_is_bound_and_human_pending() -> Non
         "spec_sha256": _sha256(FIXTURE / "spec.yaml"),
     }
     assert scaffold["machine_gate"]["strict_compile"] == "passed"
+    assert scaffold["machine_gate"]["visual_clash_strict_candidates"] == 0
+    assert scaffold["machine_gate"]["geometry_coverage"] == {
+        "parsed_operations": 21,
+        "total_operations": 25,
+        "coverage_ratio": 0.84,
+    }
     assert scaffold["machine_gate"]["publication_acceptance"] == "not_claimed"
     assert scaffold["render_evidence"] == {
         "render_path": "build/fig3_resistance_mechanism.pdf",

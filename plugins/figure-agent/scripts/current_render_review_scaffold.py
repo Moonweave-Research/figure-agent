@@ -9,6 +9,7 @@ target after any of those artifacts have changed.
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,63 @@ def _invalid(path: Path, reason: str) -> dict[str, Any]:
         "human_review_state": None,
         "stale_fields": [],
     }
+
+
+def _json_mapping(path: Path) -> dict[str, Any] | None:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _machine_gate_stale_fields(
+    example_dir: Path,
+    machine_gate: dict[str, Any],
+) -> tuple[list[str], str | None]:
+    """Compare declared current-machine facts with their generated reports."""
+    declared_fields = {
+        "strict_compile",
+        "visual_clash_strict_candidates",
+        "geometry_coverage",
+    }
+    present = declared_fields & machine_gate.keys()
+    if not present:
+        return [], None
+    if present != declared_fields:
+        return [], "machine_gate_evidence_incomplete"
+
+    strict_compile = machine_gate["strict_compile"]
+    expected_clashes = machine_gate["visual_clash_strict_candidates"]
+    expected_coverage = machine_gate["geometry_coverage"]
+    if (
+        not isinstance(strict_compile, str)
+        or not isinstance(expected_clashes, int)
+        or isinstance(expected_clashes, bool)
+        or not isinstance(expected_coverage, dict)
+    ):
+        return [], "machine_gate_evidence_invalid"
+
+    strict_status = _json_mapping(example_dir / "build" / "strict_status.json")
+    visual_clash = _json_mapping(example_dir / "build" / "visual_clash.json")
+    geometry = _json_mapping(example_dir / "build" / "undeclared_geometry.json")
+    if strict_status is None or visual_clash is None or geometry is None:
+        return [], "machine_gate_report_missing"
+
+    candidates = visual_clash.get("candidates")
+    coverage = geometry.get("geometry_parse_coverage")
+    if not isinstance(candidates, list) or not isinstance(coverage, dict):
+        return [], "machine_gate_report_invalid"
+
+    stale_fields: list[str] = []
+    if strict_status.get("state") != strict_compile:
+        stale_fields.append("machine_gate.strict_compile")
+    if len(candidates) != expected_clashes:
+        stale_fields.append("machine_gate.visual_clash_strict_candidates")
+    for key in ("parsed_operations", "total_operations", "coverage_ratio"):
+        if coverage.get(key) != expected_coverage.get(key):
+            stale_fields.append(f"machine_gate.geometry_coverage.{key}")
+    return stale_fields, None
 
 
 def review_scaffold_summary(example_dir: Path) -> dict[str, Any]:
@@ -111,6 +169,12 @@ def review_scaffold_summary(example_dir: Path) -> dict[str, Any]:
         or machine_gate.get("publication_acceptance") != "not_claimed"
     ):
         return _invalid(path, "machine_acceptance_boundary_invalid")
+    machine_gate_stale_fields, machine_gate_error = _machine_gate_stale_fields(
+        example_dir, machine_gate
+    )
+    if machine_gate_error is not None:
+        return _invalid(path, machine_gate_error)
+    stale_fields.extend(machine_gate_stale_fields)
     observations = payload.get("agent_observations")
     if not isinstance(observations, list) or not observations:
         return _invalid(path, "agent_observations_missing")

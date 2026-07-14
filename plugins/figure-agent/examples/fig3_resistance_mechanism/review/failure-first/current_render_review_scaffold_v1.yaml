@@ -18,9 +18,9 @@ machine_gate:
   strict_compile: passed
   visual_clash_strict_candidates: 0
   geometry_coverage:
-    parsed_operations: 23
-    total_operations: 26
-    coverage_ratio: 0.884615
+    parsed_operations: 21
+    total_operations: 25
+    coverage_ratio: 0.84
   state_field_geometry: passed
   publication_acceptance: not_claimed
 agent_observations:
