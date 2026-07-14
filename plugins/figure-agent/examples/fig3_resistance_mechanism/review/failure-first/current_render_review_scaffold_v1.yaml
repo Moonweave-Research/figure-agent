@@ -7,8 +7,12 @@ source_inputs:
   spec_sha256: sha256:8ea441044b0197212c8856140cac06cc610340f8118aa7d4b79dd8d78051fcb7
 render_evidence:
   render_path: build/fig3_resistance_mechanism.pdf
+  render_png_path: build/fig3_resistance_mechanism.png
+  render_png_sha256: sha256:a27f7a360e0c3df19de1342c32eab972c0dc566688255d0c11db42aedb0bb717
   audit_crop_manifest: build/audit_crops/manifest.json
+  audit_crop_manifest_sha256: sha256:8d44ff50f56f97c2f5c1691d8d0d8f77a416a6c6f0b3ffb4e16e3721583d85f4
   print_proxy: build/audit_crops/print_178mm.png
+  print_proxy_sha256: sha256:3746f8db070ef9abdf39ce4f647fc7886349048cd24c982404353270cdac34e7
   inspection_method: full_render_plus_high_zoom_crops_plus_print_proxy
 machine_gate:
   strict_compile: passed

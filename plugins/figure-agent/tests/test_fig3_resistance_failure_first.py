@@ -2466,6 +2466,20 @@ def test_fig3_current_render_review_scaffold_is_bound_and_human_pending() -> Non
     }
     assert scaffold["machine_gate"]["strict_compile"] == "passed"
     assert scaffold["machine_gate"]["publication_acceptance"] == "not_claimed"
+    assert scaffold["render_evidence"] == {
+        "render_path": "build/fig3_resistance_mechanism.pdf",
+        "render_png_path": "build/fig3_resistance_mechanism.png",
+        "render_png_sha256": _sha256(FIXTURE / "build" / "fig3_resistance_mechanism.png"),
+        "audit_crop_manifest": "build/audit_crops/manifest.json",
+        "audit_crop_manifest_sha256": _sha256(
+            FIXTURE / "build" / "audit_crops" / "manifest.json"
+        ),
+        "print_proxy": "build/audit_crops/print_178mm.png",
+        "print_proxy_sha256": _sha256(
+            FIXTURE / "build" / "audit_crops" / "print_178mm.png"
+        ),
+        "inspection_method": "full_render_plus_high_zoom_crops_plus_print_proxy",
+    }
     assert scaffold["human_review"]["state"] == "pending"
     assert scaffold["human_review"]["verdict"] == "not_recorded"
 

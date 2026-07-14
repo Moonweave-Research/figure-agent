@@ -15,6 +15,7 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 sys.path.insert(0, str(SCRIPTS_DIR / "checks"))
 sys.path.insert(0, str(SCRIPTS_DIR / "quality"))
 
+import current_render_review_scaffold
 import human_decision_record
 import runtime_paths
 import status_next_policy
@@ -681,6 +682,18 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
                 exports_substate=str(result.get("exports_substate") or ""),
             )
     _append_critique_freshness_diagnostics(result, example_dir)
+    current_review = current_render_review_scaffold.review_scaffold_summary(example_dir)
+    result["current_render_review"] = current_review
+    if current_review["state"] != "NOT_DECLARED":
+        result.setdefault("checks", []).append(
+            ("current_render_review", str(current_review["state"]).lower())
+        )
+    if current_review["state"] == "PENDING":
+        result.setdefault("notes", []).append("current_render_review_pending")
+    elif current_review["state"] == "STALE":
+        result.setdefault("notes", []).append("current_render_review_stale")
+    elif current_review["state"] == "INVALID":
+        result.setdefault("notes", []).append("current_render_review_invalid")
     result["adjudication_state"] = _adjudication_state(example_dir, result)
     result["audit_evidence"] = summarize_audit_evidence(
         example_dir,
@@ -1160,6 +1173,14 @@ def _print_single(result: dict) -> None:
             f"{result.get('final_artifact_kind', '?')} "
             f"{result.get('final_artifact_state', '?')} "
             f"{result.get('final_artifact_path', '?')}"
+        )
+    current_review = result.get("current_render_review")
+    if isinstance(current_review, dict) and current_review.get("state") != "NOT_DECLARED":
+        detail = current_review.get("human_review_state") or current_review.get("reason")
+        print(
+            "  Current human review: "
+            f"{current_review.get('state', '?')}"
+            f" ({detail or '?'})"
         )
     audit_evidence = result.get("audit_evidence")
     if isinstance(audit_evidence, dict):

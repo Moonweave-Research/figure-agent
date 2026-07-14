@@ -1,0 +1,15 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v35.yaml
+extends_sha256: sha256:55c9dbca2e95da12e82729a2ef21d77ac6dda8d1a2da9a8ef9331de6020fc43d
+reason: bind the current human-review packet to the rendered PDF plus deterministic PNG, crop-manifest, and print-proxy evidence, then expose pending or stale review state through the generic status surface
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/current_render_review_scaffold_v1.yaml
+  - review/failure-first/scope_extension_v36.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/scripts/current_render_review_scaffold.py
+  - plugins/figure-agent/scripts/status.py
+  - plugins/figure-agent/tests/test_status.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed
