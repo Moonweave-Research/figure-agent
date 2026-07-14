@@ -15,6 +15,7 @@ from typing import Any
 
 import fixture_identity
 import runtime_paths
+import yaml
 
 QUEUE_SCHEMA = "figure-agent.promotion-queue.v1"
 TRIAGE_SCHEMA = "figure-agent.promotion-triage.v1"
@@ -115,6 +116,12 @@ def load_detector_report(path: Path, detector: str) -> dict[str, Any]:
         issues = payload.get("issues")
         if not isinstance(issues, list):
             raise PromotionWiringError(f"{detector}_schema:issues")
+        checked = payload.get("checked")
+        total = payload.get("total")
+        if isinstance(checked, bool) or not isinstance(checked, int) or checked < 0:
+            raise PromotionWiringError(f"{detector}_schema:checked")
+        if isinstance(total, bool) or not isinstance(total, int) or total != len(issues):
+            raise PromotionWiringError(f"{detector}_schema:total")
     elif detector == "semantic_assertions":
         if payload.get("schema") != SEMANTIC_ASSERTIONS_SCHEMA:
             raise PromotionWiringError(f"{detector}_schema:{payload.get('schema')}")
@@ -552,6 +559,12 @@ def _auto_promoted_tex_defects(example_dir: Path, name: str) -> list[dict[str, A
     source_hashes = report.get("source_hashes")
     if source_hashes != _current_source_hashes(example_dir, name):
         raise PromotionWiringError("tex_assertions_source_hash_mismatch")
+    expected_checked = _declared_tex_assertion_count(example_dir, name)
+    if report["checked"] != expected_checked:
+        raise PromotionWiringError(
+            "tex_assertions_checked_count_mismatch:"
+            f"expected={expected_checked}:actual={report['checked']}"
+        )
     promotable_issues: list[dict[str, Any]] = []
     for issue in report["issues"]:
         if not isinstance(issue, dict):
@@ -597,6 +610,36 @@ def _auto_promoted_tex_defects(example_dir: Path, name: str) -> list[dict[str, A
             }
         )
     return defects
+
+
+def _declared_tex_assertion_count(example_dir: Path, name: str) -> int:
+    """Count assertions applicable to the current source without trusting evidence.
+
+    The checker filters declarations by optional ``source_name`` before it writes
+    ``checked``. Repeating that small selection rule here makes a stale or
+    truncated clean report blocking rather than indistinguishable from a clean
+    scan. Full assertion syntax remains the checker's responsibility during
+    report creation.
+    """
+    spec_path = example_dir / "spec.yaml"
+    try:
+        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}
+    except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise PromotionWiringError(f"tex_assertions_spec_unreadable:{spec_path}") from exc
+    assertions = spec.get("tex_assertions", [])
+    if not isinstance(assertions, list):
+        raise PromotionWiringError("tex_assertions_spec_schema:list")
+    source_name = f"{name}.tex"
+    applicable = 0
+    for index, assertion in enumerate(assertions):
+        if not isinstance(assertion, dict):
+            raise PromotionWiringError(f"tex_assertions_spec_schema:item:{index}")
+        declared_source = assertion.get("source_name")
+        if declared_source is not None and not isinstance(declared_source, str):
+            raise PromotionWiringError(f"tex_assertions_spec_schema:source_name:{index}")
+        if declared_source in (None, source_name):
+            applicable += 1
+    return applicable
 
 
 def _auto_promoted_semantic_defects(example_dir: Path, name: str) -> list[dict[str, Any]]:

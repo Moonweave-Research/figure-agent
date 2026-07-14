@@ -31,7 +31,9 @@ fi
 
 FIXTURE_NAME=""
 FIXTURE_TAIL="${TEX_INPUT#*examples/}"
-if [[ "$FIXTURE_TAIL" != "$TEX_INPUT" ]]; then
+if [[ -n "${FIGURE_AGENT_FIXTURE_NAME:-}" ]]; then
+  FIXTURE_NAME="$FIGURE_AGENT_FIXTURE_NAME"
+elif [[ "$FIXTURE_TAIL" != "$TEX_INPUT" ]]; then
   FIXTURE_NAME="${FIXTURE_TAIL%%/*}"
 fi
 COLLISION_FIXTURE_ARGS=()
@@ -45,7 +47,7 @@ if [[ -n "$FIXTURE_NAME" ]]; then
   LAYOUT_CONTRACT="${FIXTURE_ROOT}/layout_lanes.yaml"
   TEX_INPUT_DIR="$(cd "$(dirname "$TEX_INPUT")" && pwd)"
   TEX_INPUT_ABS="${TEX_INPUT_DIR}/$(basename "$TEX_INPUT")"
-  if [[ "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/"* && -f "$FIGURE_SPEC" ]]; then
+  if [[ ( "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/"* || -n "${FIGURE_AGENT_FIXTURE_NAME:-}" ) && -f "$FIGURE_SPEC" ]]; then
     UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     TEX_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
   fi

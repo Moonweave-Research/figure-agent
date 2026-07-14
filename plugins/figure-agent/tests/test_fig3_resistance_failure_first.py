@@ -4,11 +4,13 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
 
+import pytest
 import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
@@ -1161,6 +1163,18 @@ def _declared_fixture_path(relative_path: str) -> Path:
     return path
 
 
+def _isolated_historical_tex(tmp_path: Path, source: Path) -> Path:
+    """Copy a historical TeX input before compilation.
+
+    Historical review attempts are immutable evidence, so their ignored build
+    directories must never be the output location of a regression test.
+    """
+    copied = tmp_path / "historical-render-inputs" / source.parent.name / source.name
+    copied.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, copied)
+    return copied
+
+
 def _git_pending_paths(repo_root: Path) -> set[str]:
     commands = (
         ("diff", "--name-only", "--cached"),
@@ -1177,6 +1191,16 @@ def _git_pending_paths(repo_root: Path) -> set[str]:
         )
         pending.update(path for path in result.stdout.splitlines() if path)
     return pending
+
+
+def _git_branch_delta_paths(repo_root: Path, base_ref: str) -> set[str]:
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "diff", "--name-only", f"{base_ref}...HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return {path for path in result.stdout.splitlines() if path}
 
 
 def _scope_violations(pending_paths: set[str], allowed_paths: set[str]) -> set[str]:
@@ -2363,6 +2387,7 @@ def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None
         *extension["allowed_repository_paths"],
     }
     pending_paths = _git_pending_paths(repo_root)
+    branch_delta_paths = _git_branch_delta_paths(repo_root, extension["scope_base_ref"])
     for prefix in extension["allowed_review_prefixes"]:
         allowed_paths.update(
             path for path in pending_paths if path.startswith(fixture_prefix + prefix)
@@ -2373,7 +2398,7 @@ def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None
     }
     assert extension["extends_sha256"] == _sha256(REVIEW / extension["extends"])
     assert extension["publication_acceptance"] == "not_claimed"
-    assert _scope_violations(pending_paths, allowed_paths) == set()
+    assert _scope_violations(pending_paths | branch_delta_paths, allowed_paths) == set()
 
 
 def test_lh001_repair_history_preserves_failures_and_binds_resolved_attempt() -> None:
@@ -2549,6 +2574,7 @@ def test_visual_clash_evaluation_v2_rejects_neighbor_text_luma_noise() -> None:
     assert review["publication_acceptance"] == "not_claimed"
 
 
+@pytest.mark.render
 def test_execution_scaffold_v1_exposes_boundary_and_density_failures(
     tmp_path: Path,
 ) -> None:
@@ -2630,18 +2656,20 @@ def test_execution_scaffold_v1_exposes_boundary_and_density_failures(
     assert review["publication_acceptance"] == "not_claimed"
 
     source_path = _declared_fixture_path(review["source"]["path"])
-    source_from_plugin = source_path.relative_to(PLUGIN_ROOT)
+    isolated_source = _isolated_historical_tex(tmp_path, source_path)
     compile_result = subprocess.run(
-        ["bash", "scripts/compile.sh", str(source_from_plugin)],
+        ["bash", "scripts/compile.sh", str(isolated_source)],
         cwd=PLUGIN_ROOT,
-        env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
+        env={
+            **os.environ,
+            "FIGURE_AGENT_STRICT": "1",
+            "FIGURE_AGENT_FIXTURE_NAME": "fig3_resistance_mechanism",
+        },
         capture_output=True,
         text=True,
     )
     assert compile_result.returncode == 0, compile_result.stdout + compile_result.stderr
-    render_path = _declared_fixture_path(
-        review["render_evidence"]["resolved_runtime_path"]
-    )
+    render_path = isolated_source.parent / "build" / f"{isolated_source.stem}.pdf"
     assert _pdf_content_signature(render_path) == review["render_evidence"][
         "content_signature"
     ]
@@ -2667,6 +2695,7 @@ def test_execution_scaffold_v1_exposes_boundary_and_density_failures(
     assert json.loads(reproduced_report.read_text(encoding="utf-8")) == report
 
 
+@pytest.mark.render
 def test_execution_repair_v11_contains_labels_without_reducing_text(
     tmp_path: Path,
 ) -> None:
@@ -2738,24 +2767,34 @@ def test_execution_repair_v11_contains_labels_without_reducing_text(
         "panel_b_text_budget": (26, "violation"),
     }
 
-    render_path = attempt_root / "build" / "repaired_generated.pdf"
-    based_on_render_path = based_on_source.parent / "build" / "repaired_generated.pdf"
-    based_on_source_from_plugin = based_on_source.relative_to(PLUGIN_ROOT)
+    isolated_based_on_source = _isolated_historical_tex(tmp_path, based_on_source)
+    isolated_source = _isolated_historical_tex(tmp_path, source)
+    render_path = isolated_source.parent / "build" / "repaired_generated.pdf"
+    based_on_render_path = (
+        isolated_based_on_source.parent / "build" / "repaired_generated.pdf"
+    )
     based_on_compile_result = subprocess.run(
-        ["bash", "scripts/compile.sh", str(based_on_source_from_plugin)],
+        ["bash", "scripts/compile.sh", str(isolated_based_on_source)],
         cwd=PLUGIN_ROOT,
-        env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
+        env={
+            **os.environ,
+            "FIGURE_AGENT_STRICT": "1",
+            "FIGURE_AGENT_FIXTURE_NAME": "fig3_resistance_mechanism",
+        },
         capture_output=True,
         text=True,
     )
     assert based_on_compile_result.returncode == 0, (
         based_on_compile_result.stdout + based_on_compile_result.stderr
     )
-    source_from_plugin = source.relative_to(PLUGIN_ROOT)
     compile_result = subprocess.run(
-        ["bash", "scripts/compile.sh", str(source_from_plugin)],
+        ["bash", "scripts/compile.sh", str(isolated_source)],
         cwd=PLUGIN_ROOT,
-        env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
+        env={
+            **os.environ,
+            "FIGURE_AGENT_STRICT": "1",
+            "FIGURE_AGENT_FIXTURE_NAME": "fig3_resistance_mechanism",
+        },
         capture_output=True,
         text=True,
     )
@@ -2767,7 +2806,9 @@ def test_execution_repair_v11_contains_labels_without_reducing_text(
         _pdf_normalized_token_inventory(based_on_render_path)
     )
     assert review["reproduction"]["strict_compile_command"] == (
-        "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh " f"{source_from_plugin}"
+        "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh "
+        "examples/fig3_resistance_mechanism/review/failure-first/"
+        "execution-repair-v11/repaired_generated.tex"
     )
 
     reproduced_report = tmp_path / "layout_report.json"
@@ -2799,6 +2840,7 @@ def test_execution_repair_v11_contains_labels_without_reducing_text(
     )
 
 
+@pytest.mark.render
 def test_execution_repair_v12_resolves_density_with_visual_semantics_pending(
     tmp_path: Path,
 ) -> None:
@@ -2932,12 +2974,16 @@ def test_execution_repair_v12_resolves_density_with_visual_semantics_pending(
     ):
         assert protected in tex
 
-    render_path = attempt_root / "build" / "repaired_generated.pdf"
-    source_from_plugin = source.relative_to(PLUGIN_ROOT)
+    isolated_source = _isolated_historical_tex(tmp_path, source)
+    render_path = isolated_source.parent / "build" / "repaired_generated.pdf"
     compile_result = subprocess.run(
-        ["bash", "scripts/compile.sh", str(source_from_plugin)],
+        ["bash", "scripts/compile.sh", str(isolated_source)],
         cwd=PLUGIN_ROOT,
-        env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
+        env={
+            **os.environ,
+            "FIGURE_AGENT_STRICT": "1",
+            "FIGURE_AGENT_FIXTURE_NAME": "fig3_resistance_mechanism",
+        },
         capture_output=True,
         text=True,
     )
@@ -3017,6 +3063,7 @@ def test_execution_repair_v12_resolves_density_with_visual_semantics_pending(
     assert json.loads(geometry_report.read_text(encoding="utf-8"))["total"] == 0
 
 
+@pytest.mark.render
 def test_fig3_resistance_render_receipt_reproduces_current_source_outputs() -> None:
     receipt = _compile_receipt_outputs()
     command = ["bash", "scripts/compile.sh", "examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex"]

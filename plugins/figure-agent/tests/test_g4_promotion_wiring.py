@@ -33,7 +33,15 @@ def _fixture(workspace: Path, name: str = "fig_demo") -> Path:
     )
     (fixture / "briefing.md").write_text("brief\n", encoding="utf-8")
     (fixture / "spec.yaml").write_text(
-        "name: fig_demo\npanels:\n  - id: A\n  - id: E\n",
+        "name: fig_demo\n"
+        "panels:\n"
+        "  - id: A\n"
+        "  - id: E\n"
+        "tex_assertions:\n"
+        "  - id: force-repels\n"
+        "    anchor_style: forceArr\n"
+        "    axis: x\n"
+        "    direction: decreasing\n",
         encoding="utf-8",
     )
     return fixture
@@ -455,6 +463,43 @@ def test_clean_tex_assertions_source_hash_mismatch_fails_loud(tmp_path: Path) ->
         match="tex_assertions_source_hash_mismatch",
     ):
         promotion_wiring.auto_promoted_defects(fixture, "fig_demo")
+
+
+def test_tex_assertions_checked_count_mismatch_fails_loud(tmp_path: Path) -> None:
+    fixture = _fixture(tmp_path)
+    _write_json(
+        fixture / "build" / "tex_assertions.json",
+        {
+            "schema": "figure-agent.tex-assertions.v1",
+            "source_tex": "fig_demo.tex",
+            "source_hashes": promotion_wiring._current_source_hashes(fixture, "fig_demo"),
+            "issues": [],
+            "total": 0,
+            "checked": 0,
+        },
+    )
+
+    with pytest.raises(
+        promotion_wiring.PromotionWiringError,
+        match="tex_assertions_checked_count_mismatch",
+    ):
+        promotion_wiring.auto_promoted_defects(fixture, "fig_demo")
+
+
+def test_tex_assertions_total_must_match_issue_count(tmp_path: Path) -> None:
+    report = tmp_path / "tex_assertions.json"
+    _write_json(
+        report,
+        {
+            "schema": "figure-agent.tex-assertions.v1",
+            "issues": [],
+            "total": 1,
+            "checked": 1,
+        },
+    )
+
+    with pytest.raises(promotion_wiring.PromotionWiringError, match="tex_assertions_schema:total"):
+        promotion_wiring.load_detector_report(report, "tex_assertions")
 
 
 def test_promotion_queue_contains_inline_crop_evidence_and_non_promoting_notes(
