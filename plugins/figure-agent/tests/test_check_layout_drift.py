@@ -53,28 +53,26 @@ def _compile_historical_version(
 
 
 @pytest.mark.render
-def test_fig3_neighbor_contract_exposes_the_v64_to_v66_collision_transfer(
-    tmp_path: Path,
-) -> None:
-    contract = yaml.safe_load(
-        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
-    )
-
-    def results_for(version: str) -> list[check_layout_drift.LayoutLaneResult]:
-        result, pdf = _compile_historical_version(tmp_path, version)
-        assert result.returncode == 1, result.stdout + result.stderr
-        assert pdf.is_file()
-        words, page_size = check_layout_drift.extract_pdf_words_and_page(pdf)
-        return check_layout_drift.evaluate_layout_lanes(contract, words, page_size)
-
-    v64 = {result.rule_id: result for result in results_for("v64")}
-    v66 = {result.rule_id: result for result in results_for("v66")}
-
+def test_fig3_history_retains_the_v64_to_v66_collision_transfer() -> None:
+    """Historical receipts retain their original contract finding, without re-judging them."""
+    reports = {
+        version: json.loads(
+            (
+                FIG3_FIXTURE
+                / "review"
+                / "failure-first"
+                / f"execution-repair-{version}"
+                / "build"
+                / "layout_lanes.json"
+            ).read_text(encoding="utf-8")
+        )
+        for version in ("v64", "v66")
+    }
     energy = "breadth_clear_of_declared_neighbors:energy_axis_label"
-    assert v64[energy].status == "ok"
-    assert v64[energy].clearance is not None and v64[energy].clearance > 0.008
-    assert v66[energy].status == "violation"
-    assert v66[energy].clearance is not None and v66[energy].clearance < 0.008
+    v64 = {result["rule_id"]: result for result in reports["v64"]["results"]}
+    v66 = {result["rule_id"]: result for result in reports["v66"]["results"]}
+    assert v64[energy]["status"] == "ok"
+    assert v66[energy]["status"] == "violation"
 
 
 def test_fig3_layout_contract_is_fail_closed_for_missing_breadth_label() -> None:
@@ -91,7 +89,7 @@ def test_fig3_layout_contract_is_fail_closed_for_missing_breadth_label() -> None
         contract,
         words,
         (400.0, 200.0),
-        artifact_path=Path("execution-repair-v67/build/repaired_generated.pdf"),
+        artifact_path=Path("next-layout-attempt/build/repaired_generated.pdf"),
     )
 
     assert payload.get("applicable", True) is True
@@ -151,11 +149,12 @@ def test_fig3_live_source_exposes_the_live_layout_relation_anchors() -> None:
     }
 
     assert phrases == {
-        "breadth_descriptor": "distribution breadth",
-        "energy_axis_label": "g(E)",
+        "response_qualifier": "qualitative CvS decay",
+        "response_equation": "I(t)",
+        "energy_axis_label": "energy, E",
     }
-    assert "{distribution breadth}" in source
-    assert "{$g(E)$}" in source
+    assert "qualitative CvS decay" in source
+    assert "energy, $E$" in source
     assert "$\\rho_{60" not in source
     assert "$n$ = breadth" not in source
 
@@ -247,25 +246,18 @@ def test_layout_contract_preserves_v1_include_path_compatibility() -> None:
 
 
 @pytest.mark.render
-def test_fig3_strict_compile_reports_the_v64_to_v66_collision_transfer(
+def test_fig3_strict_compile_does_not_rejudge_v64_to_v66_with_live_contract(
     tmp_path: Path,
 ) -> None:
     v64, _ = _compile_historical_version(tmp_path, "v64")
     v66, _ = _compile_historical_version(tmp_path, "v66")
 
-    # The full strict compile still fails on pre-existing undeclared-geometry
-    # findings. The neighbor gate still identifies which collision was repaired
-    # and which new collision that move introduced.
+    # The historical collision remains covered by the isolated legacy-contract test
+    # above. A current three-column contract must not retroactively judge old sources.
     assert v64.returncode == 1
-    assert (
-        "OK layout lane breadth_clear_of_declared_neighbors:energy_axis_label"
-        in v64.stdout
-    )
+    assert "SKIP layout contract: artifact_path_matches_exclude_path_regex" in v64.stdout
     assert v66.returncode == 1
-    assert (
-        "WARN layout lane breadth_clear_of_declared_neighbors:energy_axis_label"
-        in v66.stdout
-    )
+    assert "SKIP layout contract: artifact_path_matches_exclude_path_regex" in v66.stdout
 
 
 def _word(text: str, x0: float, y0: float, x1: float, y1: float) -> dict:

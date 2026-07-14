@@ -219,6 +219,26 @@ def test_fig3_visual_clash_registry_accepts_repaired_material_label_knockout() -
     assert suppressed == 2
 
 
+def test_fig3_visual_calibrations_are_fixture_scoped_and_bounded() -> None:
+    current_axis = check_visual_clash.VisualIssue(
+        "near_miss", "I(t)", "dark=0.023, edge=0.011", (0, 0, 1, 1)
+    )
+    film = check_visual_clash.VisualIssue(
+        "near_miss", "film", "dark=0.022, edge=0.008", (0, 0, 1, 1)
+    )
+    patterns = check_visual_clash.load_known_false_positive_patterns()
+
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        [current_axis, film], patterns, "fig3_resistance_mechanism"
+    )
+    foreign_filtered, foreign_suppressed = check_visual_clash.suppress_known_false_positives(
+        [current_axis, film], patterns, "fig2_trap_design_space"
+    )
+
+    assert filtered == [] and suppressed == 2
+    assert foreign_filtered == [current_axis, film] and foreign_suppressed == 0
+
+
 def test_check_visual_clash_cli_uses_explicit_fixture_for_suppression(
     tmp_path: Path,
     monkeypatch,
@@ -550,6 +570,14 @@ def test_compile_strict_flag_is_documented_in_script() -> None:
     assert "visual_clash.json" in compile_sh
     assert "check_text_boundary_clash.py" in compile_sh
     assert "text_boundary_clash.json" in compile_sh
+
+
+def test_compile_preserves_historical_repair_replay_from_live_contracts() -> None:
+    compile_sh = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert "HISTORICAL_REPAIR_REPLAY=0" in compile_sh
+    assert "^execution-repair-v[0-9]+$" in compile_sh
+    assert "historical repair replay reports, but does not strict-gate, live coverage requirements" in compile_sh
 
 
 def test_check_text_boundary_clash_default_exits_zero_with_report(

@@ -1,0 +1,13 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v16.yaml
+extends_sha256: sha256:8aacb9dcfcecc754067ae7041c4d1dbbbb27afc838eea620bcbca74b93d06823
+reason: authorize fixture-scoped film-label visual-clash calibration after rendered human review
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v17.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/_known_false_positives.yaml
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+  - plugins/figure-agent/tests/test_strict_mode.py
+publication_acceptance: not_claimed

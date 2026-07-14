@@ -1,14 +1,16 @@
 schema: figure-agent.layout-lanes.v1
-exclude_path_regex: '(?:^|/)execution-repair-v(?:[1-9]|[1-5][0-9]|6[0-3])/'
+exclude_path_regex: '(?:^|/)execution-repair-v[0-9]+/'
 label_groups:
-  - id: breadth_descriptor
-    required_phrase: distribution breadth
+  - id: response_qualifier
+    required_phrase: qualitative CvS decay
+  - id: response_equation
+    required_phrase: I(t)
   - id: energy_axis_label
-    required_phrase: g(E)
+    required_phrase: energy, E
 rules:
-  - id: breadth_clear_of_declared_neighbors
+  - id: response_qualifier_clear_of_response_curve_label
     kind: minimum_clearance_from_groups
-    group: breadth_descriptor
+    group: response_qualifier
     other_groups:
-      - energy_axis_label
+      - response_equation
     minimum_normalized_clearance: 0.008

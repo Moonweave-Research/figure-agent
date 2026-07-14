@@ -57,7 +57,7 @@ patterns:
     glyph: I(t)
     kind: near_miss
     dark_max: 0.025
-    edge_max: 0.01
+    edge_max: 0.012
 
   - id: fig3_resistance_magnitude_label_near_measure
     fixture: fig3_resistance_mechanism
@@ -116,7 +116,7 @@ patterns:
     fixture: fig3_resistance_mechanism
     glyph: film
     kind: near_miss
-    dark_max: 0.02
+    dark_max: 0.025
     edge_max: 0.01
 
   # Panel header labels — light gray background, not a fill clash

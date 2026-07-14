@@ -1,129 +1,120 @@
-% Fig3 mechanism schematic — iter2 (post cross-figure consistency review)
-% Key reframe: (b) compares DISCRETE (low-S) -> CONTINUOUS (S80 broad) evolution,
-% which is the paper's mechanism (CvS_Analysis_Strategy: discrete double-exp -> continuous power-law).
-% n is a fitted exponent, not a geometric width; rho60s is a separate magnitude cue.
-% Carrier is sign-agnostic; energy is vertical in A and horizontal in B.
+% Fig3 mechanism schematic — three-column explanatory composition.
+% (a) mechanism -> (b) qualitative transient response -> (c) composition-dependent
+% trap-energy landscape. Panel (b) is not measured data: it carries no numerical scale.
 \documentclass[border=6pt]{standalone}
 \usepackage{polymer-paper-preamble}
-\usetikzlibrary{decorations.pathmorphing, arrows.meta}
+\usetikzlibrary{arrows.meta,decorations.pathmorphing}
 
 \begin{document}
 \begin{tikzpicture}[
   font=\sffamily\fontsize{7}{8.4}\selectfont,
-  trapx/.style={cGray!62!black, font=\fontsize{5.5}{5.5}\selectfont},
-  walk/.style={cGray!72!black, line width=1.05pt, rounded corners=1.3pt},
-  carrier/.style={circle, fill=cGray!60!black, inner sep=0pt, minimum size=1.35mm},
+  carrier/.style={circle, fill=cGray!60!black, inner sep=0pt, minimum size=1.3mm},
   xfer/.style={-{Stealth[length=1.0mm]}, cGray!68!black, line width=0.6pt},
-  lbl/.style={align=center, font=\fontsize{6.5}{8}\selectfont},
-  sub/.style={align=center, font=\fontsize{6}{7.4}\selectfont},
-  pl/.style={font=\fontsize{7.5}{9}\selectfont, font=\bfseries},
+  axis/.style={-{Stealth[length=1.0mm]}, cGray!72!black, line width=0.4pt},
+  pl/.style={font=\bfseries\fontsize{7.5}{9}\selectfont},
+  label/.style={align=center, font=\fontsize{5.6}{6.8}\selectfont},
 ]
-% ===================== (a) representative trapping-state sequence: no spatial drift is
-% implied. Capture, release, and retention are ordered in time, causing I(t) to decay.
-\node[pl] at (0.1,4.3) {a};
-% the measured sulfur-polymer film (the sample) between the contacts -- names the material
-\fill[cAmber!8] (0.72,1.02) rectangle (4.46,3.52);
-% trap manifold: the continuous distribution that the discrete ticks below merely sample
-\fill[cGray!10] (0.95,1.55) rectangle (4.28,2.82);
-\node[anchor=north, font=\fontsize{5.5}{6.5}\selectfont, text=cAmber!55!black] at (2.59,0.98)
-  {sulfur polymer film};
-\draw[-{Stealth[length=1.0mm]}, line width=0.4pt] (0.42,0.95) -- (0.42,4.05);
-\node[rotate=90, anchor=south, font=\fontsize{6.2}{7.5}\selectfont] at (0.20,2.35)
+% ===================== (a) applied-bias trapping mechanism =====================
+\node[pl] at (0.08,4.34) {a};
+\node[font=\bfseries\fontsize{6.5}{7.8}\selectfont, anchor=west] at (0.42,4.34)
+  {trapping during conduction};
+\fill[cAmber!8] (0.74,1.04) rectangle (4.55,3.56);
+\fill[cGray!10] (0.96,1.54) rectangle (4.34,2.89);
+\fill[cGray!70] (0.56,1.08) rectangle (0.74,3.52);
+\fill[cGray!70] (4.55,1.08) rectangle (4.73,3.52);
+\node[font=\fontsize{5.4}{6.5}\selectfont, text=cAmber!55!black] at (2.65,0.60)
+  {sulfur-polymer film};
+\node[font=\fontsize{6}{7.2}\selectfont] at (0.65,3.80) {$+V$};
+\node[font=\fontsize{6}{7.2}\selectfont] at (4.64,3.80) {$-V$};
+\draw[axis] (0.42,1.00) -- (0.42,4.02);
+\node[rotate=90, anchor=south, font=\fontsize{5.9}{7}\selectfont] at (0.20,2.46)
   {energy, $E$};
-% biased film: contacts left (+V) / right (-V)
-\fill[cGray!70] (0.56,1.05) rectangle (0.72,3.5);
-\fill[cGray!70] (4.46,1.05) rectangle (4.62,3.5);
-\node[font=\fontsize{6}{7.4}\selectfont] at (0.64,3.74) {$+V$};
-\node[font=\fontsize{6}{7.4}\selectfont] at (4.54,3.74) {$-V$};
-% transport level (mobility edge), tilted down by the applied field
-\draw[cAmber!60!black, line width=0.8pt] (0.72,3.4) -- (4.46,3.0);
-\node[anchor=west, font=\fontsize{5.5}{6.5}\selectfont, text=cAmber!55!black] at (1.0,3.62) {mobile transport level};
-% trap states sampling the manifold: irregular depths/spacing = a continuous distribution
-% (its spread = panel b's g(E)). The named states below are the only states that
-% carrier paths may enter or leave; this prevents a visually detached arrowhead.
-\coordinate (trap_shallow) at (1.55,2.45);
-\coordinate (trap_mid) at (2.75,2.18);
-\coordinate (trap_deep) at (3.60,1.75);
-\foreach \x/\y in {1.55/2.45, 2.75/2.18, 3.60/1.75, 1.18/2.62, 1.95/1.98, 2.12/2.6,
-                   2.45/2.0, 3.12/2.52, 3.32/2.05, 2.3/1.72, 1.42/2.08, 4.02/2.32}{
-  \draw[cGray!55!black, line width=0.55pt] (\x-0.11,\y) -- (\x+0.11,\y);
+\draw[cAmber!60!black, line width=0.8pt] (0.74,3.42) -- (4.55,3.04);
+\node[anchor=west, font=\fontsize{5.2}{6.2}\selectfont, text=cAmber!55!black] at (1.02,3.67)
+  {mobile transport level};
+\coordinate (trap_shallow) at (1.62,2.48);
+\coordinate (trap_mid) at (2.82,2.18);
+\coordinate (trap_deep) at (3.70,1.74);
+\foreach \x/\y in {1.62/2.48,2.82/2.18,3.70/1.74,1.22/2.68,1.98/2.00,2.18/2.63,
+  2.48/1.98,3.17/2.56,3.38/2.05,2.34/1.68,1.45/2.10,4.08/2.31}{
+  \draw[cGray!55!black, line width=0.55pt] (\x-0.10,\y) -- (\x+0.10,\y);
 }
-\node[anchor=north, font=\fontsize{5.5}{6.5}\selectfont, text=cGray!55!black] at (2.5,1.46) {trap states};
+\node[anchor=north, font=\fontsize{5.2}{6.2}\selectfont, text=cGray!55!black] at (2.62,1.43)
+  {representative trap states};
 % fig-agent:start object=carrier_sequence panel=A kind=state_sequence truth_bearing=true
-% Named carrier/trap endpoints bind every curved path to the state it depicts.
-% Left-to-right placement is temporal ordering only, never a net carrier-drift claim.
-\node[carrier] (carrier_shallow_in) at (1.18,3.26) {};
-\node[carrier] (carrier_shallow_out) at (1.88,3.10) {};
-\node[carrier] (carrier_mid_in) at (2.34,3.12) {};
-\node[carrier] (carrier_mid_out) at (3.06,2.92) {};
-\node[carrier] (carrier_deep_in) at (3.44,2.88) {};
-% shallow capture followed by thermal release
+% Left-to-right placement is temporal ordering, not net spatial carrier drift.
+\node[carrier] (carrier_shallow_in) at (1.22,3.28) {};
+\node[carrier] (carrier_shallow_out) at (1.94,3.10) {};
+\node[carrier] (carrier_mid_in) at (2.40,3.13) {};
+\node[carrier] (carrier_mid_out) at (3.13,2.91) {};
+\node[carrier] (carrier_deep_in) at (3.51,2.88) {};
 \draw[xfer] (carrier_shallow_in) to[out=-22,in=82] (trap_shallow);
 \draw[xfer] (trap_shallow) to[out=82,in=-150] (carrier_shallow_out);
-% mid-depth capture followed by thermal release
 \draw[xfer] (carrier_mid_in) to[out=-20,in=84] (trap_mid);
 \draw[xfer] (trap_mid) to[out=82,in=-152] (carrier_mid_out);
-% deep capture; the carrier remains retained at this state in the schematic
 \draw[xfer] (carrier_deep_in) to[out=-118,in=82] (trap_deep);
-% Keep sequence labels clear of transfer paths without masking later marks.
-\node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black]
-  at (1.04,2.84) {capture};
-\node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black]
-  at (2.04,2.84) {release};
-\node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black]
-  at (4.12,1.50) {retained};
+\node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black] at (1.07,2.90) {capture};
+\node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black] at (2.08,2.90) {release};
+\node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black] at (4.16,1.48) {retained};
 % fig-agent:end object=carrier_sequence
-% The lower outcome strip belongs to panel A; it is not a floating inter-panel inset.
-\draw[cGray!25, line width=0.25pt] (0.72,0.86) -- (4.62,0.86);
-\node[lbl, anchor=west, font=\fontsize{5.0}{6.2}\selectfont] at (0.55,0.48)
-  {trapping $\rightarrow$ current $\downarrow$, $R\uparrow$};
-% fig-agent:start object=current_sparkline panel=A kind=inset_plot truth_bearing=true
-\draw[-{Stealth[length=0.6mm]}, line width=0.3pt] (3.68,0.18) -- (4.38,0.18);
-\draw[-{Stealth[length=0.6mm]}, line width=0.3pt] (3.68,0.18) -- (3.68,0.68);
-\draw[cGray!72!black, line width=0.5pt] plot[smooth, domain=0:0.92, samples=32]
-  ({3.68+0.72*\x},{0.18+0.43*exp(-3.2*\x)});
-\node[font=\fontsize{3.8}{4.5}\selectfont, anchor=north] at (4.38,0.14) {$t$};
-\node[font=\fontsize{3.8}{4.5}\selectfont, anchor=south] at (4.03,0.70) {$I(t)$};
-% fig-agent:end object=current_sparkline
 
-% ===================== (b) g(E): DISCRETE -> CONTINUOUS evolution =====================
-\node[pl] at (5.7,4.5) {b};
-\begin{scope}[shift={(6.3,1.05)}]
-  % Separate local axes compare distribution type without asserting a peak-energy shift.
-  \draw[-{Stealth[length=0.9mm]}, line width=0.4pt] (0,0) -- (1.92,0)
-    node[right, font=\fontsize{4.5}{5.5}\selectfont]{$E$};
-  \draw[-{Stealth[length=0.9mm]}, line width=0.4pt] (0,0) -- (0,2.35);
-  \node[rotate=90, font=\fontsize{5.5}{6.5}\selectfont] at (-0.32,1.18) {$g(E)$};
-  \draw[-{Stealth[length=0.9mm]}, line width=0.4pt] (2.85,0) -- (4.98,0)
-    node[right, font=\fontsize{4.5}{5.5}\selectfont]{$E$};
-  \draw[-{Stealth[length=0.9mm]}, line width=0.4pt] (2.85,0) -- (2.85,2.35);
-  % fig-agent:start object=s60_discrete_states panel=B kind=distribution truth_bearing=true
-  % Representative state sticks show a discrete set; their count and heights are illustrative,
-  % not a measured peak-count claim.
-  \foreach \x/\h in {0.66/0.72,1.10/1.85,1.54/0.84}{
-    \draw[cBlue!65!black, line width=0.85pt, line cap=round] (\x,0) -- (\x,\h);
+% ===================== (b) qualitative transient response, not data =====================
+\node[pl] at (5.34,4.34) {b};
+\node[font=\bfseries\fontsize{6.5}{7.8}\selectfont, anchor=west] at (5.68,4.34)
+  {transient response};
+\node[label, text=cGray!60!black] at (7.35,3.97)
+  {qualitative CvS decay\\(not measured data)};
+% fig-agent:start object=qualitative_current_decay panel=B kind=qualitative_relation truth_bearing=true
+\draw[axis] (5.84,1.05) -- (8.97,1.05) node[anchor=north, font=\fontsize{5.5}{6.6}\selectfont] {time, $t$};
+\draw[axis] (5.84,1.05) -- (5.84,3.52);
+\node[rotate=90, font=\fontsize{5.5}{6.6}\selectfont] at (5.00,2.30) {current, $I(t)$};
+\draw[cBlue!70!black, line width=1.0pt] plot[smooth, domain=5.98:8.80, samples=48]
+  (\x,{1.18+2.05*(0.22+0.78*((8.80-\x)/2.82)^0.52)});
+\draw[cGray!35!black, dashed, line width=0.35pt] (5.98,1.62) -- (8.80,1.62);
+\node[label, text=cBlue!65!black, fill=white, inner sep=1.2pt, anchor=west] at (6.18,1.91)
+  {$I(t)\propto t^{-n}$};
+\node[label, text=cGray!60!black] at (7.35,0.48)
+  {trapping: current falls; \quad at fixed $V$, resistance rises};
+% fig-agent:end object=qualitative_current_decay
+
+% ===================== (c) shared vertical energy-landscape grammar =====================
+\node[pl] at (9.53,4.34) {c};
+\node[font=\bfseries\fontsize{6.5}{7.8}\selectfont, anchor=west] at (9.87,4.34)
+  {composition-dependent trap-energy landscape};
+\draw[axis] (9.78,1.03) -- (9.78,3.92);
+\node[rotate=90, anchor=south, font=\fontsize{5.9}{7}\selectfont] at (9.55,2.47)
+  {energy, $E$};
+\draw[-{Stealth[length=0.8mm]}, cGray!45!black, line width=0.35pt] (11.34,3.90) -- (13.13,3.90);
+\node[label, text=cGray!55!black] at (12.24,4.13) {sulfur content $\uparrow$};
+% S60 and S80 are separate comparison units, sharing the same energy orientation.
+\begin{scope}
+  \fill[cBlue!8] (10.08,1.22) rectangle (11.62,3.48);
+  \draw[cBlue!40!black, line width=0.38pt] (10.08,3.27) -- (11.62,3.27);
+  \node[label, text=cBlue!60!black] at (10.85,3.55) {S60\\discrete states};
+  % fig-agent:start object=s60_discrete_states panel=C kind=energy_landscape truth_bearing=true
+  \foreach \y/\len in {2.64/0.64,2.21/0.44,1.76/0.76}{
+    \draw[cBlue!65!black, line width=0.85pt, line cap=round] (10.85-\len/2,\y) -- (10.85+\len/2,\y);
   }
   % fig-agent:end object=s60_discrete_states
-  % fig-agent:start object=s80_continuous_distribution panel=B kind=distribution truth_bearing=true
-  \draw[cRed!70!black, line width=0.95pt, dash pattern=on 2pt off 1.4pt] plot[smooth, domain=3.02:4.82, samples=90]
-    (\x, {1.70*exp(-((\x-3.92)^2)/0.42)});
+\end{scope}
+\begin{scope}
+  \fill[cRed!12] (12.18,1.22) rectangle (14.32,3.48);
+  \draw[cRed!45!black, line width=0.38pt] (12.18,3.27) -- (14.32,3.27);
+  \node[label, text=cRed!65!black] at (13.25,3.55) {S80\\continuous broad};
+  % fig-agent:start object=s80_continuous_distribution panel=C kind=energy_landscape truth_bearing=true
+  \fill[cRed!30, opacity=0.52]
+    (13.25,1.46) .. controls (12.63,1.72) and (12.55,2.00) .. (12.74,2.34)
+    .. controls (12.89,2.70) and (12.83,2.92) .. (13.25,3.07)
+    .. controls (13.67,2.92) and (13.61,2.70) .. (13.76,2.34)
+    .. controls (13.95,2.00) and (13.87,1.72) .. (13.25,1.46) -- cycle;
+  \foreach \y/\span in {1.67/0.64,1.88/0.88,2.10/1.08,2.33/1.18,2.56/1.02,2.79/0.76}{
+    \draw[cRed!70!black, opacity=0.78, line width=0.42pt] (13.25-\span/2,\y) -- (13.25+\span/2,\y);
+  }
   % fig-agent:end object=s80_continuous_distribution
-  \draw[-{Stealth[length=0.7mm]}, line width=0.3pt, cGray!45!black] (1.35,2.82) -- (3.72,2.82);
-  \node[font=\fontsize{5.2}{6.3}\selectfont, text=cGray!55!black] at (2.50,2.98)
-    {sulfur content $\uparrow$};
-  % Distribution breadth follows the visible support of the broad distribution; it is
-  % qualitative and is not directly equated with n.
-  % fig-agent:start object=n_breadth panel=B kind=measurement_span truth_bearing=true
-\draw[line width=0.35pt, cRed!60!black] (3.06,-0.25) -- (4.78,-0.25);
-\draw[line width=0.35pt, cRed!60!black] (3.06,-0.12) -- (3.06,-0.38);
-\draw[line width=0.35pt, cRed!60!black] (4.78,-0.12) -- (4.78,-0.38);
-  \node[sub, cRed!60!black] at (3.92,-0.52) {distribution breadth};
-  % fig-agent:end object=n_breadth
-  % Labels make the two composition states explicit without placing text on either curve.
-  \node[font=\fontsize{5.1}{6.1}\selectfont, text=cBlue!60!black, align=center]
-    at (1.10,2.55) {S60\\discrete};
-  \node[font=\fontsize{5.1}{6.1}\selectfont, text=cRed!65!black, align=center]
-    at (3.92,2.52) {S80\\continuous broad};
+  \draw[cRed!60!black, line width=0.35pt] (14.54,1.46) -- (14.54,3.07);
+  \draw[cRed!60!black, line width=0.35pt] (14.40,1.46) -- (14.68,1.46);
+  \draw[cRed!60!black, line width=0.35pt] (14.40,3.07) -- (14.68,3.07);
+  \node[label, text=cRed!60!black, anchor=west] at (14.73,2.27) {broader\\energy support};
 \end{scope}
 \end{tikzpicture}
 \end{document}

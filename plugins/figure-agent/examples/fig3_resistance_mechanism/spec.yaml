@@ -1,16 +1,12 @@
 name: fig3_resistance_mechanism
-title: "Fig 3 — Trapping-during-conduction mechanism: transient I(t) power-law (CvS) and composition-tunable trap-energy breadth (schematic)"
+title: "Fig 3 — Trapping during conduction: qualitative transient response and composition-dependent trap-energy landscape"
 style_profile: polymer-paper
 undeclared_geometry_profile: schematic
-# A zero-detector-finding result is only a bounded geometry claim. For this
-# fixture it additionally requires attribution of all five transfer paths and
-# both analytic band plots, plus rendered evidence for the five curved arrows.
-# It does not validate that the plotted energy-band shape is physically correct.
 geometry_coverage_policy:
   minimum_parsed_ratio: 0.8
   required_source_geometry:
     to_curve: 5
-    analytic_plot: 2
+    analytic_plot: 1
   minimum_rendered_curved_semantic_paths: 5
 visual_clash_cap: 10
 tex_assertions:
@@ -60,21 +56,28 @@ semantic_assertions:
     relation: left_of
     subject: release
     reference: retained
+  - id: fig3-mechanism-before-response
+    relation: left_of
+    subject: retained
+    reference: qualitative
+  - id: fig3-response-before-landscape
+    relation: left_of
+    subject: qualitative
+    reference: S60
   - id: fig3-s60-before-s80
     relation: left_of
     subject: S60
     reference: S80
-  - id: fig3-outcome-text-before-sparkline
-    relation: left_of
-    subject: trapping
-    reference: I(t)
 panels:
   - id: A
-    caption: Cell under applied V — charge carrier (sign-agnostic) undergoes dispersive, repeated trapping; transient current decays (I ∝ t^-n) so resistance rises
-    bbox_pdf_cm: [0.00, 0.00, 5.80, 4.80]
+    caption: Applied-bias sulfur-polymer cell with temporally ordered sign-agnostic trapping
+    bbox_pdf_cm: [0.00, 0.00, 5.10, 4.80]
   - id: B
-    caption: Trap energy distribution g(E) — discrete S60 states evolving to a continuous broad S80 distribution; n is the fitted CvS exponent and rho60s belongs to the companion data plot
-    bbox_pdf_cm: [6.00, 0.00, 11.60, 4.80]
+    caption: Qualitative, non-measured Curie-von Schweidler transient-current response
+    bbox_pdf_cm: [5.10, 0.00, 9.25, 4.80]
+  - id: C
+    caption: Discrete S60 and continuous broad S80 trap-energy landscapes in a shared energy grammar
+    bbox_pdf_cm: [9.25, 0.00, 15.20, 4.80]
 composition_model:
   panels:
     A:
@@ -84,61 +87,29 @@ composition_model:
           truth_bearing: true
           semantic_claim: sign-agnostic carrier undergoes temporally ordered repeated trapping
           invariant: carrier_sign_agnostic_temporal_state_sequence
-          allowed_creative_ops:
-            - reshape_path
-            - reduce_arrowheads
-        current_sparkline:
-          kind: inset_plot
-          truth_bearing: true
-          semantic_claim: transient current decays as I proportional to t^-n
-          invariant: current_decay_power_law
-          anchor_target: carrier_sequence
-          structural_role: in_panel_outcome_strip
-          allowed_creative_ops:
-            - anchor_plot
-            - consolidate_label
+          allowed_creative_ops: [reshape_path, reduce_arrowheads]
     B:
       objects:
-        distribution_breadth:
-          kind: measurement_span
+        qualitative_current_decay:
+          kind: qualitative_relation
           truth_bearing: true
-          semantic_claim: geometric trap-distribution breadth is distinct from the fitted CvS exponent n
-          invariant: distribution_breadth_not_directly_equated_to_n
-          allowed_creative_ops:
-            - externalize_span
-            - reduce_arrow_clutter
-        composition_comparison:
-          kind: ordered_comparison
-          truth_bearing: true
-          semantic_claim: S60 discrete traps evolve to S80 continuous broad distribution
-          invariant: s60_to_s80_left_to_right_without_overlay
-          allowed_creative_ops:
-            - separate_comparison_units
-            - avoid_peak_shift_implication
+          semantic_claim: trapping produces a qualitative Curie-von Schweidler current decay
+          invariant: qualitative_not_measured_and_current_decay_implies_resistance_increase
+          allowed_creative_ops: [reshape_qualitative_curve, consolidate_annotation]
+    C:
+      objects:
         s60_discrete_states:
-          kind: distribution
+          kind: energy_landscape
           truth_bearing: true
-          semantic_claim: low-sulfur S60 has a representative discrete state set, not one smooth narrow distribution
-          invariant: low_sulfur_discrete_state_set_not_single_smooth_peak
-          structural_role: discrete_state_set
-          allowed_creative_ops:
-            - vary_illustrative_state_count
-            - preserve_non_quantitative_status
+          semantic_claim: low-sulfur S60 has a representative discrete state set
+          invariant: low_sulfur_discrete_state_set_not_spectrum_bar_chart
+          allowed_creative_ops: [vary_illustrative_state_count, preserve_non_quantitative_status]
         s80_continuous_distribution:
-          kind: distribution
+          kind: energy_landscape
           truth_bearing: true
-          semantic_claim: high-sulfur S80 is represented as a continuous broad distribution
-          invariant: high_sulfur_continuous_broad_distribution
-          structural_role: continuous_distribution
-          allowed_creative_ops:
-            - reshape_qualitative_envelope
-            - preserve_non_quantitative_status
+          semantic_claim: high-sulfur S80 has continuous broad energy support
+          invariant: high_sulfur_continuous_broad_support_not_width_to_n_mapping
+          allowed_creative_ops: [reshape_qualitative_envelope, preserve_non_quantitative_status]
 notes: |
-  figure-agent figure (the REAL paper Fig 3 per the 2026-06-22 figure plan:
-  characterization -> mechanism synthesis). SCHEMATIC ONLY — this is the explanatory
-  half of a composite figure; the real I(t)∝t^-n data curves + composition series are
-  produced by the data pipeline (Origin / Graph Hub) and composited beside this schematic.
-  Bboxes approximate (first pass); expected to move during element-iteration.
-  Physics is grounded in 02_Surfur_Polymer docs (CvS power-law; n is a fitted exponent
-  whose mapping to distribution breadth is model-dependent; carrier-agnostic dispersive transport; discrete->continuous
-  evolution with sulfur). See briefing.md for the binding physics-correctness rules.
+  Three-column explanatory schematic only. The middle I(t) curve has no quantitative data claim.
+  A clean machine gate is bounded screening evidence; publication acceptance requires human review.

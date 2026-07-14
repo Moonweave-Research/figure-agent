@@ -5,19 +5,19 @@ historical_packet_policy: preserve_byte_identity
 authoritative_inputs:
   - role: briefing
     path: briefing.md
-    sha256: sha256:58db21b2320229c2cdaa2d8798bc93fdb9174cc52b7c8c0f8d2fe57a68ffe366
+    sha256: sha256:93716e4a06cee50a187d2b903552b194de1bea784d02a3893c85edf699424c8d
   - role: specification
     path: spec.yaml
-    sha256: sha256:75db3fcf82452a760818f0d712e84eedff55f0f2949eacc1857b79be4d2f6706
+    sha256: sha256:2faf8d2f886a122f71b79bb49f303199f6d4f49709f0e6181425a8c9bb675efd
   - role: authoring_contract
     path: authoring_contract.md
-    sha256: sha256:6560ab1128f32c7151de6a924914568b81a1f520ac89723fd58347cda1cd5327
+    sha256: sha256:2b371894f5511d3ca496a167f1496b765cd88cc448a34a455f9fdb96f424e822
   - role: panel_goals
     path: panel_goals.md
-    sha256: sha256:6949c30b0ad255c85e0a2ea6bc75eaed491b516b033720bf763398773da0690b
+    sha256: sha256:9416740bbfd9ef40c3d02c3123850c127d19ea22fc57f08db0bd73e78a7737af
   - role: editable_source
     path: fig3_resistance_mechanism.tex
-    sha256: sha256:ac8b502a17e9369f10d3c87b1e8a3199f5180436b9e22f95d25e0e2cd69a9363
+    sha256: sha256:e5f39c9eb812cedfc1beeb606f477104a4390621c709375a290c823bcc6beed7
 semantic_boundary:
   fitted_n: Curie-von Schweidler exponent
   distribution_breadth: schematic mechanism cue

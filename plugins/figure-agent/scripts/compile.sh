@@ -29,6 +29,14 @@ if [[ ! -f "$TEX_INPUT" ]]; then
   exit 1
 fi
 
+# A copied execution-repair-v* source is immutable review evidence. It keeps
+# the fixture's generic schematic profile, but a later live coverage contract
+# cannot make its strict replay fail.
+HISTORICAL_REPAIR_REPLAY=0
+if [[ "$(basename "$(dirname "$TEX_INPUT")")" =~ ^execution-repair-v[0-9]+$ ]]; then
+  HISTORICAL_REPAIR_REPLAY=1
+fi
+
 FIXTURE_NAME=""
 FIXTURE_TAIL="${TEX_INPUT#*examples/}"
 if [[ -n "${FIGURE_AGENT_FIXTURE_NAME:-}" ]]; then
@@ -73,6 +81,11 @@ if [[ "${FIGURE_AGENT_STRICT:-}" == "1" ]]; then
   STRICT_ARGS=(--strict)
   VISUAL_CLASH_ARGS=(--strict --ignore-known-fp)
   echo 'Strict mode: collision/clash findings will fail the compile.' >&2
+fi
+UNDECLARED_GEOMETRY_STRICT_ARGS=("${STRICT_ARGS[@]}")
+if [[ $HISTORICAL_REPAIR_REPLAY -eq 1 ]]; then
+  UNDECLARED_GEOMETRY_STRICT_ARGS=()
+  echo "INFO: historical repair replay reports, but does not strict-gate, live coverage requirements" >&2
 fi
 
 ENGINE="${LATEX_ENGINE:-lualatex}"
@@ -179,7 +192,7 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_labe
   --json-output "${BUILD_DIR}/label_path_proximity.json" \
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_undeclared_geometry.py" \
-  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${UNDECLARED_GEOMETRY_STRICT_ARGS[@]+"${UNDECLARED_GEOMETRY_STRICT_ARGS[@]}"} \
   ${UNDECLARED_GEOMETRY_SPEC_ARGS[@]+"${UNDECLARED_GEOMETRY_SPEC_ARGS[@]}"} \
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/undeclared_geometry.json" \

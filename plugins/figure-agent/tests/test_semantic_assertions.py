@@ -295,25 +295,29 @@ def test_fig3_declares_visible_temporal_and_composition_ordering_contracts():
     }
 
 
-def test_fig3_declares_structural_outcome_and_discrete_state_grammar() -> None:
+def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar() -> None:
     plugin_root = Path(__file__).resolve().parents[1]
     fixture = plugin_root / "examples" / "fig3_resistance_mechanism"
     spec = yaml.safe_load((fixture / "spec.yaml").read_text(encoding="utf-8"))
     source = (fixture / "fig3_resistance_mechanism.tex").read_text(encoding="utf-8")
     objects = spec["composition_model"]["panels"]
 
-    assert objects["A"]["objects"]["current_sparkline"]["structural_role"] == (
-        "in_panel_outcome_strip"
+    assert objects["B"]["objects"]["qualitative_current_decay"]["invariant"] == (
+        "qualitative_not_measured_and_current_decay_implies_resistance_increase"
     )
-    assert objects["B"]["objects"]["s60_discrete_states"]["structural_role"] == (
-        "discrete_state_set"
+    assert objects["C"]["objects"]["s60_discrete_states"]["invariant"] == (
+        "low_sulfur_discrete_state_set_not_spectrum_bar_chart"
     )
-    assert "object=s60_discrete_states panel=B kind=distribution" in source
+    assert "object=qualitative_current_decay panel=B kind=qualitative_relation" in source
+    assert "object=s60_discrete_states panel=C kind=energy_landscape" in source
     assert "$\\rho_{60" not in source
     assert {
         (assertion["id"], assertion["relation"], assertion["subject"], assertion["reference"])
         for assertion in parse_assertions(spec)
-    } >= {("fig3-outcome-text-before-sparkline", "left_of", "trapping", "I(t)")}
+    } >= {
+        ("fig3-mechanism-before-response", "left_of", "retained", "qualitative"),
+        ("fig3-response-before-landscape", "left_of", "qualitative", "S60"),
+    }
 
 
 def test_load_spec_missing_returns_empty(tmp_path: Path) -> None:
