@@ -13,8 +13,9 @@ it is the visible symptom of trapping during conduction.
 Goal: make the reader see that sulfur composition changes the trap-energy landscape
 from discrete low-sulfur states to a broad continuous S80 distribution.
 
-Required reader takeaway: the S80 schematic has a broader trap-energy distribution,
-while `n` remains the separately fitted CvS exponent and `rho_60s` is a magnitude cue.
+Required reader takeaway: S60 is a representative discrete state set while S80 has a
+broader continuous trap-energy distribution. `n` remains the separately fitted CvS
+exponent; `rho_60s` belongs to the companion data plot, not this schematic.
 
 ## Cross-Panel Bridge
 

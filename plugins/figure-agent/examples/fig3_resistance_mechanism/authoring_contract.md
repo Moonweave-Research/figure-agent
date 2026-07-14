@@ -14,10 +14,13 @@ conduction, bridging Fig 2 dielectric response to Fig 4 trap-energy quantificati
 - Keep `n` as the fitted Curie-von Schweidler exponent. The schematic may show
   trap-distribution breadth, but must not equate geometric width directly with `n`
   without a declared model or calibration.
-- Keep `rho_60s` orthogonal to `n` as a magnitude cue.
-- Express `rho_60s` as a separate key unless a declared measurement supplies a real
-  scale; do not draw a pseudo-quantitative arrow without one.
+- Keep `rho_60s` orthogonal to `n` in the composite figure's data plot. Do not place it in
+  this schematic unless a declared measurement supplies a real scale and visual mapping.
 - Show low-sulfur traps as discrete and S80 as continuous broad.
+- Draw S60 as a representative discrete state set, never as one narrow smooth peak. The
+  number and heights of state marks are illustrative, not measured peak-count evidence.
+- Reserve the bottom of panel A as an outcome strip: the causal summary and qualitative
+  `I(t)` inset must live together inside the panel, not in the A/B gutter.
 - Present S60 on the left and S80 on the right as separate comparison units. Do not overlay
   their curves unless an explicit mixture claim is in the declared science.
 - Present panel-A capture, release, and retained states in temporal order. That order must not

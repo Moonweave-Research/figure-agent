@@ -5,13 +5,10 @@ label_groups:
     required_phrase: distribution breadth
   - id: energy_axis_label
     required_phrase: g(E)
-  - id: magnitude_axis_label
-    required_phrase: magnitude
 rules:
   - id: breadth_clear_of_declared_neighbors
     kind: minimum_clearance_from_groups
     group: breadth_descriptor
     other_groups:
       - energy_axis_label
-      - magnitude_axis_label
     minimum_normalized_clearance: 0.008

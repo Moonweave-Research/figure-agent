@@ -22,14 +22,15 @@
   세로축은 전기장이 아닌 **energy, E**이며, carrier-path의 모든 끝점은 실제 trap/carrier glyph에
   결속해야 한다. 좌→우 배치는 시간 순서만 나타내며 net spatial drift를 뜻하지 않는다.
 - **(b) g(E) evolution**: 에너지 가로축의 trap energy distribution. S60 = discrete
-  localized trap(좁음) → S80 = continuous broad(넓음). `distribution breadth`(가로 범위), `ρ60s`
-  (별도 textual magnitude cue). S60과 S80은 겹친 성분처럼 그리지 말고 좌→우 비교 단위로 분리한다.
+  localized trap state set → S80 = continuous broad(넓음). `distribution breadth`(가로 범위)를
+  보이며, `ρ60s`는 이 explanatory schematic이 아니라 companion transient-current data plot에서
+  보고한다. S60과 S80은 겹친 성분처럼 그리지 말고 좌→우 비교 단위로 분리한다.
 
 ## §3. Physics invariants (grounded in 02_Surfur_Polymer docs; DO NOT violate)
 1. Measurement = transient current I(t) under applied V, **Curie–von Schweidler power-law
    I(t) ∝ t⁻ⁿ** (n∈(0,2)); I=V/R so I↓ ⇒ R↑. t>~2s = pure trap-mediated absorption current.
 2. **n is the fitted CvS power-law exponent.** Distribution breadth is the schematic
-   mechanism cue and magnitude is a separate metric `ρ60s`. A direct width-to-`n`
+   mechanism cue; `ρ60s` belongs to the companion data plot. A direct width-to-`n`
    mapping is model/calibration dependent; do not assert it from geometry alone.
 3. **Carrier is sign-agnostic** — dispersive trap-controlled transport in a disordered solid
    (Scher–Montroll for n>1, Jonscher for n≤1). Do NOT commit to electron vs hole; do NOT draw

@@ -295,6 +295,27 @@ def test_fig3_declares_visible_temporal_and_composition_ordering_contracts():
     }
 
 
+def test_fig3_declares_structural_outcome_and_discrete_state_grammar() -> None:
+    plugin_root = Path(__file__).resolve().parents[1]
+    fixture = plugin_root / "examples" / "fig3_resistance_mechanism"
+    spec = yaml.safe_load((fixture / "spec.yaml").read_text(encoding="utf-8"))
+    source = (fixture / "fig3_resistance_mechanism.tex").read_text(encoding="utf-8")
+    objects = spec["composition_model"]["panels"]
+
+    assert objects["A"]["objects"]["current_sparkline"]["structural_role"] == (
+        "in_panel_outcome_strip"
+    )
+    assert objects["B"]["objects"]["s60_discrete_states"]["structural_role"] == (
+        "discrete_state_set"
+    )
+    assert "object=s60_discrete_states panel=B kind=distribution" in source
+    assert "$\\rho_{60" not in source
+    assert {
+        (assertion["id"], assertion["relation"], assertion["subject"], assertion["reference"])
+        for assertion in parse_assertions(spec)
+    } >= {("fig3-outcome-text-before-sparkline", "left_of", "trapping", "I(t)")}
+
+
 def test_load_spec_missing_returns_empty(tmp_path: Path) -> None:
     from semantic_assertions import _load_spec
 

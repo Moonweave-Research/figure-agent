@@ -71,15 +71,10 @@ def test_fig3_neighbor_contract_exposes_the_v64_to_v66_collision_transfer(
     v66 = {result.rule_id: result for result in results_for("v66")}
 
     energy = "breadth_clear_of_declared_neighbors:energy_axis_label"
-    magnitude = "breadth_clear_of_declared_neighbors:magnitude_axis_label"
     assert v64[energy].status == "ok"
     assert v64[energy].clearance is not None and v64[energy].clearance > 0.008
-    assert v64[magnitude].status == "ok"
-    assert v64[magnitude].clearance is not None and v64[magnitude].clearance > 0.008
     assert v66[energy].status == "violation"
     assert v66[energy].clearance is not None and v66[energy].clearance < 0.008
-    assert v66[magnitude].status == "ok"
-    assert v66[magnitude].clearance is not None and v66[magnitude].clearance > 0.008
 
 
 def test_fig3_layout_contract_is_fail_closed_for_missing_breadth_label() -> None:
@@ -100,7 +95,7 @@ def test_fig3_layout_contract_is_fail_closed_for_missing_breadth_label() -> None
     )
 
     assert payload.get("applicable", True) is True
-    assert payload["failure_count"] == 2
+    assert payload["failure_count"] == 1
     assert {result["status"] for result in payload["results"]} == {
         "missing_label_group"
     }
@@ -138,13 +133,13 @@ def test_fig3_layout_contract_still_checks_the_live_fixture_build() -> None:
     )
 
     assert payload.get("applicable", True) is True
-    assert payload["failure_count"] == 2
+    assert payload["failure_count"] == 1
     assert {result["status"] for result in payload["results"]} == {
         "missing_label_group"
     }
 
 
-def test_fig3_live_source_exposes_the_three_layout_relation_anchors() -> None:
+def test_fig3_live_source_exposes_the_live_layout_relation_anchors() -> None:
     source = (FIG3_FIXTURE / "fig3_resistance_mechanism.tex").read_text(
         encoding="utf-8"
     )
@@ -158,11 +153,10 @@ def test_fig3_live_source_exposes_the_three_layout_relation_anchors() -> None:
     assert phrases == {
         "breadth_descriptor": "distribution breadth",
         "energy_axis_label": "g(E)",
-        "magnitude_axis_label": "magnitude",
     }
     assert "{distribution breadth}" in source
     assert "{$g(E)$}" in source
-    assert "$\\rho_{60\\mathrm{s}}$ magnitude cue" in source
+    assert "$\\rho_{60" not in source
     assert "$n$ = breadth" not in source
 
 
@@ -184,7 +178,7 @@ def test_fig3_layout_contract_applies_to_unfamiliar_future_artifact_names() -> N
     )
 
     assert payload.get("applicable", True) is True
-    assert payload["failure_count"] == 2
+    assert payload["failure_count"] == 1
     assert {result["status"] for result in payload["results"]} == {
         "missing_label_group"
     }
@@ -267,17 +261,9 @@ def test_fig3_strict_compile_reports_the_v64_to_v66_collision_transfer(
         "OK layout lane breadth_clear_of_declared_neighbors:energy_axis_label"
         in v64.stdout
     )
-    assert (
-        "OK layout lane breadth_clear_of_declared_neighbors:magnitude_axis_label"
-        in v64.stdout
-    )
     assert v66.returncode == 1
     assert (
         "WARN layout lane breadth_clear_of_declared_neighbors:energy_axis_label"
-        in v66.stdout
-    )
-    assert (
-        "OK layout lane breadth_clear_of_declared_neighbors:magnitude_axis_label"
         in v66.stdout
     )
 
