@@ -246,7 +246,8 @@ def test_fig3_carrier_sequence_binds_each_transfer_to_declared_named_states():
     )
 
     assert [assertion["id"] for assertion in assertions] == [
-        "carrier-sequence-binds-every-transfer-to-a-declared-state"
+        "carrier-sequence-binds-every-transfer-to-a-declared-state",
+        "terminal-state-label-binds-to-terminal-trap",
     ]
     assert cta.check_named_endpoint_assertions(
         (fixture / "fig3_resistance_mechanism.tex").read_text(encoding="utf-8"),
@@ -274,6 +275,25 @@ def test_named_endpoint_assertion_rejects_a_literal_detached_transfer_path():
 
     assert issues[0]["id"] == "named-transfer"
     assert issues[0]["status"] == "insufficient_named_paths"
+
+
+def test_named_endpoint_assertion_binds_a_straight_leader_to_its_named_target():
+    tex = "\n".join(
+        [
+            r"\coordinate (trap) at (1.0,2.0);",
+            r"\coordinate (label_anchor) at (1.0,1.5);",
+            r"\draw[terminalLabelLeader] (trap) -- (label_anchor);",
+        ]
+    )
+    assertion = {
+        "id": "terminal-label",
+        "anchor_style": "terminalLabelLeader",
+        "minimum_paths": 1,
+        "required_anchors": ["trap", "label_anchor"],
+        "allowed_anchors": ["trap", "label_anchor"],
+    }
+
+    assert cta.check_named_endpoint_assertions(tex, [assertion]) == []
 
 
 def test_payload_has_stable_shape(tmp_path):

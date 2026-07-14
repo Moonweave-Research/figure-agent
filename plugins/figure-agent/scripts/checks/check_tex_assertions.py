@@ -68,6 +68,10 @@ _STYLED_NAMED_TO_RE = re.compile(
     + _OPT_BODY
     + rf"\])?\s*\(\s*({_NAMED_COORD})\s*\)"
 )
+_STYLED_NAMED_DRAW_RE = re.compile(
+    r"\\draw\s*\[(" + _OPT_BODY + r")\]\s*"
+    rf"\(\s*({_NAMED_COORD})\s*\)\s*--\s*\(\s*({_NAMED_COORD})\s*\)"
+)
 _NAMED_COORD_DECL_RE = re.compile(
     r"\\(?:coordinate|node)(?:\s*\[[^\]]*\])?\s*"
     rf"\(\s*({_NAMED_COORD})\s*\)\s*at\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
@@ -200,8 +204,8 @@ def find_all_draws(tex_text: str) -> list[tuple[float, float, float, float]]:
     return [raw[:4] for raw in _all_draws_raw(tex_text)]
 
 
-def find_styled_named_to_paths(tex_text: str, style: str) -> list[tuple[str, str]]:
-    """Named TikZ endpoints for ``style``-tagged curved paths.
+def find_styled_named_paths(tex_text: str, style: str) -> list[tuple[str, str]]:
+    """Named TikZ endpoints for ``style``-tagged curved or straight paths.
 
     A source relation is robust only when the path ends at the named visual state
     it claims to enter or leave. Literal coordinates cannot provide that binding:
@@ -212,7 +216,15 @@ def find_styled_named_to_paths(tex_text: str, style: str) -> list[tuple[str, str
     for match in _STYLED_NAMED_TO_RE.finditer(_strip_tex_comments(tex_text)):
         if _has_style_token(match.group(1), style):
             paths.append((match.group(2), match.group(3)))
+    for match in _STYLED_NAMED_DRAW_RE.finditer(_strip_tex_comments(tex_text)):
+        if _has_style_token(match.group(1), style):
+            paths.append((match.group(2), match.group(3)))
     return paths
+
+
+def find_styled_named_to_paths(tex_text: str, style: str) -> list[tuple[str, str]]:
+    """Backward-compatible alias for :func:`find_styled_named_paths`."""
+    return find_styled_named_paths(tex_text, style)
 
 
 def _tip_orientation(option_body: str) -> str:
@@ -457,7 +469,7 @@ def check_named_endpoint_assertions(tex_text: str, assertions: list[dict]) -> li
     """Return blocking issues when semantic paths detach from declared named states."""
     issues: list[dict] = []
     for assertion in assertions:
-        paths = find_styled_named_to_paths(tex_text, assertion["anchor_style"])
+        paths = find_styled_named_paths(tex_text, assertion["anchor_style"])
         if len(paths) < assertion["minimum_paths"]:
             issues.append(
                 {
