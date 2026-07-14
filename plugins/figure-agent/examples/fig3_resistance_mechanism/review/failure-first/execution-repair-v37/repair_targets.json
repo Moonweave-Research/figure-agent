@@ -1,0 +1,26 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/repaired_generated.tex",
+  "source_sha256": "sha256:3db2a595dda981bd7de97feb5a912d567c14bcd4bde72d6b3bd7e7a617464f60",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v37/human_findings.before.json",
+        "id": "HF019"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-carrier-path-arrow-grammar",
+        "anchor_start": "% The walk changes direction repeatedly and has no electrode-polarity assignment.",
+        "anchor_end": "\\node[carrier] at (1.08,1.62) {};"
+      },
+      "repair_family": "relation_restore",
+      "protected_invariants": [
+        "(1.08,1.62)",
+        "(3.02,3.02)",
+        "no electrode-polarity assignment"
+      ]
+    }
+  ]
+}

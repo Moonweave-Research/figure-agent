@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v43/repaired_generated.tex",
+  "source_sha256": "sha256:e359209aeab84f0a51cdbe92d02ca163487252d3cf4b0ada6b1315030494738d",
+  "targets": [{
+    "finding": {"report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v46/human_findings.before.json", "id": "HF028"},
+    "attribution": {"state": "exact"},
+    "selector": {"kind": "semantic_anchor", "selector_id": "panel-b-magnitude-right-lane-retry", "anchor_start": "  \\draw[draw=cBrown, line width=0.65pt, {Stealth}-{Stealth}] (4.78,0.18)--(4.78,1.35);", "anchor_end": "\\node[label, align=center] at (8.94,0.18)"},
+    "repair_family": "label_reflow",
+    "protected_invariants": ["$\\rho_{60\\mathrm{s}}$", "magnitude", "(4.78,1.35)"]
+  }]
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:337d690891fb85b9d5e2aaba3f12e1da5ff28a21c33565b69bed29e071473868",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [{
+    "id": "HF024",
+    "subject": "panel_b_s60_descriptor_peak_clearance",
+    "finding": "single discrete state crosses the narrow S60 peak instead of forming a label stack above it"
+  }],
+  "publication_acceptance": "not_claimed"
+}

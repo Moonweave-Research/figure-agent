@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[compact label, text=cBrown, anchor=west] at (4.93,1.24) {$\\rho_{60\\mathrm{s}}$};\n  \\node[compact label, text=cBrown, rotate=90] at (4.58,0.765) {magnitude};\n\\end{scope}",
+  "change_summary": "Put the rho value in a right-side lane and keep magnitude rotated beside the vertical span."
+}

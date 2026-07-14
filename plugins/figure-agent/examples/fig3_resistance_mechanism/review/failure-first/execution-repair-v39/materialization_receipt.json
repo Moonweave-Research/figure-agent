@@ -1,0 +1,15 @@
+{
+  "change_summary": "Detach g(E) from the arrow tip and center it beside the Panel B y-axis.",
+  "changed_lines": 4,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v39/repaired_generated.tex",
+  "output_sha256": "sha256:2a5515b603d2226da077d94d708bc81f6ee40c7135e00929d173f9449caed286",
+  "packet_sha256": "sha256:f0525f43e539af6476b245b26c3958bc64a3b7a4c3d54b560a3c270134a57033",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:38b0056e2a5d5cdf6b3c976bd9d8e756e8a9c2892a872c379031fd41dd50db82"
+}

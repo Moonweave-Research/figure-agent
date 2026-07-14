@@ -1,0 +1,7 @@
+{
+  "schema": "figure-agent.execution-review.v1",
+  "decision": "failed_exact_repair",
+  "repair_result": "semantic overclaim removed but the single breadth span crossed its label",
+  "next_human_target": "panel_b_distribution_breadth_split_span_retry",
+  "publication_acceptance": "not_claimed"
+}

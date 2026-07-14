@@ -11,7 +11,9 @@ conduction, bridging Fig 2 dielectric response to Fig 4 trap-energy quantificati
 - Read left to right: applied bias cell -> dispersive trapping walk -> I(t) decay / R increase -> trap-energy distribution broadening.
 - Keep the carrier sign-agnostic. Do not imply electron-only or hole-only transport.
 - Encode Curie-von Schweidler behavior as qualitative decay, not a measured data plot.
-- Keep `n` as distribution breadth, not trap density or magnitude.
+- Keep `n` as the fitted Curie-von Schweidler exponent. The schematic may show
+  trap-distribution breadth, but must not equate geometric width directly with `n`
+  without a declared model or calibration.
 - Keep `rho_60s` orthogonal to `n` as a magnitude cue.
 - Show low-sulfur traps as discrete and S80 as continuous broad.
 - Keep the schematic slim, compact, and dense, not bloated.
@@ -22,6 +24,8 @@ conduction, bridging Fig 2 dielectric response to Fig 4 trap-energy quantificati
 - Do not add quantitative tick values or measured curve parameters.
 - Do not convert this schematic into the data-graph half of Fig 3.
 - Do not encode stronger trapping as well depth.
+- Do not infer the direction or magnitude of a breadth-to-`n` relation from the
+  schematic alone.
 - Do not use “trap network”; the intended phrase is trap-energy distribution or landscape.
 
 ## Acceptance Gate

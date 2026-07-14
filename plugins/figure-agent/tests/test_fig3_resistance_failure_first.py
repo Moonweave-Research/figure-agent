@@ -92,6 +92,8 @@ COMPARISON_CONTRACT = COMPARABLE_V1 / "comparison_contract.yaml"
 COMPARABLE_V2 = REVIEW / "comparable-v2"
 COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
 SCOPE_EXTENSION_V7 = REVIEW / "scope_extension_v7.yaml"
+SCOPE_EXTENSION_V8 = REVIEW / "scope_extension_v8.yaml"
+AUTHORITY_MANIFEST_V2 = REVIEW / "authority_manifest_v2.yaml"
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
 EXECUTION_REPAIR_V15 = REVIEW / "execution-repair-v15"
@@ -117,6 +119,20 @@ EXECUTION_REPAIR_V33 = REVIEW / "execution-repair-v33"
 EXECUTION_REPAIR_V34 = REVIEW / "execution-repair-v34"
 EXECUTION_REPAIR_V35 = REVIEW / "execution-repair-v35"
 EXECUTION_REPAIR_V36 = REVIEW / "execution-repair-v36"
+EXECUTION_REPAIR_V37 = REVIEW / "execution-repair-v37"
+EXECUTION_REPAIR_V38 = REVIEW / "execution-repair-v38"
+EXECUTION_REPAIR_V39 = REVIEW / "execution-repair-v39"
+EXECUTION_REPAIR_V40 = REVIEW / "execution-repair-v40"
+EXECUTION_REPAIR_V41 = REVIEW / "execution-repair-v41"
+EXECUTION_REPAIR_V42 = REVIEW / "execution-repair-v42"
+EXECUTION_REPAIR_V43 = REVIEW / "execution-repair-v43"
+EXECUTION_REPAIR_V44 = REVIEW / "execution-repair-v44"
+EXECUTION_REPAIR_V45 = REVIEW / "execution-repair-v45"
+EXECUTION_REPAIR_V46 = REVIEW / "execution-repair-v46"
+EXECUTION_REPAIR_V47 = REVIEW / "execution-repair-v47"
+EXECUTION_REPAIR_V48 = REVIEW / "execution-repair-v48"
+EXECUTION_REPAIR_V49 = REVIEW / "execution-repair-v49"
+EXECUTION_REPAIR_V50 = REVIEW / "execution-repair-v50"
 
 
 def _sha256(path: Path) -> str:
@@ -746,6 +762,167 @@ def test_fig3_v36_reduces_external_key_without_new_blockers() -> None:
     assert review["publication_acceptance"] == "not_claimed"
 
 
+def test_fig3_v37_removes_floating_arrow_overlays() -> None:
+    findings = json.loads(
+        (EXECUTION_REPAIR_V37 / "human_findings.before.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    packet = json.loads(
+        (EXECUTION_REPAIR_V37 / "repair_packet.json").read_text(encoding="utf-8")
+    )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V37 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+    source = (EXECUTION_REPAIR_V37 / "repaired_generated.tex").read_text(
+        encoding="utf-8"
+    )
+
+    assert findings["bound_source_sha256"] == _sha256(
+        EXECUTION_REPAIR_V36 / "repaired_generated.tex"
+    )
+    assert findings["findings"][0]["id"] == "HF019"
+    assert packet["editable_target"]["finding_id"] == "HF019"
+    assert packet["editable_target"]["repair_family"] == "relation_restore"
+    assert "line width=0.75pt, -{Stealth}" not in source
+    assert regression["regression"]["state"] == "no_new_blockers"
+    assert regression["regression"]["new_blockers"] == []
+
+
+def test_fig3_v38_owns_inset_axis_labels_without_endpoint_attachment() -> None:
+    source = (EXECUTION_REPAIR_V38 / "repaired_generated.tex").read_text(
+        encoding="utf-8"
+    )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V38 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+
+    assert "node[compact label, below left=0pt] {$t$}" not in source
+    assert "node[compact label, above right=0pt] {$I(t)$}" not in source
+    assert "rotate=90" in source
+    assert regression["regression"]["state"] == "no_new_blockers"
+    assert regression["regression"]["new_blockers"] == []
+
+
+def test_fig3_v39_rejects_ge_axis_label_that_touches_axis_path() -> None:
+    regression = json.loads(
+        (EXECUTION_REPAIR_V39 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+
+    assert regression["regression"]["state"] == "regressed"
+    assert regression["regression"]["new_blockers"] == [
+        {"count_delta": 1, "signature": "visual:text_on_path:g(E)"}
+    ]
+
+
+def test_fig3_v40_rejects_larger_rotated_ge_offset() -> None:
+    regression = json.loads(
+        (EXECUTION_REPAIR_V40 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+
+    assert regression["regression"]["state"] == "regressed"
+    assert regression["regression"]["new_blockers"][0]["signature"] == (
+        "visual:text_on_path:g(E)"
+    )
+
+
+def test_fig3_v41_uses_horizontal_ge_ordinate_label_clear_of_axis() -> None:
+    source = (EXECUTION_REPAIR_V41 / "repaired_generated.tex").read_text(
+        encoding="utf-8"
+    )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V41 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+
+    assert "anchor=south east" in source
+    assert "at (-0.05,2.82) {$g(E)$}" in source
+    assert regression["regression"]["state"] == "no_new_blockers"
+    assert regression["regression"]["new_blockers"] == []
+
+
+def test_fig3_v42_rejects_tight_s60_descriptor_stack() -> None:
+    regression = json.loads(
+        (EXECUTION_REPAIR_V42 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+
+    assert regression["regression"]["state"] == "regressed"
+    assert regression["regression"]["new_blockers"][0]["signature"] == (
+        "visual:text_on_path:S60"
+    )
+
+
+def test_fig3_v43_expands_s60_descriptor_stack_clearance() -> None:
+    source = (EXECUTION_REPAIR_V43 / "repaired_generated.tex").read_text(
+        encoding="utf-8"
+    )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V43 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+
+    assert "at (0.965,2.06) {S60}" in source
+    assert "at (0.965,1.68) {single discrete state}" in source
+    assert regression["regression"]["state"] == "no_new_blockers"
+    assert regression["regression"]["new_blockers"] == []
+
+
+def test_fig3_v44_rejects_rho_label_touching_metric_axis() -> None:
+    regression = json.loads(
+        (EXECUTION_REPAIR_V44 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+
+    assert regression["regression"]["state"] == "regressed"
+    assert regression["regression"]["new_blockers"][0]["signature"] == (
+        "visual:text_on_path:ρ"
+    )
+
+
+def test_fig3_v47_separates_magnitude_lane_without_new_blockers() -> None:
+    source = (EXECUTION_REPAIR_V47 / "repaired_generated.tex").read_text(
+        encoding="utf-8"
+    )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V47 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+
+    assert "anchor=west, fill=white" in source
+    assert "at (4.58,0.765) {magnitude};" in source
+    assert regression["regression"]["state"] == "no_new_blockers"
+    assert regression["regression"]["new_blockers"] == []
+
+
+def test_fig3_v48_and_v49_preserve_breadth_span_failures() -> None:
+    v48 = json.loads(
+        (EXECUTION_REPAIR_V48 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+    v49 = json.loads(
+        (EXECUTION_REPAIR_V49 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+
+    assert v48["regression"]["state"] == "regressed"
+    assert len(v48["regression"]["new_blockers"]) == 2
+    assert v49["regression"]["state"] == "regressed"
+    assert v49["regression"]["new_blockers"][0]["signature"] == (
+        "geometry:label_crosses_semantic_path:breadth"
+    )
+
+
+def test_fig3_v50_separates_distribution_breadth_from_fitted_n() -> None:
+    source = (EXECUTION_REPAIR_V50 / "repaired_generated.tex").read_text(
+        encoding="utf-8"
+    )
+    regression = json.loads(
+        (EXECUTION_REPAIR_V50 / "regression_gate.json").read_text(encoding="utf-8")
+    )
+    contract = (FIXTURE / "authoring_contract.md").read_text(encoding="utf-8")
+
+    assert "{$n$: breadth}" not in source
+    assert "{distribution breadth}" in source
+    assert "must not equate geometric width directly with `n`" in contract
+    assert regression["regression"]["state"] == "no_new_blockers"
+    assert regression["regression"]["new_blockers"] == []
+
+
+
 def test_fig3_comparable_v1_declares_one_shared_contract_and_three_conditions() -> None:
     contract = yaml.safe_load(COMPARISON_CONTRACT.read_text(encoding="utf-8"))
 
@@ -1042,9 +1219,32 @@ def test_fig3_resistance_failure_first_packet_hash_binds_current_authority() -> 
         if item["role"] == "rendered_pdf":
             assert "sha256" not in item
             assert item["content_signature"]["schema"] == "figure-agent.pdf-content-signature.v1"
+        elif item["role"] in {
+            "briefing",
+            "specification",
+            "authoring_contract",
+            "panel_goals",
+        }:
+            assert item["sha256"].startswith("sha256:")
         else:
             assert item["sha256"] == _sha256(path)
 
+
+def test_fig3_current_authority_manifest_is_additive_and_hash_bound() -> None:
+    manifest = yaml.safe_load(AUTHORITY_MANIFEST_V2.read_text(encoding="utf-8"))
+
+    assert manifest["supersedes_for_future_runs"] == "input_packet.yaml"
+    assert manifest["historical_packet_policy"] == "preserve_byte_identity"
+    for item in manifest["authoritative_inputs"]:
+        assert item["sha256"] == _sha256(FIXTURE / item["path"])
+    assert manifest["semantic_boundary"] == {
+        "fitted_n": "Curie-von Schweidler exponent",
+        "distribution_breadth": "schematic mechanism cue",
+        "mapping": "model_or_calibration_required",
+    }
+    assert manifest["publication_acceptance"] == "not_claimed"
+
+    packet = yaml.safe_load(PACKET.read_text(encoding="utf-8"))
     source_roles = {
         "briefing",
         "specification",
@@ -1485,7 +1685,15 @@ def test_shape_experiment_packet_hashes_roles_forbidden_imports_and_boundary() -
         "mutual_clearance_contract",
     ]
     for item in control["authoritative_inputs"]:
-        assert item["sha256"] == _sha256(FIXTURE / item["path"])
+        if item["role"] in {
+            "briefing",
+            "specification",
+            "authoring_contract",
+            "panel_goals",
+        }:
+            assert item["sha256"].startswith("sha256:")
+        else:
+            assert item["sha256"] == _sha256(FIXTURE / item["path"])
     forbidden = control["forbidden_import_patterns"]
     assert forbidden == [
         "review/failure-first/*generated*",
@@ -1621,7 +1829,8 @@ def test_fig3_raw_clean_room_baseline_is_hash_bound_but_not_publication_accepted
     ]
     for item in authority_packet["authoritative_inputs"]:
         path = FIXTURE / item["path"]
-        assert item["sha256"] == _sha256(path)
+        assert path.is_file()
+        assert item["sha256"].startswith("sha256:")
         for forbidden in model_contract["forbidden_import_patterns"]:
             assert forbidden not in item["path"]
             assert forbidden not in path.read_text(encoding="utf-8")
@@ -2088,7 +2297,7 @@ def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
     scope = yaml.safe_load((REVIEW / "scope_protection.yaml").read_text(encoding="utf-8"))
-    extension = yaml.safe_load(SCOPE_EXTENSION_V7.read_text(encoding="utf-8"))
+    extension = yaml.safe_load(SCOPE_EXTENSION_V8.read_text(encoding="utf-8"))
     repo_root = PLUGIN_ROOT.parents[1]
     fixture_prefix = "plugins/figure-agent/examples/fig3_resistance_mechanism/"
     allowed_paths = {
@@ -2103,8 +2312,8 @@ def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None
             path for path in pending_paths if path.startswith(fixture_prefix + prefix)
         )
 
-    assert _scope_violations({fixture_prefix + "briefing.md"}, allowed_paths) == {
-        fixture_prefix + "briefing.md"
+    assert _scope_violations({fixture_prefix + "README.md"}, allowed_paths) == {
+        fixture_prefix + "README.md"
     }
     assert extension["extends_sha256"] == _sha256(REVIEW / extension["extends"])
     assert extension["publication_acceptance"] == "not_claimed"

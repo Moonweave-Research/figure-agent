@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:38b0056e2a5d5cdf6b3c976bd9d8e756e8a9c2892a872c379031fd41dd50db82",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [{
+    "id": "HF022",
+    "subject": "panel_b_ge_axis_clearance_retry",
+    "finding": "retry y-axis ownership from the clean v38 source with enough offset to avoid the new g(E)-axis path collision"
+  }],
+  "publication_acceptance": "not_claimed"
+}

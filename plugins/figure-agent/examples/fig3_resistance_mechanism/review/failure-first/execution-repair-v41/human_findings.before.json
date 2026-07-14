@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:38b0056e2a5d5cdf6b3c976bd9d8e756e8a9c2892a872c379031fd41dd50db82",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [{
+    "id": "HF023",
+    "subject": "panel_b_ge_horizontal_ordinate_retry",
+    "finding": "rotated g(E) remains visually attached to the arrow, so use a horizontal ordinate label above-left of the y-axis tip"
+  }],
+  "publication_acceptance": "not_claimed"
+}

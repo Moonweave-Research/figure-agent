@@ -1,0 +1,8 @@
+{
+  "decision": "repair_rejected_new_blockers",
+  "repair_result": "centering g(E) beside the y-axis improved ownership but placed the rotated text on the axis path",
+  "external_compile": "passed_with_new_structural_blocker",
+  "next_human_target": "panel_b_ge_axis_clearance_retry",
+  "human_review": "corrections_required",
+  "publication_acceptance": "not_claimed"
+}

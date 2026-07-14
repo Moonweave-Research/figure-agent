@@ -1,0 +1,15 @@
+{
+  "change_summary": "Remove four independently overdrawn arrow fragments while preserving the continuous carrier path.",
+  "changed_lines": 4,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v37/repaired_generated.tex",
+  "output_sha256": "sha256:1c1630b9edd27936edbb81c2dc3affe2c04e00419632ac8e4457bf58bce4696d",
+  "packet_sha256": "sha256:8ab0019950506346db8839aa8f105fbf9e1efcae370566b43a9c937a7b91dce8",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:3db2a595dda981bd7de97feb5a912d567c14bcd4bde72d6b3bd7e7a617464f60"
+}

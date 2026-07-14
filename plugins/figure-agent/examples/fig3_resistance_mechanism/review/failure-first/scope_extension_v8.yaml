@@ -1,0 +1,31 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v7.yaml
+extends_sha256: sha256:51e9442fcf9e83c0cf78249b2f96a62329d96c71a38d613aaf64a87a15b1237a
+reason: authorize additive axis-label, descriptor-lane, and semantic-boundary repair evidence
+allowed_review_prefixes:
+  - review/failure-first/execution-repair-v37/
+  - review/failure-first/execution-repair-v38/
+  - review/failure-first/execution-repair-v39/
+  - review/failure-first/execution-repair-v40/
+  - review/failure-first/execution-repair-v41/
+  - review/failure-first/execution-repair-v42/
+  - review/failure-first/execution-repair-v43/
+  - review/failure-first/execution-repair-v44/
+  - review/failure-first/execution-repair-v45/
+  - review/failure-first/execution-repair-v46/
+  - review/failure-first/execution-repair-v47/
+  - review/failure-first/execution-repair-v48/
+  - review/failure-first/execution-repair-v49/
+  - review/failure-first/execution-repair-v50/
+allowed_review_paths:
+  - review/failure-first/scope_extension_v8.yaml
+  - review/failure-first/authority_manifest_v2.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/docs/execution-plan.md
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/authoring_contract.md
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/panel_goals.md
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/spec.yaml
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/briefing.md
+publication_acceptance: not_claimed

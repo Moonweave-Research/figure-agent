@@ -1,0 +1,78 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "remove the direct n-to-breadth equation while retaining a central clearance gap in the breadth arrows",
+      "id": "HF031",
+      "subject": "panel_b_distribution_breadth_split_span_retry"
+    },
+    "finding_id": "HF031",
+    "protected_invariants": [
+      "cTeal",
+      "(2.23,0.28)",
+      "(4.50,0.28)"
+    ],
+    "repair_family": "relation_restore",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v49/human_findings.before.json",
+    "selector": {
+      "anchor_end": "  \\draw[draw=cBrown, line width=0.65pt, {Stealth}-{Stealth}] (4.78,0.18)--(4.78,1.35);",
+      "anchor_start": "  % Orthogonal metrics: horizontal breadth and detached vertical magnitude.",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-b-distribution-breadth-split-span",
+      "source_hash": "sha256:96d5e0c808f406dcf48adaa4313634073dfd40745829975e01dfc5143c2a9fd9"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v49/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:a7ec628fdd1cd1366b4ccba9d318e231452de1bcad4008c435372c21cf13f3ae"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v49/repaired_generated.tex",
+  "packet_sha256": "sha256:181e5a4397dc2cef8d3a892a75ce4a65d45fe69c2bece74db27de0df7d132b06",
+  "prompt": {
+    "sha256": "sha256:51db4fdde562d4f144f2071936aaacb75751e7c285458220cc64e054cf9dc2ee",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v49/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v47/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: relation_restore\n- Machine finding: {\"finding\": \"remove the direct n-to-breadth equation while retaining a central clearance gap in the breadth arrows\", \"id\": \"HF031\", \"subject\": \"panel_b_distribution_breadth_split_span_retry\"}\n- Change content only between the exact anchor lines [  % Orthogonal metrics: horizontal breadth and detached vertical magnitude.] and [  \\draw[draw=cBrown, line width=0.65pt, {Stealth}-{Stealth}] (4.78,0.18)--(4.78,1.35);].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [cTeal].\n- Preserve the exact token [(2.23,0.28)].\n- Preserve the exact token [(4.50,0.28)].\n\n## Bound editable source bytes\n```tex\n  \\draw[draw=cTeal, line width=0.65pt, -{Stealth}] (2.75,0.28)--(2.23,0.28) (3.98,0.28)--(4.50,0.28);\n  \\node[compact label, text=cTeal, fill=white, inner sep=1.4pt] at (3.365,0.28)\n    {$n$: breadth};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v49/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v47/repaired_generated.tex",
+    "sha256": "sha256:96d5e0c808f406dcf48adaa4313634073dfd40745829975e01dfc5143c2a9fd9"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v49/repair_targets.json",
+    "sha256": "sha256:57640873b48625856f33209d648f64219bde99f78a22ac573004dd8f80489488"
+  },
+  "verification": "external_sequential_compile_required"
+}

@@ -1,0 +1,15 @@
+{
+  "change_summary": "Detach t and I(t) from arrow tips and center them on their owned inset axes.",
+  "changed_lines": 6,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/repaired_generated.tex",
+  "output_sha256": "sha256:38b0056e2a5d5cdf6b3c976bd9d8e756e8a9c2892a872c379031fd41dd50db82",
+  "packet_sha256": "sha256:ef8a59b34ebd79f7d72b78a928da19e0d518e4e67ab5c075e4316e8f556bf7e7",
+  "preserved_boundary_blank_lines": 0,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:1c1630b9edd27936edbb81c2dc3affe2c04e00419632ac8e4457bf58bce4696d"
+}

@@ -1,0 +1,7 @@
+{
+  "schema": "figure-agent.execution-review.v1",
+  "decision": "failed_exact_repair",
+  "repair_result": "right-side rho lane avoided text collision but the glyph remained a visual path candidate",
+  "next_human_target": "panel_b_magnitude_value_protected_lane_retry",
+  "publication_acceptance": "not_claimed"
+}

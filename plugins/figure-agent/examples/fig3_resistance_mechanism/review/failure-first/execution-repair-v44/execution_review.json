@@ -1,0 +1,7 @@
+{
+  "schema": "figure-agent.execution-review.v1",
+  "decision": "failed_exact_repair",
+  "repair_result": "magnitude lane separated but rho label touched the metric axis",
+  "next_human_target": "panel_b_magnitude_value_axis_clearance_retry",
+  "publication_acceptance": "not_claimed"
+}

@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[label, text=cBlue, font=\\sffamily\\bfseries\\footnotesize] at (0.965,2.06) {S60};\n  \\node[compact label] at (0.965,1.68) {single discrete state};",
+  "change_summary": "Center the S60 stack above the peak with expanded name-to-descriptor clearance."
+}

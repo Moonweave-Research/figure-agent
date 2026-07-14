@@ -1,0 +1,7 @@
+{
+  "schema": "figure-agent.execution-review.v1",
+  "decision": "accepted_as_nonregressing_scaffold",
+  "repair_result": "distribution breadth is visually separated from the fitted CvS exponent n with no new structural blockers",
+  "remaining_priority": "human scaffold review of transport and trap-distribution semantics",
+  "publication_acceptance": "not_claimed"
+}

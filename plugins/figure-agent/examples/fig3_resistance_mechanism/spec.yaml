@@ -8,7 +8,7 @@ panels:
     caption: Cell under applied V — charge carrier (sign-agnostic) undergoes dispersive, repeated trapping; transient current decays (I ∝ t^-n) so resistance rises
     bbox_pdf_cm: [0.00, 0.00, 5.80, 4.80]
   - id: B
-    caption: Trap energy distribution g(E) — discrete (S60, single deep) evolving to continuous broad (S80); n = breadth of the distribution, ρ60s = magnitude
+    caption: Trap energy distribution g(E) — discrete (S60, single deep) evolving to continuous broad (S80); n is the fitted CvS exponent, ρ60s is a separate magnitude cue
     bbox_pdf_cm: [6.00, 0.00, 11.60, 4.80]
 composition_model:
   panels:
@@ -33,11 +33,11 @@ composition_model:
             - consolidate_label
     B:
       objects:
-        n_breadth:
+        distribution_breadth:
           kind: measurement_span
           truth_bearing: true
-          semantic_claim: n represents trap-distribution breadth, not density
-          invariant: distribution_breadth_not_density
+          semantic_claim: geometric trap-distribution breadth is distinct from the fitted CvS exponent n
+          invariant: distribution_breadth_not_directly_equated_to_n
           allowed_creative_ops:
             - externalize_span
             - reduce_arrow_clutter
@@ -47,6 +47,6 @@ notes: |
   half of a composite figure; the real I(t)∝t^-n data curves + composition series are
   produced by the data pipeline (Origin / Graph Hub) and composited beside this schematic.
   Bboxes approximate (first pass); expected to move during element-iteration.
-  Physics is grounded in 02_Surfur_Polymer docs (CvS power-law; n = trap-distribution
-  breadth NOT density; carrier-agnostic dispersive transport; discrete->continuous
+  Physics is grounded in 02_Surfur_Polymer docs (CvS power-law; n is a fitted exponent
+  whose mapping to distribution breadth is model-dependent; carrier-agnostic dispersive transport; discrete->continuous
   evolution with sulfur). See briefing.md for the binding physics-correctness rules.

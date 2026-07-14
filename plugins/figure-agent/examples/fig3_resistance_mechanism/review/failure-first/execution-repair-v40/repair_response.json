@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\draw[axis] (0,0)--(0,2.77);\n  \\node[compact label, rotate=90] at (-0.42,1.385) {$g(E)$};",
+  "change_summary": "Center g(E) beside the y-axis with additional clearance from the axis path."
+}

@@ -1,0 +1,15 @@
+{
+  "change_summary": "Separate the magnitude descriptor into a vertical metric lane while retaining the value label above the span.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v44/repaired_generated.tex",
+  "output_sha256": "sha256:9b3c67a7451a8ad294ebb96b73a4fd04981d33895707f837e8b19412a4cdf30b",
+  "packet_sha256": "sha256:06d6718af96a01641c6204afb95ea6c903abd1703d14e3a293c7e2aa32c560b7",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:e359209aeab84f0a51cdbe92d02ca163487252d3cf4b0ada6b1315030494738d"
+}

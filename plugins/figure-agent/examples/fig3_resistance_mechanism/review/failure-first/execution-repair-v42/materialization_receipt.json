@@ -1,0 +1,15 @@
+{
+  "change_summary": "Align the S60 name and descriptor as a centered stack above the narrow peak.",
+  "changed_lines": 4,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v42/repaired_generated.tex",
+  "output_sha256": "sha256:1faf5f2201ec3cf0f589a9c9ef93c8c3f57cb0a614dbccf572aa0f0cf31322eb",
+  "packet_sha256": "sha256:3582957d40f063329e2bb5010e359a42a74cd8ea82cc301f0107670b2924455c",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:337d690891fb85b9d5e2aaba3f12e1da5ff28a21c33565b69bed29e071473868"
+}

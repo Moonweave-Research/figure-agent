@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[compact label, text=cBrown, anchor=south] at (4.78,1.42) {$\\rho_{60\\mathrm{s}}$};\n  \\node[compact label, text=cBrown, rotate=90] at (4.58,0.765) {magnitude};\n\\end{scope}",
+  "change_summary": "Separate the magnitude descriptor into a vertical metric lane while retaining the value label above the span."
+}

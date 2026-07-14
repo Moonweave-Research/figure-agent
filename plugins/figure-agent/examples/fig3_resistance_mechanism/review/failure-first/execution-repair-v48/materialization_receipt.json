@@ -1,0 +1,15 @@
+{
+  "change_summary": "Replace the n-equals-breadth claim with a standard geometric distribution-breadth span.",
+  "changed_lines": 6,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v48/repaired_generated.tex",
+  "output_sha256": "sha256:8520cfcbc2463f83990d05ff563da8f0c9546a96a3a24860b2fa27756d8cac65",
+  "packet_sha256": "sha256:a6a3edeabaa72d2a8c78f2c1ac6d9205448055a5bca924b25340019d20c5d189",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:96d5e0c808f406dcf48adaa4313634073dfd40745829975e01dfc5143c2a9fd9"
+}

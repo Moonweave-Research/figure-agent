@@ -1,0 +1,62 @@
+{
+  "baseline_reports": {
+    "collisions": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v37/collisions.json",
+      "sha256": "sha256:b830c20131cdf35e04db080f1a49262dfeeef1db47c0c4980eacfee6f4910301"
+    },
+    "undeclared_geometry": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v37/undeclared_geometry.json",
+      "sha256": "sha256:feb45efb72c3c5ba3e2d48104f377871bb3b971702dc65ca74d62e184f55fbf5"
+    },
+    "visual_clash": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v37/visual_clash.json",
+      "sha256": "sha256:0942753f19a337c1ecb2d8af88a581e8ba57a567027cbf5e5977b961f55687b7"
+    }
+  },
+  "blocking_counts": {
+    "semantic_path_crossing": 0,
+    "text_on_path_or_fill": 2,
+    "text_text": 0
+  },
+  "coverage_gaps": [
+    "label_path",
+    "panel_boundary"
+  ],
+  "declared_coverage": {
+    "label_path": false,
+    "panel_boundary": false
+  },
+  "publication_acceptance": "not_claimed",
+  "regression": {
+    "new_blockers": [],
+    "publication_acceptance": "not_claimed",
+    "resolved_blockers": [
+      {
+        "count_delta": 1,
+        "signature": "visual:text_on_path:t"
+      }
+    ],
+    "schema": "figure-agent.structural-regression-gate.v1",
+    "state": "no_new_blockers"
+  },
+  "review_counts": {
+    "visual_near_miss": 11
+  },
+  "schema": "figure-agent.structural-collision-gate.v1",
+  "source_reports": {
+    "collisions": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/collisions.json",
+      "sha256": "sha256:b830c20131cdf35e04db080f1a49262dfeeef1db47c0c4980eacfee6f4910301"
+    },
+    "undeclared_geometry": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/undeclared_geometry.json",
+      "sha256": "sha256:0039a73a217b9fb7caded433529c86c9aa0ff06f27ffe1fd124790c743e675ef"
+    },
+    "visual_clash": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/visual_clash.json",
+      "sha256": "sha256:651c7be7447bad2300419170c4ad3096c0a2b20e8c72e1065b3f4e79835aceac"
+    }
+  },
+  "state": "failed",
+  "structural_pass": false
+}

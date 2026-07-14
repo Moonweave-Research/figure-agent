@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\draw[axis] (0,0)--(0,2.77);\n  \\node[compact label, rotate=90] at (-0.28,1.385) {$g(E)$};",
+  "change_summary": "Detach g(E) from the arrow tip and center it beside the Panel B y-axis."
+}

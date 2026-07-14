@@ -1,0 +1,6 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v43/repaired_generated.tex",
+  "bound_source_sha256": "sha256:e359209aeab84f0a51cdbe92d02ca163487252d3cf4b0ada6b1315030494738d",
+  "findings": [{"id": "HF029", "subject": "panel_b_magnitude_value_protected_lane_retry", "finding": "retain the right-side rho lane but protect its label background from nearby metric geometry"}]
+}

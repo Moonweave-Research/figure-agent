@@ -1,0 +1,15 @@
+{
+  "change_summary": "Widen the central label gap and retain short outward breadth arrows at both distribution edges.",
+  "changed_lines": 6,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v50/repaired_generated.tex",
+  "output_sha256": "sha256:98ce58896bf93548797d85682ec8ab6725680cc094fd655c70bcc4032e3f213d",
+  "packet_sha256": "sha256:5c32c52b09f96fed4ad0432142b439898dea46a05edf569316c9b18417d2c7bf",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:96d5e0c808f406dcf48adaa4313634073dfd40745829975e01dfc5143c2a9fd9"
+}

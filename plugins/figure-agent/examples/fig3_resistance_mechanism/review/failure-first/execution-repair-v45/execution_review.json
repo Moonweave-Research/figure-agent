@@ -1,0 +1,7 @@
+{
+  "schema": "figure-agent.execution-review.v1",
+  "decision": "failed_exact_repair",
+  "repair_result": "rho label cleared the axis center but collided with the S80 descriptor and remained path-adjacent",
+  "next_human_target": "panel_b_magnitude_value_right_lane_retry",
+  "publication_acceptance": "not_claimed"
+}

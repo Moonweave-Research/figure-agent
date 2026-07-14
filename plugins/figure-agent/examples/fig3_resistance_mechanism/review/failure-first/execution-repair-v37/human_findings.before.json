@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:3db2a595dda981bd7de97feb5a912d567c14bcd4bde72d6b3bd7e7a617464f60",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF019",
+      "subject": "panel_a_carrier_arrow_grammar",
+      "finding": "four independently overdrawn arrow segments make the carrier path look doubled, floating, and directionally irregular"
+    }
+  ],
+  "publication_acceptance": "not_claimed"
+}

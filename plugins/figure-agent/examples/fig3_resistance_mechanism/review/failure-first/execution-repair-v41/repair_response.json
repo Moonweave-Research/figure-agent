@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\draw[axis] (0,0)--(0,2.77);\n  \\node[compact label, anchor=south east] at (-0.05,2.82) {$g(E)$};",
+  "change_summary": "Place g(E) horizontally above-left of the y-axis tip to establish ordinate ownership without touching the axis."
+}

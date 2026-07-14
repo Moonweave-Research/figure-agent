@@ -20,14 +20,15 @@
 - **(a) cell + transport + decay**: 전극/sulfur film/전극 + 인가 V; carrier의 tortuous
   multiple-trapping walk(최종 caught); 작은 I-vs-t 감쇠 sparkline + "current decays ⇒ R↑".
 - **(b) g(E) evolution**: 에너지 가로축의 trap energy distribution. S60 = discrete 단일 deep
-  peak(좁음) → S80 = continuous broad(넓음). `n = breadth`(가로 화살표), `ρ60s = magnitude`
+  peak(좁음) → S80 = continuous broad(넓음). `distribution breadth`(가로 범위), `ρ60s = magnitude`
   (세로, 별도). "disorder↑(sulfur↑): discrete → continuous broad" 화살표.
 
 ## §3. Binding physics-correctness rules (grounded in 02_Surfur_Polymer docs; DO NOT violate)
 1. Measurement = transient current I(t) under applied V, **Curie–von Schweidler power-law
    I(t) ∝ t⁻ⁿ** (n∈(0,2)); I=V/R so I↓ ⇒ R↑. t>~2s = pure trap-mediated absorption current.
-2. **n = the BREADTH of the trap energy distribution, NOT trap density.** Magnitude is a
-   separate metric ρ60s. (n=density would be WRONG.)
+2. **n is the fitted CvS power-law exponent.** Distribution breadth is the schematic
+   mechanism cue and magnitude is a separate metric `ρ60s`. A direct width-to-`n`
+   mapping is model/calibration dependent; do not assert it from geometry alone.
 3. **Carrier is sign-agnostic** — dispersive trap-controlled transport in a disordered solid
    (Scher–Montroll for n>1, Jonscher for n≤1). Do NOT commit to electron vs hole; do NOT draw
    a clean band/ballistic-drift picture (no net +→− carrier drift).
@@ -35,7 +36,7 @@
    low sulfur**. The discrete→continuous evolution with sulfur IS the mechanism (CvS_Analysis_
    Strategy.md). Do NOT draw 2 fixed discrete levels for all compositions.
 5. **Do NOT encode "stronger trapping" as well DEPTH** (depth reads as magnitude, contradicts
-   n=breadth). Use breadth + ρ60s only.
+   width-to-n mapping). Use distribution breadth + ρ60s as distinct schematic cues.
 6. "S–S radical / sulfur cluster" trap chemistry is **NOT established** — illustrative only,
    never asserted. Unlabeled × marks for trap sites are correct.
 7. Use 'trap-energy distribution / landscape', NOT 'trap network' (network asserts spatial

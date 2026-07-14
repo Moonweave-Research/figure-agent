@@ -1,0 +1,15 @@
+{
+  "change_summary": "Put the rho value in a right-side lane and keep magnitude rotated beside the vertical span.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v46/repaired_generated.tex",
+  "output_sha256": "sha256:a78b3488abe0fe85b16ffb135974f21e44d7c5f82f1364a0171c15d05448577c",
+  "packet_sha256": "sha256:9a74e21a57efe3276fee6015263905f35f95040260db61567f278ba50b0d750e",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:e359209aeab84f0a51cdbe92d02ca163487252d3cf4b0ada6b1315030494738d"
+}

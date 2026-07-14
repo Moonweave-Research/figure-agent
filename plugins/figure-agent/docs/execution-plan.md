@@ -167,8 +167,8 @@ schematic that connects Fig2's material design space to Fig4's quantified trap
 spectra. It has a maintained editable TikZ source, briefing, specification,
 authoring contract, panel goals, critique history, and current render. Its two
 dense panels test a different failure profile from Fig1: repeated,
-sign-agnostic trap/release transport in panel A and the separate `n = breadth`
-and `rho_60s = magnitude` relations in panel B.
+sign-agnostic trap/release transport in panel A and the separate fitted-`n`,
+distribution-breadth, and `rho_60s = magnitude` cues in panel B.
 
 `fig3_trap_schematic_v97` and its derivative
 `examples/fig3_trap_schematic_slice3_semantic/` are historical rejected/raw
@@ -345,14 +345,16 @@ modules listed in Section 0.
 **Current next executable step:** Slice 1 remains `pending_human_review` on the
 four current hash-bound views. Slice 2 `comparable-v2/` is transcript-bound,
 cleanly reproducible, human-rejected, and product-unauthorized. Continue from
-the verified-derived v36 source. Request the human scaffold verdict on the
-Panel A transition grammar before further polishing; v34 is the preserved
-counterexample showing why another isolated coordinate nudge is unsafe. Detector-only
-`V` and `t` candidates remain review-only until
-their intended axis or wiring relations are adjudicated. Keep all band-energy
-shape changes blocked until their physical and mathematical authority is
-reviewed. Do not start a new renderer, fixture, or manual polish lane, and do
-not request a human scaffold verdict while the structural gate remains failed.
+the verified-derived v50 source. V37 removed redundant carrier arrow overlays;
+v38 and v41 established detached axis-label ownership; v43 and v47 separated
+the S60 descriptor and magnitude lanes. V39, v40, v42, v44-v46, v48, and v49
+remain preserved counterexamples showing why an isolated label move or an
+under-spaced span is unsafe. V50 also corrects the prior overclaim that directly
+equated fitted `n` with geometric distribution breadth; that mapping is now
+declared model-dependent. Detector-only applied-`V` candidates remain review-only
+until wiring intent is adjudicated. Keep band-energy shape changes blocked until
+their physical and mathematical authority is reviewed. The next gate is a named
+human scaffold verdict; machine non-regression is not publication acceptance.
 
 ### Verification
 
