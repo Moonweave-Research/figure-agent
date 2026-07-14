@@ -211,7 +211,7 @@ if [[ -n "$LAYOUT_CONTRACT" && -f "$LAYOUT_CONTRACT" ]]; then
   run_report_check "${UV_RUN[@]}" python3 \
     "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" \
     ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
-    --pdf "$PDF_OUT" \
+    --pdf "$PWD/$PDF_OUT" \
     --layout-contract "$LAYOUT_CONTRACT" \
     --json-output "${BUILD_DIR}/layout_lanes.json"
 elif [[ -f "coordinate_hints.yaml" ]]; then

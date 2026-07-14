@@ -398,7 +398,31 @@ def layout_lane_payload(
     contract: dict[str, Any],
     pdf_words: list[dict[str, Any]],
     pdf_page_size: tuple[float, float],
+    *,
+    artifact_path: Path | None = None,
 ) -> dict[str, Any]:
+    applies_to_path_regex = contract.get("applies_to_path_regex")
+    if applies_to_path_regex is not None:
+        if not isinstance(applies_to_path_regex, str) or not applies_to_path_regex:
+            raise ValueError("applies_to_path_regex must be a non-empty string")
+        try:
+            applies = artifact_path is None or re.search(
+                applies_to_path_regex, artifact_path.as_posix()
+            ) is not None
+        except re.error as exc:
+            raise ValueError(f"invalid applies_to_path_regex: {exc}") from exc
+    else:
+        applies = True
+    if not applies:
+        return {
+            "schema": "figure-agent.layout-lane-report.v1",
+            "contract_schema": LAYOUT_LANES_SCHEMA,
+            "applicable": False,
+            "page_size_pt": list(pdf_page_size),
+            "failure_count": 0,
+            "results": [],
+            "text_budget_results": [],
+        }
     results = evaluate_layout_lanes(contract, pdf_words, pdf_page_size)
     budget_results = evaluate_text_budgets(contract, pdf_words, pdf_page_size)
     return {
@@ -646,20 +670,26 @@ def run_check(
         lanes = yaml.safe_load(lanes_path.read_text(encoding="utf-8")) or {}
         if not isinstance(lanes, dict):
             return 1, [f"ERROR invalid layout_lanes.yaml: {lanes_path}"]
-        for result in evaluate_layout_lanes(lanes, pdf_words, page_size):
-            if result.status != "ok":
+        payload = layout_lane_payload(
+            lanes,
+            pdf_words,
+            page_size,
+            artifact_path=pdf_path,
+        )
+        for result in payload["results"]:
+            if result["status"] not in {"ok", "not_applicable"}:
                 failures += 1
             lines.append(
                 _layout_lane_line(
-                    result.rule_id,
-                    result.status,
-                    result.clearance,
-                    result.minimum_clearance,
-                    result.missing_groups,
+                    str(result["rule_id"]),
+                    str(result["status"]),
+                    result["clearance"],
+                    float(result["minimum_clearance"]),
+                    list(result["missing_groups"]),
                 )
             )
-        for result in evaluate_text_budgets(lanes, pdf_words, page_size):
-            if result.status != "ok":
+        for result in payload["text_budget_results"]:
+            if result["status"] != "ok":
                 failures += 1
             lines.append(_text_budget_line(result))
     return failures, lines
@@ -695,7 +725,12 @@ def main(argv: list[str] | None = None) -> int:
             if not isinstance(contract, dict):
                 raise ValueError(f"invalid layout contract: {args.layout_contract}")
             words, page_size = extract_pdf_words_and_page(args.pdf)
-            payload = layout_lane_payload(contract, words, page_size)
+            payload = layout_lane_payload(
+                contract,
+                words,
+                page_size,
+                artifact_path=args.pdf,
+            )
             failures = int(payload["failure_count"])
             lines = []
             for result in payload["results"]:

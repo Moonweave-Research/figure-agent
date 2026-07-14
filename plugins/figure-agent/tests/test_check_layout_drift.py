@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -43,6 +45,71 @@ def test_fig3_destination_lane_contract_accepts_v64_and_rejects_v66() -> None:
     assert transferred.rule_id == "breadth_clear_of_energy_axis"
     assert transferred.status == "violation"
     assert transferred.clearance is not None and transferred.clearance < 0.01
+
+
+def test_fig3_layout_contract_is_fail_closed_for_missing_breadth_label() -> None:
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+    words = [
+        _word("trap", 100, 100, 120, 112),
+        _word("energy", 122, 100, 150, 112),
+        _word("E", 152, 100, 158, 112),
+    ]
+
+    payload = check_layout_drift.layout_lane_payload(
+        contract,
+        words,
+        (400.0, 200.0),
+        artifact_path=Path("execution-repair-v67/build/repaired_generated.pdf"),
+    )
+
+    assert payload.get("applicable", True) is True
+    assert payload["failure_count"] == 1
+    assert payload["results"][0]["status"] == "missing_label_group"
+
+
+def test_fig3_layout_contract_does_not_rejudge_pre_v64_history() -> None:
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+
+    payload = check_layout_drift.layout_lane_payload(
+        contract,
+        [],
+        (400.0, 200.0),
+        artifact_path=Path("execution-repair-v12/build/repaired_generated.pdf"),
+    )
+
+    assert payload["applicable"] is False
+    assert payload["failure_count"] == 0
+    assert payload["results"] == []
+
+
+def test_fig3_strict_compile_reaches_layout_gate_and_distinguishes_v64_v66() -> None:
+    def compile_version(version: str) -> subprocess.CompletedProcess[str]:
+        source = (
+            "examples/fig3_resistance_mechanism/review/failure-first/"
+            f"execution-repair-{version}/repaired_generated.tex"
+        )
+        return subprocess.run(
+            ["bash", "scripts/compile.sh", source],
+            cwd=REPO_ROOT,
+            env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
+            capture_output=True,
+            text=True,
+        )
+
+    accepted = compile_version("v64")
+    rejected = compile_version("v66")
+
+    # The full strict compile still fails on pre-existing undeclared-geometry
+    # findings. This proves the compile path reaches this gate and that this
+    # gate itself distinguishes the accepted scaffold from the regression.
+    assert accepted.returncode == 1
+    assert "OK layout lane breadth_clear_of_energy_axis" in accepted.stdout
+    assert rejected.returncode == 1
+    assert "WARN layout lane breadth_clear_of_energy_axis" in rejected.stdout
 
 
 def _word(text: str, x0: float, y0: float, x1: float, y1: float) -> dict:

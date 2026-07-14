@@ -3,39 +3,28 @@
 
 > **For agentic workers:** Execute this plan in order with tests first. Do not open another renderer, grammar, roadmap, or fixture-specific polish lane.
 
-**Goal:** Prove on two materially different complex figure families that the same LLM plus Figure Agent detects and safely reduces recurring scientific and
-visual failures better than the same LLM alone.
+**Goal:** Prove on two materially different complex figure families that the same LLM plus Figure Agent detects and safely reduces recurring scientific and visual failures better than the same LLM alone.
 
-**Architecture:** Keep TikZ as the current default publication-authoring path. Use the existing Python control plane for reviewed failure evidence, multi-scale
-observation, exact attribution, bounded repair, rollback, provenance, and human
-review. SVG remains a derived export or bounded diagnostic surface and is not an
-active backend-development target.
+**Architecture:** Keep TikZ as the current default publication-authoring path. Use the existing Python control plane for reviewed failure evidence, multi-scale observation, exact attribution, bounded repair, rollback, provenance, and human review. SVG remains a derived export or bounded diagnostic surface and is not an active backend-development target.
 
-**Tech stack:** Python 3.11+, pytest, PyYAML, existing Figure Agent CLI and quality modules, TikZ/LuaLaTeX, PDF/PNG review evidence, existing dvisvgm export.
-Add no dependency.
+**Tech stack:** Python 3.11+, pytest, PyYAML, existing Figure Agent CLI and quality modules, TikZ/LuaLaTeX, PDF/PNG review evidence, existing dvisvgm export. Add no dependency.
 
 ---
 
 ## 0. Authority and execution rules
 
-This is the only active forward plan. `docs/product-spec.md` is the only active
-product specification. Completed tasks, superseded plans, experiment designs,
-and generated review packets remain evidence in Git history and their existing
-artifact directories; they do not set the next action.
+This is the only active forward plan. `docs/product-spec.md` is the only active product specification. Completed tasks, superseded plans, experiment designs, and generated review packets remain evidence in Git history and their existing artifact directories; they do not set the next action.
 
 Before editing any implementation, the integration target is `main`:
 
 1. verify the active worktree, branch, common Git directory, and clean state;
-2. compare `main` and this branch because they have diverged, using the exact
-   read-only preflight below;
+2. compare `main` and this branch because they have diverged, using the exact read-only preflight below;
 3. preserve accepted, historical, and user-owned artifacts;
-4. resolve integration in a dedicated clean worktree without force, reset,
-   checkout-discard, or clean;
+4. resolve integration in a dedicated clean worktree without force, reset, checkout-discard, or clean;
 5. run commands from `plugins/figure-agent` unless stated otherwise;
 6. write the smallest failing test before behavior changes;
 7. keep each implementation commit bounded to one slice;
-8. do not modify `scripts/quality/quality_search.py` or add fixture names and
-   coordinates to reusable modules;
+8. do not modify `scripts/quality/quality_search.py` or add fixture names and coordinates to reusable modules;
 9. do not create another active specification, roadmap, or execution plan; and
 10. never equate machine-valid or review-ready with publication acceptance.
 
@@ -47,15 +36,9 @@ git rev-list --left-right --count main...HEAD
 git diff --stat main...HEAD
 ```
 
-If `main` cannot be resolved locally, stop as `integration_base_missing`; do not
-silently substitute another branch. Integration conflict resolution belongs in
-a separate clean worktree and is not part of the figure-evidence slices below.
+If `main` cannot be resolved locally, stop as `integration_base_missing`; do not silently substitute another branch. Integration conflict resolution belongs in a separate clean worktree and is not part of the figure-evidence slices below.
 
-Every A/B/C manifest must bind at least `model_id`, `input_packet_sha256`,
-`budget_contract`, `source_commit`, `starting_artifact_sha256`, selectors or
-declared regions, toolchain versions, and an aggregate `review_input_hash`.
-Generated outputs must carry their own hashes and provenance. A manifest without
-an actual generation receipt is staged evidence, not a comparable model run.
+Every A/B/C manifest must bind at least `model_id`, `input_packet_sha256`, `budget_contract`, `source_commit`, `starting_artifact_sha256`, selectors or declared regions, toolchain versions, and an aggregate `review_input_hash`. Generated outputs must carry their own hashes and provenance. A manifest without an actual generation receipt is staged evidence, not a comparable model run.
 
 Existing implementation surfaces to reuse:
 
@@ -71,8 +54,7 @@ Existing implementation surfaces to reuse:
 | `scripts/quality/quality_patch_apply.py` | Preflight, application, receipt, rollback |
 | `styles/snippets/panel-f-floating-cantilever.tex` | Reviewed same-family TikZ motif evidence |
 | `bin/fig-agent` | Existing corpus, ablation, compile, export, and review surfaces |
-The direct Panel F SVG renderer is retained only as non-promoted experiment
-evidence. Do not polish, generalize, import, or delete it during these slices.
+The direct Panel F SVG renderer is retained only as non-promoted experiment evidence. Do not polish, generalize, import, or delete it during these slices.
 
 ## Slice 1: Panel F review closure
 
@@ -351,8 +333,9 @@ path. V66 is a preserved counterexample: moving the distribution-breadth label
 outside its plot transferred the defect onto the energy-axis lane. That failure
 is now promoted into the fixture-level `layout_lanes.yaml` relation, and nested
 repair compiles inherit fixture-level layout and TeX-source assertions
-automatically. Literal-count assertions can also block duplicated semantic
-glyphs when a fixture declares the expected cardinality. These are machine
+automatically. TeX-source assertions remain limited to declared directional
+geometry: raw source-token counts are not rendered-object counts because loops
+and macros can expand one occurrence into multiple glyphs. These are machine
 guardrails against repeated known failure modes, not evidence that v64 is
 publication-ready. Detector-only applied-`V` candidates remain review-only until
 wiring intent is adjudicated. Keep band-energy shape changes blocked until their

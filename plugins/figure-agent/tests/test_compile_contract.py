@@ -40,7 +40,7 @@ def test_compile_applies_fixture_layout_contract_to_nested_repairs() -> None:
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 
     assert 'LAYOUT_CONTRACT="${FIXTURE_ROOT}/layout_lanes.yaml"' in script
-    assert '--pdf "$PDF_OUT"' in script
+    assert '--pdf "$PWD/$PDF_OUT"' in script
     assert '--layout-contract "$LAYOUT_CONTRACT"' in script
     assert '--json-output "${BUILD_DIR}/layout_lanes.json"' in script
 
