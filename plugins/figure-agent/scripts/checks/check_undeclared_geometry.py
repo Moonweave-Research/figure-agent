@@ -774,6 +774,17 @@ def _curve_is_matching_arrowhead(
 ) -> bool:
     if not raw_curve.get("fill"):
         return False
+    path = raw_curve.get("path")
+    if not isinstance(path, list):
+        return False
+    path_commands = [item[0] for item in path if isinstance(item, tuple) and item]
+    if (
+        len(path_commands) < 4
+        or path_commands[0] != "m"
+        or path_commands[-1] != "h"
+        or any(command != "l" for command in path_commands[1:-1])
+    ):
+        return False
     if not _colors_close(raw_curve.get("stroking_color"), raw_line.get("stroking_color")):
         return False
     x0 = float(raw_curve["x0"])
@@ -791,6 +802,66 @@ def _curve_is_matching_arrowhead(
     )
 
 
+def resolve_rendered_semantic_arrows(
+    rendered_lines: list[dict[str, Any]],
+    rendered_curves: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Reconstruct axis-aligned semantic arrows from rendered PDF geometry."""
+    resolved: list[dict[str, Any]] = []
+    for raw_line in rendered_lines:
+        if not _is_chromatic_stroke(raw_line.get("stroking_color")):
+            continue
+        shaft = _rendered_axis_aligned_line(raw_line)
+        if shaft is None:
+            continue
+        arrowheads = [
+            raw_curve
+            for raw_curve in rendered_curves
+            if _curve_is_matching_arrowhead(raw_curve, raw_line, shaft)
+        ]
+        if not arrowheads:
+            continue
+
+        shaft_bbox = _line_bbox(shaft)
+        x_values = [shaft_bbox[0], shaft_bbox[2]]
+        y_values = [shaft_bbox[1], shaft_bbox[3]]
+        for arrowhead in arrowheads:
+            x_values.extend([float(arrowhead["x0"]), float(arrowhead["x1"])])
+            y_values.extend([float(arrowhead["top"]), float(arrowhead["bottom"])])
+
+        color = _color_channels(raw_line.get("stroking_color"))
+        resolved.append(
+            {
+                "kind": "axis_aligned_arrow",
+                "orientation": ("vertical" if shaft["kind"] == "vertical_line" else "horizontal"),
+                "shaft": shaft,
+                "arrowhead_count": len(arrowheads),
+                "bbox_pt": [
+                    min(x_values),
+                    min(y_values),
+                    max(x_values),
+                    max(y_values),
+                ],
+                "stroke_color": list(color or ()),
+                "line_width_pt": float(raw_line.get("linewidth") or 0.0),
+            }
+        )
+
+    resolved.sort(
+        key=lambda arrow: (
+            tuple(arrow["bbox_pt"]),
+            arrow["orientation"],
+            tuple(_line_bbox(arrow["shaft"])),
+            tuple(arrow["stroke_color"]),
+            arrow["line_width_pt"],
+            arrow["arrowhead_count"],
+        )
+    )
+    for index, arrow in enumerate(resolved, start=1):
+        arrow["id"] = f"RA{index:03d}"
+    return resolved
+
+
 def detect_rendered_semantic_path_crossings(
     words: list[dict[str, Any]],
     rendered_lines: list[dict[str, Any]],
@@ -798,17 +869,8 @@ def detect_rendered_semantic_path_crossings(
 ) -> list[dict[str, Any]]:
     """Return text crossings for rendered chromatic arrows in PDF coordinates."""
     candidates: list[dict[str, Any]] = []
-    for raw_line in rendered_lines:
-        if not _is_chromatic_stroke(raw_line.get("stroking_color")):
-            continue
-        line = _rendered_axis_aligned_line(raw_line)
-        if line is None:
-            continue
-        if not any(
-            _curve_is_matching_arrowhead(raw_curve, raw_line, line)
-            for raw_curve in rendered_curves
-        ):
-            continue
+    for arrow in resolve_rendered_semantic_arrows(rendered_lines, rendered_curves):
+        line = arrow["shaft"]
         for word in words:
             if not _semantic_path_label_candidate(word) or not _line_crosses_word(line, word):
                 continue

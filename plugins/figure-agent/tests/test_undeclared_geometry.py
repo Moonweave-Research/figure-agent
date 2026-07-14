@@ -18,6 +18,7 @@ from check_undeclared_geometry import (  # noqa: E402
     geometry_parse_coverage,
     partition_candidates_by_profile,
     rendered_curve_coverage,
+    resolve_rendered_semantic_arrows,
     undeclared_geometry_payload,
 )
 
@@ -406,6 +407,7 @@ def test_rendered_semantic_arrow_crossing_uses_pdf_path_coordinates() -> None:
             "linewidth": 0.78,
             "stroking_color": (0.576, 0.288, 0.336),
             "fill": True,
+            "path": [("m", (351.1, 306.8)), ("l", (356.4, 305.0)), ("l", (356.4, 308.7)), ("h",)],
         }
     ]
 
@@ -423,6 +425,88 @@ def test_rendered_semantic_arrow_crossing_uses_pdf_path_coordinates() -> None:
     assert candidates[0]["evidence"].startswith("rendered semantic arrow crosses text")
 
 
+def test_resolve_rendered_semantic_arrow_uses_current_pdf_coordinates() -> None:
+    rendered_lines = [
+        {
+            "x0": 354.8,
+            "x1": 380.2,
+            "top": 306.8,
+            "bottom": 306.8,
+            "linewidth": 0.78,
+            "stroking_color": (0.576, 0.288, 0.336),
+        }
+    ]
+    rendered_curves = [
+        {
+            "x0": 351.1,
+            "x1": 356.4,
+            "top": 305.0,
+            "bottom": 308.7,
+            "linewidth": 0.78,
+            "stroking_color": (0.576, 0.288, 0.336),
+            "fill": True,
+            "path": [("m", (351.1, 306.8)), ("l", (356.4, 305.0)), ("l", (356.4, 308.7)), ("h",)],
+        }
+    ]
+
+    assert resolve_rendered_semantic_arrows(rendered_lines, rendered_curves) == [
+        {
+            "id": "RA001",
+            "kind": "axis_aligned_arrow",
+            "orientation": "horizontal",
+            "shaft": {
+                "kind": "horizontal_line",
+                "y": 306.8,
+                "x_range": [354.8, 380.2],
+            },
+            "arrowhead_count": 1,
+            "bbox_pt": [351.1, 305.0, 380.2, 308.7],
+            "stroke_color": [0.576, 0.288, 0.336],
+            "line_width_pt": 0.78,
+        }
+    ]
+
+
+def test_resolve_rendered_semantic_arrow_counts_both_heads() -> None:
+    rendered_lines = [
+        {
+            "x0": 346.4,
+            "x1": 346.4,
+            "top": 77.9,
+            "bottom": 103.6,
+            "linewidth": 0.78,
+            "stroking_color": (0.365, 0.282, 0.125),
+        }
+    ]
+    rendered_curves = [
+        {
+            "x0": 344.9,
+            "x1": 347.9,
+            "top": 75.1,
+            "bottom": 79.0,
+            "stroking_color": (0.365, 0.282, 0.125),
+            "fill": True,
+            "path": [("m", (346.4, 75.1)), ("l", (344.9, 79.0)), ("l", (347.9, 79.0)), ("h",)],
+        },
+        {
+            "x0": 344.9,
+            "x1": 347.9,
+            "top": 102.5,
+            "bottom": 106.4,
+            "stroking_color": (0.365, 0.282, 0.125),
+            "fill": True,
+            "path": [("m", (346.4, 106.4)), ("l", (344.9, 102.5)), ("l", (347.9, 102.5)), ("h",)],
+        },
+    ]
+
+    arrows = resolve_rendered_semantic_arrows(rendered_lines, rendered_curves)
+
+    assert len(arrows) == 1
+    assert arrows[0]["orientation"] == "vertical"
+    assert arrows[0]["arrowhead_count"] == 2
+    assert arrows[0]["bbox_pt"] == [344.9, 75.1, 347.9, 106.4]
+
+
 def test_rendered_colored_line_without_arrowhead_is_not_semantic_path() -> None:
     words = [_word("shallow", 468.0, 69.0, 499.0, 77.0)]
     rendered_lines = [
@@ -437,6 +521,93 @@ def test_rendered_colored_line_without_arrowhead_is_not_semantic_path() -> None:
     ]
 
     assert detect_rendered_semantic_path_crossings(words, rendered_lines, []) == []
+
+
+def test_resolve_rendered_colored_line_without_arrowhead_returns_nothing() -> None:
+    rendered_lines = [
+        {
+            "x0": 484.0,
+            "x1": 484.0,
+            "top": 45.0,
+            "bottom": 128.0,
+            "linewidth": 0.6,
+            "stroking_color": (0.6, 0.3, 0.35),
+        }
+    ]
+
+    assert resolve_rendered_semantic_arrows(rendered_lines, []) == []
+
+
+def test_resolve_rendered_semantic_arrows_ignores_decorative_small_geometry() -> None:
+    rendered_lines = [
+        {
+            "x0": 100.0,
+            "x1": 120.0,
+            "top": 50.0,
+            "bottom": 50.0,
+            "linewidth": 0.6,
+            "stroking_color": (0.6, 0.3, 0.35),
+        }
+    ]
+    rendered_curves = [
+        {
+            "x0": 117.0,
+            "x1": 123.0,
+            "top": 48.0,
+            "bottom": 52.0,
+            "stroking_color": (0.6, 0.3, 0.35),
+            "fill": True,
+            "path": [
+                ("m", (120.0, 50.0)),
+                ("c", (120.0, 48.0), (123.0, 48.0), (123.0, 50.0)),
+                ("c", (123.0, 52.0), (120.0, 52.0), (120.0, 50.0)),
+                ("h",),
+            ],
+        }
+    ]
+
+    assert resolve_rendered_semantic_arrows(rendered_lines, rendered_curves) == []
+
+
+def test_resolved_semantic_arrow_ids_do_not_depend_on_input_order() -> None:
+    short_line = {
+        "x0": 100.0,
+        "x1": 120.0,
+        "top": 50.0,
+        "bottom": 50.0,
+        "linewidth": 0.6,
+        "stroking_color": (0.6, 0.3, 0.35),
+    }
+    long_line = {**short_line, "x1": 130.0}
+    rendered_curves = [
+        {
+            "x0": 118.0,
+            "x1": 122.0,
+            "top": 48.0,
+            "bottom": 52.0,
+            "stroking_color": (0.6, 0.3, 0.35),
+            "fill": True,
+            "path": [("m", (122.0, 50.0)), ("l", (118.0, 48.0)), ("l", (118.0, 52.0)), ("h",)],
+        },
+        {
+            "x0": 128.0,
+            "x1": 132.0,
+            "top": 48.0,
+            "bottom": 52.0,
+            "stroking_color": (0.6, 0.3, 0.35),
+            "fill": True,
+            "path": [("m", (132.0, 50.0)), ("l", (128.0, 48.0)), ("l", (128.0, 52.0)), ("h",)],
+        },
+    ]
+
+    forward = resolve_rendered_semantic_arrows([short_line, long_line], rendered_curves)
+    reversed_input = resolve_rendered_semantic_arrows([long_line, short_line], rendered_curves)
+
+    assert forward == reversed_input
+    assert [arrow["shaft"]["x_range"] for arrow in forward] == [
+        [100.0, 120.0],
+        [100.0, 130.0],
+    ]
 
 
 def test_label_crossing_ignores_non_frame_like_geometry() -> None:
