@@ -101,7 +101,17 @@ def _machine_gate_stale_fields(
         return [], "machine_gate_report_invalid"
 
     stale_fields: list[str] = []
-    if strict_status.get("state") != strict_compile:
+    # A report-only recompile writes ``not_requested`` even when the scaffold
+    # still binds the identical source and rendered evidence from a prior strict
+    # pass.  It is not evidence against that pass; source or output changes are
+    # independently hash-bound above and therefore still make the packet stale.
+    report_only_after_strict_pass = (
+        strict_compile == "passed"
+        and strict_status.get("state") == "not_requested"
+        and strict_status.get("strict_requested") is False
+        and strict_status.get("detector_failed") is False
+    )
+    if strict_status.get("state") != strict_compile and not report_only_after_strict_pass:
         stale_fields.append("machine_gate.strict_compile")
     if len(candidates) != expected_clashes:
         stale_fields.append("machine_gate.visual_clash_strict_candidates")

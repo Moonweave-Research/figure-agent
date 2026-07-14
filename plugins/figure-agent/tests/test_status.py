@@ -156,6 +156,59 @@ def test_current_render_review_scaffold_detects_machine_gate_geometry_drift(
     assert stale["stale_fields"] == ["machine_gate.geometry_coverage.parsed_operations"]
 
 
+def test_current_render_review_keeps_bound_strict_pass_after_nonstrict_recompile(
+    tmp_path: Path,
+) -> None:
+    """A report-only compile must not erase a still-bound strict receipt."""
+    fig_dir = tmp_path / "review_demo"
+    _write_current_review_scaffold(fig_dir)
+    scaffold_path = fig_dir / "review" / "failure-first" / "current_render_review_scaffold_v1.yaml"
+    scaffold = json.loads(scaffold_path.read_text(encoding="utf-8"))
+    scaffold["machine_gate"].update(
+        {
+            "strict_compile": "passed",
+            "visual_clash_strict_candidates": 0,
+            "geometry_coverage": {
+                "parsed_operations": 21,
+                "total_operations": 25,
+                "coverage_ratio": 0.84,
+            },
+        }
+    )
+    scaffold_path.write_text(json.dumps(scaffold, sort_keys=True) + "\n", encoding="utf-8")
+    build = fig_dir / "build"
+    (build / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": False,
+                "detector_failed": False,
+                "state": "not_requested",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (build / "visual_clash.json").write_text(
+        json.dumps({"candidates": []}) + "\n", encoding="utf-8"
+    )
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "geometry_parse_coverage": {
+                    "parsed_operations": 21,
+                    "total_operations": 25,
+                    "coverage_ratio": 0.84,
+                }
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert review_scaffold_summary(fig_dir)["state"] == "PENDING"
+
+
 def test_status_surfaces_pending_current_render_review(tmp_path: Path) -> None:
     fig_dir = tmp_path / "review_status_demo"
     _write_current_review_scaffold(fig_dir)

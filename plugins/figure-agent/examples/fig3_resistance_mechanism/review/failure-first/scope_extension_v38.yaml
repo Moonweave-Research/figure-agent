@@ -1,0 +1,12 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v37.yaml
+extends_sha256: sha256:e96137e8d16e2c39d9e4f44c965312249698143d47fb2c99fbcc9718cbb0cb86
+reason: retain a hash-bound strict-pass review packet across a later report-only recompile of the unchanged current render
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v38.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/scripts/current_render_review_scaffold.py
+  - plugins/figure-agent/tests/test_status.py
+publication_acceptance: not_claimed
