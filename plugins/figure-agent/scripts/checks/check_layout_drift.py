@@ -394,6 +394,42 @@ def evaluate_layout_lanes(
     return results
 
 
+def _layout_contract_exclusion_reason(
+    contract: dict[str, Any], artifact_path: Path | None
+) -> str | None:
+    applies_to_path_regex = contract.get("applies_to_path_regex")
+    exclude_path_regex = contract.get("exclude_path_regex")
+    if applies_to_path_regex is not None and exclude_path_regex is not None:
+        raise ValueError(
+            "layout contract cannot combine applies_to_path_regex and exclude_path_regex"
+        )
+    key = (
+        "applies_to_path_regex"
+        if applies_to_path_regex is not None
+        else "exclude_path_regex"
+    )
+    pattern = (
+        applies_to_path_regex
+        if applies_to_path_regex is not None
+        else exclude_path_regex
+    )
+    if pattern is None:
+        return None
+    if not isinstance(pattern, str) or not pattern:
+        raise ValueError(f"{key} must be a non-empty string")
+    try:
+        matches = artifact_path is not None and re.search(
+            pattern, artifact_path.as_posix()
+        ) is not None
+    except re.error as exc:
+        raise ValueError(f"invalid {key}: {exc}") from exc
+    if applies_to_path_regex is not None and artifact_path is not None and not matches:
+        return "artifact_path_outside_applies_to_path_regex"
+    if exclude_path_regex is not None and matches:
+        return "artifact_path_matches_exclude_path_regex"
+    return None
+
+
 def layout_lane_payload(
     contract: dict[str, Any],
     pdf_words: list[dict[str, Any]],
@@ -401,23 +437,13 @@ def layout_lane_payload(
     *,
     artifact_path: Path | None = None,
 ) -> dict[str, Any]:
-    applies_to_path_regex = contract.get("applies_to_path_regex")
-    if applies_to_path_regex is not None:
-        if not isinstance(applies_to_path_regex, str) or not applies_to_path_regex:
-            raise ValueError("applies_to_path_regex must be a non-empty string")
-        try:
-            applies = artifact_path is None or re.search(
-                applies_to_path_regex, artifact_path.as_posix()
-            ) is not None
-        except re.error as exc:
-            raise ValueError(f"invalid applies_to_path_regex: {exc}") from exc
-    else:
-        applies = True
-    if not applies:
+    exclusion_reason = _layout_contract_exclusion_reason(contract, artifact_path)
+    if exclusion_reason is not None:
         return {
             "schema": "figure-agent.layout-lane-report.v1",
             "contract_schema": LAYOUT_LANES_SCHEMA,
             "applicable": False,
+            "exclusion_reason": exclusion_reason,
             "page_size_pt": list(pdf_page_size),
             "failure_count": 0,
             "results": [],
@@ -733,6 +759,11 @@ def main(argv: list[str] | None = None) -> int:
             )
             failures = int(payload["failure_count"])
             lines = []
+            if payload.get("applicable") is False:
+                lines.append(
+                    "SKIP layout contract: "
+                    f"{payload['exclusion_reason']} for artifact {args.pdf}"
+                )
             for result in payload["results"]:
                 lines.append(
                     _layout_lane_line(

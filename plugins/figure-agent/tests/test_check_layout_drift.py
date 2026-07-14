@@ -86,6 +86,109 @@ def test_fig3_layout_contract_does_not_rejudge_pre_v64_history() -> None:
     assert payload["results"] == []
 
 
+def test_fig3_layout_contract_still_checks_the_live_fixture_build() -> None:
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+
+    payload = check_layout_drift.layout_lane_payload(
+        contract,
+        [],
+        (400.0, 200.0),
+        artifact_path=Path(
+            "examples/fig3_resistance_mechanism/build/fig3_resistance_mechanism.pdf"
+        ),
+    )
+
+    assert payload.get("applicable", True) is True
+    assert payload["failure_count"] == 1
+    assert payload["results"][0]["status"] == "missing_label_group"
+
+
+def test_fig3_layout_contract_applies_to_unfamiliar_future_artifact_names() -> None:
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+    words = [
+        _word("trap", 100, 100, 120, 112),
+        _word("energy", 122, 100, 150, 112),
+        _word("E", 152, 100, 158, 112),
+    ]
+
+    payload = check_layout_drift.layout_lane_payload(
+        contract,
+        words,
+        (400.0, 200.0),
+        artifact_path=Path("next-layout-attempt/build/candidate.pdf"),
+    )
+
+    assert payload.get("applicable", True) is True
+    assert payload["failure_count"] == 1
+    assert payload["results"][0]["status"] == "missing_label_group"
+
+
+def test_direct_cli_reports_when_a_legacy_artifact_is_explicitly_excluded(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    contract_path = tmp_path / "layout_lanes.yaml"
+    contract_path.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "figure-agent.layout-lanes.v1",
+                "exclude_path_regex": r"(?:^|/)legacy/",
+                "label_groups": [],
+                "rules": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    pdf_path = tmp_path / "legacy" / "build" / "candidate.pdf"
+    pdf_path.parent.mkdir(parents=True)
+    pdf_path.write_bytes(b"%PDF-1.4\n%%EOF\n")
+    monkeypatch.setattr(
+        check_layout_drift,
+        "extract_pdf_words_and_page",
+        lambda _path: ([], (400.0, 200.0)),
+    )
+
+    exit_code = check_layout_drift.main(
+        [
+            "--pdf",
+            str(pdf_path),
+            "--layout-contract",
+            str(contract_path),
+            "--strict",
+        ]
+    )
+
+    assert exit_code == 0
+    assert capsys.readouterr().out.strip() == (
+        "SKIP layout contract: artifact_path_matches_exclude_path_regex "
+        f"for artifact {pdf_path}"
+    )
+
+
+def test_layout_contract_preserves_v1_include_path_compatibility() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "applies_to_path_regex": r"(?:^|/)accepted/",
+        "label_groups": [],
+        "rules": [],
+    }
+
+    payload = check_layout_drift.layout_lane_payload(
+        contract,
+        [],
+        (400.0, 200.0),
+        artifact_path=Path("legacy/build/candidate.pdf"),
+    )
+
+    assert payload["applicable"] is False
+    assert payload["exclusion_reason"] == "artifact_path_outside_applies_to_path_regex"
+
+
 def test_fig3_strict_compile_reaches_layout_gate_and_distinguishes_v64_v66() -> None:
     def compile_version(version: str) -> subprocess.CompletedProcess[str]:
         source = (
