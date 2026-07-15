@@ -9,8 +9,10 @@ import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1"
+sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
+import authoring_context_pack  # noqa: E402
 from semantic_legibility_contract import (  # noqa: E402
     validate_semantic_legibility_contract,
 )
@@ -58,11 +60,18 @@ def test_redraw_pins_unchanged_visual_and_physics_authorities() -> None:
 def test_redraw_is_independent_and_keeps_floating_panel_f_topology() -> None:
     source = (FIXTURE / "fig1_updated_agent_redraw_v1.tex").read_text(encoding="utf-8")
     assert "fig1_overview_v5f_art_direction_001_vault" not in source
-    assert "\\input{" not in source
+    assert set(
+        line.strip() for line in source.splitlines() if line.strip().startswith(r"\input{")
+    ) == {
+        r"\input{snippets/polymer_chain.snippet.tex}",
+        r"\input{snippets/panel-f-floating-cantilever.tex}",
+    }
     assert "\\include{" not in source
     assert "floating cantilever" in source
-    assert "grounded\\\\source return" in source
+    assert "grounded voltage-source return" in source
     assert "sample and cantilever remain floating" in source
+    assert r"\PolymerChain" in source
+    assert r"\PanelFFloatingCantilever" in source
 
     result = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert result["summary"]["object_role_count"] == 9
@@ -70,3 +79,16 @@ def test_redraw_is_independent_and_keeps_floating_panel_f_topology() -> None:
     assert result["summary"]["floating_object_count"] == 1
     assert result["summary"]["visual_review_required"] is True
     assert result["publication_acceptance"] == "not_claimed"
+
+
+def test_redraw_context_binds_the_curated_assets_used_by_source() -> None:
+    payload = authoring_context_pack.build_context_pack(
+        "fig1_updated_agent_redraw_v1",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=PLUGIN_ROOT,
+    )
+    selected = payload["visual_assets"]["selected"]
+    assert [item["id"] for item in selected] == ["panel_f_floating_cantilever"]
+    assert all(item["sha256"].startswith("sha256:") for item in selected)
+    assert selected[0]["contract"]["sha256"].startswith("sha256:")
+    assert selected[0]["transfer_receipt"]["sha256"].startswith("sha256:")

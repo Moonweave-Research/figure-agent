@@ -4,6 +4,8 @@ title: Fig 1 — charge trapping in sulfur-rich polymer
 style_profile: polymer-paper
 authoring_context_pack:
   enabled: true
+  visual_asset_ids:
+    - panel_f_floating_cantilever
 panels:
   - id: A
     caption: polymer repeat-unit schematic

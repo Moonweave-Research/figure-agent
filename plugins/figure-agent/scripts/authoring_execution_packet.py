@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -440,6 +441,21 @@ def _fixture_briefing_lines(context_pack: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _visual_asset_lines(context_pack: dict[str, Any]) -> list[str]:
+    selected = context_pack.get("visual_assets", {}).get("selected", [])
+    if not selected:
+        return ["- No curated visual assets selected."]
+    lines: list[str] = []
+    for asset in selected:
+        lines.append(f"- Curated asset [{asset['id']}]: [{asset['path']}]")
+        lines.extend(f"  - {item}" for item in asset.get("authoring_directives", []))
+        for pitfall in asset.get("known_pitfalls", []):
+            lines.append(f"  - Known pitfall: {pitfall}")
+        for anti_pattern in asset.get("anti_patterns", []):
+            lines.append(f"  - Do not transfer: {anti_pattern}")
+    return lines
+
+
 def render_authoring_prompt(
     *,
     name: str,
@@ -475,6 +491,9 @@ def render_authoring_prompt(
         "",
         *_contract_lines(context_pack),
         "- Do not imply physics or quantitative relations absent from the declared contracts.",
+        "",
+        "## Curated visual assets",
+        *_visual_asset_lines(context_pack),
         "",
         "## Declared layout directives",
     ]
@@ -533,10 +552,6 @@ def compile_authoring_execution_packet(
     repository_output_path = (
         Path(bound_execution_cwd) / relative_output
     ).as_posix()
-    allowed_repository_read_paths = tuple(
-        (Path(bound_execution_cwd) / path).as_posix()
-        for path in ALLOWED_REPOSITORY_READ_PATHS
-    )
     context_pack = authoring_context_pack.build_context_pack(
         name,
         plugin_root=plugin_root,
@@ -544,6 +559,22 @@ def compile_authoring_execution_packet(
         layout_contract=layout_contract,
         shape_profile=shape_profile,
     )
+    allowed_repository_read_paths = list(
+        (Path(bound_execution_cwd) / path).as_posix()
+        for path in ALLOWED_REPOSITORY_READ_PATHS
+    )
+    runtime_visual_assets = deepcopy(context_pack["visual_assets"])
+    runtime_visual_assets["root"] = {
+        "kind": "plugin_root",
+        "path": str(plugin_root.resolve()),
+    }
+    for asset in runtime_visual_assets.get("selected", []):
+        asset["resolved_read_paths"] = [
+            str((plugin_root.resolve() / path).resolve())
+            for path in asset.get("read_paths", [])
+        ]
+        allowed_repository_read_paths.extend(asset["resolved_read_paths"])
+    allowed_repository_read_paths = tuple(dict.fromkeys(allowed_repository_read_paths))
     context_hash = _sha256_bytes(_canonical_json_bytes(context_pack))
     base_context_pack = {
         key: value for key, value in context_pack.items() if key != "shape_profile"
@@ -596,6 +627,7 @@ def compile_authoring_execution_packet(
             if shape_profile
             else None
         ),
+        "visual_assets": runtime_visual_assets,
         "mandatory_source_requirements": list(MANDATORY_SOURCE_REQUIREMENTS),
         "style_lock_authoring_requirements": list(STYLE_LOCK_AUTHORING_REQUIREMENTS),
         "allowed_repository_read_paths": list(allowed_repository_read_paths),
@@ -614,6 +646,62 @@ def compile_authoring_execution_packet(
     }
     packet["packet_sha256"] = canonical_packet_sha256(packet)
     return packet, prompt
+
+
+def validate_visual_asset_bindings(packet: dict[str, object]) -> None:
+    """Revalidate byte-bound plugin assets immediately before/after execution."""
+    visual_assets = packet.get("visual_assets")
+    if not isinstance(visual_assets, dict):
+        raise AuthoringExecutionPacketError("visual_assets binding invalid")
+    root_record = visual_assets.get("root")
+    if not isinstance(root_record, dict) or root_record.get("kind") != "plugin_root":
+        raise AuthoringExecutionPacketError("visual_assets root binding invalid")
+    root_value = root_record.get("path")
+    if not isinstance(root_value, str) or not Path(root_value).is_absolute():
+        raise AuthoringExecutionPacketError("visual_assets root binding invalid")
+    root = Path(root_value).resolve(strict=True)
+
+    records: list[tuple[str, str]] = []
+    catalog_path = visual_assets.get("catalog_path")
+    catalog_sha256 = visual_assets.get("catalog_sha256")
+    if isinstance(catalog_path, str) and isinstance(catalog_sha256, str):
+        records.append((catalog_path, catalog_sha256))
+    selected = visual_assets.get("selected")
+    if not isinstance(selected, list):
+        raise AuthoringExecutionPacketError("visual_assets selection invalid")
+    allowed_paths = packet.get("allowed_repository_read_paths")
+    if not isinstance(allowed_paths, list):
+        raise AuthoringExecutionPacketError("allowed repository read paths invalid")
+    for asset in selected:
+        if not isinstance(asset, dict):
+            raise AuthoringExecutionPacketError("visual_assets selection invalid")
+        records.append((str(asset.get("path", "")), str(asset.get("sha256", ""))))
+        for key in ("contract", "transfer_receipt"):
+            binding = asset.get(key)
+            if isinstance(binding, dict):
+                records.append(
+                    (str(binding.get("path", "")), str(binding.get("sha256", "")))
+                )
+        expected_resolved = [str((root / path).resolve()) for path in asset.get("read_paths", [])]
+        if asset.get("resolved_read_paths") != expected_resolved:
+            raise AuthoringExecutionPacketError("visual asset resolved path drift")
+        if any(path not in allowed_paths for path in expected_resolved):
+            raise AuthoringExecutionPacketError("visual asset missing from read allowlist")
+
+    for relative_value, expected_hash in records:
+        relative = Path(relative_value)
+        if (
+            relative.is_absolute()
+            or not relative.parts
+            or any(part in {"", ".", ".."} for part in relative.parts)
+        ):
+            raise AuthoringExecutionPacketError("visual asset path invalid")
+        candidate = root / relative
+        resolved = candidate.resolve(strict=True)
+        if not resolved.is_relative_to(root) or candidate.is_symlink() or not candidate.is_file():
+            raise AuthoringExecutionPacketError("visual asset path invalid")
+        if _sha256_bytes(candidate.read_bytes()) != expected_hash:
+            raise AuthoringExecutionPacketError(f"visual asset byte drift: {relative_value}")
 
 
 def write_authoring_execution_packet(

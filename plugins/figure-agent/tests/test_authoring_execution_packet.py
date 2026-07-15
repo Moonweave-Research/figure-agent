@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -17,10 +18,20 @@ def _sha256_text(text: str) -> str:
     return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def _write_context_fixture(workspace: Path, name: str = "context_demo") -> Path:
+def _write_context_fixture(
+    workspace: Path,
+    name: str = "context_demo",
+    *,
+    visual_asset_ids: tuple[str, ...] = (),
+) -> Path:
     fixture = workspace / "examples" / name
     review = fixture / "review"
     review.mkdir(parents=True)
+    visual_assets = ""
+    if visual_asset_ids:
+        visual_assets = "  visual_asset_ids:\n" + "".join(
+            f"    - {asset_id}\n" for asset_id in visual_asset_ids
+        )
     (fixture / "spec.yaml").write_text(
         f"""
 name: {name}
@@ -28,7 +39,7 @@ title: Context Demo
 style_profile: polymer-paper
 authoring_context_pack:
   enabled: true
-panels:
+{visual_assets}panels:
   - id: C
     caption: Trap energy diagram
     semantic_claims:
@@ -52,6 +63,40 @@ panels:
     )
     (review / "blank.txt").write_text("", encoding="utf-8")
     return fixture
+
+
+def test_packet_allows_and_binds_selected_curated_visual_asset(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        visual_asset_ids=("panel_f_floating_cantilever",),
+    )
+
+    packet, prompt = _compile(workspace)
+
+    assert packet["allowed_repository_read_paths"] == [
+        "AGENTS.md",
+        "styles/polymer-paper-preamble.sty",
+        str(PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.tex"),
+        str(PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.contract.yaml"),
+        str(PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.transfer.yaml"),
+    ]
+    assert packet["visual_assets"]["selected"][0]["id"] == (
+        "panel_f_floating_cantilever"
+    )
+    assert "## Curated visual assets" in prompt
+    assert "Do not redraw its owned geometry" in prompt
+    authoring_execution_packet.validate_visual_asset_bindings(packet)
+    assert all(
+        Path(path).is_file() for path in packet["allowed_repository_read_paths"][2:]
+    )
+    drifted = json.loads(json.dumps(packet))
+    drifted["allowed_repository_read_paths"].pop()
+    with pytest.raises(
+        authoring_execution_packet.AuthoringExecutionPacketError,
+        match="visual asset missing from read allowlist",
+    ):
+        authoring_execution_packet.validate_visual_asset_bindings(drifted)
 
 
 def _compile(
@@ -477,6 +522,7 @@ def _write_arm(
     arm: str,
     *,
     model_id: str = "gpt-5.5",
+    plugin_root: Path = PLUGIN_ROOT,
 ) -> tuple[Path, Path]:
     output = (
         "examples/context_demo/review/failure-first/execution-binding-v1/"
@@ -484,7 +530,7 @@ def _write_arm(
     )
     packet, prompt = authoring_execution_packet.compile_authoring_execution_packet(
         "context_demo",
-        plugin_root=PLUGIN_ROOT,
+        plugin_root=plugin_root,
         workspace_root=workspace,
         model_id=model_id,
         budget_contract="examples/context_demo/review/budget.yaml",
@@ -501,6 +547,40 @@ def _write_arm(
         prompt=prompt,
     )
     return packet_path, prompt_path
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        "styles/snippets/panel-f-floating-cantilever.tex",
+        "styles/snippets/panel-f-floating-cantilever.contract.yaml",
+        "styles/snippets/panel-f-floating-cantilever.transfer.yaml",
+    ],
+)
+def test_preflight_rejects_visual_asset_byte_drift(
+    tmp_path: Path, relative_path: str
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        visual_asset_ids=("panel_f_floating_cantilever",),
+    )
+    plugin_root = tmp_path / "plugin"
+    shutil.copytree(PLUGIN_ROOT / "styles", plugin_root / "styles")
+    control, _ = _write_arm(
+        workspace, "control", plugin_root=plugin_root
+    )
+    treatment, _ = _write_arm(
+        workspace, "treatment", plugin_root=plugin_root
+    )
+    asset = plugin_root / relative_path
+    asset.write_text(asset.read_text(encoding="utf-8") + "% drift\n", encoding="utf-8")
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="visual asset byte drift",
+    ):
+        authoring_execution_preflight.preflight_authoring_pair(control, treatment)
 
 
 def test_preflight_accepts_equal_contracts_with_disjoint_outputs(tmp_path: Path) -> None:

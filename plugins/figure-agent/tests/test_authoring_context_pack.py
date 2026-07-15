@@ -433,6 +433,120 @@ def test_context_pack_cli_compiles_read_only_json_payload(tmp_path: Path) -> Non
     assert "briefing" in payload["paper_context"]
 
 
+def test_context_pack_binds_explicit_curated_visual_assets(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        context_pack_extra=(
+            "  visual_asset_ids:\n"
+            "    - panel_f_floating_cantilever\n"
+        ),
+    )
+
+    payload = authoring_context_pack.build_context_pack(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assets = payload["visual_assets"]
+    assert assets["schema"] == "figure-agent.authoring-visual-assets.v1"
+    assert assets["catalog_path"] == "styles/snippets/INDEX.yaml"
+    assert len(assets["selected"]) == 1
+    selected = assets["selected"][0]
+    assert selected["id"] == "panel_f_floating_cantilever"
+    assert selected["status"] == "reviewed_reusable"
+    assert selected["path"] == "styles/snippets/panel-f-floating-cantilever.tex"
+    assert selected["sha256"].startswith("sha256:")
+    assert selected["contract"]["path"].endswith(".contract.yaml")
+    assert selected["transfer_receipt"]["path"].endswith(".transfer.yaml")
+    assert selected["authoring_directives"]
+
+    rendered = authoring_context_pack.render_text(payload)
+    assert "## Curated Visual Assets" in rendered
+    assert "panel_f_floating_cantilever" in rendered
+    assert "Do not redraw its owned geometry" in rendered
+
+
+def test_context_pack_rejects_unknown_curated_visual_asset(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        context_pack_extra="  visual_asset_ids: [missing_asset]\n",
+    )
+
+    with pytest.raises(
+        authoring_context_pack.AuthoringContextPackError,
+        match="visual asset id is not present in the curated catalog",
+    ):
+        authoring_context_pack.build_context_pack(
+            "context_demo",
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+
+
+def test_context_pack_rejects_non_reusable_catalog_status(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "plugin"
+    catalog_dir = plugin_root / "styles" / "snippets"
+    catalog_dir.mkdir(parents=True)
+    (catalog_dir / "planned.tex").write_text("% not reusable\n", encoding="utf-8")
+    (catalog_dir / "INDEX.yaml").write_text(
+        "snippets:\n"
+        "  planned_asset:\n"
+        "    file: styles/snippets/planned.tex\n"
+        "    status: planned\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_context_pack.AuthoringContextPackError,
+        match="visual asset is not reusable: planned_asset",
+    ):
+        authoring_context_pack._authoring_visual_assets(
+            plugin_root,
+            {
+                "authoring_context_pack": {
+                    "visual_asset_ids": ["planned_asset"],
+                }
+            },
+        )
+
+
+def test_context_pack_rejects_stale_transfer_receipt(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "plugin"
+    catalog_dir = plugin_root / "styles" / "snippets"
+    catalog_dir.mkdir(parents=True)
+    (catalog_dir / "asset.tex").write_text("% asset\n", encoding="utf-8")
+    (catalog_dir / "asset.contract.yaml").write_text(
+        "schema_version: 1\n", encoding="utf-8"
+    )
+    (catalog_dir / "asset.transfer.yaml").write_text(
+        "shared_bindings:\n"
+        "  styles/snippets/asset.tex: sha256:stale\n"
+        "  styles/snippets/asset.contract.yaml: sha256:stale\n",
+        encoding="utf-8",
+    )
+    (catalog_dir / "INDEX.yaml").write_text(
+        "snippets:\n"
+        "  asset:\n"
+        "    file: styles/snippets/asset.tex\n"
+        "    contract: styles/snippets/asset.contract.yaml\n"
+        "    transfer_receipt: styles/snippets/asset.transfer.yaml\n"
+        "    status: reviewed_reusable\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_context_pack.AuthoringContextPackError,
+        match="visual asset transfer receipt is stale: asset",
+    ):
+        authoring_context_pack._authoring_visual_assets(
+            plugin_root,
+            {"authoring_context_pack": {"visual_asset_ids": ["asset"]}},
+        )
+
+
 def test_context_pack_includes_read_only_narrative_context(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _write_context_fixture(workspace)

@@ -19,6 +19,11 @@ from inputs import parse_spec
 from semantic_contracts import SemanticContractError, collect_semantic_contracts
 
 SCHEMA = "figure-agent.authoring-context-pack.v1"
+VISUAL_ASSETS_SCHEMA = "figure-agent.authoring-visual-assets.v1"
+REUSABLE_VISUAL_ASSET_STATUSES = {
+    "shipped",
+    "reviewed_reusable",
+}
 LAYOUT_LANES_SCHEMA = "figure-agent.layout-lanes.v1"
 SAFE_CATALOG_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
@@ -70,6 +75,147 @@ def _paper_context(example_dir: Path) -> dict[str, str]:
         key: _read_optional_text(path)
         for key, path in files.items()
         if path.is_file() and _read_optional_text(path)
+    }
+
+
+def _sha256_file(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _catalog_file(plugin_root: Path, value: object, *, label: str) -> Path:
+    if not isinstance(value, str):
+        raise AuthoringContextPackError(f"{label} path is invalid")
+    relative = Path(value)
+    if relative.is_absolute() or not relative.parts or any(
+        part in {"", ".", ".."} for part in relative.parts
+    ):
+        raise AuthoringContextPackError(f"{label} path is invalid")
+    path = plugin_root / relative
+    try:
+        resolved = path.resolve(strict=True)
+    except OSError as exc:
+        raise AuthoringContextPackError(f"{label} path is missing") from exc
+    if (
+        not resolved.is_relative_to(plugin_root.resolve())
+        or path.is_symlink()
+        or not path.is_file()
+    ):
+        raise AuthoringContextPackError(f"{label} path is invalid")
+    return path
+
+
+def _authoring_visual_assets(plugin_root: Path, spec: dict[str, Any]) -> dict[str, Any]:
+    catalog_path = plugin_root / "styles" / "snippets" / "INDEX.yaml"
+    config = spec.get("authoring_context_pack") or {}
+    if not isinstance(config, dict):
+        raise AuthoringContextPackError("authoring_context_pack must be an object")
+    raw_ids = config.get("visual_asset_ids", [])
+    if (
+        not isinstance(raw_ids, list)
+        or any(not isinstance(asset_id, str) or not asset_id for asset_id in raw_ids)
+        or len(set(raw_ids)) != len(raw_ids)
+    ):
+        raise AuthoringContextPackError("visual_asset_ids must be a unique string list")
+
+    catalog = yaml.safe_load(catalog_path.read_text(encoding="utf-8")) or {}
+    entries = catalog.get("snippets")
+    if not isinstance(entries, dict):
+        raise AuthoringContextPackError("curated visual asset catalog is invalid")
+
+    selected: list[dict[str, Any]] = []
+    for asset_id in raw_ids:
+        entry = entries.get(asset_id)
+        if not isinstance(entry, dict):
+            raise AuthoringContextPackError(
+                f"visual asset id is not present in the curated catalog: {asset_id}"
+            )
+        status = entry.get("status")
+        if status not in REUSABLE_VISUAL_ASSET_STATUSES:
+            raise AuthoringContextPackError(
+                f"visual asset is not reusable: {asset_id}"
+            )
+        source_path = _catalog_file(
+            plugin_root, entry.get("file"), label=f"visual asset {asset_id}"
+        )
+        role = entry.get("role") if isinstance(entry.get("role"), dict) else {}
+        api = entry.get("api") if isinstance(entry.get("api"), dict) else {}
+        directives = [
+            f"Reuse curated visual asset [{asset_id}] from [{entry['file']}]. "
+            "Do not redraw its owned geometry."
+        ]
+        signature = api.get("signature")
+        tunable = api.get("tunable")
+        if isinstance(signature, str):
+            tunable_text = (
+                ", ".join(str(item) for item in tunable)
+                if isinstance(tunable, list)
+                else "documented parameters"
+            )
+            directives.append(
+                f"Invoke [{asset_id}] through [{signature}] and adapt only "
+                f"[{tunable_text}]."
+            )
+        depicts = role.get("depicts")
+        if isinstance(depicts, str):
+            directives.append(f"Preserve its declared role: {depicts}.")
+
+        item: dict[str, Any] = {
+            "id": asset_id,
+            "status": status,
+            "path": entry["file"],
+            "sha256": _sha256_file(source_path),
+            "role": role,
+            "api": api,
+            "known_pitfalls": list(entry.get("known_pitfalls") or []),
+            "anti_patterns": list(entry.get("anti_patterns") or []),
+            "smoke_fixture": entry.get("smoke_fixture", ""),
+            "authoring_directives": directives,
+            "read_paths": [entry["file"]],
+        }
+        for output_key, entry_key in (
+            ("contract", "contract"),
+            ("transfer_receipt", "transfer_receipt"),
+        ):
+            if entry_key not in entry:
+                continue
+            binding_path = _catalog_file(
+                plugin_root,
+                entry[entry_key],
+                label=f"visual asset {asset_id} {entry_key}",
+            )
+            item[output_key] = {
+                "path": entry[entry_key],
+                "sha256": _sha256_file(binding_path),
+            }
+            item["read_paths"].append(entry[entry_key])
+        transfer = item.get("transfer_receipt")
+        if isinstance(transfer, dict):
+            receipt_payload = yaml.safe_load(
+                (plugin_root / transfer["path"]).read_text(encoding="utf-8")
+            ) or {}
+            shared_bindings = receipt_payload.get("shared_bindings")
+            expected_bindings = {
+                item["path"]: item["sha256"],
+                **(
+                    {item["contract"]["path"]: item["contract"]["sha256"]}
+                    if isinstance(item.get("contract"), dict)
+                    else {}
+                ),
+            }
+            if not isinstance(shared_bindings, dict) or any(
+                shared_bindings.get(path) != digest
+                for path, digest in expected_bindings.items()
+            ):
+                raise AuthoringContextPackError(
+                    f"visual asset transfer receipt is stale: {asset_id}"
+                )
+        selected.append(item)
+
+    return {
+        "schema": VISUAL_ASSETS_SCHEMA,
+        "catalog_path": "styles/snippets/INDEX.yaml",
+        "catalog_sha256": _sha256_file(catalog_path),
+        "selected": selected,
     }
 
 
@@ -425,6 +571,7 @@ def build_context_pack(
         if label_path_checks
         else None
     )
+    visual_assets = _authoring_visual_assets(paths.plugin_root, spec)
     selected_shape_profile = _shape_profile(example_dir, shape_profile)
     payload = {
         "schema": SCHEMA,
@@ -446,6 +593,7 @@ def build_context_pack(
             "layout_lanes": (
                 _relative(paths.workspace_root, layout_path) if layout_path is not None else ""
             ),
+            "visual_asset_catalog": visual_assets["catalog_path"],
         },
         "fixture": {
             "title": spec.get("title", ""),
@@ -465,6 +613,7 @@ def build_context_pack(
         "rule_catalog": fixture_catalog,
         "project_rule_catalog": project_catalog,
         "semantic_contracts": semantic_contracts,
+        "visual_assets": visual_assets,
         "narrative_context": narrative_context.build_narrative_context(
             example_dir,
             workspace_root=paths.workspace_root,
@@ -532,6 +681,18 @@ def render_text(payload: dict[str, Any]) -> str:
         lines.extend(["", "## Shape Profile"])
         for directive in selected_shape_profile["authoring_directives"]:
             lines.append(f"- {directive}")
+    visual_assets = payload.get("visual_assets", {})
+    selected_assets = visual_assets.get("selected", [])
+    lines.extend(["", "## Curated Visual Assets"])
+    if selected_assets:
+        for asset in selected_assets:
+            lines.append(
+                f"- {asset['id']} ({asset['status']}): {asset['path']}"
+            )
+            for directive in asset.get("authoring_directives", []):
+                lines.append(f"  - {directive}")
+    else:
+        lines.append("- No curated visual assets selected.")
     return "\n".join(lines) + "\n"
 
 

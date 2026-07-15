@@ -72,6 +72,10 @@ def _load_packet(packet_path: Path) -> tuple[dict[str, Any], Path]:
     )
     if prompt_bytes.decode("utf-8").count(expected_output_instruction) != 1:
         raise AuthoringExecutionPreflightError("prompt output path drift")
+    try:
+        authoring_execution_packet.validate_visual_asset_bindings(payload)
+    except (authoring_execution_packet.AuthoringExecutionPacketError, OSError) as exc:
+        raise AuthoringExecutionPreflightError(str(exc)) from exc
     return payload, prompt_path
 
 

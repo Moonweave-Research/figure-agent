@@ -2,6 +2,8 @@
 \usepackage{tikz}
 \usepackage{polymer-paper-preamble}
 \usetikzlibrary{arrows.meta,decorations.pathmorphing}
+\input{snippets/polymer_chain.snippet.tex}
+\input{snippets/panel-f-floating-cantilever.tex}
 
 \begin{document}
 \begin{tikzpicture}[
@@ -21,16 +23,14 @@
 % ============================== A: material identity ==============================
 \node[panel, anchor=west] at (0.12,11.15) {a};
 \node[title, anchor=west] at (0.52,11.15) {sulfur-rich polymer};
-\node[label, anchor=west, text=cAmber!75!black] at (0.52,10.68) {poly(S-r-DIB) repeat-unit motif};
-\draw[bond] plot[smooth] coordinates {(0.66,9.35) (1.18,9.72) (1.70,9.30) (2.22,9.70) (2.74,9.29) (3.26,9.67) (3.78,9.32) (4.30,9.68) (4.82,9.34)};
-\foreach \x/\y in {1.18/9.72,2.22/9.70,3.26/9.67,4.30/9.68}{
-  \node[circle, draw=cAmber!82!black, fill=cAmberSphere!85, minimum size=2.1mm, inner sep=0pt, line width=0.42pt, font=\fontsize{4.6}{5.2}\selectfont] at (\x,\y) {S};
-}
-\draw[outline, fill=cAmber!12] (0.72,7.55) .. controls (1.55,8.35) and (2.50,7.17) .. (3.35,7.98)
-  .. controls (4.12,8.72) and (4.82,8.14) .. (5.15,7.40) -- (5.15,6.86)
-  .. controls (3.90,7.10) and (2.12,6.64) .. (0.72,7.12) -- cycle;
+\node[label, anchor=west, text=cAmber!75!black] at (0.52,10.68) {schematic sulfur-rich backbone motif};
+\PolymerChain{0.75}{9.48}{11}{2,4,6,8,10}
+\draw[outline, fill=cAmber!5, rounded corners=1.2mm] (0.72,6.98) rectangle (5.15,8.45);
+\PolymerChain{0.92}{8.08}{10}{2,5,8}
+\PolymerChain{0.92}{7.67}{10}{3,4,5,7,9}
+\PolymerChain{0.92}{7.26}{10}{2,6,8}
 \node[label] at (2.90,6.58) {crosslinked sulfur-rich\\polymer network};
-\draw[cAmber!65!black, line width=0.42pt] (2.90,6.91) -- (2.90,7.28);
+\draw[cAmber!65!black, line width=0.42pt] (2.90,6.91) -- (2.90,6.98);
 
 % ============================== B: composition ==============================
 \node[panel, anchor=west] at (5.98,11.15) {b};
@@ -105,29 +105,16 @@
 \node[panel, anchor=west] at (12.00,5.56) {f};
 \node[title, anchor=west] at (12.40,5.56) {Coulomb response};
 % figure-agent:start panel_f.mechanism_scene
-\draw[outline, fill=cGray!16] (12.62,4.72) rectangle (13.18,5.10);
-\draw[outline, fill=cGray!10] (12.85,4.34) rectangle (13.00,4.73);
-\draw[outline, fill=cAmber!28] (12.91,3.48) .. controls (13.54,3.58) and (14.14,3.47) .. (14.72,3.30)
-  -- (14.75,3.57) .. controls (14.13,3.78) and (13.51,3.90) .. (12.91,3.76) -- cycle;
-\node[micro, anchor=north] at (13.02,3.22) {floating cantilever};
-\draw[outline, fill=cGray!30] (15.72,2.24) rectangle (16.02,4.36);
-\node[micro, anchor=north] at (15.87,2.12) {electrode};
-\draw[<->, cGray!65!black, line width=0.38pt] (14.86,3.31) -- (15.68,3.31);
-\node[micro, fill=white, inner sep=0.8pt] at (15.27,3.31) {air gap};
-\foreach \x/\y in {14.20/3.72,14.42/3.61,14.54/3.46}{\node[circle, fill=cRed!70, draw=cRed!88!black, minimum size=1.25mm, inner sep=0pt] at (\x,\y) {};}
-\draw[force] (14.34,3.68) -- (13.48,4.10);
-\node[micro, text=cRed!82!black, anchor=south east] at (13.34,4.15) {repulsive\\force};
-\draw[outline, fill=white] (16.48,4.26) circle (0.30);
-\node[font=\fontsize{6}{7}\selectfont] at (16.48,4.26) {$V$};
-\draw[cGray!78!black, line width=0.55pt] (16.18,4.26) -- (16.02,4.26);
-\draw[cGray!78!black, line width=0.55pt] (16.48,3.96) -- (16.48,3.52);
-\draw[cGray!78!black, line width=0.55pt] (16.30,3.52) -- (16.66,3.52);
-\draw[cGray!78!black, line width=0.55pt] (16.35,3.40) -- (16.61,3.40);
-\draw[cGray!78!black, line width=0.55pt] (16.41,3.28) -- (16.55,3.28);
-\node[micro, anchor=west] at (16.87,4.26) {$V_{\mathrm{app}}$};
-\node[micro, anchor=west] at (16.78,3.42) {grounded\\source return};
+\PanelFFloatingCantilever{redrawF}{15.20,4.55}
+\node[micro, anchor=east] at (13.90,1.90) {floating cantilever};
+\node[micro, anchor=north, rotate=90] at (16.92,3.05) {electrode};
+\node[micro, anchor=south, text=cBlue!78!black] at (16.20,5.18) {$V_{\mathrm{app}}$};
+\draw[force] (14.20,2.62) -- (13.18,2.87);
+\node[micro, text=cRed!82!black, anchor=south west] at (12.48,2.92) {Coulomb repulsion};
+\draw[<->, cGray!65!black, line width=0.38pt] (14.02,1.90) -- (16.50,1.90);
+\node[micro, fill=white, inner sep=0.8pt] at (15.26,1.90) {air gap};
 % figure-agent:end panel_f.mechanism_scene
-\node[label, text=cGray!70!black] at (14.82,0.84) {one grounded voltage-source return;\\sample and cantilever remain floating};
+\node[label, text=cGray!70!black] at (14.82,0.78) {one grounded voltage-source return;\\sample and cantilever remain floating};
 
 \end{tikzpicture}
 \end{document}

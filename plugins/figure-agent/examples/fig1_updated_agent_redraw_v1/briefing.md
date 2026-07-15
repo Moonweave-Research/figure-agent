@@ -7,10 +7,11 @@ current and ISPD, with a mechanically visible Coulomb response.
 
 `authority.yaml` pins the historical visual/narrative baseline and the
 human-reviewed Panel F physics correction. The candidate is deliberately
-independent source: it may borrow the narrative obligation, never source blocks
-or an unreviewed electrical interpretation. The first render is a structural
-baseline, not an aesthetic replacement for v5f; human review must judge whether
-its visual language actually improves on the reference.
+independent source: it may reuse explicitly selected catalog assets with bound
+hashes and contracts, but never historical candidate source blocks or an
+unreviewed electrical interpretation. The first render is a structural baseline,
+not an aesthetic replacement for v5f; human review must judge whether its visual
+language actually improves on the reference.
 
 Panel C is the sole hero. Panels D--F are compact evidence modules: retain
 scientific relations, suppress instrument decoration, and keep labels outside

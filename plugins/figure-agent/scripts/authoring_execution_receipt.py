@@ -98,6 +98,10 @@ def record_authoring_execution_receipt(
         workspace_root, touched_files_path, label="touched files"
     )
     packet = _load_packet(packet_path)
+    try:
+        authoring_execution_packet.validate_visual_asset_bindings(packet)
+    except (authoring_execution_packet.AuthoringExecutionPacketError, OSError) as exc:
+        raise AuthoringExecutionReceiptError(str(exc)) from exc
     if actual_model_id != packet.get("model_id"):
         raise AuthoringExecutionReceiptError("model mismatch")
     prompt_bytes = prompt_path.read_bytes()
