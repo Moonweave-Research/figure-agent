@@ -31,9 +31,10 @@ def test_doctor_reports_the_canonical_command_surface() -> None:
         "authoring-repair-packet",
         "authoring-repair-materialize",
         "authoring-repair-finalize",
+        "authoring-repair-rollback",
     ]
     assert surface["bounded_repair_transaction_state"] == "complete"
-    assert surface["counts"]["total"] == 84
+    assert surface["counts"]["total"] == 85
     assert set(surface["commands_by_disposition"]) == {
         "core",
         "internal_compatibility",
@@ -61,6 +62,19 @@ def test_closed_loop_core_commands_are_routed_as_internal_surfaces() -> None:
         )
 
         assert result.returncode == 0, result.stderr
+
+
+def test_rollback_cli_exposes_explicit_legacy_compatibility_opt_in() -> None:
+    result = subprocess.run(
+        [str(FIG_AGENT), "authoring-repair-rollback", "--help"],
+        cwd=PLUGIN_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "--legacy-packet" in result.stdout
 
 
 def test_improve_does_not_reactivate_retired_quality_search() -> None:

@@ -10,6 +10,7 @@ from pathlib import Path
 
 import authoring_repair_finalize
 import authoring_repair_packet
+import authoring_repair_rollback
 import pytest
 import repair_transaction
 import yaml
@@ -1309,6 +1310,355 @@ def test_post_render_finalizer_persists_compile_failure_without_promotion(
     assert failed["publication_acceptance"] == "not_claimed"
     assert failed["output_sha256"] == original_receipt["output_sha256"]
     assert json.loads(receipt_path.read_text(encoding="utf-8")) == failed
+
+
+def test_failed_materialization_rolls_back_only_the_hash_bound_output(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    authorization_path = _authorization_artifact(receipt_path, authorization)
+    failed = authoring_repair_finalize.finalize_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=authorization_path,
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path, state="failed", returncode=1),
+    )
+    build = output.parent / "build"
+    build_evidence = sorted(path.relative_to(build) for path in build.rglob("*"))
+
+    rolled_back = authoring_repair_rollback.rollback_failed_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=authorization_path,
+        workspace_root=workspace,
+    )
+
+    assert failed["decision"] == "materialized_verification_failed"
+    assert not output.exists()
+    assert build.is_dir()
+    assert sorted(path.relative_to(build) for path in build.rglob("*")) == build_evidence
+    assert rolled_back["decision"] == "materialized_rolled_back_after_verification_failure"
+    assert rolled_back["rollback"]["status"] == "completed"
+    assert rolled_back["rollback"]["output_path"] == packet["output_path"]
+    assert rolled_back["rollback"]["output_sha256"] == failed["output_sha256"]
+    assert rolled_back["post_render_verification"] == "failed"
+    assert rolled_back["publication_acceptance"] == "not_claimed"
+    assert rolled_back["recovery_required"] is False
+    assert json.loads(receipt_path.read_text(encoding="utf-8")) == rolled_back
+
+
+def test_failed_materialization_rollback_refuses_output_hash_drift(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    authorization_path = _authorization_artifact(receipt_path, authorization)
+    authoring_repair_finalize.finalize_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=authorization_path,
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path, state="failed", returncode=1),
+    )
+    receipt_before = receipt_path.read_bytes()
+    output.write_text("drifted candidate\n", encoding="utf-8")
+
+    with pytest.raises(
+        authoring_repair_rollback.AuthoringRepairRollbackError,
+        match="materialized output hash drift",
+    ):
+        authoring_repair_rollback.rollback_failed_materialized_candidate(
+            packet_path=packet_path,
+            receipt_path=receipt_path,
+            authorization_path=authorization_path,
+            workspace_root=workspace,
+        )
+
+    assert output.read_text(encoding="utf-8") == "drifted candidate\n"
+    assert receipt_path.read_bytes() == receipt_before
+
+
+def test_failed_materialization_rollback_rejects_final_component_symlink(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    authorization_path = _authorization_artifact(receipt_path, authorization)
+    authoring_repair_finalize.finalize_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=authorization_path,
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path, state="failed", returncode=1),
+    )
+    receipt_before = receipt_path.read_bytes()
+    sibling = output.with_name("sibling.tex")
+    output.replace(sibling)
+    output.symlink_to(sibling.name)
+
+    with pytest.raises(
+        authoring_repair_rollback.AuthoringRepairRollbackError,
+        match="materialized output must not be a symlink",
+    ):
+        authoring_repair_rollback.rollback_failed_materialized_candidate(
+            packet_path=packet_path,
+            receipt_path=receipt_path,
+            authorization_path=authorization_path,
+            workspace_root=workspace,
+        )
+
+    assert output.is_symlink()
+    assert sibling.is_file()
+    assert _sha256(sibling.read_bytes()) == json.loads(
+        receipt_before
+    )["output_sha256"]
+    assert receipt_path.read_bytes() == receipt_before
+
+
+def test_failed_materialization_rollback_refuses_identity_swap_before_unlink(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    authorization_path = _authorization_artifact(receipt_path, authorization)
+    authoring_repair_finalize.finalize_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=authorization_path,
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path, state="failed", returncode=1),
+    )
+    replacement = output.with_name("replacement.tex")
+    replacement.write_text("replacement must survive\n", encoding="utf-8")
+    original_unlink = authoring_repair_rollback.os.unlink
+    swapped = False
+
+    def swap_before_quarantine_unlink(
+        path: str | bytes | Path,
+        *,
+        dir_fd: int | None = None,
+    ) -> None:
+        nonlocal swapped
+        if not swapped and ".rollback-" in os.fsdecode(path):
+            replacement.replace(output)
+            swapped = True
+        original_unlink(path, dir_fd=dir_fd)
+
+    monkeypatch.setattr(
+        authoring_repair_rollback.os,
+        "unlink",
+        swap_before_quarantine_unlink,
+    )
+
+    with pytest.raises(
+        authoring_repair_rollback.AuthoringRepairRollbackError,
+        match="materialized output identity drift",
+    ):
+        authoring_repair_rollback.rollback_failed_materialized_candidate(
+            packet_path=packet_path,
+            receipt_path=receipt_path,
+            authorization_path=authorization_path,
+            workspace_root=workspace,
+        )
+
+    assert output.read_text(encoding="utf-8") == "replacement must survive\n"
+    prepared = json.loads(receipt_path.read_text(encoding="utf-8"))
+    assert prepared["decision"] == "materialized_rollback_prepared"
+    assert prepared["recovery_required"] is True
+
+
+def test_failed_materialization_rollback_preserves_swap_captured_by_quarantine(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    authorization_path = _authorization_artifact(receipt_path, authorization)
+    authoring_repair_finalize.finalize_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=authorization_path,
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path, state="failed", returncode=1),
+    )
+    replacement = output.with_name("replacement.tex")
+    replacement.write_text("replacement must survive\n", encoding="utf-8")
+    preserved = output.with_name("preserved-authorized-output.tex")
+    original_replace = authoring_repair_rollback.os.replace
+    swapped = False
+
+    def swap_at_quarantine_boundary(
+        source: str | bytes | Path,
+        destination: str | bytes | Path,
+        *,
+        src_dir_fd: int | None = None,
+        dst_dir_fd: int | None = None,
+    ) -> None:
+        nonlocal swapped
+        if not swapped and ".rollback-" in os.fsdecode(destination):
+            original_replace(output, preserved)
+            original_replace(replacement, output)
+            swapped = True
+        original_replace(
+            source,
+            destination,
+            src_dir_fd=src_dir_fd,
+            dst_dir_fd=dst_dir_fd,
+        )
+
+    monkeypatch.setattr(
+        authoring_repair_rollback.os,
+        "replace",
+        swap_at_quarantine_boundary,
+    )
+
+    with pytest.raises(
+        authoring_repair_rollback.AuthoringRepairRollbackError,
+        match="materialized output hash drift",
+    ):
+        authoring_repair_rollback.rollback_failed_materialized_candidate(
+            packet_path=packet_path,
+            receipt_path=receipt_path,
+            authorization_path=authorization_path,
+            workspace_root=workspace,
+        )
+
+    assert output.read_text(encoding="utf-8") == "replacement must survive\n"
+    assert preserved.is_file()
+    quarantine = list(output.parent.glob(f".{output.name}.rollback-*"))
+    assert len(quarantine) == 1
+    assert quarantine[0].read_text(encoding="utf-8") == "replacement must survive\n"
+    prepared = json.loads(receipt_path.read_text(encoding="utf-8"))
+    assert prepared["decision"] == "materialized_rollback_prepared"
+    assert prepared["recovery_required"] is True
+
+
+def test_failed_materialization_rollback_recovers_after_write_failure_and_stale_lock(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    authorization_path = _authorization_artifact(receipt_path, authorization)
+    authoring_repair_finalize.finalize_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=authorization_path,
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path, state="failed", returncode=1),
+    )
+    original_atomic_write = repair_transaction.atomic_write_json
+    writes = 0
+
+    def fail_completed_receipt(path: Path, payload: dict[str, object]) -> None:
+        nonlocal writes
+        writes += 1
+        if writes == 2:
+            raise OSError("rollback receipt interrupted")
+        original_atomic_write(path, payload)
+
+    monkeypatch.setattr(repair_transaction, "atomic_write_json", fail_completed_receipt)
+    with pytest.raises(OSError, match="rollback receipt interrupted"):
+        authoring_repair_rollback.rollback_failed_materialized_candidate(
+            packet_path=packet_path,
+            receipt_path=receipt_path,
+            authorization_path=authorization_path,
+            workspace_root=workspace,
+        )
+
+    prepared = json.loads(receipt_path.read_text(encoding="utf-8"))
+    assert prepared["decision"] == "materialized_rollback_prepared"
+    assert prepared["rollback"]["status"] == "pending"
+    assert prepared["recovery_required"] is True
+    assert not output.exists()
+    (output.parent / ".materialization.lock").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.recoverable-lock.v1",
+                "owner": "authoring_repair_rollback",
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(repair_transaction, "atomic_write_json", original_atomic_write)
+    recovered = authoring_repair_rollback.rollback_failed_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=authorization_path,
+        workspace_root=workspace,
+    )
+
+    assert recovered["decision"] == (
+        "materialized_rolled_back_after_verification_failure"
+    )
+    assert recovered["rollback"]["status"] == "completed"
+    assert recovered["recovery_required"] is False
 
 
 def test_post_render_finalizer_rejects_receipt_summary_drift_before_compile(

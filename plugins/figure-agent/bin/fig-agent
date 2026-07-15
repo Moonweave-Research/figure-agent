@@ -48,6 +48,7 @@ CORE_COMMANDS = frozenset(
         "authoring-repair-finalize",
         "authoring-repair-materialize",
         "authoring-repair-packet",
+        "authoring-repair-rollback",
         "closeout",
         "compile",
         "context-pack",
@@ -149,6 +150,7 @@ def _command_surface() -> dict[str, object]:
             "authoring-repair-packet",
             "authoring-repair-materialize",
             "authoring-repair-finalize",
+            "authoring-repair-rollback",
         ],
         "bounded_repair_transaction_state": "complete",
         "commands_by_disposition": by_disposition,
@@ -797,6 +799,41 @@ def _authoring_repair_finalize(argv: list[str]) -> int:
         return 1
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result.get("post_render_verification") == "passed" else 1
+
+
+def _authoring_repair_rollback(argv: list[str]) -> int:
+    import authoring_repair_rollback
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-repair-rollback")
+    parser.add_argument("--packet", required=True)
+    parser.add_argument("--receipt", required=True)
+    parser.add_argument("--authorization", required=True)
+    parser.add_argument("--legacy-packet", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    workspace_root = _paths().workspace_root.resolve()
+
+    def evidence_path(value: str) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError("repair evidence path must be workspace-relative and safe")
+        return workspace_root / relative
+
+    try:
+        result = authoring_repair_rollback.rollback_failed_materialized_candidate(
+            packet_path=evidence_path(args.packet),
+            receipt_path=evidence_path(args.receipt),
+            authorization_path=evidence_path(args.authorization),
+            workspace_root=workspace_root,
+            allow_legacy_packet=args.legacy_packet,
+        )
+    except (ValueError, OSError) as exc:
+        print(f"fig-agent authoring-repair-rollback: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
 
 
 def _finding_attribution(argv: list[str]) -> int:
@@ -2198,6 +2235,8 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_repair_materialize(rest)
     if command == "authoring-repair-finalize":
         return _authoring_repair_finalize(rest)
+    if command == "authoring-repair-rollback":
+        return _authoring_repair_rollback(rest)
     if command in {"text-finding-attribution", "finding-attribution"}:
         return _finding_attribution(rest)
     if command == "adjudicated-repair-target":

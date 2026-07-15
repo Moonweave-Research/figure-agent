@@ -61,12 +61,17 @@ def _mapping(path: Path, *, label: str) -> dict[str, Any]:
 
 def _safe_workspace_path(root: Path, value: object, *, label: str) -> Path:
     relative = Path(str(value or ""))
-    if relative.is_absolute() or any(part in {"", ".", ".."} for part in relative.parts):
+    if (
+        relative.is_absolute()
+        or not relative.parts
+        or any(part in {"", ".", ".."} for part in relative.parts)
+    ):
         raise AuthoringRepairFinalizeError(f"{label} must be workspace-relative and safe")
-    resolved = (root / relative).resolve(strict=False)
-    if not resolved.is_relative_to(root):
-        raise AuthoringRepairFinalizeError(f"{label} must remain inside workspace")
-    return resolved
+    return _lexical_workspace_path(
+        root / relative,
+        workspace_root=root,
+        label=label,
+    )
 
 
 def _evidence_path(path: Path, *, workspace_root: Path) -> Path:
@@ -85,6 +90,23 @@ def _evidence_path(path: Path, *, workspace_root: Path) -> Path:
     return lexical
 
 
+def _lexical_workspace_path(
+    path: Path,
+    *,
+    workspace_root: Path,
+    label: str,
+) -> Path:
+    lexical = Path(os.path.abspath(path))
+    if not lexical.is_relative_to(workspace_root):
+        raise AuthoringRepairFinalizeError(f"{label} must remain inside workspace")
+    current = workspace_root
+    for part in lexical.relative_to(workspace_root).parts:
+        current = current / part
+        if current.is_symlink():
+            raise AuthoringRepairFinalizeError(f"{label} must not traverse a symlink")
+    return lexical
+
+
 def _artifact(path: Path, *, workspace_root: Path) -> dict[str, str]:
     if path.is_symlink() or not path.is_file():
         raise AuthoringRepairFinalizeError(f"strict compile artifact missing: {path.name}")
@@ -92,6 +114,183 @@ def _artifact(path: Path, *, workspace_root: Path) -> dict[str, str]:
         "path": path.relative_to(workspace_root).as_posix(),
         "sha256": _sha256_bytes(path.read_bytes()),
     }
+
+
+def _observed_artifact(
+    path: Path,
+    *,
+    workspace_root: Path,
+    expected_schema: str | None = None,
+    expected_payload: dict[str, Any] | None = None,
+    validate_json: bool = False,
+) -> dict[str, str]:
+    record = {"path": path.relative_to(workspace_root).as_posix()}
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        return {**record, "status": "invalid_file"}
+    if not path.exists():
+        return {**record, "status": "missing"}
+    data = path.read_bytes()
+    record["sha256"] = _sha256_bytes(data)
+    if not validate_json and expected_schema is None and expected_payload is None:
+        return {**record, "status": "present"}
+    try:
+        payload = json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return {**record, "status": "invalid_json"}
+    if not isinstance(payload, dict):
+        return {**record, "status": "invalid_json"}
+    if expected_schema is not None and payload.get("schema") != expected_schema:
+        return {**record, "status": "schema_mismatch"}
+    if expected_payload is not None and payload != expected_payload:
+        return {**record, "status": "not_passed"}
+    return {**record, "status": "valid"}
+
+
+def inspect_compile_evidence_manifest(
+    *,
+    build: Path,
+    output: Path,
+    workspace_root: Path,
+) -> dict[str, Any]:
+    """Snapshot the exact post-compile artifacts, including failed evidence."""
+    workspace_root = workspace_root.resolve()
+    build = _lexical_workspace_path(
+        build,
+        workspace_root=workspace_root,
+        label="verification build path",
+    )
+    output = _lexical_workspace_path(
+        output,
+        workspace_root=workspace_root,
+        label="materialized output path",
+    )
+    strict_pass = {
+        "schema": STRICT_STATUS_SCHEMA,
+        "strict_requested": True,
+        "detector_failed": False,
+        "state": "passed",
+    }
+    return {
+        "strict_status": _observed_artifact(
+            build / "strict_status.json",
+            workspace_root=workspace_root,
+            expected_schema=STRICT_STATUS_SCHEMA,
+            expected_payload=strict_pass,
+        ),
+        "detector_reports": {
+            name: _observed_artifact(
+                build / f"{name}.json",
+                workspace_root=workspace_root,
+                expected_schema=expected_schema,
+                validate_json=True,
+            )
+            for name, expected_schema in REQUIRED_DETECTOR_REPORTS.items()
+        },
+        "pdf": _observed_artifact(
+            build / f"{output.stem}.pdf", workspace_root=workspace_root
+        ),
+        "png": _observed_artifact(
+            build / f"{output.stem}.png", workspace_root=workspace_root
+        ),
+    }
+
+
+def derive_compile_failure_reason(
+    *,
+    returncode: int,
+    evidence_manifest: dict[str, Any],
+) -> str | None:
+    """Derive the one fail-closed reason represented by compile evidence."""
+    if not isinstance(returncode, int) or isinstance(returncode, bool):
+        raise AuthoringRepairFinalizeError("compile returncode is invalid")
+    if set(evidence_manifest) != {
+        "strict_status",
+        "detector_reports",
+        "pdf",
+        "png",
+    }:
+        raise AuthoringRepairFinalizeError("compile evidence manifest is invalid")
+    strict_status = evidence_manifest.get("strict_status")
+    detector_reports = evidence_manifest.get("detector_reports")
+    pdf = evidence_manifest.get("pdf")
+    png = evidence_manifest.get("png")
+    if (
+        not isinstance(strict_status, dict)
+        or not isinstance(detector_reports, dict)
+        or set(detector_reports) != set(REQUIRED_DETECTOR_REPORTS)
+        or not isinstance(pdf, dict)
+        or not isinstance(png, dict)
+    ):
+        raise AuthoringRepairFinalizeError("compile evidence manifest is invalid")
+    if returncode != 0:
+        return "strict_compile_nonzero"
+    strict_state = strict_status.get("status")
+    if strict_state in {"missing", "invalid_file", "invalid_json", "schema_mismatch"}:
+        return "strict_status_missing_or_invalid"
+    if strict_state == "not_passed":
+        return "strict_status_not_passed"
+    if strict_state != "valid":
+        raise AuthoringRepairFinalizeError("compile evidence manifest is invalid")
+    if any(
+        not isinstance(record, dict) or record.get("status") != "valid"
+        for record in detector_reports.values()
+    ):
+        return "detector_report_missing_or_invalid"
+    if pdf.get("status") != "present" or png.get("status") != "present":
+        return "render_artifact_missing"
+    return None
+
+
+def validate_failed_compile_evidence(
+    receipt: dict[str, Any],
+    *,
+    workspace_root: Path,
+) -> dict[str, Any]:
+    """Revalidate an exact live failed-compile manifest for rollback."""
+    workspace_root = workspace_root.resolve()
+    external_compile = receipt.get("external_compile")
+    if not isinstance(external_compile, dict):
+        raise AuthoringRepairFinalizeError(
+            "failed compile evidence is inconsistent"
+        )
+    recorded_manifest = external_compile.get("evidence_manifest")
+    if not isinstance(recorded_manifest, dict):
+        raise AuthoringRepairFinalizeError(
+            "failed compile evidence is inconsistent"
+        )
+    output_relative = Path(str(receipt.get("output_path") or ""))
+    if (
+        output_relative.is_absolute()
+        or not output_relative.parts
+        or any(part in {"", ".", ".."} for part in output_relative.parts)
+    ):
+        raise AuthoringRepairFinalizeError(
+            "materialized output path must be workspace-relative and safe"
+        )
+    output = _lexical_workspace_path(
+        workspace_root / output_relative,
+        workspace_root=workspace_root,
+        label="materialized output path",
+    )
+    observed_manifest = inspect_compile_evidence_manifest(
+        build=output.parent / "build",
+        output=output,
+        workspace_root=workspace_root,
+    )
+    if recorded_manifest != observed_manifest:
+        raise AuthoringRepairFinalizeError("failed compile evidence hash drift")
+    failure_reason = derive_compile_failure_reason(
+        returncode=external_compile.get("returncode"),
+        evidence_manifest=observed_manifest,
+    )
+    if (
+        failure_reason is None
+        or external_compile.get("failure_reason") != failure_reason
+    ):
+        raise AuthoringRepairFinalizeError(
+            "failed compile evidence is inconsistent"
+        )
+    return observed_manifest
 
 
 def _detector_reports(build: Path, *, workspace_root: Path) -> dict[str, dict[str, str]]:
@@ -112,6 +311,7 @@ def _failed_receipt(
     receipt: dict[str, Any],
     *,
     compile_evidence: dict[str, Any],
+    evidence_manifest: dict[str, Any],
     failure_reason: str,
     receipt_path: Path,
 ) -> dict[str, Any]:
@@ -122,6 +322,7 @@ def _failed_receipt(
         "external_compile": {
             **compile_evidence,
             "failure_reason": failure_reason,
+            "evidence_manifest": evidence_manifest,
         },
         "human_review": "pending",
         "publication_acceptance": "not_claimed",
@@ -337,60 +538,31 @@ def finalize_materialized_candidate(
             "stdout_sha256": _sha256_bytes(completed.stdout),
             "stderr_sha256": _sha256_bytes(completed.stderr),
         }
-        if completed.returncode != 0:
+        evidence_manifest = inspect_compile_evidence_manifest(
+            build=build,
+            output=output,
+            workspace_root=workspace_root,
+        )
+        failure_reason = derive_compile_failure_reason(
+            returncode=completed.returncode,
+            evidence_manifest=evidence_manifest,
+        )
+        if failure_reason is not None:
             return _failed_receipt(
                 receipt,
                 compile_evidence=compile_evidence,
-                failure_reason="strict_compile_nonzero",
+                evidence_manifest=evidence_manifest,
+                failure_reason=failure_reason,
                 receipt_path=receipt_path,
             )
         strict_status_path = build / "strict_status.json"
-        try:
-            strict_status = _mapping(strict_status_path, label="strict status")
-        except AuthoringRepairFinalizeError:
-            return _failed_receipt(
-                receipt,
-                compile_evidence=compile_evidence,
-                failure_reason="strict_status_missing_or_invalid",
-                receipt_path=receipt_path,
-            )
-        if strict_status != {
-            "schema": STRICT_STATUS_SCHEMA,
-            "strict_requested": True,
-            "detector_failed": False,
-            "state": "passed",
-        }:
-            return _failed_receipt(
-                receipt,
-                compile_evidence=compile_evidence,
-                failure_reason="strict_status_not_passed",
-                receipt_path=receipt_path,
-            )
-        try:
-            detector_reports = _detector_reports(
-                build, workspace_root=workspace_root
-            )
-        except AuthoringRepairFinalizeError:
-            return _failed_receipt(
-                receipt,
-                compile_evidence=compile_evidence,
-                failure_reason="detector_report_missing_or_invalid",
-                receipt_path=receipt_path,
-            )
-        try:
-            pdf = _artifact(
-                build / f"{output.stem}.pdf", workspace_root=workspace_root
-            )
-            png = _artifact(
-                build / f"{output.stem}.png", workspace_root=workspace_root
-            )
-        except AuthoringRepairFinalizeError:
-            return _failed_receipt(
-                receipt,
-                compile_evidence=compile_evidence,
-                failure_reason="render_artifact_missing",
-                receipt_path=receipt_path,
-            )
+        detector_reports = _detector_reports(build, workspace_root=workspace_root)
+        pdf = _artifact(
+            build / f"{output.stem}.pdf", workspace_root=workspace_root
+        )
+        png = _artifact(
+            build / f"{output.stem}.png", workspace_root=workspace_root
+        )
         finalized = {
             **receipt,
             "decision": "materialized_machine_verified_human_review_pending",

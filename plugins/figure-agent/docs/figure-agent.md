@@ -219,9 +219,10 @@ chat-only coordinates or hidden source selection.
 - [x] Wire fresh crops and a request-bound host handoff into the canonical run
   without performing or impersonating the external host review.
 - [x] Consume a receipt-bound external host response through the same run.
-- [ ] Prove on a real fixture that a repair cannot fix one target while creating
-  or worsening another declared defect.
-- [ ] Preserve before/after evidence and rollback information.
+- [x] Controlled-fault replay on maintained Fig3 source proves current v4 rejects
+  a target fix that creates a declared neighboring collision.
+- [x] Preserve hash-bound before/after evidence; execute identity-safe, crash-recoverable rollback with explicit legacy opt-in.
+- [ ] Repeat on a prospective real defect; controlled fault is not acceptance.
 
 **Exit:** `machine_repaired` cannot become `visually_re_reviewed` without fresh
 post-repair evidence.
@@ -289,18 +290,17 @@ authentication; adapters must validate each receipt against recorded identity.
 One exact adjudicated binding now crosses packet compilation, human-authorized
 materialization, rollback, and finalization. New packets use v4 authority;
 stored v3 packets require explicit compatibility and cannot enter post-repair
-review directly. Request creation and finalization revalidate the current bound
-v4 live graph; hash/parse share one byte snapshot inside transaction locks.
+review directly. Finalization and rollback revalidate current v4 authority;
+rollback also revalidates hash-bound failed detector evidence under a recoverable lock.
 
 The binding now hash-binds declared semantic object and relation references to
 the same editable selector as the repair target. Missing semantic authority,
 ambiguous attribution, or missing references can emit only a named
 `human_attributor` handoff; they cannot create a repair binding or packet.
 
-The run now consumes a receipt-bound external host response and advances only
-through its validated execution receipt. It does not record the final named
-human verdict or prove transfer across figure families. Those are the next
-ordered boundaries; completed response plumbing does not satisfy R3-R5.
+The run consumes a receipt-bound external host response. The maintained-Fig3
+controlled-fault replay is mechanism evidence only, not an actual defect or
+publication verdict; prospective real-defect proof and R4-R5 remain pending.
 
 The closed-loop slices bind their handoffs through these narrow evidence
 contracts rather than another workflow shell:
