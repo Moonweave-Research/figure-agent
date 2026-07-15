@@ -1,0 +1,28 @@
+schema: figure-agent.reference-authority.v1
+candidate: fig1_updated_agent_redraw_v1
+candidate_kind: additive_full_figure_redraw
+historical_inputs_unchanged: true
+publication_acceptance: not_claimed
+sources:
+  - id: fig1_v5f_visual_narrative
+    role: visual_and_narrative_baseline
+    source_commit: 559bdf7cc23cb4c0ca84d366c17170e6c5c8f512
+    source_tree: 75c1e7bfd3daadf1d4a8bd2543b45a40831a12c3
+    source_path: plugins/figure-agent/examples/fig1_overview_v5f_art_direction_001_vault/fig1_overview_v5f_art_direction_001_vault.tex
+    sha256: 5190701e9976c88cfd98a412dbb5957d45602d4c353bd16842c3cfc4cb15f67b
+  - id: fig1_v5f_briefing
+    role: narrative_and_aesthetic_intent
+    source_commit: 559bdf7cc23cb4c0ca84d366c17170e6c5c8f512
+    source_tree: 75c1e7bfd3daadf1d4a8bd2543b45a40831a12c3
+    source_path: plugins/figure-agent/examples/fig1_overview_v5f_art_direction_001_vault/briefing.md
+    sha256: eb158ebac3b497df1b7237783e3542d97d6a4a0cb9c309f3e7af388903fe6ef5
+  - id: panel_f_human_reviewed_physics
+    role: physics_correction_authority
+    source_commit: 5a2a1418
+    source_tree: c6c476ba2cdb7b8f0eeada07b989dcbfeb2d774f
+    source_path: plugins/figure-agent/examples/fig1_failure_first_panel_f_pilot/review/human_findings.yaml
+    sha256: c63bf78572386b950539c0ec29f9b70ad8db77a6612ef23556cf3909e7eae238
+authority_rules:
+  - Preserve the six-panel narrative as a reference, not a source-level patch target.
+  - Keep the source return grounded while the sample and cantilever remain floating.
+  - Treat aesthetic comparison with v5f as a named human review question.

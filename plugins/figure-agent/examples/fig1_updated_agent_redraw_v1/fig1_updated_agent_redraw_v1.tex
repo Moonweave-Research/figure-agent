@@ -1,0 +1,133 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usepackage{polymer-paper-preamble}
+\usetikzlibrary{arrows.meta,decorations.pathmorphing}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily\fontsize{6.2}{7.5}\selectfont,
+  panel/.style={font=\bfseries\fontsize{8}{9.5}\selectfont, text=cGray!90!black},
+  title/.style={font=\bfseries\fontsize{6.4}{7.7}\selectfont, text=cGray!90!black},
+  label/.style={font=\fontsize{5.3}{6.4}\selectfont, text=cGray!82!black, align=center},
+  micro/.style={font=\fontsize{4.7}{5.7}\selectfont, text=cGray!70!black, align=center},
+  outline/.style={draw=cGray!82!black, line width=0.55pt, line join=round, line cap=round},
+  guide/.style={draw=cLGray!80!white, line width=0.35pt},
+  axis/.style={-{Stealth[length=1.2mm,width=0.85mm]}, cGray!75!black, line width=0.48pt},
+  signal/.style={-{Stealth[length=1.1mm,width=0.8mm]}, cBlue!78!black, line width=0.70pt},
+  force/.style={-{Stealth[length=1.3mm,width=0.95mm]}, cRed!78!black, line width=0.85pt},
+  bond/.style={cAmber!88!black, line width=0.9pt, line cap=round},
+]
+
+% ============================== A: material identity ==============================
+\node[panel, anchor=west] at (0.12,11.15) {a};
+\node[title, anchor=west] at (0.52,11.15) {sulfur-rich polymer};
+\node[label, anchor=west, text=cAmber!75!black] at (0.52,10.68) {poly(S-r-DIB) repeat-unit motif};
+\draw[bond] plot[smooth] coordinates {(0.66,9.35) (1.18,9.72) (1.70,9.30) (2.22,9.70) (2.74,9.29) (3.26,9.67) (3.78,9.32) (4.30,9.68) (4.82,9.34)};
+\foreach \x/\y in {1.18/9.72,2.22/9.70,3.26/9.67,4.30/9.68}{
+  \node[circle, draw=cAmber!82!black, fill=cAmberSphere!85, minimum size=2.1mm, inner sep=0pt, line width=0.42pt, font=\fontsize{4.6}{5.2}\selectfont] at (\x,\y) {S};
+}
+\draw[outline, fill=cAmber!12] (0.72,7.55) .. controls (1.55,8.35) and (2.50,7.17) .. (3.35,7.98)
+  .. controls (4.12,8.72) and (4.82,8.14) .. (5.15,7.40) -- (5.15,6.86)
+  .. controls (3.90,7.10) and (2.12,6.64) .. (0.72,7.12) -- cycle;
+\node[label] at (2.90,6.58) {crosslinked sulfur-rich\\polymer network};
+\draw[cAmber!65!black, line width=0.42pt] (2.90,6.91) -- (2.90,7.28);
+
+% ============================== B: composition ==============================
+\node[panel, anchor=west] at (5.98,11.15) {b};
+\node[title, anchor=west] at (6.38,11.15) {composition tunes trap landscape};
+\draw[axis] (6.45,6.85) -- (11.20,6.85);
+\node[micro, anchor=north] at (11.20,6.75) {sulfur content};
+\foreach \x/\tag/\col in {6.95/S60/cBlue,8.78/S75/cTeal,10.60/S85/cRed}{
+  \node[font=\bfseries\fontsize{5.7}{6.8}\selectfont, text=\col!80!black] at (\x,10.08) {\tag};
+  \draw[\col!78!black, line width=0.85pt] plot[smooth] coordinates {(\x-0.62,8.92) (\x-0.32,9.28) (\x,8.95) (\x+0.32,9.27) (\x+0.62,8.94)};
+  \foreach \dx/\dy in {-0.32/0.25,0.00/-0.12,0.32/0.24}{
+    \node[circle, fill=\col!70, draw=\col!85!black, minimum size=1.35mm, inner sep=0pt, line width=0.25pt] at (\x+\dx,8.96+\dy) {};
+  }
+  \draw[\col!65!black, line width=0.38pt] (\x,7.00) -- (\x,7.20);
+}
+\node[label, text=cGray!72!black] at (8.78,7.74) {same polymer backbone;\\heterogeneous sulfur environment};
+
+% ============================== C: hero energy landscape ==============================
+\node[panel, anchor=west] at (12.00,11.15) {c};
+\node[title, anchor=west] at (12.40,11.15) {localized charge traps};
+\node[micro, anchor=west, text=cRed!72!black] at (12.40,10.70) {energy landscape of the polymer};
+\draw[axis] (12.52,7.06) -- (12.52,10.38);
+\node[label, rotate=90] at (12.18,8.72) {energy, $E$};
+\draw[cGray!45!black, line width=0.42pt] (12.72,10.05) .. controls (13.42,9.58) and (13.82,9.63) .. (14.26,9.97)
+  .. controls (14.74,10.34) and (15.36,10.32) .. (15.82,9.92)
+  .. controls (16.24,9.56) and (16.73,9.63) .. (17.32,10.04);
+\draw[cBlue!78!black, line width=0.90pt] (13.08,9.86) .. controls (13.34,8.83) and (13.83,8.83) .. (14.09,9.86);
+\draw[cRed!82!black, line width=1.05pt] (15.07,9.91) .. controls (15.34,7.58) and (16.20,7.58) .. (16.48,9.91);
+\node[circle, fill=cBlue!70, draw=cBlue!90!black, minimum size=1.5mm, inner sep=0pt] at (13.59,9.02) {};
+\node[circle, fill=cRed!72, draw=cRed!90!black, minimum size=1.5mm, inner sep=0pt] at (15.77,7.94) {};
+\node[label, text=cBlue!80!black, anchor=north] at (13.59,8.57) {shallow\\trap};
+\node[label, text=cRed!82!black, anchor=north] at (15.77,7.48) {deep\\trap};
+\draw[axis] (13.00,7.00) -- (17.18,7.00);
+\node[micro, anchor=north] at (17.18,6.91) {configuration coordinate};
+\node[label, text=cGray!70!black] at (14.88,6.36) {trap depth controls\\release time qualitatively};
+
+% ============================== D: transient evidence ==============================
+\node[panel, anchor=west] at (0.12,5.56) {d};
+\node[title, anchor=west] at (0.52,5.56) {kinetic evidence};
+\draw[outline, fill=cGray!7] (0.70,3.66) rectangle (2.12,4.62);
+\draw[outline, fill=cAmber!18] (1.04,3.91) rectangle (1.78,4.20);
+\draw[signal] (0.42,4.12) -- (1.02,4.12);
+\draw[signal] (1.80,4.12) -- (2.42,4.12);
+\node[micro, anchor=north] at (1.41,3.56) {MIM test cell};
+\draw[axis] (3.00,1.24) -- (5.25,1.24);
+\draw[axis] (3.00,1.24) -- (3.00,4.54);
+\node[micro, anchor=north] at (5.24,1.15) {$t$};
+\node[micro, rotate=90] at (2.62,3.02) {$I(t)$};
+\draw[cBlue!82!black, line width=1.0pt] plot[smooth, domain=3.18:5.04, samples=40] (\x,{1.45+2.66*(1+2.1*(\x-3.18))^(-0.72)});
+\node[label, fill=white, inner sep=1pt, text=cBlue!82!black] at (4.24,2.37) {$I(t)\propto t^{-n}$};
+\node[micro] at (4.18,0.57) {constant bias: current decays};
+
+% ============================== E: ISPD evidence ==============================
+\node[panel, anchor=west] at (5.98,5.56) {e};
+\node[title, anchor=west] at (6.38,5.56) {surface-potential evidence};
+\draw[outline, fill=cAmber!18] (6.45,3.42) rectangle (8.36,3.72);
+\draw[outline, fill=cGray!12] (7.23,4.40) rectangle (7.57,4.67);
+\draw[outline] (7.40,4.40) -- (7.40,3.78);
+\draw[cRed!75!black, line width=0.55pt] (7.40,4.93) -- (7.40,4.68);
+\draw[cRed!75!black, line width=0.55pt] (7.25,4.88) -- (7.55,4.88);
+\node[micro, anchor=south] at (7.40,5.00) {noncontact probe};
+\node[micro, anchor=north] at (7.40,3.30) {charged polymer surface};
+\draw[axis] (8.85,1.24) -- (11.18,1.24);
+\draw[axis] (8.85,1.24) -- (8.85,4.54);
+\node[micro, anchor=north] at (11.18,1.15) {trap energy};
+\node[micro, rotate=90] at (8.48,3.02) {$g(E_t)$};
+\draw[cTeal!82!black, line width=0.95pt] plot[smooth, domain=9.08:10.92, samples=40] (\x,{1.35+2.35*exp(-7*(\x-10.02)^2)});
+\draw[cRed!78!black, line width=0.85pt, dashed] plot[smooth, domain=9.08:10.92, samples=40] (\x,{1.35+1.58*exp(-4*(\x-10.57)^2)});
+\node[micro, text=cTeal!85!black] at (9.64,4.18) {shallower};
+\node[micro, text=cRed!85!black] at (10.64,3.30) {deeper};
+
+% ============================== F: mechanical evidence ==============================
+\node[panel, anchor=west] at (12.00,5.56) {f};
+\node[title, anchor=west] at (12.40,5.56) {Coulomb response};
+% figure-agent:start panel_f.mechanism_scene
+\draw[outline, fill=cGray!16] (12.62,4.72) rectangle (13.18,5.10);
+\draw[outline, fill=cGray!10] (12.85,4.34) rectangle (13.00,4.73);
+\draw[outline, fill=cAmber!28] (12.91,3.48) .. controls (13.54,3.58) and (14.14,3.47) .. (14.72,3.30)
+  -- (14.75,3.57) .. controls (14.13,3.78) and (13.51,3.90) .. (12.91,3.76) -- cycle;
+\node[micro, anchor=north] at (13.02,3.22) {floating cantilever};
+\draw[outline, fill=cGray!30] (15.72,2.24) rectangle (16.02,4.36);
+\node[micro, anchor=north] at (15.87,2.12) {electrode};
+\draw[<->, cGray!65!black, line width=0.38pt] (14.86,3.31) -- (15.68,3.31);
+\node[micro, fill=white, inner sep=0.8pt] at (15.27,3.31) {air gap};
+\foreach \x/\y in {14.20/3.72,14.42/3.61,14.54/3.46}{\node[circle, fill=cRed!70, draw=cRed!88!black, minimum size=1.25mm, inner sep=0pt] at (\x,\y) {};}
+\draw[force] (14.34,3.68) -- (13.48,4.10);
+\node[micro, text=cRed!82!black, anchor=south east] at (13.34,4.15) {repulsive\\force};
+\draw[outline, fill=white] (16.48,4.26) circle (0.30);
+\node[font=\fontsize{6}{7}\selectfont] at (16.48,4.26) {$V$};
+\draw[cGray!78!black, line width=0.55pt] (16.18,4.26) -- (16.02,4.26);
+\draw[cGray!78!black, line width=0.55pt] (16.48,3.96) -- (16.48,3.52);
+\draw[cGray!78!black, line width=0.55pt] (16.30,3.52) -- (16.66,3.52);
+\draw[cGray!78!black, line width=0.55pt] (16.35,3.40) -- (16.61,3.40);
+\draw[cGray!78!black, line width=0.55pt] (16.41,3.28) -- (16.55,3.28);
+\node[micro, anchor=west] at (16.87,4.26) {$V_{\mathrm{app}}$};
+\node[micro, anchor=west] at (16.78,3.42) {grounded\\source return};
+% figure-agent:end panel_f.mechanism_scene
+\node[label, text=cGray!70!black] at (14.82,0.84) {one grounded voltage-source return;\\sample and cantilever remain floating};
+
+\end{tikzpicture}
+\end{document}

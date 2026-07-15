@@ -1,0 +1,35 @@
+name: fig1_updated_agent_redraw_v1
+paper_id: pair001
+title: Fig 1 — charge trapping in sulfur-rich polymer
+style_profile: polymer-paper
+authoring_context_pack:
+  enabled: true
+panels:
+  - id: A
+    caption: polymer repeat-unit schematic
+  - id: B
+    caption: sulfur-content composition series
+  - id: C
+    caption: localized trap landscape, visual hero
+    semantic_claims:
+      - id: trap-landscape
+        claim: shallow and deep trapping states coexist in a sulfur-rich polymer.
+    locked_invariants:
+      - id: energy-orientation
+        invariant: energy increases upward; deeper wells are lower in the diagram.
+  - id: D
+    caption: transient-current kinetic evidence
+    semantic_claims:
+      - id: current-decay
+        claim: under constant voltage, trap-mediated transient current decays with time.
+  - id: E
+    caption: ISPD-derived trap distribution evidence
+  - id: F
+    caption: floating cantilever Coulomb response
+    semantic_claims:
+      - id: floating-topology
+        claim: the grounded source return does not ground the sample or cantilever.
+    locked_invariants:
+      - id: force-direction
+        invariant: the Coulomb-force arrow points away from the active electrode.
+publication_acceptance: not_claimed
