@@ -11,7 +11,12 @@ RELEASE_DECISION_PACKET_SCHEMA = "figure-agent.release-decision-packet.v1"
 STYLE_DIRECTION_PACKET_SCHEMA = "figure-agent.style-direction-packet.v1"
 DESIGN_DIRECTION_PACKET_SCHEMA = "figure-agent.design-direction-packet.v1"
 QUALITY_PATCH_PLAN_SCHEMA = "figure-agent.quality-patch-plan.v1"
-AUTHORING_REPAIR_PACKET_SCHEMA = "figure-agent.repair-execution-packet.v3"
+AUTHORING_REPAIR_PACKET_SCHEMAS = frozenset(
+    {
+        "figure-agent.repair-execution-packet.v3",
+        "figure-agent.repair-execution-packet.v4",
+    }
+)
 
 DECISION_KINDS = frozenset(
     {
@@ -76,7 +81,7 @@ PACKET_SCHEMAS = frozenset(
         STYLE_DIRECTION_PACKET_SCHEMA,
         DESIGN_DIRECTION_PACKET_SCHEMA,
         QUALITY_PATCH_PLAN_SCHEMA,
-        AUTHORING_REPAIR_PACKET_SCHEMA,
+        *AUTHORING_REPAIR_PACKET_SCHEMAS,
     }
 )
 MUTATION_BOUNDARIES = frozenset(
@@ -274,6 +279,7 @@ def validate_additive_materialization_authorization(
     record: dict[str, Any],
     *,
     fixture: str,
+    packet_schema: str,
     packet_sha256: str,
     output_path: str,
     output_sha256: str,
@@ -284,7 +290,10 @@ def validate_additive_materialization_authorization(
     expected_kind = "materialize_authoring_repair_candidate"
     if normalized["fixture"] != fixture:
         raise HumanDecisionRecordError("materialization_decision_fixture_mismatch")
-    if normalized["packet_schema"] != AUTHORING_REPAIR_PACKET_SCHEMA:
+    if (
+        packet_schema not in AUTHORING_REPAIR_PACKET_SCHEMAS
+        or normalized["packet_schema"] != packet_schema
+    ):
         raise HumanDecisionRecordError("materialization_decision_packet_schema_mismatch")
     if normalized["packet_recommendation"] != expected_kind:
         raise HumanDecisionRecordError(

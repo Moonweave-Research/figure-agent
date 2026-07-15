@@ -9,10 +9,16 @@ import re
 from pathlib import Path
 from typing import Any
 
+import critique_repair_bridge
 import human_decision_record
 import repair_transaction
 
-SCHEMA = "figure-agent.repair-execution-packet.v3"
+SCHEMA = "figure-agent.repair-execution-packet.v4"
+LEGACY_SCHEMA = "figure-agent.repair-execution-packet.v3"
+AUTHORITY_CONTRACT_SCHEMA = "figure-agent.repair-authority-contract.v1"
+LEGACY_AUTHORITY_MODE = "legacy_explicit_inputs"
+BOUND_AUTHORITY_MODE = "adjudicated_binding"
+CANONICAL_BINDING_NAME = "critique_repair_binding.json"
 MATERIALIZATION_PREVIEW_SCHEMA = "figure-agent.repair-materialization-preview.v1"
 CONTRACT_SCHEMA = "figure-agent.repair-target-contract.v1"
 SOURCE_ATTEMPT = re.compile(
@@ -56,6 +62,11 @@ RESPONSE_SCHEMA = {
 
 class RepairExecutionPacketError(ValueError):
     """Raised when a repair execution packet cannot be bound safely."""
+
+
+def is_supported_packet_schema(value: object) -> bool:
+    """Return whether a serialized repair packet schema remains readable."""
+    return value in {SCHEMA, LEGACY_SCHEMA}
 
 
 def _sha256_bytes(data: bytes) -> str:
@@ -151,6 +162,168 @@ def _load_json(path: Path, *, label: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise RepairExecutionPacketError(f"{label} must be a JSON object")
     return payload
+
+
+def _load_json_bytes(data: bytes, *, label: str) -> dict[str, Any]:
+    try:
+        payload = json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RepairExecutionPacketError(f"{label} must be valid JSON") from exc
+    if not isinstance(payload, dict):
+        raise RepairExecutionPacketError(f"{label} must be a JSON object")
+    return payload
+
+
+def _authority_contract(mode: str) -> dict[str, object]:
+    return {
+        "schema": AUTHORITY_CONTRACT_SCHEMA,
+        "mode": mode,
+        "required_record": (
+            "adjudicated_repair_binding" if mode == BOUND_AUTHORITY_MODE else None
+        ),
+    }
+
+
+def _packet_authority_mode(
+    packet: dict[str, object], workspace_root: Path
+) -> tuple[str, Path]:
+    schema = packet.get("schema")
+    contract = packet.get("authority_contract")
+    if schema == LEGACY_SCHEMA:
+        if contract is not None:
+            raise RepairExecutionPacketError(
+                "legacy packet must not carry a v4 authority contract"
+            )
+        mode = (
+            BOUND_AUTHORITY_MODE
+            if packet.get("adjudicated_repair_binding") is not None
+            else LEGACY_AUTHORITY_MODE
+        )
+    else:
+        if not isinstance(contract, dict) or set(contract) != {
+            "schema",
+            "mode",
+            "required_record",
+        }:
+            raise RepairExecutionPacketError("packet authority contract is invalid")
+        mode = contract.get("mode")
+        if contract != _authority_contract(str(mode or "")) or mode not in {
+            LEGACY_AUTHORITY_MODE,
+            BOUND_AUTHORITY_MODE,
+        }:
+            raise RepairExecutionPacketError("packet authority contract is invalid")
+
+    target_record = packet.get("target_contract")
+    if not isinstance(target_record, dict):
+        raise RepairExecutionPacketError("packet target contract invalid")
+    target_relative = _safe_relative(
+        str(target_record.get("path") or ""), label="target contract"
+    )
+    canonical_binding = target_relative.parent / CANONICAL_BINDING_NAME
+    canonical_path = workspace_root / canonical_binding
+    canonical_binding_present = canonical_path.exists() or canonical_path.is_symlink()
+    if canonical_binding_present and mode != BOUND_AUTHORITY_MODE:
+        raise RepairExecutionPacketError(
+            "attempt requires adjudicated binding authority"
+        )
+    return str(mode), canonical_binding
+
+
+def validate_bound_packet_authority(
+    packet: dict[str, object],
+    workspace_root: Path,
+    *,
+    allow_legacy_packet: bool = False,
+) -> None:
+    """Revalidate the live adjudicated authority graph for a bound packet."""
+    workspace_root = workspace_root.resolve()
+    authority_mode, canonical_binding = _packet_authority_mode(
+        packet, workspace_root
+    )
+    if (
+        packet.get("schema") == LEGACY_SCHEMA
+        or authority_mode == LEGACY_AUTHORITY_MODE
+    ) and not allow_legacy_packet:
+        raise RepairExecutionPacketError(
+            "legacy repair packet requires explicit compatibility opt-in"
+        )
+    binding_record = packet.get("adjudicated_repair_binding")
+    if authority_mode == LEGACY_AUTHORITY_MODE:
+        if binding_record is not None:
+            raise RepairExecutionPacketError(
+                "legacy packet must not carry adjudicated binding authority"
+            )
+        return
+    if binding_record is None:
+        raise RepairExecutionPacketError(
+            "adjudicated binding authority record is required"
+        )
+    if not isinstance(binding_record, dict) or set(binding_record) != {
+        "path",
+        "sha256",
+    }:
+        raise RepairExecutionPacketError(
+            "adjudicated repair binding record is invalid"
+        )
+    fixture = packet.get("fixture")
+    if not isinstance(fixture, str) or not fixture:
+        raise RepairExecutionPacketError("packet fixture invalid")
+    binding_relative = _safe_relative(
+        str(binding_record.get("path") or ""), label="adjudicated binding"
+    )
+    if binding_relative != canonical_binding:
+        raise RepairExecutionPacketError(
+            "adjudicated binding must be canonical and target-adjacent"
+        )
+    binding_path = _regular_file(
+        workspace_root,
+        binding_relative.as_posix(),
+        label="adjudicated binding",
+    )
+    try:
+        binding, _binding_paths, binding_sha256 = (
+            critique_repair_bridge.validate_adjudicated_repair_binding_snapshot(
+                binding_relative,
+                fixture=fixture,
+                workspace_root=workspace_root,
+            )
+        )
+    except critique_repair_bridge.CritiqueRepairBridgeError as exc:
+        raise RepairExecutionPacketError(str(exc)) from exc
+    if (
+        binding_record.get("sha256") != binding_sha256
+        or _sha256_bytes(binding_path.read_bytes()) != binding_sha256
+    ):
+        raise RepairExecutionPacketError("adjudicated binding hash drift")
+
+    editable = packet.get("editable_target")
+    finding_reports = packet.get("finding_reports")
+    machine_finding = binding["machine_finding"]
+    if (
+        packet.get("source") != binding["source"]
+        or packet.get("target_contract") != binding["target_contract"]
+        or not isinstance(editable, dict)
+        or editable.get("finding_id") != machine_finding["finding_id"]
+        or editable.get("report_path") != machine_finding["report_path"]
+        or not isinstance(finding_reports, list)
+    ):
+        raise RepairExecutionPacketError(
+            "bound packet authority substitution detected"
+        )
+    matching_reports = [
+        report
+        for report in finding_reports
+        if isinstance(report, dict)
+        and report.get("path") == machine_finding["report_path"]
+    ]
+    if (
+        len(matching_reports) != 1
+        or matching_reports[0].get("sha256")
+        != machine_finding["report_sha256"]
+    ):
+        raise RepairExecutionPacketError(
+            "bound packet finding report substitution detected"
+        )
 
 
 def _report_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
@@ -330,7 +503,7 @@ def compile_repair_execution_packet(
         raise RepairExecutionPacketError("target contract must declare targets")
     exact_targets: list[dict[str, Any]] = []
     review_only: list[dict[str, str]] = []
-    reports: dict[str, dict[str, Any]] = {}
+    reports: dict[str, tuple[dict[str, Any], str]] = {}
     referenced_findings: set[tuple[str, str]] = set()
     for raw_target in targets:
         if not isinstance(raw_target, dict):
@@ -352,8 +525,12 @@ def compile_repair_execution_packet(
             report_path = _regular_file(
                 workspace_root, report_key, label="finding report"
             )
-            reports[report_key] = _load_json(report_path, label="finding report")
-        report = reports[report_key]
+            report_bytes = report_path.read_bytes()
+            reports[report_key] = (
+                _load_json_bytes(report_bytes, label="finding report"),
+                _sha256_bytes(report_bytes),
+            )
+        report, _report_sha256 = reports[report_key]
         if (
             report.get("schema") == "figure-agent.human-correction-findings.v1"
             and report.get("bound_source_sha256") != source_hash
@@ -391,7 +568,7 @@ def compile_repair_execution_packet(
                 "protected_invariants": list(invariants),
             }
         )
-    for report_key, report in sorted(reports.items()):
+    for report_key, (report, _report_sha256) in sorted(reports.items()):
         for finding in _report_findings(report):
             finding_id = finding.get("id")
             if (
@@ -416,9 +593,9 @@ def compile_repair_execution_packet(
         {
             "path": path,
             "schema": report["schema"],
-            "sha256": _sha256_bytes((workspace_root / path).read_bytes()),
+            "sha256": report_sha256,
         }
-        for path, report in sorted(reports.items())
+        for path, (report, report_sha256) in sorted(reports.items())
     ]
     prompt = _render_prompt(
         fixture=fixture,
@@ -430,6 +607,7 @@ def compile_repair_execution_packet(
     )
     packet: dict[str, object] = {
         "schema": SCHEMA,
+        "authority_contract": _authority_contract(LEGACY_AUTHORITY_MODE),
         "fixture": fixture,
         "model_id": model_id.strip(),
         "source": {"path": source_relative.as_posix(), "sha256": source_hash},
@@ -461,6 +639,95 @@ def compile_repair_execution_packet(
     return packet, prompt
 
 
+def compile_adjudicated_repair_execution_packet(
+    fixture: str,
+    *,
+    workspace_root: Path,
+    model_id: str,
+    binding_path: str,
+    output_path: str,
+    execution_cwd: str = ".",
+) -> tuple[dict[str, object], str]:
+    """Compile a repair packet whose source and target come from one binding."""
+    workspace_root = workspace_root.resolve()
+    binding_relative = _safe_relative(binding_path, label="adjudicated binding")
+    try:
+        binding, _binding_paths, binding_sha256 = (
+            critique_repair_bridge.validate_adjudicated_repair_binding_snapshot(
+                binding_relative,
+                fixture=fixture,
+                workspace_root=workspace_root,
+            )
+        )
+    except critique_repair_bridge.CritiqueRepairBridgeError as exc:
+        raise RepairExecutionPacketError(str(exc)) from exc
+    source_record = binding["source"]
+    target_record = binding["target_contract"]
+    target_relative = _safe_relative(
+        target_record["path"], label="binding target contract"
+    )
+    output_relative = _safe_relative(output_path, label="output path")
+    _fixture_attempt_path(
+        output_relative,
+        fixture=fixture,
+        attempt_pattern=REPAIR_ATTEMPT,
+        label="output path",
+    )
+    if not (
+        binding_relative.parent
+        == target_relative.parent
+        == output_relative.parent
+    ):
+        raise RepairExecutionPacketError(
+            "binding, target contract, and output must be adjacent"
+        )
+
+    packet, prompt = compile_repair_execution_packet(
+        fixture,
+        workspace_root=workspace_root,
+        model_id=model_id,
+        source_path=source_record["path"],
+        target_contract=target_record["path"],
+        output_path=output_relative.as_posix(),
+        execution_cwd=execution_cwd,
+    )
+    if (
+        packet.get("source") != source_record
+        or packet.get("target_contract") != target_record
+        or not isinstance(packet.get("editable_target"), dict)
+        or packet["editable_target"].get("finding_id")
+        != binding["machine_finding"]["finding_id"]
+        or packet["editable_target"].get("report_path")
+        != binding["machine_finding"]["report_path"]
+    ):
+        raise RepairExecutionPacketError(
+            "compiled packet authority substitution detected"
+        )
+    try:
+        revalidated, _binding_paths, revalidated_binding_sha256 = (
+            critique_repair_bridge.validate_adjudicated_repair_binding_snapshot(
+                binding_relative,
+                fixture=fixture,
+                workspace_root=workspace_root,
+            )
+        )
+    except critique_repair_bridge.CritiqueRepairBridgeError as exc:
+        raise RepairExecutionPacketError(str(exc)) from exc
+    if (
+        revalidated != binding
+        or revalidated_binding_sha256 != binding_sha256
+    ):
+        raise RepairExecutionPacketError("adjudicated binding hash drift")
+
+    packet["adjudicated_repair_binding"] = {
+        "path": binding_relative.as_posix(),
+        "sha256": binding_sha256,
+    }
+    packet["authority_contract"] = _authority_contract(BOUND_AUTHORITY_MODE)
+    packet["packet_sha256"] = canonical_packet_sha256(packet)
+    return packet, prompt
+
+
 def _anchor_indexes(text: str, selector: dict[str, Any]) -> tuple[int, int]:
     lines = text.splitlines()
     start_marker = str(selector["anchor_start"])
@@ -480,12 +747,19 @@ def materialize_repair_candidate(
     authorization: dict[str, object] | None = None,
     apply: bool = True,
     receipt_path: Path | None = None,
+    allow_legacy_packet: bool = False,
 ) -> dict[str, object]:
     """Validate an LLM response and materialize its additive source once."""
-    if packet.get("schema") != SCHEMA:
+    if not is_supported_packet_schema(packet.get("schema")):
         raise RepairExecutionPacketError("packet schema invalid")
     if packet.get("packet_sha256") != canonical_packet_sha256(packet):
         raise RepairExecutionPacketError("packet hash drift")
+    workspace_root = workspace_root.resolve()
+    validate_bound_packet_authority(
+        packet,
+        workspace_root,
+        allow_legacy_packet=allow_legacy_packet,
+    )
     if set(response) != {"replacement_utf8", "change_summary"}:
         raise RepairExecutionPacketError("candidate response schema invalid")
     replacement = response.get("replacement_utf8")
@@ -500,7 +774,6 @@ def materialize_repair_candidate(
     if re.search(r"\\[nr](?:[ \t]|$)", replacement):
         raise RepairExecutionPacketError("replacement contains literal escaped newline")
 
-    workspace_root = workspace_root.resolve()
     source_record = packet.get("source")
     if not isinstance(source_record, dict):
         raise RepairExecutionPacketError("packet source invalid")
@@ -628,6 +901,7 @@ def materialize_repair_candidate(
             human_decision_record.validate_additive_materialization_authorization(
                 authorization,
                 fixture=str(packet.get("fixture") or ""),
+                packet_schema=str(packet.get("schema") or ""),
                 packet_sha256=str(packet.get("packet_sha256") or ""),
                 output_path=output_relative.as_posix(),
                 output_sha256=output_sha256,
@@ -694,6 +968,11 @@ def materialize_repair_candidate(
             output.parent / ".materialization.lock",
             owner="authoring_repair_materialize",
         ):
+            validate_bound_packet_authority(
+                packet,
+                workspace_root,
+                allow_legacy_packet=allow_legacy_packet,
+            )
             if output.exists() or output.is_symlink():
                 raise RepairExecutionPacketError("output path already exists")
             if resolved_receipt.exists() or resolved_receipt.is_symlink():

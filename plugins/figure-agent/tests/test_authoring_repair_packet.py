@@ -5,6 +5,7 @@ import json
 import os
 import stat
 import subprocess
+from contextlib import contextmanager
 from pathlib import Path
 
 import authoring_repair_finalize
@@ -28,7 +29,7 @@ def _materialization_authorization(
     return {
         "schema": "figure-agent.human-decision-record.v1",
         "fixture": "demo",
-        "packet_schema": "figure-agent.repair-execution-packet.v3",
+        "packet_schema": packet["schema"],
         "packet_path": (
             "examples/demo/review/failure-first/execution-repair-v1/repair_packet.json"
         ),
@@ -137,20 +138,137 @@ def _fixture(tmp_path: Path, *, attribution: str = "exact") -> tuple[Path, Path,
     return workspace, source, contract
 
 
+def _adjudicated_binding(
+    workspace: Path,
+    source: Path,
+    contract: Path,
+    *,
+    fixture: str = "demo",
+) -> Path:
+    example = workspace / "examples" / fixture
+    artifacts = {
+        "critique": example / "critique.md",
+        "adjudication": example / "critique_adjudication.yaml",
+        "selector_registry": contract.parent / "source_selectors.json",
+        "spec": example / "spec.yaml",
+        "current_render": example / "build" / f"{fixture}.png",
+        "current_pdf": example / "build" / f"{fixture}.pdf",
+        "crop_manifest": example / "build" / "audit_crops" / "manifest.json",
+    }
+    for path in artifacts.values():
+        path.parent.mkdir(parents=True, exist_ok=True)
+    artifacts["critique"].write_text("---\nfixture: demo\n---\n", encoding="utf-8")
+    artifacts["selector_registry"].write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.source-selector-registry.v1",
+                "source_path": source.relative_to(workspace).as_posix(),
+                "source_sha256": _sha256(source.read_bytes()),
+            }
+        ),
+        encoding="utf-8",
+    )
+    artifacts["spec"].write_text("name: demo\n", encoding="utf-8")
+    artifacts["current_render"].write_bytes(b"png")
+    artifacts["current_pdf"].write_bytes(b"pdf")
+    artifacts["crop_manifest"].write_text(
+        json.dumps({"schema": "figure-agent.audit-crop-manifest.v1"}),
+        encoding="utf-8",
+    )
+    report = contract.parent / "collisions.json"
+    report_payload = json.loads(report.read_text(encoding="utf-8"))
+    report_payload.update(
+        {
+            "fixture": fixture,
+            "render_path": f"build/{fixture}.png",
+            "render_sha256": _sha256(artifacts["current_render"].read_bytes()),
+            "render_pdf": f"build/{fixture}.pdf",
+            "render_pdf_sha256": _sha256(artifacts["current_pdf"].read_bytes()),
+        }
+    )
+    report.write_text(json.dumps(report_payload), encoding="utf-8")
+    selector_registry_relative = artifacts["selector_registry"].relative_to(
+        workspace
+    ).as_posix()
+    artifacts["adjudication"].write_text(
+        "schema: figure-agent.critique-adjudication.v1\n"
+        f"fixture: {fixture}\n"
+        f"source_critique_hash: {_sha256(artifacts['critique'].read_bytes())}\n"
+        "decisions:\n"
+        "- finding_id: C001\n"
+        "  decision: apply\n"
+        "  reason: bounded repair\n"
+        "  patch_target: panel A label\n"
+        "  evidence: critique C001 and collision TC001\n"
+        "  repair_evidence:\n"
+        f"    report_path: {contract.parent.relative_to(workspace).as_posix()}/collisions.json\n"
+        "    finding_id: TC001\n"
+        f"    selector_registry_path: {selector_registry_relative}\n",
+        encoding="utf-8",
+    )
+
+    def record(path: Path) -> dict[str, str]:
+        return {
+            "path": path.relative_to(workspace).as_posix(),
+            "sha256": _sha256(path.read_bytes()),
+        }
+
+    binding = contract.parent / "critique_repair_binding.json"
+    binding.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.adjudicated-repair-binding.v1",
+                "fixture": fixture,
+                "critique": {
+                    **record(artifacts["critique"]),
+                    "finding_id": "C001",
+                },
+                "adjudication": {
+                    **record(artifacts["adjudication"]),
+                    "decision": "apply",
+                },
+                "machine_finding": {
+                    "report_path": (
+                        contract.parent.relative_to(workspace).as_posix()
+                        + "/collisions.json"
+                    ),
+                    "report_sha256": _sha256(
+                        (contract.parent / "collisions.json").read_bytes()
+                    ),
+                    "finding_id": "TC001",
+                },
+                "selector_registry": record(artifacts["selector_registry"]),
+                "source": record(source),
+                "spec": record(artifacts["spec"]),
+                "current_render": record(artifacts["current_render"]),
+                "current_pdf": record(artifacts["current_pdf"]),
+                "crop_manifest": record(artifacts["crop_manifest"]),
+                "attribution_state": "exact",
+                "target_contract": record(contract),
+                "publication_acceptance": "not_claimed",
+            }
+        ),
+        encoding="utf-8",
+    )
+    return binding
+
+
 def _authorized_materialization(
     tmp_path: Path,
 ) -> tuple[Path, dict[str, object], dict[str, object], dict[str, object], Path, Path]:
     workspace, source, contract = _fixture(tmp_path)
-    packet, _ = authoring_repair_packet.compile_repair_execution_packet(
-        "demo",
-        workspace_root=workspace,
-        model_id="gpt-5.5",
-        source_path=source.relative_to(workspace).as_posix(),
-        target_contract=contract.relative_to(workspace).as_posix(),
-        output_path=(
-            "examples/demo/review/failure-first/execution-repair-v1/"
-            "repaired_generated.tex"
-        ),
+    binding = _adjudicated_binding(workspace, source, contract)
+    packet, _ = (
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
     )
     response = {
         "replacement_utf8": r"\node[yshift=-2mm] {repeated dispersive trapping};",
@@ -266,7 +384,7 @@ def test_compiles_one_hash_bound_exact_repair_packet(tmp_path: Path) -> None:
         ),
     )
 
-    assert packet["schema"] == "figure-agent.repair-execution-packet.v3"
+    assert packet["schema"] == "figure-agent.repair-execution-packet.v4"
     assert packet["source"]["sha256"] == _sha256(source.read_bytes())
     assert packet["editable_target"]["finding_id"] == "TC001"
     assert packet["editable_target"]["selector"]["source_hash"] == _sha256(
@@ -572,6 +690,7 @@ def test_materializes_valid_candidate_only_after_controller_validation(
         response,
         workspace_root=workspace,
         apply=False,
+        allow_legacy_packet=True,
     )
 
     receipt = authoring_repair_packet.materialize_repair_candidate(
@@ -584,6 +703,7 @@ def test_materializes_valid_candidate_only_after_controller_validation(
             preview_sha256=str(preview["preview_sha256"]),
         ),
         receipt_path=receipt_path,
+        allow_legacy_packet=True,
     )
 
     output = workspace / packet["output_path"]
@@ -630,6 +750,7 @@ def test_materializer_refuses_to_write_without_human_authorization(
                 "change_summary": "Lower the colliding label.",
             },
             workspace_root=workspace,
+            allow_legacy_packet=True,
         )
 
     assert not output.exists()
@@ -663,6 +784,7 @@ def test_materializer_dry_run_exposes_hash_bound_candidate_without_writing(
         },
         workspace_root=workspace,
         apply=False,
+        allow_legacy_packet=True,
     )
 
     assert preview["schema"] == "figure-agent.repair-materialization-preview.v1"
@@ -697,6 +819,7 @@ def test_materializer_refuses_when_attempt_transaction_lock_exists(
         response,
         workspace_root=workspace,
         apply=False,
+        allow_legacy_packet=True,
     )
     output = workspace / packet["output_path"]
     receipt_path = output.parent / "materialization_receipt.json"
@@ -717,6 +840,7 @@ def test_materializer_refuses_when_attempt_transaction_lock_exists(
                 preview_sha256=str(preview["preview_sha256"]),
             ),
             receipt_path=receipt_path,
+            allow_legacy_packet=True,
         )
 
     assert not output.exists()
@@ -967,6 +1091,76 @@ def test_post_render_finalizer_promotes_only_strict_pass_to_human_review_pending
     assert finalized["human_review"] == "pending"
     assert finalized["publication_acceptance"] == "not_claimed"
     assert json.loads(receipt_path.read_text(encoding="utf-8")) == finalized
+
+
+def test_post_render_finalizer_revalidates_bound_authority_inside_lock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    packet, _prompt = (
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+    )
+    response = {
+        "replacement_utf8": (
+            r"\node[yshift=-2mm] {repeated dispersive trapping};"
+        ),
+        "change_summary": "Lower the colliding label.",
+    }
+    preview = authoring_repair_packet.materialize_repair_candidate(
+        packet, response, workspace_root=workspace, apply=False
+    )
+    authorization = _materialization_authorization(
+        packet,
+        output_sha256=str(preview["output_sha256"]),
+        preview_sha256=str(preview["preview_sha256"]),
+    )
+    output = workspace / str(packet["output_path"])
+    receipt_path = output.parent / "materialization_receipt.json"
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    authorization_path = _authorization_artifact(receipt_path, authorization)
+    original_lock = repair_transaction.exclusive_lock
+
+    @contextmanager
+    def drift_after_lock(*args: object, **kwargs: object):
+        with original_lock(*args, **kwargs):
+            binding.write_bytes(binding.read_bytes() + b"\n")
+            yield
+
+    monkeypatch.setattr(repair_transaction, "exclusive_lock", drift_after_lock)
+
+    with pytest.raises(
+        authoring_repair_finalize.AuthoringRepairFinalizeError,
+        match="repair packet authority invalid: adjudicated binding hash drift",
+    ):
+        authoring_repair_finalize.finalize_materialized_candidate(
+            packet_path=packet_path,
+            receipt_path=receipt_path,
+            authorization_path=authorization_path,
+            workspace_root=workspace,
+            plugin_root=_fake_strict_compiler(tmp_path),
+        )
+
+    pending = json.loads(receipt_path.read_text(encoding="utf-8"))
+    assert pending["decision"] == "materialized_verification_pending"
+    assert not (output.parent / "build").exists()
 
 
 def test_post_render_finalizer_persists_compile_failure_without_promotion(
@@ -1342,6 +1536,7 @@ def test_materializer_preserves_boundary_blank_padding(tmp_path: Path) -> None:
         response,
         workspace_root=workspace,
         apply=False,
+        allow_legacy_packet=True,
     )
 
     receipt = authoring_repair_packet.materialize_repair_candidate(
@@ -1358,6 +1553,7 @@ def test_materializer_preserves_boundary_blank_padding(tmp_path: Path) -> None:
             / "examples/demo/review/failure-first/execution-repair-v1/"
             "materialization_receipt.json"
         ),
+        allow_legacy_packet=True,
     )
 
     output = workspace / packet["output_path"]
@@ -1392,6 +1588,7 @@ def test_materializer_rejects_change_outside_exact_anchor(tmp_path: Path) -> Non
                 "change_summary": "Unsafe edit.",
             },
             workspace_root=workspace,
+            allow_legacy_packet=True,
         )
 
 
@@ -1422,6 +1619,7 @@ def test_materializer_rejects_literal_escaped_newline(tmp_path: Path) -> None:
                 "change_summary": "Malformed serialized line break.",
             },
             workspace_root=workspace,
+            allow_legacy_packet=True,
         )
 
 
@@ -1466,6 +1664,794 @@ def test_rejects_source_hash_drift(tmp_path: Path) -> None:
         )
 
 
+def test_compiles_adjudicated_binding_into_transitive_packet(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+
+    packet, prompt = (
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+    )
+
+    binding_payload = json.loads(binding.read_text(encoding="utf-8"))
+    assert packet["source"] == binding_payload["source"]
+    assert packet["target_contract"] == binding_payload["target_contract"]
+    assert packet["adjudicated_repair_binding"] == {
+        "path": binding.relative_to(workspace).as_posix(),
+        "sha256": _sha256(binding.read_bytes()),
+    }
+    assert packet["authority_contract"] == {
+        "schema": "figure-agent.repair-authority-contract.v1",
+        "mode": "adjudicated_binding",
+        "required_record": "adjudicated_repair_binding",
+    }
+    assert packet["packet_sha256"] == (
+        authoring_repair_packet.canonical_packet_sha256(packet)
+    )
+    assert packet["adjudicated_repair_binding"]["sha256"] != packet[
+        "target_contract"
+    ]["sha256"]
+    assert "# Bound repair execution: demo" in prompt
+
+
+@pytest.mark.parametrize("rewrite", ["mode", "schema"])
+def test_bound_packet_cannot_be_downgraded_by_removing_binding_and_rehashing(
+    tmp_path: Path, rewrite: str
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    packet, _prompt = (
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+    )
+    downgraded = json.loads(json.dumps(packet))
+    downgraded.pop("adjudicated_repair_binding")
+    if rewrite == "mode":
+        downgraded["authority_contract"] = {
+            "schema": "figure-agent.repair-authority-contract.v1",
+            "mode": "legacy_explicit_inputs",
+            "required_record": None,
+        }
+    else:
+        downgraded["schema"] = "figure-agent.repair-execution-packet.v3"
+        downgraded.pop("authority_contract")
+    downgraded["packet_sha256"] = (
+        authoring_repair_packet.canonical_packet_sha256(downgraded)
+    )
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="attempt requires adjudicated binding authority",
+    ):
+        authoring_repair_packet.materialize_repair_candidate(
+            downgraded,
+            {
+                "replacement_utf8": (
+                    r"\node[yshift=-2mm] {repeated dispersive trapping};"
+                ),
+                "change_summary": "Lower the colliding label.",
+            },
+            workspace_root=workspace,
+            apply=False,
+        )
+
+
+def test_bound_packet_rejects_binding_record_deletion_without_mode_rewrite(
+    tmp_path: Path,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    packet, _prompt = (
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+    )
+    packet.pop("adjudicated_repair_binding")
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        packet
+    )
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="authority record is required",
+    ):
+        authoring_repair_packet.materialize_repair_candidate(
+            packet,
+            {
+                "replacement_utf8": r"\node {repaired};",
+                "change_summary": "Bounded repair.",
+            },
+            workspace_root=workspace,
+            apply=False,
+        )
+
+
+def test_legacy_packet_has_explicit_authority_contract(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+
+    packet, _prompt = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+
+    assert packet["authority_contract"] == {
+        "schema": "figure-agent.repair-authority-contract.v1",
+        "mode": "legacy_explicit_inputs",
+        "required_record": None,
+    }
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="explicit compatibility opt-in",
+    ):
+        authoring_repair_packet.materialize_repair_candidate(
+            packet,
+            {
+                "replacement_utf8": (
+                    r"\node[yshift=-2mm] {repeated dispersive trapping};"
+                ),
+                "change_summary": "Lower the colliding label.",
+            },
+            workspace_root=workspace,
+            apply=False,
+        )
+
+
+def test_redirected_target_cannot_silently_downgrade_bound_packet(
+    tmp_path: Path,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    packet, _prompt = (
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+    )
+    redirected_target = source.parent / "redirected_repair_targets.json"
+    redirected_target.write_bytes(contract.read_bytes())
+    packet.pop("adjudicated_repair_binding")
+    packet["authority_contract"] = {
+        "schema": "figure-agent.repair-authority-contract.v1",
+        "mode": "legacy_explicit_inputs",
+        "required_record": None,
+    }
+    packet["target_contract"] = {
+        "path": redirected_target.relative_to(workspace).as_posix(),
+        "sha256": _sha256(redirected_target.read_bytes()),
+    }
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        packet
+    )
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="explicit compatibility opt-in",
+    ):
+        authoring_repair_packet.materialize_repair_candidate(
+            packet,
+            {
+                "replacement_utf8": r"\node {repaired};",
+                "change_summary": "Bounded repair.",
+            },
+            workspace_root=workspace,
+            apply=False,
+        )
+
+
+def test_saved_v3_packet_without_authority_contract_remains_readable(
+    tmp_path: Path,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    packet, _prompt = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+    packet["schema"] = "figure-agent.repair-execution-packet.v3"
+    packet.pop("authority_contract")
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        packet
+    )
+
+    preview = authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        {
+            "replacement_utf8": (
+                r"\node[yshift=-2mm] {repeated dispersive trapping};"
+            ),
+            "change_summary": "Lower the colliding label.",
+        },
+        workspace_root=workspace,
+        apply=False,
+        allow_legacy_packet=True,
+    )
+
+    assert preview["packet_sha256"] == packet["packet_sha256"]
+
+
+def test_rehashed_packet_cannot_reuse_prior_materialization_authorization(
+    tmp_path: Path,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    packet, _prompt = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+    response = {
+        "replacement_utf8": (
+            r"\node[yshift=-2mm] {repeated dispersive trapping};"
+        ),
+        "change_summary": "Lower the colliding label.",
+    }
+    preview = authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        apply=False,
+        allow_legacy_packet=True,
+    )
+    authorization = _materialization_authorization(
+        packet,
+        output_sha256=str(preview["output_sha256"]),
+        preview_sha256=str(preview["preview_sha256"]),
+    )
+    rebound = json.loads(json.dumps(packet))
+    rebound["model_id"] = "gpt-5.5-rebound"
+    rebound["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        rebound
+    )
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="materialization_decision_packet_hash_mismatch",
+    ):
+        authoring_repair_packet.materialize_repair_candidate(
+            rebound,
+            response,
+            workspace_root=workspace,
+            authorization=authorization,
+            receipt_path=(
+                workspace
+                / "examples/demo/review/failure-first/execution-repair-v1/"
+                "materialization_receipt.json"
+            ),
+            allow_legacy_packet=True,
+        )
+
+
+@pytest.mark.parametrize("drifted_artifact", ["binding", "target", "report"])
+def test_bound_packet_authority_drift_blocks_preview_and_apply_without_writes(
+    tmp_path: Path, drifted_artifact: str
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    packet, _prompt = (
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+    )
+    response = {
+        "replacement_utf8": (
+            r"\node[yshift=-2mm] {repeated dispersive trapping};"
+        ),
+        "change_summary": "Lower the colliding label.",
+    }
+    drift_path = {
+        "binding": binding,
+        "target": contract,
+        "report": contract.parent / "collisions.json",
+    }[drifted_artifact]
+    drift_path.write_bytes(drift_path.read_bytes() + b"\n")
+    output = workspace / str(packet["output_path"])
+    receipt = output.parent / "materialization_receipt.json"
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="hash drift",
+    ):
+        authoring_repair_packet.materialize_repair_candidate(
+            packet,
+            response,
+            workspace_root=workspace,
+            apply=False,
+        )
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="hash drift",
+    ):
+        authoring_repair_packet.materialize_repair_candidate(
+            packet,
+            response,
+            workspace_root=workspace,
+            authorization={},
+            receipt_path=receipt,
+        )
+
+    assert not output.exists()
+    assert not receipt.exists()
+
+
+@pytest.mark.parametrize(
+    ("substitution", "message"),
+    [
+        ("source", "authority substitution"),
+        ("target", "authority substitution"),
+        ("editable_finding", "authority substitution"),
+        ("finding_report", "finding report substitution"),
+    ],
+)
+def test_bound_packet_rejects_rehashed_authority_substitution(
+    tmp_path: Path, substitution: str, message: str
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    packet, _prompt = (
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+    )
+    tampered = json.loads(json.dumps(packet))
+    if substitution == "source":
+        tampered["source"]["sha256"] = "sha256:" + "0" * 64
+    elif substitution == "target":
+        tampered["target_contract"]["sha256"] = "sha256:" + "0" * 64
+    elif substitution == "editable_finding":
+        tampered["editable_target"]["finding_id"] = "TC999"
+    else:
+        tampered["finding_reports"][0]["sha256"] = "sha256:" + "0" * 64
+    tampered["packet_sha256"] = (
+        authoring_repair_packet.canonical_packet_sha256(tampered)
+    )
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match=message,
+    ):
+        authoring_repair_packet.materialize_repair_candidate(
+            tampered,
+            {
+                "replacement_utf8": (
+                    r"\node[yshift=-2mm] {repeated dispersive trapping};"
+                ),
+                "change_summary": "Lower the colliding label.",
+            },
+            workspace_root=workspace,
+            apply=False,
+        )
+
+
+def test_bound_packet_authority_is_revalidated_inside_materialization_lock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    packet, _prompt = (
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+    )
+    response = {
+        "replacement_utf8": (
+            r"\node[yshift=-2mm] {repeated dispersive trapping};"
+        ),
+        "change_summary": "Lower the colliding label.",
+    }
+    preview = authoring_repair_packet.materialize_repair_candidate(
+        packet, response, workspace_root=workspace, apply=False
+    )
+    authorization = _materialization_authorization(
+        packet,
+        output_sha256=str(preview["output_sha256"]),
+        preview_sha256=str(preview["preview_sha256"]),
+    )
+    output = workspace / str(packet["output_path"])
+    receipt = output.parent / "materialization_receipt.json"
+    original_lock = repair_transaction.exclusive_lock
+
+    @contextmanager
+    def drift_after_lock(*args: object, **kwargs: object):
+        with original_lock(*args, **kwargs):
+            binding.write_bytes(binding.read_bytes() + b"\n")
+            yield
+
+    monkeypatch.setattr(repair_transaction, "exclusive_lock", drift_after_lock)
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="adjudicated binding hash drift",
+    ):
+        authoring_repair_packet.materialize_repair_candidate(
+            packet,
+            response,
+            workspace_root=workspace,
+            authorization=authorization,
+            receipt_path=receipt,
+        )
+
+    assert not output.exists()
+    assert not receipt.exists()
+
+
+def test_finding_report_record_uses_one_parsed_byte_snapshot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    report = contract.parent / "collisions.json"
+    report_bytes = report.read_bytes()
+    report_read_bytes = 0
+    report_read_text = 0
+    original_read_bytes = Path.read_bytes
+    original_read_text = Path.read_text
+
+    def observed_read_bytes(path: Path) -> bytes:
+        nonlocal report_read_bytes
+        if path == report:
+            report_read_bytes += 1
+        return original_read_bytes(path)
+
+    def observed_read_text(
+        path: Path, encoding: str | None = None, errors: str | None = None
+    ) -> str:
+        nonlocal report_read_text
+        if path == report:
+            report_read_text += 1
+        return original_read_text(path, encoding=encoding, errors=errors)
+
+    monkeypatch.setattr(Path, "read_bytes", observed_read_bytes)
+    monkeypatch.setattr(Path, "read_text", observed_read_text)
+
+    packet, _prompt = authoring_repair_packet.compile_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        source_path=source.relative_to(workspace).as_posix(),
+        target_contract=contract.relative_to(workspace).as_posix(),
+        output_path=(
+            "examples/demo/review/failure-first/execution-repair-v1/"
+            "repaired_generated.tex"
+        ),
+    )
+
+    assert report_read_bytes == 1
+    assert report_read_text == 0
+    assert packet["finding_reports"] == [
+        {
+            "path": report.relative_to(workspace).as_posix(),
+            "schema": "figure-agent.text-collisions.v1",
+            "sha256": _sha256(report_bytes),
+        }
+    ]
+
+
+def test_adjudicated_binding_rejects_fabricated_partial_binding(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    payload = json.loads(binding.read_text(encoding="utf-8"))
+    for field in (
+        "critique",
+        "adjudication",
+        "machine_finding",
+        "selector_registry",
+        "spec",
+        "current_render",
+        "current_pdf",
+        "crop_manifest",
+    ):
+        payload.pop(field)
+    binding.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="top-level fields",
+    ):
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+
+
+def test_adjudicated_binding_requires_canonical_filename(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    wrong_name = binding.with_name("anything.json")
+    binding.rename(wrong_name)
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="critique_repair_binding.json",
+    ):
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=wrong_name.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "error"),
+    [
+        ("schema", "figure-agent.adjudicated-repair-binding.v2", "schema"),
+        ("fixture", "other", "fixture"),
+        ("attribution_state", "ambiguous", "exact attribution"),
+        ("publication_acceptance", "accepted", "publication acceptance"),
+    ],
+)
+def test_adjudicated_binding_rejects_invalid_authority_fields(
+    tmp_path: Path,
+    field: str,
+    value: str,
+    error: str,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    payload = json.loads(binding.read_text(encoding="utf-8"))
+    payload[field] = value
+    binding.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match=error,
+    ):
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+
+
+@pytest.mark.parametrize("record_name", ["source", "target_contract"])
+def test_adjudicated_binding_rejects_non_exact_path_hash_records(
+    tmp_path: Path,
+    record_name: str,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    payload = json.loads(binding.read_text(encoding="utf-8"))
+    payload[record_name]["substitution"] = "not-authoritative"
+    binding.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match=f"binding {record_name.replace('_', ' ')} record is invalid",
+    ):
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+
+
+@pytest.mark.parametrize("drift", ["source", "target_contract"])
+def test_adjudicated_binding_rejects_live_hash_drift(
+    tmp_path: Path,
+    drift: str,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    drifted = source if drift == "source" else contract
+    drifted.write_bytes(drifted.read_bytes() + b"\n")
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match=f"binding {drift.replace('_', ' ')} hash drift",
+    ):
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+
+
+def test_adjudicated_binding_rejects_packet_substitution(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+
+    def substituted_packet(*args: object, **kwargs: object) -> tuple[dict[str, object], str]:
+        return (
+            {
+                "source": {"path": "substituted.tex", "sha256": _sha256(b"x")},
+                "target_contract": {
+                    "path": "substituted.json",
+                    "sha256": _sha256(b"y"),
+                },
+            },
+            "prompt",
+        )
+
+    monkeypatch.setattr(
+        authoring_repair_packet,
+        "compile_repair_execution_packet",
+        substituted_packet,
+    )
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="compiled packet authority substitution",
+    ):
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+
+
+def test_adjudicated_binding_requires_attempt_local_adjacency(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="binding, target contract, and output must be adjacent",
+    ):
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v2/"
+                "repaired_generated.tex"
+            ),
+        )
+
+
+def test_adjudicated_binding_path_must_be_fixture_repair_attempt(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    wrong = source.parent / binding.name
+    wrong.write_bytes(binding.read_bytes())
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="execution-repair-vN",
+    ):
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=wrong.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+
+
+@pytest.mark.parametrize("linked_artifact", ["binding", "source", "target_contract"])
+def test_adjudicated_binding_rejects_symlinked_authority(
+    tmp_path: Path,
+    linked_artifact: str,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    selected = {
+        "binding": binding,
+        "source": source,
+        "target_contract": contract,
+    }[linked_artifact]
+    real = selected.with_name(f"real-{selected.name}")
+    selected.rename(real)
+    selected.symlink_to(real.name)
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="must not traverse a symlink",
+    ):
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
+
+
 def test_rejects_output_outside_additive_repair_attempt(tmp_path: Path) -> None:
     workspace, source, contract = _fixture(tmp_path)
 
@@ -1481,6 +2467,89 @@ def test_rejects_output_outside_additive_repair_attempt(tmp_path: Path) -> None:
             target_contract=contract.relative_to(workspace).as_posix(),
             output_path=source.relative_to(workspace).as_posix(),
         )
+
+
+def test_cli_compiles_from_adjudicated_binding_only(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    repair_root = "examples/demo/review/failure-first/execution-repair-v1"
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-repair-packet",
+            "demo",
+            "--model-id",
+            "gpt-5.5",
+            "--binding",
+            binding.relative_to(workspace).as_posix(),
+            "--output-path",
+            f"{repair_root}/repaired_generated.tex",
+            "--packet-out",
+            f"{repair_root}/repair_packet.json",
+            "--prompt-out",
+            f"{repair_root}/repair_prompt.md",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    packet = json.loads(
+        (workspace / repair_root / "repair_packet.json").read_text(encoding="utf-8")
+    )
+    assert packet["adjudicated_repair_binding"]["path"] == binding.relative_to(
+        workspace
+    ).as_posix()
+    assert packet["packet_sha256"] == (
+        authoring_repair_packet.canonical_packet_sha256(packet)
+    )
+
+
+def test_cli_rejects_binding_mixed_with_legacy_authority(tmp_path: Path) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(workspace, source, contract)
+    repair_root = "examples/demo/review/failure-first/execution-repair-v1"
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-repair-packet",
+            "demo",
+            "--model-id",
+            "gpt-5.5",
+            "--binding",
+            binding.relative_to(workspace).as_posix(),
+            "--source",
+            source.relative_to(workspace).as_posix(),
+            "--target-contract",
+            contract.relative_to(workspace).as_posix(),
+            "--output-path",
+            f"{repair_root}/repaired_generated.tex",
+            "--packet-out",
+            f"{repair_root}/repair_packet.json",
+            "--prompt-out",
+            f"{repair_root}/repair_prompt.md",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 2
+    assert "mutually exclusive" in result.stderr
+    assert not (workspace / repair_root / "repair_packet.json").exists()
 
 
 def test_cli_writes_additive_repair_packet_and_prompt(tmp_path: Path) -> None:
@@ -1534,6 +2603,27 @@ def test_cli_writes_additive_repair_packet_and_prompt(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    rejected_preview = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-repair-materialize",
+            "--packet",
+            f"{repair_root}/repair_packet.json",
+            "--response",
+            f"{repair_root}/repair_response.json",
+            "--receipt-out",
+            f"{repair_root}/materialization_receipt.json",
+            "--dry-run",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert rejected_preview.returncode == 1
+    assert "explicit compatibility opt-in" in rejected_preview.stderr
+
     preview_result = subprocess.run(
         [
             str(PLUGIN_ROOT / "bin" / "fig-agent"),
@@ -1545,6 +2635,7 @@ def test_cli_writes_additive_repair_packet_and_prompt(tmp_path: Path) -> None:
             "--receipt-out",
             f"{repair_root}/materialization_receipt.json",
             "--dry-run",
+            "--legacy-packet",
         ],
         cwd=PLUGIN_ROOT,
         env=env,
@@ -1585,6 +2676,7 @@ def test_cli_writes_additive_repair_packet_and_prompt(tmp_path: Path) -> None:
             "--apply",
             "--authorization",
             f"{repair_root}/materialization_authorization.json",
+            "--legacy-packet",
         ],
         cwd=PLUGIN_ROOT,
         env=env,
@@ -1609,6 +2701,7 @@ def test_cli_writes_additive_repair_packet_and_prompt(tmp_path: Path) -> None:
             f"{repair_root}/materialization_receipt.json",
             "--authorization",
             f"{repair_root}/materialization_authorization.json",
+            "--legacy-packet",
             "--json",
         ],
         cwd=PLUGIN_ROOT,

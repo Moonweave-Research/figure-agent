@@ -622,14 +622,19 @@ def _authoring_repair_packet(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="fig-agent authoring-repair-packet")
     parser.add_argument("name")
     parser.add_argument("--model-id", required=True)
-    parser.add_argument("--source", required=True)
-    parser.add_argument("--target-contract", required=True)
+    parser.add_argument("--binding")
+    parser.add_argument("--source")
+    parser.add_argument("--target-contract")
     parser.add_argument("--output-path", required=True)
     parser.add_argument("--execution-cwd", default=".")
     parser.add_argument("--packet-out", required=True)
     parser.add_argument("--prompt-out", required=True)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
+    if args.binding and (args.source or args.target_contract):
+        parser.error("--binding is mutually exclusive with --source/--target-contract")
+    if not args.binding and not (args.source and args.target_contract):
+        parser.error("provide --binding or both --source and --target-contract")
     name = _validated_fixture_name(parser, args.name)
     workspace_root = _paths().workspace_root.resolve()
 
@@ -654,15 +659,27 @@ def _authoring_repair_packet(argv: list[str]) -> int:
         return path
 
     try:
-        packet, prompt = authoring_repair_packet.compile_repair_execution_packet(
-            name,
-            workspace_root=workspace_root,
-            model_id=args.model_id,
-            source_path=args.source,
-            target_contract=args.target_contract,
-            output_path=args.output_path,
-            execution_cwd=args.execution_cwd,
-        )
+        if args.binding:
+            packet, prompt = (
+                authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+                    name,
+                    workspace_root=workspace_root,
+                    model_id=args.model_id,
+                    binding_path=args.binding,
+                    output_path=args.output_path,
+                    execution_cwd=args.execution_cwd,
+                )
+            )
+        else:
+            packet, prompt = authoring_repair_packet.compile_repair_execution_packet(
+                name,
+                workspace_root=workspace_root,
+                model_id=args.model_id,
+                source_path=args.source,
+                target_contract=args.target_contract,
+                output_path=args.output_path,
+                execution_cwd=args.execution_cwd,
+            )
         packet_path = repair_artifact(args.packet_out, suffix=".json")
         prompt_path = repair_artifact(args.prompt_out, suffix=".md")
         if packet_path.parent != Path(workspace_root / args.output_path).parent:
@@ -691,6 +708,7 @@ def _authoring_repair_materialize(argv: list[str]) -> int:
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--apply", action="store_true")
     parser.add_argument("--authorization")
+    parser.add_argument("--legacy-packet", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     workspace_root = _paths().workspace_root.resolve()
@@ -735,6 +753,7 @@ def _authoring_repair_materialize(argv: list[str]) -> int:
             authorization=authorization,
             apply=args.apply,
             receipt_path=receipt_path,
+            allow_legacy_packet=args.legacy_packet,
         )
     except (ValueError, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         print(f"fig-agent authoring-repair-materialize: {exc}", file=sys.stderr)
@@ -750,6 +769,7 @@ def _authoring_repair_finalize(argv: list[str]) -> int:
     parser.add_argument("--packet", required=True)
     parser.add_argument("--receipt", required=True)
     parser.add_argument("--authorization", required=True)
+    parser.add_argument("--legacy-packet", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     paths = _paths()
@@ -770,6 +790,7 @@ def _authoring_repair_finalize(argv: list[str]) -> int:
             authorization_path=evidence_path(args.authorization),
             workspace_root=workspace_root,
             plugin_root=paths.plugin_root,
+            allow_legacy_packet=args.legacy_packet,
         )
     except (ValueError, OSError) as exc:
         print(f"fig-agent authoring-repair-finalize: {exc}", file=sys.stderr)

@@ -200,7 +200,7 @@ post-repair re-review, including every fail-closed boundary.
   relation references.
 - [x] Bind one supported machine-backed visual finding to exact source
   attribution, one editable selector, and declared protected invariants.
-- [ ] Carry that binding through the existing repair packet, materialization,
+- [x] Carry that binding through the existing repair packet, materialization,
   finalization, rollback, and bounded edit-budget surfaces as one transaction.
 - [x] Keep ambiguous or evidence-missing bridge inputs as fail-closed stops.
 - [ ] Route unbound semantic or relation findings to an explicit human handoff.
@@ -291,23 +291,26 @@ Evidence-role presence is not domain validation or actor authentication: R2 and
 R3 adapters must still validate each binding, packet, materialization, host
 review, and human decision receipt against the identity recorded in state.
 
-The code can also create an exact adjudicated-repair binding for one supported
-attribution path and prepare and finalize hash-bound post-repair visual-review
-evidence. Those internal compatibility commands are not yet one binding-led
-repair transaction, canonical external-host-review orchestration, canonical
-`run` wiring, or cross-family proof.
+The code carries one exact adjudicated-repair binding through packet compilation,
+human-authorized materialization, rollback evidence, and finalization. New
+packets use `figure-agent.repair-execution-packet.v4` with an explicit authority
+contract; stored v3 packets require an explicit legacy compatibility path.
+Binding artifacts use one byte snapshot for hash and parse, and the live graph
+is revalidated at transaction entry and inside both transaction locks.
 
-The next ordered work is to make the existing adjudicated binding the sole
-authority for one repair packet, then carry that binding and the visual-review
-surfaces through one transaction and the canonical run path. Do not reinterpret
-the checked foundation items above as satisfying an unchecked R2 or R3 exit
-condition.
+This does not yet map findings to semantic objects/relations or route a named
+human handoff, orchestrate external host review, wire the canonical `run`, or
+prove transfer across figure families. Those are the next ordered boundaries;
+do not reinterpret the completed transaction plumbing as satisfying the
+unchecked R2 or R3 exit conditions.
 
 The closed-loop slices bind their handoffs through these narrow evidence
 contracts rather than another workflow shell:
 
 - `figure-agent.repair-materialization-preview.v1`;
 - `figure-agent.repair-materialization-receipt.v2`;
+- `figure-agent.repair-execution-packet.v4`;
+- `figure-agent.repair-authority-contract.v1`;
 - `figure-agent.closed-loop-attempt-state.v1`;
 - `figure-agent.adjudicated-repair-binding.v1`;
 - `figure-agent.post-repair-visual-review-request.v1`;

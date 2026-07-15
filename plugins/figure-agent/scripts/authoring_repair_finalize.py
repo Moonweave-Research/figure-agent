@@ -138,6 +138,7 @@ def finalize_materialized_candidate(
     authorization_path: Path,
     workspace_root: Path,
     plugin_root: Path,
+    allow_legacy_packet: bool = False,
 ) -> dict[str, Any]:
     """Run one strict compile and advance only explicit passed evidence."""
     workspace_root = workspace_root.resolve()
@@ -159,12 +160,22 @@ def finalize_materialized_candidate(
     authorization_record = _mapping(
         authorization_path, label="materialization authorization"
     )
-    if packet.get("schema") != authoring_repair_packet.SCHEMA:
+    if not authoring_repair_packet.is_supported_packet_schema(packet.get("schema")):
         raise AuthoringRepairFinalizeError("repair packet schema invalid")
     if packet.get("packet_sha256") != authoring_repair_packet.canonical_packet_sha256(
         packet
     ):
         raise AuthoringRepairFinalizeError("repair packet hash drift")
+    try:
+        authoring_repair_packet.validate_bound_packet_authority(
+            packet,
+            workspace_root,
+            allow_legacy_packet=allow_legacy_packet,
+        )
+    except authoring_repair_packet.RepairExecutionPacketError as exc:
+        raise AuthoringRepairFinalizeError(
+            f"repair packet authority invalid: {exc}"
+        ) from exc
     if receipt.get("schema") != RECEIPT_SCHEMA:
         raise AuthoringRepairFinalizeError("materialization receipt schema invalid")
     decision = receipt.get("decision")
@@ -215,6 +226,7 @@ def finalize_materialized_candidate(
             human_decision_record.validate_additive_materialization_authorization(
                 authorization_record,
                 fixture=fixture,
+                packet_schema=str(packet.get("schema") or ""),
                 packet_sha256=str(packet.get("packet_sha256") or ""),
                 output_path=str(packet.get("output_path") or ""),
                 output_sha256=output_sha256,
@@ -261,6 +273,16 @@ def finalize_materialized_candidate(
         output.parent / ".materialization.lock",
         owner="authoring_repair_finalize",
     ):
+        try:
+            authoring_repair_packet.validate_bound_packet_authority(
+                packet,
+                workspace_root,
+                allow_legacy_packet=allow_legacy_packet,
+            )
+        except authoring_repair_packet.RepairExecutionPacketError as exc:
+            raise AuthoringRepairFinalizeError(
+                f"repair packet authority invalid: {exc}"
+            ) from exc
         if _sha256_bytes(output.read_bytes()) != output_sha256:
             raise AuthoringRepairFinalizeError("materialized output hash drift")
         if recovery:

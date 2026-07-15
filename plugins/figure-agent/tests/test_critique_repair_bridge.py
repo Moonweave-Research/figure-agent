@@ -198,6 +198,218 @@ def test_builds_exact_additive_bridge_artifacts(tmp_path: Path) -> None:
     assert json.loads((attempt / "critique_repair_binding.json").read_text()) == result
 
 
+def test_validates_full_live_adjudicated_repair_binding(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    expected = critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    binding, paths = critique_repair_bridge.validate_adjudicated_repair_binding(
+        attempt.relative_to(workspace) / "critique_repair_binding.json",
+        fixture="demo",
+        workspace_root=workspace,
+    )
+
+    assert binding == expected
+    assert paths["source"] == (
+        workspace / "examples/demo/review/failure-first/execution-binding-v1/"
+        "treatment_generated.tex"
+    )
+    assert paths["target_contract"] == attempt / "repair_targets.json"
+
+
+def test_binding_validator_parses_and_hashes_each_authority_from_one_snapshot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    observed = {
+        attempt / "critique_repair_binding.json",
+        attempt / "collisions.json",
+        attempt / "repair_targets.json",
+        workspace / "examples/demo/critique_adjudication.yaml",
+        attempt / "source_selectors.json",
+    }
+    byte_reads = {path: 0 for path in observed}
+    text_reads = {path: 0 for path in observed}
+    original_read_bytes = Path.read_bytes
+    original_read_text = Path.read_text
+
+    def counted_read_bytes(path: Path) -> bytes:
+        if path in byte_reads:
+            byte_reads[path] += 1
+        return original_read_bytes(path)
+
+    def counted_read_text(
+        path: Path, encoding: str | None = None, errors: str | None = None
+    ) -> str:
+        if path in text_reads:
+            text_reads[path] += 1
+        return original_read_text(path, encoding=encoding, errors=errors)
+
+    monkeypatch.setattr(Path, "read_bytes", counted_read_bytes)
+    monkeypatch.setattr(Path, "read_text", counted_read_text)
+
+    critique_repair_bridge.validate_adjudicated_repair_binding(
+        attempt.relative_to(workspace) / "critique_repair_binding.json",
+        fixture="demo",
+        workspace_root=workspace,
+    )
+
+    assert byte_reads == {path: 2 for path in observed}
+    assert text_reads == {path: 0 for path in observed}
+
+
+@pytest.mark.parametrize(
+    "artifact_name",
+    [
+        "critique_repair_binding.json",
+        "collisions.json",
+        "repair_targets.json",
+        "critique_adjudication.yaml",
+        "source_selectors.json",
+    ],
+)
+def test_binding_validator_rejects_authority_mutation_after_snapshot(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    artifact_name: str,
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    selected = {
+        "critique_repair_binding.json": (
+            attempt / "critique_repair_binding.json"
+        ),
+        "collisions.json": attempt / "collisions.json",
+        "repair_targets.json": attempt / "repair_targets.json",
+        "critique_adjudication.yaml": (
+            workspace / "examples/demo/critique_adjudication.yaml"
+        ),
+        "source_selectors.json": attempt / "source_selectors.json",
+    }[artifact_name]
+    original_read_bytes = Path.read_bytes
+    selected_reads = 0
+
+    def mutate_on_final_read(path: Path) -> bytes:
+        nonlocal selected_reads
+        data = original_read_bytes(path)
+        if path == selected:
+            selected_reads += 1
+            if selected_reads == 2:
+                return data + b"\n"
+        return data
+
+    monkeypatch.setattr(Path, "read_bytes", mutate_on_final_read)
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="changed during validation",
+    ):
+        critique_repair_bridge.validate_adjudicated_repair_binding(
+            attempt.relative_to(workspace) / "critique_repair_binding.json",
+            fixture="demo",
+            workspace_root=workspace,
+        )
+
+
+def test_binding_validator_rejects_six_field_fabrication(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    payload = critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    fabricated = {
+        key: payload[key]
+        for key in (
+            "schema",
+            "fixture",
+            "source",
+            "target_contract",
+            "attribution_state",
+            "publication_acceptance",
+        )
+    }
+    binding_path = attempt / "critique_repair_binding.json"
+    binding_path.write_text(json.dumps(fabricated), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="top-level fields",
+    ):
+        critique_repair_bridge.validate_adjudicated_repair_binding(
+            binding_path.relative_to(workspace),
+            fixture="demo",
+            workspace_root=workspace,
+        )
+
+
+def test_binding_validator_rejects_noncanonical_filename(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    binding_path = attempt / "critique_repair_binding.json"
+    wrong_path = binding_path.with_name("anything.json")
+    binding_path.rename(wrong_path)
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="critique_repair_binding.json",
+    ):
+        critique_repair_bridge.validate_adjudicated_repair_binding(
+            wrong_path.relative_to(workspace),
+            fixture="demo",
+            workspace_root=workspace,
+        )
+
+
+def test_binding_validator_rejects_upstream_drift(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    binding = critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    source = workspace / str(binding["source"]["path"])
+    source.write_text(source.read_text(encoding="utf-8") + "% drift\n", encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="binding source hash drift",
+    ):
+        critique_repair_bridge.validate_adjudicated_repair_binding(
+            attempt.relative_to(workspace) / "critique_repair_binding.json",
+            fixture="demo",
+            workspace_root=workspace,
+        )
+
+
 def test_bridge_to_attempt_local_post_review_preserves_canonical_baseline(
     tmp_path: Path,
 ) -> None:

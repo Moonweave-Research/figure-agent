@@ -15,6 +15,7 @@ import critique_adjudication
 import finding_source_attribution
 import fixture_identity
 import repair_transaction
+import yaml
 from critique_contract import (
     critique_finding_id,
     critique_findings,
@@ -25,6 +26,50 @@ BINDING_SCHEMA = "figure-agent.adjudicated-repair-binding.v1"
 REPAIR_ATTEMPT = re.compile(r"execution-repair-v[1-9][0-9]*")
 SUPPORTED_CATEGORIES = frozenset({"hierarchy", "label_placement", "whitespace"})
 CROP_MANIFEST_SCHEMA = "figure-agent.audit-crop-manifest.v1"
+BINDING_FIELDS = frozenset(
+    {
+        "schema",
+        "fixture",
+        "critique",
+        "adjudication",
+        "machine_finding",
+        "selector_registry",
+        "source",
+        "spec",
+        "current_render",
+        "current_pdf",
+        "crop_manifest",
+        "attribution_state",
+        "target_contract",
+        "publication_acceptance",
+    }
+)
+BINDING_RECORD_FIELDS = {
+    "critique": frozenset({"path", "sha256", "finding_id"}),
+    "adjudication": frozenset({"path", "sha256", "decision"}),
+    "machine_finding": frozenset(
+        {"report_path", "report_sha256", "finding_id"}
+    ),
+    "selector_registry": frozenset({"path", "sha256"}),
+    "source": frozenset({"path", "sha256"}),
+    "spec": frozenset({"path", "sha256"}),
+    "current_render": frozenset({"path", "sha256"}),
+    "current_pdf": frozenset({"path", "sha256"}),
+    "crop_manifest": frozenset({"path", "sha256"}),
+    "target_contract": frozenset({"path", "sha256"}),
+}
+TARGET_CONTRACT_FIELDS = frozenset(
+    {"schema", "source_path", "source_sha256", "targets"}
+)
+TARGET_FIELDS = frozenset(
+    {
+        "finding",
+        "attribution",
+        "selector",
+        "repair_family",
+        "protected_invariants",
+    }
+)
 
 
 class CritiqueRepairBridgeError(ValueError):
@@ -33,6 +78,10 @@ class CritiqueRepairBridgeError(ValueError):
 
 def _sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _sha256_bytes(data: bytes) -> str:
+    return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
 def _json_payload_sha256(payload: dict[str, Any]) -> str:
@@ -83,6 +132,23 @@ def _load_json(path: Path, *, label: str) -> dict[str, Any]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise CritiqueRepairBridgeError(f"{label} must be valid JSON") from exc
+    if not isinstance(payload, dict):
+        raise CritiqueRepairBridgeError(f"{label} must be a JSON object")
+    return payload
+
+
+def _read_bytes(path: Path, *, label: str) -> bytes:
+    try:
+        return path.read_bytes()
+    except OSError as exc:
+        raise CritiqueRepairBridgeError(f"{label} could not be read") from exc
+
+
+def _load_json_bytes(data: bytes, *, label: str) -> dict[str, Any]:
+    try:
+        payload = json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise CritiqueRepairBridgeError(f"{label} must be valid JSON") from exc
     if not isinstance(payload, dict):
         raise CritiqueRepairBridgeError(f"{label} must be a JSON object")
@@ -201,6 +267,219 @@ def _attempt_path(
             "attempt_dir must be an execution-repair-vN directory for the fixture"
         )
     return attempt
+
+
+def validate_adjudicated_repair_binding_snapshot(
+    binding_path: str | Path,
+    *,
+    fixture: str,
+    workspace_root: Path,
+) -> tuple[dict[str, Any], dict[str, Path], str]:
+    """Validate one repair binding from coherent per-artifact byte snapshots."""
+    workspace_root = workspace_root.resolve()
+    try:
+        fixture_identity.validate_fixture_name(fixture)
+    except ValueError as exc:
+        raise CritiqueRepairBridgeError("binding fixture invalid") from exc
+    relative = Path(binding_path)
+    if relative.name != "critique_repair_binding.json":
+        raise CritiqueRepairBridgeError(
+            "binding filename must be critique_repair_binding.json"
+        )
+    binding_file = _workspace_file(
+        workspace_root,
+        relative.as_posix(),
+        label="adjudicated repair binding",
+    )
+    example_dir = workspace_root / "examples" / fixture
+    _attempt_path(
+        binding_file.parent,
+        example_dir=example_dir,
+        workspace_root=workspace_root,
+    )
+    binding_bytes = _read_bytes(
+        binding_file, label="adjudicated repair binding"
+    )
+    binding = _load_json_bytes(
+        binding_bytes, label="adjudicated repair binding"
+    )
+    if set(binding) != BINDING_FIELDS:
+        raise CritiqueRepairBridgeError("binding top-level fields are invalid")
+    if binding.get("schema") != BINDING_SCHEMA:
+        raise CritiqueRepairBridgeError("binding schema invalid")
+    if binding.get("fixture") != fixture:
+        raise CritiqueRepairBridgeError("binding fixture mismatch")
+    if binding.get("attribution_state") != "exact":
+        raise CritiqueRepairBridgeError("binding requires exact attribution")
+    if binding.get("publication_acceptance") != "not_claimed":
+        raise CritiqueRepairBridgeError(
+            "binding publication acceptance must be not_claimed"
+        )
+
+    records: dict[str, dict[str, Any]] = {}
+    paths: dict[str, Path] = {}
+    snapshots: dict[str, bytes] = {}
+    aliases = {
+        "machine_finding": ("report", "report_path", "report_sha256"),
+        "current_render": ("before_render", "path", "sha256"),
+        "current_pdf": ("before_pdf", "path", "sha256"),
+        "crop_manifest": ("baseline_crop_manifest", "path", "sha256"),
+    }
+    labels = {"target_contract": "target contract"}
+    for key, expected_fields in BINDING_RECORD_FIELDS.items():
+        label = labels.get(key, key)
+        record = binding.get(key)
+        if not isinstance(record, dict) or set(record) != expected_fields:
+            raise CritiqueRepairBridgeError(f"binding {label} record is invalid")
+        records[key] = record
+        alias, path_key, hash_key = aliases.get(key, (key, "path", "sha256"))
+        path = _workspace_file(
+            workspace_root,
+            record.get(path_key),
+            label=f"binding {key}",
+        )
+        snapshot = _read_bytes(path, label=f"binding {key}")
+        if record.get(hash_key) != _sha256_bytes(snapshot):
+            raise CritiqueRepairBridgeError(f"binding {label} hash drift")
+        paths[alias] = path
+        snapshots[alias] = snapshot
+
+    critique_id = records["critique"].get("finding_id")
+    machine_id = records["machine_finding"].get("finding_id")
+    if not isinstance(critique_id, str) or not critique_id.strip():
+        raise CritiqueRepairBridgeError("binding critique finding id invalid")
+    if not isinstance(machine_id, str) or not machine_id.strip():
+        raise CritiqueRepairBridgeError("binding machine finding id invalid")
+    if records["adjudication"].get("decision") != "apply":
+        raise CritiqueRepairBridgeError("binding adjudication decision invalid")
+
+    try:
+        raw_adjudication = yaml.safe_load(
+            snapshots["adjudication"].decode("utf-8")
+        )
+        adjudication = critique_adjudication.validate_adjudication(
+            raw_adjudication
+        )
+    except (
+        UnicodeDecodeError,
+        yaml.YAMLError,
+        critique_adjudication.CritiqueAdjudicationError,
+    ) as exc:
+        raise CritiqueRepairBridgeError(str(exc)) from exc
+    if (
+        adjudication.get("fixture") != fixture
+        or adjudication.get("source_critique_hash")
+        != _sha256_bytes(snapshots["critique"])
+    ):
+        raise CritiqueRepairBridgeError("binding adjudication lineage invalid")
+    decisions = [
+        item
+        for item in adjudication.get("decisions", [])
+        if isinstance(item, dict) and item.get("decision") == "apply"
+    ]
+    if len(decisions) != 1 or decisions[0].get("finding_id") != critique_id:
+        raise CritiqueRepairBridgeError("binding adjudication apply decision invalid")
+    evidence = decisions[0].get("repair_evidence")
+    if (
+        not isinstance(evidence, dict)
+        or set(evidence)
+        != {"report_path", "finding_id", "selector_registry_path"}
+        or evidence.get("report_path")
+        != records["machine_finding"].get("report_path")
+        or evidence.get("finding_id") != machine_id
+        or evidence.get("selector_registry_path")
+        != records["selector_registry"].get("path")
+    ):
+        raise CritiqueRepairBridgeError("binding repair evidence lineage invalid")
+
+    if paths["before_pdf"].stem != paths["before_render"].stem:
+        raise CritiqueRepairBridgeError("binding PDF/render generation mismatch")
+    report = _load_json_bytes(
+        snapshots["report"], label="binding machine report"
+    )
+    try:
+        expected_render = paths["before_render"].relative_to(example_dir).as_posix()
+        expected_pdf = paths["before_pdf"].relative_to(example_dir).as_posix()
+    except ValueError as exc:
+        raise CritiqueRepairBridgeError(
+            "binding render artifacts must remain inside the fixture"
+        ) from exc
+    if (
+        report.get("schema") != "figure-agent.text-collisions.v1"
+        or report.get("fixture") != fixture
+        or report.get("render_path") != expected_render
+        or report.get("render_sha256")
+        != _sha256_bytes(snapshots["before_render"])
+        or report.get("render_pdf") != expected_pdf
+        or report.get("render_pdf_sha256")
+        != _sha256_bytes(snapshots["before_pdf"])
+        or Path(expected_render).stem != Path(expected_pdf).stem
+    ):
+        raise CritiqueRepairBridgeError("binding machine report lineage invalid")
+
+    selector_registry = _load_json_bytes(
+        snapshots["selector_registry"], label="binding selector registry"
+    )
+    source_record = records["source"]
+    if (
+        selector_registry.get("schema")
+        != "figure-agent.source-selector-registry.v1"
+        or selector_registry.get("source_path") != source_record.get("path")
+        or selector_registry.get("source_sha256") != source_record.get("sha256")
+    ):
+        raise CritiqueRepairBridgeError("binding selector source lineage invalid")
+    target = _load_json_bytes(
+        snapshots["target_contract"], label="binding target contract"
+    )
+    targets = target.get("targets")
+    selected_target = (
+        targets[0] if isinstance(targets, list) and len(targets) == 1 else None
+    )
+    if (
+        set(target) != TARGET_CONTRACT_FIELDS
+        or target.get("schema") != "figure-agent.repair-target-contract.v1"
+        or target.get("source_path") != source_record.get("path")
+        or target.get("source_sha256") != source_record.get("sha256")
+        or not isinstance(selected_target, dict)
+        or set(selected_target) != TARGET_FIELDS
+        or selected_target.get("finding")
+        != {
+            "report_path": records["machine_finding"].get("report_path"),
+            "id": machine_id,
+        }
+        or selected_target.get("attribution") != {"state": "exact"}
+    ):
+        raise CritiqueRepairBridgeError("binding target lineage invalid")
+    for alias, path in paths.items():
+        if _read_bytes(path, label=f"binding {alias}") != snapshots[alias]:
+            raise CritiqueRepairBridgeError(
+                f"binding {alias} changed during validation"
+            )
+    if (
+        _read_bytes(binding_file, label="adjudicated repair binding")
+        != binding_bytes
+    ):
+        raise CritiqueRepairBridgeError(
+            "adjudicated repair binding changed during validation"
+        )
+    return binding, paths, _sha256_bytes(binding_bytes)
+
+
+def validate_adjudicated_repair_binding(
+    binding_path: str | Path,
+    *,
+    fixture: str,
+    workspace_root: Path,
+) -> tuple[dict[str, Any], dict[str, Path]]:
+    """Validate the complete live authority graph for one repair binding."""
+    binding, paths, _binding_sha256 = (
+        validate_adjudicated_repair_binding_snapshot(
+            binding_path,
+            fixture=fixture,
+            workspace_root=workspace_root,
+        )
+    )
+    return binding, paths
 
 
 def _selected_finding(frontmatter: dict[str, Any], finding_id: str) -> dict[str, Any]:
