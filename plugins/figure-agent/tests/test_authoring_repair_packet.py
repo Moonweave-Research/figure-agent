@@ -7,6 +7,7 @@ import stat
 import subprocess
 from pathlib import Path
 
+import authoring_repair_finalize
 import authoring_repair_packet
 import pytest
 import repair_transaction
@@ -169,6 +170,85 @@ def _authorized_materialization(
         preview_sha256=str(preview["preview_sha256"]),
     )
     return workspace, packet, response, authorization, output, receipt
+
+
+def _fake_strict_compiler(
+    tmp_path: Path,
+    *,
+    state: str = "passed",
+    returncode: int = 0,
+    write_status: bool = True,
+    write_render: bool = True,
+    expected_workspace: Path | None = None,
+) -> Path:
+    plugin_root = tmp_path / "plugin"
+    script = plugin_root / "scripts" / "compile.sh"
+    script.parent.mkdir(parents=True, exist_ok=True)
+    detector_failed = "true" if state == "failed" else "false"
+    reports = {
+        "collisions.json": "figure-agent.text-collisions.v1",
+        "visual_clash.json": None,
+        "text_boundary_clash.json": "figure-agent.text-boundary-clash.v1",
+        "label_path_proximity.json": "figure-agent.label-path-proximity.v1",
+        "undeclared_geometry.json": "figure-agent.undeclared-geometry.v1",
+        "label_hyphenation.json": "figure-agent.label-hyphenation.v1",
+        "semantic_assertions.json": "figure-agent.semantic-assertions.v1",
+        "vector_clearance.json": "figure-agent.vector-clearance.v1",
+        "tex_assertions.json": "figure-agent.tex-assertions.v1",
+        "physics_grounding.json": None,
+    }
+    report_script = "".join(
+        "printf '%s' '"
+        + json.dumps({"schema": schema} if schema else {"total": 0})
+        + f"' > \"$build/{name}\"\n"
+        for name, schema in reports.items()
+    )
+    render_script = (
+        "printf 'pdf' > \"$build/$base.pdf\"\n"
+        "printf 'png' > \"$build/$base.png\"\n"
+        if write_render
+        else ""
+    )
+    status_script = (
+        "cat > \"$build/strict_status.json\" <<'EOF'\n"
+        "{\n"
+        '  "schema": "figure-agent.strict-status.v1",\n'
+        '  "strict_requested": true,\n'
+        f'  "detector_failed": {detector_failed},\n'
+        f'  "state": "{state}"\n'
+        "}\n"
+        "EOF\n"
+        if write_status
+        else ""
+    )
+    script.write_text(
+        "#!/usr/bin/env bash\n"
+        "set -euo pipefail\n"
+        + (
+            f'test "${{FIGURE_AGENT_WORKSPACE:-}}" = "{expected_workspace}"\n'
+            if expected_workspace is not None
+            else ""
+        )
+        +
+        "tex=\"$1\"\n"
+        "base=\"$(basename \"$tex\" .tex)\"\n"
+        "build=\"$(dirname \"$tex\")/build\"\n"
+        "mkdir -p \"$build\"\n"
+        f"{render_script}"
+        f"{report_script}"
+        f"{status_script}"
+        f"exit {returncode}\n",
+        encoding="utf-8",
+    )
+    return plugin_root
+
+
+def _authorization_artifact(
+    receipt_path: Path, authorization: dict[str, object]
+) -> Path:
+    path = receipt_path.parent / "materialization_authorization.json"
+    path.write_text(json.dumps(authorization), encoding="utf-8")
+    return path
 
 
 def test_compiles_one_hash_bound_exact_repair_packet(tmp_path: Path) -> None:
@@ -840,6 +920,396 @@ def test_atomic_write_fsyncs_parent_directory_after_replace(
     assert events[-2:] == ["replace", "directory_fsync"]
 
 
+def test_post_render_finalizer_promotes_only_strict_pass_to_human_review_pending(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    output_before = output.read_bytes()
+
+    finalized = authoring_repair_finalize.finalize_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=_authorization_artifact(receipt_path, authorization),
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path, expected_workspace=workspace),
+    )
+
+    assert output.read_bytes() == output_before
+    assert finalized["decision"] == "materialized_machine_verified_human_review_pending"
+    assert finalized["post_render_verification"] == "passed"
+    assert finalized["external_compile"]["returncode"] == 0
+    assert finalized["external_compile"]["strict_status"]["state"] == "passed"
+    assert finalized["external_compile"]["pdf"]["sha256"] == _sha256(b"pdf")
+    assert finalized["external_compile"]["png"]["sha256"] == _sha256(b"png")
+    assert set(finalized["external_compile"]["detector_reports"]) == {
+        "collisions",
+        "visual_clash",
+        "text_boundary_clash",
+        "label_path_proximity",
+        "undeclared_geometry",
+        "label_hyphenation",
+        "semantic_assertions",
+        "vector_clearance",
+        "tex_assertions",
+        "physics_grounding",
+    }
+    assert finalized["human_review"] == "pending"
+    assert finalized["publication_acceptance"] == "not_claimed"
+    assert json.loads(receipt_path.read_text(encoding="utf-8")) == finalized
+
+
+def test_post_render_finalizer_persists_compile_failure_without_promotion(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    original_receipt = authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+
+    failed = authoring_repair_finalize.finalize_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=_authorization_artifact(receipt_path, authorization),
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path, state="failed", returncode=1),
+    )
+
+    assert output.is_file()
+    assert failed["decision"] == "materialized_verification_failed"
+    assert failed["post_render_verification"] == "failed"
+    assert failed["external_compile"]["returncode"] == 1
+    assert failed["external_compile"]["failure_reason"] == "strict_compile_nonzero"
+    assert failed["human_review"] == "pending"
+    assert failed["publication_acceptance"] == "not_claimed"
+    assert failed["output_sha256"] == original_receipt["output_sha256"]
+    assert json.loads(receipt_path.read_text(encoding="utf-8")) == failed
+
+
+def test_post_render_finalizer_rejects_receipt_summary_drift_before_compile(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    receipt = authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    receipt["change_summary"] = "Approval did not cover this summary."
+    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+
+    with pytest.raises(
+        authoring_repair_finalize.AuthoringRepairFinalizeError,
+        match="authorization provenance mismatch",
+    ):
+        authoring_repair_finalize.finalize_materialized_candidate(
+            packet_path=packet_path,
+            receipt_path=receipt_path,
+            authorization_path=_authorization_artifact(receipt_path, authorization),
+            workspace_root=workspace,
+            plugin_root=_fake_strict_compiler(tmp_path),
+        )
+
+    assert not (output.parent / "build").exists()
+
+
+def test_post_render_finalizer_rejects_output_and_receipt_rebinding(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    receipt = authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    output.write_text(output.read_text(encoding="utf-8") + "% unauthorized\n", encoding="utf-8")
+    rebound_hash = _sha256(output.read_bytes())
+    receipt["output_sha256"] = rebound_hash
+    receipt["authorization"]["authorized_output_sha256"] = rebound_hash
+    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+
+    with pytest.raises(
+        authoring_repair_finalize.AuthoringRepairFinalizeError,
+        match="authorization provenance mismatch",
+    ):
+        authoring_repair_finalize.finalize_materialized_candidate(
+            packet_path=packet_path,
+            receipt_path=receipt_path,
+            authorization_path=_authorization_artifact(receipt_path, authorization),
+            workspace_root=workspace,
+            plugin_root=_fake_strict_compiler(tmp_path),
+        )
+
+    assert not (output.parent / "build").exists()
+
+
+def test_post_render_finalizer_rejects_symlinked_evidence_inputs(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, _output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    links = workspace / "links"
+    links.mkdir()
+    packet_link = links / "repair_packet.json"
+    receipt_link = links / "materialization_receipt.json"
+    packet_link.symlink_to(packet_path)
+    receipt_link.symlink_to(receipt_path)
+
+    with pytest.raises(
+        authoring_repair_finalize.AuthoringRepairFinalizeError,
+        match="must not be symlinks",
+    ):
+        authoring_repair_finalize.finalize_materialized_candidate(
+            packet_path=packet_link,
+            receipt_path=receipt_link,
+            authorization_path=_authorization_artifact(receipt_path, authorization),
+            workspace_root=workspace,
+            plugin_root=_fake_strict_compiler(tmp_path),
+        )
+
+    pending = json.loads(receipt_path.read_text(encoding="utf-8"))
+    assert pending["decision"] == "materialized_verification_pending"
+
+
+def test_post_render_finalizer_requires_exact_fixture_repair_attempt_boundary(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, _output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    outside = workspace / "outside"
+    outside.mkdir()
+    packet_path = outside / "repair_packet.json"
+    copied_receipt = outside / "materialization_receipt.json"
+    copied_authorization = outside / "materialization_authorization.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    copied_receipt.write_bytes(receipt_path.read_bytes())
+    copied_authorization.write_text(json.dumps(authorization), encoding="utf-8")
+
+    with pytest.raises(
+        authoring_repair_finalize.AuthoringRepairFinalizeError,
+        match="exact execution-repair attempt",
+    ):
+        authoring_repair_finalize.finalize_materialized_candidate(
+            packet_path=packet_path,
+            receipt_path=copied_receipt,
+            authorization_path=copied_authorization,
+            workspace_root=workspace,
+            plugin_root=_fake_strict_compiler(tmp_path),
+        )
+
+
+def test_post_render_finalizer_records_missing_strict_status_as_failure(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, _output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+
+    failed = authoring_repair_finalize.finalize_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=_authorization_artifact(receipt_path, authorization),
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path, write_status=False),
+    )
+
+    assert failed["decision"] == "materialized_verification_failed"
+    assert failed["post_render_verification"] == "failed"
+    assert (
+        failed["external_compile"]["failure_reason"]
+        == "strict_status_missing_or_invalid"
+    )
+    assert failed["publication_acceptance"] == "not_claimed"
+
+
+def test_post_render_finalizer_records_missing_render_as_failure(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, _output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+
+    failed = authoring_repair_finalize.finalize_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=_authorization_artifact(receipt_path, authorization),
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path, write_render=False),
+    )
+
+    assert failed["decision"] == "materialized_verification_failed"
+    assert failed["external_compile"]["failure_reason"] == "render_artifact_missing"
+    assert failed["publication_acceptance"] == "not_claimed"
+
+
+def test_post_render_finalizer_refuses_preexisting_build_evidence(
+    tmp_path: Path,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    build = output.parent / "build"
+    build.mkdir()
+    (build / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": True,
+                "detector_failed": False,
+                "state": "passed",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_repair_finalize.AuthoringRepairFinalizeError,
+        match="verification build directory must be absent",
+    ):
+        authoring_repair_finalize.finalize_materialized_candidate(
+            packet_path=packet_path,
+            receipt_path=receipt_path,
+            authorization_path=_authorization_artifact(receipt_path, authorization),
+            workspace_root=workspace,
+            plugin_root=_fake_strict_compiler(tmp_path, write_status=False),
+        )
+
+    pending = json.loads(receipt_path.read_text(encoding="utf-8"))
+    assert pending["decision"] == "materialized_verification_pending"
+
+
+def test_post_render_finalizer_recovers_after_final_receipt_write_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, packet, response, authorization, output, receipt_path = (
+        _authorized_materialization(tmp_path)
+    )
+    authoring_repair_packet.materialize_repair_candidate(
+        packet,
+        response,
+        workspace_root=workspace,
+        authorization=authorization,
+        receipt_path=receipt_path,
+    )
+    packet_path = receipt_path.parent / "repair_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    original_atomic_write = repair_transaction.atomic_write_json
+
+    def fail_final_receipt(path: Path, payload: dict[str, object]) -> None:
+        if payload.get("decision") == (
+            "materialized_machine_verified_human_review_pending"
+        ):
+            raise OSError("final verification receipt interrupted")
+        original_atomic_write(path, payload)
+
+    monkeypatch.setattr(repair_transaction, "atomic_write_json", fail_final_receipt)
+    with pytest.raises(OSError, match="final verification receipt interrupted"):
+        authoring_repair_finalize.finalize_materialized_candidate(
+            packet_path=packet_path,
+            receipt_path=receipt_path,
+            authorization_path=_authorization_artifact(receipt_path, authorization),
+            workspace_root=workspace,
+            plugin_root=_fake_strict_compiler(tmp_path),
+        )
+
+    prepared = json.loads(receipt_path.read_text(encoding="utf-8"))
+    assert prepared["decision"] == "materialized_verification_prepared"
+    assert prepared["recovery_required"] is True
+    assert prepared["external_compile"]["candidate_sha256"] == _sha256(
+        output.read_bytes()
+    )
+    assert (output.parent / "build").is_dir()
+
+    monkeypatch.setattr(repair_transaction, "atomic_write_json", original_atomic_write)
+    recovered = authoring_repair_finalize.finalize_materialized_candidate(
+        packet_path=packet_path,
+        receipt_path=receipt_path,
+        authorization_path=_authorization_artifact(receipt_path, authorization),
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path),
+    )
+
+    assert recovered["post_render_verification"] == "passed"
+    assert recovered["recovery_required"] is False
+    assert recovered["publication_acceptance"] == "not_claimed"
+
+
 def test_materializer_preserves_boundary_blank_padding(tmp_path: Path) -> None:
     workspace, source, contract = _fixture(tmp_path)
     source.write_text(
@@ -1126,3 +1596,30 @@ def test_cli_writes_additive_repair_packet_and_prompt(tmp_path: Path) -> None:
     assert materialize.returncode == 0, materialize.stderr
     assert (workspace / repair_root / "repaired_generated.tex").is_file()
     assert (workspace / repair_root / "materialization_receipt.json").is_file()
+
+    finalize_env = env.copy()
+    finalize_env["FIGURE_AGENT_PLUGIN_ROOT"] = str(_fake_strict_compiler(tmp_path))
+    finalize = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-repair-finalize",
+            "--packet",
+            f"{repair_root}/repair_packet.json",
+            "--receipt",
+            f"{repair_root}/materialization_receipt.json",
+            "--authorization",
+            f"{repair_root}/materialization_authorization.json",
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=finalize_env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert finalize.returncode == 0, finalize.stderr
+    finalized = json.loads(finalize.stdout)
+    assert finalized["post_render_verification"] == "passed"
+    assert finalized["human_review"] == "pending"
+    assert finalized["publication_acceptance"] == "not_claimed"

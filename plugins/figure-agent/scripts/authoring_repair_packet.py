@@ -13,6 +13,7 @@ import human_decision_record
 import repair_transaction
 
 SCHEMA = "figure-agent.repair-execution-packet.v3"
+MATERIALIZATION_PREVIEW_SCHEMA = "figure-agent.repair-materialization-preview.v1"
 CONTRACT_SCHEMA = "figure-agent.repair-target-contract.v1"
 SOURCE_ATTEMPT = re.compile(
     r"(?:execution-binding|comparable|execution-repair)-v[1-9][0-9]*"
@@ -73,6 +74,26 @@ def _canonical_json_bytes(payload: object) -> bytes:
 def canonical_packet_sha256(packet: dict[str, object]) -> str:
     payload = {key: value for key, value in packet.items() if key != "packet_sha256"}
     return _sha256_bytes(_canonical_json_bytes(payload))
+
+
+def canonical_materialization_preview_sha256(record: dict[str, object]) -> str:
+    """Rebuild the exact preview authorized before additive materialization."""
+    preview = {
+        "schema": MATERIALIZATION_PREVIEW_SCHEMA,
+        "fixture": record.get("fixture"),
+        "packet_sha256": record.get("packet_sha256"),
+        "source_sha256": record.get("source_sha256"),
+        "output_path": record.get("output_path"),
+        "output_sha256": record.get("output_sha256"),
+        "changed_source_blocks": record.get("changed_source_blocks"),
+        "changed_lines": record.get("changed_lines"),
+        "preserved_boundary_blank_lines": record.get(
+            "preserved_boundary_blank_lines"
+        ),
+        "change_summary": record.get("change_summary"),
+        "publication_acceptance": record.get("publication_acceptance"),
+    }
+    return _sha256_bytes(_canonical_json_bytes(preview))
 
 
 def _safe_relative(value: str, *, label: str) -> Path:
@@ -585,7 +606,7 @@ def materialize_repair_candidate(
     output_relative = _safe_relative(str(packet.get("output_path") or ""), label="output path")
     output_sha256 = _sha256_bytes(candidate.encode("utf-8"))
     preview = {
-        "schema": "figure-agent.repair-materialization-preview.v1",
+        "schema": MATERIALIZATION_PREVIEW_SCHEMA,
         "fixture": packet.get("fixture"),
         "packet_sha256": packet["packet_sha256"],
         "source_sha256": source_record["sha256"],
@@ -597,7 +618,7 @@ def materialize_repair_candidate(
         "change_summary": summary.strip(),
         "publication_acceptance": "not_claimed",
     }
-    preview["preview_sha256"] = _sha256_bytes(_canonical_json_bytes(preview))
+    preview["preview_sha256"] = canonical_materialization_preview_sha256(preview)
     if not apply:
         return preview
     if not isinstance(authorization, dict):

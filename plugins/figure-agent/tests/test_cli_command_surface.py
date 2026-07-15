@@ -30,9 +30,10 @@ def test_doctor_reports_the_canonical_command_surface() -> None:
     assert surface["bounded_repair_entry_route"] == [
         "authoring-repair-packet",
         "authoring-repair-materialize",
+        "authoring-repair-finalize",
     ]
-    assert surface["bounded_repair_transaction_state"] == "incomplete"
-    assert surface["counts"]["total"] == 81
+    assert surface["bounded_repair_transaction_state"] == "complete"
+    assert surface["counts"]["total"] == 82
     assert set(surface["commands_by_disposition"]) == {
         "core",
         "internal_compatibility",

@@ -330,10 +330,14 @@ not add another generator, renderer, candidate family, or workflow shell.
   as deletion only when the new output still matches its approved hash.
   Quality-patch and authoring-repair now share the same low-level exclusive-lock
   and atomic-write implementation; historical packet v3 and v1 receipts remain
-  untouched. The bounded-repair transaction remains open only at the
-  verification boundary: clean strict compile/status evidence still needs a
-  fail-closed post-render finalizer. `bounded_repair_transaction_state`
-  therefore remains `incomplete`.
+  untouched. The fourth Q5 slice closes the post-render boundary with the core
+  `authoring-repair-finalize` command. It rejects stale builds, rechecks the
+  approved source hash and original adjacent human authorization, resolves live fixture spec/layout from the external workspace, and forces those gates for a new
+  `execution-repair-vN` while recording strict status, render, detector, and
+  process-output hashes. Missing evidence is persisted as failure. A
+  machine pass advances only to human-review-pending and keeps publication
+  acceptance unclaimed. The route is packet -> authorized materialization ->
+  finalization, so `bounded_repair_transaction_state` is `complete`.
 
 Q0–Q4 are sequential. Q5 is an architecture gate and may proceed without
 altering the figure while Q4 awaits human evidence. After Q4, Q5, and the Slice

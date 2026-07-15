@@ -29,11 +29,21 @@ def test_compile_script_pins_uv_project_after_changing_to_workspace_fixture() ->
 def test_compile_passes_top_level_fixture_spec_to_nested_source_checker() -> None:
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 
-    assert 'FIGURE_SPEC="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}/spec.yaml"' in script
+    assert 'FIXTURE_WORKSPACE="${FIGURE_AGENT_WORKSPACE:-$WORKFLOW_DIR}"' in script
+    assert 'FIGURE_SPEC="${FIXTURE_WORKSPACE}/examples/${FIXTURE_NAME}/spec.yaml"' in script
     assert 'UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")' in script
     assert '${UNDECLARED_GEOMETRY_SPEC_ARGS[@]+"${UNDECLARED_GEOMETRY_SPEC_ARGS[@]}"}' in script
     assert 'TEX_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")' in script
     assert '${TEX_ASSERTION_SPEC_ARGS[@]+"${TEX_ASSERTION_SPEC_ARGS[@]}"}' in script
+
+
+def test_compile_live_repair_verification_does_not_use_historical_gate_relaxation() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'LIVE_REPAIR_VERIFY="${FIGURE_AGENT_LIVE_REPAIR_VERIFY:-0}"' in script
+    assert 'LIVE_ASSERTION_TARGET=1' in script
+    assert 'if [[ $LIVE_ASSERTION_TARGET -eq 1' in script
+    assert 'if [[ $LIVE_ASSERTION_TARGET -eq 0' in script
 
 
 def test_compile_runs_opt_in_state_field_geometry_checks_from_the_fixture_spec() -> None:

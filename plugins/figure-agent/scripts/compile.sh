@@ -36,6 +36,11 @@ HISTORICAL_REPAIR_REPLAY=0
 if [[ "$(basename "$(dirname "$TEX_INPUT")")" =~ ^execution-repair-v[0-9]+$ ]]; then
   HISTORICAL_REPAIR_REPLAY=1
 fi
+LIVE_REPAIR_VERIFY="${FIGURE_AGENT_LIVE_REPAIR_VERIFY:-0}"
+LIVE_ASSERTION_TARGET=0
+if [[ $HISTORICAL_REPAIR_REPLAY -eq 0 || "$LIVE_REPAIR_VERIFY" == "1" ]]; then
+  LIVE_ASSERTION_TARGET=1
+fi
 
 FIXTURE_NAME=""
 FIXTURE_TAIL="${TEX_INPUT#*examples/}"
@@ -51,15 +56,16 @@ STATE_FIELD_GEOMETRY_SPEC_ARGS=()
 LAYOUT_CONTRACT=""
 if [[ -n "$FIXTURE_NAME" ]]; then
   COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")
-  FIGURE_SPEC="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}/spec.yaml"
-  FIXTURE_ROOT="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}"
+  FIXTURE_WORKSPACE="${FIGURE_AGENT_WORKSPACE:-$WORKFLOW_DIR}"
+  FIGURE_SPEC="${FIXTURE_WORKSPACE}/examples/${FIXTURE_NAME}/spec.yaml"
+  FIXTURE_ROOT="${FIXTURE_WORKSPACE}/examples/${FIXTURE_NAME}"
   LAYOUT_CONTRACT="${FIXTURE_ROOT}/layout_lanes.yaml"
   TEX_INPUT_DIR="$(cd "$(dirname "$TEX_INPUT")" && pwd)"
   TEX_INPUT_ABS="${TEX_INPUT_DIR}/$(basename "$TEX_INPUT")"
   # An explicitly named fixture is sufficient for a live source outside the
   # examples tree, but never turns immutable execution-repair evidence into a
   # current-source assertion target.
-  if [[ $HISTORICAL_REPAIR_REPLAY -eq 0 && ( "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/"* || -n "${FIGURE_AGENT_FIXTURE_NAME:-}" ) && -f "$FIGURE_SPEC" ]]; then
+  if [[ $LIVE_ASSERTION_TARGET -eq 1 && ( "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/"* || -n "${FIGURE_AGENT_FIXTURE_NAME:-}" ) && -f "$FIGURE_SPEC" ]]; then
     UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     TEX_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     STATE_FIELD_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
@@ -88,7 +94,7 @@ if [[ "${FIGURE_AGENT_STRICT:-}" == "1" ]]; then
   echo 'Strict mode: collision/clash findings will fail the compile.' >&2
 fi
 UNDECLARED_GEOMETRY_STRICT_ARGS=("${STRICT_ARGS[@]}")
-if [[ $HISTORICAL_REPAIR_REPLAY -eq 1 ]]; then
+if [[ $LIVE_ASSERTION_TARGET -eq 0 ]]; then
   UNDECLARED_GEOMETRY_STRICT_ARGS=()
   echo "INFO: historical repair replay reports, but does not strict-gate, live coverage requirements" >&2
 fi
