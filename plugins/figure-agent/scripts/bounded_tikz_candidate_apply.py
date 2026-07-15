@@ -14,6 +14,15 @@ SCHEMA = "figure-agent.bounded-tikz-apply-result.v1"
 CANDIDATE_PACKET_SCHEMA = "figure-agent.bounded-tikz-candidate-packet.v1"
 MUTATION_BOUNDARY = "source_mutation_allowed"
 SOURCE_MUTATION_DECISION_KIND = "apply_bounded_tikz_candidate"
+_LEGACY_AUTHORIZATION_DIAGNOSTICS = frozenset(
+    {
+        "source_mutation_decision_fixture_mismatch",
+        "source_mutation_decision_kind_invalid",
+        "source_mutation_decision_boundary_invalid",
+        "source_mutation_decision_candidate_id_mismatch",
+        "source_mutation_decision_candidate_hash_mismatch",
+    }
+)
 
 
 class BoundedTikzCandidateApplyError(ValueError):
@@ -125,19 +134,20 @@ def _source_mutation_decision_diagnostics(
     if not isinstance(decision, dict):
         return [_diagnostic("source_mutation_decision_missing")]
     try:
-        normalized = human_decision_record.validate_decision_record(decision)
+        human_decision_record.validate_source_mutation_authorization(
+            decision,
+            fixture=fixture,
+            decision_kind=SOURCE_MUTATION_DECISION_KIND,
+            candidate_id=str(candidate.get("id") or ""),
+            candidate_hash=str(candidate.get("candidate_hash") or ""),
+            packet_schema=human_decision_record.RELEASE_DECISION_PACKET_SCHEMA,
+            packet_recommendation=SOURCE_MUTATION_DECISION_KIND,
+        )
     except human_decision_record.HumanDecisionRecordError as exc:
-        return [_diagnostic(f"source_mutation_decision_invalid:{exc}")]
-    if normalized.get("fixture") != fixture:
-        return [_diagnostic("source_mutation_decision_fixture_mismatch")]
-    if normalized.get("decision_kind") != SOURCE_MUTATION_DECISION_KIND:
-        return [_diagnostic("source_mutation_decision_kind_invalid")]
-    if normalized.get("mutation_boundary") != MUTATION_BOUNDARY:
-        return [_diagnostic("source_mutation_decision_boundary_invalid")]
-    if decision.get("authorized_candidate_id") != candidate.get("id"):
-        return [_diagnostic("source_mutation_decision_candidate_id_mismatch")]
-    if decision.get("authorized_candidate_hash") != candidate.get("candidate_hash"):
-        return [_diagnostic("source_mutation_decision_candidate_hash_mismatch")]
+        code = str(exc)
+        if code in _LEGACY_AUTHORIZATION_DIAGNOSTICS:
+            return [_diagnostic(code)]
+        return [_diagnostic(f"source_mutation_decision_invalid:{code}")]
     return []
 
 

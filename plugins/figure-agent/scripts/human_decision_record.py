@@ -10,6 +10,7 @@ SCHEMA = "figure-agent.human-decision-record.v1"
 RELEASE_DECISION_PACKET_SCHEMA = "figure-agent.release-decision-packet.v1"
 STYLE_DIRECTION_PACKET_SCHEMA = "figure-agent.style-direction-packet.v1"
 DESIGN_DIRECTION_PACKET_SCHEMA = "figure-agent.design-direction-packet.v1"
+QUALITY_PATCH_PLAN_SCHEMA = "figure-agent.quality-patch-plan.v1"
 
 DECISION_KINDS = frozenset(
     {
@@ -27,6 +28,7 @@ DECISION_KINDS = frozenset(
         "request_full_style_redesign",
         "prepare_bounded_tikz_refinement",
         "apply_bounded_tikz_candidate",
+        "apply_quality_patch_plan",
         "prepare_editorial_redesign_candidates",
         "prepare_svg_polish_handoff",
         "defer_design_decision",
@@ -71,6 +73,7 @@ PACKET_SCHEMAS = frozenset(
         RELEASE_DECISION_PACKET_SCHEMA,
         STYLE_DIRECTION_PACKET_SCHEMA,
         DESIGN_DIRECTION_PACKET_SCHEMA,
+        QUALITY_PATCH_PLAN_SCHEMA,
     }
 )
 MUTATION_BOUNDARIES = frozenset(
@@ -87,7 +90,9 @@ _RELEASE_MUTATION_BOUNDARIES = frozenset(
 _SVG_POLISH_DECISION_KINDS = frozenset(
     {"request_svg_polish_candidate_evidence", "request_svg_polish_handoff_evidence"}
 )
-_SOURCE_MUTATION_DECISION_KINDS = frozenset({"apply_bounded_tikz_candidate"})
+_SOURCE_MUTATION_DECISION_KINDS = frozenset(
+    {"apply_bounded_tikz_candidate", "apply_quality_patch_plan"}
+)
 
 
 class HumanDecisionRecordError(ValueError):
@@ -205,4 +210,47 @@ def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
         "human_note": _required_string(record, "human_note"),
         "follow_up": follow_up,
         "mutation_boundary": mutation_boundary,
+    }
+
+
+def validate_source_mutation_authorization(
+    record: dict[str, Any],
+    *,
+    fixture: str,
+    decision_kind: str,
+    candidate_id: str,
+    candidate_hash: str,
+    packet_schema: str | None = None,
+    packet_recommendation: str | None = None,
+    packet_path: str | None = None,
+) -> dict[str, Any]:
+    """Validate one named decision bound to one exact source-mutation candidate."""
+    normalized = validate_decision_record(record)
+    if normalized["fixture"] != fixture:
+        raise HumanDecisionRecordError("source_mutation_decision_fixture_mismatch")
+    if normalized["decision_kind"] != decision_kind:
+        raise HumanDecisionRecordError("source_mutation_decision_kind_invalid")
+    if normalized["mutation_boundary"] != "source_mutation_allowed":
+        raise HumanDecisionRecordError("source_mutation_decision_boundary_invalid")
+    if packet_schema is not None and normalized["packet_schema"] != packet_schema:
+        raise HumanDecisionRecordError("source_mutation_decision_packet_schema_mismatch")
+    if (
+        packet_recommendation is not None
+        and normalized["packet_recommendation"] != packet_recommendation
+    ):
+        raise HumanDecisionRecordError(
+            "source_mutation_decision_packet_recommendation_mismatch"
+        )
+    if packet_path is not None and normalized["packet_path"] != packet_path:
+        raise HumanDecisionRecordError("source_mutation_decision_packet_path_mismatch")
+    authorized_candidate_id = _required_string(record, "authorized_candidate_id")
+    authorized_candidate_hash = _required_string(record, "authorized_candidate_hash")
+    if authorized_candidate_id != candidate_id:
+        raise HumanDecisionRecordError("source_mutation_decision_candidate_id_mismatch")
+    if authorized_candidate_hash != candidate_hash:
+        raise HumanDecisionRecordError("source_mutation_decision_candidate_hash_mismatch")
+    return {
+        **normalized,
+        "authorized_candidate_id": authorized_candidate_id,
+        "authorized_candidate_hash": authorized_candidate_hash,
     }

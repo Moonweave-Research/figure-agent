@@ -1742,16 +1742,27 @@ def _apply_plan(argv: list[str]) -> int:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--apply", action="store_true")
+    parser.add_argument("--authorization")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("json",), default=None)
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
     paths = _paths()
+    source_mutation_decision = None
+    if args.authorization:
+        try:
+            source_mutation_decision = json.loads(
+                Path(args.authorization).read_text(encoding="utf-8")
+            )
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            print(f"fig-agent apply-plan: authorization_invalid:{exc}", file=sys.stderr)
+            return 1
     try:
         payload = quality_patch_apply.apply_quality_patch_plan(
             name,
             plan_path=paths.examples_dir / name / args.plan,
             workspace_root=paths.workspace_root,
+            source_mutation_decision=source_mutation_decision,
             apply=args.apply,
         )
     except quality_patch_apply.QualityPatchApplyError as exc:

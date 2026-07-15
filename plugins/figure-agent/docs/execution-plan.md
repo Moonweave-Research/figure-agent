@@ -308,10 +308,22 @@ not add another generator, renderer, candidate family, or workflow shell.
   The first Q5 slice classifies all 81 callable CLI names behind
   `fig-agent doctor --commands --json`, makes `status -> run` the canonical
   public route, and removes autonomous quality-search activation from the
-  `improve` compatibility adapter. The bounded-repair transaction remains open:
-  packet/materialization, named human authorization, rollback, and post-render
-  proof are still split across three legacy paths and must be consolidated
-  before Q5 can close.
+  `improve` compatibility adapter. The second Q5 slice establishes one shared
+  source-mutation authorization validator and hardens the internal-compatibility
+  `apply-plan` executor: apply now requires a decision bound to the fixture and
+  exact quality-plan schema/path/recommendation and SHA-256 `plan_id`, rejects a
+  plan whose mutation-critical content no longer matches that ID, and persists
+  the authorization-record hash. It now derives a tested reverse patch from the
+  pre/post source pair, writes rollback plus a recovery-required receipt before
+  source mutation, and uses atomic replacement for source and final receipt.
+  Existing bounded-TikZ apply now consumes the same validator while preserving
+  its historical diagnostic codes and packet/result schemas. This is a
+  safety-kernel extraction, not selection of `apply-plan` as a second public
+  repair route. The bounded-repair transaction remains open: the shared
+  authorization/lock/rollback kernel still must be connected to the canonical
+  additive `authoring-repair-packet -> authoring-repair-materialize` route, and
+  clean strict compile/status evidence still needs a fail-closed post-render
+  finalizer. `bounded_repair_transaction_state` therefore remains `incomplete`.
 
 Q0–Q4 are sequential. Q5 is an architecture gate and may proceed without
 altering the figure while Q4 awaits human evidence. After Q4, Q5, and the Slice
