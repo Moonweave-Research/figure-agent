@@ -337,13 +337,15 @@ does not replace geometry-first region attribution in
 `visual_finding_attribution.py`.
 
 The active authoring control plane also preserves
+`figure-agent.authoring-visual-assets.v1`,
 `figure-agent.layout-lanes.v1`,
 `figure-agent.authoring-execution-input-audit.v1`,
 `figure-agent.authoring-execution-packet.v1`,
 `figure-agent.authoring-execution-preflight.v1`,
 `figure-agent.authoring-execution-receipt.v1`,
 `figure-agent.repair-execution-packet.v3`, and
-`figure-agent.shape-profile.v1` as evidence contracts. Their machine-valid
+`figure-agent.shape-profile.v1`, and
+`figure-agent.composition-profile.v1` as evidence contracts. Their machine-valid
 state remains subordinate to rendered and human review.
 
 ## 9. Evidence and learning loop
@@ -528,6 +530,42 @@ Legacy experiment runtime remains parseable under
 `figure-agent.illustration-instance.v1`. These schema names preserve existing
 artifact ownership only. They do not reopen direct-SVG or illustration-grammar
 development in the active plan.
+
+### 15.1 Constraint diet
+
+The repository is substantially broader than the earned product surface. As of
+2026-07-15 it contains 233 Python scripts, 67 top-level CLI dispatches, and 599
+Markdown documents. Code volume and command availability are not capabilities.
+Until the two-family ablation proves otherwise, Figure Agent applies the
+following diet.
+
+| Disposition | Surface | Reason |
+| --- | --- | --- |
+| Keep and deepen | authoring context, packet, preflight, input audit, execution receipt | They expose declared truth and make model runs comparable without drawing for the model. |
+| Keep and deepen | deterministic compile, export, status, hashes, and provenance | They are renderer-neutral reproducibility infrastructure. |
+| Keep and deepen | semantic and relation contracts, electrical topology, Style Lock, collision, clipping, label/path, vector-clearance, and geometry-coverage checks | They target recurring failures that the LLM misses, provided coverage is reported honestly. |
+| Keep and deepen | exact/ambiguous/unbound attribution, bounded repair, regression proof, rollback, and named human review | They turn observations into safe local action while preserving the acceptance boundary. |
+| Consolidate | `loop`, `run`, `drive`, `improve`, `quality-search`, queue, and benchmark orchestration | These overlap as workflow shells. No new behavior belongs in them until one canonical execution path is selected. |
+| Consolidate | proposal, candidate, render, rank, compare, accept, apply, and closeout command families | Candidate lifecycle remains useful internally, but the public surface is too fragmented. |
+| Freeze as compatibility evidence | direct-SVG generation and SVG-polish runtimes | SVG remains an export and inspection surface; existing schemas stay parseable, but no new backend features are authorized. |
+| Freeze as compatibility evidence | deterministic composition-family templates and the broad composition candidate stack | The implementation is inert on committed real figures and is explicitly Fig3-marker-bound; it has not met the cross-family promotion rule. |
+| Freeze as advisory evidence | numeric aesthetic ranking and autonomous quality search | They may organize evidence but cannot substitute for semantic validity or human visual judgment. |
+| Remove from the active path | fixture-specific coordinates, motif-specific repair logic, duplicated active plans, and unbound auto-repair | They either suppress LLM freedom, create false generalization, or bypass the product's evidence boundary. |
+
+Freeze means no new features, fixtures, or default workflow dependencies. It
+does not mean deleting historical artifacts or breaking their schema readers.
+Deletion requires a separate compatibility audit proving that active commands,
+tests, fixtures, and receipts no longer depend on the surface. The smallest
+stable core should remain capable of accepting free LLM TikZ, observing it,
+qualifying semantic coverage, localizing defects, applying one protected repair,
+reproducing the artifact, and presenting exact evidence to a human.
+
+The first Fig1 composition-profile pilot reinforces this diet. It produced a
+larger explanatory scene, but the assisted arm clipped content, collided labels,
+and omitted the required ISPD probe. The run is retained as invalid
+failure-first evidence, not as a composition-assistance result. The next attempt
+must add comparison eligibility and non-coordinate containment controls; it must
+not revive a complete composition grammar.
 
 The failure corpus and first A/B/C baseline now exist. The active execution plan
 therefore closes QA integrity and coverage gaps first, then closes the incomplete

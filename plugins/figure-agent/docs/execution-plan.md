@@ -221,65 +221,18 @@ modules listed in Section 0.
   discrete-to-continuous distribution evolution in B, and the distinction
   between `n` (breadth) and `rho_60s` (magnitude).
 - [x] Produce comparable `raw`, `verified`, and `repaired` manifests using the
-  same model, input packet, budget, and starting artifact; do not treat manually
-  staged manifests as actual LLM runs without generation receipts. A receipt is
-  `transcript_bound` only when its adjacent non-symlink transcript and both
-  declared starting/generated artifacts match their SHA-256 hashes and shared
-  contract; use `scripts/quality/generation_receipt.py` to write this record.
-  The writer refuses packet/budget hash drift and transcript overwrite. This is
-  an auditable execution claim, not provider authentication.
-  The additive `comparable-v1/` run is transcript-bound and equal-input, but all
-  three arms fail before render because the abstract `polymer-paper` style
-  profile was not converted into an executable preamble and palette contract.
-  Its reproduction gate failed and no product or publication claim is allowed.
-  The additive `comparable-v2/` run closes that integration gap: `raw` remains
-  free authoring, `verified` receives the executable preamble/palette/type
-  contract, and `repaired` receives the same contract plus one declared Panel A
-  layout lane. In a clean committed worktree, raw reproducibly stops at 20
-  Style Lock blockers while verified and repaired render with zero blockers.
-  Confirmed defect occurrences fall from 26 to 6 and 3 respectively. This is
-  not acceptance: both rendered arms still fail the declared layout lane
-  (`0.000 < 0.015`), verified has one detected collision and four label-order
-  risks, repaired has two detected collisions, and scaffold inspection exposes
-  unfinished label placement. The result proves that pre-authoring style
-  injection removes a broad class of avoidable source defects; it also proves
-  that prompt-only layout injection is not enforcement or repair.
-  Moon subsequently rejected both rendered arms. The verified arm remains the
-  repair seed because the repaired arm made the Panel B band-energy shapes
-  worse. The rejection names major label/path collisions, unnatural arrows and
-  endpoints, insufficient sample rendering, and unresolved physical or
-  mathematical authority for the band-energy curves; color and aesthetic
-  polish are explicitly deferred. The ablation product gate now requires an
-  `accepted` named decision, so a named rejection cannot authorize a product
-  claim.
-  Historical evidence for this unchecked comparison remains under
-  `review/failure-first/` and is non-prescriptive:
-
-  - `raw.yaml`, `style_control.yaml`, `verified.yaml`, and their receipts show a
-    bound raw run, a deterministic non-LLM style control, one preamble failure,
-    and one feedback-guided run that is not equal-input.
-  - The `region_guided_*` artifacts show narrow containment gains but continuing
-    strict collisions, a clipped label, weak hierarchy, and Moon's rejection of
-    the shapes, palette, proportion, grammar consistency, and prose density.
-    The bound inventory records `75 > 45`, `33 > 22`, and `42 > 23` words plus
-    missing-label and zero-clearance findings; these are fixture evidence, not
-    universal publication rules.
-  - `execution-binding-v3/`, `execution-binding-v4/`, and
-    `execution-binding-v6/` preserve respectively a non-renderable preamble
-    failure, undeclared treatment reads, and a timed-out treatment proof with
-    continuing strict findings. All pairs remain comparison-ineligible.
-  - `execution-repair-v1/` onward preserves every accepted and rejected bounded
-    attempt. The sequence established exact replacement, transactional
-    materialization, blocker-identity regression checks, multi-neighbor layout
-    checks, source-scoped transfer assertions, rendered semantic-path recovery,
-    and threshold-free path metrics. The detailed attempt history belongs to
-    those immutable artifact directories and Git history, not this forward plan.
-    V64 is the current verified-derived baseline; v66 is the preserved
-    transferred-collision counterexample. Neither is publication-accepted.
-  - Commits `771c339d`, `a30ff450`, `3d16305e`, and `5a2e895f` bind the v12
-    renderer-neutral semantic packet, fail-closed authority and selector checks,
-    transactional version publishing, and authenticated page evidence at
-    `semantic-review-v12/packet/packet.json`.
+  same model, input packet, budget, and starting artifact. `comparable-v1/`
+  records a reproducible preamble integration failure. `comparable-v2/` proves
+  that executable Style Lock injection removes broad source blockers, but its
+  prompt-only layout treatment is not enforcement or repair. Moon rejected both
+  rendered arms for collisions, unnatural paths, weak sample rendering, and
+  unresolved band-energy authority; the repaired arm also regressed the band
+  shapes. The verified arm remains the repair seed. All detailed intermediate
+  attempts, receipts, exact counts, and counterexamples remain immutable under
+  `review/failure-first/` and Git history rather than in this forward plan.
+  Generation receipts are auditable execution evidence, not provider
+  authentication, and no rejected or comparison-ineligible run authorizes a
+  product or publication claim.
 - [x] Generate whole, panel, object/relation, and zoom crops and overlays.
 - [x] Keep ambiguous and unbound findings review-only. The renderer-neutral
   `figure-agent.semantic-legibility-evidence.v1` packet binds full/page rasters,
@@ -304,7 +257,9 @@ modules listed in Section 0.
 
 ### Ordered next execution
 
-**Current next executable step:** complete Q0 before changing the figure.
+**Current next executable step:** complete Q4 for the maintained Fig3 evidence.
+Before any further authoring experiment, complete Q5's constraint-diet gate; do
+not add another generator, renderer, candidate family, or workflow shell.
 
 - [x] **Q0 — Make QA non-destructive and clean-checkout complete.** Copy every
   historical TeX input and its required local dependencies to `tmp_path` before
@@ -338,9 +293,22 @@ modules listed in Section 0.
   correction minutes were not captured and must not be reconstructed after the
   fact. The critique/adjudication refresh remains open after any source repair.
   Machine-valid or review-ready remains distinct from publication acceptance.
+- [ ] **Q5 — Reduce the active product surface before composition v2.** Preserve
+  historical artifacts and compatibility schema readers, but inventory every
+  top-level command and classify it as core, internal compatibility, or retired
+  from the default path. Freeze direct-SVG generation, SVG-polish, deterministic
+  composition-family templates, numeric taste ranking, and autonomous quality
+  search. Select one canonical orchestration path and one bounded-repair path;
+  do not delete code until import, CLI, fixture, and receipt dependencies are
+  proven absent. Composition v2 may add only: generated-source semantic coverage
+  eligibility, non-coordinate canvas containment, label-capacity/local-clearance
+  requirements, complete per-arm QA receipts, and independent cold-run receipts.
+  It may not prescribe coordinates, panel rectangles, primitive geometry,
+  palette choices, or a fixed reading path.
 
-Q0–Q4 are sequential. A failed earlier gate blocks later figure polishing.
-After Q4 and the Slice 1 exit condition both pass, execute Slice 3 exactly once;
+Q0–Q4 are sequential. Q5 is an architecture gate and may proceed without
+altering the figure while Q4 awaits human evidence. After Q4, Q5, and the Slice
+1 exit condition pass, execute Slice 3 exactly once;
 do not start another renderer or fixture.
 
 ### Verification
