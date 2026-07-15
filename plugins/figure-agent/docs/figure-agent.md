@@ -196,14 +196,14 @@ post-repair re-review, including every fail-closed boundary.
 
 ### R2 — Connect critique to bounded repair
 
-- [ ] Convert one adjudicated visual finding into declared semantic object and
+- [x] Convert one adjudicated visual finding into declared semantic object and
   relation references.
 - [x] Bind one supported machine-backed visual finding to exact source
   attribution, one editable selector, and declared protected invariants.
 - [x] Carry that binding through the existing repair packet, materialization,
   finalization, rollback, and bounded edit-budget surfaces as one transaction.
 - [x] Keep ambiguous or evidence-missing bridge inputs as fail-closed stops.
-- [ ] Route unbound semantic or relation findings to an explicit human handoff.
+- [x] Route unbound semantic or relation findings to an explicit human handoff.
 
 **Exit:** one reviewed finding can produce a safe repair transaction without
 chat-only coordinates or hidden source selection.
@@ -277,32 +277,28 @@ success is publication acceptance.
 
 ## 7. Current implementation boundary
 
-Reuse the established compile/export spine, perception packs, critique briefs,
-adjudication, visual and source attribution, repair policy/plan/apply,
-authoring-repair materialization/finalization, provenance, and human review
-artifacts.
+Reuse the established compile/export, perception, critique, attribution, repair,
+materialization, provenance, and human-review surfaces.
 
-The current code is a bounded R1-R3 foundation, not a completed closed loop.
-It now has one shared structural attempt-state contract with deterministic
-attempt identity, append-only parent and previous-state lineage, transitive live
-artifact freshness, exact phase evidence roles, actor identity and role
-separation, legal transitions, and terminal development-baseline outcomes.
-Evidence-role presence is not domain validation or actor authentication: R2 and
-R3 adapters must still validate each binding, packet, materialization, host
-review, and human decision receipt against the identity recorded in state.
+The code is a bounded R1-R3 foundation, not a completed closed loop. Its shared
+attempt-state contract binds identity, append-only lineage, live freshness,
+phase evidence roles, actor separation, legal transitions, and terminal
+development outcomes. Evidence-role presence is not domain validation or actor
+authentication; adapters must validate each receipt against recorded identity.
 
-The code carries one exact adjudicated-repair binding through packet compilation,
-human-authorized materialization, rollback evidence, and finalization. New
-packets use `figure-agent.repair-execution-packet.v4` with an explicit authority
-contract; stored v3 packets require an explicit legacy compatibility path.
-Binding artifacts use one byte snapshot for hash and parse, and the live graph
-is revalidated at transaction entry and inside both transaction locks.
+One exact adjudicated binding now crosses packet compilation, human-authorized
+materialization, rollback, and finalization. New packets use v4 authority;
+stored v3 packets require explicit compatibility. Hash/parse share one byte
+snapshot, and the live graph is revalidated inside both transaction locks.
 
-This does not yet map findings to semantic objects/relations or route a named
-human handoff, orchestrate external host review, wire the canonical `run`, or
-prove transfer across figure families. Those are the next ordered boundaries;
-do not reinterpret the completed transaction plumbing as satisfying the
-unchecked R2 or R3 exit conditions.
+The binding now hash-binds declared semantic object and relation references to
+the same editable selector as the repair target. Missing semantic authority,
+ambiguous attribution, or missing references can emit only a named
+`human_attributor` handoff; they cannot create a repair binding or packet.
+
+This does not yet orchestrate external host review, wire the canonical `run`,
+or prove transfer across figure families. Those are the next ordered
+boundaries; completed R2 plumbing does not satisfy R3-R5.
 
 The closed-loop slices bind their handoffs through these narrow evidence
 contracts rather than another workflow shell:
@@ -313,6 +309,8 @@ contracts rather than another workflow shell:
 - `figure-agent.repair-authority-contract.v1`;
 - `figure-agent.closed-loop-attempt-state.v1`;
 - `figure-agent.adjudicated-repair-binding.v1`;
+- `figure-agent.semantic-finding-attribution.v1`;
+- `figure-agent.attribution-handoff.v1`;
 - `figure-agent.post-repair-visual-review-request.v1`;
 - `figure-agent.host-review-execution-receipt.v1`;
 - `figure-agent.post-repair-visual-review-response.v1`; and

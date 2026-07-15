@@ -66,6 +66,36 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path]:
         "\\node {S60};\n",
         encoding="utf-8",
     )
+    semantic_contract = attempt / "semantic_contract.yaml"
+    semantic_contract.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "figure-agent.failure-first-semantic-contract.v1",
+                "required_objects": ["panel_a.carrier_label", "panel_a.axis"],
+                "protected_relations": ["carrier_label_remains_clear_of_axis"],
+                "semantic_legibility": {
+                    "object_roles": [
+                        {
+                            "object_id": "panel_a.carrier_label",
+                            "declared_role": "annotation_label",
+                            "forbidden_readings": [],
+                        },
+                        {
+                            "object_id": "panel_a.axis",
+                            "declared_role": "plot_axis",
+                            "forbidden_readings": [],
+                        },
+                    ],
+                    "visible_connectors": [],
+                    "forbidden_connectors": [],
+                    "label_ownership": [],
+                },
+                "publication_acceptance": "not_claimed",
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
     report = attempt / "collisions.json"
     report.write_text(
         json.dumps(
@@ -90,6 +120,10 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path]:
                 "schema": "figure-agent.source-selector-registry.v1",
                 "source_path": source.relative_to(workspace).as_posix(),
                 "source_sha256": _sha256(source),
+                "semantic_contract": {
+                    "path": semantic_contract.relative_to(workspace).as_posix(),
+                    "sha256": _sha256(semantic_contract),
+                },
                 "selectors": [
                     {
                         "selector_id": "panel-a-carrier-label",
@@ -99,6 +133,13 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path]:
                         "repair_role": "movable",
                         "repair_family": "local_reposition",
                         "protected_invariants": ["S60"],
+                        "semantic_object_refs": [
+                            "panel_a.axis",
+                            "panel_a.carrier_label",
+                        ],
+                        "semantic_relation_refs": [
+                            "carrier_label_remains_clear_of_axis"
+                        ],
                     }
                 ],
             }
@@ -192,9 +233,21 @@ def test_builds_exact_additive_bridge_artifacts(tmp_path: Path) -> None:
     assert target["targets"][0]["selector"]["selector_id"] == (
         "panel-a-carrier-label"
     )
-    assert json.loads((attempt / "source_attribution.json").read_text())[
-        "summary"
-    ]["exact"] == 1
+    semantic = json.loads((attempt / "semantic_attribution.json").read_text())
+    assert json.loads((attempt / "source_attribution.json").read_text())["summary"][
+        "exact"
+    ] == 1
+    assert semantic["schema"] == "figure-agent.semantic-finding-attribution.v1"
+    assert semantic["semantic_object_refs"] == [
+        "panel_a.axis",
+        "panel_a.carrier_label",
+    ]
+    assert semantic["semantic_relation_refs"] == [
+        "carrier_label_remains_clear_of_axis"
+    ]
+    assert result["semantic_attribution"]["path"].endswith(
+        "/semantic_attribution.json"
+    )
     assert json.loads((attempt / "critique_repair_binding.json").read_text()) == result
 
 
@@ -220,6 +273,534 @@ def test_validates_full_live_adjudicated_repair_binding(tmp_path: Path) -> None:
         "treatment_generated.tex"
     )
     assert paths["target_contract"] == attempt / "repair_targets.json"
+    assert paths["semantic_attribution"] == attempt / "semantic_attribution.json"
+
+
+def test_binding_rejects_crop_manifest_render_redirection(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    manifest_path = workspace / "examples/demo/build/audit_crops/manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["render_path"] = "build/redirected.png"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    binding_path = attempt / "critique_repair_binding.json"
+    binding = json.loads(binding_path.read_text(encoding="utf-8"))
+    binding["crop_manifest"]["sha256"] = _sha256(manifest_path)
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="binding crop manifest render lineage invalid",
+    ):
+        critique_repair_bridge.validate_adjudicated_repair_binding(
+            binding_path.relative_to(workspace),
+            fixture="demo",
+            workspace_root=workspace,
+        )
+
+
+def test_semantic_binding_rejects_legacy_minimal_crop_manifest(
+    tmp_path: Path,
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    manifest_path = workspace / "examples/demo/build/audit_crops/manifest.json"
+    manifest_path.write_text(
+        json.dumps({"schema": "figure-agent.audit-crop-manifest.v1"}),
+        encoding="utf-8",
+    )
+    binding_path = attempt / "critique_repair_binding.json"
+    binding = json.loads(binding_path.read_text(encoding="utf-8"))
+    binding["crop_manifest"]["sha256"] = _sha256(manifest_path)
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="binding crop manifest render lineage invalid",
+    ):
+        critique_repair_bridge.validate_adjudicated_repair_binding(
+            binding_path.relative_to(workspace),
+            fixture="demo",
+            workspace_root=workspace,
+        )
+
+
+def test_binding_rejects_rehashed_spec_stale_to_critique(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    spec_path = workspace / "examples/demo/spec.yaml"
+    spec_path.write_text(
+        spec_path.read_text(encoding="utf-8") + "panels:\n  - id: changed\n",
+        encoding="utf-8",
+    )
+    binding_path = attempt / "critique_repair_binding.json"
+    binding = json.loads(binding_path.read_text(encoding="utf-8"))
+    binding["spec"]["sha256"] = _sha256(spec_path)
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="critique_input_hash mismatch",
+    ):
+        critique_repair_bridge.validate_adjudicated_repair_binding(
+            binding_path.relative_to(workspace),
+            fixture="demo",
+            workspace_root=workspace,
+        )
+
+
+def test_new_binding_hash_binds_semantic_attribution_and_rejects_drift(
+    tmp_path: Path,
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    semantic_path = attempt / "semantic_attribution.json"
+    semantic = json.loads(semantic_path.read_text(encoding="utf-8"))
+    semantic["semantic_object_refs"].append("panel_a.unknown")
+    semantic_path.write_text(json.dumps(semantic), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="semantic attribution hash drift",
+    ):
+        critique_repair_bridge.validate_adjudicated_repair_binding(
+            attempt.relative_to(workspace) / "critique_repair_binding.json",
+            fixture="demo",
+            workspace_root=workspace,
+        )
+
+
+def test_binding_rejects_mixed_target_and_semantic_selectors(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    source_path = (
+        workspace / "examples/demo/review/failure-first/execution-binding-v1/"
+        "treatment_generated.tex"
+    )
+    source_path.write_text(
+        source_path.read_text(encoding="utf-8")
+        + "% secondary:start\n\\node {secondary};\n% secondary:end\n",
+        encoding="utf-8",
+    )
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    registry["source_sha256"] = _sha256(source_path)
+    registry["selectors"].append(
+        {
+            "selector_id": "panel-a-secondary-label",
+            "anchor_start": "% secondary:start",
+            "anchor_end": "% secondary:end",
+            "rendered_aliases": ["secondary"],
+            "repair_role": "movable",
+            "repair_family": "local_reposition",
+            "protected_invariants": ["S60"],
+            "semantic_object_refs": ["panel_a.axis", "panel_a.carrier_label"],
+            "semantic_relation_refs": [
+                "carrier_label_remains_clear_of_axis"
+            ],
+        }
+    )
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+    critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    semantic_path = attempt / "semantic_attribution.json"
+    semantic = json.loads(semantic_path.read_text(encoding="utf-8"))
+    semantic["selector_id"] = "panel-a-secondary-label"
+    semantic_path.write_text(json.dumps(semantic), encoding="utf-8")
+    binding_path = attempt / "critique_repair_binding.json"
+    binding = json.loads(binding_path.read_text(encoding="utf-8"))
+    binding["semantic_attribution"]["sha256"] = _sha256(semantic_path)
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="semantic attribution lineage invalid",
+    ):
+        critique_repair_bridge.validate_adjudicated_repair_binding(
+            binding_path.relative_to(workspace),
+            fixture="demo",
+            workspace_root=workspace,
+        )
+
+
+def test_binding_rejects_unrelated_selector_substitution(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    source_path = (
+        workspace / "examples/demo/review/failure-first/execution-binding-v1/"
+        "treatment_generated.tex"
+    )
+    source_path.write_text(
+        source_path.read_text(encoding="utf-8")
+        + "% secondary:start\n\\node {secondary};\n% secondary:end\n",
+        encoding="utf-8",
+    )
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    registry["source_sha256"] = _sha256(source_path)
+    secondary_selector = {
+        "selector_id": "panel-a-secondary-label",
+        "anchor_start": "% secondary:start",
+        "anchor_end": "% secondary:end",
+        "rendered_aliases": ["not-the-machine-finding"],
+        "repair_role": "movable",
+        "repair_family": "local_reposition",
+        "protected_invariants": ["S60"],
+        "semantic_object_refs": ["panel_a.axis", "panel_a.carrier_label"],
+        "semantic_relation_refs": ["carrier_label_remains_clear_of_axis"],
+    }
+    registry["selectors"].append(secondary_selector)
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+    critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    target_path = attempt / "repair_targets.json"
+    target = json.loads(target_path.read_text(encoding="utf-8"))
+    target["targets"][0]["selector"] = {
+        "kind": "semantic_anchor",
+        "selector_id": secondary_selector["selector_id"],
+        "anchor_start": secondary_selector["anchor_start"],
+        "anchor_end": secondary_selector["anchor_end"],
+    }
+    target_path.write_text(json.dumps(target), encoding="utf-8")
+    semantic_path = attempt / "semantic_attribution.json"
+    semantic = json.loads(semantic_path.read_text(encoding="utf-8"))
+    semantic["selector_id"] = secondary_selector["selector_id"]
+    semantic_path.write_text(json.dumps(semantic), encoding="utf-8")
+    binding_path = attempt / "critique_repair_binding.json"
+    binding = json.loads(binding_path.read_text(encoding="utf-8"))
+    binding["target_contract"]["sha256"] = _sha256(target_path)
+    binding["semantic_attribution"]["sha256"] = _sha256(semantic_path)
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="binding source attribution lineage invalid",
+    ):
+        critique_repair_bridge.validate_adjudicated_repair_binding(
+            binding_path.relative_to(workspace),
+            fixture="demo",
+            workspace_root=workspace,
+        )
+
+
+def test_binding_rejects_forged_exact_semantic_attribution_with_null_refs(
+    tmp_path: Path,
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    registry["selectors"][0]["semantic_object_refs"] = []
+    registry["selectors"][0]["semantic_relation_refs"] = []
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+    semantic_path = attempt / "semantic_attribution.json"
+    semantic = json.loads(semantic_path.read_text(encoding="utf-8"))
+    semantic["semantic_object_refs"] = None
+    semantic["semantic_relation_refs"] = None
+    semantic_path.write_text(json.dumps(semantic), encoding="utf-8")
+    binding_path = attempt / "critique_repair_binding.json"
+    binding = json.loads(binding_path.read_text(encoding="utf-8"))
+    binding["selector_registry"]["sha256"] = _sha256(registry_path)
+    binding["semantic_attribution"]["sha256"] = _sha256(semantic_path)
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="semantic attribution references invalid",
+    ):
+        critique_repair_bridge.validate_adjudicated_repair_binding(
+            binding_path.relative_to(workspace),
+            fixture="demo",
+            workspace_root=workspace,
+        )
+
+
+def test_stored_pre_semantic_binding_remains_valid(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    binding = critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+    binding.pop("semantic_attribution")
+    (attempt / "critique_repair_binding.json").write_text(
+        json.dumps(binding), encoding="utf-8"
+    )
+
+    validated, paths = critique_repair_bridge.validate_adjudicated_repair_binding(
+        attempt.relative_to(workspace) / "critique_repair_binding.json",
+        fixture="demo",
+        workspace_root=workspace,
+    )
+
+    assert "semantic_attribution" not in validated
+    assert "semantic_attribution" not in paths
+
+
+def test_bridge_rejects_unknown_semantic_references(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    registry["selectors"][0]["semantic_relation_refs"] = ["unknown_relation"]
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="semantic relation reference is undeclared",
+    ):
+        critique_repair_bridge.build_adjudicated_repair_target(
+            example_dir=workspace / "examples" / "demo",
+            critique_finding_id="C001",
+            attempt_dir=attempt,
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+
+    assert not (attempt / "semantic_attribution.json").exists()
+    assert not (attempt / "attribution_handoff.json").exists()
+
+
+def test_bridge_rejects_semantic_contract_hash_drift(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    registry["semantic_contract"]["sha256"] = "sha256:" + "0" * 64
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="semantic contract hash drift",
+    ):
+        critique_repair_bridge.build_adjudicated_repair_target(
+            example_dir=workspace / "examples" / "demo",
+            critique_finding_id="C001",
+            attempt_dir=attempt,
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+
+
+def test_bridge_rejects_corrupted_semantic_contract(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    semantic_contract_path = workspace / registry["semantic_contract"]["path"]
+    semantic_contract_path.write_text("[unclosed\n", encoding="utf-8")
+    registry["semantic_contract"]["sha256"] = _sha256(semantic_contract_path)
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="semantic contract must be valid YAML",
+    ):
+        critique_repair_bridge.build_adjudicated_repair_target(
+            example_dir=workspace / "examples" / "demo",
+            critique_finding_id="C001",
+            attempt_dir=attempt,
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+
+
+def test_unmatched_alias_does_not_bypass_bad_semantic_contract_hash(
+    tmp_path: Path,
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    registry["selectors"][0]["rendered_aliases"] = ["not-present"]
+    registry["semantic_contract"]["sha256"] = "sha256:" + "0" * 64
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="semantic contract hash drift",
+    ):
+        critique_repair_bridge.build_adjudicated_repair_target(
+            example_dir=workspace / "examples" / "demo",
+            critique_finding_id="C001",
+            attempt_dir=attempt,
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+            human_attributor_id="moon",
+        )
+
+    assert not (attempt / "attribution_handoff.json").exists()
+    assert not (attempt / "critique_repair_binding.json").exists()
+
+
+def test_bridge_rejects_null_semantic_contract_record(tmp_path: Path) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    registry["semantic_contract"] = None
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="selector registry semantic contract record is invalid",
+    ):
+        critique_repair_bridge.build_adjudicated_repair_target(
+            example_dir=workspace / "examples" / "demo",
+            critique_finding_id="C001",
+            attempt_dir=attempt,
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+
+
+@pytest.mark.parametrize(
+    ("mutation", "reason_code", "missing_reference_kinds"),
+    (
+        ("ambiguous", "multiple_declared_movable_selectors", [
+            "semantic_object",
+            "semantic_relation",
+        ]),
+        ("unbound", "no_declared_alias_match", [
+            "semantic_object",
+            "semantic_relation",
+        ]),
+        ("missing_refs", "selected_selector_missing_semantic_refs", [
+            "semantic_relation"
+        ]),
+    ),
+)
+def test_bridge_emits_handoff_only_for_unresolved_semantic_attribution(
+    tmp_path: Path,
+    mutation: str,
+    reason_code: str,
+    missing_reference_kinds: list[str],
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    if mutation == "ambiguous":
+        registry["selectors"].append(
+            {**registry["selectors"][0], "selector_id": "second-carrier-label"}
+        )
+    elif mutation == "unbound":
+        registry["selectors"][0]["rendered_aliases"] = ["not-present"]
+    else:
+        registry["selectors"][0]["semantic_relation_refs"] = []
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+    result = critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+        human_attributor_id="moon",
+    )
+
+    assert result["schema"] == "figure-agent.attribution-handoff.v1"
+    assert result["evidence_role"] == "attribution_handoff"
+    assert result["attempt_state"] == "adjudicated_unbound"
+    assert result["required_actor"] == {"id": "moon", "role": "human_attributor"}
+    assert result["reason_code"] == reason_code
+    assert result["missing_reference_kinds"] == missing_reference_kinds
+    assert result["publication_acceptance"] == "not_claimed"
+    assert (attempt / "attribution_handoff.json").is_file()
+    assert not (attempt / "semantic_attribution.json").exists()
+    assert not (attempt / "repair_targets.json").exists()
+    assert not (attempt / "critique_repair_binding.json").exists()
+
+
+def test_unresolved_attribution_without_human_id_fails_without_outputs(
+    tmp_path: Path,
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    registry["selectors"][0]["semantic_object_refs"] = []
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="human_attributor_id is required",
+    ):
+        critique_repair_bridge.build_adjudicated_repair_target(
+            example_dir=workspace / "examples" / "demo",
+            critique_finding_id="C001",
+            attempt_dir=attempt,
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+
+    assert list(attempt.glob("*attribution*.json")) == []
+    assert not (attempt / "repair_targets.json").exists()
+    assert not (attempt / "critique_repair_binding.json").exists()
+
+
+def test_exact_source_without_semantic_contract_emits_handoff_only(
+    tmp_path: Path,
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    del registry["semantic_contract"]
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+    result = critique_repair_bridge.build_adjudicated_repair_target(
+        example_dir=workspace / "examples" / "demo",
+        critique_finding_id="C001",
+        attempt_dir=attempt,
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+        human_attributor_id="moon",
+    )
+
+    assert result["reason_code"] == "semantic_boundary_missing"
+    assert result["missing_reference_kinds"] == [
+        "semantic_object",
+        "semantic_relation",
+    ]
+    generated_names = [
+        path.name
+        for path in attempt.glob("*.json")
+        if "collisions" not in path.name and "selectors" not in path.name
+    ]
+    assert generated_names == ["attribution_handoff.json"]
 
 
 def test_binding_validator_parses_and_hashes_each_authority_from_one_snapshot(
@@ -573,7 +1154,7 @@ def test_bridge_rejects_ambiguous_attribution(tmp_path: Path) -> None:
 
     with pytest.raises(
         critique_repair_bridge.CritiqueRepairBridgeError,
-        match="exact attribution required",
+        match="human_attributor_id is required",
     ):
         critique_repair_bridge.build_adjudicated_repair_target(
             example_dir=workspace / "examples" / "demo",
@@ -744,6 +1325,99 @@ def test_bridge_rejects_current_schema_with_stale_input_metadata(
         )
 
 
+def test_builder_rejects_redirected_crop_manifest_snapshot(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    manifest_path = workspace / "examples/demo/build/audit_crops/manifest.json"
+    original_read_bytes = critique_repair_bridge._read_bytes
+    injected = False
+
+    def redirect_snapshot(path: Path, *, label: str) -> bytes:
+        nonlocal injected
+        snapshot = original_read_bytes(path, label=label)
+        if path == manifest_path and not injected:
+            injected = True
+            manifest = json.loads(snapshot.decode("utf-8"))
+            manifest["render_path"] = "build/redirected.png"
+            return json.dumps(manifest).encode("utf-8")
+        return snapshot
+
+    monkeypatch.setattr(
+        critique_repair_bridge,
+        "_read_bytes",
+        redirect_snapshot,
+    )
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match=(
+            "current crop manifest render lineage invalid|"
+            "bridge input drift before publication"
+        ),
+    ):
+        critique_repair_bridge.build_adjudicated_repair_target(
+            example_dir=workspace / "examples" / "demo",
+            critique_finding_id="C001",
+            attempt_dir=attempt,
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+
+    assert not (attempt / "source_attribution.json").exists()
+    assert not (attempt / "semantic_attribution.json").exists()
+    assert not (attempt / "repair_targets.json").exists()
+    assert not (attempt / "critique_repair_binding.json").exists()
+
+
+def test_builder_rejects_spec_mutation_after_freshness_check(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    spec_path = workspace / "examples/demo/spec.yaml"
+    original = critique_repair_bridge._assert_current_critique_metadata
+    mutated = False
+
+    def mutate_spec_after_freshness(
+        example_dir: Path,
+        *,
+        plugin_root: Path,
+    ) -> None:
+        nonlocal mutated
+        original(example_dir, plugin_root=plugin_root)
+        if not mutated:
+            mutated = True
+            spec_path.write_text(
+                spec_path.read_text(encoding="utf-8") + "panels: []\n",
+                encoding="utf-8",
+            )
+
+    monkeypatch.setattr(
+        critique_repair_bridge,
+        "_assert_current_critique_metadata",
+        mutate_spec_after_freshness,
+    )
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="bridge input drift before publication",
+    ):
+        critique_repair_bridge.build_adjudicated_repair_target(
+            example_dir=workspace / "examples" / "demo",
+            critique_finding_id="C001",
+            attempt_dir=attempt,
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+
+    assert not (attempt / "source_attribution.json").exists()
+    assert not (attempt / "semantic_attribution.json").exists()
+    assert not (attempt / "repair_targets.json").exists()
+    assert not (attempt / "critique_repair_binding.json").exists()
+
+
 def test_bridge_honors_exclusive_transaction_lock(tmp_path: Path) -> None:
     workspace, attempt = _fixture(tmp_path)
     (attempt / ".critique-repair-bridge.lock").write_text(
@@ -762,7 +1436,95 @@ def test_bridge_honors_exclusive_transaction_lock(tmp_path: Path) -> None:
         )
 
 
-def test_bridge_rolls_back_partial_three_file_write(
+def test_exact_bridge_rejects_authority_mutation_after_snapshot(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    registry_path = attempt / "source_selectors.json"
+    original_read_bytes = critique_repair_bridge._read_bytes
+    mutated = False
+
+    def mutate_registry_after_snapshot(path: Path, *, label: str) -> bytes:
+        nonlocal mutated
+        snapshot = original_read_bytes(path, label=label)
+        if path == registry_path and not mutated:
+            mutated = True
+            path.write_bytes(snapshot + b"\n")
+        return snapshot
+
+    monkeypatch.setattr(
+        critique_repair_bridge,
+        "_read_bytes",
+        mutate_registry_after_snapshot,
+    )
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="bridge input drift before publication",
+    ):
+        critique_repair_bridge.build_adjudicated_repair_target(
+            example_dir=workspace / "examples" / "demo",
+            critique_finding_id="C001",
+            attempt_dir=attempt,
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+
+    assert not (attempt / "source_attribution.json").exists()
+    assert not (attempt / "semantic_attribution.json").exists()
+    assert not (attempt / "repair_targets.json").exists()
+    assert not (attempt / "critique_repair_binding.json").exists()
+
+
+def test_handoff_rejects_authority_mutation_after_snapshot(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, attempt = _fixture(tmp_path)
+    registry_path = attempt / "source_selectors.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    registry["selectors"][0]["rendered_aliases"] = ["not-present"]
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+    report_path = attempt / "collisions.json"
+    original_read_bytes = critique_repair_bridge._read_bytes
+    mutated = False
+
+    def mutate_report_after_snapshot(path: Path, *, label: str) -> bytes:
+        nonlocal mutated
+        snapshot = original_read_bytes(path, label=label)
+        if path == report_path and not mutated:
+            mutated = True
+            path.write_bytes(snapshot + b"\n")
+        return snapshot
+
+    monkeypatch.setattr(
+        critique_repair_bridge,
+        "_read_bytes",
+        mutate_report_after_snapshot,
+    )
+
+    with pytest.raises(
+        critique_repair_bridge.CritiqueRepairBridgeError,
+        match="bridge input drift before publication",
+    ):
+        critique_repair_bridge.build_adjudicated_repair_target(
+            example_dir=workspace / "examples" / "demo",
+            critique_finding_id="C001",
+            attempt_dir=attempt,
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+            human_attributor_id="moon",
+        )
+
+    assert not (attempt / "attribution_handoff.json").exists()
+    assert not (attempt / "source_attribution.json").exists()
+    assert not (attempt / "semantic_attribution.json").exists()
+    assert not (attempt / "repair_targets.json").exists()
+    assert not (attempt / "critique_repair_binding.json").exists()
+
+
+def test_bridge_rolls_back_partial_four_file_write(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     workspace, attempt = _fixture(tmp_path)
@@ -791,6 +1553,7 @@ def test_bridge_rolls_back_partial_three_file_write(
         )
 
     assert not (attempt / "source_attribution.json").exists()
+    assert not (attempt / "semantic_attribution.json").exists()
     assert not (attempt / "repair_targets.json").exists()
     assert not (attempt / "critique_repair_binding.json").exists()
 
@@ -826,3 +1589,4 @@ def test_bridge_publish_race_preserves_competing_file(
     assert (attempt / "source_attribution.json").read_text(encoding="utf-8") == (
         "competing-writer\n"
     )
+    assert not (attempt / "semantic_attribution.json").exists()

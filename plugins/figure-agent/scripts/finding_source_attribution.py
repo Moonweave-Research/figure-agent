@@ -14,9 +14,15 @@ import json
 from pathlib import Path
 from typing import Any
 
+from quality.semantic_legibility_contract import (
+    SemanticLegibilityContractError,
+    validate_semantic_legibility_contract,
+)
+
 ATTRIBUTION_SCHEMA_ID = "figure-agent.finding-source-attribution.v1"
 REGISTRY_SCHEMA_ID = "figure-agent.source-selector-registry.v1"
 TARGET_SCHEMA_ID = "figure-agent.repair-target-contract.v1"
+SEMANTIC_ATTRIBUTION_SCHEMA_ID = "figure-agent.semantic-finding-attribution.v1"
 REPORT_COLLECTIONS = {
     "figure-agent.text-collisions.v1": "collisions",
     "figure-agent.label-hyphenation.v1": "issues",
@@ -96,7 +102,20 @@ def attribute_findings(
     *,
     source_path: Path,
 ) -> dict[str, Any]:
-    source_bytes = source_path.read_bytes()
+    return attribute_findings_from_bytes(
+        report,
+        registry,
+        source_bytes=source_path.read_bytes(),
+    )
+
+
+def attribute_findings_from_bytes(
+    report: dict[str, Any],
+    registry: dict[str, Any],
+    *,
+    source_bytes: bytes,
+) -> dict[str, Any]:
+    """Attribute findings from one caller-owned source byte snapshot."""
     source_hash = _sha256(source_bytes)
     if registry.get("source_sha256") != source_hash:
         raise SourceAttributionError("source hash does not match selector registry")
@@ -213,6 +232,113 @@ def build_repair_target_contract(
                 "protected_invariants": list(invariants),
             }
         ],
+    }
+
+
+def resolve_semantic_selector(
+    *,
+    registry: dict[str, Any],
+    attribution: dict[str, Any],
+    finding_id: str,
+    semantic_contract: dict[str, Any],
+) -> dict[str, Any]:
+    """Resolve declared semantic refs without inferring from coordinates."""
+    try:
+        validated_contract = validate_semantic_legibility_contract(
+            semantic_contract
+        )
+    except SemanticLegibilityContractError as exc:
+        raise SourceAttributionError(f"semantic contract is invalid: {exc}") from exc
+    required_objects = set(validated_contract["required_objects"])
+    protected_relations = validated_contract.get("protected_relations")
+    if (
+        not isinstance(protected_relations, list)
+        or not protected_relations
+        or any(
+            not isinstance(relation, str) or not relation.strip()
+            for relation in protected_relations
+        )
+        or len(set(protected_relations)) != len(protected_relations)
+    ):
+        raise SourceAttributionError(
+            "semantic contract protected_relations are invalid"
+        )
+    declared_relations = set(protected_relations)
+    mappings = [
+        item
+        for item in attribution.get("findings", [])
+        if isinstance(item, dict) and item.get("finding_id") == finding_id
+    ]
+    if len(mappings) != 1:
+        raise SourceAttributionError("selected finding attribution must resolve once")
+    mapping = mappings[0]
+    candidate_ids = sorted(
+        {
+            item["selector_id"]
+            for item in mapping.get("matched_selectors", [])
+            if isinstance(item, dict)
+            and item.get("repair_role") == "movable"
+            and isinstance(item.get("selector_id"), str)
+        }
+    )
+    if mapping.get("state") != "exact":
+        return {
+            "state": mapping.get("state"),
+            "reason_code": mapping.get("reason_code"),
+            "candidate_selector_ids": candidate_ids,
+            "missing_reference_kinds": [
+                "semantic_object",
+                "semantic_relation",
+            ],
+        }
+    selector_id = mapping.get("selected_selector_id")
+    selectors = [
+        item
+        for item in registry.get("selectors", [])
+        if isinstance(item, dict) and item.get("selector_id") == selector_id
+    ]
+    if len(selectors) != 1:
+        raise SourceAttributionError("selected selector must resolve exactly once")
+    selector = selectors[0]
+    object_refs = selector.get("semantic_object_refs")
+    relation_refs = selector.get("semantic_relation_refs")
+    for label, refs in (
+        ("semantic object", object_refs),
+        ("semantic relation", relation_refs),
+    ):
+        if not isinstance(refs, list) or any(
+            not isinstance(ref, str) or not ref.strip() for ref in refs
+        ) or len(set(refs)) != len(refs):
+            raise SourceAttributionError(f"{label} references are invalid")
+    unknown_objects = sorted(set(object_refs) - required_objects)
+    if unknown_objects:
+        raise SourceAttributionError("semantic object reference is undeclared")
+    unknown_relations = sorted(set(relation_refs) - declared_relations)
+    if unknown_relations:
+        raise SourceAttributionError("semantic relation reference is undeclared")
+    missing = [
+        name
+        for name, refs in (
+            ("semantic_object", object_refs),
+            ("semantic_relation", relation_refs),
+        )
+        if not refs
+    ]
+    if missing:
+        return {
+            "state": "unbound",
+            "reason_code": "selected_selector_missing_semantic_refs",
+            "candidate_selector_ids": [selector_id],
+            "missing_reference_kinds": missing,
+        }
+    return {
+        "state": "exact",
+        "reason_code": "one_declared_semantic_selector",
+        "selector_id": selector_id,
+        "candidate_selector_ids": [selector_id],
+        "missing_reference_kinds": [],
+        "semantic_object_refs": sorted(object_refs),
+        "semantic_relation_refs": sorted(relation_refs),
     }
 
 

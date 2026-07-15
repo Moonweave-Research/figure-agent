@@ -661,6 +661,10 @@ def compile_adjudicated_repair_execution_packet(
         )
     except critique_repair_bridge.CritiqueRepairBridgeError as exc:
         raise RepairExecutionPacketError(str(exc)) from exc
+    if "semantic_attribution" not in binding:
+        raise RepairExecutionPacketError(
+            "current v4 repair packets require semantic attribution authority"
+        )
     source_record = binding["source"]
     target_record = binding["target_contract"]
     target_relative = _safe_relative(

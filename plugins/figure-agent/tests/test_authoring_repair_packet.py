@@ -12,6 +12,13 @@ import authoring_repair_finalize
 import authoring_repair_packet
 import pytest
 import repair_transaction
+import yaml
+from inputs import parse_spec
+from quality_manifest import (
+    compute_critique_input_hash,
+    critique_generator_version,
+    expected_critique_rubric_version,
+)
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
@@ -144,6 +151,7 @@ def _adjudicated_binding(
     contract: Path,
     *,
     fixture: str = "demo",
+    include_semantic_attribution: bool = True,
 ) -> Path:
     example = workspace / "examples" / fixture
     artifacts = {
@@ -154,25 +162,112 @@ def _adjudicated_binding(
         "current_render": example / "build" / f"{fixture}.png",
         "current_pdf": example / "build" / f"{fixture}.pdf",
         "crop_manifest": example / "build" / "audit_crops" / "manifest.json",
+        "reference": example / "reference" / "golden.png",
+        "semantic_contract": contract.parent / "semantic_contract.yaml",
+        "semantic_attribution": contract.parent / "semantic_attribution.json",
     }
     for path in artifacts.values():
         path.parent.mkdir(parents=True, exist_ok=True)
-    artifacts["critique"].write_text("---\nfixture: demo\n---\n", encoding="utf-8")
+    artifacts["semantic_contract"].write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.failure-first-semantic-contract.v1",
+                "required_objects": ["panel_a.label", "panel_a.axis"],
+                "protected_relations": ["label_remains_clear_of_axis"],
+                "semantic_legibility": {
+                    "object_roles": [
+                        {
+                            "object_id": "panel_a.label",
+                            "declared_role": "annotation_label",
+                            "forbidden_readings": [],
+                        },
+                        {
+                            "object_id": "panel_a.axis",
+                            "declared_role": "plot_axis",
+                            "forbidden_readings": [],
+                        },
+                    ],
+                    "visible_connectors": [],
+                    "forbidden_connectors": [],
+                    "label_ownership": [],
+                },
+                "publication_acceptance": "not_claimed",
+            }
+        ),
+        encoding="utf-8",
+    )
+    semantic_contract_record = {
+        "path": artifacts["semantic_contract"].relative_to(workspace).as_posix(),
+        "sha256": _sha256(artifacts["semantic_contract"].read_bytes()),
+    }
     artifacts["selector_registry"].write_text(
         json.dumps(
             {
                 "schema": "figure-agent.source-selector-registry.v1",
                 "source_path": source.relative_to(workspace).as_posix(),
                 "source_sha256": _sha256(source.read_bytes()),
+                "semantic_contract": semantic_contract_record,
+                "selectors": [
+                    {
+                        "selector_id": "panel-a-label",
+                        "anchor_start": "% repair:label:start",
+                        "anchor_end": "% repair:label:end",
+                        "rendered_aliases": ["repeated", "trapping"],
+                        "repair_role": "movable",
+                        "repair_family": "label_reflow",
+                        "protected_invariants": ["S60 -> S80"],
+                        "semantic_object_refs": ["panel_a.axis", "panel_a.label"],
+                        "semantic_relation_refs": [
+                            "label_remains_clear_of_axis"
+                        ],
+                    }
+                ],
             }
         ),
         encoding="utf-8",
     )
-    artifacts["spec"].write_text("name: demo\n", encoding="utf-8")
+    artifacts["spec"].write_text(
+        f"name: {fixture}\n"
+        "reference_image: reference/golden.png\n"
+        "panels: []\n"
+        "style_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    artifacts["reference"].write_bytes(b"reference")
     artifacts["current_render"].write_bytes(b"png")
     artifacts["current_pdf"].write_bytes(b"pdf")
+    crop_manifest = {"schema": "figure-agent.audit-crop-manifest.v1"}
+    if include_semantic_attribution:
+        crop_manifest.update(
+            {
+                "fixture": fixture,
+                "render_path": artifacts["current_render"]
+                .relative_to(example)
+                .as_posix(),
+            }
+        )
     artifacts["crop_manifest"].write_text(
-        json.dumps({"schema": "figure-agent.audit-crop-manifest.v1"}),
+        json.dumps(crop_manifest), encoding="utf-8"
+    )
+    spec = parse_spec(artifacts["spec"].read_text(encoding="utf-8"))
+    critique_metadata = {
+        "fixture": fixture,
+        "critique_input_hash": compute_critique_input_hash(
+            example,
+            fixture,
+            spec,
+            style_lock_path=PLUGIN_ROOT / "styles" / "polymer-paper-preamble.sty",
+            base_dir=PLUGIN_ROOT,
+        ),
+        "generator_version": critique_generator_version(
+            PLUGIN_ROOT / "scripts" / "critique_brief.py"
+        ),
+        "rubric_version": expected_critique_rubric_version(example),
+    }
+    artifacts["critique"].write_text(
+        "---\n"
+        + yaml.safe_dump(critique_metadata, sort_keys=False)
+        + "---\n",
         encoding="utf-8",
     )
     report = contract.parent / "collisions.json"
@@ -213,41 +308,59 @@ def _adjudicated_binding(
             "sha256": _sha256(path.read_bytes()),
         }
 
+    semantic_attribution = {
+        "schema": "figure-agent.semantic-finding-attribution.v1",
+        "fixture": fixture,
+        "machine_finding": {
+            "report_path": (
+                contract.parent.relative_to(workspace).as_posix()
+                + "/collisions.json"
+            ),
+            "report_sha256": _sha256(
+                (contract.parent / "collisions.json").read_bytes()
+            ),
+            "finding_id": "TC001",
+        },
+        "semantic_contract": semantic_contract_record,
+        "source": record(source),
+        "selector_id": "panel-a-label",
+        "semantic_object_refs": ["panel_a.axis", "panel_a.label"],
+        "semantic_relation_refs": ["label_remains_clear_of_axis"],
+        "attribution_state": "exact",
+        "publication_acceptance": "not_claimed",
+    }
+    artifacts["semantic_attribution"].write_text(
+        json.dumps(semantic_attribution), encoding="utf-8"
+    )
+    binding_payload = {
+        "schema": "figure-agent.adjudicated-repair-binding.v1",
+        "fixture": fixture,
+        "critique": {
+            **record(artifacts["critique"]),
+            "finding_id": "C001",
+        },
+        "adjudication": {
+            **record(artifacts["adjudication"]),
+            "decision": "apply",
+        },
+        "machine_finding": semantic_attribution["machine_finding"],
+        "selector_registry": record(artifacts["selector_registry"]),
+        "source": record(source),
+        "spec": record(artifacts["spec"]),
+        "current_render": record(artifacts["current_render"]),
+        "current_pdf": record(artifacts["current_pdf"]),
+        "crop_manifest": record(artifacts["crop_manifest"]),
+        "attribution_state": "exact",
+        "target_contract": record(contract),
+        "publication_acceptance": "not_claimed",
+    }
+    if include_semantic_attribution:
+        binding_payload["semantic_attribution"] = record(
+            artifacts["semantic_attribution"]
+        )
     binding = contract.parent / "critique_repair_binding.json"
     binding.write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.adjudicated-repair-binding.v1",
-                "fixture": fixture,
-                "critique": {
-                    **record(artifacts["critique"]),
-                    "finding_id": "C001",
-                },
-                "adjudication": {
-                    **record(artifacts["adjudication"]),
-                    "decision": "apply",
-                },
-                "machine_finding": {
-                    "report_path": (
-                        contract.parent.relative_to(workspace).as_posix()
-                        + "/collisions.json"
-                    ),
-                    "report_sha256": _sha256(
-                        (contract.parent / "collisions.json").read_bytes()
-                    ),
-                    "finding_id": "TC001",
-                },
-                "selector_registry": record(artifacts["selector_registry"]),
-                "source": record(source),
-                "spec": record(artifacts["spec"]),
-                "current_render": record(artifacts["current_render"]),
-                "current_pdf": record(artifacts["current_pdf"]),
-                "crop_manifest": record(artifacts["crop_manifest"]),
-                "attribution_state": "exact",
-                "target_contract": record(contract),
-                "publication_acceptance": "not_claimed",
-            }
-        ),
+        json.dumps(binding_payload),
         encoding="utf-8",
     )
     return binding
@@ -1700,6 +1813,33 @@ def test_compiles_adjudicated_binding_into_transitive_packet(tmp_path: Path) -> 
         "target_contract"
     ]["sha256"]
     assert "# Bound repair execution: demo" in prompt
+
+
+def test_current_v4_compile_rejects_legacy_binding_without_semantic_authority(
+    tmp_path: Path,
+) -> None:
+    workspace, source, contract = _fixture(tmp_path)
+    binding = _adjudicated_binding(
+        workspace,
+        source,
+        contract,
+        include_semantic_attribution=False,
+    )
+
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="current v4 repair packets require semantic attribution authority",
+    ):
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=binding.relative_to(workspace).as_posix(),
+            output_path=(
+                "examples/demo/review/failure-first/execution-repair-v1/"
+                "repaired_generated.tex"
+            ),
+        )
 
 
 @pytest.mark.parametrize("rewrite", ["mode", "schema"])

@@ -19,14 +19,15 @@ import yaml
 from critique_contract import (
     critique_finding_id,
     critique_findings,
-    load_critique_frontmatter,
 )
 
 BINDING_SCHEMA = "figure-agent.adjudicated-repair-binding.v1"
+SEMANTIC_ATTRIBUTION_SCHEMA = "figure-agent.semantic-finding-attribution.v1"
+ATTRIBUTION_HANDOFF_SCHEMA = "figure-agent.attribution-handoff.v1"
 REPAIR_ATTEMPT = re.compile(r"execution-repair-v[1-9][0-9]*")
 SUPPORTED_CATEGORIES = frozenset({"hierarchy", "label_placement", "whitespace"})
 CROP_MANIFEST_SCHEMA = "figure-agent.audit-crop-manifest.v1"
-BINDING_FIELDS = frozenset(
+BINDING_FIELDS_LEGACY = frozenset(
     {
         "schema",
         "fixture",
@@ -44,6 +45,7 @@ BINDING_FIELDS = frozenset(
         "publication_acceptance",
     }
 )
+BINDING_FIELDS = BINDING_FIELDS_LEGACY | {"semantic_attribution"}
 BINDING_RECORD_FIELDS = {
     "critique": frozenset({"path", "sha256", "finding_id"}),
     "adjudication": frozenset({"path", "sha256", "decision"}),
@@ -57,6 +59,7 @@ BINDING_RECORD_FIELDS = {
     "current_pdf": frozenset({"path", "sha256"}),
     "crop_manifest": frozenset({"path", "sha256"}),
     "target_contract": frozenset({"path", "sha256"}),
+    "semantic_attribution": frozenset({"path", "sha256"}),
 }
 TARGET_CONTRACT_FIELDS = frozenset(
     {"schema", "source_path", "source_sha256", "targets"}
@@ -69,6 +72,9 @@ TARGET_FIELDS = frozenset(
         "repair_family",
         "protected_invariants",
     }
+)
+TARGET_SELECTOR_FIELDS = frozenset(
+    {"kind", "selector_id", "anchor_start", "anchor_end"}
 )
 
 
@@ -155,6 +161,97 @@ def _load_json_bytes(data: bytes, *, label: str) -> dict[str, Any]:
     return payload
 
 
+def _load_yaml_bytes(data: bytes, *, label: str) -> dict[str, Any]:
+    try:
+        payload = yaml.safe_load(data.decode("utf-8"))
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise CritiqueRepairBridgeError(f"{label} must be valid YAML") from exc
+    if not isinstance(payload, dict):
+        raise CritiqueRepairBridgeError(f"{label} must be a YAML mapping")
+    return payload
+
+
+def _load_critique_frontmatter_bytes(data: bytes) -> dict[str, Any]:
+    try:
+        lines = data.decode("utf-8").splitlines()
+    except UnicodeDecodeError as exc:
+        raise CritiqueRepairBridgeError("critique must be valid UTF-8") from exc
+    if not lines or lines[0].strip() != "---":
+        raise CritiqueRepairBridgeError("critique frontmatter is missing")
+    end_index = next(
+        (
+            index
+            for index, line in enumerate(lines[1:], start=1)
+            if line.strip() == "---"
+        ),
+        None,
+    )
+    if end_index is None:
+        raise CritiqueRepairBridgeError("critique frontmatter is unterminated")
+    try:
+        payload = yaml.safe_load("\n".join(lines[1:end_index])) or {}
+    except yaml.YAMLError as exc:
+        raise CritiqueRepairBridgeError("critique frontmatter must be valid YAML") from exc
+    if not isinstance(payload, dict):
+        raise CritiqueRepairBridgeError("critique frontmatter must be a mapping")
+    return payload
+
+
+def _assert_input_snapshots_current(snapshots: dict[Path, bytes]) -> None:
+    for path, snapshot in snapshots.items():
+        if _read_bytes(path, label=f"bridge input {path.name}") != snapshot:
+            raise CritiqueRepairBridgeError(
+                "bridge input drift before publication"
+            )
+
+
+def _assert_current_critique_metadata(
+    example_dir: Path,
+    *,
+    plugin_root: Path,
+) -> None:
+    try:
+        mismatches = critique_adjudication._critique_metadata_mismatches(
+            example_dir,
+            repo_root=plugin_root,
+        )
+    except critique_adjudication.CritiqueAdjudicationError as exc:
+        raise CritiqueRepairBridgeError(str(exc)) from exc
+    if mismatches:
+        raise CritiqueRepairBridgeError("; ".join(mismatches))
+
+
+def _validate_crop_manifest_snapshot(
+    data: bytes,
+    *,
+    fixture: str,
+    example_dir: Path,
+    render_path: Path,
+    pdf_path: Path,
+    label: str,
+    allow_legacy_minimal: bool = False,
+) -> None:
+    manifest = _load_json_bytes(data, label=label)
+    if allow_legacy_minimal and manifest == {"schema": CROP_MANIFEST_SCHEMA}:
+        return
+    try:
+        expected_render = render_path.relative_to(example_dir).as_posix()
+        expected_pdf = pdf_path.relative_to(example_dir).as_posix()
+    except ValueError as exc:
+        raise CritiqueRepairBridgeError(
+            f"{label} render artifacts must remain inside the fixture"
+        ) from exc
+    manifest_render = manifest.get("render_path")
+    if (
+        manifest.get("schema") != CROP_MANIFEST_SCHEMA
+        or manifest.get("fixture") != fixture
+        or manifest_render != expected_render
+        or not isinstance(manifest_render, str)
+        or Path(manifest_render).with_suffix(".pdf").as_posix() != expected_pdf
+    ):
+        raise CritiqueRepairBridgeError(f"{label} render lineage invalid")
+
+
 def _current_critique_inputs(
     example_dir: Path,
     *,
@@ -169,14 +266,8 @@ def _current_critique_inputs(
     )
     try:
         critique_adjudication.build_adjudication_scaffold(example_dir)
-        mismatches = critique_adjudication._critique_metadata_mismatches(
-            example_dir,
-            repo_root=plugin_root,
-        )
     except critique_adjudication.CritiqueAdjudicationError as exc:
         raise CritiqueRepairBridgeError(str(exc)) from exc
-    if mismatches:
-        raise CritiqueRepairBridgeError("; ".join(mismatches))
     spec_path = _workspace_file(
         workspace_root,
         (example_relative / "spec.yaml").as_posix(),
@@ -224,6 +315,8 @@ def _validate_report_lineage(
     current_pdf: Path,
     example_dir: Path,
     workspace_root: Path,
+    current_render_sha256: str | None = None,
+    current_pdf_sha256: str | None = None,
 ) -> None:
     expected_render_path = current_render.relative_to(example_dir).as_posix()
     expected_pdf_path = current_pdf.relative_to(example_dir).as_posix()
@@ -233,9 +326,11 @@ def _validate_report_lineage(
         report.get("schema") != "figure-agent.text-collisions.v1"
         or report.get("fixture") != fixture
         or report.get("render_path") != expected_render_path
-        or report.get("render_sha256") != _sha256(current_render)
+        or report.get("render_sha256")
+        != (current_render_sha256 or _sha256(current_render))
         or report.get("render_pdf") != expected_pdf_path
-        or report.get("render_pdf_sha256") != _sha256(current_pdf)
+        or report.get("render_pdf_sha256")
+        != (current_pdf_sha256 or _sha256(current_pdf))
         or report_render_path.stem != report_pdf_path.stem
     ):
         raise CritiqueRepairBridgeError(
@@ -303,7 +398,8 @@ def validate_adjudicated_repair_binding_snapshot(
     binding = _load_json_bytes(
         binding_bytes, label="adjudicated repair binding"
     )
-    if set(binding) != BINDING_FIELDS:
+    binding_fields = set(binding)
+    if binding_fields not in {BINDING_FIELDS_LEGACY, BINDING_FIELDS}:
         raise CritiqueRepairBridgeError("binding top-level fields are invalid")
     if binding.get("schema") != BINDING_SCHEMA:
         raise CritiqueRepairBridgeError("binding schema invalid")
@@ -325,8 +421,20 @@ def validate_adjudicated_repair_binding_snapshot(
         "current_pdf": ("before_pdf", "path", "sha256"),
         "crop_manifest": ("baseline_crop_manifest", "path", "sha256"),
     }
-    labels = {"target_contract": "target contract"}
-    for key, expected_fields in BINDING_RECORD_FIELDS.items():
+    labels = {
+        "target_contract": "target contract",
+        "semantic_attribution": "semantic attribution",
+    }
+    record_fields = (
+        BINDING_RECORD_FIELDS
+        if "semantic_attribution" in binding_fields
+        else {
+            key: value
+            for key, value in BINDING_RECORD_FIELDS.items()
+            if key != "semantic_attribution"
+        }
+    )
+    for key, expected_fields in record_fields.items():
         label = labels.get(key, key)
         record = binding.get(key)
         if not isinstance(record, dict) or set(record) != expected_fields:
@@ -404,6 +512,20 @@ def validate_adjudicated_repair_binding_snapshot(
         raise CritiqueRepairBridgeError(
             "binding render artifacts must remain inside the fixture"
         ) from exc
+    _validate_crop_manifest_snapshot(
+        snapshots["baseline_crop_manifest"],
+        fixture=fixture,
+        example_dir=example_dir,
+        render_path=paths["before_render"],
+        pdf_path=paths["before_pdf"],
+        label="binding crop manifest",
+        allow_legacy_minimal="semantic_attribution" not in binding_fields,
+    )
+    if "semantic_attribution" in binding_fields:
+        _assert_current_critique_metadata(
+            example_dir,
+            plugin_root=Path(__file__).resolve().parents[1],
+        )
     if (
         report.get("schema") != "figure-agent.text-collisions.v1"
         or report.get("fixture") != fixture
@@ -420,6 +542,29 @@ def validate_adjudicated_repair_binding_snapshot(
     selector_registry = _load_json_bytes(
         snapshots["selector_registry"], label="binding selector registry"
     )
+    semantic_contract_record = selector_registry.get("semantic_contract")
+    if "semantic_attribution" in binding_fields:
+        if (
+            not isinstance(semantic_contract_record, dict)
+            or set(semantic_contract_record) != {"path", "sha256"}
+        ):
+            raise CritiqueRepairBridgeError(
+                "binding semantic contract record is invalid"
+            )
+        semantic_contract_path = _workspace_file(
+            workspace_root,
+            semantic_contract_record.get("path"),
+            label="binding semantic contract",
+        )
+        semantic_contract_bytes = _read_bytes(
+            semantic_contract_path, label="binding semantic contract"
+        )
+        if semantic_contract_record.get("sha256") != _sha256_bytes(
+            semantic_contract_bytes
+        ):
+            raise CritiqueRepairBridgeError("binding semantic contract hash drift")
+        paths["semantic_contract"] = semantic_contract_path
+        snapshots["semantic_contract"] = semantic_contract_bytes
     source_record = records["source"]
     if (
         selector_registry.get("schema")
@@ -450,6 +595,130 @@ def validate_adjudicated_repair_binding_snapshot(
         or selected_target.get("attribution") != {"state": "exact"}
     ):
         raise CritiqueRepairBridgeError("binding target lineage invalid")
+    target_selector = selected_target.get("selector")
+    matching_selectors = [
+        selector
+        for selector in selector_registry.get("selectors", [])
+        if isinstance(selector, dict)
+        and isinstance(target_selector, dict)
+        and selector.get("selector_id") == target_selector.get("selector_id")
+    ]
+    declared_selector = matching_selectors[0] if len(matching_selectors) == 1 else None
+    if (
+        not isinstance(target_selector, dict)
+        or set(target_selector) != TARGET_SELECTOR_FIELDS
+        or target_selector.get("kind") != "semantic_anchor"
+        or not isinstance(declared_selector, dict)
+        or declared_selector.get("repair_role") != "movable"
+        or target_selector.get("anchor_start")
+        != declared_selector.get("anchor_start")
+        or target_selector.get("anchor_end") != declared_selector.get("anchor_end")
+        or selected_target.get("repair_family")
+        != declared_selector.get("repair_family")
+        or selected_target.get("protected_invariants")
+        != declared_selector.get("protected_invariants")
+    ):
+        raise CritiqueRepairBridgeError("binding target selector lineage invalid")
+    try:
+        source_attribution = finding_source_attribution.attribute_findings_from_bytes(
+            report,
+            selector_registry,
+            source_bytes=snapshots["source"],
+        )
+    except finding_source_attribution.SourceAttributionError as exc:
+        raise CritiqueRepairBridgeError(str(exc)) from exc
+    selected_source_attribution = [
+        item
+        for item in source_attribution.get("findings", [])
+        if isinstance(item, dict) and item.get("finding_id") == machine_id
+    ]
+    if (
+        len(selected_source_attribution) != 1
+        or selected_source_attribution[0].get("state") != "exact"
+        or selected_source_attribution[0].get("selected_selector_id")
+        != target_selector.get("selector_id")
+    ):
+        raise CritiqueRepairBridgeError(
+            "binding source attribution lineage invalid"
+        )
+    if "semantic_attribution" in binding_fields:
+        semantic_attribution = _load_json_bytes(
+            snapshots["semantic_attribution"],
+            label="binding semantic attribution",
+        )
+        if (
+            set(semantic_attribution)
+            != {
+                "schema",
+                "fixture",
+                "machine_finding",
+                "semantic_contract",
+                "source",
+                "selector_id",
+                "semantic_object_refs",
+                "semantic_relation_refs",
+                "attribution_state",
+                "publication_acceptance",
+            }
+            or semantic_attribution.get("schema") != SEMANTIC_ATTRIBUTION_SCHEMA
+            or semantic_attribution.get("fixture") != fixture
+            or semantic_attribution.get("machine_finding")
+            != {
+                "report_path": records["machine_finding"].get("report_path"),
+                "report_sha256": records["machine_finding"].get(
+                    "report_sha256"
+                ),
+                "finding_id": machine_id,
+            }
+            or semantic_attribution.get("semantic_contract")
+            != semantic_contract_record
+            or semantic_attribution.get("source") != source_record
+            or semantic_attribution.get("selector_id")
+            != target_selector.get("selector_id")
+            or semantic_attribution.get("attribution_state") != "exact"
+            or semantic_attribution.get("publication_acceptance") != "not_claimed"
+        ):
+            raise CritiqueRepairBridgeError(
+                "binding semantic attribution lineage invalid"
+            )
+        try:
+            resolution = finding_source_attribution.resolve_semantic_selector(
+                registry=selector_registry,
+                attribution=source_attribution,
+                finding_id=machine_id,
+                semantic_contract=yaml.safe_load(
+                    snapshots["semantic_contract"].decode("utf-8")
+                ),
+            )
+        except (
+            OSError,
+            UnicodeDecodeError,
+            yaml.YAMLError,
+            finding_source_attribution.SourceAttributionError,
+        ) as exc:
+            raise CritiqueRepairBridgeError(str(exc)) from exc
+        resolved_object_refs = resolution.get("semantic_object_refs")
+        resolved_relation_refs = resolution.get("semantic_relation_refs")
+        refs_are_valid = all(
+            isinstance(refs, list)
+            and bool(refs)
+            and all(isinstance(ref, str) and bool(ref.strip()) for ref in refs)
+            and len(set(refs)) == len(refs)
+            for refs in (resolved_object_refs, resolved_relation_refs)
+        )
+        if (
+            resolution.get("state") != "exact"
+            or resolution.get("selector_id") != target_selector.get("selector_id")
+            or resolution.get("missing_reference_kinds") != []
+            or not refs_are_valid
+            or semantic_attribution.get("semantic_object_refs")
+            != resolved_object_refs
+            or semantic_attribution.get("semantic_relation_refs")
+            != resolved_relation_refs
+        ):
+            raise CritiqueRepairBridgeError(
+                "binding semantic attribution references invalid"
+            )
     for alias, path in paths.items():
         if _read_bytes(path, label=f"binding {alias}") != snapshots[alias]:
             raise CritiqueRepairBridgeError(
@@ -503,8 +772,9 @@ def build_adjudicated_repair_target(
     attempt_dir: Path,
     workspace_root: Path,
     plugin_root: Path | None = None,
+    human_attributor_id: str | None = None,
 ) -> dict[str, object]:
-    """Write additive exact-attribution artifacts for one fresh apply decision."""
+    """Publish an exact semantic binding or a human-attribution handoff."""
     workspace_root = workspace_root.resolve()
     plugin_root = (
         plugin_root.resolve()
@@ -528,9 +798,11 @@ def build_adjudicated_repair_target(
         workspace_root=workspace_root,
     )
     output_paths = {
-        "attribution": attempt / "source_attribution.json",
+        "source_attribution": attempt / "source_attribution.json",
+        "semantic_attribution": attempt / "semantic_attribution.json",
         "target_contract": attempt / "repair_targets.json",
         "binding": attempt / "critique_repair_binding.json",
+        "handoff": attempt / "attribution_handoff.json",
     }
     if any(path.exists() or path.is_symlink() for path in output_paths.values()):
         raise CritiqueRepairBridgeError("bridge output already exists")
@@ -555,17 +827,46 @@ def build_adjudicated_repair_target(
             plugin_root=plugin_root,
             workspace_root=workspace_root,
         )
-        frontmatter = load_critique_frontmatter(critique_path)
-        adjudication = critique_adjudication.load_adjudication(adjudication_path)
-        if critique_adjudication.adjudication_is_stale(
-            adjudication_path, critique_path
-        ):
-            raise CritiqueRepairBridgeError("critique adjudication is stale")
     except critique_adjudication.CritiqueAdjudicationError as exc:
         raise CritiqueRepairBridgeError(str(exc)) from exc
+    input_snapshots = {
+        path: _read_bytes(path, label=f"bridge input {path.name}")
+        for path in (
+            critique_path,
+            adjudication_path,
+            spec_path,
+            current_render_path,
+            current_pdf_path,
+            crop_manifest_path,
+        )
+    }
+    _assert_current_critique_metadata(example_dir, plugin_root=plugin_root)
+    _assert_input_snapshots_current(input_snapshots)
+    frontmatter = _load_critique_frontmatter_bytes(input_snapshots[critique_path])
+    try:
+        adjudication = critique_adjudication.validate_adjudication(
+            _load_yaml_bytes(
+                input_snapshots[adjudication_path],
+                label="critique adjudication",
+            )
+        )
+    except critique_adjudication.CritiqueAdjudicationError as exc:
+        raise CritiqueRepairBridgeError(str(exc)) from exc
+    if adjudication.get("source_critique_hash") != _sha256_bytes(
+        input_snapshots[critique_path]
+    ):
+        raise CritiqueRepairBridgeError("critique adjudication is stale")
     fixture = example_dir.name
     if adjudication.get("fixture") != fixture:
         raise CritiqueRepairBridgeError("adjudication fixture mismatch")
+    _validate_crop_manifest_snapshot(
+        input_snapshots[crop_manifest_path],
+        fixture=fixture,
+        example_dir=example_dir,
+        render_path=current_render_path,
+        pdf_path=current_pdf_path,
+        label="current crop manifest",
+    )
     _selected_finding(frontmatter, critique_finding_id)
     decisions = [
         item
@@ -586,7 +887,15 @@ def build_adjudicated_repair_target(
         evidence.get("selector_registry_path"),
         label="selector registry",
     )
-    report = _load_json(report_path, label="finding report")
+    input_snapshots[report_path] = _read_bytes(
+        report_path, label="bridge input finding report"
+    )
+    input_snapshots[registry_path] = _read_bytes(
+        registry_path, label="bridge input selector registry"
+    )
+    report = _load_json_bytes(
+        input_snapshots[report_path], label="finding report"
+    )
     _validate_report_lineage(
         report,
         fixture=fixture,
@@ -594,29 +903,162 @@ def build_adjudicated_repair_target(
         current_pdf=current_pdf_path,
         example_dir=example_dir,
         workspace_root=workspace_root,
+        current_render_sha256=_sha256_bytes(
+            input_snapshots[current_render_path]
+        ),
+        current_pdf_sha256=_sha256_bytes(input_snapshots[current_pdf_path]),
     )
-    registry = _load_json(registry_path, label="selector registry")
+    registry = _load_json_bytes(
+        input_snapshots[registry_path], label="selector registry"
+    )
     source_path = _workspace_file(
         workspace_root, registry.get("source_path"), label="bound source"
     )
+    input_snapshots[source_path] = _read_bytes(
+        source_path, label="bridge input bound source"
+    )
     machine_finding_id = str(evidence.get("finding_id") or "")
     try:
-        attribution = finding_source_attribution.attribute_findings(
-            report, registry, source_path=source_path
+        attribution = finding_source_attribution.attribute_findings_from_bytes(
+            report,
+            registry,
+            source_bytes=input_snapshots[source_path],
         )
-        selected = [
-            item
-            for item in attribution.get("findings", [])
-            if isinstance(item, dict)
-            and item.get("finding_id") == machine_finding_id
-        ]
-        if len(selected) != 1 or selected[0].get("state") != "exact":
-            raise CritiqueRepairBridgeError(
-                "exact attribution required for selected machine finding"
-            )
         report_relative = _relative(
             report_path, root=workspace_root, label="finding report"
         )
+    except finding_source_attribution.SourceAttributionError as exc:
+        raise CritiqueRepairBridgeError(str(exc)) from exc
+
+    selected = [
+        item
+        for item in attribution.get("findings", [])
+        if isinstance(item, dict) and item.get("finding_id") == machine_finding_id
+    ]
+    if len(selected) != 1:
+        raise CritiqueRepairBridgeError(
+            "selected finding attribution must resolve once"
+        )
+    source_resolution = selected[0]
+    semantic_contract_record = registry.get("semantic_contract")
+    semantic_contract_path: Path | None = None
+    if "semantic_contract" in registry:
+        if (
+            not isinstance(semantic_contract_record, dict)
+            or set(semantic_contract_record) != {"path", "sha256"}
+        ):
+            raise CritiqueRepairBridgeError(
+                "selector registry semantic contract record is invalid"
+            )
+        semantic_contract_path = _workspace_file(
+            workspace_root,
+            semantic_contract_record.get("path"),
+            label="semantic contract",
+        )
+        input_snapshots[semantic_contract_path] = _read_bytes(
+            semantic_contract_path, label="bridge input semantic contract"
+        )
+        semantic_contract_bytes = input_snapshots[semantic_contract_path]
+        if semantic_contract_record.get("sha256") != _sha256_bytes(
+            semantic_contract_bytes
+        ):
+            raise CritiqueRepairBridgeError("semantic contract hash drift")
+        semantic_contract = _load_yaml_bytes(
+            semantic_contract_bytes, label="semantic contract"
+        )
+        try:
+            semantic_resolution = (
+                finding_source_attribution.resolve_semantic_selector(
+                    registry=registry,
+                    attribution=attribution,
+                    finding_id=machine_finding_id,
+                    semantic_contract=semantic_contract,
+                )
+            )
+        except finding_source_attribution.SourceAttributionError as exc:
+            raise CritiqueRepairBridgeError(str(exc)) from exc
+    elif source_resolution.get("state") != "exact":
+        semantic_resolution = {
+            "state": source_resolution.get("state"),
+            "reason_code": source_resolution.get("reason_code"),
+            "candidate_selector_ids": sorted(
+                {
+                    item["selector_id"]
+                    for item in source_resolution.get("matched_selectors", [])
+                    if isinstance(item, dict)
+                    and item.get("repair_role") == "movable"
+                    and isinstance(item.get("selector_id"), str)
+                }
+            ),
+            "missing_reference_kinds": [
+                "semantic_object",
+                "semantic_relation",
+            ],
+        }
+    else:
+        semantic_resolution = {
+            "state": "unbound",
+            "reason_code": "semantic_boundary_missing",
+            "candidate_selector_ids": [source_resolution["selected_selector_id"]],
+            "missing_reference_kinds": [
+                "semantic_object",
+                "semantic_relation",
+            ],
+        }
+    if semantic_resolution["state"] != "exact":
+        if not isinstance(human_attributor_id, str) or not human_attributor_id.strip():
+            raise CritiqueRepairBridgeError(
+                "human_attributor_id is required for attribution handoff"
+            )
+        handoff: dict[str, object] = {
+            "schema": ATTRIBUTION_HANDOFF_SCHEMA,
+            "fixture": fixture,
+            "machine_finding": {
+                "report_path": report_relative,
+                "report_sha256": _sha256_bytes(input_snapshots[report_path]),
+                "finding_id": machine_finding_id,
+            },
+            "evidence_role": "attribution_handoff",
+            "attempt_state": "adjudicated_unbound",
+            "required_actor": {
+                "id": human_attributor_id.strip(),
+                "role": "human_attributor",
+            },
+            "reason_code": semantic_resolution["reason_code"],
+            "candidate_selector_ids": semantic_resolution[
+                "candidate_selector_ids"
+            ],
+            "missing_reference_kinds": semantic_resolution[
+                "missing_reference_kinds"
+            ],
+            "allowed_action": "declare_or_select_semantic_source_authority",
+            "forbidden_actions": [
+                "source_mutation",
+                "repair_target_materialization",
+                "publication_acceptance",
+            ],
+            "publication_acceptance": "not_claimed",
+        }
+        handoff_path = output_paths["handoff"]
+        try:
+            with repair_transaction.exclusive_lock(
+                attempt / ".critique-repair-bridge.lock",
+                owner="critique_repair_bridge",
+            ):
+                if any(
+                    path.exists() or path.is_symlink()
+                    for path in output_paths.values()
+                ):
+                    raise CritiqueRepairBridgeError("bridge output already exists")
+                _assert_input_snapshots_current(input_snapshots)
+                repair_transaction.atomic_create_json(handoff_path, handoff)
+        except repair_transaction.RepairTransactionError as exc:
+            raise CritiqueRepairBridgeError(
+                "bridge transaction already active"
+            ) from exc
+        return handoff
+
+    try:
         target_contract = finding_source_attribution.build_repair_target_contract(
             report_path=report_relative,
             report=report,
@@ -627,40 +1069,55 @@ def build_adjudicated_repair_target(
     except finding_source_attribution.SourceAttributionError as exc:
         raise CritiqueRepairBridgeError(str(exc)) from exc
 
+    source_record = {
+        "path": _relative(source_path, root=workspace_root, label="bound source"),
+        "sha256": _sha256_bytes(input_snapshots[source_path]),
+    }
+    machine_finding_record = {
+        "report_path": report_relative,
+        "report_sha256": _sha256_bytes(input_snapshots[report_path]),
+        "finding_id": machine_finding_id,
+    }
+    semantic_attribution: dict[str, object] = {
+        "schema": SEMANTIC_ATTRIBUTION_SCHEMA,
+        "fixture": fixture,
+        "machine_finding": machine_finding_record,
+        "semantic_contract": semantic_contract_record,
+        "source": source_record,
+        "selector_id": semantic_resolution["selector_id"],
+        "semantic_object_refs": semantic_resolution["semantic_object_refs"],
+        "semantic_relation_refs": semantic_resolution["semantic_relation_refs"],
+        "attribution_state": "exact",
+        "publication_acceptance": "not_claimed",
+    }
+
     target_contract_sha256 = _json_payload_sha256(target_contract)
     binding: dict[str, object] = {
         "schema": BINDING_SCHEMA,
         "fixture": fixture,
         "critique": {
             "path": _relative(critique_path, root=workspace_root, label="critique"),
-            "sha256": _sha256(critique_path),
+            "sha256": _sha256_bytes(input_snapshots[critique_path]),
             "finding_id": critique_finding_id,
         },
         "adjudication": {
             "path": _relative(
                 adjudication_path, root=workspace_root, label="adjudication"
             ),
-            "sha256": _sha256(adjudication_path),
+            "sha256": _sha256_bytes(input_snapshots[adjudication_path]),
             "decision": "apply",
         },
-        "machine_finding": {
-            "report_path": report_relative,
-            "report_sha256": _sha256(report_path),
-            "finding_id": machine_finding_id,
-        },
+        "machine_finding": machine_finding_record,
         "selector_registry": {
             "path": _relative(
                 registry_path, root=workspace_root, label="selector registry"
             ),
-            "sha256": _sha256(registry_path),
+            "sha256": _sha256_bytes(input_snapshots[registry_path]),
         },
-        "source": {
-            "path": _relative(source_path, root=workspace_root, label="bound source"),
-            "sha256": _sha256(source_path),
-        },
+        "source": source_record,
         "spec": {
             "path": _relative(spec_path, root=workspace_root, label="spec"),
-            "sha256": _sha256(spec_path),
+            "sha256": _sha256_bytes(input_snapshots[spec_path]),
         },
         "current_render": {
             "path": _relative(
@@ -668,7 +1125,7 @@ def build_adjudicated_repair_target(
                 root=workspace_root,
                 label="current render",
             ),
-            "sha256": _sha256(current_render_path),
+            "sha256": _sha256_bytes(input_snapshots[current_render_path]),
         },
         "current_pdf": {
             "path": _relative(
@@ -676,7 +1133,7 @@ def build_adjudicated_repair_target(
                 root=workspace_root,
                 label="current PDF",
             ),
-            "sha256": _sha256(current_pdf_path),
+            "sha256": _sha256_bytes(input_snapshots[current_pdf_path]),
         },
         "crop_manifest": {
             "path": _relative(
@@ -684,7 +1141,7 @@ def build_adjudicated_repair_target(
                 root=workspace_root,
                 label="current crop manifest",
             ),
-            "sha256": _sha256(crop_manifest_path),
+            "sha256": _sha256_bytes(input_snapshots[crop_manifest_path]),
         },
         "attribution_state": "exact",
         "target_contract": {
@@ -695,10 +1152,19 @@ def build_adjudicated_repair_target(
             ),
             "sha256": target_contract_sha256,
         },
+        "semantic_attribution": {
+            "path": _relative(
+                output_paths["semantic_attribution"],
+                root=workspace_root,
+                label="semantic attribution",
+            ),
+            "sha256": _json_payload_sha256(semantic_attribution),
+        },
         "publication_acceptance": "not_claimed",
     }
     payloads = {
-        output_paths["attribution"]: attribution,
+        output_paths["source_attribution"]: attribution,
+        output_paths["semantic_attribution"]: semantic_attribution,
         output_paths["target_contract"]: target_contract,
         output_paths["binding"]: binding,
     }
@@ -706,18 +1172,6 @@ def build_adjudicated_repair_target(
         path: _json_payload_sha256(payload)
         for path, payload in payloads.items()
     }
-    input_paths = (
-        critique_path,
-        adjudication_path,
-        report_path,
-        registry_path,
-        source_path,
-        spec_path,
-        current_render_path,
-        current_pdf_path,
-        crop_manifest_path,
-    )
-    input_hashes = {path: _sha256(path) for path in input_paths}
     try:
         with repair_transaction.exclusive_lock(
             attempt / ".critique-repair-bridge.lock",
@@ -725,20 +1179,7 @@ def build_adjudicated_repair_target(
         ):
             if any(path.exists() or path.is_symlink() for path in output_paths.values()):
                 raise CritiqueRepairBridgeError("bridge output already exists")
-            if any(_sha256(path) != digest for path, digest in input_hashes.items()):
-                raise CritiqueRepairBridgeError("bridge input drift before publication")
-            if critique_adjudication.adjudication_is_stale(
-                adjudication_path, critique_path
-            ):
-                raise CritiqueRepairBridgeError("critique adjudication is stale")
-            _validate_report_lineage(
-                _load_json(report_path, label="finding report"),
-                fixture=fixture,
-                current_render=current_render_path,
-                current_pdf=current_pdf_path,
-                example_dir=example_dir,
-                workspace_root=workspace_root,
-            )
+            _assert_input_snapshots_current(input_snapshots)
             try:
                 for path, payload in payloads.items():
                     repair_transaction.atomic_create_json(path, payload)
@@ -764,6 +1205,7 @@ def main(
     parser.add_argument("--fixture", required=True)
     parser.add_argument("--finding-id", required=True)
     parser.add_argument("--attempt-dir", required=True)
+    parser.add_argument("--human-attributor-id")
     args = parser.parse_args(argv)
     try:
         fixture_identity.validate_fixture_name(args.fixture)
@@ -774,6 +1216,7 @@ def main(
             attempt_dir=attempt,
             plugin_root=plugin_root,
             workspace_root=workspace_root,
+            human_attributor_id=args.human_attributor_id,
         )
     except (OSError, UnicodeDecodeError, ValueError, CritiqueRepairBridgeError) as exc:
         print(f"fig-agent adjudicated-repair-target: {exc}")
