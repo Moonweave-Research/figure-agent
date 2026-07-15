@@ -483,7 +483,11 @@ def test_apply_plan_source_replace_failure_keeps_original_and_recovery_receipt(
             raise OSError("source replace interrupted")
         real_replace(src, dst)
 
-    monkeypatch.setattr(quality_patch_apply.os, "replace", fail_source_replace)
+    monkeypatch.setattr(
+        quality_patch_apply.repair_transaction.os,
+        "replace",
+        fail_source_replace,
+    )
 
     with pytest.raises(OSError, match="source replace interrupted"):
         quality_patch_apply.apply_quality_patch_plan(

@@ -11,6 +11,7 @@ RELEASE_DECISION_PACKET_SCHEMA = "figure-agent.release-decision-packet.v1"
 STYLE_DIRECTION_PACKET_SCHEMA = "figure-agent.style-direction-packet.v1"
 DESIGN_DIRECTION_PACKET_SCHEMA = "figure-agent.design-direction-packet.v1"
 QUALITY_PATCH_PLAN_SCHEMA = "figure-agent.quality-patch-plan.v1"
+AUTHORING_REPAIR_PACKET_SCHEMA = "figure-agent.repair-execution-packet.v3"
 
 DECISION_KINDS = frozenset(
     {
@@ -29,6 +30,7 @@ DECISION_KINDS = frozenset(
         "prepare_bounded_tikz_refinement",
         "apply_bounded_tikz_candidate",
         "apply_quality_patch_plan",
+        "materialize_authoring_repair_candidate",
         "prepare_editorial_redesign_candidates",
         "prepare_svg_polish_handoff",
         "defer_design_decision",
@@ -74,6 +76,7 @@ PACKET_SCHEMAS = frozenset(
         STYLE_DIRECTION_PACKET_SCHEMA,
         DESIGN_DIRECTION_PACKET_SCHEMA,
         QUALITY_PATCH_PLAN_SCHEMA,
+        AUTHORING_REPAIR_PACKET_SCHEMA,
     }
 )
 MUTATION_BOUNDARIES = frozenset(
@@ -82,6 +85,7 @@ MUTATION_BOUNDARIES = frozenset(
         "source_mutation_allowed",
         "release_state_mutation_allowed",
         "golden_mutation_allowed",
+        "additive_artifact_materialization_allowed",
     }
 )
 _RELEASE_MUTATION_BOUNDARIES = frozenset(
@@ -92,6 +96,9 @@ _SVG_POLISH_DECISION_KINDS = frozenset(
 )
 _SOURCE_MUTATION_DECISION_KINDS = frozenset(
     {"apply_bounded_tikz_candidate", "apply_quality_patch_plan"}
+)
+_ADDITIVE_MATERIALIZATION_DECISION_KINDS = frozenset(
+    {"materialize_authoring_repair_candidate"}
 )
 
 
@@ -191,6 +198,13 @@ def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
     ):
         raise HumanDecisionRecordError("source_mutation_decision_requires_source_boundary")
     if (
+        decision_kind in _ADDITIVE_MATERIALIZATION_DECISION_KINDS
+        and mutation_boundary != "additive_artifact_materialization_allowed"
+    ):
+        raise HumanDecisionRecordError(
+            "materialization_decision_requires_additive_artifact_boundary"
+        )
+    if (
         decision_kind in _SVG_POLISH_DECISION_KINDS
         and packet_recommendation != decision_kind
     ):
@@ -253,4 +267,51 @@ def validate_source_mutation_authorization(
         **normalized,
         "authorized_candidate_id": authorized_candidate_id,
         "authorized_candidate_hash": authorized_candidate_hash,
+    }
+
+
+def validate_additive_materialization_authorization(
+    record: dict[str, Any],
+    *,
+    fixture: str,
+    packet_sha256: str,
+    output_path: str,
+    output_sha256: str,
+    preview_sha256: str,
+) -> dict[str, Any]:
+    """Validate one named decision bound to one additive repair artifact."""
+    normalized = validate_decision_record(record)
+    expected_kind = "materialize_authoring_repair_candidate"
+    if normalized["fixture"] != fixture:
+        raise HumanDecisionRecordError("materialization_decision_fixture_mismatch")
+    if normalized["packet_schema"] != AUTHORING_REPAIR_PACKET_SCHEMA:
+        raise HumanDecisionRecordError("materialization_decision_packet_schema_mismatch")
+    if normalized["packet_recommendation"] != expected_kind:
+        raise HumanDecisionRecordError(
+            "materialization_decision_packet_recommendation_mismatch"
+        )
+    if normalized["decision_kind"] != expected_kind:
+        raise HumanDecisionRecordError("materialization_decision_kind_invalid")
+    if normalized["mutation_boundary"] != "additive_artifact_materialization_allowed":
+        raise HumanDecisionRecordError("materialization_decision_boundary_invalid")
+    reviewer = _required_string(record, "reviewer")
+    authorized_packet_sha256 = _required_string(record, "authorized_packet_sha256")
+    authorized_output_path = _required_string(record, "authorized_output_path")
+    authorized_output_sha256 = _required_string(record, "authorized_output_sha256")
+    authorized_preview_sha256 = _required_string(record, "authorized_preview_sha256")
+    if authorized_packet_sha256 != packet_sha256:
+        raise HumanDecisionRecordError("materialization_decision_packet_hash_mismatch")
+    if authorized_output_path != output_path:
+        raise HumanDecisionRecordError("materialization_decision_output_path_mismatch")
+    if authorized_output_sha256 != output_sha256:
+        raise HumanDecisionRecordError("materialization_decision_output_hash_mismatch")
+    if authorized_preview_sha256 != preview_sha256:
+        raise HumanDecisionRecordError("materialization_decision_preview_hash_mismatch")
+    return {
+        **normalized,
+        "reviewer": reviewer,
+        "authorized_packet_sha256": authorized_packet_sha256,
+        "authorized_output_path": authorized_output_path,
+        "authorized_output_sha256": authorized_output_sha256,
+        "authorized_preview_sha256": authorized_preview_sha256,
     }

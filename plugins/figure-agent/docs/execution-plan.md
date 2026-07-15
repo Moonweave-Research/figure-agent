@@ -319,11 +319,21 @@ not add another generator, renderer, candidate family, or workflow shell.
   Existing bounded-TikZ apply now consumes the same validator while preserving
   its historical diagnostic codes and packet/result schemas. This is a
   safety-kernel extraction, not selection of `apply-plan` as a second public
-  repair route. The bounded-repair transaction remains open: the shared
-  authorization/lock/rollback kernel still must be connected to the canonical
-  additive `authoring-repair-packet -> authoring-repair-materialize` route, and
-  clean strict compile/status evidence still needs a fail-closed post-render
-  finalizer. `bounded_repair_transaction_state` therefore remains `incomplete`.
+  repair route. The third Q5 slice connects that kernel to the canonical
+  additive `authoring-repair-packet -> authoring-repair-materialize` route.
+  Materialization now has a read-only preview that exposes the packet/output
+  hashes, requires a named decision bound to the exact packet, full preview,
+  output path, and output hash, owns the adjacent v2 receipt, rejects
+  lock/replay conflicts, and writes a recovery-required receipt before
+  atomically creating the candidate. Atomic replacement fsyncs the containing
+  directory before advancing the transaction, and additive rollback is defined
+  as deletion only when the new output still matches its approved hash.
+  Quality-patch and authoring-repair now share the same low-level exclusive-lock
+  and atomic-write implementation; historical packet v3 and v1 receipts remain
+  untouched. The bounded-repair transaction remains open only at the
+  verification boundary: clean strict compile/status evidence still needs a
+  fail-closed post-render finalizer. `bounded_repair_transaction_state`
+  therefore remains `incomplete`.
 
 Q0–Q4 are sequential. Q5 is an architecture gate and may proceed without
 altering the figure while Q4 awaits human evidence. After Q4, Q5, and the Slice

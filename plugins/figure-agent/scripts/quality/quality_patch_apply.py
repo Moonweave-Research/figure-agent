@@ -5,8 +5,6 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
-import os
-import stat
 import subprocess
 import sys
 import tempfile
@@ -17,6 +15,7 @@ from typing import Any
 
 import human_decision_record
 import quality_patch_plan
+import repair_transaction
 from quality_manifest import file_sha256
 
 SCHEMA = "figure-agent.quality-patch-result.v1"
@@ -34,24 +33,11 @@ def authorization_record_hash(record: dict[str, Any]) -> str:
 
 
 def _atomic_write_text(path: Path, text: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    existing_mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else None
-    fd, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
-    temporary = Path(temporary_name)
-    try:
-        if existing_mode is not None:
-            os.fchmod(fd, existing_mode)
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write(text)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    finally:
-        temporary.unlink(missing_ok=True)
+    repair_transaction.atomic_write_text(path, text)
 
 
 def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
-    _atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    repair_transaction.atomic_write_json(path, payload)
 
 
 def _read_plan(path: Path) -> dict[str, Any]:
@@ -137,22 +123,14 @@ def _check_source_hash(plan: dict[str, Any], target_rel: str, target: Path) -> N
 
 @contextmanager
 def _mutation_lock(fixture: Path) -> Any:
-    lock_root = fixture / "build" / ".quality-locks"
-    lock_root.mkdir(parents=True, exist_ok=True)
-    lock_path = lock_root / "mutation.lock"
     try:
-        fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError as exc:
+        with repair_transaction.exclusive_lock(
+            fixture / "build" / ".quality-locks" / "mutation.lock",
+            owner="quality_patch_apply",
+        ):
+            yield
+    except repair_transaction.RepairTransactionError as exc:
         raise QualityPatchApplyError("operation_in_progress: mutation lock exists") from exc
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write("quality_patch_apply\n")
-        yield
-    finally:
-        try:
-            lock_path.unlink()
-        except FileNotFoundError:
-            pass
 
 
 def _run_patch(

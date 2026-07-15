@@ -683,6 +683,10 @@ def _authoring_repair_materialize(argv: list[str]) -> int:
     parser.add_argument("--packet", required=True)
     parser.add_argument("--response", required=True)
     parser.add_argument("--receipt-out", required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--dry-run", action="store_true")
+    mode.add_argument("--apply", action="store_true")
+    parser.add_argument("--authorization")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     workspace_root = _paths().workspace_root.resolve()
@@ -712,14 +716,21 @@ def _authoring_repair_materialize(argv: list[str]) -> int:
             raise ValueError("repair packet, response, and receipt must be adjacent")
         packet = json.loads(packet_path.read_text(encoding="utf-8"))
         response = json.loads(response_path.read_text(encoding="utf-8"))
+        authorization = None
+        if args.authorization:
+            authorization_path = workspace_path(args.authorization, must_exist=True)
+            if authorization_path.parent != packet_path.parent:
+                raise ValueError("repair authorization must be adjacent to packet")
+            authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+            if authorization.get("packet_path") != args.packet:
+                raise ValueError("repair authorization packet path mismatch")
         receipt = authoring_repair_packet.materialize_repair_candidate(
             packet,
             response,
             workspace_root=workspace_root,
-        )
-        receipt_path.write_text(
-            json.dumps(receipt, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
+            authorization=authorization,
+            apply=args.apply,
+            receipt_path=receipt_path,
         )
     except (ValueError, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         print(f"fig-agent authoring-repair-materialize: {exc}", file=sys.stderr)

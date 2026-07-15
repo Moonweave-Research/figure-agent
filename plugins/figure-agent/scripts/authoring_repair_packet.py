@@ -9,6 +9,9 @@ import re
 from pathlib import Path
 from typing import Any
 
+import human_decision_record
+import repair_transaction
+
 SCHEMA = "figure-agent.repair-execution-packet.v3"
 CONTRACT_SCHEMA = "figure-agent.repair-target-contract.v1"
 SOURCE_ATTEMPT = re.compile(
@@ -453,6 +456,9 @@ def materialize_repair_candidate(
     response: dict[str, object],
     *,
     workspace_root: Path,
+    authorization: dict[str, object] | None = None,
+    apply: bool = True,
+    receipt_path: Path | None = None,
 ) -> dict[str, object]:
     """Validate an LLM response and materialize its additive source once."""
     if packet.get("schema") != SCHEMA:
@@ -577,31 +583,115 @@ def materialize_repair_candidate(
             raise RepairExecutionPacketError("protected invariant changed")
 
     output_relative = _safe_relative(str(packet.get("output_path") or ""), label="output path")
+    output_sha256 = _sha256_bytes(candidate.encode("utf-8"))
+    preview = {
+        "schema": "figure-agent.repair-materialization-preview.v1",
+        "fixture": packet.get("fixture"),
+        "packet_sha256": packet["packet_sha256"],
+        "source_sha256": source_record["sha256"],
+        "output_path": output_relative.as_posix(),
+        "output_sha256": output_sha256,
+        "changed_source_blocks": 1,
+        "changed_lines": changed_lines,
+        "preserved_boundary_blank_lines": added_leading + added_trailing,
+        "change_summary": summary.strip(),
+        "publication_acceptance": "not_claimed",
+    }
+    preview["preview_sha256"] = _sha256_bytes(_canonical_json_bytes(preview))
+    if not apply:
+        return preview
+    if not isinstance(authorization, dict):
+        raise RepairExecutionPacketError("materialization authorization missing")
+    try:
+        normalized_authorization = (
+            human_decision_record.validate_additive_materialization_authorization(
+                authorization,
+                fixture=str(packet.get("fixture") or ""),
+                packet_sha256=str(packet.get("packet_sha256") or ""),
+                output_path=output_relative.as_posix(),
+                output_sha256=output_sha256,
+                preview_sha256=str(preview["preview_sha256"]),
+            )
+        )
+    except human_decision_record.HumanDecisionRecordError as exc:
+        raise RepairExecutionPacketError(f"materialization authorization invalid: {exc}") from exc
     output = workspace_root / output_relative
+    if receipt_path is None:
+        raise RepairExecutionPacketError("materialization receipt path missing")
+    resolved_receipt = (
+        receipt_path if receipt_path.is_absolute() else workspace_root / receipt_path
+    ).resolve(strict=False)
+    try:
+        resolved_receipt.relative_to(workspace_root)
+    except ValueError as exc:
+        raise RepairExecutionPacketError(
+            "materialization receipt path must remain inside workspace"
+        ) from exc
+    if resolved_receipt.parent != output.parent:
+        raise RepairExecutionPacketError("materialization receipt must be adjacent to output")
     if output.exists() or output.is_symlink():
         raise RepairExecutionPacketError("output path already exists")
+    if resolved_receipt.exists() or resolved_receipt.is_symlink():
+        raise RepairExecutionPacketError("materialization receipt already exists")
     current = workspace_root
     for part in output_relative.parent.parts:
         current = current / part
         if current.is_symlink():
             raise RepairExecutionPacketError("output path must not traverse a symlink")
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(candidate, encoding="utf-8")
-    return {
-        "schema": "figure-agent.repair-materialization-receipt.v1",
+    receipt = {
+        "schema": "figure-agent.repair-materialization-receipt.v2",
         "decision": "materialized_verification_pending",
-        "packet_sha256": packet["packet_sha256"],
-        "source_sha256": source_record["sha256"],
-        "output_path": output_relative.as_posix(),
-        "output_sha256": _sha256_bytes(output.read_bytes()),
-        "changed_source_blocks": 1,
-        "changed_lines": changed_lines,
-        "preserved_boundary_blank_lines": added_leading + added_trailing,
-        "change_summary": summary.strip(),
+        **{key: value for key, value in preview.items() if key != "schema"},
+        "authorization": {
+            "reviewer": normalized_authorization["reviewer"],
+            "record_sha256": _sha256_bytes(_canonical_json_bytes(authorization)),
+            "authorized_packet_sha256": normalized_authorization[
+                "authorized_packet_sha256"
+            ],
+            "authorized_output_path": normalized_authorization["authorized_output_path"],
+            "authorized_output_sha256": normalized_authorization[
+                "authorized_output_sha256"
+            ],
+            "authorized_preview_sha256": normalized_authorization[
+                "authorized_preview_sha256"
+            ],
+        },
+        "rollback": {
+            "strategy": "delete_materialized_output_if_hash_matches",
+            "pre_transaction_state": "absent",
+            "output_path": output_relative.as_posix(),
+            "output_sha256": output_sha256,
+        },
+        "post_render_verification": "pending",
         "external_compile": "pending",
         "human_review": "pending",
         "publication_acceptance": "not_claimed",
+        "recovery_required": False,
     }
+    try:
+        with repair_transaction.exclusive_lock(
+            output.parent / ".materialization.lock",
+            owner="authoring_repair_materialize",
+        ):
+            if output.exists() or output.is_symlink():
+                raise RepairExecutionPacketError("output path already exists")
+            if resolved_receipt.exists() or resolved_receipt.is_symlink():
+                raise RepairExecutionPacketError("materialization receipt already exists")
+            if _sha256_bytes(source_path.read_bytes()) != source_record["sha256"]:
+                raise RepairExecutionPacketError("source hash drift")
+            prepared_receipt = {
+                **receipt,
+                "decision": "materialization_prepared",
+                "recovery_required": True,
+            }
+            repair_transaction.atomic_write_json(resolved_receipt, prepared_receipt)
+            repair_transaction.atomic_write_text(output, candidate)
+            repair_transaction.atomic_write_json(resolved_receipt, receipt)
+    except repair_transaction.RepairTransactionError as exc:
+        raise RepairExecutionPacketError(
+            "materialization transaction already active"
+        ) from exc
+    return receipt
 
 
 def write_repair_execution_packet(
