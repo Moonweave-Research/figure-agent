@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shlex
 import subprocess
 import sys
@@ -21,6 +22,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import closed_loop_post_review  # noqa: E402
 import fig_driver  # noqa: E402
 import runtime_paths  # noqa: E402
 from driver_actor import required_actor_for_driver_summary  # noqa: E402
@@ -486,6 +488,7 @@ def run_workflow(
     goal: str,
     execute: bool = False,
     max_steps: int = DEFAULT_MAX_STEPS,
+    closed_loop_state: Path | None = None,
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
     if mode == "final":
@@ -494,6 +497,84 @@ def run_workflow(
         raise ValueError(f"unsupported mode: {mode}")
     if max_steps < 1:
         raise ValueError("max_steps must be >= 1")
+    if closed_loop_state is not None:
+        try:
+            outbound = closed_loop_post_review.run_outbound_handoff(
+                name,
+                state_path=closed_loop_state,
+                execute=execute,
+                workspace_root=repo_root,
+            )
+        except closed_loop_post_review.ClosedLoopPostReviewError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        state_path = outbound["input_state_path"]
+        request_path = outbound["request_path"]
+        next_state_path = outbound["next_state_path"]
+        input_state = outbound["input_state"]
+        payload = {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": outbound["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": outbound["stop_boundary"],
+            "final_stop_reason": outbound["stop_reason"],
+            "executed_count": 1 if outbound["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": outbound["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "request_path": request_path.relative_to(root).as_posix(),
+                "created": outbound["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": outbound["action"],
+                "stop_boundary": outbound["stop_boundary"],
+                "required_actor": outbound["required_actor"],
+                "blocking_reason": (
+                    "execute the validated local handoff plan"
+                    if not execute
+                    else "host visual review required"
+                ),
+                "evidence_refs": [
+                    f"closed_loop_state:{state_path.relative_to(root).as_posix()}"
+                ],
+                "allowed_scope": ["read-only"],
+                "forbidden_scope": [
+                    "plugin host or model invocation",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": ["run host visual review outside the plugin"],
+                "continuation_guidance": {
+                    "rerun_live_status_first": False,
+                    "rerun_live_driver_first": False,
+                    "note": "Use the exact hash-bound request; do not infer paths from chat.",
+                },
+            },
+        }
+        request = outbound.get("request")
+        if isinstance(request, dict):
+            payload["boundary_handoff"].update(
+                {
+                    "request_path": request_path.relative_to(root).as_posix(),
+                    "request_sha256": request.get("request_sha256"),
+                    "evidence_refs": [
+                        f"post_repair_visual_review_request:{request_path.relative_to(root).as_posix()}",
+                        f"closed_loop_state:{next_state_path.relative_to(root).as_posix()}",
+                    ],
+                }
+            )
+        return payload
 
     steps: list[dict[str, Any]] = []
     executed_count = 0
@@ -591,6 +672,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--goal", required=True)
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)
+    parser.add_argument("--closed-loop-state", type=Path, default=None)
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--record", action="store_true")
     parser.add_argument("--no-record", action="store_true")
@@ -605,6 +687,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             goal=args.goal,
             execute=args.execute,
             max_steps=args.max_steps,
+            closed_loop_state=args.closed_loop_state,
             repo_root=repo_root,
         )
     except ValueError as exc:
@@ -612,6 +695,8 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
         return 2
     completed_at = _utc_now()
     should_record = not args.no_record and (args.execute or args.record)
+    if args.closed_loop_state is not None and not args.execute:
+        should_record = False
     if should_record:
         try:
             payload = write_run_journal(

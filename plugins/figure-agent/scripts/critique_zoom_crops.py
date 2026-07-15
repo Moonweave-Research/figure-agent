@@ -620,6 +620,7 @@ def _write_crop_manifest(
         "schema": CROP_MANIFEST_SCHEMA,
         "fixture": example_dir.name,
         "render_path": _relative_to_example(example_dir, render_path),
+        "render_sha256": file_sha256(render_path),
         "required_crop_ids": [str(item.get("id") or "") for item in manifest_crops],
         "crops": manifest_crops,
     }
@@ -639,6 +640,7 @@ def build_zoom_crop_pack(
     pdf_page_size_cm: tuple[float, float] | None = None,
     output_dir: Path | None = None,
     manifest_path: Path | None = None,
+    include_detector_crops: bool = True,
 ) -> list[dict[str, Any]]:
     output_dir = _validated_output_path(
         example_dir,
@@ -670,21 +672,22 @@ def build_zoom_crop_pack(
             example_dir=example_dir,
         )
     )
-    crops.extend(
-        _write_visual_clash_crops(
-            source_path=render_path,
-            output_dir=output_dir,
-            example_dir=example_dir,
+    if include_detector_crops:
+        crops.extend(
+            _write_visual_clash_crops(
+                source_path=render_path,
+                output_dir=output_dir,
+                example_dir=example_dir,
+            )
         )
-    )
-    crops.extend(
-        _write_label_path_crops(
-            source_path=render_path,
-            output_dir=output_dir,
-            example_dir=example_dir,
-            pdf_page_size_cm=pdf_page_size_cm,
+        crops.extend(
+            _write_label_path_crops(
+                source_path=render_path,
+                output_dir=output_dir,
+                example_dir=example_dir,
+                pdf_page_size_cm=pdf_page_size_cm,
+            )
         )
-    )
     for panel_crop_path in panel_crop_paths:
         try:
             panel_crop_path.relative_to(example_dir)

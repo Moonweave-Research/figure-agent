@@ -216,9 +216,9 @@ chat-only coordinates or hidden source selection.
   missing, the target remains unresolved, or regression is present or uncertain.
 - [x] Require a hash-valid external host-review execution receipt before a
   non-uncertain response can advance to visual re-review pending human judgment.
-- [ ] Wire crop generation, machine checks, and receipt-bound external host
-  review orchestration into the canonical run; the plugin must not perform or
-  impersonate the host review itself.
+- [x] Wire fresh crops and a request-bound host handoff into the canonical run
+  without performing or impersonating the external host review.
+- [ ] Consume a receipt-bound external host response through the same run.
 - [ ] Prove on a real fixture that a repair cannot fix one target while creating
   or worsening another declared defect.
 - [ ] Preserve before/after evidence and rollback information.
@@ -297,9 +297,9 @@ the same editable selector as the repair target. Missing semantic authority,
 ambiguous attribution, or missing references can emit only a named
 `human_attributor` handoff; they cannot create a repair binding or packet.
 
-This does not yet orchestrate external host review, wire the canonical `run`,
-or prove transfer across figure families. Those are the next ordered
-boundaries; completed R2 plumbing does not satisfy R3-R5.
+This does not yet consume external host review, advance its response, or prove
+transfer across figure families. Those are the next ordered boundaries;
+outbound handoff and completed R2 plumbing do not satisfy R3-R5.
 
 The closed-loop slices bind their handoffs through these narrow evidence
 contracts rather than another workflow shell:

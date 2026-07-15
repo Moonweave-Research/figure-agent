@@ -6,7 +6,9 @@ from pathlib import Path
 
 import authoring_repair_finalize
 import authoring_repair_packet
+import closed_loop_attempt_state
 import critique_zoom_crops
+import fig_run
 import post_repair_visual_review
 import pytest
 import yaml
@@ -25,7 +27,9 @@ def _sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
+def _fixture(
+    tmp_path: Path, *, finding_bbox: tuple[int, int, int, int] | None = (10, 10, 50, 50)
+) -> tuple[Path, dict[str, Path]]:
     workspace = tmp_path / "workspace"
     example = workspace / "examples" / "demo"
     attempt = example / "review" / "failure-first" / "execution-repair-v1"
@@ -95,7 +99,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
     )
     before_render = example / "build" / "demo.png"
     before_render.parent.mkdir()
-    before_render.write_bytes(b"before-render")
+    Image.new("RGB", (800, 600), "white").save(before_render)
     before_pdf = example / "build" / "demo.pdf"
     before_pdf.write_bytes(b"%PDF-before\n")
     report.write_text(
@@ -111,6 +115,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
                     {
                         "id": "TC001",
                         "texts": ["repeated", "trapping"],
+                        **({"bbox_px": list(finding_bbox)} if finding_bbox else {}),
                         "source_mapping": None,
                     }
                 ],
@@ -593,6 +598,568 @@ def _response(
         "execution_receipt": execution_receipt,
         "publication_acceptance": "not_claimed",
     }
+
+
+def _machine_repaired_state(
+    workspace: Path,
+    paths: dict[str, Path],
+    *,
+    render_size: tuple[int, int] = (800, 600),
+) -> tuple[dict[str, object], Path]:
+    Image.new("RGB", render_size, "white").save(paths["render"])
+    receipt = json.loads(paths["receipt"].read_text(encoding="utf-8"))
+    receipt["external_compile"]["png"]["sha256"] = _sha256(paths["render"])
+    paths["receipt"].write_text(json.dumps(receipt), encoding="utf-8")
+
+    evidence_root = paths["attempt"] / "closed-loop-evidence"
+    evidence_root.mkdir()
+
+    def evidence_file(name: str) -> Path:
+        path = evidence_root / f"{name}.json"
+        path.write_text(json.dumps({"evidence": name}), encoding="utf-8")
+        return path
+
+    state = closed_loop_attempt_state.start_attempt(
+        workspace_root=workspace,
+        fixture="demo",
+        actor="author",
+        actor_role="authoring_agent",
+        evidence={
+            "attempt_manifest": evidence_file("attempt_manifest"),
+            "authored_source": paths["source"],
+            "render": paths["render"],
+        },
+    )
+    state_path = closed_loop_attempt_state.publish_state(
+        state, workspace_root=workspace
+    )
+    transitions = [
+        (
+            "critique_unadjudicated",
+            "workflow_agent",
+            {
+                "critique": evidence_file("critique"),
+                "host_review_execution_receipt": evidence_file(
+                    "host_review_execution_receipt"
+                ),
+            },
+        ),
+        (
+            "repair_bound",
+            "human_adjudicator",
+            {"adjudicated_repair_binding": paths["binding"]},
+        ),
+        (
+            "repair_candidate_ready",
+            "workflow_agent",
+            {
+                "repair_execution_packet": paths["packet"],
+                "materialization_preview": evidence_file("materialization_preview"),
+            },
+        ),
+        (
+            "repair_authorized",
+            "human_repair_authorizer",
+            {"human_authorization": evidence_file("human_authorization")},
+        ),
+        (
+            "machine_repaired",
+            "workflow_agent",
+            {
+                "materialization_receipt": paths["receipt"],
+                "machine_verification_receipt": paths["receipt"],
+            },
+        ),
+    ]
+    for next_state, actor_role, evidence in transitions:
+        state = closed_loop_attempt_state.transition_state(
+            state,
+            next_state=next_state,
+            actor="test",
+            actor_role=actor_role,
+            evidence=evidence,
+            workspace_root=workspace,
+            previous_state_path=state_path,
+        )
+        state_path = closed_loop_attempt_state.publish_state(
+            state, workspace_root=workspace
+        )
+    return state, state_path
+
+
+def test_fig_run_closed_loop_plan_only_validates_without_writes(tmp_path: Path) -> None:
+    workspace, paths = _fixture(tmp_path)
+    state, state_path = _machine_repaired_state(workspace, paths)
+    attempt_root = state_path.parent
+    before = sorted(path.relative_to(workspace) for path in workspace.rglob("*"))
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=False,
+        closed_loop_state=state_path,
+        repo_root=workspace,
+    )
+
+    assert payload["final_stop_reason"] == "plan_only"
+    assert payload["closed_loop"]["input_state_sha256"] == state["state_sha256"]
+    assert payload["closed_loop"]["next_state"] == "post_review_requested"
+    assert payload["boundary_handoff"]["required_actor"] == "workflow_agent"
+    assert not (attempt_root / "post-repair-review").exists()
+    assert sorted(path.relative_to(workspace) for path in workspace.rglob("*")) == before
+
+
+def test_fig_run_closed_loop_follows_packet_path_from_published_state_lineage(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    renamed_packet = paths["packet"].with_name("bound-repair-packet.json")
+    paths["packet"].rename(renamed_packet)
+    paths["packet"] = renamed_packet
+    _, state_path = _machine_repaired_state(workspace, paths)
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=False,
+        closed_loop_state=state_path,
+        repo_root=workspace,
+    )
+
+    assert payload["final_stop_reason"] == "plan_only"
+    assert payload["closed_loop"]["next_state"] == "post_review_requested"
+
+
+def test_fig_run_closed_loop_rejects_packet_binding_spliced_from_state_lineage(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    state_binding = paths["binding"].with_name("state-only-binding.json")
+    state_binding.write_bytes(paths["binding"].read_bytes())
+    paths["binding"] = state_binding
+    _, state_path = _machine_repaired_state(workspace, paths)
+
+    with pytest.raises(ValueError, match="state_binding_mismatch"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=False,
+            closed_loop_state=state_path,
+            repo_root=workspace,
+        )
+
+
+def test_fig_run_closed_loop_requires_bound_target_localization_before_output(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path, finding_bbox=None)
+    _, state_path = _machine_repaired_state(workspace, paths)
+
+    with pytest.raises(ValueError, match="target_finding_bbox_missing"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_state=state_path,
+            repo_root=workspace,
+        )
+
+    assert not (state_path.parent / "post-repair-review").exists()
+
+
+def test_fig_run_closed_loop_rejects_target_bbox_crossing_quadrant_boundary(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path, finding_bbox=(390, 10, 410, 50))
+    _, state_path = _machine_repaired_state(workspace, paths)
+
+    with pytest.raises(ValueError, match="target_finding_bbox_crosses_crop_boundary"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_state=state_path,
+            repo_root=workspace,
+        )
+
+    assert not (state_path.parent / "post-repair-review").exists()
+
+
+def test_fig_run_closed_loop_rejects_incompatible_before_after_render_dimensions(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    _, state_path = _machine_repaired_state(
+        workspace, paths, render_size=(900, 600)
+    )
+
+    with pytest.raises(ValueError, match="target_coordinate_space_incompatible"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_state=state_path,
+            repo_root=workspace,
+        )
+
+    assert not (state_path.parent / "post-repair-review").exists()
+
+
+def test_fig_run_closed_loop_detects_render_mutate_generate_restore_race(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    _, state_path = _machine_repaired_state(workspace, paths)
+    original_build_crops = critique_zoom_crops.build_zoom_crop_pack
+
+    def mutate_generate_restore(
+        *args: object, **kwargs: object
+    ) -> list[dict[str, object]]:
+        original_bytes = paths["render"].read_bytes()
+        Image.new("RGB", (800, 600), "black").save(paths["render"])
+        try:
+            return original_build_crops(*args, **kwargs)
+        finally:
+            paths["render"].write_bytes(original_bytes)
+
+    monkeypatch.setattr(
+        critique_zoom_crops, "build_zoom_crop_pack", mutate_generate_restore
+    )
+
+    with pytest.raises(ValueError, match="render.*drift|render.*changed"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_state=state_path,
+            repo_root=workspace,
+        )
+
+    assert not (state_path.parent / "post-repair-review").exists()
+    assert not any(state_path.parent.glob("state-*-post_review_requested.json"))
+
+
+def test_fig_run_closed_loop_resumes_hash_identical_request_after_state_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    _, state_path = _machine_repaired_state(workspace, paths)
+    original_publish = closed_loop_attempt_state.publish_state
+    failed = False
+
+    def fail_next_state_once(
+        state: dict[str, object], *, workspace_root: Path
+    ) -> Path:
+        nonlocal failed
+        if state.get("state") == "post_review_requested" and not failed:
+            failed = True
+            raise closed_loop_attempt_state.ClosedLoopAttemptStateError(
+                "injected_state_failure"
+            )
+        return original_publish(state, workspace_root=workspace_root)
+
+    monkeypatch.setattr(
+        closed_loop_attempt_state, "publish_state", fail_next_state_once
+    )
+    with pytest.raises(ValueError, match="injected_state_failure"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_state=state_path,
+            repo_root=workspace,
+        )
+    request_path = state_path.parent / "post-repair-review" / "request.json"
+    request_bytes = request_path.read_bytes()
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        closed_loop_state=state_path,
+        repo_root=workspace,
+    )
+
+    assert request_path.read_bytes() == request_bytes
+    assert payload["final_stop_reason"] == "host_boundary"
+    assert (workspace / payload["closed_loop"]["next_state_path"]).is_file()
+
+
+@pytest.mark.parametrize("mutation", ["self_rehashed", "missing", "extra"])
+def test_fig_run_closed_loop_recovery_rejects_crop_pack_drift(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mutation: str
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    _, state_path = _machine_repaired_state(workspace, paths)
+    original_write_once = post_repair_visual_review._write_once
+
+    def fail_request_once(*args: object, **kwargs: object) -> None:
+        raise post_repair_visual_review.PostRepairVisualReviewError(
+            "injected_request_failure"
+        )
+
+    monkeypatch.setattr(post_repair_visual_review, "_write_once", fail_request_once)
+    with pytest.raises(ValueError, match="injected_request_failure"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_state=state_path,
+            repo_root=workspace,
+        )
+    monkeypatch.setattr(post_repair_visual_review, "_write_once", original_write_once)
+
+    manifest_path = state_path.parent / "post-repair-review" / "crops" / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    target_record = next(crop for crop in manifest["crops"] if crop["id"] == "full_q1")
+    target_path = workspace / "examples" / "demo" / target_record["path"]
+    if mutation == "self_rehashed":
+        target_path.write_bytes(b"tampered-crop")
+        target_record["sha256"] = _sha256(target_path)
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    elif mutation == "missing":
+        target_path.unlink()
+    else:
+        target_path.with_name("unexpected-crop.png").write_bytes(b"extra-crop")
+
+    with pytest.raises(ValueError, match="crop_pack.*mismatch|crop.*tamper"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_state=state_path,
+            repo_root=workspace,
+        )
+
+    assert not (state_path.parent / "post-repair-review" / "request.json").exists()
+    assert not any(state_path.parent.glob("state-*-post_review_requested.json"))
+
+
+def test_fig_run_closed_loop_execute_publishes_request_state_and_host_handoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    stale_detector = workspace / "examples" / "demo" / "build" / "visual_clash.json"
+    stale_detector.parent.mkdir(exist_ok=True)
+    stale_detector.write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "id": "STALE001",
+                        "kind": "text_on_path",
+                        "text": "stale detector location",
+                        "bbox_px": [10, 10, 200, 120],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    _refresh_critique_authority(workspace, paths)
+    state, state_path = _machine_repaired_state(workspace, paths)
+
+    def forbidden_host_or_shell(*args: object, **kwargs: object) -> object:
+        raise AssertionError("closed-loop outbound handoff must not invoke shell or host")
+
+    monkeypatch.setattr(fig_run, "_run_command", forbidden_host_or_shell)
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        closed_loop_state=state_path,
+        repo_root=workspace,
+    )
+
+    request_path = workspace / payload["closed_loop"]["request_path"]
+    next_state_path = workspace / payload["closed_loop"]["next_state_path"]
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    next_state = json.loads(next_state_path.read_text(encoding="utf-8"))
+    crop_manifest = json.loads(
+        (workspace / request["crop_manifest"]["path"]).read_text(encoding="utf-8")
+    )
+    post_repair_visual_review._validate_request_freshness(
+        request, workspace_root=workspace
+    )
+    assert payload["final_stop_reason"] == "host_boundary"
+    assert payload["boundary_handoff"]["required_actor"] == "host_llm"
+    assert payload["boundary_handoff"]["request_sha256"] == request["request_sha256"]
+    assert payload["closed_loop"]["created"] is True
+    assert request["crop_roles"] == {
+        "neighbor_crop": "full_q2",
+        "print_scale": "print_thumbnail",
+        "target_crop": "full_q1",
+    }
+    assert request["publication_acceptance"] == "not_claimed"
+    assert {crop["kind"] for crop in crop_manifest["crops"]} == {
+        "zoom_crop",
+        "print_scale",
+    }
+    assert all(not crop["id"].startswith("STALE001") for crop in crop_manifest["crops"])
+    assert next_state["state"] == "post_review_requested"
+    assert next_state["previous_state_sha256"] == state["state_sha256"]
+    assert next_state["evidence"] == [
+        {
+            "role": "post_repair_visual_review_request",
+            "path": request_path.relative_to(workspace).as_posix(),
+            "sha256": _sha256(request_path),
+        }
+    ]
+    assert next_state["required_actor"] == "host_llm"
+    assert next_state["publication_acceptance"] == "not_claimed"
+
+
+@pytest.mark.parametrize("stale_artifact", ["receipt", "render", "packet", "binding"])
+def test_fig_run_closed_loop_rejects_stale_lineage_before_output(
+    tmp_path: Path, stale_artifact: str
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    _, state_path = _machine_repaired_state(workspace, paths)
+    paths[stale_artifact].write_bytes(paths[stale_artifact].read_bytes() + b"\nstale")
+
+    with pytest.raises(ValueError, match="stale|invalid"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_state=state_path,
+            repo_root=workspace,
+        )
+
+    assert not (state_path.parent / "post-repair-review").exists()
+    assert not any(state_path.parent.glob("state-*-post_review_requested.json"))
+
+
+def test_fig_run_closed_loop_post_review_rerun_is_idempotent(tmp_path: Path) -> None:
+    workspace, paths = _fixture(tmp_path)
+    _, state_path = _machine_repaired_state(workspace, paths)
+    first = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        closed_loop_state=state_path,
+        repo_root=workspace,
+    )
+    next_state_path = workspace / first["closed_loop"]["next_state_path"]
+    before = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+
+    second = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        closed_loop_state=next_state_path,
+        repo_root=workspace,
+    )
+
+    after = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+    assert second["final_stop_reason"] == "host_boundary"
+    assert second["executed_count"] == 0
+    assert second["closed_loop"]["created"] is False
+    assert second["closed_loop"]["request_path"] == first["closed_loop"]["request_path"]
+    assert second["boundary_handoff"]["request_sha256"] == first[
+        "boundary_handoff"
+    ]["request_sha256"]
+    assert after == before
+
+
+def test_fig_run_closed_loop_rerun_rejects_hash_valid_crop_role_relabeling(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    _, state_path = _machine_repaired_state(workspace, paths)
+    first = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        closed_loop_state=state_path,
+        repo_root=workspace,
+    )
+    request_path = workspace / first["closed_loop"]["request_path"]
+    original_request = json.loads(request_path.read_text(encoding="utf-8"))
+    forged_request = post_repair_visual_review.build_review_request(
+        binding_path=paths["binding"],
+        packet_path=paths["packet"],
+        materialization_receipt_path=paths["receipt"],
+        crop_manifest_path=workspace / original_request["crop_manifest"]["path"],
+        crop_roles={
+            "target_crop": "full_q2",
+            "neighbor_crop": "full_q1",
+            "print_scale": "print_thumbnail",
+        },
+        workspace_root=workspace,
+    )
+    request_path.write_text(json.dumps(forged_request), encoding="utf-8")
+    next_state_path = workspace / first["closed_loop"]["next_state_path"]
+    next_state = json.loads(next_state_path.read_text(encoding="utf-8"))
+    next_state["evidence"][0]["sha256"] = _sha256(request_path)
+    next_state["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(
+        next_state
+    )
+    next_state_path.write_text(json.dumps(next_state), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="crop_role_mismatch"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_state=next_state_path,
+            repo_root=workspace,
+        )
+
+
+def test_fig_run_closed_loop_cli_plan_only_never_records(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    _, state_path = _machine_repaired_state(workspace, paths)
+    runs_root = tmp_path / "runs"
+
+    result = fig_run.main(
+        [
+            "demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--closed-loop-state",
+            str(state_path),
+            "--record",
+            "--runs-root",
+            str(runs_root),
+            "--json",
+        ],
+        repo_root=workspace,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert result == 0
+    assert payload["final_stop_reason"] == "plan_only"
+    assert not runs_root.exists()
 
 
 def test_builds_hash_bound_review_request(tmp_path: Path) -> None:
