@@ -2,7 +2,7 @@
 
 **Status**: operational reference, not product or execution authority. Mirrors
 the layer model used to organize post-v0.1.7.2 cleanup. Read
-`docs/product-spec.md` and `docs/execution-plan.md` first. For canonical fixture acceptance criteria,
+`docs/figure-agent.md` first. For canonical fixture acceptance criteria,
 see `docs/golden-target-trap-depth-picture.md` and `docs/golden-target-001-retrospective.md`.
 
 ## Purpose
@@ -519,7 +519,7 @@ Per-figure folders use the .gitignore default of treating `build/`,
   in one commit: spec.yaml (`reference_image:` + `accepted:` keys),
   `.gitignore` negation block, optional `.gitattributes` LFS line.
 
-The current artifact and provenance boundary lives in `docs/product-spec.md`.
+The current artifact and provenance boundary lives in `docs/figure-agent.md`.
 The older detailed rationale and checklist remain as historical evidence in
 `docs/quality-kernel-goal.md`.
 
@@ -559,12 +559,15 @@ See `docs/architecture-v0.2-proposal.md` for the full layer redesign.
 
 ### Layer 10 — Documentation
 
-**Files**: `docs/` (canonical authorities plus operational and historical
+**Files**: `docs/` (the canonical authority plus operational and historical
 evidence) + `docs/historical/` (frozen).
 
-Product authorities:
-- `docs/product-spec.md` — single product specification.
-- `docs/execution-plan.md` — single active forward execution plan.
+Product and execution authority:
+- `docs/figure-agent.md` — sole product contract and executable roadmap.
+
+Legacy evidence:
+- `docs/product-spec.md` — previous product specification.
+- `docs/execution-plan.md` — previous forward execution plan.
 
 Operational and acceptance references:
 - `docs/golden-target-trap-depth-picture.md` — Golden Target 001
@@ -584,8 +587,8 @@ historical events; do not rewrite them.
 
 | You want to... | Look at |
 |---|---|
-| Understand product direction | `docs/product-spec.md` |
-| Continue product implementation | `docs/execution-plan.md` |
+| Understand product direction | `docs/figure-agent.md` |
+| Continue product implementation | `docs/figure-agent.md` |
 | Add a new fixture | `commands/fig_new.md` + `examples/<name>/` |
 | Add a new gate to `/fig_compile` | `scripts/compile.sh` + `scripts/check_*.py` |
 | Add a per-fixture validation rule | `spec.yaml.golden_contract` (new fixture) or `scripts/checks/check_golden_artifacts.py` (new contract field) |

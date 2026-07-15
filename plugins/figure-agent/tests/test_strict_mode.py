@@ -7,6 +7,7 @@ fail under FIGURE_AGENT_STRICT=1 without changing default ergonomics.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -350,11 +351,16 @@ def test_check_collisions_writes_deterministic_json_output(
     }
 
 
-def test_collision_payload_preserves_fixture_identity_for_nested_attempt() -> None:
-    pdf = Path(
-        "examples/demo/review/failure-first/execution-binding-v6/build/"
-        "treatment_generated.pdf"
+def test_collision_payload_preserves_fixture_identity_for_nested_attempt(
+    tmp_path: Path,
+) -> None:
+    pdf = (
+        tmp_path
+        / "examples/demo/review/failure-first/execution-binding-v6/build/"
+        / "treatment_generated.pdf"
     )
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"%PDF-1.4\n")
 
     report = check_collisions.collision_payload(pdf, [], [], 0.05)
 
@@ -364,13 +370,40 @@ def test_collision_payload_preserves_fixture_identity_for_nested_attempt() -> No
     )
 
 
-def test_collision_payload_accepts_bound_fixture_after_compile_changes_cwd() -> None:
+def test_collision_payload_accepts_bound_fixture_after_compile_changes_cwd(
+    tmp_path: Path,
+) -> None:
+    pdf = tmp_path / "build" / "treatment_generated.pdf"
+    pdf.parent.mkdir()
+    pdf.write_bytes(b"%PDF-1.4\n")
     report = check_collisions.collision_payload(
-        Path("build/treatment_generated.pdf"), [], [], 0.05, fixture="demo"
+        pdf, [], [], 0.05, fixture="demo"
     )
 
     assert report["fixture"] == "demo"
     assert report["render_pdf"] == "build/treatment_generated.pdf"
+
+
+def test_collision_payload_binds_current_render_bytes(tmp_path: Path) -> None:
+    fixture = tmp_path / "examples" / "demo"
+    pdf = fixture / "build" / "demo.pdf"
+    render = fixture / "build" / "demo.png"
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"%PDF-1.4\n")
+    render.write_bytes(b"render-bytes")
+
+    report = check_collisions.collision_payload(
+        pdf, [], [], 0.05, render_image=render
+    )
+
+    assert report["fixture"] == "demo"
+    assert report["render_path"] == "build/demo.png"
+    assert report["render_pdf_sha256"] == (
+        "sha256:" + hashlib.sha256(b"%PDF-1.4\n").hexdigest()
+    )
+    assert report["render_sha256"] == (
+        "sha256:" + hashlib.sha256(b"render-bytes").hexdigest()
+    )
 
 
 def test_check_visual_clash_default_exits_zero(monkeypatch) -> None:
@@ -583,7 +616,10 @@ def test_compile_preserves_historical_repair_replay_from_live_contracts() -> Non
 
     assert "HISTORICAL_REPAIR_REPLAY=0" in compile_sh
     assert "^execution-repair-v[0-9]+$" in compile_sh
-    assert "historical repair replay reports, but does not strict-gate, live coverage requirements" in compile_sh
+    assert (
+        "historical repair replay reports, but does not strict-gate, "
+        "live coverage requirements"
+    ) in compile_sh
 
 
 def test_check_text_boundary_clash_default_exits_zero_with_report(

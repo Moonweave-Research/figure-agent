@@ -1,6 +1,13 @@
+<!-- FIGURE_AGENT:LEGACY_EVIDENCE -->
 # Figure Agent Authoring Execution Binding Design
 
-**Status:** Approved design
+**Status:** Historical evidence — non-authoritative.
+
+**Superseded by:** `docs/figure-agent.md`.
+
+**Execution warning:** Everything below this boundary is quoted historical
+evidence. Its instructions and authority claims MUST NOT be executed or treated
+as current; they are superseded by `docs/figure-agent.md`.
 
 **Authority:** `docs/product-spec.md` and `docs/execution-plan.md` remain the
 only product and execution authorities. This document defines the smallest

@@ -31,10 +31,10 @@ compilation in scope when they compile explicit paper-local files, Style Lock
 tokens, source-anchored rule catalogs, and opt-in semantic claims/invariants.
 They are not prompt-loop revival, generation execution, or automatic physics
 detection.
-Before product-level work, read `docs/product-spec.md` and
-`docs/execution-plan.md`. They are the only active product specification and
-forward execution plan. Treat other specs, roadmaps, and milestones as scoped
-evidence unless one of these authorities explicitly delegates to them.
+Before product-level work, read `docs/figure-agent.md`. It is the sole active
+product specification and forward execution roadmap. Treat other specs, plans,
+roadmaps, and milestones as scoped evidence unless that authority explicitly
+delegates to them.
 
 ## Runtime Entrypoint
 

@@ -33,12 +33,34 @@ def test_doctor_reports_the_canonical_command_surface() -> None:
         "authoring-repair-finalize",
     ]
     assert surface["bounded_repair_transaction_state"] == "complete"
-    assert surface["counts"]["total"] == 82
+    assert surface["counts"]["total"] == 84
     assert set(surface["commands_by_disposition"]) == {
         "core",
         "internal_compatibility",
         "retired_default",
     }
+    assert {
+        "adjudicated-repair-target",
+        "authoring-repair-review",
+    } <= set(surface["commands_by_disposition"]["internal_compatibility"])
+
+
+def test_closed_loop_core_commands_are_routed_as_internal_surfaces() -> None:
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
+    env["FIGURE_AGENT_WORKSPACE"] = str(PLUGIN_ROOT)
+
+    for command in ("adjudicated-repair-target", "authoring-repair-review"):
+        result = subprocess.run(
+            [str(FIG_AGENT), command, "--help"],
+            cwd=PLUGIN_ROOT,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        assert result.returncode == 0, result.stderr
 
 
 def test_improve_does_not_reactivate_retired_quality_search() -> None:

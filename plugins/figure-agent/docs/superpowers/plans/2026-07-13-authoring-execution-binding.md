@@ -1,4 +1,14 @@
+<!-- FIGURE_AGENT:LEGACY_EVIDENCE -->
 # Authoring Execution Binding Implementation Plan
+
+**Status:** Historical evidence — non-authoritative.
+
+**Superseded by:** `docs/figure-agent.md`.
+
+**Execution warning:** Everything below this boundary is quoted historical
+evidence. Its instructions and unchecked tasks MUST NOT be executed as the
+current plan; any internal authority language is superseded by
+`docs/figure-agent.md`.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

@@ -1,11 +1,18 @@
-<!-- FIGURE_AGENT:PRODUCT_AUTHORITY -->
+<!-- FIGURE_AGENT:LEGACY_EVIDENCE -->
 # Figure Agent Product Specification
 
-**Status:** Active product authority
+**Status:** Historical evidence — non-authoritative.
 
 **Effective date:** 2026-07-14
 
-**Companion authority:** docs/execution-plan.md
+**Superseded by:** `docs/figure-agent.md`.
+
+**Execution warning:** Everything below this boundary is quoted historical
+evidence. Historical instructions, checklists, commands, and any internal
+"active", "current", or "authority" language MUST NOT be executed or treated
+as current. All such language is superseded by `docs/figure-agent.md`.
+
+**Preservation rule:** Retained in place for provenance only.
 
 ## 1. Authority contract
 

@@ -46,6 +46,26 @@ def atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
     atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
+def atomic_create_text(path: Path, text: str) -> None:
+    """Atomically publish a new file without ever replacing an existing path."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.link(temporary, path)
+        _fsync_directory(path.parent)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def atomic_create_json(path: Path, payload: dict[str, Any]) -> None:
+    atomic_create_text(path, json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
 @contextmanager
 def exclusive_lock(path: Path, *, owner: str) -> Iterator[None]:
     path.parent.mkdir(parents=True, exist_ok=True)

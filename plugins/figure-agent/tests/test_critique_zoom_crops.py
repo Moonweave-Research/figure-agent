@@ -4,6 +4,7 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -35,6 +36,132 @@ def test_build_zoom_crop_pack_creates_full_render_quadrants(tmp_path: Path) -> N
     assert zoom_crops[0]["source"] == "full_render"
     assert zoom_crops[0]["bbox_px"] == [0, 0, 60, 40]
     assert zoom_crops[3]["bbox_px"] == [60, 40, 120, 80]
+
+
+def test_build_zoom_crop_pack_supports_attempt_local_output_without_baseline_drift(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    baseline_render = example_dir / "build" / "demo.png"
+    _write_png(baseline_render)
+    build_zoom_crop_pack(example_dir, baseline_render, panel_crop_paths=())
+    baseline_manifest = example_dir / "build" / "audit_crops" / "manifest.json"
+    baseline_hash = file_sha256(baseline_manifest)
+    attempt = example_dir / "review" / "failure-first" / "execution-repair-v1"
+    repaired_render = attempt / "build" / "repaired.png"
+    _write_png(repaired_render, size=(800, 600))
+    output_dir = attempt / "build" / "audit_crops"
+    manifest_path = output_dir / "manifest.json"
+
+    crops = build_zoom_crop_pack(
+        example_dir,
+        repaired_render,
+        panel_crop_paths=(),
+        output_dir=output_dir,
+        manifest_path=manifest_path,
+    )
+
+    assert manifest_path.is_file()
+    assert file_sha256(baseline_manifest) == baseline_hash
+    assert all(
+        item["path"].startswith("review/failure-first/execution-repair-v1/")
+        for item in crops
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["render_path"] == (
+        "review/failure-first/execution-repair-v1/build/repaired.png"
+    )
+
+
+def test_custom_crop_output_rejects_parent_traversal_without_external_write(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    render = example_dir / "build" / "demo.png"
+    _write_png(render)
+    outside = tmp_path / "outside"
+
+    with pytest.raises(ValueError, match="output_dir"):
+        build_zoom_crop_pack(
+            example_dir,
+            render,
+            panel_crop_paths=(),
+            output_dir=example_dir / "build" / ".." / ".." / "outside",
+        )
+
+    assert not outside.exists()
+
+
+def test_custom_crop_output_rejects_symlink_escape_without_external_write(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    render = example_dir / "build" / "demo.png"
+    _write_png(render)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    alias = example_dir / "review" / "escape"
+    alias.parent.mkdir()
+    alias.symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="symlink"):
+        build_zoom_crop_pack(
+            example_dir,
+            render,
+            panel_crop_paths=(),
+            output_dir=alias / "audit_crops",
+        )
+
+    assert list(outside.iterdir()) == []
+
+
+def test_custom_crop_manifest_rejects_symlink_without_target_mutation(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    render = example_dir / "build" / "demo.png"
+    _write_png(render)
+    output_dir = example_dir / "review" / "attempt" / "audit_crops"
+    output_dir.mkdir(parents=True)
+    outside = tmp_path / "outside-manifest.json"
+    outside.write_text("historical\n", encoding="utf-8")
+    manifest = output_dir / "manifest.json"
+    manifest.symlink_to(outside)
+
+    with pytest.raises(ValueError, match="symlink"):
+        build_zoom_crop_pack(
+            example_dir,
+            render,
+            panel_crop_paths=(),
+            output_dir=output_dir,
+            manifest_path=manifest,
+        )
+
+    assert outside.read_text(encoding="utf-8") == "historical\n"
+
+
+def test_custom_crop_output_cannot_overwrite_canonical_manifest(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    render = example_dir / "build" / "demo.png"
+    _write_png(render)
+    build_zoom_crop_pack(example_dir, render, panel_crop_paths=())
+    canonical = example_dir / "build" / "audit_crops" / "manifest.json"
+    canonical_bytes = canonical.read_bytes()
+    custom = example_dir / "review" / "attempt" / "audit_crops"
+
+    with pytest.raises(ValueError, match="output_dir/manifest.json"):
+        build_zoom_crop_pack(
+            example_dir,
+            render,
+            panel_crop_paths=(),
+            output_dir=custom,
+            manifest_path=canonical,
+        )
+
+    assert canonical.read_bytes() == canonical_bytes
+    assert not custom.exists()
 
 
 def test_build_zoom_crop_pack_creates_print_scale_audit_images(tmp_path: Path) -> None:

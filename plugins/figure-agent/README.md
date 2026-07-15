@@ -230,8 +230,8 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 ## Documentation map
 
 **Read these first:**
-- `docs/product-spec.md` — the single product authority. Start here.
-- `docs/execution-plan.md` — the single active forward implementation plan.
+- `docs/figure-agent.md` — the sole product contract and executable roadmap.
+  Start here.
 - `docs/architecture-overview.md` — the shipped layer-by-layer reference.
 - `docs/v0.9-operator-playbook.md` — release-candidate command sequence for
   single-fixture, queue, host critique, closeout, and release/golden operation.
@@ -245,8 +245,10 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 - `docs/trials/` — dated dogfood reports.
 
 **Frozen historical (do not maintain, kept for context):**
+- `docs/product-spec.md` and `docs/execution-plan.md` — the previous split
+  authorities, retained in place as legacy evidence.
 - `docs/quality-kernel-goal.md` — prior quality-kernel direction, superseded by
-  `docs/product-spec.md` and `docs/execution-plan.md`.
+  `docs/figure-agent.md`.
 - `docs/milestones-archive/2026-05-17-quality-state-hardening.md` — prior issue
   record for reference contracts, readiness states, manifest hashes, and TIFF
   quality gates.

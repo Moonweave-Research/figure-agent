@@ -56,10 +56,10 @@ After install, the six commands are available in any Claude Code session:
 
 ## Documentation
 
-Agents and contributors must start with the two product authorities:
+Agents and contributors must start with the sole product and execution
+authority:
 
-- [`plugins/figure-agent/docs/product-spec.md`](plugins/figure-agent/docs/product-spec.md) — what Figure Agent is, its architecture, boundaries, and acceptance model.
-- [`plugins/figure-agent/docs/execution-plan.md`](plugins/figure-agent/docs/execution-plan.md) — the single active implementation sequence and completion boundary.
+- [`plugins/figure-agent/docs/figure-agent.md`](plugins/figure-agent/docs/figure-agent.md) — product contract, architecture boundaries, executable roadmap, and completion gates.
 
 The operational docs live in [`plugins/figure-agent/README.md`](plugins/figure-agent/README.md). It covers:
 

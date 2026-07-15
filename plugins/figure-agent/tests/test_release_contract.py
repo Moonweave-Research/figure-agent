@@ -822,8 +822,10 @@ def test_schema_module_map_covers_script_schema_constants() -> None:
         / "issues"
         / "2026-06-01-issue-100hi-schema-module-map.md"
     ).read_text()
-    active_authority = "\n".join(
+    documented_contracts = "\n".join(
         (
+            module_map,
+            (REPO_ROOT / "docs" / "figure-agent.md").read_text(),
             (REPO_ROOT / "docs" / "product-spec.md").read_text(),
             (REPO_ROOT / "docs" / "execution-plan.md").read_text(),
         )
@@ -850,7 +852,7 @@ def test_schema_module_map_covers_script_schema_constants() -> None:
                     and critique_shorthand in module_map
                 ):
                     continue
-                if schema not in module_map and schema not in active_authority:
+                if schema not in documented_contracts:
                     missing.append(f"{schema} ({script_path.relative_to(REPO_ROOT)})")
 
     assert missing == []

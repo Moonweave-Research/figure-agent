@@ -88,7 +88,9 @@ INTERNAL_COMPATIBILITY_COMMANDS = frozenset(
         "apply-candidate",
         "apply-candidate-ready",
         "apply-plan",
+        "adjudicated-repair-target",
         "authoring-orro-plan",
+        "authoring-repair-review",
         "benchmark-compare",
         "benchmark-detectors",
         "benchmark-list",
@@ -780,6 +782,25 @@ def _finding_attribution(argv: list[str]) -> int:
     import finding_source_attribution
 
     return finding_source_attribution.main(argv)
+
+
+def _adjudicated_repair_target(argv: list[str]) -> int:
+    import critique_repair_bridge
+
+    return critique_repair_bridge.main(
+        argv,
+        plugin_root=_paths().plugin_root.resolve(),
+        workspace_root=_paths().workspace_root.resolve(),
+    )
+
+
+def _authoring_repair_review(argv: list[str]) -> int:
+    import post_repair_visual_review
+
+    return post_repair_visual_review.main(
+        argv,
+        workspace_root=_paths().workspace_root.resolve(),
+    )
 
 
 def _authoring_orro_plan(argv: list[str]) -> int:
@@ -2158,6 +2179,10 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_repair_finalize(rest)
     if command in {"text-finding-attribution", "finding-attribution"}:
         return _finding_attribution(rest)
+    if command == "adjudicated-repair-target":
+        return _adjudicated_repair_target(rest)
+    if command == "authoring-repair-review":
+        return _authoring_repair_review(rest)
     if command == "authoring-orro-plan":
         return _authoring_orro_plan(rest)
     if command == "authoring-receipt":

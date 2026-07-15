@@ -1,5 +1,16 @@
-<!-- FIGURE_AGENT:EXECUTION_AUTHORITY -->
+<!-- FIGURE_AGENT:LEGACY_EVIDENCE -->
 # Figure Agent Failure-First Implementation Plan
+
+**Status:** Historical evidence — non-authoritative.
+
+**Superseded by:** `docs/figure-agent.md`.
+
+**Execution warning:** Everything below this boundary is quoted historical
+evidence. Historical instructions, checklists, commands, and any internal
+"active", "current", or "authority" language MUST NOT be executed or treated
+as current. All such language is superseded by `docs/figure-agent.md`.
+
+**Preservation rule:** Retained in place for provenance only.
 
 > **For agentic workers:** Execute this plan in order with tests first. Do not open another renderer, grammar, roadmap, or fixture-specific polish lane.
 
