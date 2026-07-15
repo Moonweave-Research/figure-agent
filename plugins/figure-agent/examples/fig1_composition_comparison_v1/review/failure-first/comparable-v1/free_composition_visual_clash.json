@@ -1,0 +1,183 @@
+{
+  "candidates": [
+    {
+      "bbox_px": [
+        220,
+        439,
+        256,
+        489
+      ],
+      "id": "VC001",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.068,
+        "edge": 0.013
+      },
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "bbox_px": [
+        433,
+        439,
+        469,
+        489
+      ],
+      "id": "VC002",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.068,
+        "edge": 0.013
+      },
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "bbox_px": [
+        657,
+        439,
+        693,
+        489
+      ],
+      "id": "VC003",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.068,
+        "edge": 0.013
+      },
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "bbox_px": [
+        1300,
+        278,
+        1354,
+        347
+      ],
+      "id": "VC004",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.019,
+        "edge": 0.007
+      },
+      "tex_lines": null,
+      "text": "C"
+    },
+    {
+      "bbox_px": [
+        882,
+        439,
+        918,
+        489
+      ],
+      "id": "VC005",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.069,
+        "edge": 0.013
+      },
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "bbox_px": [
+        3032,
+        278,
+        3086,
+        347
+      ],
+      "id": "VC006",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.023,
+        "edge": 0.005
+      },
+      "tex_lines": null,
+      "text": "D"
+    },
+    {
+      "bbox_px": [
+        1024,
+        439,
+        1060,
+        489
+      ],
+      "id": "VC007",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.07,
+        "edge": 0.013
+      },
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "bbox_px": [
+        67,
+        1048,
+        121,
+        1117
+      ],
+      "id": "VC008",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.026,
+        "edge": 0.006
+      },
+      "tex_lines": null,
+      "text": "B"
+    },
+    {
+      "bbox_px": [
+        3032,
+        1230,
+        3082,
+        1299
+      ],
+      "id": "VC009",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.038,
+        "edge": 0.009
+      },
+      "tex_lines": null,
+      "text": "E"
+    },
+    {
+      "bbox_px": [
+        3131,
+        1230,
+        3503,
+        1285
+      ],
+      "id": "VC010",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.028,
+        "edge": 0.005
+      },
+      "tex_lines": null,
+      "text": "ISPD-derived"
+    },
+    {
+      "bbox_px": [
+        1300,
+        1823,
+        1346,
+        1892
+      ],
+      "id": "VC011",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.037,
+        "edge": 0.009
+      },
+      "tex_lines": null,
+      "text": "F"
+    }
+  ],
+  "fixture": "fig1_composition_comparison_v1",
+  "render_pdf": "build/free_composition_generated.pdf",
+  "total": 11
+}

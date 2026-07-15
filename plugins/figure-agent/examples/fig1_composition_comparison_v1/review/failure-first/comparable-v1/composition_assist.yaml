@@ -1,0 +1,12 @@
+schema: figure-agent.composition-profile.v1
+status: experimental_attempt_scoped
+policy: preserve_llm_composition
+requirements:
+  - semantic_load_controls_area
+  - related_panels_are_grouped
+  - negative_space_is_reserved
+forbidden:
+  - fixed_coordinates
+  - fixed_panel_rectangles
+  - primitive_geometry
+  - palette_override

@@ -1,0 +1,8 @@
+{
+  "candidates": [],
+  "fixture": "comparable-v1",
+  "render_pdf": "build/free_composition_generated.pdf",
+  "schema": "figure-agent.text-boundary-clash.v1",
+  "source": "spec.yaml:text_boundary_checks",
+  "total": 0
+}

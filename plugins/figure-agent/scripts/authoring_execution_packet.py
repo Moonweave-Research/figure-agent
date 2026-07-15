@@ -36,11 +36,19 @@ COMPARISON_OUTPUT_NAMES = frozenset(
         "raw_generated.tex",
         "verified_generated.tex",
         "repaired_generated.tex",
+        "free_composition_generated.tex",
+        "assisted_composition_generated.tex",
     }
 )
 COMPARISON_ARTIFACT_NAMES = frozenset(
     f"{arm}_{kind}{suffix}"
-    for arm in ("raw", "verified", "repaired")
+    for arm in (
+        "raw",
+        "verified",
+        "repaired",
+        "free_composition",
+        "assisted_composition",
+    )
     for kind, suffix in (("packet", ".json"), ("prompt", ".md"))
 )
 ORRO_LANE_ID = re.compile(r"[a-z0-9][a-z0-9-]*")
@@ -510,6 +518,15 @@ def render_authoring_prompt(
         )
     else:
         lines.append("- No optional shape profile selected.")
+    lines.extend(["", "## Optional composition-profile directives"])
+    composition_profile = context_pack.get("composition_profile")
+    if composition_profile:
+        lines.extend(
+            f"- {item}"
+            for item in composition_profile.get("authoring_directives", [])
+        )
+    else:
+        lines.append("- No optional composition profile selected.")
     lines.extend(
         [
             "",
@@ -538,6 +555,7 @@ def compile_authoring_execution_packet(
     execution_cwd: str = ".",
     layout_contract: str | None = None,
     shape_profile: str | None = None,
+    composition_profile: str | None = None,
 ) -> tuple[dict[str, object], str]:
     """Compile one deterministic packet without executing an authoring model."""
     if not model_id.strip():
@@ -558,6 +576,7 @@ def compile_authoring_execution_packet(
         workspace_root=workspace_root,
         layout_contract=layout_contract,
         shape_profile=shape_profile,
+        composition_profile=composition_profile,
     )
     allowed_repository_read_paths = list(
         (Path(bound_execution_cwd) / path).as_posix()
@@ -577,7 +596,9 @@ def compile_authoring_execution_packet(
     allowed_repository_read_paths = tuple(dict.fromkeys(allowed_repository_read_paths))
     context_hash = _sha256_bytes(_canonical_json_bytes(context_pack))
     base_context_pack = {
-        key: value for key, value in context_pack.items() if key != "shape_profile"
+        key: value
+        for key, value in context_pack.items()
+        if key not in {"shape_profile", "composition_profile"}
     }
     prompt = render_authoring_prompt(
         name=name,
@@ -625,6 +646,18 @@ def compile_authoring_execution_packet(
                 ],
             }
             if shape_profile
+            else None
+        ),
+        "composition_profile": (
+            {
+                "path": context_pack["composition_profile"]["path"],
+                "sha256": context_pack["composition_profile"]["sha256"],
+                "policy": context_pack["composition_profile"]["policy"],
+                "authoring_directives": context_pack["composition_profile"][
+                    "authoring_directives"
+                ],
+            }
+            if composition_profile
             else None
         ),
         "visual_assets": runtime_visual_assets,

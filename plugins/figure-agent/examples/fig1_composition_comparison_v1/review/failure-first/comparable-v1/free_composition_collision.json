@@ -1,0 +1,9 @@
+{
+  "schema": "figure-agent.text-collisions.v1",
+  "fixture": "fig1_composition_comparison_v1",
+  "render_pdf": "review/failure-first/comparable-v1/build/free_composition_generated.pdf",
+  "iou_threshold": 0.05,
+  "word_count": 95,
+  "collisions": [],
+  "total": 0
+}

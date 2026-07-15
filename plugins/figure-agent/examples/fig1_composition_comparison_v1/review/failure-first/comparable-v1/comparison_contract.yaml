@@ -1,0 +1,115 @@
+schema: figure-agent.composition-comparison.v1
+attempt_id: fig1-composition-comparable-v1
+question: >-
+  In this single illustrative pair, what incremental effect does an optional
+  non-coordinate composition profile have over the shared Figure Agent briefing?
+controls:
+  model_id: gpt-5.5
+  scientific_context: identical
+  authoring_budget: identical
+  blank_start: identical
+  reviewed_visual_assets: identical
+  feedback_rounds: 0
+  manual_repairs: 0
+  historical_figure_access: forbidden
+intervention:
+  free_composition: no_optional_composition_profile
+  assisted_composition: composition_assist.yaml
+  only_declared_difference: composition_profile
+  shared_baseline_already_contains_composition_guidance: true
+compilation:
+  command_template: >-
+    TEXINPUTS="$PWD/:" bash scripts/compile.sh
+    examples/fig1_composition_comparison_v1/review/failure-first/comparable-v1/<source>.tex
+  sequential: true
+  semantic_contract: semantic_contract.yaml
+  strict_mode: false
+preflight:
+  evidence: preflight_result.json
+  decision: pass
+  intervention_field: composition_profile
+  filesystem_read_isolation: unavailable
+artifacts:
+  free_composition:
+    packet_sha256: 56b174457e2577ebb3a12a739e2c2c9eb6dca274d6be12658d095f74dde1c769
+    source_sha256: ec498f388b9d9a03078e092a539f6ccdd1bfbf2cda6843201e95526b1cf6d683
+    png_sha256: e6ceacc211dc1c265b0cf913190870e2e9cd0f208e7491b2943d26d6bac75f16
+    png_pixels: [4564, 3007]
+  assisted_composition:
+    packet_sha256: 3fd9fb62e6607fdcaac838f494fac15369f483174ac055c4a6b89246053863b2
+    source_sha256: 9a73cf690fe78fb301b4c302afa497bd1af448b153b41d9c64f765adb4d72653
+    png_sha256: 6a3c572e857b87d35fac829eb95cb63de6d6677b8c4d7bb0c5501693476f4382
+    png_pixels: [4555, 2807]
+machine_observations:
+  free_composition:
+    compile_exit: 0
+    semantic_contract_schema_validation: pass
+    generated_source_semantic_coverage: pass
+    text_collisions: 0
+    visual_clash_candidates: 11
+    text_boundary_clashes: 0
+    label_path_proximity_candidates: 0
+    undeclared_geometry_candidates: 23
+    strict_collision_check: pass
+    strict_visual_clash_check: fail
+    strict_undeclared_geometry_check: fail
+  assisted_composition:
+    compile_exit: 0
+    semantic_contract_schema_validation: pass
+    generated_source_semantic_coverage: fail
+    missing_required_objects:
+      - panel_e.ispd_probe
+    text_collisions: 1
+    visual_clash_candidates: 13
+    text_boundary_clashes: 0
+    label_path_proximity_candidates: 0
+    undeclared_geometry_candidates: 24
+    strict_collision_check: fail
+    strict_visual_clash_check: fail
+    strict_undeclared_geometry_check: fail
+  fixture_physics_grounding: undeclared
+  named_evidence:
+    - free_composition_collision.json
+    - assisted_composition_collision.json
+    - free_composition_visual_clash.json
+    - assisted_composition_visual_clash.json
+    - free_composition_text_boundary_clash.json
+    - assisted_composition_text_boundary_clash.json
+    - free_composition_label_path_proximity.json
+    - assisted_composition_label_path_proximity.json
+    - free_composition_undeclared_geometry.json
+    - assisted_composition_undeclared_geometry.json
+    - fixture_physics_grounding.json
+  interpretation: diagnostic_only
+first_pass_agent_observations:
+  free_composition:
+    - balanced_canvas_and_complete_bounds
+    - weak_semantic_hierarchy
+    - conventional_and_visually_conservative
+  assisted_composition:
+    - stronger_primary_scene_hierarchy
+    - right_edge_content_is_clipped
+    - primary_scene_labels_collide
+    - unused_space_is_poorly_balanced
+comparison_validity:
+  status: invalid_for_causal_composition_claim
+  semantic_coverage_evidence: semantic_coverage_review.yaml
+  reasons:
+    - assisted_arm_omits_required_panel_e_ispd_probe
+    - execution_receipts_are_missing
+    - filesystem_read_isolation_is_unavailable
+    - one_stochastic_sample_per_arm_cannot_establish_general_improvement
+    - execution_time_full_report_sets_were_not_preserved_before_named_rechecks
+provisional_result: none
+failure_discovery:
+  - semantic_load_area_guidance_can_create_a_stronger_primary_scene
+  - non_coordinate_canvas_containment_is_missing
+  - label_capacity_and_local_clearance_controls_are_missing
+  - semantic_source_coverage_must_gate_comparison_eligibility
+human_review:
+  surface: review/index.html
+  mapping: review/mapping.yaml
+  verdict: pending
+  scope: defect_and_preference_observation_only
+  can_establish_causal_effect: false
+publication_acceptance: not_claimed

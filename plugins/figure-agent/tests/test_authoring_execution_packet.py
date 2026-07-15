@@ -109,6 +109,7 @@ def _compile(
         "control_generated.tex"
     ),
     execution_cwd: str = ".",
+    composition_profile: str | None = None,
 ) -> tuple[dict[str, object], str]:
     return authoring_execution_packet.compile_authoring_execution_packet(
         "context_demo",
@@ -119,7 +120,45 @@ def _compile(
         blank_start=blank_start,
         output_path=output_path,
         execution_cwd=execution_cwd,
+        composition_profile=composition_profile,
     )
+
+
+def test_composition_profile_is_an_explicit_base_equal_intervention(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    profile = fixture / "review/composition.yaml"
+    profile.write_text(
+        "schema: figure-agent.composition-profile.v1\n"
+        "status: experimental_attempt_scoped\n"
+        "policy: preserve_llm_composition\n"
+        "requirements:\n"
+        "  - semantic_load_controls_area\n"
+        "  - related_panels_are_grouped\n"
+        "  - negative_space_is_reserved\n"
+        "forbidden:\n"
+        "  - fixed_coordinates\n"
+        "  - fixed_panel_rectangles\n"
+        "  - primitive_geometry\n"
+        "  - palette_override\n",
+        encoding="utf-8",
+    )
+
+    control, control_prompt = _compile(workspace)
+    assisted, assisted_prompt = _compile(
+        workspace, composition_profile="review/composition.yaml"
+    )
+
+    assert control["context_pack"]["base_sha256"] == assisted["context_pack"][
+        "base_sha256"
+    ]
+    assert control["context_pack"]["sha256"] != assisted["context_pack"]["sha256"]
+    assert control["composition_profile"] is None
+    assert assisted["composition_profile"]["policy"] == "preserve_llm_composition"
+    assert "No optional composition profile selected" in control_prompt
+    assert "do not default to equal-size panels" in assisted_prompt
 
 
 def test_compiles_canonical_packet_and_prompt(tmp_path: Path) -> None:
@@ -378,6 +417,21 @@ def test_rejects_undeclared_comparable_output_name(tmp_path: Path) -> None:
         )
 
 
+def test_accepts_named_composition_comparison_arms(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    for arm in ("free_composition", "assisted_composition"):
+        packet, _ = _compile(
+            workspace,
+            output_path=(
+                "examples/context_demo/review/failure-first/comparable-v2/"
+                f"{arm}_generated.tex"
+            ),
+        )
+        assert packet["output_path"].endswith(f"{arm}_generated.tex")
+
+
 def test_resolves_declared_comparable_packet_artifact(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _write_context_fixture(workspace)
@@ -523,6 +577,8 @@ def _write_arm(
     *,
     model_id: str = "gpt-5.5",
     plugin_root: Path = PLUGIN_ROOT,
+    shape_profile: str | None = None,
+    composition_profile: str | None = None,
 ) -> tuple[Path, Path]:
     output = (
         "examples/context_demo/review/failure-first/execution-binding-v1/"
@@ -536,6 +592,8 @@ def _write_arm(
         budget_contract="examples/context_demo/review/budget.yaml",
         blank_start="examples/context_demo/review/blank.txt",
         output_path=output,
+        shape_profile=shape_profile,
+        composition_profile=composition_profile,
     )
     attempt = workspace / "examples/context_demo/review/failure-first/execution-binding-v1"
     packet_path = attempt / f"{arm}_packet.json"
@@ -597,6 +655,7 @@ def test_preflight_accepts_equal_contracts_with_disjoint_outputs(tmp_path: Path)
     assert result["schema"] == "figure-agent.authoring-execution-preflight.v1"
     assert result["decision"] == "pass"
     assert result["filesystem_read_isolation"] == "unavailable"
+    assert result["intervention_field"] is None
     assert result["control"]["packet_sha256"] != result["treatment"]["packet_sha256"]
     assert result["control"]["packet_path"] == (
         "examples/context_demo/review/failure-first/execution-binding-v1/"
@@ -632,6 +691,59 @@ def test_preflight_accepts_equal_triplet_with_disjoint_outputs(tmp_path: Path) -
     assert len(
         {item["packet_sha256"] for item in result["conditions"].values()}
     ) == 3
+
+
+def test_preflight_rejects_shape_and_composition_changing_together(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    (fixture / "review/shape.yaml").write_text(
+        "schema: figure-agent.shape-profile.v1\n"
+        "status: experimental_attempt_scoped\n"
+        "objects:\n"
+        "  - id: s60\n"
+        "    role: discrete_distribution\n"
+        "  - id: s80\n"
+        "    role: continuous_broad_distribution\n"
+        "relations:\n"
+        "  - kind: wider_than\n"
+        "    subject: s80\n"
+        "    object: s60\n"
+        "  - kind: same_encoding_family\n"
+        "    members: [s60, s80]\n"
+        "forbidden_claims: [fixed_peak_count, monotonic_disorder, decay_direction]\n"
+        "composition_header: increasing sulfur content\n",
+        encoding="utf-8",
+    )
+    (fixture / "review/composition.yaml").write_text(
+        "schema: figure-agent.composition-profile.v1\n"
+        "status: experimental_attempt_scoped\n"
+        "policy: preserve_llm_composition\n"
+        "requirements:\n"
+        "  - semantic_load_controls_area\n"
+        "  - related_panels_are_grouped\n"
+        "  - negative_space_is_reserved\n"
+        "forbidden:\n"
+        "  - fixed_coordinates\n"
+        "  - fixed_panel_rectangles\n"
+        "  - primitive_geometry\n"
+        "  - palette_override\n",
+        encoding="utf-8",
+    )
+    control, _ = _write_arm(workspace, "control")
+    treatment, _ = _write_arm(
+        workspace,
+        "treatment",
+        shape_profile="review/shape.yaml",
+        composition_profile="review/composition.yaml",
+    )
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="multiple intervention fields differ",
+    ):
+        authoring_execution_preflight.preflight_authoring_pair(control, treatment)
 
 
 def test_preflight_triplet_rejects_a_mismatched_third_model_contract(

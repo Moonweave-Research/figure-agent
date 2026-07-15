@@ -1,0 +1,708 @@
+{
+  "candidates": [
+    {
+      "bbox_pt": [
+        0.0,
+        333.92126,
+        538.582677,
+        333.92126
+      ],
+      "distance_pt": null,
+      "evidence": "source line 53 line lacks text_boundary_check",
+      "id": "UG001",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 53
+    },
+    {
+      "bbox_pt": [
+        7.086614,
+        252.850394,
+        128.125984,
+        271.559055
+      ],
+      "distance_pt": null,
+      "evidence": "source line 59 rectangle lacks text_boundary_check",
+      "id": "UG002",
+      "kind": "undeclared_rect_boundary",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 59
+    },
+    {
+      "bbox_pt": [
+        7.086614,
+        252.850394,
+        128.125984,
+        271.559055
+      ],
+      "distance_pt": null,
+      "evidence": "source line 61 rectangle lacks text_boundary_check",
+      "id": "UG003",
+      "kind": "undeclared_rect_boundary",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 61
+    },
+    {
+      "bbox_pt": [
+        15.874016,
+        170.645669,
+        118.488189,
+        170.645669
+      ],
+      "distance_pt": 2.961043,
+      "evidence": "source line 81 is within 2.96 pt of text 'high'",
+      "id": "UG004",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "high",
+      "recommended_action": "add_micro_defect",
+      "source_line": 81
+    },
+    {
+      "bbox_pt": [
+        15.874016,
+        170.645669,
+        118.488189,
+        170.645669
+      ],
+      "distance_pt": 3.476043,
+      "evidence": "source line 81 is within 3.48 pt of text 'intermediate'",
+      "id": "UG005",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "intermediate",
+      "recommended_action": "add_micro_defect",
+      "source_line": 81
+    },
+    {
+      "bbox_pt": [
+        15.874016,
+        170.645669,
+        118.488189,
+        170.645669
+      ],
+      "distance_pt": 3.476043,
+      "evidence": "source line 81 is within 3.48 pt of text 'low'",
+      "id": "UG006",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "low",
+      "recommended_action": "add_micro_defect",
+      "source_line": 81
+    },
+    {
+      "bbox_pt": [
+        15.874016,
+        170.645669,
+        118.488189,
+        170.645669
+      ],
+      "distance_pt": null,
+      "evidence": "source line 81 line lacks text_boundary_check",
+      "id": "UG007",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 81
+    },
+    {
+      "bbox_pt": [
+        161.574803,
+        179.716535,
+        161.574803,
+        303.874016
+      ],
+      "distance_pt": 0.102138,
+      "evidence": "source line 89 is within 0.10 pt of text 'F'",
+      "id": "UG008",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "F",
+      "recommended_action": "add_micro_defect",
+      "source_line": 89
+    },
+    {
+      "bbox_pt": [
+        161.574803,
+        179.716535,
+        161.574803,
+        303.874016
+      ],
+      "distance_pt": null,
+      "evidence": "source line 89 line lacks text_boundary_check",
+      "id": "UG009",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 89
+    },
+    {
+      "bbox_pt": [
+        172.913386,
+        288.0,
+        322.015748,
+        288.0
+      ],
+      "distance_pt": 1.487915,
+      "evidence": "source line 91 is within 1.49 pt of text 'Coulomb'",
+      "id": "UG010",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "Coulomb",
+      "recommended_action": "add_micro_defect",
+      "source_line": 91
+    },
+    {
+      "bbox_pt": [
+        172.913386,
+        288.0,
+        322.015748,
+        288.0
+      ],
+      "distance_pt": null,
+      "evidence": "source line 91 line lacks text_boundary_check",
+      "id": "UG011",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 91
+    },
+    {
+      "bbox_pt": [
+        369.92126,
+        231.874016,
+        527.811024,
+        231.874016
+      ],
+      "distance_pt": null,
+      "evidence": "source line 114 line lacks text_boundary_check",
+      "id": "UG012",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 114
+    },
+    {
+      "bbox_pt": [
+        369.92126,
+        231.874016,
+        369.92126,
+        301.606299
+      ],
+      "distance_pt": null,
+      "evidence": "source line 115 line lacks text_boundary_check",
+      "id": "UG013",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 115
+    },
+    {
+      "bbox_pt": [
+        367.086614,
+        155.338583,
+        437.102362,
+        167.811024
+      ],
+      "distance_pt": null,
+      "evidence": "source line 135 rectangle lacks text_boundary_check",
+      "id": "UG014",
+      "kind": "undeclared_rect_boundary",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 135
+    },
+    {
+      "bbox_pt": [
+        367.086614,
+        155.338583,
+        437.102362,
+        167.811024
+      ],
+      "distance_pt": null,
+      "evidence": "source line 137 rectangle lacks text_boundary_check",
+      "id": "UG015",
+      "kind": "undeclared_rect_boundary",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 137
+    },
+    {
+      "bbox_pt": [
+        388.913386,
+        191.338583,
+        415.559055,
+        191.338583
+      ],
+      "distance_pt": null,
+      "evidence": "source line 142 line lacks text_boundary_check",
+      "id": "UG016",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 142
+    },
+    {
+      "bbox_pt": [
+        394.866142,
+        176.88189,
+        409.606299,
+        176.88189
+      ],
+      "distance_pt": null,
+      "evidence": "source line 142 line lacks text_boundary_check",
+      "id": "UG017",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 142
+    },
+    {
+      "bbox_pt": [
+        402.23622,
+        168.944882,
+        402.23622,
+        176.314961
+      ],
+      "distance_pt": null,
+      "evidence": "source line 144 line lacks text_boundary_check",
+      "id": "UG018",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 144
+    },
+    {
+      "bbox_pt": [
+        443.905512,
+        161.574803,
+        460.913386,
+        161.574803
+      ],
+      "distance_pt": null,
+      "evidence": "source line 146 line lacks text_boundary_check",
+      "id": "UG019",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 146
+    },
+    {
+      "bbox_pt": [
+        468.283465,
+        132.377953,
+        530.645669,
+        132.377953
+      ],
+      "distance_pt": null,
+      "evidence": "source line 147 line lacks text_boundary_check",
+      "id": "UG020",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 147
+    },
+    {
+      "bbox_pt": [
+        468.283465,
+        132.377953,
+        468.283465,
+        187.653543
+      ],
+      "distance_pt": 3.068545,
+      "evidence": "source line 148 is within 3.07 pt of text 'distribution'",
+      "id": "UG021",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "distribution",
+      "recommended_action": "add_micro_defect",
+      "source_line": 148
+    },
+    {
+      "bbox_pt": [
+        468.283465,
+        132.377953,
+        468.283465,
+        187.653543
+      ],
+      "distance_pt": null,
+      "evidence": "source line 148 line lacks text_boundary_check",
+      "id": "UG022",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 148
+    },
+    {
+      "bbox_pt": [
+        5.102362,
+        17.574803,
+        533.480315,
+        17.574803
+      ],
+      "distance_pt": null,
+      "evidence": "source line 181 line lacks text_boundary_check",
+      "id": "UG023",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 181
+    }
+  ],
+  "fixture": "comparable-v1",
+  "geometry_coverage_gate": {
+    "clean_claim_allowed": null,
+    "configured": false,
+    "failures": [],
+    "state": "not_configured"
+  },
+  "geometry_parse_coverage": {
+    "coverage_ratio": 0.647059,
+    "fully_parsed_operations": 20,
+    "non_auto_promotable_geometry": [
+      "circle_envelope",
+      "curve_conservative_hull",
+      "to_curve_rendered_path_required",
+      "analytic_plot_human_review_required"
+    ],
+    "parsed_geometry_counts": {
+      "circle": 4,
+      "curve": 3,
+      "horizontal_line": 9,
+      "rect": 4,
+      "vertical_line": 4
+    },
+    "parsed_operations": 22,
+    "partial_unknown_operations": 2,
+    "rendered_curves": {
+      "rendered_curve_count": 88,
+      "rendered_curve_envelopes": [
+        {
+          "bbox_pt": [
+            10.17727,
+            62.90073,
+            133.48606,
+            67.71964
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.84683
+        },
+        {
+          "bbox_pt": [
+            27.41217,
+            58.30849,
+            29.79372,
+            60.69002
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.49814
+        },
+        {
+          "bbox_pt": [
+            52.92414,
+            58.30849,
+            55.30568,
+            60.69002
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.49814
+        },
+        {
+          "bbox_pt": [
+            79.8535,
+            58.30849,
+            82.23505,
+            60.69002
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.49814
+        },
+        {
+          "bbox_pt": [
+            106.78289,
+            58.30849,
+            109.16443,
+            60.69002
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.49814
+        },
+        {
+          "bbox_pt": [
+            123.79116,
+            58.30849,
+            126.17269,
+            60.69002
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.49814
+        },
+        {
+          "bbox_pt": [
+            11.59469,
+            85.29452,
+            132.6357,
+            104.00351
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            11.59469,
+            85.29452,
+            132.6357,
+            104.00351
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.54794
+        },
+        {
+          "bbox_pt": [
+            20.24025,
+            92.80643,
+            23.92547,
+            96.49163
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            36.11441,
+            96.49164,
+            39.79961,
+            100.17685
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            51.98899,
+            89.12119,
+            55.67418,
+            92.8064
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            68.43018,
+            94.50716,
+            72.11539,
+            98.19237
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            85.1547,
+            90.2553,
+            88.83991,
+            93.94051
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            100.74553,
+            97.05826,
+            104.43073,
+            100.74347
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            118.32041,
+            91.10569,
+            122.00562,
+            94.7909
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            14.42955,
+            147.09081,
+            43.3434,
+            169.20128
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            14.42955,
+            147.09081,
+            43.3434,
+            169.20128
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.44832
+        },
+        {
+          "bbox_pt": [
+            56.09938,
+            147.09081,
+            85.01325,
+            169.20128
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            56.09938,
+            147.09081,
+            85.01325,
+            169.20128
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.44832
+        },
+        {
+          "bbox_pt": [
+            97.7688,
+            147.09081,
+            126.68265,
+            169.20128
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            97.7688,
+            147.09081,
+            126.68265,
+            169.20128
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.44832
+        },
+        {
+          "bbox_pt": [
+            22.79181,
+            158.00417,
+            27.04364,
+            162.25602
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            61.62679,
+            160.27196,
+            65.87864,
+            164.5238
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            74.38277,
+            151.76783,
+            78.63462,
+            156.01967
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            101.31258,
+            161.40565,
+            105.56443,
+            165.65749
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        }
+      ]
+    },
+    "total_operations": 34,
+    "unknown_operations": 12,
+    "unknown_reasons": {
+      "nonliteral_circle": 5,
+      "nonliteral_coordinate": 2,
+      "unsupported_curve": 2,
+      "unsupported_geometry": 5
+    },
+    "unknown_samples": [
+      {
+        "command": "fill",
+        "reason": "nonliteral_circle",
+        "sample": "\\fill[cAmber] (\\sx,\\sy) circle (0.065);",
+        "source_line": 64
+      },
+      {
+        "command": "fill",
+        "reason": "nonliteral_coordinate",
+        "sample": "\\fill[cLGray!28, rounded corners=1.5pt]\n      (\\x,6.62) rectangle ++(1.02,0.78);",
+        "source_line": 72
+      },
+      {
+        "command": "draw",
+        "reason": "nonliteral_coordinate",
+        "sample": "\\draw[cGray!76!black, line width=0.45pt, rounded corners=1.5pt]\n      (\\x,6.62) rectangle ++(1.02,0.78);",
+        "source_line": 74
+      },
+      {
+        "command": "fill",
+        "reason": "nonliteral_circle",
+        "sample": "\\fill[cAmber] (\\x,\\y) circle (0.075);",
+        "source_line": 79
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_curve",
+        "sample": "\\draw[cGray!75!black, line width=0.65pt]\n    (6.14,9.58)\n    .. controls (6.72,9.56) and (6.82,8.78) .. (7.42,8.78)\n    .. controls (8.02,8.78) and (8.13,9.55) ",
+        "source_line": 93
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_geometry",
+        "sample": "\\draw[relation] (7.42,8.66) -- ++(0,-0.76);",
+        "source_line": 103
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_geometry",
+        "sample": "\\draw[relation] (9.96,7.20) -- ++(0,-0.76);",
+        "source_line": 104
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_curve",
+        "sample": "\\draw[cBlue, line width=0.92pt]\n    (13.26,10.34)\n    .. controls (13.72,9.35) and (14.65,8.88) .. (15.56,8.62)\n    .. controls (16.48,8.38) and (17.56,8.30) ..",
+        "source_line": 120
+      },
+      {
+        "command": "fill",
+        "reason": "nonliteral_circle",
+        "sample": "\\fill[white] (\\x,\\y) circle (0.070);",
+        "source_line": 125
+      },
+      {
+        "command": "draw",
+        "reason": "nonliteral_circle",
+        "sample": "\\draw[cBlue, line width=0.38pt] (\\x,\\y) circle (0.070);",
+        "source_line": 126
+      }
+    ]
+  },
+  "render_pdf": "build/free_composition_generated.pdf",
+  "rendered_semantic_paths": [],
+  "schema": "figure-agent.undeclared-geometry.v1",
+  "source": "tikz-source:auto-discovery",
+  "source_hashes": {
+    "examples/comparable-v1/free_composition_generated.tex": "sha256:ec498f388b9d9a03078e092a539f6ccdd1bfbf2cda6843201e95526b1cf6d683"
+  },
+  "total": 23
+}

@@ -10,6 +10,7 @@ from typing import Any
 import authoring_execution_packet
 
 SCHEMA = "figure-agent.authoring-execution-preflight.v1"
+INTERVENTION_FIELDS = ("shape_profile", "composition_profile")
 
 
 class AuthoringExecutionPreflightError(ValueError):
@@ -90,7 +91,7 @@ def _artifact_reference(packet: dict[str, Any], path: Path) -> str:
 
 def _preflight_authoring_conditions(
     packet_paths: dict[str, Path],
-) -> dict[str, dict[str, object]]:
+) -> tuple[dict[str, dict[str, object]], str | None]:
     """Validate one equal-input authoring comparison before any model runs."""
     if len(packet_paths) < 2 or any(not name for name in packet_paths):
         raise AuthoringExecutionPreflightError("at least two named conditions are required")
@@ -101,6 +102,7 @@ def _preflight_authoring_conditions(
     }
     baseline_name = next(iter(packet_paths))
     baseline, _ = loaded[baseline_name]
+    intervention_fields: set[str] = set()
     for name, (packet, _) in loaded.items():
         if name == baseline_name:
             continue
@@ -126,6 +128,18 @@ def _preflight_authoring_conditions(
             raise AuthoringExecutionPreflightError("context_pack schema mismatch")
         if baseline_context.get("base_sha256") != context.get("base_sha256"):
             raise AuthoringExecutionPreflightError("context_pack base_sha256 mismatch")
+        intervention_fields.update(
+            field
+            for field in INTERVENTION_FIELDS
+            if baseline.get(field) != packet.get(field)
+        )
+
+    if len(intervention_fields) > 1:
+        raise AuthoringExecutionPreflightError(
+            "multiple intervention fields differ: "
+            + ", ".join(sorted(intervention_fields))
+        )
+    intervention_field = next(iter(intervention_fields), None)
 
     outputs = {packet.get("output_path") for packet, _ in loaded.values()}
     if len(outputs) != len(loaded) or None in outputs:
@@ -137,7 +151,7 @@ def _preflight_authoring_conditions(
     if len(set(resolved_prompts)) != len(resolved_prompts):
         raise AuthoringExecutionPreflightError("prompt paths must be disjoint")
 
-    return {
+    conditions = {
         name: {
             "packet_path": _artifact_reference(packet, packet_paths[name]),
             "packet_sha256": packet["packet_sha256"],
@@ -147,6 +161,7 @@ def _preflight_authoring_conditions(
         }
         for name, (packet, prompt) in loaded.items()
     }
+    return conditions, intervention_field
 
 
 def preflight_authoring_pair(
@@ -154,13 +169,14 @@ def preflight_authoring_pair(
     treatment_packet_path: Path,
 ) -> dict[str, object]:
     """Validate equal arm contracts and disjoint one-file write scopes."""
-    conditions = _preflight_authoring_conditions(
+    conditions, intervention_field = _preflight_authoring_conditions(
         {"control": control_packet_path, "treatment": treatment_packet_path}
     )
     return {
         "schema": SCHEMA,
         "decision": "pass",
         "filesystem_read_isolation": "unavailable",
+        "intervention_field": intervention_field,
         **conditions,
     }
 
@@ -171,7 +187,7 @@ def preflight_authoring_triplet(
     repaired_packet_path: Path,
 ) -> dict[str, object]:
     """Validate an equal-input raw/verified/repaired comparison preflight."""
-    conditions = _preflight_authoring_conditions(
+    conditions, intervention_field = _preflight_authoring_conditions(
         {
             "raw": raw_packet_path,
             "verified": verified_packet_path,
@@ -182,5 +198,6 @@ def preflight_authoring_triplet(
         "schema": SCHEMA,
         "decision": "pass",
         "filesystem_read_isolation": "unavailable",
+        "intervention_field": intervention_field,
         "conditions": conditions,
     }

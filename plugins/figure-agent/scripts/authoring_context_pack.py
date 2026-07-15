@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import authoring_rules
+import composition_profile as composition_profile_compiler
 import narrative_context
 import runtime_paths
 import shape_profile as shape_profile_compiler
@@ -471,6 +472,51 @@ def _shape_profile(
     }
 
 
+def _composition_profile(
+    example_dir: Path,
+    selector: str | None,
+) -> dict[str, Any] | None:
+    if selector is None:
+        return None
+    relative = Path(selector)
+    if (
+        not selector
+        or relative.is_absolute()
+        or relative.suffix not in {".yaml", ".yml"}
+        or any(part in {"", ".", ".."} for part in relative.parts)
+    ):
+        raise AuthoringContextPackError(
+            "composition profile must be a fixture-relative YAML path"
+        )
+    current = example_dir
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise AuthoringContextPackError("composition profile not found or symlinked")
+    try:
+        resolved = current.resolve(strict=True)
+    except OSError as exc:
+        raise AuthoringContextPackError(
+            "composition profile not found or symlinked"
+        ) from exc
+    if not resolved.is_relative_to(example_dir.resolve()) or not resolved.is_file():
+        raise AuthoringContextPackError(
+            "composition profile must remain inside the fixture"
+        )
+    raw_bytes = resolved.read_bytes()
+    try:
+        compiled = composition_profile_compiler.compile_composition_profile(
+            yaml.safe_load(raw_bytes)
+        )
+    except composition_profile_compiler.CompositionProfileError as exc:
+        raise AuthoringContextPackError(str(exc)) from exc
+    return {
+        "path": relative.as_posix(),
+        "sha256": f"sha256:{hashlib.sha256(raw_bytes).hexdigest()}",
+        **compiled,
+    }
+
+
 def _authoring_context_config(spec: dict[str, Any]) -> dict[str, Any]:
     config = spec.get("authoring_context_pack")
     return config if isinstance(config, dict) else {}
@@ -531,6 +577,7 @@ def build_context_pack(
     workspace_root: Path | None = None,
     layout_contract: str | None = None,
     shape_profile: str | None = None,
+    composition_profile: str | None = None,
 ) -> dict[str, Any]:
     paths = runtime_paths.resolve_runtime_paths(
         plugin_root=plugin_root,
@@ -573,6 +620,9 @@ def build_context_pack(
     )
     visual_assets = _authoring_visual_assets(paths.plugin_root, spec)
     selected_shape_profile = _shape_profile(example_dir, shape_profile)
+    selected_composition_profile = _composition_profile(
+        example_dir, composition_profile
+    )
     payload = {
         "schema": SCHEMA,
         "name": name,
@@ -631,6 +681,8 @@ def build_context_pack(
     }
     if selected_shape_profile is not None:
         payload["shape_profile"] = selected_shape_profile
+    if selected_composition_profile is not None:
+        payload["composition_profile"] = selected_composition_profile
     if path_constraints is not None:
         payload["path_constraints"] = path_constraints
     return payload
@@ -681,6 +733,11 @@ def render_text(payload: dict[str, Any]) -> str:
         lines.extend(["", "## Shape Profile"])
         for directive in selected_shape_profile["authoring_directives"]:
             lines.append(f"- {directive}")
+    selected_composition_profile = payload.get("composition_profile")
+    if selected_composition_profile:
+        lines.extend(["", "## Composition Profile"])
+        for directive in selected_composition_profile["authoring_directives"]:
+            lines.append(f"- {directive}")
     visual_assets = payload.get("visual_assets", {})
     selected_assets = visual_assets.get("selected", [])
     lines.extend(["", "## Curated Visual Assets"])
@@ -708,6 +765,7 @@ def main(
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument("--layout-contract")
     parser.add_argument("--shape-profile")
+    parser.add_argument("--composition-profile")
     args = parser.parse_args(argv)
     try:
         payload = build_context_pack(
@@ -716,6 +774,7 @@ def main(
             workspace_root=workspace_root,
             layout_contract=args.layout_contract,
             shape_profile=args.shape_profile,
+            composition_profile=args.composition_profile,
         )
     except (ValueError, OSError, yaml.YAMLError) as exc:
         print(f"fig-agent context-pack: {exc}", flush=True)

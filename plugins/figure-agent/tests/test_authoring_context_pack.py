@@ -96,6 +96,87 @@ composition_header: increasing sulfur content
     return profile
 
 
+def _write_composition_profile(
+    fixture: Path, relative_path: str = "attempts/a1/composition.yaml"
+) -> Path:
+    profile = fixture / relative_path
+    profile.parent.mkdir(parents=True, exist_ok=True)
+    profile.write_text(
+        """
+schema: figure-agent.composition-profile.v1
+status: experimental_attempt_scoped
+policy: preserve_llm_composition
+requirements:
+  - semantic_load_controls_area
+  - related_panels_are_grouped
+  - negative_space_is_reserved
+forbidden:
+  - fixed_coordinates
+  - fixed_panel_rectangles
+  - primitive_geometry
+  - palette_override
+""".lstrip(),
+        encoding="utf-8",
+    )
+    return profile
+
+
+def test_context_pack_injects_non_coordinate_composition_profile(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    profile = _write_composition_profile(fixture)
+
+    payload = authoring_context_pack.build_context_pack(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+        composition_profile="attempts/a1/composition.yaml",
+    )
+
+    selected = payload["composition_profile"]
+    assert selected["sha256"] == (
+        f"sha256:{hashlib.sha256(profile.read_bytes()).hexdigest()}"
+    )
+    assert selected["policy"] == "preserve_llm_composition"
+    assert selected["authoring_directives"]
+    rendered = authoring_context_pack.render_text(payload)
+    assert "## Composition Profile" in rendered
+    assert "no coordinates or panel rectangles are prescribed" in rendered
+
+
+def test_context_pack_outer_cli_forwards_composition_profile(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    profile = _write_composition_profile(fixture)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--composition-profile",
+            "attempts/a1/composition.yaml",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["composition_profile"]["path"] == (
+        "attempts/a1/composition.yaml"
+    )
+    assert payload["composition_profile"]["sha256"] == (
+        f"sha256:{hashlib.sha256(profile.read_bytes()).hexdigest()}"
+    )
+
+
 def test_build_context_pack_injects_selected_shape_profile(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _write_context_fixture(workspace)

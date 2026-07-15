@@ -1,0 +1,114 @@
+schema: figure-agent.failure-first-semantic-contract.v1
+selector_id: figure1.composition_comparison_v1
+required_objects:
+  - panel_c.trap_landscape
+  - panel_d.transient_current
+  - panel_e.ispd_probe
+  - panel_f.mechanical_jig
+  - panel_f.cantilever
+  - panel_f.electrode
+  - panel_f.voltage_source
+  - panel_f.ground_reference
+  - panel_f.coulomb_force
+forbidden_implications:
+  - panel_f.grounded_sample
+  - panel_f.grounded_cantilever
+  - panel_f.electrical_contact_at_jig
+  - panel_f.second_contact
+repair:
+  family: composition_comparison_candidate
+  selector_id: figure1.composition_comparison_v1
+  max_source_blocks: 6
+protected_relations:
+  - shallow_and_deep_traps_share_one_energy_orientation
+  - transient_current_decays_under_constant_voltage
+  - ispd_probe_remains_separate_from_sample_surface
+  - mechanical_jig_holds_cantilever
+  - cantilever_separated_from_electrode_by_air_gap
+  - voltage_source_drives_electrode
+  - voltage_source_returns_to_ground
+  - cantilever_remains_electrically_floating
+semantic_legibility:
+  object_roles:
+    - object_id: panel_c.trap_landscape
+      declared_role: energy_landscape
+      forbidden_readings: [quantitative_density_fit]
+    - object_id: panel_d.transient_current
+      declared_role: qualitative_decay_plot
+      forbidden_readings: [calibrated_measurement]
+    - object_id: panel_e.ispd_probe
+      declared_role: noncontact_measurement_probe
+      forbidden_readings: [sample_electrode]
+    - object_id: panel_f.mechanical_jig
+      declared_role: mechanical_fixture
+      forbidden_readings: [electrical_contact]
+    - object_id: panel_f.cantilever
+      declared_role: mechanical_member
+      forbidden_readings: [grounded_conductor]
+    - object_id: panel_f.electrode
+      declared_role: active_electrode
+      forbidden_readings: [ground_reference]
+    - object_id: panel_f.voltage_source
+      declared_role: compact_voltage_source
+      forbidden_readings: [instrument_display]
+    - object_id: panel_f.ground_reference
+      declared_role: source_return_ground
+      forbidden_readings: [sample_ground]
+    - object_id: panel_f.coulomb_force
+      declared_role: directed_force
+      forbidden_readings: [annotation_leader]
+  visible_connectors:
+    - connector_id: panel_f.jig_holds_cantilever
+      from_object: panel_f.mechanical_jig
+      to_object: panel_f.cantilever
+      declared_role: mechanical_attachment
+      render_style: mechanical_structural
+    - connector_id: panel_f.source_drives_electrode
+      from_object: panel_f.voltage_source
+      to_object: panel_f.electrode
+      declared_role: electrical_bias_lead
+      render_style: electrical_bias_lead
+    - connector_id: panel_f.source_returns_to_ground
+      from_object: panel_f.voltage_source
+      to_object: panel_f.ground_reference
+      declared_role: grounded_source_return
+      render_style: electrical_ground_return
+    - connector_id: panel_f.force_acts_on_cantilever
+      from_object: panel_f.coulomb_force
+      to_object: panel_f.cantilever
+      declared_role: force_direction
+      render_style: force_directional
+  forbidden_connectors:
+    - from_object: panel_f.mechanical_jig
+      to_object: panel_f.cantilever
+      declared_role: electrical_contact
+    - from_object: panel_f.cantilever
+      to_object: panel_f.ground_reference
+      declared_role: ground_return
+  label_ownership:
+    - label_id: panel_f.air_gap_label
+      owner: panel_f.cantilever
+    - label_id: panel_f.applied_voltage_label
+      owner: panel_f.voltage_source
+  electrical_topology:
+    nodes:
+      - object_id: panel_f.mechanical_jig
+        declared_state: electrically_unmodeled
+      - object_id: panel_f.cantilever
+        declared_state: floating
+      - object_id: panel_f.electrode
+        declared_state: driven
+      - object_id: panel_f.voltage_source
+        declared_state: source
+      - object_id: panel_f.ground_reference
+        declared_state: ground_reference
+    connections:
+      - connection_id: panel_f.source_drives_electrode
+        from_object: panel_f.voltage_source
+        to_object: panel_f.electrode
+        declared_role: electrical_bias_lead
+      - connection_id: panel_f.source_returns_to_ground
+        from_object: panel_f.voltage_source
+        to_object: panel_f.ground_reference
+        declared_role: grounded_source_return
+publication_acceptance: not_claimed

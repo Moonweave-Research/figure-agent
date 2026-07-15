@@ -1,0 +1,8 @@
+{
+  "candidates": [],
+  "fixture": "comparable-v1",
+  "render_pdf": "build/free_composition_generated.pdf",
+  "schema": "figure-agent.label-path-proximity.v1",
+  "source": "spec.yaml:label_path_proximity_checks",
+  "total": 0
+}

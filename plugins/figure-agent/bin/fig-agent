@@ -340,6 +340,7 @@ def _context_pack(argv: list[str]) -> int:
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument("--layout-contract")
     parser.add_argument("--shape-profile")
+    parser.add_argument("--composition-profile")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
     pass_args = [name]
@@ -351,6 +352,8 @@ def _context_pack(argv: list[str]) -> int:
         pass_args.extend(["--layout-contract", args.layout_contract])
     if args.shape_profile is not None:
         pass_args.extend(["--shape-profile", args.shape_profile])
+    if args.composition_profile is not None:
+        pass_args.extend(["--composition-profile", args.composition_profile])
     return authoring_context_pack.main(
         pass_args,
         plugin_root=_paths().plugin_root,
@@ -372,6 +375,7 @@ def _authoring_packet(argv: list[str]) -> int:
     parser.add_argument("--prompt-out", required=True)
     parser.add_argument("--layout-contract")
     parser.add_argument("--shape-profile")
+    parser.add_argument("--composition-profile")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
@@ -388,6 +392,7 @@ def _authoring_packet(argv: list[str]) -> int:
             execution_cwd=args.execution_cwd,
             layout_contract=args.layout_contract,
             shape_profile=args.shape_profile,
+            composition_profile=args.composition_profile,
         )
         packet_path = authoring_execution_packet.resolve_attempt_artifact_path(
             paths.workspace_root,

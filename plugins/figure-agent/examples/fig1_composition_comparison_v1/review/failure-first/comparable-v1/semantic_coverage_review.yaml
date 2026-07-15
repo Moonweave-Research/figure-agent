@@ -1,0 +1,29 @@
+schema: figure-agent.authoring-semantic-coverage-review.v1
+reviewer: adversarial_code_review
+contract: semantic_contract.yaml
+scope: generated_source_first_pass
+arms:
+  free_composition:
+    status: pass
+    required_object_findings:
+      panel_e.ispd_probe:
+        status: present
+        evidence:
+          source: free_composition_generated.tex
+          lines: [131, 145]
+          observation: >-
+            Panel E contains a noncontact probe above the sample, a guide to the
+            sample, and an explicit noncontact surface-potential-decay label.
+  assisted_composition:
+    status: fail
+    required_object_findings:
+      panel_e.ispd_probe:
+        status: missing
+        evidence:
+          source: assisted_composition_generated.tex
+          lines: [152, 176]
+          observation: >-
+            Panel E contains only axes and a derived distribution curve; no
+            noncontact ISPD probe or probe-to-sample relation is rendered.
+comparison_eligibility: fail
+publication_acceptance: not_claimed

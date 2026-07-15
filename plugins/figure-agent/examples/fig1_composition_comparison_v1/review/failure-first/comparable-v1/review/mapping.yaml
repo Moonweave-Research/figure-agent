@@ -1,0 +1,13 @@
+schema: figure-agent.blind-review-mapping.v1
+surface: index.html
+mapping:
+  option-a: assisted_composition
+  option-b: free_composition
+assets:
+  option-a:
+    path: option-a.png
+    sha256: 6a3c572e857b87d35fac829eb95cb63de6d6677b8c4d7bb0c5501693476f4382
+  option-b:
+    path: option-b.png
+    sha256: e6ceacc211dc1c265b0cf913190870e2e9cd0f208e7491b2943d26d6bac75f16
+publication_acceptance: not_claimed

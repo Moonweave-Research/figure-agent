@@ -1,0 +1,6 @@
+schema: figure-agent.authoring-budget.v1
+attempts: 1
+feedback_rounds: 0
+manual_repairs: 0
+max_output_tokens: 12000
+publication_acceptance: not_claimed
