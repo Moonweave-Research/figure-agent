@@ -9,7 +9,16 @@ import authoring_repair_packet
 import critique_zoom_crops
 import post_repair_visual_review
 import pytest
+import yaml
+from inputs import parse_spec
 from PIL import Image
+from quality_manifest import (
+    compute_critique_input_hash,
+    critique_generator_version,
+    expected_critique_rubric_version,
+)
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _sha256(path: Path) -> str:
@@ -24,29 +33,42 @@ def _fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
     crops = build / "audit_crops"
     crops.mkdir(parents=True)
     critique = example / "critique.md"
-    critique.write_text("---\nschema: figure-agent.critique.v1.17\n---\n", encoding="utf-8")
     adjudication = example / "critique_adjudication.yaml"
-    adjudication.write_text(
-        "schema: figure-agent.critique-adjudication.v1\n"
-        "fixture: demo\n"
-        f"source_critique_hash: {_sha256(critique)}\n"
-        "decisions:\n"
-        "- finding_id: C001\n"
-        "  decision: apply\n"
-        "  reason: bounded repair\n"
-        "  patch_target: panel A\n"
-        "  evidence: critique C001\n",
+    reference = example / "reference" / "golden.png"
+    reference.parent.mkdir(parents=True)
+    reference.write_bytes(b"reference")
+    spec = example / "spec.yaml"
+    spec.write_text(
+        "name: demo\n"
+        "reference_image: reference/golden.png\n"
+        "panels: []\n"
+        "style_profile: polymer-default\n",
         encoding="utf-8",
     )
-    spec = example / "spec.yaml"
-    spec.write_text("name: demo\npanels: []\n", encoding="utf-8")
+    parsed_spec = parse_spec(spec.read_text(encoding="utf-8"))
+    critique_metadata = {
+        "fixture": "demo",
+        "critique_input_hash": compute_critique_input_hash(
+            example,
+            "demo",
+            parsed_spec,
+            style_lock_path=PLUGIN_ROOT / "styles" / "polymer-paper-preamble.sty",
+            base_dir=PLUGIN_ROOT,
+        ),
+        "generator_version": critique_generator_version(
+            PLUGIN_ROOT / "scripts" / "critique_brief.py"
+        ),
+        "rubric_version": expected_critique_rubric_version(example),
+    }
+    critique.write_text(
+        "---\n"
+        + yaml.safe_dump(critique_metadata, sort_keys=False)
+        + "---\n",
+        encoding="utf-8",
+    )
     report = attempt / "collisions.json"
     report.write_text('{"schema":"figure-agent.text-collisions.v1"}\n', encoding="utf-8")
     registry = attempt / "source_selectors.json"
-    registry.write_text(
-        '{"schema":"figure-agent.source-selector-registry.v1"}\n',
-        encoding="utf-8",
-    )
     adjudication.write_text(
         "schema: figure-agent.critique-adjudication.v1\n"
         "fixture: demo\n"
@@ -64,7 +86,13 @@ def _fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
         encoding="utf-8",
     )
     baseline_source = attempt / "baseline.tex"
-    baseline_source.write_text("\\node {baseline};\n", encoding="utf-8")
+    baseline_source.write_text(
+        "% repair:label:start\n"
+        "\\node {repeated dispersive trapping};\n"
+        "% repair:label:end\n"
+        "\\node {S60 -> S80};\n",
+        encoding="utf-8",
+    )
     before_render = example / "build" / "demo.png"
     before_render.parent.mkdir()
     before_render.write_bytes(b"before-render")
@@ -79,6 +107,14 @@ def _fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
                 "render_pdf_sha256": _sha256(before_pdf),
                 "render_path": "build/demo.png",
                 "render_sha256": _sha256(before_render),
+                "collisions": [
+                    {
+                        "id": "TC001",
+                        "texts": ["repeated", "trapping"],
+                        "source_mapping": None,
+                    }
+                ],
+                "total": 1,
             }
         ),
         encoding="utf-8",
@@ -91,15 +127,96 @@ def _fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
                 "schema": "figure-agent.audit-crop-manifest.v1",
                 "fixture": "demo",
                 "render_path": "build/demo.png",
+                "render_pdf": "build/demo.pdf",
                 "required_crop_ids": [],
                 "crops": [],
             }
         ),
         encoding="utf-8",
     )
+    semantic_contract = attempt / "semantic_contract.yaml"
+    semantic_contract.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.failure-first-semantic-contract.v1",
+                "required_objects": ["panel_a.label", "panel_a.axis"],
+                "protected_relations": ["label_remains_clear_of_axis"],
+                "semantic_legibility": {
+                    "object_roles": [
+                        {
+                            "object_id": "panel_a.label",
+                            "declared_role": "annotation_label",
+                            "forbidden_readings": [],
+                        },
+                        {
+                            "object_id": "panel_a.axis",
+                            "declared_role": "plot_axis",
+                            "forbidden_readings": [],
+                        },
+                    ],
+                    "visible_connectors": [],
+                    "forbidden_connectors": [],
+                    "label_ownership": [],
+                },
+                "publication_acceptance": "not_claimed",
+            }
+        ),
+        encoding="utf-8",
+    )
+    semantic_contract_record = {
+        "path": semantic_contract.relative_to(workspace).as_posix(),
+        "sha256": _sha256(semantic_contract),
+    }
+    registry.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.source-selector-registry.v1",
+                "source_path": baseline_source.relative_to(workspace).as_posix(),
+                "source_sha256": _sha256(baseline_source),
+                "semantic_contract": semantic_contract_record,
+                "selectors": [
+                    {
+                        "selector_id": "panel-a-label",
+                        "anchor_start": "% repair:label:start",
+                        "anchor_end": "% repair:label:end",
+                        "rendered_aliases": ["repeated", "trapping"],
+                        "repair_role": "movable",
+                        "repair_family": "label_reflow",
+                        "protected_invariants": ["S60 -> S80"],
+                        "semantic_object_refs": ["panel_a.axis", "panel_a.label"],
+                        "semantic_relation_refs": ["label_remains_clear_of_axis"],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
     target_contract = attempt / "repair_targets.json"
     target_contract.write_text(
-        '{"schema":"figure-agent.repair-target-contract.v1"}\n',
+        json.dumps(
+            {
+                "schema": "figure-agent.repair-target-contract.v1",
+                "source_path": baseline_source.relative_to(workspace).as_posix(),
+                "source_sha256": _sha256(baseline_source),
+                "targets": [
+                    {
+                        "finding": {
+                            "report_path": report.relative_to(workspace).as_posix(),
+                            "id": "TC001",
+                        },
+                        "attribution": {"state": "exact"},
+                        "selector": {
+                            "kind": "semantic_anchor",
+                            "selector_id": "panel-a-label",
+                            "anchor_start": "% repair:label:start",
+                            "anchor_end": "% repair:label:end",
+                        },
+                        "repair_family": "label_reflow",
+                        "protected_invariants": ["S60 -> S80"],
+                    }
+                ],
+            }
+        ),
         encoding="utf-8",
     )
     source = attempt / "repaired_generated.tex"
@@ -186,10 +303,33 @@ def _fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
         ),
         encoding="utf-8",
     )
-    binding = attempt / "critique_repair_binding.json"
-    binding.write_text(
+    semantic_attribution = attempt / "semantic_attribution.json"
+    semantic_attribution.write_text(
         json.dumps(
             {
+                "schema": "figure-agent.semantic-finding-attribution.v1",
+                "fixture": "demo",
+                "machine_finding": {
+                    "report_path": report.relative_to(workspace).as_posix(),
+                    "report_sha256": _sha256(report),
+                    "finding_id": "TC001",
+                },
+                "semantic_contract": semantic_contract_record,
+                "source": {
+                    "path": baseline_source.relative_to(workspace).as_posix(),
+                    "sha256": _sha256(baseline_source),
+                },
+                "selector_id": "panel-a-label",
+                "semantic_object_refs": ["panel_a.axis", "panel_a.label"],
+                "semantic_relation_refs": ["label_remains_clear_of_axis"],
+                "attribution_state": "exact",
+                "publication_acceptance": "not_claimed",
+            }
+        ),
+        encoding="utf-8",
+    )
+    binding = attempt / "critique_repair_binding.json"
+    binding_payload = {
                 "schema": "figure-agent.adjudicated-repair-binding.v1",
                 "fixture": "demo",
                 "critique": {
@@ -236,19 +376,41 @@ def _fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
                     "path": target_contract.relative_to(workspace).as_posix(),
                     "sha256": _sha256(target_contract),
                 },
+                "semantic_attribution": {
+                    "path": semantic_attribution.relative_to(workspace).as_posix(),
+                    "sha256": _sha256(semantic_attribution),
+                },
                 "publication_acceptance": "not_claimed",
-            }
-        ),
+    }
+    binding.write_text(
+        json.dumps(binding_payload),
         encoding="utf-8",
     )
     packet = attempt / "repair_packet.json"
     packet_payload = {
-        "schema": "figure-agent.repair-execution-packet.v3",
+        "schema": authoring_repair_packet.SCHEMA,
         "fixture": "demo",
-        "target_contract": {
-            "path": target_contract.relative_to(workspace).as_posix(),
-            "sha256": _sha256(target_contract),
+        "source": binding_payload["source"],
+        "target_contract": binding_payload["target_contract"],
+        "adjudicated_repair_binding": {
+            "path": binding.relative_to(workspace).as_posix(),
+            "sha256": _sha256(binding),
         },
+        "authority_contract": {
+            "schema": authoring_repair_packet.AUTHORITY_CONTRACT_SCHEMA,
+            "mode": authoring_repair_packet.BOUND_AUTHORITY_MODE,
+            "required_record": "adjudicated_repair_binding",
+        },
+        "editable_target": {
+            "finding_id": "TC001",
+            "report_path": report.relative_to(workspace).as_posix(),
+        },
+        "finding_reports": [
+            {
+                "path": report.relative_to(workspace).as_posix(),
+                "sha256": _sha256(report),
+            }
+        ],
         "output_path": source.relative_to(workspace).as_posix(),
         "publication_acceptance": "not_claimed",
     }
@@ -334,6 +496,59 @@ def _request(workspace: Path, paths: dict[str, Path]) -> dict[str, object]:
     )
 
 
+def _refresh_critique_authority(
+    workspace: Path, paths: dict[str, Path]
+) -> None:
+    example = workspace / "examples" / "demo"
+    spec_path = example / "spec.yaml"
+    parsed_spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+    critique = paths["binding_critique"]
+    critique.write_text(
+        "---\n"
+        + yaml.safe_dump(
+            {
+                "fixture": "demo",
+                "critique_input_hash": compute_critique_input_hash(
+                    example,
+                    "demo",
+                    parsed_spec,
+                    style_lock_path=(
+                        PLUGIN_ROOT / "styles" / "polymer-paper-preamble.sty"
+                    ),
+                    base_dir=PLUGIN_ROOT,
+                ),
+                "generator_version": critique_generator_version(
+                    PLUGIN_ROOT / "scripts" / "critique_brief.py"
+                ),
+                "rubric_version": expected_critique_rubric_version(example),
+            },
+            sort_keys=False,
+        )
+        + "---\n",
+        encoding="utf-8",
+    )
+    adjudication_path = example / "critique_adjudication.yaml"
+    adjudication = yaml.safe_load(adjudication_path.read_text(encoding="utf-8"))
+    adjudication["source_critique_hash"] = _sha256(critique)
+    adjudication_path.write_text(
+        yaml.safe_dump(adjudication, sort_keys=False),
+        encoding="utf-8",
+    )
+    binding = json.loads(paths["binding"].read_text(encoding="utf-8"))
+    binding["critique"]["sha256"] = _sha256(critique)
+    binding["adjudication"]["sha256"] = _sha256(adjudication_path)
+    paths["binding"].write_text(json.dumps(binding), encoding="utf-8")
+    packet = json.loads(paths["packet"].read_text(encoding="utf-8"))
+    packet["adjudicated_repair_binding"]["sha256"] = _sha256(paths["binding"])
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        packet
+    )
+    paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
+    receipt = json.loads(paths["receipt"].read_text(encoding="utf-8"))
+    receipt["packet_sha256"] = packet["packet_sha256"]
+    paths["receipt"].write_text(json.dumps(receipt), encoding="utf-8")
+
+
 def _response(
     request: dict[str, object], workspace: Path
 ) -> dict[str, object]:
@@ -397,6 +612,132 @@ def test_builds_hash_bound_review_request(tmp_path: Path) -> None:
         "print_scale",
     }
     assert request["publication_acceptance"] == "not_claimed"
+
+
+def test_review_request_rejects_unbound_current_v4_packet(tmp_path: Path) -> None:
+    workspace, paths = _fixture(tmp_path)
+    packet = json.loads(paths["packet"].read_text(encoding="utf-8"))
+    packet.pop("adjudicated_repair_binding")
+    packet["authority_contract"] = {
+        "schema": authoring_repair_packet.AUTHORITY_CONTRACT_SCHEMA,
+        "mode": authoring_repair_packet.LEGACY_AUTHORITY_MODE,
+        "required_record": None,
+    }
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        packet
+    )
+    paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
+
+    with pytest.raises(
+        post_repair_visual_review.PostRepairVisualReviewError,
+        match="requires adjudicated binding authority",
+    ):
+        _request(workspace, paths)
+
+
+def test_review_request_rejects_bound_v4_packet_with_binding_hash_drift(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    packet = json.loads(paths["packet"].read_text(encoding="utf-8"))
+    packet["adjudicated_repair_binding"]["sha256"] = "sha256:" + "f" * 64
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        packet
+    )
+    paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
+
+    with pytest.raises(
+        post_repair_visual_review.PostRepairVisualReviewError,
+        match="adjudicated binding hash drift",
+    ):
+        _request(workspace, paths)
+
+
+def test_review_request_rejects_rehashed_noncanonical_binding_substitution(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    alternate_binding = paths["binding"].with_name("alternate_binding.json")
+    alternate_binding.write_bytes(paths["binding"].read_bytes())
+    packet = json.loads(paths["packet"].read_text(encoding="utf-8"))
+    packet["adjudicated_repair_binding"] = {
+        "path": alternate_binding.relative_to(workspace).as_posix(),
+        "sha256": _sha256(alternate_binding),
+    }
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        packet
+    )
+    paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
+
+    with pytest.raises(
+        post_repair_visual_review.PostRepairVisualReviewError,
+        match="adjudicated binding must be canonical and target-adjacent",
+    ):
+        _request(workspace, paths)
+
+
+def test_review_finalize_rejects_fully_rehashed_binding_substitution(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    request = _request(workspace, paths)
+    alternate_binding = paths["binding"].with_name("alternate_binding.json")
+    alternate_binding.write_bytes(paths["binding"].read_bytes())
+    packet = json.loads(paths["packet"].read_text(encoding="utf-8"))
+    packet["adjudicated_repair_binding"] = {
+        "path": alternate_binding.relative_to(workspace).as_posix(),
+        "sha256": _sha256(alternate_binding),
+    }
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        packet
+    )
+    paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
+    receipt = json.loads(paths["receipt"].read_text(encoding="utf-8"))
+    receipt["packet_sha256"] = packet["packet_sha256"]
+    paths["receipt"].write_text(json.dumps(receipt), encoding="utf-8")
+    request["binding"] = {
+        "path": alternate_binding.relative_to(workspace).as_posix(),
+        "sha256": _sha256(alternate_binding),
+    }
+    request["repair_packet"] = {
+        "path": paths["packet"].relative_to(workspace).as_posix(),
+        "sha256": _sha256(paths["packet"]),
+        "packet_sha256": packet["packet_sha256"],
+    }
+    request["materialization_receipt"]["sha256"] = _sha256(paths["receipt"])
+    request["request_sha256"] = post_repair_visual_review._canonical_hash(
+        request,
+        omitted="request_sha256",
+    )
+
+    with pytest.raises(
+        post_repair_visual_review.PostRepairVisualReviewError,
+        match="adjudicated binding must be canonical and target-adjacent",
+    ):
+        post_repair_visual_review.finalize_review_payload(
+            request,
+            _response(request, workspace),
+            workspace_root=workspace,
+        )
+
+
+def test_review_request_rejects_stored_v3_without_explicit_legacy_boundary(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    packet = json.loads(paths["packet"].read_text(encoding="utf-8"))
+    packet["schema"] = authoring_repair_packet.LEGACY_SCHEMA
+    packet.pop("authority_contract")
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        packet
+    )
+    paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
+
+    with pytest.raises(
+        post_repair_visual_review.PostRepairVisualReviewError,
+        match="repair packet is invalid",
+    ):
+        _request(workspace, paths)
 
 
 def test_visual_review_advances_only_after_resolved_no_regression(tmp_path: Path) -> None:
@@ -527,7 +868,7 @@ def test_review_request_rejects_target_contract_lineage_drift(tmp_path: Path) ->
 
     with pytest.raises(
         post_repair_visual_review.PostRepairVisualReviewError,
-        match="target contract lineage",
+        match="authority substitution",
     ):
         _request(workspace, paths)
 
@@ -761,6 +1102,7 @@ def test_review_request_accepts_unmodified_real_crop_producer_manifest(
         paths["render"],
         panel_crop_paths=(),
     )
+    _refresh_critique_authority(workspace, paths)
     manifest_path = example / "build" / "audit_crops" / "manifest.json"
 
     request = post_repair_visual_review.build_review_request(

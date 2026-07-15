@@ -246,6 +246,35 @@ def _validate_binding_freshness(
     return paths
 
 
+def _validate_current_bound_repair_packet(
+    packet: dict[str, Any],
+    *,
+    binding_path: Path,
+    workspace_root: Path,
+) -> None:
+    if (
+        packet.get("schema") != authoring_repair_packet.SCHEMA
+        or packet.get("publication_acceptance") != "not_claimed"
+        or packet.get("packet_sha256")
+        != authoring_repair_packet.canonical_packet_sha256(packet)
+    ):
+        raise PostRepairVisualReviewError("repair packet is invalid")
+    try:
+        authoring_repair_packet.validate_bound_packet_authority(
+            packet,
+            workspace_root,
+        )
+    except authoring_repair_packet.RepairExecutionPacketError as exc:
+        raise PostRepairVisualReviewError(str(exc)) from exc
+    if packet.get("adjudicated_repair_binding") != _artifact(
+        binding_path,
+        root=workspace_root,
+    ):
+        raise PostRepairVisualReviewError(
+            "repair packet adjudicated binding lineage invalid"
+        )
+
+
 def _valid_geometry(item: dict[str, Any]) -> dict[str, list[int]] | None:
     bbox = item.get("bbox_px")
     if (
@@ -504,13 +533,11 @@ def build_review_request(
         binding,
         workspace_root=workspace_root,
     )
-    if (
-        packet.get("schema") != "figure-agent.repair-execution-packet.v3"
-        or packet.get("publication_acceptance") != "not_claimed"
-        or packet.get("packet_sha256")
-        != authoring_repair_packet.canonical_packet_sha256(packet)
-    ):
-        raise PostRepairVisualReviewError("repair packet is invalid")
+    _validate_current_bound_repair_packet(
+        packet,
+        binding_path=binding_path,
+        workspace_root=workspace_root,
+    )
     fixture = binding.get("fixture")
     if (
         not isinstance(fixture, str)
@@ -636,6 +663,11 @@ def _validate_request_freshness(
         label="review repair packet",
     )
     packet = _load_json(packet_path, label="review repair packet")
+    _validate_current_bound_repair_packet(
+        packet,
+        binding_path=binding_path,
+        workspace_root=workspace_root,
+    )
     receipt_record = request["materialization_receipt"]
     receipt_path = _workspace_file(
         workspace_root,
@@ -646,8 +678,6 @@ def _validate_request_freshness(
     fixture = request.get("fixture")
     if (
         not isinstance(fixture, str)
-        or packet.get("schema") != "figure-agent.repair-execution-packet.v3"
-        or packet.get("publication_acceptance") != "not_claimed"
         or receipt.get("schema")
         != "figure-agent.repair-materialization-receipt.v2"
         or receipt.get("decision")

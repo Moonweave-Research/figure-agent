@@ -1006,7 +1006,6 @@ def test_bridge_to_attempt_local_post_review_preserves_canonical_baseline(
         workspace_root=workspace,
     )
     repaired_source = attempt / "repaired_generated.tex"
-    repaired_source.write_text("\\node {repaired};\n", encoding="utf-8")
     repaired_render = attempt / "build" / "repaired_generated.png"
     repaired_render.parent.mkdir()
     Image.new("RGB", (800, 600), "white").save(repaired_render)
@@ -1050,15 +1049,19 @@ def test_bridge_to_attempt_local_post_review_preserves_canonical_baseline(
         "examples/demo/build/audit_crops/manifest.json"
     )
     packet_path = attempt / "repair_packet.json"
-    packet = {
-        "schema": "figure-agent.repair-execution-packet.v3",
-        "fixture": "demo",
-        "target_contract": binding["target_contract"],
-        "output_path": repaired_source.relative_to(workspace).as_posix(),
-        "publication_acceptance": "not_claimed",
-    }
-    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(packet)
+    packet, _prompt = (
+        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+            "demo",
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            binding_path=(
+                attempt / "critique_repair_binding.json"
+            ).relative_to(workspace).as_posix(),
+            output_path=repaired_source.relative_to(workspace).as_posix(),
+        )
+    )
     packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    repaired_source.write_text("\\node {repaired};\n", encoding="utf-8")
     receipt_path = attempt / "materialization_receipt.json"
     receipt_path.write_text(
         json.dumps(

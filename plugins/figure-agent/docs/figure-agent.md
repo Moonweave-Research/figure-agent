@@ -288,8 +288,9 @@ authentication; adapters must validate each receipt against recorded identity.
 
 One exact adjudicated binding now crosses packet compilation, human-authorized
 materialization, rollback, and finalization. New packets use v4 authority;
-stored v3 packets require explicit compatibility. Hash/parse share one byte
-snapshot, and the live graph is revalidated inside both transaction locks.
+stored v3 packets require explicit compatibility and cannot enter post-repair
+review directly. Request creation and finalization revalidate the current bound
+v4 live graph; hash/parse share one byte snapshot inside transaction locks.
 
 The binding now hash-binds declared semantic object and relation references to
 the same editable selector as the repair target. Missing semantic authority,
