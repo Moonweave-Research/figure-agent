@@ -184,11 +184,11 @@ routes here.
 
 - [x] Add bounded failing-first contract tests for adjudicated repair binding and
   hash-bound post-repair visual-review evidence.
-- [ ] Define attempt identity, parent-child lineage, freshness, actor boundary,
+- [x] Define attempt identity, parent-child lineage, freshness, actor boundary,
   and terminal-state fields without adding a new renderer or workflow shell.
 - [x] Reject stale adjudication, ambiguous attribution, and missing repair
   evidence at the supported critique-to-target bridge.
-- [ ] Express and prove the complete lifecycle, including unadjudicated and
+- [x] Express and prove the complete lifecycle, including unadjudicated and
   unbound starts, through one shared attempt-state contract.
 
 **Exit:** tests express the full state transition from authored render through
@@ -283,22 +283,32 @@ authoring-repair materialization/finalization, provenance, and human review
 artifacts.
 
 The current code is a bounded R1-R3 foundation, not a completed closed loop.
-It can create an exact adjudicated-repair binding for one supported attribution
-path and can prepare and finalize hash-bound post-repair visual-review evidence.
-Those internal compatibility commands do not yet provide full attempt identity,
-parent-child lineage, actor/state transitions, canonical orchestration of the
-external host review, canonical `run` wiring, or cross-family proof.
+It now has one shared structural attempt-state contract with deterministic
+attempt identity, append-only parent and previous-state lineage, transitive live
+artifact freshness, exact phase evidence roles, actor identity and role
+separation, legal transitions, and terminal development-baseline outcomes.
+Evidence-role presence is not domain validation or actor authentication: R2 and
+R3 adapters must still validate each binding, packet, materialization, host
+review, and human decision receipt against the identity recorded in state.
 
-The next ordered work is to complete the shared attempt identity and lineage
-contract, then carry the existing binding and visual-review surfaces through one
-repair transaction and the canonical run path. Do not reinterpret the checked
-foundation items above as satisfying an R1, R2, or R3 exit condition.
+The code can also create an exact adjudicated-repair binding for one supported
+attribution path and prepare and finalize hash-bound post-repair visual-review
+evidence. Those internal compatibility commands are not yet one binding-led
+repair transaction, canonical external-host-review orchestration, canonical
+`run` wiring, or cross-family proof.
+
+The next ordered work is to make the existing adjudicated binding the sole
+authority for one repair packet, then carry that binding and the visual-review
+surfaces through one transaction and the canonical run path. Do not reinterpret
+the checked foundation items above as satisfying an unchecked R2 or R3 exit
+condition.
 
 The closed-loop slices bind their handoffs through these narrow evidence
 contracts rather than another workflow shell:
 
 - `figure-agent.repair-materialization-preview.v1`;
 - `figure-agent.repair-materialization-receipt.v2`;
+- `figure-agent.closed-loop-attempt-state.v1`;
 - `figure-agent.adjudicated-repair-binding.v1`;
 - `figure-agent.post-repair-visual-review-request.v1`;
 - `figure-agent.host-review-execution-receipt.v1`;
