@@ -284,7 +284,7 @@ def test_current_readme_documents_release_boundaries() -> None:
     for required in [
         "single next-action summary",
         "Bounded safe runner",
-        "Loop-centered improvement orchestrator",
+        "Loop-centered compatibility wrapper",
         "Operator queue",
         "multi-fixture",
         "journal style-pack catalog",
@@ -626,37 +626,40 @@ def test_completed_issue_headers_do_not_claim_branch_or_worktree_only() -> None:
     assert stale_headers == []
 
 
-def test_readme_documents_status_and_driver_first_workflow() -> None:
+def test_readme_documents_status_and_run_first_workflow() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
 
     assert "/fig_drive" in readme
     assert "/fig_status fig3_trap_concept" in readme
     assert "canonical first check" in readme
-    assert "Export, release, or\npolish only when" in readme
+    assert "Run `/fig_status <name>` first, then use\n`/fig_run" in readme
+    assert "They do not define separate canonical\nworkflows" in readme
 
 
-def test_readme_core_commands_cover_command_docs() -> None:
+def test_readme_command_surface_covers_command_docs() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
-    core_commands_section = readme.partition("## Core commands")[2].partition(
+    command_surface_section = readme.partition("## Command surface")[2].partition(
         "## A typical figure"
     )[0]
 
     missing = []
     for command_doc in sorted((REPO_ROOT / "commands").glob("fig_*.md")):
         command = f"/{command_doc.stem}"
-        if command not in core_commands_section:
+        if command not in command_surface_section:
             missing.append(command)
 
     assert missing == []
 
 
-def test_skill_quick_command_list_covers_readme_core_commands() -> None:
+def test_skill_quick_command_list_covers_readme_command_surface() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
     skill = (REPO_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text()
-    core_commands_section = readme.partition("## Core commands")[2].partition(
+    command_surface_section = readme.partition("## Command surface")[2].partition(
         "## A typical figure"
     )[0]
-    readme_commands = set(re.findall(r"^/(fig_[a-z0-9_]+)", core_commands_section, re.M))
+    readme_commands = set(
+        re.findall(r"^/(fig_[a-z0-9_]+)", command_surface_section, re.M)
+    )
     skill_commands = set(re.findall(r"^/(fig_[a-z0-9_]+)", skill, re.M))
     missing = sorted(readme_commands - skill_commands)
 

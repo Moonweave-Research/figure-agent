@@ -377,8 +377,6 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--max-loops", type=int, default=DEFAULT_MAX_LOOPS)
     parser.add_argument("--max-steps-per-loop", type=int, default=fig_run.DEFAULT_MAX_STEPS)
-    parser.add_argument("--aggressive-candidates", action="store_true")
-    parser.add_argument("--candidate-iterations", type=int, default=1)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("json",), default="json")
     args = parser.parse_args(argv)
@@ -395,8 +393,6 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             max_loops=args.max_loops,
             max_steps_per_loop=args.max_steps_per_loop,
             repo_root=resolved_repo_root,
-            aggressive_candidates=args.aggressive_candidates,
-            candidate_iterations=args.candidate_iterations,
         )
     except ValueError as exc:
         print(f"fig_improve.py: {exc}", file=sys.stderr)

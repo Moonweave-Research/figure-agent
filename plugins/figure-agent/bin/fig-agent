@@ -36,6 +36,128 @@ for script_dir in reversed(SCRIPT_IMPORT_DIRS):
 import fixture_identity  # noqa: E402
 import runtime_paths  # noqa: E402
 
+CORE_COMMANDS = frozenset(
+    {
+        "adjudicate",
+        "attest",
+        "authoring-input-audit",
+        "authoring-packet",
+        "authoring-preflight",
+        "authoring-preflight-triplet",
+        "authoring-receipt",
+        "authoring-repair-materialize",
+        "authoring-repair-packet",
+        "closeout",
+        "compile",
+        "context-pack",
+        "critique-scaffold",
+        "doctor",
+        "export",
+        "failure-ablation",
+        "failure-corpus",
+        "quality-map",
+        "run",
+        "status",
+        "text-finding-attribution",
+    }
+)
+RETIRED_DEFAULT_COMMANDS = frozenset(
+    {
+        "compose-accept",
+        "compose-apply",
+        "compose-apply-ready",
+        "compose-capture",
+        "compose-generalization-report",
+        "compose-generate-families",
+        "compose-post-apply-verify",
+        "compose-rank",
+        "compose-render",
+        "compose-review",
+        "compose-review-synthesis",
+        "compose-visual-clash-triage",
+        "quality-search",
+        "rank-candidates",
+    }
+)
+INTERNAL_COMPATIBILITY_COMMANDS = frozenset(
+    {
+        "accept-candidate",
+        "analyze-composition",
+        "analyze-panel",
+        "apply-candidate",
+        "apply-candidate-ready",
+        "apply-plan",
+        "authoring-orro-plan",
+        "benchmark-compare",
+        "benchmark-detectors",
+        "benchmark-list",
+        "benchmark-run",
+        "bounded-tikz-apply",
+        "bounded-tikz-candidate",
+        "bounded-tikz-refinement",
+        "candidates",
+        "closeout-accept",
+        "closeout-ready",
+        "compare-candidate",
+        "compare-fixtures",
+        "design-dogfood",
+        "drive",
+        "e2e-smoke",
+        "evidence-sync",
+        "finding-attribution",
+        "fork-fixture",
+        "helper",
+        "improve",
+        "intent",
+        "lint-composition",
+        "loop",
+        "loop-metrics",
+        "memory-index",
+        "memory-log",
+        "next",
+        "plan-check",
+        "promotion-queue",
+        "propose",
+        "quality-next-experiment",
+        "queue",
+        "queue-run",
+        "render-candidates",
+        "review-candidate",
+        "text-boundary",
+        "triage",
+        "verify-plan",
+        "visual-metrics",
+    }
+)
+ALL_COMMANDS = (
+    CORE_COMMANDS | INTERNAL_COMPATIBILITY_COMMANDS | RETIRED_DEFAULT_COMMANDS
+)
+
+
+def _command_surface() -> dict[str, object]:
+    by_disposition = {
+        "core": sorted(CORE_COMMANDS),
+        "internal_compatibility": sorted(INTERNAL_COMPATIBILITY_COMMANDS),
+        "retired_default": sorted(RETIRED_DEFAULT_COMMANDS),
+    }
+    return {
+        "canonical_route": ["status", "run"],
+        "bounded_repair_entry_route": [
+            "authoring-repair-packet",
+            "authoring-repair-materialize",
+        ],
+        "bounded_repair_transaction_state": "incomplete",
+        "commands_by_disposition": by_disposition,
+        "counts": {
+            **{key: len(value) for key, value in by_disposition.items()},
+            "total": sum(len(value) for value in by_disposition.values()),
+        },
+        "compatibility_contract": (
+            "internal and retired-default commands remain callable until their "
+            "CLI, import, fixture, receipt, and release-gate dependencies are migrated"
+        ),
+    }
+
 
 def _missing_project_python_modules() -> list[str]:
     missing = []
@@ -121,6 +243,7 @@ def _doctor(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="fig-agent doctor")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument("--commands", action="store_true")
     args = parser.parse_args(argv)
     paths = _paths()
     deps = _dependency_diagnostics()
@@ -130,6 +253,8 @@ def _doctor(argv: list[str]) -> int:
         "workspace": runtime_paths.workspace_diagnostics_for_cli(paths),
         "dependencies": deps,
     }
+    if args.commands:
+        payload["command_surface"] = _command_surface()
     ok = (
         payload["bundle"]["state"] == "ok"
         and payload["workspace"]["state"] == "ok"
@@ -1913,11 +2038,15 @@ def main(argv: list[str] | None = None) -> int:
     args = list(argv if argv is not None else sys.argv[1:])
     if not args:
         print(
-            "usage: fig-agent <doctor|status|compile|export|adjudicate|loop|closeout|helper> ...",
+            "usage: fig-agent "
+            "<doctor|status|context-pack|compile|run|export|adjudicate|closeout> ...",
             file=sys.stderr,
         )
         return 2
     command, rest = args[0], args[1:]
+    if command not in ALL_COMMANDS:
+        print(f"fig-agent: unknown command {command!r}", file=sys.stderr)
+        return 2
     if command == "doctor":
         return _doctor(rest)
     if command == "status":

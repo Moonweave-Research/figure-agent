@@ -668,49 +668,6 @@ def test_aggressive_candidates_run_on_basin_complete_boundary(
     assert payload["aggressive_candidate_run"]["selected_candidate_id"] == "QS003"
 
 
-def test_main_accepts_aggressive_candidates_flag(
-    tmp_path: Path, monkeypatch: Any, capsys: Any
-) -> None:
-    run = _run_payload(
-        final_action=fig_driver.ACTION_HUMAN_GATE_STOP,
-        final_stop_reason=fig_run.STOP_NOT_EXECUTABLE,
-    )
-    _install_runs(monkeypatch, [run])
-
-    def _fake_candidate_runner(
-        name: str,
-        *,
-        goal: str,
-        max_iterations: int,
-        repo_root: Path,
-    ) -> dict[str, Any]:
-        return {
-            "status": "dry_run_complete",
-            "mode": "execute_dry_witness",
-            "run_dir": ".scratch/quality-search-runs/demo-run",
-            "safety": {"source_mutation": "forbidden_in_dry_executor"},
-            "decision": {"selected_candidate_id": "QS002"},
-        }
-
-    monkeypatch.setattr(fig_improve, "_run_aggressive_candidate_search", _fake_candidate_runner)
-
-    result = fig_improve.main(
-        [
-            "demo",
-            "--goal",
-            "improve",
-            "--aggressive-candidates",
-            "--candidate-iterations",
-            "3",
-        ],
-        repo_root=tmp_path,
-    )
-
-    assert result == 0
-    payload = json.loads(capsys.readouterr().out)
-    assert payload["aggressive_candidate_run"]["selected_candidate_id"] == "QS002"
-
-
 def test_main_rejects_invalid_max_loops(
     tmp_path: Path, capsys: Any
 ) -> None:

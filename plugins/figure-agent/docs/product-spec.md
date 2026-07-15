@@ -534,7 +534,7 @@ development in the active plan.
 ### 15.1 Constraint diet
 
 The repository is substantially broader than the earned product surface. As of
-2026-07-15 it contains 233 Python scripts, 67 top-level CLI dispatches, and 599
+2026-07-15 it contains 233 Python scripts, 81 callable top-level CLI names, and 599
 Markdown documents. Code volume and command availability are not capabilities.
 Until the two-family ablation proves otherwise, Figure Agent applies the
 following diet.

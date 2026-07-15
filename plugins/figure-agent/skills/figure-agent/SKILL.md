@@ -98,12 +98,10 @@ stop, then rerun live `/fig_status` or `/fig_drive` before using
 
 If the user asks to "use figure-agent to improve this", "loop 10 times", or
 "keep reviewing and polishing until no major issues remain" for one fixture,
-prefer `/fig_improve <name> --goal "<goal>" --execute --max-loops N`. It wraps
-`/fig_run` as a loop-centered orchestrator, then stops at host critique, human,
-patch, SVG polish, release, or optional-improvement boundaries. `/fig_improve`
-does not author critiques, patch source, edit SVG, force golden, or set
-accepted state. After the required actor acts, rerun `/fig_improve`; do not
-pretend the first call can cross host/human/release boundaries by itself.
+use `/fig_status` and then rerun the canonical bounded `/fig_run` after each
+host, human, or repair boundary. `/fig_improve` remains a compatibility wrapper
+over `/fig_run`; it is not a separate default workflow and does not reactivate
+autonomous quality search.
 
 If the user asks to proceed autonomously across multiple fixtures, start with
 the queue:
@@ -190,8 +188,7 @@ polish backport, or actions the current mode forbids.
                          and writes non-authoritative .scratch/fig-run-runs/
                          evidence; no resume/replay command exists
 /fig_improve <name> --goal "<goal>" --execute --max-loops N
-                         loop-centered one-fixture orchestrator over /fig_run;
-                         stops at host/human/patch/SVG/release/optional gates
+                         compatibility wrapper over /fig_run; not the default route
 /fig_queue --mode <mode> --goal "<goal>"
                          read-only multi-fixture driver queue with actor/action
                          filters and optional command plan

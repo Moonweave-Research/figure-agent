@@ -305,6 +305,13 @@ not add another generator, renderer, candidate family, or workflow shell.
   requirements, complete per-arm QA receipts, and independent cold-run receipts.
   It may not prescribe coordinates, panel rectangles, primitive geometry,
   palette choices, or a fixed reading path.
+  The first Q5 slice classifies all 81 callable CLI names behind
+  `fig-agent doctor --commands --json`, makes `status -> run` the canonical
+  public route, and removes autonomous quality-search activation from the
+  `improve` compatibility adapter. The bounded-repair transaction remains open:
+  packet/materialization, named human authorization, rollback, and post-render
+  proof are still split across three legacy paths and must be consolidated
+  before Q5 can close.
 
 Q0–Q4 are sequential. Q5 is an architecture gate and may proceed without
 altering the figure while Q4 awaits human evidence. After Q4, Q5, and the Slice
