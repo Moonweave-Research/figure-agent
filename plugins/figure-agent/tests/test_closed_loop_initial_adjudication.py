@@ -429,3 +429,32 @@ def test_current_response_drift_fails_closed_before_adjudication(tmp_path: Path)
             execute=True,
             workspace_root=workspace,
         )
+
+
+def test_decision_replacement_before_publication_fails_without_handoff_or_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, state_path = _setup(tmp_path)
+    decision = _decision(workspace, state_path)
+    original_assert = adjudication._assert_snapshot_still_current  # noqa: SLF001
+
+    def replace_then_assert(snapshot: object, *, root: Path) -> None:
+        original_bytes = decision.read_bytes()
+        decision.unlink()
+        decision.write_bytes(original_bytes)
+        original_assert(snapshot, root=root)
+
+    monkeypatch.setattr(adjudication, "_assert_snapshot_still_current", replace_then_assert)
+
+    with pytest.raises(adjudication.ClosedLoopInitialAdjudicationError, match="decision_drift"):
+        adjudication.run_initial_adjudication(
+            FIXTURE,
+            state_path=state_path,
+            decision_path=decision,
+            execute=True,
+            workspace_root=workspace,
+        )
+
+    assert not (decision.parent / adjudication.DECISION_SNAPSHOT_FILE).exists()
+    assert not (decision.parent / adjudication.HANDOFF_FILE).exists()
+    assert not (state_path.parent / f"state-{3:03d}-adjudicated_unbound.json").exists()

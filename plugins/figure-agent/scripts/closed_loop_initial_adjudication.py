@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import stat
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,7 @@ HANDOFF_SCHEMA = "figure-agent.initial-attribution-handoff.v1"
 ACTION = "closed_loop_initial_adjudication"
 DECISION_DIRECTORY = "initial-adjudication"
 DECISION_FILE = "decision.json"
+DECISION_SNAPSHOT_FILE = "decision.snapshot.json"
 HANDOFF_FILE = "attribution-handoff.json"
 PUBLICATION_ACCEPTANCE = "not_claimed"
 _RESPONSE_ROLES = (
@@ -52,6 +54,18 @@ _DECISION_KEYS = {
 
 class ClosedLoopInitialAdjudicationError(ValueError):
     """Raised when a human decision cannot safely advance the current attempt."""
+
+
+@dataclass(frozen=True)
+class _DecisionSnapshot:
+    path: Path
+    payload: dict[str, Any]
+    content: bytes
+    fingerprint: tuple[int, int, int, int, int]
+
+    @property
+    def sha256(self) -> str:
+        return _sha256_bytes(self.content)
 
 
 def _sha256_bytes(value: bytes) -> str:
@@ -110,6 +124,67 @@ def _load_json(path: Path, *, root: Path, label: str) -> tuple[dict[str, Any], b
     if not isinstance(payload, dict):
         raise ClosedLoopInitialAdjudicationError(f"{label}_invalid")
     return payload, content
+
+
+def _snapshot_decision(path: Path, *, root: Path) -> _DecisionSnapshot:
+    _regular_file(path, root=root, label="initial_adjudication_decision")
+    try:
+        before = path.stat()
+        content = path.read_bytes()
+        after = path.stat()
+        payload = json.loads(content.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ClosedLoopInitialAdjudicationError("initial_adjudication_decision_invalid") from exc
+    fingerprint = (
+        after.st_dev,
+        after.st_ino,
+        after.st_size,
+        after.st_mtime_ns,
+        after.st_ctime_ns,
+    )
+    if (
+        before.st_dev,
+        before.st_ino,
+        before.st_size,
+        before.st_mtime_ns,
+        before.st_ctime_ns,
+    ) != fingerprint:
+        raise ClosedLoopInitialAdjudicationError(
+            "initial_adjudication_decision_changed_during_snapshot"
+        )
+    if not isinstance(payload, dict):
+        raise ClosedLoopInitialAdjudicationError("initial_adjudication_decision_invalid")
+    return _DecisionSnapshot(path=path, payload=payload, content=content, fingerprint=fingerprint)
+
+
+def _assert_snapshot_still_current(snapshot: _DecisionSnapshot, *, root: Path) -> None:
+    _regular_file(snapshot.path, root=root, label="initial_adjudication_decision")
+    try:
+        before = snapshot.path.stat()
+        content = snapshot.path.read_bytes()
+        after = snapshot.path.stat()
+    except OSError as exc:
+        raise ClosedLoopInitialAdjudicationError("initial_adjudication_decision_drift") from exc
+    fingerprint = (
+        after.st_dev,
+        after.st_ino,
+        after.st_size,
+        after.st_mtime_ns,
+        after.st_ctime_ns,
+    )
+    if (
+        (
+            before.st_dev,
+            before.st_ino,
+            before.st_size,
+            before.st_mtime_ns,
+            before.st_ctime_ns,
+        )
+        != fingerprint
+        or fingerprint != snapshot.fingerprint
+        or content != snapshot.content
+    ):
+        raise ClosedLoopInitialAdjudicationError("initial_adjudication_decision_drift")
 
 
 def _load_state(root: Path, fixture: str, state_path: Path) -> tuple[dict[str, Any], Path]:
@@ -191,7 +266,7 @@ def _nonempty_string_list(value: Any, *, label: str) -> list[str]:
 
 def _validate_decision(
     *, root: Path, fixture: str, state: dict[str, Any], state_path: Path, decision_path: Path
-) -> tuple[dict[str, Any], bytes, dict[str, Any] | None]:
+) -> tuple[_DecisionSnapshot, dict[str, Any] | None]:
     expected_path = state_path.parent / DECISION_DIRECTORY / DECISION_FILE
     if decision_path != expected_path:
         raise ClosedLoopInitialAdjudicationError(
@@ -199,9 +274,8 @@ def _validate_decision(
         )
     if decision_path.parent.is_symlink() or not decision_path.parent.is_dir():
         raise ClosedLoopInitialAdjudicationError("initial_adjudication_decision_directory_invalid")
-    decision, decision_bytes = _load_json(
-        decision_path, root=root, label="initial_adjudication_decision"
-    )
+    snapshot = _snapshot_decision(decision_path, root=root)
+    decision = snapshot.payload
     if set(decision) != _DECISION_KEYS or decision.get("schema") != SCHEMA:
         raise ClosedLoopInitialAdjudicationError("initial_adjudication_decision_schema_invalid")
     if decision.get("decision_sha256") != canonical_decision_sha256(decision):
@@ -239,7 +313,7 @@ def _validate_decision(
             raise ClosedLoopInitialAdjudicationError(
                 "initial_adjudication_reject_attribution_invalid"
             )
-        return decision, decision_bytes, None
+        return snapshot, None
     if action != "approve_for_attribution" or not isinstance(attribution, dict):
         raise ClosedLoopInitialAdjudicationError("initial_adjudication_action_invalid")
     expected_keys = {
@@ -268,19 +342,24 @@ def _validate_decision(
     forbidden = _nonempty_string_list(attribution.get("forbidden_scope"), label="forbidden_scope")
     if set(permitted) & set(forbidden):
         raise ClosedLoopInitialAdjudicationError("initial_adjudication_scope_overlap")
-    return decision, decision_bytes, attribution
+    return snapshot, attribution
 
 
 def _handoff_payload(
-    *, decision: dict[str, Any], attribution: dict[str, Any], root: Path, decision_path: Path
+    *,
+    decision: dict[str, Any],
+    attribution: dict[str, Any],
+    root: Path,
+    decision_snapshot_path: Path,
+    decision_snapshot_sha256: str,
 ) -> dict[str, Any]:
     return {
         "schema": HANDOFF_SCHEMA,
         "fixture": decision["fixture"],
         "attempt_id": decision["attempt_id"],
         "adjudication": {
-            "path": decision_path.relative_to(root).as_posix(),
-            "sha256": _sha256(decision_path),
+            "path": decision_snapshot_path.relative_to(root).as_posix(),
+            "sha256": decision_snapshot_sha256,
         },
         "selected_finding_ids": attribution["selected_finding_ids"],
         "human_attributor": attribution["human_attributor"],
@@ -289,6 +368,48 @@ def _handoff_payload(
         "source_mutation": "forbidden",
         "publication_acceptance": PUBLICATION_ACCEPTANCE,
     }
+
+
+def _decision_snapshot_path(decision_path: Path) -> Path:
+    return decision_path.parent / DECISION_SNAPSHOT_FILE
+
+
+def _publish_decision_snapshot(path: Path, snapshot: _DecisionSnapshot, *, root: Path) -> None:
+    if path.exists():
+        _regular_file(path, root=root, label="initial_adjudication_decision_snapshot")
+        try:
+            existing = path.read_bytes()
+        except OSError as exc:
+            raise ClosedLoopInitialAdjudicationError(
+                "initial_adjudication_decision_snapshot_invalid"
+            ) from exc
+        if existing != snapshot.content:
+            raise ClosedLoopInitialAdjudicationError(
+                "initial_adjudication_decision_snapshot_conflict"
+            )
+        return
+    try:
+        repair_transaction.atomic_create_text(path, snapshot.content.decode("utf-8"))
+    except (FileExistsError, UnicodeDecodeError) as exc:
+        if isinstance(exc, UnicodeDecodeError):
+            raise ClosedLoopInitialAdjudicationError(
+                "initial_adjudication_decision_snapshot_invalid"
+            ) from exc
+        _publish_decision_snapshot(path, snapshot, root=root)
+
+
+def _assert_published_snapshot_matches(
+    path: Path, snapshot: _DecisionSnapshot, *, root: Path
+) -> None:
+    _regular_file(path, root=root, label="initial_adjudication_decision_snapshot")
+    try:
+        existing = path.read_bytes()
+    except OSError as exc:
+        raise ClosedLoopInitialAdjudicationError(
+            "initial_adjudication_decision_snapshot_invalid"
+        ) from exc
+    if existing != snapshot.content:
+        raise ClosedLoopInitialAdjudicationError("initial_adjudication_decision_snapshot_conflict")
 
 
 def _publish_handoff(path: Path, payload: dict[str, Any], *, root: Path) -> None:
@@ -309,7 +430,8 @@ def _existing_matches(
     state: dict[str, Any],
     *,
     next_state: str,
-    decision_path: Path,
+    decision_snapshot_path: Path,
+    decision_snapshot_sha256: str,
     handoff_path: Path | None,
     root: Path,
 ) -> bool:
@@ -319,8 +441,8 @@ def _existing_matches(
     expected = {
         "adjudication": {
             "role": "adjudication",
-            "path": decision_path.relative_to(root).as_posix(),
-            "sha256": _sha256(decision_path),
+            "path": decision_snapshot_path.relative_to(root).as_posix(),
+            "sha256": decision_snapshot_sha256,
         },
     }
     if next_state == "adjudicated_unbound":
@@ -334,8 +456,8 @@ def _existing_matches(
         expected = {
             "human_decision_record": {
                 "role": "human_decision_record",
-                "path": decision_path.relative_to(root).as_posix(),
-                "sha256": _sha256(decision_path),
+                "path": decision_snapshot_path.relative_to(root).as_posix(),
+                "sha256": decision_snapshot_sha256,
             }
         }
     for role in _RESPONSE_ROLES:
@@ -371,18 +493,24 @@ def run_initial_adjudication(
         parent, parent_path = _load_state(root, fixture, Path(previous))
         if parent["state"] != "critique_unadjudicated":
             raise ClosedLoopInitialAdjudicationError("initial_adjudication_parent_state_invalid")
-        decision, _, attribution = _validate_decision(
+        snapshot, attribution = _validate_decision(
             root=root,
             fixture=fixture,
             state=parent,
             state_path=parent_path,
             decision_path=requested,
         )
+        decision_snapshot_path = _decision_snapshot_path(requested)
+        _assert_published_snapshot_matches(decision_snapshot_path, snapshot, root=root)
         expected_next = "adjudicated_unbound" if attribution is not None else "rejected"
         handoff_path = requested.parent / HANDOFF_FILE if attribution is not None else None
         if handoff_path is not None:
             handoff = _handoff_payload(
-                decision=decision, attribution=attribution, root=root, decision_path=requested
+                decision=snapshot.payload,
+                attribution=attribution,
+                root=root,
+                decision_snapshot_path=decision_snapshot_path,
+                decision_snapshot_sha256=snapshot.sha256,
             )
             existing, _ = _load_json(handoff_path, root=root, label="initial_adjudication_handoff")
             if existing != handoff:
@@ -390,7 +518,8 @@ def run_initial_adjudication(
         if not _existing_matches(
             state,
             next_state=expected_next,
-            decision_path=requested,
+            decision_snapshot_path=decision_snapshot_path,
+            decision_snapshot_sha256=snapshot.sha256,
             handoff_path=handoff_path,
             root=root,
         ):
@@ -410,9 +539,10 @@ def run_initial_adjudication(
         }
     if state["state"] != "critique_unadjudicated":
         raise ClosedLoopInitialAdjudicationError("closed_loop_state_not_critique_unadjudicated")
-    decision, decision_bytes, attribution = _validate_decision(
+    snapshot, attribution = _validate_decision(
         root=root, fixture=fixture, state=state, state_path=published_path, decision_path=requested
     )
+    decision_snapshot_path = _decision_snapshot_path(requested)
     next_name = "adjudicated_unbound" if attribution is not None else "rejected"
     next_path = published_path.parent / f"state-{state['sequence'] + 1:03d}-{next_name}.json"
     handoff_path = requested.parent / HANDOFF_FILE if attribution is not None else None
@@ -438,7 +568,7 @@ def run_initial_adjudication(
                 raise ClosedLoopInitialAdjudicationError(
                     "initial_adjudication_state_drift_detected"
                 )
-            fresh, fresh_bytes, fresh_attribution = _validate_decision(
+            fresh_snapshot, fresh_attribution = _validate_decision(
                 root=root,
                 fixture=fixture,
                 state=current,
@@ -446,22 +576,24 @@ def run_initial_adjudication(
                 decision_path=requested,
             )
             if (
-                fresh != decision
-                or fresh_bytes != decision_bytes
+                fresh_snapshot.content != snapshot.content
+                or fresh_snapshot.fingerprint != snapshot.fingerprint
                 or fresh_attribution != attribution
             ):
                 raise ClosedLoopInitialAdjudicationError(
                     "initial_adjudication_inputs_drift_detected"
                 )
+            _assert_snapshot_still_current(fresh_snapshot, root=root)
+            _publish_decision_snapshot(decision_snapshot_path, fresh_snapshot, root=root)
             evidence: dict[str, Path] = {
                 role: root / _evidence_by_role(current)[role]["path"] for role in _RESPONSE_ROLES
             }
             if attribution is None:
-                evidence["human_decision_record"] = requested
+                evidence["human_decision_record"] = decision_snapshot_path
                 next_state = closed_loop_attempt_state.transition_state(
                     current,
                     next_state="rejected",
-                    actor=fresh["reviewer"]["identity"],
+                    actor=fresh_snapshot.payload["reviewer"]["identity"],
                     actor_role="human_adjudicator",
                     evidence=evidence,
                     workspace_root=root,
@@ -470,15 +602,19 @@ def run_initial_adjudication(
             else:
                 assert handoff_path is not None
                 handoff = _handoff_payload(
-                    decision=fresh, attribution=attribution, root=root, decision_path=requested
+                    decision=fresh_snapshot.payload,
+                    attribution=attribution,
+                    root=root,
+                    decision_snapshot_path=decision_snapshot_path,
+                    decision_snapshot_sha256=fresh_snapshot.sha256,
                 )
                 _publish_handoff(handoff_path, handoff, root=root)
-                evidence["adjudication"] = requested
+                evidence["adjudication"] = decision_snapshot_path
                 evidence["attribution_handoff"] = handoff_path
                 next_state = closed_loop_attempt_state.transition_state(
                     current,
                     next_state="adjudicated_unbound",
-                    actor=fresh["reviewer"]["identity"],
+                    actor=fresh_snapshot.payload["reviewer"]["identity"],
                     actor_role="human_adjudicator",
                     evidence=evidence,
                     workspace_root=root,
@@ -495,7 +631,8 @@ def run_initial_adjudication(
                 if not _existing_matches(
                     existing,
                     next_state=next_name,
-                    decision_path=requested,
+                    decision_snapshot_path=decision_snapshot_path,
+                    decision_snapshot_sha256=fresh_snapshot.sha256,
                     handoff_path=handoff_path,
                     root=root,
                 ):
