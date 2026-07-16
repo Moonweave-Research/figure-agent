@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(1, str(Path(__file__).resolve().parent / "quality"))
 
 import closed_loop_attempt_state  # noqa: E402
 import closed_loop_current_state  # noqa: E402
@@ -76,6 +77,7 @@ from status import infer_stage  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RUNS_ROOT = REPO_ROOT / ".scratch" / "fig-loop-runs"
 MODE = "verify-only"
+RUN_SCHEMA = "figure-agent.fig-loop-run.v1"
 _GIT_MUTATIONS = frozenset(
     {"add", "commit", "reset", "checkout", "clean", "push", "merge", "rebase"}
 )
@@ -690,7 +692,7 @@ def _run_loop_after_admission(
     if basin is not None:
         iteration["basin_summary"] = basin
     manifest = {
-        "schema": "figure-agent.fig-loop-run.v1",
+        "schema": RUN_SCHEMA,
         "fixture": name,
         "mode": MODE,
         "goal": goal,

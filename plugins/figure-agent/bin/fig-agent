@@ -33,6 +33,7 @@ SCRIPT_IMPORT_DIRS = (
 for script_dir in reversed(SCRIPT_IMPORT_DIRS):
     sys.path.insert(0, str(script_dir))
 
+import compatibility_command_contracts  # noqa: E402
 import fixture_identity  # noqa: E402
 import runtime_paths  # noqa: E402
 
@@ -81,7 +82,7 @@ RETIRED_DEFAULT_COMMANDS = frozenset(
         "rank-candidates",
     }
 )
-INTERNAL_COMPATIBILITY_COMMANDS = frozenset(
+_LITERAL_INTERNAL_COMPATIBILITY_COMMANDS = frozenset(
     {
         "accept-candidate",
         "analyze-composition",
@@ -106,15 +107,12 @@ INTERNAL_COMPATIBILITY_COMMANDS = frozenset(
         "compare-fixtures",
         "design-dogfood",
         "drive",
-        "e2e-smoke",
         "evidence-sync",
         "finding-attribution",
         "fork-fixture",
         "helper",
-        "improve",
         "intent",
         "lint-composition",
-        "loop",
         "loop-metrics",
         "memory-index",
         "memory-log",
@@ -132,6 +130,10 @@ INTERNAL_COMPATIBILITY_COMMANDS = frozenset(
         "verify-plan",
         "visual-metrics",
     }
+)
+INTERNAL_COMPATIBILITY_COMMANDS = (
+    _LITERAL_INTERNAL_COMPATIBILITY_COMMANDS
+    | compatibility_command_contracts.command_names()
 )
 ALL_COMMANDS = (
     CORE_COMMANDS | INTERNAL_COMPATIBILITY_COMMANDS | RETIRED_DEFAULT_COMMANDS
@@ -161,6 +163,9 @@ def _command_surface() -> dict[str, object]:
         "compatibility_contract": (
             "internal and retired-default commands remain callable until their "
             "CLI, import, fixture, receipt, and release-gate dependencies are migrated"
+        ),
+        "compatibility_command_contract_registry": (
+            compatibility_command_contracts.serialize_registry()
         ),
     }
 

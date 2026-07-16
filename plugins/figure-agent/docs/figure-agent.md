@@ -232,7 +232,7 @@ reviewable; open the next slice only after recording stop conditions and evidenc
 - [x] Compatibility bypass guard: `e2e-smoke` leases/resolves each repeat through status; `loop` is scratch-only verify-only; `improve` rejects aggressive search. No prospective-proof or publication-acceptance claim.
 - [x] Stop at host-vision, scientific, human authorization, accepted/golden,
   release, and publication boundaries.
-- [ ] Next: give each remaining specialist/internal adapter a per-command canonical successor and evidence registry/contract.
+- [x] The initial compatibility registry covers only `loop`, `improve`, and `e2e-smoke`; its schema is `figure-agent.compatibility-command-contract-registry.v1`, `write_authority` records the maximum tested mutation boundary, not permission, release, acceptance, or publication authority, and publication acceptance remains unclaimed.
 - [x] Preserve exact actor, evidence references, allowed/forbidden scope, and
   `publication_acceptance` through queue and plan-only queue-run projections;
   aggressive candidate search may not cross a human boundary.

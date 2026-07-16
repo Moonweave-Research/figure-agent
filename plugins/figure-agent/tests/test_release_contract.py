@@ -139,6 +139,18 @@ def test_authoring_context_pack_docs_preserve_quality_kernel_boundary() -> None:
         assert "automatic physics" in text, doc_path
 
 
+def test_ssot_bounds_initial_compatibility_registry_authority() -> None:
+    authority = (REPO_ROOT / "docs" / "figure-agent.md").read_text()
+
+    assert (
+        "initial compatibility registry covers only `loop`, `improve`, and `e2e-smoke`"
+        in authority
+    )
+    assert "maximum tested mutation boundary" in authority
+    assert "not permission, release, acceptance, or publication authority" in authority
+    assert "publication acceptance remains unclaimed" in authority
+
+
 def test_package_descriptions_name_quality_kernel_direction() -> None:
     plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
     pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
