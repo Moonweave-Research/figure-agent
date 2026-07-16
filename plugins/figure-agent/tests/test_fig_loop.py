@@ -100,6 +100,80 @@ def test_admission_lease_blocks_legacy_loop_before_scratch_output(tmp_path: Path
     assert not runs_root.exists()
 
 
+def test_noncanonical_workspace_runs_root_is_rejected_before_loop_writes(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    unsafe_root = fixture / "review" / "legacy-runs"
+
+    with pytest.raises(FigLoopError, match="runs_root_noncanonical_workspace"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=unsafe_root)
+
+    assert not unsafe_root.exists()
+    assert not (tmp_path / ".scratch").exists()
+
+
+def test_external_alias_into_noncanonical_workspace_runs_root_is_rejected(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    alias = tmp_path.parent / "external-runs-alias"
+    alias.symlink_to(fixture / "review" / "legacy-runs")
+
+    with pytest.raises(FigLoopError, match="runs_root_noncanonical_workspace"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=alias)
+
+    assert not (fixture / "review" / "legacy-runs").exists()
+    assert not (tmp_path / ".scratch").exists()
+
+
+def test_external_temp_runs_root_remains_supported(tmp_path: Path) -> None:
+    _make_fixture(tmp_path)
+    external_runs_root = tmp_path.parent / "external-loop-runs"
+
+    run_dir = run_loop(
+        "loop_demo", "inspect", repo_root=tmp_path, runs_root=external_runs_root
+    )
+
+    assert run_dir.is_relative_to(external_runs_root)
+    assert (run_dir / "run_manifest.json").is_file()
+    assert not (tmp_path / ".scratch").exists()
+
+
+def test_symlinked_loop_source_is_rejected_before_scratch_output(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    outside = tmp_path.parent / "outside.tex"
+    outside.write_text("outside", encoding="utf-8")
+    source = fixture / "loop_demo.tex"
+    source.symlink_to(outside)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    with pytest.raises(FigLoopError, match="canonical_preflight:source_symlink"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+
+    assert not runs_root.exists()
+
+
+def test_loop_cli_reports_unsafe_runs_root_without_stdout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    original = fig_loop_mod.run_loop
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "run_loop",
+        lambda name, goal, *, runs_root=None: original(
+            name, goal, repo_root=tmp_path, runs_root=runs_root
+        ),
+    )
+
+    exit_code = fig_loop_mod.main(
+        ["loop_demo", "--goal", "inspect", "--runs-root", str(fixture / "review")]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert captured.err == "fig_loop.py: runs_root_noncanonical_workspace\n"
+    assert not (fixture / "review").exists()
+
+
 @pytest.mark.parametrize("critique_state", ["MISSING", "STALE"])
 def test_verify_only_loop_never_runs_auto_remedy_or_rewrites_stop_reason(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, critique_state: str

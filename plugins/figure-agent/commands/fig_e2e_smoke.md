@@ -24,6 +24,9 @@ canonical state. Only an absent canonical attempt may run compile/export/status;
 current, invalid, ambiguous, symlinked, resolver-error, or busy-lease inputs
 fail before command execution. The lease is released before the legacy loop,
 which performs its own fresh preflight.
+The source file and every workspace path component must be non-symlinked.
+`--runs-root` may be external for test/dogfood evidence, but a workspace path
+or alias into the workspace must resolve under `.scratch/fig-loop-runs`.
 
 The command emits one JSON object to stdout. `--json` and `--format json` are
 accepted as explicit no-op output flags. Exit code is `0` only if every step in

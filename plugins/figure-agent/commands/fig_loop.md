@@ -87,6 +87,12 @@ retry after the active admission or legacy run finishes.
 
 Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
 
+An external `--runs-root` remains supported for test or dogfood evidence. A
+workspace path, a workspace path that resolves through a symlink, or an
+external alias that resolves into the workspace is accepted only under the
+canonical `.scratch/fig-loop-runs/` root. The fixture source and each workspace
+path component are also fail-closed against symlinks before a checkpoint write.
+
 - `run_manifest.json` — fixture, goal, mode, branch/commit, run timing, and artifact list.
 - `iteration_001.json` — `/fig_status`-equivalent state, audit-evidence
   summary, narrative context summary, per-axis verdicts,

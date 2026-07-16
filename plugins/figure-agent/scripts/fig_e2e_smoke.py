@@ -237,7 +237,13 @@ def run_smoke(
         raise SmokeError(str(exc)) from exc
 
     repo_root = repo_root.resolve()
-    runs_root = runs_root.resolve() if runs_root is not None else None
+    if runs_root is not None:
+        try:
+            runs_root = closed_loop_attempt_state.validate_legacy_runs_root(
+                repo_root, runs_root
+            )
+        except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+            raise SmokeError(str(exc)) from exc
     example_dir = repo_root / "examples" / name
     tex_path = example_dir / f"{name}.tex"
     if not example_dir.is_dir():
@@ -261,6 +267,12 @@ def run_smoke(
         try:
             with closed_loop_attempt_state.fixture_admission_lock(repo_root, name):
                 _resolve_absent_canonical_state(repo_root, name)
+                try:
+                    closed_loop_attempt_state._workspace_artifact(  # noqa: SLF001
+                        repo_root, name, tex_path, label="source"
+                    )
+                except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+                    raise SmokeError(f"canonical_preflight:{exc}") from exc
 
                 run["compile"] = _run_step(
                     ["fig-agent", "compile", name],

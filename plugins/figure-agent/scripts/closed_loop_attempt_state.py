@@ -248,6 +248,34 @@ def _fixture_root(workspace_root: Path, fixture: str) -> Path:
     return fixture_root
 
 
+def validate_legacy_runs_root(workspace_root: Path, runs_root: Path) -> Path:
+    """Keep legacy loop evidence inside its canonical workspace scratch root."""
+    root = Path(os.path.abspath(workspace_root))
+    requested = Path(os.path.abspath(runs_root))
+    resolved = requested.resolve()
+    canonical = root / ".scratch" / "fig-loop-runs"
+    canonical_resolved = canonical.resolve()
+
+    def within(path: Path, parent: Path) -> bool:
+        try:
+            path.relative_to(parent)
+        except ValueError:
+            return False
+        return True
+
+    requested_inside = within(requested, root)
+    resolved_inside = within(resolved, root)
+    if requested_inside and (
+        not within(requested, canonical)
+        or not resolved_inside
+        or not within(resolved, canonical_resolved)
+    ):
+        raise ClosedLoopAttemptStateError("runs_root_noncanonical_workspace")
+    if not requested_inside and resolved_inside and not within(resolved, canonical_resolved):
+        raise ClosedLoopAttemptStateError("runs_root_noncanonical_workspace")
+    return resolved
+
+
 def _workspace_artifact(
     workspace_root: Path,
     fixture: str,

@@ -486,6 +486,13 @@ def run_loop(
     except ValueError as exc:
         raise FigLoopError(str(exc)) from exc
     root = repo_root.resolve()
+    try:
+        normalized_runs_root = closed_loop_attempt_state.validate_legacy_runs_root(
+            root,
+            runs_root or root / ".scratch" / "fig-loop-runs",
+        )
+    except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+        raise FigLoopError(str(exc)) from exc
     example_dir = root / "examples" / name
     if not example_dir.is_dir():
         raise FigLoopError(f"examples/{name}/ not found")
@@ -515,7 +522,20 @@ def run_loop(
                 f"{current.get('resolution')}:{current.get('reason')}; "
                 "use canonical status/lifecycle"
             )
-        return _run_loop_after_admission(name, goal, repo_root=root, runs_root=runs_root)
+        source = example_dir / f"{name}.tex"
+        if source.exists() or source.is_symlink():
+            try:
+                closed_loop_attempt_state._workspace_artifact(  # noqa: SLF001
+                    root, name, source, label="source"
+                )
+            except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+                raise FigLoopError(f"canonical_preflight:{exc}") from exc
+        return _run_loop_after_admission(
+            name,
+            goal,
+            repo_root=root,
+            runs_root=normalized_runs_root,
+        )
 
 
 def _run_loop_after_admission(
@@ -531,7 +551,13 @@ def _run_loop_after_admission(
     except ValueError as exc:
         raise FigLoopError(str(exc)) from exc
     repo_root = repo_root.resolve()
-    runs_root = (runs_root or repo_root / ".scratch" / "fig-loop-runs").resolve()
+    try:
+        runs_root = closed_loop_attempt_state.validate_legacy_runs_root(
+            repo_root,
+            runs_root or repo_root / ".scratch" / "fig-loop-runs",
+        )
+    except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+        raise FigLoopError(str(exc)) from exc
     example_dir = repo_root / "examples" / name
     if not example_dir.is_dir():
         raise FigLoopError(f"examples/{name}/ not found")

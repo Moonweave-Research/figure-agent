@@ -452,6 +452,49 @@ def test_run_smoke_missing_tex_fails_preflight_without_running_commands(
     assert calls == []
 
 
+def test_e2e_rejects_noncanonical_workspace_runs_root_before_commands(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    calls: list[list[str]] = []
+    unsafe_root = fixture / "review" / "legacy-runs"
+
+    with pytest.raises(smoke.SmokeError, match="runs_root_noncanonical_workspace"):
+        smoke.run_smoke(
+            fixture.name,
+            repo_root=tmp_path,
+            runs_root=unsafe_root,
+            command_runner=lambda args, **_kwargs: calls.append(args) or _completed(args),
+        )
+
+    assert calls == []
+    assert not (fixture / "build").exists()
+    assert not (fixture / "exports").exists()
+    assert not (tmp_path / ".scratch").exists()
+
+
+def test_e2e_rejects_symlinked_source_before_commands_or_outputs(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    outside = tmp_path.parent / "outside.tex"
+    outside.write_text("outside", encoding="utf-8")
+    source = fixture / f"{fixture.name}.tex"
+    source.unlink()
+    source.symlink_to(outside)
+    calls: list[list[str]] = []
+
+    with pytest.raises(smoke.SmokeError, match="canonical_preflight:source_symlink"):
+        smoke.run_smoke(
+            fixture.name,
+            repo_root=tmp_path,
+            command_runner=lambda args, **_kwargs: calls.append(args) or _completed(args),
+        )
+
+    assert calls == []
+    assert not (fixture / "build").exists()
+    assert not (fixture / "exports").exists()
+    assert not (tmp_path / ".scratch").exists()
+
+
 def test_run_smoke_manual_approval_loop_outcome_is_still_success(tmp_path: Path) -> None:
     _make_fixture(tmp_path)
     runs_root = tmp_path / ".scratch" / "fig-loop-runs"
