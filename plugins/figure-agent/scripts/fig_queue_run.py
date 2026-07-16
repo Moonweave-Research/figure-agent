@@ -85,6 +85,7 @@ def _summary(
     failed = 0
     stale = 0
     busy = 0
+    admission_invalid = 0
     admission_pending = 0
     for run in runs:
         result = run.get("result")
@@ -99,6 +100,8 @@ def _summary(
             stale += 1
         if result.get("final_stop_reason") == fig_run.STOP_ADMISSION_BUSY:
             busy += 1
+        if result.get("final_stop_reason") == fig_run.STOP_ADMISSION_INVALID:
+            admission_invalid += 1
         if (
             result.get("final_stop_reason")
             == fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING
@@ -115,6 +118,7 @@ def _summary(
         "failed": failed,
         "stale": stale,
         "busy": busy,
+        "admission_invalid": admission_invalid,
         "admission_pending": admission_pending,
         "blocked": int(command_plan.get("blocked_count", 0)),
         "unattempted_executable": max(planned_executable - attempted, 0),
@@ -128,6 +132,7 @@ def _has_delegated_execution_error(runs: list[dict[str, Any]]) -> bool:
         and run["result"].get("final_stop_reason")
         in {
             fig_run.STOP_ADMISSION_BUSY,
+            fig_run.STOP_ADMISSION_INVALID,
             fig_run.STOP_COMMAND_FAILED,
             fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING,
             fig_run.STOP_STALE_PLAN,

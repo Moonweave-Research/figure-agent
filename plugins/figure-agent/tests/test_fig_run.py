@@ -625,6 +625,102 @@ def test_direct_cli_exit_policy_remains_zero_for_admission_busy(
     )
 
 
+def test_execute_returns_admission_invalid_when_fixture_becomes_symlink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = tmp_path / "examples" / "runner_demo"
+    fixture.mkdir(parents=True)
+    external = tmp_path / "external"
+    external.mkdir()
+    marker = external / "marker.txt"
+    marker.write_text("unchanged\n", encoding="utf-8")
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_COMPILE,
+        safe_command="fig-agent compile runner_demo",
+    )
+    real_lock = fig_run.closed_loop_attempt_state.fixture_admission_lock
+    _install_driver_sequence(monkeypatch, [summary])
+    commands: list[str] = []
+
+    @contextmanager
+    def _path_drifting_lock(
+        workspace_root: Path, fixture_name: str
+    ) -> Iterator[None]:
+        fixture.rmdir()
+        fixture.symlink_to(external, target_is_directory=True)
+        with real_lock(workspace_root, fixture_name):
+            yield
+
+    monkeypatch.setattr(
+        fig_run.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _path_drifting_lock,
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert marker.read_text(encoding="utf-8") == "unchanged\n"
+    assert payload["executed_count"] == 0
+    assert payload["final_stop_reason"] == fig_run.STOP_ADMISSION_INVALID
+    assert payload["steps"][0]["would_execute"] is True
+    assert payload["steps"][0]["executed"] is False
+    assert payload["admission_diagnostic"] == {
+        "state": "fixture_symlink",
+        "exception": "ClosedLoopAttemptStateError",
+        "retryable": False,
+        "publication_acceptance": "not_claimed",
+    }
+    assert payload["boundary_handoff"]["allowed_scope"] == ["read-only"]
+    assert payload["boundary_handoff"]["publication_acceptance"] == "not_claimed"
+
+
+def test_execute_controls_invalid_repair_transaction_lock_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_COMPILE,
+        safe_command="fig-agent compile runner_demo",
+    )
+    _install_driver_sequence(monkeypatch, [summary])
+
+    @contextmanager
+    def _invalid_lock(workspace_root: Path, fixture: str) -> Iterator[None]:
+        raise fig_run.repair_transaction.RepairTransactionError(
+            "lock metadata invalid at /private/path"
+        )
+        yield
+
+    monkeypatch.setattr(
+        fig_run.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _invalid_lock,
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert payload["final_stop_reason"] == fig_run.STOP_ADMISSION_INVALID
+    assert payload["admission_diagnostic"]["state"] == "fixture_admission_lock_invalid"
+    assert "/private/path" not in json.dumps(payload)
+
+
 def test_execute_runs_compile_then_stops_at_host_critique(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

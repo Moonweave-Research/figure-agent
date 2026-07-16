@@ -313,7 +313,9 @@ revalidates the exact action, command, stop boundary, and action-specific safety
 while the lease is held, keeps the lease through subprocess completion, and then
 releases it before selecting the next step. Driver drift stops as `stale_plan`;
 a busy lease stops as retryable `admission_busy`, with no subprocess and no
-executed-count increment. Plan-only runner calls acquire no lease.
+executed-count increment. A fixture-path, non-busy lock, or under-lock
+validation failure stops as non-retryable `admission_invalid` with a sanitized
+diagnostic and no subprocess. Plan-only runner calls acquire no lease.
 
 Direct `fig_run` delegation to `fig_loop` remains on the existing self-leased
 `fig_loop` path and is not wrapped in an outer lease. Queue-bound `fig_loop`

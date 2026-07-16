@@ -32,6 +32,7 @@ import closed_loop_post_review_response  # noqa: E402
 import closed_loop_repair_authorization  # noqa: E402
 import closed_loop_repair_candidate  # noqa: E402
 import fig_driver  # noqa: E402
+import repair_transaction  # noqa: E402
 import runtime_paths  # noqa: E402
 from driver_actor import required_actor_for_driver_summary  # noqa: E402
 from fig_run_records import write_run_journal  # noqa: E402
@@ -56,6 +57,7 @@ STOP_NOT_EXECUTABLE = "not_executable_action"
 STOP_COMMAND_FAILED = "command_failed"
 STOP_STALE_PLAN = "stale_plan"
 STOP_ADMISSION_BUSY = "admission_busy"
+STOP_ADMISSION_INVALID = "admission_invalid"
 STOP_RUN_FIG_LOOP_ADMISSION_PENDING = "run_fig_loop_admission_integration_pending"
 STOP_COMPLETE = "complete"
 STOP_MAX_STEPS = "max_steps_exceeded"
@@ -613,6 +615,35 @@ def _boundary_handoff(
             },
             "publication_acceptance": "not_claimed",
         }
+    if final_stop_reason == STOP_ADMISSION_INVALID:
+        return {
+            "schema": BOUNDARY_HANDOFF_SCHEMA,
+            "action": action,
+            "stop_boundary": stop_boundary,
+            "required_actor": "workflow_agent",
+            "blocking_reason": (
+                "fixture mutation admission became invalid; no subprocess was started"
+            ),
+            "evidence_refs": [f"runner.stop_reason:{STOP_ADMISSION_INVALID}"],
+            "allowed_scope": ["read-only"],
+            "forbidden_scope": [
+                "repair or bypass the admission boundary inside this run",
+                "execute the unadmitted command",
+                "publication acceptance claim",
+            ],
+            "closeout_checks": [
+                "inspect the admission diagnostic",
+                "restore a real canonical fixture path and valid lock state",
+                "rerun live /fig_drive",
+            ],
+            "continuation_guidance": {
+                "rerun_live_status_first": True,
+                "rerun_live_driver_first": True,
+                "retryable": False,
+                "note": "Repair the fixture or lock boundary before a new live run.",
+            },
+            "publication_acceptance": "not_claimed",
+        }
     if final_stop_reason == STOP_RUN_FIG_LOOP_ADMISSION_PENDING:
         return {
             "schema": BOUNDARY_HANDOFF_SCHEMA,
@@ -765,6 +796,25 @@ def _step_plan_binding(
             "would_execute": live_would_execute,
         },
         "mutation_prevented": not matched,
+    }
+
+
+def _admission_diagnostic(exc: Exception) -> dict[str, Any]:
+    detail = str(exc)
+    if not detail or any(
+        character not in "abcdefghijklmnopqrstuvwxyz0123456789_:-"
+        for character in detail
+    ):
+        detail = (
+            "fixture_boundary_invalid"
+            if isinstance(exc, closed_loop_attempt_state.ClosedLoopAttemptStateError)
+            else "fixture_admission_lock_invalid"
+        )
+    return {
+        "state": detail,
+        "exception": type(exc).__name__,
+        "retryable": False,
+        "publication_acceptance": "not_claimed",
     }
 
 
@@ -1549,6 +1599,7 @@ def run_workflow(
     final_stop_reason = STOP_MAX_STEPS
     executed_signatures: set[tuple[str, str]] = set()
     queue_first_step_pending = all(first_step_expectation_supplied)
+    admission_diagnostic: dict[str, Any] | None = None
 
     for index in range(1, max_steps + 1):
         if initial_summary is not None:
@@ -1639,6 +1690,7 @@ def run_workflow(
         ):
             raise ValueError("executable action missing admission policy")
 
+        admission_validation_active = requires_step_lease
         try:
             admission_context = (
                 closed_loop_attempt_state.fixture_admission_lock(repo_root, name)
@@ -1710,6 +1762,7 @@ def run_workflow(
                     )
                     final_stop_reason = STOP_REPEATED_ACTION
                     break
+                admission_validation_active = False
                 result = _run_command(command, repo_root=repo_root)
         except closed_loop_attempt_state.FixtureAdmissionLeaseBusy:
             steps.append(
@@ -1723,6 +1776,25 @@ def run_workflow(
             )
             final_summary = summary
             final_stop_reason = STOP_ADMISSION_BUSY
+            break
+        except (
+            closed_loop_attempt_state.ClosedLoopAttemptStateError,
+            repair_transaction.RepairTransactionError,
+        ) as exc:
+            if not admission_validation_active:
+                raise
+            steps.append(
+                _step_payload(
+                    index=index,
+                    summary=summary,
+                    would_execute=True,
+                    executed=False,
+                    stop_reason=STOP_ADMISSION_INVALID,
+                )
+            )
+            admission_diagnostic = _admission_diagnostic(exc)
+            final_summary = summary
+            final_stop_reason = STOP_ADMISSION_INVALID
             break
 
         queue_first_step_pending = False
@@ -1760,6 +1832,8 @@ def run_workflow(
     )
     if plan_binding is not None:
         payload["plan_binding"] = plan_binding
+    if admission_diagnostic is not None:
+        payload["admission_diagnostic"] = admission_diagnostic
     return payload
 
 

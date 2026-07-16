@@ -44,7 +44,9 @@ expectation. Compile, adjudication-scaffold, and export candidates are re-querie
 and revalidated under the shared fixture admission lease, which remains held
 through subprocess completion. A mismatch or lost safety predicate returns
 `stale_plan`; a busy lease returns `admission_busy`. Neither starts a
-subprocess. A matched first step is consumed after its successful command;
+subprocess. An invalid fixture path, non-busy lock failure, or under-lock
+validation failure returns non-retryable `admission_invalid` with a sanitized
+diagnostic. A matched first step is consumed after its successful command;
 later steps remain free to follow fresh live driver decisions and reacquire the
 lease independently.
 
@@ -60,15 +62,15 @@ The complete JSON payload is written before `queue-run` exits. Direct
 
 | Exit | Condition |
 |---|---|
-| `0` | Plan-only/dry-run, or an execute batch with no nested `/fig_run` `command_failed`, `stale_plan`, `admission_busy`, or `run_fig_loop_admission_integration_pending` final stop. This includes complete, host/human boundaries, repeated-action, max-step, blocked, unattempted, and pre-delegation fixture-row errors. |
-| `1` | `--execute` delegated at least one selected fixture to `/fig_run` and that nested run ended with canonical `final_stop_reason: command_failed`, `stale_plan`, `admission_busy`, or `run_fig_loop_admission_integration_pending`. Remaining selected fixtures are still attempted and remain in `runs`. |
+| `0` | Plan-only/dry-run, or an execute batch with no nested `/fig_run` `command_failed`, `stale_plan`, `admission_busy`, `admission_invalid`, or `run_fig_loop_admission_integration_pending` final stop. This includes complete, host/human boundaries, repeated-action, max-step, blocked, unattempted, and pre-delegation fixture-row errors. |
+| `1` | `--execute` delegated at least one selected fixture to `/fig_run` and that nested run ended with canonical `final_stop_reason: command_failed`, `stale_plan`, `admission_busy`, `admission_invalid`, or `run_fig_loop_admission_integration_pending`. Remaining selected fixtures are still attempted and remain in `runs`. |
 | `2` | Existing argument/value errors or workspace diagnostics, including missing `examples/` and an implicit symlinked `examples/` directory. These diagnostics take precedence over delegated command failures. |
 
 `summary.failed` counts only delegated command failures. `summary.stale`,
-`summary.busy`, and `summary.admission_pending` count their corresponding
-admission stops separately. Exit status is based only on those actual nested
-`/fig_run` stop contracts, so a pre-delegation fixture/path error row does not
-make shell or CI treat the batch as a delegated execution error.
+`summary.busy`, `summary.admission_invalid`, and `summary.admission_pending`
+count their corresponding stops separately. Exit status is based only on those
+actual nested `/fig_run` stop contracts, so a pre-delegation fixture/path error
+row does not make shell or CI treat the batch as a delegated execution error.
 
 ## Filters
 
@@ -118,7 +120,7 @@ make SVG polish handoff executable; `svg_editor` rows remain blocked.
 | `filters` | active queue filters |
 | `queue` | source queue summary, `bottleneck_report`, and command plan |
 | `runs` | one record per attempted fixture |
-| `summary` | planned executable, planned blocked, planned complete, attempted, unattempted executable, executed command, failed, stale, busy, admission-pending, and blocked counts |
+| `summary` | planned executable, planned blocked, planned complete, attempted, unattempted executable, executed command, failed, stale, busy, admission-invalid, admission-pending, and blocked counts |
 
 Run records contain the planned fixture/action/command. In execute mode they
 also include the embedded `/fig_run` result, including additive `plan_binding`

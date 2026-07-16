@@ -107,6 +107,7 @@ def test_plan_only_reports_planned_runs_without_executing(
         "failed": 0,
         "stale": 0,
         "busy": 0,
+        "admission_invalid": 0,
         "admission_pending": 0,
         "blocked": 1,
         "unattempted_executable": 0,
@@ -326,6 +327,7 @@ def test_main_returns_one_for_executed_delegated_command_failure(
     ("stop_reason", "summary_key"),
     (
         (fig_queue_run.fig_run.STOP_ADMISSION_BUSY, "busy"),
+        (fig_queue_run.fig_run.STOP_ADMISSION_INVALID, "admission_invalid"),
         (
             fig_queue_run.fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING,
             "admission_pending",
@@ -378,6 +380,7 @@ def test_execute_counts_admission_stops_and_continues_batch(
     "stop_reason",
     (
         fig_queue_run.fig_run.STOP_ADMISSION_BUSY,
+        fig_queue_run.fig_run.STOP_ADMISSION_INVALID,
         fig_queue_run.fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING,
     ),
 )

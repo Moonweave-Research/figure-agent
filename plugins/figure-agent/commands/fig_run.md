@@ -65,6 +65,11 @@ mutation and records `plan_binding.scope: step_admission`.
 If the fixture lease is already held, the runner stops as retryable
 `admission_busy`, starts no subprocess, leaves `executed_count` unchanged, and
 returns a read-only workflow-agent handoff. Plan-only runs acquire no lease.
+If the fixture path or non-busy lock state becomes invalid during acquisition
+or under-lock validation, the runner instead stops as non-retryable
+`admission_invalid`. It preserves the eligible pre-lock step as
+`would_execute: true`, executes nothing, and emits a sanitized
+`admission_diagnostic` without filesystem paths.
 
 Direct `run_fig_loop` execution remains on the existing self-leased `fig_loop`
 path and is never wrapped in an outer runner lease. A queue-bound first
@@ -125,6 +130,7 @@ because that is a host-vision operation, not a shell command.
 | `final_stop_reason` | string | runner reason for stopping |
 | `executed_count` | int | number of shell commands actually run |
 | `plan_binding` | object, optional | step-admission comparison with `basis: queue_first_step | live_prelock`, planned/live action and command evidence, and `matched`, `stale`, or `admission_pending` state |
+| `admission_diagnostic` | object, optional | sanitized non-retryable fixture/lock diagnostic for `admission_invalid`; no filesystem paths |
 | `boundary_handoff` | object, optional | present for non-`complete` stops; explanatory only |
 | `journal` | object, optional | reference to the non-authoritative `.scratch/fig-run-runs/` record unless `--no-record` is used |
 | `journal_error` | object, optional | recording failure details; run payload remains usable |
@@ -223,6 +229,9 @@ action is `patch_handoff_stop`, the handoff reports
   is attempted.
 - `admission_busy` — the fixture admission lease is held; no subprocess starts
   and the read-only handoff may be retried from fresh live state.
+- `admission_invalid` — the fixture path, lock state, or under-lock validation
+  became unsafe; no subprocess starts and the boundary must be repaired before
+  a new live run.
 - `run_fig_loop_admission_integration_pending` — a queue-bound `run_fig_loop`
   first step is deliberately not delegated yet; direct `fig_run` keeps the
   existing self-leased path.
