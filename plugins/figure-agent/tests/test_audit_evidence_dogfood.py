@@ -274,7 +274,14 @@ def _make_repo_fixture(
         f"name: {name}\npanels: []\nstyle_profile: polymer-default\n",
         encoding="utf-8",
     )
-    (fixture / "briefing.md").write_text("QA-only audit evidence fixture.\n", encoding="utf-8")
+    (fixture / "briefing.md").write_text(
+        "## 1. Intent\n"
+        "Exercise audit-evidence state propagation across status, driver, and loop "
+        "surfaces without publication claims.\n\n"
+        "## 3. Semantic rules\n"
+        "- Detector evidence must remain attributable to this temporary fixture.\n",
+        encoding="utf-8",
+    )
     (fixture / f"{name}.tex").write_text("% deterministic QA fixture\n", encoding="utf-8")
     build = fixture / "build"
     build.mkdir()
@@ -292,6 +299,7 @@ def _make_repo_fixture(
     for path in (fixture / "spec.yaml", fixture / "briefing.md", fixture / f"{name}.tex"):
         os.utime(path, (old_time, old_time))
     os.utime(build / f"{name}.pdf", (fresh_time, fresh_time))
+    os.utime(fixture / "critique.md", (fresh_time + 100, fresh_time + 100))
     return fixture
 
 
@@ -409,7 +417,7 @@ def _assert_surfaces_state(
         fixture.name,
         "audit evidence dogfood",
         repo_root=tmp_path,
-        runs_root=tmp_path / "runs",
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
     )
     loop_summary = json_stdout_summary(run_dir)
     decision = (run_dir / "decision.md").read_text(encoding="utf-8")
