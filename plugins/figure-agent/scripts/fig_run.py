@@ -729,6 +729,8 @@ def run_workflow(
                 "next_state_path": next_state_path.relative_to(root).as_posix(),
                 "verdict_path": verdict_path.relative_to(root).as_posix(),
                 "reviewer": verdict["reviewer"],
+                "decision_kind": verdict["decision_kind"],
+                "evidence_role": verdict["evidence_role"],
                 "created": verdict["created"],
                 "publication_acceptance": "not_claimed",
             },
@@ -740,7 +742,7 @@ def run_workflow(
                 "blocking_reason": (
                     "publish the exact named development verdict"
                     if "published_state" not in verdict
-                    else "development baseline recorded for the exact reviewed state"
+                    else f"development verdict recorded as {verdict['next_state']}"
                 ),
                 "evidence_refs": [
                     "human_decision_record:"
@@ -748,7 +750,7 @@ def run_workflow(
                     "closed_loop_state:"
                     + state_evidence_path.relative_to(root).as_posix(),
                 ],
-                "allowed_scope": ["publish the bound development-baseline state"],
+                "allowed_scope": ["publish the bound development-verdict state"],
                 "forbidden_scope": [
                     "verdict discovery or synthesis",
                     "accepted or golden mutation",

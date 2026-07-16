@@ -226,7 +226,7 @@ reviewable; open the next slice only after recording stop conditions and evidenc
   `repair_required`. Never discover a response, invoke a host, accept legacy
   packets implicitly, or claim publication acceptance.
 - [x] Consume explicit hash-bound human authorization only from canonical `repair_candidate_ready`; publish the named reviewer without inventing approval.
-- [x] Bind one explicit named human verdict to canonical `visually_re_reviewed`; publish only development acceptance, never release or publication acceptance.
+- [x] Bind one explicit named human verdict to canonical `visually_re_reviewed`; publish only development acceptance, rejection, or a new-repair requirement, never release or publication acceptance.
 - [ ] Wire remaining safe deterministic transitions through default `run` one
   at a time without synthesizing host, scientific, or human evidence.
 - [x] Stop at host-vision, scientific, human authorization, accepted/golden,
@@ -302,11 +302,11 @@ ambiguous attribution, or missing references can emit only a named
 
 Default `run` consumes explicit hash-bound human authorization at
 `repair_candidate_ready`, an explicit repair response at `repair_authorized`, and one
-state-bound named human verdict at `visually_re_reviewed`. Materialize/strict-finalize/rollback publishes
-`machine_repaired` or `repair_required`; completed receipts recover state publication.
+state-bound named human verdict at `visually_re_reviewed`. That verdict can accept the development baseline, reject the artifact, or require a separately authorized repair attempt. Materialize/strict-finalize/rollback publishes
+`machine_repaired` or `repair_required`; completed receipts recover state publication. `repair_failure_record` is a schema-heterogeneous reason-for-repair role, so consumers must validate its referenced schema and decision rather than assume a machine failure.
 Canonical state publishers share one recoverable transition lock and temporarily dual-lock legacy paths. The run discovers no input, invokes no host, admits no legacy packet, and claims no
 publication acceptance. It advances `machine_repaired` to `post_review_requested`,
-stops at `host_llm`, binds the response, and can close only a named development baseline. Maintained-Fig3 controlled-fault replay is mechanism evidence,
+stops at `host_llm`, binds the response, and closes only the named development outcome. Maintained-Fig3 controlled-fault replay is mechanism evidence,
 not an actual defect or publication verdict; prospective proof and R4-R5 remain.
 
 Closed-loop handoffs use these contracts rather than another workflow shell:

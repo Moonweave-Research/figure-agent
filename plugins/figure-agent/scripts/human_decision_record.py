@@ -25,6 +25,30 @@ DEVELOPMENT_BASELINE_APPROVAL = (
 DEVELOPMENT_BASELINE_STATE_BOUNDARY = (
     "development_baseline_state_mutation_allowed"
 )
+DEVELOPMENT_VERDICT_POLICIES = {
+    "accept_development_baseline": {
+        "human_decision": DEVELOPMENT_BASELINE_APPROVAL,
+        "mutation_boundary": DEVELOPMENT_BASELINE_STATE_BOUNDARY,
+        "next_state": "development_accepted",
+        "evidence_role": "human_decision_record",
+    },
+    "reject_development_artifact": {
+        "human_decision": (
+            "reject this exact visually re-reviewed artifact as a development baseline"
+        ),
+        "mutation_boundary": "development_rejection_state_mutation_allowed",
+        "next_state": "rejected",
+        "evidence_role": "human_decision_record",
+    },
+    "request_development_repair": {
+        "human_decision": (
+            "require another repair attempt for this exact visually re-reviewed artifact"
+        ),
+        "mutation_boundary": "development_repair_request_state_mutation_allowed",
+        "next_state": "repair_required",
+        "evidence_role": "repair_failure_record",
+    },
+}
 
 DECISION_KINDS = frozenset(
     {
@@ -336,7 +360,7 @@ def validate_additive_materialization_authorization(
     }
 
 
-def validate_development_baseline_acceptance(
+def validate_development_verdict(
     record: dict[str, Any],
     *,
     fixture: str,
@@ -344,7 +368,7 @@ def validate_development_baseline_acceptance(
     state_path: str,
     state_sha256: str,
 ) -> dict[str, Any]:
-    """Validate one named acceptance bound to one visually re-reviewed state."""
+    """Validate one named verdict bound to one visually re-reviewed state."""
     expected_fields = {
         "schema",
         "fixture",
@@ -376,13 +400,20 @@ def validate_development_baseline_acceptance(
     reviewed_state_path = _required_string(record, "reviewed_state_path")
     if reviewed_state_path != state_path:
         raise HumanDecisionRecordError("development_verdict_state_path_mismatch")
-    if _required_string(record, "decision_kind") != "accept_development_baseline":
+    decision_kind = _required_string(record, "decision_kind")
+    policy = DEVELOPMENT_VERDICT_POLICIES.get(decision_kind)
+    if policy is None:
         raise HumanDecisionRecordError("development_verdict_decision_kind_invalid")
     human_decision = _required_string(record, "human_decision")
-    if human_decision != DEVELOPMENT_BASELINE_APPROVAL:
-        raise HumanDecisionRecordError("development_verdict_not_approved")
+    if human_decision != policy["human_decision"]:
+        error = (
+            "development_verdict_not_approved"
+            if decision_kind == "accept_development_baseline"
+            else "development_verdict_decision_text_invalid"
+        )
+        raise HumanDecisionRecordError(error)
     mutation_boundary = _required_string(record, "mutation_boundary")
-    if mutation_boundary != DEVELOPMENT_BASELINE_STATE_BOUNDARY:
+    if mutation_boundary != policy["mutation_boundary"]:
         raise HumanDecisionRecordError("development_verdict_mutation_boundary_invalid")
     reviewer = _required_string(record, "reviewer")
     reviewed_state_sha256 = _required_string(record, "reviewed_state_sha256")
@@ -395,11 +426,34 @@ def validate_development_baseline_acceptance(
         "fixture": record_fixture,
         "attempt_id": attempt_id,
         "reviewed_state_path": reviewed_state_path,
-        "decision_kind": "accept_development_baseline",
+        "decision_kind": decision_kind,
         "reviewer": reviewer,
         "human_decision": human_decision,
         "human_note": _required_string(record, "human_note"),
         "mutation_boundary": mutation_boundary,
         "reviewed_state_sha256": reviewed_state_sha256,
         "publication_acceptance": "not_claimed",
+        "next_state": policy["next_state"],
+        "evidence_role": policy["evidence_role"],
     }
+
+
+def validate_development_baseline_acceptance(
+    record: dict[str, Any],
+    *,
+    fixture: str,
+    attempt_id: str,
+    state_path: str,
+    state_sha256: str,
+) -> dict[str, Any]:
+    """Compatibility validator restricted to development-baseline acceptance."""
+    normalized = validate_development_verdict(
+        record,
+        fixture=fixture,
+        attempt_id=attempt_id,
+        state_path=state_path,
+        state_sha256=state_sha256,
+    )
+    if normalized["decision_kind"] != "accept_development_baseline":
+        raise HumanDecisionRecordError("development_verdict_decision_kind_invalid")
+    return normalized

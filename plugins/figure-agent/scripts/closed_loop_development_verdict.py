@@ -91,7 +91,7 @@ def _validated_plan(
             "development_verdict_and_state_must_be_adjacent"
         )
     verdict, verdict_bytes = _load_verdict(verdict_path)
-    normalized = human_decision_record.validate_development_baseline_acceptance(
+    normalized = human_decision_record.validate_development_verdict(
         verdict,
         fixture=fixture,
         attempt_id=state["attempt_id"],
@@ -104,28 +104,31 @@ def _validated_plan(
         "verdict_path": verdict_path,
         "verdict_bytes": verdict_bytes,
         "reviewer": normalized["reviewer"],
+        "decision_kind": normalized["decision_kind"],
+        "next_state": normalized["next_state"],
+        "evidence_role": normalized["evidence_role"],
         "next_state_path": published_state_path.parent
-        / f"state-{state['sequence'] + 1:03d}-development_accepted.json",
+        / f"state-{state['sequence'] + 1:03d}-{normalized['next_state']}.json",
     }
 
 
-def _expected_accepted_state(
+def _expected_terminal_state(
     plan: dict[str, Any],
     *,
     workspace_root: Path,
 ) -> dict[str, Any]:
     return closed_loop_attempt_state.transition_state(
         plan["state"],
-        next_state="development_accepted",
+        next_state=str(plan["next_state"]),
         actor=str(plan["reviewer"]),
         actor_role="human_reviewer",
-        evidence={"human_decision_record": plan["verdict_path"]},
+        evidence={str(plan["evidence_role"]): plan["verdict_path"]},
         workspace_root=workspace_root,
         previous_state_path=plan["state_path"],
     )
 
 
-def _matching_published_acceptance(
+def _matching_published_verdict(
     fixture: str,
     plan: dict[str, Any],
     *,
@@ -140,7 +143,7 @@ def _matching_published_acceptance(
             fixture=fixture,
             state_path=next_state_path,
         )
-        expected = _expected_accepted_state(plan, workspace_root=workspace_root)
+        expected = _expected_terminal_state(plan, workspace_root=workspace_root)
     except (
         authority.ClosedLoopPostReviewError,
         closed_loop_attempt_state.ClosedLoopAttemptStateError,
@@ -148,11 +151,11 @@ def _matching_published_acceptance(
         ValueError,
     ) as exc:
         raise ClosedLoopDevelopmentVerdictError(
-            f"development_acceptance_recovery_invalid:{exc}"
+            f"development_verdict_recovery_invalid:{exc}"
         ) from exc
     if published_path != next_state_path or published != expected:
         raise ClosedLoopDevelopmentVerdictError(
-            "development_acceptance_state_conflict"
+            "development_verdict_state_conflict"
         )
     projection = closed_loop_current_state.resolve_current_attempt(
         workspace_root,
@@ -160,7 +163,7 @@ def _matching_published_acceptance(
     )
     if (
         projection.get("resolution") != "current"
-        or projection.get("state") != "development_accepted"
+        or projection.get("state") != plan["next_state"]
         or projection.get("required_actor") != "none"
         or projection.get("terminal") is not True
         or projection.get("publication_acceptance") != "not_claimed"
@@ -178,15 +181,17 @@ def _recovered_result(plan: dict[str, Any], published: dict[str, Any]) -> dict[s
     return {
         "action": ACTION,
         "stop_boundary": "none",
-        "stop_reason": "development_accepted_recovered",
+        "stop_reason": f"{plan['next_state']}_recovered",
         "required_actor": "none",
         "created": False,
         "input_state": plan["state"],
         "input_state_path": plan["state_path"],
-        "next_state": "development_accepted",
+        "next_state": plan["next_state"],
         "next_state_path": plan["next_state_path"],
         "verdict_path": plan["verdict_path"],
         "reviewer": plan["reviewer"],
+        "decision_kind": plan["decision_kind"],
+        "evidence_role": plan["evidence_role"],
         "published_state": published,
         "publication_acceptance": "not_claimed",
     }
@@ -198,7 +203,7 @@ def _matching_or_assert_current(
     *,
     workspace_root: Path,
 ) -> dict[str, Any] | None:
-    published = _matching_published_acceptance(
+    published = _matching_published_verdict(
         fixture,
         plan,
         workspace_root=workspace_root,
@@ -214,7 +219,7 @@ def _matching_or_assert_current(
     except ClosedLoopDevelopmentVerdictError as exc:
         if str(exc) != "closed_loop_canonical_current_state_drift":
             raise
-        published = _matching_published_acceptance(
+        published = _matching_published_verdict(
             fixture,
             plan,
             workspace_root=workspace_root,
@@ -234,7 +239,7 @@ def run_development_verdict(
     workspace_root: Path,
     expected_state_sha256: str | None = None,
 ) -> dict[str, Any]:
-    """Validate or publish one explicit development-baseline acceptance."""
+    """Validate or publish one explicit terminal development verdict."""
     root = Path(os.path.abspath(workspace_root))
     try:
         plan = _validated_plan(
@@ -260,10 +265,12 @@ def run_development_verdict(
                 "created": False,
                 "input_state": plan["state"],
                 "input_state_path": plan["state_path"],
-                "next_state": "development_accepted",
+                "next_state": plan["next_state"],
                 "next_state_path": plan["next_state_path"],
                 "verdict_path": plan["verdict_path"],
                 "reviewer": plan["reviewer"],
+                "decision_kind": plan["decision_kind"],
+                "evidence_role": plan["evidence_role"],
                 "publication_acceptance": "not_claimed",
             }
 
@@ -288,7 +295,7 @@ def run_development_verdict(
                 raise ClosedLoopDevelopmentVerdictError(
                     "development_verdict_inputs_drifted"
                 )
-            next_state = _expected_accepted_state(
+            next_state = _expected_terminal_state(
                 current,
                 workspace_root=root,
             )
@@ -299,15 +306,17 @@ def run_development_verdict(
         return {
             "action": ACTION,
             "stop_boundary": "none",
-            "stop_reason": "development_accepted",
+            "stop_reason": current["next_state"],
             "required_actor": "none",
             "created": True,
             "input_state": current["state"],
             "input_state_path": current["state_path"],
-            "next_state": "development_accepted",
+            "next_state": current["next_state"],
             "next_state_path": next_state_path,
             "verdict_path": current["verdict_path"],
             "reviewer": current["reviewer"],
+            "decision_kind": current["decision_kind"],
+            "evidence_role": current["evidence_role"],
             "published_state": next_state,
             "publication_acceptance": "not_claimed",
         }

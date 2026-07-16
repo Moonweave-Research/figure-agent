@@ -1376,6 +1376,48 @@ def _visually_re_reviewed_attempt(
     return workspace, reviewed_state_path, verdict_path
 
 
+def _write_terminal_development_verdict(
+    verdict_path: Path,
+    *,
+    decision_kind: str,
+) -> tuple[str, str]:
+    policies = {
+        "accept_development_baseline": (
+            "accept this exact visually re-reviewed artifact as a development baseline",
+            "Development baseline only; no release or publication claim.",
+            "development_baseline_state_mutation_allowed",
+            "development_accepted",
+            "human_decision_record",
+        ),
+        "reject_development_artifact": (
+            "reject this exact visually re-reviewed artifact as a development baseline",
+            "Reject this artifact; do not start another repair attempt.",
+            "development_rejection_state_mutation_allowed",
+            "rejected",
+            "human_decision_record",
+        ),
+        "request_development_repair": (
+            "require another repair attempt for this exact visually re-reviewed artifact",
+            "Close this attempt and start a separately authorized repair.",
+            "development_repair_request_state_mutation_allowed",
+            "repair_required",
+            "repair_failure_record",
+        ),
+    }
+    human_decision, note, boundary, next_state, evidence_role = policies[decision_kind]
+    verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
+    verdict.update(
+        {
+            "decision_kind": decision_kind,
+            "human_decision": human_decision,
+            "human_note": note,
+            "mutation_boundary": boundary,
+        }
+    )
+    verdict_path.write_text(json.dumps(verdict), encoding="utf-8")
+    return next_state, evidence_role
+
+
 def test_fig_run_development_verdict_plan_only_is_bound_and_write_free(
     tmp_path: Path,
 ) -> None:
@@ -1444,6 +1486,304 @@ def test_fig_run_development_verdict_publishes_named_terminal_state(
     ]
 
 
+def test_fig_run_development_verdict_publishes_named_rejection(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    _write_terminal_development_verdict(
+        verdict_path,
+        decision_kind="reject_development_artifact",
+    )
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="record the named development rejection",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    next_state_path = workspace / payload["closed_loop"]["next_state_path"]
+    next_state = json.loads(next_state_path.read_text(encoding="utf-8"))
+    assert payload["final_stop_reason"] == "rejected"
+    assert payload["executed_count"] == 1
+    assert payload["closed_loop"]["decision_kind"] == "reject_development_artifact"
+    assert payload["closed_loop"]["evidence_role"] == "human_decision_record"
+    assert next_state["state"] == "rejected"
+    assert next_state["actor"] == "named-human-reviewer"
+    assert next_state["actor_role"] == "human_reviewer"
+    assert next_state["required_actor"] == "none"
+    assert next_state["terminal"] is True
+    assert next_state["publication_acceptance"] == "not_claimed"
+    assert next_state["evidence"] == [
+        {
+            "role": "human_decision_record",
+            "path": verdict_path.relative_to(workspace).as_posix(),
+            "sha256": _sha256(verdict_path),
+        }
+    ]
+
+
+def test_fig_run_development_verdict_publishes_named_repair_request(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    _write_terminal_development_verdict(
+        verdict_path,
+        decision_kind="request_development_repair",
+    )
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="record the named development repair request",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    next_state_path = workspace / payload["closed_loop"]["next_state_path"]
+    next_state = json.loads(next_state_path.read_text(encoding="utf-8"))
+    assert payload["final_stop_reason"] == "repair_required"
+    assert payload["executed_count"] == 1
+    assert payload["closed_loop"]["decision_kind"] == "request_development_repair"
+    assert payload["closed_loop"]["evidence_role"] == "repair_failure_record"
+    assert next_state["state"] == "repair_required"
+    assert next_state["actor"] == "named-human-reviewer"
+    assert next_state["actor_role"] == "human_reviewer"
+    assert next_state["required_actor"] == "none"
+    assert next_state["terminal"] is True
+    assert next_state["publication_acceptance"] == "not_claimed"
+    assert next_state["evidence"] == [
+        {
+            "role": "repair_failure_record",
+            "path": verdict_path.relative_to(workspace).as_posix(),
+            "sha256": _sha256(verdict_path),
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    ("decision_kind", "expected_state"),
+    [
+        ("reject_development_artifact", "rejected"),
+        ("request_development_repair", "repair_required"),
+    ],
+)
+def test_fig_run_negative_development_verdict_plan_only_is_write_free(
+    tmp_path: Path,
+    decision_kind: str,
+    expected_state: str,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    _write_terminal_development_verdict(
+        verdict_path,
+        decision_kind=decision_kind,
+    )
+    before = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="plan the named negative development verdict",
+        execute=False,
+        closed_loop_state=state_path,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    after = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+    assert payload["final_stop_reason"] == "plan_only"
+    assert payload["closed_loop"]["next_state"] == expected_state
+    assert payload["closed_loop"]["created"] is False
+    assert payload["boundary_handoff"]["publication_acceptance"] == "not_claimed"
+    assert after == before
+
+
+@pytest.mark.parametrize(
+    ("decision_kind", "expected_state"),
+    [
+        ("reject_development_artifact", "rejected"),
+        ("request_development_repair", "repair_required"),
+    ],
+)
+def test_fig_run_negative_development_verdict_recovers_exact_terminal_state(
+    tmp_path: Path,
+    decision_kind: str,
+    expected_state: str,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    _write_terminal_development_verdict(
+        verdict_path,
+        decision_kind=decision_kind,
+    )
+    created = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="record the named negative development verdict",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    recovered = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="record the named negative development verdict",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    assert recovered["final_stop_reason"] == f"{expected_state}_recovered"
+    assert recovered["executed_count"] == 0
+    assert recovered["closed_loop"]["created"] is False
+    assert recovered["closed_loop"]["next_state_path"] == (
+        created["closed_loop"]["next_state_path"]
+    )
+    assert len(list(state_path.parent.glob(f"state-*-{expected_state}.json"))) == 1
+
+
+@pytest.mark.parametrize(
+    ("decision_kind", "field", "value", "error"),
+    [
+        (
+            "reject_development_artifact",
+            "human_decision",
+            "accept this exact visually re-reviewed artifact as a development baseline",
+            "development_verdict_decision_text_invalid",
+        ),
+        (
+            "request_development_repair",
+            "mutation_boundary",
+            "development_rejection_state_mutation_allowed",
+            "development_verdict_mutation_boundary_invalid",
+        ),
+    ],
+)
+def test_negative_development_verdict_cannot_borrow_another_decision_contract(
+    tmp_path: Path,
+    decision_kind: str,
+    field: str,
+    value: str,
+    error: str,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    _write_terminal_development_verdict(
+        verdict_path,
+        decision_kind=decision_kind,
+    )
+    verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
+    verdict[field] = value
+    verdict_path.write_text(json.dumps(verdict), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=error):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="reject a crossed development verdict contract",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_development_verdict=verdict_path,
+            repo_root=workspace,
+        )
+
+    assert not any(state_path.parent.glob("state-*-rejected.json"))
+    assert not any(state_path.parent.glob("state-*-repair_required.json"))
+
+
+@pytest.mark.parametrize(
+    ("decision_kind", "expected_state"),
+    [
+        ("reject_development_artifact", "rejected"),
+        ("request_development_repair", "repair_required"),
+    ],
+)
+def test_default_fig_run_negative_verdict_binds_current_without_host(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    decision_kind: str,
+    expected_state: str,
+) -> None:
+    workspace, _state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    _write_terminal_development_verdict(
+        verdict_path,
+        decision_kind=decision_kind,
+    )
+
+    def forbidden_host_or_shell(*args: object, **kwargs: object) -> object:
+        raise AssertionError("verdict consumption must not invoke shell or host")
+
+    monkeypatch.setattr(fig_run, "_run_command", forbidden_host_or_shell)
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="record the named negative development verdict",
+        execute=True,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    assert payload["final_stop_reason"] == expected_state
+    assert payload["closed_loop"]["next_state"] == expected_state
+    assert payload["closed_loop"]["publication_acceptance"] == "not_claimed"
+
+
+def test_development_verdict_cannot_switch_terminal_branch_after_publication(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    original_verdict = verdict_path.read_bytes()
+    accepted_payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="accept the development baseline",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+    accepted_path = workspace / accepted_payload["closed_loop"]["next_state_path"]
+    competing_verdict_path = verdict_path.with_name("competing-development-verdict.json")
+    competing_verdict_path.write_bytes(original_verdict)
+    _write_terminal_development_verdict(
+        competing_verdict_path,
+        decision_kind="reject_development_artifact",
+    )
+
+    with pytest.raises(ValueError, match="canonical_current_state_drift"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="attempt to switch the terminal verdict",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_development_verdict=competing_verdict_path,
+            repo_root=workspace,
+        )
+
+    accepted = json.loads(accepted_path.read_text(encoding="utf-8"))
+    assert closed_loop_attempt_state.validate_state(
+        accepted,
+        workspace_root=workspace,
+    ) == accepted
+    assert verdict_path.read_bytes() == original_verdict
+    assert not any(state_path.parent.glob("state-*-rejected.json"))
+
+
 def test_fig_run_development_verdict_recovers_exact_published_state(
     tmp_path: Path,
 ) -> None:
@@ -1485,9 +1825,7 @@ def test_fig_run_development_verdict_recovers_publish_between_match_and_current_
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
-    original_matching = (
-        closed_loop_development_verdict._matching_published_acceptance
-    )
+    original_matching = closed_loop_development_verdict._matching_published_verdict
     injected = False
 
     def publish_after_first_match(
@@ -1504,7 +1842,7 @@ def test_fig_run_development_verdict_recovers_publish_between_match_and_current_
         )
         if published is None and not injected:
             injected = True
-            expected = closed_loop_development_verdict._expected_accepted_state(
+            expected = closed_loop_development_verdict._expected_terminal_state(
                 plan,
                 workspace_root=workspace_root,
             )
@@ -1516,7 +1854,7 @@ def test_fig_run_development_verdict_recovers_publish_between_match_and_current_
 
     monkeypatch.setattr(
         closed_loop_development_verdict,
-        "_matching_published_acceptance",
+        "_matching_published_verdict",
         publish_after_first_match,
     )
 
