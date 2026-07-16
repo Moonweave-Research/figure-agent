@@ -42,11 +42,11 @@ fixtures:
     critique_reference_pack: false
     paper_aesthetic_context:
     journal_art_direction_playbook:
-    adoption_status: not_applicable_no_reference
+    adoption_status: deferred_geometry_needed
     rationale: >
-      Composition comparison fixture declares scientific panel semantics but has
-      no reference image, critique reference pack, aesthetic intent, or
-      deterministic boundary/path checks to adopt.
+      Current evidence reports visual-clash 11/13, undeclared-geometry 23/24,
+      and failed collision/semantic coverage. Fixture-specific geometry adoption
+      is required rather than treating the missing reference as not applicable.
 
   - fixture: fig1_hybrid_complex_panel_pilot
     reference_image: true
@@ -79,11 +79,11 @@ fixtures:
     critique_reference_pack: false
     paper_aesthetic_context:
     journal_art_direction_playbook:
-    adoption_status: not_applicable_no_reference
+    adoption_status: deferred_geometry_needed
     rationale: >
-      Updated agent redraw fixture declares scientific panel semantics but has
-      no reference image, critique reference pack, aesthetic intent, or
-      deterministic boundary/path checks to adopt.
+      The editable TeX carries high-risk Panel F connector, grounding, and label
+      semantics. Those hazards require fixture-specific geometry adoption even
+      though no reference image is declared.
 
   - fixture: fig3_trap_schematic_slice3_semantic
     reference_image: true
