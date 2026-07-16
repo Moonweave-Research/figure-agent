@@ -252,8 +252,10 @@ def validate_legacy_runs_root(workspace_root: Path, runs_root: Path) -> Path:
     """Keep legacy loop evidence inside its canonical workspace scratch root."""
     root = Path(os.path.abspath(workspace_root))
     requested = Path(os.path.abspath(runs_root))
+    scratch = root / ".scratch"
+    canonical = scratch / "fig-loop-runs"
+    canonical_component_symlink = scratch.is_symlink() or canonical.is_symlink()
     resolved = requested.resolve()
-    canonical = root / ".scratch" / "fig-loop-runs"
     canonical_resolved = canonical.resolve()
 
     def within(path: Path, parent: Path) -> bool:
@@ -265,6 +267,10 @@ def validate_legacy_runs_root(workspace_root: Path, runs_root: Path) -> Path:
 
     requested_inside = within(requested, root)
     resolved_inside = within(resolved, root)
+    if canonical_component_symlink and (
+        within(requested, canonical) or within(resolved, canonical_resolved)
+    ):
+        raise ClosedLoopAttemptStateError("runs_root_canonical_symlink")
     if requested_inside and (
         not within(requested, canonical)
         or not resolved_inside

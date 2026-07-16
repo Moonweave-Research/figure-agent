@@ -136,6 +136,43 @@ def test_external_temp_runs_root_remains_supported(tmp_path: Path) -> None:
     assert not (tmp_path / ".scratch").exists()
 
 
+def test_external_alias_to_nonsymlinked_canonical_runs_root_remains_supported(
+    tmp_path: Path,
+) -> None:
+    _make_fixture(tmp_path)
+    canonical_runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    canonical_runs_root.mkdir(parents=True)
+    alias = tmp_path.parent / "canonical-runs-alias"
+    alias.symlink_to(canonical_runs_root)
+
+    run_dir = run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=alias)
+
+    assert run_dir.is_relative_to(canonical_runs_root)
+    assert (run_dir / "run_manifest.json").is_file()
+
+
+@pytest.mark.parametrize("component", ["scratch", "runs_root"])
+def test_canonical_runs_root_symlink_is_rejected_before_loop_checkpoint(
+    tmp_path: Path, component: str
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    target = fixture / "review" / "legacy-runs"
+    target.mkdir(parents=True)
+    scratch = tmp_path / ".scratch"
+    canonical_runs_root = scratch / "fig-loop-runs"
+    if component == "scratch":
+        scratch.symlink_to(target)
+    else:
+        scratch.mkdir()
+        canonical_runs_root.symlink_to(target)
+
+    with pytest.raises(FigLoopError, match="runs_root_canonical_symlink"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=canonical_runs_root)
+
+    assert not (target / "loop_demo").exists()
+    assert not list(target.glob("*/run_manifest.json"))
+
+
 def test_symlinked_loop_source_is_rejected_before_scratch_output(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
     outside = tmp_path.parent / "outside.tex"

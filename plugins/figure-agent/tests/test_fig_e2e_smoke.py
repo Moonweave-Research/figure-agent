@@ -473,6 +473,37 @@ def test_e2e_rejects_noncanonical_workspace_runs_root_before_commands(
     assert not (tmp_path / ".scratch").exists()
 
 
+@pytest.mark.parametrize("component", ["scratch", "runs_root"])
+@pytest.mark.parametrize("provide_runs_root", [False, True])
+def test_e2e_rejects_canonical_runs_root_symlink_before_commands_or_outputs(
+    tmp_path: Path, component: str, provide_runs_root: bool
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    target = fixture / "review" / "legacy-runs"
+    target.mkdir(parents=True)
+    scratch = tmp_path / ".scratch"
+    canonical_runs_root = scratch / "fig-loop-runs"
+    if component == "scratch":
+        scratch.symlink_to(target)
+    else:
+        scratch.mkdir()
+        canonical_runs_root.symlink_to(target)
+    calls: list[list[str]] = []
+
+    with pytest.raises(smoke.SmokeError, match="runs_root_canonical_symlink"):
+        smoke.run_smoke(
+            fixture.name,
+            repo_root=tmp_path,
+            command_runner=lambda args, **_kwargs: calls.append(args) or _completed(args),
+            **({"runs_root": canonical_runs_root} if provide_runs_root else {}),
+        )
+
+    assert calls == []
+    assert not (fixture / "build").exists()
+    assert not (fixture / "exports").exists()
+    assert not list(target.glob("*/run_manifest.json"))
+
+
 def test_e2e_rejects_symlinked_source_before_commands_or_outputs(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
     outside = tmp_path.parent / "outside.tex"

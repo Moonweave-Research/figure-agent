@@ -237,13 +237,13 @@ def run_smoke(
         raise SmokeError(str(exc)) from exc
 
     repo_root = repo_root.resolve()
-    if runs_root is not None:
-        try:
-            runs_root = closed_loop_attempt_state.validate_legacy_runs_root(
-                repo_root, runs_root
-            )
-        except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
-            raise SmokeError(str(exc)) from exc
+    try:
+        runs_root = closed_loop_attempt_state.validate_legacy_runs_root(
+            repo_root,
+            runs_root or repo_root / ".scratch" / "fig-loop-runs",
+        )
+    except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+        raise SmokeError(str(exc)) from exc
     example_dir = repo_root / "examples" / name
     tex_path = example_dir / f"{name}.tex"
     if not example_dir.is_dir():
