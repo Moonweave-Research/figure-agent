@@ -106,6 +106,8 @@ def test_plan_only_reports_planned_runs_without_executing(
         "executed_commands": 0,
         "failed": 0,
         "stale": 0,
+        "busy": 0,
+        "admission_pending": 0,
         "blocked": 1,
         "unattempted_executable": 0,
     }
@@ -318,6 +320,129 @@ def test_main_returns_one_for_executed_delegated_command_failure(
     payload = json.loads(capsys.readouterr().out)
     assert [run["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
     assert payload["summary"]["failed"] == 1
+
+
+@pytest.mark.parametrize(
+    ("stop_reason", "summary_key"),
+    (
+        (fig_queue_run.fig_run.STOP_ADMISSION_BUSY, "busy"),
+        (
+            fig_queue_run.fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING,
+            "admission_pending",
+        ),
+    ),
+)
+def test_execute_counts_admission_stops_and_continues_batch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    stop_reason: str,
+    summary_key: str,
+) -> None:
+    for name in ("alpha", "beta"):
+        (tmp_path / "examples" / name).mkdir(parents=True)
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+    calls: list[str] = []
+
+    def fake_run_workflow(name: str, **kwargs: Any) -> dict[str, Any]:
+        calls.append(name)
+        return {
+            "schema": "figure-agent.run.v1",
+            "fixture": name,
+            "executed_count": 0 if name == "alpha" else 1,
+            "final_stop_reason": (
+                stop_reason
+                if name == "alpha"
+                else fig_queue_run.fig_run.STOP_COMPLETE
+            ),
+        }
+
+    monkeypatch.setattr(fig_queue_run.fig_run, "run_workflow", fake_run_workflow)
+
+    payload = fig_queue_run.run_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        execute=True,
+        max_steps=4,
+        max_fixtures=10,
+        fixtures=None,
+        filters={},
+    )
+
+    assert calls == ["alpha", "beta"]
+    assert payload["summary"][summary_key] == 1
+    assert payload["summary"]["executed_commands"] == 1
+
+
+@pytest.mark.parametrize(
+    "stop_reason",
+    (
+        fig_queue_run.fig_run.STOP_ADMISSION_BUSY,
+        fig_queue_run.fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING,
+    ),
+)
+def test_main_returns_one_for_admission_stop(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    stop_reason: str,
+) -> None:
+    for name in ("alpha", "beta"):
+        (tmp_path / "examples" / name).mkdir(parents=True)
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+    monkeypatch.setattr(
+        fig_queue_run.fig_run,
+        "run_workflow",
+        lambda name, **kwargs: {
+            "schema": "figure-agent.run.v1",
+            "fixture": name,
+            "executed_count": 0,
+            "final_stop_reason": stop_reason,
+        },
+    )
+
+    assert fig_queue_run.main(
+        ["--mode", "review", "--goal", "triage", "--execute"], repo_root=tmp_path
+    ) == 1
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["summary"]["failed"] == 0
+
+
+def test_workspace_diagnostic_exit_two_precedes_nested_admission_busy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    payload = {
+        "schema": fig_queue_run.SCHEMA,
+        "queue": {
+            "workspace_diagnostic": {
+                "schema": fig_queue.WORKSPACE_DIAGNOSTIC_SCHEMA,
+                "state": "fixture_symlink",
+                "workspace_root": str(tmp_path),
+                "missing": [],
+                "message": "unsafe workspace",
+            }
+        },
+        "runs": [
+            {
+                "fixture": "alpha",
+                "result": {
+                    "final_stop_reason": fig_queue_run.fig_run.STOP_ADMISSION_BUSY
+                },
+            }
+        ],
+    }
+    monkeypatch.setattr(fig_queue_run, "run_queue", lambda **kwargs: payload)
+    monkeypatch.setattr(fig_queue_run.fig_queue, "_print_workspace_diagnostic", lambda queue: None)
+    monkeypatch.setattr(
+        fig_queue_run.fig_queue,
+        "workspace_diagnostic_exit_code",
+        lambda queue: 2,
+    )
+
+    assert fig_queue_run.main(
+        ["--mode", "review", "--goal", "triage", "--execute"], repo_root=tmp_path
+    ) == 2
+    assert json.loads(capsys.readouterr().out)["runs"][0]["fixture"] == "alpha"
 
 
 @pytest.mark.parametrize(

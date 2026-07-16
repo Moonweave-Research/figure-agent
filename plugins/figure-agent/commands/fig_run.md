@@ -47,19 +47,30 @@ any unsupported mutation.
 
 The internal `run_workflow` API also accepts an optional paired
 `expected_first_action` and `expected_first_safe_command`. `/fig_queue_run`
-uses this pair to bind only the first live driver step to the queue row it
+uses this pair to bind the first admitted live driver step to the queue row it
 selected. Both values must be present together and cannot be combined with
-explicit closed-loop lifecycle inputs. Direct `/fig_run` calls omit them and
-keep the existing behavior.
+explicit closed-loop lifecycle inputs. Direct `/fig_run` calls omit them.
 
-Immediately after the first live driver query, the runner compares the queued
-action and command with the live action and command. A live stop boundary also
-invalidates the queued executable plan. Any mismatch stops as `stale_plan`
-before shell or closed-loop mutation, records the non-executed live driver step,
-and returns a read-only workflow-agent handoff. An exact match records
-`plan_binding.state: matched`; after that first command succeeds, later driver
-queries are normal live replanning and are not constrained to the old queue
-snapshot.
+In execute mode, `run_compile`, `run_adjudicate`, and `run_export` each acquire
+the shared fixture admission lease independently. The runner identifies a
+pre-lock candidate, acquires the lease, re-queries the driver, and revalidates
+the exact action, command, absence of a stop boundary, and every action-specific
+safety predicate while the lease is held. It holds the lease through subprocess
+completion, releases it, and reacquires separately for a later mutation step.
+A direct call compares the pre-lock candidate with the under-lock live result.
+A queue-bound first step compares the queued expectation with that under-lock
+result. Any mismatch or lost safety predicate stops as `stale_plan` before
+mutation and records `plan_binding.scope: step_admission`.
+
+If the fixture lease is already held, the runner stops as retryable
+`admission_busy`, starts no subprocess, leaves `executed_count` unchanged, and
+returns a read-only workflow-agent handoff. Plan-only runs acquire no lease.
+
+Direct `run_fig_loop` execution remains on the existing self-leased `fig_loop`
+path and is never wrapped in an outer runner lease. A queue-bound first
+`run_fig_loop` step temporarily stops without a subprocess as
+`run_fig_loop_admission_integration_pending`; integrating that self-leased path
+with queue expectations is deferred to the next slice.
 
 Default mode is plan-only. Without `--execute`, the command emits what would be
 run and does not mutate fixture source, exports, accepted state, or golden
@@ -113,7 +124,7 @@ because that is a host-vision operation, not a shell command.
 | `final_stop_boundary` | string or null | last driver stop boundary |
 | `final_stop_reason` | string | runner reason for stopping |
 | `executed_count` | int | number of shell commands actually run |
-| `plan_binding` | object, optional | first-step-only queued plan comparison: `matched` or `stale`, with planned/live action and command evidence |
+| `plan_binding` | object, optional | step-admission comparison with `basis: queue_first_step | live_prelock`, planned/live action and command evidence, and `matched`, `stale`, or `admission_pending` state |
 | `boundary_handoff` | object, optional | present for non-`complete` stops; explanatory only |
 | `journal` | object, optional | reference to the non-authoritative `.scratch/fig-run-runs/` record unless `--no-record` is used |
 | `journal_error` | object, optional | recording failure details; run payload remains usable |
@@ -207,9 +218,14 @@ action is `patch_handoff_stop`, the handoff reports
 - `not_executable_action` — driver selected an unsupported action, or an
   allowlisted action failed its extra safety predicate.
 - `command_failed` — an executed command returned non-zero.
-- `stale_plan` — the first live driver action/command no longer matches the
-  queue-bound expectation, or the live step now has a stop boundary; no
-  mutation is attempted.
+- `stale_plan` — the under-lock live driver action/command or safety state no
+  longer matches the queued first step or direct pre-lock candidate; no mutation
+  is attempted.
+- `admission_busy` — the fixture admission lease is held; no subprocess starts
+  and the read-only handoff may be retried from fresh live state.
+- `run_fig_loop_admission_integration_pending` — a queue-bound `run_fig_loop`
+  first step is deliberately not delegated yet; direct `fig_run` keeps the
+  existing self-leased path.
 - `complete` — driver selected `complete`.
 - `repeated_executable_action` — a successful command was followed by the same
   driver action and shell command again, so the runner stopped instead of
@@ -229,3 +245,5 @@ copy-paste for deterministic shell work the driver already selected.
 `/fig_drive --mode final --dry-run` is intentionally driver-only; `/fig_run`
 does not execute final mode because final readiness is an explanatory
 human/release preset, not a new automation lane.
+Admission success is a machine safety result only and never claims visual,
+human-development, release, or publication acceptance.

@@ -307,6 +307,21 @@ Canonical state publishers share one recoverable transition lock and temporarily
 stops at `host_llm`, binds the response, and closes only the named development outcome. Maintained-Fig3 controlled-fault replay is mechanism evidence,
 not an actual defect or publication verdict; prospective proof and R4-R5 remain.
 Direct legacy `fig_loop` shares a recoverable fixture-root admission lease with root admission: it holds that lease from canonical resolution through scratch evidence writing, and rejects current, invalid, ambiguous, or busy resolution before creating `.scratch/fig-loop-runs/` output.
+The bounded runner now acquires that same fixture admission lease separately for
+each compile, adjudication-scaffold, or export step. It re-queries the driver and
+revalidates the exact action, command, stop boundary, and action-specific safety
+while the lease is held, keeps the lease through subprocess completion, and then
+releases it before selecting the next step. Driver drift stops as `stale_plan`;
+a busy lease stops as retryable `admission_busy`, with no subprocess and no
+executed-count increment. Plan-only runner calls acquire no lease.
+
+Direct `fig_run` delegation to `fig_loop` remains on the existing self-leased
+`fig_loop` path and is not wrapped in an outer lease. Queue-bound `fig_loop`
+delegation temporarily stops without a subprocess as
+`run_fig_loop_admission_integration_pending`; queue execution counts that stop,
+continues the batch, and exits nonzero after emitting the complete JSON result.
+These machine admission gates do not establish visual, human-development,
+release, or publication acceptance.
 
 Closed-loop handoffs use these contracts rather than another workflow shell:
 `figure-agent.repair-materialization-preview.v1`, `figure-agent.repair-materialization-receipt.v2`,

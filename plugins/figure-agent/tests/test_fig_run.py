@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +50,7 @@ def _install_driver_sequence(
     monkeypatch: pytest.MonkeyPatch, sequence: list[dict[str, Any]]
 ) -> list[str]:
     calls: list[str] = []
+    current: dict[str, Any] | None = None
 
     def _fake_driver(
         name: str,
@@ -56,11 +59,41 @@ def _install_driver_sequence(
         goal: str,
         repo_root: Path,
     ) -> dict[str, Any]:
+        nonlocal current
         calls.append(f"{name}:{mode}:{goal}:{repo_root}")
         index = min(len(calls) - 1, len(sequence) - 1)
-        return dict(sequence[index])
+        current = dict(sequence[index])
+        return dict(current)
+
+    def _fake_under_admission_driver(
+        name: str,
+        *,
+        mode: str,
+        goal: str,
+        repo_root: Path,
+    ) -> dict[str, Any]:
+        assert current is not None
+        return dict(current)
+
+    @contextmanager
+    def _fake_admission_lock(
+        workspace_root: Path, fixture: str
+    ) -> Iterator[None]:
+        yield
 
     monkeypatch.setattr(fig_run, "_driver_summary", _fake_driver)
+    monkeypatch.setattr(
+        fig_run,
+        "_driver_summary_under_admission",
+        _fake_under_admission_driver,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        fig_run.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _fake_admission_lock,
+        raising=False,
+    )
     return calls
 
 
@@ -84,6 +117,17 @@ def test_plan_only_reports_compile_without_executing(
 
     monkeypatch.setattr(fig_run, "_run_command", _fake_run)
 
+    @contextmanager
+    def _unexpected_lock(workspace_root: Path, fixture: str) -> Iterator[None]:
+        pytest.fail("plan-only run acquired fixture admission lease")
+        yield
+
+    monkeypatch.setattr(
+        fig_run.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _unexpected_lock,
+    )
+
     payload = fig_run.run_workflow(
         "runner_demo",
         mode="review",
@@ -100,6 +144,483 @@ def test_plan_only_reports_compile_without_executing(
     assert payload["steps"][0]["would_execute"] is True
     assert payload["steps"][0]["executed"] is False
     assert commands == []
+
+
+@pytest.mark.parametrize(
+    ("action", "safe_command", "status"),
+    (
+        (
+            fig_driver.ACTION_RUN_COMPILE,
+            "bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            {"render_state": "STALE"},
+        ),
+        (
+            fig_driver.ACTION_RUN_ADJUDICATE,
+            "uv run python3 scripts/critique_adjudication.py scaffold runner_demo",
+            {"render_state": "FRESH"},
+        ),
+        (
+            fig_driver.ACTION_RUN_EXPORT,
+            "uv run python3 scripts/run_export.py runner_demo",
+            {
+                "acceptance_state": "NOT_DECLARED",
+                "export_state": "STALE",
+                "critique_state": "FRESH",
+            },
+        ),
+    ),
+)
+def test_execute_mutation_command_runs_while_fixture_lease_is_held(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    action: str,
+    safe_command: str,
+    status: dict[str, Any],
+) -> None:
+    (tmp_path / "examples" / "runner_demo").mkdir(parents=True)
+    summary = _driver_summary(
+        action=action,
+        safe_command=safe_command,
+        status=status,
+    )
+    _install_driver_sequence(
+        monkeypatch,
+        [summary, _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None)],
+    )
+    lease_held = False
+    lease_events: list[str] = []
+
+    @contextmanager
+    def _tracking_lock(workspace_root: Path, fixture: str) -> Iterator[None]:
+        nonlocal lease_held
+        assert workspace_root == tmp_path
+        assert fixture == "runner_demo"
+        assert lease_held is False
+        lease_held = True
+        lease_events.append("acquire")
+        try:
+            yield
+        finally:
+            lease_events.append("release")
+            lease_held = False
+
+    def _under_lock_driver(
+        name: str,
+        *,
+        mode: str,
+        goal: str,
+        repo_root: Path,
+    ) -> dict[str, Any]:
+        assert lease_held is True
+        return dict(summary)
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        assert lease_held is True
+        assert command == safe_command
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(
+        fig_run.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _tracking_lock,
+    )
+    monkeypatch.setattr(fig_run, "_driver_summary_under_admission", _under_lock_driver)
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert payload["executed_count"] == 1
+    assert payload["final_stop_reason"] == fig_run.STOP_COMPLETE
+    assert lease_events == ["acquire", "release"]
+
+
+def test_execute_releases_and_reacquires_fixture_lease_for_each_mutation_step(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "examples" / "runner_demo").mkdir(parents=True)
+    compile_summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_COMPILE,
+        safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+    )
+    export_summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_EXPORT,
+        safe_command="uv run python3 scripts/run_export.py runner_demo",
+        status={
+            "acceptance_state": "NOT_DECLARED",
+            "export_state": "STALE",
+            "critique_state": "FRESH",
+        },
+    )
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            compile_summary,
+            export_summary,
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    lease_held = False
+    lease_events: list[str] = []
+    under_lock_summaries = iter((compile_summary, export_summary))
+
+    @contextmanager
+    def _tracking_lock(workspace_root: Path, fixture: str) -> Iterator[None]:
+        nonlocal lease_held
+        assert lease_held is False
+        lease_held = True
+        lease_events.append("acquire")
+        try:
+            yield
+        finally:
+            lease_events.append("release")
+            lease_held = False
+
+    def _under_lock_driver(name: str, **kwargs: Any) -> dict[str, Any]:
+        assert lease_held is True
+        return dict(next(under_lock_summaries))
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        assert lease_held is True
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(
+        fig_run.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _tracking_lock,
+    )
+    monkeypatch.setattr(fig_run, "_driver_summary_under_admission", _under_lock_driver)
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert payload["executed_count"] == 2
+    assert lease_events == ["acquire", "release", "acquire", "release"]
+
+
+def test_execute_stops_retryably_when_fixture_admission_lease_is_busy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_COMPILE,
+        safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+    )
+    _install_driver_sequence(monkeypatch, [summary])
+    commands: list[str] = []
+
+    @contextmanager
+    def _busy_lock(workspace_root: Path, fixture: str) -> Iterator[None]:
+        raise fig_run.closed_loop_attempt_state.FixtureAdmissionLeaseBusy(
+            "fixture_admission_lease_busy"
+        )
+        yield
+
+    monkeypatch.setattr(
+        fig_run.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _busy_lock,
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
+    assert payload["final_stop_reason"] == fig_run.STOP_ADMISSION_BUSY
+    assert payload["steps"][0]["stop_reason"] == fig_run.STOP_ADMISSION_BUSY
+    assert payload["boundary_handoff"]["required_actor"] == "workflow_agent"
+    assert payload["boundary_handoff"]["allowed_scope"] == ["read-only"]
+    assert payload["boundary_handoff"]["publication_acceptance"] == "not_claimed"
+
+
+def test_direct_execute_stops_on_prelock_to_underlock_driver_drift(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prelock = _driver_summary(
+        action=fig_driver.ACTION_RUN_COMPILE,
+        safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+    )
+    underlock = _driver_summary(
+        action=fig_driver.ACTION_RUN_EXPORT,
+        safe_command="fig-agent export runner_demo",
+        status={
+            "acceptance_state": "NOT_DECLARED",
+            "export_state": "STALE",
+            "critique_state": "FRESH",
+        },
+    )
+    _install_driver_sequence(monkeypatch, [prelock])
+    monkeypatch.setattr(
+        fig_run,
+        "_driver_summary_under_admission",
+        lambda *args, **kwargs: dict(underlock),
+    )
+    commands: list[str] = []
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["final_stop_reason"] == fig_run.STOP_STALE_PLAN
+    assert payload["plan_binding"]["basis"] == "live_prelock"
+    assert payload["plan_binding"]["state"] == "stale"
+    assert payload["plan_binding"]["mutation_prevented"] is True
+    assert "queued" not in payload["boundary_handoff"]["blocking_reason"]
+
+
+def test_underlock_action_safety_is_revalidated_before_subprocess(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = tmp_path / "examples" / "runner_demo"
+    fixture.mkdir(parents=True)
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_ADJUDICATE,
+        safe_command="fig-agent adjudicate runner_demo",
+    )
+    _install_driver_sequence(monkeypatch, [summary])
+    commands: list[str] = []
+
+    @contextmanager
+    def _state_changing_lock(
+        workspace_root: Path, fixture_name: str
+    ) -> Iterator[None]:
+        (fixture / "critique_adjudication.yaml").write_text(
+            "schema: existing\n",
+            encoding="utf-8",
+        )
+        yield
+
+    monkeypatch.setattr(
+        fig_run.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _state_changing_lock,
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["final_stop_reason"] == fig_run.STOP_STALE_PLAN
+    assert payload["plan_binding"]["live"]["would_execute"] is False
+    assert payload["plan_binding"]["mutation_prevented"] is True
+
+
+def test_queue_bound_first_step_uses_underlock_live_state_for_stale_decision(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    planned_command = (
+        "bash scripts/compile.sh examples/runner_demo/runner_demo.tex"
+    )
+    prelock = _driver_summary(
+        action=fig_driver.ACTION_RUN_COMPILE,
+        safe_command=planned_command,
+    )
+    underlock = _driver_summary(
+        action=fig_driver.ACTION_RUN_EXPORT,
+        safe_command="fig-agent export runner_demo",
+        status={
+            "acceptance_state": "NOT_DECLARED",
+            "export_state": "STALE",
+            "critique_state": "FRESH",
+        },
+    )
+    _install_driver_sequence(monkeypatch, [prelock])
+    monkeypatch.setattr(
+        fig_run,
+        "_driver_summary_under_admission",
+        lambda *args, **kwargs: dict(underlock),
+    )
+    commands: list[str] = []
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        expected_first_action=fig_driver.ACTION_RUN_COMPILE,
+        expected_first_safe_command=planned_command,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["final_stop_reason"] == fig_run.STOP_STALE_PLAN
+    assert payload["plan_binding"]["basis"] == "queue_first_step"
+    assert payload["plan_binding"]["live"]["action"] == fig_driver.ACTION_RUN_EXPORT
+
+
+def test_direct_fig_loop_keeps_existing_self_leased_execution_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    command = (
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
+    )
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_FIG_LOOP,
+                safe_command=command,
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    commands: list[str] = []
+
+    @contextmanager
+    def _unexpected_outer_lock(
+        workspace_root: Path, fixture: str
+    ) -> Iterator[None]:
+        pytest.fail("direct fig_loop was wrapped in an outer admission lease")
+        yield
+
+    monkeypatch.setattr(
+        fig_run.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _unexpected_outer_lock,
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: (
+            commands.append(command) or fig_run.CommandResult(0, "", "")
+        ),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == [command]
+    assert payload["executed_count"] == 1
+    assert payload["final_stop_reason"] == fig_run.STOP_COMPLETE
+
+
+def test_queue_bound_fig_loop_stops_pending_without_subprocess(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    command = (
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
+    )
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_FIG_LOOP,
+        safe_command=command,
+    )
+    _install_driver_sequence(monkeypatch, [summary])
+    commands: list[str] = []
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        expected_first_action=fig_driver.ACTION_RUN_FIG_LOOP,
+        expected_first_safe_command=command,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
+    assert payload["final_stop_reason"] == (
+        fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING
+    )
+    assert payload["boundary_handoff"]["allowed_scope"] == ["read-only"]
+    assert payload["boundary_handoff"]["publication_acceptance"] == "not_claimed"
+
+
+def test_direct_cli_exit_policy_remains_zero_for_admission_busy(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_COMPILE,
+        safe_command="fig-agent compile runner_demo",
+    )
+    _install_driver_sequence(monkeypatch, [summary])
+
+    @contextmanager
+    def _busy_lock(workspace_root: Path, fixture: str) -> Iterator[None]:
+        raise fig_run.closed_loop_attempt_state.FixtureAdmissionLeaseBusy(
+            "fixture_admission_lease_busy"
+        )
+        yield
+
+    monkeypatch.setattr(
+        fig_run.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _busy_lock,
+    )
+
+    assert fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--execute",
+            "--no-record",
+        ],
+        repo_root=tmp_path,
+    ) == 0
+    assert json.loads(capsys.readouterr().out)["final_stop_reason"] == (
+        fig_run.STOP_ADMISSION_BUSY
+    )
 
 
 def test_execute_runs_compile_then_stops_at_host_critique(
@@ -291,7 +812,9 @@ def test_first_step_expectation_stops_stale_plan_before_mutation(
         }
     ]
     assert payload["plan_binding"] == {
-        "scope": "first_step_only",
+        "scope": "step_admission",
+        "basis": "queue_first_step",
+        "step_index": 1,
         "state": "stale",
         "planned": {
             "action": planned_action,
@@ -301,6 +824,7 @@ def test_first_step_expectation_stops_stale_plan_before_mutation(
             "action": live_action,
             "safe_command": live_command,
             "stop_boundary": live_boundary,
+            "would_execute": False,
         },
         "mutation_prevented": True,
     }
@@ -354,7 +878,9 @@ def test_first_step_expectation_matches_once_then_allows_live_replanning(
     assert payload["executed_count"] == 2
     assert payload["final_stop_reason"] == fig_run.STOP_COMPLETE
     assert payload["plan_binding"] == {
-        "scope": "first_step_only",
+        "scope": "step_admission",
+        "basis": "queue_first_step",
+        "step_index": 1,
         "state": "matched",
         "planned": {
             "action": fig_driver.ACTION_RUN_COMPILE,
@@ -364,6 +890,7 @@ def test_first_step_expectation_matches_once_then_allows_live_replanning(
             "action": fig_driver.ACTION_RUN_COMPILE,
             "safe_command": compile_command,
             "stop_boundary": None,
+            "would_execute": True,
         },
         "mutation_prevented": False,
     }

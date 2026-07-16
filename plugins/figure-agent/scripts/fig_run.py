@@ -15,6 +15,7 @@ import os
 import shlex
 import subprocess
 import sys
+from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -23,6 +24,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import closed_loop_attempt_admission  # noqa: E402
+import closed_loop_attempt_state  # noqa: E402
 import closed_loop_development_verdict as development_verdict_adapter  # noqa: E402
 import closed_loop_machine_repair  # noqa: E402
 import closed_loop_post_review  # noqa: E402
@@ -53,10 +55,19 @@ STOP_HOST_BOUNDARY = "host_boundary"
 STOP_NOT_EXECUTABLE = "not_executable_action"
 STOP_COMMAND_FAILED = "command_failed"
 STOP_STALE_PLAN = "stale_plan"
+STOP_ADMISSION_BUSY = "admission_busy"
+STOP_RUN_FIG_LOOP_ADMISSION_PENDING = "run_fig_loop_admission_integration_pending"
 STOP_COMPLETE = "complete"
 STOP_MAX_STEPS = "max_steps_exceeded"
 STOP_REPEATED_ACTION = "repeated_executable_action"
 PATCH_DEFERRED = "patch_source_mutation_deferred_until_70c"
+LEASED_EXECUTABLE_ACTIONS = frozenset(
+    {
+        fig_driver.ACTION_RUN_ADJUDICATE,
+        fig_driver.ACTION_RUN_COMPILE,
+        fig_driver.ACTION_RUN_EXPORT,
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -78,6 +89,22 @@ def _driver_summary(
     repo_root: Path,
 ) -> dict[str, Any]:
     return fig_driver.build_driver_summary(
+        name,
+        mode=mode,
+        goal=goal,
+        repo_root=repo_root,
+    )
+
+
+def _driver_summary_under_admission(
+    name: str,
+    *,
+    mode: str,
+    goal: str,
+    repo_root: Path,
+) -> dict[str, Any]:
+    """Re-query the driver while the fixture admission lease is held."""
+    return _driver_summary(
         name,
         mode=mode,
         goal=goal,
@@ -533,27 +560,88 @@ def _boundary_handoff(
             "stop_boundary": stop_boundary,
             "required_actor": "workflow_agent",
             "blocking_reason": (
-                "the live first driver action no longer matches the queued plan; "
+                "the live driver action changed before mutation admission; "
                 "no mutation was attempted"
             ),
             "evidence_refs": [
                 f"runner.stop_reason:{STOP_STALE_PLAN}",
-                "runner.plan_binding:first_step_only",
+                "runner.plan_binding:step_admission",
             ],
             "allowed_scope": ["read-only"],
             "forbidden_scope": [
-                "execute the stale queued command",
+                "execute the stale command candidate",
                 "closed-loop lifecycle mutation",
                 "publication acceptance claim",
             ],
             "closeout_checks": [
-                "rebuild the live fixture queue",
+                "rebuild any queue derived from earlier driver state",
                 "rerun live /fig_drive",
             ],
             "continuation_guidance": {
                 "rerun_live_status_first": True,
                 "rerun_live_driver_first": True,
-                "note": "Discard the stale queue row; do not replay its command.",
+                "note": "Discard the stale candidate; do not replay its command.",
+            },
+            "publication_acceptance": "not_claimed",
+        }
+    if final_stop_reason == STOP_ADMISSION_BUSY:
+        return {
+            "schema": BOUNDARY_HANDOFF_SCHEMA,
+            "action": action,
+            "stop_boundary": stop_boundary,
+            "required_actor": "workflow_agent",
+            "blocking_reason": (
+                "the fixture mutation admission lease is busy; no subprocess "
+                "was started"
+            ),
+            "evidence_refs": [f"runner.stop_reason:{STOP_ADMISSION_BUSY}"],
+            "allowed_scope": ["read-only"],
+            "forbidden_scope": [
+                "bypass or remove the fixture admission lease",
+                "execute the unadmitted command",
+                "publication acceptance claim",
+            ],
+            "closeout_checks": [
+                "retry after the current fixture lease holder completes",
+                "rerun live /fig_drive",
+            ],
+            "continuation_guidance": {
+                "rerun_live_status_first": True,
+                "rerun_live_driver_first": True,
+                "retryable": True,
+                "note": "Retry from live state; do not replay the prior command.",
+            },
+            "publication_acceptance": "not_claimed",
+        }
+    if final_stop_reason == STOP_RUN_FIG_LOOP_ADMISSION_PENDING:
+        return {
+            "schema": BOUNDARY_HANDOFF_SCHEMA,
+            "action": action,
+            "stop_boundary": stop_boundary,
+            "required_actor": "workflow_agent",
+            "blocking_reason": (
+                "queue-bound fig_loop admission is not integrated; no subprocess "
+                "was started"
+            ),
+            "evidence_refs": [
+                f"runner.stop_reason:{STOP_RUN_FIG_LOOP_ADMISSION_PENDING}",
+                "runner.plan_binding:step_admission",
+            ],
+            "allowed_scope": ["read-only"],
+            "forbidden_scope": [
+                "wrap fig_loop in an outer admission lease",
+                "execute the queued fig_loop command",
+                "publication acceptance claim",
+            ],
+            "closeout_checks": [
+                "run direct live fig_run only when its self-leased fig_loop path is intended",
+                "rerun live /fig_drive",
+            ],
+            "continuation_guidance": {
+                "rerun_live_status_first": True,
+                "rerun_live_driver_first": True,
+                "retryable": False,
+                "note": "Wait for queue-to-fig_loop admission integration; do not replay.",
             },
             "publication_acceptance": "not_claimed",
         }
@@ -643,11 +731,14 @@ def _result_payload(
     return payload
 
 
-def _first_step_plan_binding(
+def _step_plan_binding(
     *,
     planned_action: str,
     planned_safe_command: str,
     live_summary: dict[str, Any],
+    basis: str,
+    step_index: int,
+    live_would_execute: bool,
 ) -> dict[str, Any]:
     live_action = live_summary.get("action")
     live_safe_command = live_summary.get("safe_command")
@@ -656,9 +747,12 @@ def _first_step_plan_binding(
         live_action == planned_action
         and live_safe_command == planned_safe_command
         and live_stop_boundary is None
+        and live_would_execute
     )
     return {
-        "scope": "first_step_only",
+        "scope": "step_admission",
+        "basis": basis,
+        "step_index": step_index,
         "state": "matched" if matched else "stale",
         "planned": {
             "action": planned_action,
@@ -668,6 +762,7 @@ def _first_step_plan_binding(
             "action": live_action,
             "safe_command": live_safe_command,
             "stop_boundary": live_stop_boundary,
+            "would_execute": live_would_execute,
         },
         "mutation_prevented": not matched,
     }
@@ -845,13 +940,22 @@ def run_workflow(
             goal=goal,
             repo_root=repo_root,
         )
-        if all(first_step_expectation_supplied):
+        if all(first_step_expectation_supplied) and not execute:
             assert expected_first_action is not None
             assert expected_first_safe_command is not None
-            plan_binding = _first_step_plan_binding(
+            live_would_execute = _would_execute(
+                initial_summary,
+                name=name,
+                goal=goal,
+                repo_root=repo_root,
+            )
+            plan_binding = _step_plan_binding(
                 planned_action=expected_first_action,
                 planned_safe_command=expected_first_safe_command,
                 live_summary=initial_summary,
+                basis="queue_first_step",
+                step_index=1,
+                live_would_execute=live_would_execute,
             )
             if plan_binding["state"] == "stale":
                 step = _step_payload(
@@ -1444,6 +1548,7 @@ def run_workflow(
     final_summary: dict[str, Any] | None = None
     final_stop_reason = STOP_MAX_STEPS
     executed_signatures: set[tuple[str, str]] = set()
+    queue_first_step_pending = all(first_step_expectation_supplied)
 
     for index in range(1, max_steps + 1):
         if initial_summary is not None:
@@ -1469,7 +1574,20 @@ def run_workflow(
             break
 
         if not would_execute:
-            stop_reason = _boundary_stop_reason(summary)
+            if queue_first_step_pending:
+                assert expected_first_action is not None
+                assert expected_first_safe_command is not None
+                plan_binding = _step_plan_binding(
+                    planned_action=expected_first_action,
+                    planned_safe_command=expected_first_safe_command,
+                    live_summary=summary,
+                    basis="queue_first_step",
+                    step_index=index,
+                    live_would_execute=False,
+                )
+                stop_reason = STOP_STALE_PLAN
+            else:
+                stop_reason = _boundary_stop_reason(summary)
             steps.append(
                 _step_payload(
                     index=index,
@@ -1482,29 +1600,139 @@ def run_workflow(
             final_stop_reason = stop_reason
             break
 
-        command = summary["safe_command"]
-        signature = (summary["action"], command)
-        if signature in executed_signatures:
+        if summary.get("action") == fig_driver.ACTION_RUN_FIG_LOOP:
+            if queue_first_step_pending:
+                assert expected_first_action is not None
+                assert expected_first_safe_command is not None
+                plan_binding = _step_plan_binding(
+                    planned_action=expected_first_action,
+                    planned_safe_command=expected_first_safe_command,
+                    live_summary=summary,
+                    basis="queue_first_step",
+                    step_index=index,
+                    live_would_execute=would_execute,
+                )
+                stop_reason = (
+                    STOP_RUN_FIG_LOOP_ADMISSION_PENDING
+                    if plan_binding["state"] == "matched"
+                    else STOP_STALE_PLAN
+                )
+                if stop_reason == STOP_RUN_FIG_LOOP_ADMISSION_PENDING:
+                    plan_binding["state"] = "admission_pending"
+                    plan_binding["mutation_prevented"] = True
+                steps.append(
+                    _step_payload(
+                        index=index,
+                        summary=summary,
+                        would_execute=False,
+                        executed=False,
+                        stop_reason=stop_reason,
+                    )
+                )
+                final_stop_reason = stop_reason
+                break
+
+        requires_step_lease = summary.get("action") in LEASED_EXECUTABLE_ACTIONS
+        if (
+            not requires_step_lease
+            and summary.get("action") != fig_driver.ACTION_RUN_FIG_LOOP
+        ):
+            raise ValueError("executable action missing admission policy")
+
+        try:
+            admission_context = (
+                closed_loop_attempt_state.fixture_admission_lock(repo_root, name)
+                if requires_step_lease
+                else nullcontext()
+            )
+            with admission_context:
+                admitted_summary = summary
+                if requires_step_lease:
+                    admitted_summary = _driver_summary_under_admission(
+                        name,
+                        mode=mode,
+                        goal=goal,
+                        repo_root=repo_root,
+                    )
+                    admitted_would_execute = _would_execute(
+                        admitted_summary,
+                        name=name,
+                        goal=goal,
+                        repo_root=repo_root,
+                    )
+                    if queue_first_step_pending:
+                        assert expected_first_action is not None
+                        assert expected_first_safe_command is not None
+                        binding_basis = "queue_first_step"
+                        binding_action = expected_first_action
+                        binding_command = expected_first_safe_command
+                    else:
+                        binding_basis = "live_prelock"
+                        binding_action = summary["action"]
+                        binding_command = summary["safe_command"]
+                    admission_binding = _step_plan_binding(
+                        planned_action=binding_action,
+                        planned_safe_command=binding_command,
+                        live_summary=admitted_summary,
+                        basis=binding_basis,
+                        step_index=index,
+                        live_would_execute=admitted_would_execute,
+                    )
+                    if (
+                        queue_first_step_pending
+                        or admission_binding["state"] == "stale"
+                    ):
+                        plan_binding = admission_binding
+                    final_summary = admitted_summary
+                    if admission_binding["state"] == "stale":
+                        steps.append(
+                            _step_payload(
+                                index=index,
+                                summary=admitted_summary,
+                                would_execute=False,
+                                executed=False,
+                                stop_reason=STOP_STALE_PLAN,
+                            )
+                        )
+                        final_stop_reason = STOP_STALE_PLAN
+                        break
+                command = admitted_summary["safe_command"]
+                signature = (admitted_summary["action"], command)
+                if signature in executed_signatures:
+                    steps.append(
+                        _step_payload(
+                            index=index,
+                            summary=admitted_summary,
+                            would_execute=False,
+                            executed=False,
+                            stop_reason=STOP_REPEATED_ACTION,
+                        )
+                    )
+                    final_stop_reason = STOP_REPEATED_ACTION
+                    break
+                result = _run_command(command, repo_root=repo_root)
+        except closed_loop_attempt_state.FixtureAdmissionLeaseBusy:
             steps.append(
                 _step_payload(
                     index=index,
                     summary=summary,
                     would_execute=False,
                     executed=False,
-                    stop_reason=STOP_REPEATED_ACTION,
+                    stop_reason=STOP_ADMISSION_BUSY,
                 )
             )
-            final_stop_reason = STOP_REPEATED_ACTION
+            final_summary = summary
+            final_stop_reason = STOP_ADMISSION_BUSY
             break
 
-        result = _run_command(command, repo_root=repo_root)
+        queue_first_step_pending = False
         executed_count += 1
         executed_signatures.add(signature)
         stop_reason = STOP_COMMAND_FAILED if result.returncode != 0 else None
         steps.append(
             _step_payload(
                 index=index,
-                summary=summary,
+                summary=admitted_summary,
                 would_execute=True,
                 executed=True,
                 stop_reason=stop_reason,
