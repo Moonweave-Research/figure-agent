@@ -723,9 +723,21 @@ def test_public_wrapper_queue_run_returns_one_after_synthetic_delegated_failure(
     (fixture / "broken_compile.tex").write_text(
         "% intentionally incomplete\n", encoding="utf-8"
     )
+    tool_dir = tmp_path / "tools"
+    tool_dir.mkdir()
+    compiler_marker = tmp_path / "compiler-invoked.txt"
+    compiler = tool_dir / "deterministic-compiler-failure"
+    compiler.write_text(
+        "#!/bin/sh\n"
+        f"printf 'invoked:%s\\n' \"$*\" > {compiler_marker}\n"
+        "exit 73\n",
+        encoding="utf-8",
+    )
+    compiler.chmod(0o755)
     env = os.environ.copy()
     env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
     env["FIGURE_AGENT_PLUGIN_ROOT"] = str(Path(__file__).resolve().parents[1])
+    env["LATEX_ENGINE"] = str(compiler)
 
     result = subprocess.run(
         [
@@ -750,7 +762,9 @@ def test_public_wrapper_queue_run_returns_one_after_synthetic_delegated_failure(
     payload = json.loads(result.stdout)
     assert [run["fixture"] for run in payload["runs"]] == ["broken_compile"]
     assert payload["runs"][0]["result"]["final_stop_reason"] == "command_failed"
+    assert payload["runs"][0]["result"]["steps"][0]["returncode"] == 73
     assert payload["summary"]["failed"] == 1
+    assert compiler_marker.read_text(encoding="utf-8").startswith("invoked:")
 
 
 @pytest.mark.parametrize(
