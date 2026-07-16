@@ -286,6 +286,79 @@ def test_initial_rejection_cannot_be_recast_as_legacy_or_mixed_evidence(
         closed_loop_attempt_state.validate_state(mixed, workspace_root=workspace)
 
 
+def test_rejection_contracts_require_their_own_validated_predecessor(
+    tmp_path: Path,
+) -> None:
+    workspace, critique_state_path = _setup(tmp_path)
+    decision = _decision(workspace, critique_state_path, action="reject_initial_review")
+    initial = adjudication.run_initial_adjudication(
+        FIXTURE,
+        state_path=critique_state_path,
+        decision_path=decision,
+        execute=True,
+        workspace_root=workspace,
+    )["published_state"]
+    records = {record["role"]: record for record in initial["evidence"]}
+    critique_state = json.loads(critique_state_path.read_text())
+
+    with pytest.raises(
+        closed_loop_attempt_state.ClosedLoopAttemptStateError,
+        match="initial_rejection_decision_invalid",
+    ):
+        closed_loop_attempt_state._rejection_evidence_contract(  # noqa: SLF001
+            initial,
+            records=records,
+            role_set=frozenset(records),
+            previous_state={**critique_state, "state": "visually_re_reviewed"},
+            workspace_root=workspace,
+            require_live_evidence=True,
+        )
+
+    legacy_path = decision.parent / "legacy-development-verdict.json"
+    _write_json(
+        legacy_path,
+        {
+            "schema": "figure-agent.closed-loop-development-verdict.v1",
+            "fixture": FIXTURE,
+            "attempt_id": critique_state["attempt_id"],
+            "reviewed_state_path": critique_state_path.relative_to(workspace).as_posix(),
+            "reviewed_state_sha256": critique_state["state_sha256"],
+            "decision_kind": "reject_development_artifact",
+            "reviewer": "named-human-reviewer",
+            "human_decision": (
+                "reject this exact visually re-reviewed artifact as a development baseline"
+            ),
+            "human_note": "Negative development verdict.",
+            "mutation_boundary": "development_rejection_state_mutation_allowed",
+            "publication_acceptance": "not_claimed",
+        },
+    )
+    legacy_records = {
+        "human_decision_record": {
+            "role": "human_decision_record",
+            "path": legacy_path.relative_to(workspace).as_posix(),
+            "sha256": _sha(legacy_path),
+        }
+    }
+    legacy_payload = {
+        **initial,
+        "actor": "named-human-reviewer",
+        "actor_role": "human_reviewer",
+    }
+    with pytest.raises(
+        closed_loop_attempt_state.ClosedLoopAttemptStateError,
+        match="development_rejection_decision_invalid",
+    ):
+        closed_loop_attempt_state._rejection_evidence_contract(  # noqa: SLF001
+            legacy_payload,
+            records=legacy_records,
+            role_set=frozenset(legacy_records),
+            previous_state=critique_state,
+            workspace_root=workspace,
+            require_live_evidence=True,
+        )
+
+
 @pytest.mark.parametrize("mutation", ("state_hash", "finding", "path", "symlink", "publication"))
 def test_decision_fails_closed_on_bad_binding_or_selection(tmp_path: Path, mutation: str) -> None:
     workspace, state_path = _setup(tmp_path)

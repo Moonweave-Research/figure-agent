@@ -393,6 +393,7 @@ def _rejection_evidence_contract(
     *,
     records: dict[str, dict[str, str]],
     role_set: frozenset[str],
+    previous_state: dict[str, Any],
     workspace_root: Path,
     require_live_evidence: bool,
 ) -> None:
@@ -437,6 +438,8 @@ def _rejection_evidence_contract(
         recorded_hash = canonical.pop("decision_sha256", None)
         if (
             set(decision) != expected_fields
+            or previous_state.get("state") != "critique_unadjudicated"
+            or payload.get("actor_role") != "human_adjudicator"
             or decision.get("schema") != "figure-agent.initial-human-adjudication.v1"
             or decision.get("fixture") != payload["fixture"]
             or decision.get("attempt_id") != payload["attempt_id"]
@@ -480,6 +483,8 @@ def _rejection_evidence_contract(
     }
     if (
         set(decision) != expected_fields
+        or previous_state.get("state") != "visually_re_reviewed"
+        or payload.get("actor_role") != "human_reviewer"
         or decision.get("schema") != "figure-agent.closed-loop-development-verdict.v1"
         or decision.get("fixture") != payload["fixture"]
         or decision.get("attempt_id") != payload["attempt_id"]
@@ -756,14 +761,6 @@ def validate_state(
     rejection_variant = state_name == "rejected" and seen_roles in _REJECTED_EVIDENCE_ROLE_SETS
     if seen_roles != expected_evidence_roles and not rejection_variant:
         raise ClosedLoopAttemptStateError("evidence_roles_invalid")
-    if state_name == "rejected":
-        _rejection_evidence_contract(
-            payload,
-            records=records_by_role,
-            role_set=frozenset(seen_roles),
-            workspace_root=root,
-            require_live_evidence=_require_live_evidence,
-        )
     if sequence == 0:
         parent_record = None
         if payload["parent_state_sha256"] is not None:
@@ -778,7 +775,7 @@ def validate_state(
             parent_record=parent_record,
         ):
             raise ClosedLoopAttemptStateError("attempt_id_root_evidence_mismatch")
-    _validate_lineage_record(
+    previous_state = _validate_lineage_record(
         payload,
         prefix="previous_state",
         workspace_root=root,
@@ -792,6 +789,17 @@ def validate_state(
         lineage_stack=_lineage_stack,
         require_live_evidence=_require_live_evidence,
     )
+    if state_name == "rejected":
+        if previous_state is None:
+            raise ClosedLoopAttemptStateError("rejection_previous_state_invalid")
+        _rejection_evidence_contract(
+            payload,
+            records=records_by_role,
+            role_set=frozenset(seen_roles),
+            previous_state=previous_state,
+            workspace_root=root,
+            require_live_evidence=_require_live_evidence,
+        )
     return payload
 
 
@@ -818,13 +826,13 @@ def _validate_lineage_record(
     workspace_root: Path,
     lineage_stack: frozenset[Path],
     require_live_evidence: bool,
-) -> None:
+) -> dict[str, Any] | None:
     path_value = payload.get(f"{prefix}_path")
     state_hash = payload.get(f"{prefix}_sha256")
     file_hash = payload.get(f"{prefix}_file_sha256")
     values = (path_value, state_hash, file_hash)
     if all(value is None for value in values):
-        return
+        return None
     if any(value is None for value in values) or not isinstance(path_value, str):
         raise ClosedLoopAttemptStateError(f"{prefix}_record_incomplete")
     path = _workspace_artifact(
@@ -871,6 +879,7 @@ def _validate_lineage_record(
             raise ClosedLoopAttemptStateError("illegal_transition")
         if payload["actor_role"] != linked["required_actor"]:
             raise ClosedLoopAttemptStateError("actor_mismatch")
+    return linked
 
 
 def transition_state(
