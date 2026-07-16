@@ -320,7 +320,13 @@ def _revalidate(
 
 
 def _existing_state_matches(
-    state: dict[str, Any], *, critique: Path, host: Path, root: Path
+    state: dict[str, Any],
+    *,
+    response: Path,
+    critique: Path,
+    host: Path,
+    transcript: Path,
+    root: Path,
 ) -> bool:
     records = {record["role"]: record for record in state["evidence"]}
     return records.get("critique") == {
@@ -331,6 +337,14 @@ def _existing_state_matches(
         "role": "host_review_execution_receipt",
         "path": host.relative_to(root).as_posix(),
         "sha256": _sha256(host),
+    } and records.get("initial_visual_review_response") == {
+        "role": "initial_visual_review_response",
+        "path": response.relative_to(root).as_posix(),
+        "sha256": _sha256(response),
+    } and records.get("host_review_transcript") == {
+        "role": "host_review_transcript",
+        "path": transcript.relative_to(root).as_posix(),
+        "sha256": _sha256(transcript),
     }
 
 
@@ -376,7 +390,14 @@ def run_inbound_response(
             state_path=parent_path,
             response_path=response_path,
         )
-        if not _existing_state_matches(state, critique=critique, host=host, root=root):
+        if not _existing_state_matches(
+            state,
+            response=response_path,
+            critique=critique,
+            host=host,
+            transcript=response_path.parent / TRANSCRIPT_FILE,
+            root=root,
+        ):
             raise ClosedLoopInitialReviewResponseError(
                 "initial_review_response_published_state_stale"
             )
@@ -453,7 +474,12 @@ def run_inbound_response(
                 next_state="critique_unadjudicated",
                 actor="host_review_response",
                 actor_role="host_llm",
-                evidence={"critique": critique, "host_review_execution_receipt": host},
+                evidence={
+                    "critique": critique,
+                    "host_review_execution_receipt": host,
+                    "initial_visual_review_response": response_path,
+                    "host_review_transcript": response_path.parent / TRANSCRIPT_FILE,
+                },
                 workspace_root=root,
                 previous_state_path=current_path,
             )

@@ -277,7 +277,15 @@ def test_parent_link_selects_unique_terminal_descendant(tmp_path: Path) -> None:
     workspace, render = _workspace(tmp_path)
     parent, parent_path = _start(workspace, render, suffix="-parent")
     for next_state, roles in (
-        ("critique_unadjudicated", ("critique", "host_review_execution_receipt")),
+        (
+            "critique_unadjudicated",
+            (
+                "critique",
+                "host_review_execution_receipt",
+                "initial_visual_review_response",
+                "host_review_transcript",
+            ),
+        ),
         ("repair_bound", ("adjudicated_repair_binding",)),
         (
             "repair_candidate_ready",

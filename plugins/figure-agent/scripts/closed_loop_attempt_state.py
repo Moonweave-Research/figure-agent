@@ -151,7 +151,12 @@ _STATE_EVIDENCE_ROLES: dict[str, frozenset[str]] = {
     "authored_rendered": frozenset({"attempt_manifest", "authored_source", "render"}),
     "initial_review_requested": frozenset({"initial_visual_review_request"}),
     "critique_unadjudicated": frozenset(
-        {"critique", "host_review_execution_receipt"}
+        {
+            "critique",
+            "host_review_execution_receipt",
+            "initial_visual_review_response",
+            "host_review_transcript",
+        }
     ),
     "adjudicated_unbound": frozenset({"adjudication", "attribution_handoff"}),
     "repair_bound": frozenset({"adjudicated_repair_binding"}),

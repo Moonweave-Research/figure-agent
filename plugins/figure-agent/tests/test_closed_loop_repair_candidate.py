@@ -74,6 +74,10 @@ def _repair_bound_attempt(tmp_path: Path) -> tuple[Path, Path, Path, Path, Path]
                 "host_review_execution_receipt": evidence(
                     "host_review_execution_receipt"
                 ),
+                "initial_visual_review_response": evidence(
+                    "initial_visual_review_response"
+                ),
+                "host_review_transcript": evidence("host_review_transcript"),
             },
         ),
         (

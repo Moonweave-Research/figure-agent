@@ -10,7 +10,12 @@ import closed_loop_attempt_state
 import pytest
 
 _STATE_EVIDENCE_ROLES = {
-    "critique_unadjudicated": ("critique", "host_review_execution_receipt"),
+    "critique_unadjudicated": (
+        "critique",
+        "host_review_execution_receipt",
+        "initial_visual_review_response",
+        "host_review_transcript",
+    ),
     "adjudicated_unbound": ("adjudication", "attribution_handoff"),
     "repair_bound": ("adjudicated_repair_binding",),
     "repair_candidate_ready": (

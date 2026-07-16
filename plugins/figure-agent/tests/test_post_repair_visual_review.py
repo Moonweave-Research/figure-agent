@@ -646,6 +646,10 @@ def _machine_repaired_state(
                 "host_review_execution_receipt": evidence_file(
                     "host_review_execution_receipt"
                 ),
+                "initial_visual_review_response": evidence_file(
+                    "initial_visual_review_response"
+                ),
+                "host_review_transcript": evidence_file("host_review_transcript"),
             },
         ),
         (

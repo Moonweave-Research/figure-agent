@@ -202,15 +202,24 @@ def test_initial_request_is_the_canonical_predecessor_of_unadjudicated_critique(
     )
     critique = fixture / "critique.md"
     receipt = fixture / "host-review-receipt.json"
+    response = fixture / "initial-review-response.json"
+    transcript = fixture / "host-review-transcript.md"
     critique.write_text("unadjudicated host finding\n", encoding="utf-8")
     receipt.write_text("{}\n", encoding="utf-8")
+    response.write_text("{}\n", encoding="utf-8")
+    transcript.write_text("host transcript\n", encoding="utf-8")
 
     next_state = closed_loop_attempt_state.transition_state(
         initial["published_state"],
         next_state="critique_unadjudicated",
         actor="host-reviewer",
         actor_role="host_llm",
-        evidence={"critique": critique, "host_review_execution_receipt": receipt},
+        evidence={
+            "critique": critique,
+            "host_review_execution_receipt": receipt,
+            "initial_visual_review_response": response,
+            "host_review_transcript": transcript,
+        },
         workspace_root=workspace,
         previous_state_path=initial["next_state_path"],
     )

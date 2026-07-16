@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import closed_loop_attempt_admission  # noqa: E402
 import closed_loop_attempt_state  # noqa: E402
+import closed_loop_current_state  # noqa: E402
 import closed_loop_initial_review  # noqa: E402
 import closed_loop_initial_review_response as inbound  # noqa: E402
 import fig_run  # noqa: E402
@@ -284,3 +285,37 @@ def test_rerun_recovers_after_state_publication_failure(
         workspace_root=workspace,
     )
     assert recovered["created"] is True
+
+
+@pytest.mark.parametrize("artifact", (inbound.RESPONSE_FILE, inbound.TRANSCRIPT_FILE))
+def test_published_initial_response_artifacts_are_durable_current_state_evidence(
+    tmp_path: Path, artifact: str
+) -> None:
+    workspace, _, state_path = _setup(tmp_path)
+    response_path = _response_pack(workspace, workspace / "examples" / FIXTURE, state_path)
+    created = inbound.run_inbound_response(
+        FIXTURE,
+        state_path=state_path,
+        response_path=response_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    leaf_path = created["next_state_path"]
+    leaf = json.loads(leaf_path.read_text(encoding="utf-8"))
+    roles = {record["role"] for record in leaf["evidence"]}
+    assert roles == {
+        "critique",
+        "host_review_execution_receipt",
+        "initial_visual_review_response",
+        "host_review_transcript",
+    }
+    target = response_path.parent / artifact
+    if artifact == inbound.RESPONSE_FILE:
+        target.unlink()
+    else:
+        target.write_text("tampered transcript\n", encoding="utf-8")
+
+    with pytest.raises(closed_loop_attempt_state.ClosedLoopAttemptStateError):
+        closed_loop_attempt_state.validate_state(leaf, workspace_root=workspace)
+    projection = closed_loop_current_state.resolve_current_attempt(workspace, FIXTURE)
+    assert projection["resolution"] == "invalid"
