@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -729,15 +730,37 @@ def test_public_wrapper_queue_run_returns_one_after_synthetic_delegated_failure(
     compiler = tool_dir / "deterministic-compiler-failure"
     compiler.write_text(
         "#!/bin/sh\n"
-        f"printf 'invoked:%s\\n' \"$*\" > {compiler_marker}\n"
+        f"printf 'invoked:%s\\n' \"$*\" > {shlex.quote(str(compiler_marker))}\n"
         "exit 73\n",
         encoding="utf-8",
     )
     compiler.chmod(0o755)
+    pdf_helper_markers = {
+        helper: tmp_path / f"{helper}-invoked.txt" for helper in ("pdftocairo", "magick")
+    }
+    for helper, marker in pdf_helper_markers.items():
+        shim = tool_dir / helper
+        shim.write_text(
+            "#!/bin/sh\n"
+            f"printf 'forbidden helper invoked\\n' > {shlex.quote(str(marker))}\n"
+            "exit 91\n",
+            encoding="utf-8",
+        )
+        shim.chmod(0o755)
     env = os.environ.copy()
     env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
     env["FIGURE_AGENT_PLUGIN_ROOT"] = str(Path(__file__).resolve().parents[1])
     env["LATEX_ENGINE"] = str(compiler)
+    env["UV_PROJECT_ENVIRONMENT"] = str(tmp_path / "uv-project-environment")
+    env["PATH"] = os.pathsep.join((str(tool_dir), env["PATH"]))
+    repo_root = Path(__file__).resolve().parents[3]
+    source_status_before = subprocess.run(
+        ["git", "status", "--short", "--", "plugins/figure-agent"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
 
     result = subprocess.run(
         [
@@ -760,11 +783,22 @@ def test_public_wrapper_queue_run_returns_one_after_synthetic_delegated_failure(
 
     assert result.returncode == 1, result.stderr + result.stdout
     payload = json.loads(result.stdout)
+    assert payload["schema"] == "figure-agent.queue-run.v1"
     assert [run["fixture"] for run in payload["runs"]] == ["broken_compile"]
     assert payload["runs"][0]["result"]["final_stop_reason"] == "command_failed"
     assert payload["runs"][0]["result"]["steps"][0]["returncode"] == 73
     assert payload["summary"]["failed"] == 1
     assert compiler_marker.read_text(encoding="utf-8").startswith("invoked:")
+    assert all(not marker.exists() for marker in pdf_helper_markers.values())
+    assert Path(env["UV_PROJECT_ENVIRONMENT"]).is_relative_to(tmp_path)
+    source_status_after = subprocess.run(
+        ["git", "status", "--short", "--", "plugins/figure-agent"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    assert source_status_after == source_status_before
 
 
 @pytest.mark.parametrize(
