@@ -75,6 +75,7 @@ def fixture_admission_lock(workspace_root: Path, fixture: str) -> Iterator[None]
 
 _STATE_POLICY: dict[str, tuple[str, str, bool]] = {
     "authored_rendered": ("continue", "workflow_agent", False),
+    "initial_review_requested": ("human_review_required", "host_llm", False),
     "critique_unadjudicated": (
         "human_review_required",
         "human_adjudicator",
@@ -106,7 +107,13 @@ _STATE_POLICY: dict[str, tuple[str, str, bool]] = {
 }
 
 _LEGAL_TRANSITIONS: dict[str, frozenset[str]] = {
-    "authored_rendered": frozenset({"critique_unadjudicated", "aborted"}),
+    # Canonical root execution takes the initial request edge.  The direct
+    # critique edge remains readable legacy evidence until its adapters receive
+    # an explicit successor; it is never selected by the canonical runner.
+    "authored_rendered": frozenset(
+        {"initial_review_requested", "critique_unadjudicated", "aborted"}
+    ),
+    "initial_review_requested": frozenset({"critique_unadjudicated", "aborted"}),
     "critique_unadjudicated": frozenset(
         {"adjudicated_unbound", "repair_bound", "rejected", "aborted"}
     ),
@@ -142,6 +149,7 @@ _LEGAL_TRANSITIONS: dict[str, frozenset[str]] = {
 
 _STATE_EVIDENCE_ROLES: dict[str, frozenset[str]] = {
     "authored_rendered": frozenset({"attempt_manifest", "authored_source", "render"}),
+    "initial_review_requested": frozenset({"initial_visual_review_request"}),
     "critique_unadjudicated": frozenset(
         {"critique", "host_review_execution_receipt"}
     ),

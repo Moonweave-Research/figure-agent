@@ -15,6 +15,7 @@ import os
 import shlex
 import subprocess
 import sys
+import time
 from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -28,7 +29,9 @@ for _import_dir in ("quality", "loop", "driver"):
 
 import closed_loop_attempt_admission  # noqa: E402
 import closed_loop_attempt_state  # noqa: E402
+import closed_loop_current_state  # noqa: E402
 import closed_loop_development_verdict as development_verdict_adapter  # noqa: E402
+import closed_loop_initial_review  # noqa: E402
 import closed_loop_machine_repair  # noqa: E402
 import closed_loop_post_review  # noqa: E402
 import closed_loop_post_review_response  # noqa: E402
@@ -958,19 +961,142 @@ def run_workflow(
             raise ValueError(
                 "closed-loop attempt manifest is mutually exclusive with later lifecycle inputs"
             )
+        root = Path(os.path.abspath(repo_root))
         try:
             admission = closed_loop_attempt_admission.admit_root_attempt(
                 name,
                 manifest_path=closed_loop_attempt_manifest,
                 execute=execute,
-                workspace_root=repo_root,
+                workspace_root=root,
             )
         except closed_loop_attempt_admission.ClosedLoopAttemptAdmissionError as exc:
-            raise ValueError(str(exc)) from exc
-        root = Path(os.path.abspath(repo_root))
+            # A rerun may encounter the exact hash-bound initial-request child
+            # rather than its root.  Recover only that verified descendant;
+            # another state or attempt remains a fail-closed admission error.
+            if not execute or not str(exc).startswith("existing_current_attempt:current:"):
+                raise ValueError(str(exc)) from exc
+            try:
+                candidate = closed_loop_attempt_admission._validated_state(  # noqa: SLF001
+                    name, closed_loop_attempt_manifest, workspace_root=root
+                )
+                current = closed_loop_current_state.resolve_current_attempt(root, name)
+                if (
+                    current.get("resolution") != "current"
+                    or current.get("attempt_id") != candidate["attempt_id"]
+                    or current.get("state") != "initial_review_requested"
+                    or not isinstance(current.get("path"), str)
+                    or not isinstance(current.get("state_sha256"), str)
+                ):
+                    raise ValueError(str(exc)) from exc
+                admission = {
+                    "state": candidate,
+                    "next_state_path": closed_loop_attempt_state.state_path(
+                        candidate, workspace_root=root
+                    ),
+                    "manifest_path": closed_loop_attempt_admission._manifest_evidence_path(  # noqa: SLF001
+                        candidate, workspace_root=root
+                    ),
+                    "created": False,
+                    "existing_initial_state_path": root / current["path"],
+                    "existing_initial_state_sha256": current["state_sha256"],
+                }
+            except (
+                ValueError,
+                closed_loop_attempt_admission.ClosedLoopAttemptAdmissionError,
+            ) as recovery_exc:
+                raise ValueError(str(recovery_exc)) from exc
         state = admission["state"]
-        next_state_path = admission["next_state_path"]
+        authored_state_path = admission["next_state_path"]
         manifest_path = admission["manifest_path"]
+        if execute:
+            try:
+                initial_state_path = admission.get(
+                    "existing_initial_state_path", authored_state_path
+                )
+                initial_state_sha256 = admission.get(
+                    "existing_initial_state_sha256", state["state_sha256"]
+                )
+                for retry_index in range(25):
+                    try:
+                        outbound = closed_loop_initial_review.run_outbound_handoff(
+                            name,
+                            state_path=initial_state_path,
+                            execute=True,
+                            workspace_root=root,
+                            expected_state_sha256=initial_state_sha256,
+                        )
+                        break
+                    except closed_loop_initial_review.ClosedLoopInitialReviewError as exc:
+                        if "transaction lock exists" not in str(exc) or retry_index == 24:
+                            raise
+                        time.sleep(0.01)
+                        current = closed_loop_current_state.resolve_current_attempt(root, name)
+                        if (
+                            current.get("resolution") == "current"
+                            and current.get("state") == "initial_review_requested"
+                            and current.get("attempt_id") == state["attempt_id"]
+                            and isinstance(current.get("path"), str)
+                            and isinstance(current.get("state_sha256"), str)
+                        ):
+                            initial_state_path = root / current["path"]
+                            initial_state_sha256 = current["state_sha256"]
+                else:  # pragma: no cover - the loop either breaks or raises.
+                    raise ValueError("initial_review_retry_exhausted")
+            except closed_loop_initial_review.ClosedLoopInitialReviewError as exc:
+                raise ValueError(str(exc)) from exc
+            next_state = outbound["published_state"]
+            next_state_path = outbound["next_state_path"]
+            request_path = outbound["request_path"]
+            return {
+                "schema": SCHEMA,
+                "fixture": name,
+                "mode": mode,
+                "goal": goal,
+                "execute": execute,
+                "max_steps": max_steps,
+                "executable_actions": sorted(EXECUTABLE_ACTIONS),
+                "steps": [],
+                "final_action": outbound["action"],
+                "final_safe_command": None,
+                "final_stop_boundary": outbound["stop_boundary"],
+                "final_stop_reason": outbound["stop_reason"],
+                "executed_count": int(admission["created"]) + int(outbound["created"]),
+                "closed_loop": {
+                    "input_state": state["state"],
+                    "input_state_path": authored_state_path.relative_to(root).as_posix(),
+                    "input_state_sha256": state["state_sha256"],
+                    "next_state": next_state["state"],
+                    "next_state_path": next_state_path.relative_to(root).as_posix(),
+                    "next_state_sha256": next_state["state_sha256"],
+                    "request_path": request_path.relative_to(root).as_posix(),
+                    "manifest_path": manifest_path.relative_to(root).as_posix(),
+                    "created": bool(admission["created"] or outbound["created"]),
+                    "publication_acceptance": "not_claimed",
+                },
+                "boundary_handoff": {
+                    "schema": BOUNDARY_HANDOFF_SCHEMA,
+                    "action": outbound["action"],
+                    "stop_boundary": outbound["stop_boundary"],
+                    "required_actor": outbound["required_actor"],
+                    "blocking_reason": "initial host visual review required",
+                    "evidence_refs": [
+                        f"initial_visual_review_request:{request_path.relative_to(root).as_posix()}",
+                        f"closed_loop_state:{next_state_path.relative_to(root).as_posix()}",
+                    ],
+                    "allowed_scope": ["read-only host visual review outside the plugin"],
+                    "forbidden_scope": [
+                        "plugin host or model invocation",
+                        "critique, adjudication, attribution, repair, authorization, "
+                        "materialization, or verdict",
+                        "accepted, golden, or publication acceptance claim",
+                    ],
+                    "closeout_checks": ["supply host evidence through a separate canonical step"],
+                    "publication_acceptance": "not_claimed",
+                },
+            }
+        next_state_path = authored_state_path.parent / (
+            f"state-{state['sequence'] + 1:03d}-initial_review_requested.json"
+        )
         return {
             "schema": SCHEMA,
             "fixture": name,
@@ -980,43 +1106,43 @@ def run_workflow(
             "max_steps": max_steps,
             "executable_actions": sorted(EXECUTABLE_ACTIONS),
             "steps": [],
-            "final_action": closed_loop_attempt_admission.ACTION,
+            "final_action": closed_loop_initial_review.ACTION,
             "final_safe_command": None,
-            "final_stop_boundary": "critique_unadjudicated",
-            "final_stop_reason": (
-                closed_loop_attempt_admission.STOP_REASON if execute else STOP_PLAN_ONLY
-            ),
-            "executed_count": int(admission["created"]),
+            "final_stop_boundary": "host_llm",
+            "final_stop_reason": STOP_PLAN_ONLY,
+            "executed_count": 0,
             "closed_loop": {
-                "next_state": state["state"],
+                "next_state": "initial_review_requested",
                 "next_state_path": next_state_path.relative_to(root).as_posix(),
-                "next_state_sha256": state["state_sha256"],
                 "manifest_path": manifest_path.relative_to(root).as_posix(),
                 "evidence_paths": {
                     record["role"]: record["path"] for record in state["evidence"]
                 },
-                "created": admission["created"],
+                "created": False,
                 "publication_acceptance": "not_claimed",
             },
             "boundary_handoff": {
                 "schema": BOUNDARY_HANDOFF_SCHEMA,
-                "action": closed_loop_attempt_admission.ACTION,
-                "stop_boundary": "critique_unadjudicated",
+                "action": closed_loop_initial_review.ACTION,
+                "stop_boundary": "host_llm",
                 "required_actor": "workflow_agent",
-                "blocking_reason": "root attempt admission only; critique is not yet evidence",
+                "blocking_reason": (
+                    "plan validates root evidence; execute publishes an outbound "
+                    "initial review request"
+                ),
                 "evidence_refs": [
                     f"{record['role']}:{record['path']}" for record in state["evidence"]
                 ]
                 + [
                     f"closed_loop_state:{next_state_path.relative_to(root).as_posix()}",
                 ],
-                "allowed_scope": ["admit the explicit fresh authored render"],
+                "allowed_scope": ["validate the explicit fresh authored render"],
                 "forbidden_scope": [
-                    "critique or host-review synthesis",
+                    "host invocation or critique synthesis",
                     "adjudication, attribution, repair, authorization, materialization, or verdict",
                     "accepted, golden, or publication acceptance claim",
                 ],
-                "closeout_checks": ["run the next canonical lifecycle step separately"],
+                "closeout_checks": ["execute to publish the initial host-review request"],
                 "publication_acceptance": "not_claimed",
             },
         }

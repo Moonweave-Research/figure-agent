@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -38,7 +39,7 @@ def _setup(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
     render = fixture / "build" / "demo.png"
     source.write_text("source", encoding="utf-8")
     render.parent.mkdir()
-    render.write_bytes(b"render")
+    Image.new("RGB", (640, 480), color=(44, 88, 155)).save(render)
     manifest = _manifest(
         fixture / "attempt-manifest.json",
         {
@@ -68,15 +69,16 @@ def test_fig_run_admits_one_fresh_root_attempt_and_stops(tmp_path: Path) -> None
         repo_root=workspace,
     )
 
-    assert payload["final_action"] == "admit_authored_rendered"
-    assert payload["final_stop_reason"] == "authored_rendered_admitted"
-    assert payload["executed_count"] == 1
-    assert payload["closed_loop"]["next_state"] == "authored_rendered"
+    assert payload["final_action"] == "initial_visual_review_request"
+    assert payload["final_stop_reason"] == "host_boundary"
+    assert payload["executed_count"] == 2
+    assert payload["closed_loop"]["next_state"] == "initial_review_requested"
     assert payload["closed_loop"]["publication_acceptance"] == "not_claimed"
     assert "development_accepted" not in json.dumps(payload["closed_loop"])
     assert "golden" not in json.dumps(payload["closed_loop"])
     state_path = workspace / payload["closed_loop"]["next_state_path"]
     assert state_path.is_file()
+    assert (workspace / payload["closed_loop"]["request_path"]).is_file()
 
 
 def test_plan_only_validates_and_never_acquires_or_writes_admission_lease(
@@ -237,11 +239,11 @@ def test_execute_accepts_workspace_relative_attempt_manifest_and_recovers(
         repo_root=workspace,
     )
 
-    assert created["final_stop_reason"] == "authored_rendered_admitted"
+    assert created["final_stop_reason"] == "host_boundary"
     assert created["closed_loop"]["created"] is True
     assert recovered["closed_loop"]["created"] is False
     assert created["closed_loop"]["manifest_path"] == "examples/demo/attempt-manifest.json"
-    assert len(list((fixture / "review" / "closed-loop").rglob("state-*.json"))) == 1
+    assert len(list((fixture / "review" / "closed-loop").rglob("state-*.json"))) == 2
 
 
 @pytest.mark.parametrize("field", ["source", "render"])
@@ -298,7 +300,7 @@ def test_admission_rejects_existing_nonterminal_and_recovers_identical_publish(
 
     assert first["closed_loop"]["created"] is True
     assert recovered["closed_loop"]["created"] is False
-    assert len(list((fixture / "review" / "closed-loop").rglob("state-*.json"))) == 1
+    assert len(list((fixture / "review" / "closed-loop").rglob("state-*.json"))) == 2
 
     other = fixture / "second-manifest.json"
     data = json.loads(manifest.read_text(encoding="utf-8"))
@@ -422,4 +424,4 @@ def test_identical_concurrent_admission_recovers_one_publication(tmp_path: Path)
         results = list(executor.map(lambda _: admit(), range(2)))
 
     assert sorted(result["closed_loop"]["created"] for result in results) == [False, True]
-    assert len(list((fixture / "review" / "closed-loop").rglob("state-*.json"))) == 1
+    assert len(list((fixture / "review" / "closed-loop").rglob("state-*.json"))) == 2
