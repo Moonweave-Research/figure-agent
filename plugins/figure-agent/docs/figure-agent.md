@@ -7,8 +7,7 @@
 
 **Committed baseline:** `c6a28e40` (`codex/figure-agent-closed-loop-reset`)
 
-This is the sole product specification and forward execution authority for Figure
-Agent. Other specifications, plans, roadmaps, milestone notes, fixture reviews,
+This is the sole product specification and forward execution authority for Figure Agent. Other specifications, plans, roadmaps, milestone notes, fixture reviews,
 and generated packets are implementation references or historical evidence. They
 cannot change product direction or the next implementation step.
 
@@ -227,6 +226,7 @@ reviewable; open the next slice only after recording stop conditions and evidenc
   `repair_required`. Never discover a response, invoke a host, accept legacy
   packets implicitly, or claim publication acceptance.
 - [x] Consume explicit hash-bound human authorization only from canonical `repair_candidate_ready`; publish the named reviewer without inventing approval.
+- [x] Bind one explicit named human verdict to canonical `visually_re_reviewed`; publish only development acceptance, never release or publication acceptance.
 - [ ] Wire remaining safe deterministic transitions through default `run` one
   at a time without synthesizing host, scientific, or human evidence.
 - [x] Stop at host-vision, scientific, human authorization, accepted/golden,
@@ -300,13 +300,13 @@ the same editable selector as the repair target. Missing semantic authority,
 ambiguous attribution, or missing references can emit only a named
 `human_attributor` handoff; they cannot create a repair binding or packet.
 
-Default `run` consumes explicit hash-bound human authorization only at
-`repair_candidate_ready`, then an explicit repair response only at
-`repair_authorized`. Materialize/strict-finalize/rollback publishes
-`machine_repaired` or rolls back to `repair_required`; completed receipts recover
-state publication. It discovers no input, invokes no host, admits no legacy packet,
-and claims no publication acceptance. It then advances validated `machine_repaired`
-to bound `post_review_requested`, stops at `host_llm`, and binds any response to the unique current state. Maintained-Fig3 controlled-fault replay is mechanism evidence,
+Default `run` consumes explicit hash-bound human authorization at
+`repair_candidate_ready`, an explicit repair response at `repair_authorized`, and one
+state-bound named human verdict at `visually_re_reviewed`. Materialize/strict-finalize/rollback publishes
+`machine_repaired` or `repair_required`; completed receipts recover state publication.
+Canonical state publishers share one recoverable transition lock and temporarily dual-lock legacy paths. The run discovers no input, invokes no host, admits no legacy packet, and claims no
+publication acceptance. It advances `machine_repaired` to `post_review_requested`,
+stops at `host_llm`, binds the response, and can close only a named development baseline. Maintained-Fig3 controlled-fault replay is mechanism evidence,
 not an actual defect or publication verdict; prospective proof and R4-R5 remain.
 
 Closed-loop handoffs use these contracts rather than another workflow shell:
@@ -315,5 +315,5 @@ Closed-loop handoffs use these contracts rather than another workflow shell:
 `figure-agent.closed-loop-attempt-state.v1`, `figure-agent.closed-loop-current-state.v1`,
 `figure-agent.adjudicated-repair-binding.v1`, `figure-agent.semantic-finding-attribution.v1`,
 `figure-agent.attribution-handoff.v1`, `figure-agent.post-repair-visual-review-request.v1`,
-`figure-agent.host-review-execution-receipt.v1`, `figure-agent.post-repair-visual-review-response.v1`, and
-`figure-agent.post-repair-visual-review-receipt.v1`.
+`figure-agent.host-review-execution-receipt.v1`, `figure-agent.post-repair-visual-review-response.v1`,
+`figure-agent.post-repair-visual-review-receipt.v1`, and `figure-agent.closed-loop-development-verdict.v1`.

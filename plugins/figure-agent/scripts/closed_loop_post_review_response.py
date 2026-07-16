@@ -336,10 +336,7 @@ def run_inbound_response(
         }
 
     try:
-        with repair_transaction.exclusive_lock(
-            attempt_root / ".closed-loop-post-review-response.lock",
-            owner="closed_loop_post_review_response",
-        ):
+        with closed_loop_attempt_state.attempt_transition_lock(attempt_root):
             if expected_state_sha256 is not None:
                 projection = closed_loop_current_state.resolve_current_attempt(
                     root,

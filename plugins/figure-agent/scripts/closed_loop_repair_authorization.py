@@ -326,9 +326,8 @@ def run_authorization(
                 "publication_acceptance": "not_claimed",
             }
 
-        with repair_transaction.recoverable_exclusive_lock(
-            plan["state_path"].parent / ".closed-loop-repair-authorization.lock",
-            owner="closed_loop_repair_authorization",
+        with closed_loop_attempt_state.attempt_transition_lock(
+            plan["state_path"].parent
         ):
             current = _validated_plan(
                 fixture,

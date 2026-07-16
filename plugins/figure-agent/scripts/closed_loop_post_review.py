@@ -101,10 +101,7 @@ def run_outbound_handoff(
     if execute:
         example_dir = root / "examples" / fixture
         try:
-            with repair_transaction.exclusive_lock(
-                attempt_root / ".closed-loop-post-review.lock",
-                owner="closed_loop_post_review",
-            ):
+            with closed_loop_attempt_state.attempt_transition_lock(attempt_root):
                 if next_state_path.is_file():
                     return run_outbound_handoff(
                         fixture,

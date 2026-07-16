@@ -10,7 +10,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,34 @@ import repair_transaction
 
 SCHEMA = "figure-agent.closed-loop-attempt-state.v1"
 PUBLICATION_ACCEPTANCE = "not_claimed"
+ATTEMPT_TRANSITION_LOCK = ".closed-loop-attempt-transition.lock"
+ATTEMPT_TRANSITION_LOCK_OWNER = "figure_agent_closed_loop_attempt_transition"
+_LEGACY_TRANSITION_LOCKS = (
+    (".closed-loop-repair-authorization.lock", "closed_loop_repair_authorization"),
+    (".closed-loop-machine-repair.lock", "closed_loop_machine_repair"),
+    (".closed-loop-post-review.lock", "closed_loop_post_review"),
+    (".closed-loop-post-review-response.lock", "closed_loop_post_review_response"),
+)
+
+
+@contextmanager
+def attempt_transition_lock(attempt_root: Path) -> Iterator[None]:
+    """Serialize current publishers and one-release legacy lock holders."""
+    with ExitStack() as stack:
+        stack.enter_context(
+            repair_transaction.recoverable_exclusive_lock(
+                attempt_root / ATTEMPT_TRANSITION_LOCK,
+                owner=ATTEMPT_TRANSITION_LOCK_OWNER,
+            )
+        )
+        for name, owner in _LEGACY_TRANSITION_LOCKS:
+            stack.enter_context(
+                repair_transaction.recoverable_exclusive_lock(
+                    attempt_root / name,
+                    owner=owner,
+                )
+            )
+        yield
 
 _STATE_POLICY: dict[str, tuple[str, str, bool]] = {
     "authored_rendered": ("continue", "workflow_agent", False),

@@ -11,6 +11,7 @@ RELEASE_DECISION_PACKET_SCHEMA = "figure-agent.release-decision-packet.v1"
 STYLE_DIRECTION_PACKET_SCHEMA = "figure-agent.style-direction-packet.v1"
 DESIGN_DIRECTION_PACKET_SCHEMA = "figure-agent.design-direction-packet.v1"
 QUALITY_PATCH_PLAN_SCHEMA = "figure-agent.quality-patch-plan.v1"
+DEVELOPMENT_VERDICT_SCHEMA = "figure-agent.closed-loop-development-verdict.v1"
 AUTHORING_REPAIR_PACKET_SCHEMAS = frozenset(
     {
         "figure-agent.repair-execution-packet.v3",
@@ -18,6 +19,12 @@ AUTHORING_REPAIR_PACKET_SCHEMAS = frozenset(
     }
 )
 ADDITIVE_MATERIALIZATION_APPROVAL = "approve this exact additive repair candidate"
+DEVELOPMENT_BASELINE_APPROVAL = (
+    "accept this exact visually re-reviewed artifact as a development baseline"
+)
+DEVELOPMENT_BASELINE_STATE_BOUNDARY = (
+    "development_baseline_state_mutation_allowed"
+)
 
 DECISION_KINDS = frozenset(
     {
@@ -326,4 +333,73 @@ def validate_additive_materialization_authorization(
         "authorized_output_path": authorized_output_path,
         "authorized_output_sha256": authorized_output_sha256,
         "authorized_preview_sha256": authorized_preview_sha256,
+    }
+
+
+def validate_development_baseline_acceptance(
+    record: dict[str, Any],
+    *,
+    fixture: str,
+    attempt_id: str,
+    state_path: str,
+    state_sha256: str,
+) -> dict[str, Any]:
+    """Validate one named acceptance bound to one visually re-reviewed state."""
+    expected_fields = {
+        "schema",
+        "fixture",
+        "attempt_id",
+        "reviewed_state_path",
+        "reviewed_state_sha256",
+        "decision_kind",
+        "reviewer",
+        "human_decision",
+        "human_note",
+        "mutation_boundary",
+        "publication_acceptance",
+    }
+    if not isinstance(record, dict) or set(record) != expected_fields:
+        raise HumanDecisionRecordError("development_verdict_fields_invalid")
+    if record.get("schema") != DEVELOPMENT_VERDICT_SCHEMA:
+        raise HumanDecisionRecordError("development_verdict_schema_invalid")
+    record_fixture = _required_string(record, "fixture")
+    try:
+        fixture_identity.validate_fixture_name(record_fixture)
+    except ValueError as exc:
+        raise HumanDecisionRecordError(
+            f"development_verdict_fixture_invalid:{record_fixture}"
+        ) from exc
+    if record_fixture != fixture:
+        raise HumanDecisionRecordError("development_verdict_fixture_mismatch")
+    if _required_string(record, "attempt_id") != attempt_id:
+        raise HumanDecisionRecordError("development_verdict_attempt_id_mismatch")
+    reviewed_state_path = _required_string(record, "reviewed_state_path")
+    if reviewed_state_path != state_path:
+        raise HumanDecisionRecordError("development_verdict_state_path_mismatch")
+    if _required_string(record, "decision_kind") != "accept_development_baseline":
+        raise HumanDecisionRecordError("development_verdict_decision_kind_invalid")
+    human_decision = _required_string(record, "human_decision")
+    if human_decision != DEVELOPMENT_BASELINE_APPROVAL:
+        raise HumanDecisionRecordError("development_verdict_not_approved")
+    mutation_boundary = _required_string(record, "mutation_boundary")
+    if mutation_boundary != DEVELOPMENT_BASELINE_STATE_BOUNDARY:
+        raise HumanDecisionRecordError("development_verdict_mutation_boundary_invalid")
+    reviewer = _required_string(record, "reviewer")
+    reviewed_state_sha256 = _required_string(record, "reviewed_state_sha256")
+    if reviewed_state_sha256 != state_sha256:
+        raise HumanDecisionRecordError("development_verdict_state_hash_mismatch")
+    if record.get("publication_acceptance") != "not_claimed":
+        raise HumanDecisionRecordError("development_verdict_publication_claimed")
+    return {
+        "schema": DEVELOPMENT_VERDICT_SCHEMA,
+        "fixture": record_fixture,
+        "attempt_id": attempt_id,
+        "reviewed_state_path": reviewed_state_path,
+        "decision_kind": "accept_development_baseline",
+        "reviewer": reviewer,
+        "human_decision": human_decision,
+        "human_note": _required_string(record, "human_note"),
+        "mutation_boundary": mutation_boundary,
+        "reviewed_state_sha256": reviewed_state_sha256,
+        "publication_acceptance": "not_claimed",
     }

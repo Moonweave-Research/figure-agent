@@ -462,10 +462,7 @@ def run_machine_repair(
             }
 
         attempt_root = plan["state_path"].parent
-        with repair_transaction.recoverable_exclusive_lock(
-            attempt_root / ".closed-loop-machine-repair.lock",
-            owner="closed_loop_machine_repair",
-        ):
+        with closed_loop_attempt_state.attempt_transition_lock(attempt_root):
             plan = _validated_plan(
                 fixture,
                 state_path=state_path,

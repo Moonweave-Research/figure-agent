@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -31,6 +33,35 @@ _STATE_EVIDENCE_ROLES = {
     "repair_required": ("repair_failure_record",),
     "aborted": ("abort_record",),
 }
+
+
+def test_attempt_transition_lock_recovers_all_current_lock_files_after_crash(
+    tmp_path: Path,
+) -> None:
+    attempt_root = tmp_path / "attempt"
+    script = "\n".join(
+        (
+            "import os",
+            "import sys",
+            "from pathlib import Path",
+            f"sys.path.insert(0, {str(Path(closed_loop_attempt_state.__file__).parent)!r})",
+            "import closed_loop_attempt_state",
+            "attempt_root = Path(sys.argv[1])",
+            "attempt_root.mkdir(parents=True)",
+            "with closed_loop_attempt_state.attempt_transition_lock(attempt_root):",
+            "    os._exit(23)",
+        )
+    )
+
+    crashed = subprocess.run(
+        [sys.executable, "-c", script, str(attempt_root)],
+        check=False,
+    )
+
+    assert crashed.returncode == 23
+    with closed_loop_attempt_state.attempt_transition_lock(attempt_root):
+        pass
+    assert not list(attempt_root.glob(".closed-loop*.lock"))
 
 
 def _workspace(tmp_path: Path) -> tuple[Path, Path]:

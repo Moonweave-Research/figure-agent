@@ -218,6 +218,18 @@ def test_style_record_rejects_source_mutation_boundary() -> None:
         )
 
 
+def test_generic_release_record_cannot_borrow_development_state_boundary() -> None:
+    with pytest.raises(
+        HumanDecisionRecordError,
+        match="mutation_boundary_unknown",
+    ):
+        validate_decision_record(
+            _record(
+                mutation_boundary="development_baseline_state_mutation_allowed",
+            )
+        )
+
+
 def test_style_preference_from_release_packet_cannot_approve_release_state() -> None:
     with pytest.raises(HumanDecisionRecordError, match="style_preference_cannot_approve_release"):
         validate_decision_record(

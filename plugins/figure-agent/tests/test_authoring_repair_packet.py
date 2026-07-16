@@ -3590,6 +3590,11 @@ def test_fig_run_authorization_rejects_valid_input_replacement_under_lock(
 
     @contextmanager
     def replace_after_lock(path: Path, *, owner: str):
+        if path.name != closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK:
+            with original_lock(path, owner=owner):
+                yield
+            return
+        assert owner == closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK_OWNER
         with original_lock(path, owner=owner):
             authorization = json.loads(
                 authorization_path.read_text(encoding="utf-8")
@@ -3985,10 +3990,11 @@ def test_closed_loop_machine_repair_rechecks_current_state_under_lock(
 
     @contextmanager
     def superseding_lock(path: Path, *, owner: str):
-        if path.name != ".closed-loop-machine-repair.lock":
+        if path.name != closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK:
             with original_lock(path, owner=owner):
                 yield
             return
+        assert owner == closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK_OWNER
         current = json.loads(state_path.read_text(encoding="utf-8"))
         terminal = closed_loop_attempt_state.transition_state(
             current,
@@ -4364,11 +4370,13 @@ def test_closed_loop_machine_repair_resumes_prepared_finalize(
     assert prepared["decision"] == "materialized_verification_prepared"
     assert prepared["recovery_required"] is True
     monkeypatch.setattr(authoring_repair_finalize.subprocess, "run", original_run)
-    (state_path.parent / ".closed-loop-machine-repair.lock").write_text(
+    (
+        state_path.parent / closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK
+    ).write_text(
         json.dumps(
             {
                 "schema": "figure-agent.recoverable-lock.v1",
-                "owner": "closed_loop_machine_repair",
+                "owner": closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK_OWNER,
             },
             sort_keys=True,
             separators=(",", ":"),
@@ -4448,11 +4456,13 @@ def test_closed_loop_machine_repair_resumes_prepared_rollback(
         "_unlink_hash_bound_output",
         original_unlink,
     )
-    (state_path.parent / ".closed-loop-machine-repair.lock").write_text(
+    (
+        state_path.parent / closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK
+    ).write_text(
         json.dumps(
             {
                 "schema": "figure-agent.recoverable-lock.v1",
-                "owner": "closed_loop_machine_repair",
+                "owner": closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK_OWNER,
             },
             sort_keys=True,
             separators=(",", ":"),

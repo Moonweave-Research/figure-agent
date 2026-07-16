@@ -8,11 +8,13 @@ from pathlib import Path
 import authoring_repair_finalize
 import authoring_repair_packet
 import closed_loop_attempt_state
+import closed_loop_development_verdict
 import closed_loop_post_review_response
 import critique_zoom_crops
 import fig_run
 import post_repair_visual_review
 import pytest
+import repair_transaction
 import yaml
 from inputs import parse_spec
 from PIL import Image
@@ -1331,6 +1333,512 @@ def _write_closed_loop_response(
     return response_path
 
 
+def _visually_re_reviewed_attempt(
+    tmp_path: Path,
+) -> tuple[Path, Path, Path]:
+    workspace, paths = _fixture(tmp_path)
+    _, state_path, request, _ = _published_post_review_request(workspace, paths)
+    response_path = _write_closed_loop_response(workspace, state_path, request)
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_response=response_path,
+        repo_root=workspace,
+    )
+    reviewed_state_path = workspace / payload["closed_loop"]["next_state_path"]
+    reviewed_state = json.loads(reviewed_state_path.read_text(encoding="utf-8"))
+    verdict_path = reviewed_state_path.parent / "development-verdict.json"
+    verdict_path.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.closed-loop-development-verdict.v1",
+                "fixture": "demo",
+                "attempt_id": reviewed_state["attempt_id"],
+                "reviewed_state_path": reviewed_state_path.relative_to(
+                    workspace
+                ).as_posix(),
+                "decision_kind": "accept_development_baseline",
+                "human_decision": (
+                    "accept this exact visually re-reviewed artifact as a development baseline"
+                ),
+                "human_note": "Development baseline only; no release or publication claim.",
+                "mutation_boundary": "development_baseline_state_mutation_allowed",
+                "reviewer": "named-human-reviewer",
+                "reviewed_state_sha256": reviewed_state["state_sha256"],
+                "publication_acceptance": "not_claimed",
+            }
+        ),
+        encoding="utf-8",
+    )
+    return workspace, reviewed_state_path, verdict_path
+
+
+def test_fig_run_development_verdict_plan_only_is_bound_and_write_free(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    before = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="record the named development verdict",
+        execute=False,
+        closed_loop_state=state_path,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    after = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+    assert payload["final_stop_reason"] == "plan_only"
+    assert payload["closed_loop"]["input_state"] == "visually_re_reviewed"
+    assert payload["closed_loop"]["next_state"] == "development_accepted"
+    assert payload["closed_loop"]["created"] is False
+    assert payload["boundary_handoff"]["required_actor"] == "workflow_agent"
+    assert payload["boundary_handoff"]["publication_acceptance"] == "not_claimed"
+    assert after == before
+
+
+def test_fig_run_development_verdict_publishes_named_terminal_state(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="record the named development verdict",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    next_state_path = workspace / payload["closed_loop"]["next_state_path"]
+    next_state = json.loads(next_state_path.read_text(encoding="utf-8"))
+    assert payload["final_stop_reason"] == "development_accepted"
+    assert payload["executed_count"] == 1
+    assert next_state["state"] == "development_accepted"
+    assert next_state["actor"] == "named-human-reviewer"
+    assert next_state["actor_role"] == "human_reviewer"
+    assert next_state["required_actor"] == "none"
+    assert next_state["terminal"] is True
+    assert next_state["publication_acceptance"] == "not_claimed"
+    assert next_state["evidence"] == [
+        {
+            "role": "human_decision_record",
+            "path": verdict_path.relative_to(workspace).as_posix(),
+            "sha256": _sha256(verdict_path),
+        }
+    ]
+
+
+def test_fig_run_development_verdict_recovers_exact_published_state(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    created = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="record the named development verdict",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    recovered = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="record the named development verdict",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    assert recovered["final_stop_reason"] == "development_accepted_recovered"
+    assert recovered["executed_count"] == 0
+    assert recovered["closed_loop"]["created"] is False
+    assert recovered["closed_loop"]["next_state_path"] == (
+        created["closed_loop"]["next_state_path"]
+    )
+    assert recovered["boundary_handoff"]["evidence_refs"][-1] == (
+        "closed_loop_state:" + created["closed_loop"]["next_state_path"]
+    )
+    assert len(list(state_path.parent.glob("state-*-development_accepted.json"))) == 1
+
+
+def test_fig_run_development_verdict_recovers_publish_between_match_and_current_check(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    original_matching = (
+        closed_loop_development_verdict._matching_published_acceptance
+    )
+    injected = False
+
+    def publish_after_first_match(
+        fixture: str,
+        plan: dict[str, object],
+        *,
+        workspace_root: Path,
+    ) -> dict[str, object] | None:
+        nonlocal injected
+        published = original_matching(
+            fixture,
+            plan,
+            workspace_root=workspace_root,
+        )
+        if published is None and not injected:
+            injected = True
+            expected = closed_loop_development_verdict._expected_accepted_state(
+                plan,
+                workspace_root=workspace_root,
+            )
+            closed_loop_attempt_state.publish_state(
+                expected,
+                workspace_root=workspace_root,
+            )
+        return published
+
+    monkeypatch.setattr(
+        closed_loop_development_verdict,
+        "_matching_published_acceptance",
+        publish_after_first_match,
+    )
+
+    recovered = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="record the named development verdict",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    assert recovered["final_stop_reason"] == "development_accepted_recovered"
+    assert recovered["executed_count"] == 0
+    assert recovered["closed_loop"]["created"] is False
+    assert len(list(state_path.parent.glob("state-*-development_accepted.json"))) == 1
+
+
+def test_shared_attempt_transition_lock_blocks_development_acceptance(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    lock_path = (
+        state_path.parent / closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK
+    )
+
+    with repair_transaction.recoverable_exclusive_lock(
+        lock_path,
+        owner=closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK_OWNER,
+    ):
+        with pytest.raises(ValueError, match="transaction lock exists"):
+            fig_run.run_workflow(
+                "demo",
+                mode="review",
+                goal="record the named development verdict",
+                execute=True,
+                closed_loop_state=state_path,
+                closed_loop_development_verdict=verdict_path,
+                repo_root=workspace,
+            )
+
+    assert not any(state_path.parent.glob("state-*-development_accepted.json"))
+
+
+def test_legacy_post_review_response_lock_blocks_development_acceptance(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    legacy_lock_path = state_path.parent / ".closed-loop-post-review-response.lock"
+
+    with repair_transaction.exclusive_lock(
+        legacy_lock_path,
+        owner="closed_loop_post_review_response",
+    ):
+        with pytest.raises(ValueError, match="transaction lock exists"):
+            fig_run.run_workflow(
+                "demo",
+                mode="review",
+                goal="record the named development verdict",
+                execute=True,
+                closed_loop_state=state_path,
+                closed_loop_development_verdict=verdict_path,
+                repo_root=workspace,
+            )
+
+    assert not any(state_path.parent.glob("state-*-development_accepted.json"))
+
+
+def test_fig_run_development_verdict_rejects_contradictory_human_text(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
+    verdict["human_decision"] = "reject this development baseline"
+    verdict_path.write_text(json.dumps(verdict), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="development_verdict_not_approved"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="record the named development verdict",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_development_verdict=verdict_path,
+            repo_root=workspace,
+        )
+
+    assert not any(state_path.parent.glob("state-*-development_accepted.json"))
+
+
+def test_fig_run_development_verdict_rejects_state_hash_mismatch(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
+    verdict["reviewed_state_sha256"] = "sha256:" + "0" * 64
+    verdict_path.write_text(json.dumps(verdict), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="development_verdict_state_hash_mismatch"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="record the named development verdict",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_development_verdict=verdict_path,
+            repo_root=workspace,
+        )
+
+    assert not any(state_path.parent.glob("state-*-development_accepted.json"))
+
+
+def test_fig_run_development_verdict_rejects_publication_claim(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
+    verdict["publication_acceptance"] = "accepted"
+    verdict_path.write_text(json.dumps(verdict), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="development_verdict_publication_claimed"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="record the named development verdict",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_development_verdict=verdict_path,
+            repo_root=workspace,
+        )
+
+    assert not any(state_path.parent.glob("state-*-development_accepted.json"))
+
+
+def test_fig_run_development_verdict_requires_exact_state_mutation_boundary(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
+    verdict["mutation_boundary"] = "no_source_mutation"
+    verdict_path.write_text(json.dumps(verdict), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="development_verdict_mutation_boundary_invalid"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="record the named development verdict",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_development_verdict=verdict_path,
+            repo_root=workspace,
+        )
+
+    assert not any(state_path.parent.glob("state-*-development_accepted.json"))
+
+
+def test_fig_run_development_verdict_rejects_input_replacement_under_lock(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    original_lock = repair_transaction.recoverable_exclusive_lock
+
+    @contextmanager
+    def replace_after_lock(path: Path, *, owner: str):
+        if path.name != closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK:
+            with original_lock(path, owner=owner):
+                yield
+            return
+        assert owner == closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK_OWNER
+        with original_lock(path, owner=owner):
+            verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
+            verdict["human_note"] = "A different, still valid decision record."
+            verdict_path.write_text(json.dumps(verdict), encoding="utf-8")
+            yield
+
+    monkeypatch.setattr(
+        closed_loop_development_verdict.repair_transaction,
+        "recoverable_exclusive_lock",
+        replace_after_lock,
+    )
+
+    with pytest.raises(ValueError, match="development_verdict_inputs_drifted"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="record the named development verdict",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_development_verdict=verdict_path,
+            repo_root=workspace,
+        )
+
+    assert not any(state_path.parent.glob("state-*-development_accepted.json"))
+
+
+def test_fig_run_development_verdict_rejects_evidence_drift_before_publish(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    original_transition = closed_loop_attempt_state.transition_state
+
+    def drift_after_transition(*args: object, **kwargs: object) -> dict[str, object]:
+        next_state = original_transition(*args, **kwargs)
+        verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
+        verdict["human_note"] = "Changed after transition construction."
+        verdict_path.write_text(json.dumps(verdict), encoding="utf-8")
+        return next_state
+
+    monkeypatch.setattr(
+        closed_loop_development_verdict.closed_loop_attempt_state,
+        "transition_state",
+        drift_after_transition,
+    )
+
+    with pytest.raises(ValueError, match="evidence_hash_stale"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="record the named development verdict",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_development_verdict=verdict_path,
+            repo_root=workspace,
+        )
+
+    assert not any(state_path.parent.glob("state-*-development_accepted.json"))
+
+
+def test_default_fig_run_never_discovers_adjacent_development_verdict(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    assert verdict_path.is_file()
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="continue the lifecycle",
+        execute=True,
+        repo_root=workspace,
+    )
+
+    assert payload["executed_count"] == 0
+    assert payload["final_action"] == fig_run.fig_driver.ACTION_CLOSED_LOOP_HANDOFF_STOP
+    assert payload["boundary_handoff"]["required_actor"] == "human_reviewer"
+    assert payload["boundary_handoff"]["evidence_refs"][0] == (
+        state_path.relative_to(workspace).as_posix()
+    )
+    assert not any(state_path.parent.glob("state-*-development_accepted.json"))
+
+
+def test_default_fig_run_development_verdict_cli_binds_current_without_journal(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+    current = json.loads(state_path.read_text(encoding="utf-8"))
+    runs_root = tmp_path / "runs"
+
+    result = fig_run.main(
+        [
+            "demo",
+            "--mode",
+            "review",
+            "--goal",
+            "record the named development verdict",
+            "--closed-loop-development-verdict",
+            str(verdict_path),
+            "--record",
+            "--runs-root",
+            str(runs_root),
+            "--json",
+        ],
+        repo_root=workspace,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert result == 0
+    assert payload["closed_loop"]["input_state_sha256"] == current["state_sha256"]
+    assert payload["closed_loop"]["next_state"] == "development_accepted"
+    assert payload["closed_loop"]["created"] is False
+    assert not runs_root.exists()
+
+
+def test_default_fig_run_development_verdict_closes_current_attempt_without_host(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, _state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
+
+    def forbidden_host_or_shell(*args: object, **kwargs: object) -> object:
+        raise AssertionError("verdict consumption must not invoke shell or host")
+
+    monkeypatch.setattr(fig_run, "_run_command", forbidden_host_or_shell)
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="record the named development verdict",
+        execute=True,
+        closed_loop_development_verdict=verdict_path,
+        repo_root=workspace,
+    )
+
+    accepted_path = workspace / payload["closed_loop"]["next_state_path"]
+    accepted = json.loads(accepted_path.read_text(encoding="utf-8"))
+    completed = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="continue the lifecycle",
+        execute=True,
+        repo_root=workspace,
+    )
+    assert payload["final_stop_reason"] == "development_accepted"
+    assert accepted["state"] == "development_accepted"
+    assert accepted["publication_acceptance"] == "not_claimed"
+    assert completed["final_stop_reason"] == "complete"
+    assert completed["executed_count"] == 0
+
+
 def test_fig_run_closed_loop_inbound_plan_only_is_truthful_and_write_free(
     tmp_path: Path,
 ) -> None:
@@ -1482,9 +1990,15 @@ def test_default_fig_run_response_only_rejects_state_that_stops_being_current(
         competing_state,
         workspace_root=workspace,
     )
+    original_lock = repair_transaction.recoverable_exclusive_lock
 
     @contextmanager
-    def advance_before_lock(*args: object, **kwargs: object):
+    def advance_before_lock(path: Path, *, owner: str):
+        if path.name != closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK:
+            with original_lock(path, owner=owner):
+                yield
+            return
+        assert owner == closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK_OWNER
         closed_loop_attempt_state.publish_state(
             competing_state,
             workspace_root=workspace,
@@ -1493,7 +2007,7 @@ def test_default_fig_run_response_only_rejects_state_that_stops_being_current(
 
     monkeypatch.setattr(
         closed_loop_post_review_response.repair_transaction,
-        "exclusive_lock",
+        "recoverable_exclusive_lock",
         advance_before_lock,
     )
 

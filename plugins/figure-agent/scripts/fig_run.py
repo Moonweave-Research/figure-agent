@@ -22,6 +22,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import closed_loop_development_verdict as development_verdict_adapter  # noqa: E402
 import closed_loop_machine_repair  # noqa: E402
 import closed_loop_post_review  # noqa: E402
 import closed_loop_post_review_response  # noqa: E402
@@ -317,6 +318,20 @@ def _automatic_repair_candidate_ready_state(
     )
 
 
+def _automatic_visually_re_reviewed_state(
+    summary: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> tuple[Path, str] | None:
+    return _projected_current_state(
+        summary,
+        lifecycle_state="visually_re_reviewed",
+        disposition="human_review_required",
+        required_actor="human_reviewer",
+        repo_root=repo_root,
+    )
+
+
 def _boundary_stop_reason(summary: dict[str, Any]) -> str:
     action = summary.get("action")
     if action == fig_driver.ACTION_COMPLETE:
@@ -591,6 +606,7 @@ def run_workflow(
     closed_loop_response: Path | None = None,
     closed_loop_repair_response: Path | None = None,
     closed_loop_authorization: Path | None = None,
+    closed_loop_development_verdict: Path | None = None,
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
     if mode == "final":
@@ -605,10 +621,12 @@ def run_workflow(
             closed_loop_response,
             closed_loop_repair_response,
             closed_loop_authorization,
+            closed_loop_development_verdict,
         )
     ) > 1:
         raise ValueError(
-            "closed-loop response, repair response, and authorization are mutually exclusive"
+            "closed-loop response, repair response, authorization, and development "
+            "verdict are mutually exclusive"
         )
     initial_summary: dict[str, Any] | None = None
     automatic_state_sha256: str | None = None
@@ -619,7 +637,17 @@ def run_workflow(
             goal=goal,
             repo_root=repo_root,
         )
-        if closed_loop_authorization is not None:
+        if closed_loop_development_verdict is not None:
+            automatic_state = _automatic_visually_re_reviewed_state(
+                initial_summary,
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-development-verdict requires current "
+                    "visually_re_reviewed state or --closed-loop-state"
+                )
+        elif closed_loop_authorization is not None:
             automatic_state = _automatic_repair_candidate_ready_state(
                 initial_summary,
                 repo_root=repo_root,
@@ -659,6 +687,77 @@ def run_workflow(
                 )
         if automatic_state is not None:
             closed_loop_state, automatic_state_sha256 = automatic_state
+    if closed_loop_state is not None and closed_loop_development_verdict is not None:
+        try:
+            verdict = development_verdict_adapter.run_development_verdict(
+                name,
+                state_path=closed_loop_state,
+                verdict_path=closed_loop_development_verdict,
+                execute=execute,
+                workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except development_verdict_adapter.ClosedLoopDevelopmentVerdictError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        state_path = verdict["input_state_path"]
+        next_state_path = verdict["next_state_path"]
+        verdict_path = verdict["verdict_path"]
+        input_state = verdict["input_state"]
+        state_evidence_path = (
+            next_state_path if "published_state" in verdict else state_path
+        )
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": verdict["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": verdict["stop_boundary"],
+            "final_stop_reason": verdict["stop_reason"],
+            "executed_count": 1 if verdict["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": verdict["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "verdict_path": verdict_path.relative_to(root).as_posix(),
+                "reviewer": verdict["reviewer"],
+                "created": verdict["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": verdict["action"],
+                "stop_boundary": verdict["stop_boundary"],
+                "required_actor": verdict["required_actor"],
+                "blocking_reason": (
+                    "publish the exact named development verdict"
+                    if "published_state" not in verdict
+                    else "development baseline recorded for the exact reviewed state"
+                ),
+                "evidence_refs": [
+                    "human_decision_record:"
+                    + verdict_path.relative_to(root).as_posix(),
+                    "closed_loop_state:"
+                    + state_evidence_path.relative_to(root).as_posix(),
+                ],
+                "allowed_scope": ["publish the bound development-baseline state"],
+                "forbidden_scope": [
+                    "verdict discovery or synthesis",
+                    "accepted or golden mutation",
+                    "release or publication acceptance claim",
+                ],
+                "closeout_checks": ["publish only the exact state-bound verdict"],
+                "publication_acceptance": "not_claimed",
+            },
+        }
     if closed_loop_state is not None and closed_loop_authorization is not None:
         try:
             authorization = closed_loop_repair_authorization.run_authorization(
@@ -1106,6 +1205,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--closed-loop-response", type=Path, default=None)
     parser.add_argument("--closed-loop-repair-response", type=Path, default=None)
     parser.add_argument("--closed-loop-authorization", type=Path, default=None)
+    parser.add_argument("--closed-loop-development-verdict", type=Path, default=None)
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--record", action="store_true")
     parser.add_argument("--no-record", action="store_true")
@@ -1124,6 +1224,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             closed_loop_response=args.closed_loop_response,
             closed_loop_repair_response=args.closed_loop_repair_response,
             closed_loop_authorization=args.closed_loop_authorization,
+            closed_loop_development_verdict=args.closed_loop_development_verdict,
             repo_root=repo_root,
         )
     except ValueError as exc:
@@ -1142,6 +1243,10 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     ):
         should_record = False
     if args.closed_loop_authorization is not None and not payload.get(
+        "closed_loop", {}
+    ).get("created", False):
+        should_record = False
+    if args.closed_loop_development_verdict is not None and not payload.get(
         "closed_loop", {}
     ).get("created", False):
         should_record = False
