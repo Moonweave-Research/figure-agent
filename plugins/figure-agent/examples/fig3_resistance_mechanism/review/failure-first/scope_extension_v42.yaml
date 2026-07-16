@@ -1,0 +1,17 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v41.yaml
+extends_sha256: sha256:3e94bfd08fed044c371d85c3167ad837a7423f269730be4fd132a373f0efe2ea
+reason: add the canonical initial human-adjudication and attribution-only boundary without source repair or historical artifact mutation
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v42.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/docs/figure-agent.md
+  - plugins/figure-agent/docs/superpowers/issues/2026-06-01-issue-100hi-schema-module-map.md
+  - plugins/figure-agent/scripts/closed_loop_attempt_state.py
+  - plugins/figure-agent/scripts/closed_loop_initial_adjudication.py
+  - plugins/figure-agent/scripts/fig_run.py
+  - plugins/figure-agent/tests/test_closed_loop_attempt_state.py
+  - plugins/figure-agent/tests/test_closed_loop_initial_adjudication.py
+publication_acceptance: not_claimed

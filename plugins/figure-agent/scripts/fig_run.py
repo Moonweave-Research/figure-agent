@@ -31,6 +31,7 @@ import closed_loop_attempt_admission  # noqa: E402
 import closed_loop_attempt_state  # noqa: E402
 import closed_loop_current_state  # noqa: E402
 import closed_loop_development_verdict as development_verdict_adapter  # noqa: E402
+import closed_loop_initial_adjudication as initial_adjudication_adapter  # noqa: E402
 import closed_loop_initial_review  # noqa: E402
 import closed_loop_initial_review_response as initial_review_response_adapter  # noqa: E402
 import closed_loop_machine_repair  # noqa: E402
@@ -893,6 +894,7 @@ def run_workflow(
     closed_loop_state: Path | None = None,
     closed_loop_response: Path | None = None,
     closed_loop_initial_review_response: Path | None = None,
+    closed_loop_initial_adjudication: Path | None = None,
     closed_loop_repair_response: Path | None = None,
     closed_loop_repair_packet: Path | None = None,
     closed_loop_candidate_response: Path | None = None,
@@ -920,6 +922,7 @@ def run_workflow(
         closed_loop_state,
         closed_loop_response,
         closed_loop_initial_review_response,
+        closed_loop_initial_adjudication,
         closed_loop_repair_response,
         closed_loop_repair_packet,
         closed_loop_candidate_response,
@@ -948,6 +951,7 @@ def run_workflow(
                 closed_loop_state,
                 closed_loop_response,
                 closed_loop_initial_review_response,
+                closed_loop_initial_adjudication,
                 closed_loop_repair_response,
                 closed_loop_repair_packet,
                 closed_loop_candidate_response,
@@ -1162,6 +1166,7 @@ def run_workflow(
             for value in (
                 closed_loop_response,
                 closed_loop_initial_review_response,
+                closed_loop_initial_adjudication,
                 closed_loop_repair_response,
                 closed_loop_authorization,
                 closed_loop_development_verdict,
@@ -1171,8 +1176,8 @@ def run_workflow(
         > 1
     ):
         raise ValueError(
-            "closed-loop candidate, response, initial review response, repair "
-            "response, authorization, and "
+            "closed-loop candidate, response, initial review response, "
+            "initial adjudication, repair response, authorization, and "
             "development verdict are mutually exclusive"
         )
     initial_summary: dict[str, Any] | None = None
@@ -1275,6 +1280,19 @@ def run_workflow(
                 raise ValueError(
                     "closed-loop-initial-review-response requires current "
                     "initial_review_requested state or --closed-loop-state"
+                )
+        elif closed_loop_initial_adjudication is not None:
+            automatic_state = _projected_current_state(
+                initial_summary,
+                lifecycle_state="critique_unadjudicated",
+                disposition="human_review_required",
+                required_actor="human_adjudicator",
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-initial-adjudication requires current "
+                    "critique_unadjudicated state or --closed-loop-state"
                 )
         elif closed_loop_response is None:
             automatic_state = _automatic_machine_repaired_state(
@@ -1674,6 +1692,85 @@ def run_workflow(
                     "publication acceptance claim",
                 ],
                 "closeout_checks": ["record a named human adjudication"],
+                "publication_acceptance": "not_claimed",
+            },
+        }
+    if closed_loop_state is not None and closed_loop_initial_adjudication is not None:
+        try:
+            adjudicated = initial_adjudication_adapter.run_initial_adjudication(
+                name,
+                state_path=closed_loop_state,
+                decision_path=closed_loop_initial_adjudication,
+                execute=execute,
+                workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except initial_adjudication_adapter.ClosedLoopInitialAdjudicationError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        input_state = adjudicated["input_state"]
+        input_state_path = adjudicated["input_state_path"]
+        next_state_path = adjudicated["next_state_path"]
+        decision_path = adjudicated["decision_path"]
+        handoff_path = adjudicated["attribution_handoff_path"]
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": adjudicated["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": adjudicated["stop_boundary"],
+            "final_stop_reason": adjudicated["stop_reason"],
+            "executed_count": 1 if adjudicated["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": input_state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": adjudicated["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "decision_path": decision_path.relative_to(root).as_posix(),
+                "attribution_handoff_path": (
+                    handoff_path.relative_to(root).as_posix() if handoff_path is not None else None
+                ),
+                "created": adjudicated["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": adjudicated["action"],
+                "stop_boundary": adjudicated["stop_boundary"],
+                "required_actor": adjudicated["stop_boundary"],
+                "blocking_reason": (
+                    "initial review was rejected"
+                    if adjudicated["next_state"] == "rejected"
+                    else "human attribution is required before any repair binding"
+                ),
+                "evidence_refs": [
+                    "initial_adjudication:" + decision_path.relative_to(root).as_posix(),
+                    "closed_loop_state:" + next_state_path.relative_to(root).as_posix(),
+                ]
+                + (
+                    ["attribution_handoff:" + handoff_path.relative_to(root).as_posix()]
+                    if handoff_path is not None
+                    else []
+                ),
+                "allowed_scope": (
+                    []
+                    if adjudicated["next_state"] == "rejected"
+                    else ["human attribution inside the explicit handoff scope"]
+                ),
+                "forbidden_scope": [
+                    "plugin host or model invocation",
+                    "automatic adjudication, repair binding, repair, authorization, "
+                    "materialization, or verdict",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": ["keep the source unchanged", "do not bind repair in this step"],
                 "publication_acceptance": "not_claimed",
             },
         }
@@ -2274,6 +2371,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--closed-loop-state", type=Path, default=None)
     parser.add_argument("--closed-loop-response", type=Path, default=None)
     parser.add_argument("--closed-loop-initial-review-response", type=Path, default=None)
+    parser.add_argument("--closed-loop-initial-adjudication", type=Path, default=None)
     parser.add_argument("--closed-loop-repair-response", type=Path, default=None)
     parser.add_argument("--closed-loop-repair-packet", type=Path, default=None)
     parser.add_argument("--closed-loop-candidate-response", type=Path, default=None)
@@ -2302,6 +2400,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             closed_loop_state=args.closed_loop_state,
             closed_loop_response=args.closed_loop_response,
             closed_loop_initial_review_response=args.closed_loop_initial_review_response,
+            closed_loop_initial_adjudication=args.closed_loop_initial_adjudication,
             closed_loop_repair_response=args.closed_loop_repair_response,
             closed_loop_repair_packet=args.closed_loop_repair_packet,
             closed_loop_candidate_response=args.closed_loop_candidate_response,
@@ -2327,6 +2426,10 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     if args.closed_loop_initial_review_response is not None and not payload.get(
         "closed_loop", {}
     ).get("created", False):
+        should_record = False
+    if args.closed_loop_initial_adjudication is not None and not payload.get("closed_loop", {}).get(
+        "created", False
+    ):
         should_record = False
     if args.closed_loop_repair_response is not None and not payload.get("closed_loop", {}).get(
         "created", False

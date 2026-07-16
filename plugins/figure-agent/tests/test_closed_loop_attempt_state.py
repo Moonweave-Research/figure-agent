@@ -16,7 +16,14 @@ _STATE_EVIDENCE_ROLES = {
         "initial_visual_review_response",
         "host_review_transcript",
     ),
-    "adjudicated_unbound": ("adjudication", "attribution_handoff"),
+    "adjudicated_unbound": (
+        "adjudication",
+        "attribution_handoff",
+        "critique",
+        "host_review_execution_receipt",
+        "host_review_transcript",
+        "initial_visual_review_response",
+    ),
     "repair_bound": ("adjudicated_repair_binding",),
     "repair_candidate_ready": (
         "repair_execution_packet",
@@ -35,7 +42,13 @@ _STATE_EVIDENCE_ROLES = {
         "post_repair_visual_review_receipt",
     ),
     "development_accepted": ("human_decision_record",),
-    "rejected": ("human_decision_record",),
+    "rejected": (
+        "human_decision_record",
+        "critique",
+        "host_review_execution_receipt",
+        "host_review_transcript",
+        "initial_visual_review_response",
+    ),
     "repair_required": ("repair_failure_record",),
     "aborted": ("abort_record",),
 }
@@ -167,13 +180,9 @@ def _transition(
     workspace: Path,
     render: Path,
 ) -> dict[str, Any]:
-    previous_path = closed_loop_attempt_state.state_path(
-        previous, workspace_root=workspace
-    )
+    previous_path = closed_loop_attempt_state.state_path(previous, workspace_root=workspace)
     if not previous_path.exists():
-        previous_path = closed_loop_attempt_state.publish_state(
-            previous, workspace_root=workspace
-        )
+        previous_path = closed_loop_attempt_state.publish_state(previous, workspace_root=workspace)
     return closed_loop_attempt_state.transition_state(
         previous,
         next_state=state,
@@ -209,13 +218,9 @@ def test_start_attempt_has_deterministic_identity_and_canonical_state_hash(
     assert first["schema"] == "figure-agent.closed-loop-attempt-state.v1"
     assert first["state"] == "authored_rendered"
     assert first["attempt_id"].startswith("attempt-")
-    assert first["state_sha256"] == (
-        closed_loop_attempt_state.canonical_state_sha256(first)
-    )
+    assert first["state_sha256"] == (closed_loop_attempt_state.canonical_state_sha256(first))
     assert first["publication_acceptance"] == "not_claimed"
-    assert closed_loop_attempt_state.validate_state(
-        first, workspace_root=workspace
-    ) == first
+    assert closed_loop_attempt_state.validate_state(first, workspace_root=workspace) == first
 
 
 def test_unadjudicated_and_unbound_states_stop_for_the_derived_human_actor(
@@ -286,13 +291,9 @@ def test_valid_chain_reaches_development_acceptance_without_claiming_publication
         "visually_re_reviewed",
         "development_accepted",
     ):
-        chain.append(
-            _transition(chain[-1], state, workspace=workspace, render=render)
-        )
+        chain.append(_transition(chain[-1], state, workspace=workspace, render=render))
 
-    assert closed_loop_attempt_state.validate_chain(
-        chain, workspace_root=workspace
-    ) == chain
+    assert closed_loop_attempt_state.validate_chain(chain, workspace_root=workspace) == chain
     assert chain[-1]["terminal"] is True
     assert chain[-1]["actor"] == "human_reviewer-identity"
     assert chain[-1]["actor_role"] == "human_reviewer"
@@ -329,9 +330,7 @@ def test_transition_rejects_actor_mismatch_and_illegal_skip(tmp_path: Path) -> N
         closed_loop_attempt_state.ClosedLoopAttemptStateError,
         match="illegal_transition",
     ):
-        initial_path = closed_loop_attempt_state.state_path(
-            initial, workspace_root=workspace
-        )
+        initial_path = closed_loop_attempt_state.state_path(initial, workspace_root=workspace)
         closed_loop_attempt_state.transition_state(
             initial,
             next_state="machine_repaired",
@@ -441,9 +440,7 @@ def test_previous_and_parent_files_are_live_lineage_and_child_is_distinct(
         "repair_required",
     ):
         state = _transition(state, name, workspace=workspace2, render=render2)
-    parent_path = closed_loop_attempt_state.publish_state(
-        state, workspace_root=workspace2
-    )
+    parent_path = closed_loop_attempt_state.publish_state(state, workspace_root=workspace2)
     child_render = render2.parent / "child-render.png"
     child_render.write_bytes(b"child-render")
     child = closed_loop_attempt_state.start_attempt(
@@ -518,9 +515,7 @@ def test_initial_attempt_id_is_recomputed_from_root_evidence(tmp_path: Path) -> 
         evidence=_root_evidence(render),
     )
     forged = {**state, "attempt_id": "attempt-000000000000000000000000"}
-    forged["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(
-        forged
-    )
+    forged["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(forged)
 
     with pytest.raises(
         closed_loop_attempt_state.ClosedLoopAttemptStateError,
@@ -538,9 +533,7 @@ def test_transitive_previous_lineage_rechecks_root_evidence(tmp_path: Path) -> N
         actor_role="authoring_agent",
         evidence=_root_evidence(render),
     )
-    critique = _transition(
-        root, "critique_unadjudicated", workspace=workspace, render=render
-    )
+    critique = _transition(root, "critique_unadjudicated", workspace=workspace, render=render)
     bound = _transition(critique, "repair_bound", workspace=workspace, render=render)
     render.write_bytes(b"root-render-drift")
 
@@ -655,9 +648,7 @@ def test_publish_fails_closed_when_evidence_drifts_during_create(
     assert captured.value.path == closed_loop_attempt_state.state_path(
         state, workspace_root=workspace
     )
-    assert closed_loop_attempt_state.state_path(
-        state, workspace_root=workspace
-    ).is_file()
+    assert closed_loop_attempt_state.state_path(state, workspace_root=workspace).is_file()
 
 
 def test_validate_state_rejects_forged_transition_and_actor_role(tmp_path: Path) -> None:
@@ -669,9 +660,7 @@ def test_validate_state_rejects_forged_transition_and_actor_role(tmp_path: Path)
         actor_role="authoring_agent",
         evidence=_root_evidence(render),
     )
-    critique = _transition(
-        root, "critique_unadjudicated", workspace=workspace, render=render
-    )
+    critique = _transition(root, "critique_unadjudicated", workspace=workspace, render=render)
 
     illegal = {**critique, "state": "machine_repaired"}
     illegal.update(
@@ -684,9 +673,7 @@ def test_validate_state_rejects_forged_transition_and_actor_role(tmp_path: Path)
             fixture="demo",
         ),
     )
-    illegal["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(
-        illegal
-    )
+    illegal["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(illegal)
     with pytest.raises(
         closed_loop_attempt_state.ClosedLoopAttemptStateError,
         match="illegal_transition",
@@ -694,16 +681,12 @@ def test_validate_state_rejects_forged_transition_and_actor_role(tmp_path: Path)
         closed_loop_attempt_state.validate_state(illegal, workspace_root=workspace)
 
     wrong_actor = {**critique, "actor_role": "human_adjudicator"}
-    wrong_actor["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(
-        wrong_actor
-    )
+    wrong_actor["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(wrong_actor)
     with pytest.raises(
         closed_loop_attempt_state.ClosedLoopAttemptStateError,
         match="actor_mismatch",
     ):
-        closed_loop_attempt_state.validate_state(
-            wrong_actor, workspace_root=workspace
-        )
+        closed_loop_attempt_state.validate_state(wrong_actor, workspace_root=workspace)
 
 
 def test_root_state_requires_authoring_agent_role(tmp_path: Path) -> None:
@@ -791,9 +774,7 @@ def test_transition_rejects_whitespace_only_named_actor(tmp_path: Path) -> None:
             next_state="development_accepted",
             actor="   ",
             actor_role="human_reviewer",
-            evidence=_state_evidence(
-                render, "development_accepted", state["sequence"] + 1
-            ),
+            evidence=_state_evidence(render, "development_accepted", state["sequence"] + 1),
             workspace_root=workspace,
             previous_state_path=closed_loop_attempt_state.publish_state(
                 state, workspace_root=workspace
@@ -812,20 +793,19 @@ def test_attempt_identity_is_order_independent_but_state_evidence_is_canonical(
         actor_role="authoring_agent",
         evidence=_root_evidence(render),
     )
-    assert closed_loop_attempt_state._attempt_id(
-        fixture="demo",
-        root_evidence=list(reversed(state["evidence"])),
-        parent_record=None,
-    ) == state["attempt_id"]
+    assert (
+        closed_loop_attempt_state._attempt_id(
+            fixture="demo",
+            root_evidence=list(reversed(state["evidence"])),
+            parent_record=None,
+        )
+        == state["attempt_id"]
+    )
 
     reordered = {**state, "evidence": list(reversed(state["evidence"]))}
-    reordered["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(
-        reordered
-    )
+    reordered["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(reordered)
     with pytest.raises(
         closed_loop_attempt_state.ClosedLoopAttemptStateError,
         match="evidence_order_invalid",
     ):
-        closed_loop_attempt_state.validate_state(
-            reordered, workspace_root=workspace
-        )
+        closed_loop_attempt_state.validate_state(reordered, workspace_root=workspace)

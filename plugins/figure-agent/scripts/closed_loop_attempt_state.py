@@ -158,7 +158,19 @@ _STATE_EVIDENCE_ROLES: dict[str, frozenset[str]] = {
             "host_review_transcript",
         }
     ),
-    "adjudicated_unbound": frozenset({"adjudication", "attribution_handoff"}),
+    # Preserve the actual initial-review packet alongside the human decision.
+    # A later attribution handoff must not make the response/critique/transcript
+    # merely historical and therefore silently unvalidated.
+    "adjudicated_unbound": frozenset(
+        {
+            "adjudication",
+            "attribution_handoff",
+            "critique",
+            "host_review_execution_receipt",
+            "host_review_transcript",
+            "initial_visual_review_response",
+        }
+    ),
     "repair_bound": frozenset({"adjudicated_repair_binding"}),
     "repair_candidate_ready": frozenset(
         {"repair_execution_packet", "repair_response", "materialization_preview"}
@@ -176,7 +188,15 @@ _STATE_EVIDENCE_ROLES: dict[str, frozenset[str]] = {
         }
     ),
     "development_accepted": frozenset({"human_decision_record"}),
-    "rejected": frozenset({"human_decision_record"}),
+    "rejected": frozenset(
+        {
+            "human_decision_record",
+            "critique",
+            "host_review_execution_receipt",
+            "host_review_transcript",
+            "initial_visual_review_response",
+        }
+    ),
     "repair_required": frozenset({"repair_failure_record"}),
     "aborted": frozenset({"abort_record"}),
 }
