@@ -22,6 +22,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import closed_loop_attempt_admission  # noqa: E402
 import closed_loop_development_verdict as development_verdict_adapter  # noqa: E402
 import closed_loop_machine_repair  # noqa: E402
 import closed_loop_post_review  # noqa: E402
@@ -625,6 +626,7 @@ def run_workflow(
     closed_loop_materialization_preview: Path | None = None,
     closed_loop_authorization: Path | None = None,
     closed_loop_development_verdict: Path | None = None,
+    closed_loop_attempt_manifest: Path | None = None,
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
     if mode == "final":
@@ -633,6 +635,84 @@ def run_workflow(
         raise ValueError(f"unsupported mode: {mode}")
     if max_steps < 1:
         raise ValueError("max_steps must be >= 1")
+    if closed_loop_attempt_manifest is not None:
+        if any(
+            value is not None
+            for value in (
+                closed_loop_state,
+                closed_loop_response,
+                closed_loop_repair_response,
+                closed_loop_repair_packet,
+                closed_loop_candidate_response,
+                closed_loop_materialization_preview,
+                closed_loop_authorization,
+                closed_loop_development_verdict,
+            )
+        ):
+            raise ValueError(
+                "closed-loop attempt manifest is mutually exclusive with later lifecycle inputs"
+            )
+        try:
+            admission = closed_loop_attempt_admission.admit_root_attempt(
+                name,
+                manifest_path=closed_loop_attempt_manifest,
+                execute=execute,
+                workspace_root=repo_root,
+            )
+        except closed_loop_attempt_admission.ClosedLoopAttemptAdmissionError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        state = admission["state"]
+        next_state_path = admission["next_state_path"]
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": closed_loop_attempt_admission.ACTION,
+            "final_safe_command": None,
+            "final_stop_boundary": "critique_unadjudicated",
+            "final_stop_reason": (
+                closed_loop_attempt_admission.STOP_REASON if execute else STOP_PLAN_ONLY
+            ),
+            "executed_count": int(admission["created"]),
+            "closed_loop": {
+                "next_state": state["state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "next_state_sha256": state["state_sha256"],
+                "manifest_path": closed_loop_attempt_manifest.relative_to(root).as_posix(),
+                "evidence_paths": {
+                    record["role"]: record["path"] for record in state["evidence"]
+                },
+                "created": admission["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": closed_loop_attempt_admission.ACTION,
+                "stop_boundary": "critique_unadjudicated",
+                "required_actor": "workflow_agent",
+                "blocking_reason": "root attempt admission only; critique is not yet evidence",
+                "evidence_refs": [
+                    f"{record['role']}:{record['path']}" for record in state["evidence"]
+                ]
+                + [
+                    f"closed_loop_state:{next_state_path.relative_to(root).as_posix()}",
+                ],
+                "allowed_scope": ["admit the explicit fresh authored render"],
+                "forbidden_scope": [
+                    "critique or host-review synthesis",
+                    "adjudication, attribution, repair, authorization, materialization, or verdict",
+                    "accepted, golden, or publication acceptance claim",
+                ],
+                "closeout_checks": ["run the next canonical lifecycle step separately"],
+                "publication_acceptance": "not_claimed",
+            },
+        }
     candidate_inputs = (
         closed_loop_repair_packet is not None,
         closed_loop_candidate_response is not None,
@@ -1343,6 +1423,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     )
     parser.add_argument("--closed-loop-authorization", type=Path, default=None)
     parser.add_argument("--closed-loop-development-verdict", type=Path, default=None)
+    parser.add_argument("--closed-loop-attempt-manifest", type=Path, default=None)
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--record", action="store_true")
     parser.add_argument("--no-record", action="store_true")
@@ -1367,6 +1448,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             ),
             closed_loop_authorization=args.closed_loop_authorization,
             closed_loop_development_verdict=args.closed_loop_development_verdict,
+            closed_loop_attempt_manifest=args.closed_loop_attempt_manifest,
             repo_root=repo_root,
         )
     except ValueError as exc:
@@ -1375,6 +1457,8 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     completed_at = _utc_now()
     should_record = not args.no_record and (args.execute or args.record)
     if args.closed_loop_state is not None and not args.execute:
+        should_record = False
+    if args.closed_loop_attempt_manifest is not None:
         should_record = False
     if args.closed_loop_response is not None and not payload.get("closed_loop", {}).get(
         "created", False

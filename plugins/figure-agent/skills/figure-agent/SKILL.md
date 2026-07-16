@@ -96,6 +96,17 @@ run `fig-agent helper fig_run_journal.py <name>` to summarize the prior
 stop, then rerun live `/fig_status` or `/fig_drive` before using
 `/fig_run --execute` again. Do not replay commands from a journal.
 
+For the first canonical lifecycle state after a fresh real render, require one
+explicit `--closed-loop-attempt-manifest <manifest.json>` on `/fig_run`; never
+discover it adjacently. The manifest must bind fixture, named authoring-agent
+identity/role, source/render paths and hashes, task/model/budget provenance, and
+`publication_acceptance: not_claimed`. Plan-only validates and reports the
+proposed `authored_rendered` path without writing. Execute revalidates under the
+shared transition lock, publishes only that root state, and stops. This is
+lifecycle admission, not prospective defect proof, visual acceptance, or
+publication acceptance; do not synthesize any critique, review, repair,
+authorization, verdict, accepted, or golden evidence in this step.
+
 When canonical status is `repair_bound`, pass all of
 `--closed-loop-repair-packet <v4.json>` and
 `--closed-loop-candidate-response <response.json>` and

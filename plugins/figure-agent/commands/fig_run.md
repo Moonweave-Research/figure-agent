@@ -18,6 +18,25 @@ fig-agent run <name> --mode review --goal "<goal>" --no-record
 fig-agent helper fig_run_journal.py <name>
 ```
 
+### Root attempt admission
+
+For a fresh real render with no canonical attempt, pass exactly one explicit
+`--closed-loop-attempt-manifest <manifest.json>` input. The manifest must
+hash-bind the fixture, named `authoring_agent`, source and render paths/hashes,
+task/model/budget provenance, and `publication_acceptance: not_claimed`.
+The runner never discovers a manifest beside a render.
+
+Plan-only validates the manifest and reports the exact proposed
+`authored_rendered` state path without writing. `--execute` revalidates under
+the shared transition lock and publishes that one root state, then stops.
+Existing current attempts of every disposition are rejected; an identical
+concurrent publication is recovered idempotently, while a conflicting one is
+rejected. Admission is lifecycle provenance only: it does not create critique,
+review, adjudication, attribution, repair, authorization, verdict, accepted or
+golden evidence, and never claims visual or publication acceptance.
+Admission deliberately does not write a run journal: the canonical state is its
+only execute-time publication.
+
 `/fig_run` is a conservative executor over `/fig_drive`. It asks the driver
 for one next action, executes only allowlisted deterministic shell actions, then
 asks the driver again. It stops when the next action requires host vision,
