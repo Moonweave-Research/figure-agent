@@ -35,15 +35,13 @@ def _sha256(path: Path) -> str:
 
 
 def _canonical_sha256(payload: dict[str, Any]) -> str:
-    encoded = json.dumps(
-        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    ).encode("utf-8")
+    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
-def _workspace_file(
-    root: Path, fixture: str, value: Path | str, *, label: str
-) -> Path:
+def _workspace_file(root: Path, fixture: str, value: Path | str, *, label: str) -> Path:
     try:
         return closed_loop_attempt_state._workspace_artifact(  # noqa: SLF001
             root, fixture, value, label=label
@@ -55,24 +53,18 @@ def _workspace_file(
 def _load_published_state(
     *, workspace_root: Path, fixture: str, state_path: Path
 ) -> tuple[dict[str, Any], Path]:
-    actual_path = _workspace_file(
-        workspace_root, fixture, state_path, label="closed_loop_state"
-    )
+    actual_path = _workspace_file(workspace_root, fixture, state_path, label="closed_loop_state")
     try:
         payload = json.loads(actual_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ClosedLoopInitialReviewError("closed_loop_state_json_invalid") from exc
     try:
-        state = closed_loop_attempt_state.validate_state(
-            payload, workspace_root=workspace_root
-        )
+        state = closed_loop_attempt_state.validate_state(payload, workspace_root=workspace_root)
     except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
         raise ClosedLoopInitialReviewError(f"closed_loop_state_invalid:{exc}") from exc
     if state["fixture"] != fixture:
         raise ClosedLoopInitialReviewError("closed_loop_state_fixture_mismatch")
-    if actual_path != closed_loop_attempt_state.state_path(
-        state, workspace_root=workspace_root
-    ):
+    if actual_path != closed_loop_attempt_state.state_path(state, workspace_root=workspace_root):
         raise ClosedLoopInitialReviewError("closed_loop_state_path_mismatch")
     return state, actual_path
 
@@ -109,12 +101,8 @@ def _bound_root_artifacts(
     return source, source_record, render, render_record
 
 
-def _assert_current(
-    state: dict[str, Any], state_path: Path, *, workspace_root: Path
-) -> None:
-    current = closed_loop_current_state.resolve_current_attempt(
-        workspace_root, state["fixture"]
-    )
+def _assert_current(state: dict[str, Any], state_path: Path, *, workspace_root: Path) -> None:
+    current = closed_loop_current_state.resolve_current_attempt(workspace_root, state["fixture"])
     if current.get("resolution") != "current":
         raise ClosedLoopInitialReviewError(
             f"initial_review_current_resolution:{current.get('resolution')}"
@@ -140,10 +128,12 @@ def _snapshot_render(
         after.st_ctime_ns,
     )
     if (
-        (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns)
-        != fingerprint
-        or "sha256:" + hashlib.sha256(data).hexdigest() != expected_sha256
-    ):
+        before.st_dev,
+        before.st_ino,
+        before.st_size,
+        before.st_mtime_ns,
+        before.st_ctime_ns,
+    ) != fingerprint or "sha256:" + hashlib.sha256(data).hexdigest() != expected_sha256:
         raise ClosedLoopInitialReviewError("initial_review_render_changed_during_snapshot")
     return data, fingerprint
 
@@ -313,9 +303,13 @@ def _assert_crop_pixels_match(render: Path, crop_path: Path, *, crop_id: str) ->
                     critique_zoom_crops._scaled_size(width, height, target_width),  # noqa: SLF001
                     getattr(Image, "Resampling", Image).LANCZOS,
                 )
-            if expected.size != actual.size or ImageChops.difference(
-                expected.convert("RGBA"), actual.convert("RGBA")
-            ).getbbox(alpha_only=False) is not None:
+            if (
+                expected.size != actual.size
+                or ImageChops.difference(expected.convert("RGBA"), actual.convert("RGBA")).getbbox(
+                    alpha_only=False
+                )
+                is not None
+            ):
                 raise ClosedLoopInitialReviewError("initial_review_crop_pixels_invalid")
     except (OSError, UnidentifiedImageError, StopIteration, ValueError) as exc:
         raise ClosedLoopInitialReviewError("initial_review_crop_pixels_invalid") from exc
@@ -390,6 +384,12 @@ def _validate_existing_request(
     state_path: Path,
     workspace_root: Path,
 ) -> tuple[Path, Path, dict[str, Any]]:
+    return validate_outbound_request_pack(
+        state=state, state_path=state_path, workspace_root=workspace_root
+    )
+
+
+def _validated_request_record(state: dict[str, Any], *, workspace_root: Path) -> Path:
     request_record = _state_evidence(state, "initial_visual_review_request")
     request_path = _workspace_file(
         workspace_root,
@@ -399,15 +399,7 @@ def _validate_existing_request(
     )
     if _sha256(request_path) != request_record["sha256"]:
         raise ClosedLoopInitialReviewError("initial_review_request_hash_stale")
-    parent = _initial_parent_state(state, workspace_root=workspace_root)
-    parent_path = _initial_parent_path(state, workspace_root=workspace_root)
-    return _validate_complete_review_pack(
-        state=parent,
-        state_path=parent_path,
-        request_path=request_path,
-        crop_manifest_path=request_path.parent / "crops" / "manifest.json",
-        workspace_root=workspace_root,
-    )
+    return request_path
 
 
 def _load_request(request_path: Path) -> dict[str, Any]:
@@ -475,6 +467,26 @@ def _validate_complete_review_pack(
     if request != expected:
         raise ClosedLoopInitialReviewError("initial_review_existing_request_mismatch")
     return request_path, crop_manifest_path, request
+
+
+def validate_outbound_request_pack(
+    *,
+    state: dict[str, Any],
+    state_path: Path,
+    workspace_root: Path,
+) -> tuple[Path, Path, dict[str, Any]]:
+    """Validate the immutable outbound request and its six exact crops only."""
+    request_path = _validated_request_record(state, workspace_root=workspace_root)
+    parent = _initial_parent_state(state, workspace_root=workspace_root)
+    parent_path = _initial_parent_path(state, workspace_root=workspace_root)
+    del state_path
+    return _validate_complete_review_pack(
+        state=parent,
+        state_path=parent_path,
+        request_path=request_path,
+        crop_manifest_path=request_path.parent / "crops" / "manifest.json",
+        workspace_root=workspace_root,
+    )
 
 
 def _initial_parent_state(state: dict[str, Any], *, workspace_root: Path) -> dict[str, Any]:
@@ -657,17 +669,23 @@ def run_outbound_handoff(
             state=state, state_path=published_state_path, workspace_root=root
         )
         return {
-            "action": ACTION, "stop_boundary": STOP_BOUNDARY, "stop_reason": "host_boundary",
-            "required_actor": "host_llm", "created": False, "input_state": state,
-            "input_state_path": published_state_path, "next_state": state["state"],
-            "next_state_path": published_state_path, "request_path": request_path,
-            "crop_manifest_path": crop_manifest_path, "request": request, "published_state": state,
+            "action": ACTION,
+            "stop_boundary": STOP_BOUNDARY,
+            "stop_reason": "host_boundary",
+            "required_actor": "host_llm",
+            "created": False,
+            "input_state": state,
+            "input_state_path": published_state_path,
+            "next_state": state["state"],
+            "next_state_path": published_state_path,
+            "request_path": request_path,
+            "crop_manifest_path": crop_manifest_path,
+            "request": request,
+            "published_state": state,
         }
     if state["state"] != "authored_rendered":
         raise ClosedLoopInitialReviewError("closed_loop_state_not_authored_rendered")
-    source, source_record, render, render_record = _bound_root_artifacts(
-        state, workspace_root=root
-    )
+    source, source_record, render, render_record = _bound_root_artifacts(state, workspace_root=root)
     del source
     attempt_root = published_state_path.parent
     review_root = attempt_root / "initial-review"
@@ -678,11 +696,19 @@ def run_outbound_handoff(
     )
     if not execute:
         return {
-            "action": ACTION, "stop_boundary": STOP_BOUNDARY, "stop_reason": "plan_only",
-            "required_actor": "workflow_agent", "created": False, "input_state": state,
-            "input_state_path": published_state_path, "next_state": "initial_review_requested",
-            "next_state_path": next_state_path, "request_path": request_path,
-            "crop_manifest_path": crop_manifest_path, "request": None, "published_state": None,
+            "action": ACTION,
+            "stop_boundary": STOP_BOUNDARY,
+            "stop_reason": "plan_only",
+            "required_actor": "workflow_agent",
+            "created": False,
+            "input_state": state,
+            "input_state_path": published_state_path,
+            "next_state": "initial_review_requested",
+            "next_state_path": next_state_path,
+            "request_path": request_path,
+            "crop_manifest_path": crop_manifest_path,
+            "request": None,
+            "published_state": None,
         }
     try:
         with closed_loop_attempt_state.attempt_transition_lock(attempt_root):
@@ -786,10 +812,17 @@ def run_outbound_handoff(
     if published_next_state != next_state_path:
         raise ClosedLoopInitialReviewError("initial_review_state_path_mismatch")
     return {
-        "action": ACTION, "stop_boundary": STOP_BOUNDARY, "stop_reason": "host_boundary",
-        "required_actor": "host_llm", "created": True, "input_state": state,
-        "input_state_path": published_state_path, "next_state": next_state["state"],
-        "next_state_path": published_next_state, "request_path": request_path,
-        "crop_manifest_path": crop_manifest_path, "request": request,
+        "action": ACTION,
+        "stop_boundary": STOP_BOUNDARY,
+        "stop_reason": "host_boundary",
+        "required_actor": "host_llm",
+        "created": True,
+        "input_state": state,
+        "input_state_path": published_state_path,
+        "next_state": next_state["state"],
+        "next_state_path": published_next_state,
+        "request_path": request_path,
+        "crop_manifest_path": crop_manifest_path,
+        "request": request,
         "published_state": next_state,
     }

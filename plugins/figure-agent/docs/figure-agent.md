@@ -310,4 +310,5 @@ Closed-loop handoffs use these contracts rather than another workflow shell:
 `figure-agent.adjudicated-repair-binding.v1`, `figure-agent.semantic-finding-attribution.v1`,
 `figure-agent.attribution-handoff.v1`, `figure-agent.post-repair-visual-review-request.v1`,
 `figure-agent.host-review-execution-receipt.v1`, `figure-agent.post-repair-visual-review-response.v1`,
-`figure-agent.post-repair-visual-review-receipt.v1`, and `figure-agent.closed-loop-development-verdict.v1`.
+`figure-agent.post-repair-visual-review-receipt.v1`, `figure-agent.initial-visual-review-request.v1`,
+`figure-agent.initial-visual-review-response.v1`, and `figure-agent.closed-loop-development-verdict.v1`.

@@ -32,6 +32,7 @@ import closed_loop_attempt_state  # noqa: E402
 import closed_loop_current_state  # noqa: E402
 import closed_loop_development_verdict as development_verdict_adapter  # noqa: E402
 import closed_loop_initial_review  # noqa: E402
+import closed_loop_initial_review_response as initial_review_response_adapter  # noqa: E402
 import closed_loop_machine_repair  # noqa: E402
 import closed_loop_post_review  # noqa: E402
 import closed_loop_post_review_response  # noqa: E402
@@ -660,8 +661,7 @@ def _boundary_handoff(
             "stop_boundary": stop_boundary,
             "required_actor": "workflow_agent",
             "blocking_reason": (
-                "the fixture mutation admission lease is busy; no subprocess "
-                "was started"
+                "the fixture mutation admission lease is busy; no subprocess was started"
             ),
             "evidence_refs": [f"runner.stop_reason:{STOP_ADMISSION_BUSY}"],
             "allowed_scope": ["read-only"],
@@ -718,8 +718,7 @@ def _boundary_handoff(
             "stop_boundary": stop_boundary,
             "required_actor": "workflow_agent",
             "blocking_reason": (
-                "queue-bound fig_loop admission is not integrated; no subprocess "
-                "was started"
+                "queue-bound fig_loop admission is not integrated; no subprocess was started"
             ),
             "evidence_refs": [
                 f"runner.stop_reason:{STOP_RUN_FIG_LOOP_ADMISSION_PENDING}",
@@ -869,8 +868,7 @@ def _step_plan_binding(
 def _admission_diagnostic(exc: Exception) -> dict[str, Any]:
     detail = str(exc)
     if not detail or any(
-        character not in "abcdefghijklmnopqrstuvwxyz0123456789_:-"
-        for character in detail
+        character not in "abcdefghijklmnopqrstuvwxyz0123456789_:-" for character in detail
     ):
         detail = (
             "fixture_boundary_invalid"
@@ -894,6 +892,7 @@ def run_workflow(
     max_steps: int = DEFAULT_MAX_STEPS,
     closed_loop_state: Path | None = None,
     closed_loop_response: Path | None = None,
+    closed_loop_initial_review_response: Path | None = None,
     closed_loop_repair_response: Path | None = None,
     closed_loop_repair_packet: Path | None = None,
     closed_loop_candidate_response: Path | None = None,
@@ -916,12 +915,11 @@ def run_workflow(
         expected_first_safe_command is not None,
     )
     if any(first_step_expectation_supplied) and not all(first_step_expectation_supplied):
-        raise ValueError(
-            "first-step action and command expectations must be supplied together"
-        )
+        raise ValueError("first-step action and command expectations must be supplied together")
     lifecycle_inputs = (
         closed_loop_state,
         closed_loop_response,
+        closed_loop_initial_review_response,
         closed_loop_repair_response,
         closed_loop_repair_packet,
         closed_loop_candidate_response,
@@ -934,8 +932,7 @@ def run_workflow(
         value is not None for value in lifecycle_inputs
     ):
         raise ValueError(
-            "first-step expectation is mutually exclusive with closed-loop "
-            "lifecycle inputs"
+            "first-step expectation is mutually exclusive with closed-loop lifecycle inputs"
         )
     if all(first_step_expectation_supplied) and (
         not isinstance(expected_first_action, str)
@@ -950,6 +947,7 @@ def run_workflow(
             for value in (
                 closed_loop_state,
                 closed_loop_response,
+                closed_loop_initial_review_response,
                 closed_loop_repair_response,
                 closed_loop_repair_packet,
                 closed_loop_candidate_response,
@@ -1118,9 +1116,7 @@ def run_workflow(
                 "next_state": "initial_review_requested",
                 "next_state_path": next_state_path.relative_to(root).as_posix(),
                 "manifest_path": manifest_path.relative_to(root).as_posix(),
-                "evidence_paths": {
-                    record["role"]: record["path"] for record in state["evidence"]
-                },
+                "evidence_paths": {record["role"]: record["path"] for record in state["evidence"]},
                 "created": False,
                 "publication_acceptance": "not_claimed",
             },
@@ -1160,17 +1156,23 @@ def run_workflow(
             "preview must be supplied together"
         )
     candidate_supplied = all(candidate_inputs)
-    if sum(
-        value is not None
-        for value in (
-            closed_loop_response,
-            closed_loop_repair_response,
-            closed_loop_authorization,
-            closed_loop_development_verdict,
+    if (
+        sum(
+            value is not None
+            for value in (
+                closed_loop_response,
+                closed_loop_initial_review_response,
+                closed_loop_repair_response,
+                closed_loop_authorization,
+                closed_loop_development_verdict,
+            )
         )
-    ) + int(candidate_supplied) > 1:
+        + int(candidate_supplied)
+        > 1
+    ):
         raise ValueError(
-            "closed-loop candidate, response, repair response, authorization, and "
+            "closed-loop candidate, response, initial review response, repair "
+            "response, authorization, and "
             "development verdict are mutually exclusive"
         )
     initial_summary: dict[str, Any] | None = None
@@ -1261,6 +1263,19 @@ def run_workflow(
                     "closed-loop-repair-response requires current "
                     "repair_authorized state or --closed-loop-state"
                 )
+        elif closed_loop_initial_review_response is not None:
+            automatic_state = _projected_current_state(
+                initial_summary,
+                lifecycle_state="initial_review_requested",
+                disposition="human_review_required",
+                required_actor="host_llm",
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-initial-review-response requires current "
+                    "initial_review_requested state or --closed-loop-state"
+                )
         elif closed_loop_response is None:
             automatic_state = _automatic_machine_repaired_state(
                 initial_summary,
@@ -1305,9 +1320,7 @@ def run_workflow(
         response_path = candidate["response_path"]
         preview_path = candidate["preview_path"]
         input_state = candidate["input_state"]
-        state_evidence_path = (
-            next_state_path if "published_state" in candidate else state_path
-        )
+        state_evidence_path = next_state_path if "published_state" in candidate else state_path
         return {
             "schema": SCHEMA,
             "fixture": name,
@@ -1345,14 +1358,10 @@ def run_workflow(
                     else "named human authorization is required"
                 ),
                 "evidence_refs": [
-                    "repair_execution_packet:"
-                    + packet_path.relative_to(root).as_posix(),
-                    "repair_response:"
-                    + response_path.relative_to(root).as_posix(),
-                    "materialization_preview:"
-                    + preview_path.relative_to(root).as_posix(),
-                    "closed_loop_state:"
-                    + state_evidence_path.relative_to(root).as_posix(),
+                    "repair_execution_packet:" + packet_path.relative_to(root).as_posix(),
+                    "repair_response:" + response_path.relative_to(root).as_posix(),
+                    "materialization_preview:" + preview_path.relative_to(root).as_posix(),
+                    "closed_loop_state:" + state_evidence_path.relative_to(root).as_posix(),
                 ],
                 "allowed_scope": [
                     "validate the explicit v4 packet, response, and exact dry-run preview",
@@ -1364,9 +1373,7 @@ def run_workflow(
                     "repair materialization before named human authorization",
                     "publication acceptance claim",
                 ],
-                "closeout_checks": [
-                    "obtain explicit hash-bound named human authorization"
-                ],
+                "closeout_checks": ["obtain explicit hash-bound named human authorization"],
                 "publication_acceptance": "not_claimed",
             },
         }
@@ -1387,9 +1394,7 @@ def run_workflow(
         next_state_path = verdict["next_state_path"]
         verdict_path = verdict["verdict_path"]
         input_state = verdict["input_state"]
-        state_evidence_path = (
-            next_state_path if "published_state" in verdict else state_path
-        )
+        state_evidence_path = next_state_path if "published_state" in verdict else state_path
         return {
             "schema": SCHEMA,
             "fixture": name,
@@ -1428,10 +1433,8 @@ def run_workflow(
                     else f"development verdict recorded as {verdict['next_state']}"
                 ),
                 "evidence_refs": [
-                    "human_decision_record:"
-                    + verdict_path.relative_to(root).as_posix(),
-                    "closed_loop_state:"
-                    + state_evidence_path.relative_to(root).as_posix(),
+                    "human_decision_record:" + verdict_path.relative_to(root).as_posix(),
+                    "closed_loop_state:" + state_evidence_path.relative_to(root).as_posix(),
                 ],
                 "allowed_scope": ["publish the bound development-verdict state"],
                 "forbidden_scope": [
@@ -1453,20 +1456,14 @@ def run_workflow(
                 workspace_root=repo_root,
                 expected_state_sha256=automatic_state_sha256,
             )
-        except (
-            closed_loop_repair_authorization.ClosedLoopRepairAuthorizationError
-        ) as exc:
+        except closed_loop_repair_authorization.ClosedLoopRepairAuthorizationError as exc:
             raise ValueError(str(exc)) from exc
         root = Path(os.path.abspath(repo_root))
         state_path = authorization["input_state_path"]
         next_state_path = authorization["next_state_path"]
         authorization_path = authorization["authorization_path"]
         input_state = authorization["input_state"]
-        state_evidence_path = (
-            next_state_path
-            if "published_state" in authorization
-            else state_path
-        )
+        state_evidence_path = next_state_path if "published_state" in authorization else state_path
         return {
             "schema": SCHEMA,
             "fixture": name,
@@ -1502,10 +1499,8 @@ def run_workflow(
                     else "continue from the authorized repair candidate"
                 ),
                 "evidence_refs": [
-                    "human_authorization:"
-                    + authorization_path.relative_to(root).as_posix(),
-                    "closed_loop_state:"
-                    + state_evidence_path.relative_to(root).as_posix(),
+                    "human_authorization:" + authorization_path.relative_to(root).as_posix(),
+                    "closed_loop_state:" + state_evidence_path.relative_to(root).as_posix(),
                 ],
                 "allowed_scope": [
                     "validate the explicit hash-bound human authorization",
@@ -1617,6 +1612,68 @@ def run_workflow(
                         "Use the exact hash-bound attempt evidence; do not infer paths from chat."
                     ),
                 },
+                "publication_acceptance": "not_claimed",
+            },
+        }
+    if closed_loop_state is not None and closed_loop_initial_review_response is not None:
+        try:
+            inbound = initial_review_response_adapter.run_inbound_response(
+                name,
+                state_path=closed_loop_state,
+                response_path=closed_loop_initial_review_response,
+                execute=execute,
+                workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except initial_review_response_adapter.ClosedLoopInitialReviewResponseError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        input_state = inbound["input_state"]
+        state_path = inbound["input_state_path"]
+        next_state_path = inbound["next_state_path"]
+        response_path = inbound["response_path"]
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": inbound["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": inbound["stop_boundary"],
+            "final_stop_reason": inbound["stop_reason"],
+            "executed_count": 1 if inbound["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": inbound["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "response_path": response_path.relative_to(root).as_posix(),
+                "created": inbound["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": inbound["action"],
+                "stop_boundary": "human_adjudicator",
+                "required_actor": "human_adjudicator",
+                "blocking_reason": "validated initial host critique requires human adjudication",
+                "evidence_refs": [
+                    "initial_visual_review_response:" + response_path.relative_to(root).as_posix(),
+                    "closed_loop_state:" + next_state_path.relative_to(root).as_posix(),
+                ],
+                "allowed_scope": ["read-only human adjudication"],
+                "forbidden_scope": [
+                    "plugin host or model invocation",
+                    "critique generation, adjudication, attribution, repair, authorization, "
+                    "materialization, or verdict",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": ["record a named human adjudication"],
                 "publication_acceptance": "not_claimed",
             },
         }
@@ -1892,25 +1949,21 @@ def run_workflow(
                     fig_loop_admission["binding"] = binding
                     if binding["state"] != "matched":
                         return False
-                    fig_loop_admission["evidence_capture"] = (
-                        _begin_step_execution_evidence(
-                            repo_root,
-                            fixture=name,
-                            action=admitted_summary["action"],
-                        )
+                    fig_loop_admission["evidence_capture"] = _begin_step_execution_evidence(
+                        repo_root,
+                        fixture=name,
+                        action=admitted_summary["action"],
                     )
                     return True
 
                 def _post_run_capture(run_dir: Path) -> None:
                     admitted_summary = fig_loop_admission["summary"]
-                    fig_loop_admission["execution_evidence"] = (
-                        _finish_step_execution_evidence(
-                            fig_loop_admission["evidence_capture"],
-                            fixture=name,
-                            action=admitted_summary["action"],
-                            returncode=0,
-                            loop_run_dir=run_dir,
-                        )
+                    fig_loop_admission["execution_evidence"] = _finish_step_execution_evidence(
+                        fig_loop_admission["evidence_capture"],
+                        fixture=name,
+                        action=admitted_summary["action"],
+                        returncode=0,
+                        loop_run_dir=run_dir,
                     )
 
                 try:
@@ -2010,38 +2063,30 @@ def run_workflow(
                 executed_count += 1
                 executed_signatures.add(signature)
                 stop_reason = STOP_COMMAND_FAILED if result.returncode != 0 else None
-                step_execution_evidence = fig_loop_admission.get(
-                    "execution_evidence"
-                )
+                step_execution_evidence = fig_loop_admission.get("execution_evidence")
                 if not isinstance(step_execution_evidence, dict):
                     evidence_capture = fig_loop_admission.get("evidence_capture")
                     if result.returncode == 0:
-                        step_execution_evidence = (
-                            _missing_step_execution_evidence(
-                                fixture=name,
-                                action=admitted_summary["action"],
-                                reason="PostRunCallbackNotInvoked",
-                            )
+                        step_execution_evidence = _missing_step_execution_evidence(
+                            fixture=name,
+                            action=admitted_summary["action"],
+                            reason="PostRunCallbackNotInvoked",
                         )
                     elif isinstance(
                         evidence_capture,
                         (execution_evidence.StepCapture, dict),
                     ):
-                        step_execution_evidence = (
-                            _finish_step_execution_evidence(
-                                evidence_capture,
-                                fixture=name,
-                                action=admitted_summary["action"],
-                                returncode=result.returncode,
-                            )
+                        step_execution_evidence = _finish_step_execution_evidence(
+                            evidence_capture,
+                            fixture=name,
+                            action=admitted_summary["action"],
+                            returncode=result.returncode,
                         )
                     else:
-                        step_execution_evidence = (
-                            _missing_step_execution_evidence(
-                                fixture=name,
-                                action=admitted_summary["action"],
-                                reason="CaptureNotStarted",
-                            )
+                        step_execution_evidence = _missing_step_execution_evidence(
+                            fixture=name,
+                            action=admitted_summary["action"],
+                            reason="CaptureNotStarted",
                         )
                 steps.append(
                     _step_payload(
@@ -2060,10 +2105,7 @@ def run_workflow(
                 continue
 
         requires_step_lease = summary.get("action") in LEASED_EXECUTABLE_ACTIONS
-        if (
-            not requires_step_lease
-            and summary.get("action") != fig_driver.ACTION_RUN_FIG_LOOP
-        ):
+        if not requires_step_lease and summary.get("action") != fig_driver.ACTION_RUN_FIG_LOOP:
             raise ValueError("executable action missing admission policy")
 
         admission_validation_active = requires_step_lease
@@ -2106,10 +2148,7 @@ def run_workflow(
                         step_index=index,
                         live_would_execute=admitted_would_execute,
                     )
-                    if (
-                        queue_first_step_pending
-                        or admission_binding["state"] == "stale"
-                    ):
+                    if queue_first_step_pending or admission_binding["state"] == "stale":
                         plan_binding = admission_binding
                     final_summary = admitted_summary
                     if admission_binding["state"] == "stale":
@@ -2234,6 +2273,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)
     parser.add_argument("--closed-loop-state", type=Path, default=None)
     parser.add_argument("--closed-loop-response", type=Path, default=None)
+    parser.add_argument("--closed-loop-initial-review-response", type=Path, default=None)
     parser.add_argument("--closed-loop-repair-response", type=Path, default=None)
     parser.add_argument("--closed-loop-repair-packet", type=Path, default=None)
     parser.add_argument("--closed-loop-candidate-response", type=Path, default=None)
@@ -2261,12 +2301,11 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             max_steps=args.max_steps,
             closed_loop_state=args.closed_loop_state,
             closed_loop_response=args.closed_loop_response,
+            closed_loop_initial_review_response=args.closed_loop_initial_review_response,
             closed_loop_repair_response=args.closed_loop_repair_response,
             closed_loop_repair_packet=args.closed_loop_repair_packet,
             closed_loop_candidate_response=args.closed_loop_candidate_response,
-            closed_loop_materialization_preview=(
-                args.closed_loop_materialization_preview
-            ),
+            closed_loop_materialization_preview=(args.closed_loop_materialization_preview),
             closed_loop_authorization=args.closed_loop_authorization,
             closed_loop_development_verdict=args.closed_loop_development_verdict,
             closed_loop_attempt_manifest=args.closed_loop_attempt_manifest,
@@ -2285,21 +2324,25 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
         "created", False
     ):
         should_record = False
+    if args.closed_loop_initial_review_response is not None and not payload.get(
+        "closed_loop", {}
+    ).get("created", False):
+        should_record = False
     if args.closed_loop_repair_response is not None and not payload.get("closed_loop", {}).get(
         "created", False
     ):
         should_record = False
-    if args.closed_loop_repair_packet is not None and not payload.get(
-        "closed_loop", {}
-    ).get("created", False):
+    if args.closed_loop_repair_packet is not None and not payload.get("closed_loop", {}).get(
+        "created", False
+    ):
         should_record = False
-    if args.closed_loop_authorization is not None and not payload.get(
-        "closed_loop", {}
-    ).get("created", False):
+    if args.closed_loop_authorization is not None and not payload.get("closed_loop", {}).get(
+        "created", False
+    ):
         should_record = False
-    if args.closed_loop_development_verdict is not None and not payload.get(
-        "closed_loop", {}
-    ).get("created", False):
+    if args.closed_loop_development_verdict is not None and not payload.get("closed_loop", {}).get(
+        "created", False
+    ):
         should_record = False
     if should_record:
         try:
