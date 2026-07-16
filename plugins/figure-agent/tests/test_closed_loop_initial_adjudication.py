@@ -245,6 +245,47 @@ def test_reject_is_terminal_and_plan_only_writes_nothing(tmp_path: Path) -> None
     assert created["published_state"]["terminal"] is True
 
 
+def test_initial_rejection_cannot_be_recast_as_legacy_or_mixed_evidence(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path = _setup(tmp_path)
+    decision = _decision(workspace, state_path, action="reject_initial_review")
+    created = adjudication.run_initial_adjudication(
+        FIXTURE,
+        state_path=state_path,
+        decision_path=decision,
+        execute=True,
+        workspace_root=workspace,
+    )
+    published = created["published_state"]
+    human_record = next(
+        record for record in published["evidence"] if record["role"] == "human_decision_record"
+    )
+
+    legacy_shape = {**published, "evidence": [human_record]}
+    legacy_shape["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(legacy_shape)
+    with pytest.raises(
+        closed_loop_attempt_state.ClosedLoopAttemptStateError,
+        match="development_rejection_decision_invalid",
+    ):
+        closed_loop_attempt_state.validate_state(legacy_shape, workspace_root=workspace)
+
+    mixed = {
+        **published,
+        "evidence": [
+            *published["evidence"],
+            {**human_record, "role": "adjudication"},
+        ],
+    }
+    mixed["evidence"].sort(key=lambda record: record["role"])
+    mixed["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(mixed)
+    with pytest.raises(
+        closed_loop_attempt_state.ClosedLoopAttemptStateError,
+        match="evidence_roles_invalid",
+    ):
+        closed_loop_attempt_state.validate_state(mixed, workspace_root=workspace)
+
+
 @pytest.mark.parametrize("mutation", ("state_hash", "finding", "path", "symlink", "publication"))
 def test_decision_fails_closed_on_bad_binding_or_selection(tmp_path: Path, mutation: str) -> None:
     workspace, state_path = _setup(tmp_path)

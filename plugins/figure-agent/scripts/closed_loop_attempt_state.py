@@ -73,6 +73,7 @@ def fixture_admission_lock(workspace_root: Path, fixture: str) -> Iterator[None]
             raise
         yield
 
+
 _STATE_POLICY: dict[str, tuple[str, str, bool]] = {
     "authored_rendered": ("continue", "workflow_agent", False),
     "initial_review_requested": ("human_review_required", "host_llm", False),
@@ -119,12 +120,8 @@ _LEGAL_TRANSITIONS: dict[str, frozenset[str]] = {
     ),
     "adjudicated_unbound": frozenset({"repair_bound", "rejected", "aborted"}),
     "repair_bound": frozenset({"repair_candidate_ready", "aborted"}),
-    "repair_candidate_ready": frozenset(
-        {"repair_authorized", "rejected", "aborted"}
-    ),
-    "repair_authorized": frozenset(
-        {"machine_repaired", "repair_required", "aborted"}
-    ),
+    "repair_candidate_ready": frozenset({"repair_authorized", "rejected", "aborted"}),
+    "repair_authorized": frozenset({"machine_repaired", "repair_required", "aborted"}),
     "machine_repaired": frozenset({"post_review_requested", "repair_required", "aborted"}),
     "post_review_requested": frozenset(
         {
@@ -176,9 +173,7 @@ _STATE_EVIDENCE_ROLES: dict[str, frozenset[str]] = {
         {"repair_execution_packet", "repair_response", "materialization_preview"}
     ),
     "repair_authorized": frozenset({"human_authorization"}),
-    "machine_repaired": frozenset(
-        {"materialization_receipt", "machine_verification_receipt"}
-    ),
+    "machine_repaired": frozenset({"materialization_receipt", "machine_verification_receipt"}),
     "post_review_requested": frozenset({"post_repair_visual_review_request"}),
     "visually_re_reviewed": frozenset(
         {
@@ -188,18 +183,25 @@ _STATE_EVIDENCE_ROLES: dict[str, frozenset[str]] = {
         }
     ),
     "development_accepted": frozenset({"human_decision_record"}),
-    "rejected": frozenset(
-        {
-            "human_decision_record",
-            "critique",
-            "host_review_execution_receipt",
-            "host_review_transcript",
-            "initial_visual_review_response",
-        }
-    ),
+    # The development-verdict rejection remains the historic one-record path.
+    # The initial-review rejection is an explicitly separate complete set below.
+    "rejected": frozenset({"human_decision_record"}),
     "repair_required": frozenset({"repair_failure_record"}),
     "aborted": frozenset({"abort_record"}),
 }
+_INITIAL_REJECTION_EVIDENCE_ROLES = frozenset(
+    {
+        "human_decision_record",
+        "critique",
+        "host_review_execution_receipt",
+        "host_review_transcript",
+        "initial_visual_review_response",
+    }
+)
+_REJECTED_EVIDENCE_ROLE_SETS = (
+    _STATE_EVIDENCE_ROLES["rejected"],
+    _INITIAL_REJECTION_EVIDENCE_ROLES,
+)
 _PRE_R4_8_CANDIDATE_EVIDENCE_ROLES = frozenset(
     {"repair_execution_packet", "materialization_preview"}
 )
@@ -384,6 +386,115 @@ def _evidence_records(
             }
         )
     return records
+
+
+def _rejection_evidence_contract(
+    payload: dict[str, Any],
+    *,
+    records: dict[str, dict[str, str]],
+    role_set: frozenset[str],
+    workspace_root: Path,
+    require_live_evidence: bool,
+) -> None:
+    """Keep initial and development rejection records strictly disjoint."""
+    if not require_live_evidence:
+        return
+    record = records["human_decision_record"]
+    path = _workspace_artifact(
+        workspace_root,
+        str(payload["fixture"]),
+        record["path"],
+        label="rejection_human_decision_record",
+    )
+    try:
+        decision = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ClosedLoopAttemptStateError("rejection_decision_invalid") from exc
+    if not isinstance(decision, dict):
+        raise ClosedLoopAttemptStateError("rejection_decision_invalid")
+    previous_path = payload.get("previous_state_path")
+    previous_sha256 = payload.get("previous_state_sha256")
+    if not isinstance(previous_path, str) or not isinstance(previous_sha256, str):
+        raise ClosedLoopAttemptStateError("rejection_previous_state_invalid")
+    if role_set == _INITIAL_REJECTION_EVIDENCE_ROLES:
+        expected_fields = {
+            "schema",
+            "fixture",
+            "attempt_id",
+            "current_state",
+            "response",
+            "critique",
+            "host_review_execution_receipt",
+            "host_review_transcript",
+            "reviewer",
+            "rationale",
+            "decision",
+            "attribution",
+            "publication_acceptance",
+            "decision_sha256",
+        }
+        canonical = dict(decision)
+        recorded_hash = canonical.pop("decision_sha256", None)
+        if (
+            set(decision) != expected_fields
+            or decision.get("schema") != "figure-agent.initial-human-adjudication.v1"
+            or decision.get("fixture") != payload["fixture"]
+            or decision.get("attempt_id") != payload["attempt_id"]
+            or decision.get("decision") != "reject_initial_review"
+            or decision.get("attribution") is not None
+            or decision.get("publication_acceptance") != PUBLICATION_ACCEPTANCE
+            or not isinstance(decision.get("rationale"), str)
+            or not decision["rationale"].strip()
+            or not isinstance(decision.get("reviewer"), dict)
+            or decision["reviewer"].get("kind") != "human"
+            or decision["reviewer"].get("identity") != payload["actor"]
+            or recorded_hash != _canonical_hash(canonical)
+        ):
+            raise ClosedLoopAttemptStateError("initial_rejection_decision_invalid")
+        expected_state = {"path": previous_path, "sha256": previous_sha256}
+        if decision.get("current_state") != expected_state:
+            raise ClosedLoopAttemptStateError("initial_rejection_state_binding_invalid")
+        reference_roles = {
+            "response": "initial_visual_review_response",
+            "critique": "critique",
+            "host_review_execution_receipt": "host_review_execution_receipt",
+            "host_review_transcript": "host_review_transcript",
+        }
+        for field, role in reference_roles.items():
+            expected = {"path": records[role]["path"], "sha256": records[role]["sha256"]}
+            if decision.get(field) != expected:
+                raise ClosedLoopAttemptStateError("initial_rejection_provenance_invalid")
+        return
+    expected_fields = {
+        "schema",
+        "fixture",
+        "attempt_id",
+        "reviewed_state_path",
+        "reviewed_state_sha256",
+        "decision_kind",
+        "reviewer",
+        "human_decision",
+        "human_note",
+        "mutation_boundary",
+        "publication_acceptance",
+    }
+    if (
+        set(decision) != expected_fields
+        or decision.get("schema") != "figure-agent.closed-loop-development-verdict.v1"
+        or decision.get("fixture") != payload["fixture"]
+        or decision.get("attempt_id") != payload["attempt_id"]
+        or decision.get("reviewed_state_path") != previous_path
+        or decision.get("reviewed_state_sha256") != previous_sha256
+        or decision.get("decision_kind") != "reject_development_artifact"
+        or decision.get("reviewer") != payload["actor"]
+        or decision.get("human_decision")
+        != "reject this exact visually re-reviewed artifact as a development baseline"
+        or decision.get("mutation_boundary") != "development_rejection_state_mutation_allowed"
+        or not isinstance(decision.get("human_note"), str)
+        or not decision["human_note"].strip()
+        or decision.get("publication_acceptance") != PUBLICATION_ACCEPTANCE
+    ):
+        raise ClosedLoopAttemptStateError("development_rejection_decision_invalid")
 
 
 def state_path(state: Mapping[str, Any], *, workspace_root: Path) -> Path:
@@ -586,9 +697,7 @@ def validate_state(
     ):
         value = payload.get(field)
         if value is not None and (
-            not isinstance(value, str)
-            or not value.startswith("sha256:")
-            or len(value) != 71
+            not isinstance(value, str) or not value.startswith("sha256:") or len(value) != 71
         ):
             raise ClosedLoopAttemptStateError(f"{field}_invalid")
     if sequence == 0:
@@ -612,6 +721,7 @@ def validate_state(
     if not isinstance(evidence, list) or not evidence:
         raise ClosedLoopAttemptStateError("evidence_missing")
     seen_roles: set[str] = set()
+    records_by_role: dict[str, dict[str, str]] = {}
     root = Path(os.path.abspath(workspace_root))
     for record in evidence:
         if not isinstance(record, dict) or set(record) != {"role", "path", "sha256"}:
@@ -629,6 +739,11 @@ def validate_state(
         )
         if _require_live_evidence and record.get("sha256") != _file_sha256(path):
             raise ClosedLoopAttemptStateError("evidence_hash_stale")
+        records_by_role[role] = {
+            "role": role,
+            "path": str(record["path"]),
+            "sha256": str(record["sha256"]),
+        }
     if [record["role"] for record in evidence] != sorted(seen_roles):
         raise ClosedLoopAttemptStateError("evidence_order_invalid")
     expected_evidence_roles = (
@@ -636,13 +751,19 @@ def validate_state(
         if _expected_evidence_roles is None
         else _expected_evidence_roles
     )
-    if (
-        _expected_evidence_roles is not None
-        and state_name != "repair_candidate_ready"
-    ):
+    if _expected_evidence_roles is not None and state_name != "repair_candidate_ready":
         raise ClosedLoopAttemptStateError("legacy_candidate_state_invalid")
-    if seen_roles != expected_evidence_roles:
+    rejection_variant = state_name == "rejected" and seen_roles in _REJECTED_EVIDENCE_ROLE_SETS
+    if seen_roles != expected_evidence_roles and not rejection_variant:
         raise ClosedLoopAttemptStateError("evidence_roles_invalid")
+    if state_name == "rejected":
+        _rejection_evidence_contract(
+            payload,
+            records=records_by_role,
+            role_set=frozenset(seen_roles),
+            workspace_root=root,
+            require_live_evidence=_require_live_evidence,
+        )
     if sequence == 0:
         parent_record = None
         if payload["parent_state_sha256"] is not None:
@@ -722,9 +843,7 @@ def _validate_lineage_record(
         raise ClosedLoopAttemptStateError(f"{prefix}_json_invalid") from exc
     if not isinstance(linked, dict):
         raise ClosedLoopAttemptStateError(f"{prefix}_payload_invalid")
-    if linked.get("state_sha256") != state_hash or state_hash != canonical_state_sha256(
-        linked
-    ):
+    if linked.get("state_sha256") != state_hash or state_hash != canonical_state_sha256(linked):
         raise ClosedLoopAttemptStateError(f"{prefix}_state_hash_stale")
     if linked.get("fixture") != payload["fixture"]:
         raise ClosedLoopAttemptStateError(f"{prefix}_fixture_mismatch")
@@ -869,11 +988,9 @@ def validate_chain(
         if current["previous_state_sha256"] != previous["state_sha256"]:
             raise ClosedLoopAttemptStateError("previous_state_hash_mismatch")
         previous_file = state_path(previous, workspace_root=workspace_root)
-        if (
-            current["previous_state_path"]
-            != previous_file.relative_to(Path(os.path.abspath(workspace_root))).as_posix()
-            or current["previous_state_file_sha256"] != _file_sha256(previous_file)
-        ):
+        if current["previous_state_path"] != previous_file.relative_to(
+            Path(os.path.abspath(workspace_root))
+        ).as_posix() or current["previous_state_file_sha256"] != _file_sha256(previous_file):
             raise ClosedLoopAttemptStateError("previous_state_file_mismatch")
         if previous["terminal"]:
             raise ClosedLoopAttemptStateError("terminal_state_continuation")
