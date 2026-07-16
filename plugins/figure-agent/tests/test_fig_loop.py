@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -63,7 +64,10 @@ def test_current_canonical_attempt_blocks_legacy_loop_before_scratch_output(
     _publish_current_attempt(tmp_path, fixture, actor="author-1")
     runs_root = tmp_path / ".scratch" / "fig-loop-runs"
 
-    with pytest.raises(FigLoopError, match="canonical_attempt_resolution:current") as exc:
+    with pytest.raises(
+        fig_loop_mod.FigLoopAdmissionInvalid,
+        match="canonical_attempt_resolution:current",
+    ) as exc:
         run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
 
     assert "publication_acceptance" not in str(exc.value)
@@ -82,7 +86,10 @@ def test_invalid_or_ambiguous_canonical_resolution_blocks_legacy_loop_before_scr
         _publish_current_attempt(tmp_path, fixture, actor="author-2")
     runs_root = tmp_path / ".scratch" / "fig-loop-runs"
 
-    with pytest.raises(FigLoopError, match=f"canonical_attempt_resolution:{resolution}") as exc:
+    with pytest.raises(
+        fig_loop_mod.FigLoopAdmissionInvalid,
+        match=f"canonical_attempt_resolution:{resolution}",
+    ) as exc:
         run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
 
     assert "publication_acceptance" not in str(exc.value)
@@ -94,9 +101,56 @@ def test_admission_lease_blocks_legacy_loop_before_scratch_output(tmp_path: Path
     runs_root = tmp_path / ".scratch" / "fig-loop-runs"
 
     with closed_loop_attempt_state.fixture_admission_lock(tmp_path, fixture.name):
-        with pytest.raises(FigLoopError, match="canonical_admission_legacy_coordination_busy"):
+        with pytest.raises(
+            fig_loop_mod.FigLoopAdmissionBusy,
+            match="canonical_admission_legacy_coordination_busy",
+        ):
             run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
 
+    assert not runs_root.exists()
+
+
+def test_admission_callback_rejection_runs_under_lease_before_loop_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    lease_held = False
+    callback_observations: list[bool] = []
+
+    @contextmanager
+    def _observed_lock(workspace_root: Path, fixture_name: str):
+        nonlocal lease_held
+        assert workspace_root == tmp_path
+        assert fixture_name == fixture.name
+        lease_held = True
+        try:
+            yield
+        finally:
+            lease_held = False
+
+    monkeypatch.setattr(
+        fig_loop_mod.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _observed_lock,
+    )
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "_run_loop_after_admission",
+        lambda *args, **kwargs: pytest.fail("loop helper ran after rejected admission"),
+    )
+
+    with pytest.raises(fig_loop_mod.FigLoopAdmissionRejected):
+        run_loop(
+            fixture.name,
+            "inspect",
+            repo_root=tmp_path,
+            runs_root=runs_root,
+            admission_check=lambda: callback_observations.append(lease_held) or False,
+        )
+
+    assert callback_observations == [True]
+    assert lease_held is False
     assert not runs_root.exists()
 
 

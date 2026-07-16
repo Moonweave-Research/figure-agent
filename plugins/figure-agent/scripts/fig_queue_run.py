@@ -86,7 +86,6 @@ def _summary(
     stale = 0
     busy = 0
     admission_invalid = 0
-    admission_pending = 0
     for run in runs:
         result = run.get("result")
         if not isinstance(result, dict):
@@ -102,11 +101,6 @@ def _summary(
             busy += 1
         if result.get("final_stop_reason") == fig_run.STOP_ADMISSION_INVALID:
             admission_invalid += 1
-        if (
-            result.get("final_stop_reason")
-            == fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING
-        ):
-            admission_pending += 1
     planned_executable = int(command_plan.get("executable_count", 0))
     attempted = len(runs)
     return {
@@ -119,7 +113,8 @@ def _summary(
         "stale": stale,
         "busy": busy,
         "admission_invalid": admission_invalid,
-        "admission_pending": admission_pending,
+        # Deprecated compatibility field. The pending stop is no longer generated.
+        "admission_pending": 0,
         "blocked": int(command_plan.get("blocked_count", 0)),
         "unattempted_executable": max(planned_executable - attempted, 0),
     }
@@ -134,7 +129,6 @@ def _has_delegated_execution_error(runs: list[dict[str, Any]]) -> bool:
             fig_run.STOP_ADMISSION_BUSY,
             fig_run.STOP_ADMISSION_INVALID,
             fig_run.STOP_COMMAND_FAILED,
-            fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING,
             fig_run.STOP_STALE_PLAN,
         }
         for run in runs

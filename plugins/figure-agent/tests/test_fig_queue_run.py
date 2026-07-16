@@ -328,10 +328,6 @@ def test_main_returns_one_for_executed_delegated_command_failure(
     (
         (fig_queue_run.fig_run.STOP_ADMISSION_BUSY, "busy"),
         (fig_queue_run.fig_run.STOP_ADMISSION_INVALID, "admission_invalid"),
-        (
-            fig_queue_run.fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING,
-            "admission_pending",
-        ),
     ),
 )
 def test_execute_counts_admission_stops_and_continues_batch(
@@ -381,7 +377,6 @@ def test_execute_counts_admission_stops_and_continues_batch(
     (
         fig_queue_run.fig_run.STOP_ADMISSION_BUSY,
         fig_queue_run.fig_run.STOP_ADMISSION_INVALID,
-        fig_queue_run.fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING,
     ),
 )
 def test_main_returns_one_for_admission_stop(
@@ -408,6 +403,35 @@ def test_main_returns_one_for_admission_stop(
         ["--mode", "review", "--goal", "triage", "--execute"], repo_root=tmp_path
     ) == 1
     payload = json.loads(capsys.readouterr().out)
+    assert payload["summary"]["failed"] == 0
+
+
+def test_deprecated_admission_pending_summary_stays_zero_and_does_not_fail_batch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    for name in ("alpha", "beta"):
+        (tmp_path / "examples" / name).mkdir(parents=True)
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+    monkeypatch.setattr(
+        fig_queue_run.fig_run,
+        "run_workflow",
+        lambda name, **kwargs: {
+            "schema": "figure-agent.run.v1",
+            "fixture": name,
+            "executed_count": 0,
+            "final_stop_reason": (
+                fig_queue_run.fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING
+            ),
+        },
+    )
+
+    assert fig_queue_run.main(
+        ["--mode", "review", "--goal", "triage", "--execute"], repo_root=tmp_path
+    ) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["summary"]["admission_pending"] == 0
     assert payload["summary"]["failed"] == 0
 
 

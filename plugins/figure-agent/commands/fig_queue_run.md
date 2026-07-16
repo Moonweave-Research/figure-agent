@@ -50,10 +50,14 @@ diagnostic. A matched first step is consumed after its successful command;
 later steps remain free to follow fresh live driver decisions and reacquire the
 lease independently.
 
-Queue-bound `run_fig_loop` is temporarily non-executing and returns
-`run_fig_loop_admission_integration_pending`. Direct single-fixture `fig_run`
-retains the existing self-leased `fig_loop` path; queue-run does not add an
-outer lease around it.
+Queue-bound `run_fig_loop` uses the existing self-leased `fig_loop` Python API;
+queue-run does not add an outer lease or spawn the loop CLI. An internal
+callback runs after `fig_loop` acquires its lease and exact-matches the queued
+action and command against the under-lock live driver result. Drift returns
+`stale_plan` before scratch creation. Busy and invalid loop admission map to
+`admission_busy` and `admission_invalid`. A match writes the normal verify-only
+checkpoint, preserves `fig_loop --json` stdout shape, and lets `/fig_run`
+continue with fresh live replanning.
 
 ## Exit status
 
@@ -62,15 +66,17 @@ The complete JSON payload is written before `queue-run` exits. Direct
 
 | Exit | Condition |
 |---|---|
-| `0` | Plan-only/dry-run, or an execute batch with no nested `/fig_run` `command_failed`, `stale_plan`, `admission_busy`, `admission_invalid`, or `run_fig_loop_admission_integration_pending` final stop. This includes complete, host/human boundaries, repeated-action, max-step, blocked, unattempted, and pre-delegation fixture-row errors. |
-| `1` | `--execute` delegated at least one selected fixture to `/fig_run` and that nested run ended with canonical `final_stop_reason: command_failed`, `stale_plan`, `admission_busy`, `admission_invalid`, or `run_fig_loop_admission_integration_pending`. Remaining selected fixtures are still attempted and remain in `runs`. |
+| `0` | Plan-only/dry-run, or an execute batch with no nested `/fig_run` `command_failed`, `stale_plan`, `admission_busy`, or `admission_invalid` final stop. This includes complete, host/human boundaries, repeated-action, max-step, blocked, unattempted, and pre-delegation fixture-row errors. |
+| `1` | `--execute` delegated at least one selected fixture to `/fig_run` and that nested run ended with canonical `final_stop_reason: command_failed`, `stale_plan`, `admission_busy`, or `admission_invalid`. Remaining selected fixtures are still attempted and remain in `runs`. |
 | `2` | Existing argument/value errors or workspace diagnostics, including missing `examples/` and an implicit symlinked `examples/` directory. These diagnostics take precedence over delegated command failures. |
 
 `summary.failed` counts only delegated command failures. `summary.stale`,
-`summary.busy`, `summary.admission_invalid`, and `summary.admission_pending`
-count their corresponding stops separately. Exit status is based only on those
-actual nested `/fig_run` stop contracts, so a pre-delegation fixture/path error
-row does not make shell or CI treat the batch as a delegated execution error.
+`summary.busy`, and `summary.admission_invalid` count their corresponding stops
+separately. `summary.admission_pending` remains as a deprecated compatibility
+field and is always zero because current runner paths no longer generate that
+stop. Exit status is based only on actual current nested `/fig_run` stop
+contracts, so a pre-delegation fixture/path error row does not make shell or CI
+treat the batch as a delegated execution error.
 
 ## Filters
 
@@ -102,8 +108,8 @@ make SVG polish handoff executable; `svg_editor` rows remain blocked.
   directly.
 - Compile, adjudication-scaffold, and export subprocesses run only after
   under-lease live revalidation.
-- Queue-bound `run_fig_loop` remains non-executing until its queue admission
-  integration is implemented.
+- Queue-bound `run_fig_loop` uses the self-leased loop API with under-lock live
+  revalidation; no outer lease or loop subprocess is introduced.
 - `--max-fixtures` bounds the number of fixture attempts.
 - Host critique, human review, release/golden approval, SVG polish handoff,
   and rows with stop boundaries are not attempted.

@@ -279,51 +279,22 @@ success is publication acceptance.
 
 ## 7. Current implementation boundary
 
-Reuse the established compile/export, perception, critique, attribution, repair,
-materialization, provenance, and human-review surfaces.
+Reuse the established compile/export, perception, critique, attribution, repair, materialization, provenance, and human-review surfaces.
 
-The code is an R1-R3 foundation with several R4 canonical transitions, not a
-completed loop. Its attempt state binds identity, append-only lineage, freshness,
-evidence roles, actors, legal transitions, and terminal development outcomes.
-Default status/run finds one current attempt without mtime, projects exact
-actor/path/hash, and stops instead of selecting a legacy loop. Evidence-role
-presence is not domain validation or actor authentication; adapters validate each
-receipt against recorded identity.
+The code is an R1-R3 foundation with several R4 canonical transitions, not a completed loop. Its attempt state binds identity, append-only lineage, freshness, evidence roles, actors, legal transitions, and terminal development outcomes. Default status/run finds one current attempt without mtime, projects exact actor/path/hash, and stops instead of selecting a legacy loop. Evidence-role presence is not domain validation or actor authentication; adapters validate each receipt against recorded identity.
 
-One adjudicated binding crosses packet compilation, authorized materialization,
-rollback, and finalization. New packets use v4 authority; stored v3 packets need
-explicit compatibility and cannot enter post-repair review. Finalization and
-rollback revalidate v4 authority and hash-bound failure evidence under recovery.
+One adjudicated binding crosses packet compilation, authorized materialization, rollback, and finalization. New packets use v4 authority; stored v3 packets need explicit compatibility and cannot enter post-repair review. Finalization and rollback revalidate v4 authority and hash-bound failure evidence under recovery.
 
-The binding now hash-binds declared semantic object and relation references to
-the same editable selector as the repair target. Missing semantic authority,
-ambiguous attribution, or missing references can emit only a named
-`human_attributor` handoff; they cannot create a repair binding or packet.
+The binding now hash-binds declared semantic object and relation references to the same editable selector as the repair target. Missing semantic authority, ambiguous attribution, or missing references can emit only a named `human_attributor` handoff; they cannot create a repair binding or packet.
 
 Default `run` consumes an explicit bound packet/response/preview at `repair_bound`, human authorization at `repair_candidate_ready`, the same response again at `repair_authorized`, and one state-bound named human verdict at `visually_re_reviewed`. That verdict can accept the development baseline, reject the artifact, or require a separately authorized repair attempt. Materialize/strict-finalize/rollback publishes
 `machine_repaired` or `repair_required`; completed receipts recover state publication. `repair_failure_record` is a schema-heterogeneous reason-for-repair role, so consumers must validate its referenced schema and decision rather than assume a machine failure.
 Pre-R4.8 candidate-ready v1 states without response evidence fail closed and cannot restart in place; a named human must authorize the exact leaf path/state/file hashes, then explicitly run `python3 scripts/closed_loop_legacy_candidate_quarantine.py --fixture <name> --state <leaf.json> --authorization <record.json> --execute` to preserve the retired leaf and authorization outside canonical discovery before restarting its verified `repair_bound` parent. They are never auto-migrated or discarded.
-Canonical state publishers share one recoverable transition lock and temporarily dual-lock legacy paths. Root `run` admission accepts only one explicit hash-bound `figure-agent.root-attempt-manifest.v1` while current resolution is absent; plan-only is write-free and execute publishes only `authored_rendered` before stopping. It discovers no other input, invokes no host, admits no legacy packet, and claims no publication acceptance. It advances `machine_repaired` to `post_review_requested`,
-stops at `host_llm`, binds the response, and closes only the named development outcome. Maintained-Fig3 controlled-fault replay is mechanism evidence,
-not an actual defect or publication verdict; prospective proof and R4-R5 remain.
+Canonical state publishers share one recoverable transition lock and temporarily dual-lock legacy paths. Root `run` admission accepts only one explicit hash-bound `figure-agent.root-attempt-manifest.v1` while current resolution is absent; plan-only is write-free and execute publishes only `authored_rendered` before stopping. It discovers no other input, invokes no host, admits no legacy packet, and claims no publication acceptance. It advances `machine_repaired` to `post_review_requested`, stops at `host_llm`, binds the response, and closes only the named development outcome. Maintained-Fig3 controlled-fault replay is mechanism evidence, not an actual defect or publication verdict; prospective proof and R4-R5 remain.
 Direct legacy `fig_loop` shares a recoverable fixture-root admission lease with root admission: it holds that lease from canonical resolution through scratch evidence writing, and rejects current, invalid, ambiguous, or busy resolution before creating `.scratch/fig-loop-runs/` output.
-The bounded runner now acquires that same fixture admission lease separately for
-each compile, adjudication-scaffold, or export step. It re-queries the driver and
-revalidates the exact action, command, stop boundary, and action-specific safety
-while the lease is held, keeps the lease through subprocess completion, and then
-releases it before selecting the next step. Driver drift stops as `stale_plan`;
-a busy lease stops as retryable `admission_busy`, with no subprocess and no
-executed-count increment. A fixture-path, non-busy lock, or under-lock
-validation failure stops as non-retryable `admission_invalid` with a sanitized
-diagnostic and no subprocess. Plan-only runner calls acquire no lease.
+The bounded runner acquires that lease separately for each compile, adjudication-scaffold, or export step. It re-queries the driver and revalidates the exact action, command, stop boundary, and action-specific safety while holding the lease through subprocess completion, then releases it before selecting the next step. Driver drift stops as `stale_plan`; busy admission stops as retryable `admission_busy`; fixture-path, non-busy lock, or under-lock validation failure stops as non-retryable `admission_invalid`. None starts an unadmitted subprocess or increments the executed count. Plan-only calls acquire no lease.
 
-Direct `fig_run` delegation to `fig_loop` remains on the existing self-leased
-`fig_loop` path and is not wrapped in an outer lease. Queue-bound `fig_loop`
-delegation temporarily stops without a subprocess as
-`run_fig_loop_admission_integration_pending`; queue execution counts that stop,
-continues the batch, and exits nonzero after emitting the complete JSON result.
-These machine admission gates do not establish visual, human-development,
-release, or publication acceptance.
+Direct `fig_run` delegation to `fig_loop` remains on the existing self-leased path and is not wrapped in an outer lease. Queue-bound delegation uses that same API with an internal under-lock callback that exact-matches the queued action and command before canonical/source preflight or scratch creation. Drift stops as `stale_plan`; busy or invalid admission maps to the typed runner stops. A match writes the normal verify-only checkpoint, preserves CLI-equivalent JSON stdout, and returns to fresh live replanning. The retired admission-pending token remains only as a compatibility constant, and the queue summary field is always zero. These machine gates do not establish visual, human-development, release, or publication acceptance.
 
 Closed-loop handoffs use these contracts rather than another workflow shell:
 `figure-agent.repair-materialization-preview.v1`, `figure-agent.repair-materialization-receipt.v2`,

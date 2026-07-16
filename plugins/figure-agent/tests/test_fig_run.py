@@ -547,7 +547,7 @@ def test_direct_fig_loop_keeps_existing_self_leased_execution_path(
     assert payload["final_stop_reason"] == fig_run.STOP_COMPLETE
 
 
-def test_queue_bound_fig_loop_stops_pending_without_subprocess(
+def test_queue_bound_fig_loop_uses_self_leased_api_and_replans_after_success(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     command = (
@@ -557,12 +557,42 @@ def test_queue_bound_fig_loop_stops_pending_without_subprocess(
         action=fig_driver.ACTION_RUN_FIG_LOOP,
         safe_command=command,
     )
-    _install_driver_sequence(monkeypatch, [summary])
-    commands: list[str] = []
+    _install_driver_sequence(
+        monkeypatch,
+        [summary, _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None)],
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_driver_summary_under_admission",
+        lambda *args, **kwargs: dict(summary),
+    )
+    api_calls: list[tuple[str, str, Path]] = []
+    loop_summary = {
+        "run_dir": ".scratch/fig-loop-runs/run-1",
+        "final_stop_reason": "agent_action_required",
+    }
+
+    def _fake_run_loop(
+        name: str,
+        goal: str,
+        *,
+        repo_root: Path,
+        admission_check,
+    ) -> Path:
+        api_calls.append((name, goal, repo_root))
+        assert admission_check() is True
+        return tmp_path / ".scratch" / "fig-loop-runs" / "run-1"
+
+    monkeypatch.setattr(fig_run.fig_loop, "run_loop", _fake_run_loop)
+    monkeypatch.setattr(
+        fig_run.fig_loop,
+        "json_stdout_summary",
+        lambda run_dir: dict(loop_summary),
+    )
     monkeypatch.setattr(
         fig_run,
         "_run_command",
-        lambda command, *, repo_root: commands.append(command),
+        lambda command, *, repo_root: pytest.fail("queue-bound fig_loop used subprocess"),
     )
 
     payload = fig_run.run_workflow(
@@ -575,13 +605,168 @@ def test_queue_bound_fig_loop_stops_pending_without_subprocess(
         repo_root=tmp_path,
     )
 
-    assert commands == []
-    assert payload["executed_count"] == 0
-    assert payload["final_stop_reason"] == (
-        fig_run.STOP_RUN_FIG_LOOP_ADMISSION_PENDING
+    assert api_calls == [("runner_demo", "close loop", tmp_path)]
+    assert payload["executed_count"] == 1
+    assert payload["final_stop_reason"] == fig_run.STOP_COMPLETE
+    assert payload["plan_binding"]["state"] == "matched"
+    assert payload["steps"][0]["executed"] is True
+    assert payload["steps"][0]["returncode"] == 0
+    assert payload["steps"][0]["stdout_tail"] == (
+        json.dumps(loop_summary, sort_keys=True) + "\n"
     )
-    assert payload["boundary_handoff"]["allowed_scope"] == ["read-only"]
-    assert payload["boundary_handoff"]["publication_acceptance"] == "not_claimed"
+    assert payload["steps"][0]["stderr_tail"] == ""
+
+
+def test_queue_bound_fig_loop_underlock_drift_stops_stale_without_scratch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    command = (
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
+    )
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_FIG_LOOP,
+        safe_command=command,
+    )
+    drifted = _driver_summary(
+        action=fig_driver.ACTION_RUN_EXPORT,
+        safe_command="fig-agent export runner_demo",
+        status={
+            "acceptance_state": "NOT_DECLARED",
+            "export_state": "STALE",
+            "critique_state": "FRESH",
+        },
+    )
+    _install_driver_sequence(monkeypatch, [summary])
+    monkeypatch.setattr(
+        fig_run,
+        "_driver_summary_under_admission",
+        lambda *args, **kwargs: dict(drifted),
+    )
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    def _rejecting_run_loop(name: str, goal: str, *, repo_root: Path, admission_check):
+        assert admission_check() is False
+        raise fig_run.fig_loop.FigLoopAdmissionRejected("fig_loop_admission_rejected")
+
+    monkeypatch.setattr(fig_run.fig_loop, "run_loop", _rejecting_run_loop)
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: pytest.fail("stale fig_loop used subprocess"),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        expected_first_action=fig_driver.ACTION_RUN_FIG_LOOP,
+        expected_first_safe_command=command,
+        repo_root=tmp_path,
+    )
+
+    assert payload["executed_count"] == 0
+    assert payload["final_stop_reason"] == fig_run.STOP_STALE_PLAN
+    assert payload["plan_binding"]["state"] == "stale"
+    assert payload["plan_binding"]["live"]["action"] == fig_driver.ACTION_RUN_EXPORT
+    assert payload["plan_binding"]["mutation_prevented"] is True
+    assert not runs_root.exists()
+
+
+@pytest.mark.parametrize(
+    ("error_type", "stop_reason"),
+    (
+        (fig_run.fig_loop.FigLoopAdmissionBusy, fig_run.STOP_ADMISSION_BUSY),
+        (fig_run.fig_loop.FigLoopAdmissionInvalid, fig_run.STOP_ADMISSION_INVALID),
+    ),
+)
+def test_queue_bound_fig_loop_maps_typed_admission_errors_without_execution(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    error_type: type[Exception],
+    stop_reason: str,
+) -> None:
+    command = (
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
+    )
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_FIG_LOOP,
+        safe_command=command,
+    )
+    _install_driver_sequence(monkeypatch, [summary])
+    monkeypatch.setattr(
+        fig_run.fig_loop,
+        "run_loop",
+        lambda *args, **kwargs: (_ for _ in ()).throw(error_type("admission_test")),
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: pytest.fail("admission stop used subprocess"),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        expected_first_action=fig_driver.ACTION_RUN_FIG_LOOP,
+        expected_first_safe_command=command,
+        repo_root=tmp_path,
+    )
+
+    assert payload["executed_count"] == 0
+    assert payload["final_stop_reason"] == stop_reason
+    assert payload["steps"][0]["executed"] is False
+    assert not (tmp_path / ".scratch" / "fig-loop-runs").exists()
+    if stop_reason == fig_run.STOP_ADMISSION_INVALID:
+        assert payload["admission_diagnostic"]["retryable"] is False
+
+
+def test_queue_bound_fig_loop_maps_generic_error_to_cli_equivalent_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    command = (
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
+    )
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_FIG_LOOP,
+        safe_command=command,
+    )
+    _install_driver_sequence(monkeypatch, [summary])
+
+    def _failing_run_loop(name: str, goal: str, *, repo_root: Path, admission_check):
+        assert admission_check() is True
+        raise fig_run.fig_loop.FigLoopError("loop failed")
+
+    monkeypatch.setattr(
+        fig_run,
+        "_driver_summary_under_admission",
+        lambda *args, **kwargs: dict(summary),
+    )
+    monkeypatch.setattr(fig_run.fig_loop, "run_loop", _failing_run_loop)
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: pytest.fail("generic fig_loop error used subprocess"),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        expected_first_action=fig_driver.ACTION_RUN_FIG_LOOP,
+        expected_first_safe_command=command,
+        repo_root=tmp_path,
+    )
+
+    assert payload["executed_count"] == 1
+    assert payload["final_stop_reason"] == fig_run.STOP_COMMAND_FAILED
+    assert payload["steps"][0]["executed"] is True
+    assert payload["steps"][0]["returncode"] == 1
+    assert payload["steps"][0]["stdout_tail"] == ""
+    assert payload["steps"][0]["stderr_tail"] == "fig_loop.py: loop failed\n"
 
 
 def test_direct_cli_exit_policy_remains_zero_for_admission_busy(

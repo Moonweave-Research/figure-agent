@@ -72,10 +72,14 @@ or under-lock validation, the runner instead stops as non-retryable
 `admission_diagnostic` without filesystem paths.
 
 Direct `run_fig_loop` execution remains on the existing self-leased `fig_loop`
-path and is never wrapped in an outer runner lease. A queue-bound first
-`run_fig_loop` step temporarily stops without a subprocess as
-`run_fig_loop_admission_integration_pending`; integrating that self-leased path
-with queue expectations is deferred to the next slice.
+path and is never wrapped in an outer runner lease. For a queue-bound first
+`run_fig_loop` step, the runner calls that same internal self-leased API with an
+admission callback. While `fig_loop` holds the lease, the callback re-queries
+the driver and exact-matches the queued action, command, absent stop boundary,
+and action safety. Drift stops as `stale_plan` before scratch creation; busy and
+invalid preflight map to the existing admission stops. A match writes one loop
+checkpoint, records stdout exactly as `fig_loop --json`, and then returns to
+fresh live driver selection.
 
 Default mode is plan-only. Without `--execute`, the command emits what would be
 run and does not mutate fixture source, exports, accepted state, or golden
@@ -232,9 +236,8 @@ action is `patch_handoff_stop`, the handoff reports
 - `admission_invalid` — the fixture path, lock state, or under-lock validation
   became unsafe; no subprocess starts and the boundary must be repaired before
   a new live run.
-- `run_fig_loop_admission_integration_pending` — a queue-bound `run_fig_loop`
-  first step is deliberately not delegated yet; direct `fig_run` keeps the
-  existing self-leased path.
+- `run_fig_loop_admission_integration_pending` — deprecated compatibility
+  token retained for older consumers; current runner paths do not generate it.
 - `complete` — driver selected `complete`.
 - `repeated_executable_action` — a successful command was followed by the same
   driver action and shell command again, so the runner stopped instead of

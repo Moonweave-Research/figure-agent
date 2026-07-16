@@ -11,6 +11,7 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -85,6 +86,18 @@ _GIT_MUTATIONS = frozenset(
 
 class FigLoopError(ValueError):
     """Expected user-facing error for fig loop preflight failures."""
+
+
+class FigLoopAdmissionRejected(FigLoopError):
+    """Admission callback rejected the loop before any scratch output."""
+
+
+class FigLoopAdmissionBusy(FigLoopError):
+    """The fixture admission lease is currently held by another operation."""
+
+
+class FigLoopAdmissionInvalid(FigLoopError):
+    """Fixture admission or canonical preflight is invalid."""
 
 
 @dataclass(frozen=True)
@@ -481,6 +494,7 @@ def run_loop(
     *,
     repo_root: Path = REPO_ROOT,
     runs_root: Path | None = None,
+    admission_check: Callable[[], bool] | None = None,
 ) -> Path:
     """Run one legacy checkpoint only when canonical lifecycle discovery is absent."""
     try:
@@ -494,7 +508,7 @@ def run_loop(
             runs_root or root / ".scratch" / "fig-loop-runs",
         )
     except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
-        raise FigLoopError(str(exc)) from exc
+        raise FigLoopAdmissionInvalid(str(exc)) from exc
     example_dir = root / "examples" / name
     if not example_dir.is_dir():
         raise FigLoopError(f"examples/{name}/ not found")
@@ -504,22 +518,24 @@ def run_loop(
                 closed_loop_attempt_state.fixture_admission_lock(root, name)
             )
         except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
-            raise FigLoopError(f"canonical_preflight:{exc}") from exc
+            raise FigLoopAdmissionInvalid(f"canonical_preflight:{exc}") from exc
         except closed_loop_attempt_state.FixtureAdmissionLeaseBusy as exc:
-            raise FigLoopError(
+            raise FigLoopAdmissionBusy(
                 "canonical_admission_legacy_coordination_busy; retry canonical admission "
                 "or legacy coordination"
             ) from exc
         except repair_transaction.RepairTransactionError as exc:
-            raise FigLoopError(str(exc)) from exc
+            raise FigLoopAdmissionInvalid(str(exc)) from exc
         except OSError as exc:
-            raise FigLoopError("canonical_preflight_error") from exc
+            raise FigLoopAdmissionInvalid("canonical_preflight_error") from exc
+        if admission_check is not None and not admission_check():
+            raise FigLoopAdmissionRejected("fig_loop_admission_rejected")
         try:
             current = closed_loop_current_state.resolve_current_attempt(root, name)
         except OSError as exc:
-            raise FigLoopError("canonical_state_resolution_error") from exc
+            raise FigLoopAdmissionInvalid("canonical_state_resolution_error") from exc
         if current.get("resolution") != "absent":
-            raise FigLoopError(
+            raise FigLoopAdmissionInvalid(
                 "canonical_attempt_resolution:"
                 f"{current.get('resolution')}:{current.get('reason')}; "
                 "use canonical status/lifecycle"
@@ -531,7 +547,7 @@ def run_loop(
                     root, name, source, label="source"
                 )
             except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
-                raise FigLoopError(f"canonical_preflight:{exc}") from exc
+                raise FigLoopAdmissionInvalid(f"canonical_preflight:{exc}") from exc
         return _run_loop_after_admission(
             name,
             goal,

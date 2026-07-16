@@ -88,6 +88,11 @@ legacy `/fig_loop` stops before creating scratch evidence and directs the caller
 to canonical status/lifecycle. A transient recoverable fixture-root coordination
 lease also serializes root admission and a legacy loop run; if it is busy,
 retry after the active admission or legacy run finishes.
+The internal Python `run_loop` API may receive an admission callback for bounded
+runner integration. It invokes that callback only after acquiring its own lease
+and before canonical/source preflight or scratch creation. A false result rejects
+the loop without output. This is not a CLI option and does not transfer lease
+ownership outside `fig_loop`.
 
 Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
 

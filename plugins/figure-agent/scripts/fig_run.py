@@ -21,7 +21,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(_SCRIPTS_DIR))
+for _import_dir in ("quality", "loop", "driver"):
+    sys.path.insert(1, str(_SCRIPTS_DIR / _import_dir))
 
 import closed_loop_attempt_admission  # noqa: E402
 import closed_loop_attempt_state  # noqa: E402
@@ -32,6 +35,7 @@ import closed_loop_post_review_response  # noqa: E402
 import closed_loop_repair_authorization  # noqa: E402
 import closed_loop_repair_candidate  # noqa: E402
 import fig_driver  # noqa: E402
+import fig_loop  # noqa: E402
 import repair_transaction  # noqa: E402
 import runtime_paths  # noqa: E402
 from driver_actor import required_actor_for_driver_summary  # noqa: E402
@@ -1655,33 +1659,140 @@ def run_workflow(
             if queue_first_step_pending:
                 assert expected_first_action is not None
                 assert expected_first_safe_command is not None
-                plan_binding = _step_plan_binding(
-                    planned_action=expected_first_action,
-                    planned_safe_command=expected_first_safe_command,
-                    live_summary=summary,
-                    basis="queue_first_step",
-                    step_index=index,
-                    live_would_execute=would_execute,
-                )
-                stop_reason = (
-                    STOP_RUN_FIG_LOOP_ADMISSION_PENDING
-                    if plan_binding["state"] == "matched"
-                    else STOP_STALE_PLAN
-                )
-                if stop_reason == STOP_RUN_FIG_LOOP_ADMISSION_PENDING:
-                    plan_binding["state"] = "admission_pending"
-                    plan_binding["mutation_prevented"] = True
+                fig_loop_admission: dict[str, Any] = {}
+
+                def _admission_check() -> bool:
+                    admitted_summary = _driver_summary_under_admission(
+                        name,
+                        mode=mode,
+                        goal=goal,
+                        repo_root=repo_root,
+                    )
+                    admitted_would_execute = _would_execute(
+                        admitted_summary,
+                        name=name,
+                        goal=goal,
+                        repo_root=repo_root,
+                    )
+                    binding = _step_plan_binding(
+                        planned_action=expected_first_action,
+                        planned_safe_command=expected_first_safe_command,
+                        live_summary=admitted_summary,
+                        basis="queue_first_step",
+                        step_index=index,
+                        live_would_execute=admitted_would_execute,
+                    )
+                    fig_loop_admission["summary"] = admitted_summary
+                    fig_loop_admission["binding"] = binding
+                    return binding["state"] == "matched"
+
+                try:
+                    run_dir = fig_loop.run_loop(
+                        name,
+                        goal,
+                        repo_root=repo_root,
+                        admission_check=_admission_check,
+                    )
+                except fig_loop.FigLoopAdmissionRejected:
+                    admitted_summary = fig_loop_admission["summary"]
+                    plan_binding = fig_loop_admission["binding"]
+                    final_summary = admitted_summary
+                    steps.append(
+                        _step_payload(
+                            index=index,
+                            summary=admitted_summary,
+                            would_execute=False,
+                            executed=False,
+                            stop_reason=STOP_STALE_PLAN,
+                        )
+                    )
+                    final_stop_reason = STOP_STALE_PLAN
+                    break
+                except fig_loop.FigLoopAdmissionBusy:
+                    steps.append(
+                        _step_payload(
+                            index=index,
+                            summary=summary,
+                            would_execute=True,
+                            executed=False,
+                            stop_reason=STOP_ADMISSION_BUSY,
+                        )
+                    )
+                    final_summary = summary
+                    final_stop_reason = STOP_ADMISSION_BUSY
+                    break
+                except fig_loop.FigLoopAdmissionInvalid as exc:
+                    steps.append(
+                        _step_payload(
+                            index=index,
+                            summary=summary,
+                            would_execute=True,
+                            executed=False,
+                            stop_reason=STOP_ADMISSION_INVALID,
+                        )
+                    )
+                    admission_diagnostic = _admission_diagnostic(exc)
+                    final_summary = summary
+                    final_stop_reason = STOP_ADMISSION_INVALID
+                    break
+                except fig_loop.FigLoopError as exc:
+                    admitted_summary = fig_loop_admission.get("summary", summary)
+                    binding = fig_loop_admission.get("binding")
+                    if isinstance(binding, dict):
+                        plan_binding = binding
+                    result = CommandResult(
+                        returncode=1,
+                        stdout="",
+                        stderr=f"fig_loop.py: {exc}\n",
+                    )
+                else:
+                    admitted_summary = fig_loop_admission["summary"]
+                    plan_binding = fig_loop_admission["binding"]
+                    result = CommandResult(
+                        returncode=0,
+                        stdout=(
+                            json.dumps(
+                                fig_loop.json_stdout_summary(run_dir),
+                                sort_keys=True,
+                            )
+                            + "\n"
+                        ),
+                        stderr="",
+                    )
+
+                final_summary = admitted_summary
+                command = admitted_summary["safe_command"]
+                signature = (admitted_summary["action"], command)
+                if signature in executed_signatures:
+                    steps.append(
+                        _step_payload(
+                            index=index,
+                            summary=admitted_summary,
+                            would_execute=False,
+                            executed=False,
+                            stop_reason=STOP_REPEATED_ACTION,
+                        )
+                    )
+                    final_stop_reason = STOP_REPEATED_ACTION
+                    break
+                queue_first_step_pending = False
+                executed_count += 1
+                executed_signatures.add(signature)
+                stop_reason = STOP_COMMAND_FAILED if result.returncode != 0 else None
                 steps.append(
                     _step_payload(
                         index=index,
-                        summary=summary,
-                        would_execute=False,
-                        executed=False,
+                        summary=admitted_summary,
+                        would_execute=True,
+                        executed=True,
                         stop_reason=stop_reason,
+                        result=result,
                     )
                 )
-                final_stop_reason = stop_reason
-                break
+                if result.returncode != 0:
+                    final_stop_reason = STOP_COMMAND_FAILED
+                    break
+                continue
 
         requires_step_lease = summary.get("action") in LEASED_EXECUTABLE_ACTIONS
         if (
