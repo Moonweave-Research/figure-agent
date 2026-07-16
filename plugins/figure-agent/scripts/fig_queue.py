@@ -169,6 +169,14 @@ def _workspace_diagnostic(repo_root: Path, fixtures: list[str] | None) -> dict[s
     if fixtures:
         return None
     examples_dir = repo_root / "examples"
+    if examples_dir.is_symlink():
+        return {
+            "schema": WORKSPACE_DIAGNOSTIC_SCHEMA,
+            "state": "fixture_symlink",
+            "workspace_root": str(repo_root),
+            "missing": [],
+            "message": "implicit queue discovery refused symlinked examples/ directory",
+        }
     if examples_dir.is_dir():
         return None
     return {
@@ -195,7 +203,10 @@ def _print_workspace_diagnostic(queue: dict[str, Any]) -> None:
 
 def workspace_diagnostic_exit_code(queue: dict[str, Any]) -> int:
     diagnostic = queue.get("workspace_diagnostic")
-    if isinstance(diagnostic, dict) and diagnostic.get("state") == "missing_examples":
+    if isinstance(diagnostic, dict) and diagnostic.get("state") in {
+        "fixture_symlink",
+        "missing_examples",
+    }:
         return 2
     return 0
 

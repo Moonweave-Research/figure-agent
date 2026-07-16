@@ -139,6 +139,47 @@ def test_queue_implicit_discovery_keeps_symlink_entry_as_controlled_error(
     ]
 
 
+def test_queue_implicit_examples_symlink_is_nonzero_workspace_diagnostic(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    external_examples = tmp_path / "external-examples"
+    fixture = external_examples / "demo"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
+    (tmp_path / "examples").symlink_to(external_examples, target_is_directory=True)
+    monkeypatch.setattr(
+        fig_queue.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: pytest.fail("symlinked examples reached driver"),
+    )
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path, mode="review", goal="triage", fixtures=None
+    )
+
+    assert queue["rows"] == []
+    assert queue["workspace_diagnostic"] == {
+        "schema": fig_queue.WORKSPACE_DIAGNOSTIC_SCHEMA,
+        "state": "fixture_symlink",
+        "workspace_root": str(tmp_path),
+        "missing": [],
+        "message": "implicit queue discovery refused symlinked examples/ directory",
+    }
+    assert fig_queue.workspace_diagnostic_exit_code(queue) == 2
+
+
+def test_queue_implicit_empty_real_examples_directory_remains_healthy(tmp_path: Path) -> None:
+    (tmp_path / "examples").mkdir()
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path, mode="review", goal="triage", fixtures=None
+    )
+
+    assert queue["rows"] == []
+    assert "workspace_diagnostic" not in queue
+    assert fig_queue.workspace_diagnostic_exit_code(queue) == 0
+
+
 def test_queue_surfaces_missing_style_benchmark_pack_non_fatal(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -280,6 +280,34 @@ def test_execute_rejects_symlink_fixture_before_delegating_to_fig_run(
     ]
 
 
+def test_execute_rejects_symlinked_examples_workspace_before_fig_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    external_examples = tmp_path / "external-examples"
+    fixture = external_examples / "demo"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
+    (tmp_path / "examples").symlink_to(external_examples, target_is_directory=True)
+    monkeypatch.setattr(
+        fig_queue_run.fig_run,
+        "run_workflow",
+        lambda *_args, **_kwargs: pytest.fail("symlinked examples reached fig_run"),
+    )
+
+    payload = fig_queue_run.run_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        execute=True,
+        max_fixtures=1,
+        fixtures=None,
+        filters={},
+    )
+
+    assert payload["runs"] == []
+    assert payload["queue"]["workspace_diagnostic"]["state"] == "fixture_symlink"
+
+
 def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys) -> None:
     monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
 
@@ -616,6 +644,55 @@ def test_public_wrapper_rejects_workspace_symlink_fixture_without_external_mutat
         payload = json.loads(result.stdout)
         queue_payload = payload["queue"] if command[0] == "queue-run" else payload
         assert queue_payload["summary"]["errors"] == 1
+
+
+@pytest.mark.parametrize(
+    "command",
+    (
+        ("queue", "--mode", "review", "--goal", "triage", "--json"),
+        ("queue-run", "--mode", "review", "--goal", "triage", "--execute", "--json"),
+    ),
+)
+def test_public_wrapper_rejects_symlinked_examples_workspace_without_external_mutation(
+    tmp_path: Path, command: tuple[str, ...]
+) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    external_examples = tmp_path / "external-examples"
+    fixture = external_examples / "demo"
+    fixture.mkdir(parents=True)
+    spec = fixture / "spec.yaml"
+    spec.write_text("name: demo\n", encoding="utf-8")
+    (workspace / "examples").symlink_to(external_examples, target_is_directory=True)
+    before = {path.relative_to(external_examples): path.read_bytes() for path in fixture.iterdir()}
+    env = os.environ.copy()
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(Path(__file__).resolve().parents[1])
+
+    result = subprocess.run(
+        [str(Path(__file__).resolve().parents[1] / "bin" / "fig-agent"), *command],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 2, result.stderr + result.stdout
+    after = {path.relative_to(external_examples): path.read_bytes() for path in fixture.iterdir()}
+    assert after == before
+    payload = json.loads(result.stdout)
+    queue_payload = payload["queue"] if command[0] == "queue-run" else payload
+    assert queue_payload["summary"]["total"] == 0
+    assert queue_payload["summary"]["errors"] == 0
+    assert queue_payload["workspace_diagnostic"] == {
+        "schema": fig_queue.WORKSPACE_DIAGNOSTIC_SCHEMA,
+        "state": "fixture_symlink",
+        "workspace_root": str(workspace),
+        "missing": [],
+        "message": "implicit queue discovery refused symlinked examples/ directory",
+    }
+    assert "symlinked examples/ directory" in result.stderr
 
 
 def test_queue_run_filter_surface_matches_fig_queue() -> None:
