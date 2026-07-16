@@ -268,7 +268,7 @@ def test_development_acceptance_closes_review_without_reopening_legacy_loop() ->
 def test_run_execute_never_runs_a_command_at_closed_loop_boundary(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    projection = _projection(lifecycle_state="machine_repaired", required_actor="workflow_agent")
+    projection = _projection(lifecycle_state="repair_authorized", required_actor="workflow_agent")
     driver_summary = fig_driver._select_action(
         "demo",
         mode="review",

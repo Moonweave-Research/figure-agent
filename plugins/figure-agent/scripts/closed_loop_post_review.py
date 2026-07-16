@@ -24,6 +24,7 @@ def run_outbound_handoff(
     state_path: Path,
     execute: bool,
     workspace_root: Path,
+    expected_state_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Validate or publish one post-repair host-review handoff."""
     root = Path(os.path.abspath(workspace_root))
@@ -32,6 +33,11 @@ def run_outbound_handoff(
         fixture=fixture,
         state_path=state_path,
     )
+    if (
+        expected_state_sha256 is not None
+        and state["state_sha256"] != expected_state_sha256
+    ):
+        raise ClosedLoopPostReviewError("closed_loop_projected_state_hash_mismatch")
     if state["state"] == "post_review_requested":
         evidence = authority.evidence_by_role(state)
         request_record = evidence.get("post_repair_visual_review_request")

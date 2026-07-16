@@ -233,8 +233,11 @@ post-repair evidence.
 - [x] Project the unique hash-validated current attempt into `status`, `drive`,
   and default `run`; fail closed on invalid, ambiguous, stale, or symlinked
   lineage instead of falling through to a legacy loop.
-- [ ] Wire safe deterministic transitions through default `run` one at a time;
-  the first pending transition is `machine_repaired -> post_review_requested`.
+- [x] Wire `machine_repaired -> post_review_requested` through default `run`:
+  plan-only writes nothing; execute creates the bound request/crops/state and
+  stops before host invocation.
+- [ ] Wire remaining safe deterministic transitions through default `run` one
+  at a time without synthesizing host, scientific, or human evidence.
 - [x] Stop at host-vision, scientific, human authorization, accepted/golden,
   release, and publication boundaries.
 - [ ] Keep historical `drive`, `loop`, `improve`, queue, and specialist commands
@@ -312,11 +315,13 @@ the same editable selector as the repair target. Missing semantic authority,
 ambiguous attribution, or missing references can emit only a named
 `human_attributor` handoff; they cannot create a repair binding or packet.
 
-The explicit R3 run consumes a receipt-bound external host response. Automatic
-transition execution from the projected state is still pending R4.2. The
-maintained-Fig3 controlled-fault replay is mechanism evidence only, not an
-actual defect or publication verdict; prospective real-defect proof and the
-remaining R4-R5 work are still pending.
+Default `run` now advances one validated `machine_repaired` state to a bound
+`post_review_requested` state and stops at `host_llm`; it does not invoke the
+host or discover a response automatically. The explicit inbound R3 path
+consumes a receipt-bound external host response. The maintained-Fig3
+controlled-fault replay is mechanism evidence only, not an actual defect or
+publication verdict; prospective real-defect proof and the remaining R4-R5
+work are still pending.
 
 The closed-loop slices bind their handoffs through these narrow evidence
 contracts rather than another workflow shell:

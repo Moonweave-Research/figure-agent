@@ -703,11 +703,76 @@ def test_fig_run_closed_loop_plan_only_validates_without_writes(tmp_path: Path) 
     )
 
     assert payload["final_stop_reason"] == "plan_only"
+    assert payload["final_action"] == "post_repair_visual_review_request"
     assert payload["closed_loop"]["input_state_sha256"] == state["state_sha256"]
     assert payload["closed_loop"]["next_state"] == "post_review_requested"
     assert payload["boundary_handoff"]["required_actor"] == "workflow_agent"
     assert not (attempt_root / "post-repair-review").exists()
     assert sorted(path.relative_to(workspace) for path in workspace.rglob("*")) == before
+
+
+def test_default_fig_run_plan_only_discovers_machine_repaired_without_writes(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    state, _ = _machine_repaired_state(workspace, paths)
+    before = sorted(path.relative_to(workspace) for path in workspace.rglob("*"))
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=False,
+        repo_root=workspace,
+    )
+
+    assert payload["final_stop_reason"] == "plan_only"
+    assert payload["final_action"] == "post_repair_visual_review_request"
+    assert payload["closed_loop"]["input_state_sha256"] == state["state_sha256"]
+    assert payload["closed_loop"]["next_state"] == "post_review_requested"
+    assert payload["boundary_handoff"]["required_actor"] == "workflow_agent"
+    assert sorted(path.relative_to(workspace) for path in workspace.rglob("*")) == before
+
+
+@pytest.mark.parametrize("execute", [False, True])
+def test_default_fig_run_rejects_projected_state_hash_mismatch_without_writes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    execute: bool,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    state, state_path = _machine_repaired_state(workspace, paths)
+    summary = fig_run._driver_summary(
+        "demo",
+        mode="review",
+        goal="close loop",
+        repo_root=workspace,
+    )
+    assert summary["closed_loop_attempt"]["state_sha256"] == state["state_sha256"]
+    summary["closed_loop_attempt"]["state_sha256"] = "sha256:" + "0" * 64
+    monkeypatch.setattr(fig_run, "_driver_summary", lambda *args, **kwargs: summary)
+    before = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+
+    with pytest.raises(ValueError, match="projected_state_hash_mismatch"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=execute,
+            repo_root=workspace,
+        )
+
+    after = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+    assert after == before
+    assert not (state_path.parent / "post-repair-review").exists()
 
 
 def test_fig_run_closed_loop_follows_packet_path_from_published_state_lineage(
@@ -891,6 +956,7 @@ def test_fig_run_closed_loop_resumes_hash_identical_request_after_state_failure(
 
     assert request_path.read_bytes() == request_bytes
     assert payload["final_stop_reason"] == "host_boundary"
+    assert payload["final_action"] == "post_repair_visual_review_request"
     assert (workspace / payload["closed_loop"]["next_state_path"]).is_file()
 
 
@@ -1017,6 +1083,52 @@ def test_fig_run_closed_loop_execute_publishes_request_state_and_host_handoff(
             "sha256": _sha256(request_path),
         }
     ]
+    assert next_state["required_actor"] == "host_llm"
+    assert next_state["publication_acceptance"] == "not_claimed"
+
+    before_rerun = sorted(path.relative_to(workspace) for path in workspace.rglob("*"))
+    rerun = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=workspace,
+    )
+    assert rerun["executed_count"] == 0
+    assert rerun["final_action"] == "closed_loop_handoff_stop"
+    assert rerun["boundary_handoff"]["required_actor"] == "host_llm"
+    assert sorted(path.relative_to(workspace) for path in workspace.rglob("*")) == before_rerun
+
+
+def test_default_fig_run_execute_advances_only_to_host_boundary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    _refresh_critique_authority(workspace, paths)
+    state, _ = _machine_repaired_state(workspace, paths)
+
+    def forbidden_host_or_shell(*args: object, **kwargs: object) -> object:
+        raise AssertionError("default closed-loop dispatch must not invoke shell or host")
+
+    monkeypatch.setattr(fig_run, "_run_command", forbidden_host_or_shell)
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=workspace,
+    )
+
+    request_path = workspace / payload["closed_loop"]["request_path"]
+    next_state_path = workspace / payload["closed_loop"]["next_state_path"]
+    next_state = json.loads(next_state_path.read_text(encoding="utf-8"))
+    assert payload["final_stop_reason"] == "host_boundary"
+    assert payload["final_action"] == "post_repair_visual_review_request"
+    assert payload["executed_count"] == 1
+    assert payload["boundary_handoff"]["required_actor"] == "host_llm"
+    assert payload["closed_loop"]["input_state_sha256"] == state["state_sha256"]
+    assert request_path.is_file()
+    assert next_state["state"] == "post_review_requested"
     assert next_state["required_actor"] == "host_llm"
     assert next_state["publication_acceptance"] == "not_claimed"
 

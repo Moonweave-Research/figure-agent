@@ -224,6 +224,52 @@ def _would_execute(summary: dict[str, Any], *, name: str, goal: str, repo_root: 
     return True
 
 
+def _automatic_machine_repaired_state(
+    summary: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> tuple[Path, str] | None:
+    if (
+        summary.get("action") != fig_driver.ACTION_CLOSED_LOOP_HANDOFF_STOP
+        or summary.get("stop_boundary") != fig_driver.STOP_CLOSED_LOOP_ACTOR
+    ):
+        return None
+    projection = summary.get("closed_loop_attempt")
+    if not isinstance(projection, dict):
+        return None
+    if (
+        projection.get("schema") != "figure-agent.closed-loop-current-state.v1"
+        or projection.get("resolution") != "current"
+        or projection.get("state") != "machine_repaired"
+        or projection.get("disposition") != "continue"
+        or projection.get("required_actor") != "workflow_agent"
+        or projection.get("terminal") is not False
+        or projection.get("publication_acceptance") != "not_claimed"
+    ):
+        return None
+    path_value = projection.get("path")
+    if not isinstance(path_value, str) or not path_value:
+        raise ValueError("closed_loop_current_state_path_missing")
+    state_sha256 = projection.get("state_sha256")
+    if (
+        not isinstance(state_sha256, str)
+        or not state_sha256.startswith("sha256:")
+        or len(state_sha256) != 71
+        or any(character not in "0123456789abcdef" for character in state_sha256[7:])
+    ):
+        raise ValueError("closed_loop_current_state_sha256_missing")
+    relative = Path(path_value)
+    if relative.is_absolute() or any(part in {"", ".", ".."} for part in relative.parts):
+        raise ValueError("closed_loop_current_state_path_unsafe")
+    root = Path(os.path.abspath(repo_root))
+    state_path = root / relative
+    try:
+        state_path.relative_to(root)
+    except ValueError as exc:
+        raise ValueError("closed_loop_current_state_path_unsafe") from exc
+    return state_path, state_sha256
+
+
 def _boundary_stop_reason(summary: dict[str, Any]) -> str:
     action = summary.get("action")
     if action == fig_driver.ACTION_COMPLETE:
@@ -504,8 +550,23 @@ def run_workflow(
         raise ValueError(f"unsupported mode: {mode}")
     if max_steps < 1:
         raise ValueError("max_steps must be >= 1")
+    initial_summary: dict[str, Any] | None = None
+    automatic_state_sha256: str | None = None
     if closed_loop_response is not None and closed_loop_state is None:
         raise ValueError("closed-loop-response requires --closed-loop-state")
+    if closed_loop_state is None and closed_loop_response is None:
+        initial_summary = _driver_summary(
+            name,
+            mode=mode,
+            goal=goal,
+            repo_root=repo_root,
+        )
+        automatic_state = _automatic_machine_repaired_state(
+            initial_summary,
+            repo_root=repo_root,
+        )
+        if automatic_state is not None:
+            closed_loop_state, automatic_state_sha256 = automatic_state
     if closed_loop_state is not None and closed_loop_response is not None:
         try:
             inbound = closed_loop_post_review_response.run_inbound_response(
@@ -603,6 +664,7 @@ def run_workflow(
                 state_path=closed_loop_state,
                 execute=execute,
                 workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
             )
         except closed_loop_post_review.ClosedLoopPostReviewError as exc:
             raise ValueError(str(exc)) from exc
@@ -682,7 +744,11 @@ def run_workflow(
     executed_signatures: set[tuple[str, str]] = set()
 
     for index in range(1, max_steps + 1):
-        summary = _driver_summary(name, mode=mode, goal=goal, repo_root=repo_root)
+        if initial_summary is not None:
+            summary = initial_summary
+            initial_summary = None
+        else:
+            summary = _driver_summary(name, mode=mode, goal=goal, repo_root=repo_root)
         final_summary = summary
         would_execute = _would_execute(summary, name=name, goal=goal, repo_root=repo_root)
 
