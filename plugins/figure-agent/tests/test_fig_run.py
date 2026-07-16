@@ -181,6 +181,194 @@ def test_runner_accepts_quoted_fixture_name_commands(
     assert payload["final_stop_reason"] == "complete"
 
 
+def test_first_step_expectation_requires_action_and_command_together(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="first-step action and command"):
+        fig_run.run_workflow(
+            "runner_demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            expected_first_action=fig_driver.ACTION_RUN_COMPILE,
+            repo_root=tmp_path,
+        )
+
+
+def test_first_step_expectation_rejects_closed_loop_lifecycle_inputs(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(ValueError, match="first-step expectation.*closed-loop"):
+        fig_run.run_workflow(
+            "runner_demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            expected_first_action=fig_driver.ACTION_RUN_COMPILE,
+            expected_first_safe_command=(
+                "bash scripts/compile.sh examples/runner_demo/runner_demo.tex"
+            ),
+            closed_loop_state=tmp_path / "state.json",
+            repo_root=tmp_path,
+        )
+
+
+@pytest.mark.parametrize(
+    ("live_action", "live_command", "live_boundary"),
+    (
+        (
+            fig_driver.ACTION_RUN_EXPORT,
+            "fig-agent export runner_demo",
+            None,
+        ),
+        (
+            fig_driver.ACTION_RUN_COMPILE,
+            "bash scripts/compile.sh examples/runner_demo/other.tex",
+            None,
+        ),
+        (
+            fig_driver.ACTION_RUN_COMPILE,
+            "bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            fig_driver.STOP_CLOSEOUT,
+        ),
+        (
+            fig_driver.ACTION_COMPLETE,
+            None,
+            None,
+        ),
+    ),
+)
+def test_first_step_expectation_stops_stale_plan_before_mutation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    live_action: str,
+    live_command: str | None,
+    live_boundary: str | None,
+) -> None:
+    planned_action = fig_driver.ACTION_RUN_COMPILE
+    planned_command = (
+        "bash scripts/compile.sh examples/runner_demo/runner_demo.tex"
+    )
+    live_summary = _driver_summary(
+        action=live_action,
+        safe_command=live_command,
+        stop_boundary=live_boundary,
+    )
+    _install_driver_sequence(monkeypatch, [live_summary])
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        expected_first_action=planned_action,
+        expected_first_safe_command=planned_command,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
+    assert payload["final_stop_reason"] == fig_run.STOP_STALE_PLAN
+    assert payload["steps"] == [
+        {
+            "index": 1,
+            "action": live_action,
+            "safe_command": live_command,
+            "stop_boundary": live_boundary,
+            "reason": "driver reason",
+            "would_execute": False,
+            "executed": False,
+            "returncode": None,
+            "stdout_tail": "",
+            "stderr_tail": "",
+            "stop_reason": fig_run.STOP_STALE_PLAN,
+            "driver": live_summary,
+        }
+    ]
+    assert payload["plan_binding"] == {
+        "scope": "first_step_only",
+        "state": "stale",
+        "planned": {
+            "action": planned_action,
+            "safe_command": planned_command,
+        },
+        "live": {
+            "action": live_action,
+            "safe_command": live_command,
+            "stop_boundary": live_boundary,
+        },
+        "mutation_prevented": True,
+    }
+    assert payload["boundary_handoff"]["required_actor"] == "workflow_agent"
+    assert payload["boundary_handoff"]["allowed_scope"] == ["read-only"]
+    assert payload["boundary_handoff"]["publication_acceptance"] == "not_claimed"
+
+
+def test_first_step_expectation_matches_once_then_allows_live_replanning(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    compile_command = (
+        "bash scripts/compile.sh examples/runner_demo/runner_demo.tex"
+    )
+    loop_command = (
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
+    )
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command=compile_command,
+            ),
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_FIG_LOOP,
+                safe_command=loop_command,
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        expected_first_action=fig_driver.ACTION_RUN_COMPILE,
+        expected_first_safe_command=compile_command,
+        repo_root=tmp_path,
+    )
+
+    assert commands == [compile_command, loop_command]
+    assert payload["executed_count"] == 2
+    assert payload["final_stop_reason"] == fig_run.STOP_COMPLETE
+    assert payload["plan_binding"] == {
+        "scope": "first_step_only",
+        "state": "matched",
+        "planned": {
+            "action": fig_driver.ACTION_RUN_COMPILE,
+            "safe_command": compile_command,
+        },
+        "live": {
+            "action": fig_driver.ACTION_RUN_COMPILE,
+            "safe_command": compile_command,
+            "stop_boundary": None,
+        },
+        "mutation_prevented": False,
+    }
+
+
 @pytest.mark.parametrize(
     ("action", "safe_command"),
     [

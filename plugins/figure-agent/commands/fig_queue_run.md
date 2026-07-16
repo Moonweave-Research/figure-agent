@@ -38,7 +38,12 @@ The normal order is:
 
 With `--execute`, it still does not execute queue commands directly. For each
 planned fixture it calls `/fig_run` logic, which re-queries live driver state
-and applies the existing deterministic allowlist and safety predicates.
+and applies the existing deterministic allowlist and safety predicates. It
+also passes the exact queued `action` and `safe_command` as a first-step-only
+expectation. If either differs from the first live driver result, or the live
+result now has a stop boundary, `/fig_run` returns `stale_plan` without
+mutation. A matched first step is consumed after its successful command; later
+steps remain free to follow fresh live driver decisions.
 
 ## Exit status
 
@@ -47,13 +52,14 @@ The complete JSON payload is written before `queue-run` exits. Direct
 
 | Exit | Condition |
 |---|---|
-| `0` | Plan-only/dry-run, or an execute batch with no nested `/fig_run` `final_stop_reason: command_failed`. This includes complete, host/human boundaries, repeated-action, max-step, blocked, unattempted, and pre-delegation fixture-row errors. |
-| `1` | `--execute` delegated at least one selected fixture to `/fig_run` and that nested run ended with the canonical `final_stop_reason: command_failed`. Remaining selected fixtures are still attempted and remain in `runs`. |
+| `0` | Plan-only/dry-run, or an execute batch with no nested `/fig_run` `command_failed` or `stale_plan` final stop. This includes complete, host/human boundaries, repeated-action, max-step, blocked, unattempted, and pre-delegation fixture-row errors. |
+| `1` | `--execute` delegated at least one selected fixture to `/fig_run` and that nested run ended with canonical `final_stop_reason: command_failed` or `stale_plan`. Remaining selected fixtures are still attempted and remain in `runs`. |
 | `2` | Existing argument/value errors or workspace diagnostics, including missing `examples/` and an implicit symlinked `examples/` directory. These diagnostics take precedence over delegated command failures. |
 
-`summary.failed` remains a reporting count. Exit status is based only on the
-actual nested `/fig_run` stop contract, so a pre-delegation fixture/path error
-row does not make shell or CI treat the batch as a delegated command failure.
+`summary.failed` counts only delegated command failures. `summary.stale` counts
+first-step plan drift separately. Exit status is based only on those actual
+nested `/fig_run` stop contracts, so a pre-delegation fixture/path error row
+does not make shell or CI treat the batch as a delegated execution error.
 
 ## Filters
 
@@ -99,11 +105,11 @@ make SVG polish handoff executable; `svg_editor` rows remain blocked.
 | `filters` | active queue filters |
 | `queue` | source queue summary, `bottleneck_report`, and command plan |
 | `runs` | one record per attempted fixture |
-| `summary` | planned executable, planned blocked, planned complete, attempted, unattempted executable, executed command, failed, and blocked counts |
+| `summary` | planned executable, planned blocked, planned complete, attempted, unattempted executable, executed command, failed, stale, and blocked counts |
 
 Run records contain the planned fixture/action/command. In execute mode they
-also include the embedded `/fig_run` result so the operator can inspect the live
-revalidation stop reason.
+also include the embedded `/fig_run` result, including additive `plan_binding`
+evidence, so the operator can inspect the live revalidation stop reason.
 
 Blocked rows remain under `queue.command_plan.blocked`. Each blocked row carries
 `operator_handoff`, copied from `/fig_queue`, so the operator can see the next

@@ -105,6 +105,7 @@ def test_plan_only_reports_planned_runs_without_executing(
         "attempted": 2,
         "executed_commands": 0,
         "failed": 0,
+        "stale": 0,
         "blocked": 1,
         "unattempted_executable": 0,
     }
@@ -154,7 +155,7 @@ def test_execute_delegates_each_planned_fixture_to_fig_run(
     for name in ("alpha", "beta"):
         (tmp_path / "examples" / name).mkdir(parents=True)
     monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
-    calls: list[tuple[str, bool, int]] = []
+    calls: list[tuple[str, bool, int, str, str]] = []
 
     def fake_run_workflow(
         name: str,
@@ -164,8 +165,18 @@ def test_execute_delegates_each_planned_fixture_to_fig_run(
         execute: bool,
         max_steps: int,
         repo_root: Path,
+        expected_first_action: str,
+        expected_first_safe_command: str,
     ) -> dict[str, Any]:
-        calls.append((name, execute, max_steps))
+        calls.append(
+            (
+                name,
+                execute,
+                max_steps,
+                expected_first_action,
+                expected_first_safe_command,
+            )
+        )
         return {
             "schema": "figure-agent.run.v1",
             "fixture": name,
@@ -187,11 +198,98 @@ def test_execute_delegates_each_planned_fixture_to_fig_run(
         filters={},
     )
 
-    assert calls == [("alpha", True, 4), ("beta", True, 4)]
+    assert calls == [
+        (
+            "alpha",
+            True,
+            4,
+            "run_fig_loop",
+            "uv run python3 scripts/fig_loop.py alpha --goal triage --json",
+        ),
+        (
+            "beta",
+            True,
+            4,
+            "run_compile",
+            "bash scripts/compile.sh examples/beta/beta.tex",
+        ),
+    ]
     assert payload["summary"]["attempted"] == 2
     assert payload["summary"]["executed_commands"] == 2
     assert payload["summary"]["failed"] == 0
+    assert payload["summary"]["stale"] == 0
     assert [run["result"]["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
+
+
+def test_execute_counts_stale_plan_separately_and_continues_batch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    for name in ("alpha", "beta"):
+        (tmp_path / "examples" / name).mkdir(parents=True)
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+    calls: list[str] = []
+
+    def fake_run_workflow(name: str, **kwargs: Any) -> dict[str, Any]:
+        calls.append(name)
+        return {
+            "schema": "figure-agent.run.v1",
+            "fixture": name,
+            "executed_count": 0 if name == "alpha" else 1,
+            "final_stop_reason": (
+                fig_queue_run.fig_run.STOP_STALE_PLAN
+                if name == "alpha"
+                else fig_queue_run.fig_run.STOP_COMPLETE
+            ),
+        }
+
+    monkeypatch.setattr(fig_queue_run.fig_run, "run_workflow", fake_run_workflow)
+
+    payload = fig_queue_run.run_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        execute=True,
+        max_steps=4,
+        max_fixtures=10,
+        fixtures=None,
+        filters={},
+    )
+
+    assert calls == ["alpha", "beta"]
+    assert payload["summary"]["failed"] == 0
+    assert payload["summary"]["stale"] == 1
+    assert payload["summary"]["executed_commands"] == 1
+
+
+def test_main_returns_one_for_stale_plan_and_preserves_failure_count(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    for name in ("alpha", "beta"):
+        (tmp_path / "examples" / name).mkdir(parents=True)
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+
+    def fake_run_workflow(name: str, **kwargs: Any) -> dict[str, Any]:
+        return {
+            "schema": "figure-agent.run.v1",
+            "fixture": name,
+            "executed_count": 0,
+            "final_stop_reason": (
+                fig_queue_run.fig_run.STOP_STALE_PLAN
+                if name == "alpha"
+                else fig_queue_run.fig_run.STOP_COMPLETE
+            ),
+        }
+
+    monkeypatch.setattr(fig_queue_run.fig_run, "run_workflow", fake_run_workflow)
+
+    assert fig_queue_run.main(
+        ["--mode", "review", "--goal", "triage", "--execute"], repo_root=tmp_path
+    ) == 1
+
+    payload = json.loads(capsys.readouterr().out)
+    assert [run["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
+    assert payload["summary"]["failed"] == 0
+    assert payload["summary"]["stale"] == 1
 
 
 def test_main_returns_one_for_executed_delegated_command_failure(

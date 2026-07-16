@@ -52,6 +52,7 @@ STOP_PLAN_ONLY = "plan_only"
 STOP_HOST_BOUNDARY = "host_boundary"
 STOP_NOT_EXECUTABLE = "not_executable_action"
 STOP_COMMAND_FAILED = "command_failed"
+STOP_STALE_PLAN = "stale_plan"
 STOP_COMPLETE = "complete"
 STOP_MAX_STEPS = "max_steps_exceeded"
 STOP_REPEATED_ACTION = "repeated_executable_action"
@@ -525,6 +526,37 @@ def _boundary_handoff(
         return None
     action = summary.get("action")
     stop_boundary = summary.get("stop_boundary")
+    if final_stop_reason == STOP_STALE_PLAN:
+        return {
+            "schema": BOUNDARY_HANDOFF_SCHEMA,
+            "action": action,
+            "stop_boundary": stop_boundary,
+            "required_actor": "workflow_agent",
+            "blocking_reason": (
+                "the live first driver action no longer matches the queued plan; "
+                "no mutation was attempted"
+            ),
+            "evidence_refs": [
+                f"runner.stop_reason:{STOP_STALE_PLAN}",
+                "runner.plan_binding:first_step_only",
+            ],
+            "allowed_scope": ["read-only"],
+            "forbidden_scope": [
+                "execute the stale queued command",
+                "closed-loop lifecycle mutation",
+                "publication acceptance claim",
+            ],
+            "closeout_checks": [
+                "rebuild the live fixture queue",
+                "rerun live /fig_drive",
+            ],
+            "continuation_guidance": {
+                "rerun_live_status_first": True,
+                "rerun_live_driver_first": True,
+                "note": "Discard the stale queue row; do not replay its command.",
+            },
+            "publication_acceptance": "not_claimed",
+        }
     handoff = {
         "schema": BOUNDARY_HANDOFF_SCHEMA,
         "action": action,
@@ -611,6 +643,36 @@ def _result_payload(
     return payload
 
 
+def _first_step_plan_binding(
+    *,
+    planned_action: str,
+    planned_safe_command: str,
+    live_summary: dict[str, Any],
+) -> dict[str, Any]:
+    live_action = live_summary.get("action")
+    live_safe_command = live_summary.get("safe_command")
+    live_stop_boundary = live_summary.get("stop_boundary")
+    matched = (
+        live_action == planned_action
+        and live_safe_command == planned_safe_command
+        and live_stop_boundary is None
+    )
+    return {
+        "scope": "first_step_only",
+        "state": "matched" if matched else "stale",
+        "planned": {
+            "action": planned_action,
+            "safe_command": planned_safe_command,
+        },
+        "live": {
+            "action": live_action,
+            "safe_command": live_safe_command,
+            "stop_boundary": live_stop_boundary,
+        },
+        "mutation_prevented": not matched,
+    }
+
+
 def run_workflow(
     name: str,
     *,
@@ -627,6 +689,8 @@ def run_workflow(
     closed_loop_authorization: Path | None = None,
     closed_loop_development_verdict: Path | None = None,
     closed_loop_attempt_manifest: Path | None = None,
+    expected_first_action: str | None = None,
+    expected_first_safe_command: str | None = None,
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
     if mode == "final":
@@ -635,6 +699,39 @@ def run_workflow(
         raise ValueError(f"unsupported mode: {mode}")
     if max_steps < 1:
         raise ValueError("max_steps must be >= 1")
+    first_step_expectation_supplied = (
+        expected_first_action is not None,
+        expected_first_safe_command is not None,
+    )
+    if any(first_step_expectation_supplied) and not all(first_step_expectation_supplied):
+        raise ValueError(
+            "first-step action and command expectations must be supplied together"
+        )
+    lifecycle_inputs = (
+        closed_loop_state,
+        closed_loop_response,
+        closed_loop_repair_response,
+        closed_loop_repair_packet,
+        closed_loop_candidate_response,
+        closed_loop_materialization_preview,
+        closed_loop_authorization,
+        closed_loop_development_verdict,
+        closed_loop_attempt_manifest,
+    )
+    if all(first_step_expectation_supplied) and any(
+        value is not None for value in lifecycle_inputs
+    ):
+        raise ValueError(
+            "first-step expectation is mutually exclusive with closed-loop "
+            "lifecycle inputs"
+        )
+    if all(first_step_expectation_supplied) and (
+        not isinstance(expected_first_action, str)
+        or not expected_first_action
+        or not isinstance(expected_first_safe_command, str)
+        or not expected_first_safe_command
+    ):
+        raise ValueError("first-step action and command expectations must be non-empty")
     if closed_loop_attempt_manifest is not None:
         if any(
             value is not None
@@ -739,6 +836,7 @@ def run_workflow(
             "development verdict are mutually exclusive"
         )
     initial_summary: dict[str, Any] | None = None
+    plan_binding: dict[str, Any] | None = None
     automatic_state_sha256: str | None = None
     if closed_loop_state is None:
         initial_summary = _driver_summary(
@@ -747,6 +845,35 @@ def run_workflow(
             goal=goal,
             repo_root=repo_root,
         )
+        if all(first_step_expectation_supplied):
+            assert expected_first_action is not None
+            assert expected_first_safe_command is not None
+            plan_binding = _first_step_plan_binding(
+                planned_action=expected_first_action,
+                planned_safe_command=expected_first_safe_command,
+                live_summary=initial_summary,
+            )
+            if plan_binding["state"] == "stale":
+                step = _step_payload(
+                    index=1,
+                    summary=initial_summary,
+                    would_execute=False,
+                    executed=False,
+                    stop_reason=STOP_STALE_PLAN,
+                )
+                payload = _result_payload(
+                    name=name,
+                    mode=mode,
+                    goal=goal,
+                    execute=execute,
+                    max_steps=max_steps,
+                    steps=[step],
+                    final_summary=initial_summary,
+                    final_stop_reason=STOP_STALE_PLAN,
+                    executed_count=0,
+                )
+                payload["plan_binding"] = plan_binding
+                return payload
         if closed_loop_development_verdict is not None:
             automatic_state = _automatic_visually_re_reviewed_state(
                 initial_summary,
@@ -1392,7 +1519,7 @@ def run_workflow(
 
     if final_summary is None:
         raise ValueError("driver did not produce a summary")
-    return _result_payload(
+    payload = _result_payload(
         name=name,
         mode=mode,
         goal=goal,
@@ -1403,6 +1530,9 @@ def run_workflow(
         final_stop_reason=final_stop_reason,
         executed_count=executed_count,
     )
+    if plan_binding is not None:
+        payload["plan_binding"] = plan_binding
+    return payload
 
 
 def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
