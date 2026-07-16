@@ -236,6 +236,10 @@ post-repair evidence.
 - [x] Wire `machine_repaired -> post_review_requested` through default `run`:
   plan-only writes nothing; execute creates the bound request/crops/state and
   stops before host invocation.
+- [x] Consume an explicitly supplied post-review response against the canonical
+  projected `post_review_requested` path and hash, then revalidate the canonical
+  current leaf under the publication lock; do not discover responses or invoke
+  the host automatically.
 - [ ] Wire remaining safe deterministic transitions through default `run` one
   at a time without synthesizing host, scientific, or human evidence.
 - [x] Stop at host-vision, scientific, human authorization, accepted/golden,
@@ -317,8 +321,10 @@ ambiguous attribution, or missing references can emit only a named
 
 Default `run` now advances one validated `machine_repaired` state to a bound
 `post_review_requested` state and stops at `host_llm`; it does not invoke the
-host or discover a response automatically. The explicit inbound R3 path
-consumes a receipt-bound external host response. The maintained-Fig3
+host or discover a response automatically. When the operator explicitly
+supplies that receipt-bound response, the same default run resolves the unique
+current `post_review_requested` state and consumes the response without a
+second state-path selection. The maintained-Fig3
 controlled-fault replay is mechanism evidence only, not an actual defect or
 publication verdict; prospective real-defect proof and the remaining R4-R5
 work are still pending.

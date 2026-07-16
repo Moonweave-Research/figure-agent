@@ -224,9 +224,12 @@ def _would_execute(summary: dict[str, Any], *, name: str, goal: str, repo_root: 
     return True
 
 
-def _automatic_machine_repaired_state(
+def _projected_current_state(
     summary: dict[str, Any],
     *,
+    lifecycle_state: str,
+    disposition: str,
+    required_actor: str,
     repo_root: Path,
 ) -> tuple[Path, str] | None:
     if (
@@ -240,9 +243,9 @@ def _automatic_machine_repaired_state(
     if (
         projection.get("schema") != "figure-agent.closed-loop-current-state.v1"
         or projection.get("resolution") != "current"
-        or projection.get("state") != "machine_repaired"
-        or projection.get("disposition") != "continue"
-        or projection.get("required_actor") != "workflow_agent"
+        or projection.get("state") != lifecycle_state
+        or projection.get("disposition") != disposition
+        or projection.get("required_actor") != required_actor
         or projection.get("terminal") is not False
         or projection.get("publication_acceptance") != "not_claimed"
     ):
@@ -268,6 +271,20 @@ def _automatic_machine_repaired_state(
     except ValueError as exc:
         raise ValueError("closed_loop_current_state_path_unsafe") from exc
     return state_path, state_sha256
+
+
+def _automatic_machine_repaired_state(
+    summary: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> tuple[Path, str] | None:
+    return _projected_current_state(
+        summary,
+        lifecycle_state="machine_repaired",
+        disposition="continue",
+        required_actor="workflow_agent",
+        repo_root=repo_root,
+    )
 
 
 def _boundary_stop_reason(summary: dict[str, Any]) -> str:
@@ -552,19 +569,31 @@ def run_workflow(
         raise ValueError("max_steps must be >= 1")
     initial_summary: dict[str, Any] | None = None
     automatic_state_sha256: str | None = None
-    if closed_loop_response is not None and closed_loop_state is None:
-        raise ValueError("closed-loop-response requires --closed-loop-state")
-    if closed_loop_state is None and closed_loop_response is None:
+    if closed_loop_state is None:
         initial_summary = _driver_summary(
             name,
             mode=mode,
             goal=goal,
             repo_root=repo_root,
         )
-        automatic_state = _automatic_machine_repaired_state(
-            initial_summary,
-            repo_root=repo_root,
-        )
+        if closed_loop_response is None:
+            automatic_state = _automatic_machine_repaired_state(
+                initial_summary,
+                repo_root=repo_root,
+            )
+        else:
+            automatic_state = _projected_current_state(
+                initial_summary,
+                lifecycle_state="post_review_requested",
+                disposition="human_review_required",
+                required_actor="host_llm",
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-response requires current "
+                    "post_review_requested state or --closed-loop-state"
+                )
         if automatic_state is not None:
             closed_loop_state, automatic_state_sha256 = automatic_state
     if closed_loop_state is not None and closed_loop_response is not None:
@@ -575,6 +604,7 @@ def run_workflow(
                 response_path=closed_loop_response,
                 execute=execute,
                 workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
             )
         except closed_loop_post_review_response.ClosedLoopPostReviewError as exc:
             raise ValueError(str(exc)) from exc

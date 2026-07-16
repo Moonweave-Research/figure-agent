@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+from contextlib import contextmanager
 from pathlib import Path
 
 import authoring_repair_finalize
 import authoring_repair_packet
 import closed_loop_attempt_state
+import closed_loop_post_review_response
 import critique_zoom_crops
 import fig_run
 import post_repair_visual_review
@@ -1365,6 +1367,196 @@ def test_fig_run_closed_loop_inbound_plan_only_is_truthful_and_write_free(
     assert after == before
 
 
+def test_default_fig_run_response_only_plan_binds_current_state_without_writes(
+    tmp_path: Path,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    state, state_path, request, _ = _published_post_review_request(workspace, paths)
+    response_path = _write_closed_loop_response(workspace, state_path, request)
+    before = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=False,
+        closed_loop_response=response_path,
+        repo_root=workspace,
+    )
+
+    after = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+    assert payload["final_stop_reason"] == "plan_only"
+    assert payload["closed_loop"]["input_state_sha256"] == state["state_sha256"]
+    assert payload["closed_loop"]["next_state"] == "visually_re_reviewed"
+    assert payload["boundary_handoff"]["required_actor"] == "human_reviewer"
+    assert after == before
+
+
+def test_default_fig_run_response_only_cli_plan_writes_no_journal(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    state, state_path, request, _ = _published_post_review_request(workspace, paths)
+    response_path = _write_closed_loop_response(workspace, state_path, request)
+    runs_root = tmp_path / "runs"
+
+    result = fig_run.main(
+        [
+            "demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--closed-loop-response",
+            str(response_path),
+            "--record",
+            "--runs-root",
+            str(runs_root),
+            "--json",
+        ],
+        repo_root=workspace,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert result == 0
+    assert payload["final_stop_reason"] == "plan_only"
+    assert payload["closed_loop"]["input_state_sha256"] == state["state_sha256"]
+    assert not runs_root.exists()
+
+
+def test_default_fig_run_response_only_execute_advances_without_host_or_shell(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    state, state_path, request, _ = _published_post_review_request(workspace, paths)
+    response_path = _write_closed_loop_response(workspace, state_path, request)
+
+    def forbidden_host_or_shell(*args: object, **kwargs: object) -> object:
+        raise AssertionError("response consumption must not invoke shell or host")
+
+    monkeypatch.setattr(fig_run, "_run_command", forbidden_host_or_shell)
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        closed_loop_response=response_path,
+        repo_root=workspace,
+    )
+
+    next_state = json.loads(
+        (workspace / payload["closed_loop"]["next_state_path"]).read_text()
+    )
+    assert payload["final_stop_reason"] == "human_review_boundary"
+    assert payload["closed_loop"]["input_state_sha256"] == state["state_sha256"]
+    assert next_state["state"] == "visually_re_reviewed"
+    assert next_state["required_actor"] == "human_reviewer"
+    assert next_state["publication_acceptance"] == "not_claimed"
+
+
+def test_default_fig_run_response_only_rejects_state_that_stops_being_current(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    state, state_path, request, _ = _published_post_review_request(workspace, paths)
+    response_path = _write_closed_loop_response(workspace, state_path, request)
+    competing_state = closed_loop_attempt_state.transition_state(
+        state,
+        next_state="repair_required",
+        actor="competing-host",
+        actor_role="host_llm",
+        evidence={"repair_failure_record": response_path},
+        workspace_root=workspace,
+        previous_state_path=state_path,
+    )
+    competing_state_path = closed_loop_attempt_state.state_path(
+        competing_state,
+        workspace_root=workspace,
+    )
+
+    @contextmanager
+    def advance_before_lock(*args: object, **kwargs: object):
+        closed_loop_attempt_state.publish_state(
+            competing_state,
+            workspace_root=workspace,
+        )
+        yield
+
+    monkeypatch.setattr(
+        closed_loop_post_review_response.repair_transaction,
+        "exclusive_lock",
+        advance_before_lock,
+    )
+
+    with pytest.raises(ValueError, match="canonical_current_state_drift"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_response=response_path,
+            repo_root=workspace,
+        )
+
+    receipt_path = state_path.parent / "post-repair-review" / "review-receipt.json"
+    visually_reviewed_path = state_path.parent / "state-002-visually_re_reviewed.json"
+    assert competing_state_path.is_file()
+    assert not receipt_path.exists()
+    assert not visually_reviewed_path.exists()
+
+
+@pytest.mark.parametrize("execute", [False, True])
+def test_default_fig_run_response_only_rejects_projected_hash_mismatch_without_writes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    execute: bool,
+) -> None:
+    workspace, paths = _fixture(tmp_path)
+    _, state_path, request, _ = _published_post_review_request(workspace, paths)
+    response_path = _write_closed_loop_response(workspace, state_path, request)
+    summary = fig_run._driver_summary(
+        "demo",
+        mode="review",
+        goal="close loop",
+        repo_root=workspace,
+    )
+    assert summary["closed_loop_attempt"]["state"] == "post_review_requested"
+    summary["closed_loop_attempt"]["state_sha256"] = "sha256:" + "0" * 64
+    monkeypatch.setattr(fig_run, "_driver_summary", lambda *args, **kwargs: summary)
+    before = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+
+    with pytest.raises(ValueError, match="projected_state_hash_mismatch"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="close loop",
+            execute=execute,
+            closed_loop_response=response_path,
+            repo_root=workspace,
+        )
+
+    after = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+    assert after == before
+    assert not (state_path.parent / "post-repair-review" / "review-receipt.json").exists()
+
+
 def test_fig_run_closed_loop_inbound_clean_publishes_human_review_state(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1598,9 +1790,11 @@ def test_fig_run_closed_loop_inbound_rejects_response_attempt_splice(
         )
 
 
-def test_fig_run_closed_loop_cli_requires_state_for_response(
+def test_fig_run_closed_loop_response_requires_current_request_state_or_explicit_state(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    workspace, paths = _fixture(tmp_path)
+    _machine_repaired_state(workspace, paths)
     result = fig_run.main(
         [
             "demo",
@@ -1612,11 +1806,14 @@ def test_fig_run_closed_loop_cli_requires_state_for_response(
             "response.json",
             "--json",
         ],
-        repo_root=tmp_path,
+        repo_root=workspace,
     )
 
     assert result == 2
-    assert "closed-loop-response requires --closed-loop-state" in capsys.readouterr().err
+    assert (
+        "closed-loop-response requires current post_review_requested state "
+        "or --closed-loop-state"
+    ) in capsys.readouterr().err
 
 
 def test_fig_run_closed_loop_inbound_recovers_identical_receipt_after_state_failure(

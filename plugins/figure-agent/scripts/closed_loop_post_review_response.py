@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import closed_loop_attempt_state
+import closed_loop_current_state
 import closed_loop_post_review_authority as authority
 import post_repair_visual_review
 import repair_transaction
@@ -251,6 +252,7 @@ def run_inbound_response(
     response_path: Path,
     execute: bool,
     workspace_root: Path,
+    expected_state_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Validate an external response and optionally publish the next state."""
     root = Path(os.path.abspath(workspace_root))
@@ -259,6 +261,11 @@ def run_inbound_response(
         fixture=fixture,
         state_path=state_path,
     )
+    if (
+        expected_state_sha256 is not None
+        and state["state_sha256"] != expected_state_sha256
+    ):
+        raise ClosedLoopPostReviewError("closed_loop_projected_state_hash_mismatch")
     if state["state"] != "post_review_requested":
         raise ClosedLoopPostReviewError("closed_loop_state_not_post_review_requested")
     attempt_root = published_state_path.parent
@@ -333,6 +340,20 @@ def run_inbound_response(
             attempt_root / ".closed-loop-post-review-response.lock",
             owner="closed_loop_post_review_response",
         ):
+            if expected_state_sha256 is not None:
+                projection = closed_loop_current_state.resolve_current_attempt(
+                    root,
+                    fixture,
+                )
+                expected_path = published_state_path.relative_to(root).as_posix()
+                if (
+                    projection.get("resolution") != "current"
+                    or projection.get("path") != expected_path
+                    or projection.get("state_sha256") != expected_state_sha256
+                ):
+                    raise ClosedLoopPostReviewError(
+                        "closed_loop_canonical_current_state_drift"
+                    )
             current_state, current_state_path = authority.load_published_state(
                 workspace_root=root,
                 fixture=fixture,
