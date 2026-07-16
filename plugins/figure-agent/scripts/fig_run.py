@@ -1716,7 +1716,7 @@ def run_workflow(
                 _step_payload(
                     index=index,
                     summary=summary,
-                    would_execute=False,
+                    would_execute=True,
                     executed=False,
                     stop_reason=STOP_ADMISSION_BUSY,
                 )

@@ -348,6 +348,8 @@ def test_execute_stops_retryably_when_fixture_admission_lease_is_busy(
     assert commands == []
     assert payload["executed_count"] == 0
     assert payload["final_stop_reason"] == fig_run.STOP_ADMISSION_BUSY
+    assert payload["steps"][0]["would_execute"] is True
+    assert payload["steps"][0]["executed"] is False
     assert payload["steps"][0]["stop_reason"] == fig_run.STOP_ADMISSION_BUSY
     assert payload["boundary_handoff"]["required_actor"] == "workflow_agent"
     assert payload["boundary_handoff"]["allowed_scope"] == ["read-only"]
