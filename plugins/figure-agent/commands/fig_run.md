@@ -29,6 +29,7 @@ The runner never discovers a manifest beside a render.
 Plan-only validates the manifest and reports the exact proposed
 `authored_rendered` state path without writing. `--execute` revalidates under
 the shared transition lock and publishes that one root state, then stops.
+Admission invokes neither host nor human actor.
 Existing current attempts of every disposition are rejected; an identical
 concurrent publication is recovered idempotently, while a conflicting one is
 rejected. Admission is lifecycle provenance only: it does not create critique,
