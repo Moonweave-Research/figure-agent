@@ -10,6 +10,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import closed_loop_attempt_state  # noqa: E402
 import fig_driver  # noqa: E402
 import fig_queue  # noqa: E402
 import fig_run  # noqa: E402
@@ -47,6 +48,13 @@ def _executed_run(
         return _planned_run(item) | {
             "would_execute": False,
             "stop_reason": "invalid_fixture",
+        }
+    try:
+        closed_loop_attempt_state.validate_workspace_fixture(repo_root, fixture)
+    except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+        return _planned_run(item) | {
+            "would_execute": False,
+            "stop_reason": str(exc),
         }
     result = fig_run.run_workflow(
         fixture,

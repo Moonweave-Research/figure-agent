@@ -32,6 +32,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import check_visual_clash_budget as warning_budget_mod  # noqa: E402
+import closed_loop_attempt_state  # noqa: E402
 import fig_driver_checkpoint as checkpoint_mod  # noqa: E402
 import fig_driver_closeout as closeout_mod  # noqa: E402
 import fig_driver_commands as command_mod  # noqa: E402
@@ -609,7 +610,9 @@ def build_driver_summary(
     if mode not in MODES:
         raise ValueError(f"unsupported mode: {mode}")
     fixture_identity.validate_fixture_name(name)
-    example_dir = repo_root / "examples" / name
+    example_dir = closed_loop_attempt_state.validate_workspace_fixture(
+        repo_root, name, require_directory=False
+    )
     status = _status_for(example_dir)
     workspace_warnings = _workspace_warnings(repo_root)
     loop_checkpoint = (

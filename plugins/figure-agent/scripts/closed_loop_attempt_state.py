@@ -229,7 +229,10 @@ def _file_sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _fixture_root(workspace_root: Path, fixture: str) -> Path:
+def validate_workspace_fixture(
+    workspace_root: Path, fixture: str, *, require_directory: bool = True
+) -> Path:
+    """Return a real fixture directory without traversing workspace symlinks."""
     if (
         not isinstance(fixture, str)
         or not fixture
@@ -243,9 +246,14 @@ def _fixture_root(workspace_root: Path, fixture: str) -> Path:
     fixture_root = examples / fixture
     if examples.is_symlink() or fixture_root.is_symlink():
         raise ClosedLoopAttemptStateError("fixture_symlink")
-    if not fixture_root.is_dir():
+    if require_directory and not fixture_root.is_dir():
         raise ClosedLoopAttemptStateError("fixture_missing")
     return fixture_root
+
+
+def _fixture_root(workspace_root: Path, fixture: str) -> Path:
+    """Backward-compatible internal alias for the shared fixture boundary."""
+    return validate_workspace_fixture(workspace_root, fixture)
 
 
 def validate_legacy_runs_root(workspace_root: Path, runs_root: Path) -> Path:

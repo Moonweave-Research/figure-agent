@@ -150,6 +150,8 @@ def test_plan_only_run_preserves_command_plan_evidence_contract(
 def test_execute_delegates_each_planned_fixture_to_fig_run(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    for name in ("alpha", "beta"):
+        (tmp_path / "examples" / name).mkdir(parents=True)
     monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
     calls: list[tuple[str, bool, int]] = []
 
@@ -194,6 +196,7 @@ def test_execute_delegates_each_planned_fixture_to_fig_run(
 def test_execute_respects_max_fixtures(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    (tmp_path / "examples" / "alpha").mkdir(parents=True)
     monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
     calls: list[str] = []
 
@@ -224,6 +227,57 @@ def test_execute_respects_max_fixtures(
     assert payload["summary"]["attempted"] == 1
     assert payload["summary"]["planned_executable"] == 2
     assert payload["summary"]["unattempted_executable"] == 1
+
+
+def test_execute_rejects_symlink_fixture_before_delegating_to_fig_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    examples = tmp_path / "examples"
+    examples.mkdir()
+    external = tmp_path / "external"
+    external.mkdir()
+    (external / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
+    (examples / "demo").symlink_to(external, target_is_directory=True)
+    queue = _queue()
+    queue["command_plan"]["executable"] = [
+        {
+            "fixture": "demo",
+            "action": "run_compile",
+            "safe_command": "fig-agent compile demo",
+            "required_actor": "workflow_agent",
+        }
+    ]
+    queue["command_plan"]["executable_count"] = 1
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **_kwargs: queue)
+    monkeypatch.setattr(
+        fig_queue_run.fig_run,
+        "run_workflow",
+        lambda *_args, **_kwargs: pytest.fail("symlink fixture reached fig_run"),
+    )
+
+    payload = fig_queue_run.run_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        execute=True,
+        max_steps=2,
+        max_fixtures=1,
+        fixtures=None,
+        filters={},
+    )
+
+    assert payload["runs"] == [
+        {
+            "fixture": "demo",
+            "action": "run_compile",
+            "safe_command": "fig-agent compile demo",
+            "would_execute": False,
+            "executed": False,
+            "result": None,
+            "required_actor": "workflow_agent",
+            "stop_reason": "fixture_symlink",
+        }
+    ]
 
 
 def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys) -> None:
@@ -518,6 +572,50 @@ def test_wrapper_queue_run_from_parent_uses_plugin_examples() -> None:
     payload = json.loads(result.stdout)
     assert payload["queue"]["unfiltered_total"] > 0
     assert payload["queue"]["summary"]["total"] > 0
+
+
+@pytest.mark.parametrize(
+    ("command", "expected_returncode"),
+    (
+        (("drive", "demo", "--mode", "review", "--goal", "triage", "--dry-run", "--json"), 2),
+        (("queue", "demo", "--mode", "review", "--goal", "triage", "--json"), 0),
+        (("queue-run", "demo", "--mode", "review", "--goal", "triage", "--execute", "--json"), 0),
+    ),
+)
+def test_public_wrapper_rejects_workspace_symlink_fixture_without_external_mutation(
+    tmp_path: Path, command: tuple[str, ...], expected_returncode: int
+) -> None:
+    workspace = tmp_path / "workspace"
+    examples = workspace / "examples"
+    examples.mkdir(parents=True)
+    external = tmp_path / "external"
+    external.mkdir()
+    spec = external / "spec.yaml"
+    spec.write_text("name: demo\n", encoding="utf-8")
+    (examples / "demo").symlink_to(external, target_is_directory=True)
+    before = {path.relative_to(external): path.read_bytes() for path in external.iterdir()}
+    env = os.environ.copy()
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(Path(__file__).resolve().parents[1])
+
+    result = subprocess.run(
+        [str(Path(__file__).resolve().parents[1] / "bin" / "fig-agent"), *command],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == expected_returncode, result.stderr + result.stdout
+    assert {path.relative_to(external): path.read_bytes() for path in external.iterdir()} == before
+    if command[0] == "drive":
+        assert "fixture_symlink" in result.stderr
+        assert result.stdout == ""
+    else:
+        payload = json.loads(result.stdout)
+        queue_payload = payload["queue"] if command[0] == "queue-run" else payload
+        assert queue_payload["summary"]["errors"] == 1
 
 
 def test_queue_run_filter_surface_matches_fig_queue() -> None:

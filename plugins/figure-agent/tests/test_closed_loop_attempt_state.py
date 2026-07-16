@@ -98,6 +98,42 @@ def _workspace(tmp_path: Path) -> tuple[Path, Path]:
     return workspace, render
 
 
+@pytest.mark.parametrize("link_target", ("absolute", "relative"))
+def test_validate_workspace_fixture_rejects_symlinked_fixture_before_reads(
+    tmp_path: Path, link_target: str
+) -> None:
+    workspace = tmp_path / "workspace"
+    examples = workspace / "examples"
+    examples.mkdir(parents=True)
+    external = tmp_path / "external-fixture"
+    external.mkdir()
+    (external / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
+    target = external if link_target == "absolute" else Path("../../external-fixture")
+    (examples / "demo").symlink_to(target, target_is_directory=True)
+
+    with pytest.raises(
+        closed_loop_attempt_state.ClosedLoopAttemptStateError,
+        match="fixture_symlink",
+    ):
+        closed_loop_attempt_state.validate_workspace_fixture(workspace, "demo")
+
+
+def test_validate_workspace_fixture_rejects_symlinked_examples_component(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    external_examples = tmp_path / "external-examples"
+    fixture = external_examples / "demo"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
+    (workspace / "examples").symlink_to(external_examples, target_is_directory=True)
+
+    with pytest.raises(
+        closed_loop_attempt_state.ClosedLoopAttemptStateError,
+        match="fixture_symlink",
+    ):
+        closed_loop_attempt_state.validate_workspace_fixture(workspace, "demo")
+
+
 def _artifact(render: Path, name: str) -> Path:
     path = render.parents[1] / name
     path.write_text(name + "\n", encoding="utf-8")

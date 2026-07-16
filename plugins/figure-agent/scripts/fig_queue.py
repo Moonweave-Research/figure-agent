@@ -12,6 +12,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import closed_loop_attempt_state  # noqa: E402
 import design_direction_packet  # noqa: E402
 import fig_driver  # noqa: E402
 import runtime_paths  # noqa: E402
@@ -155,12 +156,12 @@ def _fixture_names(repo_root: Path, fixtures: list[str] | None) -> list[str]:
     if fixtures:
         return list(fixtures)
     examples_dir = repo_root / "examples"
-    if not examples_dir.is_dir():
+    if examples_dir.is_symlink() or not examples_dir.is_dir():
         return []
     return sorted(
         path.name
         for path in examples_dir.iterdir()
-        if path.is_dir() and (path / "spec.yaml").is_file()
+        if path.is_symlink() or (path.is_dir() and (path / "spec.yaml").is_file())
     )
 
 
@@ -2200,14 +2201,21 @@ def build_queue(
                 )
             )
             continue
-        example_dir = repo_root / "examples" / name
-        if not example_dir.is_dir():
+        try:
+            closed_loop_attempt_state.validate_workspace_fixture(repo_root, name)
+        except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+            error_code = str(exc)
+            stop_boundary = "fixture_not_found" if error_code == "fixture_missing" else error_code
             rows.append(
                 _error_row(
                     name,
                     mode=mode,
-                    stop_boundary="fixture_not_found",
-                    error=f"examples/{name}/ not found",
+                    stop_boundary=stop_boundary,
+                    error=(
+                        f"examples/{name}/ not found"
+                        if error_code == "fixture_missing"
+                        else stop_boundary
+                    ),
                 )
             )
             continue

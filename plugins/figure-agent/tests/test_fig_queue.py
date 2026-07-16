@@ -76,6 +76,69 @@ def _write_fixture(root: Path, name: str) -> None:
     (fixture / "spec.yaml").write_text(f"name: {name}\npanels: []\n", encoding="utf-8")
 
 
+def test_queue_rejects_explicit_symlink_fixture_before_driver_invocation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    examples = tmp_path / "examples"
+    examples.mkdir()
+    external = tmp_path / "external"
+    external.mkdir()
+    (external / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
+    (examples / "demo").symlink_to(external, target_is_directory=True)
+    monkeypatch.setattr(
+        fig_queue.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: pytest.fail("symlink fixture reached driver"),
+    )
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path, mode="review", goal="triage", fixtures=["demo"]
+    )
+
+    assert queue["rows"] == [
+        {
+            **fig_queue._error_row(
+                "demo",
+                mode="review",
+                stop_boundary="fixture_symlink",
+                error="fixture_symlink",
+            )
+        }
+    ]
+
+
+def test_queue_implicit_discovery_keeps_symlink_entry_as_controlled_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "real")
+    external = tmp_path / "external"
+    external.mkdir()
+    (external / "spec.yaml").write_text("name: linked\n", encoding="utf-8")
+    (tmp_path / "examples" / "linked").symlink_to(external, target_is_directory=True)
+    seen: list[str] = []
+
+    def fake_driver(name: str, **_kwargs: Any) -> dict[str, Any]:
+        seen.append(name)
+        return _summary(
+            name,
+            action=fig_queue.fig_driver.ACTION_COMPLETE,
+            stop_boundary=None,
+            first_blocker="none",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path, mode="review", goal="triage", fixtures=None
+    )
+
+    assert seen == ["real"]
+    assert [(row["fixture"], row["stop_boundary"]) for row in queue["rows"]] == [
+        ("linked", "fixture_symlink"),
+        ("real", None),
+    ]
+
+
 def test_queue_surfaces_missing_style_benchmark_pack_non_fatal(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
