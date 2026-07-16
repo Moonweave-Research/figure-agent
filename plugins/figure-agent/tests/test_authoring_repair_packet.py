@@ -12,7 +12,9 @@ import authoring_repair_finalize
 import authoring_repair_packet
 import authoring_repair_rollback
 import closed_loop_attempt_state
+import closed_loop_current_state
 import closed_loop_machine_repair
+import closed_loop_repair_authorization
 import fig_run
 import pytest
 import repair_transaction
@@ -486,9 +488,9 @@ def _authorization_artifact(
     return path
 
 
-def _repair_authorized_attempt(
+def _repair_candidate_ready_attempt(
     tmp_path: Path,
-) -> tuple[Path, Path, Path, Path, Path]:
+) -> tuple[Path, Path, Path, Path, Path, Path]:
     workspace, packet, response, authorization, output, receipt = (
         _authorized_materialization(tmp_path)
     )
@@ -561,11 +563,6 @@ def _repair_authorized_attempt(
                 "materialization_preview": preview_path,
             },
         ),
-        (
-            "repair_authorized",
-            "human_repair_authorizer",
-            {"human_authorization": authorization_path},
-        ),
     ):
         state = closed_loop_attempt_state.transition_state(
             state,
@@ -580,6 +577,29 @@ def _repair_authorized_attempt(
             state,
             workspace_root=workspace,
         )
+    return workspace, state_path, response_path, authorization_path, output, receipt
+
+
+def _repair_authorized_attempt(
+    tmp_path: Path,
+) -> tuple[Path, Path, Path, Path, Path]:
+    workspace, state_path, response_path, authorization_path, output, receipt = (
+        _repair_candidate_ready_attempt(tmp_path)
+    )
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state = closed_loop_attempt_state.transition_state(
+        state,
+        next_state="repair_authorized",
+        actor="test",
+        actor_role="human_repair_authorizer",
+        evidence={"human_authorization": authorization_path},
+        workspace_root=workspace,
+        previous_state_path=state_path,
+    )
+    state_path = closed_loop_attempt_state.publish_state(
+        state,
+        workspace_root=workspace,
+    )
     return workspace, state_path, response_path, output, receipt
 
 
@@ -3390,6 +3410,368 @@ def test_closed_loop_machine_repair_plan_only_is_write_free(tmp_path: Path) -> N
     assert not output.exists()
     assert not receipt.exists()
     assert after == before
+
+
+def test_fig_run_authorization_plan_only_is_hash_bound_and_write_free(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, _response_path, authorization_path, output, receipt = (
+        _repair_candidate_ready_attempt(tmp_path)
+    )
+    before = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="authorize the explicit repair",
+        execute=False,
+        closed_loop_state=state_path,
+        closed_loop_authorization=authorization_path,
+        repo_root=workspace,
+    )
+
+    after = {
+        path.relative_to(workspace): path.read_bytes()
+        for path in workspace.rglob("*")
+        if path.is_file()
+    }
+    assert payload["final_stop_reason"] == "plan_only"
+    assert payload["closed_loop"]["input_state"] == "repair_candidate_ready"
+    assert payload["closed_loop"]["next_state"] == "repair_authorized"
+    assert payload["closed_loop"]["created"] is False
+    assert payload["boundary_handoff"]["required_actor"] == "workflow_agent"
+    assert payload["boundary_handoff"]["publication_acceptance"] == "not_claimed"
+    assert not output.exists()
+    assert not receipt.exists()
+    assert after == before
+
+
+def test_fig_run_authorization_execute_publishes_canonical_authorized_state(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, _response_path, authorization_path, output, receipt = (
+        _repair_candidate_ready_attempt(tmp_path)
+    )
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="authorize the explicit repair",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_authorization=authorization_path,
+        repo_root=workspace,
+    )
+
+    next_state_path = workspace / payload["closed_loop"]["next_state_path"]
+    next_state = json.loads(next_state_path.read_text(encoding="utf-8"))
+    projection = closed_loop_current_state.resolve_current_attempt(workspace, "demo")
+    assert payload["final_stop_reason"] == "repair_authorized"
+    assert payload["executed_count"] == 1
+    assert next_state["state"] == "repair_authorized"
+    assert next_state["actor"] == "named-reviewer"
+    assert next_state["actor_role"] == "human_repair_authorizer"
+    assert next_state["required_actor"] == "workflow_agent"
+    assert next_state["publication_acceptance"] == "not_claimed"
+    assert next_state["evidence"] == [
+        {
+            "role": "human_authorization",
+            "path": authorization_path.relative_to(workspace).as_posix(),
+            "sha256": _sha256(authorization_path.read_bytes()),
+        }
+    ]
+    assert projection["path"] == next_state_path.relative_to(workspace).as_posix()
+    assert projection["state_sha256"] == next_state["state_sha256"]
+    assert not output.exists()
+    assert not receipt.exists()
+
+
+def test_default_fig_run_authorization_plan_binds_current_state_without_journal(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace, state_path, _response_path, authorization_path, output, receipt = (
+        _repair_candidate_ready_attempt(tmp_path)
+    )
+    current = json.loads(state_path.read_text(encoding="utf-8"))
+    runs_root = tmp_path / "runs"
+
+    result = fig_run.main(
+        [
+            "demo",
+            "--mode",
+            "review",
+            "--goal",
+            "authorize the explicit repair",
+            "--closed-loop-authorization",
+            str(authorization_path),
+            "--runs-root",
+            str(runs_root),
+            "--record",
+            "--json",
+        ],
+        repo_root=workspace,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert result == 0
+    assert payload["closed_loop"]["input_state_sha256"] == current["state_sha256"]
+    assert payload["closed_loop"]["next_state"] == "repair_authorized"
+    assert payload["closed_loop"]["created"] is False
+    assert not runs_root.exists()
+    assert not output.exists()
+    assert not receipt.exists()
+
+
+def test_fig_run_authorization_rejects_unbound_human_decision_without_writes(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, _response_path, authorization_path, output, receipt = (
+        _repair_candidate_ready_attempt(tmp_path)
+    )
+    authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+    authorization["authorized_preview_sha256"] = "sha256:" + "0" * 64
+    authorization_path.write_text(json.dumps(authorization), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="materialization_decision_preview_hash_mismatch"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="authorize the explicit repair",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_authorization=authorization_path,
+            repo_root=workspace,
+        )
+
+    assert not any(state_path.parent.glob("state-*-repair_authorized.json"))
+    assert not output.exists()
+    assert not receipt.exists()
+
+
+def test_fig_run_authorization_rejects_contradictory_human_decision_without_writes(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, _response_path, authorization_path, output, receipt = (
+        _repair_candidate_ready_attempt(tmp_path)
+    )
+    authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+    authorization["human_decision"] = "reject this exact additive repair candidate"
+    authorization_path.write_text(json.dumps(authorization), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="materialization_decision_not_approved"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="authorize the explicit repair",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_authorization=authorization_path,
+            repo_root=workspace,
+        )
+
+    assert not any(state_path.parent.glob("state-*-repair_authorized.json"))
+    assert not output.exists()
+    assert not receipt.exists()
+
+
+def test_fig_run_authorization_rejects_valid_input_replacement_under_lock(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, state_path, _response_path, authorization_path, output, receipt = (
+        _repair_candidate_ready_attempt(tmp_path)
+    )
+    original_lock = repair_transaction.recoverable_exclusive_lock
+
+    @contextmanager
+    def replace_after_lock(path: Path, *, owner: str):
+        with original_lock(path, owner=owner):
+            authorization = json.loads(
+                authorization_path.read_text(encoding="utf-8")
+            )
+            authorization["reviewer"] = "racing-reviewer"
+            authorization_path.write_text(json.dumps(authorization), encoding="utf-8")
+            yield
+
+    monkeypatch.setattr(
+        closed_loop_repair_authorization.repair_transaction,
+        "recoverable_exclusive_lock",
+        replace_after_lock,
+    )
+    with pytest.raises(ValueError, match="repair_authorization_inputs_drifted"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="authorize the explicit repair",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_authorization=authorization_path,
+            repo_root=workspace,
+        )
+
+    assert not any(state_path.parent.glob("state-*-repair_authorized.json"))
+    assert not output.exists()
+    assert not receipt.exists()
+
+
+def test_fig_run_authorization_rejects_input_drift_during_state_transition(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, state_path, _response_path, authorization_path, output, receipt = (
+        _repair_candidate_ready_attempt(tmp_path)
+    )
+    original_transition = closed_loop_attempt_state.transition_state
+
+    def drift_after_transition(*args: object, **kwargs: object) -> dict[str, object]:
+        next_state = original_transition(*args, **kwargs)
+        authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+        authorization["reviewer"] = "racing-reviewer"
+        authorization_path.write_text(json.dumps(authorization), encoding="utf-8")
+        return next_state
+
+    monkeypatch.setattr(
+        closed_loop_repair_authorization.closed_loop_attempt_state,
+        "transition_state",
+        drift_after_transition,
+    )
+    with pytest.raises(ValueError, match="evidence_hash_stale"):
+        fig_run.run_workflow(
+            "demo",
+            mode="review",
+            goal="authorize the explicit repair",
+            execute=True,
+            closed_loop_state=state_path,
+            closed_loop_authorization=authorization_path,
+            repo_root=workspace,
+        )
+
+    assert not any(state_path.parent.glob("state-*-repair_authorized.json"))
+    assert not output.exists()
+    assert not receipt.exists()
+
+
+def test_default_fig_run_never_discovers_adjacent_human_authorization(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, _response_path, authorization_path, output, receipt = (
+        _repair_candidate_ready_attempt(tmp_path)
+    )
+    assert authorization_path.is_file()
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="continue the lifecycle",
+        execute=True,
+        repo_root=workspace,
+    )
+
+    projection = closed_loop_current_state.resolve_current_attempt(workspace, "demo")
+    assert payload["executed_count"] == 0
+    assert payload["final_action"] == fig_run.fig_driver.ACTION_CLOSED_LOOP_HANDOFF_STOP
+    assert payload["boundary_handoff"]["required_actor"] == "human_repair_authorizer"
+    assert projection["state"] == "repair_candidate_ready"
+    assert projection["path"] == state_path.relative_to(workspace).as_posix()
+    assert not any(state_path.parent.glob("state-*-repair_authorized.json"))
+    assert not output.exists()
+    assert not receipt.exists()
+
+
+def test_default_fig_run_chains_explicit_authorization_into_explicit_repair(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, _state_path, response_path, authorization_path, output, receipt = (
+        _repair_candidate_ready_attempt(tmp_path)
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "REPO_ROOT",
+        _fake_strict_compiler(tmp_path, expected_workspace=workspace),
+    )
+
+    authorized = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="authorize the explicit repair",
+        execute=True,
+        closed_loop_authorization=authorization_path,
+        repo_root=workspace,
+    )
+    repaired = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="execute the explicit repair",
+        execute=True,
+        closed_loop_repair_response=response_path,
+        repo_root=workspace,
+    )
+
+    assert authorized["closed_loop"]["next_state"] == "repair_authorized"
+    assert repaired["closed_loop"]["input_state"] == "repair_authorized"
+    assert repaired["closed_loop"]["next_state"] == "machine_repaired"
+    assert repaired["closed_loop"]["publication_acceptance"] == "not_claimed"
+    assert output.is_file()
+    assert receipt.is_file()
+
+
+def test_fig_run_authorization_recovers_already_published_matching_state(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, _response_path, authorization_path, output, receipt = (
+        _repair_candidate_ready_attempt(tmp_path)
+    )
+    created = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="authorize the explicit repair",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_authorization=authorization_path,
+        repo_root=workspace,
+    )
+
+    recovered = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="authorize the explicit repair",
+        execute=True,
+        closed_loop_state=state_path,
+        closed_loop_authorization=authorization_path,
+        repo_root=workspace,
+    )
+    planned_recovery = fig_run.run_workflow(
+        "demo",
+        mode="review",
+        goal="inspect the explicit repair authorization",
+        execute=False,
+        closed_loop_state=state_path,
+        closed_loop_authorization=authorization_path,
+        repo_root=workspace,
+    )
+
+    assert recovered["final_stop_reason"] == "repair_authorized_recovered"
+    assert recovered["executed_count"] == 0
+    assert recovered["closed_loop"]["created"] is False
+    assert recovered["closed_loop"]["next_state_path"] == (
+        created["closed_loop"]["next_state_path"]
+    )
+    assert recovered["boundary_handoff"]["evidence_refs"][-1] == (
+        "closed_loop_state:" + created["closed_loop"]["next_state_path"]
+    )
+    assert planned_recovery["final_stop_reason"] == "repair_authorized_recovered"
+    assert planned_recovery["boundary_handoff"]["blocking_reason"] == (
+        "continue from the authorized repair candidate"
+    )
+    assert len(list(state_path.parent.glob("state-*-repair_authorized.json"))) == 1
+    assert not output.exists()
+    assert not receipt.exists()
 
 
 def test_closed_loop_machine_repair_executes_existing_verified_chain(

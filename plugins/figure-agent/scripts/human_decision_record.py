@@ -17,6 +17,7 @@ AUTHORING_REPAIR_PACKET_SCHEMAS = frozenset(
         "figure-agent.repair-execution-packet.v4",
     }
 )
+ADDITIVE_MATERIALIZATION_APPROVAL = "approve this exact additive repair candidate"
 
 DECISION_KINDS = frozenset(
     {
@@ -303,6 +304,8 @@ def validate_additive_materialization_authorization(
         raise HumanDecisionRecordError("materialization_decision_kind_invalid")
     if normalized["mutation_boundary"] != "additive_artifact_materialization_allowed":
         raise HumanDecisionRecordError("materialization_decision_boundary_invalid")
+    if normalized["human_decision"] != ADDITIVE_MATERIALIZATION_APPROVAL:
+        raise HumanDecisionRecordError("materialization_decision_not_approved")
     reviewer = _required_string(record, "reviewer")
     authorized_packet_sha256 = _required_string(record, "authorized_packet_sha256")
     authorized_output_path = _required_string(record, "authorized_output_path")

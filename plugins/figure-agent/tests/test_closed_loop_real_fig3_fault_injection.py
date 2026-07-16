@@ -80,7 +80,7 @@ def _authorization(
         "queue_run_id": "r3-real-fig3-controlled-fault-001",
         "decision_kind": "materialize_authoring_repair_candidate",
         "agent_recommendation": "Exercise the bounded regression gate only.",
-        "human_decision": "Authorize additive controlled-fault materialization.",
+        "human_decision": "approve this exact additive repair candidate",
         "human_note": "This does not accept the figure or publication quality.",
         "follow_up": {"implementation_slice": "R3 controlled-fault rollback proof"},
         "mutation_boundary": "additive_artifact_materialization_allowed",

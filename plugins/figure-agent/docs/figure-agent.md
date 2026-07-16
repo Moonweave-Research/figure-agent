@@ -226,6 +226,7 @@ reviewable; open the next slice only after recording stop conditions and evidenc
   success publishes `machine_repaired`; strict failure rolls back and publishes
   `repair_required`. Never discover a response, invoke a host, accept legacy
   packets implicitly, or claim publication acceptance.
+- [x] Consume explicit hash-bound human authorization only from canonical `repair_candidate_ready`; publish the named reviewer without inventing approval.
 - [ ] Wire remaining safe deterministic transitions through default `run` one
   at a time without synthesizing host, scientific, or human evidence.
 - [x] Stop at host-vision, scientific, human authorization, accepted/golden,
@@ -299,14 +300,13 @@ the same editable selector as the repair target. Missing semantic authority,
 ambiguous attribution, or missing references can emit only a named
 `human_attributor` handoff; they cannot create a repair binding or packet.
 
-Default `run` consumes an explicitly supplied, hash-bound repair response only
-against canonical `repair_authorized`. It reuses materialize, strict finalize,
-and rollback: success publishes `machine_repaired`; strict failure rolls back to
-`repair_required`; completed receipts recover interrupted state publication. It neither discovers responses,
-invokes a host, implicitly admits legacy packets, nor claims publication acceptance.
-It then advances validated `machine_repaired` to bound `post_review_requested` and
-stops at `host_llm`; an explicit receipt-bound response is resolved against the
-unique current state. Maintained-Fig3 controlled-fault replay is mechanism evidence,
+Default `run` consumes explicit hash-bound human authorization only at
+`repair_candidate_ready`, then an explicit repair response only at
+`repair_authorized`. Materialize/strict-finalize/rollback publishes
+`machine_repaired` or rolls back to `repair_required`; completed receipts recover
+state publication. It discovers no input, invokes no host, admits no legacy packet,
+and claims no publication acceptance. It then advances validated `machine_repaired`
+to bound `post_review_requested`, stops at `host_llm`, and binds any response to the unique current state. Maintained-Fig3 controlled-fault replay is mechanism evidence,
 not an actual defect or publication verdict; prospective proof and R4-R5 remain.
 
 Closed-loop handoffs use these contracts rather than another workflow shell:
