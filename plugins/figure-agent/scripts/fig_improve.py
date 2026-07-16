@@ -297,6 +297,8 @@ def run_improvement(
     candidate_iterations: int = 1,
     candidate_runner: CandidateRunner | None = None,
 ) -> dict[str, Any]:
+    if aggressive_candidates:
+        raise ValueError("aggressive_candidates is no longer supported")
     if max_loops < 1:
         raise ValueError("max_loops must be >= 1")
     if max_steps_per_loop < 1:
@@ -352,23 +354,6 @@ def run_improvement(
     }
     if ready_improvement is not None:
         payload["ready_improvement_summary"] = ready_improvement
-    if aggressive_candidates and _should_run_aggressive_candidates(
-        final_run,
-        stop_reason=final_stop_reason,
-        actor=final_actor,
-    ):
-        runner = candidate_runner or _run_aggressive_candidate_search
-        candidate_run = runner(
-            name,
-            goal=goal,
-            max_iterations=candidate_iterations,
-            repo_root=repo_root,
-        )
-        candidate_summary = _candidate_run_summary(candidate_run)
-        payload["aggressive_candidate_run"] = candidate_summary
-        payload["next_operator_instruction"] = _aggressive_candidate_instruction(
-            candidate_summary
-        )
     return payload
 
 

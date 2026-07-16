@@ -686,22 +686,9 @@ def _run_loop_after_admission(
         repo_root=repo_root,
         plugin_root=REPO_ROOT,
     )
-    auto_remedy, stop_report = _apply_auto_remedy(
-        name,
-        run_dir,
-        repo_root=repo_root,
-        status_result=status_result,
-        stop_report=stop_report,
-    )
     iteration["stop_diagnosis"] = _stop_diagnosis_summary(stop_report)
     iteration["stop_routes"] = _stop_route_records(stop_report)
-    iteration["auto_remedy"] = auto_remedy
-    if auto_remedy is not None and auto_remedy.get("status") == "remedy_ineffective":
-        iteration["stop_reason"] = "remedy_ineffective"
-        iteration["recommended_next_action"] = (
-            f"auto-remedy ineffective for {auto_remedy.get('cause')}; inspect stop_report.json"
-        )
-        manifest["final_stop_reason"] = "remedy_ineffective"
+    iteration["auto_remedy"] = None
     manifest["stop_report"] = "stop_report.json"
     manifest["dominant_premature_cause"] = stop_report.get("dominant_premature_cause")
     manifest["dominant_premature_count"] = stop_report.get("dominant_premature_count")

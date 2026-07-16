@@ -182,7 +182,7 @@ human gates, top-tier blockers, crop uncertainty, aesthetic lever gates, export
 freshness, accepted/golden gates, or publication provenance.
 
 `/fig_loop` is verify-only. It does not edit `examples/<name>/`, run compile/export,
-change acceptance state, stage files, or run git mutation commands. Use it to
+critique scaffolding, change acceptance state, stage files, or run git mutation commands. Use it to
 turn the current status + critique adjudication state into an auditable loop
 checkpoint before a human or later automation decides what to patch.
 

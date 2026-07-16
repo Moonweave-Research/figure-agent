@@ -229,11 +229,10 @@ reviewable; open the next slice only after recording stop conditions and evidenc
 - [x] Consume an explicit v4 packet, response, and recomputed dry-run preview only
   from `repair_bound`; validate binding authority and stop for named authorization.
 - [x] Bind one explicit named human verdict to canonical `visually_re_reviewed`; publish only development acceptance, rejection, or a new-repair requirement, never release or publication acceptance.
-- [x] Guard direct legacy `fig_loop` from writing competing `.scratch/fig-loop-runs/...` evidence whenever canonical resolution is current, invalid, or ambiguous; fail closed, preserve root-admission/acceptance boundaries, and make no prospective-proof or publication-acceptance claim.
+- [x] Compatibility bypass guard: `e2e-smoke` leases/resolves each repeat through status; `loop` is scratch-only verify-only; `improve` rejects aggressive search. No prospective-proof or publication-acceptance claim.
 - [x] Stop at host-vision, scientific, human authorization, accepted/golden,
   release, and publication boundaries.
-- [ ] Keep historical `drive`, `loop`, `improve`, queue, and specialist commands
-  as internal compatibility adapters rather than competing workflows.
+- [ ] Next: give each remaining specialist/internal adapter a per-command canonical successor and evidence registry/contract.
 - [x] Preserve exact actor, evidence references, allowed/forbidden scope, and
   `publication_acceptance` through queue and plan-only queue-run projections;
   aggressive candidate search may not cross a human boundary.

@@ -100,6 +100,100 @@ def test_admission_lease_blocks_legacy_loop_before_scratch_output(tmp_path: Path
     assert not runs_root.exists()
 
 
+@pytest.mark.parametrize("critique_state", ["MISSING", "STALE"])
+def test_verify_only_loop_never_runs_auto_remedy_or_rewrites_stop_reason(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, critique_state: str
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    before = _fixture_files(fixture)
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "infer_stage",
+        lambda _example_dir: {
+            "stage": 1,
+            "render_state": "FRESH",
+            "critique_state": critique_state,
+            "export_state": "MISSING",
+            "acceptance_state": "NOT_ACCEPTED",
+            "workflow_ready": False,
+            "golden_ready": False,
+            "release_ready": False,
+            "final_ready": False,
+            "notes": [],
+            "next": "run critique",
+        },
+    )
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "_run_auto_remedy_command",
+        lambda *_args, **_kwargs: pytest.fail("verify-only loop invoked a command runner"),
+    )
+
+    run_dir = run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+
+    assert iteration["auto_remedy"] is None
+    assert iteration["stop_reason"] != "remedy_ineffective"
+    assert manifest["command_results"] == []
+    assert _fixture_files(fixture) == before
+
+
+def test_verify_only_loop_never_remedies_stale_detector_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    before = _fixture_files(fixture)
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "infer_stage",
+        lambda _example_dir: {
+            "stage": 1,
+            "render_state": "FRESH",
+            "critique_state": "FRESH",
+            "export_state": "MISSING",
+            "acceptance_state": "NOT_ACCEPTED",
+            "workflow_ready": False,
+            "golden_ready": False,
+            "release_ready": False,
+            "final_ready": False,
+            "notes": [],
+            "next": "inspect detector evidence",
+        },
+    )
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "build_stop_diagnosis",
+        lambda *_args, **_kwargs: {
+            "dominant_premature_cause": "stale_detector_evidence",
+            "dominant_premature_count": 1,
+            "cause_histogram": {"stale_detector_evidence": 1},
+            "subregions": [
+                {
+                    "subregion_id": "detector",
+                    "evidence": [{"signal_key": "stale_detector_evidence"}],
+                }
+            ],
+        },
+    )
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "_run_auto_remedy_command",
+        lambda *_args, **_kwargs: pytest.fail("verify-only loop invoked strict compile"),
+    )
+
+    run_dir = run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+
+    assert iteration["auto_remedy"] is None
+    assert iteration["stop_reason"] != "remedy_ineffective"
+    assert manifest["command_results"] == []
+    assert _fixture_files(fixture) == before
+
+
 def test_main_reports_canonical_stop_without_stdout(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -19,6 +19,12 @@ Each repeat runs the same command sequence:
 3. `fig-agent status examples/<name>`
 4. `fig-agent loop <name> --goal "<goal> (smoke run i/N)" --json`
 
+Before compile, each repeat takes the fixture admission lease and resolves
+canonical state. Only an absent canonical attempt may run compile/export/status;
+current, invalid, ambiguous, symlinked, resolver-error, or busy-lease inputs
+fail before command execution. The lease is released before the legacy loop,
+which performs its own fresh preflight.
+
 The command emits one JSON object to stdout. `--json` and `--format json` are
 accepted as explicit no-op output flags. Exit code is `0` only if every step in
 every repeat succeeds. On the first failed step, the runner stops, returns exit
