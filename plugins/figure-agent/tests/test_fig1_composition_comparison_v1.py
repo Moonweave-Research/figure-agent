@@ -36,7 +36,7 @@ def _sha256_bytes(data: bytes) -> str:
 def _frozen_pair_snapshot() -> tuple[
     dict[str, dict[str, object]], dict[str, object]
 ]:
-    """Compare only the immutable packet, prompt, and historical receipt bytes."""
+    """Check static packet safety plus cross-arm and frozen-receipt invariants."""
     packet_paths = {
         "control": ATTEMPT / "free_composition_packet.json",
         "treatment": ATTEMPT / "assisted_composition_packet.json",
@@ -47,8 +47,13 @@ def _frozen_pair_snapshot() -> tuple[
     }
     packets: dict[str, dict[str, object]] = {}
     for arm, packet_path in packet_paths.items():
+        prompt_path = prompt_paths[arm]
+        assert packet_path.is_file()
+        assert not packet_path.is_symlink()
+        assert prompt_path.is_file()
+        assert not prompt_path.is_symlink()
         packet = json.loads(packet_path.read_text(encoding="utf-8"))
-        prompt_bytes = prompt_paths[arm].read_bytes()
+        prompt_bytes = prompt_path.read_bytes()
         assert packet["schema"] == authoring_execution_packet.SCHEMA
         assert packet["packet_sha256"] == (
             authoring_execution_packet.canonical_packet_sha256(packet)
@@ -57,6 +62,7 @@ def _frozen_pair_snapshot() -> tuple[
         assert isinstance(prompt, dict)
         assert prompt["utf8"].encode("utf-8") == prompt_bytes
         assert prompt["sha256"] == _sha256_bytes(prompt_bytes)
+        authoring_execution_packet._validate_prompt_requirements(prompt["utf8"])
         assert isinstance(packet["execution_cwd"], str)
         assert isinstance(packet["output_path"], str)
         assert packet["repository_output_path"] == (
@@ -67,8 +73,8 @@ def _frozen_pair_snapshot() -> tuple[
         ) == 1
         packets[arm] = packet
 
-    assert len(set(packet_paths.values())) == len(packet_paths)
-    assert len(set(prompt_paths.values())) == len(prompt_paths)
+    assert len({path.resolve() for path in packet_paths.values()}) == len(packet_paths)
+    assert len({path.resolve() for path in prompt_paths.values()}) == len(prompt_paths)
     assert len({packet["output_path"] for packet in packets.values()}) == len(packets)
 
     control = packets["control"]
@@ -136,15 +142,37 @@ def test_packets_are_base_equal_and_differ_only_by_composition_intervention() ->
     assert preflight["decision"] == "pass"
 
 
-def test_historical_pair_is_stale_under_the_current_canonical_preflight() -> None:
+def test_historical_pair_is_stale_under_the_current_canonical_preflight(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The frozen pass receipt is not a successful current-environment preflight."""
-    _, historical_receipt = _frozen_pair_snapshot()
+    packets, historical_receipt = _frozen_pair_snapshot()
     assert historical_receipt["decision"] == "pass"
+    historical_roots = {
+        packet["visual_assets"]["root"]["path"] for packet in packets.values()
+    }
+    assert historical_roots == {
+        (
+            "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/"
+            "slice2-fig3-comparable-runs/plugins/figure-agent"
+        )
+    }
+    historical_root = Path(next(iter(historical_roots)))
+    assert historical_root.is_absolute()
+    assert historical_root != PLUGIN_ROOT.resolve()
+    assert "/.worktrees/slice2-fig3-comparable-runs/" in historical_root.as_posix()
 
-    with pytest.raises(
-        authoring_execution_preflight.AuthoringExecutionPreflightError,
-        match=r"^visual asset byte drift: styles/snippets/INDEX\.yaml$",
-    ):
+    original_resolve = Path.resolve
+
+    def unavailable_historical_root(
+        path: Path, strict: bool = False
+    ) -> Path:
+        if path == historical_root and strict:
+            raise FileNotFoundError(path)
+        return original_resolve(path, strict=strict)
+
+    monkeypatch.setattr(Path, "resolve", unavailable_historical_root)
+    with pytest.raises(authoring_execution_preflight.AuthoringExecutionPreflightError):
         authoring_execution_preflight.preflight_authoring_pair(
             ATTEMPT / "free_composition_packet.json",
             ATTEMPT / "assisted_composition_packet.json",
