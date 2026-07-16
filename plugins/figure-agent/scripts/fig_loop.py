@@ -18,8 +18,11 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import closed_loop_attempt_state  # noqa: E402
+import closed_loop_current_state  # noqa: E402
 import fixture_identity  # noqa: E402
 import narrative_context  # noqa: E402
+import repair_transaction  # noqa: E402
 from fig_driver_editorial import (  # noqa: E402
     svg_polish_gate_from_checkpoint,
     svg_polish_readiness_from_checkpoint,
@@ -470,6 +473,41 @@ def _run_id(name: str) -> str:
 
 
 def run_loop(
+    name: str,
+    goal: str,
+    *,
+    repo_root: Path = REPO_ROOT,
+    runs_root: Path | None = None,
+) -> Path:
+    """Run one legacy checkpoint only when canonical lifecycle discovery is absent."""
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise FigLoopError(str(exc)) from exc
+    root = repo_root.resolve()
+    example_dir = root / "examples" / name
+    if not example_dir.is_dir():
+        raise FigLoopError(f"examples/{name}/ not found")
+    try:
+        with closed_loop_attempt_state.fixture_admission_lock(root, name):
+            current = closed_loop_current_state.resolve_current_attempt(root, name)
+            if current.get("resolution") != "absent":
+                raise FigLoopError(
+                    "canonical_attempt_resolution:"
+                    f"{current.get('resolution')}:{current.get('reason')}; "
+                    "use canonical status/lifecycle"
+                )
+            return _run_loop_after_admission(name, goal, repo_root=root, runs_root=runs_root)
+    except closed_loop_attempt_state.FixtureAdmissionLeaseBusy as exc:
+        raise FigLoopError(
+            "canonical_admission_legacy_coordination_busy; retry canonical admission "
+            "or legacy coordination"
+        ) from exc
+    except repair_transaction.RepairTransactionError as exc:
+        raise FigLoopError(str(exc)) from exc
+
+
+def _run_loop_after_admission(
     name: str,
     goal: str,
     *,

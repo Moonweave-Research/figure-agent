@@ -21,12 +21,18 @@ SCHEMA = "figure-agent.closed-loop-attempt-state.v1"
 PUBLICATION_ACCEPTANCE = "not_claimed"
 ATTEMPT_TRANSITION_LOCK = ".closed-loop-attempt-transition.lock"
 ATTEMPT_TRANSITION_LOCK_OWNER = "figure_agent_closed_loop_attempt_transition"
+FIXTURE_ADMISSION_LOCK = ".closed-loop-admission.lock"
+FIXTURE_ADMISSION_LOCK_OWNER = "figure_agent_closed_loop_admission"
 _LEGACY_TRANSITION_LOCKS = (
     (".closed-loop-repair-authorization.lock", "closed_loop_repair_authorization"),
     (".closed-loop-machine-repair.lock", "closed_loop_machine_repair"),
     (".closed-loop-post-review.lock", "closed_loop_post_review"),
     (".closed-loop-post-review-response.lock", "closed_loop_post_review_response"),
 )
+
+
+class FixtureAdmissionLeaseBusy(RuntimeError):
+    """Raised when root admission or legacy evidence cannot take the shared lease."""
 
 
 @contextmanager
@@ -46,6 +52,25 @@ def attempt_transition_lock(attempt_root: Path) -> Iterator[None]:
                     owner=owner,
                 )
             )
+        yield
+
+
+@contextmanager
+def fixture_admission_lock(workspace_root: Path, fixture: str) -> Iterator[None]:
+    """Serialize canonical root admission with legacy loop evidence writes."""
+    fixture_root = _fixture_root(workspace_root, fixture)
+    with ExitStack() as stack:
+        try:
+            stack.enter_context(
+                repair_transaction.recoverable_exclusive_lock(
+                    fixture_root / FIXTURE_ADMISSION_LOCK,
+                    owner=FIXTURE_ADMISSION_LOCK_OWNER,
+                )
+            )
+        except repair_transaction.RepairTransactionError as exc:
+            if str(exc) == "transaction lock exists":
+                raise FixtureAdmissionLeaseBusy("fixture_admission_lease_busy") from exc
+            raise
         yield
 
 _STATE_POLICY: dict[str, tuple[str, str, bool]] = {

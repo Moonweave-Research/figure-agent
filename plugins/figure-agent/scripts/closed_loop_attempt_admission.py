@@ -7,6 +7,7 @@ import json
 import os
 import time
 from collections.abc import Mapping
+from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
 
@@ -192,9 +193,18 @@ def admit_root_attempt(
 
     # Root admission has no attempt directory yet; lock the shared closed-loop
     # publication root so the lock itself cannot masquerade as an attempt.
+    contention_kind: str | None = None
     for _ in range(25):
         try:
-            with closed_loop_attempt_state.attempt_transition_lock(proposed_path.parent.parent):
+            with ExitStack() as stack:
+                stack.enter_context(
+                    closed_loop_attempt_state.fixture_admission_lock(root, fixture)
+                )
+                stack.enter_context(
+                    closed_loop_attempt_state.attempt_transition_lock(
+                        proposed_path.parent.parent
+                    )
+                )
                 # Re-read all explicit inputs after taking the publication lock so a
                 # source/render/manifest replacement between plan and execute fails closed.
                 state = _validated_state(fixture, manifest_path, workspace_root=root)
@@ -249,9 +259,13 @@ def admit_root_attempt(
                     "manifest_path": canonical_manifest_path,
                     "created": True,
                 }
+        except closed_loop_attempt_state.FixtureAdmissionLeaseBusy:
+            contention_kind = "fixture_admission_lease"
+            time.sleep(0.01)
         except repair_transaction.RepairTransactionError as exc:
             if str(exc) != "transaction lock exists":
                 raise ClosedLoopAttemptAdmissionError(str(exc)) from exc
+            contention_kind = "attempt_transition_lock"
             time.sleep(0.01)
     current = closed_loop_current_state.resolve_current_attempt(root, fixture)
     if (
@@ -265,4 +279,8 @@ def admit_root_attempt(
             "manifest_path": canonical_manifest_path,
             "created": False,
         }
+    if contention_kind == "fixture_admission_lease":
+        raise ClosedLoopAttemptAdmissionError(
+            "canonical_admission_legacy_coordination_busy"
+        )
     raise ClosedLoopAttemptAdmissionError("attempt_transition_lock_busy")

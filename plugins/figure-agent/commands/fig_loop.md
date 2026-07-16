@@ -79,6 +79,12 @@ boundaries. It does not change `stop_reason`, active patch target,
 On preflight failure, the command preserves the existing error contract: exit
 code `1`, empty stdout, and a prose `fig_loop.py: ...` message on stderr.
 
+When canonical lifecycle resolution is current, invalid, or ambiguous, direct
+legacy `/fig_loop` stops before creating scratch evidence and directs the caller
+to canonical status/lifecycle. A transient recoverable fixture-root coordination
+lease also serializes root admission and a legacy loop run; if it is busy,
+retry after the active admission or legacy run finishes.
+
 Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
 
 - `run_manifest.json` — fixture, goal, mode, branch/commit, run timing, and artifact list.

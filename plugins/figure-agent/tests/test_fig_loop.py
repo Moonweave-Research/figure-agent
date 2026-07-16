@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import closed_loop_attempt_state  # noqa: E402
 import fig_loop as fig_loop_mod  # noqa: E402
 from fig_loop import FigLoopError, ensure_safe_command, run_loop  # noqa: E402
 from fig_loop_escalation import escalation_summary  # noqa: E402
@@ -31,6 +32,95 @@ def _make_fixture(repo: Path, name: str = "loop_demo") -> Path:
     )
     (fixture / "briefing.md").write_text("briefing", encoding="utf-8")
     return fixture
+
+
+def _publish_current_attempt(repo: Path, fixture: Path, *, actor: str) -> None:
+    source = fixture / "loop_demo.tex"
+    render = fixture / "build" / "loop_demo.png"
+    manifest = fixture / f"{actor}-attempt-manifest.json"
+    source.write_text("source", encoding="utf-8")
+    render.parent.mkdir(exist_ok=True)
+    render.write_bytes(b"render")
+    manifest.write_text("{}\n", encoding="utf-8")
+    state = closed_loop_attempt_state.start_attempt(
+        workspace_root=repo,
+        fixture=fixture.name,
+        actor=actor,
+        actor_role="authoring_agent",
+        evidence={
+            "attempt_manifest": manifest,
+            "authored_source": source,
+            "render": render,
+        },
+    )
+    closed_loop_attempt_state.publish_state(state, workspace_root=repo)
+
+
+def test_current_canonical_attempt_blocks_legacy_loop_before_scratch_output(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _publish_current_attempt(tmp_path, fixture, actor="author-1")
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    with pytest.raises(FigLoopError, match="canonical_attempt_resolution:current") as exc:
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+
+    assert "publication_acceptance" not in str(exc.value)
+    assert not runs_root.exists()
+
+
+@pytest.mark.parametrize("resolution", ["invalid", "ambiguous"])
+def test_invalid_or_ambiguous_canonical_resolution_blocks_legacy_loop_before_scratch_output(
+    tmp_path: Path, resolution: str
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    if resolution == "invalid":
+        (fixture / "review" / "closed-loop" / "attempt-bad").mkdir(parents=True)
+    else:
+        _publish_current_attempt(tmp_path, fixture, actor="author-1")
+        _publish_current_attempt(tmp_path, fixture, actor="author-2")
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    with pytest.raises(FigLoopError, match=f"canonical_attempt_resolution:{resolution}") as exc:
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+
+    assert "publication_acceptance" not in str(exc.value)
+    assert not runs_root.exists()
+
+
+def test_admission_lease_blocks_legacy_loop_before_scratch_output(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    with closed_loop_attempt_state.fixture_admission_lock(tmp_path, fixture.name):
+        with pytest.raises(FigLoopError, match="canonical_admission_legacy_coordination_busy"):
+            run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+
+    assert not runs_root.exists()
+
+
+def test_main_reports_canonical_stop_without_stdout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _publish_current_attempt(tmp_path, fixture, actor="author-1")
+    original = fig_loop_mod.run_loop
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "run_loop",
+        lambda name, goal, *, runs_root=None: original(
+            name, goal, repo_root=tmp_path, runs_root=runs_root
+        ),
+    )
+
+    exit_code = fig_loop_mod.main(["loop_demo", "--goal", "inspect", "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert "canonical_attempt_resolution:current" in captured.err
+    assert "publication_acceptance" not in captured.err
 
 
 def _write_reference_learning_metric_fixture(fixture: Path) -> None:

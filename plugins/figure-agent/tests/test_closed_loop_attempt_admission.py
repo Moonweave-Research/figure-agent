@@ -4,14 +4,17 @@ import hashlib
 import json
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import closed_loop_attempt_admission  # noqa: E402
 import closed_loop_attempt_state  # noqa: E402
 import fig_run  # noqa: E402
+import repair_transaction  # noqa: E402
 
 
 def _sha256(path: Path) -> str:
@@ -76,8 +79,15 @@ def test_fig_run_admits_one_fresh_root_attempt_and_stops(tmp_path: Path) -> None
     assert state_path.is_file()
 
 
-def test_plan_only_validates_and_never_creates_closed_loop_state(tmp_path: Path) -> None:
+def test_plan_only_validates_and_never_acquires_or_writes_admission_lease(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     workspace, fixture, _, manifest = _setup(tmp_path)
+    monkeypatch.setattr(
+        closed_loop_attempt_state,
+        "fixture_admission_lock",
+        lambda *_args, **_kwargs: pytest.fail("plan-only must not acquire admission lease"),
+    )
 
     payload = fig_run.run_workflow(
         "demo", mode="authoring", goal="author", closed_loop_attempt_manifest=manifest,
@@ -87,6 +97,105 @@ def test_plan_only_validates_and_never_creates_closed_loop_state(tmp_path: Path)
     assert payload["final_stop_reason"] == "plan_only"
     assert payload["closed_loop"]["created"] is False
     assert not (fixture / "review").exists()
+    assert not (fixture / ".closed-loop-admission.lock").exists()
+
+
+def test_legacy_lease_prevents_root_admission_until_release(tmp_path: Path) -> None:
+    workspace, fixture, _, manifest = _setup(tmp_path)
+
+    with closed_loop_attempt_state.fixture_admission_lock(workspace, fixture.name):
+        with pytest.raises(
+            closed_loop_attempt_admission.ClosedLoopAttemptAdmissionError,
+            match="canonical_admission_legacy_coordination_busy",
+        ):
+            closed_loop_attempt_admission.admit_root_attempt(
+                fixture.name,
+                manifest_path=manifest,
+                execute=True,
+                workspace_root=workspace,
+            )
+        assert not (fixture / "review").exists()
+
+    admitted = closed_loop_attempt_admission.admit_root_attempt(
+        fixture.name,
+        manifest_path=manifest,
+        execute=True,
+        workspace_root=workspace,
+    )
+    assert admitted["created"] is True
+
+
+def test_inner_attempt_transition_lock_keeps_existing_busy_contract(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, fixture, _, manifest = _setup(tmp_path)
+
+    @contextmanager
+    def busy_transition_lock(*_args: object, **_kwargs: object) -> object:
+        raise repair_transaction.RepairTransactionError("transaction lock exists")
+        yield
+
+    monkeypatch.setattr(
+        closed_loop_attempt_state,
+        "attempt_transition_lock",
+        busy_transition_lock,
+    )
+
+    with pytest.raises(
+        closed_loop_attempt_admission.ClosedLoopAttemptAdmissionError,
+        match="attempt_transition_lock_busy",
+    ):
+        closed_loop_attempt_admission.admit_root_attempt(
+            fixture.name,
+            manifest_path=manifest,
+            execute=True,
+            workspace_root=workspace,
+        )
+    assert not (fixture / "review").exists()
+
+
+def test_latest_inner_lock_contention_is_not_misreported_as_fixture_lease(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, fixture, _, manifest = _setup(tmp_path)
+    fixture_lock_calls = 0
+
+    @contextmanager
+    def mixed_fixture_lease(*_args: object, **_kwargs: object) -> object:
+        nonlocal fixture_lock_calls
+        fixture_lock_calls += 1
+        if fixture_lock_calls == 1:
+            raise closed_loop_attempt_state.FixtureAdmissionLeaseBusy(
+                "fixture_admission_lease_busy"
+            )
+        yield
+
+    @contextmanager
+    def busy_transition_lock(*_args: object, **_kwargs: object) -> object:
+        raise repair_transaction.RepairTransactionError("transaction lock exists")
+        yield
+
+    monkeypatch.setattr(
+        closed_loop_attempt_state,
+        "fixture_admission_lock",
+        mixed_fixture_lease,
+    )
+    monkeypatch.setattr(
+        closed_loop_attempt_state,
+        "attempt_transition_lock",
+        busy_transition_lock,
+    )
+
+    with pytest.raises(
+        closed_loop_attempt_admission.ClosedLoopAttemptAdmissionError,
+        match="attempt_transition_lock_busy",
+    ):
+        closed_loop_attempt_admission.admit_root_attempt(
+            fixture.name,
+            manifest_path=manifest,
+            execute=True,
+            workspace_root=workspace,
+        )
 
 
 def test_plan_only_accepts_workspace_relative_attempt_manifest(tmp_path: Path) -> None:

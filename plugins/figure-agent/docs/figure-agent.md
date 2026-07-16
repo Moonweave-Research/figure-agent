@@ -229,7 +229,7 @@ reviewable; open the next slice only after recording stop conditions and evidenc
 - [x] Consume an explicit v4 packet, response, and recomputed dry-run preview only
   from `repair_bound`; validate binding authority and stop for named authorization.
 - [x] Bind one explicit named human verdict to canonical `visually_re_reviewed`; publish only development acceptance, rejection, or a new-repair requirement, never release or publication acceptance.
-- [ ] Next separate slice: guard direct legacy `fig_loop` from writing competing `.scratch/fig-loop-runs/...` evidence whenever canonical resolution is current, invalid, or ambiguous; fail closed, preserve root-admission/acceptance boundaries, and make no prospective-proof or publication-acceptance claim.
+- [x] Guard direct legacy `fig_loop` from writing competing `.scratch/fig-loop-runs/...` evidence whenever canonical resolution is current, invalid, or ambiguous; fail closed, preserve root-admission/acceptance boundaries, and make no prospective-proof or publication-acceptance claim.
 - [x] Stop at host-vision, scientific, human authorization, accepted/golden,
   release, and publication boundaries.
 - [ ] Keep historical `drive`, `loop`, `improve`, queue, and specialist commands
@@ -308,6 +308,7 @@ Canonical state publishers share one recoverable transition lock and temporarily
 publication acceptance. It advances `machine_repaired` to `post_review_requested`,
 stops at `host_llm`, binds the response, and closes only the named development outcome. Maintained-Fig3 controlled-fault replay is mechanism evidence,
 not an actual defect or publication verdict; prospective proof and R4-R5 remain.
+Direct legacy `fig_loop` shares a recoverable fixture-root admission lease with root admission: it holds that lease from canonical resolution through scratch evidence writing, and rejects current, invalid, ambiguous, or busy resolution before creating `.scratch/fig-loop-runs/` output.
 
 Closed-loop handoffs use these contracts rather than another workflow shell:
 `figure-agent.repair-materialization-preview.v1`, `figure-agent.repair-materialization-receipt.v2`,

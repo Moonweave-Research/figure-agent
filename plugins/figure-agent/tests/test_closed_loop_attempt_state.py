@@ -65,6 +65,29 @@ def test_attempt_transition_lock_recovers_all_current_lock_files_after_crash(
     assert not list(attempt_root.glob(".closed-loop*.lock"))
 
 
+def test_fixture_admission_lock_recovers_after_crash(tmp_path: Path) -> None:
+    workspace, _ = _workspace(tmp_path)
+    script = "\n".join(
+        (
+            "import os",
+            "import sys",
+            "from pathlib import Path",
+            f"sys.path.insert(0, {str(Path(closed_loop_attempt_state.__file__).parent)!r})",
+            "import closed_loop_attempt_state",
+            "workspace = Path(sys.argv[1])",
+            "with closed_loop_attempt_state.fixture_admission_lock(workspace, 'demo'):",
+            "    os._exit(23)",
+        )
+    )
+
+    crashed = subprocess.run([sys.executable, "-c", script, str(workspace)], check=False)
+
+    assert crashed.returncode == 23
+    with closed_loop_attempt_state.fixture_admission_lock(workspace, "demo"):
+        pass
+    assert not (workspace / "examples" / "demo" / ".closed-loop-admission.lock").exists()
+
+
 def _workspace(tmp_path: Path) -> tuple[Path, Path]:
     workspace = tmp_path / "workspace"
     fixture = workspace / "examples" / "demo"
