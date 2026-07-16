@@ -89,6 +89,52 @@ def test_plan_only_validates_and_never_creates_closed_loop_state(tmp_path: Path)
     assert not (fixture / "review").exists()
 
 
+def test_plan_only_accepts_workspace_relative_attempt_manifest(tmp_path: Path) -> None:
+    workspace, fixture, _, manifest = _setup(tmp_path)
+
+    payload = fig_run.run_workflow(
+        "demo",
+        mode="authoring",
+        goal="author",
+        closed_loop_attempt_manifest=manifest.relative_to(workspace),
+        repo_root=workspace,
+    )
+
+    assert payload["final_stop_reason"] == "plan_only"
+    assert payload["closed_loop"]["manifest_path"] == "examples/demo/attempt-manifest.json"
+    assert not (fixture / "review").exists()
+
+
+def test_execute_accepts_workspace_relative_attempt_manifest_and_recovers(
+    tmp_path: Path,
+) -> None:
+    workspace, fixture, _, manifest = _setup(tmp_path)
+    relative_manifest = manifest.relative_to(workspace)
+
+    created = fig_run.run_workflow(
+        "demo",
+        mode="authoring",
+        goal="author",
+        execute=True,
+        closed_loop_attempt_manifest=relative_manifest,
+        repo_root=workspace,
+    )
+    recovered = fig_run.run_workflow(
+        "demo",
+        mode="authoring",
+        goal="author",
+        execute=True,
+        closed_loop_attempt_manifest=relative_manifest,
+        repo_root=workspace,
+    )
+
+    assert created["final_stop_reason"] == "authored_rendered_admitted"
+    assert created["closed_loop"]["created"] is True
+    assert recovered["closed_loop"]["created"] is False
+    assert created["closed_loop"]["manifest_path"] == "examples/demo/attempt-manifest.json"
+    assert len(list((fixture / "review" / "closed-loop").rglob("state-*.json"))) == 1
+
+
 @pytest.mark.parametrize("field", ["source", "render"])
 def test_admission_rejects_stale_bound_artifact_hashes(tmp_path: Path, field: str) -> None:
     workspace, fixture, source, manifest = _setup(tmp_path)

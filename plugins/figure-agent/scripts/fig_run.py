@@ -664,6 +664,7 @@ def run_workflow(
         root = Path(os.path.abspath(repo_root))
         state = admission["state"]
         next_state_path = admission["next_state_path"]
+        manifest_path = admission["manifest_path"]
         return {
             "schema": SCHEMA,
             "fixture": name,
@@ -684,7 +685,7 @@ def run_workflow(
                 "next_state": state["state"],
                 "next_state_path": next_state_path.relative_to(root).as_posix(),
                 "next_state_sha256": state["state_sha256"],
-                "manifest_path": closed_loop_attempt_manifest.relative_to(root).as_posix(),
+                "manifest_path": manifest_path.relative_to(root).as_posix(),
                 "evidence_paths": {
                     record["role"]: record["path"] for record in state["evidence"]
                 },

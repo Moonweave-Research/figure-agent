@@ -139,6 +139,13 @@ def _validated_state(
         raise ClosedLoopAttemptAdmissionError(str(exc)) from exc
 
 
+def _manifest_evidence_path(state: Mapping[str, Any], *, workspace_root: Path) -> Path:
+    for record in state["evidence"]:
+        if record["role"] == "attempt_manifest":
+            return workspace_root / record["path"]
+    raise ClosedLoopAttemptAdmissionError("attempt_manifest_evidence_missing")
+
+
 def admit_root_attempt(
     fixture: str,
     *,
@@ -149,6 +156,7 @@ def admit_root_attempt(
     """Validate explicit evidence; publish only the root state when requested."""
     root = Path(os.path.abspath(workspace_root))
     state = _validated_state(fixture, manifest_path, workspace_root=root)
+    canonical_manifest_path = _manifest_evidence_path(state, workspace_root=root)
     initial_current = closed_loop_current_state.resolve_current_attempt(root, fixture)
     if initial_current.get("resolution") != "absent":
         if initial_current.get("resolution") == "current":
@@ -166,6 +174,7 @@ def admit_root_attempt(
                 return {
                     "state": state,
                     "next_state_path": proposed_path,
+                    "manifest_path": canonical_manifest_path,
                     "created": False,
                 }
         raise ClosedLoopAttemptAdmissionError(
@@ -174,7 +183,12 @@ def admit_root_attempt(
         )
     proposed_path = closed_loop_attempt_state.state_path(state, workspace_root=root)
     if not execute:
-        return {"state": state, "next_state_path": proposed_path, "created": False}
+        return {
+            "state": state,
+            "next_state_path": proposed_path,
+            "manifest_path": canonical_manifest_path,
+            "created": False,
+        }
 
     # Root admission has no attempt directory yet; lock the shared closed-loop
     # publication root so the lock itself cannot masquerade as an attempt.
@@ -184,6 +198,9 @@ def admit_root_attempt(
                 # Re-read all explicit inputs after taking the publication lock so a
                 # source/render/manifest replacement between plan and execute fails closed.
                 state = _validated_state(fixture, manifest_path, workspace_root=root)
+                canonical_manifest_path = _manifest_evidence_path(
+                    state, workspace_root=root
+                )
                 proposed_path = closed_loop_attempt_state.state_path(
                     state, workspace_root=root
                 )
@@ -198,6 +215,7 @@ def admit_root_attempt(
                         return {
                             "state": state,
                             "next_state_path": proposed_path,
+                            "manifest_path": canonical_manifest_path,
                             "created": False,
                         }
                     raise ClosedLoopAttemptAdmissionError(
@@ -221,10 +239,16 @@ def admit_root_attempt(
                         return {
                             "state": state,
                             "next_state_path": proposed_path,
+                            "manifest_path": canonical_manifest_path,
                             "created": False,
                         }
                     raise ClosedLoopAttemptAdmissionError("conflicting_state_publication") from exc
-                return {"state": state, "next_state_path": published, "created": True}
+                return {
+                    "state": state,
+                    "next_state_path": published,
+                    "manifest_path": canonical_manifest_path,
+                    "created": True,
+                }
         except repair_transaction.RepairTransactionError as exc:
             if str(exc) != "transaction lock exists":
                 raise ClosedLoopAttemptAdmissionError(str(exc)) from exc
@@ -235,5 +259,10 @@ def admit_root_attempt(
         and current.get("path") == proposed_path.relative_to(root).as_posix()
         and current.get("state_sha256") == state["state_sha256"]
     ):
-        return {"state": state, "next_state_path": proposed_path, "created": False}
+        return {
+            "state": state,
+            "next_state_path": proposed_path,
+            "manifest_path": canonical_manifest_path,
+            "created": False,
+        }
     raise ClosedLoopAttemptAdmissionError("attempt_transition_lock_busy")
