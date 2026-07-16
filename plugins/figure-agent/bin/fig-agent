@@ -341,8 +341,23 @@ def _adjudicate(argv: list[str]) -> int:
 
 
 def _loop(argv: list[str]) -> int:
+    routed_argv: list[str] = []
+    index = 0
+    while index < len(argv):
+        arg = argv[index]
+        if arg.startswith("--repo-root="):
+            index += 1
+            continue
+        if arg == "--repo-root":
+            index += 1
+            if index < len(argv) and not argv[index].startswith("--"):
+                index += 1
+            continue
+        routed_argv.append(arg)
+        index += 1
+    routed_argv.extend(["--repo-root", str(_paths().workspace_root)])
     return _run(
-        [sys.executable, str(SCRIPTS_DIR / "fig_loop.py"), *argv],
+        [sys.executable, str(SCRIPTS_DIR / "fig_loop.py"), *routed_argv],
         cwd=_paths().workspace_root,
     )
 

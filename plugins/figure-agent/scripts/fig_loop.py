@@ -739,13 +739,22 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("name", help="fixture name under examples/")
     parser.add_argument("--goal", required=True, help="natural-language loop goal")
+    parser.add_argument("--repo-root", type=Path, default=None, help=argparse.SUPPRESS)
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
 
     try:
-        run_dir = run_loop(args.name, args.goal, runs_root=args.runs_root)
+        if args.repo_root is None:
+            run_dir = run_loop(args.name, args.goal, runs_root=args.runs_root)
+        else:
+            run_dir = run_loop(
+                args.name,
+                args.goal,
+                repo_root=args.repo_root,
+                runs_root=args.runs_root,
+            )
     except FigLoopError as exc:
         print(f"fig_loop.py: {exc}", file=sys.stderr)
         return 1

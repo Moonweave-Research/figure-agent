@@ -12,6 +12,10 @@ Run from the plugin root:
 fig-agent loop <name> --goal "<goal>"
 ```
 
+When the installed plugin bundle and figure workspace differ, public
+`fig-agent loop` reads fixtures and writes its default scratch evidence under
+`FIGURE_AGENT_WORKSPACE` (or `CLAUDE_PROJECT_DIR`), not the bundled plugin root.
+
 ## When To Use
 
 Run `/fig_loop` only when `/fig_status <name>` reports `render_state: FRESH`

@@ -87,6 +87,148 @@ def test_fig_agent_status_missing_name_still_targets_workspace_examples(
     assert payload["stage"] == 0
 
 
+@pytest.mark.parametrize("component", ["scratch", "runs_root"])
+def test_fig_agent_loop_uses_workspace_before_cyclic_root_validation(
+    tmp_path: Path,
+    component: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    scratch = workspace / ".scratch"
+    runs_root = scratch / "fig-loop-runs"
+    if component == "scratch":
+        scratch.symlink_to(scratch.name)
+    else:
+        scratch.mkdir()
+        runs_root.symlink_to(runs_root.name)
+    workspace_entries = sorted(path.name for path in workspace.iterdir())
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "loop",
+            fixture.name,
+            "--goal",
+            "inspect",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_public_entry_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert result.stderr == "fig_loop.py: runs_root_path_resolution_error\n"
+    assert sorted(path.name for path in workspace.iterdir()) == workspace_entries
+    assert not (fixture / "build").exists()
+    assert not (fixture / "exports").exists()
+
+
+def test_fig_agent_loop_writes_default_evidence_in_configured_workspace(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "loop",
+            fixture.name,
+            "--goal",
+            "inspect",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_public_entry_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    run_dir = Path(payload["run_dir"])
+    assert run_dir.is_relative_to(workspace / ".scratch" / "fig-loop-runs")
+    assert (run_dir / "run_manifest.json").is_file()
+
+
+def test_fig_agent_loop_preserves_public_external_runs_root(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    external_runs_root = tmp_path / "external-runs"
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "loop",
+            fixture.name,
+            "--goal",
+            "inspect",
+            "--json",
+            "--runs-root",
+            str(external_runs_root),
+        ],
+        cwd=tmp_path,
+        env=_public_entry_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    run_dir = Path(json.loads(result.stdout)["run_dir"])
+    assert run_dir.is_relative_to(external_runs_root)
+    assert (run_dir / "run_manifest.json").is_file()
+    assert not (workspace / ".scratch").exists()
+
+
+@pytest.mark.parametrize(
+    "repo_root_args",
+    [
+        ("--repo-root",),
+        ("--repo-root=",),
+    ],
+)
+def test_fig_agent_loop_ignores_public_repo_root_override(
+    tmp_path: Path,
+    repo_root_args: tuple[str],
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    arbitrary_root = tmp_path / "arbitrary-root"
+    _write_fixture(arbitrary_root)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "loop",
+            fixture.name,
+            "--goal",
+            "inspect",
+            "--json",
+            *(
+                [repo_root_args[0], str(arbitrary_root)]
+                if repo_root_args[0] == "--repo-root"
+                else [f"{repo_root_args[0]}{arbitrary_root}"]
+            ),
+        ],
+        cwd=tmp_path,
+        env=_public_entry_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    run_dir = Path(json.loads(result.stdout)["run_dir"])
+    assert run_dir.is_relative_to(workspace / ".scratch" / "fig-loop-runs")
+    assert not (arbitrary_root / ".scratch").exists()
+
+
 def test_fig_agent_closeout_uses_public_wrapper_without_type_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
