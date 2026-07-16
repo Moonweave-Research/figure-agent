@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
-import os
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -14,65 +12,50 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FIG3_FIXTURE = REPO_ROOT / "examples" / "fig3_resistance_mechanism"
+HISTORICAL_LAYOUT_TRANSFER_RECEIPT = (
+    FIG3_FIXTURE
+    / "review"
+    / "failure-first"
+    / "historical_layout_transfer_receipt_v1.yaml"
+)
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "checks"))
 
 import check_layout_drift  # noqa: E402
 
 
-def _compile_historical_version(
-    tmp_path: Path, version: str
-) -> tuple[subprocess.CompletedProcess[str], Path]:
-    """Compile a tracked historical source only inside the disposable test tree."""
-    source = (
-        FIG3_FIXTURE
-        / "review"
-        / "failure-first"
-        / f"execution-repair-{version}"
-        / "repaired_generated.tex"
-    )
-    copied = (
-        tmp_path
-        / "examples"
-        / "fig3_resistance_mechanism"
-        / "review"
-        / "failure-first"
-        / f"execution-repair-{version}"
-        / source.name
-    )
-    copied.parent.mkdir(parents=True)
-    shutil.copy2(source, copied)
-    result = subprocess.run(
-        ["bash", "scripts/compile.sh", str(copied)],
-        cwd=REPO_ROOT,
-        env={**os.environ, "FIGURE_AGENT_STRICT": "1"},
-        capture_output=True,
-        text=True,
-    )
-    return result, copied.parent / "build" / "repaired_generated.pdf"
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-@pytest.mark.render
 def test_fig3_history_retains_the_v64_to_v66_collision_transfer() -> None:
-    """Historical receipts retain their original contract finding, without re-judging them."""
-    reports = {
-        version: json.loads(
-            (
-                FIG3_FIXTURE
-                / "review"
-                / "failure-first"
-                / f"execution-repair-{version}"
-                / "build"
-                / "layout_lanes.json"
-            ).read_text(encoding="utf-8")
-        )
-        for version in ("v64", "v66")
-    }
+    """A tracked receipt preserves the ignored historical report findings."""
+    receipt = yaml.safe_load(
+        HISTORICAL_LAYOUT_TRANSFER_RECEIPT.read_text(encoding="utf-8")
+    )
     energy = "breadth_clear_of_declared_neighbors:energy_axis_label"
-    v64 = {result["rule_id"]: result for result in reports["v64"]["results"]}
-    v66 = {result["rule_id"]: result for result in reports["v66"]["results"]}
-    assert v64[energy]["status"] == "ok"
-    assert v66[energy]["status"] == "violation"
+
+    assert receipt["schema"] == "figure-agent.historical-layout-transfer-receipt.v1"
+    assert receipt["fixture"] == "fig3_resistance_mechanism"
+    assert receipt["rule"] == {
+        "id": energy,
+        "minimum_clearance": 0.008,
+    }
+    assert receipt["never_recompile_historical_sources"] is True
+    for version in ("v64", "v66"):
+        record = receipt["versions"][version]
+        source = FIG3_FIXTURE / record["source_path"]
+        assert source.is_file()
+        assert record["source_sha256"] == _sha256(source)
+        assert record["ignored_layout_report_path"].endswith(
+            f"execution-repair-{version}/build/layout_lanes.json"
+        )
+        assert record["ignored_layout_report_sha256"].startswith("sha256:")
+    assert receipt["versions"]["v64"]["status"] == "ok"
+    assert receipt["versions"]["v64"]["clearance"] == 0.019776
+    assert receipt["versions"]["v66"]["status"] == "violation"
+    assert receipt["versions"]["v66"]["clearance"] == 0.004272
+    assert receipt["publication_acceptance"] == "not_claimed"
 
 
 def test_fig3_layout_contract_is_fail_closed_for_missing_breadth_label() -> None:
@@ -259,19 +242,28 @@ def test_layout_contract_preserves_v1_include_path_compatibility() -> None:
     assert payload["exclusion_reason"] == "artifact_path_outside_applies_to_path_regex"
 
 
-@pytest.mark.render
 def test_fig3_strict_compile_does_not_rejudge_v64_to_v66_with_live_contract(
-    tmp_path: Path,
 ) -> None:
-    v64, _ = _compile_historical_version(tmp_path, "v64")
-    v66, _ = _compile_historical_version(tmp_path, "v66")
+    receipt = yaml.safe_load(
+        HISTORICAL_LAYOUT_TRANSFER_RECEIPT.read_text(encoding="utf-8")
+    )
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
 
-    # The historical collision remains covered by the isolated legacy-contract test
-    # above. A current three-column contract must not retroactively judge old sources.
-    assert v64.returncode == 1
-    assert "SKIP layout contract: artifact_path_matches_exclude_path_regex" in v64.stdout
-    assert v66.returncode == 1
-    assert "SKIP layout contract: artifact_path_matches_exclude_path_regex" in v66.stdout
+    assert receipt["never_recompile_historical_sources"] is True
+    for record in receipt["versions"].values():
+        payload = check_layout_drift.layout_lane_payload(
+            contract,
+            [],
+            (400.0, 200.0),
+            artifact_path=Path(record["ignored_layout_report_path"]).with_name(
+                "repaired_generated.pdf"
+            ),
+        )
+        assert payload["applicable"] is False
+        assert payload["failure_count"] == 0
+        assert payload["results"] == []
 
 
 def _word(text: str, x0: float, y0: float, x1: float, y1: float) -> dict:

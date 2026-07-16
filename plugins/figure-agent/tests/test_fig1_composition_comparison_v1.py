@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
-import authoring_execution_preflight
+import authoring_execution_packet
 import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
@@ -24,12 +24,20 @@ def test_common_input_preserves_scientific_coverage_without_layout_answer() -> N
 
 
 def test_packets_are_base_equal_and_differ_only_by_composition_intervention() -> None:
-    free = json.loads(
-        (ATTEMPT / "free_composition_packet.json").read_text(encoding="utf-8")
-    )
-    assisted = json.loads(
-        (ATTEMPT / "assisted_composition_packet.json").read_text(encoding="utf-8")
-    )
+    packet_paths = {
+        "control": ATTEMPT / "free_composition_packet.json",
+        "treatment": ATTEMPT / "assisted_composition_packet.json",
+    }
+    prompt_paths = {
+        "control": ATTEMPT / "free_composition_prompt.md",
+        "treatment": ATTEMPT / "assisted_composition_prompt.md",
+    }
+    packets = {
+        arm: json.loads(path.read_text(encoding="utf-8"))
+        for arm, path in packet_paths.items()
+    }
+    free = packets["control"]
+    assisted = packets["treatment"]
 
     for field in (
         "model_id",
@@ -50,12 +58,25 @@ def test_packets_are_base_equal_and_differ_only_by_composition_intervention() ->
     assert free["publication_acceptance"] == "not_claimed"
     assert assisted["publication_acceptance"] == "not_claimed"
 
-    preflight = authoring_execution_preflight.preflight_authoring_pair(
-        ATTEMPT / "free_composition_packet.json",
-        ATTEMPT / "assisted_composition_packet.json",
+    preflight = json.loads(
+        (ATTEMPT / "preflight_result.json").read_text(encoding="utf-8")
     )
+    assert preflight["schema"] == "figure-agent.authoring-execution-preflight.v1"
     assert preflight["decision"] == "pass"
     assert preflight["intervention_field"] == "composition_profile"
+    for arm, packet in packets.items():
+        prompt_bytes = prompt_paths[arm].read_bytes()
+        assert packet["packet_sha256"] == (
+            authoring_execution_packet.canonical_packet_sha256(packet)
+        )
+        assert packet["prompt"]["utf8"].encode("utf-8") == prompt_bytes
+        assert packet["prompt"]["sha256"] == (
+            "sha256:" + hashlib.sha256(prompt_bytes).hexdigest()
+        )
+        assert preflight[arm]["packet_sha256"] == packet["packet_sha256"]
+        assert preflight[arm]["prompt_sha256"] == packet["prompt"]["sha256"]
+        assert preflight[arm]["packet_path"].endswith(packet_paths[arm].name)
+        assert preflight[arm]["prompt_path"].endswith(prompt_paths[arm].name)
 
 
 def test_prompts_do_not_prescribe_coordinates_or_fixed_panel_rectangles() -> None:

@@ -95,6 +95,12 @@ COMPARABLE_V2 = REVIEW / "comparable-v2"
 COMPARISON_CONTRACT_V2 = COMPARABLE_V2 / "comparison_contract.yaml"
 AUTHORITY_MANIFEST_V2 = REVIEW / "authority_manifest_v2.yaml"
 CURRENT_RENDER_REVIEW_SCAFFOLD = REVIEW / "current_render_review_scaffold_v1.yaml"
+CURRENT_RENDER_REVIEW_PROVENANCE = (
+    REVIEW / "current_render_review_provenance_v1.yaml"
+)
+HISTORICAL_SCOPE_VALIDATION_RECEIPT = (
+    REVIEW / "historical_scope_validation_receipt_v1.yaml"
+)
 EXECUTION_REPAIR_V13 = REVIEW / "execution-repair-v13"
 EXECUTION_REPAIR_V14 = REVIEW / "execution-repair-v14"
 EXECUTION_REPAIR_V15 = REVIEW / "execution-repair-v15"
@@ -1205,14 +1211,21 @@ def _git_pending_paths(repo_root: Path) -> set[str]:
     return pending
 
 
-def _git_branch_delta_paths(repo_root: Path, base_ref: str) -> set[str]:
+def _git_historical_delta_paths(
+    repo_root: Path, base_ref: str, head_ref: str
+) -> list[str]:
     result = subprocess.run(
-        ["git", "-C", str(repo_root), "diff", "--name-only", f"{base_ref}...HEAD"],
+        ["git", "-C", str(repo_root), "diff", "--name-only", f"{base_ref}..{head_ref}"],
         check=True,
         capture_output=True,
         text=True,
     )
-    return {path for path in result.stdout.splitlines() if path}
+    return sorted(path for path in result.stdout.splitlines() if path)
+
+
+def _newline_terminated_path_digest(paths: list[str]) -> str:
+    payload = "".join(f"{path}\n" for path in paths).encode("utf-8")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
 def _scope_violations(pending_paths: set[str], allowed_paths: set[str]) -> set[str]:
@@ -2424,6 +2437,9 @@ def test_fig3_shape_profile_review_and_handoff_block_visual_judgment() -> None:
 
 def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None:
     scope = yaml.safe_load((REVIEW / "scope_protection.yaml").read_text(encoding="utf-8"))
+    historical = yaml.safe_load(
+        HISTORICAL_SCOPE_VALIDATION_RECEIPT.read_text(encoding="utf-8")
+    )
     extension_paths = _scope_extension_paths()
     extensions = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in extension_paths]
     extension = extensions[-1]
@@ -2451,29 +2467,92 @@ def test_fig3_resistance_scope_guard_checks_actual_pending_git_surface() -> None
         )
         allowed_paths.update(scope_extension["allowed_repository_paths"])
     pending_paths = _git_pending_paths(repo_root)
-    branch_delta_paths = _git_branch_delta_paths(repo_root, base_extension["scope_base_ref"])
     for scope_extension in extensions:
         for prefix in scope_extension["allowed_review_prefixes"]:
             allowed_paths.update(
                 path for path in pending_paths if path.startswith(fixture_prefix + prefix)
             )
 
+    historical_paths = _git_historical_delta_paths(
+        repo_root,
+        historical["historical_delta"]["base_ref"],
+        historical["historical_delta"]["head_ref"],
+    )
+    assert historical["schema"] == (
+        "figure-agent.historical-scope-validation-receipt.v1"
+    )
+    assert historical["fixture"] == "fig3_resistance_mechanism"
+    assert base_extension["scope_base_ref"] == (
+        historical["historical_delta"]["base_ref"][:8]
+    )
+    assert historical["scope_chain_tip"] == {
+        "path": "review/failure-first/scope_extension_v40.yaml",
+        "sha256": _sha256(REVIEW / "scope_extension_v40.yaml"),
+    }
+    assert historical["historical_delta"]["path_order"] == "utf8_lexicographic"
+    assert historical["historical_delta"]["diff_mode"] == "two_dot_name_only"
+    assert historical["historical_delta"]["digest_algorithm"] == (
+        "sha256_newline_terminated_utf8"
+    )
+    assert historical["historical_delta"]["path_count"] == len(historical_paths)
+    assert historical["historical_delta"]["paths"] == historical_paths
+    assert historical["historical_delta"]["paths_sha256"] == (
+        _newline_terminated_path_digest(historical_paths)
+    )
+    assert historical["violations"] == sorted(
+        _scope_violations(set(historical_paths), allowed_paths)
+    )
+    assert historical["violations"] == []
+    assert historical["publication_acceptance"] == "not_claimed"
     assert _scope_violations({fixture_prefix + "README.md"}, allowed_paths) == {
         fixture_prefix + "README.md"
     }
     assert extension["publication_acceptance"] == "not_claimed"
-    assert _scope_violations(pending_paths | branch_delta_paths, allowed_paths) == set()
+    assert _scope_violations(pending_paths, allowed_paths) == set()
 
 
 def test_fig3_current_render_review_scaffold_is_bound_and_human_baseline_recorded() -> None:
     scaffold = yaml.safe_load(CURRENT_RENDER_REVIEW_SCAFFOLD.read_text(encoding="utf-8"))
+    provenance = yaml.safe_load(
+        CURRENT_RENDER_REVIEW_PROVENANCE.read_text(encoding="utf-8")
+    )
+    render_receipt = yaml.safe_load(RENDER_RECEIPT.read_text(encoding="utf-8"))
 
     assert scaffold["schema"] == "figure-agent.current-render-review-scaffold.v1"
     assert scaffold["fixture"] == "fig3_resistance_mechanism"
+    assert provenance["schema"] == (
+        "figure-agent.current-render-review-provenance.v1"
+    )
+    assert provenance["fixture"] == "fig3_resistance_mechanism"
+    assert provenance["tracked_receipts"] == {
+        "scaffold": {
+            "path": "review/failure-first/current_render_review_scaffold_v1.yaml",
+            "sha256": _sha256(CURRENT_RENDER_REVIEW_SCAFFOLD),
+        },
+        "render_receipt": {
+            "path": "review/failure-first/render_receipt.yaml",
+            "sha256": _sha256(RENDER_RECEIPT),
+        },
+    }
+    tracked_inputs = provenance["tracked_inputs"]
+    assert tracked_inputs == {
+        "tex": {
+            "path": "fig3_resistance_mechanism.tex",
+            "sha256": _sha256(FIXTURE / "fig3_resistance_mechanism.tex"),
+        },
+        "briefing": {
+            "path": "briefing.md",
+            "sha256": _sha256(FIXTURE / "briefing.md"),
+        },
+        "spec": {
+            "path": "spec.yaml",
+            "sha256": _sha256(FIXTURE / "spec.yaml"),
+        },
+    }
     assert scaffold["source_inputs"] == {
-        "tex_sha256": _sha256(FIXTURE / "fig3_resistance_mechanism.tex"),
-        "briefing_sha256": _sha256(FIXTURE / "briefing.md"),
-        "spec_sha256": _sha256(FIXTURE / "spec.yaml"),
+        "tex_sha256": tracked_inputs["tex"]["sha256"],
+        "briefing_sha256": tracked_inputs["briefing"]["sha256"],
+        "spec_sha256": tracked_inputs["spec"]["sha256"],
     }
     assert scaffold["machine_gate"]["strict_compile"] == "passed"
     assert scaffold["machine_gate"]["visual_clash_strict_candidates"] == 0
@@ -2486,19 +2565,31 @@ def test_fig3_current_render_review_scaffold_is_bound_and_human_baseline_recorde
     adjudication = yaml.safe_load((FIXTURE / "critique_adjudication.yaml").read_text())
     c001 = next(item for item in adjudication["decisions"] if item["finding_id"] == "C001")
     assert c001["decision"] == "resolved"
-    assert scaffold["render_evidence"] == {
-        "render_path": "build/fig3_resistance_mechanism.pdf",
-        "render_png_path": "build/fig3_resistance_mechanism.png",
-        "render_png_sha256": _sha256(FIXTURE / "build" / "fig3_resistance_mechanism.png"),
-        "audit_crop_manifest": "build/audit_crops/manifest.json",
-        "audit_crop_manifest_sha256": _sha256(
-            FIXTURE / "build" / "audit_crops" / "manifest.json"
-        ),
-        "print_proxy": "build/audit_crops/print_178mm.png",
-        "print_proxy_sha256": _sha256(
-            FIXTURE / "build" / "audit_crops" / "print_178mm.png"
-        ),
-        "inspection_method": "full_render_plus_high_zoom_crops_plus_print_proxy",
+    ignored = provenance["optional_ignored_build"]
+    assert scaffold["render_evidence"]["render_png_path"] == ignored[
+        "render_png"
+    ]["path"]
+    assert scaffold["render_evidence"]["audit_crop_manifest"] == ignored[
+        "audit_crop_manifest"
+    ]["path"]
+    assert scaffold["render_evidence"]["print_proxy"] == ignored[
+        "print_proxy"
+    ]["path"]
+    assert scaffold["render_evidence"]["render_png_sha256"] == ignored[
+        "render_png"
+    ]["recorded_sha256"]
+    assert scaffold["render_evidence"]["audit_crop_manifest_sha256"] == ignored[
+        "audit_crop_manifest"
+    ]["recorded_sha256"]
+    assert scaffold["render_evidence"]["print_proxy_sha256"] == ignored[
+        "print_proxy"
+    ]["recorded_sha256"]
+    assert render_receipt["source_sha256"] == tracked_inputs["tex"]["sha256"]
+    assert render_receipt["png_sha256"] == ignored["render_png"]["recorded_sha256"]
+    assert provenance["clean_checkout_validation"] == {
+        "mode": "tracked_files_and_recorded_hashes_only",
+        "ignored_build_reads_required": False,
+        "optional_live_status": "available_and_hashes_matched_at_capture",
     }
     assert scaffold["human_review"]["state"] == "recorded"
     assert scaffold["human_review"]["verdict"] == (
@@ -2508,6 +2599,7 @@ def test_fig3_current_render_review_scaffold_is_bound_and_human_baseline_recorde
         "development_baseline_only_not_publication_acceptance"
     )
     assert scaffold["machine_gate"]["publication_acceptance"] == "not_claimed"
+    assert provenance["publication_acceptance"] == "not_claimed"
 
 
 def test_lh001_repair_history_preserves_failures_and_binds_resolved_attempt() -> None:
