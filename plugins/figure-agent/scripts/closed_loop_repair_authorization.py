@@ -81,18 +81,15 @@ def _validate_preview(
     *,
     packet: dict[str, Any],
 ) -> None:
-    if (
-        preview.get("schema")
-        != authoring_repair_packet.MATERIALIZATION_PREVIEW_SCHEMA
-        or preview.get("fixture") != packet.get("fixture")
-        or preview.get("packet_sha256") != packet.get("packet_sha256")
-        or preview.get("source_sha256") != packet.get("source", {}).get("sha256")
-        or preview.get("output_path") != packet.get("output_path")
-        or preview.get("publication_acceptance") != "not_claimed"
-        or preview.get("preview_sha256")
-        != authoring_repair_packet.canonical_materialization_preview_sha256(preview)
-    ):
-        raise ClosedLoopRepairAuthorizationError("materialization_preview_invalid")
+    try:
+        authoring_repair_packet.validate_materialization_preview(
+            preview,
+            packet=packet,
+        )
+    except authoring_repair_packet.RepairExecutionPacketError as exc:
+        raise ClosedLoopRepairAuthorizationError(
+            "materialization_preview_invalid"
+        ) from exc
 
 
 def _validated_plan(
@@ -126,13 +123,21 @@ def _validated_plan(
         "materialization_preview",
         workspace_root=workspace_root,
     )
+    response_path = _lineage_file(
+        state,
+        "repair_response",
+        workspace_root=workspace_root,
+    )
     authorization_path = authority.workspace_file(
         workspace_root,
         authorization_path,
         label="human_authorization",
     )
     if not (
-        packet_path.parent == preview_path.parent == authorization_path.parent
+        packet_path.parent
+        == response_path.parent
+        == preview_path.parent
+        == authorization_path.parent
     ):
         raise ClosedLoopRepairAuthorizationError(
             "repair_authorization_and_candidate_must_be_adjacent"
@@ -141,6 +146,10 @@ def _validated_plan(
     packet, packet_bytes = _json_snapshot(
         packet_path,
         label="repair_execution_packet",
+    )
+    response, response_bytes = _json_snapshot(
+        response_path,
+        label="repair_response",
     )
     preview, preview_bytes = _json_snapshot(
         preview_path,
@@ -167,6 +176,21 @@ def _validated_plan(
         ) from exc
     _validate_preview(preview, packet=packet)
     try:
+        expected_preview = authoring_repair_packet.materialize_repair_candidate(
+            packet,
+            response,
+            workspace_root=workspace_root,
+            apply=False,
+        )
+    except authoring_repair_packet.RepairExecutionPacketError as exc:
+        raise ClosedLoopRepairAuthorizationError(
+            f"repair_response_invalid:{exc}"
+        ) from exc
+    if expected_preview != preview:
+        raise ClosedLoopRepairAuthorizationError(
+            "repair_response_preview_mismatch"
+        )
+    try:
         normalized_authorization = (
             human_decision_record.validate_additive_materialization_authorization(
                 authorization,
@@ -191,6 +215,7 @@ def _validated_plan(
         "state_path": published_state_path,
         "packet_path": packet_path,
         "packet_bytes": packet_bytes,
+        "response_bytes": response_bytes,
         "preview_path": preview_path,
         "preview_bytes": preview_bytes,
         "authorization_path": authorization_path,
@@ -348,7 +373,12 @@ def run_authorization(
                 current["state_path"],
                 workspace_root=root,
             )
-            for key in ("packet_bytes", "preview_bytes", "authorization_bytes"):
+            for key in (
+                "packet_bytes",
+                "response_bytes",
+                "preview_bytes",
+                "authorization_bytes",
+            ):
                 if current[key] != plan[key]:
                     raise ClosedLoopRepairAuthorizationError(
                         "repair_authorization_inputs_drifted"

@@ -658,6 +658,7 @@ def _machine_repaired_state(
             "workflow_agent",
             {
                 "repair_execution_packet": paths["packet"],
+                "repair_response": evidence_file("repair_response"),
                 "materialization_preview": evidence_file("materialization_preview"),
             },
         ),

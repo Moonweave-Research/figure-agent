@@ -234,11 +234,20 @@ def _validated_plan(
         "human_authorization",
         workspace_root=workspace_root,
     )
+    lineage_response_path = _lineage_file(
+        state,
+        "repair_response",
+        workspace_root=workspace_root,
+    )
     response_path = authority.workspace_file(
         workspace_root,
         response_path,
         label="repair_response",
     )
+    if response_path != lineage_response_path:
+        raise ClosedLoopMachineRepairError(
+            "repair_response_state_binding_mismatch"
+        )
     if not (
         packet_path.parent
         == preview_path.parent

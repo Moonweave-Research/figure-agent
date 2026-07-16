@@ -560,6 +560,7 @@ def _repair_candidate_ready_attempt(
             "workflow_agent",
             {
                 "repair_execution_packet": packet_path,
+                "repair_response": response_path,
                 "materialization_preview": preview_path,
             },
         ),
@@ -2777,7 +2778,7 @@ def test_bound_packet_authority_is_revalidated_inside_materialization_lock(
     )
     output = workspace / str(packet["output_path"])
     receipt = output.parent / "materialization_receipt.json"
-    original_lock = repair_transaction.exclusive_lock
+    original_lock = repair_transaction.recoverable_exclusive_lock
 
     @contextmanager
     def drift_after_lock(*args: object, **kwargs: object):
@@ -2785,7 +2786,11 @@ def test_bound_packet_authority_is_revalidated_inside_materialization_lock(
             binding.write_bytes(binding.read_bytes() + b"\n")
             yield
 
-    monkeypatch.setattr(repair_transaction, "exclusive_lock", drift_after_lock)
+    monkeypatch.setattr(
+        repair_transaction,
+        "recoverable_exclusive_lock",
+        drift_after_lock,
+    )
 
     with pytest.raises(
         authoring_repair_packet.RepairExecutionPacketError,
@@ -3410,6 +3415,35 @@ def test_closed_loop_machine_repair_plan_only_is_write_free(tmp_path: Path) -> N
     assert not output.exists()
     assert not receipt.exists()
     assert after == before
+
+
+def test_closed_loop_machine_repair_rejects_identical_response_path_substitution(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path, response_path, output, receipt = (
+        _repair_authorized_attempt(tmp_path)
+    )
+    substitute = response_path.with_name("equivalent-repair-response.json")
+    substitute.write_text(
+        json.dumps(json.loads(response_path.read_text(encoding="utf-8")), indent=2),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        closed_loop_machine_repair.ClosedLoopMachineRepairError,
+        match="repair_response_state_binding_mismatch",
+    ):
+        closed_loop_machine_repair.run_machine_repair(
+            "demo",
+            state_path=state_path,
+            response_path=substitute,
+            execute=True,
+            workspace_root=workspace,
+            plugin_root=PLUGIN_ROOT,
+        )
+
+    assert not output.exists()
+    assert not receipt.exists()
 
 
 def test_fig_run_authorization_plan_only_is_hash_bound_and_write_free(

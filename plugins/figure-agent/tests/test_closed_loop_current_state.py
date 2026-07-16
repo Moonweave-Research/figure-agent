@@ -279,7 +279,10 @@ def test_parent_link_selects_unique_terminal_descendant(tmp_path: Path) -> None:
     for next_state, roles in (
         ("critique_unadjudicated", ("critique", "host_review_execution_receipt")),
         ("repair_bound", ("adjudicated_repair_binding",)),
-        ("repair_candidate_ready", ("repair_execution_packet", "materialization_preview")),
+        (
+            "repair_candidate_ready",
+            ("repair_execution_packet", "repair_response", "materialization_preview"),
+        ),
         ("repair_authorized", ("human_authorization",)),
         ("repair_required", ("repair_failure_record",)),
     ):

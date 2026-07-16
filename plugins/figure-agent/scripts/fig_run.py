@@ -27,6 +27,7 @@ import closed_loop_machine_repair  # noqa: E402
 import closed_loop_post_review  # noqa: E402
 import closed_loop_post_review_response  # noqa: E402
 import closed_loop_repair_authorization  # noqa: E402
+import closed_loop_repair_candidate  # noqa: E402
 import fig_driver  # noqa: E402
 import runtime_paths  # noqa: E402
 from driver_actor import required_actor_for_driver_summary  # noqa: E402
@@ -318,6 +319,20 @@ def _automatic_repair_candidate_ready_state(
     )
 
 
+def _automatic_repair_bound_state(
+    summary: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> tuple[Path, str] | None:
+    return _projected_current_state(
+        summary,
+        lifecycle_state="repair_bound",
+        disposition="continue",
+        required_actor="workflow_agent",
+        repo_root=repo_root,
+    )
+
+
 def _automatic_visually_re_reviewed_state(
     summary: dict[str, Any],
     *,
@@ -605,6 +620,9 @@ def run_workflow(
     closed_loop_state: Path | None = None,
     closed_loop_response: Path | None = None,
     closed_loop_repair_response: Path | None = None,
+    closed_loop_repair_packet: Path | None = None,
+    closed_loop_candidate_response: Path | None = None,
+    closed_loop_materialization_preview: Path | None = None,
     closed_loop_authorization: Path | None = None,
     closed_loop_development_verdict: Path | None = None,
     repo_root: Path = REPO_ROOT,
@@ -615,6 +633,17 @@ def run_workflow(
         raise ValueError(f"unsupported mode: {mode}")
     if max_steps < 1:
         raise ValueError("max_steps must be >= 1")
+    candidate_inputs = (
+        closed_loop_repair_packet is not None,
+        closed_loop_candidate_response is not None,
+        closed_loop_materialization_preview is not None,
+    )
+    if any(candidate_inputs) and not all(candidate_inputs):
+        raise ValueError(
+            "closed-loop repair packet, candidate response, and materialization "
+            "preview must be supplied together"
+        )
+    candidate_supplied = all(candidate_inputs)
     if sum(
         value is not None
         for value in (
@@ -623,10 +652,10 @@ def run_workflow(
             closed_loop_authorization,
             closed_loop_development_verdict,
         )
-    ) > 1:
+    ) + int(candidate_supplied) > 1:
         raise ValueError(
-            "closed-loop response, repair response, authorization, and development "
-            "verdict are mutually exclusive"
+            "closed-loop candidate, response, repair response, authorization, and "
+            "development verdict are mutually exclusive"
         )
     initial_summary: dict[str, Any] | None = None
     automatic_state_sha256: str | None = None
@@ -646,6 +675,16 @@ def run_workflow(
                 raise ValueError(
                     "closed-loop-development-verdict requires current "
                     "visually_re_reviewed state or --closed-loop-state"
+                )
+        elif candidate_supplied:
+            automatic_state = _automatic_repair_bound_state(
+                initial_summary,
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop repair candidate requires current repair_bound "
+                    "state or --closed-loop-state"
                 )
         elif closed_loop_authorization is not None:
             automatic_state = _automatic_repair_candidate_ready_state(
@@ -687,6 +726,95 @@ def run_workflow(
                 )
         if automatic_state is not None:
             closed_loop_state, automatic_state_sha256 = automatic_state
+    if closed_loop_state is not None and candidate_supplied:
+        assert closed_loop_repair_packet is not None
+        assert closed_loop_candidate_response is not None
+        assert closed_loop_materialization_preview is not None
+        try:
+            candidate = closed_loop_repair_candidate.run_repair_candidate(
+                name,
+                state_path=closed_loop_state,
+                packet_path=closed_loop_repair_packet,
+                response_path=closed_loop_candidate_response,
+                preview_path=closed_loop_materialization_preview,
+                execute=execute,
+                workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except closed_loop_repair_candidate.ClosedLoopRepairCandidateError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        state_path = candidate["input_state_path"]
+        next_state_path = candidate["next_state_path"]
+        packet_path = candidate["packet_path"]
+        response_path = candidate["response_path"]
+        preview_path = candidate["preview_path"]
+        input_state = candidate["input_state"]
+        state_evidence_path = (
+            next_state_path if "published_state" in candidate else state_path
+        )
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": candidate["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": candidate["stop_boundary"],
+            "final_stop_reason": candidate["stop_reason"],
+            "executed_count": 1 if candidate["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": candidate["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "packet_path": packet_path.relative_to(root).as_posix(),
+                "response_path": response_path.relative_to(root).as_posix(),
+                "preview_path": preview_path.relative_to(root).as_posix(),
+                "created": candidate["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": candidate["action"],
+                "stop_boundary": candidate["stop_boundary"],
+                "required_actor": candidate["required_actor"],
+                "blocking_reason": (
+                    "publish the explicitly supplied bound repair candidate"
+                    if "published_state" not in candidate
+                    else "named human authorization is required"
+                ),
+                "evidence_refs": [
+                    "repair_execution_packet:"
+                    + packet_path.relative_to(root).as_posix(),
+                    "repair_response:"
+                    + response_path.relative_to(root).as_posix(),
+                    "materialization_preview:"
+                    + preview_path.relative_to(root).as_posix(),
+                    "closed_loop_state:"
+                    + state_evidence_path.relative_to(root).as_posix(),
+                ],
+                "allowed_scope": [
+                    "validate the explicit v4 packet, response, and exact dry-run preview",
+                    "publish the canonical repair_candidate_ready state",
+                ],
+                "forbidden_scope": [
+                    "candidate artifact discovery or synthesis",
+                    "plugin host or model invocation",
+                    "repair materialization before named human authorization",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": [
+                    "obtain explicit hash-bound named human authorization"
+                ],
+                "publication_acceptance": "not_claimed",
+            },
+        }
     if closed_loop_state is not None and closed_loop_development_verdict is not None:
         try:
             verdict = development_verdict_adapter.run_development_verdict(
@@ -1206,6 +1334,13 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--closed-loop-state", type=Path, default=None)
     parser.add_argument("--closed-loop-response", type=Path, default=None)
     parser.add_argument("--closed-loop-repair-response", type=Path, default=None)
+    parser.add_argument("--closed-loop-repair-packet", type=Path, default=None)
+    parser.add_argument("--closed-loop-candidate-response", type=Path, default=None)
+    parser.add_argument(
+        "--closed-loop-materialization-preview",
+        type=Path,
+        default=None,
+    )
     parser.add_argument("--closed-loop-authorization", type=Path, default=None)
     parser.add_argument("--closed-loop-development-verdict", type=Path, default=None)
     parser.add_argument("--runs-root", type=Path, default=None)
@@ -1225,6 +1360,11 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             closed_loop_state=args.closed_loop_state,
             closed_loop_response=args.closed_loop_response,
             closed_loop_repair_response=args.closed_loop_repair_response,
+            closed_loop_repair_packet=args.closed_loop_repair_packet,
+            closed_loop_candidate_response=args.closed_loop_candidate_response,
+            closed_loop_materialization_preview=(
+                args.closed_loop_materialization_preview
+            ),
             closed_loop_authorization=args.closed_loop_authorization,
             closed_loop_development_verdict=args.closed_loop_development_verdict,
             repo_root=repo_root,
@@ -1243,6 +1383,10 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     if args.closed_loop_repair_response is not None and not payload.get("closed_loop", {}).get(
         "created", False
     ):
+        should_record = False
+    if args.closed_loop_repair_packet is not None and not payload.get(
+        "closed_loop", {}
+    ).get("created", False):
         should_record = False
     if args.closed_loop_authorization is not None and not payload.get(
         "closed_loop", {}

@@ -226,9 +226,10 @@ reviewable; open the next slice only after recording stop conditions and evidenc
   `repair_required`. Never discover a response, invoke a host, accept legacy
   packets implicitly, or claim publication acceptance.
 - [x] Consume explicit hash-bound human authorization only from canonical `repair_candidate_ready`; publish the named reviewer without inventing approval.
+- [x] Consume an explicit v4 packet, response, and recomputed dry-run preview only
+  from `repair_bound`; validate binding authority and stop for named authorization.
 - [x] Bind one explicit named human verdict to canonical `visually_re_reviewed`; publish only development acceptance, rejection, or a new-repair requirement, never release or publication acceptance.
-- [ ] Wire remaining safe deterministic transitions through default `run` one
-  at a time without synthesizing host, scientific, or human evidence.
+- [ ] Wire other safe deterministic transitions through default `run` one at a time without synthesizing host, scientific, or human evidence.
 - [x] Stop at host-vision, scientific, human authorization, accepted/golden,
   release, and publication boundaries.
 - [ ] Keep historical `drive`, `loop`, `improve`, queue, and specialist commands
@@ -300,10 +301,9 @@ the same editable selector as the repair target. Missing semantic authority,
 ambiguous attribution, or missing references can emit only a named
 `human_attributor` handoff; they cannot create a repair binding or packet.
 
-Default `run` consumes explicit hash-bound human authorization at
-`repair_candidate_ready`, an explicit repair response at `repair_authorized`, and one
-state-bound named human verdict at `visually_re_reviewed`. That verdict can accept the development baseline, reject the artifact, or require a separately authorized repair attempt. Materialize/strict-finalize/rollback publishes
+Default `run` consumes an explicit bound packet/response/preview at `repair_bound`, human authorization at `repair_candidate_ready`, the same response again at `repair_authorized`, and one state-bound named human verdict at `visually_re_reviewed`. That verdict can accept the development baseline, reject the artifact, or require a separately authorized repair attempt. Materialize/strict-finalize/rollback publishes
 `machine_repaired` or `repair_required`; completed receipts recover state publication. `repair_failure_record` is a schema-heterogeneous reason-for-repair role, so consumers must validate its referenced schema and decision rather than assume a machine failure.
+Pre-R4.8 candidate-ready v1 states without response evidence fail closed and cannot restart in place; a named human must authorize the exact leaf path/state/file hashes, then explicitly run `python3 scripts/closed_loop_legacy_candidate_quarantine.py --fixture <name> --state <leaf.json> --authorization <record.json> --execute` to preserve the retired leaf and authorization outside canonical discovery before restarting its verified `repair_bound` parent. They are never auto-migrated or discarded.
 Canonical state publishers share one recoverable transition lock and temporarily dual-lock legacy paths. The run discovers no input, invokes no host, admits no legacy packet, and claims no
 publication acceptance. It advances `machine_repaired` to `post_review_requested`,
 stops at `host_llm`, binds the response, and closes only the named development outcome. Maintained-Fig3 controlled-fault replay is mechanism evidence,
@@ -312,7 +312,7 @@ not an actual defect or publication verdict; prospective proof and R4-R5 remain.
 Closed-loop handoffs use these contracts rather than another workflow shell:
 `figure-agent.repair-materialization-preview.v1`, `figure-agent.repair-materialization-receipt.v2`,
 `figure-agent.repair-execution-packet.v4`, `figure-agent.repair-authority-contract.v1`,
-`figure-agent.closed-loop-attempt-state.v1`, `figure-agent.closed-loop-current-state.v1`,
+`figure-agent.closed-loop-attempt-state.v1`, `figure-agent.closed-loop-current-state.v1`, `figure-agent.legacy-candidate-quarantine-authorization.v1`,
 `figure-agent.adjudicated-repair-binding.v1`, `figure-agent.semantic-finding-attribution.v1`,
 `figure-agent.attribution-handoff.v1`, `figure-agent.post-repair-visual-review-request.v1`,
 `figure-agent.host-review-execution-receipt.v1`, `figure-agent.post-repair-visual-review-response.v1`,

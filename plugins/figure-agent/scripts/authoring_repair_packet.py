@@ -107,6 +107,58 @@ def canonical_materialization_preview_sha256(record: dict[str, object]) -> str:
     return _sha256_bytes(_canonical_json_bytes(preview))
 
 
+def validate_materialization_preview(
+    preview: dict[str, object],
+    *,
+    packet: dict[str, object],
+) -> None:
+    """Validate one dry-run preview against its exact current repair packet."""
+    expected_fields = {
+        "schema",
+        "fixture",
+        "packet_sha256",
+        "source_sha256",
+        "output_path",
+        "output_sha256",
+        "changed_source_blocks",
+        "changed_lines",
+        "preserved_boundary_blank_lines",
+        "change_summary",
+        "publication_acceptance",
+        "preview_sha256",
+    }
+    source = packet.get("source")
+    budget = packet.get("change_budget")
+    changed_lines = preview.get("changed_lines")
+    preserved_blank_lines = preview.get("preserved_boundary_blank_lines")
+    output_sha256 = preview.get("output_sha256")
+    if (
+        set(preview) != expected_fields
+        or preview.get("schema") != MATERIALIZATION_PREVIEW_SCHEMA
+        or preview.get("fixture") != packet.get("fixture")
+        or preview.get("packet_sha256") != packet.get("packet_sha256")
+        or not isinstance(source, dict)
+        or preview.get("source_sha256") != source.get("sha256")
+        or preview.get("output_path") != packet.get("output_path")
+        or preview.get("changed_source_blocks") != 1
+        or not isinstance(output_sha256, str)
+        or not re.fullmatch(r"sha256:[0-9a-f]{64}", output_sha256)
+        or type(changed_lines) is not int
+        or changed_lines < 1
+        or not isinstance(budget, dict)
+        or type(budget.get("max_changed_lines")) is not int
+        or changed_lines > int(budget["max_changed_lines"])
+        or type(preserved_blank_lines) is not int
+        or preserved_blank_lines < 0
+        or not isinstance(preview.get("change_summary"), str)
+        or not str(preview["change_summary"]).strip()
+        or preview.get("publication_acceptance") != "not_claimed"
+        or preview.get("preview_sha256")
+        != canonical_materialization_preview_sha256(preview)
+    ):
+        raise RepairExecutionPacketError("materialization preview invalid")
+
+
 def _safe_relative(value: str, *, label: str) -> Path:
     path = Path(value)
     if path.is_absolute() or not path.parts or any(
@@ -994,9 +1046,9 @@ def materialize_repair_candidate(
         "recovery_required": False,
     }
     try:
-        with repair_transaction.exclusive_lock(
+        with repair_transaction.recoverable_exclusive_lock(
             output.parent / ".materialization.lock",
-            owner="authoring_repair_materialize",
+            owner=repair_transaction.MATERIALIZATION_LOCK_OWNER,
         ):
             validate_bound_packet_authority(
                 packet,

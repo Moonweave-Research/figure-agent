@@ -123,7 +123,7 @@ _STATE_EVIDENCE_ROLES: dict[str, frozenset[str]] = {
     "adjudicated_unbound": frozenset({"adjudication", "attribution_handoff"}),
     "repair_bound": frozenset({"adjudicated_repair_binding"}),
     "repair_candidate_ready": frozenset(
-        {"repair_execution_packet", "materialization_preview"}
+        {"repair_execution_packet", "repair_response", "materialization_preview"}
     ),
     "repair_authorized": frozenset({"human_authorization"}),
     "machine_repaired": frozenset(
@@ -142,6 +142,9 @@ _STATE_EVIDENCE_ROLES: dict[str, frozenset[str]] = {
     "repair_required": frozenset({"repair_failure_record"}),
     "aborted": frozenset({"abort_record"}),
 }
+_PRE_R4_8_CANDIDATE_EVIDENCE_ROLES = frozenset(
+    {"repair_execution_packet", "materialization_preview"}
+)
 
 
 class ClosedLoopAttemptStateError(ValueError):
@@ -418,6 +421,7 @@ def validate_state(
     workspace_root: Path,
     _lineage_stack: frozenset[Path] = frozenset(),
     _require_live_evidence: bool = True,
+    _expected_evidence_roles: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     if not isinstance(state, Mapping):
         raise ClosedLoopAttemptStateError("state_invalid")
@@ -524,7 +528,17 @@ def validate_state(
             raise ClosedLoopAttemptStateError("evidence_hash_stale")
     if [record["role"] for record in evidence] != sorted(seen_roles):
         raise ClosedLoopAttemptStateError("evidence_order_invalid")
-    if seen_roles != _STATE_EVIDENCE_ROLES[state_name]:
+    expected_evidence_roles = (
+        _STATE_EVIDENCE_ROLES[state_name]
+        if _expected_evidence_roles is None
+        else _expected_evidence_roles
+    )
+    if (
+        _expected_evidence_roles is not None
+        and state_name != "repair_candidate_ready"
+    ):
+        raise ClosedLoopAttemptStateError("legacy_candidate_state_invalid")
+    if seen_roles != expected_evidence_roles:
         raise ClosedLoopAttemptStateError("evidence_roles_invalid")
     if sequence == 0:
         parent_record = None
@@ -554,6 +568,22 @@ def validate_state(
         lineage_stack=_lineage_stack,
         require_live_evidence=_require_live_evidence,
     )
+    return payload
+
+
+def validate_pre_r4_8_candidate_state(
+    state: Mapping[str, Any],
+    *,
+    workspace_root: Path,
+) -> dict[str, Any]:
+    """Validate only the retired candidate leaf shape for explicit quarantine."""
+    payload = validate_state(
+        state,
+        workspace_root=workspace_root,
+        _expected_evidence_roles=_PRE_R4_8_CANDIDATE_EVIDENCE_ROLES,
+    )
+    if payload["state"] != "repair_candidate_ready":
+        raise ClosedLoopAttemptStateError("legacy_candidate_state_invalid")
     return payload
 
 

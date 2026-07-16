@@ -96,6 +96,21 @@ run `fig-agent helper fig_run_journal.py <name>` to summarize the prior
 stop, then rerun live `/fig_status` or `/fig_drive` before using
 `/fig_run --execute` again. Do not replay commands from a journal.
 
+When canonical status is `repair_bound`, pass all of
+`--closed-loop-repair-packet <v4.json>` and
+`--closed-loop-candidate-response <response.json>` and
+`--closed-loop-materialization-preview <preview.json>` to `/fig_run`. The run
+recomputes the preview from this explicit triplet, validates it against the
+state binding, and only publishes
+`repair_candidate_ready`; it does not discover candidate files, invoke a model,
+materialize source, or cross the named-human authorization boundary.
+Retired pre-R4.8 candidate leaves cannot restart in place. Use
+`fig-agent helper closed_loop_legacy_candidate_quarantine.py --fixture <name> --state <leaf.json> --authorization <record.json> --execute`
+only as an explicit preservation step; it moves no evidence until `--execute`,
+requires a named-human record bound to the exact leaf path/state/file hashes,
+preserves both outside discovery, and re-exposes only its verified `repair_bound`
+parent.
+
 If the user asks to "use figure-agent to improve this", "loop 10 times", or
 "keep reviewing and polishing until no major issues remain" for one fixture,
 use `/fig_status` and then rerun the canonical bounded `/fig_run` after each

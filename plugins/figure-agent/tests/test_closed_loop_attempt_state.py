@@ -15,6 +15,7 @@ _STATE_EVIDENCE_ROLES = {
     "repair_bound": ("adjudicated_repair_binding",),
     "repair_candidate_ready": (
         "repair_execution_packet",
+        "repair_response",
         "materialization_preview",
     ),
     "repair_authorized": ("human_authorization",),
