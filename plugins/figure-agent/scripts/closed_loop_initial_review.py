@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import shutil
+import stat
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,7 @@ import closed_loop_attempt_state
 import closed_loop_current_state
 import critique_zoom_crops
 import repair_transaction
+from PIL import Image, ImageChops, UnidentifiedImageError
 
 SCHEMA = "figure-agent.initial-visual-review-request.v1"
 ACTION = "initial_visual_review_request"
@@ -160,7 +162,13 @@ def _validate_crop_manifest(
     fixture_root: Path,
     render: Path,
     render_sha256: str,
+    review_root: Path,
 ) -> dict[str, Any]:
+    crops_root = review_root / "crops"
+    expected_manifest_path = crops_root / "manifest.json"
+    if manifest_path != expected_manifest_path:
+        raise ClosedLoopInitialReviewError("initial_review_crop_manifest_path_invalid")
+    _assert_regular_file(manifest_path, fixture_root=fixture_root)
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -175,7 +183,23 @@ def _validate_crop_manifest(
     crops = manifest.get("crops")
     if not isinstance(crops, list):
         raise ClosedLoopInitialReviewError("initial_review_crop_manifest_crops_invalid")
-    expected_ids = {"full_q1", "full_q2", "full_q3", "full_q4", "print_178mm", "print_thumbnail"}
+    expected_ids = (
+        "full_q1",
+        "full_q2",
+        "full_q3",
+        "full_q4",
+        "print_178mm",
+        "print_thumbnail",
+    )
+    if manifest.get("required_crop_ids") != list(expected_ids):
+        raise ClosedLoopInitialReviewError("initial_review_required_crops_invalid")
+    if len(crops) != len(expected_ids):
+        raise ClosedLoopInitialReviewError("initial_review_crop_count_invalid")
+    expected_by_id = _expected_crop_records(
+        fixture_root=fixture_root,
+        render=render,
+        review_root=review_root,
+    )
     seen_ids: set[str] = set()
     for crop in crops:
         if not isinstance(crop, dict):
@@ -198,16 +222,120 @@ def _validate_crop_manifest(
             or any(part in {"", ".", ".."} for part in relative.parts)
         ):
             raise ClosedLoopInitialReviewError("initial_review_crop_path_unsafe")
-        crop_path = fixture_root
-        for part in relative.parts:
-            crop_path = crop_path / part
-            if crop_path.is_symlink():
-                raise ClosedLoopInitialReviewError("initial_review_crop_path_unsafe")
-        if not crop_path.is_file() or _sha256(crop_path) != expected_hash:
+        expected = expected_by_id.get(crop_id)
+        if expected is None or relative.as_posix() != expected["path"]:
+            raise ClosedLoopInitialReviewError("initial_review_crop_path_outside_attempt")
+        if any(crop.get(key) != value for key, value in expected.items()):
+            raise ClosedLoopInitialReviewError("initial_review_crop_semantics_invalid")
+        crop_path = fixture_root / relative
+        _assert_regular_file(crop_path, fixture_root=fixture_root)
+        if _sha256(crop_path) != expected_hash:
             raise ClosedLoopInitialReviewError("initial_review_crop_hash_stale")
-    if not expected_ids.issubset(seen_ids):
+        _assert_crop_pixels_match(render, crop_path, crop_id=crop_id)
+    if seen_ids != set(expected_ids):
         raise ClosedLoopInitialReviewError("initial_review_required_crops_missing")
+    _assert_review_tree_layout(review_root, crops_root=crops_root, expected_ids=expected_ids)
     return manifest
+
+
+def _assert_regular_file(path: Path, *, fixture_root: Path) -> None:
+    try:
+        relative = path.relative_to(fixture_root)
+    except ValueError as exc:
+        raise ClosedLoopInitialReviewError("initial_review_crop_path_unsafe") from exc
+    current = fixture_root
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise ClosedLoopInitialReviewError("initial_review_crop_path_unsafe")
+    try:
+        mode = path.stat().st_mode
+    except OSError as exc:
+        raise ClosedLoopInitialReviewError("initial_review_crop_missing") from exc
+    if not stat.S_ISREG(mode):
+        raise ClosedLoopInitialReviewError("initial_review_crop_not_regular")
+
+
+def _expected_crop_records(
+    *, fixture_root: Path, render: Path, review_root: Path
+) -> dict[str, dict[str, Any]]:
+    try:
+        with Image.open(render) as image:
+            width, height = image.size
+    except (OSError, UnidentifiedImageError) as exc:
+        raise ClosedLoopInitialReviewError("initial_review_render_not_image") from exc
+    render_path = render.relative_to(fixture_root).as_posix()
+    crops_prefix = (review_root / "crops").relative_to(fixture_root).as_posix()
+    quadrant_boxes = critique_zoom_crops._quadrant_boxes(width, height)  # noqa: SLF001
+    expected: dict[str, dict[str, Any]] = {}
+    for index, box in enumerate(quadrant_boxes, start=1):
+        crop_id = f"full_q{index}"
+        expected[crop_id] = {
+            "id": crop_id,
+            "kind": "zoom_crop",
+            "source": "full_render",
+            "path": f"{crops_prefix}/{crop_id}.png",
+            "source_path": render_path,
+            "bbox_px": box,
+        }
+    for crop_id, scale_label, target_width in critique_zoom_crops.PRINT_SCALE_TARGETS:
+        size = critique_zoom_crops._scaled_size(width, height, target_width)  # noqa: SLF001
+        expected[crop_id] = {
+            "id": crop_id,
+            "kind": "print_scale",
+            "scale_label": scale_label,
+            "scale_basis": "fixed_width_proxy",
+            "target_width_px": target_width,
+            "upscaled": size[0] > width,
+            "path": f"{crops_prefix}/{crop_id}.png",
+            "source_path": render_path,
+            "size_px": list(size),
+        }
+    return expected
+
+
+def _assert_crop_pixels_match(render: Path, crop_path: Path, *, crop_id: str) -> None:
+    try:
+        with Image.open(render) as source, Image.open(crop_path) as actual:
+            width, height = source.size
+            if crop_id.startswith("full_q"):
+                index = int(crop_id.removeprefix("full_q")) - 1
+                expected = source.crop(
+                    tuple(critique_zoom_crops._quadrant_boxes(width, height)[index])  # noqa: SLF001
+                )
+            else:
+                target_width = next(
+                    width_px
+                    for identifier, _, width_px in critique_zoom_crops.PRINT_SCALE_TARGETS
+                    if identifier == crop_id
+                )
+                expected = source.resize(
+                    critique_zoom_crops._scaled_size(width, height, target_width),  # noqa: SLF001
+                    getattr(Image, "Resampling", Image).LANCZOS,
+                )
+            if expected.size != actual.size or ImageChops.difference(
+                expected.convert("RGBA"), actual.convert("RGBA")
+            ).getbbox(alpha_only=False) is not None:
+                raise ClosedLoopInitialReviewError("initial_review_crop_pixels_invalid")
+    except (OSError, UnidentifiedImageError, StopIteration, ValueError) as exc:
+        raise ClosedLoopInitialReviewError("initial_review_crop_pixels_invalid") from exc
+
+
+def _assert_review_tree_layout(
+    review_root: Path, *, crops_root: Path, expected_ids: tuple[str, ...]
+) -> None:
+    if review_root.is_symlink() or crops_root.is_symlink():
+        raise ClosedLoopInitialReviewError("initial_review_crop_path_unsafe")
+    try:
+        root_names = {path.name for path in review_root.iterdir()}
+        crop_names = {path.name for path in crops_root.iterdir()}
+    except OSError as exc:
+        raise ClosedLoopInitialReviewError("initial_review_crop_missing") from exc
+    if root_names not in ({"crops"}, {"crops", "request.json"}):
+        raise ClosedLoopInitialReviewError("initial_review_pack_layout_invalid")
+    expected_crop_names = {"manifest.json", *(f"{crop_id}.png" for crop_id in expected_ids)}
+    if crop_names != expected_crop_names:
+        raise ClosedLoopInitialReviewError("initial_review_pack_layout_invalid")
 
 
 def _crop_roles(manifest: dict[str, Any]) -> dict[str, list[str]]:
@@ -230,7 +358,9 @@ def _build_request(
     crop_manifest_path: Path,
     crop_manifest: dict[str, Any],
     workspace_root: Path,
+    crop_manifest_sha256: str | None = None,
 ) -> dict[str, Any]:
+    manifest_sha256 = crop_manifest_sha256 or _sha256(crop_manifest_path)
     unsigned = {
         "schema": SCHEMA,
         "fixture": state["fixture"],
@@ -243,7 +373,7 @@ def _build_request(
         "render": {"path": render_record["path"], "sha256": render_record["sha256"]},
         "crop_manifest": {
             "path": crop_manifest_path.relative_to(workspace_root).as_posix(),
-            "sha256": _sha256(crop_manifest_path),
+            "sha256": manifest_sha256,
         },
         "crop_roles": {
             "full_render": "render",
@@ -269,6 +399,18 @@ def _validate_existing_request(
     )
     if _sha256(request_path) != request_record["sha256"]:
         raise ClosedLoopInitialReviewError("initial_review_request_hash_stale")
+    parent = _initial_parent_state(state, workspace_root=workspace_root)
+    parent_path = _initial_parent_path(state, workspace_root=workspace_root)
+    return _validate_complete_review_pack(
+        state=parent,
+        state_path=parent_path,
+        request_path=request_path,
+        crop_manifest_path=request_path.parent / "crops" / "manifest.json",
+        workspace_root=workspace_root,
+    )
+
+
+def _load_request(request_path: Path) -> dict[str, Any]:
     try:
         request = json.loads(request_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -279,18 +421,39 @@ def _validate_existing_request(
     request_hash = unsigned.pop("request_sha256", None)
     if request_hash != _canonical_sha256(unsigned):
         raise ClosedLoopInitialReviewError("initial_review_request_hash_invalid")
-    source, source_record, render, render_record = _bound_root_artifacts_from_lineage(
+    return request
+
+
+def _validate_complete_review_pack(
+    *,
+    state: dict[str, Any],
+    state_path: Path,
+    request_path: Path,
+    crop_manifest_path: Path,
+    workspace_root: Path,
+) -> tuple[Path, Path, dict[str, Any]]:
+    expected_review_root = state_path.parent / "initial-review"
+    if (
+        request_path != expected_review_root / "request.json"
+        or crop_manifest_path != expected_review_root / "crops" / "manifest.json"
+    ):
+        raise ClosedLoopInitialReviewError("initial_review_pack_path_outside_attempt")
+    request = _load_request(request_path)
+    source, source_record, render, render_record = _bound_root_artifacts(
         state, workspace_root=workspace_root
     )
+    del source
     crop_manifest_record = request.get("crop_manifest")
     if not isinstance(crop_manifest_record, dict):
         raise ClosedLoopInitialReviewError("initial_review_crop_manifest_missing")
-    crop_manifest_path = _workspace_file(
+    declared_crop_manifest_path = _workspace_file(
         workspace_root,
         state["fixture"],
         str(crop_manifest_record.get("path") or ""),
         label="initial_review_crop_manifest",
     )
+    if declared_crop_manifest_path != crop_manifest_path:
+        raise ClosedLoopInitialReviewError("initial_review_crop_manifest_path_invalid")
     if crop_manifest_record.get("sha256") != _sha256(crop_manifest_path):
         raise ClosedLoopInitialReviewError("initial_review_crop_manifest_hash_stale")
     manifest = _validate_crop_manifest(
@@ -298,10 +461,11 @@ def _validate_existing_request(
         fixture_root=workspace_root / "examples" / state["fixture"],
         render=render,
         render_sha256=render_record["sha256"],
+        review_root=request_path.parent,
     )
     expected = _build_request(
-        state=_initial_parent_state(state, workspace_root=workspace_root),
-        state_path=_initial_parent_path(state, workspace_root=workspace_root),
+        state=state,
+        state_path=state_path,
         source_record=source_record,
         render_record=render_record,
         crop_manifest_path=crop_manifest_path,
@@ -350,7 +514,7 @@ def _bound_root_artifacts_from_lineage(
     )
 
 
-def _publish_crop_pack(
+def _publish_review_pack(
     *,
     fixture_root: Path,
     render: Path,
@@ -358,7 +522,13 @@ def _publish_crop_pack(
     render_sha256: str,
     attempt_root: Path,
     review_root: Path,
-) -> Path:
+    state: dict[str, Any],
+    state_path: Path,
+    source_record: dict[str, str],
+    render_record: dict[str, str],
+    workspace_root: Path,
+) -> tuple[Path, Path, dict[str, Any]]:
+    """Stage the full crop/request pack, then publish it with one rename."""
     staging = attempt_root / ".initial-review-staging"
     if staging.exists() or staging.is_symlink():
         raise ClosedLoopInitialReviewError("initial_review_staging_conflict")
@@ -395,6 +565,19 @@ def _publish_crop_pack(
             encoding="utf-8",
         )
         snapshot.unlink()
+        request_path = review_root / "request.json"
+        final_manifest_path = review_root / "crops" / "manifest.json"
+        request = _build_request(
+            state=state,
+            state_path=state_path,
+            source_record=source_record,
+            render_record=render_record,
+            crop_manifest_path=final_manifest_path,
+            crop_manifest=manifest,
+            workspace_root=workspace_root,
+            crop_manifest_sha256=_sha256(manifest_path),
+        )
+        repair_transaction.atomic_create_json(staging / "request.json", request)
         if review_root.exists() or review_root.is_symlink():
             raise ClosedLoopInitialReviewError("initial_review_output_conflict")
         os.replace(staging, review_root)
@@ -402,7 +585,55 @@ def _publish_crop_pack(
         if staging.is_dir() and not staging.is_symlink():
             shutil.rmtree(staging)
         raise
-    return review_root / "crops" / "manifest.json"
+    return request_path, final_manifest_path, request
+
+
+def _recover_or_validate_review_pack(
+    *,
+    state: dict[str, Any],
+    state_path: Path,
+    source_record: dict[str, str],
+    render_record: dict[str, str],
+    render: Path,
+    fixture_root: Path,
+    review_root: Path,
+    workspace_root: Path,
+) -> tuple[Path, Path, dict[str, Any]]:
+    """Accept only an exact complete pack; recover a verified old crop-only pack."""
+    request_path = review_root / "request.json"
+    crop_manifest_path = review_root / "crops" / "manifest.json"
+    if request_path.exists() or request_path.is_symlink():
+        return _validate_complete_review_pack(
+            state=state,
+            state_path=state_path,
+            request_path=request_path,
+            crop_manifest_path=crop_manifest_path,
+            workspace_root=workspace_root,
+        )
+    manifest = _validate_crop_manifest(
+        crop_manifest_path,
+        fixture_root=fixture_root,
+        render=render,
+        render_sha256=render_record["sha256"],
+        review_root=review_root,
+    )
+    request = _build_request(
+        state=state,
+        state_path=state_path,
+        source_record=source_record,
+        render_record=render_record,
+        crop_manifest_path=crop_manifest_path,
+        crop_manifest=manifest,
+        workspace_root=workspace_root,
+    )
+    repair_transaction.atomic_create_json(request_path, request)
+    return _validate_complete_review_pack(
+        state=state,
+        state_path=state_path,
+        request_path=request_path,
+        crop_manifest_path=crop_manifest_path,
+        workspace_root=workspace_root,
+    )
 
 
 def run_outbound_handoff(
@@ -480,18 +711,29 @@ def run_outbound_handoff(
             if review_root.is_symlink():
                 raise ClosedLoopInitialReviewError("initial_review_output_conflict")
             if review_root.exists():
-                if request_path.is_symlink() or crop_manifest_path.is_symlink():
-                    raise ClosedLoopInitialReviewError("initial_review_output_conflict")
-                if not request_path.is_file() or not crop_manifest_path.is_file():
-                    raise ClosedLoopInitialReviewError("initial_review_output_conflict")
+                request_path, crop_manifest_path, request = _recover_or_validate_review_pack(
+                    state=state,
+                    state_path=published_state_path,
+                    source_record=source_record,
+                    render_record=render_record,
+                    render=render,
+                    fixture_root=root / "examples" / fixture,
+                    review_root=review_root,
+                    workspace_root=root,
+                )
             else:
-                crop_manifest_path = _publish_crop_pack(
+                request_path, crop_manifest_path, request = _publish_review_pack(
                     fixture_root=root / "examples" / fixture,
                     render=render,
                     render_bytes=render_bytes,
                     render_sha256=render_record["sha256"],
                     attempt_root=attempt_root,
                     review_root=review_root,
+                    state=state,
+                    state_path=published_state_path,
+                    source_record=source_record,
+                    render_record=render_record,
+                    workspace_root=root,
                 )
             _assert_render_unchanged(
                 render,
@@ -503,8 +745,9 @@ def run_outbound_handoff(
                 fixture_root=root / "examples" / fixture,
                 render=render,
                 render_sha256=render_record["sha256"],
+                review_root=review_root,
             )
-            request = _build_request(
+            expected_request = _build_request(
                 state=state,
                 state_path=published_state_path,
                 source_record=source_record,
@@ -513,19 +756,9 @@ def run_outbound_handoff(
                 crop_manifest=manifest,
                 workspace_root=root,
             )
-            if request_path.is_file():
-                try:
-                    existing_request = json.loads(request_path.read_text(encoding="utf-8"))
-                except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-                    raise ClosedLoopInitialReviewError(
-                        "initial_review_existing_request_invalid"
-                    ) from exc
-                if existing_request != request:
-                    raise ClosedLoopInitialReviewError(
-                        "initial_review_existing_request_mismatch"
-                    )
-            else:
-                repair_transaction.atomic_create_json(request_path, request)
+            if request != expected_request:
+                raise ClosedLoopInitialReviewError("initial_review_existing_request_mismatch")
+            request = expected_request
             next_state = closed_loop_attempt_state.transition_state(
                 state,
                 next_state="initial_review_requested",

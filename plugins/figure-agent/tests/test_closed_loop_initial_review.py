@@ -59,6 +59,33 @@ def _setup(tmp_path: Path) -> tuple[Path, Path, Path, Path, Path]:
     return workspace, fixture, source, render, admitted["next_state_path"]
 
 
+def _rewrite_initial_pack_and_state(
+    created: dict[str, object], *, mutate_manifest: callable
+) -> None:
+    """Keep request/state hashes valid so pack-boundary checks are exercised."""
+    manifest_path = created["crop_manifest_path"]
+    request_path = created["request_path"]
+    state_path = created["next_state_path"]
+    assert isinstance(manifest_path, Path)
+    assert isinstance(request_path, Path)
+    assert isinstance(state_path, Path)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    mutate_manifest(manifest)
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True), encoding="utf-8")
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    request["crop_manifest"]["sha256"] = _sha256(manifest_path)
+    unsigned_request = dict(request)
+    unsigned_request.pop("request_sha256", None)
+    request["request_sha256"] = closed_loop_initial_review._canonical_sha256(  # noqa: SLF001
+        unsigned_request
+    )
+    request_path.write_text(json.dumps(request, sort_keys=True), encoding="utf-8")
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["evidence"][0]["sha256"] = _sha256(request_path)
+    state["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(state)
+    state_path.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
+
+
 def test_plan_only_verifies_root_without_writing_request_or_crops(tmp_path: Path) -> None:
     workspace, fixture, _, _, state_path = _setup(tmp_path)
 
@@ -294,6 +321,158 @@ def test_idempotent_recheck_rejects_a_symlinked_crop(tmp_path: Path) -> None:
             execute=True,
             workspace_root=workspace,
         )
+
+
+def test_idempotent_recheck_rejects_forged_build_render_crop_mapping(tmp_path: Path) -> None:
+    workspace, fixture, _, render, state_path = _setup(tmp_path)
+    created = closed_loop_initial_review.run_outbound_handoff(
+        "demo", state_path=state_path, execute=True, workspace_root=workspace
+    )
+
+    def forge(manifest: dict[str, object]) -> None:
+        crops = manifest["crops"]
+        assert isinstance(crops, list)
+        first = next(crop for crop in crops if crop["id"] == "full_q1")
+        first["path"] = "build/demo.png"
+        first["sha256"] = _sha256(render)
+
+    _rewrite_initial_pack_and_state(created, mutate_manifest=forge)
+
+    with pytest.raises(
+        closed_loop_initial_review.ClosedLoopInitialReviewError,
+        match="initial_review_crop_path_outside_attempt",
+    ):
+        closed_loop_initial_review.run_outbound_handoff(
+            "demo",
+            state_path=created["next_state_path"],
+            execute=True,
+            workspace_root=workspace,
+        )
+
+
+def test_idempotent_recheck_rejects_semantically_forged_crop_metadata(tmp_path: Path) -> None:
+    workspace, _, _, _, state_path = _setup(tmp_path)
+    created = closed_loop_initial_review.run_outbound_handoff(
+        "demo", state_path=state_path, execute=True, workspace_root=workspace
+    )
+
+    def forge(manifest: dict[str, object]) -> None:
+        crops = manifest["crops"]
+        assert isinstance(crops, list)
+        first = next(crop for crop in crops if crop["id"] == "full_q1")
+        first["bbox_px"] = [1, 1, 2, 2]
+
+    _rewrite_initial_pack_and_state(created, mutate_manifest=forge)
+
+    with pytest.raises(
+        closed_loop_initial_review.ClosedLoopInitialReviewError,
+        match="initial_review_crop_semantics_invalid",
+    ):
+        closed_loop_initial_review.run_outbound_handoff(
+            "demo",
+            state_path=created["next_state_path"],
+            execute=True,
+            workspace_root=workspace,
+        )
+
+
+def test_idempotent_recheck_rejects_pixel_forged_crop_with_valid_hash(tmp_path: Path) -> None:
+    workspace, fixture, _, _, state_path = _setup(tmp_path)
+    created = closed_loop_initial_review.run_outbound_handoff(
+        "demo", state_path=state_path, execute=True, workspace_root=workspace
+    )
+    manifest_path = created["crop_manifest_path"]
+    assert isinstance(manifest_path, Path)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    first = next(crop for crop in manifest["crops"] if crop["id"] == "full_q1")
+    crop_path = fixture / first["path"]
+    with Image.open(crop_path) as crop_image:
+        crop_size = crop_image.size
+    Image.new("RGB", crop_size, color=(1, 2, 3)).save(crop_path)
+
+    def forge(updated_manifest: dict[str, object]) -> None:
+        crops = updated_manifest["crops"]
+        assert isinstance(crops, list)
+        next(crop for crop in crops if crop["id"] == "full_q1")["sha256"] = _sha256(
+            crop_path
+        )
+
+    _rewrite_initial_pack_and_state(created, mutate_manifest=forge)
+
+    with pytest.raises(
+        closed_loop_initial_review.ClosedLoopInitialReviewError,
+        match="initial_review_crop_pixels_invalid",
+    ):
+        closed_loop_initial_review.run_outbound_handoff(
+            "demo",
+            state_path=created["next_state_path"],
+            execute=True,
+            workspace_root=workspace,
+        )
+
+
+def test_root_retry_recovers_only_a_complete_verified_crop_pack(tmp_path: Path) -> None:
+    workspace, fixture, _, render, state_path = _setup(tmp_path)
+    state, published_state_path = closed_loop_initial_review._load_published_state(  # noqa: SLF001
+        workspace_root=workspace,
+        fixture="demo",
+        state_path=state_path,
+    )
+    _, source_record, _, render_record = closed_loop_initial_review._bound_root_artifacts(  # noqa: SLF001
+        state, workspace_root=workspace
+    )
+    request_path, _, _ = closed_loop_initial_review._publish_review_pack(  # noqa: SLF001
+        fixture_root=fixture,
+        render=render,
+        render_bytes=render.read_bytes(),
+        render_sha256=render_record["sha256"],
+        attempt_root=published_state_path.parent,
+        review_root=published_state_path.parent / "initial-review",
+        state=state,
+        state_path=published_state_path,
+        source_record=source_record,
+        render_record=render_record,
+        workspace_root=workspace,
+    )
+    request_path.unlink()
+
+    recovered = closed_loop_initial_review.run_outbound_handoff(
+        "demo", state_path=state_path, execute=True, workspace_root=workspace
+    )
+
+    assert recovered["created"] is True
+    assert request_path.is_file()
+
+
+def test_atomic_crop_request_publish_leaves_no_partial_final_pack_on_request_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, _, _, _, state_path = _setup(tmp_path)
+    original_create = closed_loop_initial_review.repair_transaction.atomic_create_json
+
+    def fail_staged_request(path: Path, payload: dict[str, object]) -> None:
+        if path.name == "request.json" and ".initial-review-staging" in path.parts:
+            raise closed_loop_initial_review.repair_transaction.RepairTransactionError(
+                "simulated_request_failure"
+            )
+        original_create(path, payload)
+
+    monkeypatch.setattr(
+        closed_loop_initial_review.repair_transaction,
+        "atomic_create_json",
+        fail_staged_request,
+    )
+    with pytest.raises(
+        closed_loop_initial_review.ClosedLoopInitialReviewError,
+        match="initial_review_publication_failed",
+    ):
+        closed_loop_initial_review.run_outbound_handoff(
+            "demo", state_path=state_path, execute=True, workspace_root=workspace
+        )
+
+    review_root = state_path.parent / "initial-review"
+    assert not review_root.exists()
+    assert not (state_path.parent / ".initial-review-staging").exists()
 
 
 def test_post_repair_adapter_rejects_initial_review_state(tmp_path: Path) -> None:

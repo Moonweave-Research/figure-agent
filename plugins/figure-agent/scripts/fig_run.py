@@ -1027,7 +1027,10 @@ def run_workflow(
                         )
                         break
                     except closed_loop_initial_review.ClosedLoopInitialReviewError as exc:
-                        if "transaction lock exists" not in str(exc) or retry_index == 24:
+                        if (
+                            "transaction lock exists" not in str(exc)
+                            and "initial_review_current_state_mismatch" not in str(exc)
+                        ) or retry_index == 24:
                             raise
                         time.sleep(0.01)
                         current = closed_loop_current_state.resolve_current_attempt(root, name)
