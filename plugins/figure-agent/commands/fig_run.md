@@ -132,8 +132,8 @@ because that is a host-vision operation, not a shell command.
 | `final_safe_command` | string or null | last command selected by driver |
 | `final_stop_boundary` | string or null | last driver stop boundary |
 | `final_stop_reason` | string | runner reason for stopping |
-| `executed_count` | int | number of shell commands actually run |
-| `plan_binding` | object, optional | step-admission comparison with `basis: queue_first_step | live_prelock`, planned/live action and command evidence, and `matched`, `stale`, or `admission_pending` state |
+| `executed_count` | int | number of mutation steps actually executed by the runner, including an admitted internal `fig_loop` API step as well as subprocess-backed steps |
+| `plan_binding` | object, optional | step-admission comparison with `basis: queue_first_step | live_prelock`, planned/live action and command evidence, and `matched` or `stale` state |
 | `admission_diagnostic` | object, optional | sanitized non-retryable fixture/lock diagnostic for `admission_invalid`; no filesystem paths |
 | `boundary_handoff` | object, optional | present for non-`complete` stops; explanatory only |
 | `journal` | object, optional | reference to the non-authoritative `.scratch/fig-run-runs/` record unless `--no-record` is used |

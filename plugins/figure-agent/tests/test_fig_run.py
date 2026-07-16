@@ -723,6 +723,90 @@ def test_queue_bound_fig_loop_maps_typed_admission_errors_without_execution(
         assert payload["admission_diagnostic"]["retryable"] is False
 
 
+def test_queue_bound_fig_loop_maps_underlock_validation_error_to_admission_invalid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    command = (
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
+    )
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_FIG_LOOP,
+        safe_command=command,
+    )
+    _install_driver_sequence(monkeypatch, [summary])
+
+    def _invalid_underlock(*args, **kwargs):
+        raise fig_run.closed_loop_attempt_state.ClosedLoopAttemptStateError(
+            "fixture_boundary_invalid"
+        )
+
+    monkeypatch.setattr(fig_run, "_driver_summary_under_admission", _invalid_underlock)
+
+    def _run_loop(name: str, goal: str, *, repo_root: Path, admission_check):
+        admission_check()
+        pytest.fail("known validation error escaped the admission callback")
+
+    monkeypatch.setattr(fig_run.fig_loop, "run_loop", _run_loop)
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: pytest.fail("invalid fig_loop used subprocess"),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        expected_first_action=fig_driver.ACTION_RUN_FIG_LOOP,
+        expected_first_safe_command=command,
+        repo_root=tmp_path,
+    )
+
+    assert payload["executed_count"] == 0
+    assert payload["final_stop_reason"] == fig_run.STOP_ADMISSION_INVALID
+    assert payload["plan_binding"]["basis"] == "queue_first_step"
+    assert payload["plan_binding"]["state"] == "matched"
+    assert payload["plan_binding"]["mutation_prevented"] is True
+    assert payload["admission_diagnostic"]["state"] == "fixture_boundary_invalid"
+    assert not (tmp_path / ".scratch" / "fig-loop-runs").exists()
+
+
+def test_queue_bound_fig_loop_does_not_swallow_underlock_programming_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    command = (
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
+    )
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_FIG_LOOP,
+        safe_command=command,
+    )
+    _install_driver_sequence(monkeypatch, [summary])
+    monkeypatch.setattr(
+        fig_run,
+        "_driver_summary_under_admission",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("programming bug")),
+    )
+
+    def _run_loop(name: str, goal: str, *, repo_root: Path, admission_check):
+        admission_check()
+        pytest.fail("programming error was swallowed")
+
+    monkeypatch.setattr(fig_run.fig_loop, "run_loop", _run_loop)
+
+    with pytest.raises(RuntimeError, match="programming bug"):
+        fig_run.run_workflow(
+            "runner_demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            expected_first_action=fig_driver.ACTION_RUN_FIG_LOOP,
+            expected_first_safe_command=command,
+            repo_root=tmp_path,
+        )
+
+
 def test_queue_bound_fig_loop_maps_generic_error_to_cli_equivalent_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -1662,18 +1662,35 @@ def run_workflow(
                 fig_loop_admission: dict[str, Any] = {}
 
                 def _admission_check() -> bool:
-                    admitted_summary = _driver_summary_under_admission(
-                        name,
-                        mode=mode,
-                        goal=goal,
-                        repo_root=repo_root,
-                    )
-                    admitted_would_execute = _would_execute(
-                        admitted_summary,
-                        name=name,
-                        goal=goal,
-                        repo_root=repo_root,
-                    )
+                    try:
+                        admitted_summary = _driver_summary_under_admission(
+                            name,
+                            mode=mode,
+                            goal=goal,
+                            repo_root=repo_root,
+                        )
+                        admitted_would_execute = _would_execute(
+                            admitted_summary,
+                            name=name,
+                            goal=goal,
+                            repo_root=repo_root,
+                        )
+                    except (
+                        closed_loop_attempt_state.ClosedLoopAttemptStateError,
+                        repair_transaction.RepairTransactionError,
+                    ) as exc:
+                        binding = _step_plan_binding(
+                            planned_action=expected_first_action,
+                            planned_safe_command=expected_first_safe_command,
+                            live_summary=summary,
+                            basis="queue_first_step",
+                            step_index=index,
+                            live_would_execute=would_execute,
+                        )
+                        binding["mutation_prevented"] = True
+                        fig_loop_admission["summary"] = summary
+                        fig_loop_admission["binding"] = binding
+                        raise fig_loop.FigLoopAdmissionInvalid(str(exc)) from exc
                     binding = _step_plan_binding(
                         planned_action=expected_first_action,
                         planned_safe_command=expected_first_safe_command,
@@ -1722,6 +1739,9 @@ def run_workflow(
                     final_stop_reason = STOP_ADMISSION_BUSY
                     break
                 except fig_loop.FigLoopAdmissionInvalid as exc:
+                    binding = fig_loop_admission.get("binding")
+                    if isinstance(binding, dict):
+                        plan_binding = binding
                     steps.append(
                         _step_payload(
                             index=index,
