@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -28,8 +29,17 @@ def _sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def test_fig3_history_retains_the_v64_to_v66_collision_transfer() -> None:
-    """A tracked receipt preserves the ignored historical report findings."""
+def _git_blob_sha256(repo_root: Path, commit: str, path: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "show", f"{commit}:{path}"],
+        check=True,
+        capture_output=True,
+    )
+    return "sha256:" + hashlib.sha256(result.stdout).hexdigest()
+
+
+def test_fig3_history_preserves_a_recorded_v64_to_v66_collision_snapshot() -> None:
+    """Ignored report fields remain an explicitly unverified historical record."""
     receipt = yaml.safe_load(
         HISTORICAL_LAYOUT_TRANSFER_RECEIPT.read_text(encoding="utf-8")
     )
@@ -41,20 +51,85 @@ def test_fig3_history_retains_the_v64_to_v66_collision_transfer() -> None:
         "id": energy,
         "minimum_clearance": 0.008,
     }
+    assert receipt["evidence_verification"] == {
+        "tracked_sources": "verified_in_clean_checkout",
+        "ignored_layout_reports": "recorded_unverifiable_ignored_artifact",
+        "capture_commit_layout_report_content": "not_tracked",
+    }
     assert receipt["never_recompile_historical_sources"] is True
+    repo_root = REPO_ROOT.parents[1]
+    capture_commit = receipt["tracked_sources_capture_commit"]
     for version in ("v64", "v66"):
         record = receipt["versions"][version]
-        source = FIG3_FIXTURE / record["source_path"]
+        source = FIG3_FIXTURE / record["tracked_source_path"]
+        source_repo_path = source.relative_to(repo_root).as_posix()
         assert source.is_file()
-        assert record["source_sha256"] == _sha256(source)
-        assert record["ignored_layout_report_path"].endswith(
+        assert record["tracked_source_sha256"] == _sha256(source)
+        assert record["tracked_source_sha256"] == _git_blob_sha256(
+            repo_root, capture_commit, source_repo_path
+        )
+        snapshot = record["recorded_ignored_layout_snapshot"]
+        assert snapshot["evidence_verification"] == (
+            "recorded_unverifiable_ignored_artifact"
+        )
+        assert snapshot["path"].endswith(
             f"execution-repair-{version}/build/layout_lanes.json"
         )
-        assert record["ignored_layout_report_sha256"].startswith("sha256:")
-    assert receipt["versions"]["v64"]["status"] == "ok"
-    assert receipt["versions"]["v64"]["clearance"] == 0.019776
-    assert receipt["versions"]["v66"]["status"] == "violation"
-    assert receipt["versions"]["v66"]["clearance"] == 0.004272
+        ignored_report = FIG3_FIXTURE / snapshot["path"]
+        ignored_report_repo_path = ignored_report.relative_to(repo_root).as_posix()
+        tracked_at_capture = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo_root),
+                "ls-tree",
+                "-r",
+                "--name-only",
+                capture_commit,
+                "--",
+                ignored_report_repo_path,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert tracked_at_capture.stdout == ""
+        tracked_now = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo_root),
+                "ls-files",
+                "--",
+                ignored_report_repo_path,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert tracked_now.stdout == ""
+    assert receipt["versions"]["v64"]["recorded_ignored_layout_snapshot"] == {
+        "path": (
+            "review/failure-first/execution-repair-v64/build/layout_lanes.json"
+        ),
+        "recorded_sha256": (
+            "sha256:26b5e6a831b1add1deea12652eaec8df009da33f43bcb5f7caa4a24bbc1dc701"
+        ),
+        "recorded_status": "ok",
+        "recorded_clearance": 0.019776,
+        "evidence_verification": "recorded_unverifiable_ignored_artifact",
+    }
+    assert receipt["versions"]["v66"]["recorded_ignored_layout_snapshot"] == {
+        "path": (
+            "review/failure-first/execution-repair-v66/build/layout_lanes.json"
+        ),
+        "recorded_sha256": (
+            "sha256:77dc1204f15ca39e42ef2c86df0b1b4f41767e51a823fac28f25dc9475b37d8e"
+        ),
+        "recorded_status": "violation",
+        "recorded_clearance": 0.004272,
+        "evidence_verification": "recorded_unverifiable_ignored_artifact",
+    }
     assert receipt["publication_acceptance"] == "not_claimed"
 
 
@@ -253,13 +328,12 @@ def test_fig3_strict_compile_does_not_rejudge_v64_to_v66_with_live_contract(
 
     assert receipt["never_recompile_historical_sources"] is True
     for record in receipt["versions"].values():
+        source_path = Path(record["tracked_source_path"])
         payload = check_layout_drift.layout_lane_payload(
             contract,
             [],
             (400.0, 200.0),
-            artifact_path=Path(record["ignored_layout_report_path"]).with_name(
-                "repaired_generated.pdf"
-            ),
+            artifact_path=source_path.parent / "build" / "repaired_generated.pdf",
         )
         assert payload["applicable"] is False
         assert payload["failure_count"] == 0
