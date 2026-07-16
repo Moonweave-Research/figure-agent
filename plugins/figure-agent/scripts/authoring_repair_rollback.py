@@ -388,7 +388,7 @@ def rollback_failed_materialized_candidate(
     try:
         with repair_transaction.recoverable_exclusive_lock(
             receipt_path.parent / ".materialization.lock",
-            owner="authoring_repair_rollback",
+            owner=repair_transaction.MATERIALIZATION_LOCK_OWNER,
         ):
             if packet_path.read_bytes() != packet_bytes:
                 raise AuthoringRepairRollbackError("repair packet drifted during rollback")

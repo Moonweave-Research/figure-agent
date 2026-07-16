@@ -752,6 +752,7 @@ def materialize_repair_candidate(
     apply: bool = True,
     receipt_path: Path | None = None,
     allow_legacy_packet: bool = False,
+    response_provenance: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Validate an LLM response and materialize its additive source once."""
     if not is_supported_packet_schema(packet.get("schema")):
@@ -915,6 +916,30 @@ def materialize_repair_candidate(
     except human_decision_record.HumanDecisionRecordError as exc:
         raise RepairExecutionPacketError(f"materialization authorization invalid: {exc}") from exc
     output = workspace_root / output_relative
+    bound_response: dict[str, object] | None = None
+    if response_provenance is not None:
+        if set(response_provenance) != {"path", "sha256", "payload"}:
+            raise RepairExecutionPacketError("repair response provenance invalid")
+        response_path = _regular_file(
+            workspace_root,
+            str(response_provenance.get("path") or ""),
+            label="repair response path",
+        )
+        try:
+            response_bytes = response_path.read_bytes()
+            response_payload = json.loads(response_bytes)
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise RepairExecutionPacketError(
+                "repair response provenance invalid"
+            ) from exc
+        if (
+            response_path.parent != output.parent
+            or response_provenance.get("sha256") != _sha256_bytes(response_bytes)
+            or response_provenance.get("payload") != response
+            or response_payload != response
+        ):
+            raise RepairExecutionPacketError("repair response provenance invalid")
+        bound_response = dict(response_provenance)
     if receipt_path is None:
         raise RepairExecutionPacketError("materialization receipt path missing")
     resolved_receipt = (
@@ -955,6 +980,7 @@ def materialize_repair_candidate(
                 "authorized_preview_sha256"
             ],
         },
+        **({"repair_response": bound_response} if bound_response is not None else {}),
         "rollback": {
             "strategy": "delete_materialized_output_if_hash_matches",
             "pre_transaction_state": "absent",

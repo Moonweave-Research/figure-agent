@@ -59,6 +59,19 @@ def _mapping(path: Path, *, label: str) -> dict[str, Any]:
     return payload
 
 
+def _mapping_snapshot(path: Path, *, label: str) -> tuple[dict[str, Any], bytes]:
+    if path.is_symlink() or not path.is_file():
+        raise AuthoringRepairFinalizeError(f"{label} must be a regular file")
+    try:
+        data = path.read_bytes()
+        payload = json.loads(data.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise AuthoringRepairFinalizeError(f"{label} is invalid") from exc
+    if not isinstance(payload, dict):
+        raise AuthoringRepairFinalizeError(f"{label} is invalid")
+    return payload, data
+
+
 def _safe_workspace_path(root: Path, value: object, *, label: str) -> Path:
     relative = Path(str(value or ""))
     if (
@@ -356,9 +369,11 @@ def finalize_materialized_candidate(
             "packet, receipt, and authorization must be adjacent"
         )
 
-    packet = _mapping(packet_path, label="repair packet")
-    receipt = _mapping(receipt_path, label="materialization receipt")
-    authorization_record = _mapping(
+    packet, packet_bytes = _mapping_snapshot(packet_path, label="repair packet")
+    receipt, receipt_bytes = _mapping_snapshot(
+        receipt_path, label="materialization receipt"
+    )
+    authorization_record, authorization_bytes = _mapping_snapshot(
         authorization_path, label="materialization authorization"
     )
     if not authoring_repair_packet.is_supported_packet_schema(packet.get("schema")):
@@ -470,10 +485,22 @@ def finalize_materialized_candidate(
     env["FIGURE_AGENT_WORKSPACE"] = str(workspace_root)
     build = output.parent / "build"
 
-    with repair_transaction.exclusive_lock(
+    with repair_transaction.recoverable_exclusive_lock(
         output.parent / ".materialization.lock",
-        owner="authoring_repair_finalize",
+        owner=repair_transaction.MATERIALIZATION_LOCK_OWNER,
     ):
+        if packet_path.read_bytes() != packet_bytes:
+            raise AuthoringRepairFinalizeError(
+                "repair packet drifted during finalization"
+            )
+        if receipt_path.read_bytes() != receipt_bytes:
+            raise AuthoringRepairFinalizeError(
+                "receipt drifted during finalization"
+            )
+        if authorization_path.read_bytes() != authorization_bytes:
+            raise AuthoringRepairFinalizeError(
+                "authorization drifted during finalization"
+            )
         try:
             authoring_repair_packet.validate_bound_packet_authority(
                 packet,

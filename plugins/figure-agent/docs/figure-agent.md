@@ -7,22 +7,20 @@
 
 **Committed baseline:** `c6a28e40` (`codex/figure-agent-closed-loop-reset`)
 
-This is the sole product specification and forward execution authority for
-Figure Agent. Other specifications, plans, roadmaps, milestone notes, fixture
-reviews, and generated packets are implementation references or historical
-evidence. They cannot change product direction or the next implementation step.
+This is the sole product specification and forward execution authority for Figure
+Agent. Other specifications, plans, roadmaps, milestone notes, fixture reviews,
+and generated packets are implementation references or historical evidence. They
+cannot change product direction or the next implementation step.
 
 The baseline names a reproducible starting commit, not a release, quality, or
-publication verdict. A clean worktree at this commit passed 235 targeted
-baseline tests. Future claims require fresh evidence from the implementation
-slice that makes the claim.
+publication verdict. A clean worktree at this commit passed 235 targeted baseline
+tests. Future claims require fresh evidence from the slice that makes the claim.
 
 ## 1. Outcome
 
-Figure Agent does not compete with an LLM as a second general drawing model.
-The LLM remains free to interpret the scientific narrative, propose a
-composition, choose an analogy, and author editable TikZ or another declared
-representation.
+Figure Agent does not compete with an LLM as a second general drawing model. The
+LLM remains free to interpret the scientific narrative, propose a composition,
+choose an analogy, and author editable TikZ or another declared representation.
 
 Figure Agent complements that capability where an unconstrained LLM is
 reliably weak:
@@ -36,50 +34,42 @@ reliably weak:
 - reproducing the result from declared inputs and tool versions; and
 - separating machine evidence from human scientific and publication judgment.
 
-The operating rule is:
+The operating rule is: **Let the LLM propose freely.** Make Figure Agent constrain,
+observe, localize, repair, reproduce, and prove.
 
-> Let the LLM propose freely. Make Figure Agent constrain, observe, localize,
-> repair, reproduce, and prove.
-
-Figure production is not Figure Agent product development. A hand-tuned
-fixture may be valuable evidence, but it becomes a product capability only when
-the same declared mechanism transfers across materially different figure
-families without fixture coordinates or hidden human edits.
+Figure production is not Figure Agent product development. A hand-tuned fixture
+becomes a product capability only when the same declared mechanism transfers
+across different figure families without fixture coordinates or hidden human edits.
 
 ## 2. Product boundaries
 
 ### 2.1 Representation roles
 
 - **TikZ/TeX** is the current default editable publication-authoring path.
-- **SVG** is a derived export, inspection, interchange, or bounded fragment
-  surface. Direct-SVG generation is not an active backend-development target.
+- **SVG** is a derived export, inspection, interchange, or bounded fragment surface.
+  Direct-SVG generation is not an active backend-development target.
 - **Python** is the control plane for contracts, compilation, observation,
-  attribution, repair transactions, provenance, and evaluation. It is not a
-  replacement illustration language.
+  attribution, repair, provenance, and evaluation, not an illustration language.
 - **PDF and PNG** are rendered evidence surfaces, not editable authority.
 - Exact chemical structures and quantitative plots should use their domain
   authorities when needed; the general LLM must not imitate them freehand when
   a deterministic renderer or data pipeline owns the truth.
 
-Backend selection is closed until comparative evidence demonstrates a concrete
-failure that the current control plane cannot address. Do not add a renderer,
-an Illustrator clone, a whole-page composition grammar, or fixture-specific
-handcrafted coordinates to reusable code during the closed-loop slices.
+Backend selection is closed until comparative evidence shows a failure the control
+plane cannot address. During closed-loop slices, do not add a renderer, Illustrator
+clone, whole-page grammar, or fixture-specific coordinates to reusable code.
 
 ### 2.2 Knowledge and model boundaries
 
-Read-only authoring context packs are durable paper-specific knowledge
-compilation. They may bind explicit paper-local files, Style Lock tokens,
-reviewed visual assets, semantic objects, relations, and protected invariants.
-They are not LLM prompt plumbing, prompt-loop revival, generation execution, or
-automatic physics detection.
+Read-only authoring context packs compile durable paper-specific knowledge. They
+may bind explicit paper-local files, Style Lock tokens, reviewed assets, semantic
+objects, relations, and protected invariants. They are not LLM prompt plumbing,
+prompt-loop revival, generation execution, or automatic physics detection.
 
-The plugin may prepare crops and structured briefs for host vision review, but
-the host performs that review outside the plugin. Figure Agent accepts the
-result only through a receipt that binds the actor, model or tool, request hash,
-transcript hash, and exact inspected artifacts. It does not treat a detector, a
-model critique, or a numerical score as scientific truth. Ambiguity remains
-visible and routes to the responsible human.
+The plugin may prepare crops and briefs, but host vision review occurs outside it.
+Figure Agent accepts only a receipt binding actor, model or tool, request hash,
+transcript hash, and inspected artifacts. Detectors, critiques, and scores are not
+scientific truth; ambiguity remains visible and routes to the responsible human.
 
 ## 3. Closed-loop architecture
 
@@ -122,14 +112,12 @@ scientific task + references + declared invariants
         named human development-baseline verdict
 ```
 
-The first implementation priority is the missing connection from observed
-critique to attributable bounded repair and then to a fresh post-repair visual
-review. Existing detectors, crops, attribution modules, repair transactions,
-and provenance artifacts should be reused before adding new mechanisms.
+The first priority is connecting observed critique to attributable bounded repair
+and fresh post-repair visual review. Reuse existing detectors, crops, attribution,
+repair transactions, and provenance before adding mechanisms.
 
-Zero-feedback authoring remains useful only as a controlled benchmark arm. It
-must not be presented as the normal Figure Agent workflow. In an A/B/C
-comparison:
+Zero-feedback authoring is only a controlled benchmark arm, not the normal
+workflow. In an A/B/C comparison:
 
 - **A** is raw LLM authoring from the neutral scientific task;
 - **B** is the same LLM and task plus Figure Agent's declared contracts; and
@@ -138,10 +126,9 @@ comparison:
 
 ## 4. Evidence contract
 
-Every attempt must bind the scientific task, model, budget, source commit,
-starting artifact, context packet, generated artifact, renderer/toolchain,
-review inputs, and resulting evidence by hash. A line number alone is never
-source identity; use a stable selector and fail closed on missing, duplicated,
+Every attempt must hash-bind the task, model, budget, source commit, starting and
+generated artifacts, context packet, toolchain, review inputs, and evidence. A line
+number is not source identity; use stable selectors and reject missing, duplicate,
 or stale anchors.
 
 Evidence remains layered:
@@ -155,20 +142,18 @@ Evidence remains layered:
 4. **Publication accepted:** an external editorial outcome outside Figure
    Agent's authority.
 
-No lower state implies a higher one. Machine gates and model critiques must use
-`publication_acceptance: not_claimed` unless a separate external record exists;
-even then, the external record is evidence rather than plugin authority.
+No lower state implies a higher one. Machine gates and model critiques use
+`publication_acceptance: not_claimed`; any external record is evidence, not plugin
+authority.
 
-Capability promotion requires two materially different figure families,
-prospectively recorded correction time, named human outcomes, no semantic or
-relation regression, and reproducible evidence. Rejected and neutral attempts
-remain useful failure-corpus records.
+Promotion requires two materially different figure families, prospectively recorded correction time,
+named human outcomes, no semantic or relation regression,
+and reproducible evidence. Rejected and neutral attempts remain failure evidence.
 
 ## 5. Executable roadmap
 
-Execute one slice at a time with the smallest failing test first. Keep each
-slice reviewable and do not open the next slice until its stop conditions and
-verification are recorded.
+Execute one slice at a time with the smallest failing test first. Keep it
+reviewable; open the next slice only after recording stop conditions and evidence.
 
 ### R0 — Establish the authority baseline
 
@@ -177,43 +162,40 @@ verification are recorded.
 - [x] Preserve previous authorities in place as legacy evidence.
 - [x] Run authority, package, and entrypoint contract tests after consolidation.
 
-**Exit:** exactly one active authority marker exists and every agent entrypoint
-routes here.
+**Exit:** exactly one active authority marker exists; every entrypoint routes here.
 
 ### R1 — Specify the closed-loop attempt state
 
-- [x] Add bounded failing-first contract tests for adjudicated repair binding and
-  hash-bound post-repair visual-review evidence.
-- [x] Define attempt identity, parent-child lineage, freshness, actor boundary,
-  and terminal-state fields without adding a new renderer or workflow shell.
+- [x] Add failing-first tests for adjudicated repair binding and hash-bound
+  post-repair visual-review evidence.
+- [x] Define attempt identity, lineage, freshness, actor boundary, and terminal
+  fields without a new renderer or workflow shell.
 - [x] Reject stale adjudication, ambiguous attribution, and missing repair
   evidence at the supported critique-to-target bridge.
 - [x] Express and prove the complete lifecycle, including unadjudicated and
   unbound starts, through one shared attempt-state contract.
 
-**Exit:** tests express the full state transition from authored render through
-post-repair re-review, including every fail-closed boundary.
+**Exit:** tests cover authored render through re-review and each fail-closed boundary.
 
 ### R2 — Connect critique to bounded repair
 
 - [x] Convert one adjudicated visual finding into declared semantic object and
   relation references.
-- [x] Bind one supported machine-backed visual finding to exact source
-  attribution, one editable selector, and declared protected invariants.
-- [x] Carry that binding through the existing repair packet, materialization,
-  finalization, rollback, and bounded edit-budget surfaces as one transaction.
+- [x] Bind one machine-backed finding to exact source attribution, one editable
+  selector, and declared protected invariants.
+- [x] Carry it through repair packet, materialization, finalization, rollback, and
+  bounded edit-budget surfaces as one transaction.
 - [x] Keep ambiguous or evidence-missing bridge inputs as fail-closed stops.
 - [x] Route unbound semantic or relation findings to an explicit human handoff.
 
-**Exit:** one reviewed finding can produce a safe repair transaction without
-chat-only coordinates or hidden source selection.
+**Exit:** one reviewed finding produces safe repair without hidden source selection.
 
 ### R3 — Require fresh post-repair vision and regression evidence
 
-- [x] Build a post-repair review request that binds verified repaired-source and
-  render hashes plus full, target, neighboring, and print-scale artifacts.
-- [x] Fail closed when review artifacts drift, required inspection roles are
-  missing, the target remains unresolved, or regression is present or uncertain.
+- [x] Bind verified repaired-source/render hashes and full, target, neighboring,
+  and print-scale artifacts in the post-repair review request.
+- [x] Reject drift, missing inspection roles, unresolved targets, and present or
+  uncertain regression.
 - [x] Require a hash-valid external host-review execution receipt before a
   non-uncertain response can advance to visual re-review pending human judgment.
 - [x] Wire fresh crops and a request-bound host handoff into the canonical run
@@ -224,8 +206,7 @@ chat-only coordinates or hidden source selection.
 - [x] Preserve hash-bound before/after evidence; execute identity-safe, crash-recoverable rollback with explicit legacy opt-in.
 - [ ] Repeat on a prospective real defect; controlled fault is not acceptance.
 
-**Exit:** `machine_repaired` cannot become `visually_re_reviewed` without fresh
-post-repair evidence.
+**Exit:** `machine_repaired` needs fresh evidence to become `visually_re_reviewed`.
 
 ### R4 — Make the lifecycle the canonical run path
 
@@ -240,6 +221,11 @@ post-repair evidence.
   projected `post_review_requested` path and hash, then revalidate the canonical
   current leaf under the publication lock; do not discover responses or invoke
   the host automatically.
+- [x] Consume an explicitly supplied, hash-bound repair response only from the
+  canonical `repair_authorized` state. Reuse materialize/finalize/rollback: strict
+  success publishes `machine_repaired`; strict failure rolls back and publishes
+  `repair_required`. Never discover a response, invoke a host, accept legacy
+  packets implicitly, or claim publication acceptance.
 - [ ] Wire remaining safe deterministic transitions through default `run` one
   at a time without synthesizing host, scientific, or human evidence.
 - [x] Stop at host-vision, scientific, human authorization, accepted/golden,
@@ -254,9 +240,7 @@ post-repair evidence.
 - [ ] Expose a compact default command surface only after compatibility tests
   prove no evidence path is lost.
 
-**Exit:** a new agent can start from status, execute all safe deterministic work,
-and receive one truthful next actor/action without selecting among overlapping
-workflow shells.
+**Exit:** status drives safe deterministic work to one truthful next actor/action.
 
 ### R5 — Cross-family proof and capability promotion
 
@@ -267,9 +251,8 @@ workflow shells.
   reproducibility, and transfer without fixture-specific imports.
 - [ ] Promote only the narrow mechanisms supported by both families.
 
-**Exit:** the evidence demonstrates reduced correction burden without reducing
-the LLM's open-ended authoring capability. Otherwise retain the mechanism as
-experimental or retire it.
+**Exit:** evidence shows lower correction burden without reducing open-ended LLM
+authoring; otherwise retain the mechanism as experimental or retire it.
 
 ## 6. Mandatory stop conditions
 
@@ -298,50 +281,39 @@ success is publication acceptance.
 Reuse the established compile/export, perception, critique, attribution, repair,
 materialization, provenance, and human-review surfaces.
 
-The code is a bounded R1-R3 foundation with the first R4 canonical-routing
-slice, not a completed closed loop. Its shared attempt-state contract binds
-identity, append-only lineage, live freshness, phase evidence roles, actor
-separation, legal transitions, and terminal development outcomes. The default
-status/run path now discovers one authoritative current attempt without mtime,
-projects its exact actor/path/hash, and stops rather than selecting a legacy
-loop when the next transition is not yet wired. Evidence-role presence is not
-domain validation or actor authentication; adapters must validate each receipt
-against recorded identity.
+The code is an R1-R3 foundation with several R4 canonical transitions, not a
+completed loop. Its attempt state binds identity, append-only lineage, freshness,
+evidence roles, actors, legal transitions, and terminal development outcomes.
+Default status/run finds one current attempt without mtime, projects exact
+actor/path/hash, and stops instead of selecting a legacy loop. Evidence-role
+presence is not domain validation or actor authentication; adapters validate each
+receipt against recorded identity.
 
-One exact adjudicated binding now crosses packet compilation, human-authorized
-materialization, rollback, and finalization. New packets use v4 authority;
-stored v3 packets require explicit compatibility and cannot enter post-repair
-review directly. Finalization and rollback revalidate current v4 authority;
-rollback also revalidates hash-bound failed detector evidence under a recoverable lock.
+One adjudicated binding crosses packet compilation, authorized materialization,
+rollback, and finalization. New packets use v4 authority; stored v3 packets need
+explicit compatibility and cannot enter post-repair review. Finalization and
+rollback revalidate v4 authority and hash-bound failure evidence under recovery.
 
 The binding now hash-binds declared semantic object and relation references to
 the same editable selector as the repair target. Missing semantic authority,
 ambiguous attribution, or missing references can emit only a named
 `human_attributor` handoff; they cannot create a repair binding or packet.
 
-Default `run` now advances one validated `machine_repaired` state to a bound
-`post_review_requested` state and stops at `host_llm`; it does not invoke the
-host or discover a response automatically. When the operator explicitly
-supplies that receipt-bound response, the same default run resolves the unique
-current `post_review_requested` state and consumes the response without a
-second state-path selection. The maintained-Fig3
-controlled-fault replay is mechanism evidence only, not an actual defect or
-publication verdict; prospective real-defect proof and the remaining R4-R5
-work are still pending.
+Default `run` consumes an explicitly supplied, hash-bound repair response only
+against canonical `repair_authorized`. It reuses materialize, strict finalize,
+and rollback: success publishes `machine_repaired`; strict failure rolls back to
+`repair_required`; completed receipts recover interrupted state publication. It neither discovers responses,
+invokes a host, implicitly admits legacy packets, nor claims publication acceptance.
+It then advances validated `machine_repaired` to bound `post_review_requested` and
+stops at `host_llm`; an explicit receipt-bound response is resolved against the
+unique current state. Maintained-Fig3 controlled-fault replay is mechanism evidence,
+not an actual defect or publication verdict; prospective proof and R4-R5 remain.
 
-The closed-loop slices bind their handoffs through these narrow evidence
-contracts rather than another workflow shell:
-
-- `figure-agent.repair-materialization-preview.v1`;
-- `figure-agent.repair-materialization-receipt.v2`;
-- `figure-agent.repair-execution-packet.v4`;
-- `figure-agent.repair-authority-contract.v1`;
-- `figure-agent.closed-loop-attempt-state.v1`;
-- `figure-agent.closed-loop-current-state.v1`;
-- `figure-agent.adjudicated-repair-binding.v1`;
-- `figure-agent.semantic-finding-attribution.v1`;
-- `figure-agent.attribution-handoff.v1`;
-- `figure-agent.post-repair-visual-review-request.v1`;
-- `figure-agent.host-review-execution-receipt.v1`;
-- `figure-agent.post-repair-visual-review-response.v1`; and
-- `figure-agent.post-repair-visual-review-receipt.v1`.
+Closed-loop handoffs use these contracts rather than another workflow shell:
+`figure-agent.repair-materialization-preview.v1`, `figure-agent.repair-materialization-receipt.v2`,
+`figure-agent.repair-execution-packet.v4`, `figure-agent.repair-authority-contract.v1`,
+`figure-agent.closed-loop-attempt-state.v1`, `figure-agent.closed-loop-current-state.v1`,
+`figure-agent.adjudicated-repair-binding.v1`, `figure-agent.semantic-finding-attribution.v1`,
+`figure-agent.attribution-handoff.v1`, `figure-agent.post-repair-visual-review-request.v1`,
+`figure-agent.host-review-execution-receipt.v1`, `figure-agent.post-repair-visual-review-response.v1`, and
+`figure-agent.post-repair-visual-review-receipt.v1`.

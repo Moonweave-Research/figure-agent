@@ -17,6 +17,9 @@ class RepairTransactionError(RuntimeError):
     """Raised when an exclusive repair transaction cannot start."""
 
 
+MATERIALIZATION_LOCK_OWNER = "figure_agent_materialization_transaction"
+
+
 def _fsync_directory(path: Path) -> None:
     fd = os.open(path, os.O_RDONLY)
     try:

@@ -22,6 +22,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import closed_loop_machine_repair  # noqa: E402
 import closed_loop_post_review  # noqa: E402
 import closed_loop_post_review_response  # noqa: E402
 import fig_driver  # noqa: E402
@@ -281,6 +282,20 @@ def _automatic_machine_repaired_state(
     return _projected_current_state(
         summary,
         lifecycle_state="machine_repaired",
+        disposition="continue",
+        required_actor="workflow_agent",
+        repo_root=repo_root,
+    )
+
+
+def _automatic_repair_authorized_state(
+    summary: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> tuple[Path, str] | None:
+    return _projected_current_state(
+        summary,
+        lifecycle_state="repair_authorized",
         disposition="continue",
         required_actor="workflow_agent",
         repo_root=repo_root,
@@ -559,6 +574,7 @@ def run_workflow(
     max_steps: int = DEFAULT_MAX_STEPS,
     closed_loop_state: Path | None = None,
     closed_loop_response: Path | None = None,
+    closed_loop_repair_response: Path | None = None,
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
     if mode == "final":
@@ -567,6 +583,10 @@ def run_workflow(
         raise ValueError(f"unsupported mode: {mode}")
     if max_steps < 1:
         raise ValueError("max_steps must be >= 1")
+    if closed_loop_response is not None and closed_loop_repair_response is not None:
+        raise ValueError(
+            "--closed-loop-response and --closed-loop-repair-response are mutually exclusive"
+        )
     initial_summary: dict[str, Any] | None = None
     automatic_state_sha256: str | None = None
     if closed_loop_state is None:
@@ -576,7 +596,17 @@ def run_workflow(
             goal=goal,
             repo_root=repo_root,
         )
-        if closed_loop_response is None:
+        if closed_loop_repair_response is not None:
+            automatic_state = _automatic_repair_authorized_state(
+                initial_summary,
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-repair-response requires current "
+                    "repair_authorized state or --closed-loop-state"
+                )
+        elif closed_loop_response is None:
             automatic_state = _automatic_machine_repaired_state(
                 initial_summary,
                 repo_root=repo_root,
@@ -596,6 +626,100 @@ def run_workflow(
                 )
         if automatic_state is not None:
             closed_loop_state, automatic_state_sha256 = automatic_state
+    if closed_loop_state is not None and closed_loop_repair_response is not None:
+        try:
+            repair = closed_loop_machine_repair.run_machine_repair(
+                name,
+                state_path=closed_loop_state,
+                response_path=closed_loop_repair_response,
+                execute=execute,
+                workspace_root=repo_root,
+                plugin_root=REPO_ROOT,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except closed_loop_machine_repair.ClosedLoopMachineRepairError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        state_path = repair["input_state_path"]
+        next_state_path = repair["next_state_path"]
+        response_path = repair["response_path"]
+        receipt_path = repair["receipt_path"]
+        input_state = repair["input_state"]
+        state_evidence_path = next_state_path if repair["created"] else state_path
+        evidence_refs = [
+            f"repair_response:{response_path.relative_to(root).as_posix()}",
+            f"closed_loop_state:{state_evidence_path.relative_to(root).as_posix()}",
+        ]
+        if receipt_path.is_file():
+            evidence_refs.insert(
+                1,
+                f"materialization_receipt:{receipt_path.relative_to(root).as_posix()}",
+            )
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": repair["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": repair["stop_boundary"],
+            "final_stop_reason": repair["stop_reason"],
+            "executed_count": 1 if repair["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": repair["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "response_path": response_path.relative_to(root).as_posix(),
+                "receipt_path": receipt_path.relative_to(root).as_posix(),
+                "decision": repair["decision"],
+                "created": repair["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": repair["action"],
+                "stop_boundary": repair["stop_boundary"],
+                "required_actor": repair["required_actor"],
+                "blocking_reason": (
+                    "execute the hash-bound authorized repair plan"
+                    if not execute
+                    else (
+                        "continue from the machine-verified repair"
+                        if repair["next_state"] == "machine_repaired"
+                        else "strict verification failed and the candidate was rolled back"
+                    )
+                ),
+                "evidence_refs": evidence_refs,
+                "allowed_scope": [
+                    "hash-bound additive materialization",
+                    "strict local machine verification",
+                ],
+                "forbidden_scope": [
+                    "repair response discovery",
+                    "plugin host or model invocation",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": (
+                    ["request post-repair visual review"]
+                    if repair["next_state"] == "machine_repaired"
+                    else ["start a new attempt from the repair failure record"]
+                ),
+                "continuation_guidance": {
+                    "rerun_live_status_first": True,
+                    "rerun_live_driver_first": True,
+                    "note": (
+                        "Use the exact hash-bound attempt evidence; do not infer paths from chat."
+                    ),
+                },
+                "publication_acceptance": "not_claimed",
+            },
+        }
     if closed_loop_state is not None and closed_loop_response is not None:
         try:
             inbound = closed_loop_post_review_response.run_inbound_response(
@@ -662,16 +786,13 @@ def run_workflow(
                 "closeout_checks": (
                     ["start a new attempt from the bound repair failure record"]
                     if inbound["stop_boundary"] == "repair_required"
-                    else [
-                        "record a named human verdict before development acceptance"
-                    ]
+                    else ["record a named human verdict before development acceptance"]
                 ),
                 "continuation_guidance": {
                     "rerun_live_status_first": False,
                     "rerun_live_driver_first": False,
                     "note": (
-                        "Use the exact hash-bound attempt evidence; "
-                        "do not infer paths from chat."
+                        "Use the exact hash-bound attempt evidence; do not infer paths from chat."
                     ),
                 },
             },
@@ -737,9 +858,7 @@ def run_workflow(
                     if not execute
                     else "host visual review required"
                 ),
-                "evidence_refs": [
-                    f"closed_loop_state:{state_path.relative_to(root).as_posix()}"
-                ],
+                "evidence_refs": [f"closed_loop_state:{state_path.relative_to(root).as_posix()}"],
                 "allowed_scope": ["read-only"],
                 "forbidden_scope": [
                     "plugin host or model invocation",
@@ -869,6 +988,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)
     parser.add_argument("--closed-loop-state", type=Path, default=None)
     parser.add_argument("--closed-loop-response", type=Path, default=None)
+    parser.add_argument("--closed-loop-repair-response", type=Path, default=None)
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--record", action="store_true")
     parser.add_argument("--no-record", action="store_true")
@@ -885,6 +1005,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             max_steps=args.max_steps,
             closed_loop_state=args.closed_loop_state,
             closed_loop_response=args.closed_loop_response,
+            closed_loop_repair_response=args.closed_loop_repair_response,
             repo_root=repo_root,
         )
     except ValueError as exc:
@@ -894,9 +1015,12 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     should_record = not args.no_record and (args.execute or args.record)
     if args.closed_loop_state is not None and not args.execute:
         should_record = False
-    if (
-        args.closed_loop_response is not None
-        and not payload.get("closed_loop", {}).get("created", False)
+    if args.closed_loop_response is not None and not payload.get("closed_loop", {}).get(
+        "created", False
+    ):
+        should_record = False
+    if args.closed_loop_repair_response is not None and not payload.get("closed_loop", {}).get(
+        "created", False
     ):
         should_record = False
     if should_record:
