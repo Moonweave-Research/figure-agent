@@ -504,6 +504,62 @@ def test_e2e_rejects_canonical_runs_root_symlink_before_commands_or_outputs(
     assert not list(target.glob("*/run_manifest.json"))
 
 
+@pytest.mark.parametrize("two_node_cycle", [False, True])
+def test_e2e_rejects_cyclic_scratch_before_commands_or_outputs(
+    tmp_path: Path, two_node_cycle: bool
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    scratch = tmp_path / ".scratch"
+    if two_node_cycle:
+        cycle_peer = tmp_path / ".scratch-cycle-peer"
+        scratch.symlink_to(cycle_peer.name)
+        cycle_peer.symlink_to(scratch.name)
+    else:
+        scratch.symlink_to(scratch.name)
+    calls: list[list[str]] = []
+    workspace_entries = sorted(path.name for path in tmp_path.iterdir())
+
+    with pytest.raises(smoke.SmokeError, match="runs_root_path_resolution_error"):
+        smoke.run_smoke(
+            fixture.name,
+            repo_root=tmp_path,
+            command_runner=lambda args, **_kwargs: calls.append(args) or _completed(args),
+        )
+
+    assert calls == []
+    assert not (fixture / "build").exists()
+    assert not (fixture / "exports").exists()
+    assert sorted(path.name for path in tmp_path.iterdir()) == workspace_entries
+
+
+def test_e2e_main_reports_cyclic_scratch_as_json_error(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    scratch = tmp_path / ".scratch"
+    scratch.symlink_to(scratch.name)
+    workspace_entries = sorted(path.name for path in tmp_path.iterdir())
+
+    exit_code = smoke.main([fixture.name, "--repo-root", str(tmp_path), "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.err == ""
+    assert json.loads(captured.out) == {
+        "error": "runs_root_path_resolution_error",
+        "fixture": fixture.name,
+        "goal": "deterministic E2E smoke",
+        "repeat": 1,
+        "runs": [],
+        "schema": "figure-agent.e2e-smoke.v1",
+        "success": False,
+    }
+    assert not (fixture / "build").exists()
+    assert not (fixture / "exports").exists()
+    assert sorted(path.name for path in tmp_path.iterdir()) == workspace_entries
+
+
 def test_e2e_rejects_symlinked_source_before_commands_or_outputs(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
     outside = tmp_path.parent / "outside.tex"

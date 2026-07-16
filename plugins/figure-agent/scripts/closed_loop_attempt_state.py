@@ -255,8 +255,11 @@ def validate_legacy_runs_root(workspace_root: Path, runs_root: Path) -> Path:
     scratch = root / ".scratch"
     canonical = scratch / "fig-loop-runs"
     canonical_component_symlink = scratch.is_symlink() or canonical.is_symlink()
-    resolved = requested.resolve()
-    canonical_resolved = canonical.resolve()
+    try:
+        resolved = requested.resolve()
+        canonical_resolved = canonical.resolve()
+    except (OSError, RuntimeError) as exc:
+        raise ClosedLoopAttemptStateError("runs_root_path_resolution_error") from exc
 
     def within(path: Path, parent: Path) -> bool:
         try:

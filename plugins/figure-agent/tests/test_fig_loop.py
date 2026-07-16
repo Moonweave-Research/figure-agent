@@ -173,6 +173,49 @@ def test_canonical_runs_root_symlink_is_rejected_before_loop_checkpoint(
     assert not list(target.glob("*/run_manifest.json"))
 
 
+def test_loop_rejects_cyclic_scratch_before_checkpoint(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    scratch = tmp_path / ".scratch"
+    scratch.symlink_to(scratch.name)
+    workspace_entries = sorted(path.name for path in tmp_path.iterdir())
+
+    with pytest.raises(FigLoopError, match="runs_root_path_resolution_error"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path)
+
+    assert not (fixture / "build").exists()
+    assert not (fixture / "exports").exists()
+    assert sorted(path.name for path in tmp_path.iterdir()) == workspace_entries
+
+
+def test_loop_main_reports_cyclic_scratch_without_stdout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    scratch = tmp_path / ".scratch"
+    scratch.symlink_to(scratch.name)
+    workspace_entries = sorted(path.name for path in tmp_path.iterdir())
+    real_run_loop = fig_loop_mod.run_loop
+
+    def run_loop_in_fixture_root(
+        name: str, goal: str, *, runs_root: Path | None = None
+    ) -> Path:
+        return real_run_loop(name, goal, repo_root=tmp_path, runs_root=runs_root)
+
+    monkeypatch.setattr(fig_loop_mod, "run_loop", run_loop_in_fixture_root)
+
+    exit_code = fig_loop_mod.main([fixture.name, "--goal", "inspect", "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert captured.err == "fig_loop.py: runs_root_path_resolution_error\n"
+    assert not (fixture / "build").exists()
+    assert not (fixture / "exports").exists()
+    assert sorted(path.name for path in tmp_path.iterdir()) == workspace_entries
+
+
 def test_symlinked_loop_source_is_rejected_before_scratch_output(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
     outside = tmp_path.parent / "outside.tex"
