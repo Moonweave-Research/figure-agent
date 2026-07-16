@@ -322,8 +322,10 @@ def _resolve_loop_run_dir(
             diagnostics.append("fig_loop_run_outside_allowlist")
             return None
         if (
-            len(supplied_relative.parts) != 1
-            or supplied != runs_root / supplied_relative.name
+            not supplied_relative.parts
+            or any(part in {".", ".."} for part in supplied_relative.parts)
+            or supplied.parent != runs_root
+            or not _safe_loop_run_basename(supplied.name)
         ):
             diagnostics.append("fig_loop_run_not_immediate_child")
             return None
@@ -525,9 +527,22 @@ def _fingerprints(
 
 def _relative_path(root: Path, path: Path) -> str:
     try:
-        return path.relative_to(root).as_posix()
+        relative = path.relative_to(root)
     except ValueError as exc:
         raise ValueError("execution evidence path is outside repository") from exc
+    if ".." in relative.parts:
+        raise ValueError("execution evidence path contains parent traversal")
+    return relative.as_posix()
+
+
+def _safe_loop_run_basename(name: str) -> bool:
+    return (
+        bool(name)
+        and bool(name.strip())
+        and name not in {".", ".."}
+        and "/" not in name
+        and "\\" not in name
+    )
 
 
 def _safe_path_components(

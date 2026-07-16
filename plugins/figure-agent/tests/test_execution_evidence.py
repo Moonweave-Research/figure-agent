@@ -335,6 +335,47 @@ def test_supplied_loop_run_dir_must_be_normalized_immediate_child(
     assert evidence["diagnostics"] == ["fig_loop_run_not_immediate_child"]
 
 
+def test_supplied_loop_parent_segment_cannot_capture_scratch_files(
+    tmp_path: Path,
+) -> None:
+    scratch_dir = tmp_path / ".scratch"
+    scratch_dir.mkdir()
+    (scratch_dir / "run_manifest.json").write_text(
+        json.dumps({"fixture": "demo"}) + "\n",
+        encoding="utf-8",
+    )
+    (scratch_dir / "iteration_001.json").write_text("{}\n", encoding="utf-8")
+    (scratch_dir / "stop_report.json").write_text("{}\n", encoding="utf-8")
+    (scratch_dir / "decision.md").write_text("# outside run root\n", encoding="utf-8")
+    runs_root = scratch_dir / "fig-loop-runs"
+    runs_root.mkdir()
+    capture = execution_evidence.begin_step_capture(
+        tmp_path,
+        fixture="demo",
+        action="run_fig_loop",
+    )
+
+    evidence = execution_evidence.finish_step_capture(
+        capture,
+        returncode=0,
+        loop_run_dir=runs_root / "..",
+    )
+
+    assert evidence["artifacts"] == []
+    assert evidence["diagnostics"] == ["fig_loop_run_not_immediate_child"]
+
+
+def test_relative_path_rejects_parent_traversal_segments(tmp_path: Path) -> None:
+    with pytest.raises(
+        ValueError,
+        match="execution evidence path contains parent traversal",
+    ):
+        execution_evidence._relative_path(  # noqa: SLF001
+            tmp_path,
+            tmp_path / ".scratch" / "fig-loop-runs" / ".." / "decision.md",
+        )
+
+
 def test_supplied_loop_run_dir_rejects_symlinked_immediate_child(
     tmp_path: Path,
 ) -> None:
