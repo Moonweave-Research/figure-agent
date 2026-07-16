@@ -236,6 +236,9 @@ reviewable; open the next slice only after recording stop conditions and evidenc
 - [x] Preserve exact actor, evidence references, allowed/forbidden scope, and
   `publication_acceptance` through queue and plan-only queue-run projections;
   aggressive candidate search may not cross a human boundary.
+- [x] Preserve additive, content-hashed per-step execution artifacts for
+  compile, adjudication scaffold, export, and fig-loop runs without changing
+  the selected action, command return code, or final stop reason.
 - [ ] Give every remaining specialist/internal adapter an explicit canonical
   successor and evidence contract before compacting the surface.
 - [ ] Expose a compact default command surface only after compatibility tests
@@ -295,6 +298,25 @@ Direct legacy `fig_loop` shares a recoverable fixture-root admission lease with 
 The bounded runner acquires that lease separately for each compile, adjudication-scaffold, or export step. It re-queries the driver and revalidates the exact action, command, stop boundary, and action-specific safety while holding the lease through subprocess completion, then releases it before selecting the next step. Driver drift stops as `stale_plan`; busy admission stops as retryable `admission_busy`; fixture-path, non-busy lock, or under-lock validation failure stops as non-retryable `admission_invalid`. None starts an unadmitted subprocess or increments the executed count. Plan-only calls acquire no lease.
 
 Direct `fig_run` delegation to `fig_loop` remains on the existing self-leased path and is not wrapped in an outer lease. Queue-bound delegation uses that same API with an internal under-lock callback that exact-matches the queued action and command before canonical/source preflight or scratch creation. Drift stops as `stale_plan`; busy or invalid admission maps to the typed runner stops. A match writes the normal verify-only checkpoint, preserves CLI-equivalent JSON stdout, and returns to fresh live replanning. The retired admission-pending token remains only as a compatibility constant, and the queue summary field is always zero. These machine gates do not establish visual, human-development, release, or publication acceptance.
+
+Every `figure-agent.run.v1` step now carries additive
+`execution_evidence`. Unexecuted steps use `null`; executed steps use
+`figure-agent.step-execution-evidence.v1` with the fixture/action binding,
+sorted sanitized diagnostics, and sorted allowlisted regular-file artifacts.
+Each artifact records its repo-relative POSIX path, role, byte size, SHA-256,
+and `created`, `modified`, or `unchanged` state from pre/post content
+fingerprints rather than mtime. Collection never follows symlinks and never
+changes the command return code or runner stop. A successful command that
+omits a required output receives only a capture diagnostic.
+
+Compile evidence is limited to the named render, detector/report, convention,
+and perception outputs; adjudication evidence is the exact
+`critique_adjudication.yaml`; export evidence is the fixture's PDF, SVG, PNG,
+and TIFF. Queue-bound fig-loop capture uses the exact returned run directory.
+Direct fig-loop capture accepts exactly one newly created immediate child of
+`.scratch/fig-loop-runs/` whose manifest names the fixture, never a
+latest/mtime guess. Queue-run preserves the nested `figure-agent.run.v1`
+payload as-is and does not wrap or duplicate step evidence.
 
 Closed-loop handoffs use these contracts rather than another workflow shell:
 `figure-agent.repair-materialization-preview.v1`, `figure-agent.repair-materialization-receipt.v2`,

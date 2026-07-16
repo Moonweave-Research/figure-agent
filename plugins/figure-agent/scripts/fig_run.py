@@ -34,6 +34,7 @@ import closed_loop_post_review  # noqa: E402
 import closed_loop_post_review_response  # noqa: E402
 import closed_loop_repair_authorization  # noqa: E402
 import closed_loop_repair_candidate  # noqa: E402
+import execution_evidence  # noqa: E402
 import fig_driver  # noqa: E402
 import fig_loop  # noqa: E402
 import repair_transaction  # noqa: E402
@@ -399,6 +400,7 @@ def _step_payload(
     executed: bool,
     stop_reason: str | None,
     result: CommandResult | None = None,
+    step_execution_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "index": index,
@@ -411,6 +413,7 @@ def _step_payload(
         "returncode": result.returncode if result is not None else None,
         "stdout_tail": _tail(result.stdout) if result is not None else "",
         "stderr_tail": _tail(result.stderr) if result is not None else "",
+        "execution_evidence": step_execution_evidence,
         "stop_reason": stop_reason,
         "driver": summary,
     }
@@ -1701,7 +1704,16 @@ def run_workflow(
                     )
                     fig_loop_admission["summary"] = admitted_summary
                     fig_loop_admission["binding"] = binding
-                    return binding["state"] == "matched"
+                    if binding["state"] != "matched":
+                        return False
+                    fig_loop_admission["evidence_capture"] = (
+                        execution_evidence.begin_step_capture(
+                            repo_root,
+                            fixture=name,
+                            action=admitted_summary["action"],
+                        )
+                    )
+                    return True
 
                 try:
                     run_dir = fig_loop.run_loop(
@@ -1799,6 +1811,12 @@ def run_workflow(
                 executed_count += 1
                 executed_signatures.add(signature)
                 stop_reason = STOP_COMMAND_FAILED if result.returncode != 0 else None
+                evidence_capture = fig_loop_admission["evidence_capture"]
+                step_execution_evidence = execution_evidence.finish_step_capture(
+                    evidence_capture,
+                    returncode=result.returncode,
+                    loop_run_dir=run_dir if result.returncode == 0 else None,
+                )
                 steps.append(
                     _step_payload(
                         index=index,
@@ -1807,6 +1825,7 @@ def run_workflow(
                         executed=True,
                         stop_reason=stop_reason,
                         result=result,
+                        step_execution_evidence=step_execution_evidence,
                     )
                 )
                 if result.returncode != 0:
@@ -1894,6 +1913,11 @@ def run_workflow(
                     final_stop_reason = STOP_REPEATED_ACTION
                     break
                 admission_validation_active = False
+                evidence_capture = execution_evidence.begin_step_capture(
+                    repo_root,
+                    fixture=name,
+                    action=admitted_summary["action"],
+                )
                 result = _run_command(command, repo_root=repo_root)
         except closed_loop_attempt_state.FixtureAdmissionLeaseBusy:
             steps.append(
@@ -1932,6 +1956,10 @@ def run_workflow(
         executed_count += 1
         executed_signatures.add(signature)
         stop_reason = STOP_COMMAND_FAILED if result.returncode != 0 else None
+        step_execution_evidence = execution_evidence.finish_step_capture(
+            evidence_capture,
+            returncode=result.returncode,
+        )
         steps.append(
             _step_payload(
                 index=index,
@@ -1940,6 +1968,7 @@ def run_workflow(
                 executed=True,
                 stop_reason=stop_reason,
                 result=result,
+                step_execution_evidence=step_execution_evidence,
             )
         )
         if result.returncode != 0:

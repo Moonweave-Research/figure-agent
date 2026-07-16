@@ -224,6 +224,60 @@ def test_execute_delegates_each_planned_fixture_to_fig_run(
     assert [run["result"]["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
 
 
+def test_queue_run_preserves_nested_step_execution_evidence_without_wrapping(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "examples" / "alpha").mkdir(parents=True)
+    queue = _queue()
+    queue["command_plan"]["executable"] = [queue["command_plan"]["executable"][0]]
+    queue["command_plan"]["executable_count"] = 1
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: queue)
+    evidence = {
+        "schema": "figure-agent.step-execution-evidence.v1",
+        "fixture": "alpha",
+        "action": "run_fig_loop",
+        "state": "captured",
+        "artifacts": [
+            {
+                "role": "fig_loop_manifest",
+                "path": ".scratch/fig-loop-runs/run-1/run_manifest.json",
+                "change": "created",
+                "size_bytes": 2,
+                "sha256": "0" * 64,
+            }
+        ],
+        "diagnostics": [],
+    }
+    nested = {
+        "schema": "figure-agent.run.v1",
+        "fixture": "alpha",
+        "execute": True,
+        "executed_count": 1,
+        "final_stop_reason": "complete",
+        "steps": [{"execution_evidence": evidence}],
+    }
+    monkeypatch.setattr(
+        fig_queue_run.fig_run,
+        "run_workflow",
+        lambda *args, **kwargs: nested,
+    )
+
+    payload = fig_queue_run.run_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        execute=True,
+        max_steps=2,
+        max_fixtures=1,
+        fixtures=None,
+        filters={},
+    )
+
+    assert payload["runs"][0]["result"] is nested
+    assert payload["runs"][0]["result"]["steps"][0]["execution_evidence"] is evidence
+    assert "execution_evidence" not in payload["runs"][0]
+
+
 def test_execute_counts_stale_plan_separately_and_continues_batch(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

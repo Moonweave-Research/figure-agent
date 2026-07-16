@@ -97,6 +97,17 @@ def _install_driver_sequence(
     return calls
 
 
+def _write_loop_run(run_dir: Path, *, fixture: str) -> None:
+    run_dir.mkdir(parents=True)
+    (run_dir / "run_manifest.json").write_text(
+        json.dumps({"fixture": fixture}) + "\n",
+        encoding="utf-8",
+    )
+    (run_dir / "iteration_001.json").write_text("{}\n", encoding="utf-8")
+    (run_dir / "stop_report.json").write_text("{}\n", encoding="utf-8")
+    (run_dir / "decision.md").write_text("# Decision\n", encoding="utf-8")
+
+
 def test_plan_only_reports_compile_without_executing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -143,7 +154,96 @@ def test_plan_only_reports_compile_without_executing(
     assert payload["final_stop_reason"] == "plan_only"
     assert payload["steps"][0]["would_execute"] is True
     assert payload["steps"][0]["executed"] is False
+    assert payload["steps"][0]["execution_evidence"] is None
     assert commands == []
+
+
+def test_execute_compile_attaches_structured_artifact_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture_dir = tmp_path / "examples" / "runner_demo"
+    build_dir = fixture_dir / "build"
+    build_dir.mkdir(parents=True)
+    command = "bash scripts/compile.sh examples/runner_demo/runner_demo.tex"
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command=command,
+            ),
+            _driver_summary(
+                action=fig_driver.ACTION_COMPLETE,
+                safe_command=None,
+                status={"render_state": "FRESH"},
+            ),
+        ],
+    )
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        assert command == "bash scripts/compile.sh examples/runner_demo/runner_demo.tex"
+        (build_dir / "runner_demo.pdf").write_bytes(b"pdf")
+        (build_dir / "runner_demo.png").write_bytes(b"png")
+        (build_dir / "strict_status.json").write_text("{}\n", encoding="utf-8")
+        return fig_run.CommandResult(returncode=0, stdout="compiled\n", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    evidence = payload["steps"][0]["execution_evidence"]
+    assert evidence["schema"] == "figure-agent.step-execution-evidence.v1"
+    assert evidence["fixture"] == "runner_demo"
+    assert evidence["action"] == fig_driver.ACTION_RUN_COMPILE
+    assert evidence["state"] == "captured"
+    assert [item["path"] for item in evidence["artifacts"]] == [
+        "examples/runner_demo/build/runner_demo.pdf",
+        "examples/runner_demo/build/runner_demo.png",
+        "examples/runner_demo/build/strict_status.json",
+    ]
+
+
+def test_missing_success_artifacts_are_diagnostic_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "examples" / "runner_demo").mkdir(parents=True)
+    command = "bash scripts/compile.sh examples/runner_demo/runner_demo.tex"
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command=command,
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: fig_run.CommandResult(0, "ok\n", ""),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert payload["final_stop_reason"] == fig_run.STOP_COMPLETE
+    assert payload["steps"][0]["returncode"] == 0
+    assert payload["steps"][0]["execution_evidence"]["diagnostics"] == [
+        "required_artifact_missing:examples/runner_demo/build/runner_demo.pdf",
+        "required_artifact_missing:examples/runner_demo/build/runner_demo.png",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -526,13 +626,15 @@ def test_direct_fig_loop_keeps_existing_self_leased_execution_path(
         "fixture_admission_lock",
         _unexpected_outer_lock,
     )
-    monkeypatch.setattr(
-        fig_run,
-        "_run_command",
-        lambda command, *, repo_root: (
-            commands.append(command) or fig_run.CommandResult(0, "", "")
-        ),
-    )
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        _write_loop_run(
+            tmp_path / ".scratch" / "fig-loop-runs" / "run-1",
+            fixture="runner_demo",
+        )
+        return fig_run.CommandResult(0, "", "")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
 
     payload = fig_run.run_workflow(
         "runner_demo",
@@ -545,6 +647,14 @@ def test_direct_fig_loop_keeps_existing_self_leased_execution_path(
     assert commands == [command]
     assert payload["executed_count"] == 1
     assert payload["final_stop_reason"] == fig_run.STOP_COMPLETE
+    assert [
+        item["role"] for item in payload["steps"][0]["execution_evidence"]["artifacts"]
+    ] == [
+        "fig_loop_decision",
+        "fig_loop_iteration",
+        "fig_loop_manifest",
+        "fig_loop_stop_report",
+    ]
 
 
 def test_queue_bound_fig_loop_uses_self_leased_api_and_replans_after_success(
@@ -581,7 +691,9 @@ def test_queue_bound_fig_loop_uses_self_leased_api_and_replans_after_success(
     ) -> Path:
         api_calls.append((name, goal, repo_root))
         assert admission_check() is True
-        return tmp_path / ".scratch" / "fig-loop-runs" / "run-1"
+        run_dir = tmp_path / ".scratch" / "fig-loop-runs" / "run-1"
+        _write_loop_run(run_dir, fixture="runner_demo")
+        return run_dir
 
     monkeypatch.setattr(fig_run.fig_loop, "run_loop", _fake_run_loop)
     monkeypatch.setattr(
@@ -615,6 +727,8 @@ def test_queue_bound_fig_loop_uses_self_leased_api_and_replans_after_success(
         json.dumps(loop_summary, sort_keys=True) + "\n"
     )
     assert payload["steps"][0]["stderr_tail"] == ""
+    assert payload["steps"][0]["execution_evidence"]["state"] == "captured"
+    assert len(payload["steps"][0]["execution_evidence"]["artifacts"]) == 4
 
 
 def test_queue_bound_fig_loop_underlock_drift_stops_stale_without_scratch(
@@ -1174,6 +1288,7 @@ def test_first_step_expectation_stops_stale_plan_before_mutation(
             "returncode": None,
             "stdout_tail": "",
             "stderr_tail": "",
+            "execution_evidence": None,
             "stop_reason": fig_run.STOP_STALE_PLAN,
             "driver": live_summary,
         }

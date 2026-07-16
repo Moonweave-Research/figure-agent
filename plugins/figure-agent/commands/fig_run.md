@@ -144,6 +144,29 @@ agent can inspect the exact status, blocker, and next-action evidence used for
 the decision. A successful executed step may have `stop_reason: null`; the
 runner then re-queries the driver for the next action.
 
+Every step also includes `execution_evidence`. It is `null` when the step was
+not executed. Executed steps use
+`schema: figure-agent.step-execution-evidence.v1`:
+
+| Field | Type | Notes |
+|---|---|---|
+| `fixture`, `action` | string | exact step binding |
+| `state` | string | `captured` or `captured_with_diagnostics` |
+| `artifacts` | list | sorted allowlisted regular files only |
+| `diagnostics` | list | sorted sanitized capture diagnostics |
+
+Each artifact records `role`, repo-relative POSIX `path`, content-derived
+`change: created | modified | unchanged`, `size_bytes`, and lowercase
+`sha256`. Capture uses pre/post content fingerprints, never mtime, does not
+follow symlinks, and cannot change `returncode` or `final_stop_reason`.
+Required-output absence after a successful command is diagnostic only.
+
+The allowlist is action-specific: compile render/report/perception outputs,
+the exact adjudication YAML, the fixture's four export formats, and the
+fixture-bound fig-loop run files. Queue-bound fig-loop uses the exact returned
+run directory. Direct fig-loop requires exactly one newly created
+fixture-matching immediate child and never selects a latest run by mtime.
+
 ### Run Journal
 
 When `--execute` is passed, the CLI records each `/fig_run` payload under:

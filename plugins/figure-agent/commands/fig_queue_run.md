@@ -129,8 +129,9 @@ make SVG polish handoff executable; `svg_editor` rows remain blocked.
 | `summary` | planned executable, planned blocked, planned complete, attempted, unattempted executable, executed command, failed, stale, busy, admission-invalid, admission-pending, and blocked counts |
 
 Run records contain the planned fixture/action/command. In execute mode they
-also include the embedded `/fig_run` result, including additive `plan_binding`
-evidence, so the operator can inspect the live revalidation stop reason.
+also include the embedded `/fig_run` result, including additive per-step
+`execution_evidence` and `plan_binding`. Queue-run preserves that nested schema
+as-is and does not create a second evidence wrapper.
 
 Blocked rows remain under `queue.command_plan.blocked`. Each blocked row carries
 `operator_handoff`, copied from `/fig_queue`, so the operator can see the next
