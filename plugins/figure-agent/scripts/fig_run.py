@@ -145,6 +145,63 @@ def _tail(text: str, *, limit: int = 4000) -> str:
     return text[-limit:]
 
 
+def _begin_step_execution_evidence(
+    repo_root: Path,
+    *,
+    fixture: str,
+    action: str,
+) -> execution_evidence.StepCapture | dict[str, object]:
+    try:
+        return execution_evidence.begin_step_capture(
+            repo_root,
+            fixture=fixture,
+            action=action,
+        )
+    except Exception as exc:
+        return execution_evidence.capture_internal_error_evidence(
+            fixture=fixture,
+            action=action,
+            error_type=type(exc).__name__,
+        )
+
+
+def _finish_step_execution_evidence(
+    capture: execution_evidence.StepCapture | dict[str, object],
+    *,
+    fixture: str,
+    action: str,
+    returncode: int,
+    loop_run_dir: Path | None = None,
+) -> dict[str, object]:
+    if isinstance(capture, dict):
+        return capture
+    try:
+        return execution_evidence.finish_step_capture(
+            capture,
+            returncode=returncode,
+            loop_run_dir=loop_run_dir,
+        )
+    except Exception as exc:
+        return execution_evidence.capture_internal_error_evidence(
+            fixture=fixture,
+            action=action,
+            error_type=type(exc).__name__,
+        )
+
+
+def _missing_step_execution_evidence(
+    *,
+    fixture: str,
+    action: str,
+    reason: str,
+) -> dict[str, object]:
+    return execution_evidence.capture_internal_error_evidence(
+        fixture=fixture,
+        action=action,
+        error_type=reason,
+    )
+
+
 def _is_slash_command(command: str | None) -> bool:
     return isinstance(command, str) and command.strip().startswith("/")
 
@@ -1707,7 +1764,7 @@ def run_workflow(
                     if binding["state"] != "matched":
                         return False
                     fig_loop_admission["evidence_capture"] = (
-                        execution_evidence.begin_step_capture(
+                        _begin_step_execution_evidence(
                             repo_root,
                             fixture=name,
                             action=admitted_summary["action"],
@@ -1715,12 +1772,25 @@ def run_workflow(
                     )
                     return True
 
+                def _post_run_capture(run_dir: Path) -> None:
+                    admitted_summary = fig_loop_admission["summary"]
+                    fig_loop_admission["execution_evidence"] = (
+                        _finish_step_execution_evidence(
+                            fig_loop_admission["evidence_capture"],
+                            fixture=name,
+                            action=admitted_summary["action"],
+                            returncode=0,
+                            loop_run_dir=run_dir,
+                        )
+                    )
+
                 try:
                     run_dir = fig_loop.run_loop(
                         name,
                         goal,
                         repo_root=repo_root,
                         admission_check=_admission_check,
+                        post_run_callback=_post_run_capture,
                     )
                 except fig_loop.FigLoopAdmissionRejected:
                     admitted_summary = fig_loop_admission["summary"]
@@ -1811,12 +1881,39 @@ def run_workflow(
                 executed_count += 1
                 executed_signatures.add(signature)
                 stop_reason = STOP_COMMAND_FAILED if result.returncode != 0 else None
-                evidence_capture = fig_loop_admission["evidence_capture"]
-                step_execution_evidence = execution_evidence.finish_step_capture(
-                    evidence_capture,
-                    returncode=result.returncode,
-                    loop_run_dir=run_dir if result.returncode == 0 else None,
+                step_execution_evidence = fig_loop_admission.get(
+                    "execution_evidence"
                 )
+                if not isinstance(step_execution_evidence, dict):
+                    evidence_capture = fig_loop_admission.get("evidence_capture")
+                    if result.returncode == 0:
+                        step_execution_evidence = (
+                            _missing_step_execution_evidence(
+                                fixture=name,
+                                action=admitted_summary["action"],
+                                reason="PostRunCallbackNotInvoked",
+                            )
+                        )
+                    elif isinstance(
+                        evidence_capture,
+                        (execution_evidence.StepCapture, dict),
+                    ):
+                        step_execution_evidence = (
+                            _finish_step_execution_evidence(
+                                evidence_capture,
+                                fixture=name,
+                                action=admitted_summary["action"],
+                                returncode=result.returncode,
+                            )
+                        )
+                    else:
+                        step_execution_evidence = (
+                            _missing_step_execution_evidence(
+                                fixture=name,
+                                action=admitted_summary["action"],
+                                reason="CaptureNotStarted",
+                            )
+                        )
                 steps.append(
                     _step_payload(
                         index=index,
@@ -1913,12 +2010,18 @@ def run_workflow(
                     final_stop_reason = STOP_REPEATED_ACTION
                     break
                 admission_validation_active = False
-                evidence_capture = execution_evidence.begin_step_capture(
+                evidence_capture = _begin_step_execution_evidence(
                     repo_root,
                     fixture=name,
                     action=admitted_summary["action"],
                 )
                 result = _run_command(command, repo_root=repo_root)
+                step_execution_evidence = _finish_step_execution_evidence(
+                    evidence_capture,
+                    fixture=name,
+                    action=admitted_summary["action"],
+                    returncode=result.returncode,
+                )
         except closed_loop_attempt_state.FixtureAdmissionLeaseBusy:
             steps.append(
                 _step_payload(
@@ -1956,10 +2059,6 @@ def run_workflow(
         executed_count += 1
         executed_signatures.add(signature)
         stop_reason = STOP_COMMAND_FAILED if result.returncode != 0 else None
-        step_execution_evidence = execution_evidence.finish_step_capture(
-            evidence_capture,
-            returncode=result.returncode,
-        )
         steps.append(
             _step_payload(
                 index=index,

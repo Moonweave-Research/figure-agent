@@ -262,32 +262,6 @@ def test_export_evidence_is_limited_to_four_named_formats(tmp_path: Path) -> Non
     )
 
 
-def test_unexpected_programming_error_is_not_converted_to_capture_diagnostic(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fixture_dir = tmp_path / "examples" / "demo"
-    fixture_dir.mkdir(parents=True)
-    capture = execution_evidence.begin_step_capture(
-        tmp_path,
-        fixture="demo",
-        action="run_adjudicate",
-    )
-    path = fixture_dir / "critique_adjudication.yaml"
-    path.write_text("schema: test\n", encoding="utf-8")
-    original_lstat = Path.lstat
-
-    def _broken_lstat(self: Path):
-        if self == path:
-            raise RuntimeError("programming defect with /private/raw/path")
-        return original_lstat(self)
-
-    monkeypatch.setattr(Path, "lstat", _broken_lstat)
-
-    with pytest.raises(RuntimeError, match="programming defect"):
-        execution_evidence.finish_step_capture(capture, returncode=0)
-
-
 def test_collection_oserror_is_sanitized_and_other_artifacts_survive(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -321,3 +295,69 @@ def test_collection_oserror_is_sanitized_and_other_artifacts_survive(
         "required_artifact_missing:examples/demo/build/demo.pdf",
     ]
     assert "/do/not/expose" not in json.dumps(evidence)
+
+
+@pytest.mark.parametrize("fixture", ("../escape", ".", "nested/demo", "/absolute"))
+def test_public_capture_rejects_invalid_fixture_names(
+    tmp_path: Path,
+    fixture: str,
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match="fixture name must be a single examples/<name> directory name",
+    ):
+        execution_evidence.begin_step_capture(
+            tmp_path,
+            fixture=fixture,
+            action="run_compile",
+        )
+
+
+def test_supplied_loop_run_dir_must_be_normalized_immediate_child(
+    tmp_path: Path,
+) -> None:
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    run_dir = runs_root / "run-1"
+    _write_loop_run(run_dir, fixture="demo")
+    capture = execution_evidence.begin_step_capture(
+        tmp_path,
+        fixture="demo",
+        action="run_fig_loop",
+    )
+
+    evidence = execution_evidence.finish_step_capture(
+        capture,
+        returncode=0,
+        loop_run_dir=runs_root / "other" / ".." / "run-1",
+    )
+
+    assert evidence["artifacts"] == []
+    assert evidence["diagnostics"] == ["fig_loop_run_not_immediate_child"]
+
+
+def test_supplied_loop_run_dir_rejects_symlinked_immediate_child(
+    tmp_path: Path,
+) -> None:
+    outside = tmp_path / "outside-run"
+    _write_loop_run(outside, fixture="demo")
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    runs_root.mkdir(parents=True)
+    linked = runs_root / "run-linked"
+    linked.symlink_to(outside, target_is_directory=True)
+    capture = execution_evidence.begin_step_capture(
+        tmp_path,
+        fixture="demo",
+        action="run_fig_loop",
+    )
+
+    evidence = execution_evidence.finish_step_capture(
+        capture,
+        returncode=0,
+        loop_run_dir=linked,
+    )
+
+    assert evidence["artifacts"] == []
+    assert evidence["diagnostics"] == [
+        "artifact_symlink_ignored:.scratch/fig-loop-runs/run-linked",
+        "fig_loop_run_missing",
+    ]

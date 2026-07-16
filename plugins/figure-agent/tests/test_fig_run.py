@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -244,6 +245,156 @@ def test_missing_success_artifacts_are_diagnostic_only(
         "required_artifact_missing:examples/runner_demo/build/runner_demo.pdf",
         "required_artifact_missing:examples/runner_demo/build/runner_demo.png",
     ]
+
+
+def test_leased_step_finishes_evidence_before_release_overwrite(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    build_dir = tmp_path / "examples" / "runner_demo" / "build"
+    build_dir.mkdir(parents=True)
+    command = "bash scripts/compile.sh examples/runner_demo/runner_demo.tex"
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_COMPILE,
+        safe_command=command,
+    )
+    _install_driver_sequence(
+        monkeypatch,
+        [summary, _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None)],
+    )
+
+    @contextmanager
+    def _overwrite_after_release(
+        workspace_root: Path, fixture: str
+    ) -> Iterator[None]:
+        try:
+            yield
+        finally:
+            (build_dir / "runner_demo.pdf").write_bytes(b"other-run")
+
+    monkeypatch.setattr(
+        fig_run.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _overwrite_after_release,
+    )
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        (build_dir / "runner_demo.pdf").write_bytes(b"this-step")
+        (build_dir / "runner_demo.png").write_bytes(b"png")
+        return fig_run.CommandResult(0, "", "")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    pdf = next(
+        item
+        for item in payload["steps"][0]["execution_evidence"]["artifacts"]
+        if item["role"] == "render_pdf"
+    )
+    assert pdf["sha256"] == hashlib.sha256(b"this-step").hexdigest()
+    assert (build_dir / "runner_demo.pdf").read_bytes() == b"other-run"
+
+
+@pytest.mark.parametrize("capture_phase", ("begin", "finish"))
+def test_capture_internal_errors_preserve_command_result(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capture_phase: str,
+) -> None:
+    (tmp_path / "examples" / "runner_demo").mkdir(parents=True)
+    command = "bash scripts/compile.sh examples/runner_demo/runner_demo.tex"
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command=command,
+            )
+        ],
+    )
+    target = (
+        "begin_step_capture" if capture_phase == "begin" else "finish_step_capture"
+    )
+    monkeypatch.setattr(
+        fig_run.execution_evidence,
+        target,
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            RuntimeError("raw /private/path must not escape")
+        ),
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: fig_run.CommandResult(
+            7,
+            "",
+            "compile failed",
+        ),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert payload["final_stop_reason"] == fig_run.STOP_COMMAND_FAILED
+    assert payload["steps"][0]["returncode"] == 7
+    evidence = payload["steps"][0]["execution_evidence"]
+    assert evidence["state"] == "captured_with_diagnostics"
+    assert evidence["diagnostics"] == ["capture_internal_error:RuntimeError"]
+    assert "/private/path" not in json.dumps(evidence)
+
+
+@pytest.mark.parametrize("capture_phase", ("begin", "finish"))
+@pytest.mark.parametrize("error_type", (KeyboardInterrupt, SystemExit))
+def test_capture_control_flow_exceptions_are_not_isolated(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capture_phase: str,
+    error_type: type[BaseException],
+) -> None:
+    (tmp_path / "examples" / "runner_demo").mkdir(parents=True)
+    command = "bash scripts/compile.sh examples/runner_demo/runner_demo.tex"
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command=command,
+            )
+        ],
+    )
+    target = (
+        "begin_step_capture" if capture_phase == "begin" else "finish_step_capture"
+    )
+    monkeypatch.setattr(
+        fig_run.execution_evidence,
+        target,
+        lambda *args, **kwargs: (_ for _ in ()).throw(error_type("control flow")),
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: fig_run.CommandResult(0, "", ""),
+    )
+
+    with pytest.raises(error_type):
+        fig_run.run_workflow(
+            "runner_demo",
+            mode="review",
+            goal="close loop",
+            execute=True,
+            repo_root=tmp_path,
+        )
 
 
 @pytest.mark.parametrize(
@@ -677,6 +828,7 @@ def test_queue_bound_fig_loop_uses_self_leased_api_and_replans_after_success(
         lambda *args, **kwargs: dict(summary),
     )
     api_calls: list[tuple[str, str, Path]] = []
+    expected_manifest_sha256: list[str] = []
     loop_summary = {
         "run_dir": ".scratch/fig-loop-runs/run-1",
         "final_stop_reason": "agent_action_required",
@@ -688,11 +840,21 @@ def test_queue_bound_fig_loop_uses_self_leased_api_and_replans_after_success(
         *,
         repo_root: Path,
         admission_check,
+        post_run_callback,
     ) -> Path:
         api_calls.append((name, goal, repo_root))
         assert admission_check() is True
         run_dir = tmp_path / ".scratch" / "fig-loop-runs" / "run-1"
         _write_loop_run(run_dir, fixture="runner_demo")
+        manifest = run_dir / "run_manifest.json"
+        expected_manifest_sha256.append(
+            hashlib.sha256(manifest.read_bytes()).hexdigest()
+        )
+        post_run_callback(run_dir)
+        manifest.write_text(
+            json.dumps({"fixture": "runner_demo", "writer": "other-run"}) + "\n",
+            encoding="utf-8",
+        )
         return run_dir
 
     monkeypatch.setattr(fig_run.fig_loop, "run_loop", _fake_run_loop)
@@ -729,6 +891,21 @@ def test_queue_bound_fig_loop_uses_self_leased_api_and_replans_after_success(
     assert payload["steps"][0]["stderr_tail"] == ""
     assert payload["steps"][0]["execution_evidence"]["state"] == "captured"
     assert len(payload["steps"][0]["execution_evidence"]["artifacts"]) == 4
+    manifest = next(
+        item
+        for item in payload["steps"][0]["execution_evidence"]["artifacts"]
+        if item["role"] == "fig_loop_manifest"
+    )
+    assert manifest["sha256"] == expected_manifest_sha256[0]
+    assert manifest["sha256"] != hashlib.sha256(
+        (
+            tmp_path
+            / ".scratch"
+            / "fig-loop-runs"
+            / "run-1"
+            / "run_manifest.json"
+        ).read_bytes()
+    ).hexdigest()
 
 
 def test_queue_bound_fig_loop_underlock_drift_stops_stale_without_scratch(
@@ -758,7 +935,14 @@ def test_queue_bound_fig_loop_underlock_drift_stops_stale_without_scratch(
     )
     runs_root = tmp_path / ".scratch" / "fig-loop-runs"
 
-    def _rejecting_run_loop(name: str, goal: str, *, repo_root: Path, admission_check):
+    def _rejecting_run_loop(
+        name: str,
+        goal: str,
+        *,
+        repo_root: Path,
+        admission_check,
+        post_run_callback,
+    ):
         assert admission_check() is False
         raise fig_run.fig_loop.FigLoopAdmissionRejected("fig_loop_admission_rejected")
 
@@ -856,7 +1040,14 @@ def test_queue_bound_fig_loop_maps_underlock_validation_error_to_admission_inval
 
     monkeypatch.setattr(fig_run, "_driver_summary_under_admission", _invalid_underlock)
 
-    def _run_loop(name: str, goal: str, *, repo_root: Path, admission_check):
+    def _run_loop(
+        name: str,
+        goal: str,
+        *,
+        repo_root: Path,
+        admission_check,
+        post_run_callback,
+    ):
         admission_check()
         pytest.fail("known validation error escaped the admission callback")
 
@@ -903,7 +1094,14 @@ def test_queue_bound_fig_loop_does_not_swallow_underlock_programming_error(
         lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("programming bug")),
     )
 
-    def _run_loop(name: str, goal: str, *, repo_root: Path, admission_check):
+    def _run_loop(
+        name: str,
+        goal: str,
+        *,
+        repo_root: Path,
+        admission_check,
+        post_run_callback,
+    ):
         admission_check()
         pytest.fail("programming error was swallowed")
 
@@ -933,7 +1131,14 @@ def test_queue_bound_fig_loop_maps_generic_error_to_cli_equivalent_failure(
     )
     _install_driver_sequence(monkeypatch, [summary])
 
-    def _failing_run_loop(name: str, goal: str, *, repo_root: Path, admission_check):
+    def _failing_run_loop(
+        name: str,
+        goal: str,
+        *,
+        repo_root: Path,
+        admission_check,
+        post_run_callback,
+    ):
         assert admission_check() is True
         raise fig_run.fig_loop.FigLoopError("loop failed")
 
@@ -965,6 +1170,42 @@ def test_queue_bound_fig_loop_maps_generic_error_to_cli_equivalent_failure(
     assert payload["steps"][0]["returncode"] == 1
     assert payload["steps"][0]["stdout_tail"] == ""
     assert payload["steps"][0]["stderr_tail"] == "fig_loop.py: loop failed\n"
+
+
+def test_queue_bound_fig_loop_error_before_admission_callback_keeps_failure_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    command = (
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
+    )
+    summary = _driver_summary(
+        action=fig_driver.ACTION_RUN_FIG_LOOP,
+        safe_command=command,
+    )
+    _install_driver_sequence(monkeypatch, [summary])
+    monkeypatch.setattr(
+        fig_run.fig_loop,
+        "run_loop",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            fig_run.fig_loop.FigLoopError("pre-callback failure")
+        ),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        expected_first_action=fig_driver.ACTION_RUN_FIG_LOOP,
+        expected_first_safe_command=command,
+        repo_root=tmp_path,
+    )
+
+    assert payload["final_stop_reason"] == fig_run.STOP_COMMAND_FAILED
+    assert payload["steps"][0]["returncode"] == 1
+    assert payload["steps"][0]["execution_evidence"]["diagnostics"] == [
+        "capture_internal_error:CaptureNotStarted"
+    ]
 
 
 def test_direct_cli_exit_policy_remains_zero_for_admission_busy(

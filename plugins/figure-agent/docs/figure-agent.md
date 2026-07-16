@@ -295,9 +295,9 @@ Default `run` consumes an explicit bound packet/response/preview at `repair_boun
 Pre-R4.8 candidate-ready v1 states without response evidence fail closed and cannot restart in place; a named human must authorize the exact leaf path/state/file hashes, then explicitly run `python3 scripts/closed_loop_legacy_candidate_quarantine.py --fixture <name> --state <leaf.json> --authorization <record.json> --execute` to preserve the retired leaf and authorization outside canonical discovery before restarting its verified `repair_bound` parent. They are never auto-migrated or discarded.
 Canonical state publishers share one recoverable transition lock and temporarily dual-lock legacy paths. Root `run` admission accepts only one explicit hash-bound `figure-agent.root-attempt-manifest.v1` while current resolution is absent; plan-only is write-free and execute publishes only `authored_rendered` before stopping. It discovers no other input, invokes no host, admits no legacy packet, and claims no publication acceptance. It advances `machine_repaired` to `post_review_requested`, stops at `host_llm`, binds the response, and closes only the named development outcome. Maintained-Fig3 controlled-fault replay is mechanism evidence, not an actual defect or publication verdict; prospective proof and R4-R5 remain.
 Direct legacy `fig_loop` shares a recoverable fixture-root admission lease with root admission: it holds that lease from canonical resolution through scratch evidence writing, and rejects current, invalid, ambiguous, or busy resolution before creating `.scratch/fig-loop-runs/` output.
-The bounded runner acquires that lease separately for each compile, adjudication-scaffold, or export step. It re-queries the driver and revalidates the exact action, command, stop boundary, and action-specific safety while holding the lease through subprocess completion, then releases it before selecting the next step. Driver drift stops as `stale_plan`; busy admission stops as retryable `admission_busy`; fixture-path, non-busy lock, or under-lock validation failure stops as non-retryable `admission_invalid`. None starts an unadmitted subprocess or increments the executed count. Plan-only calls acquire no lease.
+The bounded runner acquires that lease separately for each compile, adjudication-scaffold, or export step. It re-queries the driver and revalidates the exact action, command, stop boundary, and action-specific safety while holding the lease through subprocess completion and post-step execution-evidence fingerprinting, then releases it before selecting the next step. Driver drift stops as `stale_plan`; busy admission stops as retryable `admission_busy`; fixture-path, non-busy lock, or under-lock validation failure stops as non-retryable `admission_invalid`. None starts an unadmitted subprocess or increments the executed count. Plan-only calls acquire no lease.
 
-Direct `fig_run` delegation to `fig_loop` remains on the existing self-leased path and is not wrapped in an outer lease. Queue-bound delegation uses that same API with an internal under-lock callback that exact-matches the queued action and command before canonical/source preflight or scratch creation. Drift stops as `stale_plan`; busy or invalid admission maps to the typed runner stops. A match writes the normal verify-only checkpoint, preserves CLI-equivalent JSON stdout, and returns to fresh live replanning. The retired admission-pending token remains only as a compatibility constant, and the queue summary field is always zero. These machine gates do not establish visual, human-development, release, or publication acceptance.
+Direct `fig_run` delegation to `fig_loop` remains on the existing self-leased path and is not wrapped in an outer lease. Queue-bound delegation uses that same API with an internal under-lock callback that exact-matches the queued action and command before canonical/source preflight or scratch creation. Drift stops as `stale_plan`; busy or invalid admission maps to the typed runner stops. A match writes the normal verify-only checkpoint and invokes an internal post-run evidence finalizer with the exact run directory before the self-owned lease is released. Finalizer failures are diagnostic-only and cannot alter loop success. The runner preserves CLI-equivalent JSON stdout and returns to fresh live replanning. The retired admission-pending token remains only as a compatibility constant, and the queue summary field is always zero. These machine gates do not establish visual, human-development, release, or publication acceptance.
 
 Every `figure-agent.run.v1` step now carries additive
 `execution_evidence`. Unexecuted steps use `null`; executed steps use
@@ -307,12 +307,16 @@ Each artifact records its repo-relative POSIX path, role, byte size, SHA-256,
 and `created`, `modified`, or `unchanged` state from pre/post content
 fingerprints rather than mtime. Collection never follows symlinks and never
 changes the command return code or runner stop. A successful command that
-omits a required output receives only a capture diagnostic.
+omits a required output receives only a capture diagnostic. An unexpected
+capture exception becomes a sanitized
+`capture_internal_error:<ExceptionType>` diagnostic envelope without changing
+the original command result or stop reason.
 
 Compile evidence is limited to the named render, detector/report, convention,
 and perception outputs; adjudication evidence is the exact
 `critique_adjudication.yaml`; export evidence is the fixture's PDF, SVG, PNG,
-and TIFF. Queue-bound fig-loop capture uses the exact returned run directory.
+and TIFF. Queue-bound fig-loop capture uses the exact returned run directory
+and completes fingerprinting before the self-owned lease is released.
 Direct fig-loop capture accepts exactly one newly created immediate child of
 `.scratch/fig-loop-runs/` whose manifest names the fixture, never a
 latest/mtime guess. Queue-run preserves the nested `figure-agent.run.v1`

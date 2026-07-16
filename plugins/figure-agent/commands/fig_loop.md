@@ -93,6 +93,10 @@ runner integration. It invokes that callback only after acquiring its own lease
 and before canonical/source preflight or scratch creation. A false result rejects
 the loop without output. This is not a CLI option and does not transfer lease
 ownership outside `fig_loop`.
+The same internal API may receive a post-run finalizer. It receives the exact
+run directory after checkpoint artifacts are written and before the self-owned
+lease is released. Finalizer exceptions are isolated from the loop result. This
+is also not a CLI option and does not transfer lease ownership.
 
 Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
 

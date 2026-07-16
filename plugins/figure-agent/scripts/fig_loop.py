@@ -495,8 +495,9 @@ def run_loop(
     repo_root: Path = REPO_ROOT,
     runs_root: Path | None = None,
     admission_check: Callable[[], bool] | None = None,
+    post_run_callback: Callable[[Path], None] | None = None,
 ) -> Path:
-    """Run one legacy checkpoint only when canonical lifecycle discovery is absent."""
+    """Run one legacy checkpoint, then finalize internal evidence under the lease."""
     try:
         fixture_identity.validate_fixture_name(name)
     except ValueError as exc:
@@ -548,12 +549,19 @@ def run_loop(
                 )
             except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
                 raise FigLoopAdmissionInvalid(f"canonical_preflight:{exc}") from exc
-        return _run_loop_after_admission(
+        run_dir = _run_loop_after_admission(
             name,
             goal,
             repo_root=root,
             runs_root=normalized_runs_root,
         )
+        if post_run_callback is not None:
+            try:
+                post_run_callback(run_dir)
+            except Exception:
+                # Evidence finalization is diagnostic-only and cannot alter loop success.
+                pass
+        return run_dir
 
 
 def _run_loop_after_admission(

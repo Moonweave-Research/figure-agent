@@ -10,6 +10,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
+import fixture_identity
+
 SCHEMA = "figure-agent.step-execution-evidence.v1"
 
 _COMPILE_REPORT_NAMES = frozenset(
@@ -63,6 +65,7 @@ def begin_step_capture(
     action: str,
 ) -> StepCapture:
     """Capture allowlisted pre-step content fingerprints."""
+    fixture_identity.validate_fixture_name(fixture)
     root = repo_root.resolve()
     diagnostics: list[str] = []
     before = (
@@ -94,6 +97,23 @@ def begin_step_capture(
         diagnostics=tuple(sorted(set(diagnostics))),
         loop_run_names=loop_run_names,
     )
+
+
+def capture_internal_error_evidence(
+    *,
+    fixture: str,
+    action: str,
+    error_type: str,
+) -> dict[str, object]:
+    """Return a sanitized evidence envelope for a capture-boundary failure."""
+    return {
+        "schema": SCHEMA,
+        "fixture": fixture,
+        "action": action,
+        "state": "captured_with_diagnostics",
+        "artifacts": [],
+        "diagnostics": [f"capture_internal_error:{error_type}"],
+    }
 
 
 def finish_step_capture(
@@ -296,6 +316,17 @@ def _resolve_loop_run_dir(
     runs_root = root / ".scratch" / "fig-loop-runs"
     candidates: list[Path]
     if supplied is not None:
+        try:
+            supplied_relative = supplied.relative_to(runs_root)
+        except ValueError:
+            diagnostics.append("fig_loop_run_outside_allowlist")
+            return None
+        if (
+            len(supplied_relative.parts) != 1
+            or supplied != runs_root / supplied_relative.name
+        ):
+            diagnostics.append("fig_loop_run_not_immediate_child")
+            return None
         candidates = [supplied]
     else:
         after_names = _immediate_child_names(

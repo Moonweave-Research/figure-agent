@@ -154,6 +154,52 @@ def test_admission_callback_rejection_runs_under_lease_before_loop_output(
     assert not runs_root.exists()
 
 
+def test_post_run_callback_runs_under_lease_and_cannot_change_success(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    run_dir = runs_root / "run-1"
+    lease_held = False
+    observations: list[tuple[Path, bool]] = []
+
+    @contextmanager
+    def _observed_lock(workspace_root: Path, fixture_name: str):
+        nonlocal lease_held
+        lease_held = True
+        try:
+            yield
+        finally:
+            lease_held = False
+
+    def _fake_loop(*args, **kwargs) -> Path:
+        run_dir.mkdir(parents=True)
+        return run_dir
+
+    monkeypatch.setattr(
+        fig_loop_mod.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _observed_lock,
+    )
+    monkeypatch.setattr(fig_loop_mod, "_run_loop_after_admission", _fake_loop)
+
+    def _post_run(path: Path) -> None:
+        observations.append((path, lease_held))
+        raise RuntimeError("capture callback must not change loop success")
+
+    result = run_loop(
+        fixture.name,
+        "inspect",
+        repo_root=tmp_path,
+        runs_root=runs_root,
+        post_run_callback=_post_run,
+    )
+
+    assert result == run_dir
+    assert observations == [(run_dir, True)]
+    assert lease_held is False
+
+
 def test_noncanonical_workspace_runs_root_is_rejected_before_loop_writes(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
     unsafe_root = fixture / "review" / "legacy-runs"

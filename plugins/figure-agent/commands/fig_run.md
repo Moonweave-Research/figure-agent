@@ -56,7 +56,8 @@ the shared fixture admission lease independently. The runner identifies a
 pre-lock candidate, acquires the lease, re-queries the driver, and revalidates
 the exact action, command, absence of a stop boundary, and every action-specific
 safety predicate while the lease is held. It holds the lease through subprocess
-completion, releases it, and reacquires separately for a later mutation step.
+completion and post-step execution-evidence fingerprinting, releases it, and
+reacquires separately for a later mutation step.
 A direct call compares the pre-lock candidate with the under-lock live result.
 A queue-bound first step compares the queued expectation with that under-lock
 result. Any mismatch or lost safety predicate stops as `stale_plan` before
@@ -78,8 +79,10 @@ admission callback. While `fig_loop` holds the lease, the callback re-queries
 the driver and exact-matches the queued action, command, absent stop boundary,
 and action safety. Drift stops as `stale_plan` before scratch creation; busy and
 invalid preflight map to the existing admission stops. A match writes one loop
-checkpoint, records stdout exactly as `fig_loop --json`, and then returns to
-fresh live driver selection.
+checkpoint, invokes an internal evidence finalizer with the exact returned run
+directory before releasing the self-owned lease, records stdout exactly as
+`fig_loop --json`, and then returns to fresh live driver selection. The
+finalizer is not a CLI surface and cannot change loop success.
 
 Default mode is plan-only. Without `--execute`, the command emits what would be
 run and does not mutate fixture source, exports, accepted state, or golden
@@ -159,12 +162,16 @@ Each artifact records `role`, repo-relative POSIX `path`, content-derived
 `change: created | modified | unchanged`, `size_bytes`, and lowercase
 `sha256`. Capture uses pre/post content fingerprints, never mtime, does not
 follow symlinks, and cannot change `returncode` or `final_stop_reason`.
-Required-output absence after a successful command is diagnostic only.
+Required-output absence after a successful command is diagnostic only. Any
+unexpected evidence-capture exception is reduced to a sanitized
+`capture_internal_error:<ExceptionType>` diagnostic envelope; the original
+command result and runner stop remain authoritative.
 
 The allowlist is action-specific: compile render/report/perception outputs,
 the exact adjudication YAML, the fixture's four export formats, and the
 fixture-bound fig-loop run files. Queue-bound fig-loop uses the exact returned
-run directory. Direct fig-loop requires exactly one newly created
+run directory and fingerprints it before the self-owned lease is released.
+Direct fig-loop requires exactly one newly created
 fixture-matching immediate child and never selects a latest run by mtime.
 
 ### Run Journal
