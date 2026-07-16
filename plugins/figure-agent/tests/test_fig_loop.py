@@ -123,6 +123,78 @@ def test_main_reports_canonical_stop_without_stdout(
     assert "publication_acceptance" not in captured.err
 
 
+@pytest.mark.parametrize("symlink_kind", ["fixture", "examples"])
+def test_symlinked_fixture_root_keeps_legacy_loop_cli_contract(
+    tmp_path: Path,
+    symlink_kind: str,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    target_root = tmp_path / "target"
+    _make_fixture(target_root)
+    examples = tmp_path / "examples"
+    if symlink_kind == "fixture":
+        examples.mkdir()
+        (examples / "loop_demo").symlink_to(target_root / "examples" / "loop_demo")
+    else:
+        examples.symlink_to(target_root / "examples")
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    with pytest.raises(FigLoopError, match="canonical_preflight:fixture_symlink"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+    assert not runs_root.exists()
+
+    original = fig_loop_mod.run_loop
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "run_loop",
+        lambda name, goal, *, runs_root=None: original(
+            name, goal, repo_root=tmp_path, runs_root=runs_root
+        ),
+    )
+    exit_code = fig_loop_mod.main(["loop_demo", "--goal", "inspect", "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert captured.err == "fig_loop.py: canonical_preflight:fixture_symlink\n"
+    assert not runs_root.exists()
+
+
+def test_resolver_oserror_keeps_legacy_loop_cli_contract(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    monkeypatch.setattr(
+        fig_loop_mod.closed_loop_current_state,
+        "resolve_current_attempt",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("resolver unavailable")),
+    )
+
+    with pytest.raises(FigLoopError, match="canonical_state_resolution_error"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+    assert not runs_root.exists()
+
+    original = fig_loop_mod.run_loop
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "run_loop",
+        lambda name, goal, *, runs_root=None: original(
+            name, goal, repo_root=tmp_path, runs_root=runs_root
+        ),
+    )
+    exit_code = fig_loop_mod.main(["loop_demo", "--goal", "inspect", "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert captured.err == "fig_loop.py: canonical_state_resolution_error\n"
+    assert not runs_root.exists()
+
+
 def _write_reference_learning_metric_fixture(fixture: Path) -> None:
     build_dir = fixture / "build"
     ref_dir = fixture / "reference"

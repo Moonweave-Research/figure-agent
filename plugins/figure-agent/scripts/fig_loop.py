@@ -11,6 +11,7 @@ import json
 import os
 import subprocess
 import sys
+from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -488,23 +489,33 @@ def run_loop(
     example_dir = root / "examples" / name
     if not example_dir.is_dir():
         raise FigLoopError(f"examples/{name}/ not found")
-    try:
-        with closed_loop_attempt_state.fixture_admission_lock(root, name):
+    with ExitStack() as stack:
+        try:
+            stack.enter_context(
+                closed_loop_attempt_state.fixture_admission_lock(root, name)
+            )
+        except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+            raise FigLoopError(f"canonical_preflight:{exc}") from exc
+        except closed_loop_attempt_state.FixtureAdmissionLeaseBusy as exc:
+            raise FigLoopError(
+                "canonical_admission_legacy_coordination_busy; retry canonical admission "
+                "or legacy coordination"
+            ) from exc
+        except repair_transaction.RepairTransactionError as exc:
+            raise FigLoopError(str(exc)) from exc
+        except OSError as exc:
+            raise FigLoopError("canonical_preflight_error") from exc
+        try:
             current = closed_loop_current_state.resolve_current_attempt(root, name)
-            if current.get("resolution") != "absent":
-                raise FigLoopError(
-                    "canonical_attempt_resolution:"
-                    f"{current.get('resolution')}:{current.get('reason')}; "
-                    "use canonical status/lifecycle"
-                )
-            return _run_loop_after_admission(name, goal, repo_root=root, runs_root=runs_root)
-    except closed_loop_attempt_state.FixtureAdmissionLeaseBusy as exc:
-        raise FigLoopError(
-            "canonical_admission_legacy_coordination_busy; retry canonical admission "
-            "or legacy coordination"
-        ) from exc
-    except repair_transaction.RepairTransactionError as exc:
-        raise FigLoopError(str(exc)) from exc
+        except OSError as exc:
+            raise FigLoopError("canonical_state_resolution_error") from exc
+        if current.get("resolution") != "absent":
+            raise FigLoopError(
+                "canonical_attempt_resolution:"
+                f"{current.get('resolution')}:{current.get('reason')}; "
+                "use canonical status/lifecycle"
+            )
+        return _run_loop_after_admission(name, goal, repo_root=root, runs_root=runs_root)
 
 
 def _run_loop_after_admission(
