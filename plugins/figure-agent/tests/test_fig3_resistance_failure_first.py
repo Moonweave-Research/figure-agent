@@ -1236,11 +1236,20 @@ def _pdf_content_signature(path: Path) -> dict[str, object]:
     text_result = subprocess.run(
         ["pdftotext", "-layout", str(path), "-"], check=True, capture_output=True, text=True
     )
-    normalized_text = "\n".join(line.rstrip() for line in text_result.stdout.splitlines()).strip() + "\n"
+    normalized_text = (
+        "\n".join(line.rstrip() for line in text_result.stdout.splitlines()).strip()
+        + "\n"
+    )
     info_result = subprocess.run(
         ["pdfinfo", str(path)], check=True, capture_output=True, text=True
     )
-    page_count = int(next(line.split(":", 1)[1] for line in info_result.stdout.splitlines() if line.startswith("Pages:")).strip())
+    page_count = int(
+        next(
+            line.split(":", 1)[1]
+            for line in info_result.stdout.splitlines()
+            if line.startswith("Pages:")
+        ).strip()
+    )
     return {
         "schema": "figure-agent.pdf-content-signature.v1",
         "extraction": "pdftotext-layout-trim-right-lines-v1",
@@ -1738,14 +1747,16 @@ def test_shape_experiment_treatment_is_exact_compiled_profile_only_delta() -> No
         "AUTHORIZED_INPUTS: control packet only",
         "AUTHORIZED_INPUTS: ARM_INPUTS",
     ).replace(
-        "ARM_INSTRUCTION: Apply the control packet constraints. No treatment overlay or profile directives are authorized.",
+        "ARM_INSTRUCTION: Apply the control packet constraints. "
+        "No treatment overlay or profile directives are authorized.",
         "ARM_INSTRUCTION: ARM_ACTION",
     )
     normalized_treatment = treatment_prompt.replace("shape_profiled", "ARM").replace(
         "AUTHORIZED_INPUTS: control packet and treatment overlay",
         "AUTHORIZED_INPUTS: ARM_INPUTS",
     ).replace(
-        "ARM_INSTRUCTION: Read the treatment overlay and apply every authoring_directive exactly once in addition to the control packet constraints.",
+        "ARM_INSTRUCTION: Read the treatment overlay and apply every "
+        "authoring_directive exactly once in addition to the control packet constraints.",
         "ARM_INSTRUCTION: ARM_ACTION",
     )
     assert normalized_control == normalized_treatment
@@ -3170,7 +3181,11 @@ def test_execution_repair_v12_resolves_density_with_visual_semantics_pending(
 @pytest.mark.render
 def test_fig3_resistance_render_receipt_reproduces_current_source_outputs() -> None:
     receipt = _compile_receipt_outputs()
-    command = ["bash", "scripts/compile.sh", "examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex"]
+    command = [
+        "bash",
+        "scripts/compile.sh",
+        "examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex",
+    ]
 
     assert receipt["schema"] == "figure-agent.compile-render-receipt.v1"
     assert receipt["fixture"] == "fig3_resistance_mechanism"
@@ -3207,10 +3222,22 @@ def test_fig3_resistance_render_receipt_reproduces_current_source_outputs() -> N
 
 def test_fig3_execution_binding_packets_are_additive_and_equal_input() -> None:
     historical_hashes = {
-        SHAPE_CONTROL_SOURCE: "sha256:46e58f500368471a491b9cf5cfbf36dc2fdad3b1a5013ba7cd6e43b445dddfc2",
-        SHAPE_PROFILED_SOURCE: "sha256:0314182b8f2bbbcf107000d4d806934368ab49f00b5e14f54a1deefeafa5c2a9",
-        SHAPE_CONTROL_PROMPT: "sha256:ecaf28ee4d5e8c1b05ad098cba5747391620ea5e981b4c5877c47c46f32a13a7",
-        SHAPE_PROFILED_PROMPT: "sha256:c1554202da35fdee1702c275b930463bf6055b10a2f51b9eb5cfbfcebf6b2944",
+        SHAPE_CONTROL_SOURCE: (
+            "sha256:46e58f500368471a491b9cf5cfbf36dc"
+            "2fdad3b1a5013ba7cd6e43b445dddfc2"
+        ),
+        SHAPE_PROFILED_SOURCE: (
+            "sha256:0314182b8f2bbbcf107000d4d8069343"
+            "68ab49f00b5e14f54a1deefeafa5c2a9"
+        ),
+        SHAPE_CONTROL_PROMPT: (
+            "sha256:ecaf28ee4d5e8c1b05ad098cba574739"
+            "1620ea5e981b4c5877c47c46f32a13a7"
+        ),
+        SHAPE_PROFILED_PROMPT: (
+            "sha256:c1554202da35fdee1702c275b930463b"
+            "f6055b10a2f51b9eb5cfbfcebf6b2944"
+        ),
     }
     assert {path: _sha256(path) for path in historical_hashes} == historical_hashes
 

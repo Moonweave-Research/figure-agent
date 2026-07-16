@@ -474,20 +474,23 @@ def parse_named_endpoint_assertions(
         if required_node_bindings is not None:
             if not isinstance(required_node_bindings, list) or not required_node_bindings:
                 raise TexAssertionError(
-                    f"named_endpoint_assertions[{index}].required_node_bindings must be a non-empty list"
+                    f"named_endpoint_assertions[{index}].required_node_bindings"
+                    " must be a non-empty list"
                 )
             parsed_bindings: list[dict[str, str]] = []
             for binding_index, binding in enumerate(required_node_bindings):
                 if not isinstance(binding, dict):
                     raise TexAssertionError(
-                        f"named_endpoint_assertions[{index}].required_node_bindings[{binding_index}] must be a mapping"
+                        f"named_endpoint_assertions[{index}].required_node_bindings"
+                        f"[{binding_index}] must be a mapping"
                     )
                 parsed_binding: dict[str, str] = {}
                 for field in ("node", "anchor"):
                     value = binding.get(field)
                     if not isinstance(value, str) or not value.strip():
                         raise TexAssertionError(
-                            f"named_endpoint_assertions[{index}].required_node_bindings[{binding_index}].{field} is required"
+                            f"named_endpoint_assertions[{index}].required_node_bindings"
+                            f"[{binding_index}].{field} is required"
                         )
                     parsed_binding[field] = value.strip()
                 parsed_bindings.append(parsed_binding)
