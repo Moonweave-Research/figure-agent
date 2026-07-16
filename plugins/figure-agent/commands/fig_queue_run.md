@@ -40,6 +40,21 @@ With `--execute`, it still does not execute queue commands directly. For each
 planned fixture it calls `/fig_run` logic, which re-queries live driver state
 and applies the existing deterministic allowlist and safety predicates.
 
+## Exit status
+
+The complete JSON payload is written before `queue-run` exits. Direct
+`fig_queue_run.py` and `fig-agent queue-run` use the same exit matrix:
+
+| Exit | Condition |
+|---|---|
+| `0` | Plan-only/dry-run, or an execute batch with no nested `/fig_run` `final_stop_reason: command_failed`. This includes complete, host/human boundaries, repeated-action, max-step, blocked, unattempted, and pre-delegation fixture-row errors. |
+| `1` | `--execute` delegated at least one selected fixture to `/fig_run` and that nested run ended with the canonical `final_stop_reason: command_failed`. Remaining selected fixtures are still attempted and remain in `runs`. |
+| `2` | Existing argument/value errors or workspace diagnostics, including missing `examples/` and an implicit symlinked `examples/` directory. These diagnostics take precedence over delegated command failures. |
+
+`summary.failed` remains a reporting count. Exit status is based only on the
+actual nested `/fig_run` stop contract, so a pre-delegation fixture/path error
+row does not make shell or CI treat the batch as a delegated command failure.
+
 ## Filters
 
 The command accepts the same filters as `/fig_queue`:

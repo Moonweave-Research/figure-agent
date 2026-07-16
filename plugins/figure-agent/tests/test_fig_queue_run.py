@@ -193,6 +193,70 @@ def test_execute_delegates_each_planned_fixture_to_fig_run(
     assert [run["result"]["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
 
 
+def test_main_returns_one_for_executed_delegated_command_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    for name in ("alpha", "beta"):
+        (tmp_path / "examples" / name).mkdir(parents=True)
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+
+    def fake_run_workflow(name: str, **kwargs: Any) -> dict[str, Any]:
+        return {
+            "schema": "figure-agent.run.v1",
+            "fixture": name,
+            "executed_count": 1,
+            "final_stop_reason": (
+                fig_queue_run.fig_run.STOP_COMMAND_FAILED if name == "alpha" else "complete"
+            ),
+        }
+
+    monkeypatch.setattr(fig_queue_run.fig_run, "run_workflow", fake_run_workflow)
+
+    assert fig_queue_run.main(
+        ["--mode", "review", "--goal", "triage", "--execute"], repo_root=tmp_path
+    ) == 1
+
+    payload = json.loads(capsys.readouterr().out)
+    assert [run["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
+    assert payload["summary"]["failed"] == 1
+
+
+@pytest.mark.parametrize(
+    "stop_reason",
+    (
+        "complete",
+        "host_boundary",
+        "repeated_executable_action",
+        "max_steps_exceeded",
+        "not_executable_action",
+    ),
+)
+def test_main_keeps_nonfailure_execute_stop_reasons_at_zero(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    stop_reason: str,
+) -> None:
+    for name in ("alpha", "beta"):
+        (tmp_path / "examples" / name).mkdir(parents=True)
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+    monkeypatch.setattr(
+        fig_queue_run.fig_run,
+        "run_workflow",
+        lambda name, **kwargs: {
+            "schema": "figure-agent.run.v1",
+            "fixture": name,
+            "executed_count": 0,
+            "final_stop_reason": stop_reason,
+        },
+    )
+
+    assert fig_queue_run.main(
+        ["--mode", "review", "--goal", "triage", "--execute"], repo_root=tmp_path
+    ) == 0
+    assert json.loads(capsys.readouterr().out)["summary"]["failed"] == 0
+
+
 def test_execute_respects_max_fixtures(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -351,6 +415,20 @@ def test_main_warns_when_queue_workspace_has_no_examples(
     assert "implicit queue discovery found no examples/ directory" in captured.err
 
 
+def test_main_keeps_empty_examples_workspace_as_success(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / "examples").mkdir()
+
+    assert fig_queue_run.main(
+        ["--mode", "review", "--goal", "triage", "--dry-run"], repo_root=tmp_path
+    ) == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["summary"]["attempted"] == 0
+    assert "workspace_diagnostic" not in payload["queue"]
+
+
 def test_main_accepts_json_and_dry_run_flags_as_plan_only_noops(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:
@@ -396,6 +474,36 @@ def test_main_returns_nonzero_for_implicit_missing_examples_workspace(
     assert "implicit queue discovery found no examples/ directory" in captured.err
     payload = json.loads(captured.out)
     assert payload["queue"]["workspace_diagnostic"]["state"] == "missing_examples"
+
+
+def test_main_prioritizes_workspace_diagnostic_over_delegated_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    for name in ("alpha", "beta"):
+        (tmp_path / "examples" / name).mkdir(parents=True)
+    queue = _queue()
+    queue["workspace_diagnostic"] = {
+        "schema": fig_queue.WORKSPACE_DIAGNOSTIC_SCHEMA,
+        "state": "missing_examples",
+        "workspace_root": str(tmp_path),
+        "missing": ["examples"],
+        "message": "synthetic missing examples diagnostic",
+    }
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: queue)
+    monkeypatch.setattr(
+        fig_queue_run.fig_run,
+        "run_workflow",
+        lambda name, **kwargs: {
+            "fixture": name,
+            "executed_count": 1,
+            "final_stop_reason": fig_queue_run.fig_run.STOP_COMMAND_FAILED,
+        },
+    )
+
+    assert fig_queue_run.main(
+        ["--mode", "review", "--goal", "triage", "--execute"], repo_root=tmp_path
+    ) == 2
+    assert json.loads(capsys.readouterr().out)["summary"]["failed"] == 2
 
 
 def test_main_rejects_execute_with_dry_run_without_running(
@@ -602,6 +710,49 @@ def test_wrapper_queue_run_from_parent_uses_plugin_examples() -> None:
     assert payload["queue"]["summary"]["total"] > 0
 
 
+def test_public_wrapper_queue_run_returns_one_after_synthetic_delegated_failure(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = workspace / "examples" / "broken_compile"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text(
+        "name: broken_compile\npanels: []\n", encoding="utf-8"
+    )
+    (fixture / "briefing.md").write_text("brief\n", encoding="utf-8")
+    (fixture / "broken_compile.tex").write_text(
+        "% intentionally incomplete\n", encoding="utf-8"
+    )
+    env = os.environ.copy()
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(Path(__file__).resolve().parents[1])
+
+    result = subprocess.run(
+        [
+            str(Path(__file__).resolve().parents[1] / "bin" / "fig-agent"),
+            "queue-run",
+            "broken_compile",
+            "--mode",
+            "review",
+            "--goal",
+            "synthetic delegated failure",
+            "--execute",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1, result.stderr + result.stdout
+    payload = json.loads(result.stdout)
+    assert [run["fixture"] for run in payload["runs"]] == ["broken_compile"]
+    assert payload["runs"][0]["result"]["final_stop_reason"] == "command_failed"
+    assert payload["summary"]["failed"] == 1
+
+
 @pytest.mark.parametrize(
     ("command", "expected_returncode"),
     (
@@ -644,6 +795,51 @@ def test_public_wrapper_rejects_workspace_symlink_fixture_without_external_mutat
         payload = json.loads(result.stdout)
         queue_payload = payload["queue"] if command[0] == "queue-run" else payload
         assert queue_payload["summary"]["errors"] == 1
+
+
+@pytest.mark.parametrize(
+    "target",
+    ("external", "../external", "missing-target"),
+)
+def test_queue_run_fixture_symlink_rows_do_not_delegate_or_mutate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target: str
+) -> None:
+    examples = tmp_path / "examples"
+    examples.mkdir()
+    external = tmp_path / "external"
+    external.mkdir()
+    marker = external / "marker.txt"
+    marker.write_text("unchanged\n", encoding="utf-8")
+    (examples / "demo").symlink_to(target, target_is_directory=True)
+    queue = _queue()
+    queue["command_plan"]["executable"] = [
+        {
+            "fixture": "demo",
+            "action": "run_compile",
+            "safe_command": "fig-agent compile demo",
+            "required_actor": "workflow_agent",
+        }
+    ]
+    queue["command_plan"]["executable_count"] = 1
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **_kwargs: queue)
+    monkeypatch.setattr(
+        fig_queue_run.fig_run,
+        "run_workflow",
+        lambda *_args, **_kwargs: pytest.fail("symlink fixture reached fig_run"),
+    )
+
+    payload = fig_queue_run.run_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        execute=True,
+        max_fixtures=1,
+        fixtures=None,
+        filters={},
+    )
+
+    assert payload["runs"][0]["stop_reason"] == "fixture_symlink"
+    assert marker.read_text(encoding="utf-8") == "unchanged\n"
 
 
 @pytest.mark.parametrize(

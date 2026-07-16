@@ -104,6 +104,15 @@ def _summary(
     }
 
 
+def _has_delegated_command_failure(runs: list[dict[str, Any]]) -> bool:
+    """Return whether an executed nested fig_run stopped on command failure."""
+    return any(
+        isinstance(run.get("result"), dict)
+        and run["result"].get("final_stop_reason") == fig_run.STOP_COMMAND_FAILED
+        for run in runs
+    )
+
+
 def _queue_filters_from_args(args: argparse.Namespace) -> dict[str, str | None]:
     values = {
         "required_actor": args.required_actor,
@@ -255,7 +264,12 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
     queue = payload.get("queue", {})
     fig_queue._print_workspace_diagnostic(queue)
     print(json.dumps(payload, indent=2, sort_keys=True))
-    return fig_queue.workspace_diagnostic_exit_code(queue)
+    diagnostic_exit_code = fig_queue.workspace_diagnostic_exit_code(queue)
+    if diagnostic_exit_code:
+        return diagnostic_exit_code
+    if args.execute and _has_delegated_command_failure(payload["runs"]):
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
