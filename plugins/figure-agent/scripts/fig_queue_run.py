@@ -29,6 +29,7 @@ def _planned_run(item: dict[str, Any]) -> dict[str, Any]:
         "would_execute": True,
         "executed": False,
         "result": None,
+        **fig_queue._next_action_evidence_fields(item),
     }
 
 

@@ -197,6 +197,7 @@ def _workspace_artifact(
     value: Path | str,
     *,
     label: str,
+    require_file: bool = True,
 ) -> Path:
     root = Path(os.path.abspath(workspace_root))
     fixture_root = _fixture_root(root, fixture)
@@ -216,7 +217,7 @@ def _workspace_artifact(
         current = current / part
         if current.is_symlink():
             raise ClosedLoopAttemptStateError(f"{label}_symlink")
-    if not current.is_file():
+    if require_file and not current.is_file():
         raise ClosedLoopAttemptStateError(f"{label}_missing")
     return current
 
@@ -387,6 +388,7 @@ def validate_state(
     *,
     workspace_root: Path,
     _lineage_stack: frozenset[Path] = frozenset(),
+    _require_live_evidence: bool = True,
 ) -> dict[str, Any]:
     if not isinstance(state, Mapping):
         raise ClosedLoopAttemptStateError("state_invalid")
@@ -487,8 +489,9 @@ def validate_state(
             fixture,
             str(record.get("path") or ""),
             label=f"evidence_{role}",
+            require_file=_require_live_evidence,
         )
-        if record.get("sha256") != _file_sha256(path):
+        if _require_live_evidence and record.get("sha256") != _file_sha256(path):
             raise ClosedLoopAttemptStateError("evidence_hash_stale")
     if [record["role"] for record in evidence] != sorted(seen_roles):
         raise ClosedLoopAttemptStateError("evidence_order_invalid")
@@ -513,12 +516,14 @@ def validate_state(
         prefix="previous_state",
         workspace_root=root,
         lineage_stack=_lineage_stack,
+        require_live_evidence=_require_live_evidence,
     )
     _validate_lineage_record(
         payload,
         prefix="parent_state",
         workspace_root=root,
         lineage_stack=_lineage_stack,
+        require_live_evidence=_require_live_evidence,
     )
     return payload
 
@@ -529,6 +534,7 @@ def _validate_lineage_record(
     prefix: str,
     workspace_root: Path,
     lineage_stack: frozenset[Path],
+    require_live_evidence: bool,
 ) -> None:
     path_value = payload.get(f"{prefix}_path")
     state_hash = payload.get(f"{prefix}_sha256")
@@ -577,6 +583,7 @@ def _validate_lineage_record(
         linked,
         workspace_root=workspace_root,
         _lineage_stack=lineage_stack | {path},
+        _require_live_evidence=require_live_evidence,
     )
     if prefix == "previous_state":
         if payload["state"] not in _LEGAL_TRANSITIONS[linked["state"]]:

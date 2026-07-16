@@ -196,6 +196,8 @@ def _should_run_aggressive_candidates(
     actor: str,
 ) -> bool:
     stop_boundary = run_payload.get("final_stop_boundary")
+    if actor == "human" or actor.startswith("human_"):
+        return False
     if stop_boundary == "basin_detected":
         return True
     if stop_reason == STOP_OPTIONAL_IMPROVEMENT:
@@ -213,7 +215,7 @@ def _should_run_aggressive_candidates(
         fig_driver.STOP_AMBIGUOUS_PATCH,
     }:
         return False
-    return stop_reason == STOP_REPEATED_BOUNDARY or actor == "human"
+    return stop_reason == STOP_REPEATED_BOUNDARY
 
 
 def _run_aggressive_candidate_search(

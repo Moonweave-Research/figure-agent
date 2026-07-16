@@ -3,7 +3,7 @@
 
 **Status:** Active and authoritative
 
-**Effective date:** 2026-07-15
+**Effective date:** 2026-07-16
 
 **Committed baseline:** `c6a28e40` (`codex/figure-agent-closed-loop-reset`)
 
@@ -230,10 +230,20 @@ post-repair evidence.
 ### R4 — Make the lifecycle the canonical run path
 
 - [ ] Route the existing canonical run through R1-R3 state transitions.
-- [ ] Stop at host-vision, scientific, human authorization, accepted/golden,
+- [x] Project the unique hash-validated current attempt into `status`, `drive`,
+  and default `run`; fail closed on invalid, ambiguous, stale, or symlinked
+  lineage instead of falling through to a legacy loop.
+- [ ] Wire safe deterministic transitions through default `run` one at a time;
+  the first pending transition is `machine_repaired -> post_review_requested`.
+- [x] Stop at host-vision, scientific, human authorization, accepted/golden,
   release, and publication boundaries.
 - [ ] Keep historical `drive`, `loop`, `improve`, queue, and specialist commands
   as internal compatibility adapters rather than competing workflows.
+- [x] Preserve exact actor, evidence references, allowed/forbidden scope, and
+  `publication_acceptance` through queue and plan-only queue-run projections;
+  aggressive candidate search may not cross a human boundary.
+- [ ] Give every remaining specialist/internal adapter an explicit canonical
+  successor and evidence contract before compacting the surface.
 - [ ] Expose a compact default command surface only after compatibility tests
   prove no evidence path is lost.
 
@@ -281,11 +291,15 @@ success is publication acceptance.
 Reuse the established compile/export, perception, critique, attribution, repair,
 materialization, provenance, and human-review surfaces.
 
-The code is a bounded R1-R3 foundation, not a completed closed loop. Its shared
-attempt-state contract binds identity, append-only lineage, live freshness,
-phase evidence roles, actor separation, legal transitions, and terminal
-development outcomes. Evidence-role presence is not domain validation or actor
-authentication; adapters must validate each receipt against recorded identity.
+The code is a bounded R1-R3 foundation with the first R4 canonical-routing
+slice, not a completed closed loop. Its shared attempt-state contract binds
+identity, append-only lineage, live freshness, phase evidence roles, actor
+separation, legal transitions, and terminal development outcomes. The default
+status/run path now discovers one authoritative current attempt without mtime,
+projects its exact actor/path/hash, and stops rather than selecting a legacy
+loop when the next transition is not yet wired. Evidence-role presence is not
+domain validation or actor authentication; adapters must validate each receipt
+against recorded identity.
 
 One exact adjudicated binding now crosses packet compilation, human-authorized
 materialization, rollback, and finalization. New packets use v4 authority;
@@ -298,9 +312,11 @@ the same editable selector as the repair target. Missing semantic authority,
 ambiguous attribution, or missing references can emit only a named
 `human_attributor` handoff; they cannot create a repair binding or packet.
 
-The run consumes a receipt-bound external host response. The maintained-Fig3
-controlled-fault replay is mechanism evidence only, not an actual defect or
-publication verdict; prospective real-defect proof and R4-R5 remain pending.
+The explicit R3 run consumes a receipt-bound external host response. Automatic
+transition execution from the projected state is still pending R4.2. The
+maintained-Fig3 controlled-fault replay is mechanism evidence only, not an
+actual defect or publication verdict; prospective real-defect proof and the
+remaining R4-R5 work are still pending.
 
 The closed-loop slices bind their handoffs through these narrow evidence
 contracts rather than another workflow shell:
@@ -310,6 +326,7 @@ contracts rather than another workflow shell:
 - `figure-agent.repair-execution-packet.v4`;
 - `figure-agent.repair-authority-contract.v1`;
 - `figure-agent.closed-loop-attempt-state.v1`;
+- `figure-agent.closed-loop-current-state.v1`;
 - `figure-agent.adjudicated-repair-binding.v1`;
 - `figure-agent.semantic-finding-attribution.v1`;
 - `figure-agent.attribution-handoff.v1`;

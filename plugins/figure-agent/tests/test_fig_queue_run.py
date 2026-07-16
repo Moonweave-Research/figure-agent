@@ -113,6 +113,40 @@ def test_plan_only_reports_planned_runs_without_executing(
     assert calls == []
 
 
+def test_plan_only_run_preserves_command_plan_evidence_contract(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    queue = _queue()
+    contract = {
+        "required_actor": "workflow_agent",
+        "evidence_refs": ["review/closed-loop/attempt-a/state-005.json"],
+        "allowed_scope": ["bounded repair packet"],
+        "forbidden_scope": ["accepted artifact mutation"],
+        "publication_acceptance": "not_claimed",
+        "decision_boundary": {
+            "kind": "deterministic_plugin_gate",
+            "authority": "plugin",
+        },
+    }
+    queue["command_plan"]["executable"][0].update(contract)
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: queue)
+
+    payload = fig_queue_run.run_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        execute=False,
+        max_steps=3,
+        max_fixtures=1,
+        fixtures=None,
+        filters={},
+    )
+
+    planned = payload["runs"][0]
+    for key, value in contract.items():
+        assert planned[key] == value
+
+
 def test_execute_delegates_each_planned_fixture_to_fig_run(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

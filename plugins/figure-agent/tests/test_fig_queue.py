@@ -2197,6 +2197,79 @@ def test_build_queue_can_include_command_plan(
     }
 
 
+def test_queue_and_command_plan_preserve_next_action_evidence_contract(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "executable")
+    _write_fixture(tmp_path, "blocked")
+    contracts = {
+        "executable": {
+            "required_actor": "workflow_agent",
+            "evidence_refs": ["review/closed-loop/attempt-a/state-005.json"],
+            "allowed_scope": ["bounded repair packet"],
+            "forbidden_scope": ["accepted artifact mutation"],
+            "publication_acceptance": "not_claimed",
+            "decision_boundary": {
+                "kind": "deterministic_plugin_gate",
+                "authority": "plugin",
+            },
+        },
+        "blocked": {
+            "required_actor": "host_llm",
+            "evidence_refs": ["review/closed-loop/attempt-b/state-007.json"],
+            "allowed_scope": ["visual re-review only"],
+            "forbidden_scope": ["source mutation"],
+            "publication_acceptance": "not_claimed",
+            "decision_boundary": {
+                "kind": "host_vision_gate",
+                "authority": "host_llm",
+            },
+        },
+    }
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        if name == "executable":
+            summary = _summary(
+                name,
+                action="run_fig_loop",
+                stop_boundary=None,
+                first_blocker="acceptance_not_declared",
+                safe_command="fig-agent loop executable --goal triage --json",
+            )
+        else:
+            summary = _summary(
+                name,
+                action="closed_loop_handoff_stop",
+                stop_boundary="host_llm_post_review_required",
+                first_blocker="post_review_required",
+            )
+        summary["next_action_summary"].update(contracts[name])
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    rows = {row["fixture"]: row for row in queue["rows"]}
+    for fixture, contract in contracts.items():
+        for key, value in contract.items():
+            assert rows[fixture][key] == value
+
+    executable = queue["command_plan"]["executable"][0]
+    blocked = queue["command_plan"]["blocked"][0]
+    for key, value in contracts["executable"].items():
+        assert executable[key] == value
+    for key, value in contracts["blocked"].items():
+        assert blocked[key] == value
+        assert blocked["operator_handoff"][key] == value
+
+
 def test_command_plan_treats_next_action_complete_as_complete(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

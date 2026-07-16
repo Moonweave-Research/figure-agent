@@ -20,6 +20,7 @@ ACTION_HUMAN_GATE_STOP = "human_gate_stop"
 ACTION_POLISH_HANDOFF_STOP = "polish_handoff_stop"
 ACTION_RELEASE_BLOCKED = "release_blocked"
 ACTION_COMPLETE = "complete"
+ACTION_CLOSED_LOOP_HANDOFF_STOP = "closed_loop_handoff_stop"
 
 STOP_SEMANTIC_BACKPORT = "semantic_backport_required"
 
@@ -53,7 +54,37 @@ def _decision_boundary(
     action: str,
     blocking_source: str,
     requires_human: bool,
+    required_actor: str | None = None,
 ) -> dict[str, Any]:
+    if action == ACTION_CLOSED_LOOP_HANDOFF_STOP:
+        if required_actor == "host_llm":
+            kind = "host_vision_gate"
+            authority = "host_llm"
+        elif required_actor in {
+            "human_adjudicator",
+            "human_attributor",
+            "human_repair_authorizer",
+            "human_reviewer",
+        }:
+            kind = "human_decision"
+            authority = required_actor
+        elif required_actor == "none":
+            kind = "terminal"
+            authority = "none"
+        else:
+            kind = "deterministic_plugin_gate"
+            authority = "plugin"
+        return {
+            "schema": DECISION_BOUNDARY_SCHEMA,
+            "kind": kind,
+            "authority": authority,
+            "blocks_progress": True,
+            "blocks_release": True,
+            "explanation": (
+                "The hash-bound closed-loop attempt must be resolved by its "
+                "recorded next actor before another workflow path can run."
+            ),
+        }
     if action == ACTION_COMPLETE:
         return {
             "schema": DECISION_BOUNDARY_SCHEMA,
@@ -282,6 +313,8 @@ def _summary(
     evidence_refs: list[str],
     patch_handoff: Mapping[str, Any] | None = None,
     release_blockers: list[dict[str, Any]] | None = None,
+    required_actor: str | None = None,
+    publication_acceptance: str | None = None,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "schema": SCHEMA,
@@ -294,16 +327,73 @@ def _summary(
             action=action,
             blocking_source=blocking_source,
             requires_human=requires_human,
+            required_actor=required_actor,
         ),
         "allowed_scope": _allowed_scope(action, fixture, patch_handoff, blocking_source),
         "forbidden_scope": _forbidden_scope(action, patch_handoff),
         "evidence_refs": evidence_refs,
     }
+    if required_actor is not None:
+        payload["required_actor"] = required_actor
+    if publication_acceptance is not None:
+        payload["publication_acceptance"] = publication_acceptance
     normalized_release_blockers = list(release_blockers or [])
     if normalized_release_blockers:
         payload["release_blockers"] = normalized_release_blockers
         payload["release_blocker"] = normalized_release_blockers[0]
     return payload
+
+
+def _closed_loop_summary(payload: Mapping[str, Any]) -> dict[str, Any] | None:
+    closed_loop = payload.get("closed_loop_attempt")
+    if not isinstance(closed_loop, Mapping):
+        return None
+    resolution = _string(closed_loop.get("resolution"))
+    lifecycle_state = _string(closed_loop.get("state"))
+    if resolution == "absent" or (
+        resolution == "current" and lifecycle_state == "development_accepted"
+    ):
+        return None
+    if resolution not in {"current", "invalid", "ambiguous"}:
+        return None
+    required_actor = _string(closed_loop.get("required_actor"), "workflow_agent")
+    if resolution == "current":
+        blocking_source = "closed_loop_actor_required"
+        reason = (
+            f"closed-loop attempt is at {lifecycle_state}; continue only with "
+            f"the recorded actor {required_actor}."
+        )
+    else:
+        blocking_source = f"closed_loop_{resolution}"
+        reason = _string(
+            closed_loop.get("reason"),
+            f"closed-loop current-state resolution is {resolution}",
+        )
+    evidence_refs: list[str] = []
+    state_path = closed_loop.get("path")
+    if isinstance(state_path, str) and state_path:
+        evidence_refs.append(state_path)
+    supplied_refs = closed_loop.get("evidence_refs")
+    if isinstance(supplied_refs, list):
+        evidence_refs.extend(
+            ref for ref in supplied_refs if isinstance(ref, str) and ref not in evidence_refs
+        )
+    state_sha256 = closed_loop.get("state_sha256")
+    if isinstance(state_sha256, str) and state_sha256:
+        evidence_refs.append(f"closed_loop.state_sha256:{state_sha256}")
+    if not evidence_refs:
+        evidence_refs.append("closed_loop.current_state")
+    return _summary(
+        fixture=_fixture(payload),
+        action=ACTION_CLOSED_LOOP_HANDOFF_STOP,
+        reason=reason,
+        blocking_source=blocking_source,
+        safe_command=None,
+        requires_human=required_actor.startswith("human_"),
+        evidence_refs=evidence_refs,
+        required_actor=required_actor,
+        publication_acceptance="not_claimed",
+    )
 
 
 def _human_blocker_entries(payload: Mapping[str, Any]) -> list[Mapping[str, Any]]:
@@ -369,6 +459,9 @@ def _release_blockers(payload: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 def status_next_action_summary(status: Mapping[str, Any]) -> dict[str, Any]:
     """Compress a /fig_status result without changing status.next semantics."""
+    closed_loop_summary = _closed_loop_summary(status)
+    if closed_loop_summary is not None:
+        return closed_loop_summary
     fixture = _fixture(status)
     explanation = status.get("status_explanation")
     first_blocker = explanation.get("first_blocker") if isinstance(explanation, Mapping) else None
@@ -400,6 +493,9 @@ def status_next_action_summary(status: Mapping[str, Any]) -> dict[str, Any]:
 
 def driver_next_action_summary(driver_summary: Mapping[str, Any]) -> dict[str, Any]:
     """Compress the already-selected /fig_drive dry-run action."""
+    closed_loop_summary = _closed_loop_summary(driver_summary)
+    if closed_loop_summary is not None:
+        return closed_loop_summary
     fixture = _fixture(driver_summary)
     action = _string(driver_summary.get("action"), ACTION_RUN_FIG_LOOP)
     stop_boundary = driver_summary.get("stop_boundary")

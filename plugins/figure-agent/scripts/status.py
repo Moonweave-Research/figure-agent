@@ -15,6 +15,7 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 sys.path.insert(0, str(SCRIPTS_DIR / "checks"))
 sys.path.insert(0, str(SCRIPTS_DIR / "quality"))
 
+import closed_loop_current_state
 import current_render_review_scaffold
 import human_decision_record
 import runtime_paths
@@ -673,6 +674,10 @@ def _promotion_queue_summary(example_dir: Path) -> dict[str, Any]:
 
 
 def _finalize_status(result: dict, example_dir: Path) -> dict:
+    result["closed_loop_attempt"] = closed_loop_current_state.resolve_current_attempt(
+        workspace_root=example_dir.parents[1],
+        fixture=example_dir.name,
+    )
     if "release_decision" not in result:
         name = result.get("name")
         if isinstance(name, str) and name:

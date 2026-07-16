@@ -114,8 +114,20 @@ _ACTORS = (
     "workflow_agent",
     "host_llm",
     "human",
+    "human_adjudicator",
+    "human_attributor",
+    "human_repair_authorizer",
+    "human_reviewer",
     "release_operator",
     "svg_editor",
+)
+_NEXT_ACTION_EVIDENCE_KEYS = (
+    "required_actor",
+    "evidence_refs",
+    "allowed_scope",
+    "forbidden_scope",
+    "publication_acceptance",
+    "decision_boundary",
 )
 _EXECUTABLE_ACTIONS = frozenset(
     {
@@ -203,6 +215,10 @@ def _first_blocker(summary: dict[str, Any]) -> str | None:
     return stripped
 
 
+def _next_action_evidence_fields(value: dict[str, Any]) -> dict[str, Any]:
+    return {key: value[key] for key in _NEXT_ACTION_EVIDENCE_KEYS if key in value}
+
+
 def _row_from_summary(
     summary: dict[str, Any], *, mode: str, repo_root: Path
 ) -> dict[str, Any]:
@@ -251,6 +267,8 @@ def _row_from_summary(
         "blocking_source": blocking_source_for_driver_summary(summary),
         "requires_human": requires_human_for_driver_summary(summary),
     }
+    if isinstance(next_action, dict):
+        row.update(_next_action_evidence_fields(next_action))
     release_decision = status.get("release_decision")
     if isinstance(release_decision, dict):
         row["release_decision"] = release_decision
@@ -1333,6 +1351,23 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
                     "forbidden_scope": common_forbidden,
                     "closeout_checks": ["rerun /fig_queue in the next broader mode"],
                 }
+    if row.get("action") == fig_driver.ACTION_CLOSED_LOOP_HANDOFF_STOP:
+        return {
+            "schema": OPERATOR_HANDOFF_SCHEMA,
+            "fixture": fixture,
+            "required_actor": actor,
+            "next_step": (
+                "Continue only from the exact hash-bound closed-loop state with "
+                f"the recorded actor {actor}."
+            ),
+            "command": None,
+            "reason": reason,
+            **_next_action_evidence_fields(row),
+            "closeout_checks": [
+                "resolve the recorded closed-loop actor boundary",
+                "rerun live /fig_status before continuing",
+            ],
+        }
     if actor == "host_llm":
         details = _host_llm_handoff_details(row)
         return {
@@ -1489,6 +1524,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
                 "design_direction_state": row.get("design_direction_state"),
                 "design_direction_summary": row.get("design_direction_summary"),
+                **_next_action_evidence_fields(row),
             }
             if row.get("svg_polish_evidence_state") is not None:
                 item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
@@ -1501,6 +1537,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "action": row.get("action"),
                 "safe_command": row.get("safe_command"),
                 "required_actor": row.get("required_actor"),
+                **_next_action_evidence_fields(row),
             }
             if row.get("svg_polish_evidence_state") is not None:
                 item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
@@ -1519,6 +1556,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
             "design_direction_state": row.get("design_direction_state"),
             "design_direction_summary": row.get("design_direction_summary"),
+            **_next_action_evidence_fields(row),
         }
         if row.get("svg_polish_evidence_state") is not None:
             item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")

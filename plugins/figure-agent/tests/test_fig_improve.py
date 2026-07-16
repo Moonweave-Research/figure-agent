@@ -620,6 +620,88 @@ def test_aggressive_candidates_do_not_run_for_release_operator(
     assert payload["final_required_actor"] == "release_operator"
 
 
+def test_aggressive_candidates_do_not_run_at_mandatory_human_gate(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_HUMAN_GATE_STOP,
+                final_stop_reason=fig_run.STOP_NOT_EXECUTABLE,
+                final_stop_boundary=fig_driver.STOP_HUMAN_GATE,
+                boundary_handoff=_boundary_handoff(
+                    action=fig_driver.ACTION_HUMAN_GATE_STOP,
+                    stop_boundary=fig_driver.STOP_HUMAN_GATE,
+                    required_actor="human",
+                ),
+            )
+        ],
+    )
+
+    def _unexpected_candidate_runner(
+        name: str,
+        *,
+        goal: str,
+        max_iterations: int,
+        repo_root: Path,
+    ) -> dict[str, Any]:
+        raise AssertionError("mandatory human gates must not run aggressive candidates")
+
+    payload = fig_improve.run_improvement(
+        "demo",
+        goal="improve",
+        execute=True,
+        repo_root=tmp_path,
+        aggressive_candidates=True,
+        candidate_runner=_unexpected_candidate_runner,
+    )
+
+    assert "aggressive_candidate_run" not in payload
+    assert payload["final_required_actor"] == "human"
+
+
+def test_aggressive_candidates_do_not_run_at_named_closed_loop_human_gate(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_CLOSED_LOOP_HANDOFF_STOP,
+                final_stop_reason=fig_run.STOP_NOT_EXECUTABLE,
+                final_stop_boundary=fig_driver.STOP_CLOSED_LOOP_ACTOR,
+                boundary_handoff=_boundary_handoff(
+                    action=fig_driver.ACTION_CLOSED_LOOP_HANDOFF_STOP,
+                    stop_boundary=fig_driver.STOP_CLOSED_LOOP_ACTOR,
+                    required_actor="human_reviewer",
+                ),
+            )
+        ],
+    )
+
+    def _unexpected_candidate_runner(
+        name: str,
+        *,
+        goal: str,
+        max_iterations: int,
+        repo_root: Path,
+    ) -> dict[str, Any]:
+        raise AssertionError("named human gates must not run aggressive candidates")
+
+    payload = fig_improve.run_improvement(
+        "demo",
+        goal="improve",
+        execute=True,
+        repo_root=tmp_path,
+        aggressive_candidates=True,
+        candidate_runner=_unexpected_candidate_runner,
+    )
+
+    assert "aggressive_candidate_run" not in payload
+    assert payload["final_required_actor"] == "human_reviewer"
+
+
 def test_aggressive_candidates_run_on_basin_complete_boundary(
     tmp_path: Path, monkeypatch: Any
 ) -> None:
@@ -666,6 +748,48 @@ def test_aggressive_candidates_run_on_basin_complete_boundary(
     assert payload["final_stop_reason"] == "complete"
     assert payload["aggressive_candidate_run"]["run_dir"].endswith("demo-basin")
     assert payload["aggressive_candidate_run"]["selected_candidate_id"] == "QS003"
+
+
+def test_aggressive_candidates_do_not_run_at_basin_human_boundary(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_HUMAN_GATE_STOP,
+                final_stop_reason=fig_run.STOP_NOT_EXECUTABLE,
+                final_stop_boundary="basin_detected",
+                boundary_handoff=_boundary_handoff(
+                    action=fig_driver.ACTION_HUMAN_GATE_STOP,
+                    stop_boundary="basin_detected",
+                    required_actor="human",
+                ),
+            )
+        ],
+    )
+
+    def _unexpected_candidate_runner(
+        name: str,
+        *,
+        goal: str,
+        max_iterations: int,
+        repo_root: Path,
+    ) -> dict[str, Any]:
+        raise AssertionError("basin human boundaries must not run aggressive candidates")
+
+    payload = fig_improve.run_improvement(
+        "demo",
+        goal="improve",
+        execute=True,
+        repo_root=tmp_path,
+        aggressive_candidates=True,
+        candidate_runner=_unexpected_candidate_runner,
+    )
+
+    assert "aggressive_candidate_run" not in payload
+    assert payload["final_required_actor"] == "human"
+    assert payload["final_stop_boundary"] == "basin_detected"
 
 
 def test_main_rejects_invalid_max_loops(

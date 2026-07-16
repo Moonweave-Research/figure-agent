@@ -425,6 +425,11 @@ def _boundary_handoff(
             "note": "Do not replay this handoff; rerun live status and driver state first.",
         },
     }
+    next_action = summary.get("next_action_summary")
+    if isinstance(next_action, dict):
+        publication_acceptance = next_action.get("publication_acceptance")
+        if isinstance(publication_acceptance, str) and publication_acceptance:
+            handoff["publication_acceptance"] = publication_acceptance
     if action == fig_driver.ACTION_PATCH_HANDOFF_STOP or stop_boundary in {
         fig_driver.STOP_PATCH_HANDOFF,
         fig_driver.STOP_AMBIGUOUS_PATCH,
