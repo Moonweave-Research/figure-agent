@@ -316,4 +316,4 @@ Closed-loop handoffs use these contracts rather than another workflow shell:
 `figure-agent.attempt-local-post-repair-review-request.v2`, `figure-agent.attempt-local-host-review-execution-receipt.v2`,
 `figure-agent.attempt-local-post-repair-review-response.v2`, `figure-agent.attempt-local-post-repair-review-receipt.v2`,
 `figure-agent.initial-visual-review-response.v1`, `figure-agent.initial-human-adjudication.v1`,
-`figure-agent.initial-attribution-handoff.v1`, `figure-agent.initial-attribution-binding.v2`, and `figure-agent.closed-loop-development-verdict.v1`.
+`figure-agent.initial-attribution-handoff.v1`, `figure-agent.initial-attribution-binding.v2`, `figure-agent.closed-loop-development-verdict.v1`, and the internal-only `figure-agent.prospective-evidence-receipt.v1` recorder in `prospective_evidence_receipt.py`.

@@ -300,6 +300,9 @@ not add another generator, renderer, candidate family, or workflow shell.
   this bounds detector coverage only, not physical band-energy shape.
 - [ ] **Q4 — Refresh evidence and close human review.** Regenerate critique,
   audit crops, compile/export receipts, and review hashes in a clean environment.
+  Record those already-produced artifacts with the internal
+  `scripts/prospective_evidence_receipt.py` module; it snapshots one explicit
+  fixture-relative declaration and never runs compilation or review itself.
   A named development-baseline scaffold verdict is now recorded; prospective
   correction minutes were not captured and must not be reconstructed after the
   fact. The critique/adjudication refresh remains open after any source repair.
