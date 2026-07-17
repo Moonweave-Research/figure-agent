@@ -114,7 +114,7 @@ def _write_request(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def _validate_request(payload: dict[str, Any], *, root: Path, fixture: str) -> None:
+def validate_request(payload: dict[str, Any], *, root: Path, fixture: str) -> None:
     canonical = {key: value for key, value in payload.items() if key != "request_sha256"}
     expected_hash = authority.sha256_bytes(
         json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
@@ -206,7 +206,7 @@ def _recover_existing(
     ):
         raise AttemptLocalPostReviewError("post_review_request_evidence_drift")
     request = authority.load_json(existing, label="attempt_local_review_request")
-    _validate_request(request, root=root, fixture=fixture)
+    validate_request(request, root=root, fixture=fixture)
     return {"state": state, "request": request}
 
 
@@ -220,7 +220,7 @@ def _revalidate_request_before_state_publish(
     actual = authority.load_json(request_path, label="attempt_local_review_request")
     if actual != expected:
         raise AttemptLocalPostReviewError("post_review_request_drift_before_state_publish")
-    _validate_request(actual, root=root, fixture=fixture)
+    validate_request(actual, root=root, fixture=fixture)
 
 
 def run_attempt_local_post_review(
@@ -375,7 +375,7 @@ def run_attempt_local_post_review(
                     if staging_root.is_dir() and not staging_root.is_symlink():
                         shutil.rmtree(staging_root)
                     raise
-            _validate_request(request, root=root, fixture=fixture)
+            validate_request(request, root=root, fixture=fixture)
             next_state = closed_loop_attempt_state.transition_state(
                 machine_state,
                 next_state="post_review_requested",
