@@ -539,3 +539,40 @@ def test_v2_post_review_write_failure_cleans_staging(
     assert not (attempt_root / ".attempt-local-post-review-staging").exists()
     assert not (attempt_root / "attempt-local-post-repair-review").exists()
     assert not _post_review_state_path(repaired).exists()
+
+
+def test_v2_post_review_all_artifact_validation_is_the_final_publish_barrier(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, repaired = _image_machine_repaired_attempt(tmp_path)
+    attempt_root = repaired["next_state_path"].parent
+    request_path = attempt_root / "attempt-local-post-repair-review" / "request.json"
+    original = attempt_local_post_review.authority.assert_render_unchanged
+    mutated = False
+
+    def mutate_after_render_check(*args: object, **kwargs: object) -> None:
+        nonlocal mutated
+        original(*args, **kwargs)
+        if request_path.is_file() and not mutated:
+            request = json.loads(request_path.read_text(encoding="utf-8"))
+            crop = workspace / request["initial_crops"][0]["path"]
+            crop.write_bytes(b"drift-after-final-render-check")
+            mutated = True
+
+    monkeypatch.setattr(
+        attempt_local_post_review.authority,
+        "assert_render_unchanged",
+        mutate_after_render_check,
+    )
+    with pytest.raises(
+        attempt_local_post_review.AttemptLocalPostReviewError,
+        match="post_review_request_artifact_hash_drift",
+    ):
+        attempt_local_post_review.run_attempt_local_post_review(
+            FIXTURE,
+            state_path=repaired["next_state_path"],
+            execute=True,
+            workspace_root=workspace,
+        )
+    assert mutated is True
+    assert not _post_review_state_path(repaired).exists()

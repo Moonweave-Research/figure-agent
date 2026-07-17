@@ -385,13 +385,13 @@ def run_attempt_local_post_review(
                 workspace_root=root,
                 previous_state_path=plan["state_path"],
             )
-            _revalidate_request_before_state_publish(
-                request_path, request, root=root, fixture=fixture
-            )
             authority.assert_render_unchanged(
                 plan["after_render"],
                 expected_sha256=after_sha,
                 expected_fingerprint=fingerprint,
+            )
+            _revalidate_request_before_state_publish(
+                request_path, request, root=root, fixture=fixture
             )
             published = closed_loop_attempt_state.publish_state(next_state, workspace_root=root)
             if published != next_state_path:
