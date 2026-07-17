@@ -15,6 +15,7 @@ import yaml
 
 SCHEMA = "figure-agent.prospective-evidence-receipt.v1"
 REQUIRED_SINGLETON_ROLES = {
+    "source",
     "strict_compile_report",
     "render",
     "audit_crop_manifest",
@@ -144,6 +145,9 @@ def _validate_declaration(payload: dict[str, Any]) -> list[dict[str, str]]:
         raise ProspectiveEvidenceReceiptError("artifact_role_cardinality_invalid")
     if any(roles.count(role) > 1 for role in OPTIONAL_SINGLETON_ROLES):
         raise ProspectiveEvidenceReceiptError("artifact_role_cardinality_invalid")
+    source = next(item for item in normalized if item["role"] == "source")
+    if source["path"] != f"{fixture}.tex":
+        raise ProspectiveEvidenceReceiptError("source_invalid")
     return normalized
 
 
@@ -191,8 +195,10 @@ def record(*, fixture_dir: Path, declaration: str, output_dir: str) -> dict[str,
         raise ProspectiveEvidenceReceiptError("strict_report_invalid") from exc
     if (
         not isinstance(strict_report, dict)
-        or strict_report.get("strict") is not True
-        or strict_report.get("returncode") != 0
+        or strict_report.get("schema") != "figure-agent.strict-status.v1"
+        or strict_report.get("strict_requested") is not True
+        or strict_report.get("detector_failed") is not False
+        or strict_report.get("state") != "passed"
     ):
         raise ProspectiveEvidenceReceiptError("strict_report_invalid")
 

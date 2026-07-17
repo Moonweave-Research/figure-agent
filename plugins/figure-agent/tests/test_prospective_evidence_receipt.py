@@ -21,7 +21,16 @@ def _sha256(path: Path) -> str:
 def _fixture(tmp_path: Path) -> Path:
     fixture = tmp_path / "fixture"
     files = {
-        "build/strict.json": '{"strict": true, "returncode": 0}\n',
+        "fixture.tex": "\\documentclass{standalone}\n",
+        "build/strict.json": json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": True,
+                "detector_failed": False,
+                "state": "passed",
+            }
+        )
+        + "\n",
         "build/figure.png": "render\n",
         "review/crops/manifest.json": '{"crops": ["panel-a.png"]}\n',
         "review/crops/panel-a.png": "crop\n",
@@ -41,6 +50,7 @@ def _fixture(tmp_path: Path) -> Path:
             "returncode": 0,
         },
         "artifacts": [
+            {"role": "source", "path": "fixture.tex"},
             {"role": "strict_compile_report", "path": "build/strict.json"},
             {"role": "render", "path": "build/figure.png"},
             {"role": "audit_crop_manifest", "path": "review/crops/manifest.json"},
@@ -74,6 +84,7 @@ def test_records_hash_bound_immutable_prospective_evidence(tmp_path: Path) -> No
     assert payload["source_declaration"]["path"] == "declaration.yaml"
     assert payload["source_declaration"]["sha256"] == _sha256(fixture / "declaration.yaml")
     assert {item["role"] for item in payload["artifacts"]} == {
+        "source",
         "strict_compile_report",
         "render",
         "audit_crop_manifest",
@@ -187,7 +198,7 @@ def test_rejects_invalid_strict_correction_or_acceptance_facts(
         )
 
 
-def test_source_drift_cleans_staging_and_publishes_nothing(
+def test_editable_source_drift_cleans_staging_and_publishes_nothing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     fixture = _fixture(tmp_path)
@@ -198,12 +209,12 @@ def test_source_drift_cleans_staging_and_publishes_nothing(
         nonlocal reads
         path, data = original(*args, **kwargs)  # type: ignore[arg-type]
         reads += 1
-        if reads == 9:
+        if reads == 11:
             return path, data + b"drift"
         return path, data
 
     monkeypatch.setattr(receipt, "_read_regular", drift)
-    with pytest.raises(receipt.ProspectiveEvidenceReceiptError, match="declaration_drift"):
+    with pytest.raises(receipt.ProspectiveEvidenceReceiptError, match="source_artifact_drift"):
         receipt.record(
             fixture_dir=fixture,
             declaration="declaration.yaml",
@@ -234,11 +245,54 @@ def test_accepts_json_measured_correction_and_optional_human_verdict(tmp_path: P
 
 def test_rejects_strict_report_that_does_not_prove_strict_rc_zero(tmp_path: Path) -> None:
     fixture = _fixture(tmp_path)
-    (fixture / "build/strict.json").write_text('{"strict": false, "returncode": 0}\n')
+    (fixture / "build/strict.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": False,
+                "detector_failed": False,
+                "state": "passed",
+            }
+        )
+        + "\n"
+    )
 
     with pytest.raises(receipt.ProspectiveEvidenceReceiptError, match="strict_report_invalid"):
         receipt.record(
             fixture_dir=fixture,
             declaration="declaration.yaml",
+            output_dir="review/prospective/q4-invalid",
+        )
+
+
+def test_rejects_missing_editable_source_role(tmp_path: Path) -> None:
+    fixture = _fixture(tmp_path)
+    declaration = yaml.safe_load((fixture / "declaration.yaml").read_text())
+    declaration["artifacts"] = [
+        item for item in declaration["artifacts"] if item["role"] != "source"
+    ]
+    (fixture / "missing-source.yaml").write_text(yaml.safe_dump(declaration))
+
+    with pytest.raises(receipt.ProspectiveEvidenceReceiptError, match="role_cardinality"):
+        receipt.record(
+            fixture_dir=fixture,
+            declaration="missing-source.yaml",
+            output_dir="review/prospective/q4-invalid",
+        )
+
+
+def test_rejects_source_role_that_is_not_editable_tex(tmp_path: Path) -> None:
+    fixture = _fixture(tmp_path)
+    declaration = yaml.safe_load((fixture / "declaration.yaml").read_text())
+    (fixture / "source.txt").write_text("not tex\n")
+    next(item for item in declaration["artifacts"] if item["role"] == "source")["path"] = (
+        "source.txt"
+    )
+    (fixture / "invalid-source.yaml").write_text(yaml.safe_dump(declaration))
+
+    with pytest.raises(receipt.ProspectiveEvidenceReceiptError, match="source_invalid"):
+        receipt.record(
+            fixture_dir=fixture,
+            declaration="invalid-source.yaml",
             output_dir="review/prospective/q4-invalid",
         )
