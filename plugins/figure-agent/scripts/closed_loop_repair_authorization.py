@@ -204,6 +204,7 @@ def _validated_plan(
                 output_path=str(preview.get("output_path") or ""),
                 output_sha256=str(preview.get("output_sha256") or ""),
                 preview_sha256=str(preview.get("preview_sha256") or ""),
+                expected_packet_path=packet_path.relative_to(workspace_root).as_posix(),
             )
         )
     except human_decision_record.HumanDecisionRecordError as exc:

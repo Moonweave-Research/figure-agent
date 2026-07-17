@@ -81,6 +81,19 @@ def is_attempt_local_packet_schema(value: object) -> bool:
     return value == ATTEMPT_LOCAL_PACKET_SCHEMA
 
 
+def attempt_local_packet_path(packet: dict[str, object]) -> str:
+    """Return the one canonical packet path accepted by a v2 authorization."""
+    binding = packet.get("attempt_local_repair_binding")
+    if not isinstance(binding, dict):
+        raise RepairExecutionPacketError("attempt-local packet binding invalid")
+    binding_relative = _safe_relative(
+        str(binding.get("path") or ""), label="attempt-local packet binding"
+    )
+    if binding_relative.name != "attempt-local-repair-binding.json":
+        raise RepairExecutionPacketError("attempt-local packet binding invalid")
+    return (binding_relative.parent / "attempt-local-repair-packet.json").as_posix()
+
+
 def _sha256_bytes(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
@@ -1881,6 +1894,7 @@ def materialize_attempt_local_repair_candidate_v2(
                 output_path=output_relative.as_posix(),
                 output_sha256=str(preview["output_sha256"]),
                 preview_sha256=str(preview["preview_sha256"]),
+                expected_packet_path=attempt_local_packet_path(packet),
             )
         )
     except human_decision_record.HumanDecisionRecordError as exc:

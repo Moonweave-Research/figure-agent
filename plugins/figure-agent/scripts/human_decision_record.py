@@ -317,6 +317,7 @@ def validate_additive_materialization_authorization(
     output_path: str,
     output_sha256: str,
     preview_sha256: str,
+    expected_packet_path: str | None = None,
 ) -> dict[str, Any]:
     """Validate one named decision bound to one additive repair artifact."""
     normalized = validate_decision_record(record)
@@ -351,6 +352,8 @@ def validate_additive_materialization_authorization(
         raise HumanDecisionRecordError("materialization_decision_output_hash_mismatch")
     if authorized_preview_sha256 != preview_sha256:
         raise HumanDecisionRecordError("materialization_decision_preview_hash_mismatch")
+    if expected_packet_path is not None and normalized["packet_path"] != expected_packet_path:
+        raise HumanDecisionRecordError("materialization_decision_packet_path_mismatch")
     return {
         **normalized,
         "reviewer": reviewer,

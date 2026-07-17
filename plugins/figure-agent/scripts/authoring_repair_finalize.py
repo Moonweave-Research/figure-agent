@@ -467,6 +467,7 @@ def finalize_materialized_candidate(
                 output_path=str(packet.get("output_path") or ""),
                 output_sha256=output_sha256,
                 preview_sha256=preview_sha256,
+                expected_packet_path=packet_path.relative_to(workspace_root).as_posix(),
             )
         )
     except human_decision_record.HumanDecisionRecordError as exc:

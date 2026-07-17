@@ -236,6 +236,7 @@ def _unlink_hash_bound_output(
 def _validate_authority(
     *,
     packet: dict[str, Any],
+    packet_path: Path,
     receipt: dict[str, Any],
     authorization: dict[str, Any],
     output: Path,
@@ -303,6 +304,7 @@ def _validate_authority(
             output_path=str(packet.get("output_path") or ""),
             output_sha256=str(receipt.get("output_sha256") or ""),
             preview_sha256=preview_sha256,
+                expected_packet_path=packet_path.relative_to(workspace_root).as_posix(),
         )
     except human_decision_record.HumanDecisionRecordError as exc:
         raise AuthoringRepairRollbackError(
@@ -378,6 +380,7 @@ def rollback_failed_materialized_candidate(
     )
     _validate_authority(
         packet=packet,
+        packet_path=packet_path,
         receipt=receipt,
         authorization=authorization,
         output=output,
@@ -400,6 +403,7 @@ def rollback_failed_materialized_candidate(
                 )
             _validate_authority(
                 packet=packet,
+                packet_path=packet_path,
                 receipt=receipt,
                 authorization=authorization,
                 output=output,

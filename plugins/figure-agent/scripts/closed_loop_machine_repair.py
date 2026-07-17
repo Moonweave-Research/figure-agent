@@ -304,6 +304,7 @@ def _validated_plan(
             output_path=str(computed_preview.get("output_path") or ""),
             output_sha256=str(computed_preview.get("output_sha256") or ""),
             preview_sha256=str(computed_preview.get("preview_sha256") or ""),
+            expected_packet_path=packet_path.relative_to(workspace_root).as_posix(),
         )
     except human_decision_record.HumanDecisionRecordError as exc:
         raise ClosedLoopMachineRepairError(f"materialization_authorization_invalid:{exc}") from exc

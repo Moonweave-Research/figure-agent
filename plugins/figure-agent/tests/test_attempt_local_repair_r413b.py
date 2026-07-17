@@ -164,6 +164,36 @@ def test_v2_materialization_is_sandbox_only_and_authorization_drift_fails_closed
         )
 
 
+def test_v2_authorization_packet_path_must_match_the_actual_packet(tmp_path: Path) -> None:
+    workspace, repair_bound, packet, packet_path, response_path, preview_path = _prepared(tmp_path)
+    candidate = closed_loop_repair_candidate.run_repair_candidate(
+        FIXTURE,
+        state_path=repair_bound,
+        packet_path=packet_path,
+        response_path=response_path,
+        preview_path=preview_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    preview = json.loads(preview_path.read_text(encoding="utf-8"))
+    forged = _authorization(packet, preview)
+    forged["packet_path"] = "examples/fig3_resistance_mechanism/other-packet.json"
+    authorization_path = packet_path.with_name("human-authorization.json")
+    authorization_path.write_text(json.dumps(forged), encoding="utf-8")
+    with pytest.raises(
+        closed_loop_repair_authorization.ClosedLoopRepairAuthorizationError,
+        match="materialization_decision_packet_path_mismatch",
+    ):
+        closed_loop_repair_authorization.run_authorization(
+            FIXTURE,
+            state_path=candidate["next_state_path"],
+            authorization_path=authorization_path,
+            execute=True,
+            workspace_root=workspace,
+        )
+    assert not (candidate["next_state_path"].parent / "state-006-repair_authorized.json").exists()
+
+
 def test_v2_failed_strict_finalize_rolls_back_only_additive_output(tmp_path: Path) -> None:
     workspace, _repair_bound, packet, packet_path, response_path, preview_path = _prepared(tmp_path)
     response = json.loads(response_path.read_text(encoding="utf-8"))
