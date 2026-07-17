@@ -99,6 +99,48 @@ def _fake_image_strict_compiler(tmp_path: Path) -> Path:
     return plugin_root
 
 
+def _image_machine_repaired_attempt(
+    tmp_path: Path,
+) -> tuple[Path, dict[str, object]]:
+    workspace, repair_bound, packet, packet_path, response_path, preview_path = _prepared(tmp_path)
+    candidate = closed_loop_repair_candidate.run_repair_candidate(
+        FIXTURE,
+        state_path=repair_bound,
+        packet_path=packet_path,
+        response_path=response_path,
+        preview_path=preview_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    preview = json.loads(preview_path.read_text(encoding="utf-8"))
+    authorization_path = packet_path.with_name("human-authorization.json")
+    authorization_path.write_text(json.dumps(_authorization(packet, preview)), encoding="utf-8")
+    authorized = closed_loop_repair_authorization.run_authorization(
+        FIXTURE,
+        state_path=candidate["next_state_path"],
+        authorization_path=authorization_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    repaired = closed_loop_machine_repair.run_machine_repair(
+        FIXTURE,
+        state_path=authorized["next_state_path"],
+        response_path=response_path,
+        execute=True,
+        workspace_root=workspace,
+        plugin_root=_fake_image_strict_compiler(tmp_path),
+    )
+    return workspace, repaired
+
+
+def _post_review_state_path(repaired: dict[str, object]) -> Path:
+    machine_path = repaired["next_state_path"]
+    machine_state = json.loads(machine_path.read_text(encoding="utf-8"))
+    return machine_path.with_name(
+        f"state-{machine_state['sequence'] + 1:03d}-post_review_requested.json"
+    )
+
+
 def test_v2_candidate_and_named_authorization_do_not_cross_inject_v1(tmp_path: Path) -> None:
     workspace, repair_bound, packet, packet_path, response_path, preview_path = _prepared(tmp_path)
     candidate = closed_loop_repair_candidate.run_repair_candidate(
@@ -375,34 +417,7 @@ def test_v2_machine_repair_reconstructs_write_free_post_review_authority(
 def test_v2_post_review_plan_is_write_free_and_execute_publishes_separate_request(
     tmp_path: Path,
 ) -> None:
-    workspace, repair_bound, packet, packet_path, response_path, preview_path = _prepared(tmp_path)
-    candidate = closed_loop_repair_candidate.run_repair_candidate(
-        FIXTURE,
-        state_path=repair_bound,
-        packet_path=packet_path,
-        response_path=response_path,
-        preview_path=preview_path,
-        execute=True,
-        workspace_root=workspace,
-    )
-    preview = json.loads(preview_path.read_text(encoding="utf-8"))
-    authorization_path = packet_path.with_name("human-authorization.json")
-    authorization_path.write_text(json.dumps(_authorization(packet, preview)), encoding="utf-8")
-    authorized = closed_loop_repair_authorization.run_authorization(
-        FIXTURE,
-        state_path=candidate["next_state_path"],
-        authorization_path=authorization_path,
-        execute=True,
-        workspace_root=workspace,
-    )
-    repaired = closed_loop_machine_repair.run_machine_repair(
-        FIXTURE,
-        state_path=authorized["next_state_path"],
-        response_path=response_path,
-        execute=True,
-        workspace_root=workspace,
-        plugin_root=_fake_image_strict_compiler(tmp_path),
-    )
+    workspace, repaired = _image_machine_repaired_attempt(tmp_path)
     before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
     planned = attempt_local_post_review.run_attempt_local_post_review(
         FIXTURE, state_path=repaired["next_state_path"], execute=False, workspace_root=workspace
@@ -447,3 +462,80 @@ def test_v2_post_review_plan_is_write_free_and_execute_publishes_separate_reques
             execute=True,
             workspace_root=workspace,
         )
+
+
+def test_v2_post_review_rejects_next_state_symlink_before_read(tmp_path: Path) -> None:
+    workspace, repaired = _image_machine_repaired_attempt(tmp_path)
+    next_state_path = _post_review_state_path(repaired)
+    next_state_path.symlink_to(repaired["next_state_path"])
+
+    with pytest.raises(
+        attempt_local_post_review.AttemptLocalPostReviewError,
+        match="post_review_publication_failed:closed_loop_state_symlink",
+    ):
+        attempt_local_post_review.run_attempt_local_post_review(
+            FIXTURE,
+            state_path=repaired["next_state_path"],
+            execute=True,
+            workspace_root=workspace,
+        )
+    assert not (next_state_path.parent / "attempt-local-post-repair-review").exists()
+
+
+def test_v2_post_review_revalidates_all_artifacts_after_transition(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, repaired = _image_machine_repaired_attempt(tmp_path)
+    original = attempt_local_post_review.closed_loop_attempt_state.transition_state
+
+    def tampering_transition(*args: object, **kwargs: object) -> dict[str, object]:
+        state = original(*args, **kwargs)
+        request_path = repaired["next_state_path"].parent / (
+            "attempt-local-post-repair-review/request.json"
+        )
+        request = json.loads(request_path.read_text(encoding="utf-8"))
+        crop = workspace / request["initial_crops"][0]["path"]
+        crop.write_bytes(b"drift-after-transition")
+        return state
+
+    monkeypatch.setattr(
+        attempt_local_post_review.closed_loop_attempt_state,
+        "transition_state",
+        tampering_transition,
+    )
+    with pytest.raises(
+        attempt_local_post_review.AttemptLocalPostReviewError,
+        match="post_review_request_artifact_hash_drift",
+    ):
+        attempt_local_post_review.run_attempt_local_post_review(
+            FIXTURE,
+            state_path=repaired["next_state_path"],
+            execute=True,
+            workspace_root=workspace,
+        )
+    assert not _post_review_state_path(repaired).exists()
+
+
+def test_v2_post_review_write_failure_cleans_staging(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, repaired = _image_machine_repaired_attempt(tmp_path)
+
+    def fail_write(*args: object, **kwargs: object) -> None:
+        raise OSError("injected request write failure")
+
+    monkeypatch.setattr(attempt_local_post_review, "_write_request", fail_write)
+    with pytest.raises(
+        attempt_local_post_review.AttemptLocalPostReviewError,
+        match="injected request write failure",
+    ):
+        attempt_local_post_review.run_attempt_local_post_review(
+            FIXTURE,
+            state_path=repaired["next_state_path"],
+            execute=True,
+            workspace_root=workspace,
+        )
+    attempt_root = repaired["next_state_path"].parent
+    assert not (attempt_root / ".attempt-local-post-review-staging").exists()
+    assert not (attempt_root / "attempt-local-post-repair-review").exists()
+    assert not _post_review_state_path(repaired).exists()

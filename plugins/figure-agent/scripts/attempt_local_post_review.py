@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -182,8 +183,11 @@ def _validate_request(payload: dict[str, Any], *, root: Path, fixture: str) -> N
 def _recover_existing(
     *, root: Path, fixture: str, next_state_path: Path, request_path: Path
 ) -> dict[str, Any]:
-    state = authority.load_json(next_state_path, label="post_review_requested_state")
-    state = closed_loop_attempt_state.validate_state(state, workspace_root=root)
+    state, published_path = authority.load_published_state(
+        workspace_root=root, fixture=fixture, state_path=next_state_path
+    )
+    if published_path != next_state_path:
+        raise AttemptLocalPostReviewError("post_review_state_path_mismatch")
     current = closed_loop_current_state.resolve_current_attempt(root, fixture)
     if (
         current.get("resolution") != "current"
@@ -206,6 +210,19 @@ def _recover_existing(
     return {"state": state, "request": request}
 
 
+def _revalidate_request_before_state_publish(
+    request_path: Path,
+    expected: dict[str, Any],
+    *,
+    root: Path,
+    fixture: str,
+) -> None:
+    actual = authority.load_json(request_path, label="attempt_local_review_request")
+    if actual != expected:
+        raise AttemptLocalPostReviewError("post_review_request_drift_before_state_publish")
+    _validate_request(actual, root=root, fixture=fixture)
+
+
 def run_attempt_local_post_review(
     fixture: str,
     *,
@@ -225,14 +242,25 @@ def run_attempt_local_post_review(
     next_state_path = attempt_root / (
         f"state-{machine_state['sequence'] + 1:03d}-post_review_requested.json"
     )
-    if execute and next_state_path.is_file():
-        with closed_loop_attempt_state.attempt_transition_lock(attempt_root):
-            recovered = _recover_existing(
-                root=root,
-                fixture=fixture,
-                next_state_path=next_state_path,
-                request_path=request_path,
-            )
+    if execute and (next_state_path.exists() or next_state_path.is_symlink()):
+        try:
+            with closed_loop_attempt_state.attempt_transition_lock(attempt_root):
+                recovered = _recover_existing(
+                    root=root,
+                    fixture=fixture,
+                    next_state_path=next_state_path,
+                    request_path=request_path,
+                )
+        except (
+            authority.ClosedLoopPostReviewError,
+            closed_loop_attempt_state.ClosedLoopAttemptStateError,
+            repair_transaction.RepairTransactionError,
+            OSError,
+            ValueError,
+        ) as exc:
+            if isinstance(exc, AttemptLocalPostReviewError):
+                raise
+            raise AttemptLocalPostReviewError(f"post_review_publication_failed:{exc}") from exc
         return {
             "action": ACTION,
             "created": False,
@@ -264,7 +292,7 @@ def run_attempt_local_post_review(
         }
     try:
         with closed_loop_attempt_state.attempt_transition_lock(attempt_root):
-            if next_state_path.is_file():
+            if next_state_path.exists() or next_state_path.is_symlink():
                 recovered = _recover_existing(
                     root=root,
                     fixture=fixture,
@@ -313,34 +341,40 @@ def run_attempt_local_post_review(
             elif review_root.exists() or review_root.is_symlink():
                 raise AttemptLocalPostReviewError("post_review_output_conflict")
             else:
-                staging_root, _ = closed_loop_post_review_crops.generate_generic_crop_staging(
-                    example_dir=example_dir,
-                    render=plan["after_render"],
-                    render_bytes=render_bytes,
-                    render_sha256=after_sha,
-                    render_fingerprint=fingerprint,
-                    staging_root=attempt_root / ".attempt-local-post-review-staging",
-                    review_root=review_root,
-                )
-                staged_manifest = staging_root / "crops" / "manifest.json"
-                request = _request(plan, root=root, crop_manifest_path=staged_manifest)
-                # The manifest record must bind its final published path and bytes.
-                request["after_crop_manifest"]["path"] = _relative(crop_manifest_path, root)
-                request["request_sha256"] = authority.sha256_bytes(
-                    json.dumps(
-                        {k: v for k, v in request.items() if k != "request_sha256"},
-                        ensure_ascii=False,
-                        sort_keys=True,
-                        separators=(",", ":"),
-                    ).encode("utf-8")
-                )
-                _write_request(staging_root / "request.json", request)
-                authority.assert_render_unchanged(
-                    plan["after_render"],
-                    expected_sha256=after_sha,
-                    expected_fingerprint=fingerprint,
-                )
-                os.replace(staging_root, review_root)
+                staging_root = attempt_root / ".attempt-local-post-review-staging"
+                try:
+                    staging_root, _ = closed_loop_post_review_crops.generate_generic_crop_staging(
+                        example_dir=example_dir,
+                        render=plan["after_render"],
+                        render_bytes=render_bytes,
+                        render_sha256=after_sha,
+                        render_fingerprint=fingerprint,
+                        staging_root=staging_root,
+                        review_root=review_root,
+                    )
+                    staged_manifest = staging_root / "crops" / "manifest.json"
+                    request = _request(plan, root=root, crop_manifest_path=staged_manifest)
+                    # The manifest record must bind its final published path and bytes.
+                    request["after_crop_manifest"]["path"] = _relative(crop_manifest_path, root)
+                    request["request_sha256"] = authority.sha256_bytes(
+                        json.dumps(
+                            {k: v for k, v in request.items() if k != "request_sha256"},
+                            ensure_ascii=False,
+                            sort_keys=True,
+                            separators=(",", ":"),
+                        ).encode("utf-8")
+                    )
+                    _write_request(staging_root / "request.json", request)
+                    authority.assert_render_unchanged(
+                        plan["after_render"],
+                        expected_sha256=after_sha,
+                        expected_fingerprint=fingerprint,
+                    )
+                    os.replace(staging_root, review_root)
+                except Exception:
+                    if staging_root.is_dir() and not staging_root.is_symlink():
+                        shutil.rmtree(staging_root)
+                    raise
             _validate_request(request, root=root, fixture=fixture)
             next_state = closed_loop_attempt_state.transition_state(
                 machine_state,
@@ -350,6 +384,9 @@ def run_attempt_local_post_review(
                 evidence={"post_repair_visual_review_request": request_path},
                 workspace_root=root,
                 previous_state_path=plan["state_path"],
+            )
+            _revalidate_request_before_state_publish(
+                request_path, request, root=root, fixture=fixture
             )
             authority.assert_render_unchanged(
                 plan["after_render"],
