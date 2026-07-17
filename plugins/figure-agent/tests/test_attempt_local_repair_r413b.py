@@ -833,6 +833,14 @@ def test_fig_run_dispatches_attempt_local_machine_repaired_to_v2_outbound(
     assert not (repaired["next_state_path"].parent / "attempt-local-post-repair-review").exists()
 
 
+def test_attempt_local_request_has_public_cross_module_validator(tmp_path: Path) -> None:
+    workspace, requested = _v2_post_review_requested(tmp_path)
+
+    attempt_local_post_review.validate_request(
+        requested["request"], root=workspace, fixture=FIXTURE
+    )
+
+
 def test_fig_run_executes_attempt_local_outbound_and_complete_inbound(
     tmp_path: Path,
 ) -> None:
@@ -863,6 +871,9 @@ def test_fig_run_executes_attempt_local_outbound_and_complete_inbound(
     assert inbound["closed_loop"]["next_state"] == "visually_re_reviewed"
     assert inbound["closed_loop"]["publication_acceptance"] == "not_claimed"
     assert inbound["final_stop_boundary"] == "human_reviewer"
+    assert inbound["boundary_handoff"]["closeout_checks"] == [
+        "record a named human verdict before development acceptance"
+    ]
 
 
 def test_fig_run_attempt_local_missing_execution_remains_write_free(
@@ -886,6 +897,15 @@ def test_fig_run_attempt_local_missing_execution_remains_write_free(
 
     assert inbound["closed_loop"]["next_state"] == "post_review_requested"
     assert inbound["final_stop_reason"] == "human_review_boundary"
+    handoff = inbound["boundary_handoff"]
+    assert handoff["required_actor"] == "human_reviewer"
+    assert "complete or clarify the exact host execution and response" in handoff[
+        "blocking_reason"
+    ]
+    assert handoff["closeout_checks"] == [
+        "complete or clarify the exact hash-bound host execution and response"
+    ]
+    assert "named human verdict" not in json.dumps(handoff)
     assert sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*")) == before
 
 

@@ -84,7 +84,7 @@ def _validate_request(
     if record.get("sha256") != authority.sha256_bytes(data):
         raise AttemptLocalPostReviewResponseError("post_review_request_evidence_drift")
     try:
-        attempt_local_post_review._validate_request(request, root=root, fixture=fixture)
+        attempt_local_post_review.validate_request(request, root=root, fixture=fixture)
     except (attempt_local_post_review.AttemptLocalPostReviewError, OSError, ValueError) as exc:
         raise AttemptLocalPostReviewResponseError(f"post_review_request_invalid:{exc}") from exc
     return request, path, data, fingerprint
@@ -236,7 +236,7 @@ def _revalidate_exact_inputs(
 ) -> None:
     _same_snapshot(request_path, request_data, request_fingerprint, label="request")
     _same_snapshot(response_path, response_data, response_fingerprint, label="response")
-    attempt_local_post_review._validate_request(request, root=root, fixture=fixture)
+    attempt_local_post_review.validate_request(request, root=root, fixture=fixture)
     current_response, current_data, current_fingerprint, current_receipt = _validate_response(
         root=root,
         fixture=fixture,

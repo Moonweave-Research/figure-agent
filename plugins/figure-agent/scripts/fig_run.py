@@ -1977,9 +1977,13 @@ def run_workflow(
                 "stop_boundary": inbound["stop_boundary"],
                 "required_actor": inbound["required_actor"],
                 "blocking_reason": (
-                    "validated external review requires human adjudication"
-                    if inbound["stop_boundary"] == "human_reviewer"
-                    else "validated external review requires another repair attempt"
+                    "complete or clarify the exact host execution and response"
+                    if inbound["next_state"] == "post_review_requested"
+                    else (
+                        "validated external review requires human adjudication"
+                        if inbound["next_state"] == "visually_re_reviewed"
+                        else "validated external review requires another repair attempt"
+                    )
                 ),
                 "evidence_refs": [
                     f"post_repair_visual_review_response:{response_path.relative_to(root).as_posix()}",
@@ -1992,8 +1996,15 @@ def run_workflow(
                 ],
                 "closeout_checks": (
                     ["start a new attempt from the bound repair failure record"]
-                    if inbound["stop_boundary"] == "repair_required"
-                    else ["record a named human verdict before development acceptance"]
+                    if inbound["next_state"] == "repair_required"
+                    else (
+                        ["record a named human verdict before development acceptance"]
+                        if inbound["next_state"] == "visually_re_reviewed"
+                        else [
+                            "complete or clarify the exact hash-bound host execution "
+                            "and response"
+                        ]
+                    )
                 ),
                 "continuation_guidance": {
                     "rerun_live_status_first": False,
