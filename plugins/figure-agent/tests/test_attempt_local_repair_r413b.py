@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import attempt_local_post_review  # noqa: E402
 import attempt_local_post_review_authority as post_review_authority  # noqa: E402
+import attempt_local_post_review_response  # noqa: E402
 import attempt_local_repair_binding as packet_boundary  # noqa: E402
 import authoring_repair_finalize  # noqa: E402
 import authoring_repair_packet  # noqa: E402
@@ -576,3 +577,236 @@ def test_v2_post_review_all_artifact_validation_is_the_final_publish_barrier(
         )
     assert mutated is True
     assert not _post_review_state_path(repaired).exists()
+
+
+def _v2_post_review_response(
+    workspace: Path,
+    request: dict[str, object],
+    *,
+    with_execution: bool = True,
+) -> tuple[Path, dict[str, object]]:
+    attempt_root = workspace / str(request["after_crop_manifest"]["path"])
+    attempt_root = attempt_root.parents[2]
+    transcript = attempt_root / "attempt-local-post-repair-review" / "host-transcript.json"
+    transcript.write_text('{"review":"completed"}\n', encoding="utf-8")
+    inspected = {
+        "before_render": request["before_render"],
+        "after_render": request["after_render"],
+        "materialized_output": request["materialized_output"],
+        "materialization_receipt": request["materialization_receipt"],
+        "initial_crops": request["initial_crops"],
+        "after_crop_manifest": request["after_crop_manifest"],
+        "after_crops": request["after_crops"],
+    }
+    execution: dict[str, object] | None = None
+    if with_execution:
+        execution = {
+            "schema": "figure-agent.attempt-local-host-review-execution-receipt.v2",
+            "request_sha256": request["request_sha256"],
+            "actor": {
+                "kind": "model",
+                "identity": "host-vision",
+                "model_or_tool": "vision-runtime",
+            },
+            "transcript": {
+                "path": transcript.relative_to(workspace).as_posix(),
+                "sha256": "sha256:" + hashlib.sha256(transcript.read_bytes()).hexdigest(),
+            },
+            "inspected_artifacts": inspected,
+        }
+        execution["receipt_sha256"] = attempt_local_post_review_response.canonical_hash(
+            execution, omitted="receipt_sha256"
+        )
+    response = {
+        "schema": "figure-agent.attempt-local-post-repair-review-response.v2",
+        "request_sha256": request["request_sha256"],
+        "reviewer": "host-vision",
+        "inspected_artifacts": inspected,
+        "verdicts": {
+            "target_resolved": "resolved",
+            "no_new_local_defect": "pass",
+            "unchanged_region_regression": "none",
+        },
+        "findings": [],
+        "execution_receipt": execution,
+        "publication_acceptance": "not_claimed",
+    }
+    response_path = attempt_root / "attempt-local-post-repair-review" / "response.json"
+    response_path.write_text(json.dumps(response), encoding="utf-8")
+    return response_path, response
+
+
+def _v2_post_review_requested(tmp_path: Path) -> tuple[Path, dict[str, object]]:
+    workspace, repaired = _image_machine_repaired_attempt(tmp_path)
+    requested = attempt_local_post_review.run_attempt_local_post_review(
+        FIXTURE,
+        state_path=repaired["next_state_path"],
+        execute=True,
+        workspace_root=workspace,
+    )
+    return workspace, requested
+
+
+def test_v2_post_review_response_advances_only_with_complete_execution(
+    tmp_path: Path,
+) -> None:
+    workspace, requested = _v2_post_review_requested(tmp_path)
+    response_path, _ = _v2_post_review_response(
+        workspace, requested["request"], with_execution=True
+    )
+    planned = attempt_local_post_review_response.run_inbound_response(
+        FIXTURE,
+        state_path=requested["next_state_path"],
+        response_path=response_path,
+        execute=False,
+        workspace_root=workspace,
+    )
+    assert planned["next_state"] == "visually_re_reviewed"
+    assert not planned["receipt_path"].exists()
+
+    result = attempt_local_post_review_response.run_inbound_response(
+        FIXTURE,
+        state_path=requested["next_state_path"],
+        response_path=response_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    assert result["next_state"] == "visually_re_reviewed"
+    assert result["required_actor"] == "human_reviewer"
+    assert result["published_state"]["publication_acceptance"] == "not_claimed"
+
+
+def test_v2_post_review_response_without_execution_is_write_free(
+    tmp_path: Path,
+) -> None:
+    workspace, requested = _v2_post_review_requested(tmp_path)
+    response_path, _ = _v2_post_review_response(
+        workspace, requested["request"], with_execution=False
+    )
+    before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+    result = attempt_local_post_review_response.run_inbound_response(
+        FIXTURE,
+        state_path=requested["next_state_path"],
+        response_path=response_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    assert result["decision"] == "human_review_required"
+    assert result["next_state"] == "post_review_requested"
+    assert sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*")) == before
+
+
+def test_v2_post_review_response_defect_requires_repair(tmp_path: Path) -> None:
+    workspace, requested = _v2_post_review_requested(tmp_path)
+    response_path, response = _v2_post_review_response(workspace, requested["request"])
+    response["verdicts"]["no_new_local_defect"] = "fail"
+    response_path.write_text(json.dumps(response), encoding="utf-8")
+    result = attempt_local_post_review_response.run_inbound_response(
+        FIXTURE,
+        state_path=requested["next_state_path"],
+        response_path=response_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    assert result["next_state"] == "repair_required"
+    assert result["required_actor"] == "none"
+
+
+def test_v2_post_review_response_rejects_inspection_artifact_drift(tmp_path: Path) -> None:
+    workspace, requested = _v2_post_review_requested(tmp_path)
+    response_path, _ = _v2_post_review_response(workspace, requested["request"])
+    after_render = workspace / str(requested["request"]["after_render"]["path"])
+    after_render.write_bytes(b"drift")
+    with pytest.raises(
+        attempt_local_post_review_response.AttemptLocalPostReviewResponseError,
+        match="post_review_request_artifact_hash_drift",
+    ):
+        attempt_local_post_review_response.run_inbound_response(
+            FIXTURE,
+            state_path=requested["next_state_path"],
+            response_path=response_path,
+            execute=True,
+            workspace_root=workspace,
+        )
+
+
+def test_v2_post_review_response_recovers_receipt_only_publication(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, requested = _v2_post_review_requested(tmp_path)
+    response_path, _ = _v2_post_review_response(workspace, requested["request"])
+    original = attempt_local_post_review_response.closed_loop_attempt_state.publish_state
+
+    def fail_state(*args: object, **kwargs: object) -> Path:
+        state_module = attempt_local_post_review_response.closed_loop_attempt_state
+        raise state_module.ClosedLoopAttemptStateError("injected state failure")
+
+    monkeypatch.setattr(
+        attempt_local_post_review_response.closed_loop_attempt_state,
+        "publish_state",
+        fail_state,
+    )
+    with pytest.raises(
+        attempt_local_post_review_response.AttemptLocalPostReviewResponseError,
+        match="injected state failure",
+    ):
+        attempt_local_post_review_response.run_inbound_response(
+            FIXTURE,
+            state_path=requested["next_state_path"],
+            response_path=response_path,
+            execute=True,
+            workspace_root=workspace,
+        )
+    receipt_path = (
+        requested["next_state_path"].parent
+        / "attempt-local-post-repair-review"
+        / "review-receipt.json"
+    )
+    assert receipt_path.is_file()
+    monkeypatch.setattr(
+        attempt_local_post_review_response.closed_loop_attempt_state,
+        "publish_state",
+        original,
+    )
+    recovered = attempt_local_post_review_response.run_inbound_response(
+        FIXTURE,
+        state_path=requested["next_state_path"],
+        response_path=response_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    assert recovered["next_state"] == "visually_re_reviewed"
+    assert recovered["published_state"]["state"] == "visually_re_reviewed"
+
+
+def test_v2_post_review_response_revalidates_after_receipt_before_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, requested = _v2_post_review_requested(tmp_path)
+    response_path, _ = _v2_post_review_response(workspace, requested["request"])
+    original = attempt_local_post_review_response.closed_loop_attempt_state.transition_state
+
+    def drift_response(*args: object, **kwargs: object) -> dict[str, object]:
+        state = original(*args, **kwargs)
+        response_path.write_text('{"drift":true}\n', encoding="utf-8")
+        return state
+
+    monkeypatch.setattr(
+        attempt_local_post_review_response.closed_loop_attempt_state,
+        "transition_state",
+        drift_response,
+    )
+    with pytest.raises(
+        attempt_local_post_review_response.AttemptLocalPostReviewResponseError,
+        match="response_drift",
+    ):
+        attempt_local_post_review_response.run_inbound_response(
+            FIXTURE,
+            state_path=requested["next_state_path"],
+            response_path=response_path,
+            execute=True,
+            workspace_root=workspace,
+        )
+    assert not any(
+        requested["next_state_path"].parent.glob("state-*-visually_re_reviewed.json")
+    )
