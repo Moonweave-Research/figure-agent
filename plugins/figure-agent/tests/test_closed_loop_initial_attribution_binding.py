@@ -75,6 +75,7 @@ def _binding(workspace: Path, state_path: Path) -> Path:
                     "anchor_start": "\\documentclass",
                     "anchor_end": "standalone}",
                     "repair_role": "movable",
+                    "repair_family": "label_reflow",
                     "protected_invariants": ["axis stays visible"],
                     "semantic_object_refs": ["panel_a.label", "panel_a.axis"],
                     "semantic_relation_refs": ["label_remains_clear_of_axis"],
@@ -101,6 +102,7 @@ def _binding(workspace: Path, state_path: Path) -> Path:
         "selector_registry": _record(registry, workspace),
         "semantic_contract": _record(semantic, workspace),
         "selector_id": "panel-a-label",
+        "repair_family": "label_reflow",
         "publication_acceptance": "not_claimed",
     }
     payload["binding_sha256"] = binding.canonical_binding_sha256(payload)
@@ -170,6 +172,14 @@ def test_plan_is_write_free_then_execute_snapshots_and_binds(tmp_path: Path) -> 
             lambda payload: payload.update({"selector_id": "missing"}),
             "initial_attribution_selector_invalid",
         ),
+        (
+            lambda payload: payload.update({"repair_family": "unknown_family"}),
+            "initial_attribution_repair_family_invalid",
+        ),
+        (
+            lambda payload: payload.pop("repair_family"),
+            "initial_attribution_binding_schema_invalid",
+        ),
     ],
 )
 def test_binding_rejects_wrong_current_provenance_or_target(
@@ -189,6 +199,114 @@ def test_binding_rejects_wrong_current_provenance_or_target(
             execute=False,
             workspace_root=workspace,
         )
+
+
+@pytest.mark.parametrize("execute", [False, True])
+def test_binding_rejects_overlapping_selector_anchors(tmp_path: Path, execute: bool) -> None:
+    workspace, state_path = _approved_attempt(tmp_path)
+    path = _binding(workspace, state_path)
+    payload = json.loads(path.read_text())
+    registry_path = workspace / payload["selector_registry"]["path"]
+    registry = json.loads(registry_path.read_text())
+    registry["selectors"][0]["anchor_end"] = "class{stand"
+    _write(registry_path, registry)
+    payload["selector_registry"] = _record(registry_path, workspace)
+    payload["binding_sha256"] = binding.canonical_binding_sha256(payload)
+    _write(path, payload)
+    with pytest.raises(
+        binding.ClosedLoopInitialAttributionBindingError,
+        match="initial_attribution_selector_anchor_invalid",
+    ):
+        binding.run_initial_attribution_binding(
+            FIXTURE,
+            state_path=state_path,
+            binding_path=path,
+            execute=execute,
+            workspace_root=workspace,
+        )
+    assert not path.with_name(binding.BINDING_SNAPSHOT_FILE).exists()
+
+
+@pytest.mark.parametrize("execute", [False, True])
+def test_dangling_snapshot_symlink_fails_closed_without_recursion(
+    tmp_path: Path, execute: bool
+) -> None:
+    workspace, state_path = _approved_attempt(tmp_path)
+    path = _binding(workspace, state_path)
+    snapshot = path.with_name(binding.BINDING_SNAPSHOT_FILE)
+    snapshot.symlink_to("missing-binding.snapshot.json")
+    with pytest.raises(
+        binding.ClosedLoopInitialAttributionBindingError,
+        match="initial_attribution_binding_snapshot_symlink",
+    ):
+        binding.run_initial_attribution_binding(
+            FIXTURE,
+            state_path=state_path,
+            binding_path=path,
+            execute=execute,
+            workspace_root=workspace,
+        )
+
+
+def test_conflicting_snapshot_fails_closed_while_exact_snapshot_recovers(tmp_path: Path) -> None:
+    workspace, state_path = _approved_attempt(tmp_path)
+    path = _binding(workspace, state_path)
+    snapshot = path.with_name(binding.BINDING_SNAPSHOT_FILE)
+    snapshot.write_text("{}\n", encoding="utf-8")
+    with pytest.raises(
+        binding.ClosedLoopInitialAttributionBindingError,
+        match="initial_attribution_binding_snapshot_conflict",
+    ):
+        binding.run_initial_attribution_binding(
+            FIXTURE,
+            state_path=state_path,
+            binding_path=path,
+            execute=True,
+            workspace_root=workspace,
+        )
+    snapshot.write_bytes(path.read_bytes())
+    recovered = binding.run_initial_attribution_binding(
+        FIXTURE,
+        state_path=state_path,
+        binding_path=path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    assert recovered["created"] is True
+
+
+@pytest.mark.parametrize("artifact", ["authored_source", "selector_registry", "semantic_contract"])
+def test_execute_revalidates_declared_repair_authority_before_publish(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, artifact: str
+) -> None:
+    workspace, state_path = _approved_attempt(tmp_path)
+    path = _binding(workspace, state_path)
+    payload = json.loads(path.read_text())
+    artifact_path = workspace / payload[artifact]["path"]
+    original = binding._validate_binding  # noqa: SLF001
+    calls = 0
+
+    def mutate_after_fresh_validation(*args: object, **kwargs: object) -> object:
+        nonlocal calls
+        calls += 1
+        validated = original(*args, **kwargs)
+        if calls == 2:
+            artifact_path.write_text("{}\n", encoding="utf-8")
+        return validated
+
+    monkeypatch.setattr(binding, "_validate_binding", mutate_after_fresh_validation)
+    with pytest.raises(
+        binding.ClosedLoopInitialAttributionBindingError,
+        match=f"initial_attribution_{artifact}_drift",
+    ):
+        binding.run_initial_attribution_binding(
+            FIXTURE,
+            state_path=state_path,
+            binding_path=path,
+            execute=True,
+            workspace_root=workspace,
+        )
+    assert not path.with_name(binding.BINDING_SNAPSHOT_FILE).exists()
 
 
 def test_v2_repair_bound_blocks_legacy_candidate_until_r4_13(tmp_path: Path) -> None:

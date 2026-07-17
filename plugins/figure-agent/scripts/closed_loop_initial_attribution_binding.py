@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import authoring_repair_packet
 import closed_loop_attempt_state
 import closed_loop_current_state
 import critique_contract
@@ -43,6 +44,7 @@ _BINDING_FIELDS = {
     "selector_registry",
     "semantic_contract",
     "selector_id",
+    "repair_family",
     "publication_acceptance",
     "binding_sha256",
 }
@@ -53,11 +55,20 @@ class ClosedLoopInitialAttributionBindingError(ValueError):
 
 
 @dataclass(frozen=True)
+class _FileSnapshot:
+    path: Path
+    content: bytes
+    fingerprint: tuple[int, int, int, int, int]
+    label: str
+
+
+@dataclass(frozen=True)
 class _Snapshot:
     path: Path
     payload: dict[str, Any]
     content: bytes
     fingerprint: tuple[int, int, int, int, int]
+    dependencies: tuple[_FileSnapshot, ...] = ()
 
     @property
     def sha256(self) -> str:
@@ -155,6 +166,40 @@ def _snapshot(path: Path, *, root: Path) -> _Snapshot:
     return _Snapshot(path=path, payload=payload, content=content, fingerprint=fingerprint)
 
 
+def _file_snapshot(path: Path, *, root: Path, label: str, expected_sha256: str) -> _FileSnapshot:
+    _regular_file(path, root=root, label=label)
+    try:
+        before = path.stat()
+        content = path.read_bytes()
+        after = path.stat()
+    except OSError as exc:
+        raise ClosedLoopInitialAttributionBindingError(
+            f"initial_attribution_{label}_invalid"
+        ) from exc
+    fingerprint = _fingerprint(after)
+    if _fingerprint(before) != fingerprint or _sha256_bytes(content) != expected_sha256:
+        raise ClosedLoopInitialAttributionBindingError(f"initial_attribution_{label}_drift")
+    return _FileSnapshot(path=path, content=content, fingerprint=fingerprint, label=label)
+
+
+def _assert_file_snapshot_current(snapshot: _FileSnapshot, *, root: Path, label: str) -> None:
+    _regular_file(snapshot.path, root=root, label=label)
+    try:
+        before = snapshot.path.stat()
+        content = snapshot.path.read_bytes()
+        after = snapshot.path.stat()
+    except OSError as exc:
+        raise ClosedLoopInitialAttributionBindingError(
+            f"initial_attribution_{label}_drift"
+        ) from exc
+    if (
+        _fingerprint(before) != _fingerprint(after)
+        or _fingerprint(after) != snapshot.fingerprint
+        or content != snapshot.content
+    ):
+        raise ClosedLoopInitialAttributionBindingError(f"initial_attribution_{label}_drift")
+
+
 def _assert_snapshot_current(snapshot: _Snapshot, *, root: Path) -> None:
     _regular_file(snapshot.path, root=root, label="binding")
     try:
@@ -169,6 +214,12 @@ def _assert_snapshot_current(snapshot: _Snapshot, *, root: Path) -> None:
         or content != snapshot.content
     ):
         raise ClosedLoopInitialAttributionBindingError("initial_attribution_binding_drift")
+    for dependency in snapshot.dependencies:
+        _assert_file_snapshot_current(
+            dependency,
+            root=root,
+            label=dependency.label,
+        )
 
 
 def _load_state(root: Path, fixture: str, value: Path) -> tuple[dict[str, Any], Path]:
@@ -304,6 +355,7 @@ def _validate_selector(
     semantic_record: dict[str, str],
     source_record: dict[str, str],
     selector_id: str,
+    repair_family: str,
 ) -> None:
     registry, _ = _load_json(registry_path, root=root, label="selector_registry")
     required = {"schema", "source_path", "source_sha256", "semantic_contract", "selectors"}
@@ -338,6 +390,10 @@ def _validate_selector(
     selector = matches[0]
     if selector.get("repair_role") != "movable":
         raise ClosedLoopInitialAttributionBindingError("initial_attribution_selector_not_movable")
+    if not repair_family or repair_family not in authoring_repair_packet.ALLOWED_REPAIR_FAMILIES:
+        raise ClosedLoopInitialAttributionBindingError("initial_attribution_repair_family_invalid")
+    if selector.get("repair_family") != repair_family:
+        raise ClosedLoopInitialAttributionBindingError("initial_attribution_repair_family_mismatch")
     anchors = (selector.get("anchor_start"), selector.get("anchor_end"))
     if (
         any(not isinstance(anchor, str) or not anchor.strip() for anchor in anchors)
@@ -349,10 +405,14 @@ def _validate_selector(
     source = root / source_record["path"]
     _regular_file(source, root=root, label="authored_source")
     source_text = source.read_text(encoding="utf-8")
+    start_index = source_text.find(anchors[0])
+    end_index = source_text.find(anchors[1])
     if (
         source_text.count(anchors[0]) != 1
         or source_text.count(anchors[1]) != 1
-        or source_text.index(anchors[0]) >= source_text.index(anchors[1])
+        or start_index < 0
+        or end_index < 0
+        or start_index + len(anchors[0]) > end_index
     ):
         raise ClosedLoopInitialAttributionBindingError(
             "initial_attribution_selector_anchor_invalid"
@@ -463,18 +523,21 @@ def _validate_binding(
         raise ClosedLoopInitialAttributionBindingError("initial_attribution_finding_invalid")
     root_source = _root_authored_source(root, fixture, state_path, state["attempt_id"])
     _reference(payload.get("authored_source"), root_source, label="authored_source")
-    source_record, _source_path = _binding_record(
+    source_record, source_path = _binding_record(
         payload.get("authored_source"), root=root, label="authored_source"
     )
     registry_record, registry_path = _binding_record(
         payload.get("selector_registry"), root=root, label="selector_registry"
     )
-    semantic_record, _semantic_path = _binding_record(
+    semantic_record, semantic_path = _binding_record(
         payload.get("semantic_contract"), root=root, label="semantic_contract"
     )
     selector_id = payload.get("selector_id")
     if not isinstance(selector_id, str) or not selector_id.strip():
         raise ClosedLoopInitialAttributionBindingError("initial_attribution_selector_invalid")
+    repair_family = payload.get("repair_family")
+    if not isinstance(repair_family, str) or not repair_family.strip():
+        raise ClosedLoopInitialAttributionBindingError("initial_attribution_repair_family_invalid")
     _validate_selector(
         root=root,
         registry_path=registry_path,
@@ -482,21 +545,63 @@ def _validate_binding(
         semantic_record=semantic_record,
         source_record=source_record,
         selector_id=selector_id,
+        repair_family=repair_family,
     )
-    return snapshot
+    return _Snapshot(
+        path=snapshot.path,
+        payload=snapshot.payload,
+        content=snapshot.content,
+        fingerprint=snapshot.fingerprint,
+        dependencies=(
+            _file_snapshot(
+                source_path,
+                root=root,
+                label="authored_source",
+                expected_sha256=source_record["sha256"],
+            ),
+            _file_snapshot(
+                registry_path,
+                root=root,
+                label="selector_registry",
+                expected_sha256=registry_record["sha256"],
+            ),
+            _file_snapshot(
+                semantic_path,
+                root=root,
+                label="semantic_contract",
+                expected_sha256=semantic_record["sha256"],
+            ),
+        ),
+    )
 
 
 def _snapshot_path(binding_path: Path) -> Path:
     return binding_path.with_name(BINDING_SNAPSHOT_FILE)
 
 
+def _assert_snapshot_destination(path: Path, snapshot: _Snapshot, *, root: Path) -> None:
+    if path.is_symlink():
+        raise ClosedLoopInitialAttributionBindingError(
+            "initial_attribution_binding_snapshot_symlink"
+        )
+    if not path.exists():
+        return
+    _regular_file(path, root=root, label="binding_snapshot")
+    try:
+        existing = path.read_bytes()
+    except OSError as exc:
+        raise ClosedLoopInitialAttributionBindingError(
+            "initial_attribution_binding_snapshot_invalid"
+        ) from exc
+    if existing != snapshot.content:
+        raise ClosedLoopInitialAttributionBindingError(
+            "initial_attribution_binding_snapshot_conflict"
+        )
+
+
 def _publish_snapshot(path: Path, snapshot: _Snapshot, *, root: Path) -> None:
+    _assert_snapshot_destination(path, snapshot, root=root)
     if path.exists():
-        _regular_file(path, root=root, label="binding_snapshot")
-        if path.read_bytes() != snapshot.content:
-            raise ClosedLoopInitialAttributionBindingError(
-                "initial_attribution_binding_snapshot_conflict"
-            )
         return
     try:
         repair_transaction.atomic_create_text(path, snapshot.content.decode("utf-8"))
@@ -505,7 +610,7 @@ def _publish_snapshot(path: Path, snapshot: _Snapshot, *, root: Path) -> None:
             raise ClosedLoopInitialAttributionBindingError(
                 "initial_attribution_binding_snapshot_invalid"
             ) from exc
-        _publish_snapshot(path, snapshot, root=root)
+        _assert_snapshot_destination(path, snapshot, root=root)
 
 
 def _published_matches(
@@ -568,6 +673,7 @@ def run_initial_attribution_binding(
             )
         snapshot = _validate_binding(root, fixture, previous, previous_path, requested)
         snapshot_path = _snapshot_path(requested)
+        _assert_snapshot_destination(snapshot_path, snapshot, root=root)
         _regular_file(snapshot_path, root=root, label="binding_snapshot")
         if snapshot_path.read_bytes() != snapshot.content or not _published_matches(
             current,
@@ -598,6 +704,7 @@ def run_initial_attribution_binding(
         raise ClosedLoopInitialAttributionBindingError("closed_loop_state_not_adjudicated_unbound")
     snapshot = _validate_binding(root, fixture, current, current_path, requested)
     snapshot_path = _snapshot_path(requested)
+    _assert_snapshot_destination(snapshot_path, snapshot, root=root)
     next_path = current_path.parent / f"state-{current['sequence'] + 1:03d}-repair_bound.json"
     if not execute:
         return {
