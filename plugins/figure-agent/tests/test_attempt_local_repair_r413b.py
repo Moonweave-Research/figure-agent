@@ -10,6 +10,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import attempt_local_repair_binding as packet_boundary  # noqa: E402
+import attempt_local_post_review_authority as post_review_authority  # noqa: E402
 import authoring_repair_finalize  # noqa: E402
 import authoring_repair_packet  # noqa: E402
 import authoring_repair_rollback  # noqa: E402
@@ -310,3 +311,34 @@ def test_v2_machine_repair_never_falls_through_to_legacy_post_review(
             workspace_root=workspace,
         )
     assert not (repaired["next_state_path"].parent / "post-repair-review").exists()
+
+
+def test_v2_machine_repair_reconstructs_write_free_post_review_authority(
+    tmp_path: Path,
+) -> None:
+    workspace, repair_bound, packet, packet_path, response_path, preview_path = _prepared(tmp_path)
+    candidate = closed_loop_repair_candidate.run_repair_candidate(
+        FIXTURE, state_path=repair_bound, packet_path=packet_path, response_path=response_path,
+        preview_path=preview_path, execute=True, workspace_root=workspace,
+    )
+    preview = json.loads(preview_path.read_text(encoding="utf-8"))
+    authorization_path = packet_path.with_name("human-authorization.json")
+    authorization_path.write_text(json.dumps(_authorization(packet, preview)), encoding="utf-8")
+    authorized = closed_loop_repair_authorization.run_authorization(
+        FIXTURE, state_path=candidate["next_state_path"], authorization_path=authorization_path,
+        execute=True, workspace_root=workspace,
+    )
+    repaired = closed_loop_machine_repair.run_machine_repair(
+        FIXTURE, state_path=authorized["next_state_path"], response_path=response_path,
+        execute=True, workspace_root=workspace, plugin_root=_fake_strict_compiler(tmp_path),
+    )
+    before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+    plan = post_review_authority.plan_attempt_local_post_review(
+        FIXTURE, state_path=repaired["next_state_path"], workspace_root=workspace
+    )
+    assert plan["selected_finding_id"] == packet["selected_finding_id"]
+    assert plan["output_path"] == workspace / packet["output_path"]
+    assert set(plan["initial_crops"]) == {
+        "full_q1", "full_q2", "full_q3", "full_q4", "print_178mm", "print_thumbnail"
+    }
+    assert sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*")) == before
