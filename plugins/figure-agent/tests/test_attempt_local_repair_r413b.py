@@ -6,11 +6,13 @@ import sys
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-import attempt_local_repair_binding as packet_boundary  # noqa: E402
+import attempt_local_post_review  # noqa: E402
 import attempt_local_post_review_authority as post_review_authority  # noqa: E402
+import attempt_local_repair_binding as packet_boundary  # noqa: E402
 import authoring_repair_finalize  # noqa: E402
 import authoring_repair_packet  # noqa: E402
 import authoring_repair_rollback  # noqa: E402
@@ -81,6 +83,22 @@ def _prepared(tmp_path: Path) -> tuple[Path, Path, dict[str, object], Path, Path
     return workspace, repair_bound, packet, paths["packet"], response_path, preview_path
 
 
+def _fake_image_strict_compiler(tmp_path: Path) -> Path:
+    plugin_root = _fake_strict_compiler(tmp_path)
+    source_png = tmp_path / "strict-render.png"
+    Image.new("RGB", (800, 600), "white").save(source_png)
+    script = plugin_root / "scripts" / "compile.sh"
+    text = script.read_text(encoding="utf-8")
+    script.write_text(
+        text.replace(
+            "printf 'png' > \"$build/$base.png\"",
+            f'cp "{source_png}" "$build/$base.png"',
+        ),
+        encoding="utf-8",
+    )
+    return plugin_root
+
+
 def test_v2_candidate_and_named_authorization_do_not_cross_inject_v1(tmp_path: Path) -> None:
     workspace, repair_bound, packet, packet_path, response_path, preview_path = _prepared(tmp_path)
     candidate = closed_loop_repair_candidate.run_repair_candidate(
@@ -106,9 +124,7 @@ def test_v2_candidate_and_named_authorization_do_not_cross_inject_v1(tmp_path: P
 
     preview = json.loads(preview_path.read_text(encoding="utf-8"))
     authorization_path = packet_path.with_name("human-authorization.json")
-    authorization_path.write_text(
-        json.dumps(_authorization(packet, preview)), encoding="utf-8"
-    )
+    authorization_path.write_text(json.dumps(_authorization(packet, preview)), encoding="utf-8")
     authorized = closed_loop_repair_authorization.run_authorization(
         FIXTURE,
         state_path=candidate["next_state_path"],
@@ -142,8 +158,7 @@ def test_v2_materialization_is_sandbox_only_and_authorization_drift_fails_closed
         receipt_path=receipt_path,
         response_provenance={
             "path": response_path.relative_to(workspace).as_posix(),
-            "sha256": "sha256:"
-            + hashlib.sha256(response_path.read_bytes()).hexdigest(),
+            "sha256": "sha256:" + hashlib.sha256(response_path.read_bytes()).hexdigest(),
             "payload": response,
         },
     )
@@ -243,9 +258,7 @@ def test_v2_machine_repair_stops_before_post_repair_visual_review(tmp_path: Path
     )
     preview = json.loads(preview_path.read_text(encoding="utf-8"))
     authorization_path = packet_path.with_name("human-authorization.json")
-    authorization_path.write_text(
-        json.dumps(_authorization(packet, preview)), encoding="utf-8"
-    )
+    authorization_path.write_text(json.dumps(_authorization(packet, preview)), encoding="utf-8")
     authorized = closed_loop_repair_authorization.run_authorization(
         FIXTURE,
         state_path=candidate["next_state_path"],
@@ -281,9 +294,7 @@ def test_v2_machine_repair_never_falls_through_to_legacy_post_review(
     )
     preview = json.loads(preview_path.read_text(encoding="utf-8"))
     authorization_path = packet_path.with_name("human-authorization.json")
-    authorization_path.write_text(
-        json.dumps(_authorization(packet, preview)), encoding="utf-8"
-    )
+    authorization_path.write_text(json.dumps(_authorization(packet, preview)), encoding="utf-8")
     authorized = closed_loop_repair_authorization.run_authorization(
         FIXTURE,
         state_path=candidate["next_state_path"],
@@ -318,19 +329,31 @@ def test_v2_machine_repair_reconstructs_write_free_post_review_authority(
 ) -> None:
     workspace, repair_bound, packet, packet_path, response_path, preview_path = _prepared(tmp_path)
     candidate = closed_loop_repair_candidate.run_repair_candidate(
-        FIXTURE, state_path=repair_bound, packet_path=packet_path, response_path=response_path,
-        preview_path=preview_path, execute=True, workspace_root=workspace,
+        FIXTURE,
+        state_path=repair_bound,
+        packet_path=packet_path,
+        response_path=response_path,
+        preview_path=preview_path,
+        execute=True,
+        workspace_root=workspace,
     )
     preview = json.loads(preview_path.read_text(encoding="utf-8"))
     authorization_path = packet_path.with_name("human-authorization.json")
     authorization_path.write_text(json.dumps(_authorization(packet, preview)), encoding="utf-8")
     authorized = closed_loop_repair_authorization.run_authorization(
-        FIXTURE, state_path=candidate["next_state_path"], authorization_path=authorization_path,
-        execute=True, workspace_root=workspace,
+        FIXTURE,
+        state_path=candidate["next_state_path"],
+        authorization_path=authorization_path,
+        execute=True,
+        workspace_root=workspace,
     )
     repaired = closed_loop_machine_repair.run_machine_repair(
-        FIXTURE, state_path=authorized["next_state_path"], response_path=response_path,
-        execute=True, workspace_root=workspace, plugin_root=_fake_strict_compiler(tmp_path),
+        FIXTURE,
+        state_path=authorized["next_state_path"],
+        response_path=response_path,
+        execute=True,
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path),
     )
     before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
     plan = post_review_authority.plan_attempt_local_post_review(
@@ -339,6 +362,88 @@ def test_v2_machine_repair_reconstructs_write_free_post_review_authority(
     assert plan["selected_finding_id"] == packet["selected_finding_id"]
     assert plan["output_path"] == workspace / packet["output_path"]
     assert set(plan["initial_crops"]) == {
-        "full_q1", "full_q2", "full_q3", "full_q4", "print_178mm", "print_thumbnail"
+        "full_q1",
+        "full_q2",
+        "full_q3",
+        "full_q4",
+        "print_178mm",
+        "print_thumbnail",
     }
     assert sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*")) == before
+
+
+def test_v2_post_review_plan_is_write_free_and_execute_publishes_separate_request(
+    tmp_path: Path,
+) -> None:
+    workspace, repair_bound, packet, packet_path, response_path, preview_path = _prepared(tmp_path)
+    candidate = closed_loop_repair_candidate.run_repair_candidate(
+        FIXTURE,
+        state_path=repair_bound,
+        packet_path=packet_path,
+        response_path=response_path,
+        preview_path=preview_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    preview = json.loads(preview_path.read_text(encoding="utf-8"))
+    authorization_path = packet_path.with_name("human-authorization.json")
+    authorization_path.write_text(json.dumps(_authorization(packet, preview)), encoding="utf-8")
+    authorized = closed_loop_repair_authorization.run_authorization(
+        FIXTURE,
+        state_path=candidate["next_state_path"],
+        authorization_path=authorization_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    repaired = closed_loop_machine_repair.run_machine_repair(
+        FIXTURE,
+        state_path=authorized["next_state_path"],
+        response_path=response_path,
+        execute=True,
+        workspace_root=workspace,
+        plugin_root=_fake_image_strict_compiler(tmp_path),
+    )
+    before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+    planned = attempt_local_post_review.run_attempt_local_post_review(
+        FIXTURE, state_path=repaired["next_state_path"], execute=False, workspace_root=workspace
+    )
+    assert planned["stop_reason"] == "plan_only"
+    assert sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*")) == before
+
+    result = attempt_local_post_review.run_attempt_local_post_review(
+        FIXTURE, state_path=repaired["next_state_path"], execute=True, workspace_root=workspace
+    )
+    request = json.loads(result["request_path"].read_text(encoding="utf-8"))
+    assert request["schema"] == "figure-agent.attempt-local-post-repair-review-request.v2"
+    assert request["review_kind"] == "human_or_host_post_repair_review"
+    assert request["publication_acceptance"] == "not_claimed"
+    assert {crop["id"] for crop in request["initial_crops"]} == {
+        "full_q1",
+        "full_q2",
+        "full_q3",
+        "full_q4",
+        "print_178mm",
+        "print_thumbnail",
+    }
+    assert all("bbox_px" not in crop for crop in request["initial_crops"])
+    assert result["published_state"]["state"] == "post_review_requested"
+    assert result["required_actor"] == "host_llm"
+
+    recovered = attempt_local_post_review.run_attempt_local_post_review(
+        FIXTURE, state_path=repaired["next_state_path"], execute=True, workspace_root=workspace
+    )
+    assert recovered["created"] is False
+    assert recovered["request"] == request
+
+    crop_path = workspace / "examples" / FIXTURE / request["after_crops"][0]["path"]
+    crop_path.write_bytes(b"drift")
+    with pytest.raises(
+        attempt_local_post_review.AttemptLocalPostReviewError,
+        match="post_review_after_crop_hash_drift",
+    ):
+        attempt_local_post_review.run_attempt_local_post_review(
+            FIXTURE,
+            state_path=repaired["next_state_path"],
+            execute=True,
+            workspace_root=workspace,
+        )

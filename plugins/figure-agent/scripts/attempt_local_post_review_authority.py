@@ -91,8 +91,18 @@ def plan_attempt_local_post_review(
     assert isinstance(render, dict)
     before_render = _file(root, render, label="before_render")
     crops = packet["crops"]
-    if not isinstance(crops, list) or {item.get("id") for item in crops if isinstance(item, dict)} != {
-        "full_q1", "full_q2", "full_q3", "full_q4", "print_178mm", "print_thumbnail"
+    crop_ids = (
+        {item.get("id") for item in crops if isinstance(item, dict)}
+        if isinstance(crops, list)
+        else set()
+    )
+    if crop_ids != {
+        "full_q1",
+        "full_q2",
+        "full_q3",
+        "full_q4",
+        "print_178mm",
+        "print_thumbnail",
     }:
         raise AttemptLocalPostReviewAuthorityError("initial_crop_authority_invalid")
     crop_paths = {
@@ -118,4 +128,14 @@ def plan_attempt_local_post_review(
         "selected_finding_id": packet["selected_finding_id"],
         "semantic_contract": packet["editable_target"]["semantic_contract"],
         "publication_acceptance": "not_claimed",
+        "artifact_sha256": {
+            "before_render": render["sha256"],
+            "after_render": after_png["sha256"],
+            "after_pdf": after_pdf["sha256"],
+            "materialized_output": output_record["sha256"],
+            "materialization_receipt": receipt_record["sha256"],
+            "initial_crops": {
+                str(item["id"]): item["sha256"] for item in crops if isinstance(item, dict)
+            },
+        },
     }
