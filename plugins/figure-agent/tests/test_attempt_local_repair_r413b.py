@@ -14,6 +14,7 @@ import authoring_repair_finalize  # noqa: E402
 import authoring_repair_packet  # noqa: E402
 import authoring_repair_rollback  # noqa: E402
 import closed_loop_machine_repair  # noqa: E402
+import closed_loop_post_review  # noqa: E402
 import closed_loop_repair_authorization  # noqa: E402
 import closed_loop_repair_candidate  # noqa: E402
 from test_attempt_local_repair_binding import FIXTURE, _repair_bound_attempt  # noqa: E402
@@ -262,3 +263,50 @@ def test_v2_machine_repair_stops_before_post_repair_visual_review(tmp_path: Path
     assert repaired["next_state"] == "machine_repaired"
     assert repaired["stop_boundary"] == "human_or_host_post_repair_review"
     assert repaired["required_actor"] == "human_or_host"
+
+
+def test_v2_machine_repair_never_falls_through_to_legacy_post_review(
+    tmp_path: Path,
+) -> None:
+    workspace, repair_bound, packet, packet_path, response_path, preview_path = _prepared(tmp_path)
+    candidate = closed_loop_repair_candidate.run_repair_candidate(
+        FIXTURE,
+        state_path=repair_bound,
+        packet_path=packet_path,
+        response_path=response_path,
+        preview_path=preview_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    preview = json.loads(preview_path.read_text(encoding="utf-8"))
+    authorization_path = packet_path.with_name("human-authorization.json")
+    authorization_path.write_text(
+        json.dumps(_authorization(packet, preview)), encoding="utf-8"
+    )
+    authorized = closed_loop_repair_authorization.run_authorization(
+        FIXTURE,
+        state_path=candidate["next_state_path"],
+        authorization_path=authorization_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+    repaired = closed_loop_machine_repair.run_machine_repair(
+        FIXTURE,
+        state_path=authorized["next_state_path"],
+        response_path=response_path,
+        execute=True,
+        workspace_root=workspace,
+        plugin_root=_fake_strict_compiler(tmp_path),
+    )
+
+    with pytest.raises(
+        closed_loop_post_review.ClosedLoopPostReviewError,
+        match="repair_packet_binding_missing",
+    ):
+        closed_loop_post_review.run_outbound_handoff(
+            FIXTURE,
+            state_path=repaired["next_state_path"],
+            execute=True,
+            workspace_root=workspace,
+        )
+    assert not (repaired["next_state_path"].parent / "post-repair-review").exists()
