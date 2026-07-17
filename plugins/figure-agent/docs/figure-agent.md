@@ -289,6 +289,7 @@ The code is an R1-R3 foundation with several R4 canonical transitions, not a com
 One adjudicated binding crosses packet compilation, authorized materialization, rollback, and finalization. New packets use v4 authority; stored v3 packets need explicit compatibility and cannot enter post-repair review. Finalization and rollback revalidate v4 authority and hash-bound failure evidence under recovery.
 
 The binding now hash-binds declared semantic object and relation references to the same editable selector as the repair target. Missing semantic authority, ambiguous attribution, or missing references can emit only a named `human_attributor` handoff; they cannot create a repair binding or packet.
+An approved initial review instead requires one human-authored, attempt-local v2 attribution binding that hash-binds the selected finding, handoff, root authored source, selector registry, and semantic contract; it snapshots only that binding into `repair_bound`, while R4.13 must still compile any repair packet.
 
 Default `run` consumes an explicit bound packet/response/preview at `repair_bound`, human authorization at `repair_candidate_ready`, the same response again at `repair_authorized`, and one state-bound named human verdict at `visually_re_reviewed`. That verdict can accept the development baseline, reject the artifact, or require a separately authorized repair attempt. Materialize/strict-finalize/rollback publishes
 `machine_repaired` or `repair_required`; completed receipts recover state publication. `repair_failure_record` is a schema-heterogeneous reason-for-repair role, so consumers must validate its referenced schema and decision rather than assume a machine failure.
@@ -312,4 +313,4 @@ Closed-loop handoffs use these contracts rather than another workflow shell:
 `figure-agent.host-review-execution-receipt.v1`, `figure-agent.post-repair-visual-review-response.v1`,
 `figure-agent.post-repair-visual-review-receipt.v1`, `figure-agent.initial-visual-review-request.v1`,
 `figure-agent.initial-visual-review-response.v1`, `figure-agent.initial-human-adjudication.v1`,
-`figure-agent.initial-attribution-handoff.v1`, and `figure-agent.closed-loop-development-verdict.v1`.
+`figure-agent.initial-attribution-handoff.v1`, `figure-agent.initial-attribution-binding.v2`, and `figure-agent.closed-loop-development-verdict.v1`.

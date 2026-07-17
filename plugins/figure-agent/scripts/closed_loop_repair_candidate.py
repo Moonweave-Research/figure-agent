@@ -50,13 +50,10 @@ def _assert_current_state(
         or projection.get("required_actor") != "workflow_agent"
         or projection.get("terminal") is not False
         or projection.get("publication_acceptance") != "not_claimed"
-        or projection.get("path")
-        != state_path.relative_to(workspace_root).as_posix()
+        or projection.get("path") != state_path.relative_to(workspace_root).as_posix()
         or projection.get("state_sha256") != state["state_sha256"]
     ):
-        raise ClosedLoopRepairCandidateError(
-            "closed_loop_canonical_current_state_drift"
-        )
+        raise ClosedLoopRepairCandidateError("closed_loop_canonical_current_state_drift")
 
 
 def _safe_unmaterialized_output(
@@ -78,9 +75,7 @@ def _safe_unmaterialized_output(
             raise ClosedLoopRepairCandidateError("repair_candidate_output_path_symlink")
     output = workspace_root / relative
     if output.exists() or output.is_symlink():
-        raise ClosedLoopRepairCandidateError(
-            "repair_candidate_output_already_materialized"
-        )
+        raise ClosedLoopRepairCandidateError("repair_candidate_output_already_materialized")
     return output
 
 
@@ -101,13 +96,8 @@ def _validated_plan(
     )
     if state["state"] != "repair_bound":
         raise ClosedLoopRepairCandidateError("closed_loop_state_not_repair_bound")
-    if (
-        expected_state_sha256 is not None
-        and state["state_sha256"] != expected_state_sha256
-    ):
-        raise ClosedLoopRepairCandidateError(
-            "closed_loop_projected_state_hash_mismatch"
-        )
+    if expected_state_sha256 is not None and state["state_sha256"] != expected_state_sha256:
+        raise ClosedLoopRepairCandidateError("closed_loop_projected_state_hash_mismatch")
     packet_path = authority.workspace_file(
         workspace_root,
         packet_path,
@@ -133,15 +123,16 @@ def _validated_plan(
         str(binding_record.get("path") or ""),
         label="adjudicated_repair_binding",
     )
+    binding, _binding_bytes = _json_snapshot(
+        binding_path,
+        label="adjudicated_repair_binding",
+    )
+    if binding.get("schema") == "figure-agent.initial-attribution-binding.v2":
+        raise ClosedLoopRepairCandidateError("initial_attribution_binding_v2_requires_r4_13")
     if not (
-        packet_path.parent
-        == response_path.parent
-        == preview_path.parent
-        == binding_path.parent
+        packet_path.parent == response_path.parent == preview_path.parent == binding_path.parent
     ):
-        raise ClosedLoopRepairCandidateError(
-            "repair_candidate_artifacts_must_be_binding_adjacent"
-        )
+        raise ClosedLoopRepairCandidateError("repair_candidate_artifacts_must_be_binding_adjacent")
     packet, packet_bytes = _json_snapshot(
         packet_path,
         label="repair_execution_packet",
@@ -154,11 +145,9 @@ def _validated_plan(
         preview_path,
         label="materialization_preview",
     )
-    if (
-        packet.get("schema") != authoring_repair_packet.SCHEMA
-        or packet.get("packet_sha256")
-        != authoring_repair_packet.canonical_packet_sha256(packet)
-    ):
+    if packet.get("schema") != authoring_repair_packet.SCHEMA or packet.get(
+        "packet_sha256"
+    ) != authoring_repair_packet.canonical_packet_sha256(packet):
         raise ClosedLoopRepairCandidateError("current_repair_packet_required")
     output_path = _safe_unmaterialized_output(
         packet,
@@ -176,9 +165,7 @@ def _validated_plan(
             )
         )
         if packet != expected_packet:
-            raise ClosedLoopRepairCandidateError(
-                "repair_packet_not_canonical_from_binding"
-            )
+            raise ClosedLoopRepairCandidateError("repair_packet_not_canonical_from_binding")
         authoring_repair_packet.validate_bound_packet_authority(
             packet,
             workspace_root,
@@ -201,16 +188,12 @@ def _validated_plan(
         )
         raise ClosedLoopRepairCandidateError(f"{label}:{exc}") from exc
     if preview != expected_preview:
-        raise ClosedLoopRepairCandidateError(
-            "materialization_preview_response_mismatch"
-        )
+        raise ClosedLoopRepairCandidateError("materialization_preview_response_mismatch")
     if packet.get("adjudicated_repair_binding") != {
         "path": binding_record.get("path"),
         "sha256": binding_record.get("sha256"),
     }:
-        raise ClosedLoopRepairCandidateError(
-            "repair_packet_state_binding_mismatch"
-        )
+        raise ClosedLoopRepairCandidateError("repair_packet_state_binding_mismatch")
     return {
         "state": state,
         "state_path": published_state_path,
@@ -268,9 +251,7 @@ def _matching_published_candidate(
         OSError,
         ValueError,
     ) as exc:
-        raise ClosedLoopRepairCandidateError(
-            f"repair_candidate_recovery_invalid:{exc}"
-        ) from exc
+        raise ClosedLoopRepairCandidateError(f"repair_candidate_recovery_invalid:{exc}") from exc
     if published_path != next_state_path or published != expected:
         raise ClosedLoopRepairCandidateError("repair_candidate_state_conflict")
     projection = closed_loop_current_state.resolve_current_attempt(
@@ -283,13 +264,10 @@ def _matching_published_candidate(
         or projection.get("required_actor") != "human_repair_authorizer"
         or projection.get("terminal") is not False
         or projection.get("publication_acceptance") != "not_claimed"
-        or projection.get("path")
-        != published_path.relative_to(workspace_root).as_posix()
+        or projection.get("path") != published_path.relative_to(workspace_root).as_posix()
         or projection.get("state_sha256") != published["state_sha256"]
     ):
-        raise ClosedLoopRepairCandidateError(
-            "closed_loop_canonical_current_state_drift"
-        )
+        raise ClosedLoopRepairCandidateError("closed_loop_canonical_current_state_drift")
     return published
 
 
@@ -335,9 +313,7 @@ def _result(
     result = {
         "action": ACTION,
         "stop_boundary": (
-            STOP_HUMAN_BOUNDARY
-            if created or published is not None
-            else STOP_WORKFLOW_BOUNDARY
+            STOP_HUMAN_BOUNDARY if created or published is not None else STOP_WORKFLOW_BOUNDARY
         ),
         "stop_reason": "repair_candidate_ready" if created else "plan_only",
         "required_actor": "human_repair_authorizer" if created else "workflow_agent",
@@ -392,9 +368,7 @@ def run_repair_candidate(
         if not execute:
             return _result(plan, created=False)
 
-        with closed_loop_attempt_state.attempt_transition_lock(
-            plan["state_path"].parent
-        ):
+        with closed_loop_attempt_state.attempt_transition_lock(plan["state_path"].parent):
             with repair_transaction.recoverable_exclusive_lock(
                 plan["output_path"].parent / ".materialization.lock",
                 owner=repair_transaction.MATERIALIZATION_LOCK_OWNER,
@@ -420,9 +394,7 @@ def run_repair_candidate(
                     return result
                 for key in ("packet_bytes", "response_bytes", "preview_bytes"):
                     if current[key] != plan[key]:
-                        raise ClosedLoopRepairCandidateError(
-                            "repair_candidate_inputs_drifted"
-                        )
+                        raise ClosedLoopRepairCandidateError("repair_candidate_inputs_drifted")
                 next_state = _expected_candidate_state(
                     current,
                     workspace_root=root,
@@ -443,6 +415,4 @@ def run_repair_candidate(
         OSError,
         ValueError,
     ) as exc:
-        raise ClosedLoopRepairCandidateError(
-            f"repair_candidate_failed:{exc}"
-        ) from exc
+        raise ClosedLoopRepairCandidateError(f"repair_candidate_failed:{exc}") from exc
