@@ -1,0 +1,134 @@
+{
+  "artifacts": [
+    {
+      "path": "fig3_resistance_mechanism.tex",
+      "role": "source",
+      "sha256": "148d9bda59c6344f31a587b0b3517ee07d9c47bfff32980c21111a803d377955",
+      "size_bytes": 6918,
+      "snapshot_path": "artifacts/000-source-fig3_resistance_mechanism.tex"
+    },
+    {
+      "path": "build/strict_status.json",
+      "role": "strict_compile_report",
+      "sha256": "8ff3e3a05f7cb02ceef8914f4ee36fbdf8c9472216e9efce013ed75b3aef2f4a",
+      "size_bytes": 125,
+      "snapshot_path": "artifacts/001-strict_compile_report-strict_status.json"
+    },
+    {
+      "path": "build/fig3_resistance_mechanism.png",
+      "role": "render",
+      "sha256": "ca6cc671da1403bd0c9123b9eacf033206080fb34bef0e0d1072f41d84b9b8a3",
+      "size_bytes": 199059,
+      "snapshot_path": "artifacts/002-render-fig3_resistance_mechanism.png"
+    },
+    {
+      "path": "build/audit_crops/manifest.json",
+      "role": "audit_crop_manifest",
+      "sha256": "6e6c81217ae001e12078c0c56cd7c01b0ef4ad808c09884fb52c1346a71e35e5",
+      "size_bytes": 2799,
+      "snapshot_path": "artifacts/003-audit_crop_manifest-manifest.json"
+    },
+    {
+      "path": "build/audit_crops/full_q1.png",
+      "role": "audit_crop",
+      "sha256": "5fee951d007aa524f59721dc89fdd63cf95750395603bc88c939b1a18ada6597",
+      "size_bytes": 64628,
+      "snapshot_path": "artifacts/004-audit_crop-full_q1.png"
+    },
+    {
+      "path": "build/audit_crops/full_q2.png",
+      "role": "audit_crop",
+      "sha256": "515335a8f9bf3b4a20db60264ab2196c45c5bb2c739fe1fb89a3c10b8f938fe0",
+      "size_bytes": 56880,
+      "snapshot_path": "artifacts/005-audit_crop-full_q2.png"
+    },
+    {
+      "path": "build/audit_crops/full_q3.png",
+      "role": "audit_crop",
+      "sha256": "cb43cccf14b94e17190c15e361cdbf5baa310409c5a0def9c76368516a4d276a",
+      "size_bytes": 49114,
+      "snapshot_path": "artifacts/006-audit_crop-full_q3.png"
+    },
+    {
+      "path": "build/audit_crops/full_q4.png",
+      "role": "audit_crop",
+      "sha256": "9aa9cc93910e03b52bd1840c70fdf8e978d288536162a71b7bd34a577f25ffa3",
+      "size_bytes": 31518,
+      "snapshot_path": "artifacts/007-audit_crop-full_q4.png"
+    },
+    {
+      "path": "build/audit_crops/print_178mm.png",
+      "role": "audit_crop",
+      "sha256": "98f00975e381b223345ba2f8be9efbc58d18cda1f3e1214893f624b0d3de5e1c",
+      "size_bytes": 62810,
+      "snapshot_path": "artifacts/008-audit_crop-print_178mm.png"
+    },
+    {
+      "path": "build/audit_crops/print_thumbnail.png",
+      "role": "audit_crop",
+      "sha256": "24cccc6e55ca144400f3330d4d94ec4cbd9d6ea1e79ee0ea2f11494e2317bb8b",
+      "size_bytes": 16963,
+      "snapshot_path": "artifacts/009-audit_crop-print_thumbnail.png"
+    },
+    {
+      "path": "critique.md",
+      "role": "critique",
+      "sha256": "bb440aeea369f411b1bde458fcda9b4285b61cea9a261822bc002a752e05bebf",
+      "size_bytes": 26701,
+      "snapshot_path": "artifacts/010-critique-critique.md"
+    },
+    {
+      "path": "critique_adjudication.yaml",
+      "role": "adjudication",
+      "sha256": "881329c178823f5b9060f05424abd97d5a462ac60e50e006c661fd63a9b3ea2e",
+      "size_bytes": 361,
+      "snapshot_path": "artifacts/011-adjudication-critique_adjudication.yaml"
+    },
+    {
+      "path": "exports/fig3_resistance_mechanism.png",
+      "role": "export",
+      "sha256": "957c0f85a7a74bbcf4be4e6409d637cf715bcb0f41d1be36d405bd9b055085e7",
+      "size_bytes": 211754,
+      "snapshot_path": "artifacts/012-export-fig3_resistance_mechanism.png"
+    },
+    {
+      "path": "exports/fig3_resistance_mechanism.pdf",
+      "role": "export",
+      "sha256": "2011a38ec63d78ec32c63978b8a791b038bff4eebcfca46431c052becf8ee8bc",
+      "size_bytes": 88632,
+      "snapshot_path": "artifacts/013-export-fig3_resistance_mechanism.pdf"
+    },
+    {
+      "path": "exports/fig3_resistance_mechanism.tif",
+      "role": "export",
+      "sha256": "bcb2ee9cc1e14393ed31f42672698042dd627e525289fb1f86f5e696a2964903",
+      "size_bytes": 14122788,
+      "snapshot_path": "artifacts/014-export-fig3_resistance_mechanism.tif"
+    },
+    {
+      "path": "exports/fig3_resistance_mechanism.svg",
+      "role": "export",
+      "sha256": "7cf0b1fa813f2117788ea18f516737df1fd363152743187015351cec9b4b61f7",
+      "size_bytes": 33042,
+      "snapshot_path": "artifacts/015-export-fig3_resistance_mechanism.svg"
+    }
+  ],
+  "compile": {
+    "command": "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex",
+    "returncode": 0,
+    "strict": true
+  },
+  "correction": {
+    "minutes": null,
+    "state": "not_captured"
+  },
+  "fixture": "fig3_resistance_mechanism",
+  "publication_acceptance": "not_claimed",
+  "receipt_sha256": "1391e6a0566896af2cf681adc55409d83963b30a362d116c0beb1603ec139b3a",
+  "schema": "figure-agent.prospective-evidence-receipt.v1",
+  "source_declaration": {
+    "path": "review/failure-first/prospective-q4-v1-declaration.yaml",
+    "sha256": "b4b8d6eacbfab969da5ee5adc58ae624390db67baf559223f6236267e6299a92",
+    "snapshot_path": "source-declaration/prospective-q4-v1-declaration.yaml"
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "crops": [
+    {
+      "bbox_px": [
+        0,
+        0,
+        2000,
+        588
+      ],
+      "id": "full_q1",
+      "kind": "zoom_crop",
+      "path": "build/audit_crops/full_q1.png",
+      "sha256": "sha256:5fee951d007aa524f59721dc89fdd63cf95750395603bc88c939b1a18ada6597",
+      "source": "full_render",
+      "source_path": "build/fig3_resistance_mechanism.png"
+    },
+    {
+      "bbox_px": [
+        2000,
+        0,
+        4001,
+        588
+      ],
+      "id": "full_q2",
+      "kind": "zoom_crop",
+      "path": "build/audit_crops/full_q2.png",
+      "sha256": "sha256:515335a8f9bf3b4a20db60264ab2196c45c5bb2c739fe1fb89a3c10b8f938fe0",
+      "source": "full_render",
+      "source_path": "build/fig3_resistance_mechanism.png"
+    },
+    {
+      "bbox_px": [
+        0,
+        588,
+        2000,
+        1176
+      ],
+      "id": "full_q3",
+      "kind": "zoom_crop",
+      "path": "build/audit_crops/full_q3.png",
+      "sha256": "sha256:cb43cccf14b94e17190c15e361cdbf5baa310409c5a0def9c76368516a4d276a",
+      "source": "full_render",
+      "source_path": "build/fig3_resistance_mechanism.png"
+    },
+    {
+      "bbox_px": [
+        2000,
+        588,
+        4001,
+        1176
+      ],
+      "id": "full_q4",
+      "kind": "zoom_crop",
+      "path": "build/audit_crops/full_q4.png",
+      "sha256": "sha256:9aa9cc93910e03b52bd1840c70fdf8e978d288536162a71b7bd34a577f25ffa3",
+      "source": "full_render",
+      "source_path": "build/fig3_resistance_mechanism.png"
+    },
+    {
+      "id": "print_178mm",
+      "kind": "print_scale",
+      "path": "build/audit_crops/print_178mm.png",
+      "scale_basis": "fixed_width_proxy",
+      "scale_label": "178mm_equivalent",
+      "sha256": "sha256:98f00975e381b223345ba2f8be9efbc58d18cda1f3e1214893f624b0d3de5e1c",
+      "size_px": [
+        1000,
+        294
+      ],
+      "source_path": "build/fig3_resistance_mechanism.png",
+      "target_width_px": 1000,
+      "upscaled": false
+    },
+    {
+      "id": "print_thumbnail",
+      "kind": "print_scale",
+      "path": "build/audit_crops/print_thumbnail.png",
+      "scale_basis": "fixed_width_proxy",
+      "scale_label": "thumbnail",
+      "sha256": "sha256:24cccc6e55ca144400f3330d4d94ec4cbd9d6ea1e79ee0ea2f11494e2317bb8b",
+      "size_px": [
+        360,
+        106
+      ],
+      "source_path": "build/fig3_resistance_mechanism.png",
+      "target_width_px": 360,
+      "upscaled": false
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "render_path": "build/fig3_resistance_mechanism.png",
+  "render_sha256": "sha256:ca6cc671da1403bd0c9123b9eacf033206080fb34bef0e0d1072f41d84b9b8a3",
+  "required_crop_ids": [
+    "full_q1",
+    "full_q2",
+    "full_q3",
+    "full_q4",
+    "print_178mm",
+    "print_thumbnail"
+  ],
+  "schema": "figure-agent.audit-crop-manifest.v1"
+}

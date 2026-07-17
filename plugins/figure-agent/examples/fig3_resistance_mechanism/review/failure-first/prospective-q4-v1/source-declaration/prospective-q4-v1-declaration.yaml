@@ -1,0 +1,42 @@
+fixture: fig3_resistance_mechanism
+compile:
+  command: FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+  strict: true
+  returncode: 0
+artifacts:
+  - role: source
+    path: fig3_resistance_mechanism.tex
+  - role: strict_compile_report
+    path: build/strict_status.json
+  - role: render
+    path: build/fig3_resistance_mechanism.png
+  - role: audit_crop_manifest
+    path: build/audit_crops/manifest.json
+  - role: audit_crop
+    path: build/audit_crops/full_q1.png
+  - role: audit_crop
+    path: build/audit_crops/full_q2.png
+  - role: audit_crop
+    path: build/audit_crops/full_q3.png
+  - role: audit_crop
+    path: build/audit_crops/full_q4.png
+  - role: audit_crop
+    path: build/audit_crops/print_178mm.png
+  - role: audit_crop
+    path: build/audit_crops/print_thumbnail.png
+  - role: critique
+    path: critique.md
+  - role: adjudication
+    path: critique_adjudication.yaml
+  - role: export
+    path: exports/fig3_resistance_mechanism.png
+  - role: export
+    path: exports/fig3_resistance_mechanism.pdf
+  - role: export
+    path: exports/fig3_resistance_mechanism.tif
+  - role: export
+    path: exports/fig3_resistance_mechanism.svg
+correction:
+  state: not_captured
+  minutes: null
+publication_acceptance: not_claimed
