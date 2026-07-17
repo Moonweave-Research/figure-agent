@@ -309,7 +309,9 @@ def test_execute_revalidates_declared_repair_authority_before_publish(
     assert not path.with_name(binding.BINDING_SNAPSHOT_FILE).exists()
 
 
-def test_v2_repair_bound_blocks_legacy_candidate_until_r4_13(tmp_path: Path) -> None:
+def test_v2_repair_bound_rejects_binding_substituted_for_repair_packet(
+    tmp_path: Path,
+) -> None:
     workspace, state_path = _approved_attempt(tmp_path)
     binding_path = _binding(workspace, state_path)
     bound = binding.run_initial_attribution_binding(
@@ -321,7 +323,7 @@ def test_v2_repair_bound_blocks_legacy_candidate_until_r4_13(tmp_path: Path) -> 
     )
     with pytest.raises(
         closed_loop_repair_candidate.ClosedLoopRepairCandidateError,
-        match="initial_attribution_binding_v2_requires_r4_13",
+        match="current_repair_packet_required",
     ):
         closed_loop_repair_candidate.run_repair_candidate(
             FIXTURE,
