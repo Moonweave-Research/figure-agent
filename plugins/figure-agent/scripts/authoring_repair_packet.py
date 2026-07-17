@@ -12,9 +12,11 @@ from typing import Any
 import closed_loop_attempt_state
 import closed_loop_current_state
 import closed_loop_initial_review
+import critique_contract
 import critique_repair_bridge
 import human_decision_record
 import repair_transaction
+import yaml
 
 SCHEMA = "figure-agent.repair-execution-packet.v4"
 LEGACY_SCHEMA = "figure-agent.repair-execution-packet.v3"
@@ -153,6 +155,147 @@ def _attempt_local_evidence(state: dict[str, object], role: str) -> dict[str, st
     if len(matches) != 1:
         raise RepairExecutionPacketError("attempt-local lineage evidence missing")
     return {"path": str(matches[0]["path"]), "sha256": str(matches[0]["sha256"])}
+
+
+def _attempt_local_json_record(
+    record: dict[str, str],
+    *,
+    workspace_root: Path,
+    label: str,
+) -> dict[str, Any]:
+    path = _regular_file(workspace_root, record["path"], label=f"attempt-local {label}")
+    try:
+        content = path.read_bytes()
+        payload = json.loads(content.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RepairExecutionPacketError(f"attempt-local {label} invalid") from exc
+    if _sha256_bytes(content) != record["sha256"]:
+        raise RepairExecutionPacketError(f"attempt-local {label} hash drift")
+    if not isinstance(payload, dict):
+        raise RepairExecutionPacketError(f"attempt-local {label} invalid")
+    return payload
+
+
+def _validate_attempt_local_snapshot_cross_checks(
+    binding: dict[str, object],
+    *,
+    workspace_root: Path,
+    handoff_record: dict[str, str],
+    critique_record: dict[str, str],
+    snapshot_record: dict[str, str],
+) -> None:
+    """Cross-check the immutable R4.12 snapshot, not just its hash record."""
+    snapshot = _attempt_local_json_record(
+        snapshot_record,
+        workspace_root=workspace_root,
+        label="initial attribution binding",
+    )
+    if (
+        snapshot.get("schema") != "figure-agent.initial-attribution-binding.v2"
+        or snapshot.get("fixture") != binding["fixture"]
+        or snapshot.get("attempt_id") != binding["attempt_id"]
+        or snapshot.get("publication_acceptance") != "not_claimed"
+        or snapshot.get("binding_sha256")
+        != _sha256_bytes(
+            _canonical_json_bytes(
+                {key: value for key, value in snapshot.items() if key != "binding_sha256"}
+            )
+        )
+    ):
+        raise RepairExecutionPacketError("attempt-local attribution snapshot invalid")
+    handoff = _attempt_local_json_record(
+        handoff_record,
+        workspace_root=workspace_root,
+        label="attribution handoff",
+    )
+    if (
+        handoff.get("schema") != "figure-agent.initial-attribution-handoff.v1"
+        or handoff.get("fixture") != binding["fixture"]
+        or handoff.get("attempt_id") != binding["attempt_id"]
+        or handoff.get("source_mutation") != "forbidden"
+        or handoff.get("publication_acceptance") != "not_claimed"
+        or snapshot.get("attribution_handoff") != handoff_record
+        or snapshot.get("human_attributor") != handoff.get("human_attributor")
+        or snapshot.get("human_attributor") != binding.get("human_attributor")
+    ):
+        raise RepairExecutionPacketError("attempt-local attribution handoff mismatch")
+    selected = handoff.get("selected_finding_ids")
+    finding_id = binding.get("selected_finding_id")
+    snapshot_critique = snapshot.get("critique")
+    if (
+        not isinstance(selected, list)
+        or selected.count(finding_id) != 1
+        or not isinstance(snapshot_critique, dict)
+        or snapshot_critique.get("finding_id") != finding_id
+        or snapshot_critique.get("path") != critique_record["path"]
+        or snapshot_critique.get("sha256") != critique_record["sha256"]
+    ):
+        raise RepairExecutionPacketError("attempt-local selected finding mismatch")
+    critique_path = _regular_file(
+        workspace_root,
+        critique_record["path"],
+        label="attempt-local critique",
+    )
+    try:
+        frontmatter = critique_contract.load_critique_frontmatter(critique_path)
+        findings = critique_contract.critique_findings(frontmatter)
+        identifiers = {
+            critique_contract.critique_finding_id(item, "attempt-local critique finding")
+            for item in findings
+        }
+    except (critique_contract.CritiqueContractError, ValueError) as exc:
+        raise RepairExecutionPacketError("attempt-local critique invalid") from exc
+    if frontmatter.get("fixture") != binding["fixture"] or finding_id not in identifiers:
+        raise RepairExecutionPacketError("attempt-local selected finding mismatch")
+    registry_record = snapshot.get("selector_registry")
+    semantic_record = snapshot.get("semantic_contract")
+    if not isinstance(registry_record, dict) or not isinstance(semantic_record, dict):
+        raise RepairExecutionPacketError("attempt-local attribution snapshot invalid")
+    registry_reference = {
+        "path": str(registry_record.get("path") or ""),
+        "sha256": str(registry_record.get("sha256") or ""),
+    }
+    registry = _attempt_local_json_record(
+        registry_reference,
+        workspace_root=workspace_root,
+        label="selector registry",
+    )
+    semantic_path = _regular_file(
+        workspace_root,
+        str(semantic_record.get("path") or ""),
+        label="attempt-local semantic contract",
+    )
+    try:
+        semantic = yaml.safe_load(semantic_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise RepairExecutionPacketError("attempt-local semantic contract invalid") from exc
+    selector_id = snapshot.get("selector_id")
+    selectors = registry.get("selectors")
+    matches = [
+        item
+        for item in selectors or []
+        if isinstance(item, dict) and item.get("selector_id") == selector_id
+    ]
+    if (
+        len(matches) != 1
+        or snapshot.get("repair_family") != binding.get("repair_family")
+        or binding.get("selector") != matches[0]
+        or binding.get("selector") is None
+        or not isinstance(semantic, dict)
+    ):
+        raise RepairExecutionPacketError("attempt-local selector snapshot mismatch")
+    selector = matches[0]
+    if (
+        selector.get("repair_family") != binding.get("repair_family")
+        or not set(selector.get("semantic_object_refs", [])).issubset(
+            set(semantic.get("required_objects", []))
+        )
+        or not set(selector.get("semantic_relation_refs", [])).issubset(
+            set(semantic.get("protected_relations", []))
+        )
+        or semantic.get("publication_acceptance") != "not_claimed"
+    ):
+        raise RepairExecutionPacketError("attempt-local semantic snapshot mismatch")
 
 
 def validate_attempt_local_repair_binding_v2(
@@ -308,6 +451,13 @@ def validate_attempt_local_repair_binding_v2(
     for name, expected in expected_records.items():
         if binding.get(name) != expected:
             raise RepairExecutionPacketError("attempt-local lineage evidence mismatch")
+    _validate_attempt_local_snapshot_cross_checks(
+        binding,
+        workspace_root=root,
+        handoff_record=expected_records["attribution_handoff"],
+        critique_record=expected_records["critique"],
+        snapshot_record=expected_records["initial_attribution_binding"],
+    )
     normalized["current_state"] = {
         "path": str(current_state["path"]),
         "sha256": str(current_state["sha256"]),

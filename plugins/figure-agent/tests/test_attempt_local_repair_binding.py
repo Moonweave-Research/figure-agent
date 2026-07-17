@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -265,6 +266,55 @@ def test_public_v2_validator_reconstructs_exact_initial_review_crops(tmp_path: P
     with pytest.raises(
         authoring_repair_packet.RepairExecutionPacketError,
         match="crops do not match initial request",
+    ):
+        authoring_repair_packet.validate_attempt_local_repair_binding_v2(
+            binding,
+            workspace_root=workspace,
+        )
+
+
+def test_public_v2_validator_rejects_forged_recomputed_attribution_snapshot(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, state_path = _repair_bound_attempt(tmp_path)
+    created = packet_boundary.run_attempt_local_repair_packet(
+        FIXTURE,
+        state_path=state_path,
+        model_id="test-model",
+        execute=True,
+        workspace_root=workspace,
+    )
+    binding = json.loads(created["artifacts"]["binding"].read_text(encoding="utf-8"))
+    original_record = binding["initial_attribution_binding"]
+    original_snapshot = workspace / original_record["path"]
+    forged = json.loads(original_snapshot.read_text(encoding="utf-8"))
+    forged["human_attributor"] = {"kind": "human", "identity": "forged-human"}
+    forged["binding_sha256"] = attribution.canonical_binding_sha256(forged)
+    forged_path = original_snapshot.with_name("forged.binding.snapshot.json")
+    forged_path.write_text(
+        json.dumps(forged, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    forged_record = {
+        "path": forged_path.relative_to(workspace).as_posix(),
+        "sha256": "sha256:" + hashlib.sha256(forged_path.read_bytes()).hexdigest(),
+    }
+    binding["initial_attribution_binding"] = forged_record
+    binding["binding_sha256"] = authoring_repair_packet.canonical_attempt_local_binding_sha256(
+        binding
+    )
+    original_evidence = authoring_repair_packet._attempt_local_evidence  # noqa: SLF001
+
+    def forged_evidence(state: dict[str, object], role: str) -> dict[str, str]:
+        if state.get("state") == "repair_bound" and role == "adjudicated_repair_binding":
+            return forged_record
+        return original_evidence(state, role)
+
+    monkeypatch.setattr(authoring_repair_packet, "_attempt_local_evidence", forged_evidence)
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="attribution handoff mismatch",
     ):
         authoring_repair_packet.validate_attempt_local_repair_binding_v2(
             binding,
