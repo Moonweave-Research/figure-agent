@@ -319,6 +319,24 @@ def _revalidate(
     )
 
 
+def inspect_inbound_response_pack(
+    *,
+    fixture: str,
+    initial_review_state: dict[str, Any],
+    initial_review_state_path: Path,
+    response_path: Path,
+    workspace_root: Path,
+) -> tuple[dict[str, Any], bytes, tuple[int, ...], Path, Path]:
+    """Inspect one supplied response pack without publishing state or invoking a host."""
+    return _revalidate(
+        root=Path(os.path.abspath(workspace_root)),
+        fixture=fixture,
+        state=initial_review_state,
+        state_path=initial_review_state_path,
+        response_path=response_path,
+    )
+
+
 def _existing_state_matches(
     state: dict[str, Any],
     *,
