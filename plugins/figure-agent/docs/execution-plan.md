@@ -303,6 +303,12 @@ not add another generator, renderer, candidate family, or workflow shell.
   Record those already-produced artifacts with the internal
   `scripts/prospective_evidence_receipt.py` module; it snapshots one explicit
   fixture-relative declaration and never runs compilation or review itself.
+  The clean Q4-v1 run is now recorded at
+  `review/failure-first/prospective-q4-v1/`: normal and strict compilation
+  passed, all six required crops were inspected, critique/adjudication/export
+  became fresh, and PNG/PDF/TIF/SVG were snapshotted with the exact source.
+  Its only open decision is `C001: needs_human`; correction time is explicitly
+  `not_captured` and publication acceptance remains `not_claimed`.
   A named development-baseline scaffold verdict is now recorded; prospective
   correction minutes were not captured and must not be reconstructed after the
   fact. The critique/adjudication refresh remains open after any source repair.
