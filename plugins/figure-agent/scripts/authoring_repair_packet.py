@@ -249,7 +249,11 @@ def _validate_attempt_local_snapshot_cross_checks(
         raise RepairExecutionPacketError("attempt-local selected finding mismatch")
     registry_record = snapshot.get("selector_registry")
     semantic_record = snapshot.get("semantic_contract")
-    if not isinstance(registry_record, dict) or not isinstance(semantic_record, dict):
+    if (
+        not isinstance(registry_record, dict)
+        or not isinstance(semantic_record, dict)
+        or binding.get("semantic_contract") != semantic_record
+    ):
         raise RepairExecutionPacketError("attempt-local attribution snapshot invalid")
     registry_reference = {
         "path": str(registry_record.get("path") or ""),

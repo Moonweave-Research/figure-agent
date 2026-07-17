@@ -322,6 +322,38 @@ def test_public_v2_validator_rejects_forged_recomputed_attribution_snapshot(
         )
 
 
+def test_public_v2_validator_rejects_alternate_valid_semantic_contract_record(
+    tmp_path: Path,
+) -> None:
+    workspace, state_path = _repair_bound_attempt(tmp_path)
+    created = packet_boundary.run_attempt_local_repair_packet(
+        FIXTURE,
+        state_path=state_path,
+        model_id="test-model",
+        execute=True,
+        workspace_root=workspace,
+    )
+    binding = json.loads(created["artifacts"]["binding"].read_text(encoding="utf-8"))
+    original = workspace / binding["semantic_contract"]["path"]
+    alternate = original.with_name("alternate-semantic-contract.json")
+    alternate.write_bytes(original.read_bytes())
+    binding["semantic_contract"] = {
+        "path": alternate.relative_to(workspace).as_posix(),
+        "sha256": "sha256:" + hashlib.sha256(alternate.read_bytes()).hexdigest(),
+    }
+    binding["binding_sha256"] = authoring_repair_packet.canonical_attempt_local_binding_sha256(
+        binding
+    )
+    with pytest.raises(
+        authoring_repair_packet.RepairExecutionPacketError,
+        match="attribution snapshot invalid",
+    ):
+        authoring_repair_packet.validate_attempt_local_repair_binding_v2(
+            binding,
+            workspace_root=workspace,
+        )
+
+
 @pytest.mark.parametrize(
     ("binding_path", "sandbox_path", "error"),
     [
