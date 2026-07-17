@@ -21,6 +21,7 @@ import closed_loop_machine_repair  # noqa: E402
 import closed_loop_post_review  # noqa: E402
 import closed_loop_repair_authorization  # noqa: E402
 import closed_loop_repair_candidate  # noqa: E402
+import fig_run  # noqa: E402
 from test_attempt_local_repair_binding import FIXTURE, _repair_bound_attempt  # noqa: E402
 from test_authoring_repair_packet import _fake_strict_compiler  # noqa: E402
 
@@ -810,3 +811,123 @@ def test_v2_post_review_response_revalidates_after_receipt_before_state(
     assert not any(
         requested["next_state_path"].parent.glob("state-*-visually_re_reviewed.json")
     )
+
+
+def test_fig_run_dispatches_attempt_local_machine_repaired_to_v2_outbound(
+    tmp_path: Path,
+) -> None:
+    workspace, repaired = _image_machine_repaired_attempt(tmp_path)
+
+    payload = fig_run.run_workflow(
+        FIXTURE,
+        mode="review",
+        goal="close loop",
+        execute=False,
+        closed_loop_state=repaired["next_state_path"],
+        repo_root=workspace,
+    )
+
+    assert payload["final_action"] == attempt_local_post_review.ACTION
+    assert payload["closed_loop"]["next_state"] == "post_review_requested"
+    assert payload["closed_loop"]["publication_acceptance"] == "not_claimed"
+    assert not (repaired["next_state_path"].parent / "attempt-local-post-repair-review").exists()
+
+
+def test_fig_run_executes_attempt_local_outbound_and_complete_inbound(
+    tmp_path: Path,
+) -> None:
+    workspace, repaired = _image_machine_repaired_attempt(tmp_path)
+    outbound = fig_run.run_workflow(
+        FIXTURE,
+        mode="review",
+        goal="close loop",
+        execute=True,
+        closed_loop_state=repaired["next_state_path"],
+        repo_root=workspace,
+    )
+    request_path = workspace / outbound["closed_loop"]["request_path"]
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    assert request["schema"] == attempt_local_post_review.SCHEMA
+    response_path, _ = _v2_post_review_response(workspace, request, with_execution=True)
+
+    inbound = fig_run.run_workflow(
+        FIXTURE,
+        mode="review",
+        goal="close loop",
+        execute=True,
+        closed_loop_state=workspace / outbound["closed_loop"]["next_state_path"],
+        closed_loop_response=response_path,
+        repo_root=workspace,
+    )
+
+    assert inbound["closed_loop"]["next_state"] == "visually_re_reviewed"
+    assert inbound["closed_loop"]["publication_acceptance"] == "not_claimed"
+    assert inbound["final_stop_boundary"] == "human_reviewer"
+
+
+def test_fig_run_attempt_local_missing_execution_remains_write_free(
+    tmp_path: Path,
+) -> None:
+    workspace, requested = _v2_post_review_requested(tmp_path)
+    response_path, _ = _v2_post_review_response(
+        workspace, requested["request"], with_execution=False
+    )
+    before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+
+    inbound = fig_run.run_workflow(
+        FIXTURE,
+        mode="review",
+        goal="close loop",
+        execute=True,
+        closed_loop_state=requested["next_state_path"],
+        closed_loop_response=response_path,
+        repo_root=workspace,
+    )
+
+    assert inbound["closed_loop"]["next_state"] == "post_review_requested"
+    assert inbound["final_stop_reason"] == "human_review_boundary"
+    assert sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*")) == before
+
+
+def test_fig_run_unknown_post_review_schema_fails_before_writes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, repaired = _image_machine_repaired_attempt(tmp_path)
+    before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+    monkeypatch.setattr(fig_run, "_bound_evidence_schema", lambda *args, **kwargs: "unknown.v9")
+
+    with pytest.raises(ValueError, match="unsupported_repair_execution_packet_schema:unknown.v9"):
+        fig_run.run_workflow(
+            FIXTURE,
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_state=repaired["next_state_path"],
+            repo_root=workspace,
+        )
+
+    assert sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*")) == before
+
+
+def test_fig_run_unknown_review_request_schema_fails_before_writes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, requested = _v2_post_review_requested(tmp_path)
+    response_path, _ = _v2_post_review_response(workspace, requested["request"])
+    before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+    monkeypatch.setattr(fig_run, "_bound_evidence_schema", lambda *args, **kwargs: "unknown.v9")
+
+    with pytest.raises(
+        ValueError, match="unsupported_post_repair_visual_review_request_schema:unknown.v9"
+    ):
+        fig_run.run_workflow(
+            FIXTURE,
+            mode="review",
+            goal="close loop",
+            execute=True,
+            closed_loop_state=requested["next_state_path"],
+            closed_loop_response=response_path,
+            repo_root=workspace,
+        )
+
+    assert sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*")) == before

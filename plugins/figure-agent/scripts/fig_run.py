@@ -27,6 +27,8 @@ sys.path.insert(0, str(_SCRIPTS_DIR))
 for _import_dir in ("quality", "loop", "driver"):
     sys.path.insert(1, str(_SCRIPTS_DIR / _import_dir))
 
+import attempt_local_post_review  # noqa: E402
+import attempt_local_post_review_response  # noqa: E402
 import closed_loop_attempt_admission  # noqa: E402
 import closed_loop_attempt_state  # noqa: E402
 import closed_loop_current_state  # noqa: E402
@@ -37,6 +39,7 @@ import closed_loop_initial_review  # noqa: E402
 import closed_loop_initial_review_response as initial_review_response_adapter  # noqa: E402
 import closed_loop_machine_repair  # noqa: E402
 import closed_loop_post_review  # noqa: E402
+import closed_loop_post_review_authority as post_review_authority  # noqa: E402
 import closed_loop_post_review_response  # noqa: E402
 import closed_loop_repair_authorization  # noqa: E402
 import closed_loop_repair_candidate  # noqa: E402
@@ -81,6 +84,63 @@ LEASED_EXECUTABLE_ACTIONS = frozenset(
         fig_driver.ACTION_RUN_EXPORT,
     }
 )
+
+_ATTEMPT_LOCAL_PACKET_SCHEMA = "figure-agent.attempt-local-repair-packet.v1"
+_LEGACY_PACKET_SCHEMAS = frozenset(
+    {
+        "figure-agent.repair-execution-packet.v3",
+        "figure-agent.repair-execution-packet.v4",
+    }
+)
+_ATTEMPT_LOCAL_REQUEST_SCHEMA = "figure-agent.attempt-local-post-repair-review-request.v2"
+_LEGACY_REQUEST_SCHEMA = "figure-agent.post-repair-visual-review-request.v1"
+
+
+def _bound_evidence_schema(
+    state: dict[str, Any], role: str, *, workspace_root: Path
+) -> str:
+    record = post_review_authority.lineage_evidence_record(
+        state, role, workspace_root=workspace_root
+    )
+    path = post_review_authority.workspace_file(
+        workspace_root, str(record.get("path") or ""), label=f"dispatch_{role}"
+    )
+    data = path.read_bytes()
+    if record.get("sha256") != post_review_authority.sha256_bytes(data):
+        raise ValueError(f"dispatch_{role}_hash_drift")
+    payload = post_review_authority.load_json(path, label=f"dispatch_{role}")
+    schema = payload.get("schema")
+    if not isinstance(schema, str) or not schema:
+        raise ValueError(f"dispatch_{role}_schema_missing")
+    return schema
+
+
+def _post_review_adapters(
+    fixture: str, state_path: Path, *, workspace_root: Path
+) -> tuple[object, object]:
+    root = Path(os.path.abspath(workspace_root))
+    state, _ = post_review_authority.load_published_state(
+        workspace_root=root, fixture=fixture, state_path=state_path
+    )
+    if state.get("state") == "machine_repaired":
+        schema = _bound_evidence_schema(
+            state, "repair_execution_packet", workspace_root=root
+        )
+        if schema == _ATTEMPT_LOCAL_PACKET_SCHEMA:
+            return attempt_local_post_review, attempt_local_post_review_response
+        if schema in _LEGACY_PACKET_SCHEMAS:
+            return closed_loop_post_review, closed_loop_post_review_response
+        raise ValueError(f"unsupported_repair_execution_packet_schema:{schema}")
+    if state.get("state") == "post_review_requested":
+        schema = _bound_evidence_schema(
+            state, "post_repair_visual_review_request", workspace_root=root
+        )
+        if schema == _ATTEMPT_LOCAL_REQUEST_SCHEMA:
+            return attempt_local_post_review, attempt_local_post_review_response
+        if schema == _LEGACY_REQUEST_SCHEMA:
+            return closed_loop_post_review, closed_loop_post_review_response
+        raise ValueError(f"unsupported_post_repair_visual_review_request_schema:{schema}")
+    raise ValueError("post_review_dispatch_state_unsupported")
 
 
 @dataclass(frozen=True)
@@ -1859,8 +1919,11 @@ def run_workflow(
             },
         }
     if closed_loop_state is not None and closed_loop_response is not None:
+        _, inbound_adapter = _post_review_adapters(
+            name, closed_loop_state, workspace_root=repo_root
+        )
         try:
-            inbound = closed_loop_post_review_response.run_inbound_response(
+            inbound = inbound_adapter.run_inbound_response(
                 name,
                 state_path=closed_loop_state,
                 response_path=closed_loop_response,
@@ -1868,14 +1931,20 @@ def run_workflow(
                 workspace_root=repo_root,
                 expected_state_sha256=automatic_state_sha256,
             )
-        except closed_loop_post_review_response.ClosedLoopPostReviewError as exc:
+        except (
+            closed_loop_post_review_response.ClosedLoopPostReviewError,
+            attempt_local_post_review_response.AttemptLocalPostReviewResponseError,
+        ) as exc:
             raise ValueError(str(exc)) from exc
         root = Path(os.path.abspath(repo_root))
-        state_path = inbound["input_state_path"]
+        input_state, state_path = post_review_authority.load_published_state(
+            workspace_root=root, fixture=name, state_path=closed_loop_state
+        )
         next_state_path = inbound["next_state_path"]
-        response_path = inbound["response_path"]
+        response_path = post_review_authority.workspace_file(
+            root, closed_loop_response, label="post_review_response"
+        )
         receipt_path = inbound["receipt_path"]
-        input_state = inbound["input_state"]
         payload = {
             "schema": SCHEMA,
             "fixture": name,
@@ -1947,21 +2016,41 @@ def run_workflow(
             )
         return payload
     if closed_loop_state is not None:
+        outbound_adapter, _ = _post_review_adapters(
+            name, closed_loop_state, workspace_root=repo_root
+        )
         try:
-            outbound = closed_loop_post_review.run_outbound_handoff(
-                name,
-                state_path=closed_loop_state,
-                execute=execute,
-                workspace_root=repo_root,
-                expected_state_sha256=automatic_state_sha256,
-            )
-        except closed_loop_post_review.ClosedLoopPostReviewError as exc:
+            if outbound_adapter is attempt_local_post_review:
+                outbound = outbound_adapter.run_attempt_local_post_review(
+                    name,
+                    state_path=closed_loop_state,
+                    execute=execute,
+                    workspace_root=repo_root,
+                )
+            else:
+                outbound = outbound_adapter.run_outbound_handoff(
+                    name,
+                    state_path=closed_loop_state,
+                    execute=execute,
+                    workspace_root=repo_root,
+                    expected_state_sha256=automatic_state_sha256,
+                )
+        except (
+            closed_loop_post_review.ClosedLoopPostReviewError,
+            attempt_local_post_review.AttemptLocalPostReviewError,
+        ) as exc:
             raise ValueError(str(exc)) from exc
         root = Path(os.path.abspath(repo_root))
-        state_path = outbound["input_state_path"]
+        input_state, state_path = post_review_authority.load_published_state(
+            workspace_root=root, fixture=name, state_path=closed_loop_state
+        )
         request_path = outbound["request_path"]
-        next_state_path = outbound["next_state_path"]
-        input_state = outbound["input_state"]
+        next_state_path = outbound.get(
+            "next_state_path",
+            state_path.with_name(
+                f"state-{input_state['sequence'] + 1:03d}-post_review_requested.json"
+            ),
+        )
         payload = {
             "schema": SCHEMA,
             "fixture": name,
