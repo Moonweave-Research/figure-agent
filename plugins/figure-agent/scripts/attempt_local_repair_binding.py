@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import secrets
 import stat
 from pathlib import Path
 from typing import Any
@@ -344,6 +345,88 @@ def _artifact_paths(state_path: Path) -> dict[str, Path]:
     }
 
 
+def _write_all(fd: int, content: bytes) -> None:
+    view = memoryview(content)
+    while view:
+        written = os.write(fd, view)
+        if written <= 0:
+            raise OSError("short write")
+        view = view[written:]
+
+
+def _publish_staged_bundle(
+    attempt_root: Path,
+    *,
+    expected: dict[str, bytes],
+) -> None:
+    """Publish a complete bundle by rename; never follow final-directory symlinks."""
+    flags = os.O_RDONLY | os.O_DIRECTORY
+    nofollow = getattr(os, "O_NOFOLLOW", 0)
+    attempt_fd = os.open(attempt_root, flags | nofollow)
+    stage_name = f".{REPAIR_PACKET_DIRECTORY}-staging-{secrets.token_hex(16)}"
+    stage_fd: int | None = None
+    published = False
+    created_names: list[str] = []
+    try:
+        os.mkdir(stage_name, 0o700, dir_fd=attempt_fd)
+        stage_fd = os.open(stage_name, flags | nofollow, dir_fd=attempt_fd)
+        for name in ("binding", "sandbox", "packet", "prompt"):
+            filename = {
+                "binding": BINDING_FILE,
+                "packet": PACKET_FILE,
+                "prompt": PROMPT_FILE,
+                "sandbox": SANDBOX_FILE,
+            }[name]
+            fd = os.open(
+                filename,
+                os.O_WRONLY | os.O_CREAT | os.O_EXCL | nofollow,
+                0o600,
+                dir_fd=stage_fd,
+            )
+            try:
+                _write_all(fd, expected[name])
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+            created_names.append(filename)
+        os.fsync(stage_fd)
+        os.rename(
+            stage_name,
+            REPAIR_PACKET_DIRECTORY,
+            src_dir_fd=attempt_fd,
+            dst_dir_fd=attempt_fd,
+        )
+        published = True
+        os.fsync(attempt_fd)
+    finally:
+        if not published:
+            if stage_fd is not None:
+                for filename in reversed(created_names):
+                    try:
+                        os.unlink(filename, dir_fd=stage_fd)
+                    except OSError:
+                        pass
+        if stage_fd is not None:
+            os.close(stage_fd)
+        if not published:
+            try:
+                if stat.S_ISLNK(
+                    os.stat(
+                        REPAIR_PACKET_DIRECTORY,
+                        dir_fd=attempt_fd,
+                        follow_symlinks=False,
+                    ).st_mode
+                ):
+                    os.unlink(REPAIR_PACKET_DIRECTORY, dir_fd=attempt_fd)
+            except FileNotFoundError:
+                pass
+            try:
+                os.rmdir(stage_name, dir_fd=attempt_fd)
+            except OSError:
+                pass
+        os.close(attempt_fd)
+
+
 def _assert_destination(path: Path, expected: bytes, *, root: Path, label: str) -> bool:
     if path.is_symlink():
         raise AttemptLocalRepairBindingError(f"{label}_symlink")
@@ -450,10 +533,8 @@ def run_attempt_local_repair_packet(
         return result
     try:
         with closed_loop_attempt_state.attempt_transition_lock(plan["state_path"].parent):
-            paths = plan["paths"]
-            paths["binding"].parent.mkdir(exist_ok=True)
             with repair_transaction.recoverable_exclusive_lock(
-                paths["binding"].parent / ".attempt-local-repair-packet.lock",
+                plan["state_path"].parent / ".attempt-local-repair-packet.lock",
                 owner="figure_agent_attempt_local_repair_packet",
             ):
                 fresh = _plan(
@@ -470,21 +551,10 @@ def run_attempt_local_repair_packet(
                 if fresh["expected"] != plan["expected"]:
                     raise AttemptLocalRepairBindingError("inputs_drifted_during_execution")
                 if not fresh["complete"]:
-                    for name in ("binding", "sandbox", "packet", "prompt"):
-                        path, content = fresh["paths"][name], fresh["expected"][name]
-                        if not path.exists():
-                            try:
-                                repair_transaction.atomic_create_text(path, content.decode("utf-8"))
-                            except UnicodeDecodeError:
-                                raise AttemptLocalRepairBindingError(
-                                    f"{name}_encoding_invalid"
-                                ) from None
-                            except FileExistsError:
-                                _assert_destination(path, content, root=fresh["root"], label=name)
-                    for name, content in fresh["expected"].items():
-                        _assert_destination(
-                            fresh["paths"][name], content, root=fresh["root"], label=name
-                        )
+                    _publish_staged_bundle(
+                        fresh["state_path"].parent,
+                        expected=fresh["expected"],
+                    )
                 try:
                     verified = _plan(
                         fixture,

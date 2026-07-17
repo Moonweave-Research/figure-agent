@@ -9,6 +9,9 @@ import re
 from pathlib import Path
 from typing import Any
 
+import closed_loop_attempt_state
+import closed_loop_current_state
+import closed_loop_initial_review
 import critique_repair_bridge
 import human_decision_record
 import repair_transaction
@@ -112,6 +115,46 @@ def _attempt_local_record(
     return {"path": path_value, "sha256": sha256}
 
 
+def _attempt_local_state(
+    state: dict[str, object],
+    *,
+    workspace_root: Path,
+    expected_name: str,
+) -> tuple[dict[str, object], Path]:
+    value = state.get("previous_state_path")
+    if not isinstance(value, str):
+        raise RepairExecutionPacketError("attempt-local lineage missing")
+    path = _regular_file(workspace_root, value, label="attempt-local previous state")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        validated = closed_loop_attempt_state.validate_state(
+            payload,
+            workspace_root=workspace_root,
+        )
+    except (
+        OSError,
+        UnicodeDecodeError,
+        json.JSONDecodeError,
+        closed_loop_attempt_state.ClosedLoopAttemptStateError,
+    ) as exc:
+        raise RepairExecutionPacketError("attempt-local lineage invalid") from exc
+    if (
+        validated["state"] != expected_name
+        or validated["fixture"] != state["fixture"]
+        or validated["attempt_id"] != state["attempt_id"]
+        or path != closed_loop_attempt_state.state_path(validated, workspace_root=workspace_root)
+    ):
+        raise RepairExecutionPacketError("attempt-local lineage invalid")
+    return validated, path
+
+
+def _attempt_local_evidence(state: dict[str, object], role: str) -> dict[str, str]:
+    matches = [record for record in state["evidence"] if record["role"] == role]
+    if len(matches) != 1:
+        raise RepairExecutionPacketError("attempt-local lineage evidence missing")
+    return {"path": str(matches[0]["path"]), "sha256": str(matches[0]["sha256"])}
+
+
 def validate_attempt_local_repair_binding_v2(
     binding: dict[str, object],
     *,
@@ -170,6 +213,101 @@ def validate_attempt_local_repair_binding_v2(
         raise RepairExecutionPacketError("attempt-local current state invalid") from exc
     if current_state.get("sha256") != current_state_payload.get("state_sha256"):
         raise RepairExecutionPacketError("attempt-local current state hash drift")
+    try:
+        validated_current = closed_loop_attempt_state.validate_state(
+            current_state_payload,
+            workspace_root=root,
+        )
+    except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+        raise RepairExecutionPacketError("attempt-local current state invalid") from exc
+    if (
+        validated_current["state"] != "repair_bound"
+        or validated_current["fixture"] != binding["fixture"]
+        or validated_current["attempt_id"] != binding["attempt_id"]
+        or current_state_path
+        != closed_loop_attempt_state.state_path(validated_current, workspace_root=root)
+    ):
+        raise RepairExecutionPacketError("attempt-local current state is not repair_bound")
+    projection = closed_loop_current_state.resolve_current_attempt(
+        root,
+        str(binding["fixture"]),
+    )
+    if (
+        projection.get("resolution") != "current"
+        or projection.get("state") != "repair_bound"
+        or projection.get("path") != str(current_state["path"])
+        or projection.get("state_sha256") != str(current_state["sha256"])
+        or projection.get("attempt_id") != binding["attempt_id"]
+    ):
+        raise RepairExecutionPacketError("attempt-local current state is not canonical")
+    adjudicated, adjudicated_path = _attempt_local_state(
+        validated_current,
+        workspace_root=root,
+        expected_name="adjudicated_unbound",
+    )
+    critique_state, critique_path = _attempt_local_state(
+        adjudicated,
+        workspace_root=root,
+        expected_name="critique_unadjudicated",
+    )
+    review_state, review_path = _attempt_local_state(
+        critique_state,
+        workspace_root=root,
+        expected_name="initial_review_requested",
+    )
+    authored_state, _authored_path = _attempt_local_state(
+        review_state,
+        workspace_root=root,
+        expected_name="authored_rendered",
+    )
+    try:
+        closed_loop_attempt_state.validate_chain(
+            [
+                authored_state,
+                review_state,
+                critique_state,
+                adjudicated,
+                validated_current,
+            ],
+            workspace_root=root,
+        )
+        request_path, manifest_path, _request = (
+            closed_loop_initial_review.validate_outbound_request_pack(
+                state=review_state,
+                state_path=review_path,
+                workspace_root=root,
+            )
+        )
+    except (
+        closed_loop_attempt_state.ClosedLoopAttemptStateError,
+        closed_loop_initial_review.ClosedLoopInitialReviewError,
+    ) as exc:
+        raise RepairExecutionPacketError("attempt-local initial request invalid") from exc
+    expected_records = {
+        "authored_source": _attempt_local_evidence(authored_state, "authored_source"),
+        "render": _attempt_local_evidence(authored_state, "render"),
+        "initial_review_request": _attempt_local_evidence(
+            review_state, "initial_visual_review_request"
+        ),
+        "initial_visual_review_response": _attempt_local_evidence(
+            critique_state, "initial_visual_review_response"
+        ),
+        "critique": _attempt_local_evidence(critique_state, "critique"),
+        "adjudication": _attempt_local_evidence(adjudicated, "adjudication"),
+        "attribution_handoff": _attempt_local_evidence(
+            adjudicated, "attribution_handoff"
+        ),
+        "initial_attribution_binding": _attempt_local_evidence(
+            validated_current, "adjudicated_repair_binding"
+        ),
+    }
+    expected_records["crop_manifest"] = {
+        "path": manifest_path.relative_to(root).as_posix(),
+        "sha256": _sha256_bytes(manifest_path.read_bytes()),
+    }
+    for name, expected in expected_records.items():
+        if binding.get(name) != expected:
+            raise RepairExecutionPacketError("attempt-local lineage evidence mismatch")
     normalized["current_state"] = {
         "path": str(current_state["path"]),
         "sha256": str(current_state["sha256"]),
@@ -198,6 +336,18 @@ def validate_attempt_local_repair_binding_v2(
     }
     if not isinstance(crops, list) or len(crops) != len(expected_crop_ids):
         raise RepairExecutionPacketError("attempt-local crops invalid")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RepairExecutionPacketError("attempt-local crops invalid") from exc
+    manifest_crops = manifest.get("crops") if isinstance(manifest, dict) else None
+    manifest_by_id = {
+        item.get("id"): item
+        for item in manifest_crops or []
+        if isinstance(item, dict)
+    }
+    if set(manifest_by_id) != expected_crop_ids:
+        raise RepairExecutionPacketError("attempt-local crops invalid")
     normalized_crops: list[dict[str, str]] = []
     for crop in crops:
         if not isinstance(crop, dict) or set(crop) != {"id", "path", "sha256"}:
@@ -213,6 +363,25 @@ def validate_attempt_local_repair_binding_v2(
         normalized_crops.append({"id": crop_id, **record})
     if {crop["id"] for crop in normalized_crops} != expected_crop_ids:
         raise RepairExecutionPacketError("attempt-local crops invalid")
+    expected_crops = []
+    for crop_id in (
+        "full_q1",
+        "full_q2",
+        "full_q3",
+        "full_q4",
+        "print_178mm",
+        "print_thumbnail",
+    ):
+        crop = manifest_by_id[crop_id]
+        expected_crops.append(
+            {
+                "id": crop_id,
+                "path": f"examples/{binding['fixture']}/{crop.get('path')}",
+                "sha256": crop.get("sha256"),
+            }
+        )
+    if crops != expected_crops:
+        raise RepairExecutionPacketError("attempt-local crops do not match initial request")
     normalized["crops"] = sorted(normalized_crops, key=lambda crop: crop["id"])
     human = binding.get("human_attributor")
     if (
@@ -287,6 +456,15 @@ def compile_attempt_local_repair_packet_v2(
     normalized = validate_attempt_local_repair_binding_v2(binding, workspace_root=root)
     binding_relative = _safe_relative(binding_path, label="attempt-local binding")
     sandbox_relative = _safe_relative(sandbox_path, label="attempt-local sandbox")
+    current_state = normalized["current_state"]
+    assert isinstance(current_state, dict)
+    attempt_root = Path(str(current_state["path"])).parent
+    expected_binding = attempt_root / "repair-packet" / "attempt-local-repair-binding.json"
+    expected_sandbox = attempt_root / "repair-packet" / "repaired.tex"
+    if binding_relative != expected_binding:
+        raise RepairExecutionPacketError("attempt-local binding path must be canonical")
+    if sandbox_relative != expected_sandbox:
+        raise RepairExecutionPacketError("attempt-local sandbox path must be canonical")
     source = normalized["authored_source"]
     assert isinstance(source, dict)
     source_path = _regular_file(root, str(source["path"]), label="attempt-local source")
