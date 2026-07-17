@@ -16,6 +16,7 @@ AUTHORING_REPAIR_PACKET_SCHEMAS = frozenset(
     {
         "figure-agent.repair-execution-packet.v3",
         "figure-agent.repair-execution-packet.v4",
+        "figure-agent.attempt-local-repair-packet.v1",
     }
 )
 ADDITIVE_MATERIALIZATION_APPROVAL = "approve this exact additive repair candidate"

@@ -1401,7 +1401,7 @@ def run_workflow(
                     "closed_loop_state:" + state_evidence_path.relative_to(root).as_posix(),
                 ],
                 "allowed_scope": [
-                    "validate the explicit v4 packet, response, and exact dry-run preview",
+                    "validate the explicit v1/v2 packet, response, and exact dry-run preview",
                     "publish the canonical repair_candidate_ready state",
                 ],
                 "forbidden_scope": [

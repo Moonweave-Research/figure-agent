@@ -410,14 +410,34 @@ def finalize_materialized_candidate(
     except ValueError as exc:
         raise AuthoringRepairFinalizeError("repair fixture invalid") from exc
     attempt_relative = packet_path.parent.relative_to(workspace_root)
-    expected_attempt_root = Path("examples") / fixture / "review" / "failure-first"
-    if (
-        attempt_relative.parent != expected_attempt_root
-        or REPAIR_ATTEMPT.fullmatch(attempt_relative.name) is None
-    ):
-        raise AuthoringRepairFinalizeError(
-            "packet and receipt must be inside the exact execution-repair attempt"
+    if authoring_repair_packet.is_attempt_local_packet_schema(packet.get("schema")):
+        binding_record = packet.get("attempt_local_repair_binding")
+        if not isinstance(binding_record, dict):
+            raise AuthoringRepairFinalizeError("attempt-local packet binding invalid")
+        binding_relative = Path(str(binding_record.get("path") or ""))
+        expected_packet_root = binding_relative.parent
+        expected_prefix = (
+            Path("examples") / fixture / "review" / "closed-loop"
         )
+        if (
+            binding_relative.is_absolute()
+            or binding_relative.name != "attempt-local-repair-binding.json"
+            or expected_packet_root.name != "repair-packet"
+            or expected_packet_root.parent.parent != expected_prefix
+            or packet_path.parent.relative_to(workspace_root) != expected_packet_root
+        ):
+            raise AuthoringRepairFinalizeError(
+                "packet and receipt must be inside the exact attempt-local repair packet"
+            )
+    else:
+        expected_attempt_root = Path("examples") / fixture / "review" / "failure-first"
+        if (
+            attempt_relative.parent != expected_attempt_root
+            or REPAIR_ATTEMPT.fullmatch(attempt_relative.name) is None
+        ):
+            raise AuthoringRepairFinalizeError(
+                "packet and receipt must be inside the exact execution-repair attempt"
+            )
 
     output = _safe_workspace_path(
         workspace_root, receipt.get("output_path"), label="materialized output path"

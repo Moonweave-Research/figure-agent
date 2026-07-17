@@ -73,7 +73,12 @@ class RepairExecutionPacketError(ValueError):
 
 def is_supported_packet_schema(value: object) -> bool:
     """Return whether a serialized repair packet schema remains readable."""
-    return value in {SCHEMA, LEGACY_SCHEMA}
+    return value in {SCHEMA, LEGACY_SCHEMA, ATTEMPT_LOCAL_PACKET_SCHEMA}
+
+
+def is_attempt_local_packet_schema(value: object) -> bool:
+    """Return whether a packet uses the R4.13 attempt-local authority graph."""
+    return value == ATTEMPT_LOCAL_PACKET_SCHEMA
 
 
 def _sha256_bytes(data: bytes) -> str:
@@ -302,10 +307,47 @@ def _validate_attempt_local_snapshot_cross_checks(
         raise RepairExecutionPacketError("attempt-local semantic snapshot mismatch")
 
 
+def _current_attempt_descends_from(
+    *, root: Path, fixture: str, attempt_id: str, ancestor_path: Path
+) -> bool:
+    """Return whether the canonical current state remains in this exact attempt."""
+    projection = closed_loop_current_state.resolve_current_attempt(root, fixture)
+    current_value = projection.get("path")
+    if (
+        projection.get("resolution") != "current"
+        or projection.get("attempt_id") != attempt_id
+        or not isinstance(current_value, str)
+    ):
+        return False
+    current_path = _regular_file(root, current_value, label="attempt-local current state")
+    for _ in range(16):
+        if current_path == ancestor_path:
+            return True
+        try:
+            current = json.loads(current_path.read_text(encoding="utf-8"))
+            validated = closed_loop_attempt_state.validate_state(current, workspace_root=root)
+        except (
+            OSError,
+            UnicodeDecodeError,
+            json.JSONDecodeError,
+            closed_loop_attempt_state.ClosedLoopAttemptStateError,
+        ):
+            return False
+        previous = validated.get("previous_state_path")
+        if not isinstance(previous, str):
+            return False
+        try:
+            current_path = _regular_file(root, previous, label="attempt-local previous state")
+        except RepairExecutionPacketError:
+            return False
+    return False
+
+
 def validate_attempt_local_repair_binding_v2(
     binding: dict[str, object],
     *,
     workspace_root: Path,
+    require_current_repair_bound: bool = True,
 ) -> dict[str, object]:
     """Validate the self-contained R4.13 binding without legacy bridge reads."""
     required = {
@@ -379,13 +421,22 @@ def validate_attempt_local_repair_binding_v2(
         root,
         str(binding["fixture"]),
     )
-    if (
-        projection.get("resolution") != "current"
-        or projection.get("state") != "repair_bound"
-        or projection.get("path") != str(current_state["path"])
-        or projection.get("state_sha256") != str(current_state["sha256"])
-        or projection.get("attempt_id") != binding["attempt_id"]
-    ):
+    if require_current_repair_bound:
+        current_valid = (
+            projection.get("resolution") == "current"
+            and projection.get("state") == "repair_bound"
+            and projection.get("path") == str(current_state["path"])
+            and projection.get("state_sha256") == str(current_state["sha256"])
+            and projection.get("attempt_id") == binding["attempt_id"]
+        )
+    else:
+        current_valid = _current_attempt_descends_from(
+            root=root,
+            fixture=str(binding["fixture"]),
+            attempt_id=str(binding["attempt_id"]),
+            ancestor_path=current_state_path,
+        )
+    if not current_valid:
         raise RepairExecutionPacketError("attempt-local current state is not canonical")
     adjudicated, adjudicated_path = _attempt_local_state(
         validated_current,
@@ -602,12 +653,17 @@ def compile_attempt_local_repair_packet_v2(
     sandbox_path: str,
     model_id: str,
     workspace_root: Path,
+    require_current_repair_bound: bool = True,
 ) -> tuple[dict[str, object], str]:
     """Compile an R4.13 packet only; it neither invokes nor materializes a model."""
     if not isinstance(model_id, str) or not model_id.strip():
         raise RepairExecutionPacketError("attempt-local model id invalid")
     root = workspace_root.resolve()
-    normalized = validate_attempt_local_repair_binding_v2(binding, workspace_root=root)
+    normalized = validate_attempt_local_repair_binding_v2(
+        binding,
+        workspace_root=root,
+        require_current_repair_bound=require_current_repair_bound,
+    )
     binding_relative = _safe_relative(binding_path, label="attempt-local binding")
     sandbox_relative = _safe_relative(sandbox_path, label="attempt-local sandbox")
     current_state = normalized["current_state"]
@@ -671,6 +727,10 @@ def compile_attempt_local_repair_packet_v2(
             "path": sandbox_relative.as_posix(),
             "sha256": source["sha256"],
         },
+        # The R4.13a sandbox is immutable source evidence.  The materialized
+        # candidate must be a distinct additive neighbour, not an overwrite of
+        # that snapshot or of the authored source.
+        "output_path": (sandbox_relative.parent / "materialized-repair.tex").as_posix(),
         "render": normalized["render"],
         "crops": normalized["crops"],
         "selected_finding_id": normalized["selected_finding_id"],
@@ -688,6 +748,114 @@ def compile_attempt_local_repair_packet_v2(
     }
     packet["packet_sha256"] = canonical_packet_sha256(packet)
     return packet, prompt
+
+
+def validate_attempt_local_repair_packet_v2(
+    packet: dict[str, object],
+    *,
+    workspace_root: Path,
+) -> dict[str, object]:
+    """Validate a v2 packet against its own attempt-local authority only."""
+    required = {
+        "schema",
+        "fixture",
+        "attempt_id",
+        "model_id",
+        "attempt_local_repair_binding",
+        "source",
+        "repaired_source_sandbox",
+        "output_path",
+        "render",
+        "crops",
+        "selected_finding_id",
+        "editable_target",
+        "change_budget",
+        "author_may_compile",
+        "author_may_write_files",
+        "response_schema",
+        "publication_acceptance",
+        "prompt",
+        "packet_sha256",
+    }
+    if (
+        set(packet) != required
+        or packet.get("schema") != ATTEMPT_LOCAL_PACKET_SCHEMA
+        or packet.get("packet_sha256") != canonical_packet_sha256(packet)
+        or packet.get("publication_acceptance") != "not_claimed"
+        or packet.get("author_may_compile") is not False
+        or packet.get("author_may_write_files") is not False
+        or packet.get("response_schema") != RESPONSE_SCHEMA
+        or not isinstance(packet.get("fixture"), str)
+        or not str(packet["fixture"]).strip()
+        or not isinstance(packet.get("attempt_id"), str)
+        or not str(packet["attempt_id"]).strip()
+        or not isinstance(packet.get("model_id"), str)
+        or not str(packet["model_id"]).strip()
+    ):
+        raise RepairExecutionPacketError("attempt-local packet schema invalid")
+    root = workspace_root.resolve()
+    binding_record = packet.get("attempt_local_repair_binding")
+    if not isinstance(binding_record, dict) or set(binding_record) != {"path", "sha256"}:
+        raise RepairExecutionPacketError("attempt-local packet binding invalid")
+    binding_path = _regular_file(
+        root,
+        str(binding_record.get("path") or ""),
+        label="attempt-local packet binding",
+    )
+    try:
+        binding = json.loads(binding_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RepairExecutionPacketError("attempt-local packet binding invalid") from exc
+    if not isinstance(binding, dict):
+        raise RepairExecutionPacketError("attempt-local packet binding invalid")
+    normalized = validate_attempt_local_repair_binding_v2(
+        binding,
+        workspace_root=root,
+        require_current_repair_bound=False,
+    )
+    current = normalized["current_state"]
+    assert isinstance(current, dict)
+    attempt_root = Path(str(current["path"])).parent
+    expected_binding = attempt_root / "repair-packet" / "attempt-local-repair-binding.json"
+    expected_output = attempt_root / "repair-packet" / "materialized-repair.tex"
+    if (
+        binding_record.get("path") != expected_binding.as_posix()
+        or binding_record.get("sha256") != normalized["binding_sha256"]
+        or Path(str(packet.get("output_path") or "")) != expected_output
+    ):
+        raise RepairExecutionPacketError("attempt-local packet path invalid")
+    sandbox = packet.get("repaired_source_sandbox")
+    if (
+        not isinstance(sandbox, dict)
+        or sandbox != {
+            "path": (attempt_root / "repair-packet" / "repaired.tex").as_posix(),
+            "sha256": normalized["authored_source"]["sha256"],
+        }
+        or packet.get("source") != normalized["authored_source"]
+        or packet.get("render") != normalized["render"]
+        or packet.get("crops") != normalized["crops"]
+        or packet.get("selected_finding_id") != normalized["selected_finding_id"]
+        or packet.get("editable_target")
+        != {
+            "selector": normalized["selector"],
+            "repair_family": normalized["repair_family"],
+            "semantic_contract": normalized["semantic_contract"],
+        }
+        or packet.get("change_budget")
+        != {"max_attempts": 1, "max_source_blocks": 1, "max_changed_lines": 6}
+    ):
+        raise RepairExecutionPacketError("attempt-local packet authority mismatch")
+    expected, _prompt = compile_attempt_local_repair_packet_v2(
+        normalized,
+        binding_path=expected_binding.as_posix(),
+        sandbox_path=(attempt_root / "repair-packet" / "repaired.tex").as_posix(),
+        model_id=str(packet["model_id"]),
+        workspace_root=root,
+        require_current_repair_bound=False,
+    )
+    if packet != expected:
+        raise RepairExecutionPacketError("attempt-local packet is not canonical")
+    return dict(packet)
 
 
 def canonical_materialization_preview_sha256(record: dict[str, object]) -> str:
@@ -874,6 +1042,9 @@ def validate_bound_packet_authority(
 ) -> None:
     """Revalidate the live adjudicated authority graph for a bound packet."""
     workspace_root = workspace_root.resolve()
+    if is_attempt_local_packet_schema(packet.get("schema")):
+        validate_attempt_local_repair_packet_v2(packet, workspace_root=workspace_root)
+        return
     authority_mode, canonical_binding = _packet_authority_mode(packet, workspace_root)
     if (
         packet.get("schema") == LEGACY_SCHEMA or authority_mode == LEGACY_AUTHORITY_MODE
@@ -1345,6 +1516,16 @@ def materialize_repair_candidate(
     response_provenance: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Validate an LLM response and materialize its additive source once."""
+    if is_attempt_local_packet_schema(packet.get("schema")):
+        return materialize_attempt_local_repair_candidate_v2(
+            packet,
+            response,
+            workspace_root=workspace_root,
+            authorization=authorization,
+            apply=apply,
+            receipt_path=receipt_path,
+            response_provenance=response_provenance,
+        )
     if not is_supported_packet_schema(packet.get("schema")):
         raise RepairExecutionPacketError("packet schema invalid")
     if packet.get("packet_sha256") != canonical_packet_sha256(packet):
@@ -1382,10 +1563,17 @@ def materialize_repair_candidate(
 
     editable = packet.get("editable_target")
     selector = editable.get("selector") if isinstance(editable, dict) else None
-    invariants = editable.get("protected_invariants") if isinstance(editable, dict) else None
+    invariants = (
+        selector.get("protected_invariants")
+        if is_attempt_local_packet_schema(packet.get("schema")) and isinstance(selector, dict)
+        else editable.get("protected_invariants") if isinstance(editable, dict) else None
+    )
     if not isinstance(selector, dict) or not isinstance(invariants, list):
         raise RepairExecutionPacketError("packet editable target invalid")
-    if selector.get("source_hash") != source_record.get("sha256"):
+    if (
+        not is_attempt_local_packet_schema(packet.get("schema"))
+        and selector.get("source_hash") != source_record.get("sha256")
+    ):
         raise RepairExecutionPacketError("selector source hash drift")
     original_start, original_end = _anchor_indexes(original, selector)
     replacement_lines = replacement.splitlines()
@@ -1588,6 +1776,191 @@ def materialize_repair_candidate(
                 "recovery_required": True,
             }
             repair_transaction.atomic_write_json(resolved_receipt, prepared_receipt)
+            repair_transaction.atomic_write_text(output, candidate)
+            repair_transaction.atomic_write_json(resolved_receipt, receipt)
+    except repair_transaction.RepairTransactionError as exc:
+        raise RepairExecutionPacketError("materialization transaction already active") from exc
+    return receipt
+
+
+def materialize_attempt_local_repair_candidate_v2(
+    packet: dict[str, object],
+    response: dict[str, object],
+    *,
+    workspace_root: Path,
+    authorization: dict[str, object] | None = None,
+    apply: bool = True,
+    receipt_path: Path | None = None,
+    response_provenance: dict[str, object] | None = None,
+) -> dict[str, object]:
+    """Materialize only the v2 sandbox using its character-level selector."""
+    workspace_root = workspace_root.resolve()
+    validate_attempt_local_repair_packet_v2(packet, workspace_root=workspace_root)
+    if set(response) != {"replacement_utf8", "change_summary"}:
+        raise RepairExecutionPacketError("candidate response schema invalid")
+    replacement = response.get("replacement_utf8")
+    summary = response.get("change_summary")
+    if (
+        not isinstance(replacement, str)
+        or not replacement
+        or not isinstance(summary, str)
+        or not summary.strip()
+        or re.search(r"\\[nr](?:[ \t]|$)", replacement)
+    ):
+        raise RepairExecutionPacketError("candidate response schema invalid")
+    source_record = packet["source"]
+    assert isinstance(source_record, dict)
+    source_path = _regular_file(
+        workspace_root, str(source_record["path"]), label="attempt-local source"
+    )
+    source_bytes = source_path.read_bytes()
+    if source_record.get("sha256") != _sha256_bytes(source_bytes):
+        raise RepairExecutionPacketError("source hash drift")
+    original = source_bytes.decode("utf-8")
+    editable = packet["editable_target"]
+    assert isinstance(editable, dict)
+    selector = editable["selector"]
+    assert isinstance(selector, dict)
+    start_marker = str(selector["anchor_start"])
+    end_marker = str(selector["anchor_end"])
+    start = original.find(start_marker)
+    end = original.find(end_marker, start + len(start_marker))
+    if (
+        start < 0
+        or end < 0
+        or original.count(start_marker) != 1
+        or original.count(end_marker) != 1
+        or start + len(start_marker) > end
+    ):
+        raise RepairExecutionPacketError("attempt-local selector anchor drift")
+    if start_marker in replacement or end_marker in replacement:
+        raise RepairExecutionPacketError("replacement must not contain anchor lines")
+    candidate = original[: start + len(start_marker)] + replacement + original[end:]
+    if candidate == original:
+        raise RepairExecutionPacketError("candidate must change one source block")
+    invariants = selector.get("protected_invariants")
+    if not isinstance(invariants, list) or any(
+        not isinstance(token, str) or not token or original.count(token) != candidate.count(token)
+        for token in invariants
+    ):
+        raise RepairExecutionPacketError("protected invariant changed")
+    changed_lines = max(1, len(replacement.splitlines()))
+    budget = packet.get("change_budget")
+    if (
+        not isinstance(budget, dict)
+        or type(budget.get("max_changed_lines")) is not int
+        or changed_lines > budget["max_changed_lines"]
+    ):
+        raise RepairExecutionPacketError("candidate change budget exceeded")
+    output_relative = _safe_relative(str(packet["output_path"]), label="output path")
+    preview: dict[str, object] = {
+        "schema": MATERIALIZATION_PREVIEW_SCHEMA,
+        "fixture": packet["fixture"],
+        "packet_sha256": packet["packet_sha256"],
+        "source_sha256": source_record["sha256"],
+        "output_path": output_relative.as_posix(),
+        "output_sha256": _sha256_bytes(candidate.encode("utf-8")),
+        "changed_source_blocks": 1,
+        "changed_lines": changed_lines,
+        "preserved_boundary_blank_lines": 0,
+        "change_summary": summary.strip(),
+        "publication_acceptance": "not_claimed",
+    }
+    preview["preview_sha256"] = canonical_materialization_preview_sha256(preview)
+    if not apply:
+        return preview
+    if not isinstance(authorization, dict):
+        raise RepairExecutionPacketError("materialization authorization missing")
+    try:
+        normalized_authorization = (
+            human_decision_record.validate_additive_materialization_authorization(
+                authorization,
+                fixture=str(packet["fixture"]),
+                packet_schema=str(packet["schema"]),
+                packet_sha256=str(packet["packet_sha256"]),
+                output_path=output_relative.as_posix(),
+                output_sha256=str(preview["output_sha256"]),
+                preview_sha256=str(preview["preview_sha256"]),
+            )
+        )
+    except human_decision_record.HumanDecisionRecordError as exc:
+        raise RepairExecutionPacketError(f"materialization authorization invalid: {exc}") from exc
+    output = workspace_root / output_relative
+    current = workspace_root
+    for part in output_relative.parent.parts:
+        current = current / part
+        if current.is_symlink():
+            raise RepairExecutionPacketError("attempt-local materialization path invalid")
+    if receipt_path is None:
+        raise RepairExecutionPacketError("materialization receipt path missing")
+    resolved_receipt = receipt_path if receipt_path.is_absolute() else workspace_root / receipt_path
+    if (
+        not resolved_receipt.is_relative_to(workspace_root)
+        or resolved_receipt.parent != output.parent
+        or output.exists()
+        or output.is_symlink()
+        or resolved_receipt.exists()
+        or resolved_receipt.is_symlink()
+    ):
+        raise RepairExecutionPacketError("attempt-local materialization path invalid")
+    if response_provenance is not None:
+        if set(response_provenance) != {"path", "sha256", "payload"}:
+            raise RepairExecutionPacketError("repair response provenance invalid")
+        response_path = _regular_file(
+            workspace_root, str(response_provenance.get("path") or ""), label="repair response path"
+        )
+        response_bytes = response_path.read_bytes()
+        try:
+            response_payload = json.loads(response_bytes)
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise RepairExecutionPacketError("repair response provenance invalid") from exc
+        if (
+            response_path.parent != output.parent
+            or response_provenance.get("sha256") != _sha256_bytes(response_bytes)
+            or response_provenance.get("payload") != response
+            or response_payload != response
+        ):
+            raise RepairExecutionPacketError("repair response provenance invalid")
+    receipt: dict[str, object] = {
+        "schema": "figure-agent.repair-materialization-receipt.v2",
+        "decision": "materialized_verification_pending",
+        **{key: value for key, value in preview.items() if key != "schema"},
+        "authorization": {
+            "reviewer": normalized_authorization["reviewer"],
+            "record_sha256": _sha256_bytes(_canonical_json_bytes(authorization)),
+            "authorized_packet_sha256": normalized_authorization["authorized_packet_sha256"],
+            "authorized_output_path": normalized_authorization["authorized_output_path"],
+            "authorized_output_sha256": normalized_authorization["authorized_output_sha256"],
+            "authorized_preview_sha256": normalized_authorization["authorized_preview_sha256"],
+        },
+        "rollback": {
+            "strategy": "delete_materialized_output_if_hash_matches",
+            "pre_transaction_state": "absent",
+            "output_path": output_relative.as_posix(),
+            "output_sha256": preview["output_sha256"],
+        },
+        "post_render_verification": "pending",
+        "external_compile": "pending",
+        "human_review": "pending",
+        "publication_acceptance": "not_claimed",
+        "recovery_required": False,
+    }
+    if response_provenance is not None:
+        receipt["repair_response"] = dict(response_provenance)
+    try:
+        with repair_transaction.recoverable_exclusive_lock(
+            output.parent / ".materialization.lock",
+            owner=repair_transaction.MATERIALIZATION_LOCK_OWNER,
+        ):
+            validate_attempt_local_repair_packet_v2(packet, workspace_root=workspace_root)
+            if _sha256_bytes(source_path.read_bytes()) != source_record["sha256"]:
+                raise RepairExecutionPacketError("source hash drift")
+            prepared = {
+                **receipt,
+                "decision": "materialization_prepared",
+                "recovery_required": True,
+            }
+            repair_transaction.atomic_write_json(resolved_receipt, prepared)
             repair_transaction.atomic_write_text(output, candidate)
             repair_transaction.atomic_write_json(resolved_receipt, receipt)
     except repair_transaction.RepairTransactionError as exc:

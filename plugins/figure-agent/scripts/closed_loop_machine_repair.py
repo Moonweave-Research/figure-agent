@@ -21,11 +21,21 @@ import repair_transaction
 ACTION = "authoring_repair_materialize_and_verify"
 PLAN_STOP_BOUNDARY = "workflow_agent"
 FAILURE_STOP_BOUNDARY = "repair_required"
+ATTEMPT_LOCAL_POST_REPAIR_BOUNDARY = "human_or_host_post_repair_review"
 RECEIPT_NAME = "materialization_receipt.json"
 
 
 class ClosedLoopMachineRepairError(ValueError):
     """Raised when an authorized repair cannot advance safely."""
+
+
+def _post_repair_boundary(plan: dict[str, Any]) -> tuple[str, str]:
+    """Keep v2 at a human/host boundary until R4.14 is implemented."""
+    if authoring_repair_packet.is_attempt_local_packet_schema(
+        plan["packet"].get("schema")
+    ):
+        return ATTEMPT_LOCAL_POST_REPAIR_BOUNDARY, "human_or_host"
+    return PLAN_STOP_BOUNDARY, "workflow_agent"
 
 
 def _json_snapshot(path: Path, *, label: str) -> tuple[dict[str, Any], str]:
@@ -257,7 +267,10 @@ def _validated_plan(
         raise ClosedLoopMachineRepairError("repair_response_and_authority_must_be_adjacent")
 
     packet = authority.load_json(packet_path, label="repair_execution_packet")
-    if packet.get("schema") != authoring_repair_packet.SCHEMA:
+    if packet.get("schema") not in {
+        authoring_repair_packet.SCHEMA,
+        authoring_repair_packet.ATTEMPT_LOCAL_PACKET_SCHEMA,
+    }:
         raise ClosedLoopMachineRepairError("current_repair_packet_required")
     stored_preview = authority.load_json(
         preview_path,
@@ -494,11 +507,13 @@ def run_machine_repair(
                     "stop_boundary": (
                         FAILURE_STOP_BOUNDARY
                         if recovery_state == "repair_required"
-                        else PLAN_STOP_BOUNDARY
+                        else _post_repair_boundary(plan)[0]
                     ),
                     "stop_reason": f"{recovery_state}_recovered",
                     "required_actor": (
-                        "none" if recovery_state == "repair_required" else "workflow_agent"
+                        "none"
+                        if recovery_state == "repair_required"
+                        else _post_repair_boundary(plan)[1]
                     ),
                     "created": True,
                     "decision": plan["recovery_receipt"]["decision"],
@@ -611,9 +626,9 @@ def run_machine_repair(
             )
             return {
                 "action": ACTION,
-                "stop_boundary": PLAN_STOP_BOUNDARY,
+                "stop_boundary": _post_repair_boundary(plan)[0],
                 "stop_reason": "machine_repaired",
-                "required_actor": "workflow_agent",
+                "required_actor": _post_repair_boundary(plan)[1],
                 "created": True,
                 "decision": finalized["decision"],
                 "input_state": plan["state"],

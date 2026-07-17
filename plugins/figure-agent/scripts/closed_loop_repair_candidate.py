@@ -127,12 +127,6 @@ def _validated_plan(
         binding_path,
         label="adjudicated_repair_binding",
     )
-    if binding.get("schema") == "figure-agent.initial-attribution-binding.v2":
-        raise ClosedLoopRepairCandidateError("initial_attribution_binding_v2_requires_r4_13")
-    if not (
-        packet_path.parent == response_path.parent == preview_path.parent == binding_path.parent
-    ):
-        raise ClosedLoopRepairCandidateError("repair_candidate_artifacts_must_be_binding_adjacent")
     packet, packet_bytes = _json_snapshot(
         packet_path,
         label="repair_execution_packet",
@@ -145,25 +139,63 @@ def _validated_plan(
         preview_path,
         label="materialization_preview",
     )
-    if packet.get("schema") != authoring_repair_packet.SCHEMA or packet.get(
-        "packet_sha256"
-    ) != authoring_repair_packet.canonical_packet_sha256(packet):
+    attempt_local = authoring_repair_packet.is_attempt_local_packet_schema(
+        packet.get("schema")
+    )
+    if not (
+        packet_path.parent == response_path.parent == preview_path.parent
+    ):
+        raise ClosedLoopRepairCandidateError("repair_candidate_artifacts_must_be_adjacent")
+    if not attempt_local and packet_path.parent != binding_path.parent:
+        raise ClosedLoopRepairCandidateError("repair_candidate_artifacts_must_be_binding_adjacent")
+    if packet.get("packet_sha256") != authoring_repair_packet.canonical_packet_sha256(packet):
         raise ClosedLoopRepairCandidateError("current_repair_packet_required")
     output_path = _safe_unmaterialized_output(
         packet,
         workspace_root=workspace_root,
     )
     try:
-        expected_packet, _expected_prompt = (
-            authoring_repair_packet.compile_adjudicated_repair_execution_packet(
-                fixture,
-                workspace_root=workspace_root,
-                model_id=str(packet.get("model_id") or ""),
-                binding_path=binding_path.relative_to(workspace_root).as_posix(),
-                output_path=str(packet.get("output_path") or ""),
-                execution_cwd=str(packet.get("execution_cwd") or ""),
+        if attempt_local:
+            if binding.get("schema") != "figure-agent.initial-attribution-binding.v2":
+                raise ClosedLoopRepairCandidateError("attempt_local_binding_schema_invalid")
+            packet_binding = packet.get("attempt_local_repair_binding")
+            if not isinstance(packet_binding, dict):
+                raise ClosedLoopRepairCandidateError("attempt_local_packet_binding_invalid")
+            local_binding_path = authority.workspace_file(
+                workspace_root,
+                Path(str(packet_binding.get("path") or "")),
+                label="attempt_local_repair_binding",
             )
-        )
+            local_binding, _local_binding_bytes = _json_snapshot(
+                local_binding_path,
+                label="attempt_local_repair_binding",
+            )
+            sandbox = packet.get("repaired_source_sandbox")
+            if not isinstance(sandbox, dict):
+                raise ClosedLoopRepairCandidateError("attempt_local_packet_sandbox_invalid")
+            expected_packet, _expected_prompt = (
+                authoring_repair_packet.compile_attempt_local_repair_packet_v2(
+                    local_binding,
+                    binding_path=local_binding_path.relative_to(workspace_root).as_posix(),
+                    sandbox_path=str(sandbox.get("path") or ""),
+                    model_id=str(packet.get("model_id") or ""),
+                    workspace_root=workspace_root,
+                    require_current_repair_bound=False,
+                )
+            )
+        else:
+            if packet.get("schema") != authoring_repair_packet.SCHEMA:
+                raise ClosedLoopRepairCandidateError("current_repair_packet_required")
+            expected_packet, _expected_prompt = (
+                authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+                    fixture,
+                    workspace_root=workspace_root,
+                    model_id=str(packet.get("model_id") or ""),
+                    binding_path=binding_path.relative_to(workspace_root).as_posix(),
+                    output_path=str(packet.get("output_path") or ""),
+                    execution_cwd=str(packet.get("execution_cwd") or ""),
+                )
+            )
         if packet != expected_packet:
             raise ClosedLoopRepairCandidateError("repair_packet_not_canonical_from_binding")
         authoring_repair_packet.validate_bound_packet_authority(
@@ -189,7 +221,7 @@ def _validated_plan(
         raise ClosedLoopRepairCandidateError(f"{label}:{exc}") from exc
     if preview != expected_preview:
         raise ClosedLoopRepairCandidateError("materialization_preview_response_mismatch")
-    if packet.get("adjudicated_repair_binding") != {
+    if not attempt_local and packet.get("adjudicated_repair_binding") != {
         "path": binding_record.get("path"),
         "sha256": binding_record.get("sha256"),
     }:

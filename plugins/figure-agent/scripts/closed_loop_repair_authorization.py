@@ -160,7 +160,11 @@ def _validated_plan(
         label="human_authorization",
     )
     if (
-        packet.get("schema") != authoring_repair_packet.SCHEMA
+        packet.get("schema")
+        not in {
+            authoring_repair_packet.SCHEMA,
+            authoring_repair_packet.ATTEMPT_LOCAL_PACKET_SCHEMA,
+        }
         or packet.get("packet_sha256")
         != authoring_repair_packet.canonical_packet_sha256(packet)
     ):
