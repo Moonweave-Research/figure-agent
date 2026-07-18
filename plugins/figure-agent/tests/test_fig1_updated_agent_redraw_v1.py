@@ -119,6 +119,8 @@ def test_bound_authoring_prompt_carries_project_cantilever_orientation_rule() ->
     assert "polymer_paper_project.panel-header-and-label-clearance" in prompt
     assert "Reserve a clear header band inside every panel" in prompt
     assert "Do not solve clearance by forcing an equal-cell grid" in prompt
+    for panel_id in "ABCDEF":
+        assert f"Add exactly one canonical marker [% Panel {panel_id}]" in prompt
 
 
 def test_r5_v2_predeclaration_frees_composition_but_binds_vertical_cantilever() -> None:
@@ -180,3 +182,16 @@ def test_r5_v3_predeclaration_reuses_control_and_binds_system_deltas() -> None:
         "malformed_numeric_node_anchor_blocker",
         "global_panel_header_and_label_clearance_rule",
     }
+
+
+def test_redraw_uses_schematic_undeclared_geometry_profile() -> None:
+    spec = yaml.safe_load(
+        (
+            PLUGIN_ROOT
+            / "examples"
+            / "fig1_updated_agent_redraw_v1"
+            / "spec.yaml"
+        ).read_text(encoding="utf-8")
+    )
+
+    assert spec["undeclared_geometry_profile"] == "schematic"

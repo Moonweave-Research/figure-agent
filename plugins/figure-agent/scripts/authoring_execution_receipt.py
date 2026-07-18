@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -64,6 +65,30 @@ def _expected_touched_files(packet: dict[str, Any]) -> list[str]:
     return [(execution_cwd / output_path).as_posix()]
 
 
+def _validate_required_panel_markers(
+    source_text: str,
+    required_markers: object,
+) -> list[str]:
+    if not isinstance(required_markers, list) or not all(
+        isinstance(marker, str) and marker.startswith("% Panel ")
+        for marker in required_markers
+    ):
+        raise AuthoringExecutionReceiptError("required panel marker contract invalid")
+    observed: list[tuple[int, str]] = []
+    for marker in required_markers:
+        panel_id = marker.removeprefix("% Panel ")
+        pattern = re.compile(rf"^\s*%\s*Panel\s+{re.escape(panel_id)}\b", re.MULTILINE)
+        matches = list(pattern.finditer(source_text))
+        if not matches:
+            raise AuthoringExecutionReceiptError(f"required panel marker missing: {marker}")
+        if len(matches) > 1:
+            raise AuthoringExecutionReceiptError(f"required panel marker duplicate: {marker}")
+        observed.append((matches[0].start(), marker))
+    if [marker for _, marker in sorted(observed)] != required_markers:
+        raise AuthoringExecutionReceiptError("required panel marker order mismatch")
+    return list(required_markers)
+
+
 def record_authoring_execution_receipt(
     *,
     workspace_root: Path,
@@ -117,6 +142,10 @@ def record_authoring_execution_receipt(
     )
     if generated_source_path != expected_source:
         raise AuthoringExecutionReceiptError("generated source path mismatch")
+    required_panel_markers = _validate_required_panel_markers(
+        generated_source_path.read_text(encoding="utf-8"),
+        packet.get("required_panel_markers"),
+    )
     touched_files = json.loads(touched_files_path.read_text(encoding="utf-8"))
     expected_touched = _expected_touched_files(packet)
     if touched_files != expected_touched:
@@ -157,6 +186,7 @@ def record_authoring_execution_receipt(
             workspace_root
         ).as_posix(),
         "generated_source_sha256": _sha256_bytes(generated_source_path.read_bytes()),
+        "required_panel_markers": required_panel_markers,
         "touched_files_path": touched_files_path.relative_to(workspace_root).as_posix(),
         "touched_files_sha256": _sha256_bytes(touched_files_path.read_bytes()),
         "touched_files": touched_files,

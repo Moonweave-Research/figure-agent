@@ -167,6 +167,10 @@ def test_compiles_canonical_packet_and_prompt(tmp_path: Path) -> None:
 
     packet, prompt = _compile(workspace)
 
+    assert packet["required_panel_markers"] == ["% Panel C"]
+    assert "## Required source attribution markers" in prompt
+    assert "- Add exactly one canonical marker [% Panel C]" in prompt
+
     assert packet["schema"] == "figure-agent.authoring-execution-packet.v1"
     assert packet["prompt"]["utf8"] == prompt
     assert packet["prompt"]["sha256"] == _sha256_text(prompt)

@@ -27,7 +27,7 @@ def _evidence(tmp_path: Path, *, with_visual_asset: bool = False) -> dict[str, P
     (fixture / "spec.yaml").write_text(
         "name: context_demo\ntitle: Demo\nstyle_profile: polymer-paper\n"
         + visual_asset_config
-        + "panels: []\n",
+        + "panels:\n  - id: C\n    caption: Trap landscape\n",
         encoding="utf-8",
     )
     (review / "budget.yaml").write_text("max_attempts: 1\n", encoding="utf-8")
@@ -62,7 +62,9 @@ def _evidence(tmp_path: Path, *, with_visual_asset: bool = False) -> dict[str, P
         "\\documentclass[tikz,border=4pt]{standalone}\n"
         "\\usepackage{tikz}\n"
         "\\usepackage{polymer-paper-preamble}\n"
-        "\\begin{document}\\begin{tikzpicture}\\end{tikzpicture}\\end{document}\n",
+        "\\begin{document}\\begin{tikzpicture}\n"
+        "% Panel C\n"
+        "\\end{tikzpicture}\\end{document}\n",
         encoding="utf-8",
     )
     transcript_path = attempt / "control.transcript.jsonl"
@@ -121,7 +123,40 @@ def test_records_bound_runtime_evidence(tmp_path: Path) -> None:
     assert receipt["manual_repairs"] == 0
     assert receipt["filesystem_read_isolation"] == "unavailable"
     assert receipt["publication_acceptance"] == "not_claimed"
+    assert receipt["required_panel_markers"] == ["% Panel C"]
     assert json.loads(paths["receipt"].read_text(encoding="utf-8")) == receipt
+
+
+def test_receipt_rejects_generated_source_without_required_panel_marker(
+    tmp_path: Path,
+) -> None:
+    paths = _evidence(tmp_path)
+    paths["source"].write_text(
+        paths["source"].read_text(encoding="utf-8").replace("% Panel C\n", ""),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_execution_receipt.AuthoringExecutionReceiptError,
+        match="required panel marker missing: % Panel C",
+    ):
+        _record(paths)
+
+
+def test_receipt_rejects_duplicate_required_panel_marker(tmp_path: Path) -> None:
+    paths = _evidence(tmp_path)
+    paths["source"].write_text(
+        paths["source"].read_text(encoding="utf-8").replace(
+            "% Panel C\n", "% Panel C\n% Panel C\n"
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_execution_receipt.AuthoringExecutionReceiptError,
+        match="required panel marker duplicate: % Panel C",
+    ):
+        _record(paths)
 
 
 def test_receipt_rejects_visual_asset_byte_drift(tmp_path: Path) -> None:

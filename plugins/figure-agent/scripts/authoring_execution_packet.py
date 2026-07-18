@@ -466,6 +466,15 @@ def _fixture_briefing_lines(context_pack: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _required_panel_markers(context_pack: dict[str, Any]) -> list[str]:
+    markers: list[str] = []
+    for panel in context_pack.get("fixture", {}).get("panels", []):
+        panel_id = panel.get("id") if isinstance(panel, dict) else None
+        if isinstance(panel_id, str) and panel_id.strip():
+            markers.append(f"% Panel {panel_id.strip()}")
+    return markers
+
+
 def _visual_asset_lines(context_pack: dict[str, Any]) -> list[str]:
     selected = context_pack.get("visual_assets", {}).get("selected", [])
     if not selected:
@@ -507,6 +516,18 @@ def render_authoring_prompt(
         "",
         "## Mandatory standalone TikZ source requirements",
         *[f"- {requirement}" for requirement in MANDATORY_SOURCE_REQUIREMENTS],
+        "",
+        "## Required source attribution markers",
+        *(
+            [
+                f"- Add exactly one canonical marker [{marker}] immediately before "
+                "that panel's editable body. Keep markers in narrative order."
+                for marker in _required_panel_markers(context_pack)
+            ]
+            or ["- No panel markers are required for this fixture."]
+        ),
+        "- These comments do not prescribe coordinates or layout; they bind rendered "
+        "findings back to editable source regions.",
         "",
         "## Style Lock authoring requirements",
         *[f"- {requirement}" for requirement in STYLE_LOCK_AUTHORING_REQUIREMENTS],
@@ -682,6 +703,7 @@ def compile_authoring_execution_packet(
         ),
         "visual_assets": runtime_visual_assets,
         "mandatory_source_requirements": list(MANDATORY_SOURCE_REQUIREMENTS),
+        "required_panel_markers": _required_panel_markers(context_pack),
         "style_lock_authoring_requirements": list(STYLE_LOCK_AUTHORING_REQUIREMENTS),
         "allowed_repository_read_paths": list(allowed_repository_read_paths),
         "forbidden_import_classes": [
