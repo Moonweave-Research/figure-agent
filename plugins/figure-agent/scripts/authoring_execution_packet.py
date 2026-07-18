@@ -437,6 +437,23 @@ def _contract_lines(context_pack: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _authoring_rule_lines(context_pack: dict[str, Any]) -> list[str]:
+    lines: list[str] = []
+    for catalog_key, label in (
+        ("project_rule_catalog", "Project rule"),
+        ("rule_catalog", "Paper rule"),
+    ):
+        catalog = context_pack.get(catalog_key) or {}
+        for rule in catalog.get("rules", []):
+            rule_id = rule.get("id")
+            rule_text = rule.get("rule")
+            if isinstance(rule_id, str) and isinstance(rule_text, str):
+                lines.append(f"- {label} [{rule_id}]: {rule_text}")
+    if not lines:
+        lines.append("- No project or paper authoring rules are enabled.")
+    return lines
+
+
 def _fixture_briefing_lines(context_pack: dict[str, Any]) -> list[str]:
     lines = ["- Required panels:"]
     for panel in context_pack.get("fixture", {}).get("panels", []):
@@ -499,6 +516,9 @@ def render_authoring_prompt(
         "",
         *_contract_lines(context_pack),
         "- Do not imply physics or quantitative relations absent from the declared contracts.",
+        "",
+        "## Project and paper authoring rules",
+        *_authoring_rule_lines(context_pack),
         "",
         "## Curated visual assets",
         *_visual_asset_lines(context_pack),

@@ -13,6 +13,7 @@ sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
 import authoring_context_pack  # noqa: E402
+import authoring_execution_packet  # noqa: E402
 from semantic_legibility_contract import (  # noqa: E402
     validate_semantic_legibility_contract,
 )
@@ -92,3 +93,26 @@ def test_redraw_context_binds_the_curated_assets_used_by_source() -> None:
     assert all(item["sha256"].startswith("sha256:") for item in selected)
     assert selected[0]["contract"]["sha256"].startswith("sha256:")
     assert selected[0]["transfer_receipt"]["sha256"].startswith("sha256:")
+
+
+def test_bound_authoring_prompt_carries_project_cantilever_orientation_rule() -> None:
+    context = authoring_context_pack.build_context_pack(
+        "fig1_updated_agent_redraw_v1",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=PLUGIN_ROOT,
+    )
+
+    prompt = authoring_execution_packet.render_authoring_prompt(
+        name="fig1_updated_agent_redraw_v1",
+        repository_output_path=(
+            "examples/fig1_updated_agent_redraw_v1/review/failure-first/"
+            "comparable-v99/verified_generated.tex"
+        ),
+        allowed_repository_read_paths=("AGENTS.md",),
+        context_pack=context,
+        model_id="test-model",
+    )
+
+    assert "polymer_paper_project.cantilever-vertical-clip-top" in prompt
+    assert "Draw the polymer cantilever vertical" in prompt
+    assert "Horizontal cantilever orientation is wrong" in prompt
