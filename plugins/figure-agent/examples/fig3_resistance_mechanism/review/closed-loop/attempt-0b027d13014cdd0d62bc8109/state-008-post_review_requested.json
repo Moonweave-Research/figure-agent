@@ -1,0 +1,27 @@
+{
+  "actor": "fig_run",
+  "actor_role": "workflow_agent",
+  "attempt_id": "attempt-0b027d13014cdd0d62bc8109",
+  "disposition": "human_review_required",
+  "evidence": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/request.json",
+      "role": "post_repair_visual_review_request",
+      "sha256": "sha256:f5e0ba5d436cdcb8a5b0f61e3885958538e80688f594e56ac6affb3c46c82922"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "parent_state_file_sha256": "sha256:a1b3afafe33e4444c3683e04d531cd24af89eabf22fc73bff3fb0b0fbbfeb837",
+  "parent_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/state-007-repair_required.json",
+  "parent_state_sha256": "sha256:6c8b5ecadf58dc576c5857d420f54ca58a2af5e499f2c22c04d8b827c564c59d",
+  "previous_state_file_sha256": "sha256:48cbd14851640c86f71193305d4e172868390fd703b442536e36866f60c2611b",
+  "previous_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/state-007-machine_repaired.json",
+  "previous_state_sha256": "sha256:ca0016e3d91c5295f0642c47eae8ad87f3235c6a720d878dacf70453c5f86c7e",
+  "publication_acceptance": "not_claimed",
+  "required_actor": "host_llm",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 8,
+  "state": "post_review_requested",
+  "state_sha256": "sha256:a52aea6a8088a019688a979d736168f6de1a8ffd69bf98438dbddcc52efb3a4d",
+  "terminal": false
+}

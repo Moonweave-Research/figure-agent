@@ -1,0 +1,320 @@
+{
+  "schema": "figure-agent.attempt-local-post-repair-review-response.v2",
+  "request_sha256": "sha256:ea908af1b62e18cffe1d52af0bb28bfc703f54854830ccf4f9a76ed118c1f891",
+  "reviewer": "codex-host-reviewer",
+  "inspected_artifacts": {
+    "before_render": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/prospective-detail-v1/build/fig3_resistance_mechanism.png",
+      "role": "before_render",
+      "sha256": "sha256:0544ec9c756b0327feb15b51373f9824ac719c40f7972395fc835378a32dd72a"
+    },
+    "after_render": {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png",
+      "role": "after_render",
+      "sha256": "sha256:7dd148f1716d564e6b932044c628eea2ffd00314fe1778e225fe860a34727d99"
+    },
+    "materialized_output": {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/materialized-repair.tex",
+      "role": "materialized_output",
+      "sha256": "sha256:17c23a721305e1a572443267d08ef0e8ba3c6d4d31d80a4e30927dde88958032"
+    },
+    "materialization_receipt": {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/materialization_receipt.json",
+      "role": "materialization_receipt",
+      "sha256": "sha256:3fd7aacea97f6546263ae309910701f9d17df09ec33811e42358ed56f22f4b89"
+    },
+    "initial_crops": [
+      {
+        "id": "full_q1",
+        "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q1.png",
+        "sha256": "sha256:c8174042dd0cd46bb5c095fbbf9bda8c430c355cdeed80dff4dc23583f3752d2"
+      },
+      {
+        "id": "full_q2",
+        "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q2.png",
+        "sha256": "sha256:686bb7ffc0bec954a9f36abb30a6631e55eae8dac7b3fa2582ebadba6f3921b6"
+      },
+      {
+        "id": "full_q3",
+        "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q3.png",
+        "sha256": "sha256:002caebb5ec5aa210de3bc006eac4a69078c97fec0fb3aafb5d7e594252e64e0"
+      },
+      {
+        "id": "full_q4",
+        "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q4.png",
+        "sha256": "sha256:62e84bb3b85a25bb2d112c47c6f1623aa2f0abdb2cfa200ce0c1842417851869"
+      },
+      {
+        "id": "print_178mm",
+        "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/print_178mm.png",
+        "sha256": "sha256:b7b3a0201ec1357989490b65a4a408a2b7cedda3e77d128e3e51863a4940ab6f"
+      },
+      {
+        "id": "print_thumbnail",
+        "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/print_thumbnail.png",
+        "sha256": "sha256:a5799124af06fa142870e76fe107a3fe8ffc8c36b1167539aa43687d1074faa8"
+      }
+    ],
+    "after_crop_manifest": {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/manifest.json",
+      "role": "after_crop_manifest",
+      "sha256": "sha256:60f106a656adefcb4e3dcf540f45bea8aa2c21397b3cf5759af689fac08251a9"
+    },
+    "after_crops": [
+      {
+        "bbox_px": [
+          0,
+          0,
+          2000,
+          588
+        ],
+        "id": "full_q1",
+        "kind": "zoom_crop",
+        "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/full_q1.png",
+        "sha256": "sha256:c8174042dd0cd46bb5c095fbbf9bda8c430c355cdeed80dff4dc23583f3752d2",
+        "source": "full_render",
+        "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png"
+      },
+      {
+        "bbox_px": [
+          2000,
+          0,
+          4001,
+          588
+        ],
+        "id": "full_q2",
+        "kind": "zoom_crop",
+        "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/full_q2.png",
+        "sha256": "sha256:5c969355fa559734a83162f26810d67573d3340044ab74854275c2b4a1b8a467",
+        "source": "full_render",
+        "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png"
+      },
+      {
+        "bbox_px": [
+          0,
+          588,
+          2000,
+          1176
+        ],
+        "id": "full_q3",
+        "kind": "zoom_crop",
+        "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/full_q3.png",
+        "sha256": "sha256:002caebb5ec5aa210de3bc006eac4a69078c97fec0fb3aafb5d7e594252e64e0",
+        "source": "full_render",
+        "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png"
+      },
+      {
+        "bbox_px": [
+          2000,
+          588,
+          4001,
+          1176
+        ],
+        "id": "full_q4",
+        "kind": "zoom_crop",
+        "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/full_q4.png",
+        "sha256": "sha256:575fdc74de5cc1d1f95eaa35560f5f35bcb9f6b0440d0b00af74246ec905b158",
+        "source": "full_render",
+        "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png"
+      },
+      {
+        "id": "print_178mm",
+        "kind": "print_scale",
+        "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/print_178mm.png",
+        "scale_basis": "fixed_width_proxy",
+        "scale_label": "178mm_equivalent",
+        "sha256": "sha256:b77a8293bd8633916b5a5582b5189f0a8b84c8e321717aeddaf0ca2fb34749ef",
+        "size_px": [
+          1000,
+          294
+        ],
+        "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png",
+        "target_width_px": 1000,
+        "upscaled": false
+      },
+      {
+        "id": "print_thumbnail",
+        "kind": "print_scale",
+        "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/print_thumbnail.png",
+        "scale_basis": "fixed_width_proxy",
+        "scale_label": "thumbnail",
+        "sha256": "sha256:87e14f25fc6e129316b347cad4efab1dc561b5e2afc11de4ae9753a7e3f37893",
+        "size_px": [
+          360,
+          106
+        ],
+        "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png",
+        "target_width_px": 360,
+        "upscaled": false
+      }
+    ]
+  },
+  "verdicts": {
+    "target_resolved": "resolved",
+    "no_new_local_defect": "pass",
+    "unchanged_region_regression": "none"
+  },
+  "findings": [],
+  "execution_receipt": {
+    "schema": "figure-agent.attempt-local-host-review-execution-receipt.v2",
+    "request_sha256": "sha256:ea908af1b62e18cffe1d52af0bb28bfc703f54854830ccf4f9a76ed118c1f891",
+    "actor": {
+      "kind": "model",
+      "identity": "codex-host-reviewer",
+      "model_or_tool": "gpt-5"
+    },
+    "transcript": {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/host-transcript.json",
+      "sha256": "sha256:9d4e20b80909e8347594bd9cf58c3e42b20296ca9e5b0b01c869dd063d2b3280"
+    },
+    "inspected_artifacts": {
+      "before_render": {
+        "path": "examples/fig3_resistance_mechanism/review/failure-first/prospective-detail-v1/build/fig3_resistance_mechanism.png",
+        "role": "before_render",
+        "sha256": "sha256:0544ec9c756b0327feb15b51373f9824ac719c40f7972395fc835378a32dd72a"
+      },
+      "after_render": {
+        "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png",
+        "role": "after_render",
+        "sha256": "sha256:7dd148f1716d564e6b932044c628eea2ffd00314fe1778e225fe860a34727d99"
+      },
+      "materialized_output": {
+        "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/materialized-repair.tex",
+        "role": "materialized_output",
+        "sha256": "sha256:17c23a721305e1a572443267d08ef0e8ba3c6d4d31d80a4e30927dde88958032"
+      },
+      "materialization_receipt": {
+        "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/materialization_receipt.json",
+        "role": "materialization_receipt",
+        "sha256": "sha256:3fd7aacea97f6546263ae309910701f9d17df09ec33811e42358ed56f22f4b89"
+      },
+      "initial_crops": [
+        {
+          "id": "full_q1",
+          "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q1.png",
+          "sha256": "sha256:c8174042dd0cd46bb5c095fbbf9bda8c430c355cdeed80dff4dc23583f3752d2"
+        },
+        {
+          "id": "full_q2",
+          "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q2.png",
+          "sha256": "sha256:686bb7ffc0bec954a9f36abb30a6631e55eae8dac7b3fa2582ebadba6f3921b6"
+        },
+        {
+          "id": "full_q3",
+          "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q3.png",
+          "sha256": "sha256:002caebb5ec5aa210de3bc006eac4a69078c97fec0fb3aafb5d7e594252e64e0"
+        },
+        {
+          "id": "full_q4",
+          "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q4.png",
+          "sha256": "sha256:62e84bb3b85a25bb2d112c47c6f1623aa2f0abdb2cfa200ce0c1842417851869"
+        },
+        {
+          "id": "print_178mm",
+          "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/print_178mm.png",
+          "sha256": "sha256:b7b3a0201ec1357989490b65a4a408a2b7cedda3e77d128e3e51863a4940ab6f"
+        },
+        {
+          "id": "print_thumbnail",
+          "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/print_thumbnail.png",
+          "sha256": "sha256:a5799124af06fa142870e76fe107a3fe8ffc8c36b1167539aa43687d1074faa8"
+        }
+      ],
+      "after_crop_manifest": {
+        "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/manifest.json",
+        "role": "after_crop_manifest",
+        "sha256": "sha256:60f106a656adefcb4e3dcf540f45bea8aa2c21397b3cf5759af689fac08251a9"
+      },
+      "after_crops": [
+        {
+          "bbox_px": [
+            0,
+            0,
+            2000,
+            588
+          ],
+          "id": "full_q1",
+          "kind": "zoom_crop",
+          "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/full_q1.png",
+          "sha256": "sha256:c8174042dd0cd46bb5c095fbbf9bda8c430c355cdeed80dff4dc23583f3752d2",
+          "source": "full_render",
+          "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png"
+        },
+        {
+          "bbox_px": [
+            2000,
+            0,
+            4001,
+            588
+          ],
+          "id": "full_q2",
+          "kind": "zoom_crop",
+          "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/full_q2.png",
+          "sha256": "sha256:5c969355fa559734a83162f26810d67573d3340044ab74854275c2b4a1b8a467",
+          "source": "full_render",
+          "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png"
+        },
+        {
+          "bbox_px": [
+            0,
+            588,
+            2000,
+            1176
+          ],
+          "id": "full_q3",
+          "kind": "zoom_crop",
+          "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/full_q3.png",
+          "sha256": "sha256:002caebb5ec5aa210de3bc006eac4a69078c97fec0fb3aafb5d7e594252e64e0",
+          "source": "full_render",
+          "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png"
+        },
+        {
+          "bbox_px": [
+            2000,
+            588,
+            4001,
+            1176
+          ],
+          "id": "full_q4",
+          "kind": "zoom_crop",
+          "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/full_q4.png",
+          "sha256": "sha256:575fdc74de5cc1d1f95eaa35560f5f35bcb9f6b0440d0b00af74246ec905b158",
+          "source": "full_render",
+          "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png"
+        },
+        {
+          "id": "print_178mm",
+          "kind": "print_scale",
+          "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/print_178mm.png",
+          "scale_basis": "fixed_width_proxy",
+          "scale_label": "178mm_equivalent",
+          "sha256": "sha256:b77a8293bd8633916b5a5582b5189f0a8b84c8e321717aeddaf0ca2fb34749ef",
+          "size_px": [
+            1000,
+            294
+          ],
+          "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png",
+          "target_width_px": 1000,
+          "upscaled": false
+        },
+        {
+          "id": "print_thumbnail",
+          "kind": "print_scale",
+          "path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/crops/print_thumbnail.png",
+          "scale_basis": "fixed_width_proxy",
+          "scale_label": "thumbnail",
+          "sha256": "sha256:87e14f25fc6e129316b347cad4efab1dc561b5e2afc11de4ae9753a7e3f37893",
+          "size_px": [
+            360,
+            106
+          ],
+          "source_path": "review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/build/materialized-repair.png",
+          "target_width_px": 360,
+          "upscaled": false
+        }
+      ]
+    },
+    "receipt_sha256": "sha256:9c582aaa443379aca238f213ccdbf6488e74855fe181d06c71fde4ea91b87d40"
+  },
+  "publication_acceptance": "not_claimed"
+}

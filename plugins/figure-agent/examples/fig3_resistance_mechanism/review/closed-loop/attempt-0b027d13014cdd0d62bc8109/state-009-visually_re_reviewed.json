@@ -1,0 +1,37 @@
+{
+  "actor": "model:codex-host-reviewer:gpt-5",
+  "actor_role": "host_llm",
+  "attempt_id": "attempt-0b027d13014cdd0d62bc8109",
+  "disposition": "human_review_required",
+  "evidence": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/response.json",
+      "role": "host_review_execution_receipt",
+      "sha256": "sha256:7690cef7cdb954bebbfec3ff12904cec0cb794e53fd4c175325bc402e94aee12"
+    },
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/review-receipt.json",
+      "role": "post_repair_visual_review_receipt",
+      "sha256": "sha256:0a5ffde7416c9657350d7e3d2933621012876b87557581625980acebc3f7861d"
+    },
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/attempt-local-post-repair-review/response.json",
+      "role": "post_repair_visual_review_response",
+      "sha256": "sha256:7690cef7cdb954bebbfec3ff12904cec0cb794e53fd4c175325bc402e94aee12"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "parent_state_file_sha256": "sha256:a1b3afafe33e4444c3683e04d531cd24af89eabf22fc73bff3fb0b0fbbfeb837",
+  "parent_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/state-007-repair_required.json",
+  "parent_state_sha256": "sha256:6c8b5ecadf58dc576c5857d420f54ca58a2af5e499f2c22c04d8b827c564c59d",
+  "previous_state_file_sha256": "sha256:14eb2aec693b6d6e12b0807926893eeb5bdbc950d3a6ceb2c2d91a6186b68dbe",
+  "previous_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/state-008-post_review_requested.json",
+  "previous_state_sha256": "sha256:a52aea6a8088a019688a979d736168f6de1a8ffd69bf98438dbddcc52efb3a4d",
+  "publication_acceptance": "not_claimed",
+  "required_actor": "human_reviewer",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 9,
+  "state": "visually_re_reviewed",
+  "state_sha256": "sha256:461294ca06b558a6c3fa71d19b5526b3501be818ce34b02bfb4bc144a4fb7435",
+  "terminal": false
+}
