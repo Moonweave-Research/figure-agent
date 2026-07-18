@@ -1,0 +1,21 @@
+{
+  "schema": "figure-agent.human-decision-record.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "packet_schema": "figure-agent.attempt-local-repair-packet.v1",
+  "packet_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/repair-packet/attempt-local-repair-packet.json",
+  "packet_recommendation": "materialize_authoring_repair_candidate",
+  "queue_run_id": "fig3-real-feedback-replay-001",
+  "decision_kind": "materialize_authoring_repair_candidate",
+  "agent_recommendation": "Materialize only the exact four-line Panel C sample-grouping repair bound to C001.",
+  "human_decision": "approve this exact additive repair candidate",
+  "human_note": "Approved by the user after the exact four-line bounded candidate and its protected semantics were reported.",
+  "reviewer": "Moon",
+  "follow_up": {
+    "command": "strict compile and fresh post-repair visual review"
+  },
+  "mutation_boundary": "additive_artifact_materialization_allowed",
+  "authorized_packet_sha256": "sha256:ea064f530a3a9cc4427b3f825b68a78b07859c4d79b23cc52852c5597c59a8be",
+  "authorized_output_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/repair-packet/materialized-repair.tex",
+  "authorized_output_sha256": "sha256:17c23a721305e1a572443267d08ef0e8ba3c6d4d31d80a4e30927dde88958032",
+  "authorized_preview_sha256": "sha256:afd1c08f1277247b588028e891a5350586bbbb47e2e396d6e7f2408ff5d272e1"
+}

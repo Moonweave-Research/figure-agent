@@ -436,3 +436,34 @@ def test_main_passes_when_spec_missing(tmp_path: Path) -> None:
 
     # No spec.yaml -> nothing declared -> pass without touching the PDF.
     assert main([str(pdf)]) == 0
+
+
+def test_main_uses_explicit_fixture_spec_for_nested_repair_pdf(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import semantic_assertions
+
+    nested_build = tmp_path / "attempt" / "repair-packet" / "build"
+    nested_build.mkdir(parents=True)
+    pdf = nested_build / "materialized-repair.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n%%EOF\n")
+    spec = tmp_path / "fixture-spec.yaml"
+    spec.write_text(
+        "semantic_assertions:\n"
+        "  - id: capture-before-release\n"
+        "    relation: left_of\n"
+        "    subject: capture\n"
+        "    reference: release\n",
+        encoding="utf-8",
+    )
+    output = nested_build / "semantic_assertions.json"
+    monkeypatch.setattr(
+        semantic_assertions,
+        "extract_pdf_words_and_page",
+        lambda _path: ([_word("capture", 10, 10), _word("release", 100, 10)], {}),
+    )
+
+    assert semantic_assertions.main(
+        [str(pdf), "--spec", str(spec), "--json-output", str(output), "--strict"]
+    ) == 0
+    assert output.is_file()

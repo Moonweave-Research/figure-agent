@@ -1,0 +1,27 @@
+{
+  "actor": "fig_run",
+  "actor_role": "workflow_agent",
+  "attempt_id": "attempt-1177a690a1e221ae42321289",
+  "disposition": "repair_required",
+  "evidence": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/repair-packet/materialization_receipt.json",
+      "role": "repair_failure_record",
+      "sha256": "sha256:1e17dfe2277e11f7c0345adc7e99710ec79a1237fbde4a37731a56e91221af34"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "parent_state_file_sha256": null,
+  "parent_state_path": null,
+  "parent_state_sha256": null,
+  "previous_state_file_sha256": "sha256:93791df14942f2e02b8c2f11e796b6bc369eeee78d50d5774e451bb407da8c13",
+  "previous_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/state-006-repair_authorized.json",
+  "previous_state_sha256": "sha256:58e1bb46ef9e14d05cce6e0748ae1d1af0b1327d691f61d96565927f9a5f4b1a",
+  "publication_acceptance": "not_claimed",
+  "required_actor": "none",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 7,
+  "state": "repair_required",
+  "state_sha256": "sha256:6c8b5ecadf58dc576c5857d420f54ca58a2af5e499f2c22c04d8b827c564c59d",
+  "terminal": true
+}

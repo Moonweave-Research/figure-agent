@@ -1,0 +1,27 @@
+{
+  "actor": "Moon",
+  "actor_role": "human_repair_authorizer",
+  "attempt_id": "attempt-1177a690a1e221ae42321289",
+  "disposition": "continue",
+  "evidence": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/repair-packet/human-authorization.json",
+      "role": "human_authorization",
+      "sha256": "sha256:5ae41291a905a38ebd073d2044287defc0ce6683e4e403229b03b1c6fae29d12"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "parent_state_file_sha256": null,
+  "parent_state_path": null,
+  "parent_state_sha256": null,
+  "previous_state_file_sha256": "sha256:4d62ae3bf53c6cd24e4723f81498a3d3a3ad0fcb4eb36e3bbac4eac325f3c949",
+  "previous_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/state-005-repair_candidate_ready.json",
+  "previous_state_sha256": "sha256:48d74383c45fd526a825d1ab5b224658054d850b355711114dfc8cc56add3d0d",
+  "publication_acceptance": "not_claimed",
+  "required_actor": "workflow_agent",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 6,
+  "state": "repair_authorized",
+  "state_sha256": "sha256:58e1bb46ef9e14d05cce6e0748ae1d1af0b1327d691f61d96565927f9a5f4b1a",
+  "terminal": false
+}

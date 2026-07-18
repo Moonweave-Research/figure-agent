@@ -54,6 +54,7 @@ COLLISION_FIXTURE_ARGS=()
 UNDECLARED_GEOMETRY_SPEC_ARGS=()
 TEX_ASSERTION_SPEC_ARGS=()
 STATE_FIELD_GEOMETRY_SPEC_ARGS=()
+SEMANTIC_ASSERTION_SPEC_ARGS=()
 LAYOUT_CONTRACT=""
 if [[ -n "$FIXTURE_NAME" ]]; then
   COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")
@@ -70,6 +71,7 @@ if [[ -n "$FIXTURE_NAME" ]]; then
     UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     TEX_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     STATE_FIELD_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    SEMANTIC_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
   fi
 fi
 
@@ -223,6 +225,7 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_labe
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/semantic_assertions.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${SEMANTIC_ASSERTION_SPEC_ARGS[@]+"${SEMANTIC_ASSERTION_SPEC_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/semantic_assertions.json" \
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/vector_clearance.py" \
