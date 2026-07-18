@@ -1,0 +1,825 @@
+{
+  "acceptance": "review_evidence_only",
+  "artifact_base": "repaired",
+  "finding_count": 37,
+  "findings": [
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        8.105623,
+        15.577048,
+        8.346887,
+        15.886049
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        1915,
+        96,
+        1972,
+        169
+      ],
+      "crop_path": "visual_findings/crops/VC001.png",
+      "crop_sha256": "sha256:49f760712cde13ad476fc62cdc8be45cf4fd6d78f7eaaf06344efbfca1799708",
+      "finding_id": "VC001",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC001.png",
+      "overlay_sha256": "sha256:1e47bec90c5414a476f227b1bce5d3846cfef280d40dfe108b8d4f1289f19766"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        1.09627,
+        15.649007,
+        2.378778,
+        15.881816
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        259,
+        97,
+        562,
+        152
+      ],
+      "crop_path": "visual_findings/crops/VC002.png",
+      "crop_sha256": "sha256:a82160ead905e4125b77ce2fdc6a8d0aaee4b46d03354bf848ca339575a34b57",
+      "finding_id": "VC002",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC002.png",
+      "overlay_sha256": "sha256:b21ac014dfc501018c1cf4b593b52417049e6fbc64a130108febeab7134b0c78"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        2.446501,
+        15.649007,
+        4.008368,
+        15.881816
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        578,
+        97,
+        947,
+        152
+      ],
+      "crop_path": "visual_findings/crops/VC003.png",
+      "crop_sha256": "sha256:9a8de78a349fd559a3dccda145101f5c88ae029752025c50cc306d24ede67356",
+      "finding_id": "VC003",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC003.png",
+      "overlay_sha256": "sha256:183a2a503191eae48e5144551f0666853382b4399e0c98c758538956d812252b"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        1.642288,
+        13.494464,
+        1.765036,
+        13.66378
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        388,
+        621,
+        417,
+        661
+      ],
+      "crop_path": "visual_findings/crops/VC004.png",
+      "crop_sha256": "sha256:893d15634ac422c2e2195655c6dc267f3333a4f8df3ee47a2bf112702317ab48",
+      "finding_id": "VC004",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC004.png",
+      "overlay_sha256": "sha256:c2a805d317f3e1bc92b5129302bfee508ae20b7d81bcc67d3861df5305a84ee4"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        2.090954,
+        13.494464,
+        2.213703,
+        13.66378
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        494,
+        621,
+        523,
+        661
+      ],
+      "crop_path": "visual_findings/crops/VC005.png",
+      "crop_sha256": "sha256:94fddfd45d8bac0ce8044a852a919af27e1d912c416299bc37238c4f1a416305",
+      "finding_id": "VC005",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC005.png",
+      "overlay_sha256": "sha256:8b985c5086e4cfb72a9fbb5de8e2a2e4b9c458d8d62f8ea917a9858488cf48b8"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        2.543853,
+        13.494464,
+        2.662369,
+        13.66378
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        601,
+        621,
+        629,
+        661
+      ],
+      "crop_path": "visual_findings/crops/VC006.png",
+      "crop_sha256": "sha256:3fff91f6f2f7dac2e8cd6c133cfcc9180f7ff6ffbe86bb4f2b19227ec4f02b83",
+      "finding_id": "VC006",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC006.png",
+      "overlay_sha256": "sha256:ed198c4f5c9d441eaadce463fb25c7c2538fae70597fe5094738404797b25092"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        2.99252,
+        13.494464,
+        3.115268,
+        13.66378
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        707,
+        621,
+        736,
+        661
+      ],
+      "crop_path": "visual_findings/crops/VC007.png",
+      "crop_sha256": "sha256:67eef50c2dcd47b2fd24f59bbf363f33d3468bea0ca9a15be28e4244bbbb8822",
+      "finding_id": "VC007",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC007.png",
+      "overlay_sha256": "sha256:235fbee965f38fd4566ec4cf9d5dfef4b306a4008d402073c25a67ca0519d8d5"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        8.380748,
+        12.838366,
+        8.486566,
+        12.982284
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        1980,
+        782,
+        2005,
+        816
+      ],
+      "crop_path": "visual_findings/crops/VC008.png",
+      "crop_sha256": "sha256:c09e292f0efe23510f8e0718d2dc65b93a940e7191564d9e537ba8c0ced9ccda",
+      "finding_id": "VC008",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC008.png",
+      "overlay_sha256": "sha256:bf7a24bfda27376e27aab7d49d93c93c7715e5b8fb4cb39fa5e518f5bbff744d"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        8.901371,
+        12.838366,
+        9.002955,
+        12.982284
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        2103,
+        782,
+        2127,
+        816
+      ],
+      "crop_path": "visual_findings/crops/VC009.png",
+      "crop_sha256": "sha256:d0a7e087ef8bcfce2bde561cc73cde519be2b28daa82e3c6ac4aa9b325799ad4",
+      "finding_id": "VC009",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC009.png",
+      "overlay_sha256": "sha256:a448888ae681d45b2eeaa1ec5ebaf2f71fba37efea1b8da4a81509d7e5b6b3d9"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        13.083279,
+        13.938918,
+        13.184864,
+        14.082836
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        3091,
+        522,
+        3115,
+        556
+      ],
+      "crop_path": "visual_findings/crops/VC010.png",
+      "crop_sha256": "sha256:6c3f71411e723b92285ce48c6e57dd09d8eff327961a325bbe26ecc550a6bd46",
+      "finding_id": "VC010",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC010.png",
+      "overlay_sha256": "sha256:d0db7e2f1688881f286ccaaf1dde25df9828e83fc176125a5af9df9f86121f5a"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        13.599669,
+        13.938918,
+        13.705486,
+        14.082836
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        3213,
+        522,
+        3238,
+        556
+      ],
+      "crop_path": "visual_findings/crops/VC011.png",
+      "crop_sha256": "sha256:8ab6bf8dd3ceae3fd902149c247b47881dfe529684f91f88ec361fd297358f62",
+      "finding_id": "VC011",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC011.png",
+      "overlay_sha256": "sha256:6a1ac382ee040df583cef76e3d65a462c907b7bc94be44a6527e1c3d35bb47d9"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        10.729897,
+        13.388642,
+        10.835715,
+        13.53256
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        2535,
+        652,
+        2560,
+        686
+      ],
+      "crop_path": "visual_findings/crops/VC012.png",
+      "crop_sha256": "sha256:7e506e6882428f04166b1ab1156d12ab4bb889c739281e5f3d2ce864d0e45a07",
+      "finding_id": "VC012",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC012.png",
+      "overlay_sha256": "sha256:5e0508760aca9a6c4c8add7c1f8b1b8fbcbd2fae957ca3e6a164b5f7f3eec6dd"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        11.25052,
+        13.388642,
+        11.356337,
+        13.53256
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        2658,
+        652,
+        2683,
+        686
+      ],
+      "crop_path": "visual_findings/crops/VC013.png",
+      "crop_sha256": "sha256:8ddacf24f4f9565c5a7f652a509128092a6d69c5fa521085ee6c562642f7a627",
+      "finding_id": "VC013",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC013.png",
+      "overlay_sha256": "sha256:9d139877e5e4357c55e77d4221dc10d31b47076993fe5195e3c2baaf7a7dfc0f"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        13.083279,
+        13.388642,
+        13.184864,
+        13.53256
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        3091,
+        652,
+        3115,
+        686
+      ],
+      "crop_path": "visual_findings/crops/VC014.png",
+      "crop_sha256": "sha256:fadaaa0965985e0f76647de8bbe8b7f304ecfc1b70305705a35541a23b2983c4",
+      "finding_id": "VC014",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC014.png",
+      "overlay_sha256": "sha256:deb33af8d1ea76bedf633eb97f2877fb17adb7883ddf8ee6a93eb3ae5cfd53a5"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        13.599669,
+        13.388642,
+        13.705486,
+        13.53256
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        3213,
+        652,
+        3238,
+        686
+      ],
+      "crop_path": "visual_findings/crops/VC015.png",
+      "crop_sha256": "sha256:71c285758e9f736807772adf1cff87a34f643d96f32fa113a74de6df1d2331d8",
+      "finding_id": "VC015",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC015.png",
+      "overlay_sha256": "sha256:4e026dc9ddc6d6722ccbc40691f04c774405979e06100c61edf0e8b0ac6446bd"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        10.729897,
+        12.838366,
+        10.835715,
+        12.982284
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        2535,
+        782,
+        2560,
+        816
+      ],
+      "crop_path": "visual_findings/crops/VC016.png",
+      "crop_sha256": "sha256:5b562c45647773bac2e0a0be3b3997917b06d937cc306e5998c1f91a91625a4d",
+      "finding_id": "VC016",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC016.png",
+      "overlay_sha256": "sha256:f058b8e45aaa5b216234be70540ad78654f2216d217f12b9505ca1bf0c8495df"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        11.25052,
+        12.838366,
+        11.356337,
+        12.982284
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        2658,
+        782,
+        2683,
+        816
+      ],
+      "crop_path": "visual_findings/crops/VC017.png",
+      "crop_sha256": "sha256:9499473794a1e8aead1f6f0b199a431a61566a60d1b5ba929c7d0f358d142810",
+      "finding_id": "VC017",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC017.png",
+      "overlay_sha256": "sha256:be37c78aa3848c7ff0e18edfde59a495fe6632d81d329707fda8d01753039e2c"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        13.083279,
+        12.838366,
+        13.184864,
+        12.982284
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        3091,
+        782,
+        3115,
+        816
+      ],
+      "crop_path": "visual_findings/crops/VC018.png",
+      "crop_sha256": "sha256:736d839f0b06ad9659b4657badc3c68188d128018ea986db6c36a80150376c7a",
+      "finding_id": "VC018",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC018.png",
+      "overlay_sha256": "sha256:f500a135e7767321e3cc7c0ce6778d6b9fa4bc4c1aae0dce59a8835c2cd0cd33"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        13.599669,
+        12.838366,
+        13.705486,
+        12.982284
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        3213,
+        782,
+        3238,
+        816
+      ],
+      "crop_path": "visual_findings/crops/VC019.png",
+      "crop_sha256": "sha256:b5d9a84d859379eafb5bc2d2bfecd159bd8f186af26656d1ee3a36de9f9e0ab4",
+      "finding_id": "VC019",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC019.png",
+      "overlay_sha256": "sha256:930407357b1d5140215a0ce57a2747f4cce2ce8272046e15e073329ccec6b1e6"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        3.944877,
+        12.47857,
+        4.964958,
+        12.656351
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        932,
+        859,
+        1173,
+        901
+      ],
+      "crop_path": "visual_findings/crops/VC020.png",
+      "crop_sha256": "sha256:e8d7117e082cda09c012358d60b04b34e409c85c9f9f9b6fafd91e2f35426115",
+      "finding_id": "VC020",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC020.png",
+      "overlay_sha256": "sha256:e0ab6a7de2632947d869823111fd0174e929e9baf65843f3ef5dfa25e374ef21"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        0.558717,
+        10.175876,
+        0.799981,
+        10.484877
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        132,
+        1372,
+        189,
+        1445
+      ],
+      "crop_path": "visual_findings/crops/VC021.png",
+      "crop_sha256": "sha256:b76cd4e1d4edaa3eb68fc58877703d9decf79e6d0b88cec424a38a01b97e9df8",
+      "finding_id": "VC021",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC021.png",
+      "overlay_sha256": "sha256:5569940d00dbf1655b1dcf08bef0663615cda16bf90f2fac953e8cf8c6602c73"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        13.942518,
+        10.264766,
+        14.450442,
+        10.429849
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        3294,
+        1385,
+        3414,
+        1424
+      ],
+      "crop_path": "visual_findings/crops/VC022.png",
+      "crop_sha256": "sha256:d5e8a8018ea6743bf70a05cfdec9b5e149b776d07ca7446b6de9fb8cc17dfd75",
+      "finding_id": "VC022",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC022.png",
+      "overlay_sha256": "sha256:69cc2a12e184a8a5ad8500240fdce208927a0ad508e8ee41d5cc80ddedd197dc"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        0.558717,
+        3.928125,
+        0.799981,
+        4.237126
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        132,
+        2848,
+        189,
+        2921
+      ],
+      "crop_path": "visual_findings/crops/VC023.png",
+      "crop_sha256": "sha256:b934e5b29e93e7e095c383e3d0002382faa6099f196b903f07d231c22d7b6118",
+      "finding_id": "VC023",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC023.png",
+      "overlay_sha256": "sha256:da48d8dd10f742646d6b976b77006681163eda6fbd6bd3d5c007cbbe77ec9769"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        5.557537,
+        3.928125,
+        5.78187,
+        4.237126
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        1313,
+        2848,
+        1366,
+        2921
+      ],
+      "crop_path": "visual_findings/crops/VC024.png",
+      "crop_sha256": "sha256:53e665cc9f3310228d2e4bf2c02d1be397fad54c5f2d758e737ef43000aa288b",
+      "finding_id": "VC024",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC024.png",
+      "overlay_sha256": "sha256:4d21370173abcd9f7c9f49524a21bf89d5736d38892baaa5af33e4d0b3d3b688"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        1.09627,
+        3.974687,
+        2.222168,
+        4.207496
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        259,
+        2855,
+        525,
+        2910
+      ],
+      "crop_path": "visual_findings/crops/VC025.png",
+      "crop_sha256": "sha256:1815c843660bff8bf7079322f6f9d42bc8d0eaeacd94c0624ab533f09153085e",
+      "finding_id": "VC025",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC025.png",
+      "overlay_sha256": "sha256:f96f681162d82245ccf55da98456c6c03486bc645cbc9ffd010d939811786545"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        10.556357,
+        3.928125,
+        10.759526,
+        4.237126
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        2494,
+        2848,
+        2542,
+        2921
+      ],
+      "crop_path": "visual_findings/crops/VC026.png",
+      "crop_sha256": "sha256:5a6b86a8be64c6cc3d126ef0fc2d67709d95b0b1abe1b4fad1d0fa53d660af31",
+      "finding_id": "VC026",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC026.png",
+      "overlay_sha256": "sha256:d05e2cbd9af1a3280f287bd791a26794631ea58556c540bf29412e8398b6a6df"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        6.099322,
+        3.995851,
+        6.687668,
+        4.22866
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        1441,
+        2850,
+        1580,
+        2905
+      ],
+      "crop_path": "visual_findings/crops/VC027.png",
+      "crop_sha256": "sha256:8b757230e3885ce6335e51d3a6affb47a51ba4e07ee1ef17052feaf98ddbe321",
+      "finding_id": "VC027",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC027.png",
+      "overlay_sha256": "sha256:e0525cf71fbc668f8036fc18e14683b35f512fa31052c3e297d4339b6d8e1067"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        11.098142,
+        3.995851,
+        12.080129,
+        4.232893
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        2622,
+        2849,
+        2854,
+        2905
+      ],
+      "crop_path": "visual_findings/crops/VC028.png",
+      "crop_sha256": "sha256:4dfe57e9168ad1f1b37816e025a6deeb1471c284238362cde67215f5ee0350b8",
+      "finding_id": "VC028",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC028.png",
+      "overlay_sha256": "sha256:e3cf96976b163679b4a67079a959be1b9d4548d38da8b4bc12a338754cf94f83"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        12.152085,
+        3.995851,
+        13.248355,
+        4.232893
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        2871,
+        2849,
+        3130,
+        2905
+      ],
+      "crop_path": "visual_findings/crops/VC029.png",
+      "crop_sha256": "sha256:148db0536edd34ba3b0f0623de2434c0a277f7e18fbaf527458b35a36bf4307e",
+      "finding_id": "VC029",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC029.png",
+      "overlay_sha256": "sha256:fb0e699b51f682dba5be7856f4fe7b34980cf85fbe05a850d270d6a040159ae1"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        1.879319,
+        3.470973,
+        2.518457,
+        3.62759
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        444,
+        2992,
+        595,
+        3029
+      ],
+      "crop_path": "visual_findings/crops/VC030.png",
+      "crop_sha256": "sha256:6687755a17482cf580a0b612d93ab6ee5b7eacad1f6e16d35ba8542256bca13f",
+      "finding_id": "VC030",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC030.png",
+      "overlay_sha256": "sha256:36ba7b5ad88b638050365d0071165e96b3dc1dce744c320ee1163fe40e5c56f7"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        2.565017,
+        3.470973,
+        3.106803,
+        3.62759
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        606,
+        2992,
+        734,
+        3029
+      ],
+      "crop_path": "visual_findings/crops/VC031.png",
+      "crop_sha256": "sha256:56c3f2b445f9a124dc27afb8d49d3f63cd9243074303ee454b6db084a762d12d",
+      "finding_id": "VC031",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC031.png",
+      "overlay_sha256": "sha256:2919329f9c85f42226d1e5909d4f161e6cd6bbf294645c798c0116b73c956b06"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        8.588151,
+        3.36515,
+        8.850578,
+        3.55563
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        2029,
+        3009,
+        2091,
+        3054
+      ],
+      "crop_path": "visual_findings/crops/VC032.png",
+      "crop_sha256": "sha256:db5e98f4707ae0bc494a63e649449c67058bfe3b8d02bad0de9334ba279e43ee",
+      "finding_id": "VC032",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC032.png",
+      "overlay_sha256": "sha256:3b8f3a2dcf16ae816324b94d13ac74d84f95f4dc4a7d97b734933a18a9f07e4b"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        1.015848,
+        2.971491,
+        1.248647,
+        3.128108
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        240,
+        3110,
+        295,
+        3147
+      ],
+      "crop_path": "visual_findings/crops/VC033.png",
+      "crop_sha256": "sha256:7773eb374c49e2d53e56c7e4049a5ff936101cb667c12e1eb8181984bc4e79d9",
+      "finding_id": "VC033",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC033.png",
+      "overlay_sha256": "sha256:51d44af403968cec1cd60fa1efcd15f2f5ce1fd58cf83f6e99c37abc91105409"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        3.724777,
+        2.988423,
+        4.139582,
+        3.14504
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        880,
+        3106,
+        978,
+        3143
+      ],
+      "crop_path": "visual_findings/crops/VC034.png",
+      "crop_sha256": "sha256:764005097fa038c8702de8a85a85b17535dffabc578c25b7869cbdfd3b99def0",
+      "finding_id": "VC034",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC034.png",
+      "overlay_sha256": "sha256:10a4a6cf3f1a01944bb0aeb664ae81b8be311377123dce5ebcd2f741b9fa8bfc"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        7.555372,
+        3.026519,
+        7.987107,
+        3.183136
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        1785,
+        3097,
+        1887,
+        3134
+      ],
+      "crop_path": "visual_findings/crops/VC035.png",
+      "crop_sha256": "sha256:4bad07c2dc90931841ab4de590f9ce25dead82f0a26975f1b3d8d350700457cc",
+      "finding_id": "VC035",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC035.png",
+      "overlay_sha256": "sha256:2536f97e36d2385b3d7742a73816696120fd2e93fe5d5c1b10ccedd8a85481df"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        10.721432,
+        1.248704,
+        11.445224,
+        1.405321
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        2533,
+        3517,
+        2704,
+        3554
+      ],
+      "crop_path": "visual_findings/crops/VC036.png",
+      "crop_sha256": "sha256:ad3a0f32a089bf63ad213b8b24542ffa28fd66f99d8a92129f1b30a53959079a",
+      "finding_id": "VC036",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC036.png",
+      "overlay_sha256": "sha256:b9627bf7ba181989a86bbf709ed5bcf997ded13cc18d724df2389ebb97d2c5a2"
+    },
+    {
+      "attribution_state": "unbound",
+      "bbox_pdf_cm": [
+        14.107593,
+        1.701623,
+        14.568957,
+        1.85824
+      ],
+      "bbox_pdf_cm_source": "display_page_geometry_fallback",
+      "bbox_px": [
+        3333,
+        3410,
+        3442,
+        3447
+      ],
+      "crop_path": "visual_findings/crops/VC037.png",
+      "crop_sha256": "sha256:d54c65f58acedcbc45ecc448c675d3f775725c6fab1701ffa5de20845b00ec19",
+      "finding_id": "VC037",
+      "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "overlay_path": "visual_findings/overlays/VC037.png",
+      "overlay_sha256": "sha256:7214fe1b2edcef7d5d3ece0d9652c2ffcfac5d15584d810f38d5e6d5b1cdc781"
+    }
+  ],
+  "fixture": "comparable-v3-repair-c4",
+  "input_render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+  "input_visual_clash_sha256": "sha256:e4e2933eb907bcb43141f2c1c4c6c1a011aa40b31faa29e18f58a8e92a6951b1",
+  "schema": "figure-agent.visual-finding-artifacts.v1"
+}

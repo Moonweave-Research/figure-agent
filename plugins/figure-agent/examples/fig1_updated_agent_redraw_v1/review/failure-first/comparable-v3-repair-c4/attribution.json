@@ -1,0 +1,43 @@
+{
+  "schema": "figure-agent.semantic-finding-attribution.v1",
+  "finding_id": "HA004",
+  "parent_source": {
+    "path": "../comparable-v3-repair-c3/repaired.tex",
+    "sha256": "0fe2951b5ef16199da8b2d916bce5c9bf87a3e7d20cc6b36828d0d2eff846cad"
+  },
+  "targets": [
+    {
+      "id": "panelE.grounded_substrate_label",
+      "selector": {"kind": "unique_literal_text_in_panel_block", "panel_marker": "% Panel E", "literal": "grounded substrate", "uniqueness_verified": true, "match_count": 1, "source_line_in_parent": 185},
+      "role": "annotation_label",
+      "denotes": "the grounded substrate layer (grey rectangle at panel 1.15-3.00, y 2.46-2.62) in Panel E",
+      "disposition": "repaired",
+      "edit": "restacked to two lines 'grounded'/'substrate' (align=right) and repositioned from anchor=east (1.10,2.48) to anchor=east (1.05,2.50); text/font unchanged"
+    },
+    {
+      "id": "panelE.sample_label",
+      "selector": {"kind": "unique_coordinate_literal_in_panel_block", "panel_marker": "% Panel E", "literal": "(1.28,2.72)", "uniqueness_verified": true, "match_count": 1, "source_line_in_parent": 184, "note": "the literal 'sample' occurs twice (Panel D line 151, Panel E line 184); the stable identity is the unique coordinate (1.28,2.72) in the % Panel E block. Panel D's 'sample' is NOT touched."},
+      "role": "annotation_label_sibling",
+      "denotes": "the sample layer (amber rectangle) in Panel E",
+      "disposition": "nudged_to_open_band",
+      "edit": "anchor=east y 2.72 -> 2.78 (minimal +0.06 cm up into its own headroom below 'motion stage'), to open the vertical band for the restacked 'grounded substrate'; x/anchor/text unchanged"
+    },
+    {
+      "id": "panelF.grounded_source_return_label",
+      "selector": {"kind": "unique_literal_text_in_panel_block", "panel_marker": "% Panel F", "literal": "grounded\\source return", "uniqueness_verified": true, "match_count": 1, "source_line_in_parent": 220},
+      "role": "annotation_label",
+      "denotes": "the grounded source-return / ground symbol in Panel F",
+      "disposition": "permanently_open",
+      "open_reason": "label-only vocabulary geometrically exhausted: the ground-symbol referent (panel-x 3.89-4.15) is only 0.60 cm from the right frame; no restack of a readable line fits without covering the referent or crossing the frame; moving up detaches the 0.056 cm leader stub. Requires a future authoring/layout iteration (non-label element move or panel widen), out of bounded-repair scope. UNCHANGED in C4."
+    }
+  ],
+  "protected_invariants": [
+    "panel_E_frame and panel_F_frame rectangles unchanged",
+    "all non-label geometry (substrate/amber rects, ground symbol, HV, electrode bar, leaders, motif) unchanged",
+    "Panel D 'sample' label unchanged",
+    "label text literals unchanged (restack and reposition only, no re-wording, no font change)",
+    "all other panels byte-identical to parent C3"
+  ],
+  "attribution_state": "exact_for_all_targets",
+  "publication_acceptance": "not_claimed"
+}

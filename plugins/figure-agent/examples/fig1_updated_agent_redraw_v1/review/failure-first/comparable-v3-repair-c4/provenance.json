@@ -1,0 +1,107 @@
+{
+  "schema": "figure-agent.adjudicated-repair-binding.v1",
+  "attempt_local": true,
+  "attempt_local_note": "Fourth bounded repair in the attempt-local B -> C1 -> C2 -> C3 -> C4 lineage. Materialized as C3's hash-bound repair child with the same minimal honest artifact set (adjudication, attribution, repaired tex, compile evidence, crops, provenance, regression, declared-boundary replay).",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "lineage": {
+    "root_B_source_sha256": "54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f",
+    "C1_source_sha256": "5d11f3b89303d34bba92933724a44fbf62d72cc56782b062a8b0ada32638057a",
+    "C2_source_sha256": "c1b235af640c496336e965d04a5970c6215f4249e1e992b7c8717458bb503d8e",
+    "parent_C3": {
+      "attempt_dir": "review/failure-first/comparable-v3-repair-c3",
+      "source_path": "repaired.tex",
+      "source_sha256": "0fe2951b5ef16199da8b2d916bce5c9bf87a3e7d20cc6b36828d0d2eff846cad",
+      "development_verdict": "development_baseline_accepted (orchestrator under delegation)"
+    },
+    "child_C4": {
+      "attempt_dir": "review/failure-first/comparable-v3-repair-c4",
+      "source_path": "repaired.tex",
+      "source_sha256": "20372e10f4f40fabd1e491f59a22be66b2af5e8771566f2dbe57fb6a7149df15",
+      "render_pdf_sha256": "a22eb844b93e08ab4e118e18ec29c1a022d5610835fea69ee8ea1e7d518fd1c2",
+      "render_png_sha256": "5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d",
+      "relation": "C3_bounded_repair_child_not_independent_generation"
+    }
+  },
+  "edits": {
+    "finding_id": "HA004",
+    "lines_changed": 2,
+    "changes": [
+      {
+        "label": "grounded substrate (Panel E)",
+        "line_in_parent": 185,
+        "before": "  \\node[small label, anchor=east] at (1.10,2.48) {grounded substrate};",
+        "after": "  \\node[small label, anchor=east, align=right] at (1.05,2.50) {grounded\\\\substrate};",
+        "change": "restacked to two lines 'grounded'/'substrate' (align=right) + reposition anchor (1.10,2.48)->(1.05,2.50); no wording/font change"
+      },
+      {
+        "label": "sample (Panel E, sibling)",
+        "line_in_parent": 184,
+        "before": "  \\node[small label, anchor=east] at (1.28,2.72) {sample};",
+        "after": "  \\node[small label, anchor=east] at (1.28,2.78) {sample};",
+        "change": "nudged up y 2.72 -> 2.78 (+0.06 cm) into its own headroom to open the vertical band for the restacked label; x/anchor/text unchanged"
+      }
+    ],
+    "left_open_unedited": ["grounded source return (Panel F, line 220) — permanently open, label vocabulary exhausted"]
+  },
+  "measured_geometry_cm": {
+    "method": "pdftotext -bbox word boxes + check_panel_boundary_coverage frame lines. Bottom-row calibration global_x_pt = 28.3468*global_cm + 4.344; panel_x = (pt-4.344)/28.3468 - shift (E shift 5.0); panel_y = (457.75 - pt_top)/28.3468.",
+    "panelE_grounded_substrate": {
+      "before_C3_single_line": {"x_panelE": [-0.478, 0.976], "width_cm": 1.454, "crossed_left_frame": true, "crossed_into_panel_D": true},
+      "after_C4_two_line_stack": {
+        "grounded_line": {"x_panelE": [0.213, 0.926], "y_panelE": [2.509, 2.665], "left_frame_clearance_cm": 0.213},
+        "substrate_line": {"x_panelE": [0.232, 0.926], "y_panelE": [2.305, 2.462], "left_frame_clearance_cm": 0.232},
+        "right_edge_to_substrate_rect_clearance_cm": 0.224,
+        "grounded_top_to_sample_bottom_gap_cm": 0.038,
+        "substrate_bottom_to_box_border_gap_cm": 0.035,
+        "requirements": {"frame_cm": 0.10, "neighbor_cm": 0.08},
+        "frame_pass": true,
+        "neighbor_note": "the two internal gaps (0.038 to 'sample', 0.035 to the box border) are below the 0.08 guideline but are collision-free: no text_on_path/near_miss finding appears for 'substrate'/'grounded'/'sample' (see regression.json). The band is physically only 0.433 cm after the sample nudge, so 0.08+0.08 clearance is not achievable; collision-free was the binding gate."
+      }
+    },
+    "panelE_sample_nudge": {
+      "before_C3": {"y_panelE": [2.643, 2.799]},
+      "after_C4": {"y_panelE": [2.703, 2.859]},
+      "nudge_cm": 0.06,
+      "headroom_above_after_cm": 0.241,
+      "headroom_above_ref": "'motion stage' label bottom at panel-y 3.10"
+    },
+    "panelF_grounded_source_return_open": {
+      "referent_ground_symbol_x_panelF": [3.89, 4.15],
+      "right_frame_x_panelF": 4.75,
+      "referent_to_frame_margin_cm": 0.60,
+      "narrowest_restack_line_width_cm": 0.713,
+      "verdict": "no readable restack line fits between the referent and the frame; permanently open"
+    }
+  },
+  "compile": {
+    "engine": "lualatex",
+    "normal_compile": "passed",
+    "normal_compile_rc": 0,
+    "strict_compile": "failed",
+    "strict_compile_rc": 1,
+    "undeclared_geometry_actionable": {"parent_C3": 0, "child_C4": 0},
+    "strict_failure_cause": "check_visual_clash --strict, the same pre-existing failure carried from B/C1/C2/C3, unrelated to this label repair. undeclared_geometry stays 0."
+  },
+  "boundary_coverage": {
+    "parent_C3_crossings": 4,
+    "child_C4_crossings": 2,
+    "removed": ["panel_D_frame_right 'grounded' (grounded substrate)", "panel_E_frame_left 'grounded' (grounded substrate)"],
+    "remaining_permanently_open": ["panel_F_frame_right 'grounded' (grounded source return)", "panel_F_frame_right 'return' (grounded source return)"],
+    "detail": "declared-boundary-replay.json"
+  },
+  "evidence_crops": {
+    "target_before_C3": "crops/target-before-C3.png",
+    "target_after_C4": "crops/target-after-C4.png",
+    "neighbor_after_C4": "crops/neighbor-after-C4.png",
+    "full_after_C4": "crops/full-after-C4.png",
+    "print_scale_after_C4": "crops/print-scale-after-C4.png",
+    "print_scale_note": "Full figure at true publication width 155.9 mm rendered at 300 dpi.",
+    "note": "target crops are Panel E substrate region before(C3)/after(C4); neighbor crop is Panel F top-right showing the permanently-open 'grounded source return'."
+  },
+  "human_review": {
+    "status": "pending",
+    "named_reviewer": null,
+    "note": "Step 10: orchestrator issues the C4 development verdict under delegation (recorded separately). Panel F 'grounded source return' remains a declared-open defect for a future authoring/layout iteration."
+  },
+  "publication_acceptance": "not_claimed"
+}

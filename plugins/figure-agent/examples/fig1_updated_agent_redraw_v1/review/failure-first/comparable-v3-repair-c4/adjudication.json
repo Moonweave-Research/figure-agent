@@ -1,0 +1,48 @@
+{
+  "schema": "figure-agent.initial-human-adjudication.v1",
+  "attempt_dir": "review/failure-first/comparable-v3-repair-c4",
+  "parent_attempt_dir": "review/failure-first/comparable-v3-repair-c3",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "adjudicated_at": "2026-07-18",
+  "adjudicated_by": "orchestrator_under_named_human_delegation",
+  "delegation": {
+    "named_human": {"name": "Choe Mun-yeong", "handle": "Moon-python", "session": "live session 2026-07-18"},
+    "delegation_quote_verbatim": "이 정도는 그냥 너가 판단해도 되는 수준",
+    "delegation_scope": "routine same-class judgments delegated to the orchestrator; the named human additionally set the C4 approach directly (allow line re-stacking; a minimal sibling-label nudge is permitted as label-position vocabulary; never commit a known real collision; final C4 development verdict routes back through the delegation)."
+  },
+  "finding": {
+    "id": "HA004",
+    "kind": "text_crosses_panel_frame",
+    "class": "accidental_frame_crossing_label (same class as HA001/HA003)",
+    "summary": "The 2 remaining open accidental frame-crossing labels from C3 (Panel E 'grounded substrate'; Panel F 'grounded source return'), now attempted with line re-stacking allowed.",
+    "labels": [
+      {"panel": "E", "literal": "grounded substrate", "crossings_on_C3": ["panel_D_frame_right", "panel_E_frame_left"], "disposition": "repaired"},
+      {"panel": "F", "literal": "grounded source return", "crossings_on_C3": ["panel_F_frame_right", "panel_F_frame_right"], "disposition": "permanently_open"}
+    ]
+  },
+  "adjudication": {
+    "panelE_grounded_substrate": {
+      "decision": "repaired_via_two_line_restack_plus_minimal_sibling_nudge",
+      "detail": "Restacked 'grounded substrate' to two lines 'grounded'/'substrate' (established in-figure convention; no wording/font change). The 2-line stack (0.360 cm tall) did not fit the 0.373 cm vertical band between the sibling 'sample' label and the apparatus-box bottom border, so 'sample' was nudged up 0.06 cm (2.72 -> 2.78) into its own 0.30 cm of headroom below 'motion stage', opening the band to 0.433 cm. This is a two-label position edit, strictly label-position vocabulary, explicitly authorized. Result: both Panel E frame crossings removed with zero new findings."
+    },
+    "panelF_grounded_source_return": {
+      "decision": "permanently_open_label_vocabulary_exhausted",
+      "detail": "The ground-symbol referent sits at panel-x [3.89,4.15], only 0.60 cm from the right frame (4.75). Even the narrowest sensible restack line ('grounded', 0.713 cm) cannot clear the frame (needs right edge <=4.65 => left edge <=3.937) without covering the referent (x>=3.89); shifting up to clear the referent detaches the 0.056 cm leader stub and clips the HV wire. Label-only position/anchor/restack vocabulary is geometrically exhausted for this label. Its fix belongs to a future authoring/layout iteration (widen Panel F, or move the ground symbol/HV inward), not a bounded label repair.",
+      "decided_by": ["orchestrator_under_delegation"]
+    }
+  },
+  "authorization_scope": {
+    "authorized": [
+      "restack 'grounded substrate' to two lines and nudge the sibling 'sample' label the minimal amount to open the vertical band",
+      "record 'grounded source return' as a permanently-open declared defect"
+    ],
+    "not_authorized": [
+      "final C4 development verdict is issued by the orchestrator under delegation (recorded separately)",
+      "any non-label element move, panel/frame resize, wording or font change",
+      "committing any known real collision",
+      "any publication acceptance"
+    ]
+  },
+  "parent_source_sha256": "0fe2951b5ef16199da8b2d916bce5c9bf87a3e7d20cc6b36828d0d2eff846cad",
+  "publication_acceptance": "not_claimed"
+}

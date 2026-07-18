@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.text-collisions.v1",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "render_pdf": "build/repaired.pdf",
+  "render_pdf_sha256": "sha256:a22eb844b93e08ab4e118e18ec29c1a022d5610835fea69ee8ea1e7d518fd1c2",
+  "iou_threshold": 0.05,
+  "word_count": 111,
+  "collisions": [],
+  "total": 0,
+  "render_path": "build/repaired.png",
+  "render_sha256": "sha256:5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d"
+}
