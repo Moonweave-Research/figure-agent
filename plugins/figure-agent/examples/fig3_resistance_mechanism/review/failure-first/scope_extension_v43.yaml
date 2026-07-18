@@ -1,0 +1,13 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v42.yaml
+extends_sha256: sha256:7a750b5e8b26b9c4ad45dd77c29c387ff6db1e4cc0c819ed78b0a60aa079c6d4
+reason: admit one provenance-bound prospective detail candidate while preserving the hash-bound baseline and all historical review artifacts
+allowed_review_prefixes:
+  - review/failure-first/prospective-detail-v1/
+allowed_review_paths:
+  - review/failure-first/scope_extension_v43.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/scripts/compile.sh
+  - plugins/figure-agent/tests/test_compile_contract.py
+publication_acceptance: not_claimed
