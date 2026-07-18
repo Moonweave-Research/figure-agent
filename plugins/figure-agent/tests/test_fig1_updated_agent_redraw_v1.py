@@ -156,3 +156,27 @@ def test_r5_v2_predeclaration_frees_composition_but_binds_vertical_cantilever() 
     assert contract["conditions"]["B"]["required_visual_asset_id"] == (
         "panel_f_floating_cantilever"
     )
+
+
+def test_r5_v3_predeclaration_reuses_control_and_binds_system_deltas() -> None:
+    run_root = (
+        PLUGIN_ROOT
+        / "examples"
+        / "fig1_updated_agent_redraw_v1"
+        / "review"
+        / "r5-prospective-v3"
+    )
+    contract = yaml.safe_load(
+        (run_root / "comparison_contract.yaml").read_text(encoding="utf-8")
+    )
+
+    assert contract["control"]["sha256"] == (
+        "0ac43684c00067070fbf9e86aaf6537e48509945006d21af47b5f3fd2d071476"
+    )
+    assert contract["treatment"]["layout_author_selected"] is True
+    assert contract["treatment"]["equal_grid_forbidden_as_a_requirement"] is True
+    assert set(contract["treatment"]["required_system_deltas"]) == {
+        "exact_compilable_visual_asset_import",
+        "malformed_numeric_node_anchor_blocker",
+        "global_panel_header_and_label_clearance_rule",
+    }
