@@ -1,0 +1,60 @@
+{
+  "schema": "figure-agent.closed-loop-development-verdict.v1",
+  "attempt_local": true,
+  "attempt_local_note": "The canonical closed_loop_development_verdict.py consumer requires a closed-loop-current-state projection resolving to a canonical closed-loop-attempt-state.v1 leaf with required_actor 'human_reviewer'. No such attempt-state file exists for this attempt-local B/C lineage (same gap that kept C on the minimal honest artifact set instead of the v4 packet machinery). This verdict is therefore recorded as a minimal honest attempt-local instance of the same schema, not produced by the canonical consumer. It supersedes the historical human_review:'pending' fields in provenance.json and regression.json by lineage; those files are left unmodified as historical evidence.",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "attempt_dir": "review/failure-first/comparable-v3-repair-c1",
+  "verdict_at": "2026-07-18",
+  "named_reviewer": {
+    "name": "Choe Mun-yeong",
+    "handle": "Moon-python",
+    "session": "live session 2026-07-18"
+  },
+  "verdict_verbatim": "응 완성도와 별개로 괜찮아 졌어",
+  "verdict_translation": "Accepted as a development baseline; overall polish/completeness is explicitly NOT claimed (it 'got better', separate from completeness).",
+  "outcome": "development_baseline_accepted",
+  "scope_note": "Development-baseline acceptance of the bounded R5.2 repair only (Panel A 'sulfur segment' label moved fully inside the frame). Overall figure polish and completeness are NOT claimed. This is not release acceptance and not publication acceptance.",
+  "reviewed_finding_id": "HA001",
+  "accepted_artifacts": {
+    "repaired_tex": {
+      "path": "repaired.tex",
+      "sha256": "5d11f3b89303d34bba92933724a44fbf62d72cc56782b062a8b0ada32638057a"
+    },
+    "render_png": {
+      "path": "build/repaired.png",
+      "sha256": "aeb43dc1ac36e32cf0fed4d7aee2a3d07e1ba68e6ea985e3645b2a4ed66cbee5"
+    },
+    "full_after_crop": {
+      "path": "crops/full-after-C.png",
+      "sha256": "366c6d875b1a634c1f76c7e72dec909589344fbc61f3665c43876abc8b31e12f"
+    },
+    "print_scale_after_crop": {
+      "path": "crops/print-scale-after-C.png",
+      "sha256": "df33dfe682ba74ff822596d51c712af602456438039cd68e99aa78f0ce01083d"
+    }
+  },
+  "reviewed_evidence": {
+    "adjudication": {
+      "path": "adjudication.json",
+      "sha256": "c81ba041229077c1ed3cc0e42ec83eb042353c39183adadbb213833f188e8399"
+    },
+    "attribution": {
+      "path": "attribution.json",
+      "sha256": "0a286c641c245eeb37927f840043c8441dc2c1fbc45f1759ab942c9892b04805"
+    },
+    "provenance": {
+      "path": "provenance.json",
+      "sha256": "375b25b3407a9bf7ab81abc78cbfe66780ff1d1ad047e741e642a6ab20706f19"
+    },
+    "regression": {
+      "path": "regression.json",
+      "sha256": "ac78bdb823e526819c373e25ba46a406cb039d5e01d10490c9ce55671afb6452"
+    }
+  },
+  "parent_B_source_sha256": "54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f",
+  "supersedes_pending_human_review_in": [
+    "provenance.json",
+    "regression.json"
+  ],
+  "publication_acceptance": "not_claimed"
+}
