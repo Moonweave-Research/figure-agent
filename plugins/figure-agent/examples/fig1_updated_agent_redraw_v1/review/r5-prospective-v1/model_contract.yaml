@@ -1,0 +1,8 @@
+schema: figure-agent.r5-model-contract.v1
+model_id: gpt-5.6-sol
+reasoning_effort: medium
+execution_surface: codex_exec_ephemeral
+authoring_attempts_per_condition: 1
+feedback_rounds: 0
+manual_repairs_during_authoring: 0
+publication_acceptance: not_claimed
