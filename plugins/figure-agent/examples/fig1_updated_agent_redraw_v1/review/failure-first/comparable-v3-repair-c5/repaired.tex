@@ -1,0 +1,230 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usepackage{polymer-paper-preamble}
+\input{snippets/panel-f-floating-cantilever.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily,
+  panel frame/.style={draw=cLGray, line width=0.32pt, rounded corners=1.2mm},
+  panel letter/.style={font=\sffamily\bfseries\fontsize{9.5}{11.4}\selectfont, text=black},
+  panel title/.style={font=\sffamily\bfseries\fontsize{7.2}{8.6}\selectfont, text=black, anchor=west},
+  body label/.style={font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray},
+  small label/.style={font=\sffamily\fontsize{4.8}{5.8}\selectfont, text=cGray},
+  axis line/.style={-{Stealth[length=2.8pt,width=2.2pt]}, draw=cGray, line width=0.38pt},
+  leader/.style={-{Stealth[length=2.5pt,width=1.9pt]}, draw=cGray, line width=0.32pt},
+  electron/.style={circle, draw=cBlue!80!black, fill=cBlue!55, line width=0.30pt, minimum size=1.15mm, inner sep=0pt}
+]
+
+% Panel A
+\begin{scope}[shift={(0,11.0)}]
+  \draw[panel frame] (0,0) rectangle (7.2,5.0);
+  \node[panel letter, anchor=west] at (0.28,4.62) {A};
+  \node[panel title] at (0.82,4.62) {Sulfur-rich poly(S-r-DIB)};
+
+  \node[body label] at (2.22,1.42) {sulfur segment};
+  \foreach \x in {1.55,2.00,2.45,2.90} {
+    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.42pt,
+          minimum size=2.8mm, inner sep=0pt,
+          font=\sffamily\bfseries\fontsize{5.2}{6.2}\selectfont, text=cBrown] (s\x) at (\x,2.45) {S};
+  }
+  \draw[cAmber!85!black, line width=0.62pt] (1.69,2.45)--(1.86,2.45)
+    (2.14,2.45)--(2.31,2.45) (2.59,2.45)--(2.76,2.45);
+  \draw[cGray, line width=0.62pt] (3.04,2.45)--(3.48,2.45);
+
+  \coordinate (p1) at (4.00,2.45);
+  \foreach \a in {0,60,...,300} {
+    \coordinate (r\a) at ($(p1)+(\a:0.58)$);
+  }
+  \draw[cGray, line width=0.62pt] (r0)--(r60)--(r120)--(r180)--(r240)--(r300)--cycle;
+  \draw[cGray, line width=0.42pt] ($(r0)!0.14!(r60)$)--($(r0)!0.86!(r60)$);
+  \draw[cGray, line width=0.42pt] ($(r120)!0.14!(r180)$)--($(r120)!0.86!(r180)$);
+  \draw[cGray, line width=0.42pt] ($(r240)!0.14!(r300)$)--($(r240)!0.86!(r300)$);
+  \draw[cGray, line width=0.62pt] (r60)--++(0.55,0.43) coordinate (vinylA);
+  \draw[cGray, line width=0.42pt] ($(r60)!0.16!(vinylA)$)--($(r60)!0.88!(vinylA)$);
+  \draw[cGray, line width=0.62pt] (r300)--++(0.55,-0.43) coordinate (vinylB);
+  \draw[cGray, line width=0.42pt] ($(r300)!0.16!(vinylB)$)--($(r300)!0.88!(vinylB)$);
+  \node[body label] at (4.70,1.42) {DIB-derived segment};
+
+  \draw[cGray, line width=0.52pt] (0.90,1.12)--(1.15,1.12) (0.90,1.12)--(0.90,3.78)--(1.15,3.78);
+  \draw[cGray, line width=0.52pt] (5.48,1.12)--(5.73,1.12) (5.73,1.12)--(5.73,3.78)--(5.48,3.78);
+  \node[font=\sffamily\fontsize{6.4}{7.7}\selectfont, text=cGray] at (5.98,1.20) {$n$};
+  \node[body label, align=center] at (3.60,0.55) {random copolymer repeat-unit schematic};
+\end{scope}
+
+% Panel B
+\begin{scope}[shift={(7.55,11.0)}]
+  \draw[panel frame] (0,0) rectangle (7.2,5.0);
+  \node[panel letter, anchor=west] at (0.28,4.62) {B};
+  \node[panel title] at (0.82,4.62) {Composition series};
+
+  \foreach \x/\label/\count in {1.25/lower sulfur/2,3.60/intermediate/4,5.95/sulfur-rich/6} {
+    \draw[cGray, line width=0.38pt, rounded corners=0.5mm] (\x-0.78,1.35) rectangle (\x+0.78,3.70);
+    \fill[cLGray!32] (\x-0.70,1.43) rectangle (\x+0.70,3.62);
+    \foreach \k in {1,...,\count} {
+      \pgfmathsetmacro{\px}{\x-0.52+mod(\k-1,2)*0.52}
+      \pgfmathsetmacro{\py}{1.78+floor((\k-1)/2)*0.55}
+      \node[circle, draw=cAmber!85!black, fill=cAmberSphere!78, line width=0.32pt,
+            minimum size=2.35mm, inner sep=0pt,
+            font=\sffamily\bfseries\fontsize{4.4}{5.3}\selectfont, text=cBrown] at (\px,\py) {S};
+    }
+    \node[body label, align=center] at (\x,0.88) {\label};
+  }
+  \draw[cAmber!90!black, line width=0.75pt] (1.25,4.02)--(2.53,4.02);
+  \draw[-{Stealth[length=3.2pt,width=2.4pt]}, cAmber!90!black, line width=0.75pt]
+    (4.66,4.02)--(5.95,4.02);
+  \node[small label, fill=white, inner sep=1pt] at (3.60,4.02) {increasing sulfur content};
+\end{scope}
+
+% Panel C
+\begin{scope}[shift={(0,4.75)}]
+  \draw[draw=cAmber!70!black, line width=0.72pt, rounded corners=1.4mm] (0,0) rectangle (14.75,5.85);
+  \node[panel letter, anchor=west] at (0.28,5.47) {C};
+  \node[panel title] at (0.82,5.47) {Localized shallow and deep traps};
+  \node[font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont, text=cAmber!90!black,
+        anchor=east] at (14.42,5.47) {HERO};
+
+  \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (3.52,4.88) {real space};
+  \draw[cGray!55, line width=0.46pt]
+    (0.68,2.30) .. controls (1.45,3.75) and (2.28,1.18) .. (3.06,2.84)
+    .. controls (3.70,4.10) and (4.55,1.15) .. (5.23,2.70)
+    .. controls (5.70,3.70) and (6.16,2.35) .. (6.65,2.92);
+  \draw[cAmber, line width=1.15pt]
+    (0.70,3.15) .. controls (1.35,4.02) and (2.05,2.70) .. (2.72,3.45)
+    .. controls (3.42,4.18) and (4.18,2.72) .. (4.88,3.35)
+    .. controls (5.55,3.92) and (6.05,3.05) .. (6.62,3.62);
+  \foreach \x/\y in {1.22/3.58,2.72/3.45,4.92/3.38} {
+    \draw[cBlue, line width=0.58pt] (\x-0.22,\y-0.32)
+      .. controls (\x-0.10,\y-0.70) and (\x+0.10,\y-0.70) .. (\x+0.22,\y-0.32);
+    \node[electron] at (\x,\y-0.53) {};
+  }
+  \foreach \x/\y in {2.02/2.68,3.78/2.52,5.72/2.82} {
+    \draw[cRed!90!black, line width=0.82pt] (\x-0.30,\y-0.20)
+      .. controls (\x-0.18,\y-1.02) and (\x+0.18,\y-1.02) .. (\x+0.30,\y-0.20);
+    \node[circle, draw=cRed!90!black, fill=cRed!72, line width=0.34pt,
+          minimum size=1.20mm, inner sep=0pt] at (\x,\y-0.78) {};
+  }
+  \node[body label, text=cBlue!85!black, anchor=west] at (0.82,1.03) {shallow localization};
+  \draw[leader, cBlue] (1.82,1.12)--(2.58,2.98);
+  \node[body label, text=cRed!88!black, anchor=east] at (6.28,0.63) {deep localization};
+  \draw[leader, cRed!88!black] (5.28,0.78)--(4.02,1.72);
+
+  \draw[cLGray, line width=0.32pt] (7.10,0.52)--(7.10,4.88);
+  \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (10.92,4.88) {energy landscape};
+  \draw[axis line] (7.72,0.72)--(7.72,4.40);
+  \node[body label, rotate=90] at (7.34,2.58) {energy};
+  \draw[cGray, line width=0.48pt] (8.12,3.82)--(13.98,3.82);
+  \node[small label, fill=white, inner sep=1.2pt, anchor=south west] at (8.26,3.92) {mobility edge};
+  \draw[cBlue, line width=0.78pt]
+    (8.25,3.82) .. controls (8.50,3.26) and (8.72,3.26) .. (8.97,3.82);
+  \draw[cBlue, line width=0.78pt]
+    (9.48,3.82) .. controls (9.72,3.12) and (9.98,3.12) .. (10.22,3.82);
+  \draw[cRed!90!black, line width=1.02pt]
+    (10.78,3.82) .. controls (11.04,1.58) and (11.42,1.58) .. (11.70,3.82);
+  \draw[cRed!90!black, line width=1.02pt]
+    (12.42,3.82) .. controls (12.68,1.02) and (13.08,1.02) .. (13.38,3.82);
+  \node[electron] at (8.61,3.46) {};
+  \node[electron] at (9.85,3.34) {};
+  \node[circle, draw=cRed!90!black, fill=cRed!72, line width=0.34pt,
+        minimum size=1.20mm, inner sep=0pt] at (11.24,2.42) {};
+  \node[circle, draw=cRed!90!black, fill=cRed!72, line width=0.34pt,
+        minimum size=1.20mm, inner sep=0pt] at (12.91,1.82) {};
+  \draw[-{Stealth[length=2.7pt,width=2.0pt]}, cBlue, line width=0.45pt]
+    (9.86,3.12) .. controls (10.05,2.75) and (10.40,2.96) .. (10.42,3.48);
+  \node[small label, text=cBlue!85!black, anchor=north] at (9.48,2.72) {thermal escape};
+  \node[body label, text=cBlue!85!black] at (8.95,1.10) {shallow states};
+  \node[body label, text=cRed!88!black] at (12.18,0.62) {deep states};
+\end{scope}
+
+% Panel D
+\begin{scope}[shift={(0,0)}]
+  \draw[panel frame] (0,0) rectangle (4.75,4.35);
+  \node[panel letter, anchor=west] at (0.28,3.97) {D};
+  \node[panel title] at (0.82,3.97) {Transient current};
+
+  \fill[cLGray!25, rounded corners=0.5mm] (0.45,2.36) rectangle (4.30,3.48);
+  \draw[cGray, line width=0.38pt, rounded corners=0.5mm] (0.45,2.36) rectangle (4.30,3.48);
+  \node[draw=cBlue!70!black, fill=white, line width=0.34pt, rounded corners=0.5mm,
+        minimum width=0.72cm, minimum height=0.48cm,
+        font=\sffamily\bfseries\fontsize{4.8}{5.8}\selectfont, text=cBlue!80!black] (hv) at (0.98,2.92) {HV};
+  \draw[cAmber!85!black, fill=cAmber!22, line width=0.42pt] (1.70,2.69) rectangle (2.92,3.15);
+  \node[small label] at (2.31,2.92) {sample};
+  \node[draw=cGray, fill=white, line width=0.34pt, rounded corners=0.5mm,
+        minimum width=0.72cm, minimum height=0.48cm,
+        font=\sffamily\fontsize{4.8}{5.8}\selectfont, text=cGray] (meter) at (3.78,2.92) {$I(t)$};
+  \draw[cGray, line width=0.36pt] (hv.east)--(1.70,2.92) (2.92,2.92)--(meter.west);
+  \node[small label, anchor=south] at (2.34,3.10) {constant voltage};
+
+  \draw[axis line] (0.66,0.48)--(0.66,1.93);
+  \draw[axis line] (0.66,0.48)--(4.20,0.48);
+  \node[small label, rotate=90] at (0.30,1.20) {current};
+  \node[small label] at (3.96,0.22) {time};
+  \draw[cBlue, line width=0.88pt]
+    (0.82,1.73) .. controls (1.35,1.42) and (1.72,0.92) .. (2.38,0.76)
+    .. controls (3.02,0.61) and (3.54,0.58) .. (4.02,0.57);
+  \node[small label, text=cBlue!85!black, fill=white, inner sep=1pt] at (2.95,1.36) {trap-mediated decay};
+\end{scope}
+
+% Panel E
+\begin{scope}[shift={(5.00,0)}]
+  \draw[panel frame] (0,0) rectangle (4.75,4.35);
+  \node[panel letter, anchor=west] at (0.28,3.97) {E};
+  \node[panel title] at (0.82,3.97) {ISPD trap distribution};
+
+  \fill[cLGray!25, rounded corners=0.5mm] (0.40,2.27) rectangle (4.35,3.48);
+  \draw[cGray, line width=0.38pt, rounded corners=0.5mm] (0.40,2.27) rectangle (4.35,3.48);
+  \draw[cGray!85!black, fill=cGray!18, line width=0.42pt] (1.15,2.46) rectangle (3.00,2.62);
+  \draw[cAmber!85!black, fill=cAmber!25, line width=0.38pt] (1.35,2.62) rectangle (2.80,2.78);
+  \draw[cGray, line width=0.40pt] (2.08,3.25)--(2.08,2.92);
+  \fill[cGray] (1.98,2.82)--(2.18,2.82)--(2.08,2.62)--cycle;
+  \draw[cGray, line width=0.36pt] (1.65,3.30)--(2.55,3.30);
+  \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cTeal, line width=0.38pt] (1.70,3.14)--(2.48,3.14);
+  \node[small label, anchor=east] at (1.60,3.18) {motion stage};
+  \node[small label, anchor=west] at (2.28,2.91) {probe};
+  \node[small label, anchor=east] at (1.28,2.78) {sample};
+  \node[small label, anchor=east, align=right] at (1.05,2.50) {grounded\\substrate};
+  \node[draw=cGray, fill=white, line width=0.32pt, rounded corners=0.4mm,
+        font=\sffamily\fontsize{4.7}{5.6}\selectfont, text=cGray,
+        minimum width=0.62cm, minimum height=0.38cm] (vs) at (3.75,3.02) {$V_s$};
+  \draw[cGray, line width=0.32pt] (2.18,3.04)--(3.42,3.04);
+  \node[small label, anchor=west] at (3.31,3.33) {$V_s$ meter};
+  \draw[cGray, line width=0.34pt] (2.92,2.46)--(2.92,2.35);
+  \draw[cGray, line width=0.34pt] (2.78,2.35)--(3.06,2.35);
+  \draw[cGray, line width=0.34pt] (2.82,2.29)--(3.02,2.29);
+
+  \draw[axis line] (0.66,0.46)--(0.66,1.92);
+  \draw[axis line] (0.66,0.46)--(4.22,0.46);
+  \node[small label, rotate=90] at (0.29,1.18) {trap population};
+  \node[small label] at (3.98,0.20) {depth};
+  \path[draw=cBlue, fill=cBlue!18, line width=0.58pt]
+    (0.92,0.47) .. controls (1.15,1.68) and (1.78,1.68) .. (2.10,0.47) -- cycle;
+  \path[draw=cRed!90!black, fill=cRed!20, line width=0.72pt]
+    (2.20,0.47) .. controls (2.55,1.78) and (3.42,1.78) .. (3.90,0.47) -- cycle;
+  \node[small label, text=cBlue!85!black] at (1.50,1.72) {shallow};
+  \node[small label, text=cRed!88!black] at (3.05,1.77) {deep};
+\end{scope}
+
+% Panel F
+\begin{scope}[shift={(10.00,0)}]
+  \draw[panel frame] (0,0) rectangle (4.75,4.35);
+  \node[panel letter, anchor=west] at (0.28,3.97) {F};
+  \node[panel title] at (0.82,3.97) {Floating Coulomb response};
+
+  \PanelFFloatingCantilever{f}{(2.28,3.08)}
+  \node[small label, anchor=east] at (1.72,3.48) {mechanical clamp};
+  \draw[leader] (1.76,3.40)--(2.24,3.38);
+  \node[small label, anchor=east, align=right] at (1.415,1.54) {floating polymer\\cantilever};
+  \draw[leader] (1.31,1.38)--(1.58,1.62);
+  \node[small label, anchor=west, align=left] at (3.83,1.55) {driven\\electrode};
+  \draw[leader] (4.04,1.60)--(3.70,1.68);
+  \node[small label, anchor=west, align=left] at (4.06,3.50) {grounded\\source return};
+  \draw[leader] (4.02,3.45)--(3.98,3.41);
+  \draw[-{Stealth[length=3.5pt,width=2.7pt]}, cRed!90!black, line width=0.82pt]
+    (1.48,1.76)--(0.68,1.76);
+  \node[small label, text=cRed!88!black, anchor=south] at (1.08,1.84) {Coulomb force};
+  \node[small label, text=cRed!88!black, anchor=west] at (0.46,0.53) {trapped charge};
+  \draw[leader, cRed!88!black] (1.42,0.63)--(1.20,1.12);
+\end{scope}
+
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,43 @@
+{
+  "schema": "figure-agent.semantic-finding-attribution.v1",
+  "finding_id": "HA005",
+  "parent_source": {
+    "path": "../comparable-v3-repair-c4/repaired.tex",
+    "sha256": "20372e10f4f40fabd1e491f59a22be66b2af5e8771566f2dbe57fb6a7149df15"
+  },
+  "targets": [
+    {
+      "id": "panelD.constant_voltage_label",
+      "selector": {"kind": "unique_literal_text_in_panel_block", "panel_marker": "% Panel D", "literal": "constant voltage", "uniqueness_verified": true, "match_count": 1, "source_line_in_parent": 156},
+      "role": "annotation_caption",
+      "denotes": "the constant-voltage bias across the transient-current apparatus (HV -> sample -> I(t)) in Panel D",
+      "disposition": "repaired",
+      "edit": "anchor=south y 3.20 -> 3.10 (down 0.10 cm into the box interior); x/anchor/text unchanged",
+      "protected_invariants": ["apparatus box, HV/sample/I(t) nodes, wires unchanged", "text/font/anchor-side unchanged"]
+    },
+    {
+      "id": "panelE.probe_label",
+      "selector": {"kind": "unique_literal_text_in_panel_block", "panel_marker": "% Panel E", "literal": "probe", "uniqueness_verified": true, "match_count": 1, "source_line_in_parent": 183},
+      "role": "annotation_label",
+      "denotes": "the ISPD probe element in Panel E",
+      "disposition": "repaired",
+      "edit": "anchor=west y 2.96 -> 2.91 (down 0.05 cm to center between the probe wire above and the sample rect below); x/anchor/text unchanged",
+      "protected_invariants": ["probe wire, sample/substrate rects unchanged", "text/font/anchor-side unchanged", "association with the probe element preserved"]
+    },
+    {
+      "id": "panelF.floating_polymer_cantilever_label",
+      "selector": {"kind": "unique_literal_text_in_panel_block", "panel_marker": "% Panel F", "literal": "floating polymer\\cantilever", "uniqueness_verified": true, "match_count": 1, "source_line_in_parent": 216},
+      "role": "annotation_label",
+      "denotes": "the floating poly(S-r-DIB) cantilever body in Panel F",
+      "disposition": "repaired",
+      "edit": "anchor=east y 1.30 -> 1.54 (up 0.24 cm so 'cantilever' clears above the trapped-charge sphere and the beam); x=1.415 UNCHANGED, so the C3 left-frame win ('floating' left edge at panel-x 0.100) is preserved; text/font/anchor-side unchanged",
+      "protected_invariants": ["C3 left-frame clearance preserved (floating left edge panel-x 0.100)", "leader, cantilever beam, trapped-charge spheres unchanged", "text/font/anchor-side unchanged"]
+    }
+  ],
+  "false_positive_declarations": {
+    "mechanism": "_known_false_positives.yaml (plugin root), consumed by check_visual_clash --ignore-known-fp; six fixture-scoped + glyph-scoped patterns added (ids fig1_panelA_title_polymer_name_frame_halo, fig1_panelC_hero_tag_frame_halo, fig1_panelE_letter_e_frame_halo, fig1_panelF_letter_f_frame_halo, fig1_panelE_title_ispd_frame_halo, fig1_panelE_vs_meter_label_box_border)",
+    "note": "each pattern carries a ground field; bounds are tight (just above each measured signal) so real defects and future stronger collisions on these glyphs stay actionable"
+  },
+  "attribution_state": "exact_for_all_three_repaired_targets",
+  "publication_acceptance": "not_claimed"
+}

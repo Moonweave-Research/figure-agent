@@ -1,0 +1,93 @@
+{
+  "schema": "figure-agent.adjudicated-repair-binding.v1",
+  "attempt_local": true,
+  "attempt_local_note": "Fifth bounded repair in the attempt-local B -> C1 -> C2 -> C3 -> C4 -> C5 lineage. C5 also adds six fixture-scoped known-FP declarations to the plugin-root _known_false_positives.yaml (shared config, not a historical review artifact). Same minimal honest artifact set as C1-C4.",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "lineage": {
+    "root_B_source_sha256": "54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f",
+    "C1_source_sha256": "5d11f3b89303d34bba92933724a44fbf62d72cc56782b062a8b0ada32638057a",
+    "C2_source_sha256": "c1b235af640c496336e965d04a5970c6215f4249e1e992b7c8717458bb503d8e",
+    "C3_source_sha256": "0fe2951b5ef16199da8b2d916bce5c9bf87a3e7d20cc6b36828d0d2eff846cad",
+    "parent_C4": {
+      "attempt_dir": "review/failure-first/comparable-v3-repair-c4",
+      "source_path": "repaired.tex",
+      "source_sha256": "20372e10f4f40fabd1e491f59a22be66b2af5e8771566f2dbe57fb6a7149df15",
+      "development_verdict": "development_baseline_accepted (orchestrator under delegation)"
+    },
+    "child_C5": {
+      "attempt_dir": "review/failure-first/comparable-v3-repair-c5",
+      "source_path": "repaired.tex",
+      "source_sha256": "02f811518956a50fd3e3ae526807260a44b792edcf5e2292472a48c977fa4118",
+      "render_pdf_sha256": "9f50f2b417c8284a892213e31d8dc329249cd4e3463aef9138eafe63d833f7e0",
+      "render_png_sha256": "19f0cee3729da7475ee3c4853f758646d415ee6ab2a1d38f38bbb02ba54dd55e",
+      "known_fp_yaml_sha256": "97b06bd851128d4e6ee11ab959ac378c02b51ca2ccdb950fa215e0c157f121cf",
+      "relation": "C4_bounded_repair_child_not_independent_generation"
+    }
+  },
+  "edits": {
+    "finding_id": "HA005",
+    "tex_lines_changed": 3,
+    "changes": [
+      {"label": "constant voltage (Panel D)", "line_in_parent": 156, "before": "at (2.34,3.20)", "after": "at (2.34,3.10)", "change": "down 0.10 cm; anchor=south, x/text unchanged"},
+      {"label": "probe (Panel E)", "line_in_parent": 183, "before": "at (2.28,2.96)", "after": "at (2.28,2.91)", "change": "down 0.05 cm; anchor=west, x/text unchanged"},
+      {"label": "floating polymer cantilever (Panel F)", "line_in_parent": 216, "before": "at (1.415,1.30)", "after": "at (1.415,1.54)", "change": "up 0.24 cm; anchor=east, x=1.415 unchanged (C3 left-frame win preserved), text unchanged"}
+    ],
+    "known_fp_yaml_patterns_added": 6
+  },
+  "measured_geometry_cm": {
+    "method": "pdftotext -bbox word boxes + pdfplumber path/line/curve extraction. Bottom-row calibration global_x_pt = 28.3468*global_cm + 4.344; panel_y = (457.75 - pt_top)/28.3468.",
+    "constant_voltage": {
+      "crossing_path": "apparatus-box top border at panel-y 3.48",
+      "before_C4": {"glyph_top_panelD_y": 3.483, "clearance_to_border_cm": -0.003, "crossed": true, "dark": 0.213},
+      "after_C5": {"moved_down_cm": 0.10, "glyph_top_now_below_border": true, "cleared": true},
+      "requirement_cm": 0.08
+    },
+    "probe": {
+      "crossing_path": "probe horizontal wire at panel-y 3.042; sample rect top at panel-y 2.78 (below)",
+      "before_C4": {"glyph_top_panelE_y": 3.039, "grazed_wire": true, "dark": 0.187},
+      "after_C5": {"moved_down_cm": 0.05, "centered_between_wire_and_rect": true, "wire_clearance_cm": "~0.05", "rect_clearance_cm": "~0.05", "cleared": true},
+      "requirement_cm": 0.08,
+      "note": "the wire-to-rect gap is only 0.26 cm, so a 0.155 cm-tall label with descenders centers at ~0.05 cm each side (below the 0.08 guideline but collision-free: no text_on_path finding)."
+    },
+    "floating_polymer_cantilever": {
+      "obstacles": "trapped-charge sphere at panelF x[1.078,1.242] y[1.100,1.264] on 'er'; cantilever beam passing behind the word",
+      "before_C4": {"cantilever_y_panelF": [1.104, 1.261], "sphere_on_er": true, "dark": 0.112},
+      "after_C5": {"moved_up_cm": 0.24, "cantilever_now_above_sphere": true, "floating_left_edge_panelF_x": 0.100, "c3_left_frame_win_preserved": true, "cleared": true},
+      "requirement": "preserve C3 left-frame clearance >= 0.10 cm (met, x unchanged); clear the sphere and beam (met)"
+    }
+  },
+  "false_positive_declarations": {
+    "yaml_path": "_known_false_positives.yaml",
+    "patterns_added": 6,
+    "glyphs": ["poly(S-r-DIB)", "HERO", "E", "F", "ISPD", "Vs"],
+    "scope": "fixture fig1_updated_agent_redraw_v1, glyph-scoped, tight dark/edge bounds, per-entry ground text",
+    "ground": "orchestrator crop review confirmed no real collision (bold title/letter own-glyph halo near the thin frame line; Vs meter label separated from its box border)"
+  },
+  "compile": {
+    "engine": "lualatex",
+    "normal_compile": "passed",
+    "normal_compile_rc": 0,
+    "strict_compile": "passed",
+    "strict_compile_rc": 0,
+    "strict_first_green": true,
+    "strict_status": "passed (detector_failed: false)",
+    "strict_detail": "check_visual_clash --strict --ignore-known-fp: 0 blocking, 27 report-only, 6 suppressed. undeclared_geometry 0. First time strict passes across the entire B..C5 lineage. This is a MACHINE-VALID layer only; not visual, human-development, release, or publication acceptance."
+  },
+  "boundary_coverage": {
+    "parent_C4_crossings": 2,
+    "child_C5_crossings": 2,
+    "verdict": "unchanged at 2 (Panel F grounded source return pair, declared permanently open). The 3 label moves did not regress any frame clearance."
+  },
+  "evidence_crops": {
+    "target_before_C4": ["crops/target-before-C4-D.png", "crops/target-before-C4-E.png", "crops/target-before-C4-F.png"],
+    "target_after_C5": ["crops/target-after-C5-D.png", "crops/target-after-C5-E.png", "crops/target-after-C5-F.png"],
+    "full_after_C5": "crops/full-after-C5.png",
+    "print_scale_after_C5": "crops/print-scale-after-C5.png"
+  },
+  "human_review": {
+    "status": "pending",
+    "named_reviewer": null,
+    "note": "Step 10: orchestrator issues the C5 development verdict under delegation (recorded separately). strict first-green is a machine-valid layer only; publication_acceptance not_claimed."
+  },
+  "publication_acceptance": "not_claimed"
+}

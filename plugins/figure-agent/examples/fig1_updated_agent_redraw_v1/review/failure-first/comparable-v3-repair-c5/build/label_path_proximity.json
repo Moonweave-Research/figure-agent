@@ -1,0 +1,9 @@
+{
+  "candidates": [],
+  "checked": 0,
+  "fixture": "comparable-v3-repair-c5",
+  "render_pdf": "build/repaired.pdf",
+  "schema": "figure-agent.label-path-proximity.v1",
+  "source": "spec.yaml:label_path_proximity_checks",
+  "total": 0
+}

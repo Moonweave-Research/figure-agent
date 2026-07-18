@@ -1,0 +1,49 @@
+{
+  "schema": "figure-agent.post-repair-visual-review-response.v1",
+  "attempt_local": true,
+  "finding_id": "HA005",
+  "compared": {
+    "parent_C4_build": "../comparable-v3-repair-c4/build",
+    "child_C5_build": "build"
+  },
+  "page_geometry": {
+    "parent_C4_pt": [441.894, 461.832],
+    "child_C5_pt": [441.894, 461.832],
+    "verdict": "identical page size (all 3 moves are interior, no bbox change)."
+  },
+  "detector_diff_raw": {
+    "note": "raw = check_visual_clash without --ignore-known-fp, so the 6 declared FPs are still counted here; this isolates the effect of the 3 label MOVES from the FP suppression.",
+    "collisions": {"C4": 0, "C5": 0, "verdict": "identical"},
+    "text_boundary_clash": {"C4": 0, "C5": 0, "verdict": "identical"},
+    "label_path_proximity": {"C4": 0, "C5": 0, "verdict": "identical"},
+    "vector_clearance": {"C4": 0, "C5": 0, "verdict": "identical"},
+    "undeclared_geometry": {"C4": 0, "C5": 0, "verdict": "identical (still 0 actionable)"},
+    "visual_clash_raw": {
+      "C4_unique_sigs": 32, "C5_unique_sigs": 28,
+      "new_in_C5": [],
+      "removed_in_C5": [
+        {"kind": "text_on_path", "text": "constant", "dark": 0.213},
+        {"kind": "text_on_path", "text": "voltage", "dark": 0.208},
+        {"kind": "text_on_path", "text": "probe", "dark": 0.187},
+        {"kind": "text_on_path", "text": "cantilever", "dark": 0.112}
+      ],
+      "verdict": "the 3 label moves removed EXACTLY the 4 real defect candidates with ZERO new candidates anywhere. No regression."
+    }
+  },
+  "strict_gate": {
+    "C4_blocking": 10,
+    "C5_blocking": 0,
+    "C5_report_only": 27,
+    "C5_suppressed_declared_fp": 6,
+    "breakdown": "of C4's 10 blocking: 4 (constant/voltage/probe/cantilever) removed by repair; 6 (poly(S-r-DIB)/HERO/E/F/ISPD/Vs) declared as known-FP and now suppressed. Net blocking 10 -> 0.",
+    "strict_compile": "PASSED (rc 0) -- first green across the B..C5 lineage. Machine-valid layer only."
+  },
+  "panel_boundary_coverage": {
+    "C4": 2, "C5": 2,
+    "verdict": "unchanged at 2 (Panel F grounded source return pair, declared permanently open). No frame-clearance regression from the 3 moves."
+  },
+  "regression_verdict": "PASS (machine, clean): the 3 label moves removed exactly the 4 real strict-blocking defects with zero new candidates, page geometry unchanged, all other detectors identical, boundary coverage unchanged at 2. The 6 confirmed false positives were declared via the existing fixture-scoped known-FP mechanism (glyph-scoped, tight bounds). Strict compile is GREEN for the first time -- a MACHINE-VALID layer only, not visual/human/release/publication acceptance.",
+  "false_positive_suppression_safety": "each FP pattern is fixture-scoped AND glyph-scoped with a dark_max just above the measured signal, so it cannot suppress the 4 real repaired defects (different glyphs, dark 0.11-0.21) nor a future stronger collision on the same glyph. Verified: with the patterns present, raw (un-suppressed) detection still reports all candidates; only --ignore-known-fp hides the 6.",
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}
