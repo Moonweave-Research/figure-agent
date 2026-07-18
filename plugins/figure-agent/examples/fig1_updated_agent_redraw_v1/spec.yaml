@@ -2,6 +2,7 @@ name: fig1_updated_agent_redraw_v1
 paper_id: pair001
 title: Fig 1 — charge trapping in sulfur-rich polymer
 style_profile: polymer-paper
+undeclared_geometry_profile: schematic
 authoring_context_pack:
   enabled: true
   visual_asset_ids:
