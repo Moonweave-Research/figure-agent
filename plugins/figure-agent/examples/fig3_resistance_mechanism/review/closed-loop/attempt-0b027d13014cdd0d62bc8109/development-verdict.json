@@ -1,0 +1,13 @@
+{
+  "schema": "figure-agent.closed-loop-development-verdict.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "attempt_id": "attempt-0b027d13014cdd0d62bc8109",
+  "reviewed_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/state-009-visually_re_reviewed.json",
+  "decision_kind": "accept_development_baseline",
+  "human_decision": "accept this exact visually re-reviewed artifact as a development baseline",
+  "human_note": "Approved by Moon as the Slice baseline. This is a development scaffold baseline only; further visual refinement remains allowed and no release or publication acceptance is claimed.",
+  "mutation_boundary": "development_baseline_state_mutation_allowed",
+  "reviewer": "Moon",
+  "reviewed_state_sha256": "sha256:461294ca06b558a6c3fa71d19b5526b3501be818ce34b02bfb4bc144a4fb7435",
+  "publication_acceptance": "not_claimed"
+}

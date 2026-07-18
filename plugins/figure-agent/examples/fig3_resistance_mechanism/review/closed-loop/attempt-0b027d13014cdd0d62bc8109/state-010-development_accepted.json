@@ -1,0 +1,27 @@
+{
+  "actor": "Moon",
+  "actor_role": "human_reviewer",
+  "attempt_id": "attempt-0b027d13014cdd0d62bc8109",
+  "disposition": "accepted",
+  "evidence": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/development-verdict.json",
+      "role": "human_decision_record",
+      "sha256": "sha256:ceddeeaf00e445e9906b4598e89b3c1d77b0a89a36c126bb15569d794cb30d15"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "parent_state_file_sha256": "sha256:a1b3afafe33e4444c3683e04d531cd24af89eabf22fc73bff3fb0b0fbbfeb837",
+  "parent_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/state-007-repair_required.json",
+  "parent_state_sha256": "sha256:6c8b5ecadf58dc576c5857d420f54ca58a2af5e499f2c22c04d8b827c564c59d",
+  "previous_state_file_sha256": "sha256:10b4c3b3c969ac45e9f0009f4a37c362912a31e2d1ecb7513314559a48341910",
+  "previous_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/state-009-visually_re_reviewed.json",
+  "previous_state_sha256": "sha256:461294ca06b558a6c3fa71d19b5526b3501be818ce34b02bfb4bc144a4fb7435",
+  "publication_acceptance": "not_claimed",
+  "required_actor": "none",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 10,
+  "state": "development_accepted",
+  "state_sha256": "sha256:70c080a910958d8a7f9b6e465b39f662d3bffe7cae6938986f4fad9c5d9d9f00",
+  "terminal": true
+}
