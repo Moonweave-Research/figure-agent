@@ -1,0 +1,10 @@
+{
+  "checked": 0,
+  "issues": [],
+  "render_pdf": "build/verified_generated.pdf",
+  "schema": "figure-agent.vector-clearance.v1",
+  "source_hashes": {
+    "examples/comparable-v3/verified_generated.tex": "sha256:54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f"
+  },
+  "total": 0
+}

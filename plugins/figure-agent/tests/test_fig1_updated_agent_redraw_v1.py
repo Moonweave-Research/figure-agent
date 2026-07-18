@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -182,6 +183,68 @@ def test_r5_v3_predeclaration_reuses_control_and_binds_system_deltas() -> None:
         "malformed_numeric_node_anchor_blocker",
         "global_panel_header_and_label_clearance_rule",
     }
+
+
+def test_r5_v4_predeclaration_opens_repair_for_machine_invalid_b() -> None:
+    run_root = (
+        PLUGIN_ROOT
+        / "examples"
+        / "fig1_updated_agent_redraw_v1"
+        / "review"
+        / "r5-prospective-v4"
+    )
+    contract = yaml.safe_load(
+        (run_root / "comparison_contract.yaml").read_text(encoding="utf-8")
+    )
+
+    assert contract["control"]["sha256"] == (
+        "0ac43684c00067070fbf9e86aaf6537e48509945006d21af47b5f3fd2d071476"
+    )
+    assert contract["task_path"] == "../r5-prospective-v3/task.md"
+    assert contract["budget_contract_path"] == "../r5-prospective-v3/budget_contract.yaml"
+    assert contract["treatment"]["canonical_output"] == (
+        "../failure-first/comparable-v3/verified_generated.tex"
+    )
+    assert set(contract["treatment"]["required_system_deltas"]) == {
+        "canonical_panel_attribution_markers",
+        "schematic_undeclared_geometry_profile",
+        "exact_unique_literal_source_attribution",
+    }
+    assert contract["admission"]["strict_pass_required_before_repair"] is False
+    assert contract["admission"]["reproducible_render_required"] is True
+    assert contract["admission"]["named_human_adjudication_required"] is True
+    assert contract["publication_acceptance"] == "not_claimed"
+
+    status = json.loads((run_root / "run-status.json").read_text(encoding="utf-8"))
+    metrics = json.loads(
+        (
+            PLUGIN_ROOT
+            / "examples"
+            / "fig1_updated_agent_redraw_v1"
+            / "review"
+            / "failure-first"
+            / "comparable-v3"
+            / "attribution-metrics.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert status["treatment"]["normal_compile_state"] == "passed"
+    assert status["treatment"]["strict_compile_state"] == "failed"
+    assert status["treatment"]["repair_admission"] == (
+        "open_after_named_human_adjudication_of_exact_finding"
+    )
+    assert metrics["attribution_states"] == {
+        "exact": 16,
+        "ambiguous": 18,
+        "unbound": 1,
+    }
+    assert metrics["declared_check_coverage"] == {
+        "label_path_proximity": 0,
+        "text_boundary_clash": 0,
+        "vector_clearance": 0,
+    }
+    assert metrics["repair_performed"] is False
+    assert metrics["human_review"] == "pending"
+    assert metrics["publication_acceptance"] == "not_claimed"
 
 
 def test_redraw_uses_schematic_undeclared_geometry_profile() -> None:

@@ -250,7 +250,7 @@ reviewable; open the next slice only after recording stop conditions and evidenc
 ### R5 — Cross-family proof and capability promotion
 - [x] Require ordered `% Panel <id>` markers; exact-bind only unique rendered literals and leave repeated text ambiguous.
 - [x] Apply the schematic geometry profile: v3's 53 generic-shape candidates become INFO while one semantic-path crossing remains actionable.
-- [ ] R5.1: author a fresh B, compile/crop/queue it, and record exact/ambiguous/unbound counts without repair.
+- [x] R5.1: fresh B reproduced and queued without repair; attribution is 16 exact, 18 ambiguous, and 1 unbound across 35 candidates.
 - [ ] R5.2: adjudicate one certain defect, derive C only as B's bounded repair child, and run fresh neighbor/full/print review.
 - [ ] R5.3: add minimal declared-check coverage and expose zero coverage; never encode the six-panel layout or fixture coordinates as grammar.
 - [ ] R5.4: deepen A, B, or E semantics from paper authority and prove one fault injection.

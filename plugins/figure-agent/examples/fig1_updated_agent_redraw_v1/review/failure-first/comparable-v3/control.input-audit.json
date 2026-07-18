@@ -1,0 +1,26 @@
+{
+  "allowed_repository_reads": [
+    "AGENTS.md",
+    "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3/verified_generated.tex",
+    "styles/polymer-paper-preamble.sty",
+    "styles/snippets/panel-f-floating-cantilever.contract.yaml",
+    "styles/snippets/panel-f-floating-cantilever.tex",
+    "styles/snippets/panel-f-floating-cantilever.transfer.yaml"
+  ],
+  "audit_boundary": "shell_visible_cat_grep_head_rg_sed_tail_reads_only",
+  "audited_command_count": 4,
+  "decision": "pass",
+  "filesystem_read_isolation": "unavailable",
+  "observed_repository_reads": [
+    "AGENTS.md",
+    "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3/verified_generated.tex",
+    "styles/polymer-paper-preamble.sty",
+    "styles/snippets/panel-f-floating-cantilever.contract.yaml",
+    "styles/snippets/panel-f-floating-cantilever.tex",
+    "styles/snippets/panel-f-floating-cantilever.transfer.yaml"
+  ],
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.authoring-execution-input-audit.v1",
+  "transcript_sha256": "sha256:586c95c0264b0be0b524d7c230f66ef4df117f3976a199fc257bc961fc22c2bd",
+  "undeclared_repository_reads": []
+}

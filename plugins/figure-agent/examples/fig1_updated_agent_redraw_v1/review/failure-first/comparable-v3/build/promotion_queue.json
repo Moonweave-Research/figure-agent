@@ -1,0 +1,1444 @@
+{
+  "attempt_dir": "review/failure-first/comparable-v3",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "items": [
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2002,
+        96,
+        2059,
+        169
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC001.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC001.png",
+          "sha256": "sha256:acb5af5dce09a38edb21bb13f943e08b2cec88769b4a9aa7da6239be4ab71565"
+        }
+      ],
+      "id": "VC001",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.025,
+        "edge": 0.005
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "B",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          58,
+          58
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        58,
+        58
+      ],
+      "text": "B"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        346,
+        97,
+        648,
+        152
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC002.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC002.png",
+          "sha256": "sha256:a49ac5fd772d1f5c3bc9297b0c4f9577ab416b359ae77646213f5c6b553c0141"
+        }
+      ],
+      "id": "VC002",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.023,
+        "edge": 0.005
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "A",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          23,
+          23
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        23,
+        23
+      ],
+      "text": "Sulfur-rich"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        665,
+        97,
+        1033,
+        152
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC003.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC003.png",
+          "sha256": "sha256:de82e9e37e779514478f1407e93a92969b71f4ae8b1ad0093536705b56045087"
+        }
+      ],
+      "id": "VC003",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.032,
+        "edge": 0.007
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "A",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          23,
+          23
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        23,
+        23
+      ],
+      "text": "poly(S-r-DIB)"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        475,
+        621,
+        503,
+        661
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC004.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC004.png",
+          "sha256": "sha256:62e3f8567892c4a59e8b49409dc958edac725ccb578bb0013a281dc15cf55653"
+        }
+      ],
+      "id": "VC004",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.03,
+        "edge": 0.005
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        581,
+        621,
+        610,
+        661
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC005.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC005.png",
+          "sha256": "sha256:fa33392206ad4217ec7ce32e69c0b9f38d439df04273e96d866df3620cd26e6d"
+        }
+      ],
+      "id": "VC005",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.036,
+        "edge": 0.005
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        687,
+        621,
+        716,
+        661
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC006.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC006.png",
+          "sha256": "sha256:d32c162d61f36a67187dd892c3158c69dd7fe711d9a6963eb1a80c9291b54ee5"
+        }
+      ],
+      "id": "VC006",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.032,
+        "edge": 0.005
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        794,
+        621,
+        822,
+        661
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC007.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC007.png",
+          "sha256": "sha256:9c598136c0d1028a9ee28f6bdc23389b5a1dffad4c0eed99f18d70b9c9f5e5ee"
+        }
+      ],
+      "id": "VC007",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.031,
+        "edge": 0.005
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2067,
+        782,
+        2091,
+        816
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC008.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC008.png",
+          "sha256": "sha256:455a17493962b1906b7008d14d729282cede8e275fcabb1d03834b567b71aa25"
+        }
+      ],
+      "id": "VC008",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.066,
+        "edge": 0.01
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2190,
+        782,
+        2214,
+        816
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC009.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC009.png",
+          "sha256": "sha256:06a812e64ba9d7aa52f035e12781aa817d45ae053eb608ca851b6cdfea97f7fa"
+        }
+      ],
+      "id": "VC009",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.064,
+        "edge": 0.01
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        3178,
+        522,
+        3202,
+        556
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC010.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC010.png",
+          "sha256": "sha256:89f0c8367d2fb8c1d165563e118f4e67644f45832d0d9cfa757a306385036f69"
+        }
+      ],
+      "id": "VC010",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.066,
+        "edge": 0.011
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        3300,
+        522,
+        3325,
+        556
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC011.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC011.png",
+          "sha256": "sha256:8592afe5c72989923a18a6f995be3687f5e8cdc1b176c7adb89f706f4b090c6b"
+        }
+      ],
+      "id": "VC011",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.069,
+        "edge": 0.01
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2622,
+        652,
+        2647,
+        686
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC012.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC012.png",
+          "sha256": "sha256:ce57af702cb7ce36032b4ff3dbfbcbba1a47c6a1f25a30f81d87b1bb35ab6fa2"
+        }
+      ],
+      "id": "VC012",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.071,
+        "edge": 0.01
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2745,
+        652,
+        2770,
+        686
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC013.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC013.png",
+          "sha256": "sha256:986979ee6e162b02e3570078774de5e1677dd230ffe53a6a05de4adc82da7a12"
+        }
+      ],
+      "id": "VC013",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.071,
+        "edge": 0.011
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        3178,
+        652,
+        3202,
+        686
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC014.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC014.png",
+          "sha256": "sha256:1480b2b1f7a313d739051026cc1959b12bfb6f51606525345d68286ea2103210"
+        }
+      ],
+      "id": "VC014",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.066,
+        "edge": 0.011
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        3300,
+        652,
+        3325,
+        686
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC015.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC015.png",
+          "sha256": "sha256:88bf61272f3d083909812b24659ae881bab429dc357fd1346deffc39600f85c5"
+        }
+      ],
+      "id": "VC015",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.071,
+        "edge": 0.011
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2622,
+        782,
+        2647,
+        816
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC016.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC016.png",
+          "sha256": "sha256:4a6fae01c48c6b58c260fd18dfd417145ad062cf8622b39cf24e697d50a4001f"
+        }
+      ],
+      "id": "VC016",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.073,
+        "edge": 0.011
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2745,
+        782,
+        2770,
+        816
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC017.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC017.png",
+          "sha256": "sha256:99311493aa644921627e97193531c21f54ae8c0be6493275efed8b72d8c7a171"
+        }
+      ],
+      "id": "VC017",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.073,
+        "edge": 0.011
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        3178,
+        782,
+        3202,
+        816
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC018.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC018.png",
+          "sha256": "sha256:96f981165eaf73523d15b1cebc35e6b76a43762be09fa8e0d8b3e58ad5d3fab4"
+        }
+      ],
+      "id": "VC018",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.074,
+        "edge": 0.012
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        3300,
+        782,
+        3325,
+        816
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC019.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC019.png",
+          "sha256": "sha256:5f3781b32771bf99ec4f13ad299d3d2e93cecbc324b54b30d906fe5c8a8ae80e"
+        }
+      ],
+      "id": "VC019",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.073,
+        "edge": 0.011
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          23,
+          29,
+          69
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "S"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        1019,
+        859,
+        1260,
+        901
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC020.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC020.png",
+          "sha256": "sha256:f1de763de1d1b87a6e782cb4f101e79675df145c4339eb5f1e420b2b004c8a4b"
+        }
+      ],
+      "id": "VC020",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.024,
+        "edge": 0.005
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "A",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          47,
+          47
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        47,
+        47
+      ],
+      "text": "DIB-derived"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        218,
+        1372,
+        275,
+        1445
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC021.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC021.png",
+          "sha256": "sha256:6ecb43c20bc971d25b0959b209bdf2a9a9d57686e33b2e69ffba0f5a9dca7258"
+        }
+      ],
+      "id": "VC021",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.02,
+        "edge": 0.006
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "C",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          81,
+          81
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        81,
+        81
+      ],
+      "text": "C"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        3381,
+        1385,
+        3501,
+        1424
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC022.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC022.png",
+          "sha256": "sha256:e1fdb74ec0a0556bd494dcfc71ba593d8242a0cb8c21da32358efcb61b77f6df"
+        }
+      ],
+      "id": "VC022",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.046,
+        "edge": 0.01
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "C",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          84,
+          84
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        84,
+        84
+      ],
+      "text": "HERO"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        218,
+        2848,
+        275,
+        2921
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC023.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC023.png",
+          "sha256": "sha256:59847710667f50fbf1a06c1bcdf9cec17d02c29765f6ec3fb9b64ccac12fa306"
+        }
+      ],
+      "id": "VC023",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.023,
+        "edge": 0.005
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "D",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          141,
+          141
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        141,
+        141
+      ],
+      "text": "D"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        1400,
+        2848,
+        1452,
+        2921
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC024.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC024.png",
+          "sha256": "sha256:d443126b891719786b96ab09e81559e830e362b809b566a72a6fb1aeb3c81f9d"
+        }
+      ],
+      "id": "VC024",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.039,
+        "edge": 0.008
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "E",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          170,
+          170
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        170,
+        170
+      ],
+      "text": "E"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        346,
+        2855,
+        612,
+        2910
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC025.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC025.png",
+          "sha256": "sha256:72fac9f7fdeb512b01718f7c798b473f6fdad5b0a8fe88276e8347df82451850"
+        }
+      ],
+      "id": "VC025",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.016,
+        "edge": 0.004
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "D",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          142,
+          142
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        142,
+        142
+      ],
+      "text": "Transient"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2581,
+        2848,
+        2629,
+        2921
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC026.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC026.png",
+          "sha256": "sha256:3277950b5dec0af7e672348336e2297df8b096ef632c868e1c99b1b5efbf0694"
+        }
+      ],
+      "id": "VC026",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.037,
+        "edge": 0.008
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "F",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          209,
+          209
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        209,
+        209
+      ],
+      "text": "F"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        1527,
+        2850,
+        1667,
+        2905
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC027.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC027.png",
+          "sha256": "sha256:e669596f009f0868822b54a332faeed1b703a35206315b9c0b1c3e1fe6c4faec"
+        }
+      ],
+      "id": "VC027",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.048,
+        "edge": 0.013
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "E",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          171,
+          171
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        171,
+        171
+      ],
+      "text": "ISPD"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2709,
+        2849,
+        2941,
+        2905
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC028.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC028.png",
+          "sha256": "sha256:c05d6d990aa10df97f7feab13c9fcdd11a96be74c2b415df4650e656ef437506"
+        }
+      ],
+      "id": "VC028",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.02,
+        "edge": 0.005
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "F",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          210,
+          210
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        210,
+        210
+      ],
+      "text": "Floating"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2958,
+        2849,
+        3217,
+        2905
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC029.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC029.png",
+          "sha256": "sha256:5065c85ec7e9cf57f047c16ef5145afbcbda4178e9a42f1044337a56aacd5956"
+        }
+      ],
+      "id": "VC029",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.026,
+        "edge": 0.005
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          210,
+          223
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "Coulomb"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        531,
+        2992,
+        681,
+        3029
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC030.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC030.png",
+          "sha256": "sha256:243b3d9e0723469075f432ae155c2627b7998276adae6a898493414e36393ecf"
+        }
+      ],
+      "id": "VC030",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.213,
+        "edge": 0.032
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "D",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          155,
+          155
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        155,
+        155
+      ],
+      "text": "constant"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        692,
+        2992,
+        821,
+        3029
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC031.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC031.png",
+          "sha256": "sha256:2b0a073b1a4785c111fdfd3ab01c93f8deb507439eb47159bf21497f0c11eb1b"
+        }
+      ],
+      "id": "VC031",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.208,
+        "edge": 0.032
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "D",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          155,
+          155
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        155,
+        155
+      ],
+      "text": "voltage"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2116,
+        3009,
+        2178,
+        3054
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC032.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC032.png",
+          "sha256": "sha256:3c21ab018ba6f4f459e9770f3237e6fc2891dafe4d9a032d632bea2186e8b2ab"
+        }
+      ],
+      "id": "VC032",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.151,
+        "edge": 0.027
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "reason": "literal_text_not_found",
+        "state": "unbound"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "Vs"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        327,
+        3110,
+        382,
+        3147
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC033.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC033.png",
+          "sha256": "sha256:1162defe3165bfd8583ca5064e2c6ce9298c2f5ec9099e76e95e99a255f0f9bd"
+        }
+      ],
+      "id": "VC033",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.026,
+        "edge": 0.007
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "D",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          148,
+          148
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        148,
+        148
+      ],
+      "text": "HV"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        1872,
+        3097,
+        1974,
+        3134
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC034.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC034.png",
+          "sha256": "sha256:3d3a15abd09290f76a9d80290af84135f70f0974ddb4dff216855b07c4b94cfb"
+        }
+      ],
+      "id": "VC034",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.187,
+        "edge": 0.03
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "panel": "E",
+        "reason": "unique_literal_text_in_panel_block",
+        "state": "exact",
+        "tex_lines": [
+          182,
+          182
+        ]
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": [
+        182,
+        182
+      ],
+      "text": "probe"
+    },
+    {
+      "action": "human_review_required",
+      "bbox_px": [
+        2586,
+        3517,
+        2756,
+        3554
+      ],
+      "crop_paths": [
+        "build/perception/visual_findings/crops/VC035.png"
+      ],
+      "defect_class": null,
+      "evidence_inline": [
+        {
+          "kind": "image",
+          "path": "build/perception/visual_findings/crops/VC035.png",
+          "sha256": "sha256:87545c4d015dfa82fa7616d013df90fb648f94b5695099dbdb474b0e7de06982"
+        }
+      ],
+      "id": "VC035",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.143,
+        "edge": 0.009
+      },
+      "promotion_tier": "review_queue",
+      "source_attribution": {
+        "candidate_tex_lines": [
+          4,
+          215
+        ],
+        "reason": "literal_text_matches_multiple_lines",
+        "state": "ambiguous"
+      },
+      "source_detector": "visual_clash",
+      "tex_lines": null,
+      "text": "cantilever"
+    }
+  ],
+  "non_promoting_detectors": [
+    {
+      "detector": "layout_drift",
+      "promotion_tier": "non_promoting",
+      "reason": "reference-relative advisory; intentionally not read for ledger promotion"
+    },
+    {
+      "detector": "hyphenation",
+      "promotion_tier": "non_promoting",
+      "reason": "cosmetic advisory; intentionally not read for ledger promotion"
+    },
+    {
+      "detector": "physics_grounding",
+      "promotion_tier": "non_promoting",
+      "reason": "document meta-check advisory; intentionally not read for ledger promotion"
+    }
+  ],
+  "schema": "figure-agent.promotion-queue.v1",
+  "source_detector": "visual_clash",
+  "source_hashes": {
+    "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3/verified_generated.tex": "sha256:54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f"
+  },
+  "status": "review_required",
+  "top_items": [
+    "VC030",
+    "VC031",
+    "VC034",
+    "VC032",
+    "VC035"
+  ],
+  "total": 35,
+  "visual_clash_report_sha256": "sha256:63f0765c6da6ec7cfb5d6a9d304648a492fa58a867d19fd192bf41c494d706e6"
+}
