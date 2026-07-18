@@ -1,0 +1,46 @@
+{
+  "schema": "figure-agent.semantic-finding-attribution.v1",
+  "finding_id": "HA003",
+  "parent_source": {
+    "path": "../comparable-v3-repair-c2/repaired.tex",
+    "sha256": "c1b235af640c496336e965d04a5970c6215f4249e1e992b7c8717458bb503d8e"
+  },
+  "targets": [
+    {
+      "id": "panelF.floating_polymer_cantilever_label",
+      "selector": {"kind": "unique_literal_text_in_panel_block", "panel_marker": "% Panel F", "literal": "floating polymer\\cantilever", "uniqueness_verified": true, "match_count": 1, "source_line_in_parent": 216},
+      "role": "annotation_label",
+      "denotes": "the floating poly(S-r-DIB) cantilever body in Panel F",
+      "protected_invariants": ["text/style/leader unchanged", "anchor stays east", "only x-position changes"],
+      "disposition": "repaired",
+      "editable_target": {"scope": "single \\node line", "allowed_change": "x-position of the anchor only", "forbidden_change": "text, font, anchor side, y, the leader"}
+    },
+    {
+      "id": "panelF.driven_electrode_label",
+      "selector": {"kind": "unique_literal_text_in_panel_block", "panel_marker": "% Panel F", "literal": "driven\\electrode", "uniqueness_verified": true, "match_count": 1, "source_line_in_parent": 218},
+      "role": "annotation_label",
+      "denotes": "the driven counter-electrode bar in Panel F",
+      "protected_invariants": ["text/style/leader unchanged", "anchor stays west", "only x-position changes"],
+      "disposition": "repaired",
+      "editable_target": {"scope": "single \\node line", "allowed_change": "x-position of the anchor only", "forbidden_change": "text, font, anchor side, y, the leader"}
+    },
+    {
+      "id": "panelE.grounded_substrate_label",
+      "selector": {"kind": "unique_literal_text_in_panel_block", "panel_marker": "% Panel E", "literal": "grounded substrate", "uniqueness_verified": true, "match_count": 1, "source_line_in_parent": 185},
+      "role": "annotation_label",
+      "denotes": "the grounded substrate layer (grey rectangle at panel 1.15-3.00, y 2.46-2.62) in Panel E",
+      "disposition": "left_open",
+      "open_reason": "1.454 cm label; the clear span between E's left frame (panel-x 0, +0.10 clearance) and the substrate rectangle left edge (panel-x 1.15, -0.08 clearance) is only 0.97 cm < label width. Any rightward shift that clears the frame overlaps the filled substrate rect; below the apparatus box lies the trap-distribution plot (detachment + collision). No position/anchor-only move fits without a new collision or referent detachment."
+    },
+    {
+      "id": "panelF.grounded_source_return_label",
+      "selector": {"kind": "unique_literal_text_in_panel_block", "panel_marker": "% Panel F", "literal": "grounded\\source return", "uniqueness_verified": true, "match_count": 1, "source_line_in_parent": 220},
+      "role": "annotation_label",
+      "denotes": "the grounded source-return / ground symbol in Panel F",
+      "disposition": "left_open",
+      "open_reason": "the 'source return' line (0.994 cm) needs a 0.528 cm leftward shift to clear the right frame; that lands the text on the HV wiring / cantilever motif (empirically verified: new visual_clash text_on_path 'source' dark=0.162) and over its own ground-symbol referent at panel (3.98,3.41). No position/anchor-only move fits without a new collision or referent detachment."
+    }
+  ],
+  "attribution_state": "exact_for_all_four_targets",
+  "publication_acceptance": "not_claimed"
+}

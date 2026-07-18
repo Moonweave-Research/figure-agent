@@ -1,0 +1,95 @@
+{
+  "schema": "figure-agent.adjudicated-repair-binding.v1",
+  "attempt_local": true,
+  "attempt_local_note": "Third bounded repair in the attempt-local B -> C1 -> C2 -> C3 lineage (R5.2 mechanism). C3 is materialized as C2's hash-bound repair child with the same minimal honest artifact set as C1/C2 (adjudication, attribution, repaired tex, compile evidence, crops, provenance, regression, declared-boundary replay). No closed-loop-attempt-state.v1 leaf exists for this lineage, so the canonical v4 packet machinery cannot bind here.",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "lineage": {
+    "great_grandparent_B": {"attempt_dir": "review/failure-first/comparable-v3", "source_path": "verified_generated.tex", "source_sha256": "54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f"},
+    "grandparent_C1": {"attempt_dir": "review/failure-first/comparable-v3-repair-c1", "source_sha256": "5d11f3b89303d34bba92933724a44fbf62d72cc56782b062a8b0ada32638057a", "development_verdict": "development_baseline_accepted"},
+    "parent_C2": {
+      "attempt_dir": "review/failure-first/comparable-v3-repair-c2",
+      "source_path": "repaired.tex",
+      "source_sha256": "c1b235af640c496336e965d04a5970c6215f4249e1e992b7c8717458bb503d8e",
+      "render_pdf_sha256": "6a6e849380b7aba5e9cfdaad0136c8c8efa9b139683feec37c446b016afb715b",
+      "render_png_sha256": "b6562d48ce83a4ea33c659a01579322285af127bf68320f1b850257ab51074ab",
+      "development_verdict": "development_baseline_accepted (2026-07-18, Choe Mun-yeong)"
+    },
+    "child_C3": {
+      "attempt_dir": "review/failure-first/comparable-v3-repair-c3",
+      "source_path": "repaired.tex",
+      "source_sha256": "0fe2951b5ef16199da8b2d916bce5c9bf87a3e7d20cc6b36828d0d2eff846cad",
+      "render_pdf_sha256": "66a08e2acadea8b4859ec6091efa92723bba218bb8415e35988a6b46eb85ddaa",
+      "render_png_sha256": "f2bf36e6169a67bf6cf9e07bfffa407c8197b92af430aa25cbea06a9c27fa5d2",
+      "relation": "C2_bounded_repair_child_not_independent_generation"
+    }
+  },
+  "edits": {
+    "finding_id": "HA003",
+    "lines_changed": 2,
+    "changes": [
+      {
+        "label": "floating polymer cantilever (Panel F)",
+        "line_in_parent": 216,
+        "before": "  \\node[small label, anchor=east, align=right] at (1.27,1.30) {floating polymer\\\\cantilever};",
+        "after": "  \\node[small label, anchor=east, align=right] at (1.415,1.30) {floating polymer\\\\cantilever};",
+        "change": "anchor x 1.27 -> 1.415 (shift right 0.145 cm); y, anchor side, text, style, leader unchanged"
+      },
+      {
+        "label": "driven electrode (Panel F)",
+        "line_in_parent": 218,
+        "before": "  \\node[small label, anchor=west, align=left] at (4.08,1.55) {driven\\\\electrode};",
+        "after": "  \\node[small label, anchor=west, align=left] at (3.83,1.55) {driven\\\\electrode};",
+        "change": "anchor x 4.08 -> 3.83 (shift left 0.25 cm); y, anchor side, text, style, leader unchanged"
+      }
+    ],
+    "left_open_unedited": ["grounded substrate (Panel E, line 185)", "grounded source return (Panel F, line 220)"]
+  },
+  "measured_geometry_cm": {
+    "method": "pdftotext -bbox word boxes + check_panel_boundary_coverage frame lines. Calibration (bottom row): global_x_pt = 28.3468*global_cm + 4.344 (cross-checked on the D-right/E-left/F-left/F-right frame positions 138.991/146.078/287.812/422.459); panel_x = (pt-4.344)/28.3468 - shift (E shift 5.0, F shift 10.0).",
+    "frames_pt": {"panel_F_frame_left": 287.812091, "panel_F_frame_right": 422.459434, "panel_E_frame_left": 146.078045, "panel_D_frame_right": 138.991343},
+    "floating_polymer_cantilever": {
+      "referent_leader": "(1.31,1.38)--(1.58,1.62) toward the cantilever body",
+      "before_C2": {"floating_left_edge_panelF_x": -0.045, "frame_left_clearance_cm": -0.045, "crossed": true},
+      "after_C3": {"floating_left_edge_panelF_x": 0.100, "frame_left_clearance_cm": 0.100, "crossed": false},
+      "requirement_cm": 0.10, "pass": true
+    },
+    "driven_electrode": {
+      "referent_leader": "(4.04,1.60)--(3.70,1.68) toward the driven electrode bar",
+      "before_C2": {"electrode_right_edge_panelF_x": 4.898, "frame_right_clearance_cm": -0.148, "crossed": true},
+      "after_C3": {"electrode_right_edge_panelF_x": 4.648, "frame_right_clearance_cm": 0.102, "crossed": false},
+      "requirement_cm": 0.10, "pass": true,
+      "note": "moving the label 0.25 cm toward its own electrode-bar referent produced one sub-threshold visual_clash near_miss on 'driven' (dark=0.019, promotion_tier=null); the leader still connects and the after-PNG reads clean (see regression.json)."
+    }
+  },
+  "compile": {
+    "engine": "lualatex",
+    "normal_compile": "passed",
+    "normal_compile_rc": 0,
+    "strict_compile": "failed",
+    "strict_compile_rc": 1,
+    "undeclared_geometry_actionable": {"parent_C2": 0, "child_C3": 0},
+    "strict_failure_cause": "check_visual_clash --strict is the same pre-existing strict failure carried from B/C1/C2 (identical mechanism recorded in C2's provenance); it is unrelated to this label repair. undeclared_geometry stays 0. Strict was never expected to pass for this lineage."
+  },
+  "boundary_coverage": {
+    "parent_C2_crossings": 6,
+    "child_C3_crossings": 4,
+    "removed": ["panel_F_frame_left 'floating'", "panel_F_frame_right 'electrode'"],
+    "remaining_open": ["panel_D_frame_right 'grounded' (grounded substrate)", "panel_E_frame_left 'grounded' (grounded substrate)", "panel_F_frame_right 'grounded' (grounded source return)", "panel_F_frame_right 'return' (grounded source return)"],
+    "detail": "declared-boundary-replay.json"
+  },
+  "evidence_crops": {
+    "target_before_C2": "crops/target-before-C2.png",
+    "target_after_C3": "crops/target-after-C3.png",
+    "neighbor_after_C3": "crops/neighbor-after-C3.png",
+    "full_after_C3": "crops/full-after-C3.png",
+    "print_scale_after_C3": "crops/print-scale-after-C3.png",
+    "print_scale_note": "Full figure at true publication width 155.9 mm rendered at 300 dpi (1842 px wide).",
+    "note": "target crops are Panel F before(C2)/after(C3) showing both repaired labels; neighbor crop is Panel E + D-E gutter showing the left-open 'grounded substrate'."
+  },
+  "human_review": {
+    "status": "pending",
+    "named_reviewer": null,
+    "note": "Step 10: no self-issued development verdict. The named human delegated the adjudication of these same-class defects but the final C3 development-baseline verdict routes to the named human. One caveat to surface: the sub-threshold near_miss 'driven'; and two open items (grounded substrate, grounded source return)."
+  },
+  "publication_acceptance": "not_claimed"
+}
