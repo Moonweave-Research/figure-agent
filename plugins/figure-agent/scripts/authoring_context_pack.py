@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+import aesthetic_intent
 import authoring_rules
 import composition_profile as composition_profile_compiler
 import narrative_context
@@ -76,6 +77,41 @@ def _paper_context(example_dir: Path) -> dict[str, str]:
         key: _read_optional_text(path)
         for key, path in files.items()
         if path.is_file() and _read_optional_text(path)
+    }
+
+
+def _aesthetic_intent(example_dir: Path, workspace_root: Path) -> dict[str, Any] | None:
+    try:
+        intent = aesthetic_intent.load_optional_aesthetic_intent(example_dir)
+    except aesthetic_intent.AestheticIntentError as exc:
+        raise AuthoringContextPackError(f"aesthetic intent is invalid: {exc}") from exc
+    if intent is None:
+        return None
+
+    def render_items(items: list[str]) -> str:
+        return "; ".join(item.rstrip(".") for item in items) + "."
+
+    path = example_dir / "aesthetic_intent.yaml"
+    directives = [
+        f"Preserve {principle['id']}: {principle['instruction']}"
+        for principle in intent["design_principles"]
+    ]
+    for lever in intent.get("aesthetic_levers", []):
+        lever_id = lever["id"]
+        directives.extend(
+            [
+                f"For {lever_id}: {lever['intent']}",
+                f"Avoid {lever_id} anti-patterns: {render_items(lever['anti_patterns'])}",
+                f"Allowed for {lever_id}: {render_items(lever['allowed_adjustments'])}",
+                f"Forbidden for {lever_id}: {render_items(lever['forbidden_adjustments'])}",
+                f"Use {lever['default_route']} for {lever_id} by default.",
+            ]
+        )
+    return {
+        "path": _relative(workspace_root, path),
+        "sha256": _sha256_file(path),
+        "schema": intent["schema"],
+        "authoring_directives": directives,
     }
 
 
@@ -623,6 +659,7 @@ def build_context_pack(
     selected_composition_profile = _composition_profile(
         example_dir, composition_profile
     )
+    selected_aesthetic_intent = _aesthetic_intent(example_dir, paths.workspace_root)
     payload = {
         "schema": SCHEMA,
         "name": name,
@@ -644,6 +681,9 @@ def build_context_pack(
                 _relative(paths.workspace_root, layout_path) if layout_path is not None else ""
             ),
             "visual_asset_catalog": visual_assets["catalog_path"],
+            "aesthetic_intent": (
+                selected_aesthetic_intent["path"] if selected_aesthetic_intent else ""
+            ),
         },
         "fixture": {
             "title": spec.get("title", ""),
@@ -683,6 +723,8 @@ def build_context_pack(
         payload["shape_profile"] = selected_shape_profile
     if selected_composition_profile is not None:
         payload["composition_profile"] = selected_composition_profile
+    if selected_aesthetic_intent is not None:
+        payload["aesthetic_intent"] = selected_aesthetic_intent
     if path_constraints is not None:
         payload["path_constraints"] = path_constraints
     return payload
@@ -737,6 +779,11 @@ def render_text(payload: dict[str, Any]) -> str:
     if selected_composition_profile:
         lines.extend(["", "## Composition Profile"])
         for directive in selected_composition_profile["authoring_directives"]:
+            lines.append(f"- {directive}")
+    selected_aesthetic_intent = payload.get("aesthetic_intent")
+    if selected_aesthetic_intent:
+        lines.extend(["", "## Aesthetic Intent"])
+        for directive in selected_aesthetic_intent["authoring_directives"]:
             lines.append(f"- {directive}")
     visual_assets = payload.get("visual_assets", {})
     selected_assets = visual_assets.get("selected", [])
