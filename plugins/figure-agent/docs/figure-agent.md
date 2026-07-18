@@ -146,9 +146,9 @@ No lower state implies a higher one. Machine gates and model critiques use
 `publication_acceptance: not_claimed`; any external record is evidence, not plugin
 authority.
 
-Promotion requires two materially different figure families, prospectively recorded correction time,
-named human outcomes, no semantic or relation regression,
-and reproducible evidence. Rejected and neutral attempts remain failure evidence.
+Promotion requires two materially different figure families, prospectively recorded correction time, named human outcomes, no semantic/relation regression, and reproducible evidence.
+Reports require passing `correction_time_gate` and `lineage_gate`: A/B share task/model/budget/start; C is B's hash-bound repair child, not an independent generation.
+Rejected and neutral attempts remain failure evidence.
 
 ## 5. Executable roadmap
 

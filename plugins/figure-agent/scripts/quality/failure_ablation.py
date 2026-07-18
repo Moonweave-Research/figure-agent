@@ -191,6 +191,34 @@ def _is_explicitly_comparison_ineligible(run: dict[str, Any]) -> bool:
     return eligibility is not None and eligibility != COMPARISON_ELIGIBLE
 
 
+def _has_bounded_repair_lineage(runs: dict[str, dict[str, Any]]) -> bool:
+    if {
+        name: runs[name].get("comparison_role") for name in VARIANTS
+    } != {
+        "raw": "raw_authoring",
+        "verified": "contract_authoring",
+        "repaired": "bounded_repair_child",
+    }:
+        return False
+    raw_receipt = runs["raw"].get("generation_receipt")
+    verified_receipt = runs["verified"].get("generation_receipt")
+    repaired_receipt = runs["repaired"].get("generation_receipt")
+    if not all(
+        isinstance(receipt, dict)
+        for receipt in (raw_receipt, verified_receipt, repaired_receipt)
+    ):
+        return False
+    verified_generated = verified_receipt.get("generated_artifact_sha256")
+    return bool(
+        raw_receipt.get("starting_artifact_sha256")
+        == verified_receipt.get("starting_artifact_sha256")
+        and runs["repaired"].get("parent_variant") == "verified"
+        and runs["repaired"].get("parent_generated_artifact_sha256")
+        == verified_generated
+        and repaired_receipt.get("starting_artifact_sha256") == verified_generated
+    )
+
+
 def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
     if set(run_paths) != VARIANTS:
         raise FailureAblationError("variant_set_invalid")
@@ -235,15 +263,24 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
         for item in variants.values()
     )
     receipts = [runs[name].get("generation_receipt") for name in VARIANTS]
-    transcript_bound = (
+    receipts_bound = (
         not any(_is_explicitly_comparison_ineligible(runs[name]) for name in VARIANTS)
         and all(_has_bound_generation_receipt(runs[name]) for name in VARIANTS)
         and all(
             len({receipt[field] for receipt in receipts if isinstance(receipt, dict)})
             == 1
-            for field in ("model_id", "source_commit", "starting_artifact_sha256")
+            for field in ("model_id", "source_commit")
         )
     )
+    same_start = receipts_bound and len(
+        {
+            receipt["starting_artifact_sha256"]
+            for receipt in receipts
+            if isinstance(receipt, dict)
+        }
+    ) == 1
+    lineage_complete = receipts_bound and _has_bounded_repair_lineage(runs)
+    transcript_bound = receipts_bound and (same_start or lineage_complete)
     return {
         "schema": REPORT_SCHEMA,
         "variants": variants,
@@ -257,6 +294,7 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
         "correction_time_gate": (
             "passed" if correction_time_complete else "failed"
         ),
+        "lineage_gate": "passed" if lineage_complete else "failed",
         "reproduction_gate": "passed" if reproduction_complete else "failed",
         "product_claim": (
             "review_eligible"
@@ -267,6 +305,7 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
                 and reproduction_complete
                 and correction_time_complete
                 and transcript_bound
+                and lineage_complete
             )
             else "not_authorized"
         ),

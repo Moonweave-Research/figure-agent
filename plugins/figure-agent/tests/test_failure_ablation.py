@@ -62,11 +62,17 @@ def write_comparable_runs(root: Path) -> dict[str, Path]:
     }
 
 
-def add_generation_receipt(path: Path, *, model_id: str = "test-model") -> None:
+def add_generation_receipt(
+    path: Path,
+    *,
+    model_id: str = "test-model",
+    starting_artifact_path: Path | None = None,
+) -> None:
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
-    starting_artifact_path = path.with_name("starting.tex")
+    if starting_artifact_path is None:
+        starting_artifact_path = path.with_name("starting.tex")
+        starting_artifact_path.write_text("starting artifact\n", encoding="utf-8")
     generated_artifact_path = path.with_name(f"{path.stem}.generated.tex")
-    starting_artifact_path.write_text("starting artifact\n", encoding="utf-8")
     generated_artifact_path.write_text(
         f"generated {path.stem} artifact\n", encoding="utf-8"
     )
@@ -222,7 +228,7 @@ def test_missing_prospective_correction_time_blocks_product_claim(
     assert report["product_claim"] == "not_authorized"
 
 
-def test_recorded_prospective_correction_times_allow_review_eligibility(
+def test_independent_third_generation_is_not_a_bounded_repair_child(
     tmp_path: Path,
 ) -> None:
     paths = write_comparable_runs(tmp_path)
@@ -241,6 +247,58 @@ def test_recorded_prospective_correction_times_allow_review_eligibility(
     report = evaluate_ablation(paths)
 
     assert report["correction_time_gate"] == "passed"
+    assert report["lineage_gate"] == "failed"
+    assert report["product_claim"] == "not_authorized"
+
+
+def test_bounded_repair_child_allows_review_eligibility(tmp_path: Path) -> None:
+    paths = write_comparable_runs(tmp_path)
+    correction_minutes = {"raw": 12.0, "verified": 8.0, "repaired": 3.0}
+    roles = {
+        "raw": "raw_authoring",
+        "verified": "contract_authoring",
+        "repaired": "bounded_repair_child",
+    }
+    for variant in ("raw", "verified"):
+        path = paths[variant]
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload["comparison_role"] = roles[variant]
+        payload["human_correction_minutes"] = correction_minutes[variant]
+        payload["human_verdict"] = {
+            "state": "recorded",
+            "reviewer": "moon",
+            "decision": "accepted",
+        }
+        path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+        add_generation_receipt(path)
+
+    verified = yaml.safe_load(paths["verified"].read_text(encoding="utf-8"))
+    verified_child_source = tmp_path / verified["generation_receipt"][
+        "generated_artifact_path"
+    ]
+    repaired = yaml.safe_load(paths["repaired"].read_text(encoding="utf-8"))
+    repaired["comparison_role"] = roles["repaired"]
+    repaired["parent_variant"] = "verified"
+    repaired["parent_generated_artifact_sha256"] = verified["generation_receipt"][
+        "generated_artifact_sha256"
+    ]
+    repaired["human_correction_minutes"] = correction_minutes["repaired"]
+    repaired["human_verdict"] = {
+        "state": "recorded",
+        "reviewer": "moon",
+        "decision": "accepted",
+    }
+    paths["repaired"].write_text(
+        yaml.safe_dump(repaired, sort_keys=False), encoding="utf-8"
+    )
+    add_generation_receipt(
+        paths["repaired"], starting_artifact_path=verified_child_source
+    )
+
+    report = evaluate_ablation(paths)
+
+    assert report["correction_time_gate"] == "passed"
+    assert report["lineage_gate"] == "passed"
     assert report["product_claim"] == "review_eligible"
 
 
