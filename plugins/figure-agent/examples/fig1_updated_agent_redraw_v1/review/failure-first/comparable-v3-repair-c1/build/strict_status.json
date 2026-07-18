@@ -1,0 +1,6 @@
+{
+  "schema": "figure-agent.strict-status.v1",
+  "strict_requested": true,
+  "detector_failed": true,
+  "state": "failed"
+}

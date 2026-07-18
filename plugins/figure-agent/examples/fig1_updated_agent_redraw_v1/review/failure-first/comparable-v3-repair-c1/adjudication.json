@@ -1,0 +1,37 @@
+{
+  "schema": "figure-agent.initial-human-adjudication.v1",
+  "attempt_dir": "review/failure-first/comparable-v3-repair-c1",
+  "parent_attempt_dir": "review/failure-first/comparable-v3",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "adjudicated_at": "2026-07-18",
+  "named_human": {
+    "name": "Choe Mun-yeong",
+    "handle": "Moon-python",
+    "session": "live session 2026-07-18"
+  },
+  "finding": {
+    "id": "HA001",
+    "kind": "text_boundary_clash",
+    "panel": "A",
+    "summary": "Panel A 'sulfur segment' body label crosses the left panel frame and protrudes outside it.",
+    "detector_status": "missed",
+    "detector_miss_reason": "spec.yaml declares no text_boundary_checks for this fixture, so check_text_boundary_clash inspected 0 candidates (build/text_boundary_clash.json checked=0). No promotion_queue item binds line 25; VC002 binds line 23 ('Sulfur-rich' title), a different node.",
+    "source_of_finding": "human_adjudication"
+  },
+  "human_record_verbatim": [
+    "현재 가장 확실한 missed defect: Panel A의 'sulfur segment' 라벨이 왼쪽 패널 프레임을 가로질러 바깥으로 돌출된다. detector가 이 panel-frame/text-boundary 위반을 잡지 못했다.",
+    "우선 대상: Panel A 'sulfur segment' 라벨과 왼쪽 panel frame의 교차/돌출 … 해당 라벨만 bounded repair한다."
+  ],
+  "authorization_scope": {
+    "authorized": [
+      "adjudicate this one defect",
+      "bounded repair of this one 'sulfur segment' label node only"
+    ],
+    "not_authorized": [
+      "final scaffold/review verdict (step 10 stays pending)",
+      "any publication acceptance"
+    ]
+  },
+  "parent_source_sha256": "54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f",
+  "publication_acceptance": "not_claimed"
+}
