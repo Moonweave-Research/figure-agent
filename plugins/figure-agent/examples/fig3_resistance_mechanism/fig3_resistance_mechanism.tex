@@ -8,10 +8,7 @@
 \begin{document}
 \begin{tikzpicture}[
   font=\sffamily\fontsize{7}{8.4}\selectfont,
-  carrier/.style={circle, fill=cGray!68!black, inner sep=0pt, minimum size=1.34mm},
-  trap/.style={cGray!48!black, line width=0.50pt, line cap=round},
-  trapActive/.style={cBlue!70!black, line width=0.64pt, line cap=round},
-  trapTerminal/.style={cAmber!72!black, line width=0.72pt, line cap=round},
+  carrier/.style={circle, fill=cGray!60!black, inner sep=0pt, minimum size=1.3mm},
   xfer/.style={-{Stealth[length=1.0mm]}, cGray!68!black, line width=0.6pt},
   terminalLabelLeader/.style={cGray!50!black, line width=0.28pt},
   axis/.style={-{Stealth[length=1.0mm]}, cGray!72!black, line width=0.4pt},
@@ -22,11 +19,8 @@
 \node[pl] at (0.08,4.60) {a};
 \node[font=\bfseries\fontsize{6.5}{7.8}\selectfont, anchor=west] at (0.42,4.60)
   {trapping during conduction};
-% Restrained film layering gives the material scene depth without assigning
-% chemistry, polarity, or a spatial transport network.
-\fill[cAmber!6] (0.74,1.04) rectangle (4.55,3.56);
-\fill[cAmber!11, opacity=0.46] (0.84,1.16) rectangle (4.45,3.42);
-\fill[cGray!8] (0.96,1.54) rectangle (4.34,2.89);
+\fill[cAmber!8] (0.74,1.04) rectangle (4.55,3.56);
+\fill[cGray!10] (0.96,1.54) rectangle (4.34,2.89);
 \fill[cGray!70] (0.56,1.08) rectangle (0.74,3.52);
 \fill[cGray!70] (4.55,1.08) rectangle (4.73,3.52);
 \node[font=\fontsize{5.4}{6.5}\selectfont, text=cAmber!55!black] at (2.65,0.60)
@@ -44,13 +38,8 @@
 \coordinate (trap_slow_release) at (3.70,1.74);
 \foreach \x/\y in {1.62/2.48,2.82/2.18,3.70/1.74,1.22/2.68,1.98/2.00,2.18/2.63,
   2.48/1.98,3.17/2.56,3.38/2.05,2.34/1.68,1.45/2.10,4.08/2.31}{
-  \draw[trap] (\x-0.10,\y) -- (\x+0.10,\y);
+  \draw[cGray!55!black, line width=0.55pt] (\x-0.10,\y) -- (\x+0.10,\y);
 }
-% Named anchors retain the same qualitative state sequence while making the
-% declared capture, intermediate, and terminal roles legible at figure scale.
-\draw[trapActive] (1.49,2.48) -- (1.75,2.48);
-\draw[trapActive] (2.69,2.18) -- (2.95,2.18);
-\draw[trapTerminal] (3.55,1.74) -- (3.85,1.74);
 % fig-agent:start object=carrier_sequence panel=A kind=state_sequence truth_bearing=true
 % Left-to-right placement is temporal ordering, not net spatial carrier drift.
 \node[carrier] (carrier_shallow_in) at (1.22,3.28) {};
@@ -67,7 +56,7 @@
 \node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black] at (2.08,2.90) {release};
 \coordinate (slow_release_label_anchor) at (3.70,1.56);
 \draw[terminalLabelLeader] (trap_slow_release) -- (slow_release_label_anchor);
-\node[anchor=north, font=\fontsize{4.2}{5.0}\selectfont, text=cAmber!68!black]
+\node[anchor=north, font=\fontsize{4.2}{5.0}\selectfont, text=cGray!55!black]
   (slow_release_label) at (slow_release_label_anchor) {slow-release};
 % fig-agent:end object=carrier_sequence
 
@@ -101,24 +90,26 @@
 \node[label, text=cGray!55!black] at (12.24,4.13) {sulfur content $\uparrow$};
 % S60 and S80 are separate comparison units, sharing the same energy orientation.
 \begin{scope}
+  \fill[cBlue!4] (10.08,1.22) rectangle (11.62,3.48);
   \node[label, text=cBlue!60!black] at (10.85,3.55) {S60\\discrete states};
   % fig-agent:start object=s60_discrete_states panel=C kind=energy_landscape truth_bearing=true
-  \foreach \y/\len in {2.77/0.46,2.38/0.67,1.97/0.39,1.62/0.74}{
+  \foreach \y/\len in {2.64/0.64,2.21/0.44,1.76/0.76}{
     \draw[cBlue!65!black, line width=0.85pt, line cap=round] (10.85-\len/2,\y) -- (10.85+\len/2,\y);
   }
   % fig-agent:end object=s60_discrete_states
 \end{scope}
 \begin{scope}
+  \fill[cRed!5] (12.18,1.22) rectangle (14.32,3.48);
   \node[label, text=cRed!65!black] at (13.25,3.55) {S80\\continuous support};
   % fig-agent:start object=s80_continuous_support panel=C kind=energy_landscape truth_bearing=true
   % Dense, irregular state marks indicate continuous qualitative support;
   % they do not encode a fitted density-of-states envelope or numeric count.
   \foreach \y/\x/\len in {
-    1.43/12.58/0.27,1.55/13.62/0.41,1.67/13.04/0.31,1.79/13.93/0.24,
-    1.91/12.77/0.43,2.03/13.41/0.26,2.15/12.48/0.33,2.27/13.78/0.38,
-    2.39/13.14/0.24,2.51/12.69/0.40,2.63/13.56/0.29,2.75/12.92/0.35,
-    2.87/13.89/0.25,2.99/13.28/0.44,3.11/12.60/0.28,3.23/13.70/0.34}{
-    \draw[cRed!62!black, opacity=0.82, line width=0.46pt, line cap=round]
+    1.50/12.55/0.34,1.62/13.76/0.29,1.74/13.08/0.45,1.86/13.92/0.32,
+    1.98/12.75/0.40,2.10/13.43/0.27,2.22/12.52/0.36,2.34/13.68/0.44,
+    2.46/13.00/0.30,2.58/13.86/0.38,2.70/12.68/0.28,2.82/13.34/0.42,
+    2.94/12.90/0.33,3.06/13.72/0.35}{
+    \draw[cRed!62!black, opacity=0.78, line width=0.42pt, line cap=round]
       (\x-\len/2,\y) -- (\x+\len/2,\y);
   }
   % fig-agent:end object=s80_continuous_support
