@@ -1537,7 +1537,11 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
             },
         )
     for _edit in panel_block_edits.load_bundled_panel_block_edits():
-        if all(any(term in normalized for term in group) for group in _edit.goal_trigger):
+        # Empty goal_trigger opts out of generic goal-directive recognition: the
+        # family's goal hypothesis (if any) is authored in Python above.
+        if _edit.goal_trigger and all(
+            any(term in normalized for term in group) for group in _edit.goal_trigger
+        ):
             hypotheses.insert(
                 0,
                 {
@@ -5067,182 +5071,6 @@ def _panel_f_boundary_polish_replacement(
     return original, replacement, line_start, line_end
 
 
-def _panel_f_post_boundary_force_balance_template_applied(block: str) -> bool:
-    required_fragments = (
-        "% quality-search F post-boundary force balance: separate force labels",
-        "(10.80, 1.06) -- (9.48, 1.06);",
-        "anchor=south west] at (9.62, 1.66) {Coulomb};",
-        "text=cRed!72!black] at (9.63, 1.44) {repulsion};",
-        "(10.18, 0.54) -- (13.18, 0.54);",
-    )
-    return all(fragment in block for fragment in required_fragments)
-
-
-def _panel_f_post_boundary_force_balance_replacement(
-    *,
-    lines: list[str],
-    selector: dict[str, Any],
-) -> tuple[str, str, int, int] | None:
-    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
-    if line_range is None:
-        return None
-    line_start, line_end = line_range
-    original = "".join(lines[line_start - 1 : line_end])
-    if not _panel_f_overlay_has_protected_labels(original):
-        return None
-    if not _panel_f_boundary_polish_template_applied(original):
-        return None
-    if _panel_f_post_boundary_force_balance_template_applied(original):
-        return None
-    replacements = (
-        (
-            "\\draw[panelFCoulombRepulsionArrow, "
-            "-{Stealth[length=7.2pt,width=5.0pt]}, "
-            "cRed!80!black, line width=0.92pt]\n"
-            "  (10.72, 1.12) -- (9.62, 1.12);",
-            "% quality-search F post-boundary force balance: separate force labels\n"
-            "\\draw[panelFCoulombRepulsionArrow, "
-            "-{Stealth[length=7.8pt,width=5.2pt]}, "
-            "cRed!78!black, line width=0.86pt]\n"
-            "  (10.80, 1.06) -- (9.48, 1.06);",
-        ),
-        (
-            "font=\\sffamily\\bfseries\\fontsize{5.5}{6.6}\\selectfont, "
-            "text=cRed!76!black,\n"
-            "      anchor=south west] at (9.66, 1.58) {Coulomb};",
-            "font=\\sffamily\\bfseries\\fontsize{5.2}{6.2}\\selectfont, "
-            "text=cRed!74!black,\n"
-            "      anchor=south west] at (9.62, 1.66) {Coulomb};",
-        ),
-        (
-            "font=\\sffamily\\fontsize{5.0}{6.0}\\selectfont,\n"
-            "      text=cRed!74!black] at (9.67, 1.41) {repulsion};",
-            "font=\\sffamily\\fontsize{4.8}{5.8}\\selectfont,\n"
-            "      text=cRed!72!black] at (9.63, 1.44) {repulsion};",
-        ),
-        (
-            "(10.08, 0.54) -- (13.18, 0.54);",
-            "(10.18, 0.54) -- (13.18, 0.54);",
-        ),
-    )
-    replacement = original
-    for old, new in replacements:
-        if old not in replacement:
-            return None
-        replacement = replacement.replace(old, new)
-    if replacement == original:
-        return None
-    protected = (
-        "q_{\\mathrm{tr}}",
-        "trapped charge",
-        "Coulomb",
-        "repulsion",
-        "electrode",
-        "air gap",
-        "mechanical",
-        "$V_{\\mathrm{active}}$",
-        "bias",
-    )
-    if not all(label in replacement for label in protected):
-        return None
-    if not _panel_f_post_boundary_force_balance_template_applied(replacement):
-        return None
-    return original, replacement, line_start, line_end
-
-
-def _panel_f_post_force_source_connector_template_applied(block: str) -> bool:
-    required_fragments = (
-        "% quality-search F post-force source connector: simplify source lead",
-        "at (13.02, 4.105) {$V_{\\mathrm{active}}$};",
-        "at (13.02, 3.80) {bias};",
-        "(13.24, 3.78) -- (13.18, 3.42) -- (13.18, 2.82);",
-    )
-    return all(fragment in block for fragment in required_fragments)
-
-
-def _panel_f_post_force_source_connector_replacement(
-    *,
-    lines: list[str],
-    selector: dict[str, Any],
-) -> tuple[str, str, int, int] | None:
-    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
-    if line_range is None:
-        return None
-    line_start, line_end = line_range
-    original = "".join(lines[line_start - 1 : line_end])
-    if not _panel_f_overlay_has_protected_labels(original):
-        return None
-    if not _panel_f_post_boundary_force_balance_template_applied(original):
-        return None
-    if _panel_f_post_force_source_connector_template_applied(original):
-        return None
-    replacements = (
-        (
-            "\\fill[cGray!26!black, opacity=0.014]\n  (12.70, 3.86) rectangle (13.36, 4.12);",
-            "\\fill[cGray!26!black, opacity=0.010]\n  (12.74, 3.88) rectangle (13.34, 4.12);",
-        ),
-        (
-            "\\fill[cGray!3] (12.68, 3.88) rectangle (13.38, 4.14);",
-            "\\fill[cGray!3] (12.72, 3.90) rectangle (13.36, 4.14);",
-        ),
-        (
-            "\\draw[cGray!48!black, line width=0.18pt, rounded corners=1.0pt]\n"
-            "  (12.68, 3.88) rectangle (13.38, 4.14);",
-            "\\draw[cGray!44!black, line width=0.16pt, rounded corners=1.0pt]\n"
-            "  (12.72, 3.90) rectangle (13.36, 4.14);",
-        ),
-        (
-            "font=\\sffamily\\bfseries\\fontsize{3.1}{3.8}\\selectfont, "
-            "text=cGray!48!black]\n"
-            "  at (13.02, 4.125) {$V_{\\mathrm{active}}$};",
-            "font=\\sffamily\\bfseries\\fontsize{3.0}{3.6}\\selectfont, "
-            "text=cGray!46!black]\n"
-            "  at (13.02, 4.105) {$V_{\\mathrm{active}}$};",
-        ),
-        (
-            "font=\\sffamily\\fontsize{2.7}{3.2}\\selectfont, text=cGray!38!black]\n"
-            "  at (13.02, 3.75) {bias};",
-            "font=\\sffamily\\fontsize{2.7}{3.2}\\selectfont, text=cGray!38!black]\n"
-            "  at (13.02, 3.80) {bias};",
-        ),
-        (
-            "% quality-search F connector: source-to-electrode lead\n"
-            "\\draw[cGray!64!black, line width=0.46pt, rounded corners=1.2pt]\n"
-            "  (13.28, 3.78) -- (13.08, 3.58) -- (13.08, 2.96) -- (13.18, 2.82);",
-            "% quality-search F post-force source connector: simplify source lead\n"
-            "\\draw[cGray!58!black, line width=0.36pt, rounded corners=1.8pt]\n"
-            "  (13.24, 3.78) -- (13.18, 3.42) -- (13.18, 2.82);",
-        ),
-        (
-            "\\fill[cRed!68!black] (13.30, 3.82) circle (0.020);",
-            "\\fill[cRed!62!black] (13.24, 3.82) circle (0.018);",
-        ),
-    )
-    replacement = original
-    for old, new in replacements:
-        if old not in replacement:
-            return None
-        replacement = replacement.replace(old, new)
-    if replacement == original:
-        return None
-    protected = (
-        "q_{\\mathrm{tr}}",
-        "trapped charge",
-        "Coulomb",
-        "repulsion",
-        "electrode",
-        "air gap",
-        "mechanical",
-        "$V_{\\mathrm{active}}$",
-        "bias",
-    )
-    if not all(label in replacement for label in protected):
-        return None
-    if not _panel_f_post_force_source_connector_template_applied(replacement):
-        return None
-    return original, replacement, line_start, line_end
-
-
 def _panel_f_post_source_label_scale_template_applied(block: str) -> bool:
     required_fragments = (
         "% quality-search F post-source label scale: lift trapped-charge legibility",
@@ -5891,8 +5719,6 @@ _LEGACY_PREFERRED_PANEL = {
     "panel_f_source_title_settle": "F",
     "panel_f_source_cue_demote": "F",
     "panel_f_current_label_sanitize": "F",
-    "panel_f_post_boundary_force_balance": "F",
-    "panel_f_post_force_source_connector": "F",
     "panel_f_post_source_label_scale": "F",
     "panel_f_post_label_force_cleanup": "F",
     "panel_f_trap_label_left_rail": "F",
@@ -6476,62 +6302,6 @@ def _candidate_operation_for_spec(
             "family": family,
             "operation_scale": "panel_block",
             "template_id": PANEL_F_CURRENT_LABEL_SANITIZE_TEMPLATE_ID,
-            "panel": "F",
-        }
-    if family == "panel_f_post_boundary_force_balance":
-        force_balance_block = _panel_f_post_boundary_force_balance_replacement(
-            lines=lines,
-            selector=selector,
-        )
-        if force_balance_block is not None:
-            original, new_text, line_start, line_end = force_balance_block
-            operation = {
-                "kind": "replace_text",
-                "semantic_kind": ("quality_search_panel_f_post_boundary_force_balance_panel_block"),
-                "operation_scale": "panel_block",
-                "template_id": PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID,
-                "panel": "F",
-                "path": source_ref,
-                "line_start": line_start,
-                "line_end": line_end,
-                "original": original,
-                "replacement": new_text,
-            }
-            return operation, None
-        return None, {
-            "code": "no_panel_f_post_boundary_force_balance_block",
-            "candidate_id": str(spec.get("id")),
-            "family": family,
-            "operation_scale": "panel_block",
-            "template_id": PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID,
-            "panel": "F",
-        }
-    if family == "panel_f_post_force_source_connector":
-        source_connector_block = _panel_f_post_force_source_connector_replacement(
-            lines=lines,
-            selector=selector,
-        )
-        if source_connector_block is not None:
-            original, new_text, line_start, line_end = source_connector_block
-            operation = {
-                "kind": "replace_text",
-                "semantic_kind": ("quality_search_panel_f_post_force_source_connector_panel_block"),
-                "operation_scale": "panel_block",
-                "template_id": PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID,
-                "panel": "F",
-                "path": source_ref,
-                "line_start": line_start,
-                "line_end": line_end,
-                "original": original,
-                "replacement": new_text,
-            }
-            return operation, None
-        return None, {
-            "code": "no_panel_f_post_force_source_connector_block",
-            "candidate_id": str(spec.get("id")),
-            "family": family,
-            "operation_scale": "panel_block",
-            "template_id": PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID,
             "panel": "F",
         }
     if family == "panel_f_post_source_label_scale":
