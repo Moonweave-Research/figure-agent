@@ -457,3 +457,51 @@
     expected_detector_movement: convert post-label-relief source-lead defects into a fresh source-bound Panel F candidate
     expected_visual_movement: source lead becomes less apparatus-dominant and q_tr aligns more calmly under trapped charge
     rollback_condition: candidate worsens compile, protected labels, source semantics, or force/electrode/air-gap relations
+- family_id: panel_f_air_gap_drift_repair
+  template_id: v5f_panel_f_air_gap_drift_repair_v1
+  panel: F
+  requires:
+  - \draw[<->, cGray!62!black, line width=0.68pt]
+  - (10.20, 0.54) -- (13.18, 0.54);
+  - at (11.60, 0.29) {air gap};
+  applied_signature:
+  - '% quality-search F air-gap drift repair: recenter caliper in electrode gap'
+  - (11.50, 0.55) -- (13.18, 0.55);
+  - at (12.36, 0.50) {air gap};
+  preserve_after: []
+  replacements:
+  - old: |-
+      \draw[<->, cGray!62!black, line width=0.68pt]
+        (10.20, 0.54) -- (13.18, 0.54);
+    new: |-
+      % quality-search F air-gap drift repair: recenter caliper in electrode gap
+      \draw[<->, cGray!64!black, line width=0.70pt]
+        (11.50, 0.55) -- (13.18, 0.55);
+  - old: |-
+      font=\sffamily\fontsize{5.3}{6.4}\selectfont, text=cGray!70!black]
+        at (11.60, 0.29) {air gap};
+    new: |-
+      font=\sffamily\fontsize{5.3}{6.4}\selectfont, text=cGray!70!black]
+        at (12.36, 0.50) {air gap};
+  protected_labels:
+  - q_{\mathrm{tr}}
+  - trapped charge
+  - Coulomb
+  - repulsion
+  - electrode
+  - air gap
+  - mechanical
+  - $V_{\mathrm{active}}$
+  - bias
+  goal_trigger:
+  - - air gap
+  - - geometry
+    - clearance
+    - cantilever
+    - overlap
+    - drift
+  goal_hypothesis:
+    reason: goal explicitly requests Panel F air-gap geometry, clearance, or label-clearance repair
+    expected_detector_movement: convert remaining air-gap drift and label clearance defects into a source-bound Panel F caliper repair
+    expected_visual_movement: air-gap caliper and label move into the visible gap without touching the electrode, source lead, or force-label geometry
+    rollback_condition: candidate worsens compile, protected labels, source attachment, or electrode/air-gap semantics

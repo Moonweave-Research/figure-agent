@@ -1998,6 +1998,93 @@ def test_quality_search_panel_f_post_boundary_force_balance_emits_panel_block(
     assert "(10.18, 0.54) -- (13.18, 0.54);" in operation["replacement"]
 
 
+def test_quality_search_panel_f_air_gap_drift_repair_emits_panel_block() -> None:
+    panel_block = "\n".join(
+        [
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\node at (13.02, 4.105) {$V_{\\mathrm{active}}$};",
+            "\\node at (13.02, 3.80) {bias};",
+            "% quality-search F connector: source-to-electrode lead",
+            "\\draw[cGray!54!black, line width=0.30pt, opacity=0.86, rounded corners=1.2pt]",
+            "  (13.28, 3.78) -- (13.08, 3.58) -- (13.08, 2.96) -- (13.18, 2.82);",
+            "\\node at (13.62, 1.62) {electrode};",
+            "\\node at (9.64, 3.32) {$q_{\\mathrm{tr}}$};",
+            "\\node at (9.64, 3.70) {trapped charge};",
+            (
+                "\\draw[panelFCoulombRepulsionArrow, "
+                "-{Stealth[length=6.2pt,width=4.2pt]}, "
+                "cRed!72!black, line width=0.62pt]"
+            ),
+            "  (10.52, 1.02) -- (9.68, 1.02);",
+            (
+                "\\node[anchor=south west, fill=white, fill opacity=0.94, text opacity=1,\n"
+                "      inner xsep=0.92pt, inner ysep=0.44pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{4.8}{5.8}"
+                "\\selectfont, text=cRed!72!black]\n"
+                "  at (9.58, 1.66) {Coulomb};"
+            ),
+            (
+                "\\node[labelMute, anchor=north west, fill=white, "
+                "fill opacity=0.95, text opacity=1,\n"
+                "      inner xsep=1.02pt, inner ysep=0.50pt,\n"
+                "      font=\\sffamily\\fontsize{4.6}{5.6}\\selectfont,\n"
+                "      text=cRed!70!black] at (9.58, 1.34) {repulsion};"
+            ),
+            "\\draw[<->, cGray!62!black, line width=0.68pt]",
+            "  (10.20, 0.54) -- (13.18, 0.54);",
+            (
+                "\\node[labelMute, anchor=north, fill=white, fill opacity=0.94, text opacity=1,\n"
+                "      inner xsep=1.4pt, inner ysep=0.9pt,\n"
+                "      font=\\sffamily\\fontsize{5.3}{6.4}\\selectfont, text=cGray!70!black]\n"
+                "  at (11.60, 0.29) {air gap};"
+            ),
+            "\\node at (11.70, 4.56) {mechanical};",
+        ]
+    )
+    lines = [f"{line}\n" for line in panel_block.splitlines()]
+
+    operation, refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS009",
+            "family": "panel_f_air_gap_drift_repair",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=lines,
+        source_ref="figures/example.tex",
+    )
+
+    assert refusal is None
+    assert operation is not None
+    assert operation["template_id"] == "v5f_panel_f_air_gap_drift_repair_v1"
+    assert "quality-search F air-gap drift repair" in operation["replacement"]
+    assert "(11.50, 0.55) -- (13.18, 0.55);" in operation["replacement"]
+    assert "at (12.36, 0.50) {air gap};" in operation["replacement"]
+    assert "(10.52, 1.02) -- (9.68, 1.02);" in operation["replacement"]
+    assert "at (9.58, 1.66) {Coulomb};" in operation["replacement"]
+
+
+def test_quality_search_goal_hypotheses_include_air_gap_drift_repair() -> None:
+    hypotheses = quality_search._goal_hypotheses(  # type: ignore[attr-defined]
+        "fig_demo",
+        "improve Panel F mechanical cantilever electrode air gap geometry overlap clearance",
+    )
+    families = [item["family"] for item in hypotheses]
+
+    assert "panel_f_air_gap_drift_repair" in families
+    assert "panel_f_post_boundary_force_balance" in families
+    assert families.index("panel_f_air_gap_drift_repair") < families.index(
+        "panel_f_post_boundary_force_balance"
+    )
+
+
 def test_quality_search_panel_f_post_force_source_connector_emits_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:
