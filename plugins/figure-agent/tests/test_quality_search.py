@@ -4289,7 +4289,7 @@ def test_quality_search_decision_reports_partial_materialization_refusals() -> N
     assert "partially materialized" in decision["reason"]
 
 
-def test_quality_search_decision_accepts_targeted_cleanup_below_non_marginal_threshold() -> None:
+def test_quality_search_decision_rejects_below_threshold_targeted_cleanup() -> None:
     plan = {
         "state": {"memory": {"state": "loaded", "families": {}}},
         "classifications": [],
@@ -4309,6 +4309,10 @@ def test_quality_search_decision_accepts_targeted_cleanup_below_non_marginal_thr
             "candidate_id": "QS001",
             "rank_score": 0.55,
             "render_status": "rendered_needs_human_review",
+            "evidence": {
+                "positive": ["rendered_before_after_available"],
+                "negative": ["rendered_change_below_review_threshold"],
+            },
             "effective_apply_authority": "review_only",
             "scores": {"changed_pixel_ratio": 0.00025},
         },
@@ -4318,6 +4322,46 @@ def test_quality_search_decision_accepts_targeted_cleanup_below_non_marginal_thr
     decision = quality_search._execution_decision(plan, scores)
 
     assert scores[0]["non_marginal_visual_change"] is False
+    assert scores[0]["below_review_threshold"] is True
+    assert decision["kind"] == "no_non_marginal_candidate"
+    assert decision["selected_candidate_id"] is None
+    assert decision["top_candidate_below_review_threshold"] is True
+
+
+def test_quality_search_decision_accepts_targeted_cleanup_above_review_floor() -> None:
+    plan = {
+        "state": {"memory": {"state": "loaded", "families": {}}},
+        "classifications": [],
+        "next_recommended_operation": {"kind": "step_out_experiment"},
+    }
+    candidate_specs = [
+        {
+            "id": "QS001",
+            "family": "panel_f_bias_label_cleanup",
+            "operation_scale": "panel_block",
+            "template_id": "v5f_panel_f_bias_label_cleanup_v1",
+            "expected_visual_movement": "separate V_active and bias labels",
+        },
+    ]
+    rankings = [
+        {
+            "candidate_id": "QS001",
+            "rank_score": 0.65,
+            "render_status": "rendered_needs_human_review",
+            "evidence": {
+                "positive": ["rendered_before_after_available", "rendered_small_layout_change"],
+                "negative": [],
+            },
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.0008},
+        },
+    ]
+
+    scores = quality_search._candidate_scores(candidate_specs, plan, rankings)
+    decision = quality_search._execution_decision(plan, scores)
+
+    assert scores[0]["non_marginal_visual_change"] is False
+    assert scores[0]["below_review_threshold"] is False
     assert decision["kind"] == "candidate_batch_ready"
     assert decision["candidate_state"] == "targeted_cleanup_review_candidate_ready"
     assert decision["selected_candidate_id"] == "QS001"
@@ -4409,9 +4453,7 @@ def test_quality_search_execution_includes_detector_backed_vector_candidates(
                     "operation_scale": "local_coordinate_offset",
                     "target": {
                         "panel": "E",
-                        "subregion": (
-                            "vector_clearance:panelE-deep-peak-caliper-min-clearance"
-                        ),
+                        "subregion": ("vector_clearance:panelE-deep-peak-caliper-min-clearance"),
                     },
                     "source_defect": {
                         "id": "panelE-deep-peak-caliper-min-clearance",
@@ -4429,9 +4471,7 @@ def test_quality_search_execution_includes_detector_backed_vector_candidates(
                             "replacement": "\\draw (0,0.08) -- (1,0.08);",
                         }
                     ],
-                    "expected_delta": [
-                        "increase declared vector clearance around the deep peak"
-                    ],
+                    "expected_delta": ["increase declared vector clearance around the deep peak"],
                     "apply_authority": "review_only",
                     "candidate_hash": "sha256:cand007",
                 }
@@ -4460,15 +4500,11 @@ def test_quality_search_execution_includes_detector_backed_vector_candidates(
         workspace_root=tmp_path,
     )
 
-    detector_specs = [
-        item for item in payload["candidate_specs"] if item.get("id") == "CAND007"
-    ]
+    detector_specs = [item for item in payload["candidate_specs"] if item.get("id") == "CAND007"]
     assert len(detector_specs) == 1
     assert detector_specs[0]["family"] == "vector-clearance-offset"
     assert detector_specs[0]["source_defect"]["defect_class"] == "vector_clearance_violation"
-    assert any(
-        item.get("id") == "CAND007" for item in payload["candidate_set"]["candidates"]
-    )
+    assert any(item.get("id") == "CAND007" for item in payload["candidate_set"]["candidates"])
     detector_scores = [
         item for item in payload["candidate_scores"] if item.get("candidate_id") == "CAND007"
     ]
