@@ -228,6 +228,12 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
     reproduction_complete = all(
         item["clean_reproduction"] for item in variants.values()
     )
+    correction_time_complete = all(
+        isinstance(item["human_correction_minutes"], int | float)
+        and not isinstance(item["human_correction_minutes"], bool)
+        and item["human_correction_minutes"] >= 0
+        for item in variants.values()
+    )
     receipts = [runs[name].get("generation_receipt") for name in VARIANTS]
     transcript_bound = (
         not any(_is_explicitly_comparison_ineligible(runs[name]) for name in VARIANTS)
@@ -248,6 +254,9 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
         "comparison_evidence": (
             "transcript_bound" if transcript_bound else "staged_only"
         ),
+        "correction_time_gate": (
+            "passed" if correction_time_complete else "failed"
+        ),
         "reproduction_gate": "passed" if reproduction_complete else "failed",
         "product_claim": (
             "review_eligible"
@@ -256,6 +265,7 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
                 and human_complete
                 and human_approved
                 and reproduction_complete
+                and correction_time_complete
                 and transcript_bound
             )
             else "not_authorized"

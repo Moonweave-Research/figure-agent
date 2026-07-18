@@ -202,6 +202,48 @@ def test_named_human_rejection_blocks_product_claim(tmp_path: Path) -> None:
     assert report["product_claim"] == "not_authorized"
 
 
+def test_missing_prospective_correction_time_blocks_product_claim(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    for path in paths.values():
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload["human_verdict"] = {
+            "state": "recorded",
+            "reviewer": "moon",
+            "decision": "accepted",
+        }
+        path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+        add_generation_receipt(path)
+
+    report = evaluate_ablation(paths)
+
+    assert report["correction_time_gate"] == "failed"
+    assert report["product_claim"] == "not_authorized"
+
+
+def test_recorded_prospective_correction_times_allow_review_eligibility(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    correction_minutes = {"raw": 12.0, "verified": 8.0, "repaired": 3.0}
+    for variant, path in paths.items():
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload["human_correction_minutes"] = correction_minutes[variant]
+        payload["human_verdict"] = {
+            "state": "recorded",
+            "reviewer": "moon",
+            "decision": "accepted",
+        }
+        path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+        add_generation_receipt(path)
+
+    report = evaluate_ablation(paths)
+
+    assert report["correction_time_gate"] == "passed"
+    assert report["product_claim"] == "review_eligible"
+
+
 def test_ablation_marks_manifests_without_bound_generation_receipts_as_staged(
     tmp_path: Path,
 ) -> None:
