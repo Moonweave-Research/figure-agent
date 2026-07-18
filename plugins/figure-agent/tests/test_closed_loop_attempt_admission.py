@@ -81,6 +81,62 @@ def test_fig_run_admits_one_fresh_root_attempt_and_stops(tmp_path: Path) -> None
     assert (workspace / payload["closed_loop"]["request_path"]).is_file()
 
 
+def test_admission_can_restart_from_explicit_repair_required_parent(tmp_path: Path) -> None:
+    workspace, fixture, _, manifest = _setup(tmp_path)
+    parent = closed_loop_attempt_admission._validated_state(
+        "demo", manifest, workspace_root=workspace
+    )
+    parent_path = closed_loop_attempt_state.publish_state(parent, workspace_root=workspace)
+    for next_state, roles in (
+        (
+            "critique_unadjudicated",
+            (
+                "critique",
+                "host_review_execution_receipt",
+                "initial_visual_review_response",
+                "host_review_transcript",
+            ),
+        ),
+        ("repair_bound", ("adjudicated_repair_binding",)),
+        (
+            "repair_candidate_ready",
+            ("repair_execution_packet", "repair_response", "materialization_preview"),
+        ),
+        ("repair_authorized", ("human_authorization",)),
+        ("repair_required", ("repair_failure_record",)),
+    ):
+        evidence = {}
+        for role in roles:
+            artifact = fixture / f"{next_state}-{role}.json"
+            artifact.write_text("{}\n", encoding="utf-8")
+            evidence[role] = artifact
+        parent = closed_loop_attempt_state.transition_state(
+            parent,
+            next_state=next_state,
+            actor="workflow-agent",
+            actor_role=parent["required_actor"],
+            evidence=evidence,
+            workspace_root=workspace,
+            previous_state_path=parent_path,
+        )
+        parent_path = closed_loop_attempt_state.publish_state(
+            parent, workspace_root=workspace
+        )
+
+    child = closed_loop_attempt_admission.admit_root_attempt(
+        "demo",
+        manifest_path=manifest,
+        parent_state_path=parent_path,
+        execute=True,
+        workspace_root=workspace,
+    )
+
+    assert child["created"] is True
+    assert child["state"]["parent_state_path"] == parent_path.relative_to(workspace).as_posix()
+    assert child["state"]["parent_state_sha256"] == parent["state_sha256"]
+    assert child["state"]["attempt_id"] != parent["attempt_id"]
+
+
 def test_plan_only_validates_and_never_acquires_or_writes_admission_lease(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

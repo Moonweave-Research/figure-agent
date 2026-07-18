@@ -1,0 +1,37 @@
+{
+  "actor": "codex-figure-agent",
+  "actor_role": "authoring_agent",
+  "attempt_id": "attempt-0b027d13014cdd0d62bc8109",
+  "disposition": "continue",
+  "evidence": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/prospective-detail-v1/root-attempt-manifest.json",
+      "role": "attempt_manifest",
+      "sha256": "sha256:aac994336c82b43307b233dac0fa2bdc0c5d09697d2cef5716ec2fd7b3c18aed"
+    },
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/prospective-detail-v1/fig3_resistance_mechanism.tex",
+      "role": "authored_source",
+      "sha256": "sha256:9681afdfd528a19dcc2b7a43ffaa3245b9d2c2cdbb4f2b45d929c93c9c0da609"
+    },
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/prospective-detail-v1/build/fig3_resistance_mechanism.png",
+      "role": "render",
+      "sha256": "sha256:0544ec9c756b0327feb15b51373f9824ac719c40f7972395fc835378a32dd72a"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "parent_state_file_sha256": "sha256:a1b3afafe33e4444c3683e04d531cd24af89eabf22fc73bff3fb0b0fbbfeb837",
+  "parent_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/state-007-repair_required.json",
+  "parent_state_sha256": "sha256:6c8b5ecadf58dc576c5857d420f54ca58a2af5e499f2c22c04d8b827c564c59d",
+  "previous_state_file_sha256": null,
+  "previous_state_path": null,
+  "previous_state_sha256": null,
+  "publication_acceptance": "not_claimed",
+  "required_actor": "workflow_agent",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 0,
+  "state": "authored_rendered",
+  "state_sha256": "sha256:d1e5b3f6bb5754b855a9f5dcb33d76118d9780941e5c031223620a123daf61a2",
+  "terminal": false
+}

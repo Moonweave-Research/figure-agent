@@ -83,7 +83,11 @@ def _bound_artifact(
 
 
 def _validated_state(
-    fixture: str, manifest_path: Path, *, workspace_root: Path
+    fixture: str,
+    manifest_path: Path,
+    *,
+    workspace_root: Path,
+    parent_state_path: Path | None = None,
 ) -> dict[str, Any]:
     payload, actual_manifest_path = _read_manifest(
         manifest_path, workspace_root=workspace_root, fixture=fixture
@@ -124,6 +128,16 @@ def _validated_state(
     _provenance(payload, "budget")
     source = _bound_artifact(payload, "source", workspace_root=workspace_root, fixture=fixture)
     render = _bound_artifact(payload, "render", workspace_root=workspace_root, fixture=fixture)
+    parent_state = None
+    parent_path = None
+    if parent_state_path is not None:
+        parent_path = _fixture_artifact(
+            workspace_root, fixture, str(parent_state_path), "parent_state"
+        )
+        try:
+            parent_state = json.loads(parent_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ClosedLoopAttemptAdmissionError("parent_state_json_invalid") from exc
     try:
         return closed_loop_attempt_state.start_attempt(
             workspace_root=workspace_root,
@@ -135,6 +149,8 @@ def _validated_state(
                 "authored_source": source,
                 "render": render,
             },
+            parent_state=parent_state,
+            parent_state_path=parent_path,
         )
     except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
         raise ClosedLoopAttemptAdmissionError(str(exc)) from exc
@@ -151,15 +167,29 @@ def admit_root_attempt(
     fixture: str,
     *,
     manifest_path: Path,
+    parent_state_path: Path | None = None,
     execute: bool,
     workspace_root: Path,
 ) -> dict[str, Any]:
     """Validate explicit evidence; publish only the root state when requested."""
     root = Path(os.path.abspath(workspace_root))
-    state = _validated_state(fixture, manifest_path, workspace_root=root)
+    state = _validated_state(
+        fixture,
+        manifest_path,
+        workspace_root=root,
+        parent_state_path=parent_state_path,
+    )
     canonical_manifest_path = _manifest_evidence_path(state, workspace_root=root)
     initial_current = closed_loop_current_state.resolve_current_attempt(root, fixture)
-    if initial_current.get("resolution") != "absent":
+    expected_parent_path = state.get("parent_state_path")
+    expected_parent_sha256 = state.get("parent_state_sha256")
+    current_is_parent = (
+        initial_current.get("resolution") == "current"
+        and expected_parent_path is not None
+        and initial_current.get("path") == expected_parent_path
+        and initial_current.get("state_sha256") == expected_parent_sha256
+    )
+    if initial_current.get("resolution") != "absent" and not current_is_parent:
         if initial_current.get("resolution") == "current":
             try:
                 proposed_path = closed_loop_attempt_state.state_path(
@@ -207,7 +237,12 @@ def admit_root_attempt(
                 )
                 # Re-read all explicit inputs after taking the publication lock so a
                 # source/render/manifest replacement between plan and execute fails closed.
-                state = _validated_state(fixture, manifest_path, workspace_root=root)
+                state = _validated_state(
+                    fixture,
+                    manifest_path,
+                    workspace_root=root,
+                    parent_state_path=parent_state_path,
+                )
                 canonical_manifest_path = _manifest_evidence_path(
                     state, workspace_root=root
                 )
@@ -215,7 +250,13 @@ def admit_root_attempt(
                     state, workspace_root=root
                 )
                 current = closed_loop_current_state.resolve_current_attempt(root, fixture)
-                if current.get("resolution") != "absent":
+                current_is_parent = (
+                    current.get("resolution") == "current"
+                    and state.get("parent_state_path") is not None
+                    and current.get("path") == state.get("parent_state_path")
+                    and current.get("state_sha256") == state.get("parent_state_sha256")
+                )
+                if current.get("resolution") != "absent" and not current_is_parent:
                     if (
                         current.get("resolution") == "current"
                         and current.get("path")

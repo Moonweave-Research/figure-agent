@@ -964,6 +964,7 @@ def run_workflow(
     closed_loop_authorization: Path | None = None,
     closed_loop_development_verdict: Path | None = None,
     closed_loop_attempt_manifest: Path | None = None,
+    closed_loop_parent_state: Path | None = None,
     expected_first_action: str | None = None,
     expected_first_safe_command: str | None = None,
     repo_root: Path = REPO_ROOT,
@@ -993,6 +994,7 @@ def run_workflow(
         closed_loop_authorization,
         closed_loop_development_verdict,
         closed_loop_attempt_manifest,
+        closed_loop_parent_state,
     )
     if all(first_step_expectation_supplied) and any(
         value is not None for value in lifecycle_inputs
@@ -1007,6 +1009,8 @@ def run_workflow(
         or not expected_first_safe_command
     ):
         raise ValueError("first-step action and command expectations must be non-empty")
+    if closed_loop_parent_state is not None and closed_loop_attempt_manifest is None:
+        raise ValueError("closed-loop parent state requires an attempt manifest")
     if closed_loop_attempt_manifest is not None:
         if any(
             value is not None
@@ -1032,6 +1036,7 @@ def run_workflow(
             admission = closed_loop_attempt_admission.admit_root_attempt(
                 name,
                 manifest_path=closed_loop_attempt_manifest,
+                parent_state_path=closed_loop_parent_state,
                 execute=execute,
                 workspace_root=root,
             )
@@ -1043,7 +1048,10 @@ def run_workflow(
                 raise ValueError(str(exc)) from exc
             try:
                 candidate = closed_loop_attempt_admission._validated_state(  # noqa: SLF001
-                    name, closed_loop_attempt_manifest, workspace_root=root
+                    name,
+                    closed_loop_attempt_manifest,
+                    workspace_root=root,
+                    parent_state_path=closed_loop_parent_state,
                 )
                 current = closed_loop_current_state.resolve_current_attempt(root, name)
                 if (
@@ -2568,6 +2576,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--closed-loop-authorization", type=Path, default=None)
     parser.add_argument("--closed-loop-development-verdict", type=Path, default=None)
     parser.add_argument("--closed-loop-attempt-manifest", type=Path, default=None)
+    parser.add_argument("--closed-loop-parent-state", type=Path, default=None)
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--record", action="store_true")
     parser.add_argument("--no-record", action="store_true")
@@ -2594,6 +2603,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             closed_loop_authorization=args.closed_loop_authorization,
             closed_loop_development_verdict=args.closed_loop_development_verdict,
             closed_loop_attempt_manifest=args.closed_loop_attempt_manifest,
+            closed_loop_parent_state=args.closed_loop_parent_state,
             repo_root=repo_root,
         )
     except ValueError as exc:
