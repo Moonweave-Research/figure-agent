@@ -43,6 +43,7 @@ if [[ $HISTORICAL_REPAIR_REPLAY -eq 0 || "$LIVE_REPAIR_VERIFY" == "1" ]]; then
 fi
 
 FIXTURE_NAME=""
+FIXTURE_ROOT=""
 FIXTURE_TAIL="${TEX_INPUT#*examples/}"
 if [[ -n "${FIGURE_AGENT_FIXTURE_NAME:-}" ]]; then
   FIXTURE_NAME="$FIGURE_AGENT_FIXTURE_NAME"
@@ -238,9 +239,16 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_tex_
   "$FILE"
 # Physics-intent grounding meta-check (advisory: which figures still need assertions).
 # Always report-only — it surfaces a TODO, not a defect, so it never fails a build.
+# A prospective candidate under a fixture's review tree is deliberately a
+# separate source artifact. Its physics grounding must still resolve against
+# the parent fixture's briefing/spec rather than report a false missing-briefing
+# warning for the candidate-only directory.
+PHYSICS_GROUNDING_DIR="$PWD"
+if [[ -n "$FIXTURE_ROOT" && "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/review/"* ]]; then
+  PHYSICS_GROUNDING_DIR="$FIXTURE_ROOT"
+fi
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_physics_grounding.py" \
-  --json-output "${BUILD_DIR}/physics_grounding.json" \
-  "$PWD"
+  --json-output "${BUILD_DIR}/physics_grounding.json" "$PHYSICS_GROUNDING_DIR"
 if [[ -n "$LAYOUT_CONTRACT" && -f "$LAYOUT_CONTRACT" ]]; then
   run_report_check "${UV_RUN[@]}" python3 \
     "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" \

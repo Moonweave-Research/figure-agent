@@ -74,6 +74,16 @@ def test_compile_applies_fixture_layout_contract_to_nested_repairs() -> None:
     assert '--json-output "${BUILD_DIR}/layout_lanes.json"' in script
 
 
+def test_compile_keeps_parent_physics_grounding_for_prospective_candidates() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'PHYSICS_GROUNDING_DIR="$PWD"' in script
+    assert '"$TEX_INPUT_ABS" == "$FIXTURE_ROOT/review/"*' in script
+    assert 'PHYSICS_GROUNDING_DIR="$FIXTURE_ROOT"' in script
+    assert 'check_physics_grounding.py" \\' in script
+    assert '--json-output "${BUILD_DIR}/physics_grounding.json" "$PHYSICS_GROUNDING_DIR"' in script
+
+
 def test_compile_serializes_shared_fixture_reports() -> None:
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 
