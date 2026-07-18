@@ -1,0 +1,46 @@
+{
+  "schema": "figure-agent.closed-loop-development-verdict.v1",
+  "attempt_local": true,
+  "attempt_local_note": "Attempt-local instance issued by the orchestrator under the named human's recorded live delegation. Supersedes the pending human_review fields in provenance.json and regression.json by lineage.",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "attempt_dir": "review/failure-first/comparable-v3-repair-c5",
+  "verdict_at": "2026-07-18",
+  "verdict_authority": "orchestrator_under_named_human_delegation",
+  "delegator": {
+    "name": "Choe Mun-yeong",
+    "handle": "Moon-python",
+    "session": "live session 2026-07-18",
+    "delegation_quote_verbatim": "이 정도는 그냥 너가 판단해도 되는 수준"
+  },
+  "verdict_translation": "Accepted as a development baseline for the strict-residue repair: 3 real text_on_path defects fixed by bounded position moves, 6 confirmed false positives declared via the existing fixture-scoped known-FP mechanism. Overall polish/completeness NOT claimed.",
+  "outcome": "development_baseline_accepted",
+  "scope_note": "Development-baseline acceptance of the R5.2e strict-residue closure. Panel D 'constant voltage', Panel E 'probe', and Panel F 'floating polymer cantilever' moved to clear their real path overlaps (visual_clash raw: 4 defect candidates removed, zero new). Six glyph-scoped false-positive patterns added to _known_false_positives.yaml. strict compile is GREEN for the first time across the B..C5 lineage.",
+  "strict_first_green": {
+    "achieved": true,
+    "layer": "MACHINE-VALID ONLY",
+    "explicit_non_claims": "strict-green establishes only the machine-valid evidence layer (schemas, compile, declared assertions, deterministic checks pass). It is NOT visually re-reviewed acceptance, NOT human-development completeness, NOT release, and NOT publication acceptance. The Panel F 'grounded source return' defect remains a declared permanently-open item (out of bounded-repair scope).",
+    "detail": "check_visual_clash --strict --ignore-known-fp: 0 blocking, 27 report-only, 6 suppressed; undeclared_geometry 0; strict_status state=passed."
+  },
+  "reviewed_finding_id": "HA005",
+  "accepted_known_open_items": [
+    "Panel F 'grounded source return' remains permanently open (declared since C4; label vocabulary exhausted, needs a future authoring/layout iteration).",
+    "27 report-only visual_clash candidates remain (near_miss + own-glyph-enclosure 'S' atoms) -- sub-blocking by design, not defects."
+  ],
+  "accepted_artifacts": {
+    "repaired_tex": {"path": "repaired.tex", "sha256": "02f811518956a50fd3e3ae526807260a44b792edcf5e2292472a48c977fa4118"},
+    "render_png": {"path": "build/repaired.png", "sha256": "19f0cee3729da7475ee3c4853f758646d415ee6ab2a1d38f38bbb02ba54dd55e"},
+    "known_fp_yaml": {"path": "_known_false_positives.yaml", "sha256": "97b06bd851128d4e6ee11ab959ac378c02b51ca2ccdb950fa215e0c157f121cf"},
+    "full_after_crop": {"path": "crops/full-after-C5.png", "sha256": "e4ced12ae9880ade7933d1fc1f84d4b8f527c6513094657d65105d5a6182828f"},
+    "print_scale_after_crop": {"path": "crops/print-scale-after-C5.png", "sha256": "1859ddbef189f8fd42e70d9d7dd48df75b885baeb5faf557419b129c54e9dab5"}
+  },
+  "reviewed_evidence": {
+    "adjudication": {"path": "adjudication.json", "sha256": "26fd09c77e29631b8cb334c3df1d1cf297796965623bf283fb47c60c55f92845"},
+    "attribution": {"path": "attribution.json", "sha256": "4f72704c28da091bd0147365fcffaaa090d1689852b481468e49cd1b6df96f00"},
+    "provenance": {"path": "provenance.json", "sha256": "32eab2ba53e0ff00554769efc54f822cb1da2280770d4bcfc15a4e86dad10341"},
+    "regression": {"path": "regression.json", "sha256": "4b30a6ec84eef00cb3c9dd1b55691b83b83afd5d10cd6b6bec3d713a032cc2b6"},
+    "declared_boundary_replay": {"path": "declared-boundary-replay.json", "sha256": "29ca4844bdff9d99d6eac25b7439d747ee20bb8405ec134c3c0c01fa0b31f673"}
+  },
+  "parent_C4_source_sha256": "20372e10f4f40fabd1e491f59a22be66b2af5e8771566f2dbe57fb6a7149df15",
+  "supersedes_pending_human_review_in": ["provenance.json", "regression.json"],
+  "publication_acceptance": "not_claimed"
+}
