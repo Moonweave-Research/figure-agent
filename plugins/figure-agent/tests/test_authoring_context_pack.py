@@ -637,6 +637,12 @@ def test_context_pack_binds_explicit_curated_visual_assets(tmp_path: Path) -> No
     assert selected["contract"]["path"].endswith(".contract.yaml")
     assert selected["transfer_receipt"]["path"].endswith(".transfer.yaml")
     assert selected["authoring_directives"]
+    assert any(
+        r"Import [panel_f_floating_cantilever] with "
+        r"[\input{snippets/panel-f-floating-cantilever.tex}]"
+        in directive
+        for directive in selected["authoring_directives"]
+    )
 
     rendered = authoring_context_pack.render_text(payload)
     assert "## Curated Visual Assets" in rendered

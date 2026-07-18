@@ -180,6 +180,13 @@ def _authoring_visual_assets(plugin_root: Path, spec: dict[str, Any]) -> dict[st
             f"Reuse curated visual asset [{asset_id}] from [{entry['file']}]. "
             "Do not redraw its owned geometry."
         ]
+        source_relative = Path(entry["file"])
+        if source_relative.parts[:1] == ("styles",):
+            tex_input_path = Path(*source_relative.parts[1:]).as_posix()
+            directives.append(
+                f"Import [{asset_id}] with "
+                rf"[\input{{{tex_input_path}}}] so compile.sh can resolve it."
+            )
         signature = api.get("signature")
         tunable = api.get("tunable")
         if isinstance(signature, str):
