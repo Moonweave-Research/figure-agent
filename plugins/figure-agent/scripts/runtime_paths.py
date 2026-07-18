@@ -89,13 +89,36 @@ def plugin_root_kind(plugin_root: Path) -> str:
     return "unknown"
 
 
+def _workspace_for_fixture(fixture_name: str, *, workspace: Path, plugin: Path) -> Path:
+    """Prefer the caller/env workspace (user-authored figures) but fall back to
+    the plugin root for plugin-bundled cohort fixtures (fig1-5) when the
+    workspace has no examples/<fixture_name>/<fixture_name>.tex. The cohort
+    fixtures live in <plugin>/examples, so an env workspace pointing at a repo
+    root that only *contains* the plugin (CLAUDE_PROJECT_DIR) would otherwise
+    resolve them to a non-existent <repo>/examples/<name> and refuse
+    source_missing. The presence test is the source file, not just the directory:
+    a stray/partial examples/<name>/ tree (e.g. a review-artifact fragment with
+    no <name>.tex) must not shadow the real plugin fixture. Fixtures that exist in
+    neither location leave the workspace unchanged so callers still emit an honest
+    source_missing refusal."""
+    source_rel = Path("examples") / fixture_name / f"{fixture_name}.tex"
+    if (workspace / source_rel).is_file():
+        return workspace
+    if (plugin / source_rel).is_file():
+        return plugin
+    return workspace
+
+
 def resolve_runtime_paths(
     *,
     plugin_root: Path | None = None,
     workspace_root: Path | None = None,
+    fixture_name: str | None = None,
 ) -> RuntimePaths:
     plugin = (plugin_root or default_plugin_root()).expanduser().resolve()
     workspace = (workspace_root or default_workspace_root()).expanduser().resolve()
+    if fixture_name is not None:
+        workspace = _workspace_for_fixture(fixture_name, workspace=workspace, plugin=plugin)
     return RuntimePaths(
         plugin_root=plugin,
         workspace_root=workspace,
