@@ -1,0 +1,37 @@
+{
+  "actor": "fig_run",
+  "actor_role": "workflow_agent",
+  "attempt_id": "attempt-0b027d13014cdd0d62bc8109",
+  "disposition": "human_review_required",
+  "evidence": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/materialization-preview.json",
+      "role": "materialization_preview",
+      "sha256": "sha256:1e73b61bc2e4b250f258e119a1dbee554d5abeab7454e28ede868a60e22dc273"
+    },
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/attempt-local-repair-packet.json",
+      "role": "repair_execution_packet",
+      "sha256": "sha256:e91bb4e1916d258319464323274110f25536f48d761da9743446be4d85b0c363"
+    },
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/repair-packet/repair-response.json",
+      "role": "repair_response",
+      "sha256": "sha256:f0e75c8ddbe27d47cddfd37be79cbce2a530db17c7e15fc050594b7ea18e0856"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "parent_state_file_sha256": "sha256:a1b3afafe33e4444c3683e04d531cd24af89eabf22fc73bff3fb0b0fbbfeb837",
+  "parent_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/state-007-repair_required.json",
+  "parent_state_sha256": "sha256:6c8b5ecadf58dc576c5857d420f54ca58a2af5e499f2c22c04d8b827c564c59d",
+  "previous_state_file_sha256": "sha256:5592e08d91b7c184ec11ac6f7b51cf8403955ded6d8350cbd97a0d02352c854d",
+  "previous_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/state-004-repair_bound.json",
+  "previous_state_sha256": "sha256:ae343a0537d42f50d78ad2b0b657d9d954b8a00061012dfe14533868ae8b8321",
+  "publication_acceptance": "not_claimed",
+  "required_actor": "human_repair_authorizer",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 5,
+  "state": "repair_candidate_ready",
+  "state_sha256": "sha256:b2f2de249b5bdc64d7b0124789f899f9dbe1a4957834826787f79e6048fe07dd",
+  "terminal": false
+}

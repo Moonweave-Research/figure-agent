@@ -472,6 +472,18 @@ def validate_attempt_local_repair_binding_v2(
         expected_name="authored_rendered",
     )
     try:
+        parent_state = None
+        parent_state_path = None
+        if isinstance(authored_state.get("parent_state_path"), str):
+            parent_state_path = _regular_file(
+                root,
+                str(authored_state["parent_state_path"]),
+                label="attempt-local parent state",
+            )
+            parent_state = closed_loop_attempt_state.validate_state(
+                json.loads(parent_state_path.read_text(encoding="utf-8")),
+                workspace_root=root,
+            )
         closed_loop_attempt_state.validate_chain(
             [
                 authored_state,
@@ -481,6 +493,8 @@ def validate_attempt_local_repair_binding_v2(
                 validated_current,
             ],
             workspace_root=root,
+            parent_state=parent_state,
+            parent_state_path=parent_state_path,
         )
         request_path, manifest_path, _request = (
             closed_loop_initial_review.validate_outbound_request_pack(
@@ -490,6 +504,9 @@ def validate_attempt_local_repair_binding_v2(
             )
         )
     except (
+        OSError,
+        UnicodeDecodeError,
+        json.JSONDecodeError,
         closed_loop_attempt_state.ClosedLoopAttemptStateError,
         closed_loop_initial_review.ClosedLoopInitialReviewError,
     ) as exc:

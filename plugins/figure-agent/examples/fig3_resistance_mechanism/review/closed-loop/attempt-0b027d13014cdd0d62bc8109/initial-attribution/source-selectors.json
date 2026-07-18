@@ -1,0 +1,35 @@
+{
+  "schema": "figure-agent.source-selector-registry.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/prospective-detail-v1/fig3_resistance_mechanism.tex",
+  "source_sha256": "sha256:9681afdfd528a19dcc2b7a43ffaa3245b9d2c2cdbb4f2b45d929c93c9c0da609",
+  "semantic_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-attribution/semantic-contract.yaml",
+    "sha256": "sha256:0410cad46994e2b99a6b3d65d3ec78cfc8a7ece2755c5fc0eeefa4c5b44e4962"
+  },
+  "selectors": [
+    {
+      "selector_id": "panel-c-composition-sample-fields",
+      "anchor_start": "% S60 and S80 are separate comparison units, sharing the same energy orientation.",
+      "anchor_end": "\\end{scope}\n\\end{tikzpicture}",
+      "repair_role": "movable",
+      "repair_family": "panel_rebalance",
+      "protected_invariants": [
+        "preserve all state-mark coordinates unless explicitly declared",
+        "do not create a density-of-states curve or symmetric envelope",
+        "do not alter Panels A or B"
+      ],
+      "semantic_object_refs": [
+        "panel_c.s60_sample",
+        "panel_c.s80_sample",
+        "panel_c.s60_discrete_states",
+        "panel_c.s80_continuous_support"
+      ],
+      "semantic_relation_refs": [
+        "each_state_field_remains_grouped_with_its_composition_sample",
+        "both_samples_share_one_energy_orientation",
+        "s80_support_remains_qualitative_non_dos",
+        "panels_a_and_b_remain_unchanged"
+      ]
+    }
+  ]
+}

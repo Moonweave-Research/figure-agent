@@ -1,0 +1,113 @@
+{
+  "adjudication": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-adjudication/decision.snapshot.json",
+    "sha256": "sha256:7487dbb80dca54e62955ecc9873e334051de34a49b16eaa50ae27a81de4b5726"
+  },
+  "attempt_id": "attempt-0b027d13014cdd0d62bc8109",
+  "attribution_handoff": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-adjudication/attribution-handoff.json",
+    "sha256": "sha256:6ecce494b9b4f749f30f42264e44122296b531abdfed3211814aaccb7e911f67"
+  },
+  "authored_source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/prospective-detail-v1/fig3_resistance_mechanism.tex",
+    "sha256": "sha256:9681afdfd528a19dcc2b7a43ffaa3245b9d2c2cdbb4f2b45d929c93c9c0da609"
+  },
+  "binding_sha256": "sha256:8df6f83187923062bc04387d5d728cce4a34e8218f3f8b4ff11d27d3ce613bd2",
+  "critique": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review-response/critique.md",
+    "sha256": "sha256:fc231a0dc8ecc608edb4418efbbd9c6989df5a526660ac57e569843e4344b4b2"
+  },
+  "crop_manifest": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/manifest.json",
+    "sha256": "sha256:d41516a667539a397cbfb97fe6d2e69db2d613f4bcc674b76f843456b44d7422"
+  },
+  "crops": [
+    {
+      "id": "full_q1",
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q1.png",
+      "sha256": "sha256:c8174042dd0cd46bb5c095fbbf9bda8c430c355cdeed80dff4dc23583f3752d2"
+    },
+    {
+      "id": "full_q2",
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q2.png",
+      "sha256": "sha256:686bb7ffc0bec954a9f36abb30a6631e55eae8dac7b3fa2582ebadba6f3921b6"
+    },
+    {
+      "id": "full_q3",
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q3.png",
+      "sha256": "sha256:002caebb5ec5aa210de3bc006eac4a69078c97fec0fb3aafb5d7e594252e64e0"
+    },
+    {
+      "id": "full_q4",
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/full_q4.png",
+      "sha256": "sha256:62e84bb3b85a25bb2d112c47c6f1623aa2f0abdb2cfa200ce0c1842417851869"
+    },
+    {
+      "id": "print_178mm",
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/print_178mm.png",
+      "sha256": "sha256:b7b3a0201ec1357989490b65a4a408a2b7cedda3e77d128e3e51863a4940ab6f"
+    },
+    {
+      "id": "print_thumbnail",
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/crops/print_thumbnail.png",
+      "sha256": "sha256:a5799124af06fa142870e76fe107a3fe8ffc8c36b1167539aa43687d1074faa8"
+    }
+  ],
+  "current_state": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/state-004-repair_bound.json",
+    "sha256": "sha256:ae343a0537d42f50d78ad2b0b657d9d954b8a00061012dfe14533868ae8b8321"
+  },
+  "fixture": "fig3_resistance_mechanism",
+  "human_attributor": {
+    "identity": "Moon",
+    "kind": "human"
+  },
+  "initial_attribution_binding": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-attribution/binding.snapshot.json",
+    "sha256": "sha256:344d831ab768a95f20805f63306efec6dee54edf7baa9ef86e17cec0eb82cd40"
+  },
+  "initial_review_request": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review/request.json",
+    "sha256": "sha256:18332f8b89b323ce3526d1979a9dd39a287eea40c40c7f66f82d67ad65389e98"
+  },
+  "initial_visual_review_response": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-review-response/response.json",
+    "sha256": "sha256:6e80f97bddef95c661cb4fc77c014d29cc8b2a2f9dab5414c95ca9df68b96434"
+  },
+  "publication_acceptance": "not_claimed",
+  "render": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/prospective-detail-v1/build/fig3_resistance_mechanism.png",
+    "sha256": "sha256:0544ec9c756b0327feb15b51373f9824ac719c40f7972395fc835378a32dd72a"
+  },
+  "repair_family": "panel_rebalance",
+  "schema": "figure-agent.attempt-local-repair-binding.v2",
+  "selected_finding_id": "C001",
+  "selector": {
+    "anchor_end": "\\end{scope}\n\\end{tikzpicture}",
+    "anchor_start": "% S60 and S80 are separate comparison units, sharing the same energy orientation.",
+    "protected_invariants": [
+      "preserve all state-mark coordinates unless explicitly declared",
+      "do not create a density-of-states curve or symmetric envelope",
+      "do not alter Panels A or B"
+    ],
+    "repair_family": "panel_rebalance",
+    "repair_role": "movable",
+    "selector_id": "panel-c-composition-sample-fields",
+    "semantic_object_refs": [
+      "panel_c.s60_sample",
+      "panel_c.s80_sample",
+      "panel_c.s60_discrete_states",
+      "panel_c.s80_continuous_support"
+    ],
+    "semantic_relation_refs": [
+      "each_state_field_remains_grouped_with_its_composition_sample",
+      "both_samples_share_one_energy_orientation",
+      "s80_support_remains_qualitative_non_dos",
+      "panels_a_and_b_remain_unchanged"
+    ]
+  },
+  "semantic_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-attribution/semantic-contract.yaml",
+    "sha256": "sha256:0410cad46994e2b99a6b3d65d3ec78cfc8a7ece2755c5fc0eeefa4c5b44e4962"
+  }
+}

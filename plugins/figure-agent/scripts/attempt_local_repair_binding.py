@@ -147,8 +147,17 @@ def _attempt_chain(
     ):
         raise AttemptLocalRepairBindingError("attempt_chain_invalid")
     try:
+        parent_state = None
+        parent_state_path = None
+        if authored.get("parent_state_path") is not None:
+            parent_state, parent_state_path = _load_state(
+                root, fixture, Path(authored["parent_state_path"])
+            )
         closed_loop_attempt_state.validate_chain(
-            [authored, review, critique, adjudicated, repair_state], workspace_root=root
+            [authored, review, critique, adjudicated, repair_state],
+            workspace_root=root,
+            parent_state=parent_state,
+            parent_state_path=parent_state_path,
         )
     except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
         raise AttemptLocalRepairBindingError(f"attempt_chain_invalid:{exc}") from exc

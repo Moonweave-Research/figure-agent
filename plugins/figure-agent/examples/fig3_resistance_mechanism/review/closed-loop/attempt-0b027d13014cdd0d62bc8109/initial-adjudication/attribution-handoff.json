@@ -1,0 +1,28 @@
+{
+  "adjudication": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-0b027d13014cdd0d62bc8109/initial-adjudication/decision.snapshot.json",
+    "sha256": "sha256:7487dbb80dca54e62955ecc9873e334051de34a49b16eaa50ae27a81de4b5726"
+  },
+  "attempt_id": "attempt-0b027d13014cdd0d62bc8109",
+  "fixture": "fig3_resistance_mechanism",
+  "forbidden_scope": [
+    "mutate source",
+    "change Panels A or B",
+    "introduce quantitative density of states",
+    "claim prospective timing, repair acceptance, or publication acceptance"
+  ],
+  "human_attributor": {
+    "identity": "Moon",
+    "kind": "human"
+  },
+  "permitted_scope": [
+    "attribute C001 to Panel C S60 and S80 sample grouping",
+    "preserve qualitative non-DOS state semantics"
+  ],
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.initial-attribution-handoff.v1",
+  "selected_finding_ids": [
+    "C001"
+  ],
+  "source_mutation": "forbidden"
+}
