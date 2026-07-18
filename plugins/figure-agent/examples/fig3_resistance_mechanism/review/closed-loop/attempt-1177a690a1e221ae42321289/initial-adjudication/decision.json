@@ -1,0 +1,51 @@
+{
+  "schema": "figure-agent.initial-human-adjudication.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "attempt_id": "attempt-1177a690a1e221ae42321289",
+  "current_state": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/state-002-critique_unadjudicated.json",
+    "sha256": "sha256:e7de7335f22d8d07fd0b3ea11b54a4354cab186306632dcca0d5595591a9cba2"
+  },
+  "response": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review-response/response.json",
+    "sha256": "sha256:21814b90d5bf6fb35b1ad9db7248c1f0136cc3c1f9cbaa913132e2d6c92733e3"
+  },
+  "critique": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review-response/critique.md",
+    "sha256": "sha256:24979a41c26d5be35a61d215f23c728d285a09a2ba4659a6c196350cca24bf6f"
+  },
+  "host_review_execution_receipt": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review-response/host-review-execution-receipt.json",
+    "sha256": "sha256:c1bc53cbd966a29e7c947b1cb8d05d703d28cd7449d41adff98272e9a434808d"
+  },
+  "host_review_transcript": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review-response/host-review-transcript.md",
+    "sha256": "sha256:e0e4e7fc3787f72c0f784e645a149d1483c9e27937e84dc90c4559ee69cf8c89"
+  },
+  "reviewer": {
+    "kind": "human",
+    "identity": "Moon"
+  },
+  "rationale": "The human reviewer explicitly found that removing the Panel C boxes made the result worse and requested a sample-like representation. This selects C001 for bounded attribution only; it is not repair acceptance or prospective timing evidence.",
+  "decision": "approve_for_attribution",
+  "attribution": {
+    "selected_finding_ids": ["C001"],
+    "human_attributor": {
+      "kind": "human",
+      "identity": "Moon"
+    },
+    "permitted_scope": [
+      "attribute C001 to Panel C S60 and S80 sample grouping",
+      "preserve qualitative non-DOS state semantics"
+    ],
+    "forbidden_scope": [
+      "mutate source",
+      "change Panels A or B",
+      "introduce quantitative density of states",
+      "claim prospective timing, repair acceptance, or publication acceptance"
+    ],
+    "source_mutation": "forbidden"
+  },
+  "publication_acceptance": "not_claimed",
+  "decision_sha256": "sha256:da9344960d7bb89c826486a8cf8a928d1770a75d42694acbcb8c5debce3e7882"
+}

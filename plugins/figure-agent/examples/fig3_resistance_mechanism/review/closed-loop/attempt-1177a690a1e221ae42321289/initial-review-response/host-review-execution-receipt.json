@@ -1,0 +1,23 @@
+{
+  "schema": "figure-agent.host-review-execution-receipt.v1",
+  "request_sha256": "sha256:0febb9f8942c09a0180c17f82cf0d9a144ddab6460de087317c457bdd6e07b80",
+  "actor": {
+    "kind": "model",
+    "identity": "codex-host-reviewer",
+    "model_or_tool": "gpt-5"
+  },
+  "transcript": {
+    "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review-response/host-review-transcript.md",
+    "sha256": "sha256:e0e4e7fc3787f72c0f784e645a149d1483c9e27937e84dc90c4559ee69cf8c89"
+  },
+  "inspected_artifacts": [
+    {"role": "full_render", "path": "examples/fig3_resistance_mechanism/review/failure-first/prospective-detail-v1/build/fig3_resistance_mechanism.png", "sha256": "sha256:0544ec9c756b0327feb15b51373f9824ac719c40f7972395fc835378a32dd72a"},
+    {"role": "full_q1", "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review/crops/full_q1.png", "sha256": "sha256:c8174042dd0cd46bb5c095fbbf9bda8c430c355cdeed80dff4dc23583f3752d2"},
+    {"role": "full_q2", "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review/crops/full_q2.png", "sha256": "sha256:686bb7ffc0bec954a9f36abb30a6631e55eae8dac7b3fa2582ebadba6f3921b6"},
+    {"role": "full_q3", "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review/crops/full_q3.png", "sha256": "sha256:002caebb5ec5aa210de3bc006eac4a69078c97fec0fb3aafb5d7e594252e64e0"},
+    {"role": "full_q4", "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review/crops/full_q4.png", "sha256": "sha256:62e84bb3b85a25bb2d112c47c6f1623aa2f0abdb2cfa200ce0c1842417851869"},
+    {"role": "print_178mm", "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review/crops/print_178mm.png", "sha256": "sha256:b7b3a0201ec1357989490b65a4a408a2b7cedda3e77d128e3e51863a4940ab6f"},
+    {"role": "print_thumbnail", "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review/crops/print_thumbnail.png", "sha256": "sha256:a5799124af06fa142870e76fe107a3fe8ffc8c36b1167539aa43687d1074faa8"}
+  ],
+  "receipt_sha256": "sha256:c38893757e32e77b5fa48d3022b69ec59195fb6ca231a5e65701c85d3d77fd35"
+}

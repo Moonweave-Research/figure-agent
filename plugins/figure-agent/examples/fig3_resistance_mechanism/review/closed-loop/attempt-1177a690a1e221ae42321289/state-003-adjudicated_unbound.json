@@ -1,0 +1,52 @@
+{
+  "actor": "Moon",
+  "actor_role": "human_adjudicator",
+  "attempt_id": "attempt-1177a690a1e221ae42321289",
+  "disposition": "human_review_required",
+  "evidence": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-adjudication/decision.snapshot.json",
+      "role": "adjudication",
+      "sha256": "sha256:e839cecd87adad168b0f8b17223fcec77167e96a9c2fd0869d691c3f736b64d6"
+    },
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-adjudication/attribution-handoff.json",
+      "role": "attribution_handoff",
+      "sha256": "sha256:4cdbda492b5be352ab2c8139245b7ba35d6d3870e93f01ec2eaf8c1ce4fb7625"
+    },
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review-response/critique.md",
+      "role": "critique",
+      "sha256": "sha256:24979a41c26d5be35a61d215f23c728d285a09a2ba4659a6c196350cca24bf6f"
+    },
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review-response/host-review-execution-receipt.json",
+      "role": "host_review_execution_receipt",
+      "sha256": "sha256:c1bc53cbd966a29e7c947b1cb8d05d703d28cd7449d41adff98272e9a434808d"
+    },
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review-response/host-review-transcript.md",
+      "role": "host_review_transcript",
+      "sha256": "sha256:e0e4e7fc3787f72c0f784e645a149d1483c9e27937e84dc90c4559ee69cf8c89"
+    },
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review-response/response.json",
+      "role": "initial_visual_review_response",
+      "sha256": "sha256:21814b90d5bf6fb35b1ad9db7248c1f0136cc3c1f9cbaa913132e2d6c92733e3"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "parent_state_file_sha256": null,
+  "parent_state_path": null,
+  "parent_state_sha256": null,
+  "previous_state_file_sha256": "sha256:68873100e54760ed353c2284dbfc1ea0138f7660e4ec36c5f4ac481eb000fe72",
+  "previous_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/state-002-critique_unadjudicated.json",
+  "previous_state_sha256": "sha256:e7de7335f22d8d07fd0b3ea11b54a4354cab186306632dcca0d5595591a9cba2",
+  "publication_acceptance": "not_claimed",
+  "required_actor": "human_attributor",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 3,
+  "state": "adjudicated_unbound",
+  "state_sha256": "sha256:11362910922e041a5b6aeb861bb0ed22b8235f72d0c386208d04a36971ecdf3c",
+  "terminal": false
+}
