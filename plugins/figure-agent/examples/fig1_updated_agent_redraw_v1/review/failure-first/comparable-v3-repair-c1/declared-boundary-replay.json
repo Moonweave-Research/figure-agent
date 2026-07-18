@@ -1,0 +1,510 @@
+{
+  "b_authored": {
+    "attempt": "review/failure-first/comparable-v3",
+    "candidates": [
+      {
+        "bbox_pt": [
+          7.306,
+          73.922714,
+          20.705447,
+          78.996684
+        ],
+        "boundary_id": "panel-A-frame-left",
+        "boundary_pt": {
+          "x": 14.731,
+          "y_range": [
+            4.13905,
+            145.873095
+          ]
+        },
+        "boundary_role": "panel_A_frame_left",
+        "clearance_pt": 0.0,
+        "id": "PB001",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "A",
+        "text": "sulfur"
+      },
+      {
+        "bbox_pt": [
+          142.917,
+          385.173038,
+          163.127941,
+          389.601235
+        ],
+        "boundary_id": "panel-D-frame-right",
+        "boundary_pt": {
+          "x": 149.378343,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_D_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB002",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "D",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          142.917,
+          385.173038,
+          163.127941,
+          389.601235
+        ],
+        "boundary_id": "panel-E-frame-left",
+        "boundary_pt": {
+          "x": 156.465045,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_E_frame_left",
+        "clearance_pt": 0.0,
+        "id": "PB003",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "E",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          296.919,
+          416.237038,
+          312.340219,
+          420.665235
+        ],
+        "boundary_id": "panel-F-frame-left",
+        "boundary_pt": {
+          "x": 298.199091,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_left",
+        "clearance_pt": 0.0,
+        "id": "PB004",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "floating"
+      },
+      {
+        "bbox_pt": [
+          416.802,
+          353.845038,
+          437.012941,
+          358.273235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 432.846434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB005",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          432.480495,
+          359.624038,
+          444.973174,
+          364.052235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 432.846434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB006",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "return"
+      },
+      {
+        "bbox_pt": [
+          417.369,
+          414.899038,
+          437.042436,
+          419.327235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 432.846434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB007",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "electrode"
+      }
+    ],
+    "checked_edges": 20,
+    "coverage": {
+      "A": "covered",
+      "B": "covered",
+      "C": "zero_coverage",
+      "D": "covered",
+      "E": "covered",
+      "F": "covered"
+    },
+    "frame_crossings_total": 7,
+    "render_pdf": {
+      "path": "build/verified_generated.pdf",
+      "sha256": "sha256:861e7ed8422842fdd308c124501f5c6132e6c6ed4ba615941f7ef9572c681546"
+    },
+    "source": {
+      "path": "verified_generated.tex",
+      "sha256": "sha256:54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f"
+    }
+  },
+  "c_repaired": {
+    "attempt": "review/failure-first/comparable-v3-repair-c1",
+    "candidates": [
+      {
+        "bbox_pt": [
+          132.529,
+          385.173038,
+          152.739941,
+          389.601235
+        ],
+        "boundary_id": "panel-D-frame-right",
+        "boundary_pt": {
+          "x": 138.991343,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_D_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB001",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "D",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          132.529,
+          385.173038,
+          152.739941,
+          389.601235
+        ],
+        "boundary_id": "panel-E-frame-left",
+        "boundary_pt": {
+          "x": 146.078045,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_E_frame_left",
+        "clearance_pt": 0.0,
+        "id": "PB002",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "E",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          286.531,
+          416.237038,
+          301.952219,
+          420.665235
+        ],
+        "boundary_id": "panel-F-frame-left",
+        "boundary_pt": {
+          "x": 287.812091,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_left",
+        "clearance_pt": 0.0,
+        "id": "PB003",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "floating"
+      },
+      {
+        "bbox_pt": [
+          406.414,
+          353.845038,
+          426.624941,
+          358.273235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB004",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          422.092495,
+          359.624038,
+          434.585174,
+          364.052235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB005",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "return"
+      },
+      {
+        "bbox_pt": [
+          406.981,
+          414.899038,
+          426.654436,
+          419.327235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB006",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "electrode"
+      }
+    ],
+    "checked_edges": 20,
+    "coverage": {
+      "A": "covered",
+      "B": "covered",
+      "C": "zero_coverage",
+      "D": "covered",
+      "E": "covered",
+      "F": "covered"
+    },
+    "frame_crossings_total": 6,
+    "render_pdf": {
+      "path": "build/repaired.pdf",
+      "sha256": "sha256:791d014ecab028c95b45b49238ea8d7ef114ff605d27d620f6c879e30794c56f"
+    },
+    "source": {
+      "path": "repaired.tex",
+      "sha256": "sha256:5d11f3b89303d34bba92933724a44fbf62d72cc56782b062a8b0ada32638057a"
+    }
+  },
+  "human_review": "pending",
+  "mechanism": "check_panel_boundary_coverage.evaluate_panel_boundary_coverage; frame geometry from source, affine pinned by the rendered frame, boundary lines fed to the existing text-boundary detector unchanged.",
+  "primary_claim": {
+    "panel_a_coverage_after_r53": "covered",
+    "panel_a_coverage_before_r53": "zero (no declared text-boundary geometry)",
+    "sulfur_segment_left_frame_crossing": {
+      "b_panel_a_candidates": [
+        {
+          "bbox_pt": [
+            7.306,
+            73.922714,
+            20.705447,
+            78.996684
+          ],
+          "boundary_id": "panel-A-frame-left",
+          "boundary_pt": {
+            "x": 14.731,
+            "y_range": [
+              4.13905,
+              145.873095
+            ]
+          },
+          "boundary_role": "panel_A_frame_left",
+          "clearance_pt": 0.0,
+          "id": "PB001",
+          "kind": "text_crosses_vertical_boundary",
+          "panel": "A",
+          "text": "sulfur"
+        }
+      ],
+      "c_panel_a_candidates": [],
+      "present_in_b": true,
+      "present_in_c": false
+    }
+  },
+  "publication_acceptance": "not_claimed",
+  "purpose": "R5.3 evidence: panel-frame text-boundary coverage derived from the authored source (the % Panel markers and panel-frame rectangles) restores declared coverage that was zero in R5.2. It makes the human-caught Panel A 'sulfur segment' left-frame crossing visible to a declared check in B and confirms it absent in C.",
+  "schema": "figure-agent.declared-boundary-replay.v1",
+  "unadjudicated_additional_crossings": {
+    "note": "Beyond the Panel A defect, the check surfaces Panel D/E/F floating-cantilever label straddles present in BOTH B and C. Their intentional-vs-accidental status is a human judgement routed through the declared intentional_overflow allowlist; this machine artifact does not classify them as defects.",
+    "panel_c_status": "zero_coverage (visual-hero panel is frameless; reported loudly, not silently passed)",
+    "shared_b_and_c_candidates": [
+      {
+        "bbox_pt": [
+          132.529,
+          385.173038,
+          152.739941,
+          389.601235
+        ],
+        "boundary_id": "panel-D-frame-right",
+        "boundary_pt": {
+          "x": 138.991343,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_D_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB001",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "D",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          132.529,
+          385.173038,
+          152.739941,
+          389.601235
+        ],
+        "boundary_id": "panel-E-frame-left",
+        "boundary_pt": {
+          "x": 146.078045,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_E_frame_left",
+        "clearance_pt": 0.0,
+        "id": "PB002",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "E",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          286.531,
+          416.237038,
+          301.952219,
+          420.665235
+        ],
+        "boundary_id": "panel-F-frame-left",
+        "boundary_pt": {
+          "x": 287.812091,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_left",
+        "clearance_pt": 0.0,
+        "id": "PB003",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "floating"
+      },
+      {
+        "bbox_pt": [
+          406.414,
+          353.845038,
+          426.624941,
+          358.273235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB004",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          422.092495,
+          359.624038,
+          434.585174,
+          364.052235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB005",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "return"
+      },
+      {
+        "bbox_pt": [
+          406.981,
+          414.899038,
+          426.654436,
+          419.327235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB006",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "electrode"
+      }
+    ]
+  }
+}
