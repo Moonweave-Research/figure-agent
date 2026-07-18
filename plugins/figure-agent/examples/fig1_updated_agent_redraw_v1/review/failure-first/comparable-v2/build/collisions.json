@@ -1,0 +1,175 @@
+{
+  "schema": "figure-agent.text-collisions.v1",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "render_pdf": "build/verified_generated.pdf",
+  "render_pdf_sha256": "sha256:fb759abaf67712222f5b7fa6a9c86276675acf3fe37c6e7dd01b5a1ebfe6f15e",
+  "iou_threshold": 0.05,
+  "word_count": 129,
+  "collisions": [
+    {
+      "id": "TC001",
+      "texts": [
+        "evidence",
+        "constant"
+      ],
+      "iou": 0.137187,
+      "a": {
+        "text": "evidence",
+        "bbox_pdf": [
+          85.413483,
+          141.931388,
+          115.690807,
+          148.481431
+        ]
+      },
+      "b": {
+        "text": "constant",
+        "bbox_pdf": [
+          85.521941,
+          146.63971,
+          103.976681,
+          151.160155
+        ]
+      },
+      "source_mapping": null
+    },
+    {
+      "id": "TC002",
+      "texts": [
+        "Transient-current",
+        "relaxation"
+      ],
+      "iou": 0.089058,
+      "a": {
+        "text": "Transient-current",
+        "bbox_pdf": [
+          25.279,
+          141.931388,
+          83.454129,
+          148.481431
+        ]
+      },
+      "b": {
+        "text": "relaxation",
+        "bbox_pdf": [
+          49.158232,
+          146.63971,
+          70.326216,
+          151.160155
+        ]
+      },
+      "source_mapping": null
+    },
+    {
+      "id": "TC003",
+      "texts": [
+        "Transient-current",
+        "trap-mediated"
+      ],
+      "iou": 0.087212,
+      "a": {
+        "text": "Transient-current",
+        "bbox_pdf": [
+          25.279,
+          141.931388,
+          83.454129,
+          148.481431
+        ]
+      },
+      "b": {
+        "text": "trap-mediated",
+        "bbox_pdf": [
+          17.685,
+          146.63971,
+          47.806004,
+          151.160155
+        ]
+      },
+      "source_mapping": null
+    },
+    {
+      "id": "TC004",
+      "texts": [
+        "evidence",
+        "voltage"
+      ],
+      "iou": 0.076175,
+      "a": {
+        "text": "evidence",
+        "bbox_pdf": [
+          85.413483,
+          141.931388,
+          115.690807,
+          148.481431
+        ]
+      },
+      "b": {
+        "text": "voltage",
+        "bbox_pdf": [
+          105.333791,
+          146.63971,
+          121.076265,
+          151.160155
+        ]
+      },
+      "source_mapping": null
+    },
+    {
+      "id": "TC005",
+      "texts": [
+        "motion",
+        "sample"
+      ],
+      "iou": 0.067588,
+      "a": {
+        "text": "motion",
+        "bbox_pdf": [
+          224.067,
+          156.27671,
+          238.719881,
+          160.797155
+        ]
+      },
+      "b": {
+        "text": "sample",
+        "bbox_pdf": [
+          211.798,
+          158.28971,
+          227.535592,
+          162.810155
+        ]
+      },
+      "source_mapping": null
+    },
+    {
+      "id": "TC006",
+      "texts": [
+        "Transient-current",
+        "under"
+      ],
+      "iou": 0.052135,
+      "a": {
+        "text": "Transient-current",
+        "bbox_pdf": [
+          25.279,
+          141.931388,
+          83.454129,
+          148.481431
+        ]
+      },
+      "b": {
+        "text": "under",
+        "bbox_pdf": [
+          71.683326,
+          146.63971,
+          84.169712,
+          151.160155
+        ]
+      },
+      "source_mapping": null
+    }
+  ],
+  "total": 6,
+  "render_path": "build/verified_generated.png",
+  "render_sha256": "sha256:5e33458d431b4de757920b61fe55546848376dd11264396ff928018fe7475b36"
+}

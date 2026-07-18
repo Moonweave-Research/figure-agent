@@ -1,0 +1,22 @@
+{
+  "schema": "figure-agent.r5-run-status.v1",
+  "run": "r5-prospective-v3",
+  "control_sha256": "0ac43684c00067070fbf9e86aaf6537e48509945006d21af47b5f3fd2d071476",
+  "treatment": {
+    "status": "authored_strict_blocked",
+    "source": "../failure-first/comparable-v2/verified_generated.tex",
+    "sha256": "04523d940216d8c1f59ab5695de91dcf83e772eb1244993b5de0288d9b88422a",
+    "lint_exit_code": 0,
+    "strict_compile_state": "failed",
+    "strict_detector_failed": true,
+    "detected_text_collisions": 6,
+    "render": "../failure-first/comparable-v2/build/verified_generated.png",
+    "render_sha256": "5e33458d431b4de757920b61fe55546848376dd11264396ff928018fe7475b36"
+  },
+  "human_review": {
+    "status": "not_accepted",
+    "named_reviewer": null,
+    "publication_acceptance": "not_claimed"
+  },
+  "product_claim": "not_authorized"
+}

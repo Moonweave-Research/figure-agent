@@ -1,0 +1,169 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usepackage{polymer-paper-preamble}
+\input{snippets/panel-f-floating-cantilever.tex}
+
+\tikzset{
+  panel/.style={draw=cLGray,line width=0.40pt,rounded corners=1.2mm},
+  hero panel/.style={draw=cTeal!70!black,line width=0.70pt,rounded corners=1.2mm},
+  panel letter/.style={font=\sffamily\bfseries\fontsize{9}{10.5}\selectfont,text=black},
+  panel title/.style={font=\sffamily\bfseries\fontsize{7.1}{8.4}\selectfont,text=cGray},
+  label/.style={font=\sffamily\fontsize{5.7}{6.9}\selectfont,text=cGray,align=center},
+  small label/.style={font=\sffamily\fontsize{4.9}{5.9}\selectfont,text=cGray,align=center},
+  hero label/.style={font=\sffamily\bfseries\fontsize{6.4}{7.7}\selectfont,align=center},
+  bond/.style={draw=cGray,line width=0.72pt,line cap=round,line join=round},
+  sulfur bond/.style={draw=cAmber,line width=1.05pt,line cap=round},
+  axis/.style={draw=cGray,line width=0.50pt,-{Stealth[length=3.2pt,width=2.4pt]}},
+  shallow/.style={draw=cTeal,line width=0.80pt},
+  deep/.style={draw=cRed,line width=0.90pt},
+  curve/.style={draw=cBlue,line width=1.05pt},
+  apparatus/.style={draw=cGray,line width=0.55pt,rounded corners=0.5mm},
+  leader/.style={draw=cGray,line width=0.35pt,-{Stealth[length=2.5pt,width=1.8pt]}},
+  signal/.style={draw=cTeal,line width=0.68pt,-{Stealth[length=3pt,width=2.2pt]}},
+  force/.style={draw=cRed,line width=1.20pt,-{Stealth[length=4.2pt,width=3pt]}},
+}
+
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm]
+  % Author-selected unequal layout; each frame reserves a clear 0.65 cm header band.
+  \draw[panel] (0,6.50) rectangle (4.60,10.80);
+  \draw[panel] (4.85,6.50) rectangle (8.35,10.80);
+  \draw[hero panel] (8.60,4.20) rectangle (17.80,10.80);
+  \draw[panel] (0,0) rectangle (4.60,6.25);
+  \draw[panel] (4.85,0) rectangle (9.40,6.25);
+  \draw[panel] (9.65,0) rectangle (17.80,3.95);
+  \foreach \x/\y/\letter/\title in {
+    0/10.80/A/{Sulfur-rich network},4.85/10.80/B/{Composition series},
+    8.60/10.80/C/{Localized trap landscape},0/6.25/D/{Transient-current evidence},
+    4.85/6.25/E/{Noncontact ISPD evidence},9.65/3.95/F/{Floating cantilever response}}
+  {
+    \node[panel letter,anchor=north west] at (\x+0.18,\y-0.16) {\letter};
+    \node[panel title,anchor=north west] at (\x+0.62,\y-0.18) {\title};
+  }
+
+  % A — atoms and bonds encode the repeat-unit concept.
+  \node[circle,draw=cAmber,fill=cAmber!12,line width=0.52pt,minimum size=4.6mm,
+    font=\sffamily\bfseries\fontsize{6.2}{7.2}\selectfont,text=cAmber] (aSone) at (0.76,8.82) {S};
+  \node[circle,draw=cAmber,fill=cAmber!12,line width=0.52pt,minimum size=4.6mm,
+    font=\sffamily\bfseries\fontsize{6.2}{7.2}\selectfont,text=cAmber] (aStwo) at (1.36,8.82) {S};
+  \node[circle,draw=cAmber,fill=cAmber!12,line width=0.52pt,minimum size=4.6mm,
+    font=\sffamily\bfseries\fontsize{6.2}{7.2}\selectfont,text=cAmber] (aSthree) at (1.96,8.82) {S};
+  \node[circle,draw=cAmber,fill=cAmber!12,line width=0.52pt,minimum size=4.6mm,
+    font=\sffamily\bfseries\fontsize{6.2}{7.2}\selectfont,text=cAmber] (aSfour) at (2.56,8.82) {S};
+  \draw[sulfur bond] (aSone)--(aStwo)--(aSthree)--(aSfour);
+  \draw[bond] (2.79,8.82)--(3.12,8.82)--(3.43,9.34)--(4.02,9.34)
+    --(4.31,8.82)--(4.02,8.30)--(3.43,8.30)--cycle;
+  \draw[bond] (3.43,9.34)--(3.20,9.74);
+  \draw[bond] (4.02,8.30)--(4.25,7.90);
+  \node[small label,anchor=south] at (1.66,9.45) {sulfur-rich segment};
+  \node[small label,anchor=north] at (3.72,7.72) {DIB crosslinker};
+  \draw[cGray,line width=0.48pt] (0.42,7.33)--(0.24,7.33)--(0.24,9.94)--(0.42,9.94);
+  \draw[cGray,line width=0.48pt] (4.20,7.33)--(4.40,7.33)--(4.40,9.94)--(4.20,9.94);
+  \node[label] at (2.30,6.92) {repeat-unit connectivity concept};
+
+  % B — category order is qualitative; no numerical axis is implied.
+  \foreach \x/\count/\name in {5.45/2/{lower S},6.60/3/{intermediate S},7.75/4/{higher S}} {
+    \draw[apparatus,fill=cLGray!12] (\x-0.34,7.58) rectangle (\x+0.34,9.28);
+    \foreach \index in {1,...,\count} {
+      \pgfmathsetmacro{\doty}{7.70+0.30*\index}
+      \fill[cAmber] (\x,\doty) circle (0.070);
+    }
+    \node[small label,anchor=north] at (\x,7.40) {\name};
+  }
+  \draw[signal] (5.45,9.70)--(7.75,9.70);
+  \node[small label,anchor=south] at (6.60,9.80) {qualitative sulfur ordering};
+  \node[label] at (6.60,6.92) {category spacing is not measured};
+
+  % fig-agent:start panel-c-trap-landscape
+  % C — dominant real-space and energy-space trap narrative.
+  \node[hero label,text=cTeal,anchor=north] at (11.08,10.02) {localized sites in polymer};
+  \draw[cAmber,line width=1.25pt,rounded corners=2mm]
+    (9.28,8.77) .. controls (9.92,9.35) and (10.52,8.14) .. (11.10,8.72)
+    .. controls (11.67,9.29) and (12.28,8.02) .. (12.91,8.63);
+  \draw[cAmber,line width=0.86pt]
+    (9.38,6.95) .. controls (10.02,7.63) and (10.55,6.57) .. (11.12,7.13)
+    .. controls (11.70,7.71) and (12.28,6.63) .. (12.84,7.23);
+  \foreach \x/\y in {9.82/8.68,11.54/8.62,10.57/7.06} {
+    \draw[shallow] (\x-0.28,\y)--(\x+0.28,\y);
+    \fill[cTeal] (\x,\y+0.15) circle (0.082);
+  }
+  \foreach \x/\y in {9.97/7.66,11.82/7.39,12.41/7.98} {
+    \draw[deep] (\x-0.30,\y)--(\x+0.30,\y);
+    \fill[cRed] (\x,\y+0.15) circle (0.088);
+  }
+  \node[small label,text=cTeal,anchor=north west] at (9.25,6.56) {shallow sites};
+  \node[small label,text=cRed,anchor=north east] at (12.95,6.56) {deep sites};
+  \draw[cLGray,line width=0.34pt,dashed] (13.22,4.88)--(13.22,10.00);
+  \draw[axis] (13.78,4.98)--(13.78,9.91);
+  \node[label,rotate=90] at (13.47,7.42) {energy increases upward};
+  \draw[cBlue,line width=1.22pt] (14.21,9.29)--(17.34,9.29);
+  \node[small label,text=cBlue,anchor=south] at (15.78,9.50) {mobility edge};
+  \draw[shallow] (14.57,8.53)--(15.29,8.53);
+  \draw[shallow] (16.08,8.25)--(16.84,8.25);
+  \fill[cTeal] (14.93,8.68) circle (0.098);
+  \fill[cTeal] (16.46,8.40) circle (0.098);
+  \draw[deep] (14.65,6.82)--(15.46,6.82);
+  \draw[deep] (15.97,5.76)--(16.90,5.76);
+  \fill[cRed] (15.05,6.97) circle (0.108);
+  \fill[cRed] (16.43,5.91) circle (0.108);
+  \draw[signal] (14.93,8.78) .. controls (14.98,9.00) and (15.18,9.12) .. (15.41,9.24);
+  \draw[signal] (16.43,6.06) .. controls (17.22,6.71) and (17.15,8.39) .. (16.79,9.23);
+  \node[small label,text=cTeal,anchor=east] at (17.28,7.82) {shallow localized states};
+  \node[small label,text=cRed,anchor=east] at (17.28,5.12) {deep localized states};
+  \node[label] at (13.20,4.55) {coexisting trap depths; qualitative landscape only};
+  % fig-agent:end panel-c-trap-landscape
+
+  % D — apparatus context above and qualitative transient below.
+  \draw[apparatus] (0.55,4.63) rectangle (1.48,5.17);
+  \node[small label] at (1.02,4.90) {constant $V$};
+  \draw[cBlue,line width=0.56pt] (1.48,4.90)--(2.04,4.90);
+  \draw[apparatus,fill=cAmber!10] (2.04,4.63) rectangle (3.40,5.17);
+  \node[small label] at (2.72,4.90) {polymer};
+  \draw[cBlue,line width=0.56pt] (3.40,4.90)--(4.06,4.90);
+  \node[small label,anchor=south] at (2.30,5.34) {applied-voltage context};
+  \draw[axis] (0.68,0.78)--(0.68,3.86);
+  \draw[axis] (0.68,0.78)--(4.25,0.78);
+  \node[small label,rotate=90] at (0.36,2.28) {transient current};
+  \node[small label] at (2.46,0.38) {time};
+  \draw[curve] (0.88,3.56) .. controls (1.28,2.50) and (1.88,1.70) .. (2.70,1.23)
+    .. controls (3.18,0.98) and (3.72,0.89) .. (4.08,0.86);
+  \node[label,text=cBlue] at (2.88,2.43) {qualitative monotonic decay};
+  \node[small label] at (2.30,5.70) {trap-mediated relaxation under constant voltage};
+
+  % E — noncontact side-view measurement above; interpretation below.
+  \draw[apparatus,fill=cLGray!18] (5.42,4.72) rectangle (7.12,5.22);
+  \draw[apparatus,fill=cGray!8] (5.61,5.22) rectangle (6.93,5.36);
+  \node[small label,anchor=east] at (5.29,4.96) {grounded substrate};
+  \node[small label,anchor=west] at (7.20,5.29) {sample};
+  \draw[apparatus,fill=cGray!10] (5.98,3.89) rectangle (6.64,4.29);
+  \draw[apparatus] (6.18,4.29)--(6.18,4.55)--(6.44,4.55)--(6.44,4.29);
+  \node[small label,anchor=east] at (5.86,4.08) {ISPD probe};
+  \draw[<->,draw=cTeal,line width=0.54pt] (6.79,4.33)--(6.79,5.18);
+  \node[small label,anchor=west,text=cTeal] at (6.90,4.75) {noncontact gap};
+  \draw[apparatus] (7.74,4.13) rectangle (8.70,5.01);
+  \draw[cBlue,line width=0.44pt] (7.89,4.69) rectangle (8.55,4.89);
+  \node[small label] at (8.22,4.42) {$V_s$ meter};
+  \draw[signal] (7.16,5.04)--(7.69,4.67);
+  \node[small label] at (8.25,5.36) {motion stage};
+  \draw[axis] (5.52,0.80)--(5.52,3.24);
+  \draw[axis] (5.52,0.80)--(9.00,0.80);
+  \BellCurve[draw=cRed,fill=cRed!10,line width=0.94pt]{5.75,0.80,8.70,2.76,up}
+  \node[small label,rotate=90] at (5.20,2.00) {relative signal};
+  \node[small label] at (7.30,0.40) {trap depth};
+  \node[label,text=cRed] at (7.36,3.20) {qualitative trap-distribution interpretation};
+
+  % fig-agent:start panel-f-electrical-topology
+  % F — curated geometry owns topology; caller owns labels and force arrow.
+  \PanelFFloatingCantilever{fthree}{(13.12,2.55)}
+  \node[small label,anchor=south] at (13.12,3.04) {mechanical top clip};
+  \node[small label,anchor=east] at (12.55,1.28) {floating polymer cantilever};
+  \node[small label,anchor=west] at (14.86,1.22) {driven side electrode};
+  \node[small label,anchor=west] at (15.00,2.92) {source return to ground};
+  \draw[leader] (12.02,0.58)--(11.83,0.68);
+  \node[small label,text=cRed,anchor=east] at (11.77,0.50) {trapped charge};
+  \draw[force] (12.08,1.18)--(10.76,1.18);
+  \node[label,text=cRed,anchor=south] at (11.42,1.38) {Coulomb repulsion};
+  \node[small label] at (15.96,0.42) {sample and cantilever remain electrically floating};
+  % fig-agent:end panel-f-electrical-topology
+\end{tikzpicture}
+\end{document}
