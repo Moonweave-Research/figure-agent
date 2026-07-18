@@ -107,6 +107,30 @@ def test_loads_normalized_contract_with_exact_source_binding(tmp_path: Path) -> 
     assert payload["normalized_sha256"].startswith("sha256:")
 
 
+def test_exact_source_binding_emits_selected_content_hash_matching_validator(
+    tmp_path: Path,
+) -> None:
+    # visual_finding_attribution._fresh_source_selector recomputes
+    # selected_content_sha256 from the resolved line range (splitlines keepends)
+    # and refuses the binding when the field is absent or mismatched. The contract
+    # producer must emit exactly that hash, or every exact region attributes as
+    # unbound (source_selected_content_hash_mismatch).
+    module = _module()
+    fixture, detector_geometry = _write_fixture(tmp_path)
+
+    payload = module.load_semantic_region_contract(
+        fixture,
+        detector_page_geometry=detector_geometry,
+    )
+    source = payload["regions"][0]["source"]
+    kept_lines = (fixture / "example.tex").read_bytes().decode("utf-8").splitlines(keepends=True)
+    selected = "".join(
+        kept_lines[source["resolved_line_start"] - 1 : source["resolved_line_end"]]
+    ).encode("utf-8")
+    expected = f"sha256:{hashlib.sha256(selected).hexdigest()}"
+    assert source["selected_content_sha256"] == expected
+
+
 def test_preserves_explicit_relation_fields_for_downstream_tie_breaking(
     tmp_path: Path,
 ) -> None:
@@ -249,9 +273,7 @@ def test_rejects_detector_render_geometry_mismatch(tmp_path: Path) -> None:
     module = _module()
     fixture, detector_geometry = _write_fixture(tmp_path)
     detector_geometry = {**detector_geometry, "rotation_deg": 90}
-    detector_geometry["render_geometry_hash"] = module.render_geometry_hash(
-        detector_geometry
-    )
+    detector_geometry["render_geometry_hash"] = module.render_geometry_hash(detector_geometry)
 
     with pytest.raises(module.SemanticRegionContractError, match="detector_geometry_mismatch"):
         module.load_semantic_region_contract(
