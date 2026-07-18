@@ -1,0 +1,8 @@
+schema: figure-agent.r5-budget-contract.v1
+max_output_kind: one_complete_tex_source
+max_source_lines: 260
+max_authoring_attempts: 1
+feedback_rounds: 0
+manual_repairs: 0
+human_correction_minutes: prospectively_record_after_review
+publication_acceptance: not_claimed

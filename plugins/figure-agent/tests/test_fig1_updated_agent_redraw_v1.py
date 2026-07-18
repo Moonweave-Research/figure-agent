@@ -116,3 +116,40 @@ def test_bound_authoring_prompt_carries_project_cantilever_orientation_rule() ->
     assert "polymer_paper_project.cantilever-vertical-clip-top" in prompt
     assert "Draw the polymer cantilever vertical" in prompt
     assert "Horizontal cantilever orientation is wrong" in prompt
+
+
+def test_r5_v2_predeclaration_frees_composition_but_binds_vertical_cantilever() -> None:
+    run_root = (
+        PLUGIN_ROOT
+        / "examples"
+        / "fig1_updated_agent_redraw_v1"
+        / "review"
+        / "r5-prospective-v2"
+    )
+    task = (run_root / "task.md").read_text(encoding="utf-8")
+    contract = yaml.safe_load(
+        (run_root / "comparison_contract.yaml").read_text(encoding="utf-8")
+    )
+    normalized_task = " ".join(task.split())
+
+    assert "two rows of three" not in task
+    assert "Do not assume an equal-cell grid" in normalized_task
+    assert (
+        "placement, grouping, reading path, and overall composition are author-selected"
+        in normalized_task
+    )
+    assert "floating polymer cantilever vertically from its top" in normalized_task
+    assert "A horizontal cantilever is scientifically wrong" in normalized_task
+    assert contract["composition_policy"] == {
+        "semantic_roles_required": 6,
+        "equal_grid_forbidden_as_a_requirement": True,
+        "layout_author_selected": True,
+        "visual_hero": "trap_landscape",
+    }
+    assert contract["conditions"]["B"]["handwritten_packet_summary_forbidden"] is True
+    assert contract["conditions"]["B"]["required_rule_id"] == (
+        "polymer_paper_project.cantilever-vertical-clip-top"
+    )
+    assert contract["conditions"]["B"]["required_visual_asset_id"] == (
+        "panel_f_floating_cantilever"
+    )

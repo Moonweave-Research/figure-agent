@@ -1,0 +1,55 @@
+schema: figure-agent.r5-abc-comparison.v1
+fixture_family: fig1_updated_agent_redraw_v1
+supersedes_run: ../r5-prospective-v1
+task_path: task.md
+model_contract_path: model_contract.yaml
+budget_contract_path: budget_contract.yaml
+predeclared_question: >-
+  Does the canonical Figure Agent authoring packet improve a blank-start result
+  without suppressing the model's composition judgment?
+composition_policy:
+  semantic_roles_required: 6
+  equal_grid_forbidden_as_a_requirement: true
+  layout_author_selected: true
+  visual_hero: trap_landscape
+conditions:
+  A:
+    role: raw_authoring
+    inputs: [task.md]
+    forbidden_inputs:
+      - ../../fig1_updated_agent_redraw_v1.tex
+      - ../../../fig1_overview_v5f_art_direction_001_vault/
+      - ../r5-prospective-v1/
+      - B/
+      - C/
+  B:
+    role: canonical_packet_authoring
+    inputs:
+      - task.md
+      - generated/context-pack.json
+      - generated/authoring-packet.json
+      - generated/authoring-prompt.md
+    handwritten_packet_summary_forbidden: true
+    required_rule_id: polymer_paper_project.cantilever-vertical-clip-top
+    required_visual_asset_id: panel_f_floating_cantilever
+    forbidden_inputs:
+      - ../../fig1_updated_agent_redraw_v1.tex
+      - ../../../fig1_overview_v5f_art_direction_001_vault/
+      - ../r5-prospective-v1/
+      - A/
+      - C/
+  C:
+    role: bounded_repair_child
+    parent: B
+    independent_generation_forbidden: true
+    exact_attribution_required: true
+    named_human_authorization_required: true
+clean_environment:
+  A_and_B_separate_ephemeral_processes: true
+  same_model_task_budget: true
+  blank_start: true
+measurement:
+  prospective_human_correction_minutes_required: true
+  named_human_verdict_required: true
+  machine_gate_is_not_publication_acceptance: true
+publication_acceptance: not_claimed
