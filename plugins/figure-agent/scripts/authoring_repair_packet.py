@@ -889,6 +889,18 @@ def canonical_materialization_preview_sha256(record: dict[str, object]) -> str:
     return _sha256_bytes(_canonical_json_bytes(preview))
 
 
+def changed_line_count(original: str, replacement: str) -> int:
+    """Count only inserted, removed, or replaced lines in one editable block."""
+    count = 0
+    matcher = difflib.SequenceMatcher(
+        a=original.splitlines(), b=replacement.splitlines(), autojunk=False
+    )
+    for tag, old_start, old_end, new_start, new_end in matcher.get_opcodes():
+        if tag != "equal":
+            count += (old_end - old_start) + (new_end - new_start)
+    return max(1, count)
+
+
 def validate_materialization_preview(
     preview: dict[str, object],
     *,
@@ -1857,7 +1869,8 @@ def materialize_attempt_local_repair_candidate_v2(
         for token in invariants
     ):
         raise RepairExecutionPacketError("protected invariant changed")
-    changed_lines = max(1, len(replacement.splitlines()))
+    original_editable = original[start + len(start_marker) : end]
+    changed_lines = changed_line_count(original_editable, replacement)
     budget = packet.get("change_budget")
     if (
         not isinstance(budget, dict)

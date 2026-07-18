@@ -39,6 +39,15 @@ def _response(packet: dict[str, object], workspace: Path) -> dict[str, str]:
     }
 
 
+def test_attempt_local_budget_counts_changed_lines_not_unchanged_selector_context() -> None:
+    original = "\n".join(["keep-1", "keep-2", "keep-3", "keep-4", "keep-5", "keep-6"])
+    replacement = "\n".join(
+        ["keep-1", "insert-a", "insert-b", "keep-2", "keep-3", "keep-4", "keep-5", "keep-6"]
+    )
+
+    assert authoring_repair_packet.changed_line_count(original, replacement) == 2
+
+
 def _authorization(packet: dict[str, object], preview: dict[str, object]) -> dict[str, object]:
     return {
         "schema": "figure-agent.human-decision-record.v1",
