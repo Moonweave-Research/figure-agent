@@ -1,0 +1,11 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v43.yaml
+extends_sha256: sha256:69fefda7abf645646ef67554f95e8a740524331e927333f7de55111c02d27da4
+reason: admit a second provenance-bound prospective detail candidate that applies human feedback to restore composition sample swatches without mutating the baseline
+allowed_review_prefixes:
+  - review/failure-first/prospective-detail-v2/
+allowed_review_paths:
+  - review/failure-first/scope_extension_v44.yaml
+allowed_repository_paths: []
+publication_acceptance: not_claimed
