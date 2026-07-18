@@ -1,0 +1,45 @@
+{
+  "schema": "figure-agent.semantic-finding-attribution.v1",
+  "finding_id": "HA002",
+  "parent_source": {
+    "path": "../comparable-v3-repair-c1/repaired.tex",
+    "sha256": "5d11f3b89303d34bba92933724a44fbf62d72cc56782b062a8b0ada32638057a"
+  },
+  "selector": {
+    "kind": "unique_coordinate_literal_in_panel_block",
+    "panel_marker": "% Panel B",
+    "literal": "(1.25,4.02)--(5.95,4.02)",
+    "uniqueness_verified": true,
+    "match_count": 1,
+    "source_line_in_parent": 74,
+    "parent_line_text": "    (1.25,4.02)--(5.95,4.02);",
+    "note": "Line number recorded for orientation only; the stable identity is the unique coordinate literal '(1.25,4.02)--(5.95,4.02)' within the '% Panel B' marker block. The Stealth attribute literal 'length=3.2pt,width=2.4pt' (parent line 73) is likewise unique and belongs to the same \\draw. The label literal 'increasing sulfur content' (line 75) is a DIFFERENT node in the same block and is NOT edited."
+  },
+  "semantic_object": {
+    "id": "panelB.increasing_sulfur_content_arrow",
+    "role": "annotation_arrow",
+    "denotes": "the left-to-right direction of increasing homocatenated-sulfur fraction across the three composition boxes (lower sulfur -> intermediate -> sulfur-rich)",
+    "sibling": "panelB.increasing_sulfur_content_label (line 75, the centered small label the arrow annotates)"
+  },
+  "semantic_relation": {
+    "annotates": "panelB.composition_series (three boxes at panel-x 1.25/3.60/5.95)",
+    "direction": "arrowhead at panel-x 5.95 (rightward = increasing); must be preserved",
+    "must_not_imply": "that the arrow line is part of, or strikes through, the label glyphs 'increasing sulfur content'"
+  },
+  "protected_invariants": [
+    "panel_B_frame_rectangle: (0,0)-(7.2,5.0) unchanged",
+    "arrow_endpoints: tail stays at panel-x 1.25, head (arrowhead tip) stays at panel-x 5.95, both at y=4.02",
+    "arrowhead: single Stealth head at the (5.95,4.02) end, rightward, unchanged style",
+    "label_node_increasing_sulfur_content: line 75 byte-identical (text, style, fill=white, position 3.60,4.02 unchanged)",
+    "composition_boxes_and_S_atoms: unchanged",
+    "all_other_panels_A_and_C_through_F: byte-identical to parent"
+  ],
+  "editable_target": {
+    "scope": "the single Panel B arrow \\draw (parent lines 73-74)",
+    "edit_budget": "split into two collinear segments on y=4.02 with a measured gap behind the label; endpoints, gap coordinates, and arrowhead placement only; no new colors/styles/leaders",
+    "allowed_change": "break the one path into a left plain segment and a right arrow-headed segment, introducing a gap that clears the rendered label bbox",
+    "forbidden_change": "the label node, the arrowhead direction/style, the tail/head extents, or any other line"
+  },
+  "attribution_state": "exact",
+  "publication_acceptance": "not_claimed"
+}

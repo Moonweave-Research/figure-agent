@@ -1,0 +1,46 @@
+{
+  "schema": "figure-agent.initial-human-adjudication.v1",
+  "attempt_dir": "review/failure-first/comparable-v3-repair-c2",
+  "parent_attempt_dir": "review/failure-first/comparable-v3-repair-c1",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "adjudicated_at": "2026-07-18",
+  "named_human": {
+    "name": "Choe Mun-yeong",
+    "handle": "Moon-python",
+    "session": "live session 2026-07-18",
+    "role": "informed of the target defect; final development verdict on C2 stays pending"
+  },
+  "finding": {
+    "id": "HA002",
+    "kind": "label_crosses_semantic_path",
+    "panel": "B",
+    "summary": "Panel B 'increasing sulfur content' arrow runs at the same y (4.02) as its own centered label and the single \\draw path crosses the label glyphs 'increasing', 'sulfur', 'content'.",
+    "detector_status": "detected",
+    "machine_finding_ids": ["UG001", "UG002", "UG003"],
+    "machine_backing": "check_undeclared_geometry (schematic profile) reports 3 actionable label_crosses_semantic_path candidates (distance_pt 0.0) on nearest_text 'content'/'increasing'/'sulfur'. Fresh re-run on the hash-verified parent C1 render (repaired.pdf sha256 791d014e...) reproduced the identical set; it is the sole actionable undeclared-geometry finding (35 downranked INFO under the schematic profile).",
+    "source_of_finding": "machine_detector_plus_host_orchestrator_adjudication"
+  },
+  "adjudication": {
+    "decision": "accidental_crossing_not_intentional_interrupted_arrow",
+    "rationale": "The arrow tex (parent C1 lines 73-74) is a single unbroken (1.25,4.02)--(5.95,4.02) path drawn BEFORE the label node; it is not gapped behind the text. The label's fill=white,inner sep=1pt box visually overpaints the middle, so it reads as interrupted, but the rendered semantic path geometry still crosses the label glyphs (distance_pt 0.0), which is what the detector flags. Host + orchestrator adjudicate this as an accidental crossing to be repaired into a true interrupted arrow.",
+    "decided_by": ["host", "orchestrator"]
+  },
+  "human_record_verbatim": [
+    "사용자에게 이 결함(Panel B 'increasing sulfur content' 화살표가 자기 라벨을 관통)이 다음 대상임을 보여주고 알렸다.",
+    "우선 대상: Panel B 화살표 라인만 bounded repair (라벨 뒤로 측정된 gap을 둔 interrupted-arrow); 라벨 노드는 건드리지 않는다."
+  ],
+  "authorization_scope": {
+    "authorized": [
+      "adjudicate this one machine-backed defect (UG001/UG002/UG003)",
+      "bounded repair of the Panel B 'increasing sulfur content' arrow \\draw line only (split into an interrupted arrow with a measured gap behind the label)"
+    ],
+    "not_authorized": [
+      "final scaffold/review development verdict on C2 (stays pending)",
+      "editing the label node or any other Panel B / other-panel line",
+      "any publication acceptance"
+    ]
+  },
+  "parent_source_sha256": "5d11f3b89303d34bba92933724a44fbf62d72cc56782b062a8b0ada32638057a",
+  "grandparent_B_source_sha256": "54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f",
+  "publication_acceptance": "not_claimed"
+}
