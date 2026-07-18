@@ -1,0 +1,13 @@
+{
+  "schema": "figure-agent.r5-abc-run-status.v1",
+  "fixture_family": "fig1_updated_agent_redraw_v1",
+  "predeclared_source_commit": "8ee29359db9cd8eb1e6d8dcd9436dbe74ec82d88",
+  "A": "completed_machine_blocked",
+  "B": "completed_machine_blocked",
+  "C": "not_admitted",
+  "C_stop_reason": "B is not a machine-valid contract-authoring parent; bounded repair child cannot be created",
+  "correction_time_gate": "pending",
+  "lineage_gate": "not_reached",
+  "product_claim": "not_authorized",
+  "publication_acceptance": "not_claimed"
+}
