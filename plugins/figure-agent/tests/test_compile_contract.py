@@ -37,6 +37,18 @@ def test_compile_passes_top_level_fixture_spec_to_nested_source_checker() -> Non
     assert '${TEX_ASSERTION_SPEC_ARGS[@]+"${TEX_ASSERTION_SPEC_ARGS[@]}"}' in script
 
 
+def test_compile_passes_top_level_fixture_spec_to_all_clearance_detectors() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    for variable in (
+        "TEXT_BOUNDARY_SPEC_ARGS",
+        "LABEL_PATH_SPEC_ARGS",
+        "VECTOR_CLEARANCE_SPEC_ARGS",
+    ):
+        assert f'{variable}=(--spec "$FIGURE_SPEC")' in script
+        assert f'${{{variable}[@]+"${{{variable}[@]}}"}}' in script
+
+
 def test_compile_live_repair_verification_does_not_use_historical_gate_relaxation() -> None:
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 

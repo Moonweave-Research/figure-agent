@@ -89,6 +89,19 @@ semantic_assertions:
     relation: left_of
     subject: S60
     reference: S80
+text_boundary_checks:
+  - id: panel-c-s60-label-clears-sample-top
+    kind: horizontal_line
+    role: sample_surface_top
+    y_pdf_cm: 1.81
+    x_range_pdf_cm: [10.10, 11.60]
+    clearance_pt: 1.0
+  - id: panel-c-s80-label-clears-sample-top
+    kind: horizontal_line
+    role: sample_surface_top
+    y_pdf_cm: 1.81
+    x_range_pdf_cm: [12.16, 14.34]
+    clearance_pt: 1.0
 panels:
   - id: A
     caption: Applied-bias sulfur-polymer cell with temporally ordered sign-agnostic trapping
@@ -133,11 +146,12 @@ composition_model:
           kind: energy_landscape
           truth_bearing: true
           semantic_claim: high-sulfur S80 has continuous broad energy support
-          invariant: high_sulfur_dense_irregular_support_not_envelope_or_container_or_width_to_n_mapping
+          invariant: high_sulfur_dense_irregular_support_not_envelope_or_quantitative_plot_frame_or_width_to_n_mapping
           semantic_encoding:
             primitive: dense_irregular_horizontal_state_field
             required_visible_cues: [greater_state_density_than_s60, irregular_positions, broader_vertical_energy_span]
-            forbidden_visible_cues: [symmetric_density_silhouette, closed_contour, hard_edged_interior_container]
+            allowed_visible_cues: [restrained_sample_grouping_surface]
+            forbidden_visible_cues: [symmetric_density_silhouette, closed_contour, quantitative_plot_frame]
           allowed_creative_ops: [vary_support_density, preserve_non_quantitative_status]
 notes: |
   Three-column explanatory schematic only. The middle I(t) curve has no quantitative data claim.

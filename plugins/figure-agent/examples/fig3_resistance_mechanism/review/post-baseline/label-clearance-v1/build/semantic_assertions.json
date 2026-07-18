@@ -1,0 +1,10 @@
+{
+  "checked": 5,
+  "issues": [],
+  "render_pdf": "build/fig3_resistance_mechanism.pdf",
+  "schema": "figure-agent.semantic-assertions.v1",
+  "source_hashes": {
+    "examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex": "sha256:a04dbb2b85813ba77f4d86a42b27c0f42290f6e962f42c38962b91a9a61d482f"
+  },
+  "total": 0
+}

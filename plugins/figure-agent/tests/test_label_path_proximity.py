@@ -132,12 +132,13 @@ def test_payload_uses_stable_json_contract(tmp_path: Path) -> None:
         "distance_pt": 1.0,
     }
 
-    assert proximity.label_path_proximity_payload(pdf, [candidate]) == {
+    assert proximity.label_path_proximity_payload(pdf, [candidate], checked=1) == {
         "schema": "figure-agent.label-path-proximity.v1",
         "fixture": "demo",
         "render_pdf": "build/demo.pdf",
         "source": "spec.yaml:label_path_proximity_checks",
         "candidates": [candidate],
+        "checked": 1,
         "total": 1,
     }
 
@@ -165,6 +166,7 @@ def test_main_writes_zero_candidate_json_when_spec_has_no_checks(
     assert report["schema"] == "figure-agent.label-path-proximity.v1"
     assert report["candidates"] == []
     assert report["total"] == 0
+    assert report["checked"] == 0
 
 
 def test_main_strict_returns_one_when_candidates_exist(
@@ -193,9 +195,21 @@ def test_main_strict_returns_one_when_candidates_exist(
         "extract_pdf_words_and_page",
         lambda _pdf: ([_word("mobility", 443.0, 53.5, 471.0, 61.0)], (520.0, 360.0)),
     )
-    monkeypatch.setattr(sys, "argv", ["check_label_path_proximity.py", str(pdf), "--strict"])
+    output = build / "label_path_proximity.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "check_label_path_proximity.py",
+            str(pdf),
+            "--strict",
+            "--json-output",
+            str(output),
+        ],
+    )
 
     assert proximity.main() == 1
+    assert json.loads(output.read_text(encoding="utf-8"))["checked"] == 1
 
 
 def test_fig1_vault_declares_minimal_label_path_proximity_checks() -> None:

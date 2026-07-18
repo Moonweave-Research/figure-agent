@@ -575,6 +575,8 @@ def detect_label_path_proximity(
 def label_path_proximity_payload(
     pdf_path: Path,
     candidates: list[dict[str, Any]],
+    *,
+    checked: int,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
@@ -584,6 +586,7 @@ def label_path_proximity_payload(
         "render_pdf": f"build/{pdf_path.name}",
         "source": "spec.yaml:label_path_proximity_checks",
         "candidates": candidates,
+        "checked": checked,
         "total": len(candidates),
     }
 
@@ -626,7 +629,7 @@ def main() -> int:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
 
-    payload = label_path_proximity_payload(args.pdf, candidates)
+    payload = label_path_proximity_payload(args.pdf, candidates, checked=len(checks))
     if args.json_output is not None:
         _write_json(args.json_output, payload)
 

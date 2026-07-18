@@ -55,6 +55,9 @@ UNDECLARED_GEOMETRY_SPEC_ARGS=()
 TEX_ASSERTION_SPEC_ARGS=()
 STATE_FIELD_GEOMETRY_SPEC_ARGS=()
 SEMANTIC_ASSERTION_SPEC_ARGS=()
+TEXT_BOUNDARY_SPEC_ARGS=()
+LABEL_PATH_SPEC_ARGS=()
+VECTOR_CLEARANCE_SPEC_ARGS=()
 LAYOUT_CONTRACT=""
 if [[ -n "$FIXTURE_NAME" ]]; then
   COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")
@@ -72,6 +75,9 @@ if [[ -n "$FIXTURE_NAME" ]]; then
     TEX_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     STATE_FIELD_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     SEMANTIC_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    TEXT_BOUNDARY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    LABEL_PATH_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    VECTOR_CLEARANCE_SPEC_ARGS=(--spec "$FIGURE_SPEC")
   fi
 fi
 
@@ -200,10 +206,12 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visu
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_text_boundary_clash.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${TEXT_BOUNDARY_SPEC_ARGS[@]+"${TEXT_BOUNDARY_SPEC_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/text_boundary_clash.json" \
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_path_proximity.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${LABEL_PATH_SPEC_ARGS[@]+"${LABEL_PATH_SPEC_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/label_path_proximity.json" \
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_undeclared_geometry.py" \
@@ -230,6 +238,7 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/semantic_assertio
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/vector_clearance.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${VECTOR_CLEARANCE_SPEC_ARGS[@]+"${VECTOR_CLEARANCE_SPEC_ARGS[@]}"} \
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/vector_clearance.json" \
   "$PDF_OUT"
