@@ -1998,6 +1998,93 @@ def test_quality_search_panel_f_post_boundary_force_balance_emits_panel_block(
     assert "(10.18, 0.54) -- (13.18, 0.54);" in operation["replacement"]
 
 
+def test_quality_search_panel_f_air_gap_drift_repair_emits_panel_block() -> None:
+    panel_block = "\n".join(
+        [
+            "% =============== Column F -- Mechanical =================",
+            "% v5f Panel F art-direction redraw overlay.",
+            "\\node at (13.02, 4.105) {$V_{\\mathrm{active}}$};",
+            "\\node at (13.02, 3.80) {bias};",
+            "% quality-search F connector: source-to-electrode lead",
+            "\\draw[cGray!54!black, line width=0.30pt, opacity=0.86, rounded corners=1.2pt]",
+            "  (13.28, 3.78) -- (13.08, 3.58) -- (13.08, 2.96) -- (13.18, 2.82);",
+            "\\node at (13.62, 1.62) {electrode};",
+            "\\node at (9.64, 3.32) {$q_{\\mathrm{tr}}$};",
+            "\\node at (9.64, 3.70) {trapped charge};",
+            (
+                "\\draw[panelFCoulombRepulsionArrow, "
+                "-{Stealth[length=6.2pt,width=4.2pt]}, "
+                "cRed!72!black, line width=0.62pt]"
+            ),
+            "  (10.52, 1.02) -- (9.68, 1.02);",
+            (
+                "\\node[anchor=south west, fill=white, fill opacity=0.94, text opacity=1,\n"
+                "      inner xsep=0.92pt, inner ysep=0.44pt,\n"
+                "      font=\\sffamily\\bfseries\\fontsize{4.8}{5.8}"
+                "\\selectfont, text=cRed!72!black]\n"
+                "  at (9.58, 1.66) {Coulomb};"
+            ),
+            (
+                "\\node[labelMute, anchor=north west, fill=white, "
+                "fill opacity=0.95, text opacity=1,\n"
+                "      inner xsep=1.02pt, inner ysep=0.50pt,\n"
+                "      font=\\sffamily\\fontsize{4.6}{5.6}\\selectfont,\n"
+                "      text=cRed!70!black] at (9.58, 1.34) {repulsion};"
+            ),
+            "\\draw[<->, cGray!62!black, line width=0.68pt]",
+            "  (10.20, 0.54) -- (13.18, 0.54);",
+            (
+                "\\node[labelMute, anchor=north, fill=white, fill opacity=0.94, text opacity=1,\n"
+                "      inner xsep=1.4pt, inner ysep=0.9pt,\n"
+                "      font=\\sffamily\\fontsize{5.3}{6.4}\\selectfont, text=cGray!70!black]\n"
+                "  at (11.60, 0.29) {air gap};"
+            ),
+            "\\node at (11.70, 4.56) {mechanical};",
+        ]
+    )
+    lines = [f"{line}\n" for line in panel_block.splitlines()]
+
+    operation, refusal = quality_search._candidate_operation_for_spec(  # type: ignore[attr-defined]
+        {
+            "id": "QS009",
+            "family": "panel_f_air_gap_drift_repair",
+            "source_selectors": [
+                {
+                    "panel": "F",
+                    "line_start": 1,
+                    "line_end": len(lines),
+                    "binding_state": "bound",
+                }
+            ],
+        },
+        lines=lines,
+        source_ref="figures/example.tex",
+    )
+
+    assert refusal is None
+    assert operation is not None
+    assert operation["template_id"] == "v5f_panel_f_air_gap_drift_repair_v1"
+    assert "quality-search F air-gap drift repair" in operation["replacement"]
+    assert "(11.50, 0.55) -- (13.18, 0.55);" in operation["replacement"]
+    assert "at (12.36, 0.50) {air gap};" in operation["replacement"]
+    assert "(10.52, 1.02) -- (9.68, 1.02);" in operation["replacement"]
+    assert "at (9.58, 1.66) {Coulomb};" in operation["replacement"]
+
+
+def test_quality_search_goal_hypotheses_include_air_gap_drift_repair() -> None:
+    hypotheses = quality_search._goal_hypotheses(  # type: ignore[attr-defined]
+        "fig_demo",
+        "improve Panel F mechanical cantilever electrode air gap geometry overlap clearance",
+    )
+    families = [item["family"] for item in hypotheses]
+
+    assert "panel_f_air_gap_drift_repair" in families
+    assert "panel_f_post_boundary_force_balance" in families
+    assert families.index("panel_f_air_gap_drift_repair") < families.index(
+        "panel_f_post_boundary_force_balance"
+    )
+
+
 def test_quality_search_panel_f_post_force_source_connector_emits_panel_block(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -4289,7 +4376,7 @@ def test_quality_search_decision_reports_partial_materialization_refusals() -> N
     assert "partially materialized" in decision["reason"]
 
 
-def test_quality_search_decision_accepts_targeted_cleanup_below_non_marginal_threshold() -> None:
+def test_quality_search_decision_rejects_below_threshold_targeted_cleanup() -> None:
     plan = {
         "state": {"memory": {"state": "loaded", "families": {}}},
         "classifications": [],
@@ -4309,6 +4396,10 @@ def test_quality_search_decision_accepts_targeted_cleanup_below_non_marginal_thr
             "candidate_id": "QS001",
             "rank_score": 0.55,
             "render_status": "rendered_needs_human_review",
+            "evidence": {
+                "positive": ["rendered_before_after_available"],
+                "negative": ["rendered_change_below_review_threshold"],
+            },
             "effective_apply_authority": "review_only",
             "scores": {"changed_pixel_ratio": 0.00025},
         },
@@ -4318,6 +4409,46 @@ def test_quality_search_decision_accepts_targeted_cleanup_below_non_marginal_thr
     decision = quality_search._execution_decision(plan, scores)
 
     assert scores[0]["non_marginal_visual_change"] is False
+    assert scores[0]["below_review_threshold"] is True
+    assert decision["kind"] == "no_non_marginal_candidate"
+    assert decision["selected_candidate_id"] is None
+    assert decision["top_candidate_below_review_threshold"] is True
+
+
+def test_quality_search_decision_accepts_targeted_cleanup_above_review_floor() -> None:
+    plan = {
+        "state": {"memory": {"state": "loaded", "families": {}}},
+        "classifications": [],
+        "next_recommended_operation": {"kind": "step_out_experiment"},
+    }
+    candidate_specs = [
+        {
+            "id": "QS001",
+            "family": "panel_f_bias_label_cleanup",
+            "operation_scale": "panel_block",
+            "template_id": "v5f_panel_f_bias_label_cleanup_v1",
+            "expected_visual_movement": "separate V_active and bias labels",
+        },
+    ]
+    rankings = [
+        {
+            "candidate_id": "QS001",
+            "rank_score": 0.65,
+            "render_status": "rendered_needs_human_review",
+            "evidence": {
+                "positive": ["rendered_before_after_available", "rendered_small_layout_change"],
+                "negative": [],
+            },
+            "effective_apply_authority": "review_only",
+            "scores": {"changed_pixel_ratio": 0.0008},
+        },
+    ]
+
+    scores = quality_search._candidate_scores(candidate_specs, plan, rankings)
+    decision = quality_search._execution_decision(plan, scores)
+
+    assert scores[0]["non_marginal_visual_change"] is False
+    assert scores[0]["below_review_threshold"] is False
     assert decision["kind"] == "candidate_batch_ready"
     assert decision["candidate_state"] == "targeted_cleanup_review_candidate_ready"
     assert decision["selected_candidate_id"] == "QS001"
@@ -4409,9 +4540,7 @@ def test_quality_search_execution_includes_detector_backed_vector_candidates(
                     "operation_scale": "local_coordinate_offset",
                     "target": {
                         "panel": "E",
-                        "subregion": (
-                            "vector_clearance:panelE-deep-peak-caliper-min-clearance"
-                        ),
+                        "subregion": ("vector_clearance:panelE-deep-peak-caliper-min-clearance"),
                     },
                     "source_defect": {
                         "id": "panelE-deep-peak-caliper-min-clearance",
@@ -4429,9 +4558,7 @@ def test_quality_search_execution_includes_detector_backed_vector_candidates(
                             "replacement": "\\draw (0,0.08) -- (1,0.08);",
                         }
                     ],
-                    "expected_delta": [
-                        "increase declared vector clearance around the deep peak"
-                    ],
+                    "expected_delta": ["increase declared vector clearance around the deep peak"],
                     "apply_authority": "review_only",
                     "candidate_hash": "sha256:cand007",
                 }
@@ -4460,15 +4587,11 @@ def test_quality_search_execution_includes_detector_backed_vector_candidates(
         workspace_root=tmp_path,
     )
 
-    detector_specs = [
-        item for item in payload["candidate_specs"] if item.get("id") == "CAND007"
-    ]
+    detector_specs = [item for item in payload["candidate_specs"] if item.get("id") == "CAND007"]
     assert len(detector_specs) == 1
     assert detector_specs[0]["family"] == "vector-clearance-offset"
     assert detector_specs[0]["source_defect"]["defect_class"] == "vector_clearance_violation"
-    assert any(
-        item.get("id") == "CAND007" for item in payload["candidate_set"]["candidates"]
-    )
+    assert any(item.get("id") == "CAND007" for item in payload["candidate_set"]["candidates"])
     detector_scores = [
         item for item in payload["candidate_scores"] if item.get("candidate_id") == "CAND007"
     ]

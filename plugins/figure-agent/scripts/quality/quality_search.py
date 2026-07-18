@@ -33,6 +33,14 @@ import quality_defect_ledger
 import quality_memory_index
 import runtime_paths
 import semantic_candidate_review
+from candidate_review_threshold import (
+    _bounded_float,
+    _bounded_int,
+    _has_below_review_threshold_evidence,
+    _ranking_below_review_threshold,
+    _ranking_evidence_payload,
+    _render_policy_adjustment,
+)
 
 SCHEMA = "figure-agent.quality-search-plan.v0"
 EXECUTE_SCHEMA = "figure-agent.quality-search-execute.v0"
@@ -92,6 +100,7 @@ PANEL_F_POST_LABEL_RELIEF_SOURCE_SETTLE_TEMPLATE_ID = (
     "v5f_panel_f_post_label_relief_source_settle_v1"
 )
 PANEL_F_TRAP_LABEL_LEFT_RAIL_TEMPLATE_ID = "v5f_panel_f_trap_label_left_rail_v1"
+PANEL_F_AIR_GAP_DRIFT_REPAIR_TEMPLATE_ID = "v5f_panel_f_air_gap_drift_repair_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -692,6 +701,27 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "settle the source lead so it no longer reads as the main apparatus wire",
             "align q_tr under the trapped-charge heading without touching the cantilever",
             "preserve force, electrode, air-gap, and source semantics",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_air_gap_drift_repair": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+            "$V_{\\mathrm{active}}$",
+            "bias",
+        ],
+        "design_moves": [
+            "raise the air-gap caliper back into the gap between cantilever and electrode",
+            "keep the label centered in the gap without moving Coulomb/repulsion labels",
+            "preserve electrode and source-lead geometry while reducing air-gap drift",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -2726,6 +2756,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_post_label_relief_source_settle":
         return "panel_block"
+    if family == "panel_f_air_gap_drift_repair":
+        return "panel_block"
     if family == "panel_f_trap_label_left_rail":
         return "panel_block"
     if family == "density_reduce":
@@ -2792,6 +2824,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_POST_GAP_LABEL_RELIEF_TEMPLATE_ID
     if family == "panel_f_post_label_relief_source_settle":
         return PANEL_F_POST_LABEL_RELIEF_SOURCE_SETTLE_TEMPLATE_ID
+    if family == "panel_f_air_gap_drift_repair":
+        return PANEL_F_AIR_GAP_DRIFT_REPAIR_TEMPLATE_ID
     if family == "panel_f_trap_label_left_rail":
         return PANEL_F_TRAP_LABEL_LEFT_RAIL_TEMPLATE_ID
     if family == "density_reduce":
@@ -6432,10 +6466,9 @@ def _candidate_operation_for_spec(
             return operation, None
         line_range = _panel_f_overlay_range(lines=lines, selector=selector)
         original = "".join(lines[line_range[0] - 1 : line_range[1]]) if line_range else ""
-        if (
-            _panel_f_boundary_polish_geometry_applied(original)
-            or _panel_f_later_label_clearance_template_applied(original)
-        ):
+        if _panel_f_boundary_polish_geometry_applied(
+            original
+        ) or _panel_f_later_label_clearance_template_applied(original):
             return None, None
         return None, {
             "code": "no_panel_f_current_label_sanitize_block",
@@ -8227,6 +8260,7 @@ def _candidate_structural_impact(
         "panel_f_post_trap_gap_readability",
         "panel_f_post_gap_label_relief",
         "panel_f_post_label_relief_source_settle",
+        "panel_f_air_gap_drift_repair",
         "panel_f_trap_label_left_rail",
     }:
         possible_ripples.append(
@@ -8400,6 +8434,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_post_trap_gap_readability": 0.88,
             "panel_f_post_gap_label_relief": 0.9,
             "panel_f_post_label_relief_source_settle": 0.9,
+            "panel_f_air_gap_drift_repair": 0.91,
             "panel_f_trap_label_left_rail": 0.92,
             "vector-clearance-offset": 0.91,
             "density_reduce": 0.72,
@@ -8435,28 +8470,6 @@ def _family_template_memory(
     return entry if isinstance(entry, dict) else {}
 
 
-def _bounded_float(
-    value: Any,
-    *,
-    default: float = 0.0,
-    lower: float = -1.0,
-    upper: float = 1.0,
-) -> float:
-    try:
-        parsed = float(value)
-    except (TypeError, ValueError):
-        return default
-    return min(max(parsed, lower), upper)
-
-
-def _bounded_int(value: Any, *, default: int = 0, lower: int = 0) -> int:
-    try:
-        parsed = int(value)
-    except (TypeError, ValueError):
-        return default
-    return max(parsed, lower)
-
-
 def _memory_prior(plan: dict[str, Any], family: str) -> float:
     if family == "null_baseline":
         return 0.0
@@ -8470,36 +8483,6 @@ def _memory_prior(plan: dict[str, Any], family: str) -> float:
         ),
         4,
     )
-
-
-def _ranking_evidence(ranking: dict[str, Any] | None, polarity: str) -> list[str]:
-    if not isinstance(ranking, dict):
-        return []
-    evidence = ranking.get("evidence")
-    values = evidence.get(polarity) if isinstance(evidence, dict) else None
-    if not isinstance(values, list):
-        return []
-    return [str(item) for item in values]
-
-
-def _render_policy_adjustment(ranking: dict[str, Any] | None) -> tuple[float, float]:
-    if not isinstance(ranking, dict):
-        return (0.0, 0.0)
-    rank_score = ranking.get("rank_score")
-    if rank_score is None:
-        return (0.0, 0.0)
-    adjustment = (_bounded_float(rank_score, default=0.5) - 0.5) * 0.16
-    negative = set(_ranking_evidence(ranking, "negative"))
-    render_status = str(ranking.get("render_status") or "")
-    penalty = 0.0
-    if "rendered_no_pixel_change" in negative:
-        penalty -= 0.08
-    elif render_status and render_status not in {
-        "not_rendered",
-        "rendered_needs_human_review",
-    }:
-        penalty -= 0.04
-    return (round(adjustment, 4), round(penalty, 4))
 
 
 def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
@@ -8538,6 +8521,8 @@ def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
         "panel_f_trap_label_left_rail": PANEL_F_TRAP_LABEL_LEFT_RAIL_TEMPLATE_ID,
     }
     if score.get("template_id") != targeted_templates.get(str(score.get("family"))):
+        return False
+    if _has_below_review_threshold_evidence(score):
         return False
     for key in ("panel_changed_pixel_ratio", "full_changed_pixel_ratio"):
         try:
@@ -8780,6 +8765,8 @@ def _candidate_scores(
             full_changed_pixel_ratio=full_changed_pixel_ratio,
             panel_changed_pixel_ratio=panel_changed_pixel_ratio,
         )
+        ranking_evidence = _ranking_evidence_payload(ranking)
+        below_review_threshold = _ranking_below_review_threshold(ranking)
         scores.append(
             {
                 "candidate_id": spec.get("id"),
@@ -8800,6 +8787,7 @@ def _candidate_scores(
                 "full_changed_pixel_ratio": full_changed_pixel_ratio,
                 "panel_changed_pixel_ratio": panel_changed_pixel_ratio,
                 "non_marginal_visual_change": non_marginal_visual_change,
+                "below_review_threshold": below_review_threshold,
                 "stale_duplicate_experience_family": (
                     _stale_duplicate_experience_family(plan, family, template_id)
                 ),
@@ -8808,6 +8796,7 @@ def _candidate_scores(
                     "panel_changed_pixel_ratio": NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO,
                 },
                 "policy": policy,
+                "ranking_evidence": ranking_evidence,
                 "witness": {
                     "state": "dry_scored",
                     "basis": [
@@ -8990,6 +8979,7 @@ def _execution_decision(
             "top_candidate_stale_duplicate_experience_family": top.get(
                 "stale_duplicate_experience_family"
             ),
+            "top_candidate_below_review_threshold": top.get("below_review_threshold"),
             "top_candidate_full_changed_pixel_ratio": top.get("full_changed_pixel_ratio"),
             "top_candidate_panel_changed_pixel_ratio": top.get("panel_changed_pixel_ratio"),
             "non_marginal_thresholds": {
