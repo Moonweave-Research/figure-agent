@@ -36,6 +36,7 @@ ALIGNMENT_ASSERTION_KINDS = frozenset(
     }
 )
 _PANEL_HINT_RE = re.compile(r"^\s*%\s*Panel\s+([A-Za-z0-9_-]+)\b")
+_ATTEMPT_DIR_RE = re.compile(r"^(?:comparable|execution-binding)-v[1-9][0-9]*$")
 
 
 class PromotionWiringError(ValueError):
@@ -192,6 +193,58 @@ def _source_lines(example_dir: Path, name: str) -> list[str]:
         raise PromotionWiringError(f"source_tex_unreadable:{source}") from exc
 
 
+def _resolve_queue_source(
+    example_dir: Path,
+    name: str,
+    attempt_dir: str | None,
+) -> tuple[Path, Path, str | None]:
+    if attempt_dir is None:
+        return example_dir, example_dir / f"{name}.tex", None
+    relative = Path(attempt_dir)
+    if (
+        relative.is_absolute()
+        or relative.parts[:2] != ("review", "failure-first")
+        or len(relative.parts) != 3
+        or not _ATTEMPT_DIR_RE.fullmatch(relative.parts[2])
+    ):
+        raise PromotionWiringError("promotion_queue_attempt_dir_invalid")
+    artifact_dir = example_dir / relative
+    current = example_dir
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise PromotionWiringError("promotion_queue_attempt_dir_invalid")
+    if not artifact_dir.is_dir():
+        raise PromotionWiringError("promotion_queue_attempt_dir_missing")
+    sources = sorted(
+        path
+        for path in artifact_dir.glob("*.tex")
+        if path.is_file() and not path.is_symlink()
+    )
+    if len(sources) != 1:
+        raise PromotionWiringError("promotion_queue_attempt_source_ambiguous")
+    return artifact_dir, sources[0], relative.as_posix()
+
+
+def _source_hashes_for_path(source: Path, workspace_root: Path) -> dict[str, str]:
+    if not source.is_file() or source.is_symlink():
+        raise PromotionWiringError(f"source_tex_missing:{source}")
+    try:
+        relative = source.resolve().relative_to(workspace_root.resolve()).as_posix()
+    except ValueError as exc:
+        raise PromotionWiringError("source_tex_outside_workspace") from exc
+    return {relative: _hash_file(source)}
+
+
+def _source_lines_for_path(source: Path) -> list[str]:
+    if not source.is_file() or source.is_symlink():
+        raise PromotionWiringError(f"source_tex_missing:{source}")
+    try:
+        return source.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise PromotionWiringError(f"source_tex_unreadable:{source}") from exc
+
+
 def _selector_text_hash(lines: list[str], start: int, end: int) -> str:
     if start < 1 or end < start or end > len(lines):
         raise PromotionWiringError(f"triage_tex_line_out_of_range:{start}:{end}")
@@ -262,7 +315,18 @@ def _visual_clash_evidence(
 
 def _crop_paths(example_dir: Path, clash_id: str) -> list[Path]:
     crop_dir = example_dir / "build" / "audit_crops" / "visual_clash"
-    return sorted(path for path in crop_dir.glob(f"{clash_id}_*.png") if path.is_file())
+    legacy = sorted(path for path in crop_dir.glob(f"{clash_id}_*.png") if path.is_file())
+    if legacy:
+        return legacy
+    compiled = (
+        example_dir
+        / "build"
+        / "perception"
+        / "visual_findings"
+        / "crops"
+        / f"{clash_id}.png"
+    )
+    return [compiled] if compiled.is_file() and not compiled.is_symlink() else []
 
 
 def _rel(example_dir: Path, path: Path) -> str:
@@ -329,6 +393,7 @@ def _candidate_source_attribution(
 def build_promotion_queue(
     name: str,
     *,
+    attempt_dir: str | None = None,
     plugin_root: Path | None = None,
     workspace_root: Path | None = None,
     top_n: int = 5,
@@ -340,21 +405,26 @@ def build_promotion_queue(
         workspace_root=workspace_root,
     )
     example_dir = paths.examples_dir / name
-    report_path = example_dir / "build" / "visual_clash.json"
+    artifact_dir, source_path, normalized_attempt_dir = _resolve_queue_source(
+        example_dir,
+        name,
+        attempt_dir,
+    )
+    report_path = artifact_dir / "build" / "visual_clash.json"
     report = load_detector_report(report_path, "visual_clash")
     candidates = [item for item in report["candidates"] if isinstance(item, dict)]
-    source_lines = _source_lines(example_dir, name)
+    source_lines = _source_lines_for_path(source_path)
     items: list[dict[str, Any]] = []
     for candidate in candidates:
         clash_id = str(candidate["id"]).strip()
         source_attribution = _candidate_source_attribution(source_lines, candidate)
-        crops = _crop_paths(example_dir, clash_id)
+        crops = _crop_paths(artifact_dir, clash_id)
         if not crops:
             raise PromotionWiringError(f"promotion_queue_missing_crop:{clash_id}")
         evidence_inline = [
             {
                 "kind": "image",
-                "path": _rel(example_dir, crop),
+                "path": _rel(artifact_dir, crop),
                 "sha256": _hash_file(crop),
             }
             for crop in crops
@@ -368,7 +438,7 @@ def build_promotion_queue(
                 "text": candidate.get("text"),
                 "bbox_px": candidate.get("bbox_px"),
                 "metric": candidate.get("metric"),
-                "crop_paths": [_rel(example_dir, crop) for crop in crops],
+                "crop_paths": [_rel(artifact_dir, crop) for crop in crops],
                 "evidence_inline": evidence_inline,
                 "tex_lines": source_attribution.get("tex_lines"),
                 "source_attribution": source_attribution,
@@ -380,8 +450,9 @@ def build_promotion_queue(
     payload = {
         "schema": QUEUE_SCHEMA,
         "fixture": name,
+        "attempt_dir": normalized_attempt_dir,
         "source_detector": "visual_clash",
-        "source_hashes": _current_source_hashes(example_dir, name),
+        "source_hashes": _source_hashes_for_path(source_path, paths.workspace_root),
         "visual_clash_report_sha256": _hash_file(report_path),
         "status": "review_required" if items else "empty",
         "total": len(items),
@@ -390,7 +461,7 @@ def build_promotion_queue(
         "non_promoting_detectors": list(non_promoting_detector_notes().values()),
     }
     if write:
-        output = example_dir / "build" / "promotion_queue.json"
+        output = artifact_dir / "build" / "promotion_queue.json"
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload
@@ -957,6 +1028,7 @@ def main(
     sub = parser.add_subparsers(dest="command", required=True)
     queue_parser = sub.add_parser("promotion-queue")
     queue_parser.add_argument("name")
+    queue_parser.add_argument("--attempt-dir")
     queue_parser.add_argument("--write", action="store_true")
     queue_parser.add_argument("--json", action="store_true")
     triage_parser = sub.add_parser("triage")
@@ -971,6 +1043,7 @@ def main(
         if args.command == "promotion-queue":
             payload = build_promotion_queue(
                 args.name,
+                attempt_dir=args.attempt_dir,
                 plugin_root=plugin_root,
                 workspace_root=workspace_root,
                 write=args.write,

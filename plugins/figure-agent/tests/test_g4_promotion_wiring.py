@@ -681,6 +681,39 @@ def test_promotion_queue_does_not_guess_when_candidate_text_is_duplicated(
     assert item["source_attribution"]["reason"] == "literal_text_matches_multiple_lines"
 
 
+def test_promotion_queue_supports_explicit_prospective_attempt_directory(
+    tmp_path: Path,
+) -> None:
+    fixture = _fixture(tmp_path)
+    attempt = fixture / "review" / "failure-first" / "comparable-v3"
+    attempt.mkdir(parents=True)
+    (attempt / "verified_generated.tex").write_text(
+        "% Panel A\n\\node at (0,0) {Energy};\n",
+        encoding="utf-8",
+    )
+    _write_json(attempt / "build" / "visual_clash.json", _visual_clash_payload())
+    crop = attempt / "build" / "perception" / "visual_findings" / "crops" / "VC012.png"
+    crop.parent.mkdir(parents=True)
+    crop.write_bytes(b"prospective-crop")
+
+    queue = promotion_wiring.build_promotion_queue(
+        "fig_demo",
+        attempt_dir="review/failure-first/comparable-v3",
+        plugin_root=ROOT,
+        workspace_root=tmp_path,
+        write=True,
+    )
+
+    assert queue["attempt_dir"] == "review/failure-first/comparable-v3"
+    assert list(queue["source_hashes"]) == [
+        "examples/fig_demo/review/failure-first/comparable-v3/verified_generated.tex"
+    ]
+    assert queue["items"][0]["crop_paths"] == [
+        "build/perception/visual_findings/crops/VC012.png"
+    ]
+    assert (attempt / "build" / "promotion_queue.json").is_file()
+
+
 def test_triage_accept_hashes_multi_line_tex_range_before_ledger_reads_it(
     tmp_path: Path,
 ) -> None:
