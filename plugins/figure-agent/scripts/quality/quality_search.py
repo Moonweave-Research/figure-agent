@@ -5071,81 +5071,6 @@ def _panel_f_boundary_polish_replacement(
     return original, replacement, line_start, line_end
 
 
-def _panel_f_trap_label_left_rail_template_applied(block: str) -> bool:
-    required_fragments = (
-        "% quality-search F trap label left rail: park trap labels in margin",
-        "(11.08,2.48) .. controls (10.58,3.02) and (10.10,3.40) .. (9.86,3.46);",
-        "at (9.64, 3.32) {$q_{\\mathrm{tr}}$};",
-        "at (9.64, 3.70) {trapped charge};",
-    )
-    return all(fragment in block for fragment in required_fragments)
-
-
-def _panel_f_trap_label_left_rail_replacement(
-    *,
-    lines: list[str],
-    selector: dict[str, Any],
-) -> tuple[str, str, int, int] | None:
-    line_range = _panel_f_overlay_range(lines=lines, selector=selector)
-    if line_range is None:
-        return None
-    line_start, line_end = line_range
-    original = "".join(lines[line_start - 1 : line_end])
-    if not _panel_f_overlay_has_protected_labels(original):
-        return None
-    source_settle_entry = _panel_block_edit_by_family("panel_f_post_label_relief_source_settle")
-    if source_settle_entry is None or not _panel_block_edit_applied(original, source_settle_entry):
-        return None
-    if _panel_f_trap_label_left_rail_template_applied(original):
-        return None
-    old = (
-        "% quality-search F post-source trap hierarchy: separate trap labels\n"
-        "\\draw[cRed!50!black, line width=0.26pt]\n"
-        "  (11.24,2.50) .. controls (10.72,3.02) and (10.18,3.30) .. (9.84,3.36);\n"
-        "\\node[anchor=west, fill=white, fill opacity=0.80, text opacity=1,\n"
-        "      inner xsep=0.58pt, inner ysep=0.22pt,\n"
-        "      font=\\sffamily\\bfseries\\fontsize{3.6}{4.4}\\selectfont, text=cRed!66!black]\n"
-        "  at (9.62, 3.24) {$q_{\\mathrm{tr}}$};\n"
-        "\\node[anchor=west, fill=white, fill opacity=0.84, text opacity=1,\n"
-        "      inner xsep=0.66pt, inner ysep=0.24pt,\n"
-        "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}\\selectfont, text=cRed!70!black]\n"
-        "  at (9.60, 3.62) {trapped charge};"
-    )
-    new = (
-        "% quality-search F post-source trap hierarchy: separate trap labels\n"
-        "% quality-search F trap label left rail: park trap labels in margin\n"
-        "\\draw[cRed!46!black, line width=0.20pt, opacity=0.82]\n"
-        "  (11.08,2.48) .. controls (10.58,3.02) and (10.10,3.40) .. (9.86,3.46);\n"
-        "\\node[anchor=west, fill=white, fill opacity=0.86, text opacity=1,\n"
-        "      inner xsep=0.60pt, inner ysep=0.24pt,\n"
-        "      font=\\sffamily\\bfseries\\fontsize{3.6}{4.4}\\selectfont, text=cRed!66!black]\n"
-        "  at (9.64, 3.32) {$q_{\\mathrm{tr}}$};\n"
-        "\\node[anchor=west, fill=white, fill opacity=0.88, text opacity=1,\n"
-        "      inner xsep=0.70pt, inner ysep=0.26pt,\n"
-        "      font=\\sffamily\\bfseries\\fontsize{3.8}{4.6}\\selectfont, text=cRed!70!black]\n"
-        "  at (9.64, 3.70) {trapped charge};"
-    )
-    if old not in original:
-        return None
-    replacement = original.replace(old, new)
-    protected = (
-        "q_{\\mathrm{tr}}",
-        "trapped charge",
-        "Coulomb",
-        "repulsion",
-        "electrode",
-        "air gap",
-        "mechanical",
-        "$V_{\\mathrm{active}}$",
-        "bias",
-    )
-    if not all(label in replacement for label in protected):
-        return None
-    if not _panel_f_trap_label_left_rail_template_applied(replacement):
-        return None
-    return original, replacement, line_start, line_end
-
-
 def _panel_f_final_finish_template_applied(block: str) -> bool:
     required_fragments = (
         "line width=0.22pt, dash pattern=on 1.2pt off 0.9pt",
@@ -5552,7 +5477,6 @@ _LEGACY_PREFERRED_PANEL = {
     "panel_f_source_title_settle": "F",
     "panel_f_source_cue_demote": "F",
     "panel_f_current_label_sanitize": "F",
-    "panel_f_trap_label_left_rail": "F",
     "density_reduce": "E",
 }
 
@@ -6133,34 +6057,6 @@ def _candidate_operation_for_spec(
             "family": family,
             "operation_scale": "panel_block",
             "template_id": PANEL_F_CURRENT_LABEL_SANITIZE_TEMPLATE_ID,
-            "panel": "F",
-        }
-    if family == "panel_f_trap_label_left_rail":
-        left_rail_block = _panel_f_trap_label_left_rail_replacement(
-            lines=lines,
-            selector=selector,
-        )
-        if left_rail_block is not None:
-            original, new_text, line_start, line_end = left_rail_block
-            operation = {
-                "kind": "replace_text",
-                "semantic_kind": "quality_search_panel_f_trap_label_left_rail_panel_block",
-                "operation_scale": "panel_block",
-                "template_id": PANEL_F_TRAP_LABEL_LEFT_RAIL_TEMPLATE_ID,
-                "panel": "F",
-                "path": source_ref,
-                "line_start": line_start,
-                "line_end": line_end,
-                "original": original,
-                "replacement": new_text,
-            }
-            return operation, None
-        return None, {
-            "code": "no_panel_f_trap_label_left_rail_block",
-            "candidate_id": str(spec.get("id")),
-            "family": family,
-            "operation_scale": "panel_block",
-            "template_id": PANEL_F_TRAP_LABEL_LEFT_RAIL_TEMPLATE_ID,
             "panel": "F",
         }
     if family == "panel_f_density_relief":
