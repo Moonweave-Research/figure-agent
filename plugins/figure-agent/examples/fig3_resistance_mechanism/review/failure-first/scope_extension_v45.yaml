@@ -1,0 +1,16 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v44.yaml
+extends_sha256: sha256:8741a3ac434072e299d517aab95ee896dc2801071a272f2bd8aab96d32044558
+reason: admit a canonical replay of the actual human finding against prospective-detail-v1 while explicitly withholding prospective timing and publication acceptance claims
+allowed_review_prefixes:
+  - review/closed-loop/attempt-1177a690a1e221ae42321289/
+allowed_review_paths:
+  - review/failure-first/prospective-detail-v1/root-attempt-manifest.json
+  - review/failure-first/scope_extension_v45.yaml
+allowed_repository_paths: []
+publication_acceptance: not_claimed
+notes:
+  - The human finding is real; this replay and its correction time are retrospective.
+  - This evidence does not satisfy the prospective R3 or cross-family R5 exit condition.
+  - The canonical attempt is intentionally stopped at the external host-review boundary.

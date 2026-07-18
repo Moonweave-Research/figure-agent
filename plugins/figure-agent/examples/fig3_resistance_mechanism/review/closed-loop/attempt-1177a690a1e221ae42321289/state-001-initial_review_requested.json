@@ -1,0 +1,27 @@
+{
+  "actor": "fig_run",
+  "actor_role": "workflow_agent",
+  "attempt_id": "attempt-1177a690a1e221ae42321289",
+  "disposition": "human_review_required",
+  "evidence": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/initial-review/request.json",
+      "role": "initial_visual_review_request",
+      "sha256": "sha256:2ded44a54bfe8a2bb8541cea5e29f0c56059fe881574b1b24219ea2ff5c5cecf"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "parent_state_file_sha256": null,
+  "parent_state_path": null,
+  "parent_state_sha256": null,
+  "previous_state_file_sha256": "sha256:7dfd699ee00ae1b9cf950e2617c3f3bd8f66ea29e1dc061a0d1343149ae25336",
+  "previous_state_path": "examples/fig3_resistance_mechanism/review/closed-loop/attempt-1177a690a1e221ae42321289/state-000-authored_rendered.json",
+  "previous_state_sha256": "sha256:bdae70ffb52626747c71ea0ba1ef0f92e56fb5779dbbe659de9baf651a2ac2c4",
+  "publication_acceptance": "not_claimed",
+  "required_actor": "host_llm",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 1,
+  "state": "initial_review_requested",
+  "state_sha256": "sha256:d25305b05f5b7c33945c6fc9dfb1324be72ce761ec57d609f2c1bae31078b399",
+  "terminal": false
+}
