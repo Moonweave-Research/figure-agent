@@ -121,6 +121,47 @@ forbidden:
     return profile
 
 
+def _write_aesthetic_intent(fixture: Path) -> Path:
+    path = fixture / "aesthetic_intent.yaml"
+    path.write_text(
+        """
+schema: figure-agent.aesthetic-intent.v2
+fixture: context_demo
+target_journal: Nature Communications
+visual_maturity: polished
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: publication_restraint
+    instruction: Add detail only when it strengthens an already declared object or relation.
+must_avoid:
+  - id: invented_measurement
+    pattern: Do not make a conceptual panel look like measured data.
+    severity: MAJOR
+polish_triggers:
+  - id: semantic_first
+    condition: Preserve semantic boundaries before any optical refinement.
+    recommended_path: continue_tikz
+aesthetic_levers:
+  - id: state_hierarchy
+    dimension: component_fidelity
+    intent: Make semantic states visibly distinct without adding new claims.
+    priority: required
+    positive_signals:
+      - Occupied and unoccupied states are optically distinct.
+    anti_patterns:
+      - Repeated generic marks with no semantic hierarchy.
+    allowed_adjustments:
+      - Refine state-marker hierarchy.
+    forbidden_adjustments:
+      - Add new physical states.
+    default_route: tikz_patch
+""".lstrip(),
+        encoding="utf-8",
+    )
+    return path
+
+
 def test_context_pack_injects_non_coordinate_composition_profile(
     tmp_path: Path,
 ) -> None:
@@ -144,6 +185,60 @@ def test_context_pack_injects_non_coordinate_composition_profile(
     rendered = authoring_context_pack.render_text(payload)
     assert "## Composition Profile" in rendered
     assert "no coordinates or panel rectangles are prescribed" in rendered
+
+
+def test_context_pack_binds_optional_aesthetic_intent_as_authoring_directives(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    intent = _write_aesthetic_intent(fixture)
+
+    payload = authoring_context_pack.build_context_pack(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    selected = payload["aesthetic_intent"]
+    assert selected["path"] == "examples/context_demo/aesthetic_intent.yaml"
+    assert selected["sha256"] == f"sha256:{hashlib.sha256(intent.read_bytes()).hexdigest()}"
+    assert selected["schema"] == "figure-agent.aesthetic-intent.v2"
+    assert selected["authoring_directives"] == [
+        (
+            "Preserve publication_restraint: Add detail only when it strengthens an "
+            "already declared object or relation."
+        ),
+        "For state_hierarchy: Make semantic states visibly distinct without adding new claims.",
+        "Avoid state_hierarchy anti-patterns: Repeated generic marks with no semantic hierarchy.",
+        "Allowed for state_hierarchy: Refine state-marker hierarchy.",
+        "Forbidden for state_hierarchy: Add new physical states.",
+        "Use tikz_patch for state_hierarchy by default.",
+    ]
+    assert "## Aesthetic Intent" in authoring_context_pack.render_text(payload)
+
+
+def test_fig3_context_pack_binds_human_detail_uplift_direction() -> None:
+    payload = authoring_context_pack.build_context_pack(
+        "fig3_resistance_mechanism",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=PLUGIN_ROOT,
+    )
+
+    directives = payload["aesthetic_intent"]["authoring_directives"]
+    assert (
+        "For material_state_hierarchy: Make carrier, trap, and terminal slow-release "
+        "state roles optically distinct without adding a new physical state."
+    ) in directives
+    assert (
+        "For irregular_support_field: Make S80 read as a dense irregular energy-state "
+        "field, never as a fitted density-of-states envelope."
+    ) in directives
+    assert (
+        "For cross_panel_finish: Increase detail through hierarchy and state distinction, "
+        "not through measured-data cues or decorative texture."
+    ) in directives
+    assert all("Fig1" not in directive for directive in directives)
 
 
 def test_context_pack_outer_cli_forwards_composition_profile(tmp_path: Path) -> None:

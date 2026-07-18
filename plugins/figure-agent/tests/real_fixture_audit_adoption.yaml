@@ -329,7 +329,7 @@ fixtures:
     reference_image: false
     text_boundary_check_ids: []
     label_path_check_ids: []
-    aesthetic_intent: false
+    aesthetic_intent: true
     critique_reference_pack: false
     paper_aesthetic_context:
     journal_art_direction_playbook:

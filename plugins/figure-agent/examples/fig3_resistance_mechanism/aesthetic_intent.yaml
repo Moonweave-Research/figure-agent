@@ -1,0 +1,80 @@
+schema: figure-agent.aesthetic-intent.v2
+fixture: fig3_resistance_mechanism
+target_journal: Nature Communications
+visual_maturity: polished
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: semantic_detail_only
+    instruction: Add detail only when it strengthens an already declared object, state, or relation.
+  - id: restrained_finish
+    instruction: Keep the explanatory schematic clean; improve optical hierarchy before adding visual complexity.
+must_avoid:
+  - id: invented_measurement
+    pattern: Do not make the qualitative current panel look like sampled or fitted data.
+    severity: MAJOR
+  - id: dos_envelope
+    pattern: Do not turn the S80 state field into a density-of-states curve, spectrum, or symmetric envelope.
+    severity: MAJOR
+  - id: decorative_noise
+    pattern: Do not add texture that does not distinguish a declared semantic role.
+    severity: MINOR
+polish_triggers:
+  - id: detail_before_medium_change
+    condition: The baseline is semantically clear but state hierarchy or material depth remains too sparse.
+    recommended_path: continue_tikz
+  - id: scientific_authority_boundary
+    condition: A proposed visual detail would imply carrier polarity, trap chemistry, or a quantitative distribution.
+    recommended_path: needs_human_art_direction
+aesthetic_levers:
+  - id: material_state_hierarchy
+    dimension: component_fidelity
+    intent: Make carrier, trap, and terminal slow-release state roles optically distinct without adding a new physical state.
+    priority: required
+    positive_signals:
+      - Carrier, trap, and terminal occupancy roles are distinguishable at main-figure scale.
+      - The film and its energy-state cues read as one material scene rather than unrelated symbols.
+    anti_patterns:
+      - Repeated generic marks with no semantic hierarchy.
+      - Extra arrows or states that imply a new transport mechanism.
+    allowed_adjustments:
+      - Refine declared carrier, trap, and terminal-state marker hierarchy.
+      - Add restrained material layering behind existing film and energy-state cues.
+    forbidden_adjustments:
+      - Add carrier polarity or net spatial drift.
+      - Add new physical states or trap chemistry.
+    default_route: tikz_patch
+  - id: irregular_support_field
+    dimension: hand_craft
+    intent: Make S80 read as a dense irregular energy-state field, never as a fitted density-of-states envelope.
+    priority: recommended
+    positive_signals:
+      - State marks have controlled non-repetitive variation across broader vertical support.
+      - S60 remains visibly discrete against the S80 field.
+    anti_patterns:
+      - Symmetric state-density silhouette.
+      - Closed container or chart grammar around the state field.
+    allowed_adjustments:
+      - Refine the existing irregular state-mark field and its optical depth.
+      - Strengthen the contrast between discrete and continuous state encodings.
+    forbidden_adjustments:
+      - Add a g(E) axis, fitted envelope, or numeric breadth mapping.
+      - Convert the field into a spectrum or bar chart.
+    default_route: tikz_patch
+  - id: cross_panel_finish
+    dimension: cross_panel_grammar
+    intent: Increase detail through hierarchy and state distinction, not through measured-data cues or decorative texture.
+    priority: recommended
+    positive_signals:
+      - Headers, causal labels, and fine mechanism cues have distinct optical roles.
+      - Each panel gains finish while the mechanism-to-observable-to-landscape reading remains immediate.
+    anti_patterns:
+      - Equally weighted text blocks that flatten the visual hierarchy.
+      - Detail that competes with the main causal reading.
+    allowed_adjustments:
+      - Refine typography, stroke rhythm, and whitespace around existing semantic anchors.
+      - Adjust non-essential emphasis so support detail does not compete with panel roles.
+    forbidden_adjustments:
+      - Add measured-data ticks, values, or sample series.
+      - Prescribe coordinates, panel rectangles, primitive geometry, or palette overrides.
+    default_route: tikz_patch

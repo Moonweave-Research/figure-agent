@@ -62,8 +62,9 @@ clone, whole-page grammar, or fixture-specific coordinates to reusable code.
 
 Read-only authoring context packs compile durable paper-specific knowledge. They
 may bind explicit paper-local files, Style Lock tokens, reviewed assets, semantic
-objects, relations, and protected invariants. They are not LLM prompt plumbing,
-prompt-loop revival, generation execution, or automatic physics detection.
+objects, relations, protected invariants, and human-declared non-coordinate aesthetic levers.
+They are not LLM prompt plumbing, prompt-loop revival,
+generation execution, or automatic physics detection.
 
 The plugin may prepare crops and briefs, but host vision review occurs outside it.
 Figure Agent accepts only a receipt binding actor, model or tool, request hash,
@@ -313,7 +314,6 @@ Closed-loop handoffs use these contracts rather than another workflow shell:
 `figure-agent.attribution-handoff.v1`, `figure-agent.post-repair-visual-review-request.v1`,
 `figure-agent.host-review-execution-receipt.v1`, `figure-agent.post-repair-visual-review-response.v1`,
 `figure-agent.post-repair-visual-review-receipt.v1`, `figure-agent.initial-visual-review-request.v1`,
-`figure-agent.attempt-local-post-repair-review-request.v2`, `figure-agent.attempt-local-host-review-execution-receipt.v2`,
-`figure-agent.attempt-local-post-repair-review-response.v2`, `figure-agent.attempt-local-post-repair-review-receipt.v2`,
-`figure-agent.initial-visual-review-response.v1`, `figure-agent.initial-human-adjudication.v1`,
-`figure-agent.initial-attribution-handoff.v1`, `figure-agent.initial-attribution-binding.v2`, `figure-agent.closed-loop-development-verdict.v1`, and the internal-only `figure-agent.prospective-evidence-receipt.v1` recorder in `prospective_evidence_receipt.py`.
+`figure-agent.attempt-local-post-repair-review-request.v2`, `figure-agent.attempt-local-host-review-execution-receipt.v2`, `figure-agent.attempt-local-post-repair-review-response.v2`,
+`figure-agent.attempt-local-post-repair-review-receipt.v2`,
+`figure-agent.initial-visual-review-response.v1`, `figure-agent.initial-human-adjudication.v1`, `figure-agent.initial-attribution-handoff.v1`, `figure-agent.initial-attribution-binding.v2`, `figure-agent.closed-loop-development-verdict.v1`, and the internal-only `figure-agent.prospective-evidence-receipt.v1` recorder in `prospective_evidence_receipt.py`.
