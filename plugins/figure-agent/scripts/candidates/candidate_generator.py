@@ -454,9 +454,7 @@ def _vector_curve_marker_candidate(
     candidate["operations"][0]["line_start"] = start
     candidate["operations"][0]["line_end"] = end
     candidate["risk"] = "medium"
-    candidate["expected_delta"] = [
-        "reroute declared Debye curve envelope away from the red marker"
-    ]
+    candidate["expected_delta"] = ["reroute declared Debye curve envelope away from the red marker"]
     candidate["semantic_risks"] = [
         "curve-marker candidate changes an authored reference curve; "
         "human must confirm the Debye cliff still conveys intended decay"
@@ -494,26 +492,32 @@ def _vector_clearance_candidates(
     try:
         report = json.loads(report_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-        return [], [{"code": "vector_clearance_report_unreadable"}], {
-            "vector_clearance_supported_defect_count": 0
-        }
+        return (
+            [],
+            [{"code": "vector_clearance_report_unreadable"}],
+            {"vector_clearance_supported_defect_count": 0},
+        )
     if not isinstance(report, dict):
-        return [], [{"code": "vector_clearance_report_unreadable"}], {
-            "vector_clearance_supported_defect_count": 0
-        }
+        return (
+            [],
+            [{"code": "vector_clearance_report_unreadable"}],
+            {"vector_clearance_supported_defect_count": 0},
+        )
     source_hashes = report.get("source_hashes")
-    expected = (
-        source_hashes.get(source_rel.as_posix()) if isinstance(source_hashes, dict) else None
-    )
+    expected = source_hashes.get(source_rel.as_posix()) if isinstance(source_hashes, dict) else None
     if expected != current_source_hash:
-        return [], [{"code": "stale_detector_evidence", "defect_id": "vector_clearance"}], {
-            "vector_clearance_supported_defect_count": 0
-        }
+        return (
+            [],
+            [{"code": "stale_detector_evidence", "defect_id": "vector_clearance"}],
+            {"vector_clearance_supported_defect_count": 0},
+        )
     issues = report.get("issues")
     if not isinstance(issues, list):
-        return [], [{"code": "vector_clearance_report_unreadable"}], {
-            "vector_clearance_supported_defect_count": 0
-        }
+        return (
+            [],
+            [{"code": "vector_clearance_report_unreadable"}],
+            {"vector_clearance_supported_defect_count": 0},
+        )
     candidates: list[dict[str, Any]] = []
     refusals: list[dict[str, str]] = []
     supported_count = 0
@@ -1174,6 +1178,7 @@ def build_candidate_set(
     paths = runtime_paths.resolve_runtime_paths(
         plugin_root=plugin_root,
         workspace_root=workspace_root,
+        fixture_name=name,
     )
     _validate_output_path(paths=paths, name=name, output_path=output_path)
     if panel is not None or family is not None:

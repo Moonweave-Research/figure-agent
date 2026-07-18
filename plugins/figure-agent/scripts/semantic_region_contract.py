@@ -191,12 +191,20 @@ def _normalize_source(
             "binding_state": "ambiguous",
             "binding_reason": "line_snapshot_stale",
         }
+    # Emit the selected-content hash the freshness validator recomputes
+    # (visual_finding_attribution._fresh_source_selector): the byte slice of the
+    # resolved line range with line endings preserved. Producing it here keeps the
+    # exact binding attributable; omitting it makes every region resolve as unbound
+    # (source_selected_content_hash_mismatch).
+    kept_lines = source_bytes.decode("utf-8").splitlines(keepends=True)
+    selected_bytes = "".join(kept_lines[resolved_start - 1 : resolved_end]).encode("utf-8")
     return {
         **normalized,
         "binding_state": "exact",
         "binding_reason": "anchors_and_snapshot_match",
         "resolved_line_start": resolved_start,
         "resolved_line_end": resolved_end,
+        "selected_content_sha256": _sha256_bytes(selected_bytes),
     }
 
 
@@ -284,9 +292,7 @@ def load_semantic_region_contract(
         if region_id in contains or len(contains) != len(set(contains)):
             raise SemanticRegionContractError(f"contains_invalid: {region_id}")
         priority = raw_region.get("priority")
-        if priority is not None and (
-            not isinstance(priority, int) or isinstance(priority, bool)
-        ):
+        if priority is not None and (not isinstance(priority, int) or isinstance(priority, bool)):
             raise SemanticRegionContractError(f"priority_invalid: {region_id}")
         normalized_regions.append(
             {

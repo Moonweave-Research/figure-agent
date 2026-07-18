@@ -108,9 +108,7 @@ def test_candidates_include_required_provenance_fields(tmp_path: Path) -> None:
         "fig-agent status candidate_demo --json",
     ]
     assert candidate["apply_authority"] == "review_only"
-    assert payload["refusals"] == [
-        {"code": "exact_attribution_required", "defect_id": "QD001"}
-    ]
+    assert payload["refusals"] == [{"code": "exact_attribution_required", "defect_id": "QD001"}]
     source_defect = candidate["source_defect"]
     assert source_defect.pop("source_fingerprint").startswith("sha256:")
     assert source_defect.pop("ledger_hash").startswith("sha256:")
@@ -418,9 +416,7 @@ def test_candidate_generator_refuses_stale_detector_defect(
     )
 
     assert payload["candidates"] == []
-    assert {item["code"] for item in payload["refusals"]} == {
-        "stale_detector_evidence"
-    }
+    assert {item["code"] for item in payload["refusals"]} == {"stale_detector_evidence"}
 
 
 def test_candidate_generator_refuses_real_stale_detector_source_hash(
@@ -702,9 +698,7 @@ def test_vector_clearance_review_queue_generates_review_only_line_candidate(
     assert operation["semantic_kind"] == "vector_clearance_offset"
     assert operation["replacement"] == "\\draw[caliper] (0, 1.35) -- (1, 1.35);"
     assert candidate["source_defect"]["defect_class"] == "vector_clearance_violation"
-    assert {
-        (item["code"], item.get("defect_id")) for item in payload["refusals"]
-    } == {
+    assert {(item["code"], item.get("defect_id")) for item in payload["refusals"]} == {
         ("unsupported_vector_clearance_candidate", "panelD-debye-must-not-cross-red-marker")
     }
 
@@ -818,8 +812,7 @@ def test_detector_candidate_offsets_multiline_draw_statement(tmp_path: Path) -> 
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
     (fixture / "candidate_demo.tex").write_text(
-        "\\draw[cGray!75!black, line width=0.28pt]\n"
-        "  (0.0, 1.0) -- (2.0, 1.0);\n",
+        "\\draw[cGray!75!black, line width=0.28pt]\n  (0.0, 1.0) -- (2.0, 1.0);\n",
         encoding="utf-8",
     )
     _write_undeclared_candidate_defect(fixture, source_line=1)
@@ -829,9 +822,7 @@ def test_detector_candidate_offsets_multiline_draw_statement(tmp_path: Path) -> 
         workspace_root=workspace,
     )
 
-    assert payload["refusals"] == [
-        {"code": "exact_attribution_required", "defect_id": "QD001"}
-    ]
+    assert payload["refusals"] == [{"code": "exact_attribution_required", "defect_id": "QD001"}]
     candidate = payload["candidates"][0]
     assert candidate["selector"]["start_line"] == 1
     assert candidate["selector"]["end_line"] == 2
@@ -839,12 +830,10 @@ def test_detector_candidate_offsets_multiline_draw_statement(tmp_path: Path) -> 
     assert operation["line_start"] == 1
     assert operation["line_end"] == 2
     assert operation["original"] == (
-        "\\draw[cGray!75!black, line width=0.28pt]\n"
-        "  (0.0, 1.0) -- (2.0, 1.0);\n"
+        "\\draw[cGray!75!black, line width=0.28pt]\n  (0.0, 1.0) -- (2.0, 1.0);\n"
     )
     assert operation["replacement"] == (
-        "\\draw[cGray!75!black, line width=0.28pt]\n"
-        "  (0.10, 1.0) -- (2.0, 1.0);\n"
+        "\\draw[cGray!75!black, line width=0.28pt]\n  (0.10, 1.0) -- (2.0, 1.0);\n"
     )
 
 
@@ -1241,3 +1230,43 @@ def test_adjudicated_finding_carries_target_texts_for_verifier(tmp_path: Path) -
     ]
     assert anchored, payload
     assert anchored[0]["source_defect"]["target_texts"] == ["PI,", "PDMS,", "PET"]
+
+
+_PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_build_candidate_set_resolves_plugin_bundled_fixture_when_workspace_lacks_it(tmp_path):
+    # Plugin-bundled cohort fixtures (fig1-5) live in <plugin>/examples, not in
+    # the user workspace. When CLAUDE_PROJECT_DIR / workspace_root points at a
+    # repo root that has no examples/<name>, resolution must fall back to the
+    # plugin root so the improvement loop can run on the cohort instead of
+    # dead-ending on a source_missing refusal (the fig2/fig3 plumbing_stop bug).
+    name = "fig2_trap_design_space"
+    assert (_PLUGIN_ROOT / "examples" / name / f"{name}.tex").is_file()
+    repo_root_without_examples = tmp_path / "repo_root"
+    repo_root_without_examples.mkdir()
+    result = candidate_generator.build_candidate_set(
+        name,
+        workspace_root=repo_root_without_examples,
+        plugin_root=_PLUGIN_ROOT,
+    )
+    codes = {refusal.get("code") for refusal in result["refusals"]}
+    assert "source_missing" not in codes, result["refusals"]
+
+
+def test_build_candidate_set_still_refuses_absent_fixture(tmp_path):
+    # Teeth preserved: a fixture that exists in NEITHER the workspace nor the
+    # plugin root must still refuse source_missing (an honest plumbing stop),
+    # so the fallback never masks a genuinely missing fixture.
+    name = "fig2_trap_design_space"
+    empty_workspace = tmp_path / "workspace"
+    empty_plugin = tmp_path / "plugin"
+    empty_workspace.mkdir()
+    empty_plugin.mkdir()
+    result = candidate_generator.build_candidate_set(
+        name,
+        workspace_root=empty_workspace,
+        plugin_root=empty_plugin,
+    )
+    codes = {refusal.get("code") for refusal in result["refusals"]}
+    assert "source_missing" in codes, result["refusals"]

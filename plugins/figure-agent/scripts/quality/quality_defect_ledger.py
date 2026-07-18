@@ -629,9 +629,7 @@ def _annotate_actionability(
     }
     for defect in defects:
         patchability = defect.get("patchability")
-        patchability_state = (
-            patchability.get("state") if isinstance(patchability, dict) else None
-        )
+        patchability_state = patchability.get("state") if isinstance(patchability, dict) else None
         if patchability_state not in {"safe_candidate", "assisted_only"}:
             continue
         if patchability_state == "safe_candidate":
@@ -664,6 +662,7 @@ def build_quality_defect_ledger(
     paths = runtime_paths.resolve_runtime_paths(
         plugin_root=plugin_root,
         workspace_root=workspace_root,
+        fixture_name=name,
     )
     graph = audit_evidence_graph.build_audit_evidence_graph(
         name,
