@@ -1,0 +1,117 @@
+{
+  "allowed_repository_read_paths": [
+    "AGENTS.md",
+    "styles/polymer-paper-preamble.sty",
+    "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-real-feedback-loop/plugins/figure-agent/styles/snippets/panel-f-floating-cantilever.tex",
+    "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-real-feedback-loop/plugins/figure-agent/styles/snippets/panel-f-floating-cantilever.contract.yaml",
+    "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-real-feedback-loop/plugins/figure-agent/styles/snippets/panel-f-floating-cantilever.transfer.yaml"
+  ],
+  "blank_start": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/r5-prospective-v2/B/blank-start.tex",
+    "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "budget_contract": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/r5-prospective-v2/budget_contract.yaml",
+    "sha256": "sha256:bfb7809ef2b6a92649f3158fb3d2f5667775f0dabddd4f8710d9d5324e88f992"
+  },
+  "composition_profile": null,
+  "context_pack": {
+    "base_sha256": "sha256:f3a104a05a951cdb0b9d9d87eb694b19cfc6c5c5236099cd15f7124020e3e70c",
+    "schema": "figure-agent.authoring-context-pack.v1",
+    "sha256": "sha256:f3a104a05a951cdb0b9d9d87eb694b19cfc6c5c5236099cd15f7124020e3e70c"
+  },
+  "execution_cwd": ".",
+  "feedback_rounds": 0,
+  "filesystem_read_isolation": "unavailable",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "forbidden_import_classes": [
+    "fig1_fixture_artifacts",
+    "historical_generated_sources"
+  ],
+  "layout_contract": null,
+  "mandatory_source_requirements": [
+    "\\documentclass[tikz,border=4pt]{standalone}",
+    "\\usepackage{tikz}",
+    "\\usepackage{polymer-paper-preamble}"
+  ],
+  "manual_repairs": 0,
+  "model_id": "gpt-5.6-sol",
+  "output_path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v1/verified_generated.tex",
+  "packet_sha256": "sha256:d3f3d68256dcd94be77732593ee482d0ddd077fccb984d2eb3b0f351ee9fa5b7",
+  "prompt": {
+    "sha256": "sha256:a9e0f92fde12be1f746f9087c05c678f0878bafb3ed13c200cc921839b5e4dad",
+    "utf8": "# Bound authoring execution: fig1_updated_agent_redraw_v1\n\n## Output and attempt boundary\n- Resolve every repository path from the repository root.\n- Do not change directory before resolving paths.\n- Write exactly one new source to [examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v1/verified_generated.tex].\n- Do not create an intermediate subdirectory beneath [examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v1].\n- Start from the declared blank artifact; perform one attempt only.\n- Do not inspect or repair historical generated sources.\n- Read repository file content only from [AGENTS.md] and [styles/polymer-paper-preamble.sty] and [/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-real-feedback-loop/plugins/figure-agent/styles/snippets/panel-f-floating-cantilever.tex] and [/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-real-feedback-loop/plugins/figure-agent/styles/snippets/panel-f-floating-cantilever.contract.yaml] and [/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-real-feedback-loop/plugins/figure-agent/styles/snippets/panel-f-floating-cantilever.transfer.yaml]; all other required authoring context is already bound below.\n\n## Mandatory standalone TikZ source requirements\n- \\documentclass[tikz,border=4pt]{standalone}\n- \\usepackage{tikz}\n- \\usepackage{polymer-paper-preamble}\n\n## Style Lock authoring requirements\n- Use only the preamble palette tokens cAmber, cBlue, cRed, cTeal, cGray, cLGray, cBrown, cArmAmber, and cAmberSphere, plus TikZ built-in black, white, and gray.\n- Keep every explicit line width at or above 0.25pt.\n- Do not use local \\tiny or \\scriptsize font overrides.\n\n## Semantic contracts and forbidden implications\n- Required panels:\n  - [A] polymer repeat-unit schematic\n  - [B] sulfur-content composition series\n  - [C] localized trap landscape, visual hero\n  - [D] transient-current kinetic evidence\n  - [E] ISPD-derived trap distribution evidence\n  - [F] floating cantilever Coulomb response\n- Binding fixture briefing (verbatim):\n\n# Fig1 updated-agent redraw v1\n\nThis is an additive full-figure candidate, not a modification of the historical\nv5f source. It must explain one narrative: sulfur-rich poly(S-r-DIB) has a\ncomposition-dependent trap landscape, measured independently by transient\ncurrent and ISPD, with a mechanically visible Coulomb response.\n\n`authority.yaml` pins the historical visual/narrative baseline and the\nhuman-reviewed Panel F physics correction. The candidate is deliberately\nindependent source: it may reuse explicitly selected catalog assets with bound\nhashes and contracts, but never historical candidate source blocks or an\nunreviewed electrical interpretation. The first render is a structural baseline,\nnot an aesthetic replacement for v5f; human review must judge whether its visual\nlanguage actually improves on the reference.\n\nPanel C is the sole hero. Panels D--F are compact evidence modules: retain\nscientific relations, suppress instrument decoration, and keep labels outside\nthe depicted apparatus. In Panel F, the voltage-source return is grounded;\nthe sample and cantilever remain electrically floating.\n\nMachine checks support inspection only. A named human review is required before\nany development-baseline or publication claim.\n\n- Semantic claim [C:trap-landscape]: shallow and deep trapping states coexist in a sulfur-rich polymer.\n- Semantic claim [D:current-decay]: under constant voltage, trap-mediated transient current decays with time.\n- Semantic claim [F:floating-topology]: the grounded source return does not ground the sample or cantilever.\n- Locked invariant [C:energy-orientation]: energy increases upward; deeper wells are lower in the diagram.\n- Locked invariant [F:force-direction]: the Coulomb-force arrow points away from the active electrode.\n- Do not imply physics or quantitative relations absent from the declared contracts.\n\n## Project and paper authoring rules\n- Project rule [polymer_paper_project.cantilever-vertical-clip-top]: Draw the polymer cantilever vertical: clip/clamp on top, polymer hangs down, deflection sideways toward a side electrode. Horizontal cantilever orientation is wrong for this lab and its experiments.\n- Project rule [polymer_paper_project.trap-colour-shallow-blue-deep-red]: Shallow traps and shallow states are blue or teal; deep traps and deep states are red. Keep this colour mapping consistent across every figure.\n- Paper rule [pair001.panel-c-hero-split]: Treat localized traps as the primary semantic hero and preserve the real-space plus energy-diagram split when transferring Fig 1 knowledge.\n- Paper rule [pair001.panel-c-reference-gap]: When Panel C-like trap physics is reused, ask whether fresh figure research is needed before deep layout iteration.\n- Paper rule [pair001.row2-apparatus-result-grammar]: For convergent evidence columns, keep each column split into apparatus context above and result semantics below.\n- Paper rule [pair001.panel-d-do-not-transfer-triboelectric]: Reusing Panel D apparatus grammar must not transfer triboelectric mechanism or breakdown narrative into charge-trap figures.\n- Paper rule [pair001.panel-e-side-view-apparatus]: Prefer side-view apparatus geometry for ISPD-style probe and grounded-substrate explanations unless a new source justifies isometric transfer.\n- Paper rule [pair001.panel-e-probe-above-sample]: Bind probe, motion stage, sample, grounded substrate, and Vs meter labels to their physical components in ISPD-style apparatus panels.\n- Paper rule [pair001.panel-f-cross-section-conventions]: Preserve cross-section conventions for electrode hatching, insulator stipple, parameter labels, and deflection arrows when transferring Panel F visual grammar.\n- Paper rule [pair001.mobility-edge-label-clearance]: Keep mobility-edge labels clear of the reference line; a readable label must not sit on top of the semantic line it names.\n- Paper rule [pair001.deep-escape-curve-clearance]: Treat trap-escape curves as semantic paths with explicit clearance from neighboring labels unless a panel-specific source overrides it.\n- Paper rule [pair001.nc-clean-white-background]: For an NC main-text Fig 1, keep a clean white background; remove wash ellipses, background fills, wavy chain hints, and dotted column dividers.\n- Paper rule [pair001.molecule-atoms-and-bonds]: Draw molecules such as S8 as atoms-and-bonds that carry molecular identity, not as a graphic icon, and drop redundant center identity labels.\n- Paper rule [pair001.atom-label-adjacent-bond-terminus]: Place atom labels adjacent to the bond terminus rather than on the bond line, and originate reaction arrows from the molecule exterior.\n- Paper rule [pair001.energy-reference-levels-horizontal]: Draw energy-diagram reference levels such as vacuum and band edges as band-spanning horizontal lines that read as reference levels, not as quantitative measurements.\n- Paper rule [pair001.instrument-faceplate-bezel]: Give instrument boxes a dark-glass display plus an inner faceplate bezel for machined-panel weight; avoid flat or gizmo-style boxes.\n- Paper rule [pair001.print-scale-registration]: Size and weight elements so they register at the real print scale (178 mm width), not only on screen; verify thin features and small shapes stay visible at print scale.\n- Paper rule [pair001.hero-saturation-hierarchy]: Preserve panel visual hierarchy; the HERO panel must out-saturate secondary panels and the loudest color is reserved for the hero claim. Audit when a non-hero color reads as too prominent.\n- Paper rule [pair001.label-tone-and-rotation-legibility]: Keep labels legible; avoid a same-tone label on a same-tone fill, and avoid near-vertical rotated labels because a sloped label on a near-vertical element is unreadable.\n- Paper rule [pair001.iconic-register-is-intentional]: Iconic-cartoon abstraction of apparatus references in the evidence panels is briefing intent; do not treat iconic simplification as a defect to fix toward photorealism.\n- Paper rule [pair001.no-actuator-framing-transfer]: Do not transfer actuator or MEMS framing into the charge-trap mechanical panel; the apparatus reference is borrowed for grammar only.\n\n## Curated visual assets\n- Curated asset [panel_f_floating_cantilever]: [styles/snippets/panel-f-floating-cantilever.tex]\n  - Reuse curated visual asset [panel_f_floating_cantilever] from [styles/snippets/panel-f-floating-cantilever.tex]. Do not redraw its owned geometry.\n  - Invoke [panel_f_floating_cantilever] through [\\PanelFFloatingCantilever{prefix}{(x,y)}] and adapt only [prefix, origin].\n  - Preserve its declared role: floating charge-trapping cantilever opposite a driven electrode.\n  - Known pitfall: caller owns panel labels, force arrows, and whole-panel composition\n  - Known pitfall: do not connect the floating cantilever to the source-return ground\n  - Known pitfall: do not reinterpret the fixed mechanical boundary as an electrical contact\n  - Do not transfer: grounded sample or grounded cantilever\n  - Do not transfer: bidirectional actuation sequence\n\n## Declared layout directives\n- No optional layout contract selected.\n\n## Optional shape-profile directives\n- No optional shape profile selected.\n\n## Optional composition-profile directives\n- No optional composition profile selected.\n\n## Provenance and publication boundary\n- Declared model: gpt-5.6-sol\n- feedback_rounds: 0\n- manual_repairs: 0\n- filesystem_read_isolation: unavailable\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v1/verified_generated.tex",
+  "schema": "figure-agent.authoring-execution-packet.v1",
+  "shape_profile": null,
+  "style_lock_authoring_requirements": [
+    "Use only the preamble palette tokens cAmber, cBlue, cRed, cTeal, cGray, cLGray, cBrown, cArmAmber, and cAmberSphere, plus TikZ built-in black, white, and gray.",
+    "Keep every explicit line width at or above 0.25pt.",
+    "Do not use local \\tiny or \\scriptsize font overrides."
+  ],
+  "visual_assets": {
+    "catalog_path": "styles/snippets/INDEX.yaml",
+    "catalog_sha256": "sha256:7903a00188cac224fc01d7561549e5c1104693098095db6bf4c2873cfb2f09b2",
+    "root": {
+      "kind": "plugin_root",
+      "path": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-real-feedback-loop/plugins/figure-agent"
+    },
+    "schema": "figure-agent.authoring-visual-assets.v1",
+    "selected": [
+      {
+        "anti_patterns": [
+          "grounded sample or grounded cantilever",
+          "bidirectional actuation sequence"
+        ],
+        "api": {
+          "kind": "macro",
+          "signature": "\\PanelFFloatingCantilever{prefix}{(x,y)}",
+          "tunable": [
+            "prefix",
+            "origin"
+          ]
+        },
+        "authoring_directives": [
+          "Reuse curated visual asset [panel_f_floating_cantilever] from [styles/snippets/panel-f-floating-cantilever.tex]. Do not redraw its owned geometry.",
+          "Invoke [panel_f_floating_cantilever] through [\\PanelFFloatingCantilever{prefix}{(x,y)}] and adapt only [prefix, origin].",
+          "Preserve its declared role: floating charge-trapping cantilever opposite a driven electrode."
+        ],
+        "contract": {
+          "path": "styles/snippets/panel-f-floating-cantilever.contract.yaml",
+          "sha256": "sha256:0ddcf5e652ff2049c943c0b78195c85f540484240ae42a37368c300871550eba"
+        },
+        "id": "panel_f_floating_cantilever",
+        "known_pitfalls": [
+          "caller owns panel labels, force arrows, and whole-panel composition",
+          "do not connect the floating cantilever to the source-return ground",
+          "do not reinterpret the fixed mechanical boundary as an electrical contact"
+        ],
+        "path": "styles/snippets/panel-f-floating-cantilever.tex",
+        "read_paths": [
+          "styles/snippets/panel-f-floating-cantilever.tex",
+          "styles/snippets/panel-f-floating-cantilever.contract.yaml",
+          "styles/snippets/panel-f-floating-cantilever.transfer.yaml"
+        ],
+        "resolved_read_paths": [
+          "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-real-feedback-loop/plugins/figure-agent/styles/snippets/panel-f-floating-cantilever.tex",
+          "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-real-feedback-loop/plugins/figure-agent/styles/snippets/panel-f-floating-cantilever.contract.yaml",
+          "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-real-feedback-loop/plugins/figure-agent/styles/snippets/panel-f-floating-cantilever.transfer.yaml"
+        ],
+        "role": {
+          "depicts": "floating charge-trapping cantilever opposite a driven electrode",
+          "level": "composite",
+          "placement": "panel-element"
+        },
+        "sha256": "sha256:2e0b39f3e4c20daa9987a80218702be48b263bbac149de2df80d7cc582695c49",
+        "smoke_fixture": "examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex",
+        "status": "reviewed_reusable",
+        "transfer_receipt": {
+          "path": "styles/snippets/panel-f-floating-cantilever.transfer.yaml",
+          "sha256": "sha256:ef3404976e661ef6ee43a3892682c7a2be7845850366d5df6dc9391cf4efc83d"
+        }
+      }
+    ]
+  }
+}

@@ -16,6 +16,8 @@ conditions:
   A:
     role: raw_authoring
     inputs: [task.md]
+    recorded_output: A/generated.tex
+    canonical_comparison_output: ../failure-first/comparable-v1/raw_generated.tex
     forbidden_inputs:
       - ../../fig1_updated_agent_redraw_v1.tex
       - ../../../fig1_overview_v5f_art_direction_001_vault/
@@ -29,6 +31,9 @@ conditions:
       - generated/context-pack.json
       - generated/authoring-packet.json
       - generated/authoring-prompt.md
+    canonical_comparison_output: ../failure-first/comparable-v1/verified_generated.tex
+    canonical_packet_output: ../failure-first/comparable-v1/verified_packet.json
+    canonical_prompt_output: ../failure-first/comparable-v1/verified_prompt.md
     handwritten_packet_summary_forbidden: true
     required_rule_id: polymer_paper_project.cantilever-vertical-clip-top
     required_visual_asset_id: panel_f_floating_cantilever

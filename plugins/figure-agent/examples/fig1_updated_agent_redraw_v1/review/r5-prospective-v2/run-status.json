@@ -1,0 +1,34 @@
+{
+  "schema": "figure-agent.r5-run-status.v1",
+  "run": "r5-prospective-v2",
+  "A": {
+    "status": "authored_machine_blocked",
+    "source": "A/generated.tex",
+    "canonical_source": "../failure-first/comparable-v1/raw_generated.tex",
+    "sha256": "0ac43684c00067070fbf9e86aaf6537e48509945006d21af47b5f3fd2d071476",
+    "layout_observation": "author_selected_asymmetric_hero_composition",
+    "cantilever_observation": "vertical_top_fixed",
+    "gate_observation": "style_lock_blockers_prevented_compile"
+  },
+  "B": {
+    "status": "authored_compile_blocked",
+    "source": "../failure-first/comparable-v1/verified_generated.tex",
+    "sha256": "d74c66d602c5f29514b7426f93b27f0db80cd86268e741f8af54cd975c1a3c65",
+    "layout_observation": "author_selected_asymmetric_hero_composition",
+    "cantilever_observation": "canonical_vertical_top_fixed_asset_reused",
+    "first_compile_blocker": "catalog path lacked exact TeX import syntax",
+    "diagnostic_compile_blocker": "invalid sulfur-chain coordinate tokens such as (s0.78)",
+    "diagnostic_render": "../failure-first/comparable-v1/build/verified_generated_diagnostic.png",
+    "diagnostic_render_sha256": "e42b4390f1c612f75462d7519fe99939765101e69a3776fdee39bd9968c5cd7c"
+  },
+  "C": {
+    "status": "not_admitted",
+    "reason": "B is not machine-valid and no named human repair authorization was issued"
+  },
+  "human_review": {
+    "status": "not_accepted",
+    "named_reviewer": null,
+    "publication_acceptance": "not_claimed"
+  },
+  "product_claim": "not_authorized"
+}

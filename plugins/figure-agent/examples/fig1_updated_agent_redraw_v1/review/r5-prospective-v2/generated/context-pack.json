@@ -1,0 +1,492 @@
+{
+  "design_philosophy": "# Figure Design Philosophy — poly(S-r-DIB) manuscript\n\nThe cross-figure **기준점** (reference point) for the 4-5 remaining figures.\nExtracted from fig1's proven conventions + figure-agent's codified anti-patterns +\nthe published canon. **Lean by design — grow it per-figure, do not front-load.**\n\n## The fence (read first)\n- This codifies **CONVENTIONS** (checkable: palette, sizes, weights, layout, anti-patterns),\n  **NOT TASTE**. Autonomous taste judgment is falsified (reference-free LLM critique ~18% vs author).\n- It is a reference + checklist for **you (user-as-master)** and the **deterministic linter** —\n  NOT an LLM auto-judge or a release gate. Taste calls stay human.\n- Current deterministic convention-spine evidence includes Style Lock,\n  text-anchor `semantic_assertions` with tolerance/`indeterminate`, and\n  compile-time `convention_receipt` files for injected project rules. These\n  surface convention evidence; they do not score aesthetics or mutate source.\n- Test every line you add against: *\"would this have changed a call we actually made?\"*\n  If it is taste guidance dressed as a rule, delete it.\n- Its ONE job is **cross-figure CONSISTENCY**. fig1 reached Nature-tier through 20+ human-judged\n  iterations, not through codified principles — so this doc keeps the *next* figures consistent\n  with fig1, it does not make any single figure \"good\".\n- **fig1 is the FROZEN reference**: conventions are read FROM it, never retrofitted INTO it.\n\n## 1. Palette (Paul Tol muted + polymer warm; colorblind-safe)\nDefined once in `styles/polymer-paper-preamble.sty` — every figure imports it, never redefines.\n\n| token | hex | role |\n|---|---|---|\n| `cBlue` | `#4477AA` | shallow / cool data (Paul Tol **bright**-scheme blue — NOT muted) |\n| `cRed` | `#CC6677` | deep / charge / warm data (Paul Tol muted rose) |\n| `cTeal` | `#44AA99` | third categorical (Paul Tol muted teal) |\n| `cAmberSphere` | `#DDCC77` | light highlight (Paul Tol muted sand) |\n| `cAmber` | `#997A1E` | sulfur/polymer backbone (warm gold) |\n| `cBrown` | `#5D4820` | polymer secondary warm |\n| `cGray` | `rgb(70,70,70)` | structure outlines, neutral text |\n| `cLGray` | `rgb(200,200,200)` | faint reference lines |\n\nRule: **~4 base chromatic hues** (amber, blue, red, teal). Add hue only with a semantic reason.\nBackgrounds are **clean white** (NC main-text convention) — no washes, no tinted bands.\n\n> Verified vs Paul Tol ([SRON](https://sronpersonalpages.nl/~pault/)): the set mixes **3 muted** (rose/teal/sand) **+ 1 bright** (blue `#4477AA`; muted blue would be indigo `#332288` or cyan `#88CCEE`). Each hue is individually CVD-safe, so the set is not unsafe — but Tol's rule is *use a scheme as given*. Not a defect; just verify the four together under a **deutan/protan simulator** before locking, and reserve a `#DDDDDD`-class grey strictly for inactive/bad-data, never as a category color. For a continuous symbolic gradient, switch to a perceptually-uniform map (viridis / Crameri) — do not interpolate the qualitative palette.\n\n## 2. Typography (sans-serif, Nature size discipline)\n- Family: **sans-serif** (`\\sffamily`; Helvetica/Arial family).\n- **Max 7 pt** for all non-panel-letter text (Nature/Nat Comm rule; figure-wide default capped at 7pt).\n- Tiers: panel letters **8 pt bold, upright, lowercase** (`a b c`); apparatus/axis labels **5.5-7 pt**;\n  italic only for variables/quantities (ISO 80000-2), upright for verbs/units.\n- Anti-pattern to avoid: `low_authority_typography`, `annotation_noise_competes_with_science`.\n\n## 3. Line-weight tiers (to be ENFORCED by the shared `.sty` in Phase 1.2)\nIntended 3-tier hierarchy (currently aspirational in fig1; **fig1 has 25 inlined weights with no tier\nsystem** — that is the `uniform_line_weight_monotony` / inconsistency problem 1.2 fixes for fig2-N):\n- **primary ~0.9 pt** — narrative paths (polymer chain, well curves, hero outlines)\n- **annotation ~0.7 pt** — schematic outlines that are not the narrative (rings, S8, strips)\n- **secondary ~0.55 pt** — axes, spines, faint reference lines\nRatio primary:secondary ≈ 1.6-2:1. **Do NOT retrofit fig1**; tier the NEW figures from the start via the shared style file.\nVerified floor: minimum stroke ~**0.5 pt** at final size (ACS graphics-prep; SciencePlots `nature` style = 0.5 pt axes / 1.0 pt data lines). Keep `secondary` at/above 0.5 pt so it survives print reduction. (The 0.25 pt floor seen in third-party guides is NOT on a primary Nature page — use 0.5 pt.)\n\n## 4. Layout\n- Canvas: **178 mm** double-column width = **ACS double-column max** (7.0 in; poly(S-r-DIB) is ACS-domain\n  chemistry). Within the universal full-width band (Cell 174 / NC ~180 / Nature flagship 183 mm) and reduces\n  cleanly — but confirm the **exact target journal** before locking `\\documentclass` geometry. `standalone`, real cm coords, **no global `scale=`**.\n- Multi-panel: explicit grid; align everything to invisible guides — small misalignments are highly visible (Wong); panel letters at NW of each panel/column bbox.\n- **Whitespace breathing** — avoid `cramped_or_dead_whitespace`. Consolidate negative space into clean contiguous blocks; give the hero MORE surrounding space (Wong).\n- One clear **hero** per figure (avoid `weak_hero_anchor`); supporting panels stay subordinate.\n\n## 4b. Submission output (verified — Nature artwork guide / ACS)\n- **Line art / schematics → VECTOR PDF (or EPS)**, text kept editable — **NOT** rasterized TIFF/PNG/JPEG.\n  The 300/600 dpi raster rule is for *photographs* only; a TikZ schematic has none. Our golden TIFF/PNG are\n  internal/preview artifacts — the **submission deliverable is the vector PDF**.\n- **RGB** color mode (the journal converts to CMYK for print); author + export in RGB.\n- **Embed fonts; do NOT outline text to curves** (keeps text editable for the art editor, avoids substitution).\n\n## 5. Anti-pattern checklist (the codified 13 — `aesthetic_antipattern_audit`)\nRun these as a checklist; the critique rubric already audits them per figure.\n1. `childish_shape_language` — oversized arrows, rounded generic boxes, cartoon emphasis\n2. `poster_gradient_decoration` — decorative gradients / poster-like flat color\n3. `generic_template_look` — looks templated, not editorially composed\n4. `dead_flat_vector_finish` — no material depth where the object implies it (see instrument lesson)\n5. `uniform_line_weight_monotony` — no weight hierarchy (see §3)\n6. `weak_hero_anchor` — no clear visual focus\n7. `cramped_or_dead_whitespace` — spacing too tight or too empty\n8. `low_authority_typography` — weak/inconsistent type\n9. `annotation_noise_competes_with_science` — labels fight the data\n10. `panel_style_mismatch` — panels inconsistent with each other (THIS doc's main defense)\n11. `reference_overcopying` — copied a single reference's idiom (lock-in)\n12. `reference_underlearning` — ignored what good references teach\n13. `decorative_detail_without_explanatory_value` — gizmos that carry no meaning\n\n## 6. Hard-won lessons (this manuscript)\n- **Instrument-substance**: apparatus boxes earn weight via the figure's own instrument standard\n  (dark-glass display + faceplate bezel), NOT gizmos/gloss. Over-minimalism reads as flimsy.\n- **Reference = STYLE anchor only**: borrow line weights / palette / fonts; keep content from the\n  science. no-ref → taste-blind; single-ref → lock-in; prefer 2-3 ref compose, human-supervised.\n- **Levers can be binary or structurally blocked** — once a figure is at convention, stop iterating\n  (diminishing returns); not every element has a \"better\" state.\n- **Element-iteration is the loop**: name a concrete sub-region defect → 1-line patch → recompile →\n  confirm. User-as-master. (Sub-region, not whole panel, is the iteration unit.)\n\n## 7. Published canon (pointers, not gospel)\nDesign-principle pointers with verified primary sources. **Pointers, not a spec** — the mechanical numbers (mm, pt, weights) live in §2/§3/§4, not here. Filter every line by the fence: *would this have changed a call we actually made?* (Wong's \"know your audience\" / \"message trumps beauty\", banking-to-45, and the Lie-Factor formula are deliberately omitted — taste/irrelevant for a static schematic.)\n\n- **Bang Wong, \"Points of View\"** (Nature Methods 2010-2011) — [collected PDF](https://static1.squarespace.com/static/587e7412be6594f2dc02480f/t/63e0d7f70f60c8044b65b900/1675679747977/Bang_Wong_Point-of-view_collection.pdf). Salience, gestalt grouping, negative space, layout. *Ours:* one hero per panel on one strong channel; group sub-regions by shared treatment + tight proximity, not boxes/leader-lines everywhere.\n- **Cleveland-McGill perceptual hierarchy** — [ranking](https://www.informationvisuals.com/information-design-theory/elementary-perceptual-tasks): position > length > angle > area > color saturation (least accurate). *Ours:* encode any quantitative symbolic axis / arrow length / trap-depth bar by position or length scaled linearly, never by hue or area.\n- **Claus Wilke, \"Fundamentals of Data Visualization\"** — [color pitfalls](https://clauswilke.com/dataviz/color-pitfalls.html) + [balance data/context](https://clauswilke.com/dataviz/balance-data-context.html). Cap ~3-5 meaning-bearing colors; never color-only (redundant-code so it survives B/W); direct labels over legends; and the data-ink **rebuttal** — do not strip a schematic bare. *Ours:* every color distinction gets a second cue; explanatory decoration (instrument boxes) is context, not chartjunk (cf. §6 instrument-substance).\n- **Rougier, Droettboom & Bourne, \"Ten Simple Rules for Better Figures\"** ([PLOS Comp Biol 2014, e1003833](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003833)). Survivors: Rule 5 don't-trust-defaults, Rule 6 match-colormap-to-data, Rule 8 avoid-chartjunk (erase only gridlines/fills/redundant labels), Rule 10 endorses **TikZ/PGF**. *Ours:* every style key is a deliberate value (Style-Lock); the programmatic-TikZ workflow is convention-aligned.\n- **Tufte small-multiples** (via Wilke) — repeated panels share identical scale, motif size, line weights, label placement, color mapping. *Ours:* this **is** the cross-figure Style-Lock job — keep them byte-consistent across fig2-N.\n- **Paul Tol colour schemes** — [SRON](https://sronpersonalpages.nl/~pault/). Use as given, no interpolation; muted=9 (+`#DDDDDD` bad-data grey), bright=7 (Tol's line default). *Ours:* see §1 — `cBlue #4477AA` is the **bright**-scheme blue, not muted.\n- **Crameri 2020, \"The misuse of colour\"** ([Nat Commun, PMC7595127](https://pmc.ncbi.nlm.nih.gov/articles/PMC7595127/)). No rainbow/jet; perceptually-uniform maps for continuous data; greyscale-readable.\n\n**Machine-readable systems (what already exists — answer to \"has someone built this?\"):** A scientific-figure design system already exists as **code**, not prose — closest is [**SciencePlots**](https://github.com/garrettj403/SciencePlots) (MIT; `.mplstyle` rcParam sheets for science/nature/ieee + Paul-Tol cycles). Its *weights/geometry* port to TikZ as named defaults (`nature.mplstyle`: 7pt fonts, 0.5pt axes, 1.0pt lines, ticks-in); its matplotlib inch sizes do **not** (we are a 178mm TikZ canvas). [khroma](https://cran.r-project.org/web/packages/khroma/vignettes/tol.html) gives exact Tol hex + the \"use-as-given\" constraint for cross-checking our `.sty`; [ColorBrewer](https://colorbrewer2.org/) has a colorblind-safe filter for any future ramp; [Crameri maps](https://www.fabiocrameri.ch/colourmaps/) for continuous fields only. There is **NO scientific-figure linter** that audits a figure against a journal spec — the enforcement pattern is \"apply the style at generation time\", which our `.sty` + deterministic checks already do for TikZ. Treat all as **verification references**, not dependencies.\n\n> Sources fetched + adversarially verified 2026-06-07 (workflow `wcl1r5kg8`). Honestly unverified (third-party/blocked-fetch, do not over-trust): exact Nature mm widths (artwork PDFs non-extractable), the 0.25 pt floor (third-party only; ACS 0.5\n...[truncated]",
+  "fixture": {
+    "panels": [
+      {
+        "caption": "polymer repeat-unit schematic",
+        "id": "A",
+        "reference_image": ""
+      },
+      {
+        "caption": "sulfur-content composition series",
+        "id": "B",
+        "reference_image": ""
+      },
+      {
+        "caption": "localized trap landscape, visual hero",
+        "id": "C",
+        "reference_image": ""
+      },
+      {
+        "caption": "transient-current kinetic evidence",
+        "id": "D",
+        "reference_image": ""
+      },
+      {
+        "caption": "ISPD-derived trap distribution evidence",
+        "id": "E",
+        "reference_image": ""
+      },
+      {
+        "caption": "floating cantilever Coulomb response",
+        "id": "F",
+        "reference_image": ""
+      }
+    ],
+    "style_profile": "polymer-paper",
+    "title": "Fig 1 — charge trapping in sulfur-rich polymer"
+  },
+  "layout_constraints": null,
+  "name": "fig1_updated_agent_redraw_v1",
+  "narrative_context": {
+    "mode": "human_perspective_compiler",
+    "read_only": true,
+    "reader_contract": {
+      "available_notes": {
+        "briefing": "# Fig1 updated-agent redraw v1\n\nThis is an additive full-figure candidate, not a modification of the historical\nv5f source. It must explain one narrative: sulfur-rich poly(S-r-DIB) has a\ncomposition-dependent trap landscape, measured independently by transient\ncurrent and ISPD, with a mechanically visible Coulomb response.\n\n`authority.yaml` pins the historical visual/narrative baseline and the\nhuman-reviewed Panel F physics correction. The candidate is deliberately\nindependent source: it may reuse explicitly selected catalog assets with bound\nhashes and contracts, but never historical candidate source blocks or an\nunreviewed electrical interpretation. The first render is a structural baseline,\nnot an aesthetic replacement for v5f; human review must judge whether its visual\nlanguage actually improves on the reference.\n\nPanel C is the sole hero. Panels D--F are compact evidence modules: retain\nscientific relations, suppress instrument decoration, and keep labels outside\nthe depicted apparatus. In Panel F, the voltage-source return is grounded;\nthe sample and cantilever remain electrically floating.\n\nMachine checks support inspection only. A named human review is required before\nany development-baseline or publication claim."
+      },
+      "first_takeaway_source": "briefing.md",
+      "human_review_questions": [
+        "What should a reader understand in the first three seconds?",
+        "Which panel or element is the visual hero?",
+        "Does the panel order match the paper's argument order?",
+        "What would a human illustrator simplify before adding detail?",
+        "Could a proposed visual edit change scientific meaning?"
+      ],
+      "must_not_infer": [
+        "Do not infer unstated physics, mechanisms, or quantitative claims.",
+        "Do not treat aesthetic preference as acceptance evidence.",
+        "Do not select or apply source patches from narrative context alone."
+      ],
+      "panel_story_inputs": [
+        {
+          "caption": "polymer repeat-unit schematic",
+          "id": "A",
+          "locked_invariant_count": 0,
+          "semantic_claim_count": 0
+        },
+        {
+          "caption": "sulfur-content composition series",
+          "id": "B",
+          "locked_invariant_count": 0,
+          "semantic_claim_count": 0
+        },
+        {
+          "caption": "localized trap landscape, visual hero",
+          "id": "C",
+          "locked_invariant_count": 1,
+          "semantic_claim_count": 1
+        },
+        {
+          "caption": "transient-current kinetic evidence",
+          "id": "D",
+          "locked_invariant_count": 0,
+          "semantic_claim_count": 1
+        },
+        {
+          "caption": "ISPD-derived trap distribution evidence",
+          "id": "E",
+          "locked_invariant_count": 0,
+          "semantic_claim_count": 0
+        },
+        {
+          "caption": "floating cantilever Coulomb response",
+          "id": "F",
+          "locked_invariant_count": 1,
+          "semantic_claim_count": 1
+        }
+      ],
+      "paper_series_anchors": []
+    },
+    "schema": "figure-agent.narrative-context.v1",
+    "sources": {
+      "authoring_contract": "",
+      "authoring_plan": "",
+      "briefing": "examples/fig1_updated_agent_redraw_v1/briefing.md",
+      "design": "",
+      "panel_goals": "",
+      "spec": "examples/fig1_updated_agent_redraw_v1/spec.yaml"
+    },
+    "stop_boundaries": {
+      "autonomous_patch_selection": false,
+      "generation_executor": false,
+      "model_calls": false,
+      "prompt_loop": false,
+      "rank_scoring": false,
+      "source_mutation": false
+    }
+  },
+  "paper_context": {
+    "briefing": "# Fig1 updated-agent redraw v1\n\nThis is an additive full-figure candidate, not a modification of the historical\nv5f source. It must explain one narrative: sulfur-rich poly(S-r-DIB) has a\ncomposition-dependent trap landscape, measured independently by transient\ncurrent and ISPD, with a mechanically visible Coulomb response.\n\n`authority.yaml` pins the historical visual/narrative baseline and the\nhuman-reviewed Panel F physics correction. The candidate is deliberately\nindependent source: it may reuse explicitly selected catalog assets with bound\nhashes and contracts, but never historical candidate source blocks or an\nunreviewed electrical interpretation. The first render is a structural baseline,\nnot an aesthetic replacement for v5f; human review must judge whether its visual\nlanguage actually improves on the reference.\n\nPanel C is the sole hero. Panels D--F are compact evidence modules: retain\nscientific relations, suppress instrument decoration, and keep labels outside\nthe depicted apparatus. In Panel F, the voltage-source return is grounded;\nthe sample and cantilever remain electrically floating.\n\nMachine checks support inspection only. A named human review is required before\nany development-baseline or publication claim."
+  },
+  "project_rule_catalog": {
+    "fixture": "polymer_paper_project",
+    "promotion_state": "n1_hypotheses",
+    "rules": [
+      {
+        "category": "instrument_standard",
+        "id": "polymer_paper_project.cantilever-vertical-clip-top",
+        "rule": "Draw the polymer cantilever vertical: clip/clamp on top, polymer hangs down, deflection sideways toward a side electrode. Horizontal cantilever orientation is wrong for this lab and its experiments.",
+        "source": {
+          "kind": "hand_patch_commit",
+          "locator": "examples/fig3_floating_clip_protocol vertical re-draw (2026-06-20)",
+          "quote": "clip on TOP, polymer hangs down"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "label_binding",
+        "id": "polymer_paper_project.trap-colour-shallow-blue-deep-red",
+        "rule": "Shallow traps and shallow states are blue or teal; deep traps and deep states are red. Keep this colour mapping consistent across every figure.",
+        "source": {
+          "kind": "hand_patch_commit",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/authoring_contract.md",
+          "quote": "Shallow traps are blue and deep traps are red across Panels C, F, and G"
+        },
+        "transfer_policy": "use_as_constraint"
+      }
+    ],
+    "schema": "figure-agent.authoring-rules.v1"
+  },
+  "read_only": true,
+  "rule_catalog": {
+    "fixture": "fig1_overview_v2_pair_001_vault",
+    "promotion_state": "n1_hypotheses",
+    "rules": [
+      {
+        "category": "physics_semantics",
+        "id": "pair001.panel-c-hero-split",
+        "rule": "Treat localized traps as the primary semantic hero and preserve the real-space plus energy-diagram split when transferring Fig 1 knowledge.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/spec.yaml:21-23",
+          "quote": "Localized traps (HERO #1) — real-space + energy diagram split"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "physics_semantics",
+        "id": "pair001.panel-c-reference-gap",
+        "rule": "When Panel C-like trap physics is reused, ask whether fresh figure research is needed before deep layout iteration.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/spec.yaml:23",
+          "quote": "figure-research recommended (highest-priority gap)"
+        },
+        "transfer_policy": "use_as_question"
+      },
+      {
+        "category": "panel_layout",
+        "id": "pair001.row2-apparatus-result-grammar",
+        "rule": "For convergent evidence columns, keep each column split into apparatus context above and result semantics below.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/spec.yaml:127-128",
+          "quote": "each split apparatus zone top + result zone bottom"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "physics_semantics",
+        "id": "pair001.panel-d-do-not-transfer-triboelectric",
+        "rule": "Reusing Panel D apparatus grammar must not transfer triboelectric mechanism or breakdown narrative into charge-trap figures.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/spec.yaml:30-34",
+          "quote": "Do-not-transfer: triboelectric mechanism, breakdown narrative"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "instrument_standard",
+        "id": "pair001.panel-e-side-view-apparatus",
+        "rule": "Prefer side-view apparatus geometry for ISPD-style probe and grounded-substrate explanations unless a new source justifies isometric transfer.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/spec.yaml:38-44",
+          "quote": "side-view structurally better for this apparatus"
+        },
+        "transfer_policy": "use_as_question"
+      },
+      {
+        "category": "instrument_standard",
+        "id": "pair001.panel-e-probe-above-sample",
+        "rule": "Bind probe, motion stage, sample, grounded substrate, and Vs meter labels to their physical components in ISPD-style apparatus panels.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/spec.yaml:44-47",
+          "quote": "probe-above-sample geometry, motion-stage labeling, sample-on-grounded-substrate cross-section"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "style_lock",
+        "id": "pair001.panel-f-cross-section-conventions",
+        "rule": "Preserve cross-section conventions for electrode hatching, insulator stipple, parameter labels, and deflection arrows when transferring Panel F visual grammar.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/spec.yaml:60-63",
+          "quote": "electrode hatching 45°+135° + insulator stipple"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "label_binding",
+        "id": "pair001.mobility-edge-label-clearance",
+        "rule": "Keep mobility-edge labels clear of the reference line; a readable label must not sit on top of the semantic line it names.",
+        "source": {
+          "kind": "hand_patch_commit",
+          "locator": "commit 0a6e308; examples/fig1_overview_v2_pair_001_vault/spec.yaml:108-114",
+          "quote": "panel_c_mobility_edge_reference"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "label_binding",
+        "id": "pair001.deep-escape-curve-clearance",
+        "rule": "Treat trap-escape curves as semantic paths with explicit clearance from neighboring labels unless a panel-specific source overrides it.",
+        "source": {
+          "kind": "hand_patch_commit",
+          "locator": "commit 0a6e308; examples/fig1_overview_v2_pair_001_vault/spec.yaml:115-123",
+          "quote": "panel_c_deep_escape_curve"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "style_lock",
+        "id": "pair001.nc-clean-white-background",
+        "rule": "For an NC main-text Fig 1, keep a clean white background; remove wash ellipses, background fills, wavy chain hints, and dotted column dividers.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:57-59",
+          "quote": "NC main-text Fig 1 convention = clean white"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "physics_semantics",
+        "id": "pair001.molecule-atoms-and-bonds",
+        "rule": "Draw molecules such as S8 as atoms-and-bonds that carry molecular identity, not as a graphic icon, and drop redundant center identity labels.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:271",
+          "quote": "S₈ molecule drawn as atoms-and-bonds, not graphic icon"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "label_binding",
+        "id": "pair001.atom-label-adjacent-bond-terminus",
+        "rule": "Place atom labels adjacent to the bond terminus rather than on the bond line, and originate reaction arrows from the molecule exterior.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:304-305",
+          "quote": "atom label adjacent to bond terminus rather than on bond line"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "physics_semantics",
+        "id": "pair001.energy-reference-levels-horizontal",
+        "rule": "Draw energy-diagram reference levels such as vacuum and band edges as band-spanning horizontal lines that read as reference levels, not as quantitative measurements.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:621-625",
+          "quote": "Vacuum is a *reference level*, not a quantitative measurement"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "instrument_standard",
+        "id": "pair001.instrument-faceplate-bezel",
+        "rule": "Give instrument boxes a dark-glass display plus an inner faceplate bezel for machined-panel weight; avoid flat or gizmo-style boxes.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:1029",
+          "quote": "inner faceplate bezel for machined-panel weight"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "style_lock",
+        "id": "pair001.print-scale-registration",
+        "rule": "Size and weight elements so they register at the real print scale (178 mm width), not only on screen; verify thin features and small shapes stay visible at print scale.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:670",
+          "quote": "registers at 178mm print scale as a visible"
+        },
+        "transfer_policy": "use_as_question"
+      },
+      {
+        "category": "style_lock",
+        "id": "pair001.hero-saturation-hierarchy",
+        "rule": "Preserve panel visual hierarchy; the HERO panel must out-saturate secondary panels and the loudest color is reserved for the hero claim. Audit when a non-hero color reads as too prominent.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:675",
+          "quote": "Panel C HERO must out-saturate Panel E"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "label_binding",
+        "id": "pair001.label-tone-and-rotation-legibility",
+        "rule": "Keep labels legible; avoid a same-tone label on a same-tone fill, and avoid near-vertical rotated labels because a sloped label on a near-vertical element is unreadable.",
+        "source": {
+          "kind": "iteration_comment",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:1188",
+          "quote": "sloped label would itself be near-vertical — unreadable"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "style_lock",
+        "id": "pair001.iconic-register-is-intentional",
+        "rule": "Iconic-cartoon abstraction of apparatus references in the evidence panels is briefing intent; do not treat iconic simplification as a defect to fix toward photorealism.",
+        "source": {
+          "kind": "critique_adjudication",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/critique_adjudication.yaml P001-P003",
+          "quote": "accept_simplification — iconic-cartoon register is briefing intent"
+        },
+        "transfer_policy": "use_as_constraint"
+      },
+      {
+        "category": "physics_semantics",
+        "id": "pair001.no-actuator-framing-transfer",
+        "rule": "Do not transfer actuator or MEMS framing into the charge-trap mechanical panel; the apparatus reference is borrowed for grammar only.",
+        "source": {
+          "kind": "critique_adjudication",
+          "locator": "examples/fig1_overview_v2_pair_001_vault/critique_adjudication.yaml P003",
+          "quote": "actuator framing transfer forbidden by TG-G-001"
+        },
+        "transfer_policy": "use_as_constraint"
+      }
+    ],
+    "schema": "figure-agent.authoring-rules.v1"
+  },
+  "schema": "figure-agent.authoring-context-pack.v1",
+  "scope_boundary": {
+    "automatic_physics_detector": false,
+    "durable_paper_specific_knowledge_compilation": true,
+    "generation_executor": false,
+    "model_calls": false,
+    "prompt_loop": false
+  },
+  "semantic_contracts": {
+    "enabled": true,
+    "locked_invariants": [
+      {
+        "id": "energy-orientation",
+        "invariant": "energy increases upward; deeper wells are lower in the diagram.",
+        "panel_id": "C"
+      },
+      {
+        "id": "force-direction",
+        "invariant": "the Coulomb-force arrow points away from the active electrode.",
+        "panel_id": "F"
+      }
+    ],
+    "schema": "figure-agent.semantic-contracts.v1",
+    "semantic_claims": [
+      {
+        "claim": "shallow and deep trapping states coexist in a sulfur-rich polymer.",
+        "id": "trap-landscape",
+        "panel_id": "C"
+      },
+      {
+        "claim": "under constant voltage, trap-mediated transient current decays with time.",
+        "id": "current-decay",
+        "panel_id": "D"
+      },
+      {
+        "claim": "the grounded source return does not ground the sample or cantilever.",
+        "id": "floating-topology",
+        "panel_id": "F"
+      }
+    ]
+  },
+  "sources": {
+    "aesthetic_intent": "",
+    "briefing": "examples/fig1_updated_agent_redraw_v1/briefing.md",
+    "design_philosophy": "docs/figure-design-philosophy.md",
+    "layout_lanes": "",
+    "project_rule_catalog": "docs/authoring-rules-project.md",
+    "rule_catalog": "docs/authoring-rules-pair001.md",
+    "spec": "examples/fig1_updated_agent_redraw_v1/spec.yaml",
+    "style_lock": "styles/polymer-paper-preamble.sty",
+    "visual_asset_catalog": "styles/snippets/INDEX.yaml"
+  },
+  "style_lock": {
+    "path": "polymer-paper-preamble.sty",
+    "token_count": 12,
+    "tokens": [
+      "\\definecolor{cAmber}{HTML}{997A1E}",
+      "\\definecolor{cBlue}{HTML}{4477AA}",
+      "\\definecolor{cRed}{HTML}{CC6677}",
+      "\\definecolor{cTeal}{HTML}{44AA99}",
+      "\\definecolor{cGray}{RGB}{70,70,70}",
+      "\\definecolor{cLGray}{RGB}{200,200,200}",
+      "\\definecolor{cBrown}{HTML}{5D4820}",
+      "\\definecolor{cArmAmber}{HTML}{8B6F3E}",
+      "\\definecolor{cAmberSphere}{HTML}{DDCC77}",
+      "\\tikzset{",
+      "\\tikzset{",
+      "\\tikzset{"
+    ]
+  },
+  "visual_assets": {
+    "catalog_path": "styles/snippets/INDEX.yaml",
+    "catalog_sha256": "sha256:7903a00188cac224fc01d7561549e5c1104693098095db6bf4c2873cfb2f09b2",
+    "schema": "figure-agent.authoring-visual-assets.v1",
+    "selected": [
+      {
+        "anti_patterns": [
+          "grounded sample or grounded cantilever",
+          "bidirectional actuation sequence"
+        ],
+        "api": {
+          "kind": "macro",
+          "signature": "\\PanelFFloatingCantilever{prefix}{(x,y)}",
+          "tunable": [
+            "prefix",
+            "origin"
+          ]
+        },
+        "authoring_directives": [
+          "Reuse curated visual asset [panel_f_floating_cantilever] from [styles/snippets/panel-f-floating-cantilever.tex]. Do not redraw its owned geometry.",
+          "Invoke [panel_f_floating_cantilever] through [\\PanelFFloatingCantilever{prefix}{(x,y)}] and adapt only [prefix, origin].",
+          "Preserve its declared role: floating charge-trapping cantilever opposite a driven electrode."
+        ],
+        "contract": {
+          "path": "styles/snippets/panel-f-floating-cantilever.contract.yaml",
+          "sha256": "sha256:0ddcf5e652ff2049c943c0b78195c85f540484240ae42a37368c300871550eba"
+        },
+        "id": "panel_f_floating_cantilever",
+        "known_pitfalls": [
+          "caller owns panel labels, force arrows, and whole-panel composition",
+          "do not connect the floating cantilever to the source-return ground",
+          "do not reinterpret the fixed mechanical boundary as an electrical contact"
+        ],
+        "path": "styles/snippets/panel-f-floating-cantilever.tex",
+        "read_paths": [
+          "styles/snippets/panel-f-floating-cantilever.tex",
+          "styles/snippets/panel-f-floating-cantilever.contract.yaml",
+          "styles/snippets/panel-f-floating-cantilever.transfer.yaml"
+        ],
+        "role": {
+          "depicts": "floating charge-trapping cantilever opposite a driven electrode",
+          "level": "composite",
+          "placement": "panel-element"
+        },
+        "sha256": "sha256:2e0b39f3e4c20daa9987a80218702be48b263bbac149de2df80d7cc582695c49",
+        "smoke_fixture": "examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex",
+        "status": "reviewed_reusable",
+        "transfer_receipt": {
+          "path": "styles/snippets/panel-f-floating-cantilever.transfer.yaml",
+          "sha256": "sha256:ef3404976e661ef6ee43a3892682c7a2be7845850366d5df6dc9391cf4efc83d"
+        }
+      }
+    ]
+  }
+}
