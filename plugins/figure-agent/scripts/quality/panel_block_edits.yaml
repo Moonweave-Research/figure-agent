@@ -457,6 +457,284 @@
     expected_detector_movement: convert post-label-relief source-lead defects into a fresh source-bound Panel F candidate
     expected_visual_movement: source lead becomes less apparatus-dominant and q_tr aligns more calmly under trapped charge
     rollback_condition: candidate worsens compile, protected labels, source semantics, or force/electrode/air-gap relations
+- family_id: panel_f_post_boundary_force_balance
+  template_id: v5f_panel_f_post_boundary_force_balance_v1
+  panel: F
+  requires:
+  - '% quality-search F boundary polish: pull callouts off panel edge'
+  - (11.35,2.52) .. controls (10.86,3.18) and (10.30,3.42) .. (9.84,3.42);
+  - at (9.78, 3.22) {$q_{\mathrm{tr}}$};
+  - at (9.78, 3.48) {trapped charge};
+  - (10.72, 1.12) -- (9.62, 1.12);
+  - anchor=south west] at (9.66, 1.58) {Coulomb};
+  - text=cRed!74!black] at (9.67, 1.41) {repulsion};
+  - (10.08, 0.54) -- (13.18, 0.54);
+  applied_signature:
+  - '% quality-search F post-boundary force balance: separate force labels'
+  - (10.80, 1.06) -- (9.48, 1.06);
+  - anchor=south west] at (9.62, 1.66) {Coulomb};
+  - text=cRed!72!black] at (9.63, 1.44) {repulsion};
+  - (10.18, 0.54) -- (13.18, 0.54);
+  preserve_after: []
+  replacements:
+  - old: |-
+      \draw[panelFCoulombRepulsionArrow, -{Stealth[length=7.2pt,width=5.0pt]}, cRed!80!black, line width=0.92pt]
+        (10.72, 1.12) -- (9.62, 1.12);
+    new: |-
+      % quality-search F post-boundary force balance: separate force labels
+      \draw[panelFCoulombRepulsionArrow, -{Stealth[length=7.8pt,width=5.2pt]}, cRed!78!black, line width=0.86pt]
+        (10.80, 1.06) -- (9.48, 1.06);
+  - old: |-
+      font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cRed!76!black,
+            anchor=south west] at (9.66, 1.58) {Coulomb};
+    new: |-
+      font=\sffamily\bfseries\fontsize{5.2}{6.2}\selectfont, text=cRed!74!black,
+            anchor=south west] at (9.62, 1.66) {Coulomb};
+  - old: |-
+      font=\sffamily\fontsize{5.0}{6.0}\selectfont,
+            text=cRed!74!black] at (9.67, 1.41) {repulsion};
+    new: |-
+      font=\sffamily\fontsize{4.8}{5.8}\selectfont,
+            text=cRed!72!black] at (9.63, 1.44) {repulsion};
+  - old: (10.08, 0.54) -- (13.18, 0.54);
+    new: (10.18, 0.54) -- (13.18, 0.54);
+  protected_labels:
+  - q_{\mathrm{tr}}
+  - trapped charge
+  - Coulomb
+  - repulsion
+  - electrode
+  - air gap
+  - mechanical
+  - $V_{\mathrm{active}}$
+  - bias
+  goal_trigger: []
+  goal_hypothesis: {}
+- family_id: panel_f_post_force_source_connector
+  template_id: v5f_panel_f_post_force_source_connector_v1
+  panel: F
+  requires:
+  - '% quality-search F post-boundary force balance: separate force labels'
+  - (10.80, 1.06) -- (9.48, 1.06);
+  - anchor=south west] at (9.62, 1.66) {Coulomb};
+  - text=cRed!72!black] at (9.63, 1.44) {repulsion};
+  - (10.18, 0.54) -- (13.18, 0.54);
+  applied_signature:
+  - '% quality-search F post-force source connector: simplify source lead'
+  - at (13.02, 4.105) {$V_{\mathrm{active}}$};
+  - at (13.02, 3.80) {bias};
+  - (13.24, 3.78) -- (13.18, 3.42) -- (13.18, 2.82);
+  preserve_after: []
+  replacements:
+  - old: |-
+      \fill[cGray!26!black, opacity=0.014]
+        (12.70, 3.86) rectangle (13.36, 4.12);
+    new: |-
+      \fill[cGray!26!black, opacity=0.010]
+        (12.74, 3.88) rectangle (13.34, 4.12);
+  - old: \fill[cGray!3] (12.68, 3.88) rectangle (13.38, 4.14);
+    new: \fill[cGray!3] (12.72, 3.90) rectangle (13.36, 4.14);
+  - old: |-
+      \draw[cGray!48!black, line width=0.18pt, rounded corners=1.0pt]
+        (12.68, 3.88) rectangle (13.38, 4.14);
+    new: |-
+      \draw[cGray!44!black, line width=0.16pt, rounded corners=1.0pt]
+        (12.72, 3.90) rectangle (13.36, 4.14);
+  - old: |-
+      font=\sffamily\bfseries\fontsize{3.1}{3.8}\selectfont, text=cGray!48!black]
+        at (13.02, 4.125) {$V_{\mathrm{active}}$};
+    new: |-
+      font=\sffamily\bfseries\fontsize{3.0}{3.6}\selectfont, text=cGray!46!black]
+        at (13.02, 4.105) {$V_{\mathrm{active}}$};
+  - old: |-
+      font=\sffamily\fontsize{2.7}{3.2}\selectfont, text=cGray!38!black]
+        at (13.02, 3.75) {bias};
+    new: |-
+      font=\sffamily\fontsize{2.7}{3.2}\selectfont, text=cGray!38!black]
+        at (13.02, 3.80) {bias};
+  - old: |-
+      % quality-search F connector: source-to-electrode lead
+      \draw[cGray!64!black, line width=0.46pt, rounded corners=1.2pt]
+        (13.28, 3.78) -- (13.08, 3.58) -- (13.08, 2.96) -- (13.18, 2.82);
+    new: |-
+      % quality-search F post-force source connector: simplify source lead
+      \draw[cGray!58!black, line width=0.36pt, rounded corners=1.8pt]
+        (13.24, 3.78) -- (13.18, 3.42) -- (13.18, 2.82);
+  - old: \fill[cRed!68!black] (13.30, 3.82) circle (0.020);
+    new: \fill[cRed!62!black] (13.24, 3.82) circle (0.018);
+  protected_labels:
+  - q_{\mathrm{tr}}
+  - trapped charge
+  - Coulomb
+  - repulsion
+  - electrode
+  - air gap
+  - mechanical
+  - $V_{\mathrm{active}}$
+  - bias
+  goal_trigger: []
+  goal_hypothesis: {}
+- family_id: panel_f_post_source_label_scale
+  template_id: v5f_panel_f_post_source_label_scale_v1
+  panel: F
+  requires:
+  - '% quality-search F post-force source connector: simplify source lead'
+  - at (13.02, 4.105) {$V_{\mathrm{active}}$};
+  - at (13.02, 3.80) {bias};
+  - (13.24, 3.78) -- (13.18, 3.42) -- (13.18, 2.82);
+  applied_signature:
+  - '% quality-search F post-source label scale: lift trapped-charge legibility'
+  - (11.35,2.52) .. controls (10.88,3.20) and (10.28,3.46) .. (9.76,3.44);
+  - at (9.70, 3.22) {$q_{\mathrm{tr}}$};
+  - at (9.70, 3.52) {trapped charge};
+  preserve_after: []
+  replacements:
+  - old: |-
+      % quality-search F boundary polish: pull callouts off panel edge
+      \draw[cRed!58!black, line width=0.36pt]
+        (11.35,2.52) .. controls (10.86,3.18) and (10.30,3.42) .. (9.84,3.42);
+    new: |-
+      % quality-search F post-source label scale: lift trapped-charge legibility
+      \draw[cRed!58!black, line width=0.36pt]
+        (11.35,2.52) .. controls (10.88,3.20) and (10.28,3.46) .. (9.76,3.44);
+  - old: |-
+      inner xsep=0.65pt, inner ysep=0.30pt,
+            font=\sffamily\bfseries\fontsize{3.6}{4.3}\selectfont, text=cRed!70!black]
+        at (9.78, 3.22) {$q_{\mathrm{tr}}$};
+    new: |-
+      inner xsep=0.72pt, inner ysep=0.32pt,
+            font=\sffamily\bfseries\fontsize{3.9}{4.7}\selectfont, text=cRed!72!black]
+        at (9.70, 3.22) {$q_{\mathrm{tr}}$};
+  - old: |-
+      inner xsep=0.7pt, inner ysep=0.30pt,
+            font=\sffamily\bfseries\fontsize{3.5}{4.2}\selectfont, text=cRed!70!black]
+        at (9.78, 3.48) {trapped charge};
+    new: |-
+      inner xsep=0.78pt, inner ysep=0.32pt,
+            font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!72!black]
+        at (9.70, 3.52) {trapped charge};
+  protected_labels:
+  - q_{\mathrm{tr}}
+  - trapped charge
+  - Coulomb
+  - repulsion
+  - electrode
+  - air gap
+  - mechanical
+  - $V_{\mathrm{active}}$
+  - bias
+  goal_trigger: []
+  goal_hypothesis: {}
+- family_id: panel_f_post_label_force_cleanup
+  template_id: v5f_panel_f_post_label_force_cleanup_v1
+  panel: F
+  requires:
+  - '% quality-search F post-source label scale: lift trapped-charge legibility'
+  - (11.35,2.52) .. controls (10.88,3.20) and (10.28,3.46) .. (9.76,3.44);
+  - at (9.70, 3.22) {$q_{\mathrm{tr}}$};
+  - at (9.70, 3.52) {trapped charge};
+  applied_signature:
+  - '% quality-search F post-label force cleanup: quiet arrow and clear labels'
+  - -{Stealth[length=7.0pt,width=4.8pt]}, cRed!76!black, line width=0.74pt
+  - (10.66, 1.06) -- (9.58, 1.06);
+  - at (9.66, 1.62) {Coulomb};
+  - at (9.66, 1.36) {repulsion};
+  preserve_after: []
+  replacements:
+  - old: |-
+      % Coulomb-only response, intentionally stronger than the apparatus.
+      % quality-search F post-boundary force balance: separate force labels
+      \draw[panelFCoulombRepulsionArrow, -{Stealth[length=7.8pt,width=5.2pt]}, cRed!78!black, line width=0.86pt]
+        (10.80, 1.06) -- (9.48, 1.06);
+    new: |-
+      % Coulomb-only response, intentionally stronger than the apparatus.
+      % quality-search F post-label force cleanup: quiet arrow and clear labels
+      \draw[panelFCoulombRepulsionArrow, -{Stealth[length=7.0pt,width=4.8pt]}, cRed!76!black, line width=0.74pt]
+        (10.66, 1.06) -- (9.58, 1.06);
+  - old: |-
+      \node[font=\sffamily\bfseries\fontsize{5.2}{6.2}\selectfont, text=cRed!74!black,
+            anchor=south west] at (9.62, 1.66) {Coulomb};
+    new: |-
+      \node[anchor=south west, fill=white, fill opacity=0.92, text opacity=1,
+            inner xsep=0.90pt, inner ysep=0.42pt,
+            font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont, text=cRed!74!black]
+        at (9.66, 1.62) {Coulomb};
+  - old: |-
+      \node[labelMute, anchor=north west, fill=white, fill opacity=0.90, text opacity=1,
+            inner xsep=0.95pt, inner ysep=0.45pt,
+            font=\sffamily\fontsize{4.8}{5.8}\selectfont,
+            text=cRed!72!black] at (9.63, 1.44) {repulsion};
+    new: |-
+      \node[labelMute, anchor=north west, fill=white, fill opacity=0.94, text opacity=1,
+            inner xsep=1.0pt, inner ysep=0.48pt,
+            font=\sffamily\fontsize{4.7}{5.7}\selectfont,
+            text=cRed!72!black] at (9.66, 1.36) {repulsion};
+  protected_labels:
+  - q_{\mathrm{tr}}
+  - trapped charge
+  - Coulomb
+  - repulsion
+  - electrode
+  - air gap
+  - mechanical
+  - $V_{\mathrm{active}}$
+  - bias
+  goal_trigger: []
+  goal_hypothesis: {}
+- family_id: panel_f_trap_label_left_rail
+  template_id: v5f_panel_f_trap_label_left_rail_v1
+  panel: F
+  requires:
+  - '% quality-search F post-label relief source settle: subordinate source lead'
+  - \fill[cRed!50!black, opacity=0.78] (13.24, 3.82) circle (0.012);
+  - \draw[cGray!34!black, line width=0.18pt, opacity=0.78, rounded corners=2.2pt]
+  - \fill[cGray!66!black, opacity=0.86] (13.18, 2.82) circle (0.024);
+  - (11.24,2.50) .. controls (10.72,3.02) and (10.18,3.30) .. (9.84,3.36);
+  - at (9.62, 3.24) {$q_{\mathrm{tr}}$};
+  applied_signature:
+  - '% quality-search F trap label left rail: park trap labels in margin'
+  - (11.08,2.48) .. controls (10.58,3.02) and (10.10,3.40) .. (9.86,3.46);
+  - at (9.64, 3.32) {$q_{\mathrm{tr}}$};
+  - at (9.64, 3.70) {trapped charge};
+  preserve_after: []
+  replacements:
+  - old: |-
+      % quality-search F post-source trap hierarchy: separate trap labels
+      \draw[cRed!50!black, line width=0.26pt]
+        (11.24,2.50) .. controls (10.72,3.02) and (10.18,3.30) .. (9.84,3.36);
+      \node[anchor=west, fill=white, fill opacity=0.80, text opacity=1,
+            inner xsep=0.58pt, inner ysep=0.22pt,
+            font=\sffamily\bfseries\fontsize{3.6}{4.4}\selectfont, text=cRed!66!black]
+        at (9.62, 3.24) {$q_{\mathrm{tr}}$};
+      \node[anchor=west, fill=white, fill opacity=0.84, text opacity=1,
+            inner xsep=0.66pt, inner ysep=0.24pt,
+            font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!70!black]
+        at (9.60, 3.62) {trapped charge};
+    new: |-
+      % quality-search F post-source trap hierarchy: separate trap labels
+      % quality-search F trap label left rail: park trap labels in margin
+      \draw[cRed!46!black, line width=0.20pt, opacity=0.82]
+        (11.08,2.48) .. controls (10.58,3.02) and (10.10,3.40) .. (9.86,3.46);
+      \node[anchor=west, fill=white, fill opacity=0.86, text opacity=1,
+            inner xsep=0.60pt, inner ysep=0.24pt,
+            font=\sffamily\bfseries\fontsize{3.6}{4.4}\selectfont, text=cRed!66!black]
+        at (9.64, 3.32) {$q_{\mathrm{tr}}$};
+      \node[anchor=west, fill=white, fill opacity=0.88, text opacity=1,
+            inner xsep=0.70pt, inner ysep=0.26pt,
+            font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cRed!70!black]
+        at (9.64, 3.70) {trapped charge};
+  protected_labels:
+  - q_{\mathrm{tr}}
+  - trapped charge
+  - Coulomb
+  - repulsion
+  - electrode
+  - air gap
+  - mechanical
+  - $V_{\mathrm{active}}$
+  - bias
+  goal_trigger: []
+  goal_hypothesis: {}
 - family_id: panel_f_air_gap_drift_repair
   template_id: v5f_panel_f_air_gap_drift_repair_v1
   panel: F

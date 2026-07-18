@@ -23,12 +23,13 @@ from pathlib import Path
 # When you extract a family into the YAML data path and delete its Python, RE-RUN
 # this file and lower the matching constant to the new (smaller) count.
 
-# Baselines pinned 2026-07-18 against origin/main @ 32f7fc0d.
-MAX_PANEL_F_DEFS = 62
-MAX_REPLACEMENT_DEFS = 32
-MAX_TEMPLATE_APPLIED_DEFS = 33
-MAX_FAMILY_EQ_BRANCHES = 92
-MAX_TOTAL_LINES = 10076
+# Baselines pinned 2026-07-18 against origin/main @ 32f7fc0d; lowered 2026-07-18
+# after Seam 1 tranche 1 extracted 5 Panel-F families into panel_block_edits.yaml.
+MAX_PANEL_F_DEFS = 52
+MAX_REPLACEMENT_DEFS = 27
+MAX_TEMPLATE_APPLIED_DEFS = 28
+MAX_FAMILY_EQ_BRANCHES = 89
+MAX_TOTAL_LINES = 9507
 
 _POLICY_LINE = (
     "a new iteration on an existing panel is a new entry here, never a new Python family."
