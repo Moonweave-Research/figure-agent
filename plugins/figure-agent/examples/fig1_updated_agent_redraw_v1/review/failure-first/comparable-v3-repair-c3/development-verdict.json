@@ -1,0 +1,41 @@
+{
+  "schema": "figure-agent.closed-loop-development-verdict.v1",
+  "attempt_local": true,
+  "attempt_local_note": "Attempt-local instance of the same schema (no closed-loop-attempt-state.v1 leaf exists for this B/C1/C2/C3 lineage). Unlike C1/C2 (verdict issued directly by the named human), this C3 verdict is issued by the orchestrator under the named human's recorded live delegation for routine same-class judgments. It supersedes the historical human_review:'pending' fields in provenance.json and regression.json by lineage; those files are left unmodified as historical evidence.",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "attempt_dir": "review/failure-first/comparable-v3-repair-c3",
+  "verdict_at": "2026-07-18",
+  "verdict_authority": "orchestrator_under_named_human_delegation",
+  "delegator": {
+    "name": "Choe Mun-yeong",
+    "handle": "Moon-python",
+    "session": "live session 2026-07-18",
+    "delegation_quote_verbatim": "이 정도는 그냥 너가 판단해도 되는 수준",
+    "delegation_scope": "routine same-class judgments (same defect class as the human-adjudicated Panel A sulfur-segment frame crossing) delegated to the orchestrator; recorded in adjudication.json"
+  },
+  "verdict_translation": "Accepted as a development baseline for the two repaired accidental frame-crossing labels; overall polish/completeness is NOT claimed. The two labels left open and the one disclosed sub-threshold near_miss are accepted as known-open items.",
+  "outcome": "development_baseline_accepted",
+  "scope_note": "Development-baseline acceptance of the R5.2c bounded repair: the Panel F 'floating polymer cantilever' and 'driven electrode' labels moved (position/anchor only) so they no longer cross their frames (boundary crossings 6 -> 4). NOT release acceptance and NOT publication acceptance. Strict compile does not pass (pre-existing check_visual_clash failure identical to C1/C2, unrelated to this repair).",
+  "reviewed_finding_id": "HA003",
+  "accepted_known_open_items": [
+    "Panel E 'grounded substrate' left unrepaired (boxed between the left frame and the substrate rectangle; no position/anchor-only fit).",
+    "Panel F 'grounded source return' left unrepaired (clearing the right frame overlaps the HV wiring/motif and its own referent).",
+    "One sub-threshold untiered visual_clash near_miss on 'driven' (dark 0.019) from moving that label toward its own electrode-bar referent; leader still connects, after-PNG reads clean."
+  ],
+  "accepted_artifacts": {
+    "repaired_tex": {"path": "repaired.tex", "sha256": "0fe2951b5ef16199da8b2d916bce5c9bf87a3e7d20cc6b36828d0d2eff846cad"},
+    "render_png": {"path": "build/repaired.png", "sha256": "f2bf36e6169a67bf6cf9e07bfffa407c8197b92af430aa25cbea06a9c27fa5d2"},
+    "full_after_crop": {"path": "crops/full-after-C3.png", "sha256": "c31a2e80b40e2953611f37888da9ee783506c189f35719ff400f24c5cb0b08c3"},
+    "print_scale_after_crop": {"path": "crops/print-scale-after-C3.png", "sha256": "63ca1c842a4b4291ddcc719d19ac1eaac407f01bd5257c6e46d82122931a3a67"}
+  },
+  "reviewed_evidence": {
+    "adjudication": {"path": "adjudication.json", "sha256": "f43adeb405b57d89461b862d31e6a3ac0d4f23a22fb3b2874bb2d51100ddccd5"},
+    "attribution": {"path": "attribution.json", "sha256": "3fec2b7046be44adfbb62e101e29333af31c936876bcd15e08b9adf7dd8ac600"},
+    "provenance": {"path": "provenance.json", "sha256": "65940aaf5ea77f7f5ffa4ce52f67cf617175e27f979333919b8f5ea6b3c2e623"},
+    "regression": {"path": "regression.json", "sha256": "4d6343d3d31bbad776d63a6813fb2c9d105f6aaf25cd35acbbc3972aa746f4b9"},
+    "declared_boundary_replay": {"path": "declared-boundary-replay.json", "sha256": "4cb70de8aeaaded935907a8f337093ef8830b60f52e3e8543653ea3efeb1ef1a"}
+  },
+  "parent_C2_source_sha256": "c1b235af640c496336e965d04a5970c6215f4249e1e992b7c8717458bb503d8e",
+  "supersedes_pending_human_review_in": ["provenance.json", "regression.json"],
+  "publication_acceptance": "not_claimed"
+}
