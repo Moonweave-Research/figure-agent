@@ -3,7 +3,7 @@
 
 **Status:** Active and authoritative
 
-**Effective date:** 2026-07-16
+**Effective date:** 2026-07-18
 
 **Committed baseline:** `c6a28e40` (`codex/figure-agent-closed-loop-reset`)
 
@@ -248,16 +248,16 @@ reviewable; open the next slice only after recording stop conditions and evidenc
 **Exit:** status drives safe deterministic work to one truthful next actor/action.
 
 ### R5 — Cross-family proof and capability promotion
-
-- [ ] Replay the closed loop on the maintained complex Fig1 and Fig3 families.
-- [ ] Use the same model/task/budget rules for A and B; derive C only from B.
-- [ ] Record prospective human correction minutes and blinded named verdicts.
-- [ ] Measure defect reduction, new-defect rate, semantic preservation,
-  reproducibility, and transfer without fixture-specific imports.
-- [ ] Promote only the narrow mechanisms supported by both families.
-
-**Exit:** evidence shows lower correction burden without reducing open-ended LLM
-authoring; otherwise retain the mechanism as experimental or retire it.
+- [x] Require ordered `% Panel <id>` markers; exact-bind only unique rendered literals and leave repeated text ambiguous.
+- [x] Apply the schematic geometry profile: v3's 53 generic-shape candidates become INFO while one semantic-path crossing remains actionable.
+- [ ] R5.1: author a fresh B, compile/crop/queue it, and record exact/ambiguous/unbound counts without repair.
+- [ ] R5.2: adjudicate one certain defect, derive C only as B's bounded repair child, and run fresh neighbor/full/print review.
+- [ ] R5.3: add minimal declared-check coverage and expose zero coverage; never encode the six-panel layout or fixture coordinates as grammar.
+- [ ] R5.4: deepen A, B, or E semantics from paper authority and prove one fault injection.
+- [ ] R5.5: transfer the same mechanism to maintained Fig3 with no Fig1-private imports.
+- [ ] Record correction minutes, named human verdicts, defect reduction, new-defect rate, semantic preservation, and reproducibility.
+The v3 B render is failure evidence, not a quality baseline: 33 visual candidates were detected but historically unbound; declared checks also had zero coverage, and A/B/E semantics remain shallow. B need not be machine-valid before C repair—confirmed defects are the repair input. Stop on stale evidence, ambiguity, uncertain science, or missing exact attribution. Aesthetics and composition remain human-reviewed; machine gates never claim publication acceptance.
+**Exit:** two families show lower correction burden without reducing open LLM authoring, plus the required named human scaffold/review verdict; otherwise keep the mechanism experimental or retire it.
 
 ## 6. Mandatory stop conditions
 
