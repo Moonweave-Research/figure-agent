@@ -325,7 +325,7 @@ not add another generator, renderer, candidate family, or workflow shell.
   requirements, complete per-arm QA receipts, and independent cold-run receipts.
   It may not prescribe coordinates, panel rectangles, primitive geometry,
   palette choices, or a fixed reading path.
-  The first Q5 slice classifies all 81 callable CLI names behind
+  The first Q5 slice classifies all 85 callable CLI names behind
   `fig-agent doctor --commands --json`, makes `status -> run` the canonical
   public route, and removes autonomous quality-search activation from the
   `improve` compatibility adapter. The second Q5 slice establishes one shared
