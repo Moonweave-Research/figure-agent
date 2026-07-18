@@ -29,6 +29,11 @@
     "semantic_assertions": 5,
     "test_result": "67 passed, 1 skipped"
   },
-  "human_review": "pending",
+  "human_review": {
+    "status": "development_accepted",
+    "verdict_path": "examples/fig3_resistance_mechanism/review/post-baseline/label-clearance-v1/human-review.json",
+    "verdict_sha256": "sha256:12371248f69893749dc4528655fc2160f3f92c115383a70878f5f45f9ef6ee5c",
+    "visible_defects": "none_identified_by_reviewer"
+  },
   "publication_acceptance": "not_claimed"
 }

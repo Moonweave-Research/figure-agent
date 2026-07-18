@@ -1,0 +1,13 @@
+{
+  "schema": "figure-agent.human-review-verdict.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "candidate": "post-baseline/label-clearance-v1",
+  "actor": "Moon",
+  "actor_role": "human_reviewer",
+  "recorded_at": "2026-07-18",
+  "verbatim_feedback": "이번에는 내가 인지 할수 있는 결함은 없는거 같다",
+  "disposition": "development_accepted",
+  "visible_defects": "none_identified_by_reviewer",
+  "scope": "development_baseline",
+  "publication_acceptance": "not_claimed"
+}
