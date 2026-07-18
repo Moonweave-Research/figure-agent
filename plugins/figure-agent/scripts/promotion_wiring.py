@@ -282,6 +282,50 @@ def _metric_score(metric: Any) -> float:
     return 0.0
 
 
+def _candidate_source_attribution(
+    lines: list[str],
+    candidate: dict[str, Any],
+) -> dict[str, Any]:
+    text = candidate.get("text")
+    if not isinstance(text, str) or not text.strip():
+        return {"state": "unbound", "reason": "candidate_text_missing"}
+    target = text.strip()
+    pattern = re.compile(
+        rf"(?<![A-Za-z0-9]){re.escape(target)}(?![A-Za-z0-9])"
+    )
+    matches = [
+        index
+        for index, line in enumerate(lines, start=1)
+        if not line.lstrip().startswith("%") and pattern.search(line)
+    ]
+    if not matches:
+        return {"state": "unbound", "reason": "literal_text_not_found"}
+    if len(matches) > 1:
+        return {
+            "state": "ambiguous",
+            "reason": "literal_text_matches_multiple_lines",
+            "candidate_tex_lines": matches,
+        }
+    line_number = matches[0]
+    panel = ""
+    for marker_line, marker_panel in _panel_markers(lines):
+        if marker_line > line_number:
+            break
+        panel = marker_panel
+    if not panel:
+        return {
+            "state": "unbound",
+            "reason": "canonical_panel_marker_missing_before_match",
+            "candidate_tex_lines": [line_number],
+        }
+    return {
+        "state": "exact",
+        "reason": "unique_literal_text_in_panel_block",
+        "panel": panel,
+        "tex_lines": [line_number, line_number],
+    }
+
+
 def build_promotion_queue(
     name: str,
     *,
@@ -299,9 +343,11 @@ def build_promotion_queue(
     report_path = example_dir / "build" / "visual_clash.json"
     report = load_detector_report(report_path, "visual_clash")
     candidates = [item for item in report["candidates"] if isinstance(item, dict)]
+    source_lines = _source_lines(example_dir, name)
     items: list[dict[str, Any]] = []
     for candidate in candidates:
         clash_id = str(candidate["id"]).strip()
+        source_attribution = _candidate_source_attribution(source_lines, candidate)
         crops = _crop_paths(example_dir, clash_id)
         if not crops:
             raise PromotionWiringError(f"promotion_queue_missing_crop:{clash_id}")
@@ -324,7 +370,8 @@ def build_promotion_queue(
                 "metric": candidate.get("metric"),
                 "crop_paths": [_rel(example_dir, crop) for crop in crops],
                 "evidence_inline": evidence_inline,
-                "tex_lines": None,
+                "tex_lines": source_attribution.get("tex_lines"),
+                "source_attribution": source_attribution,
                 "defect_class": None,
                 "action": "human_review_required",
             }
@@ -456,6 +503,21 @@ def triage_promotion_queue(
         raise PromotionWiringError(f"triage_unknown_ids:{','.join(unknown)}")
     line_map = _parse_tex_lines(tex_lines)
     class_map = _parse_defect_classes(defect_classes)
+    for item_id in accepted_ids - set(line_map):
+        item = items[item_id]
+        attribution = item.get("source_attribution")
+        attributed_lines = item.get("tex_lines")
+        if (
+            isinstance(attribution, dict)
+            and attribution.get("state") == "exact"
+            and isinstance(attributed_lines, list)
+            and len(attributed_lines) == 2
+            and all(
+                isinstance(value, int) and not isinstance(value, bool)
+                for value in attributed_lines
+            )
+        ):
+            line_map[item_id] = attributed_lines
     missing_lines = sorted(accepted_ids - set(line_map))
     missing_classes = sorted(accepted_ids - set(class_map))
     if missing_lines:

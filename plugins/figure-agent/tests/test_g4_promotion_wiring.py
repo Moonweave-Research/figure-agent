@@ -549,7 +549,13 @@ def test_promotion_queue_contains_inline_crop_evidence_and_non_promoting_notes(
     assert queue["schema"] == "figure-agent.promotion-queue.v1"
     assert queue["top_items"] == ["VC012"]
     assert queue["items"][0]["evidence_inline"][0]["path"].endswith("VC012_Energy.png")
-    assert queue["items"][0]["tex_lines"] is None
+    assert queue["items"][0]["tex_lines"] == [2, 2]
+    assert queue["items"][0]["source_attribution"] == {
+        "state": "exact",
+        "reason": "unique_literal_text_in_panel_block",
+        "panel": "A",
+        "tex_lines": [2, 2],
+    }
     assert queue["items"][0]["defect_class"] is None
     assert {item["detector"] for item in queue["non_promoting_detectors"]} == {
         "layout_drift",
@@ -624,6 +630,55 @@ def test_triage_accept_synthesizes_bounded_fields_and_ledger_reads_them(
     assert defect["selector_hint"]["selector_text_hash"].startswith("sha256:")
     assert defect["target"]["panel"] == "A"
     assert defect["actionability"]["state"] == "candidate_supported"
+
+
+def test_triage_accept_reuses_exact_queue_source_attribution(tmp_path: Path) -> None:
+    fixture = _fixture(tmp_path)
+    _write_crop(fixture)
+    _write_json(fixture / "build" / "visual_clash.json", _visual_clash_payload())
+    promotion_wiring.build_promotion_queue(
+        "fig_demo",
+        plugin_root=ROOT,
+        workspace_root=tmp_path,
+        write=True,
+    )
+
+    triage = promotion_wiring.triage_promotion_queue(
+        "fig_demo",
+        accept="VC012",
+        reject_rest=True,
+        tex_lines=[],
+        defect_classes=["VC012:text_overlap"],
+        plugin_root=ROOT,
+        workspace_root=tmp_path,
+    )
+
+    assert triage["accepted"][0]["tex_lines"] == [2, 2]
+    assert triage["accepted"][0]["target"]["panel"] == "A"
+
+
+def test_promotion_queue_does_not_guess_when_candidate_text_is_duplicated(
+    tmp_path: Path,
+) -> None:
+    fixture = _fixture(tmp_path)
+    source = fixture / "fig_demo.tex"
+    source.write_text(
+        source.read_text(encoding="utf-8") + "\\node at (2,2) {Energy};\n",
+        encoding="utf-8",
+    )
+    _write_crop(fixture)
+    _write_json(fixture / "build" / "visual_clash.json", _visual_clash_payload())
+
+    queue = promotion_wiring.build_promotion_queue(
+        "fig_demo",
+        plugin_root=ROOT,
+        workspace_root=tmp_path,
+    )
+
+    item = queue["items"][0]
+    assert item["tex_lines"] is None
+    assert item["source_attribution"]["state"] == "ambiguous"
+    assert item["source_attribution"]["reason"] == "literal_text_matches_multiple_lines"
 
 
 def test_triage_accept_hashes_multi_line_tex_range_before_ledger_reads_it(
