@@ -279,6 +279,10 @@ rendered encoding and calculate it from source geometry when practical. Do not
 accept a verbally correct claim whose visible ratio says something weaker or
 different.
 
+When a caliper crosses category-colored regions, reserve a neutral measurement
+lane or otherwise isolate its shaft and label from those fills. Treat placement
+that makes the measured interval inherit the wrong category as a normal finding.
+
 For a paper-specific variable or annotation, a paper-local declaration takes
 precedence over generic symbol or domain convention. Never infer its semantic
 domain from notation alone. If the briefing, semantic contract, and declared

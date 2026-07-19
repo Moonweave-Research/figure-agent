@@ -74,6 +74,9 @@ a floating measurement is a defect. Check every brief-declared relative peak
 height, width, slope, count, ordering, or approximate ratio against the rendered
 geometry, calculating from source coordinates when practical. A correct caption
 does not excuse a visibly weaker or contradictory encoding.
+When a caliper crosses category-colored regions, reserve a neutral measurement lane
+or otherwise isolate its shaft and label from those fills. Route any placement that
+makes the measured interval inherit the wrong category as a normal finding.
 For a paper-specific variable or annotation, a paper-local declaration takes precedence
 over a generic symbol or domain convention. Never assign its semantic domain from
 notation alone. If the briefing, semantic contract, and declared reference authority

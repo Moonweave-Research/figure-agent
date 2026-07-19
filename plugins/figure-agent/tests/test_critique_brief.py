@@ -617,6 +617,8 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "Do not prescribe a reusable primitive as the only" in brief
     assert "name both referents" in brief
     assert "a floating measurement is a defect" in brief
+    assert "neutral measurement lane" in brief
+    assert "inherit the wrong category" in brief
     assert "relative peak" in brief
     assert "approximate ratio against the rendered" in brief
     assert "high/low or" in brief
