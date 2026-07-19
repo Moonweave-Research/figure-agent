@@ -94,22 +94,27 @@
   \node[panel letter, anchor=west] at (0.28,4.62) {B};
   \node[panel title] at (0.82,4.62) {Composition series};
 
-  \foreach \x/\label/\count in {1.25/lower sulfur/2,3.60/intermediate/4,5.95/sulfur-rich/6} {
-    \draw[cGray, line width=0.38pt, rounded corners=0.5mm] (\x-0.78,1.35) rectangle (\x+0.78,3.70);
-    \fill[cLGray!32] (\x-0.70,1.43) rectangle (\x+0.70,3.62);
-    \foreach \k in {1,...,\count} {
-      \pgfmathsetmacro{\px}{\x-0.52+mod(\k-1,2)*0.52}
-      \pgfmathsetmacro{\py}{1.78+floor((\k-1)/2)*0.55}
+  % increasing sulfur content encoded as polysulfide chain length (S60 -> S85)
+  \draw[-{Stealth[length=3.4pt,width=2.6pt]}, cAmber!90!black, line width=0.8pt]
+    (0.66,1.45)--(0.66,3.85);
+  \node[small label, rotate=90, anchor=south, text=cBrown] at (0.44,2.65) {increasing sulfur content};
+  \foreach \y/\lbl/\sc in {1.55/S$_{60}$/2, 2.62/S$_{75}$/4, 3.70/S$_{85}$/6}{
+    \coordinate (dl) at (1.62,\y);
+    \draw[cGray, line width=0.5pt, line join=round]
+      ([shift=(0:0.20)]dl)--([shift=(60:0.20)]dl)--([shift=(120:0.20)]dl)--([shift=(180:0.20)]dl)--([shift=(240:0.20)]dl)--([shift=(300:0.20)]dl)--cycle;
+    \draw[cAmber!80!black, line width=0.55pt] (1.82,\y)--({2.24+0.36*\sc},\y);
+    \foreach \k in {1,...,\sc}{
       \node[circle, draw=cAmber!85!black, fill=cAmberSphere!78, line width=0.32pt,
-            minimum size=2.35mm, inner sep=0pt,
-            font=\sffamily\bfseries\fontsize{4.4}{5.3}\selectfont, text=cBrown] at (\px,\py) {S};
+            minimum size=2.1mm, inner sep=0pt,
+            font=\sffamily\bfseries\fontsize{3.9}{4.7}\selectfont, text=cBrown]
+            at ({2.06+0.36*\k},\y) {S};
     }
-    \node[body label, align=center] at (\x,0.88) {\label};
+    \coordinate (dr) at ({2.44+0.36*\sc},\y);
+    \draw[cGray, line width=0.5pt, line join=round]
+      ([shift=(0:0.20)]dr)--([shift=(60:0.20)]dr)--([shift=(120:0.20)]dr)--([shift=(180:0.20)]dr)--([shift=(240:0.20)]dr)--([shift=(300:0.20)]dr)--cycle;
+    \node[body label, anchor=west, text=cBrown] at ({2.44+0.36*\sc+0.34},\y) {\lbl};
   }
-  \draw[cAmber!90!black, line width=0.75pt] (1.25,4.02)--(2.53,4.02);
-  \draw[-{Stealth[length=3.2pt,width=2.4pt]}, cAmber!90!black, line width=0.75pt]
-    (4.66,4.02)--(5.95,4.02);
-  \node[small label, fill=white, inner sep=1pt] at (3.60,4.02) {increasing sulfur content};
+  \node[small label, align=center] at (3.9,0.80) {DIB unit linked by polysulfide of increasing sulfur rank};
 \end{scope}
 
 % Panel C
