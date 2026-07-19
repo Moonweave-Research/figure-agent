@@ -302,6 +302,11 @@ draft, iteration, reviewer notes, or approval state belong in comments/specs and
 must not appear in publication-visible pixels unless explicitly declared as
 reader-facing scientific text.
 
+Treat panel containers as semantic marks, not default decoration. Repeated
+rounded frames that only partition a grid can make a scientific figure read as
+UI cards; require a scientific boundary role, otherwise prefer an open canvas,
+whitespace, or restrained separator rules and re-check the full-figure hierarchy.
+
 When a usable figure-level reference image or panel reference+bbox pair exists,
 `/fig_status` and `/fig_export` promote missing/stale `critique.md` to a
 pre-export checkpoint. Use `fig-agent export <name> --skip-critique` only
