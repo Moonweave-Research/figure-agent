@@ -47,6 +47,8 @@ def test_current_ispd_rules_preserve_manual_keyence_measurement() -> None:
 
     pair_text = "\n".join(rule["rule"] for rule in pair_catalog["rules"])
     assert "motion stage" not in pair_text.lower()
+    pair_ids = {rule["id"] for rule in pair_catalog["rules"]}
+    assert "pair001.instrument-faceplate-bezel" not in pair_ids
 
     ispd_rule = next(
         rule

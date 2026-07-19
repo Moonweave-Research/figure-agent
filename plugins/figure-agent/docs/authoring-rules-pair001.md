@@ -99,14 +99,6 @@ rules:
       locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:621-625
       quote: "Vacuum is a *reference level*, not a quantitative measurement"
     transfer_policy: use_as_constraint
-  - id: pair001.instrument-faceplate-bezel
-    category: instrument_standard
-    rule: Give instrument boxes a dark-glass display plus an inner faceplate bezel for machined-panel weight; avoid flat or gizmo-style boxes.
-    source:
-      kind: iteration_comment
-      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:1029
-      quote: "inner faceplate bezel for machined-panel weight"
-    transfer_policy: use_as_constraint
   - id: pair001.print-scale-registration
     category: style_lock
     rule: Size and weight elements so they register at the real print scale (178 mm width), not only on screen; verify thin features and small shapes stay visible at print scale.
