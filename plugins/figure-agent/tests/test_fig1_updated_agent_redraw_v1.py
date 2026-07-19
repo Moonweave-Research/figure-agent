@@ -369,6 +369,11 @@ def test_repaired_panel_d_strokes_survive_nature_double_column_scale() -> None:
     assert min(widths) >= 0.84
     assert "PI control: low $n$" in panel_d
     assert "S-rich: high $n$" in panel_d
+    assert panel_d.count("circle (0.045)") == 2
+    assert "circle (0.060)" not in panel_d
+    for colored_text in ("text=cBrown", "text=cBlue", "text=cRed"):
+        assert colored_text not in panel_d
+    assert panel_d.count("text=cGray!92!black") == 2
     assert "Debye" not in panel_d
     assert r"\shade" not in panel_d
     assert "opacity=" not in panel_d
