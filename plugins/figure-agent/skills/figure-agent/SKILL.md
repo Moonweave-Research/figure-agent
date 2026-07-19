@@ -293,7 +293,13 @@ For every comparative curve or response, require visible ownership by the named
 sample, material, condition, or control through an adjacent label or unambiguous
 legend. Qualifiers such as high/low, fast/slow, or shallow/deep are not specimen
 identity when the claim depends on which specimen produced the curve. For a
-multi-stage measurement schematic, trace preparation or excitation, acquisition,
+label rotated to follow a curve, inspect the full glyph bounds against the curve,
+markers, axis shaft, and tick marks at final reduction. Move the label along and
+normal to the curve until it owns a clear annotation lane; shifting only vertically
+can trade a curve collision for an axis or tick collision. Do not mask a measured
+data stroke merely to make an inline label fit.
+
+For a multi-stage measurement schematic, trace preparation or excitation, acquisition,
 transformation, and result in order. Flag an unexplained state such as deposited
 charge without a source, and keep process labels/arrows out of data peaks,
 calipers, and axis-label lanes.

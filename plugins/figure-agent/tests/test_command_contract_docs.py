@@ -84,6 +84,14 @@ def test_skill_documents_v1_17_l4_5_contract() -> None:
         assert required in doc
 
 
+def test_skill_audits_rotated_curve_labels_against_ticks_and_axes() -> None:
+    doc = _read("skills/figure-agent/SKILL.md")
+
+    assert "inspect the full glyph bounds against the curve" in doc
+    assert "axis shaft, and tick marks at final reduction" in doc
+    assert "shifting only vertically" in doc
+
+
 def test_fig_run_documents_explicit_json_output_spellings() -> None:
     doc = _read("commands/fig_run.md")
 
