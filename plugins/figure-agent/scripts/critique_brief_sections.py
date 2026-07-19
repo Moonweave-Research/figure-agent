@@ -74,6 +74,11 @@ a floating measurement is a defect. Check every brief-declared relative peak
 height, width, slope, count, ordering, or approximate ratio against the rendered
 geometry, calculating from source coordinates when practical. A correct caption
 does not excuse a visibly weaker or contradictory encoding.
+For a paper-specific variable or annotation, a paper-local declaration takes precedence
+over a generic symbol or domain convention. Never assign its semantic domain from
+notation alone. If the briefing, semantic contract, and declared reference authority
+conflict or remain absent, route the meaning to human scientific review instead of
+silently relocating or reinterpreting the mark.
 For each comparative curve, response, or distribution, identify the producing
 sample, material, condition, or control from visible figure evidence; high/low or
 fast/slow alone is not sample identity. For each multi-stage measurement, trace

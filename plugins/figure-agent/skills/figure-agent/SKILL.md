@@ -277,6 +277,12 @@ rendered encoding and calculate it from source geometry when practical. Do not
 accept a verbally correct claim whose visible ratio says something weaker or
 different.
 
+For a paper-specific variable or annotation, a paper-local declaration takes
+precedence over generic symbol or domain convention. Never infer its semantic
+domain from notation alone. If the briefing, semantic contract, and declared
+reference authority conflict or remain absent, stop for human scientific review
+instead of silently relocating or reinterpreting the mark.
+
 For every comparative curve or response, require visible ownership by the named
 sample, material, condition, or control through an adjacent label or unambiguous
 legend. Qualifiers such as high/low, fast/slow, or shallow/deep are not specimen
