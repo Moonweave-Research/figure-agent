@@ -198,6 +198,7 @@ def test_repaired_top_row_summary_captions_share_one_text_level() -> None:
 
     assert r"\node[body label, align=center]" in panel_a
     assert r"\node[body label, align=center]" in panel_b
+    assert "DIB units linked by polysulfides of increasing sulfur rank" in panel_b
 
 
 def test_repaired_s8_atom_labels_survive_reduction() -> None:
