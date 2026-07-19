@@ -178,6 +178,17 @@ def test_repaired_panel_letters_follow_nature_communications_case() -> None:
         assert f"{{{upper}}};" not in source
 
 
+def test_repaired_panel_descriptors_do_not_form_a_second_title_band() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    declaration = source.split("panel title/.style=", 1)[1].splitlines()[0]
+
+    assert r"\bfseries" not in declaration
+    size = re.search(r"\\fontsize\{([0-9.]+)\}", declaration)
+    assert size
+    assert float(size.group(1)) <= 6.5
+    assert "text=cGray!90!black" in declaration
+
+
 def test_repaired_lower_row_uses_one_aligned_header_band() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
 
@@ -269,6 +280,10 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     # localized site rather than cutting through or floating beside the dot.
     assert "(4.635,2.84)--(7.40,2.88)" in panel_c
     assert "(5.525,1.59)--(7.40,1.68)" in panel_c
+    # Escape paths leave the upper edge of an occupied trap marker and end at
+    # the mobility edge; detached arrows imply an unrelated transport path.
+    assert "(9.62,3.11) .. controls" in panel_c
+    assert "(9.88,1.95) .. controls" in panel_c
     # A material field is not a colored cartoon object: keep its broad area
     # nearly white and its boundary neutral, reserving amber for chemistry.
     assert "\\fill[cAmber!6]" in panel_c
