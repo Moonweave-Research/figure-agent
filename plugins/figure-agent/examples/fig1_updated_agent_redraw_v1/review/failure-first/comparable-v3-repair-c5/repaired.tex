@@ -217,27 +217,47 @@
   \node[panel letter, anchor=west] at (0.28,3.97) {D};
   \node[panel title] at (0.82,3.97) {Transient current};
 
-  \fill[cLGray!25, rounded corners=0.5mm] (0.45,2.36) rectangle (4.30,3.48);
-  \draw[cGray, line width=0.38pt, rounded corners=0.5mm] (0.45,2.36) rectangle (4.30,3.48);
-  \node[draw=cBlue!70!black, fill=white, line width=0.34pt, rounded corners=0.5mm,
-        minimum width=0.72cm, minimum height=0.48cm,
-        font=\sffamily\bfseries\fontsize{4.8}{5.8}\selectfont, text=cBlue!80!black] (hv) at (0.98,2.92) {HV};
-  \draw[cAmber!85!black, fill=cAmber!22, line width=0.42pt] (1.70,2.69) rectangle (2.92,3.15);
-  \node[small label] at (2.31,2.92) {sample};
-  \node[draw=cGray, fill=white, line width=0.34pt, rounded corners=0.5mm,
-        minimum width=0.72cm, minimum height=0.48cm,
-        font=\sffamily\fontsize{4.8}{5.8}\selectfont, text=cGray] (meter) at (3.78,2.92) {$I(t)$};
-  \draw[cGray, line width=0.36pt] (hv.east)--(1.70,2.92) (2.92,2.92)--(meter.west);
-  \node[small label, anchor=south] at (2.34,3.10) {constant voltage};
+  % Constant-voltage transient-current measurement across a MIM stack.
+  \fill[cLGray!20, rounded corners=0.5mm] (0.45,2.48) rectangle (4.30,3.51);
+  \draw[cGray, line width=0.38pt, rounded corners=0.5mm] (0.45,2.48) rectangle (4.30,3.51);
+  \node[draw=cGray!80!black, fill=white, line width=0.36pt, rounded corners=0.45mm,
+        minimum width=0.78cm, minimum height=0.56cm,
+        font=\sffamily\bfseries\fontsize{4.7}{5.7}\selectfont, text=cGray!85!black] (smu) at (0.98,2.99) {SMU};
+  \draw[cGray!82!black, fill=cGray!22, line width=0.38pt] (1.82,3.16) rectangle (3.66,3.30);
+  \draw[cAmber!82!black, fill=cAmber!24, line width=0.42pt] (1.82,2.75) rectangle (3.66,3.16);
+  \draw[cGray!82!black, fill=cGray!22, line width=0.38pt] (1.82,2.61) rectangle (3.66,2.75);
+  \foreach \x in {1.96,2.24,...,3.52} {
+    \draw[cGray!65, line width=0.26pt] (\x,3.16)--({\x+0.10},3.30);
+    \draw[cGray!65, line width=0.26pt] (\x,2.61)--({\x+0.10},2.75);
+  }
+  \node[small label, text=cBrown] at (2.74,2.96) {polymer film};
+  \draw[cGray, line width=0.38pt] (smu.east)--(1.82,2.99);
+  \draw[cGray, line width=0.38pt] (3.66,2.68)--(4.03,2.68)--(4.03,2.57);
+  \draw[cGray, line width=0.34pt] (3.90,2.57)--(4.16,2.57) (3.94,2.51)--(4.12,2.51);
+  \node[small label, anchor=east] at (4.18,3.67) {MIM stack};
 
-  \draw[axis line] (0.66,0.48)--(0.66,1.93);
-  \draw[axis line] (0.66,0.48)--(4.20,0.48);
-  \node[small label, rotate=90] at (0.30,1.20) {current};
-  \node[small label] at (3.96,0.22) {time};
-  \draw[cBlue, line width=0.88pt]
-    (0.82,1.73) .. controls (1.35,1.42) and (1.72,0.92) .. (2.38,0.76)
-    .. controls (3.02,0.61) and (3.54,0.58) .. (4.02,0.57);
-  \node[small label, text=cBlue!85!black, fill=white, inner sep=1pt] at (2.95,1.36) {trap-mediated decay};
+  % Symbolic log--log response: distributed traps give a power law; Debye is the contrast.
+  \node[body label, anchor=west] at (0.72,2.27) {$I(t)\sim t^{-n}$};
+  \draw[axis line] (0.66,0.47)--(0.66,2.10);
+  \draw[axis line] (0.66,0.47)--(4.28,0.47);
+  \node[body label, rotate=90] at (0.28,1.28) {$\log I$};
+  \node[body label, anchor=north east] at (4.26,0.34) {$\log t$};
+  \foreach \y in {0.84,1.26,1.68} {\draw[cGray!65, line width=0.32pt] (0.66,\y)--(0.75,\y);}
+  \foreach \x in {1.46,2.38,3.30} {\draw[cGray!65, line width=0.32pt] (\x,0.47)--(\x,0.56);}
+
+  \draw[cBlue!82!black, line width=0.78pt] (0.86,1.88)--(4.02,1.12);
+  \draw[cRed!82!black, line width=0.82pt] (0.86,1.88)--(4.02,0.66);
+  \foreach \x/\yb/\yr in {1.28/1.78/1.72,2.22/1.55/1.36,3.25/1.30/0.96} {
+    \shade[ball color=cBlue!68] (\x,\yb) circle (0.052);
+    \shade[ball color=cRed!68] (\x,\yr) circle (0.052);
+  }
+  \draw[cGray!88!black, dash pattern=on 3pt off 2pt, line width=0.52pt]
+    (0.86,1.88)--(2.04,1.88)--(2.34,0.56);
+  \node[small label, font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont,
+        text=cBlue!82!black, rotate=-14] at (3.26,1.53) {low $n$};
+  \node[small label, font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont,
+        text=cRed!82!black, rotate=-22] at (3.34,0.78) {high $n$};
+  \node[small label, text=cGray!88!black, anchor=south west] at (2.48,0.55) {Debye};
 \end{scope}
 
 % Panel E
