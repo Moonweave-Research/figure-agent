@@ -169,6 +169,14 @@ def test_repaired_panel_e_surface_charge_has_no_undeclared_gradient() -> None:
     assert r"\rad" not in panel_e
 
 
+def test_repaired_panel_letters_follow_nature_communications_case() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+
+    for lower, upper in zip("abcdef", "ABCDEF", strict=True):
+        assert f"{{{lower}}};" in source
+        assert f"{{{upper}}};" not in source
+
+
 def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
     registry = _yaml("../../_known_false_positives.yaml")
     fig1_patterns = [
