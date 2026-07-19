@@ -374,6 +374,8 @@ def test_repaired_panel_d_strokes_survive_nature_double_column_scale() -> None:
     for colored_text in ("text=cBrown", "text=cBlue", "text=cRed"):
         assert colored_text not in panel_d
     assert panel_d.count("text=cGray!92!black") == 2
+    assert "(0.48,2.62) rectangle (1.47,3.44)" in panel_d
+    assert "(0.55,2.70) rectangle (1.40,3.36)" not in panel_d
     assert "Debye" not in panel_d
     assert r"\shade" not in panel_d
     assert "opacity=" not in panel_d
