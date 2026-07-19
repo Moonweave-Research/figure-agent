@@ -145,6 +145,9 @@ def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
     assert r"\fontsize{3.2}" not in transfer_node
     assert r"\fontsize{5.0}{5.8}" in transfer_node
     assert "text=cGray!88!black" in transfer_node
+    panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
+    assert r"(1.87,2.84)--(2.21,2.84)" in panel_e
+    assert r"(1.97,2.84)--(2.16,2.84)" not in panel_e
 
 
 def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
@@ -185,12 +188,12 @@ def test_repaired_panel_e_surface_charge_has_no_undeclared_gradient() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
 
-    assert r"\foreach \x in {1.38,1.56,1.74,2.41,2.59,2.77}" in panel_e
+    assert r"\foreach \x in {1.28,1.46,1.64,2.46,2.64,2.82}" in panel_e
     assert r"\tone" not in panel_e
     assert r"\rad" not in panel_e
     assert r"\foreach \dx in {-0.08,0,0.08}" not in panel_e
     assert "dash pattern=on 1.2pt off 1.1pt" in panel_e
-    assert "(1.55,3.30)--(1.55,3.15)" in panel_e
+    assert "(1.45,3.30)--(1.45,3.15)" in panel_e
 
 
 def test_repaired_panel_e_uses_colour_for_measurement_marks_not_text() -> None:
