@@ -177,9 +177,7 @@
   \node[small label, anchor=west] at (13.10,4.25) {vacuum};
   \draw[cGray!88!black, line width=0.52pt] (7.72,3.78)--(12.98,3.78);
   \node[body label, anchor=west] at (13.10,3.78) {$E_C$};
-  \draw[cGray!70, dash pattern=on 3pt off 2pt, line width=0.38pt]
-    (7.72,3.30)--(8.05,3.30) (9.58,3.30)--(12.98,3.30);
-  \node[small label, anchor=south west] at (8.05,3.36) {mobility edge};
+  \node[small label, anchor=north west] at (8.05,3.72) {mobility edge};
   \draw[cGray!88!black, line width=0.52pt] (7.72,0.86)--(12.98,0.86);
   \node[body label, anchor=west] at (13.10,0.86) {$E_V$};
 
@@ -213,10 +211,10 @@
         text=cRed!82!black, anchor=west] at (10.62,1.68) {deep};
 
   \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cBlue!78!black, line width=0.44pt]
-    (9.60,3.04) .. controls (9.43,3.22) and (9.58,3.43) .. (9.73,3.63);
+    (9.60,3.04) .. controls (9.43,3.26) and (9.58,3.54) .. (9.73,3.74);
   \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cRed!76!black, line width=0.44pt, dashed]
-    (9.88,1.88) .. controls (10.36,2.28) and (10.43,2.98) .. (10.22,3.56);
-  \node[small label, anchor=west, text=cGray!85!black] at (10.48,3.48) {thermal escape};
+    (9.88,1.88) .. controls (10.36,2.32) and (10.43,3.10) .. (10.22,3.74);
+  \node[small label, anchor=west, text=cGray!85!black] at (10.48,3.58) {thermal escape};
   % Trap-depth caliper: bind the endpoints to E_C and the deep-DOS peak.
   \draw[cRed!72!black, line width=0.34pt]
     (13.60,3.78)--(13.78,3.78) (13.60,1.68)--(13.78,1.68);
