@@ -130,13 +130,9 @@
   % Real-space view: both trap classes are localized sites in one disordered film,
   % not separate material phases.
   \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (3.42,4.88) {real space};
-  % A hand-shaped film cross-section avoids reading as a generic rounded card.
-  \path[fill=black, opacity=0.11]
-    (0.93,1.14) .. controls (2.20,1.08) and (4.82,1.18) .. (6.29,1.13)
-    .. controls (6.38,1.78) and (6.34,3.50) .. (6.29,4.19)
-    .. controls (4.70,4.27) and (2.36,4.14) .. (0.94,4.25)
-    .. controls (0.84,3.42) and (0.88,1.88) .. (0.93,1.14) -- cycle;
-  \shade[top color=cAmber!8, bottom color=cAmber!28]
+  % A hand-shaped, flat material field avoids both a generic rounded card and
+  % decorative pseudo-depth that would imply an undeclared film thickness.
+  \fill[cAmber!14]
     (0.82,1.23) .. controls (2.15,1.17) and (4.72,1.27) .. (6.18,1.22)
     .. controls (6.27,1.86) and (6.23,3.52) .. (6.18,4.29)
     .. controls (4.65,4.37) and (2.29,4.24) .. (0.84,4.34)
@@ -146,8 +142,6 @@
     .. controls (6.27,1.86) and (6.23,3.52) .. (6.18,4.29)
     .. controls (4.65,4.37) and (2.29,4.24) .. (0.84,4.34)
     .. controls (0.74,3.48) and (0.78,1.90) .. (0.82,1.23) -- cycle;
-  \draw[white, opacity=0.62, line width=0.38pt]
-    (1.00,4.27) .. controls (2.44,4.20) and (4.62,4.31) .. (6.01,4.24);
   % Irregular polysulfide-rich strands: unequal length, curvature, direction,
   % and spacing avoid the ordered-lamella or transport-level reading.
   \draw[cBrown!72!black, line width=0.56pt]
