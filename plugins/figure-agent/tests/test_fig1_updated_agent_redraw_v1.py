@@ -10,6 +10,13 @@ import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1"
+REPAIRED_SOURCE = (
+    FIXTURE
+    / "review"
+    / "failure-first"
+    / "comparable-v3-repair-c5"
+    / "repaired.tex"
+)
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
@@ -122,6 +129,16 @@ def test_bound_authoring_prompt_carries_project_cantilever_orientation_rule() ->
     assert "Do not solve clearance by forcing an equal-cell grid" in prompt
     for panel_id in "ABCDEF":
         assert f"Add exactly one canonical marker [% Panel {panel_id}]" in prompt
+
+
+def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    label = source.index("{manual transfer}")
+    declaration = source.rfind(r"\node", 0, label)
+    transfer_node = source[declaration : label + len("{manual transfer}")]
+
+    assert "small label" in transfer_node
+    assert r"\fontsize{3.2}" not in transfer_node
 
 
 def test_r5_v2_predeclaration_frees_composition_but_binds_vertical_cantilever() -> None:
