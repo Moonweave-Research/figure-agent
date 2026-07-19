@@ -17,11 +17,11 @@
 
 % Open publication canvas: separators organize the reading order without
 % turning each scientific panel into a rounded UI card.
-\draw[cLGray, line width=0.30pt] (0.12,10.58)--(14.63,10.58);
-\draw[cLGray, line width=0.30pt] (0.12,4.78)--(14.63,4.78);
-\draw[cLGray, line width=0.30pt] (7.375,10.95)--(7.375,15.85);
-\draw[cLGray, line width=0.30pt] (4.875,0.15)--(4.875,4.43);
-\draw[cLGray, line width=0.30pt] (9.875,0.15)--(9.875,4.43);
+\draw[cLGray, line width=0.84pt] (0.12,10.58)--(14.63,10.58);
+\draw[cLGray, line width=0.84pt] (0.12,4.78)--(14.63,4.78);
+\draw[cLGray, line width=0.84pt] (7.375,10.95)--(7.375,15.85);
+\draw[cLGray, line width=0.84pt] (4.875,0.15)--(4.875,4.43);
+\draw[cLGray, line width=0.84pt] (9.875,0.15)--(9.875,4.43);
 
 % Panel A
 \begin{scope}[shift={(0,11.0)}]
@@ -33,17 +33,17 @@
   \foreach \a/\i in {22.5/1,67.5/2,112.5/3,157.5/4,202.5/5,247.5/6,292.5/7,337.5/8} {
     \coordinate (v\i) at ($(s8c)+(\a:0.39)$);
   }
-  \draw[cAmber!82!black, line width=0.5pt, line join=round]
+  \draw[cAmber!82!black, line width=1.0pt, line join=round]
     (v1)--(v2)--(v3)--(v4)--(v5)--(v6)--(v7)--(v8)--cycle;
   \foreach \i in {1,...,8} {
-    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.30pt,
+    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.84pt,
           minimum size=1.48mm, inner sep=0pt,
           font=\sffamily\bfseries\fontsize{3.1}{3.8}\selectfont, text=cBrown] at (v\i) {S};
   }
   \node[small label] at (1.86,3.92) {S$_8$};
 
   % --- inverse-vulcanization transformation ---
-  \draw[-{Stealth[length=3.0pt,width=2.4pt]}, cGray, line width=0.5pt]
+  \draw[-{Stealth[length=3.0pt,width=2.4pt]}, cGray, line width=1.0pt]
     (2.10,3.66) .. controls (2.82,3.46) and (3.12,3.20) .. (3.40,2.92);
   \node[small label, text=cBrown!92!black] at (3.02,4.02) {inverse vulcanization};
   \node[small label] at (2.72,3.16) {$\Delta$};
@@ -52,44 +52,44 @@
   \node[body label] at (1.95,1.44) {sulfur segment};
   % left polysulfide -S-S-S-
   \foreach \x in {1.52,1.94,2.36} {
-    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.42pt,
+    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.84pt,
           minimum size=2.6mm, inner sep=0pt,
           font=\sffamily\bfseries\fontsize{4.9}{5.9}\selectfont, text=cBrown] at (\x,2.30) {S};
   }
-  \draw[cAmber!85!black, line width=0.60pt] (1.69,2.30)--(1.77,2.30) (2.11,2.30)--(2.19,2.30);
-  \draw[cGray, line width=0.58pt] (2.53,2.30)--(2.86,2.30);
+  \draw[cAmber!85!black, line width=1.0pt] (1.69,2.30)--(1.77,2.30) (2.11,2.30)--(2.19,2.30);
+  \draw[cGray, line width=1.0pt] (2.53,2.30)--(2.86,2.30);
   % left DIB-derived benzylic carbon (bare methyl stub = line-angle CH3)
   \coordinate (bcl) at (3.02,2.30);
-  \draw[cGray, line width=0.50pt] (bcl)--($(bcl)+(0,-0.34)$);
-  \draw[cGray, line width=0.58pt] (bcl)--(3.49,2.45);
+  \draw[cGray, line width=1.0pt] (bcl)--($(bcl)+(0,-0.34)$);
+  \draw[cGray, line width=1.0pt] (bcl)--(3.49,2.45);
 
   % DIB benzene ring (meta 1,3), Kekule aromatic (inner double bonds offset inward)
   \coordinate (p1) at (4.05,2.45);
   \foreach \a in {0,60,120,180,240,300} { \coordinate (r\a) at ($(p1)+(\a:0.56)$); }
-  \draw[cGray, line width=0.62pt, line join=round] (r0)--(r60)--(r120)--(r180)--(r240)--(r300)--cycle;
-  \draw[cGray, line width=0.44pt] ($(r0)!0.2!(r60)!0.14!(p1)$)--($(r0)!0.8!(r60)!0.14!(p1)$);
-  \draw[cGray, line width=0.44pt] ($(r120)!0.2!(r180)!0.14!(p1)$)--($(r120)!0.8!(r180)!0.14!(p1)$);
-  \draw[cGray, line width=0.44pt] ($(r240)!0.2!(r300)!0.14!(p1)$)--($(r240)!0.8!(r300)!0.14!(p1)$);
+  \draw[cGray, line width=1.10pt, line join=round] (r0)--(r60)--(r120)--(r180)--(r240)--(r300)--cycle;
+  \draw[cGray, line width=0.84pt] ($(r0)!0.2!(r60)!0.14!(p1)$)--($(r0)!0.8!(r60)!0.14!(p1)$);
+  \draw[cGray, line width=0.84pt] ($(r120)!0.2!(r180)!0.14!(p1)$)--($(r120)!0.8!(r180)!0.14!(p1)$);
+  \draw[cGray, line width=0.84pt] ($(r240)!0.2!(r300)!0.14!(p1)$)--($(r240)!0.8!(r300)!0.14!(p1)$);
   \node[body label] at (4.05,3.42) {DIB-derived segment};
 
   % right DIB-derived benzylic carbon (from r300) + continuing polysulfide (horizontal)
   \coordinate (bcr) at ($(r300)+(0.34,0)$);
-  \draw[cGray, line width=0.58pt] (r300)--(bcr);
-  \draw[cGray, line width=0.50pt] (bcr)--($(bcr)+(0,-0.34)$);
-  \draw[cGray, line width=0.58pt] (bcr)--($(bcr)+(0.24,0)$);
+  \draw[cGray, line width=1.0pt] (r300)--(bcr);
+  \draw[cGray, line width=1.0pt] (bcr)--($(bcr)+(0,-0.34)$);
+  \draw[cGray, line width=1.0pt] (bcr)--($(bcr)+(0.24,0)$);
   \coordinate (sc2) at ($(bcr)+(0.48,0)$);
   \foreach \x in {0,1} {
-    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.40pt,
+    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.84pt,
           minimum size=2.3mm, inner sep=0pt,
           font=\sffamily\bfseries\fontsize{4.4}{5.3}\selectfont, text=cBrown] at ($(sc2)+(0.38*\x,0)$) {S};
   }
-  \draw[cAmber!85!black, line width=0.58pt] ($(sc2)+(0.165,0)$)--($(sc2)+(0.215,0)$);
-  \draw[cGray, line width=0.56pt] ($(sc2)+(0.50,0)$)--(5.92,1.965);
+  \draw[cAmber!85!black, line width=1.0pt] ($(sc2)+(0.165,0)$)--($(sc2)+(0.215,0)$);
+  \draw[cGray, line width=1.0pt] ($(sc2)+(0.50,0)$)--(5.92,1.965);
 
   % repeat-unit brackets [ ... ]_n
-  \draw[cGray, line width=0.52pt] (1.10,1.20)--(0.84,1.20)--(0.84,3.02)--(1.10,3.02);
-  \draw[cGray, line width=0.54pt] (0.84,2.30)--(1.26,2.30);
-  \draw[cGray, line width=0.52pt] (5.60,1.20)--(5.86,1.20)--(5.86,3.02)--(5.60,3.02);
+  \draw[cGray, line width=0.90pt] (1.10,1.20)--(0.84,1.20)--(0.84,3.02)--(1.10,3.02);
+  \draw[cGray, line width=0.90pt] (0.84,2.30)--(1.26,2.30);
+  \draw[cGray, line width=0.90pt] (5.60,1.20)--(5.86,1.20)--(5.86,3.02)--(5.60,3.02);
   \node[font=\sffamily\fontsize{6.2}{7.4}\selectfont, text=cGray] at (6.02,1.32) {$n$};
   \node[body label, align=center] at (3.45,0.30) {poly(S-\emph{r}-DIB) linear repeat unit};
 \end{scope}

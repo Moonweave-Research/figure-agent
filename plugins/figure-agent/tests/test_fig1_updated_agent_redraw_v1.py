@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -175,6 +176,25 @@ def test_repaired_panel_letters_follow_nature_communications_case() -> None:
     for lower, upper in zip("abcdef", "ABCDEF", strict=True):
         assert f"{{{lower}}};" in source
         assert f"{{{upper}}};" not in source
+
+
+def test_repaired_panel_a_strokes_survive_nature_double_column_scale() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    separators = source.split("% Panel A", 1)[0].split(
+        "% Open publication canvas", 1
+    )[1]
+    panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+    widths = [
+        float(value)
+        for value in re.findall(
+            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", separators + panel_a
+        )
+    ]
+
+    # The source is about 150 mm wide and is intended for a 180 mm two-column
+    # figure. 0.84 pt at source scale therefore renders at approximately 1 pt.
+    assert widths
+    assert min(widths) >= 0.84
 
 
 def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
