@@ -17,11 +17,11 @@
 
 % Open publication canvas: separators organize the reading order without
 % turning each scientific panel into a rounded UI card.
-\draw[cLGray, line width=0.30pt] (0.12,10.78)--(14.63,10.78);
-\draw[cLGray, line width=0.30pt] (0.12,4.55)--(14.63,4.55);
-\draw[cLGray, line width=0.30pt] (7.375,11.15)--(7.375,15.85);
-\draw[cLGray, line width=0.30pt] (4.875,0.15)--(4.875,4.20);
-\draw[cLGray, line width=0.30pt] (9.875,0.15)--(9.875,4.20);
+\draw[cLGray, line width=0.30pt] (0.12,10.58)--(14.63,10.58);
+\draw[cLGray, line width=0.30pt] (0.12,4.78)--(14.63,4.78);
+\draw[cLGray, line width=0.30pt] (7.375,10.95)--(7.375,15.85);
+\draw[cLGray, line width=0.30pt] (4.875,0.15)--(4.875,4.43);
+\draw[cLGray, line width=0.30pt] (9.875,0.15)--(9.875,4.43);
 
 % Panel A
 \begin{scope}[shift={(0,11.0)}]
@@ -91,7 +91,7 @@
   \draw[cGray, line width=0.54pt] (0.84,2.30)--(1.26,2.30);
   \draw[cGray, line width=0.52pt] (5.60,1.20)--(5.86,1.20)--(5.86,3.02)--(5.60,3.02);
   \node[font=\sffamily\fontsize{6.2}{7.4}\selectfont, text=cGray] at (6.02,1.32) {$n$};
-  \node[body label, align=center] at (3.45,0.42) {poly(S-\emph{r}-DIB) linear repeat unit};
+  \node[body label, align=center] at (3.45,0.30) {poly(S-\emph{r}-DIB) linear repeat unit};
 \end{scope}
 
 % Panel B
@@ -119,13 +119,13 @@
       ([shift=(0:0.20)]dr)--([shift=(60:0.20)]dr)--([shift=(120:0.20)]dr)--([shift=(180:0.20)]dr)--([shift=(240:0.20)]dr)--([shift=(300:0.20)]dr)--cycle;
     \node[body label, anchor=west, text=cBrown] at ({2.44+0.36*\sc+0.34},\y) {\lbl};
   }
-  \node[small label, align=center] at (3.9,0.52) {DIB unit linked by polysulfide of increasing sulfur rank};
+  \node[small label, align=center] at (3.9,0.40) {DIB unit linked by polysulfide of increasing sulfur rank};
 \end{scope}
 
 % Panel C
 \begin{scope}[shift={(0,4.75)}]
-  \node[panel letter, anchor=west] at (0.28,5.58) {C};
-  \node[panel title] at (0.82,5.58) {Localized shallow and deep traps};
+  \node[panel letter, anchor=west] at (0.28,5.53) {C};
+  \node[panel title] at (0.82,5.53) {Localized shallow and deep traps};
 
   % Real-space view: both trap classes are localized sites in one disordered film,
   % not separate material phases.
@@ -265,8 +265,8 @@
 
 % Panel D
 \begin{scope}[shift={(0,0)}]
-  \node[panel letter, anchor=west] at (0.28,4.12) {D};
-  \node[panel title] at (0.82,4.12) {Transient current};
+  \node[panel letter, anchor=west] at (0.28,4.20) {D};
+  \node[panel title] at (0.82,4.20) {Transient current};
 
   % Constant-voltage transient-current measurement across a MIM stack.
   % Hand-built SMU faceplate: chassis, inset display, terminals and cable exits.
@@ -330,8 +330,8 @@
 
 % Panel E
 \begin{scope}[shift={(5.00,0)}]
-  \node[panel letter, anchor=west] at (0.28,4.12) {E};
-  \node[panel title] at (0.82,4.12) {ISPD trap distribution};
+  \node[panel letter, anchor=west] at (0.28,4.20) {E};
+  \node[panel title] at (0.82,4.20) {ISPD trap distribution};
 
   % Keyence SK series induction-type, non-contact electrostatic measurement.
   % Two explicit states of the same specimen: corona charging at left, then
@@ -465,8 +465,8 @@
 
 % Panel F
 \begin{scope}[shift={(10.00,0)}]
-  \node[panel letter, anchor=west] at (0.28,4.12) {F};
-  \node[panel title] at (0.82,4.12) {Floating Coulomb response};
+  \node[panel letter, anchor=west] at (0.28,4.20) {F};
+  \node[panel title] at (0.82,4.20) {Floating Coulomb response};
 
   % Fixed clamp: dark structural lines, light metal fill.
   \fill[cGray!10] (1.78,3.21) rectangle (2.22,3.33);
