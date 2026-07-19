@@ -309,6 +309,11 @@ with an undeclared perspective wedge, oblique side face, or pseudo-3D shadow on
 only one layer. Require a declared depth-bearing relation or redraw the stack in
 one coherent projection so layer identity and contact order remain unambiguous.
 
+When a concrete instrument family or sensing principle is declared, compare the
+sensing-head silhouette, orientation, target standoff, and cable/control topology
+with its source authority. Renaming a generic icon does not repair geometry that
+still depicts a different or confusable measurement method.
+
 Inventory every guide, construction line, alignment rail, field-like trace,
 halo, and bracket that remains in publication-visible pixels. Require each mark
 to bind to a named variable, boundary, material, or physical relation; repeated

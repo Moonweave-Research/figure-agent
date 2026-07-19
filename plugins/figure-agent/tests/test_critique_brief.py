@@ -638,6 +638,9 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "Audit projection grammar within each apparatus" in brief
     assert "flat cross-section" in brief
     assert "undeclared perspective wedge" in brief
+    assert "concrete instrument family" in brief
+    assert "sensing-head silhouette" in brief
+    assert "Renaming a generic icon" in brief
     assert "Inventory every guide, construction line, alignment rail" in brief
     assert "repetition alone" in brief
     assert "does not give a mark scientific meaning" in brief
