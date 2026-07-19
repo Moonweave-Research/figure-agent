@@ -657,6 +657,8 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "declared disordered, amorphous, tangled" in brief
     assert "equal phase, alignment" in brief
     assert "color clustering invents phase" in brief
+    assert "arrow tail touches its declared source" in brief
+    assert "arrowhead touches the named destination" in brief
     assert "same physical process to reuse one arrow" in brief
     assert "solid/dashed or arrowhead change" in brief
     assert "appears in multiple representations" in brief

@@ -131,6 +131,9 @@ Within and across panels, require the same physical process to reuse one arrow
 and line-style grammar unless a legend or brief-declared contrast explains the
 difference. An unexplained solid/dashed or arrowhead change can invent a second
 mechanism just as surely as a mislabeled arrow.
+For each mechanism arrow, verify that the arrow tail touches its declared source
+state and the arrowhead touches the named destination boundary or state. Route a
+path that stops short and relies on visual proximity as an unbound mechanism.
 When one population, specimen, or state appears in multiple representations
 (for example real space, energy space, and a derived distribution), verify an
 explicit correspondence through aligned anchors, identifiers, color, or leaders.

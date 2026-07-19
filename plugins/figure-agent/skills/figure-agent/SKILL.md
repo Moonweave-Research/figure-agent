@@ -347,6 +347,10 @@ and line-style grammar unless a legend or brief-declared contrast explains the
 difference. Treat an unexplained solid/dashed or arrowhead change as a possible
 second mechanism, not harmless styling.
 
+For each mechanism arrow, verify that the arrow tail touches its declared source
+state and the arrowhead touches the named destination boundary or state. Treat a
+path that stops short and relies on visual proximity as an unbound mechanism.
+
 When the same population, specimen, or state is shown in multiple representations,
 require visible correspondence through aligned anchors, identifiers, color, or
 leaders. Keep an equivalence connector out of plot axes and avoid arrowheads or
