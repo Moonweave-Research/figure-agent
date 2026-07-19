@@ -266,37 +266,71 @@
   \node[panel letter, anchor=west] at (0.28,3.97) {E};
   \node[panel title] at (0.82,3.97) {ISPD trap distribution};
 
-  \fill[cLGray!25, rounded corners=0.5mm] (0.40,2.27) rectangle (4.35,3.48);
-  \draw[cGray, line width=0.38pt, rounded corners=0.5mm] (0.40,2.27) rectangle (4.35,3.48);
-  \draw[cGray!85!black, fill=cGray!18, line width=0.42pt] (1.15,2.46) rectangle (3.00,2.62);
-  \draw[cAmber!85!black, fill=cAmber!25, line width=0.38pt] (1.35,2.62) rectangle (2.80,2.78);
-  \draw[cGray, line width=0.40pt] (2.08,3.25)--(2.08,2.92);
-  \fill[cGray] (1.98,2.82)--(2.18,2.82)--(2.08,2.62)--cycle;
-  \draw[cGray, line width=0.36pt] (1.65,3.30)--(2.55,3.30);
-  \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cTeal, line width=0.38pt] (1.70,3.14)--(2.48,3.14);
-  \node[small label, anchor=east] at (1.60,3.18) {motion stage};
-  \node[small label, anchor=west] at (2.28,2.91) {probe};
-  \node[small label, anchor=east] at (1.28,2.78) {sample};
-  \node[small label, anchor=east, align=right] at (1.05,2.50) {grounded\\substrate};
-  \node[draw=cGray, fill=white, line width=0.32pt, rounded corners=0.4mm,
-        font=\sffamily\fontsize{4.7}{5.6}\selectfont, text=cGray,
-        minimum width=0.62cm, minimum height=0.38cm] (vs) at (3.75,3.02) {$V_s$};
-  \draw[cGray, line width=0.32pt] (2.18,3.04)--(3.42,3.04);
-  \node[small label, anchor=west] at (3.31,3.33) {$V_s$ meter};
-  \draw[cGray, line width=0.34pt] (2.92,2.46)--(2.92,2.35);
-  \draw[cGray, line width=0.34pt] (2.78,2.35)--(3.06,2.35);
-  \draw[cGray, line width=0.34pt] (2.82,2.29)--(3.02,2.29);
+  % Non-contact induced electrostatic-voltmeter measurement (not a Kelvin probe).
+  \fill[cLGray!18, rounded corners=0.5mm] (0.40,2.64) rectangle (4.35,3.53);
+  \draw[cGray, line width=0.38pt, rounded corners=0.5mm] (0.40,2.64) rectangle (4.35,3.53);
+  \draw[cGray!82!black, fill=cGray!20, line width=0.40pt] (1.18,2.77) rectangle (2.92,2.91);
+  \draw[cAmber!82!black, fill=cAmber!24, line width=0.38pt] (1.38,2.91) rectangle (2.76,3.05);
+  \foreach \x in {1.58,1.98,2.38} {
+    \node[font=\sffamily\bfseries\fontsize{4.8}{5.8}\selectfont, text=cRed!76!black] at (\x,3.16) {$+$};
+  }
+  \draw[cGray!80!black, line width=0.42pt] (2.06,3.46)--(2.06,3.25);
+  \shade[ball color=cGray!72] (2.06,3.21) ellipse (0.16 and 0.06);
+  \draw[cGray!82!black, line width=0.30pt] (2.06,3.46)
+    .. controls (2.44,3.49) and (2.78,3.42) .. (3.22,3.35);
+  \node[draw=cGray!72!black, fill=white, line width=0.32pt, rounded corners=0.45mm,
+        minimum width=0.86cm, minimum height=0.48cm,
+        font=\sffamily\fontsize{4.8}{5.8}\selectfont, text=cGray!85!black] (esvm) at (3.78,3.22) {$V_s$};
+  \node[small label, anchor=south] at (2.06,3.47) {ESVM probe};
+  \node[small label, anchor=south] at (3.78,3.48) {$V_s$ meter};
+  \draw[-{Stealth[length=2.5pt,width=1.9pt]}, cTeal!82!black, line width=0.38pt]
+    (0.73,3.20)--(1.48,3.20);
+  \node[small label] at (1.05,3.39) {motion stage};
+  \node[font=\sffamily\fontsize{3.7}{4.4}\selectfont, text=cGray,
+        anchor=east] at (4.24,2.80) {grounded substrate};
+  \draw[cGray, line width=0.34pt] (2.82,2.77)--(2.82,2.69);
+  \draw[cGray, line width=0.34pt] (2.69,2.69)--(2.95,2.69) (2.73,2.65)--(2.91,2.65);
 
-  \draw[axis line] (0.66,0.46)--(0.66,1.92);
-  \draw[axis line] (0.66,0.46)--(4.22,0.46);
-  \node[small label, rotate=90] at (0.29,1.18) {trap population};
-  \node[small label] at (3.98,0.20) {depth};
-  \path[draw=cBlue, fill=cBlue!18, line width=0.58pt]
-    (0.92,0.47) .. controls (1.15,1.68) and (1.78,1.68) .. (2.10,0.47) -- cycle;
-  \path[draw=cRed!90!black, fill=cRed!20, line width=0.72pt]
-    (2.20,0.47) .. controls (2.55,1.78) and (3.42,1.78) .. (3.90,0.47) -- cycle;
-  \node[small label, text=cBlue!85!black] at (1.50,1.72) {shallow};
-  \node[small label, text=cRed!88!black] at (3.05,1.77) {deep};
+  % Raw surface-potential decay.
+  \draw[axis line] (0.66,1.52)--(0.66,2.49);
+  \draw[axis line] (0.66,1.52)--(4.24,1.52);
+  \node[small label, rotate=90] at (0.28,2.02) {$V_s(t)$};
+  \node[small label, anchor=north east] at (4.21,1.44) {$t$};
+  \draw[cRed!76!black, line width=0.68pt]
+    (0.88,2.37) .. controls (1.36,2.04) and (1.86,1.70) .. (2.72,1.58)
+                .. controls (3.20,1.52) and (3.66,1.52) .. (4.02,1.52);
+  \foreach \x/\y in {1.10/2.20,1.66/1.84,2.35/1.63} {
+    \shade[ball color=cRed!48] (\x,\y) circle (0.048);
+    \draw[cRed!75!black, line width=0.25pt] (\x,\y) circle (0.048);
+  }
+
+  % Explicit raw-to-derived transformation.
+  \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cGray!72!black, line width=0.42pt]
+    (3.62,1.44)--(3.62,1.28);
+  \node[small label, anchor=east] at (3.50,1.35) {derive};
+
+  % Derived trap-density distribution in energy space.
+  \draw[axis line] (0.66,0.36)--(0.66,1.27);
+  \draw[axis line] (0.66,0.36)--(4.24,0.36);
+  \node[small label, rotate=90] at (0.28,0.82) {$g(E_t)$};
+  \node[small label, anchor=north east] at (4.21,0.29) {$E_t$};
+  \path[draw=cBlue!82!black, fill=cBlue!18, line width=0.58pt]
+    (0.92,0.36) .. controls (1.20,0.36) and (1.27,0.88) .. (1.56,0.88)
+                .. controls (1.85,0.88) and (1.92,0.36) .. (2.20,0.36) -- cycle;
+  \path[draw=cRed!82!black, fill=cRed!18, line width=0.66pt]
+    (2.22,0.36) .. controls (2.53,0.36) and (2.58,1.12) .. (3.02,1.12)
+                .. controls (3.46,1.12) and (3.51,0.36) .. (3.84,0.36) -- cycle;
+  \foreach \x/\y in {1.32/0.70,1.56/0.88,1.80/0.70} {
+    \shade[ball color=cBlue!62] (\x,\y) circle (0.043);
+  }
+  \foreach \x/\y in {2.70/0.78,3.02/1.12,3.34/0.78} {
+    \shade[ball color=cRed!62] (\x,\y) circle (0.043);
+  }
+  \draw[cGray!68!black, line width=0.30pt] (1.56,1.20)--(3.02,1.20);
+  \draw[cGray!68!black, line width=0.30pt] (1.56,1.15)--(1.56,1.25) (3.02,1.15)--(3.02,1.25);
+  \node[small label, anchor=south] at (2.29,1.24) {$\tau_d$};
+  \node[small label, text=cBlue!82!black, anchor=north] at (1.56,0.31) {shallow};
+  \node[small label, text=cRed!82!black, anchor=north] at (3.02,0.31) {deep};
 \end{scope}
 
 % Panel F
