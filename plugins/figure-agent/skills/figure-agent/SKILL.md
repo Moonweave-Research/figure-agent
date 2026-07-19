@@ -397,6 +397,12 @@ panels at the final reduction. Keep scientifically co-equal axes on a common
 typographic floor; do not demote a crowded panel's claim-bearing axes to an
 annotation tier when spacing or layout should be repaired instead.
 
+Treat `thin_stroke` warnings on claim-bearing curves, marker outlines, leaders,
+and apparatus boundaries as normal print-legibility findings even when compile
+remains green. Raise them to the declared stroke floor or remove a redundant
+outline; do not preserve a sub-floor stroke merely because it is visible when
+zoomed in.
+
 When a usable figure-level reference image or panel reference+bbox pair exists,
 `/fig_status` and `/fig_export` promote missing/stale `critique.md` to a
 pre-export checkpoint. Use `fig-agent export <name> --skip-critique` only

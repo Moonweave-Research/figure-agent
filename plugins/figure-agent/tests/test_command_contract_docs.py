@@ -92,6 +92,14 @@ def test_skill_audits_rotated_curve_labels_against_ticks_and_axes() -> None:
     assert "shifting only vertically" in doc
 
 
+def test_skill_treats_thin_stroke_warnings_as_print_findings() -> None:
+    doc = _read("skills/figure-agent/SKILL.md")
+
+    assert "`thin_stroke` warnings on claim-bearing curves" in doc
+    assert "normal print-legibility findings" in doc
+    assert "visible when\nzoomed in" in doc
+
+
 def test_fig_run_documents_explicit_json_output_spellings() -> None:
     doc = _read("commands/fig_run.md")
 
