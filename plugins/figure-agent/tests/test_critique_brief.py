@@ -639,6 +639,10 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "For open-canvas multipanel figures" in brief
     assert "separator rules" in brief
     assert "missing rectangle does not remove" in brief
+    assert "Compare equivalent axis titles" in brief
+    assert "scientifically co-equal axis" in brief
+    assert "preserve a common type" in brief
+    assert "floor and solve crowding" in brief
 
 
 def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):

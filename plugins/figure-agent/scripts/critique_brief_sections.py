@@ -101,6 +101,10 @@ For open-canvas multipanel figures, infer panel lanes from separator rules,
 heading alignment, whitespace gutters, and neighboring content even when no
 closed frame exists. A missing rectangle does not remove the panel boundary;
 route labels that trespass into a sibling lane or beyond the shared canvas.
+Compare equivalent axis titles, variables, units, and endpoint labels across
+panels at full-figure reduction. A scientifically co-equal axis must not drop to
+an annotation tier merely because its panel is denser; preserve a common type
+floor and solve crowding through layout before shrinking claim-bearing axes.
     """
 
 

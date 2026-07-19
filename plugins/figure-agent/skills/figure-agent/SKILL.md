@@ -316,6 +316,11 @@ headings, whitespace gutters, and neighboring content, then flag labels that
 cross into a sibling lane or beyond the shared canvas. Do not treat the absence
 of a closed rectangle as the absence of a boundary.
 
+Compare equivalent axis titles, variables, units, and endpoint labels across
+panels at the final reduction. Keep scientifically co-equal axes on a common
+typographic floor; do not demote a crowded panel's claim-bearing axes to an
+annotation tier when spacing or layout should be repaired instead.
+
 When a usable figure-level reference image or panel reference+bbox pair exists,
 `/fig_status` and `/fig_export` promote missing/stale `critique.md` to a
 pre-export checkpoint. Use `fig-agent export <name> --skip-critique` only
