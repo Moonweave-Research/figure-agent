@@ -43,6 +43,17 @@ rules:
       locator: examples/fig1_overview_v2_pair_001_vault/spec.yaml:38-44
       quote: "side-view structurally better for this apparatus"
     transfer_policy: use_as_question
+  - id: pair001.panel-e-probe-above-sample
+    category: instrument_standard
+    rule: Bind probe, motion stage, sample, grounded substrate, and Vs meter labels to their physical components in ISPD-style apparatus panels.
+    source:
+      kind: iteration_comment
+      locator: examples/fig1_overview_v2_pair_001_vault/spec.yaml:44-47
+      quote: "probe-above-sample geometry, motion-stage labeling, sample-on-grounded-substrate cross-section"
+    transfer_policy: use_as_constraint
+    lifecycle: superseded
+    superseded_by: polymer_paper_project.ispd-keyence-manual-transfer
+    superseded_reason: Later human review confirmed manual specimen transfer rather than an automated motion stage.
   - id: pair001.panel-f-cross-section-conventions
     category: style_lock
     rule: Preserve cross-section conventions for electrode hatching, insulator stipple, parameter labels, and deflection arrows when transferring Panel F visual grammar.
@@ -99,6 +110,17 @@ rules:
       locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:621-625
       quote: "Vacuum is a *reference level*, not a quantitative measurement"
     transfer_policy: use_as_constraint
+  - id: pair001.instrument-faceplate-bezel
+    category: instrument_standard
+    rule: Give instrument boxes a dark-glass display plus an inner faceplate bezel for machined-panel weight; avoid flat or gizmo-style boxes.
+    source:
+      kind: iteration_comment
+      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:1029
+      quote: "inner faceplate bezel for machined-panel weight"
+    transfer_policy: use_as_constraint
+    lifecycle: superseded
+    superseded_by: polymer_paper_project.ispd-keyence-manual-transfer
+    superseded_reason: Confirmed family-level authority must not force unverified model-specific controls or a reusable faceplate primitive.
   - id: pair001.print-scale-registration
     category: style_lock
     rule: Size and weight elements so they register at the real print scale (178 mm width), not only on screen; verify thin features and small shapes stay visible at print scale.

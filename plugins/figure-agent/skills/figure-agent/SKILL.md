@@ -31,6 +31,8 @@ compilation in scope when they compile explicit paper-local files, Style Lock
 tokens, source-anchored rule catalogs, and opt-in semantic claims/invariants.
 They are not prompt-loop revival, generation execution, or automatic physics
 detection.
+Keep superseded rules in catalog provenance, but exclude them from authoring
+context so stale hypotheses cannot compete with later human-confirmed rules.
 Before product-level work, read `docs/figure-agent.md`. It is the sole active
 product specification and forward execution roadmap. Treat other specs, plans,
 roadmaps, and milestones as scoped evidence unless that authority explicitly

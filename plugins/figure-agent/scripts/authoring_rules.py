@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +23,7 @@ VALID_SOURCE_KINDS = {
     "hand_patch_commit",
 }
 VALID_TRANSFER_POLICIES = {"use_as_question", "use_as_constraint"}
+VALID_LIFECYCLES = {"active", "superseded"}
 # Rule ids are namespaced "<namespace>.<local_id>". The namespace was historically
 # hard-coded to "pair001", which locked conventions to one pilot fixture; any
 # lowercase namespace is now allowed so a project-scope catalog can carry
@@ -74,6 +76,16 @@ def _validate_rule(rule: object) -> dict[str, Any]:
     transfer_policy = _require_text(rule.get("transfer_policy"), "transfer_policy_missing")
     if transfer_policy not in VALID_TRANSFER_POLICIES:
         raise AuthoringRuleError("transfer_policy_invalid")
+    lifecycle = rule.get("lifecycle", "active")
+    if lifecycle not in VALID_LIFECYCLES:
+        raise AuthoringRuleError("rule_lifecycle_invalid")
+    if lifecycle == "superseded":
+        superseded_by = _require_text(
+            rule.get("superseded_by"), "superseded_by_missing"
+        )
+        if not VALID_RULE_ID_PATTERN.match(superseded_by):
+            raise AuthoringRuleError("superseded_by_invalid")
+        _require_text(rule.get("superseded_reason"), "superseded_reason_missing")
     return rule
 
 
@@ -87,5 +99,28 @@ def load_rule_catalog(path: Path) -> dict[str, Any]:
     rules = payload.get("rules")
     if not isinstance(rules, list) or not rules:
         raise AuthoringRuleError("rules_missing")
-    payload["rules"] = [_validate_rule(rule) for rule in rules]
+    validated_rules = [_validate_rule(rule) for rule in rules]
+    payload["rules"] = [
+        rule for rule in validated_rules if rule.get("lifecycle", "active") == "active"
+    ]
+    payload["superseded_rules"] = [
+        rule for rule in validated_rules if rule.get("lifecycle") == "superseded"
+    ]
     return payload
+
+
+def validate_catalog_set(catalogs: Iterable[dict[str, Any] | None]) -> None:
+    """Require every superseded rule to resolve to one live rule in the set."""
+    present_catalogs = [catalog for catalog in catalogs if catalog is not None]
+    active_ids = {
+        rule["id"]
+        for catalog in present_catalogs
+        for rule in catalog.get("rules", [])
+    }
+    for catalog in present_catalogs:
+        for rule in catalog.get("superseded_rules", []):
+            target = rule["superseded_by"]
+            if target not in active_ids:
+                raise AuthoringRuleError(
+                    f"supersession_target_missing:{rule['id']}:{target}"
+                )

@@ -49,6 +49,9 @@ def test_current_ispd_rules_preserve_manual_keyence_measurement() -> None:
     assert "motion stage" not in pair_text.lower()
     pair_ids = {rule["id"] for rule in pair_catalog["rules"]}
     assert "pair001.instrument-faceplate-bezel" not in pair_ids
+    superseded_ids = {rule["id"] for rule in pair_catalog["superseded_rules"]}
+    assert "pair001.panel-e-probe-above-sample" in superseded_ids
+    assert "pair001.instrument-faceplate-bezel" in superseded_ids
 
     ispd_rule = next(
         rule
@@ -83,6 +86,92 @@ def test_rule_catalog_rejects_unanchored_generic_guidance(tmp_path: Path) -> Non
 
     with pytest.raises(authoring_rules.AuthoringRuleError, match="source_anchor_missing"):
         authoring_rules.load_rule_catalog(path)
+
+
+def test_rule_catalog_partitions_superseded_rules(tmp_path: Path) -> None:
+    path = tmp_path / "lifecycle.md"
+    path.write_text(
+        "---\n"
+        "schema: figure-agent.authoring-rules.v1\n"
+        "fixture: demo\n"
+        "promotion_state: n1_hypotheses\n"
+        "rules:\n"
+        "  - id: demo.current\n"
+        "    category: instrument_standard\n"
+        "    rule: Preserve the confirmed manual measurement.\n"
+        "    source:\n"
+        "      kind: iteration_comment\n"
+        "      locator: review-current\n"
+        "      quote: manual measurement\n"
+        "    transfer_policy: use_as_constraint\n"
+        "  - id: demo.old\n"
+        "    category: instrument_standard\n"
+        "    rule: Draw an automated stage.\n"
+        "    source:\n"
+        "      kind: iteration_comment\n"
+        "      locator: review-old\n"
+        "      quote: automated stage\n"
+        "    transfer_policy: use_as_constraint\n"
+        "    lifecycle: superseded\n"
+        "    superseded_by: demo.current\n"
+        "    superseded_reason: Later human review corrected the transfer agency.\n"
+        "---\n",
+        encoding="utf-8",
+    )
+
+    catalog = authoring_rules.load_rule_catalog(path)
+
+    assert [rule["id"] for rule in catalog["rules"]] == ["demo.current"]
+    assert [rule["id"] for rule in catalog["superseded_rules"]] == ["demo.old"]
+
+
+def test_rule_catalog_rejects_superseded_rule_without_replacement(tmp_path: Path) -> None:
+    path = tmp_path / "bad-lifecycle.md"
+    path.write_text(
+        "---\n"
+        "schema: figure-agent.authoring-rules.v1\n"
+        "fixture: demo\n"
+        "promotion_state: n1_hypotheses\n"
+        "rules:\n"
+        "  - id: demo.old\n"
+        "    category: instrument_standard\n"
+        "    rule: Draw an automated stage.\n"
+        "    source:\n"
+        "      kind: iteration_comment\n"
+        "      locator: review-old\n"
+        "      quote: automated stage\n"
+        "    transfer_policy: use_as_constraint\n"
+        "    lifecycle: superseded\n"
+        "    superseded_reason: Later human review corrected it.\n"
+        "---\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(authoring_rules.AuthoringRuleError, match="superseded_by_missing"):
+        authoring_rules.load_rule_catalog(path)
+
+
+def test_catalog_set_requires_live_supersession_target() -> None:
+    stale_catalog = {
+        "rules": [],
+        "superseded_rules": [
+            {
+                "id": "demo.old",
+                "superseded_by": "project.current",
+            }
+        ],
+    }
+    live_catalog = {
+        "rules": [{"id": "project.current"}],
+        "superseded_rules": [],
+    }
+
+    authoring_rules.validate_catalog_set([stale_catalog, live_catalog])
+
+    with pytest.raises(
+        authoring_rules.AuthoringRuleError, match="supersession_target_missing"
+    ):
+        authoring_rules.validate_catalog_set([stale_catalog])
 
 
 def test_rule_catalog_accepts_project_namespace(tmp_path: Path) -> None:

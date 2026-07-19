@@ -650,6 +650,10 @@ def build_context_pack(
         if project_catalog_path.is_file()
         else None
     )
+    try:
+        authoring_rules.validate_catalog_set([fixture_catalog, project_catalog])
+    except authoring_rules.AuthoringRuleError as exc:
+        raise AuthoringContextPackError(str(exc)) from exc
     philosophy_path = paths.plugin_root / "docs" / "figure-design-philosophy.md"
     style_path = paths.styles_dir / "polymer-paper-preamble.sty"
     layout_path, layout_constraints = _layout_constraints(example_dir, layout_contract)
