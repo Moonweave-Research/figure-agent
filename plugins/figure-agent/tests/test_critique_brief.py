@@ -631,6 +631,11 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "Inventory every guide, construction line, alignment rail" in brief
     assert "repetition alone" in brief
     assert "does not give a mark scientific meaning" in brief
+    assert "declared disordered, amorphous, tangled" in brief
+    assert "equal phase, alignment" in brief
+    assert "color clustering invents phase" in brief
+    assert "same physical process to reuse one arrow" in brief
+    assert "solid/dashed or arrowhead change" in brief
     assert "appears in multiple representations" in brief
     assert "explicit correspondence" in brief
     assert "invented transport" not in brief

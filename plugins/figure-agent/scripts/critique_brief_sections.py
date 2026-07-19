@@ -90,6 +90,16 @@ halo, and bracket that survives into publication-visible pixels. Each must bind
 to a named variable, boundary, material, or physical relation; repetition alone
 does not give a mark scientific meaning. Route an unbound mark as removable ink
 rather than preserving it because it came from a reusable component.
+For a region declared disordered, amorphous, tangled, or heterogeneous, inspect
+repeated paths and particles for unintended periodicity, equal phase, alignment,
+or spacing that would instead imply lamellae, energy levels, or an ordered phase.
+When two categories are declared co-located in one specimen, inspect their actual
+coordinates: systematic top/bottom or left/right color clustering invents phase
+segregation even when the caption says they coexist.
+Within and across panels, require the same physical process to reuse one arrow
+and line-style grammar unless a legend or brief-declared contrast explains the
+difference. An unexplained solid/dashed or arrowhead change can invent a second
+mechanism just as surely as a mislabeled arrow.
 When one population, specimen, or state appears in multiple representations
 (for example real space, energy space, and a derived distribution), verify an
 explicit correspondence through aligned anchors, identifiers, color, or leaders.

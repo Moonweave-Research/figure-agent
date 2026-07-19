@@ -297,6 +297,17 @@ to bind to a named variable, boundary, material, or physical relation; repeated
 geometry is not self-explanatory. Remove an unbound mark instead of preserving
 it merely because a reusable component emitted it.
 
+For a region declared disordered, amorphous, tangled, or heterogeneous, inspect
+repeated paths and particles for unintended periodicity, equal phase, alignment,
+or spacing that would imply lamellae, energy levels, or an ordered phase. When
+categories are declared co-located in one specimen, inspect their coordinates;
+systematic top/bottom or left/right color clustering invents phase segregation.
+
+Within and across panels, require the same physical process to reuse one arrow
+and line-style grammar unless a legend or brief-declared contrast explains the
+difference. Treat an unexplained solid/dashed or arrowhead change as a possible
+second mechanism, not harmless styling.
+
 When the same population, specimen, or state is shown in multiple representations,
 require visible correspondence through aligned anchors, identifiers, color, or
 leaders. Keep an equivalence connector out of plot axes and avoid arrowheads or
