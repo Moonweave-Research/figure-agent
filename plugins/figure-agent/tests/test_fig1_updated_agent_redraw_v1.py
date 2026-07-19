@@ -274,6 +274,8 @@ def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
     assert "ESVM head" in panel_e
     assert "manual transfer" in panel_e
     assert "Kelvin" not in panel_e
+    assert r"\shade" not in panel_e
+    assert "opacity=" not in panel_e
 
 
 def test_repaired_panel_f_and_full_figure_have_no_source_hairlines() -> None:

@@ -358,7 +358,6 @@
   \node[small label, anchor=east, text=cGray!82!black] at (1.41,3.68) {$\mathrm{HV}^{+}$};
   % Family-level sensor-head abstraction: slim body, flat sensing face toward
   % the specimen, and a wired readout. The exact model is not declared.
-  \fill[black, opacity=0.08] (2.54,3.20) rectangle (2.70,3.64);
   \fill[cGray!18] (2.52,3.18) rectangle (2.66,3.62);
   \draw[cGray!82!black, line width=0.84pt] (2.52,3.18) rectangle (2.66,3.62);
   \fill[cGray!82!black] (2.53,3.18) rectangle (2.65,3.22);
@@ -368,15 +367,14 @@
   \node[small label, anchor=south] at (2.59,3.64) {ESVM head};
 
   % Schematic ESVM readout; controls remain model-agnostic.
-  \fill[black, opacity=0.10] (3.30,2.82) rectangle (4.31,3.47);
-  \shade[top color=cGray!7, bottom color=cGray!22] (3.25,2.87) rectangle (4.26,3.52);
+  \fill[cGray!13] (3.25,2.87) rectangle (4.26,3.52);
   \draw[cGray!80!black, line width=0.90pt] (3.25,2.87) rectangle (4.26,3.52);
   \draw[cGray!42!black, line width=0.84pt] (3.32,2.94) rectangle (4.19,3.45);
   \fill[cGray!76!black] (3.40,3.16) rectangle (4.11,3.37);
   \draw[cGray!92!black, line width=0.84pt] (3.40,3.16) rectangle (4.11,3.37);
   \node[font=\sffamily\fontsize{4.7}{5.6}\selectfont, text=white] at (3.755,3.265) {$V_s$};
-  \shade[ball color=cGray!88] (3.25,3.43) circle (0.032);
-  \shade[ball color=cTeal!70] (3.43,3.02) circle (0.032);
+  \fill[cGray!82!black] (3.25,3.43) circle (0.032);
+  \fill[cTeal!72!black] (3.43,3.02) circle (0.032);
   \node[font=\sffamily\fontsize{3.8}{4.5}\selectfont, text=cGray!78!black] at (3.82,3.02) {ESVM};
   \node[small label, anchor=south] at (3.76,3.54) {$V_s$ meter};
 
