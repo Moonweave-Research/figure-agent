@@ -128,12 +128,24 @@
   % Real-space view: both trap classes are localized sites in one disordered film,
   % not separate material phases.
   \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (3.42,4.88) {real space};
-  \fill[black, opacity=0.12, rounded corners=1.2mm] (0.91,1.13) rectangle (6.30,4.21);
-  \shade[top color=cAmber!8, bottom color=cAmber!28, rounded corners=1.2mm]
-    (0.82,1.22) rectangle (6.21,4.30);
-  \draw[cAmber!70!black, line width=0.58pt, rounded corners=1.2mm]
-    (0.82,1.22) rectangle (6.21,4.30);
-  \draw[white, opacity=0.62, line width=0.38pt] (0.98,4.23)--(6.05,4.23);
+  % A hand-shaped film cross-section avoids reading as a generic rounded card.
+  \path[fill=black, opacity=0.11]
+    (0.93,1.14) .. controls (2.20,1.08) and (4.82,1.18) .. (6.29,1.13)
+    .. controls (6.38,1.78) and (6.34,3.50) .. (6.29,4.19)
+    .. controls (4.70,4.27) and (2.36,4.14) .. (0.94,4.25)
+    .. controls (0.84,3.42) and (0.88,1.88) .. (0.93,1.14) -- cycle;
+  \shade[top color=cAmber!8, bottom color=cAmber!28]
+    (0.82,1.23) .. controls (2.15,1.17) and (4.72,1.27) .. (6.18,1.22)
+    .. controls (6.27,1.86) and (6.23,3.52) .. (6.18,4.29)
+    .. controls (4.65,4.37) and (2.29,4.24) .. (0.84,4.34)
+    .. controls (0.74,3.48) and (0.78,1.90) .. (0.82,1.23) -- cycle;
+  \draw[cAmber!70!black, line width=0.58pt]
+    (0.82,1.23) .. controls (2.15,1.17) and (4.72,1.27) .. (6.18,1.22)
+    .. controls (6.27,1.86) and (6.23,3.52) .. (6.18,4.29)
+    .. controls (4.65,4.37) and (2.29,4.24) .. (0.84,4.34)
+    .. controls (0.74,3.48) and (0.78,1.90) .. (0.82,1.23) -- cycle;
+  \draw[white, opacity=0.62, line width=0.38pt]
+    (1.00,4.27) .. controls (2.44,4.20) and (4.62,4.31) .. (6.01,4.24);
   \foreach \yy/\phase in {3.63/0,2.78/18,1.92/-12} {
     \draw[cBrown!72!black, line width=0.56pt]
       (1.12,\yy) .. controls (1.65,{\yy+0.34}) and (2.14,{\yy-0.30}) .. (2.74,\yy)
@@ -173,8 +185,6 @@
   \draw[cGray!88!black, line width=0.52pt] (7.72,0.86)--(12.98,0.86);
   \node[body label, anchor=west] at (13.10,0.86) {$E_V$};
 
-  \fill[cBlue!5, rounded corners=1.2mm] (7.80,2.47) rectangle (13.30,3.22);
-  \fill[cRed!4, rounded corners=1.2mm] (7.80,1.02) rectangle (13.30,2.32);
   \shade[left color=cBlue!48, right color=cBlue!8]
     (7.82,2.52) .. controls (8.68,2.62) and (9.10,2.82) .. (9.28,2.91)
                  .. controls (9.08,3.02) and (8.62,3.16) .. (7.82,3.20) -- cycle;
@@ -209,6 +219,9 @@
   \draw[{Stealth[length=2.7pt,width=2.0pt]}-{Stealth[length=2.7pt,width=2.0pt]},
         cRed!72!black, line width=0.42pt] (13.72,1.10)--(13.72,3.20);
   \node[body label, rotate=90, text=cRed!80!black] at (14.08,2.15) {$\Delta E_t$};
+  \draw[-{Stealth[length=2.5pt,width=1.9pt]}, cGray!82!black, line width=0.34pt]
+    (7.82,0.50)--(9.08,0.50);
+  \node[small label, text=cGray!82!black] at (8.45,0.30) {DOS};
 \end{scope}
 
 % Panel D
