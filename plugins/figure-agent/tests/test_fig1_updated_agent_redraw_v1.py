@@ -178,6 +178,19 @@ def test_repaired_panel_letters_follow_nature_communications_case() -> None:
         assert f"{{{upper}}};" not in source
 
 
+def test_repaired_lower_row_uses_one_aligned_header_band() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+
+    for panel_id, title in {
+        "D": "Transient current",
+        "E": "ISPD trap distribution",
+        "F": "Floating Coulomb response",
+    }.items():
+        panel = source.split(f"% Panel {panel_id}", 1)[1]
+        assert f"at (0.28,4.42) {{{panel_id.lower()}}};" in panel
+        assert f"at (0.82,4.42) {{{title}}};" in panel
+
+
 def test_repaired_panel_a_strokes_survive_nature_double_column_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     separators = source.split("% Panel A", 1)[0].split(
