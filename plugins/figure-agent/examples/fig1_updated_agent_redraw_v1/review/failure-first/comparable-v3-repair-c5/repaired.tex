@@ -17,11 +17,11 @@
 
 % Open publication canvas: separators organize the reading order without
 % turning each scientific panel into a rounded UI card.
-\draw[cLGray, line width=0.84pt] (0.12,10.58)--(14.63,10.58);
-\draw[cLGray, line width=0.84pt] (0.12,4.78)--(14.63,4.78);
-\draw[cLGray, line width=0.84pt] (7.375,10.95)--(7.375,15.85);
-\draw[cLGray, line width=0.84pt] (4.875,0.15)--(4.875,4.43);
-\draw[cLGray, line width=0.84pt] (9.875,0.15)--(9.875,4.43);
+\draw[cGray!18, line width=0.84pt] (0.12,10.58)--(14.63,10.58);
+\draw[cGray!18, line width=0.84pt] (0.12,4.78)--(14.63,4.78);
+\draw[cGray!18, line width=0.84pt] (7.375,10.95)--(7.375,15.85);
+\draw[cGray!18, line width=0.84pt] (4.875,0.15)--(4.875,4.43);
+\draw[cGray!18, line width=0.84pt] (9.875,0.15)--(9.875,4.43);
 
 % Panel A
 \begin{scope}[shift={(0,11.0)}]
@@ -181,12 +181,12 @@
   \node[small label, text=cBrown, anchor=north east] at (6.03,4.12) {poly(S-\emph{r}-DIB) film};
 
   % Energy-space view: continuous shallow/deep trap DOS below the mobility edge.
-  \draw[cLGray, line width=0.84pt] (6.72,0.52)--(6.72,4.88);
+  \draw[cGray!18, line width=0.84pt] (6.72,0.52)--(6.72,4.88);
   % Cross-representation correspondence: these are the same trap populations,
   % not transport trajectories or separate phases.
-  \draw[cBlue!42, dash pattern=on 2pt off 2pt, line width=0.84pt]
+  \draw[cBlue!24, dash pattern=on 2pt off 2pt, line width=0.84pt]
     (4.66,2.88)--(7.40,2.88);
-  \draw[cRed!42, dash pattern=on 2pt off 2pt, line width=0.84pt]
+  \draw[cRed!24, dash pattern=on 2pt off 2pt, line width=0.84pt]
     (5.55,1.50)--(7.40,1.68);
   \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (10.78,5.02) {energy diagram};
   \draw[axis line] (7.48,0.72)--(7.48,4.52);
@@ -206,18 +206,18 @@
   % enclosing the diagram in another decorative container.
   % Stop the population windows before the right-side trap-depth lane so the
   % caliper cannot be mistaken for a property of the shallow color field.
-  \fill[cBlue!6] (7.72,2.42) rectangle (11.80,3.34);
-  \fill[cRed!6] (7.72,0.98) rectangle (11.80,2.38);
+  \fill[cBlue!4] (7.72,2.42) rectangle (11.80,3.34);
+  \fill[cRed!4] (7.72,0.98) rectangle (11.80,2.38);
 
   % Sample true sideways Gaussians; hand-shaped lens/cusp silhouettes are not DOS.
-  \fill[cBlue!48, opacity=0.82]
+  \fill[cBlue!34, opacity=0.68]
     plot[domain=2.48:3.28, samples=36, smooth]
       ({7.82 + 1.20*exp(-((\x-2.88)*(\x-2.88))/0.045)},\x)
     -- (7.82,3.28) -- (7.82,2.48) -- cycle;
   \draw[cBlue!84!black, line width=1.0pt]
     plot[domain=2.48:3.28, samples=36, smooth]
       ({7.82 + 1.20*exp(-((\x-2.88)*(\x-2.88))/0.045)},\x);
-  \fill[cRed!48, opacity=0.80]
+  \fill[cRed!34, opacity=0.68]
     plot[domain=1.02:2.34, samples=42, smooth]
       ({7.82 + 1.50*exp(-((\x-1.68)*(\x-1.68))/0.135)},\x)
     -- (7.82,2.34) -- (7.82,1.02) -- cycle;

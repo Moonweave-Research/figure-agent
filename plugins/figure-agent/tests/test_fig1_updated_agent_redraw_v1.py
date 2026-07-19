@@ -224,6 +224,10 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert widths
     assert min(widths) >= 0.84
     assert "circle (0.040);\n    \\draw" not in panel_c
+    assert "cBlue!24, dash pattern" in panel_c
+    assert "cRed!24, dash pattern" in panel_c
+    assert "cBlue!34, opacity=0.68" in panel_c
+    assert "cRed!34, opacity=0.68" in panel_c
 
 
 def test_repaired_shared_semantic_lines_survive_nature_scale() -> None:
