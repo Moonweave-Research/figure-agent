@@ -258,6 +258,11 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert "circle (0.040);\n    \\draw" not in panel_c
     assert "cBlue!24, dash pattern" in panel_c
     assert "cRed!24, dash pattern" in panel_c
+    # Trap markers must remain subordinate to the DOS curves and level lines;
+    # oversized discs make a scientific schematic read like an infographic.
+    assert "circle (0.10)" not in panel_c
+    assert panel_c.count("circle (0.075)") == 2
+    assert panel_c.count("circle (0.070)") == 2
     # Keep the DOS legible through its publication-weight outline instead of
     # locking a saturated area fill that makes the schematic read as artwork.
     for color in ("Blue", "Red"):
