@@ -274,6 +274,23 @@ def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
     assert "Kelvin" not in panel_e
 
 
+def test_repaired_panel_f_and_full_figure_have_no_source_hairlines() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_f = source.split("% Panel F", 1)[1]
+    widths = [
+        float(value)
+        for value in re.findall(
+            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", source
+        )
+    ]
+
+    assert widths
+    assert min(widths) >= 0.84
+    assert r"{mechanical\\clamp}" in panel_f
+    assert r"{floating polymer\\cantilever}" in panel_f
+    assert r"{trapped charge $q_{\mathrm{tr}}$}" in panel_f
+
+
 def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
     registry = _yaml("../../_known_false_positives.yaml")
     fig1_patterns = [

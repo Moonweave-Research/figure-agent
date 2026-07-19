@@ -12,7 +12,7 @@
   small label/.style={font=\sffamily\fontsize{5.2}{6.2}\selectfont, text=cGray},
   axis line/.style={-{Stealth[length=2.8pt,width=2.2pt]}, draw=cGray, line width=0.84pt},
   leader/.style={-{Stealth[length=2.5pt,width=1.9pt]}, draw=cGray, line width=0.84pt},
-  electron/.style={circle, draw=cBlue!80!black, fill=cBlue!55, line width=0.30pt, minimum size=1.15mm, inner sep=0pt}
+  electron/.style={circle, draw=cBlue!80!black, fill=cBlue!55, line width=0.84pt, minimum size=1.15mm, inner sep=0pt}
 ]
 
 % Open publication canvas: separators organize the reading order without
@@ -455,52 +455,50 @@
 
   % Fixed clamp: dark structural lines, light metal fill.
   \fill[cGray!10] (1.78,3.21) rectangle (2.22,3.33);
-  \draw[cGray!78!black, line width=0.54pt] (1.78,3.21) rectangle (2.22,3.33);
-  \draw[cGray!66!black, line width=0.50pt] (1.67,3.46)--(2.33,3.46);
-  \foreach \dx in {0,0.12,0.24,0.36,0.48,0.60} {
-    \draw[cGray!50!black, line width=0.26pt]
+  \draw[cGray!78!black, line width=0.90pt] (1.78,3.21) rectangle (2.22,3.33);
+  \draw[cGray!66!black, line width=0.90pt] (1.67,3.46)--(2.33,3.46);
+  \foreach \dx in {0.06,0.24,0.42,0.60} {
+    \draw[cGray!40!black, line width=0.84pt]
       ({1.68+\dx},3.46)--({1.61+\dx},3.54);
   }
-  \draw[cGray!76!black, line width=0.50pt] (2.00,3.33)--(2.00,3.46);
+  \draw[cGray!76!black, line width=0.90pt] (2.00,3.33)--(2.00,3.46);
 
   % Bespoke floating polymer cantilever, visibly deflected toward the left.
   \shade[top color=cAmber!17, bottom color=cAmber!46, rounded corners=0.45mm]
     (1.91,3.21) .. controls (1.93,2.48) and (1.53,1.52) ..
     (0.82,0.82) -- (0.96,0.67) .. controls (1.75,1.39) and
     (2.12,2.46) .. (2.09,3.21) -- cycle;
-  \draw[cAmber!84!black, line width=0.66pt, rounded corners=0.45mm]
+  \draw[cAmber!84!black, line width=1.0pt, rounded corners=0.45mm]
     (1.91,3.21) .. controls (1.93,2.48) and (1.53,1.52) ..
     (0.82,0.82) -- (0.96,0.67) .. controls (1.75,1.39) and
     (2.12,2.46) .. (2.09,3.21) -- cycle;
-  \draw[cAmber!62!black, line width=0.28pt, opacity=0.42]
+  \draw[cAmber!52!black, line width=0.84pt, opacity=0.30]
     (1.97,3.08) .. controls (1.98,2.48) and (1.61,1.55) .. (0.91,0.78);
 
   % Trapped-charge family follows the active face of the polymer.
   \foreach \cx/\cy in {1.91/2.64,1.72/2.03,1.38/1.43,0.98/0.88} {
-    \fill[cRed!72] (\cx,\cy) circle (0.070);
-    \draw[cRed!90!black, line width=0.25pt] (\cx,\cy) circle (0.070);
+    \fill[cRed!80] (\cx,\cy) circle (0.070);
   }
 
   % Driven metal electrode and compact bias circuit.
   \shade[left color=cGray!32, right color=cGray!12]
     (3.54,0.66) rectangle (3.76,3.02);
-  \draw[cGray!84!black, line width=0.62pt] (3.54,0.66) rectangle (3.76,3.02);
-  \draw[cGray!48!black, line width=0.26pt] (3.59,0.70)--(3.59,2.98);
-  \foreach \hy in {0.82,1.10,1.38,1.66,1.94,2.22,2.50,2.78} {
-    \draw[cGray!56!black, line width=0.25pt] (3.76,\hy)--(3.54,{\hy-0.06});
+  \draw[cGray!84!black, line width=1.0pt] (3.54,0.66) rectangle (3.76,3.02);
+  \foreach \hy in {0.90,1.38,1.86,2.34,2.82} {
+    \draw[cGray!42!black, line width=0.84pt] (3.76,\hy)--(3.54,{\hy-0.06});
   }
   \fill[cBlue!5, rounded corners=0.7mm] (3.00,3.34) rectangle (3.50,3.72);
-  \draw[cBlue!66!black, line width=0.42pt, rounded corners=0.7mm]
+  \draw[cBlue!66!black, line width=0.84pt, rounded corners=0.7mm]
     (3.00,3.34) rectangle (3.50,3.72);
   \node[font=\sffamily\bfseries\fontsize{4.5}{5.3}\selectfont,
         text=cBlue!76!black] at (3.25,3.53) {HV};
-  \draw[cBlue!66!black, line width=0.38pt, rounded corners=0.35mm]
+  \draw[cBlue!66!black, line width=0.84pt, rounded corners=0.35mm]
     (3.50,3.58)--(3.65,3.58)--(3.65,3.02);
-  \draw[cBlue!58!black, line width=0.34pt]
+  \draw[cBlue!58!black, line width=0.84pt]
     (3.00,3.45)--(2.76,3.45)--(2.76,3.30);
-  \draw[cBlue!58!black, line width=0.34pt] (2.64,3.30)--(2.88,3.30);
-  \draw[cBlue!58!black, line width=0.34pt] (2.68,3.24)--(2.84,3.24);
-  \draw[cBlue!58!black, line width=0.34pt] (2.72,3.18)--(2.80,3.18);
+  \draw[cBlue!58!black, line width=0.84pt] (2.64,3.30)--(2.88,3.30);
+  \draw[cBlue!58!black, line width=0.84pt] (2.68,3.24)--(2.84,3.24);
+  \draw[cBlue!58!black, line width=0.84pt] (2.72,3.18)--(2.80,3.18);
 
   % Mechanism-first annotations; no decorative field or construction guides.
   \node[small label, anchor=west, align=left] at (0.14,3.64)
@@ -520,11 +518,11 @@
         text=cRed!88!black, anchor=south west, align=left]
     at (0.36,1.50) {Coulomb\\[-0.6pt]\mdseries repulsion};
 
-  \draw[cGray!52, line width=0.28pt]
+  \draw[cGray!42, line width=0.84pt]
     (0.96,0.67)--(0.96,0.61)
     (3.54,0.66)--(3.54,0.61);
   \draw[<->, >={Stealth[length=3.0pt,width=2.2pt]},
-        cGray!68!black, line width=0.38pt]
+        cGray!68!black, line width=0.84pt]
     (1.00,0.61)--(3.50,0.61);
   \node[small label, fill=white, inner sep=1.2pt, anchor=north]
     at (2.30,0.54) {air gap};
