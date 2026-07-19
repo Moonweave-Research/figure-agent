@@ -226,6 +226,37 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert "circle (0.040);\n    \\draw" not in panel_c
 
 
+def test_repaired_shared_semantic_lines_survive_nature_scale() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+
+    assert "axis line/.style=" in source
+    assert "leader/.style=" in source
+    for style_name in ("axis line", "leader"):
+        declaration = source.split(f"{style_name}/.style=", 1)[1].splitlines()[0]
+        width = re.search(
+            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", declaration
+        )
+        assert width is not None
+        assert float(width.group(1)) >= 0.84
+
+
+def test_repaired_panel_d_strokes_survive_nature_double_column_scale() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_d = source.split("% Panel D", 1)[1].split("% Panel E", 1)[0]
+    widths = [
+        float(value)
+        for value in re.findall(
+            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_d
+        )
+    ]
+
+    assert widths
+    assert min(widths) >= 0.84
+    assert "PI control: low $n$" in panel_d
+    assert "S-rich: high $n$" in panel_d
+    assert "Debye" not in panel_d
+
+
 def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
     registry = _yaml("../../_known_false_positives.yaml")
     fig1_patterns = [
