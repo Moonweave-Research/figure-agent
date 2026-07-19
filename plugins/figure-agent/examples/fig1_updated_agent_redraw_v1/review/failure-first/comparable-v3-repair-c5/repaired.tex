@@ -407,12 +407,15 @@
   \foreach \x/\y in {2.70/0.81,3.02/1.15,3.34/0.81} {
     \shade[ball color=cRed!62] (\x,\y) circle (0.043);
   }
+  % Characteristic decay interval belongs to the measured time axis, not to
+  % the energy-distribution peak spacing below it.
   \draw[cGray!68!black, line width=0.30pt]
-    (1.56,1.27)--(2.14,1.27) (2.44,1.27)--(3.02,1.27);
-  \draw[cGray!68!black, line width=0.30pt] (1.56,1.22)--(1.56,1.32) (3.02,1.22)--(3.02,1.32);
-  \node[small label, text=cBlue!82!black, anchor=north] at (1.56,0.31) {shallow};
-  \node[small label, text=cRed!82!black, anchor=north] at (3.02,0.31) {deep};
-  \node[small label] at (2.29,1.27) {$\tau_d$};
+    (1.56,1.43)--(2.14,1.43) (2.44,1.43)--(3.02,1.43);
+  \draw[cGray!68!black, line width=0.30pt]
+    (1.56,1.43)--(1.56,1.52) (3.02,1.43)--(3.02,1.52);
+  \node[small label, fill=white, inner sep=0.8pt] at (2.29,1.43) {$\tau_d$};
+  \node[small label, text=cBlue!82!black, anchor=north] at (1.45,0.31) {shallow};
+  \node[small label, text=cRed!82!black, anchor=north] at (3.12,0.31) {deep};
 \end{scope}
 
 % Panel F
