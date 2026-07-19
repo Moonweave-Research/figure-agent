@@ -263,6 +263,12 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert "circle (0.10)" not in panel_c
     assert panel_c.count("circle (0.075)") == 2
     assert panel_c.count("circle (0.070)") == 2
+    assert "{1.50/1.60,4.56/2.84}" in panel_c
+    assert "{2.72/3.64,5.45/1.59}" in panel_c
+    # Population correspondence begins at the perimeter of a representative
+    # localized site rather than cutting through or floating beside the dot.
+    assert "(4.635,2.84)--(7.40,2.88)" in panel_c
+    assert "(5.525,1.59)--(7.40,1.68)" in panel_c
     # A material field is not a colored cartoon object: keep its broad area
     # nearly white and its boundary neutral, reserving amber for chemistry.
     assert "\\fill[cAmber!6]" in panel_c
