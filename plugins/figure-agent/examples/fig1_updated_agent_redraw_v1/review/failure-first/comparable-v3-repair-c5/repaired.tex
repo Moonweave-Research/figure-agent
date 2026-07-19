@@ -172,14 +172,15 @@
                          1.65/2.54,2.55/2.61,3.68/2.55,5.45/2.49,
                          2.15/1.62,3.25/1.71,4.55/1.47,
                          2.10/2.70,3.18/2.02,3.92/1.98} {
-    \shade[ball color=cAmberSphere!80] (\xx,\yy) circle (0.045);
+    \fill[cAmberSphere!88] (\xx,\yy) circle (0.040);
+    \draw[cAmber!72!black, line width=0.18pt] (\xx,\yy) circle (0.040);
   }
   \foreach \x/\y in {1.50/1.48,4.56/2.88} {
-    \shade[ball color=cBlue!66] (\x,\y) circle (0.095);
+    \fill[cBlue!70] (\x,\y) circle (0.095);
     \draw[cBlue!85!black, line width=0.26pt] (\x,\y) circle (0.095);
   }
   \foreach \x/\y in {2.72/3.60,5.45/1.50} {
-    \shade[ball color=cRed!68] (\x,\y) circle (0.11);
+    \fill[cRed!72] (\x,\y) circle (0.11);
     \draw[cRed!88!black, line width=0.26pt] (\x,\y) circle (0.11);
   }
   \node[small label, text=cBlue!85!black, anchor=west] at (1.02,0.78) {shallow sites};
@@ -235,11 +236,13 @@
 
   \foreach \y in {2.72,3.04} {
     \draw[cBlue!82!black, line width=0.62pt] (9.18,\y)--(10.15,\y);
-    \shade[ball color=cBlue!70] (9.62,\y) circle (0.085);
+    \fill[cBlue!74] (9.62,\y) circle (0.085);
+    \draw[cBlue!88!black, line width=0.22pt] (9.62,\y) circle (0.085);
   }
   \foreach \y in {1.46,1.88} {
     \draw[cRed!82!black, line width=0.68pt] (9.42,\y)--(10.38,\y);
-    \shade[ball color=cRed!72] (9.88,\y) circle (0.09);
+    \fill[cRed!76] (9.88,\y) circle (0.09);
+    \draw[cRed!88!black, line width=0.22pt] (9.88,\y) circle (0.09);
   }
   \node[body label, font=\sffamily\bfseries\fontsize{6.0}{7.2}\selectfont,
         text=cBlue!82!black, anchor=west] at (10.62,2.90) {shallow};
