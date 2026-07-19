@@ -170,6 +170,29 @@ def test_repaired_panel_e_surface_charge_has_no_undeclared_gradient() -> None:
     assert r"\rad" not in panel_e
 
 
+def test_repaired_panel_e_uses_colour_for_measurement_marks_not_text() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
+
+    for colored_text in ("text=cBrown", "text=cTeal", "text=cBlue", "text=cRed"):
+        assert colored_text not in panel_e
+    assert panel_e.count("text=cGray!88!black") >= 4
+    assert "cTeal!78!black, line width=0.84pt" in panel_e
+    assert "cBlue!84!black, line width=1.0pt" in panel_e
+    assert "cRed!84!black, line width=1.0pt" in panel_e
+
+
+def test_repaired_panel_e_preserves_a_visible_noncontact_esvm_gap() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
+
+    assert "(2.52,3.28) rectangle (2.66,3.72)" in panel_e
+    assert "(2.53,3.28) rectangle (2.65,3.32)" in panel_e
+    assert "(2.52,3.18) rectangle (2.66,3.62)" not in panel_e
+    assert "{ESVM head}" in panel_e
+    assert "Kelvin" not in panel_e
+
+
 def test_repaired_panel_letters_follow_nature_communications_case() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
 
