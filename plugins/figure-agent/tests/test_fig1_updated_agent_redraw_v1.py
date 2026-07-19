@@ -150,6 +150,16 @@ def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
     assert r"(1.09,0.42)--(1.02,0.82)" not in source
 
 
+def test_repaired_panel_e_caliper_label_interrupts_its_path() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    label = source.index(r"{$\tau_d$}")
+    declaration = source.rfind(r"\node", 0, label)
+    caliper_label = source[declaration : label + len(r"{$\tau_d$}")]
+
+    assert "fill=white" in caliper_label
+    assert "inner xsep" in caliper_label
+
+
 def test_r5_v2_predeclaration_frees_composition_but_binds_vertical_cantilever() -> None:
     run_root = (
         PLUGIN_ROOT
