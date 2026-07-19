@@ -289,7 +289,10 @@ calipers, and axis-label lanes.
 Inspect every crossing between two semantic paths, or between a mechanism path
 and a state/reference line. Require an explicit junction, transition, or declared
 relation when the crossing carries meaning; otherwise route the accidental
-crossing to a clear lane. Review labels both in panel crops and at the actual
+crossing to a clear lane. Audit named boundaries, thresholds, baselines, and
+reference levels for semantic aliases: two names for the same physical quantity
+must bind to one visible referent, not separate lines or regions that invent a
+second state. Review labels both in panel crops and at the actual
 full-figure print reduction. If a specimen or mechanism label works only in the
 crop, preserve the claim by shortening or restructuring it rather than repeatedly
 shrinking the font.

@@ -84,6 +84,11 @@ normal finding.
 Enumerate crossings between semantic paths and between mechanism paths and
 state/reference lines. A crossing without an explicit junction, transition, or
 declared relation is a finding because it can invent a mechanism. Review every
+named boundary, threshold, baseline, and reference level for semantic aliases:
+if two labels denote the same physical quantity, they must bind to one visible
+referent rather than appear as distinct lines or regions. Route an unexplained
+duplicate referent as a finding because it invents a second physical state.
+Review every
 claim-bearing label in both its panel crop and the actual full-figure reduction;
 if it is legible only in the crop, recommend claim-preserving shortening or
 restructuring rather than another font-size reduction.

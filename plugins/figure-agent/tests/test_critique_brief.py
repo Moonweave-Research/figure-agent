@@ -627,6 +627,9 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "crossings between semantic paths" in brief
     assert "crossing without an explicit junction" in brief
     assert "invent a mechanism" in brief
+    assert "named boundary, threshold, baseline" in brief
+    assert "semantic aliases" in brief
+    assert "invents a second physical state" in brief
     assert "legible only in the crop" in brief
     assert "claim-preserving shortening" in brief
 
