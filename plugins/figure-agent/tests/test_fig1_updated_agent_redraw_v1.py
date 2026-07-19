@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import subprocess
 import sys
@@ -376,6 +377,10 @@ def test_repaired_panel_d_strokes_survive_nature_double_column_scale() -> None:
     assert panel_d.count("text=cGray!92!black") == 2
     assert "(0.48,2.62) rectangle (1.47,3.44)" in panel_d
     assert "(0.55,2.70) rectangle (1.40,3.36)" not in panel_d
+    for rotation, end_y in ((-13.5, 1.12), (-21.1, 0.66)):
+        slope_angle = math.degrees(math.atan2(end_y - 1.88, 4.02 - 0.86))
+        assert abs(rotation - slope_angle) <= 0.3
+        assert f"rotate={rotation}" in panel_d
     assert "Debye" not in panel_d
     assert r"\shade" not in panel_d
     assert "opacity=" not in panel_d
