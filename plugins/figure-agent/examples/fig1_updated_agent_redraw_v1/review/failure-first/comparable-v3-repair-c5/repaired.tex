@@ -354,10 +354,9 @@
     at (2.065,2.73) {manual transfer};
 
   % The charged surface is repeated in both states to preserve specimen identity.
-  \foreach \x/\tone/\rad in {1.38/88/0.040,1.56/70/0.037,1.74/50/0.034,
-                               2.41/88/0.040,2.59/70/0.037,2.77/50/0.034} {
-    \fill[cRed!\tone!black] (\x,3.06) circle (\rad);
-    \draw[cRed!82!black, line width=0.26pt] (\x,3.06) circle (\rad);
+  \foreach \x in {1.38,1.56,1.74,2.41,2.59,2.77} {
+    \fill[cRed!76!black] (\x,3.06) circle (0.040);
+    \draw[cRed!86!black, line width=0.26pt] (\x,3.06) circle (0.040);
     \node[font=\sffamily\bfseries\fontsize{4.0}{4.8}\selectfont,
           text=white, inner sep=0pt] at (\x,3.06) {$+$};
   }

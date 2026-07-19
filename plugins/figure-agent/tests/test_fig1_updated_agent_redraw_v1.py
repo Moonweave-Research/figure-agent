@@ -160,6 +160,15 @@ def test_repaired_panel_e_caliper_label_interrupts_its_path() -> None:
     assert "inner xsep" in caliper_label
 
 
+def test_repaired_panel_e_surface_charge_has_no_undeclared_gradient() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
+
+    assert r"\foreach \x in {1.38,1.56,1.74,2.41,2.59,2.77}" in panel_e
+    assert r"\tone" not in panel_e
+    assert r"\rad" not in panel_e
+
+
 def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
     registry = _yaml("../../_known_false_positives.yaml")
     fig1_patterns = [
