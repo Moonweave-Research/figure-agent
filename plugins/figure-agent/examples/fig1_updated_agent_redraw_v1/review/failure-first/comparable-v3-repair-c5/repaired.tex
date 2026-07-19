@@ -287,10 +287,10 @@
   \draw[cGray!88!black, dash pattern=on 3pt off 2pt, line width=0.52pt]
     (0.86,1.88)--(1.70,1.88)
     .. controls (1.94,1.88) and (2.14,0.78) .. (2.34,0.56);
-  \node[small label, font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont,
-        text=cBlue!82!black, rotate=-14] at (3.26,1.53) {low $n$};
-  \node[small label, font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont,
-        text=cRed!82!black, rotate=-22] at (3.34,0.70) {high $n$};
+  \node[small label, font=\sffamily\bfseries\fontsize{4.6}{5.5}\selectfont,
+        text=cBlue!82!black, rotate=-14] at (3.12,1.53) {control: low $n$};
+  \node[small label, font=\sffamily\bfseries\fontsize{4.2}{5.0}\selectfont,
+        text=cRed!82!black, rotate=-22] at (3.05,0.80) {S-rich polymer: high $n$};
   \node[small label, text=cGray!88!black, anchor=west] at (2.40,0.60) {Debye};
 \end{scope}
 
@@ -306,7 +306,7 @@
   \draw[cGray!55, line width=0.26pt] (0.62,3.29)--(1.40,3.29);
   \draw[-{Stealth[length=2.5pt,width=1.9pt]}, cTeal!82!black, line width=0.42pt]
     (0.66,3.19)--(1.42,3.19);
-  \node[small label, anchor=west] at (0.54,3.48) {motion stage};
+  \node[small label, anchor=east] at (1.18,3.48) {motion stage};
   \fill[cGray!20] (1.03,2.68)--(2.93,2.68)--(3.03,2.77)--(1.13,2.77)--cycle;
   \draw[cGray!82!black, line width=0.42pt]
     (1.03,2.68)--(2.93,2.68)--(3.03,2.77)--(1.13,2.77)--cycle;
@@ -317,6 +317,15 @@
   \foreach \x in {1.58,1.98,2.38} {
     \node[font=\sffamily\bfseries\fontsize{4.8}{5.8}\selectfont, text=cRed!76!black] at (\x,3.16) {$+$};
   }
+  % Corona charging step at the upstream end of the translating sample.
+  \draw[cGray!82!black, line width=0.38pt] (1.34,3.70)--(1.56,3.70);
+  \draw[cGray!82!black, line width=0.42pt] (1.45,3.70)--(1.45,3.43);
+  \fill[cGray!82!black] (1.41,3.43)--(1.49,3.43)--(1.45,3.34)--cycle;
+  \foreach \dx in {-0.08,0,0.08} {
+    \draw[cRed!66!black, line width=0.28pt]
+      (1.45,3.31)--({1.45+\dx},3.24);
+  }
+  \node[small label, anchor=east, text=cGray!82!black] at (1.31,3.68) {HV$^{+}$};
   % Cylindrical non-contact ESVM sensor with a physical cable and input socket.
   \fill[black, opacity=0.10] (1.94,3.22) ellipse (0.17 and 0.065);
   \draw[cGray!82!black, line width=0.44pt] (2.03,3.53)--(2.03,3.27);
@@ -359,8 +368,8 @@
 
   % Explicit raw-to-derived transformation.
   \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cGray!72!black, line width=0.42pt]
-    (3.62,1.44)--(3.62,1.28);
-  \node[small label, anchor=east] at (3.50,1.35) {derive};
+    (4.02,1.44)--(4.02,1.24);
+  \node[small label, anchor=east] at (3.91,1.35) {derive};
 
   % Derived trap-density distribution in energy space.
   \draw[axis line] (0.66,0.36)--(0.66,1.42);
