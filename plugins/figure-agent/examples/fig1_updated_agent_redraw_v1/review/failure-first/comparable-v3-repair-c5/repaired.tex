@@ -212,8 +212,10 @@
 
   % Semantic energy windows bind each DOS to its levels and label without
   % enclosing the diagram in another decorative container.
-  \fill[cBlue!6] (7.72,2.42) rectangle (12.98,3.34);
-  \fill[cRed!6] (7.72,0.98) rectangle (12.98,2.38);
+  % Stop the population windows before the right-side trap-depth lane so the
+  % caliper cannot be mistaken for a property of the shallow color field.
+  \fill[cBlue!6] (7.72,2.42) rectangle (11.80,3.34);
+  \fill[cRed!6] (7.72,0.98) rectangle (11.80,2.38);
 
   % Sample true sideways Gaussians; hand-shaped lens/cusp silhouettes are not DOS.
   \fill[cBlue!48, opacity=0.82]
