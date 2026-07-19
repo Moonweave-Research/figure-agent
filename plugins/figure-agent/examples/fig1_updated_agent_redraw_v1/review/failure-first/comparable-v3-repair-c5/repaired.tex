@@ -122,8 +122,6 @@
   \draw[draw=cAmber!70!black, line width=0.72pt, rounded corners=1.4mm] (0,0) rectangle (14.75,5.85);
   \node[panel letter, anchor=west] at (0.28,5.47) {C};
   \node[panel title] at (0.82,5.47) {Localized shallow and deep traps};
-  \node[font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont, text=cAmber!90!black,
-        anchor=east] at (14.42,5.47) {HERO};
 
   % Real-space view: both trap classes are localized sites in one disordered film,
   % not separate material phases.
@@ -185,18 +183,21 @@
   \draw[cGray!88!black, line width=0.52pt] (7.72,0.86)--(12.98,0.86);
   \node[body label, anchor=west] at (13.10,0.86) {$E_V$};
 
-  \shade[left color=cBlue!48, right color=cBlue!8]
-    (7.82,2.52) .. controls (8.68,2.62) and (9.10,2.82) .. (9.28,2.91)
-                 .. controls (9.08,3.02) and (8.62,3.16) .. (7.82,3.20) -- cycle;
-  \draw[cBlue!82!black, line width=0.66pt]
-    (7.82,2.52) .. controls (8.68,2.62) and (9.10,2.82) .. (9.28,2.91)
-                 .. controls (9.08,3.02) and (8.62,3.16) .. (7.82,3.20);
-  \shade[left color=cRed!45, right color=cRed!8]
-    (7.82,1.08) .. controls (8.64,1.18) and (9.42,1.52) .. (9.68,1.70)
-                 .. controls (9.42,1.92) and (8.62,2.22) .. (7.82,2.28) -- cycle;
-  \draw[cRed!82!black, line width=0.72pt]
-    (7.82,1.08) .. controls (8.64,1.18) and (9.42,1.52) .. (9.68,1.70)
-                 .. controls (9.42,1.92) and (8.62,2.22) .. (7.82,2.28);
+  % Sample true sideways Gaussians; hand-shaped lens/cusp silhouettes are not DOS.
+  \fill[cBlue!48, opacity=0.82]
+    plot[domain=2.48:3.28, samples=36, smooth]
+      ({7.82 + 1.20*exp(-((\x-2.88)*(\x-2.88))/0.045)},\x)
+    -- (7.82,3.28) -- (7.82,2.48) -- cycle;
+  \draw[cBlue!84!black, line width=0.66pt]
+    plot[domain=2.48:3.28, samples=36, smooth]
+      ({7.82 + 1.20*exp(-((\x-2.88)*(\x-2.88))/0.045)},\x);
+  \fill[cRed!48, opacity=0.80]
+    plot[domain=1.02:2.34, samples=42, smooth]
+      ({7.82 + 1.50*exp(-((\x-1.68)*(\x-1.68))/0.135)},\x)
+    -- (7.82,2.34) -- (7.82,1.02) -- cycle;
+  \draw[cRed!84!black, line width=0.72pt]
+    plot[domain=1.02:2.34, samples=42, smooth]
+      ({7.82 + 1.50*exp(-((\x-1.68)*(\x-1.68))/0.135)},\x);
 
   \foreach \y in {2.72,3.04} {
     \draw[cBlue!82!black, line width=0.62pt] (9.18,\y)--(10.15,\y);
