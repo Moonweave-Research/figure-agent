@@ -304,6 +304,11 @@ electrode, or interface needed to interpret the measurement. Instrument names,
 wires, and grounds do not establish what material is measured; an unbound or
 unlabeled specimen region is missing experimental provenance.
 
+Audit projection grammar within each apparatus. Do not mix a flat cross-section
+with an undeclared perspective wedge, oblique side face, or pseudo-3D shadow on
+only one layer. Require a declared depth-bearing relation or redraw the stack in
+one coherent projection so layer identity and contact order remain unambiguous.
+
 Inventory every guide, construction line, alignment rail, field-like trace,
 halo, and bracket that remains in publication-visible pixels. Require each mark
 to bind to a named variable, boundary, material, or physical relation; repeated

@@ -98,6 +98,10 @@ For every apparatus schematic, identify the specimen and any active film, layer,
 electrode, or interface required to interpret the measurement. Named instruments,
 wires, and grounds do not establish what material is being measured; route an
 unbound or unlabeled specimen region as missing experimental provenance.
+Audit projection grammar within each apparatus. A flat cross-section must not
+gain an undeclared perspective wedge, oblique side face, or pseudo-3D shadow on
+only one layer; require a declared depth-bearing relation or redraw the stack in
+one coherent projection so layer identity and contact order stay unambiguous.
 Inventory every guide, construction line, alignment rail, field-like trace,
 halo, and bracket that survives into publication-visible pixels. Each must bind
 to a named variable, boundary, material, or physical relation; repetition alone
