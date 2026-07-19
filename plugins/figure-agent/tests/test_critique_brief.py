@@ -624,6 +624,9 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "preparation or excitation, acquisition" in brief
     assert "deposited charge without a source" in brief
     assert "process label/arrow overlapping data" in brief
+    assert "manual transfer" in brief
+    assert "automated scan" in brief
+    assert "before/after specimen states" in brief
     assert "paper-local declaration takes precedence" in brief
     assert "notation alone" in brief
     assert "conflict or remain absent" in brief

@@ -86,6 +86,10 @@ preparation or excitation, acquisition, transformation, and result. Route an
 unexplained state such as deposited charge without a source, a missing stage, or
 a process label/arrow overlapping data, a caliper, or an axis-label lane to a
 normal finding.
+Preserve the declared transfer agency between stages. Do not turn a manual transfer
+or discrete repositioning into an automated scan, conveyor, or continuous in-line
+measurement. When the same sample is moved between adjacent stations, use explicit
+before/after specimen states or another unambiguous discrete-transfer encoding.
 An instrument name or capability display such as V/A does not prove which
 variable was actually applied, held constant, stepped, or acquired. When the
 response claim depends on an operating condition, require that condition to be

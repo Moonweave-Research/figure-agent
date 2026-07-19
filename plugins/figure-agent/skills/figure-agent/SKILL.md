@@ -292,6 +292,12 @@ transformation, and result in order. Flag an unexplained state such as deposited
 charge without a source, and keep process labels/arrows out of data peaks,
 calipers, and axis-label lanes.
 
+Preserve the declared transfer agency between measurement stages. Do not turn a
+manual transfer or discrete repositioning into an automated scan, conveyor, or
+continuous in-line measurement. When the same specimen moves between adjacent
+stations, use explicit before/after specimen states or another unambiguous
+discrete-transfer encoding.
+
 Do not treat an instrument name or capability display such as V/A as proof of
 the variable actually applied, held constant, stepped, or acquired. When the
 response depends on an operating condition, require that condition at the
