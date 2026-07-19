@@ -323,8 +323,10 @@
   \draw[cBlue!82!black, line width=0.78pt] (0.86,1.88)--(4.02,1.12);
   \draw[cRed!82!black, line width=0.82pt] (0.86,1.88)--(4.02,0.66);
   \foreach \x/\yb/\yr in {1.28/1.78/1.72,2.22/1.55/1.36,3.25/1.30/0.96} {
-    \shade[ball color=cBlue!68] (\x,\yb) circle (0.052);
-    \shade[ball color=cRed!68] (\x,\yr) circle (0.052);
+    \fill[cBlue!72] (\x,\yb) circle (0.052);
+    \draw[cBlue!88!black, line width=0.20pt] (\x,\yb) circle (0.052);
+    \fill[cRed!72] (\x,\yr) circle (0.052);
+    \draw[cRed!88!black, line width=0.20pt] (\x,\yr) circle (0.052);
   }
   \node[small label, font=\sffamily\bfseries\fontsize{5.2}{6.2}\selectfont,
         text=cBlue!82!black, rotate=-14] at (3.12,1.53) {PI control: low $n$};
