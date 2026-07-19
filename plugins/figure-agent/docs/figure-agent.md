@@ -26,8 +26,8 @@ reliably weak:
 
 - preserving scientific objects, relations, forbidden implications, domain-correct morphology, metric endpoints, visual ratios, curve-to-sample attribution, and process-stage ownership;
 - seeing the rendered artifact at whole-figure, panel, object, and zoom scales;
-- detecting collisions, clipping, broken paths, workflow-metadata leakage, weak
-  hierarchy, and ownership ambiguity;
+- detecting collisions, clipping, broken or falsely intersecting semantic paths,
+  reduction-only illegibility, workflow-metadata leakage, and ownership ambiguity;
 - attributing a visible defect to an exact semantic object and editable source;
 - repairing one bounded region without silently changing neighboring meaning;
 - reproducing the result from declared inputs and tool versions; and

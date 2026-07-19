@@ -624,6 +624,11 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "preparation or excitation, acquisition" in brief
     assert "deposited charge without a source" in brief
     assert "process label/arrow overlapping data" in brief
+    assert "crossings between semantic paths" in brief
+    assert "crossing without an explicit junction" in brief
+    assert "invent a mechanism" in brief
+    assert "legible only in the crop" in brief
+    assert "claim-preserving shortening" in brief
 
 
 def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):

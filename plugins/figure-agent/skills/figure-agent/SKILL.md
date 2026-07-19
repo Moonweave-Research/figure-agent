@@ -286,6 +286,14 @@ transformation, and result in order. Flag an unexplained state such as deposited
 charge without a source, and keep process labels/arrows out of data peaks,
 calipers, and axis-label lanes.
 
+Inspect every crossing between two semantic paths, or between a mechanism path
+and a state/reference line. Require an explicit junction, transition, or declared
+relation when the crossing carries meaning; otherwise route the accidental
+crossing to a clear lane. Review labels both in panel crops and at the actual
+full-figure print reduction. If a specimen or mechanism label works only in the
+crop, preserve the claim by shortening or restructuring it rather than repeatedly
+shrinking the font.
+
 Also inspect for workflow-metadata leakage. Terms such as `HERO`, priority,
 draft, iteration, reviewer notes, or approval state belong in comments/specs and
 must not appear in publication-visible pixels unless explicitly declared as

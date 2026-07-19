@@ -81,6 +81,12 @@ preparation or excitation, acquisition, transformation, and result. Route an
 unexplained state such as deposited charge without a source, a missing stage, or
 a process label/arrow overlapping data, a caliper, or an axis-label lane to a
 normal finding.
+Enumerate crossings between semantic paths and between mechanism paths and
+state/reference lines. A crossing without an explicit junction, transition, or
+declared relation is a finding because it can invent a mechanism. Review every
+claim-bearing label in both its panel crop and the actual full-figure reduction;
+if it is legible only in the crop, recommend claim-preserving shortening or
+restructuring rather than another font-size reduction.
     """
 
 
@@ -121,7 +127,8 @@ distribution, band, well, or waveform, verify that the rendered morphology—not
 only its label and color—matches the brief, reference, or stable domain convention.
 Verify dimension/caliper endpoint ownership and all declared visual ratios or
 relative orderings against the rendered geometry. Verify comparative-curve sample
-ownership and the ordered provenance of every multi-stage measurement.
+ownership, ordered measurement provenance, semantic path crossings, and
+claim-label legibility at actual reduction scale.
 
 ### 6. Composition and Layout
 Evaluate visual hierarchy, reading path, spacing, alignment, density, white
