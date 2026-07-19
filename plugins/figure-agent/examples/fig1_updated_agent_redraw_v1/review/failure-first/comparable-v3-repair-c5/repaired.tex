@@ -327,35 +327,34 @@
   % manual relocation to the adjacent non-contact ESVM station at right.
   % Charging state.
   \fill[cGray!22] (1.15,2.78) rectangle (1.95,2.90);
-  \draw[cGray!82!black, line width=0.42pt] (1.15,2.78) rectangle (1.95,2.90);
+  \draw[cGray!82!black, line width=0.84pt] (1.15,2.78) rectangle (1.95,2.90);
   \fill[cAmber!24] (1.22,2.90) rectangle (1.88,3.03);
-  \draw[cAmber!82!black, line width=0.42pt] (1.22,2.90) rectangle (1.88,3.03);
+  \draw[cAmber!82!black, line width=0.84pt] (1.22,2.90) rectangle (1.88,3.03);
   \node[small label, anchor=east, text=cBrown] at (1.12,2.96) {polymer film};
   \draw[leader, cBrown!82!black] (1.14,2.96)--(1.20,2.97);
   % Measurement state after the same specimen is moved by hand.
   \fill[cGray!22] (2.18,2.78) rectangle (2.98,2.90);
-  \draw[cGray!82!black, line width=0.42pt] (2.18,2.78) rectangle (2.98,2.90);
+  \draw[cGray!82!black, line width=0.84pt] (2.18,2.78) rectangle (2.98,2.90);
   \fill[cAmber!24] (2.25,2.90) rectangle (2.91,3.03);
-  \draw[cAmber!82!black, line width=0.42pt] (2.25,2.90) rectangle (2.91,3.03);
-  \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cTeal!78!black, line width=0.40pt]
+  \draw[cAmber!82!black, line width=0.84pt] (2.25,2.90) rectangle (2.91,3.03);
+  \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cTeal!78!black, line width=0.84pt]
     (1.97,2.84)--(2.16,2.84);
   \node[small label, text=cTeal!60!black, anchor=north]
     at (2.065,2.73) {manual transfer};
 
   % The charged surface is repeated in both states to preserve specimen identity.
   \foreach \x in {1.38,1.56,1.74,2.41,2.59,2.77} {
-    \fill[cRed!76!black] (\x,3.06) circle (0.040);
-    \draw[cRed!86!black, line width=0.26pt] (\x,3.06) circle (0.040);
+    \fill[cRed!82!black] (\x,3.06) circle (0.040);
     \node[font=\sffamily\bfseries\fontsize{4.0}{4.8}\selectfont,
           text=white, inner sep=0pt] at (\x,3.06) {$+$};
   }
 
   % Corona charging station.
-  \draw[cGray!82!black, line width=0.38pt] (1.44,3.70)--(1.66,3.70);
-  \draw[cGray!82!black, line width=0.42pt] (1.55,3.70)--(1.55,3.43);
+  \draw[cGray!82!black, line width=0.84pt] (1.44,3.70)--(1.66,3.70);
+  \draw[cGray!82!black, line width=0.84pt] (1.55,3.70)--(1.55,3.43);
   \fill[cGray!82!black] (1.51,3.43)--(1.59,3.43)--(1.55,3.34)--cycle;
   \foreach \dx in {-0.08,0,0.08} {
-    \draw[cRed!66!black, line width=0.28pt]
+    \draw[cRed!66!black, line width=0.84pt]
       (1.55,3.31)--({1.55+\dx},3.24);
   }
   \node[small label, anchor=east, text=cGray!82!black] at (1.41,3.68) {$\mathrm{HV}^{+}$};
@@ -363,30 +362,30 @@
   % the specimen, and a wired readout. The exact model is not declared.
   \fill[black, opacity=0.08] (2.54,3.20) rectangle (2.70,3.64);
   \fill[cGray!18] (2.52,3.18) rectangle (2.66,3.62);
-  \draw[cGray!82!black, line width=0.42pt] (2.52,3.18) rectangle (2.66,3.62);
+  \draw[cGray!82!black, line width=0.84pt] (2.52,3.18) rectangle (2.66,3.62);
   \fill[cGray!82!black] (2.53,3.18) rectangle (2.65,3.22);
-  \draw[cGray!92!black, line width=0.28pt] (2.53,3.18) rectangle (2.65,3.22);
-  \draw[cGray!88!black, line width=0.30pt] (2.59,3.62)
+  \draw[cGray!92!black, line width=0.84pt] (2.53,3.18) rectangle (2.65,3.22);
+  \draw[cGray!88!black, line width=0.84pt] (2.59,3.62)
     .. controls (2.78,3.60) and (3.00,3.50) .. (3.28,3.43);
   \node[small label, anchor=south] at (2.59,3.64) {ESVM head};
 
   % Schematic ESVM readout; controls remain model-agnostic.
   \fill[black, opacity=0.10] (3.30,2.82) rectangle (4.31,3.47);
   \shade[top color=cGray!7, bottom color=cGray!22] (3.25,2.87) rectangle (4.26,3.52);
-  \draw[cGray!80!black, line width=0.46pt] (3.25,2.87) rectangle (4.26,3.52);
-  \draw[cGray!48!black, line width=0.26pt] (3.32,2.94) rectangle (4.19,3.45);
+  \draw[cGray!80!black, line width=0.90pt] (3.25,2.87) rectangle (4.26,3.52);
+  \draw[cGray!42!black, line width=0.84pt] (3.32,2.94) rectangle (4.19,3.45);
   \fill[cGray!76!black] (3.40,3.16) rectangle (4.11,3.37);
-  \draw[cGray!92!black, line width=0.26pt] (3.40,3.16) rectangle (4.11,3.37);
+  \draw[cGray!92!black, line width=0.84pt] (3.40,3.16) rectangle (4.11,3.37);
   \node[font=\sffamily\fontsize{4.7}{5.6}\selectfont, text=white] at (3.755,3.265) {$V_s$};
   \shade[ball color=cGray!88] (3.25,3.43) circle (0.032);
   \shade[ball color=cTeal!70] (3.43,3.02) circle (0.032);
   \node[font=\sffamily\fontsize{3.8}{4.5}\selectfont, text=cGray!78!black] at (3.82,3.02) {ESVM};
   \node[small label, anchor=south] at (3.76,3.54) {$V_s$ meter};
 
-  \draw[cGray!72, line width=0.28pt] (2.98,2.84)--(3.18,2.84);
+  \draw[cGray!72, line width=0.84pt] (2.98,2.84)--(3.18,2.84);
   \node[small label, anchor=north west, align=left] at (3.28,2.78) {grounded\\substrate};
-  \draw[cGray, line width=0.36pt] (3.18,2.84)--(3.18,2.57);
-  \draw[cGray, line width=0.34pt]
+  \draw[cGray, line width=0.84pt] (3.18,2.84)--(3.18,2.57);
+  \draw[cGray, line width=0.84pt]
     (3.05,2.57)--(3.31,2.57)
     (3.09,2.51)--(3.27,2.51)
     (3.13,2.46)--(3.23,2.46);
@@ -396,16 +395,15 @@
   \draw[axis line] (0.66,1.52)--(4.24,1.52);
   \node[body label, rotate=90] at (0.28,2.02) {$V_s(t)$};
   \node[body label, anchor=west] at (4.29,1.52) {$t$};
-  \draw[cRed!76!black, line width=0.68pt]
+  \draw[cRed!76!black, line width=1.0pt]
     (0.88,2.37) .. controls (1.36,2.04) and (1.86,1.70) .. (2.72,1.58)
                 .. controls (3.20,1.52) and (3.66,1.52) .. (4.02,1.52);
   \foreach \x/\y in {1.10/2.20,1.66/1.84,2.35/1.63} {
-    \fill[cRed!68] (\x,\y) circle (0.048);
-    \draw[cRed!75!black, line width=0.25pt] (\x,\y) circle (0.048);
+    \fill[cRed!82!black] (\x,\y) circle (0.055);
   }
 
   % Explicit raw-to-derived transformation.
-  \draw[-{Stealth[length=3.0pt,width=2.2pt]}, cGray!72!black, line width=0.48pt]
+  \draw[-{Stealth[length=3.0pt,width=2.2pt]}, cGray!72!black, line width=0.84pt]
     (3.80,1.44)--(3.80,1.24);
 
   % Derived trap-density distribution in energy space.
@@ -418,32 +416,30 @@
     plot[domain=0.96:2.16, samples=36, smooth]
       (\x,{0.36 + 0.42*exp(-((\x-1.56)*(\x-1.56))/0.0648)})
     -- (2.16,0.36) -- (0.96,0.36) -- cycle;
-  \draw[cBlue!84!black, line width=0.58pt]
+  \draw[cBlue!84!black, line width=1.0pt]
     plot[domain=0.96:2.16, samples=36, smooth]
       (\x,{0.36 + 0.42*exp(-((\x-1.56)*(\x-1.56))/0.0648)});
   \fill[cRed!22]
     plot[domain=2.28:3.76, samples=42, smooth]
       (\x,{0.36 + 0.79*exp(-((\x-3.02)*(\x-3.02))/0.1800)})
     -- (3.76,0.36) -- (2.28,0.36) -- cycle;
-  \draw[cRed!84!black, line width=0.66pt]
+  \draw[cRed!84!black, line width=1.0pt]
     plot[domain=2.28:3.76, samples=42, smooth]
       (\x,{0.36 + 0.79*exp(-((\x-3.02)*(\x-3.02))/0.1800)});
   \foreach \x/\y in {1.32/0.53,1.56/0.78,1.80/0.53} {
-    \fill[cBlue!72] (\x,\y) circle (0.043);
-    \draw[cBlue!88!black, line width=0.25pt] (\x,\y) circle (0.043);
+    \fill[cBlue!82!black] (\x,\y) circle (0.050);
   }
   \foreach \x/\y in {2.70/0.81,3.02/1.15,3.34/0.81} {
-    \fill[cRed!72] (\x,\y) circle (0.043);
-    \draw[cRed!88!black, line width=0.25pt] (\x,\y) circle (0.043);
+    \fill[cRed!82!black] (\x,\y) circle (0.050);
   }
   % Paper-local authority defines tau_d as the energy-domain interval between
   % the shallow and deep Gaussian peak positions.
-  \draw[cGray!48, dash pattern=on 1.3pt off 1.3pt, line width=0.25pt]
+  \draw[cGray!38, dash pattern=on 1.3pt off 1.3pt, line width=0.84pt]
     (1.56,0.78)--(1.56,1.24)
     (3.02,1.15)--(3.02,1.24);
-  \draw[cGray!68!black, line width=0.30pt]
+  \draw[cGray!68!black, line width=0.84pt]
     (1.56,1.28)--(3.02,1.28);
-  \draw[cGray!68!black, line width=0.30pt]
+  \draw[cGray!68!black, line width=0.84pt]
     (1.56,1.24)--(1.56,1.32) (3.02,1.24)--(3.02,1.32);
   \node[small label, text=cGray!72!black, fill=white,
         inner xsep=1.2pt, inner ysep=0.45pt]

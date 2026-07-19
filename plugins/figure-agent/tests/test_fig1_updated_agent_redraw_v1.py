@@ -257,6 +257,23 @@ def test_repaired_panel_d_strokes_survive_nature_double_column_scale() -> None:
     assert "Debye" not in panel_d
 
 
+def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
+    widths = [
+        float(value)
+        for value in re.findall(
+            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_e
+        )
+    ]
+
+    assert widths
+    assert min(widths) >= 0.84
+    assert "ESVM head" in panel_e
+    assert "manual transfer" in panel_e
+    assert "Kelvin" not in panel_e
+
+
 def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
     registry = _yaml("../../_known_false_positives.yaml")
     fig1_patterns = [
