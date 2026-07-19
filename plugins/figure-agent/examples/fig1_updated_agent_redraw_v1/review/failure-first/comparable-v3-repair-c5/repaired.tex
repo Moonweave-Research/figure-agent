@@ -365,8 +365,8 @@
   % Raw surface-potential decay.
   \draw[axis line] (0.66,1.52)--(0.66,2.49);
   \draw[axis line] (0.66,1.52)--(4.24,1.52);
-  \node[small label, rotate=90] at (0.28,2.02) {$V_s(t)$};
-  \node[small label, anchor=north east] at (4.21,1.44) {$t$};
+  \node[body label, rotate=90] at (0.28,2.02) {$V_s(t)$};
+  \node[body label, anchor=north east] at (4.21,1.44) {$t$};
   \draw[cRed!76!black, line width=0.68pt]
     (0.88,2.37) .. controls (1.36,2.04) and (1.86,1.70) .. (2.72,1.58)
                 .. controls (3.20,1.52) and (3.66,1.52) .. (4.02,1.52);
@@ -383,8 +383,8 @@
   % Derived trap-density distribution in energy space.
   \draw[axis line] (0.66,0.36)--(0.66,1.42);
   \draw[axis line] (0.66,0.36)--(4.24,0.36);
-  \node[small label, rotate=90] at (0.28,0.82) {$g(E_t)$};
-  \node[small label, anchor=north east] at (4.21,0.29) {$E_t$};
+  \node[body label, rotate=90] at (0.28,0.82) {$g(E_t)$};
+  \node[body label, anchor=north east] at (4.21,0.29) {$E_t$};
   % Derived DOS: true Gaussians with deep/shallow peak-height ratio ~1.86.
   \fill[cBlue!22]
     plot[domain=0.96:2.16, samples=36, smooth]
