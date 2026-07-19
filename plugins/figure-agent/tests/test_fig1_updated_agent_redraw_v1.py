@@ -141,6 +141,15 @@ def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
     assert r"\fontsize{3.2}" not in transfer_node
 
 
+def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+
+    assert r"{mechanical\\clamp}" in source
+    assert "{mechanical clamp}" not in source
+    assert r"{trapped charge $q_{\mathrm{tr}}$}" in source
+    assert r"(1.09,0.42)--(1.02,0.82)" not in source
+
+
 def test_r5_v2_predeclaration_frees_composition_but_binds_vertical_cantilever() -> None:
     run_root = (
         PLUGIN_ROOT
