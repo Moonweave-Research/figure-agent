@@ -460,7 +460,7 @@
   \draw[cGray!76!black, line width=0.90pt] (2.00,3.33)--(2.00,3.46);
 
   % Bespoke floating polymer cantilever, visibly deflected toward the left.
-  \shade[top color=cAmber!17, bottom color=cAmber!46, rounded corners=0.45mm]
+  \fill[cAmber!30, rounded corners=0.45mm]
     (1.91,3.21) .. controls (1.93,2.48) and (1.53,1.52) ..
     (0.82,0.82) -- (0.96,0.67) .. controls (1.75,1.39) and
     (2.12,2.46) .. (2.09,3.21) -- cycle;
@@ -477,7 +477,7 @@
   }
 
   % Driven metal electrode and compact bias circuit.
-  \shade[left color=cGray!32, right color=cGray!12]
+  \fill[cGray!20]
     (3.54,0.66) rectangle (3.76,3.02);
   \draw[cGray!84!black, line width=1.0pt] (3.54,0.66) rectangle (3.76,3.02);
   \foreach \hy in {0.90,1.38,1.86,2.34,2.82} {

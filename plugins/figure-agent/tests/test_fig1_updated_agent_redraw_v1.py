@@ -293,6 +293,7 @@ def test_repaired_panel_f_and_full_figure_have_no_source_hairlines() -> None:
     assert r"{mechanical\\clamp}" in panel_f
     assert r"{floating polymer\\cantilever}" in panel_f
     assert r"{trapped charge $q_{\mathrm{tr}}$}" in panel_f
+    assert r"\shade" not in panel_f
 
 
 def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
