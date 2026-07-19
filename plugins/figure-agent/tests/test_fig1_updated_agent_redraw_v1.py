@@ -211,6 +211,21 @@ def test_repaired_panel_b_strokes_survive_nature_double_column_scale() -> None:
     assert min(widths) >= 0.84
 
 
+def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_c = source.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
+    widths = [
+        float(value)
+        for value in re.findall(
+            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_c
+        )
+    ]
+
+    assert widths
+    assert min(widths) >= 0.84
+    assert "circle (0.040);\n    \\draw" not in panel_c
+
+
 def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
     registry = _yaml("../../_known_false_positives.yaml")
     fig1_patterns = [
