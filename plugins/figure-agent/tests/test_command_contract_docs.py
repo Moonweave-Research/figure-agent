@@ -109,6 +109,15 @@ def test_skill_audits_panel_area_against_rendered_occupancy() -> None:
     assert "fail at reduction scale" in doc
 
 
+def test_skill_carries_nature_communications_figure_constraints() -> None:
+    doc = _read("skills/figure-agent/SKILL.md")
+
+    assert "target is Nature Communications" in doc
+    assert "lower-case bold panel letters" in doc
+    assert "no final printed line below 1 pt" in doc
+    assert "same\nreduction factor" in doc
+
+
 def test_fig_run_documents_explicit_json_output_spellings() -> None:
     doc = _read("commands/fig_run.md")
 

@@ -401,6 +401,14 @@ claim-bearing marks at final reduction rather than merely moving whitespace betw
 rows. Treat a dense panel as undersized only when its labels, axes, or semantic
 separation fail at reduction scale.
 
+When the declared target is Nature Communications, audit against its current
+figure guidance: lower-case bold panel letters, clear sans-serif lettering at an
+approximately common size, a white background, restrained boxing/color/decorative
+effects, and no final printed line below 1 pt. Size every panel for the same
+reduction factor rather than inventing a hero exception. Recheck the official
+Nature Communications author page before final compliance work because journal
+requirements can change.
+
 Compare equivalent axis titles, variables, units, and endpoint labels across
 panels at the final reduction. Keep scientifically co-equal axes on a common
 typographic floor; do not demote a crowded panel's claim-bearing axes to an

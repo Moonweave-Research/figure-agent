@@ -789,7 +789,7 @@ def test_context_pack_scopes_per_fixture_catalog_to_its_own_fixture() -> None:
     assert catalog["fixture"] == "fig1_overview_v2_pair_001_vault"
     assert payload["sources"]["rule_catalog"].endswith("authoring-rules-pair001.md")
     rule_ids = [rule["id"] for rule in catalog["rules"]]
-    assert "pair001.panel-c-hero-split" in rule_ids
+    assert "pair001.panel-c-balanced-dual-view" in rule_ids
 
 
 def test_context_pack_selects_rule_catalog_by_paper_id_for_later_figure(
@@ -817,7 +817,9 @@ def test_context_pack_selects_rule_catalog_by_paper_id_for_later_figure(
     assert catalog is not None
     assert catalog["fixture"] == "fig1_overview_v2_pair_001_vault"
     assert payload["sources"]["rule_catalog"].endswith("authoring-rules-pair001.md")
-    assert "pair001.panel-c-hero-split" in [rule["id"] for rule in catalog["rules"]]
+    assert "pair001.panel-c-balanced-dual-view" in [
+        rule["id"] for rule in catalog["rules"]
+    ]
 
 
 def test_context_pack_accepts_explicit_rule_catalog_selector(tmp_path: Path) -> None:

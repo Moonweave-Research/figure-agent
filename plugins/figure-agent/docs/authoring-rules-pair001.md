@@ -3,13 +3,13 @@ schema: figure-agent.authoring-rules.v1
 fixture: fig1_overview_v2_pair_001_vault
 promotion_state: n1_hypotheses
 rules:
-  - id: pair001.panel-c-hero-split
+  - id: pair001.panel-c-balanced-dual-view
     category: physics_semantics
-    rule: Treat localized traps as the primary semantic hero and preserve the real-space plus energy-diagram split when transferring Fig 1 knowledge.
+    rule: Preserve the real-space plus energy-diagram split for localized traps, but allocate only the extra area required for common-scale legibility; do not assign Panel C privileged hero status.
     source:
-      kind: iteration_comment
-      locator: examples/fig1_overview_v2_pair_001_vault/spec.yaml:21-23
-      quote: "Localized traps (HERO #1) — real-space + energy diagram split"
+      kind: critique_adjudication
+      locator: examples/fig1_updated_agent_redraw_v1/briefing.md
+      quote: "Panel C integrates the real-space and energy-domain trap views, but it is not a privileged visual hero."
     transfer_policy: use_as_constraint
   - id: pair001.panel-c-reference-gap
     category: physics_semantics
@@ -129,13 +129,13 @@ rules:
       locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:670
       quote: "registers at 178mm print scale as a visible"
     transfer_policy: use_as_question
-  - id: pair001.hero-saturation-hierarchy
+  - id: pair001.balanced-saturation-hierarchy
     category: style_lock
-    rule: Preserve panel visual hierarchy; the HERO panel must out-saturate secondary panels and the loudest color is reserved for the hero claim. Audit when a non-hero color reads as too prominent.
+    rule: Use saturation to bind scientific categories consistently across panels; do not reserve the loudest color for Panel C solely because it was formerly designated as a hero.
     source:
-      kind: iteration_comment
-      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:675
-      quote: "Panel C HERO must out-saturate Panel E"
+      kind: critique_adjudication
+      locator: examples/fig1_updated_agent_redraw_v1/briefing.md
+      quote: "it is not a privileged visual hero"
     transfer_policy: use_as_constraint
   - id: pair001.label-tone-and-rotation-legibility
     category: label_binding

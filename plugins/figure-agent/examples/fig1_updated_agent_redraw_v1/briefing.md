@@ -13,10 +13,13 @@ unreviewed electrical interpretation. The first render is a structural baseline,
 not an aesthetic replacement for v5f; human review must judge whether its visual
 language actually improves on the reference.
 
-Panel C is the sole hero. Panels D--F are compact evidence modules: retain
-scientific relations, suppress instrument decoration, and keep labels outside
-the depicted apparatus. In Panel F, the voltage-source return is grounded;
-the sample and cantilever remain electrically floating.
+Panel C integrates the real-space and energy-domain trap views, but it is not a
+privileged visual hero. Give it only the additional area needed to keep both
+representations legible at the common reduction used for all panels. Panels
+D--F are compact evidence modules: retain scientific relations, suppress
+instrument decoration, and keep labels outside the depicted apparatus. The
+publication target is Nature Communications. In Panel F, the voltage-source
+return is grounded; the sample and cantilever remain electrically floating.
 
 Machine checks support inspection only. A named human review is required before
 any development-baseline or publication claim.

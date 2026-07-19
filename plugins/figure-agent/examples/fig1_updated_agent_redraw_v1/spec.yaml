@@ -13,7 +13,7 @@ panels:
   - id: B
     caption: sulfur-content composition series
   - id: C
-    caption: localized trap landscape, visual hero
+    caption: localized trap landscape, balanced dual view
     semantic_claims:
       - id: trap-landscape
         claim: shallow and deep trapping states coexist in a sulfur-rich polymer.
