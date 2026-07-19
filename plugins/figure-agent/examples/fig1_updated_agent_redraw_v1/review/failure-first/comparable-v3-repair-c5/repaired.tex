@@ -325,7 +325,7 @@
   \node[panel letter, anchor=west] at (0.28,4.12) {E};
   \node[panel title] at (0.82,4.12) {ISPD trap distribution};
 
-  % Non-contact induced electrostatic-voltmeter measurement (not a Kelvin probe).
+  % Keyence SK series induction-type, non-contact electrostatic measurement.
   % Two explicit states of the same specimen: corona charging at left, then
   % manual relocation to the adjacent non-contact ESVM station at right.
   % Charging state.
@@ -363,8 +363,8 @@
       (1.55,3.31)--({1.55+\dx},3.24);
   }
   \node[small label, anchor=east, text=cGray!82!black] at (1.41,3.68) {$\mathrm{HV}^{+}$};
-  % Non-contact SK-series sensor head: a slim rectangular body with a flat
-  % sensing face toward the sample, replacing the Kelvin-like disk icon.
+  % Family-level sensor-head abstraction: slim body, flat sensing face toward
+  % the specimen, and a wired readout. The exact model is not declared.
   \fill[black, opacity=0.08] (2.54,3.20) rectangle (2.70,3.64);
   \fill[cGray!18] (2.52,3.18) rectangle (2.66,3.62);
   \draw[cGray!82!black, line width=0.42pt] (2.52,3.18) rectangle (2.66,3.62);
@@ -374,7 +374,7 @@
     .. controls (2.78,3.60) and (3.00,3.50) .. (3.28,3.43);
   \node[small label, anchor=south] at (2.59,3.64) {ESVM head};
 
-  % Hand-built ESVM faceplate with inset screen, bezel, socket and status LED.
+  % Schematic ESVM readout; controls remain model-agnostic.
   \fill[black, opacity=0.10] (3.30,2.82) rectangle (4.31,3.47);
   \shade[top color=cGray!7, bottom color=cGray!22] (3.25,2.87) rectangle (4.26,3.52);
   \draw[cGray!80!black, line width=0.46pt] (3.25,2.87) rectangle (4.26,3.52);
