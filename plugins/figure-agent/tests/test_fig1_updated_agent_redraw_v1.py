@@ -288,6 +288,11 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     # nearly white and its boundary neutral, reserving amber for chemistry.
     assert "\\fill[cAmber!6]" in panel_c
     assert "\\draw[cGray!72!black, line width=0.90pt]" in panel_c
+    # Colour encodes the trap populations in marks and curves, not in text;
+    # neutral labels remain readable in grayscale and colour-blind viewing.
+    assert "text=cBlue" not in panel_c
+    assert "text=cRed" not in panel_c
+    assert "rotate=90, text=cGray!92!black" in panel_c
     # Keep the DOS legible through its publication-weight outline instead of
     # locking a saturated area fill that makes the schematic read as artwork.
     for color in ("Blue", "Red"):
