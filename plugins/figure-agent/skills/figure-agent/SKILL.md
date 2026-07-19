@@ -291,6 +291,12 @@ electrode, or interface needed to interpret the measurement. Instrument names,
 wires, and grounds do not establish what material is measured; an unbound or
 unlabeled specimen region is missing experimental provenance.
 
+Inventory every guide, construction line, alignment rail, field-like trace,
+halo, and bracket that remains in publication-visible pixels. Require each mark
+to bind to a named variable, boundary, material, or physical relation; repeated
+geometry is not self-explanatory. Remove an unbound mark instead of preserving
+it merely because a reusable component emitted it.
+
 When the same population, specimen, or state is shown in multiple representations,
 require visible correspondence through aligned anchors, identifiers, color, or
 leaders. Keep an equivalence connector out of plot axes and avoid arrowheads or

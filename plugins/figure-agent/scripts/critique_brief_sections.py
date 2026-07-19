@@ -85,6 +85,11 @@ For every apparatus schematic, identify the specimen and any active film, layer,
 electrode, or interface required to interpret the measurement. Named instruments,
 wires, and grounds do not establish what material is being measured; route an
 unbound or unlabeled specimen region as missing experimental provenance.
+Inventory every guide, construction line, alignment rail, field-like trace,
+halo, and bracket that survives into publication-visible pixels. Each must bind
+to a named variable, boundary, material, or physical relation; repetition alone
+does not give a mark scientific meaning. Route an unbound mark as removable ink
+rather than preserving it because it came from a reusable component.
 When one population, specimen, or state appears in multiple representations
 (for example real space, energy space, and a derived distribution), verify an
 explicit correspondence through aligned anchors, identifiers, color, or leaders.
@@ -330,8 +335,9 @@ _AESTHETIC_ANTIPATTERN_PROMPTS = {
         "reference class, such as restraint, hierarchy, density, or finish?"
     ),
     "decorative_detail_without_explanatory_value": (
-        "Is any texture, pattern, icon detail, or embellishment visible but not "
-        "helping the reader understand the science?"
+        "Is any texture, pattern, icon detail, guide, construction line, "
+        "alignment rail, field-like trace, or embellishment visible without "
+        "binding to a variable, boundary, material, or physical relation?"
     ),
 }
 

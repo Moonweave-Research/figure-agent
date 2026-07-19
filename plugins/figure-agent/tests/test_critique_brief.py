@@ -628,6 +628,9 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "active film, layer" in brief
     assert "do not establish what material is being measured" in brief
     assert "missing experimental provenance" in brief
+    assert "Inventory every guide, construction line, alignment rail" in brief
+    assert "repetition alone" in brief
+    assert "does not give a mark scientific meaning" in brief
     assert "appears in multiple representations" in brief
     assert "explicit correspondence" in brief
     assert "invented transport" not in brief
