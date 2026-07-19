@@ -263,6 +263,10 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert "circle (0.10)" not in panel_c
     assert panel_c.count("circle (0.075)") == 2
     assert panel_c.count("circle (0.070)") == 2
+    # A material field is not a colored cartoon object: keep its broad area
+    # nearly white and its boundary neutral, reserving amber for chemistry.
+    assert "\\fill[cAmber!6]" in panel_c
+    assert "\\draw[cGray!72!black, line width=0.90pt]" in panel_c
     # Keep the DOS legible through its publication-weight outline instead of
     # locking a saturated area fill that makes the schematic read as artwork.
     for color in ("Blue", "Red"):
