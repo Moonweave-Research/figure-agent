@@ -392,6 +392,15 @@ headings, whitespace gutters, and neighboring content, then flag labels that
 cross into a sibling lane or beyond the shared canvas. Do not treat the absence
 of a closed rectangle as the absence of a boundary.
 
+Audit panel proportions from both allocated area and rendered content occupancy;
+do not infer importance from area alone or reward an equal grid by default. A hero
+panel may be larger when it integrates multiple necessary representations, but
+flag size created mainly by empty header bands, unused margins, or decorative
+containers. Before resizing, verify that the proposed boundary change enlarges
+claim-bearing marks at final reduction rather than merely moving whitespace between
+rows. Treat a dense panel as undersized only when its labels, axes, or semantic
+separation fail at reduction scale.
+
 Compare equivalent axis titles, variables, units, and endpoint labels across
 panels at the final reduction. Keep scientifically co-equal axes on a common
 typographic floor; do not demote a crowded panel's claim-bearing axes to an

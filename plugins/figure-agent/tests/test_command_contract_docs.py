@@ -100,6 +100,15 @@ def test_skill_treats_thin_stroke_warnings_as_print_findings() -> None:
     assert "visible when\nzoomed in" in doc
 
 
+def test_skill_audits_panel_area_against_rendered_occupancy() -> None:
+    doc = _read("skills/figure-agent/SKILL.md")
+
+    assert "allocated area and rendered content occupancy" in doc
+    assert "do not infer importance from area alone" in doc
+    assert "merely moving whitespace between\nrows" in doc
+    assert "fail at reduction scale" in doc
+
+
 def test_fig_run_documents_explicit_json_output_spellings() -> None:
     doc = _read("commands/fig_run.md")
 
