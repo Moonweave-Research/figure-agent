@@ -636,6 +636,9 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "invents a second physical state" in brief
     assert "legible only in the crop" in brief
     assert "claim-preserving shortening" in brief
+    assert "For open-canvas multipanel figures" in brief
+    assert "separator rules" in brief
+    assert "missing rectangle does not remove" in brief
 
 
 def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):

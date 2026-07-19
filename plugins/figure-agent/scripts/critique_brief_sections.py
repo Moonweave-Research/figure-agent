@@ -97,6 +97,10 @@ Review every
 claim-bearing label in both its panel crop and the actual full-figure reduction;
 if it is legible only in the crop, recommend claim-preserving shortening or
 restructuring rather than another font-size reduction.
+For open-canvas multipanel figures, infer panel lanes from separator rules,
+heading alignment, whitespace gutters, and neighboring content even when no
+closed frame exists. A missing rectangle does not remove the panel boundary;
+route labels that trespass into a sibling lane or beyond the shared canvas.
     """
 
 

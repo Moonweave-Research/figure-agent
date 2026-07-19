@@ -311,6 +311,10 @@ Treat panel containers as semantic marks, not default decoration. Repeated
 rounded frames that only partition a grid can make a scientific figure read as
 UI cards; require a scientific boundary role, otherwise prefer an open canvas,
 whitespace, or restrained separator rules and re-check the full-figure hierarchy.
+An open canvas still has panel lanes: infer them from separator rules, aligned
+headings, whitespace gutters, and neighboring content, then flag labels that
+cross into a sibling lane or beyond the shared canvas. Do not treat the absence
+of a closed rectangle as the absence of a boundary.
 
 When a usable figure-level reference image or panel reference+bbox pair exists,
 `/fig_status` and `/fig_export` promote missing/stale `critique.md` to a
