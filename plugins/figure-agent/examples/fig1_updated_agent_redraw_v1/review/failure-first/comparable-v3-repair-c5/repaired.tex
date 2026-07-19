@@ -148,25 +148,35 @@
     .. controls (0.74,3.48) and (0.78,1.90) .. (0.82,1.23) -- cycle;
   \draw[white, opacity=0.62, line width=0.38pt]
     (1.00,4.27) .. controls (2.44,4.20) and (4.62,4.31) .. (6.01,4.24);
-  \foreach \yy/\phase in {3.63/0,2.78/18,1.92/-12} {
-    \draw[cBrown!72!black, line width=0.56pt]
-      (1.12,\yy) .. controls (1.65,{\yy+0.34}) and (2.14,{\yy-0.30}) .. (2.74,\yy)
-      .. controls (3.32,{\yy+0.31}) and (3.92,{\yy-0.28}) .. (4.48,\yy)
-      .. controls (5.02,{\yy+0.28}) and (5.55,{\yy-0.24}) .. (5.91,\yy);
-    \foreach \xx in {1.42,2.70,4.45,5.62} {
-      \shade[ball color=cAmberSphere!80] (\xx,{\yy+0.055*cos(\phase+\xx*70)}) circle (0.045);
-    }
+  % Irregular polysulfide-rich strands: distinct curvature and phase prevent
+  % the material texture from reading as parallel transport-energy waves.
+  \draw[cBrown!72!black, line width=0.56pt]
+    (1.10,3.56) .. controls (1.54,3.92) and (2.08,3.28) .. (2.58,3.55)
+    .. controls (3.10,3.88) and (3.70,3.34) .. (4.20,3.60)
+    .. controls (4.76,3.88) and (5.34,3.30) .. (5.94,3.56);
+  \draw[cBrown!72!black, line width=0.56pt]
+    (1.08,2.57) .. controls (1.52,2.28) and (1.94,2.96) .. (2.54,2.67)
+    .. controls (3.12,2.36) and (3.62,2.92) .. (4.22,2.55)
+    .. controls (4.78,2.22) and (5.34,2.78) .. (5.94,2.48);
+  \draw[cBrown!72!black, line width=0.56pt]
+    (1.12,1.60) .. controls (1.64,1.91) and (2.10,1.35) .. (2.66,1.60)
+    .. controls (3.24,1.85) and (3.82,1.38) .. (4.40,1.64)
+    .. controls (4.94,1.91) and (5.44,1.52) .. (5.92,1.74);
+  \foreach \xx/\yy in {1.54/3.73,3.42/3.65,5.18/3.47,
+                         1.72/2.65,3.73/2.80,5.42/2.61,
+                         2.20/1.47,4.18/1.55,5.63/1.67} {
+    \shade[ball color=cAmberSphere!80] (\xx,\yy) circle (0.045);
   }
-  \foreach \x/\y in {1.72/3.48,4.88/2.92} {
+  \foreach \x/\y in {1.72/1.80,4.88/2.92} {
     \shade[ball color=cBlue!66] (\x,\y) circle (0.095);
     \draw[cBlue!85!black, line width=0.26pt] (\x,\y) circle (0.095);
   }
-  \foreach \x/\y in {2.56/1.78,5.26/1.62} {
+  \foreach \x/\y in {2.56/3.43,5.26/1.62} {
     \shade[ball color=cRed!68] (\x,\y) circle (0.11);
     \draw[cRed!88!black, line width=0.26pt] (\x,\y) circle (0.11);
   }
   \node[small label, text=cBlue!85!black, anchor=west] at (1.02,0.78) {shallow sites};
-  \draw[leader, cBlue!78!black] (2.02,0.86)--(1.74,3.33);
+  \draw[leader, cBlue!78!black] (2.02,0.86)--(1.74,1.65);
   \node[small label, text=cRed!88!black, anchor=east] at (6.02,0.78) {deep sites};
   \draw[leader, cRed!82!black] (5.12,0.86)--(5.25,1.47);
   \node[small label, text=cBrown, anchor=north east] at (6.03,4.12) {poly(S-\emph{r}-DIB) film};
@@ -227,17 +237,21 @@
   \node[body label, font=\sffamily\bfseries\fontsize{6.0}{7.2}\selectfont,
         text=cRed!82!black, anchor=west] at (10.62,1.68) {deep};
 
-  \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cBlue!78!black, line width=0.44pt]
+  \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cBlue!78!black,
+        line width=0.52pt, dashed]
     (9.60,3.04) .. controls (9.43,3.26) and (9.58,3.54) .. (9.73,3.74);
-  \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cRed!76!black, line width=0.44pt, dashed]
+  \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cRed!76!black,
+        line width=0.38pt, dashed]
     (9.88,1.88) .. controls (10.36,2.32) and (10.43,3.10) .. (10.22,3.74);
   \node[small label, anchor=west, text=cGray!85!black] at (10.48,3.58) {thermal escape};
-  % Trap-depth caliper: bind the endpoints to E_C and the deep-DOS peak.
-  \draw[cRed!72!black, line width=0.34pt]
-    (13.60,3.78)--(13.78,3.78) (13.60,1.68)--(13.78,1.68);
+  % Trap-depth caliper: E_C to a representative deep trap level. The upper
+  % endpoint lies on E_C; the lower endpoint owns a visible projection from
+  % the selected deep state instead of floating in the right margin.
+  \draw[cRed!55!black, opacity=0.56, line width=0.26pt,
+        dash pattern=on 1.5pt off 1.4pt] (10.38,1.88)--(12.20,1.88);
   \draw[{Stealth[length=2.7pt,width=2.0pt]}-{Stealth[length=2.7pt,width=2.0pt]},
-        cRed!72!black, line width=0.42pt] (13.72,1.68)--(13.72,3.78);
-  \node[body label, rotate=90, text=cRed!80!black] at (14.08,2.73) {$\Delta E_t$};
+        cRed!72!black, line width=0.42pt] (12.20,1.88)--(12.20,3.78);
+  \node[body label, rotate=90, text=cRed!80!black] at (12.52,2.83) {$\Delta E_t$};
   \draw[-{Stealth[length=2.5pt,width=1.9pt]}, cGray!82!black, line width=0.34pt]
     (7.82,0.50)--(9.08,0.50);
   \node[small label, text=cGray!82!black] at (8.45,0.30) {DOS};
