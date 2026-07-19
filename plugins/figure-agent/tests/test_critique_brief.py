@@ -619,6 +619,11 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "a floating measurement is a defect" in brief
     assert "relative peak" in brief
     assert "approximate ratio against the rendered" in brief
+    assert "high/low or" in brief
+    assert "alone is not sample identity" in brief
+    assert "preparation or excitation, acquisition" in brief
+    assert "deposited charge without a source" in brief
+    assert "process label/arrow overlapping data" in brief
 
 
 def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):

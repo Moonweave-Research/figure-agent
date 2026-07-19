@@ -277,6 +277,15 @@ rendered encoding and calculate it from source geometry when practical. Do not
 accept a verbally correct claim whose visible ratio says something weaker or
 different.
 
+For every comparative curve or response, require visible ownership by the named
+sample, material, condition, or control through an adjacent label or unambiguous
+legend. Qualifiers such as high/low, fast/slow, or shallow/deep are not specimen
+identity when the claim depends on which specimen produced the curve. For a
+multi-stage measurement schematic, trace preparation or excitation, acquisition,
+transformation, and result in order. Flag an unexplained state such as deposited
+charge without a source, and keep process labels/arrows out of data peaks,
+calipers, and axis-label lanes.
+
 Also inspect for workflow-metadata leakage. Terms such as `HERO`, priority,
 draft, iteration, reviewer notes, or approval state belong in comments/specs and
 must not appear in publication-visible pixels unless explicitly declared as

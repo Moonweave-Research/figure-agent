@@ -74,6 +74,13 @@ a floating measurement is a defect. Check every brief-declared relative peak
 height, width, slope, count, ordering, or approximate ratio against the rendered
 geometry, calculating from source coordinates when practical. A correct caption
 does not excuse a visibly weaker or contradictory encoding.
+For each comparative curve, response, or distribution, identify the producing
+sample, material, condition, or control from visible figure evidence; high/low or
+fast/slow alone is not sample identity. For each multi-stage measurement, trace
+preparation or excitation, acquisition, transformation, and result. Route an
+unexplained state such as deposited charge without a source, a missing stage, or
+a process label/arrow overlapping data, a caliper, or an axis-label lane to a
+normal finding.
     """
 
 
@@ -113,7 +120,8 @@ mechanism-level label/object conflicts. For every semantically named curve,
 distribution, band, well, or waveform, verify that the rendered morphology—not
 only its label and color—matches the brief, reference, or stable domain convention.
 Verify dimension/caliper endpoint ownership and all declared visual ratios or
-relative orderings against the rendered geometry.
+relative orderings against the rendered geometry. Verify comparative-curve sample
+ownership and the ordered provenance of every multi-stage measurement.
 
 ### 6. Composition and Layout
 Evaluate visual hierarchy, reading path, spacing, alignment, density, white
