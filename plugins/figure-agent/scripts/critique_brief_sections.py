@@ -330,9 +330,11 @@ typographic hierarchy.
 _AESTHETIC_ANTIPATTERN_PROMPTS = {
     "childish_shape_language": (
         "Do shapes, rounded boxes, oversized icons, or cartoon cues make the "
-        "figure feel juvenile rather than editorial? Do repeated rounded panel "
-        "containers create a UI-card grid without a scientific boundary role "
-        "where an open canvas would be clearer?"
+        "figure feel juvenile rather than editorial? Inspect repeated glossy or "
+        "ball-shaded particles, sites, and data markers: when depth does not encode "
+        "a real 3D or material relation, prefer restrained flat marks with clear "
+        "outlines. Do repeated rounded panel containers create a UI-card grid "
+        "without a scientific boundary role where an open canvas would be clearer?"
     ),
     "poster_gradient_decoration": (
         "Are gradients, shadows, glows, or decorative effects acting like "

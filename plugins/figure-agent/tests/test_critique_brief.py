@@ -689,6 +689,8 @@ def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):
 
     assert "## Aesthetic Anti-Pattern Checklist (host LLM MUST inspect)" in brief
     assert "childish_shape_language" in brief
+    assert "repeated glossy or ball-shaded particles" in brief
+    assert "depth does not encode a real 3D or material relation" in brief
     assert "repeated rounded panel containers" in brief
     assert "UI-card grid" in brief
     assert "poster_gradient_decoration" in brief

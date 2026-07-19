@@ -64,6 +64,19 @@ def test_current_ispd_rules_preserve_manual_keyence_measurement() -> None:
     assert "exact model" in ispd_rule["rule"]
 
 
+def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
+    )
+
+    rule = next(
+        rule for rule in catalog["rules"] if rule["id"] == "pair001.depth-cues-need-semantics"
+    )
+    assert "glossy or ball-shaded" in rule["rule"]
+    assert "declared 3D geometry or material relation" in rule["rule"]
+    assert "does not require apparatus photorealism" in rule["rule"]
+
+
 def test_rule_catalog_rejects_unanchored_generic_guidance(tmp_path: Path) -> None:
     path = tmp_path / "bad.md"
     path.write_text(

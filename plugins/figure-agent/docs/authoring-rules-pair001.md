@@ -153,6 +153,14 @@ rules:
       locator: examples/fig1_overview_v2_pair_001_vault/critique_adjudication.yaml P001-P003
       quote: "accept_simplification — iconic-cartoon register is briefing intent"
     transfer_policy: use_as_constraint
+  - id: pair001.depth-cues-need-semantics
+    category: style_lock
+    rule: "Do not use glossy or ball-shaded rendering as the neutral default for repeated sites, states, particles, or data markers. Keep those marks flat and restrained unless depth encodes a declared 3D geometry or material relation; this does not require apparatus photorealism."
+    source:
+      kind: iteration_comment
+      locator: "Fig1 C-F aesthetic review (2026-07-19)"
+      quote: "미감이 아직 조금 유치 한 느낌"
+    transfer_policy: use_as_constraint
   - id: pair001.no-actuator-framing-transfer
     category: physics_semantics
     rule: Do not transfer actuator or MEMS framing into the charge-trap mechanical panel; the apparatus reference is borrowed for grammar only.
