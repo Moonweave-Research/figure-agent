@@ -615,6 +615,10 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "wrong peak count" in brief
     assert "metadata such as HERO" in brief
     assert "Do not prescribe a reusable primitive as the only" in brief
+    assert "name both referents" in brief
+    assert "a floating measurement is a defect" in brief
+    assert "relative peak" in brief
+    assert "approximate ratio against the rendered" in brief
 
 
 def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):

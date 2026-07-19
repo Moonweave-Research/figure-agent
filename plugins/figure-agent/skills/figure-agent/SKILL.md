@@ -269,6 +269,14 @@ wrong relative width/height, or other claim-changing silhouettes to a normal
 finding. Do not require one reusable drawing primitive as the remedy; let the LLM
 choose a new construction and re-review the pixels.
 
+For every dimension, caliper, interval, or delta annotation, identify both named
+referents and verify that each endpoint touches or is visibly projected from its
+referent; a floating measurement is a defect. When the brief declares relative
+peak height, width, slope, count, ordering, or an approximate ratio, verify the
+rendered encoding and calculate it from source geometry when practical. Do not
+accept a verbally correct claim whose visible ratio says something weaker or
+different.
+
 Also inspect for workflow-metadata leakage. Terms such as `HERO`, priority,
 draft, iteration, reviewer notes, or approval state belong in comments/specs and
 must not appear in publication-visible pixels unless explicitly declared as

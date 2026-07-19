@@ -24,7 +24,7 @@ choose an analogy, and author editable TikZ or another declared representation.
 Figure Agent complements that capability where an unconstrained LLM is
 reliably weak:
 
-- preserving scientific objects, relations, forbidden implications, and domain-correct curve, distribution, and waveform morphology;
+- preserving scientific objects, relations, forbidden implications, domain-correct morphology, reference-owned dimension endpoints, and declared visual ratios;
 - seeing the rendered artifact at whole-figure, panel, object, and zoom scales;
 - detecting collisions, clipping, broken paths, workflow-metadata leakage, weak
   hierarchy, and ownership ambiguity;

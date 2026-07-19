@@ -68,6 +68,12 @@ metadata such as HERO, priority, draft, iteration, reviewer note, or approval
 state; route leakage to a finding unless the brief explicitly declares it as
 reader-facing scientific text. Do not prescribe a reusable primitive as the only
 repair: describe the rendered defect and let the authoring LLM choose the fix.
+For every dimension, caliper, interval, or delta annotation, name both referents
+and verify that each endpoint touches or is visibly projected from its referent;
+a floating measurement is a defect. Check every brief-declared relative peak
+height, width, slope, count, ordering, or approximate ratio against the rendered
+geometry, calculating from source coordinates when practical. A correct caption
+does not excuse a visibly weaker or contradictory encoding.
     """
 
 
@@ -106,6 +112,8 @@ scale/proximity, material/interface meaning, theory-guard invariants, and
 mechanism-level label/object conflicts. For every semantically named curve,
 distribution, band, well, or waveform, verify that the rendered morphology—not
 only its label and color—matches the brief, reference, or stable domain convention.
+Verify dimension/caliper endpoint ownership and all declared visual ratios or
+relative orderings against the rendered geometry.
 
 ### 6. Composition and Layout
 Evaluate visual hierarchy, reading path, spacing, alignment, density, white
