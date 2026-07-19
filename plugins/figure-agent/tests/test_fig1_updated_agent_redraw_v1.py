@@ -299,6 +299,7 @@ def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
     assert min(widths) >= 0.84
     assert "ESVM head" in panel_e
     assert "manual transfer" in panel_e
+    assert "{derive};" in panel_e
     assert "Kelvin" not in panel_e
     assert r"\shade" not in panel_e
     assert "opacity=" not in panel_e
