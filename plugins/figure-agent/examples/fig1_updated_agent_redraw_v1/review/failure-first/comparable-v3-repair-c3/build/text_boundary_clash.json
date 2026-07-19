@@ -1,9 +1,0 @@
-{
-  "candidates": [],
-  "checked": 0,
-  "fixture": "comparable-v3-repair-c3",
-  "render_pdf": "build/repaired.pdf",
-  "schema": "figure-agent.text-boundary-clash.v1",
-  "source": "spec.yaml:text_boundary_checks",
-  "total": 0
-}
