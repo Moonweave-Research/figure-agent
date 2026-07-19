@@ -286,6 +286,11 @@ transformation, and result in order. Flag an unexplained state such as deposited
 charge without a source, and keep process labels/arrows out of data peaks,
 calipers, and axis-label lanes.
 
+When the same population, specimen, or state is shown in multiple representations,
+require visible correspondence through aligned anchors, identifiers, color, or
+leaders. Keep an equivalence connector out of plot axes and avoid arrowheads or
+path styling that would falsely imply transport, causality, or chronology.
+
 Inspect every crossing between two semantic paths, or between a mechanism path
 and a state/reference line. Require an explicit junction, transition, or declared
 relation when the crossing carries meaning; otherwise route the accidental

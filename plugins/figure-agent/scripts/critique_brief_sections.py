@@ -81,6 +81,11 @@ preparation or excitation, acquisition, transformation, and result. Route an
 unexplained state such as deposited charge without a source, a missing stage, or
 a process label/arrow overlapping data, a caliper, or an axis-label lane to a
 normal finding.
+When one population, specimen, or state appears in multiple representations
+(for example real space, energy space, and a derived distribution), verify an
+explicit correspondence through aligned anchors, identifiers, color, or leaders.
+The connector must not cross an axis or use an arrow style that invents transport,
+causality, or chronology when it only denotes equivalence.
 Enumerate crossings between semantic paths and between mechanism paths and
 state/reference lines. A crossing without an explicit junction, transition, or
 declared relation is a finding because it can invent a mechanism. Review every
