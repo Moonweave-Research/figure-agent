@@ -255,6 +255,8 @@ def test_repaired_panel_d_strokes_survive_nature_double_column_scale() -> None:
     assert "PI control: low $n$" in panel_d
     assert "S-rich: high $n$" in panel_d
     assert "Debye" not in panel_d
+    assert r"\shade" not in panel_d
+    assert "opacity=" not in panel_d
 
 
 def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
