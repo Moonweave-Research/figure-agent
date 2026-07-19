@@ -143,6 +143,8 @@ def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
 
     assert "small label" in transfer_node
     assert r"\fontsize{3.2}" not in transfer_node
+    assert r"\fontsize{5.0}{5.8}" in transfer_node
+    assert "text=cGray!88!black" in transfer_node
 
 
 def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
