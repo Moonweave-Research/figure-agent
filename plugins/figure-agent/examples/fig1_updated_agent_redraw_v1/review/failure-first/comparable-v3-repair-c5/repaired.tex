@@ -193,6 +193,11 @@
   \draw[cGray!88!black, line width=0.52pt] (7.72,0.86)--(12.98,0.86);
   \node[body label, anchor=west] at (13.10,0.86) {$E_V$};
 
+  % Semantic energy windows bind each DOS to its levels and label without
+  % enclosing the diagram in another decorative container.
+  \fill[cBlue!6] (7.72,2.42) rectangle (12.98,3.34);
+  \fill[cRed!6] (7.72,0.98) rectangle (12.98,2.38);
+
   % Sample true sideways Gaussians; hand-shaped lens/cusp silhouettes are not DOS.
   \fill[cBlue!48, opacity=0.82]
     plot[domain=2.48:3.28, samples=36, smooth]
