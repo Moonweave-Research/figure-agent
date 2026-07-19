@@ -22,34 +22,70 @@
   \node[panel letter, anchor=west] at (0.28,4.62) {A};
   \node[panel title] at (0.82,4.62) {Sulfur-rich poly(S-r-DIB)};
 
-  \node[body label] at (2.22,1.42) {sulfur segment};
-  \foreach \x in {1.55,2.00,2.45,2.90} {
+  % --- elemental sulfur S8 crown (sulfur feedstock) ---
+  \coordinate (s8c) at (1.16,3.92);
+  \foreach \a/\i in {22.5/1,67.5/2,112.5/3,157.5/4,202.5/5,247.5/6,292.5/7,337.5/8} {
+    \coordinate (v\i) at ($(s8c)+(\a:0.39)$);
+  }
+  \draw[cAmber!82!black, line width=0.5pt, line join=round]
+    (v1)--(v2)--(v3)--(v4)--(v5)--(v6)--(v7)--(v8)--cycle;
+  \foreach \i in {1,...,8} {
+    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.30pt,
+          minimum size=1.48mm, inner sep=0pt,
+          font=\sffamily\bfseries\fontsize{3.1}{3.8}\selectfont, text=cBrown] at (v\i) {S};
+  }
+  \node[small label] at (1.86,3.92) {S$_8$};
+
+  % --- inverse-vulcanization transformation ---
+  \draw[-{Stealth[length=3.0pt,width=2.4pt]}, cGray, line width=0.5pt]
+    (2.10,3.66) .. controls (2.82,3.46) and (3.12,3.20) .. (3.40,2.92);
+  \node[small label, text=cBrown!92!black] at (3.02,4.02) {inverse vulcanization};
+  \node[small label] at (2.72,3.16) {$\Delta$};
+
+  % --- repeat unit: [ -S_x- meta-DIB (bis-thiocumyl) ]_n ---
+  \node[body label] at (1.95,1.44) {sulfur segment};
+  % left polysulfide -S-S-S-
+  \foreach \x in {1.52,1.94,2.36} {
     \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.42pt,
-          minimum size=2.8mm, inner sep=0pt,
-          font=\sffamily\bfseries\fontsize{5.2}{6.2}\selectfont, text=cBrown] (s\x) at (\x,2.45) {S};
+          minimum size=2.6mm, inner sep=0pt,
+          font=\sffamily\bfseries\fontsize{4.9}{5.9}\selectfont, text=cBrown] at (\x,2.30) {S};
   }
-  \draw[cAmber!85!black, line width=0.62pt] (1.69,2.45)--(1.86,2.45)
-    (2.14,2.45)--(2.31,2.45) (2.59,2.45)--(2.76,2.45);
-  \draw[cGray, line width=0.62pt] (3.04,2.45)--(3.48,2.45);
+  \draw[cAmber!85!black, line width=0.60pt] (1.69,2.30)--(1.77,2.30) (2.11,2.30)--(2.19,2.30);
+  \draw[cGray, line width=0.58pt] (2.53,2.30)--(2.86,2.30);
+  % left DIB-derived benzylic carbon (bare methyl stub = line-angle CH3)
+  \coordinate (bcl) at (3.02,2.30);
+  \draw[cGray, line width=0.50pt] (bcl)--($(bcl)+(0,-0.34)$);
+  \draw[cGray, line width=0.58pt] (bcl)--(3.49,2.45);
 
-  \coordinate (p1) at (4.00,2.45);
-  \foreach \a in {0,60,...,300} {
-    \coordinate (r\a) at ($(p1)+(\a:0.58)$);
+  % DIB benzene ring (meta 1,3), Kekule aromatic (inner double bonds offset inward)
+  \coordinate (p1) at (4.05,2.45);
+  \foreach \a in {0,60,120,180,240,300} { \coordinate (r\a) at ($(p1)+(\a:0.56)$); }
+  \draw[cGray, line width=0.62pt, line join=round] (r0)--(r60)--(r120)--(r180)--(r240)--(r300)--cycle;
+  \draw[cGray, line width=0.44pt] ($(r0)!0.2!(r60)!0.14!(p1)$)--($(r0)!0.8!(r60)!0.14!(p1)$);
+  \draw[cGray, line width=0.44pt] ($(r120)!0.2!(r180)!0.14!(p1)$)--($(r120)!0.8!(r180)!0.14!(p1)$);
+  \draw[cGray, line width=0.44pt] ($(r240)!0.2!(r300)!0.14!(p1)$)--($(r240)!0.8!(r300)!0.14!(p1)$);
+  \node[body label] at (4.05,3.42) {DIB-derived segment};
+
+  % right DIB-derived benzylic carbon (from r300) + continuing polysulfide (horizontal)
+  \coordinate (bcr) at ($(r300)+(0.34,0)$);
+  \draw[cGray, line width=0.58pt] (r300)--(bcr);
+  \draw[cGray, line width=0.50pt] (bcr)--($(bcr)+(0,-0.34)$);
+  \draw[cGray, line width=0.58pt] (bcr)--($(bcr)+(0.24,0)$);
+  \coordinate (sc2) at ($(bcr)+(0.48,0)$);
+  \foreach \x in {0,1} {
+    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.40pt,
+          minimum size=2.3mm, inner sep=0pt,
+          font=\sffamily\bfseries\fontsize{4.4}{5.3}\selectfont, text=cBrown] at ($(sc2)+(0.38*\x,0)$) {S};
   }
-  \draw[cGray, line width=0.62pt] (r0)--(r60)--(r120)--(r180)--(r240)--(r300)--cycle;
-  \draw[cGray, line width=0.42pt] ($(r0)!0.14!(r60)$)--($(r0)!0.86!(r60)$);
-  \draw[cGray, line width=0.42pt] ($(r120)!0.14!(r180)$)--($(r120)!0.86!(r180)$);
-  \draw[cGray, line width=0.42pt] ($(r240)!0.14!(r300)$)--($(r240)!0.86!(r300)$);
-  \draw[cGray, line width=0.62pt] (r60)--++(0.55,0.43) coordinate (vinylA);
-  \draw[cGray, line width=0.42pt] ($(r60)!0.16!(vinylA)$)--($(r60)!0.88!(vinylA)$);
-  \draw[cGray, line width=0.62pt] (r300)--++(0.55,-0.43) coordinate (vinylB);
-  \draw[cGray, line width=0.42pt] ($(r300)!0.16!(vinylB)$)--($(r300)!0.88!(vinylB)$);
-  \node[body label] at (4.70,1.42) {DIB-derived segment};
+  \draw[cAmber!85!black, line width=0.58pt] ($(sc2)+(0.165,0)$)--($(sc2)+(0.215,0)$);
+  \draw[cGray, line width=0.56pt] ($(sc2)+(0.50,0)$)--(5.92,1.965);
 
-  \draw[cGray, line width=0.52pt] (0.90,1.12)--(1.15,1.12) (0.90,1.12)--(0.90,3.78)--(1.15,3.78);
-  \draw[cGray, line width=0.52pt] (5.48,1.12)--(5.73,1.12) (5.73,1.12)--(5.73,3.78)--(5.48,3.78);
-  \node[font=\sffamily\fontsize{6.4}{7.7}\selectfont, text=cGray] at (5.98,1.20) {$n$};
-  \node[body label, align=center] at (3.60,0.55) {random copolymer repeat-unit schematic};
+  % repeat-unit brackets [ ... ]_n
+  \draw[cGray, line width=0.52pt] (1.10,1.20)--(0.84,1.20)--(0.84,3.02)--(1.10,3.02);
+  \draw[cGray, line width=0.54pt] (0.84,2.30)--(1.26,2.30);
+  \draw[cGray, line width=0.52pt] (5.60,1.20)--(5.86,1.20)--(5.86,3.02)--(5.60,3.02);
+  \node[font=\sffamily\fontsize{6.2}{7.4}\selectfont, text=cGray] at (6.02,1.32) {$n$};
+  \node[body label, align=center] at (3.45,0.56) {poly(S-\emph{r}-DIB) linear repeat unit};
 \end{scope}
 
 % Panel B
