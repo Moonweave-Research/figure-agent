@@ -129,15 +129,15 @@
 
   % Real-space view: both trap classes are localized sites in one disordered film,
   % not separate material phases.
-  \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (3.42,5.02) {real space};
+  \node[body label] at (3.42,5.02) {real space};
   % A hand-shaped, flat material field avoids both a generic rounded card and
   % decorative pseudo-depth that would imply an undeclared film thickness.
-  \fill[cAmber!14]
+  \fill[cAmber!6]
     (0.82,1.23) .. controls (2.15,1.17) and (4.72,1.27) .. (6.18,1.22)
     .. controls (6.27,1.86) and (6.23,3.52) .. (6.18,4.29)
     .. controls (4.65,4.37) and (2.29,4.24) .. (0.84,4.34)
     .. controls (0.74,3.48) and (0.78,1.90) .. (0.82,1.23) -- cycle;
-  \draw[cAmber!70!black, line width=0.90pt]
+  \draw[cBrown!72!black, line width=0.90pt]
     (0.82,1.23) .. controls (2.15,1.17) and (4.72,1.27) .. (6.18,1.22)
     .. controls (6.27,1.86) and (6.23,3.52) .. (6.18,4.29)
     .. controls (4.65,4.37) and (2.29,4.24) .. (0.84,4.34)
@@ -188,7 +188,7 @@
     (4.66,2.88)--(7.40,2.88);
   \draw[cRed!24, dash pattern=on 2pt off 2pt, line width=0.84pt]
     (5.55,1.50)--(7.40,1.68);
-  \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (10.78,5.02) {energy diagram};
+  \node[body label] at (10.78,5.02) {energy diagram};
   \draw[axis line] (7.48,0.72)--(7.48,4.52);
   \draw[cBlue!78!black, line width=0.84pt] (7.42,2.88)--(7.54,2.88);
   \draw[cRed!78!black, line width=0.84pt] (7.42,1.68)--(7.54,1.68);
@@ -210,14 +210,14 @@
   \fill[cRed!4] (7.72,0.98) rectangle (11.80,2.38);
 
   % Sample true sideways Gaussians; hand-shaped lens/cusp silhouettes are not DOS.
-  \fill[cBlue!34, opacity=0.68]
+  \fill[cBlue!20, opacity=0.58]
     plot[domain=2.48:3.28, samples=36, smooth]
       ({7.82 + 1.20*exp(-((\x-2.88)*(\x-2.88))/0.045)},\x)
     -- (7.82,3.28) -- (7.82,2.48) -- cycle;
   \draw[cBlue!84!black, line width=1.0pt]
     plot[domain=2.48:3.28, samples=36, smooth]
       ({7.82 + 1.20*exp(-((\x-2.88)*(\x-2.88))/0.045)},\x);
-  \fill[cRed!34, opacity=0.68]
+  \fill[cRed!20, opacity=0.58]
     plot[domain=1.02:2.34, samples=42, smooth]
       ({7.82 + 1.50*exp(-((\x-1.68)*(\x-1.68))/0.135)},\x)
     -- (7.82,2.34) -- (7.82,1.02) -- cycle;
@@ -284,7 +284,7 @@
   % MIM specimen, drawn as layered material rather than a generic container.
   \fill[cGray!24] (1.91,3.16) rectangle (3.96,3.32);
   \draw[cGray!84!black, line width=0.84pt] (1.91,3.16) rectangle (3.96,3.32);
-  \draw[cAmber!82!black, fill=cAmber!22, line width=0.90pt] (1.91,2.77) rectangle (3.96,3.16);
+  \draw[cAmber!82!black, fill=cAmber!10, line width=0.90pt] (1.91,2.77) rectangle (3.96,3.16);
   \fill[cGray!18] (1.91,2.61) rectangle (3.96,2.77);
   \draw[cGray!84!black, line width=0.84pt] (1.91,2.61) rectangle (3.96,2.77);
   \node[small label, text=cBrown] at (2.94,2.97) {polymer film};
@@ -309,9 +309,9 @@
     \fill[cBlue!82!black] (\x,\yb) circle (0.060);
     \fill[cRed!82!black] (\x,\yr) circle (0.060);
   }
-  \node[small label, font=\sffamily\bfseries\fontsize{5.2}{6.2}\selectfont,
+  \node[small label,
         text=cBlue!82!black, rotate=-14] at (3.05,1.62) {PI control: low $n$};
-  \node[small label, font=\sffamily\bfseries\fontsize{5.2}{6.2}\selectfont,
+  \node[small label,
         text=cRed!82!black, rotate=-22] at (2.56,0.86) {S-rich: high $n$};
 \end{scope}
 
@@ -326,14 +326,14 @@
   % Charging state.
   \fill[cGray!22] (1.15,2.78) rectangle (1.95,2.90);
   \draw[cGray!82!black, line width=0.84pt] (1.15,2.78) rectangle (1.95,2.90);
-  \fill[cAmber!24] (1.22,2.90) rectangle (1.88,3.03);
+  \fill[cAmber!10] (1.22,2.90) rectangle (1.88,3.03);
   \draw[cAmber!82!black, line width=0.84pt] (1.22,2.90) rectangle (1.88,3.03);
   \node[small label, anchor=east, text=cBrown] at (1.12,2.96) {polymer film};
   \draw[leader, cBrown!82!black] (1.14,2.96)--(1.20,2.97);
   % Measurement state after the same specimen is moved by hand.
   \fill[cGray!22] (2.18,2.78) rectangle (2.98,2.90);
   \draw[cGray!82!black, line width=0.84pt] (2.18,2.78) rectangle (2.98,2.90);
-  \fill[cAmber!24] (2.25,2.90) rectangle (2.91,3.03);
+  \fill[cAmber!10] (2.25,2.90) rectangle (2.91,3.03);
   \draw[cAmber!82!black, line width=0.84pt] (2.25,2.90) rectangle (2.91,3.03);
   \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cTeal!78!black, line width=0.84pt]
     (1.97,2.84)--(2.16,2.84);
@@ -409,14 +409,14 @@
   \node[body label, rotate=90] at (0.28,0.82) {$g(E_t)$};
   \node[body label, anchor=north east] at (4.21,0.29) {$E_t$};
   % Derived DOS: true Gaussians with deep/shallow peak-height ratio ~1.86.
-  \fill[cBlue!22]
+  \fill[cBlue!14]
     plot[domain=0.96:2.16, samples=36, smooth]
       (\x,{0.36 + 0.42*exp(-((\x-1.56)*(\x-1.56))/0.0648)})
     -- (2.16,0.36) -- (0.96,0.36) -- cycle;
   \draw[cBlue!84!black, line width=1.0pt]
     plot[domain=0.96:2.16, samples=36, smooth]
       (\x,{0.36 + 0.42*exp(-((\x-1.56)*(\x-1.56))/0.0648)});
-  \fill[cRed!22]
+  \fill[cRed!14]
     plot[domain=2.28:3.76, samples=42, smooth]
       (\x,{0.36 + 0.79*exp(-((\x-3.02)*(\x-3.02))/0.1800)})
     -- (3.76,0.36) -- (2.28,0.36) -- cycle;
@@ -461,7 +461,7 @@
   \draw[cGray!76!black, line width=0.90pt] (2.00,3.33)--(2.00,3.46);
 
   % Bespoke floating polymer cantilever, visibly deflected toward the left.
-  \fill[cAmber!30, rounded corners=0.45mm]
+  \fill[cAmber!12, rounded corners=0.45mm]
     (1.91,3.21) .. controls (1.93,2.48) and (1.53,1.52) ..
     (0.82,0.82) -- (0.96,0.67) .. controls (1.75,1.39) and
     (2.12,2.46) .. (2.09,3.21) -- cycle;
@@ -511,7 +511,7 @@
 
   \draw[-{Stealth[length=4.2pt,width=3.1pt]}, cRed!88!black, line width=0.84pt]
     (1.30,1.43)--(0.43,1.43);
-  \node[small label, font=\sffamily\bfseries\fontsize{5.2}{6.1}\selectfont,
+  \node[small label,
         text=cRed!88!black, anchor=south west, align=left]
     at (0.36,1.50) {Coulomb\\[-0.6pt]\mdseries repulsion};
 

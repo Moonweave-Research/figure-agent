@@ -258,8 +258,16 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert "circle (0.040);\n    \\draw" not in panel_c
     assert "cBlue!24, dash pattern" in panel_c
     assert "cRed!24, dash pattern" in panel_c
-    assert "cBlue!34, opacity=0.68" in panel_c
-    assert "cRed!34, opacity=0.68" in panel_c
+    # Keep the DOS legible through its publication-weight outline instead of
+    # locking a saturated area fill that makes the schematic read as artwork.
+    for color in ("Blue", "Red"):
+        fill = re.search(
+            rf"\\fill\[c{color}!(\d+), opacity=([0-9.]+)\]", panel_c
+        )
+        assert fill
+        assert int(fill.group(1)) <= 20
+        assert float(fill.group(2)) <= 0.60
+        assert f"c{color}!84!black, line width=1.0pt" in panel_c
     assert "{Localized trap model};" in panel_c
     assert "{Localized shallow and deep traps};" not in panel_c
 
