@@ -170,6 +170,9 @@ def test_repaired_panel_e_surface_charge_has_no_undeclared_gradient() -> None:
     assert r"\foreach \x in {1.38,1.56,1.74,2.41,2.59,2.77}" in panel_e
     assert r"\tone" not in panel_e
     assert r"\rad" not in panel_e
+    assert r"\foreach \dx in {-0.08,0,0.08}" not in panel_e
+    assert "dash pattern=on 1.2pt off 1.1pt" in panel_e
+    assert "(1.55,3.30)--(1.55,3.15)" in panel_e
 
 
 def test_repaired_panel_e_uses_colour_for_measurement_marks_not_text() -> None:
