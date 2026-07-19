@@ -4,30 +4,30 @@ captured_at_commit: 5a2a141804745b3a44c82c59bcb9315a1c0b60fb
 tracked_receipts:
   scaffold:
     path: review/failure-first/current_render_review_scaffold_v1.yaml
-    sha256: sha256:46012d68f62268a889cea0575f84750640ab6ac00fdf92264dc866c5bf159dfd
+    sha256: sha256:6847a0597d78b750eaf0138346c65410e22eaf6fe9c532f45a3b24e49ca00598
   render_receipt:
     path: review/failure-first/render_receipt.yaml
-    sha256: sha256:5f3e25609fd30c9ae1832c45d2705f64f60bdca90a3f6bd8bf324c4e78e66a49
+    sha256: sha256:e340f6018bc814478e8d05a990ddf6c4453f59b6636a1d6fd00097fcfa3f5787
 tracked_inputs:
   tex:
     path: fig3_resistance_mechanism.tex
-    sha256: sha256:148d9bda59c6344f31a587b0b3517ee07d9c47bfff32980c21111a803d377955
+    sha256: sha256:3eb8349ae637664d76e8a2f4d33e3d583da0b7a687d0cc3efb80ace83d603179
   briefing:
     path: briefing.md
     sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
   spec:
     path: spec.yaml
-    sha256: sha256:d74eb6d425ab0e83787d408b1859c364c6cec5b4eaac1cdd4148d396c7dc06c8
+    sha256: sha256:f6df543ef344c87b279d4231fe0f4ee7daa2cdb6f575540e8e7b90e9f3e5cadb
 optional_ignored_build:
   render_png:
     path: build/fig3_resistance_mechanism.png
-    recorded_sha256: sha256:ca6cc671da1403bd0c9123b9eacf033206080fb34bef0e0d1072f41d84b9b8a3
+    recorded_sha256: sha256:d57f2f48794caa9284a68887bf2197c8a178203f85a1068e5f1f363e09fb8ef4
   audit_crop_manifest:
     path: build/audit_crops/manifest.json
-    recorded_sha256: sha256:dd54dd6ff95300c4b43e7a6bea5235812d8a3783d8722917d067ad272087eebf
+    recorded_sha256: sha256:208ebd7094156d4e649a71bb808eb37a9eb4ce1360806f4caaf1eb5d2dce4281
   print_proxy:
     path: build/audit_crops/print_178mm.png
-    recorded_sha256: sha256:98f00975e381b223345ba2f8be9efbc58d18cda1f3e1214893f624b0d3de5e1c
+    recorded_sha256: sha256:09746e95e8f2f60687a9c6e0e1cc6c9c1ad43499cb83781f3b193c737d05819d
 clean_checkout_validation:
   mode: tracked_files_and_recorded_hashes_only
   ignored_build_reads_required: false

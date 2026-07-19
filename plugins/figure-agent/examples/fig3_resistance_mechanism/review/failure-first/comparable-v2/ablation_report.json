@@ -1,5 +1,6 @@
 {
   "comparison_evidence": "transcript_bound",
+  "correction_time_gate": "failed",
   "deltas": {
     "repaired_vs_raw": {
       "confirmed_defect_count": -2,
@@ -14,6 +15,7 @@
       "intervention_count": 1
     }
   },
+  "lineage_gate": "failed",
   "product_claim": "not_authorized",
   "publication_acceptance": "not_claimed",
   "reproduction_gate": "passed",
