@@ -253,6 +253,14 @@ def test_repaired_lower_row_uses_one_aligned_header_band() -> None:
         assert f"at (0.82,4.42) {{{title}}};" in panel
 
 
+def test_repaired_panel_separators_remain_subordinate_to_scientific_marks() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    separators = source.split("% Panel A", 1)[0]
+
+    assert separators.count("cGray!10, line width=0.84pt") == 5
+    assert "cGray!18, line width=0.84pt" not in separators
+
+
 def test_repaired_top_row_summary_captions_share_one_text_level() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
