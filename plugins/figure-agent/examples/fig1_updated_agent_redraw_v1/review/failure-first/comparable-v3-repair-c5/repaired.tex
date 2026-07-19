@@ -328,12 +328,12 @@
   % Non-contact induced electrostatic-voltmeter measurement (not a Kelvin probe).
   % The translation cue is bound to the carriage below, not floated near the
   % corona where it could be mistaken for an electric-field arrow.
-  % Coherent 2D cross-section: the translation stage, grounded substrate,
-  % and polymer film are separate flat layers with no pseudo-3D side face.
-  \fill[cGray!13] (1.08,2.66) rectangle (2.88,2.74);
-  \draw[cGray!72!black, line width=0.36pt] (1.08,2.66) rectangle (2.88,2.74);
+  % Coherent 2D cross-section. Sample translation is shown as a process cue,
+  % not as a second plate that could be mistaken for another material layer.
   \draw[-{Stealth[length=2.5pt,width=1.9pt]}, cTeal!82!black, line width=0.42pt]
-    (1.32,2.70)--(2.24,2.70);
+    (1.30,2.69)--(2.20,2.69);
+  \node[anchor=west, text=cTeal!58!black,
+        font=\sffamily\fontsize{3.8}{4.6}\selectfont] at (2.28,2.69) {scan};
   \fill[cGray!22] (1.13,2.77) rectangle (3.03,2.92);
   \draw[cGray!82!black, line width=0.42pt] (1.13,2.77) rectangle (3.03,2.92);
   \fill[cAmber!24] (1.34,2.92) rectangle (2.82,3.06);
@@ -363,13 +363,16 @@
       (1.45,3.31)--({1.45+\dx},3.24);
   }
   \node[small label, anchor=east, text=cGray!82!black] at (1.31,3.68) {$\mathrm{HV}^{+}$};
-  % Cylindrical non-contact ESVM sensor with a physical cable and input socket.
-  \fill[black, opacity=0.10] (1.94,3.22) ellipse (0.17 and 0.065);
-  \draw[cGray!82!black, line width=0.44pt] (2.03,3.53)--(2.03,3.27);
-  \shade[ball color=cGray!72] (2.03,3.23) ellipse (0.17 and 0.065);
-  \draw[cGray!88!black, line width=0.30pt] (2.03,3.53)
+  % Non-contact SK-series sensor head: a slim rectangular body with a flat
+  % sensing face toward the sample, replacing the Kelvin-like disk icon.
+  \fill[black, opacity=0.08] (1.98,3.20) rectangle (2.14,3.64);
+  \fill[cGray!18] (1.96,3.18) rectangle (2.10,3.62);
+  \draw[cGray!82!black, line width=0.42pt] (1.96,3.18) rectangle (2.10,3.62);
+  \fill[cGray!82!black] (1.97,3.18) rectangle (2.09,3.22);
+  \draw[cGray!92!black, line width=0.28pt] (1.97,3.18) rectangle (2.09,3.22);
+  \draw[cGray!88!black, line width=0.30pt] (2.03,3.62)
     .. controls (2.48,3.57) and (2.82,3.47) .. (3.28,3.43);
-  \node[small label, anchor=south] at (2.03,3.54) {ESVM probe};
+  \node[small label, anchor=south] at (2.03,3.64) {ESVM head};
 
   % Hand-built ESVM faceplate with inset screen, bezel, socket and status LED.
   \fill[black, opacity=0.10] (3.30,2.82) rectangle (4.31,3.47);
