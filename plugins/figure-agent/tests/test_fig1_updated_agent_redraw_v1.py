@@ -378,7 +378,9 @@ def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
     assert "ESVM head" in panel_e
     assert "manual transfer" in panel_e
     assert "{derive};" in panel_e
-    assert "anchor=north, text=cGray!78!black] at (3.80,1.18)" in panel_e
+    assert "(3.80,1.46)--(3.80,1.20)" in panel_e
+    assert "anchor=west, text=cGray!78!black] at (3.92,1.33)" in panel_e
+    assert "anchor=north, text=cGray!78!black] at (3.80,1.18)" not in panel_e
     assert "Kelvin" not in panel_e
     assert r"\shade" not in panel_e
     assert "opacity=" not in panel_e
