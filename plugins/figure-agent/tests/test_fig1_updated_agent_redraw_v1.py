@@ -134,9 +134,11 @@ def test_bound_authoring_prompt_carries_project_cantilever_orientation_rule() ->
 
 def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
-    label = source.index("{manual transfer}")
+    label = source.index(r"{manual sample\\[-0.5pt]transfer}")
     declaration = source.rfind(r"\node", 0, label)
-    transfer_node = source[declaration : label + len("{manual transfer}")]
+    transfer_node = source[
+        declaration : label + len(r"{manual sample\\[-0.5pt]transfer}")
+    ]
 
     assert "small label" in transfer_node
     assert r"\fontsize{3.2}" not in transfer_node
@@ -376,7 +378,9 @@ def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
     assert widths
     assert min(widths) >= 0.84
     assert "ESVM head" in panel_e
-    assert "manual transfer" in panel_e
+    assert r"manual sample\\[-0.5pt]transfer" in panel_e
+    assert "anchor=north, align=center" in panel_e
+    assert "{manual transfer}" not in panel_e
     assert "{derive};" in panel_e
     assert "(3.80,1.46)--(3.80,1.20)" in panel_e
     assert "anchor=west, text=cGray!78!black] at (3.92,1.33)" in panel_e
