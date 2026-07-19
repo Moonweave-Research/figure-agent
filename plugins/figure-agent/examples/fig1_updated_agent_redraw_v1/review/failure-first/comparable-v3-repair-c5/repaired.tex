@@ -217,9 +217,12 @@
   \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cRed!76!black, line width=0.44pt, dashed]
     (9.88,1.88) .. controls (10.12,2.30) and (10.10,2.78) .. (9.95,3.56);
   \node[small label, anchor=west, text=cGray!85!black] at (10.30,3.48) {thermal escape};
+  % Trap-depth caliper: bind the endpoints to E_C and the deep-DOS peak.
+  \draw[cRed!72!black, line width=0.34pt]
+    (13.60,3.78)--(13.78,3.78) (13.60,1.68)--(13.78,1.68);
   \draw[{Stealth[length=2.7pt,width=2.0pt]}-{Stealth[length=2.7pt,width=2.0pt]},
-        cRed!72!black, line width=0.42pt] (13.72,1.10)--(13.72,3.20);
-  \node[body label, rotate=90, text=cRed!80!black] at (14.08,2.15) {$\Delta E_t$};
+        cRed!72!black, line width=0.42pt] (13.72,1.68)--(13.72,3.78);
+  \node[body label, rotate=90, text=cRed!80!black] at (14.08,2.73) {$\Delta E_t$};
   \draw[-{Stealth[length=2.5pt,width=1.9pt]}, cGray!82!black, line width=0.34pt]
     (7.82,0.50)--(9.08,0.50);
   \node[small label, text=cGray!82!black] at (8.45,0.30) {DOS};
@@ -282,12 +285,13 @@
     \shade[ball color=cRed!68] (\x,\yr) circle (0.052);
   }
   \draw[cGray!88!black, dash pattern=on 3pt off 2pt, line width=0.52pt]
-    (0.86,1.88)--(2.04,1.88)--(2.34,0.56);
+    (0.86,1.88)--(1.70,1.88)
+    .. controls (1.94,1.88) and (2.14,0.78) .. (2.34,0.56);
   \node[small label, font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont,
         text=cBlue!82!black, rotate=-14] at (3.26,1.53) {low $n$};
   \node[small label, font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont,
         text=cRed!82!black, rotate=-22] at (3.34,0.70) {high $n$};
-  \node[small label, text=cGray!88!black, anchor=south west] at (1.55,0.60) {Debye};
+  \node[small label, text=cGray!88!black, anchor=west] at (2.40,0.60) {Debye};
 \end{scope}
 
 % Panel E
@@ -359,27 +363,37 @@
   \node[small label, anchor=east] at (3.50,1.35) {derive};
 
   % Derived trap-density distribution in energy space.
-  \draw[axis line] (0.66,0.36)--(0.66,1.27);
+  \draw[axis line] (0.66,0.36)--(0.66,1.42);
   \draw[axis line] (0.66,0.36)--(4.24,0.36);
   \node[small label, rotate=90] at (0.28,0.82) {$g(E_t)$};
   \node[small label, anchor=north east] at (4.21,0.29) {$E_t$};
-  \path[draw=cBlue!82!black, fill=cBlue!18, line width=0.58pt]
-    (0.92,0.36) .. controls (1.20,0.36) and (1.27,0.88) .. (1.56,0.88)
-                .. controls (1.85,0.88) and (1.92,0.36) .. (2.20,0.36) -- cycle;
-  \path[draw=cRed!82!black, fill=cRed!18, line width=0.66pt]
-    (2.22,0.36) .. controls (2.53,0.36) and (2.58,1.12) .. (3.02,1.12)
-                .. controls (3.46,1.12) and (3.51,0.36) .. (3.84,0.36) -- cycle;
-  \foreach \x/\y in {1.32/0.70,1.56/0.88,1.80/0.70} {
+  % Derived DOS: true Gaussians with deep/shallow peak-height ratio ~1.86.
+  \fill[cBlue!22]
+    plot[domain=0.96:2.16, samples=36, smooth]
+      (\x,{0.36 + 0.42*exp(-((\x-1.56)*(\x-1.56))/0.0648)})
+    -- (2.16,0.36) -- (0.96,0.36) -- cycle;
+  \draw[cBlue!84!black, line width=0.58pt]
+    plot[domain=0.96:2.16, samples=36, smooth]
+      (\x,{0.36 + 0.42*exp(-((\x-1.56)*(\x-1.56))/0.0648)});
+  \fill[cRed!22]
+    plot[domain=2.28:3.76, samples=42, smooth]
+      (\x,{0.36 + 0.79*exp(-((\x-3.02)*(\x-3.02))/0.1800)})
+    -- (3.76,0.36) -- (2.28,0.36) -- cycle;
+  \draw[cRed!84!black, line width=0.66pt]
+    plot[domain=2.28:3.76, samples=42, smooth]
+      (\x,{0.36 + 0.79*exp(-((\x-3.02)*(\x-3.02))/0.1800)});
+  \foreach \x/\y in {1.32/0.53,1.56/0.78,1.80/0.53} {
     \shade[ball color=cBlue!62] (\x,\y) circle (0.043);
   }
-  \foreach \x/\y in {2.70/0.78,3.02/1.12,3.34/0.78} {
+  \foreach \x/\y in {2.70/0.81,3.02/1.15,3.34/0.81} {
     \shade[ball color=cRed!62] (\x,\y) circle (0.043);
   }
-  \draw[cGray!68!black, line width=0.30pt] (1.56,1.20)--(3.02,1.20);
-  \draw[cGray!68!black, line width=0.30pt] (1.56,1.15)--(1.56,1.25) (3.02,1.15)--(3.02,1.25);
-  \node[small label, anchor=south] at (2.29,1.24) {$\tau_d$};
+  \draw[cGray!68!black, line width=0.30pt]
+    (1.56,1.27)--(2.14,1.27) (2.44,1.27)--(3.02,1.27);
+  \draw[cGray!68!black, line width=0.30pt] (1.56,1.22)--(1.56,1.32) (3.02,1.22)--(3.02,1.32);
   \node[small label, text=cBlue!82!black, anchor=north] at (1.56,0.31) {shallow};
   \node[small label, text=cRed!82!black, anchor=north] at (3.02,0.31) {deep};
+  \node[small label] at (2.29,1.27) {$\tau_d$};
 \end{scope}
 
 % Panel F
