@@ -236,7 +236,7 @@ patterns:
     edge_max: 0.01
 
   # fig1_updated_agent_redraw_v1 (R5.2e / C5): orchestrator crop review under the
-  # named human's delegation confirmed these six blocking text_on_path candidates
+  # named human's delegation confirmed these five blocking text_on_path candidates
   # carry no real collision. The bold panel titles / panel letters sit beside the
   # thin (0.32pt) panel-frame line and only their own-glyph antialiased halo grazes
   # it; the Vs meter label is adequately separated from its own meter box border.
@@ -250,13 +250,6 @@ patterns:
     dark_max: 0.05
     edge_max: 0.012
     ground: "Panel A title tail 'poly(S-r-DIB)'; own-glyph halo grazes the thin top frame line, no real path collision (orchestrator crop review)."
-  - id: fig1_panelC_hero_tag_frame_halo
-    fixture: fig1_updated_agent_redraw_v1
-    glyph: HERO
-    kind: text_on_path
-    dark_max: 0.06
-    edge_max: 0.015
-    ground: "Panel C corner 'HERO' tag; bold-glyph halo near the thin frame line, no real collision (orchestrator crop review)."
   - id: fig1_panelE_letter_e_frame_halo
     fixture: fig1_updated_agent_redraw_v1
     glyph: E

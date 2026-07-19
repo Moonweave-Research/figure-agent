@@ -160,6 +160,17 @@ def test_repaired_panel_e_caliper_label_interrupts_its_path() -> None:
     assert "inner xsep" in caliper_label
 
 
+def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
+    registry = _yaml("../../_known_false_positives.yaml")
+    fig1_patterns = [
+        pattern
+        for pattern in registry["patterns"]
+        if pattern.get("fixture") == "fig1_updated_agent_redraw_v1"
+    ]
+
+    assert all(pattern.get("glyph") != "HERO" for pattern in fig1_patterns)
+
+
 def test_r5_v2_predeclaration_frees_composition_but_binds_vertical_cantilever() -> None:
     run_root = (
         PLUGIN_ROOT
