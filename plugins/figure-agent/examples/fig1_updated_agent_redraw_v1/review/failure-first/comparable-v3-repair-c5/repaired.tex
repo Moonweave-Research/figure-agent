@@ -100,22 +100,22 @@
   \node[panel title] at (0.82,4.62) {Composition series};
 
   % increasing sulfur content encoded as polysulfide chain length (S60 -> S85)
-  \draw[-{Stealth[length=3.4pt,width=2.6pt]}, cAmber!90!black, line width=0.8pt]
+  \draw[-{Stealth[length=3.4pt,width=2.6pt]}, cAmber!90!black, line width=1.0pt]
     (0.66,1.45)--(0.66,3.85);
   \node[small label, rotate=90, anchor=south, text=cBrown] at (0.44,2.65) {increasing sulfur content};
   \foreach \y/\lbl/\sc in {1.55/S$_{60}$/2, 2.62/S$_{75}$/4, 3.70/S$_{85}$/6}{
     \coordinate (dl) at (1.62,\y);
-    \draw[cGray, line width=0.5pt, line join=round]
+    \draw[cGray, line width=1.0pt, line join=round]
       ([shift=(0:0.20)]dl)--([shift=(60:0.20)]dl)--([shift=(120:0.20)]dl)--([shift=(180:0.20)]dl)--([shift=(240:0.20)]dl)--([shift=(300:0.20)]dl)--cycle;
-    \draw[cAmber!80!black, line width=0.55pt] (1.82,\y)--({2.24+0.36*\sc},\y);
+    \draw[cAmber!80!black, line width=1.0pt] (1.82,\y)--({2.24+0.36*\sc},\y);
     \foreach \k in {1,...,\sc}{
-      \node[circle, draw=cAmber!85!black, fill=cAmberSphere!78, line width=0.32pt,
+      \node[circle, draw=cAmber!85!black, fill=cAmberSphere!78, line width=0.84pt,
             minimum size=2.1mm, inner sep=0pt,
             font=\sffamily\bfseries\fontsize{3.9}{4.7}\selectfont, text=cBrown]
             at ({2.06+0.36*\k},\y) {S};
     }
     \coordinate (dr) at ({2.44+0.36*\sc},\y);
-    \draw[cGray, line width=0.5pt, line join=round]
+    \draw[cGray, line width=1.0pt, line join=round]
       ([shift=(0:0.20)]dr)--([shift=(60:0.20)]dr)--([shift=(120:0.20)]dr)--([shift=(180:0.20)]dr)--([shift=(240:0.20)]dr)--([shift=(300:0.20)]dr)--cycle;
     \node[body label, anchor=west, text=cBrown] at ({2.44+0.36*\sc+0.34},\y) {\lbl};
   }
