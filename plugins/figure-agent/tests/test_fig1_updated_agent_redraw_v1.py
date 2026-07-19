@@ -166,6 +166,8 @@ def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
     assert r"circle (0.055)" in panel_f
     assert "cGray!54!black, line width=0.84pt" in panel_f
     assert "cAmber!7, rounded corners=0.45mm" in panel_f
+    assert r"(1.325,1.43)--(0.43,1.43)" in panel_f
+    assert r"(1.38,1.43)--(0.43,1.43)" not in panel_f
 
 
 def test_repaired_panel_e_caliper_label_interrupts_its_path() -> None:
