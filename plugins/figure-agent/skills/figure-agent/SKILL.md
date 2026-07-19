@@ -286,6 +286,11 @@ transformation, and result in order. Flag an unexplained state such as deposited
 charge without a source, and keep process labels/arrows out of data peaks,
 calipers, and axis-label lanes.
 
+For each apparatus schematic, identify the specimen and every active film, layer,
+electrode, or interface needed to interpret the measurement. Instrument names,
+wires, and grounds do not establish what material is measured; an unbound or
+unlabeled specimen region is missing experimental provenance.
+
 When the same population, specimen, or state is shown in multiple representations,
 require visible correspondence through aligned anchors, identifiers, color, or
 leaders. Keep an equivalence connector out of plot axes and avoid arrowheads or

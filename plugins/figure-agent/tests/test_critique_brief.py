@@ -624,6 +624,10 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "preparation or excitation, acquisition" in brief
     assert "deposited charge without a source" in brief
     assert "process label/arrow overlapping data" in brief
+    assert "For every apparatus schematic" in brief
+    assert "active film, layer" in brief
+    assert "do not establish what material is being measured" in brief
+    assert "missing experimental provenance" in brief
     assert "appears in multiple representations" in brief
     assert "explicit correspondence" in brief
     assert "invented transport" not in brief

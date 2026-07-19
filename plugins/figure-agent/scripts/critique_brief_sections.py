@@ -81,6 +81,10 @@ preparation or excitation, acquisition, transformation, and result. Route an
 unexplained state such as deposited charge without a source, a missing stage, or
 a process label/arrow overlapping data, a caliper, or an axis-label lane to a
 normal finding.
+For every apparatus schematic, identify the specimen and any active film, layer,
+electrode, or interface required to interpret the measurement. Named instruments,
+wires, and grounds do not establish what material is being measured; route an
+unbound or unlabeled specimen region as missing experimental provenance.
 When one population, specimen, or state appears in multiple representations
 (for example real space, energy space, and a derived distribution), verify an
 explicit correspondence through aligned anchors, identifiers, color, or leaders.
