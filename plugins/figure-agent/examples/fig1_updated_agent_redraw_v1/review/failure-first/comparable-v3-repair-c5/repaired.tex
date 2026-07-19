@@ -167,7 +167,7 @@
                          2.15/1.62,3.25/1.71,4.55/1.47,
                          2.10/2.70,3.18/2.02,3.92/1.98} {
     \fill[cAmberSphere!88] (\xx,\yy) circle (0.040);
-    \draw[cAmber!72!black, line width=0.18pt] (\xx,\yy) circle (0.040);
+    \draw[cAmber!72!black, line width=0.25pt] (\xx,\yy) circle (0.040);
   }
   \foreach \x/\y in {1.50/1.48,4.56/2.88} {
     \fill[cBlue!70] (\x,\y) circle (0.10);
@@ -231,12 +231,12 @@
   \foreach \y in {2.72,3.04} {
     \draw[cBlue!82!black, line width=0.62pt] (9.18,\y)--(10.15,\y);
     \fill[cBlue!74] (9.62,\y) circle (0.09);
-    \draw[cBlue!88!black, line width=0.22pt] (9.62,\y) circle (0.09);
+    \draw[cBlue!88!black, line width=0.25pt] (9.62,\y) circle (0.09);
   }
   \foreach \y in {1.46,1.88} {
     \draw[cRed!82!black, line width=0.68pt] (9.42,\y)--(10.38,\y);
     \fill[cRed!76] (9.88,\y) circle (0.09);
-    \draw[cRed!88!black, line width=0.22pt] (9.88,\y) circle (0.09);
+    \draw[cRed!88!black, line width=0.25pt] (9.88,\y) circle (0.09);
   }
   \node[body label, font=\sffamily\bfseries\fontsize{6.0}{7.2}\selectfont,
         text=cBlue!82!black, anchor=west] at (10.62,2.90) {shallow};
@@ -318,9 +318,9 @@
   \draw[cRed!82!black, line width=0.82pt] (0.86,1.88)--(4.02,0.66);
   \foreach \x/\yb/\yr in {1.28/1.78/1.72,2.22/1.55/1.36,3.25/1.30/0.96} {
     \fill[cBlue!72] (\x,\yb) circle (0.052);
-    \draw[cBlue!88!black, line width=0.20pt] (\x,\yb) circle (0.052);
+    \draw[cBlue!88!black, line width=0.25pt] (\x,\yb) circle (0.052);
     \fill[cRed!72] (\x,\yr) circle (0.052);
-    \draw[cRed!88!black, line width=0.20pt] (\x,\yr) circle (0.052);
+    \draw[cRed!88!black, line width=0.25pt] (\x,\yr) circle (0.052);
   }
   \node[small label, font=\sffamily\bfseries\fontsize{5.2}{6.2}\selectfont,
         text=cBlue!82!black, rotate=-14] at (3.05,1.62) {PI control: low $n$};
@@ -441,11 +441,11 @@
       (\x,{0.36 + 0.79*exp(-((\x-3.02)*(\x-3.02))/0.1800)});
   \foreach \x/\y in {1.32/0.53,1.56/0.78,1.80/0.53} {
     \fill[cBlue!72] (\x,\y) circle (0.043);
-    \draw[cBlue!88!black, line width=0.18pt] (\x,\y) circle (0.043);
+    \draw[cBlue!88!black, line width=0.25pt] (\x,\y) circle (0.043);
   }
   \foreach \x/\y in {2.70/0.81,3.02/1.15,3.34/0.81} {
     \fill[cRed!72] (\x,\y) circle (0.043);
-    \draw[cRed!88!black, line width=0.18pt] (\x,\y) circle (0.043);
+    \draw[cRed!88!black, line width=0.25pt] (\x,\y) circle (0.043);
   }
   % Paper-local authority defines tau_d as the energy-domain interval between
   % the shallow and deep Gaussian peak positions.
