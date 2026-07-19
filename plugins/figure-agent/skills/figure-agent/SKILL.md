@@ -260,6 +260,20 @@ authoring or drift review.
                              Report-only; subscription tokens, zero external API.
 ```
 
+Keep authoring freedom high and make critique strict about the rendered meaning.
+For every curve, distribution, band, well, or waveform named in the brief, inspect
+the panel crop and reduction-scale render and compare its morphology with the
+declared reference or stable domain convention. Labels and colors are insufficient:
+route cusps, lenses, unintended plateaus, truncated lobes, wrong peak count,
+wrong relative width/height, or other claim-changing silhouettes to a normal
+finding. Do not require one reusable drawing primitive as the remedy; let the LLM
+choose a new construction and re-review the pixels.
+
+Also inspect for workflow-metadata leakage. Terms such as `HERO`, priority,
+draft, iteration, reviewer notes, or approval state belong in comments/specs and
+must not appear in publication-visible pixels unless explicitly declared as
+reader-facing scientific text.
+
 When a usable figure-level reference image or panel reference+bbox pair exists,
 `/fig_status` and `/fig_export` promote missing/stale `critique.md` to a
 pre-export checkpoint. Use `fig-agent export <name> --skip-critique` only

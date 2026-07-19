@@ -605,6 +605,18 @@ def test_critique_brief_includes_top_tier_journal_audit(tmp_path):
     assert "### 10. Aesthetic Coherence" in brief
 
 
+def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "### Mandatory semantic-morphology and metadata-leak checks" in brief
+    assert "not make a cusp, lens" in brief
+    assert "wrong peak count" in brief
+    assert "metadata such as HERO" in brief
+    assert "Do not prescribe a reusable primitive as the only" in brief
+
+
 def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 

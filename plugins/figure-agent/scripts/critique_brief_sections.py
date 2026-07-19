@@ -57,6 +57,17 @@ Enumerate at least 5 physical-plausibility checks specific to this figure:
 List 3 elements that SHOULD be present per provided reference/briefing context
 but are weakly represented or missing entirely. For each, provide element name,
 bounded reference provenance, severity, and proposed action.
+
+### Mandatory semantic-morphology and metadata-leak checks
+Before concluding, inspect every semantically named curve, distribution, band,
+well, or waveform at panel-crop and reduction scale. A correct label/color does
+not make a cusp, lens, unintended plateau, truncated lobe, wrong peak count, or
+wrong relative width/height scientifically correct. Route each mismatch to a
+normal attributable finding. Also inspect all visible text for leaked workflow
+metadata such as HERO, priority, draft, iteration, reviewer note, or approval
+state; route leakage to a finding unless the brief explicitly declares it as
+reader-facing scientific text. Do not prescribe a reusable primitive as the only
+repair: describe the rendered defect and let the authoring LLM choose the fix.
     """
 
 
@@ -92,7 +103,9 @@ acceptable schematic simplifications.
 ### 5. Scientific Plausibility
 Evaluate arrows, fields, flows, forces, charge motion, current, energy ordering,
 scale/proximity, material/interface meaning, theory-guard invariants, and
-mechanism-level label/object conflicts.
+mechanism-level label/object conflicts. For every semantically named curve,
+distribution, band, well, or waveform, verify that the rendered morphology—not
+only its label and color—matches the brief, reference, or stable domain convention.
 
 ### 6. Composition and Layout
 Evaluate visual hierarchy, reading path, spacing, alignment, density, white
@@ -102,7 +115,8 @@ one coherent system instead of assembled fragments.
 ### 7. Label and Annotation Semantics
 Evaluate every label-target audit item, terminology consistency, leader-line
 necessity, label density, cross-panel label grammar, and annotation usefulness
-versus clutter.
+versus clutter. Flag workflow metadata rendered as publication content unless the
+brief explicitly declares it reader-facing.
 
 ### 8. Journal Polish
 Evaluate typography hierarchy, line-weight economy, palette economy, semantic
