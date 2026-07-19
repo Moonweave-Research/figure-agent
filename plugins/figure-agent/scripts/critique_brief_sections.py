@@ -110,6 +110,9 @@ When a concrete instrument family or sensing principle is declared, compare the
 sensing-head silhouette, orientation, target standoff, and cable/control topology
 with its source authority. Renaming a generic icon does not correct geometry that
 still depicts a different or confusable measurement method.
+Preserve the declared evidence granularity for instrument identity. Family-level
+authority supports the family name and topology, not unverified model-specific
+features, controls, or dimensions; keep those schematic unless a model is declared.
 Inventory every guide, construction line, alignment rail, field-like trace,
 halo, and bracket that survives into publication-visible pixels. Each must bind
 to a named variable, boundary, material, or physical relation; repetition alone

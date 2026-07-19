@@ -43,14 +43,6 @@ rules:
       locator: examples/fig1_overview_v2_pair_001_vault/spec.yaml:38-44
       quote: "side-view structurally better for this apparatus"
     transfer_policy: use_as_question
-  - id: pair001.panel-e-probe-above-sample
-    category: instrument_standard
-    rule: Bind probe, motion stage, sample, grounded substrate, and Vs meter labels to their physical components in ISPD-style apparatus panels.
-    source:
-      kind: iteration_comment
-      locator: examples/fig1_overview_v2_pair_001_vault/spec.yaml:44-47
-      quote: "probe-above-sample geometry, motion-stage labeling, sample-on-grounded-substrate cross-section"
-    transfer_policy: use_as_constraint
   - id: pair001.panel-f-cross-section-conventions
     category: style_lock
     rule: Preserve cross-section conventions for electrode hatching, insulator stipple, parameter labels, and deflection arrows when transferring Panel F visual grammar.

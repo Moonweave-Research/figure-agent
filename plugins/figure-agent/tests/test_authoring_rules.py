@@ -37,6 +37,28 @@ def test_pair001_rule_catalog_requires_source_anchored_rules() -> None:
         assert rule["transfer_policy"] in {"use_as_question", "use_as_constraint"}
 
 
+def test_current_ispd_rules_preserve_manual_keyence_measurement() -> None:
+    pair_catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
+    )
+    project_catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-project.md"
+    )
+
+    pair_text = "\n".join(rule["rule"] for rule in pair_catalog["rules"])
+    assert "motion stage" not in pair_text.lower()
+
+    ispd_rule = next(
+        rule
+        for rule in project_catalog["rules"]
+        if rule["id"] == "polymer_paper_project.ispd-keyence-manual-transfer"
+    )
+    assert "Keyence SK series" in ispd_rule["rule"]
+    assert "manually transfer" in ispd_rule["rule"]
+    assert "Kelvin probe" in ispd_rule["rule"]
+    assert "exact model" in ispd_rule["rule"]
+
+
 def test_rule_catalog_rejects_unanchored_generic_guidance(tmp_path: Path) -> None:
     path = tmp_path / "bad.md"
     path.write_text(

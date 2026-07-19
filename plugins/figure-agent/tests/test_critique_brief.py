@@ -644,6 +644,11 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "concrete instrument family" in brief
     assert "sensing-head silhouette" in brief
     assert "Renaming a generic icon" in brief
+    assert "Preserve the declared evidence granularity" in brief
+    assert "Family-level" in brief
+    assert "authority supports the family name" in brief
+    assert "model-specific" in brief
+    assert "features, controls" in brief
     assert "Inventory every guide, construction line, alignment rail" in brief
     assert "repetition alone" in brief
     assert "does not give a mark scientific meaning" in brief

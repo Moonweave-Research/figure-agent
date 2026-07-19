@@ -27,6 +27,14 @@ rules:
       locator: "Fig1 R5 prospective v2 adversarial review (2026-07-18)"
       quote: "아직 내가 굳이 안집어줘도 많을 정도로 완성도는 부족"
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.ispd-keyence-manual-transfer
+    category: instrument_standard
+    rule: "For ISPD panels, depict a Keyence SK series induction-type, non-contact electrostatic voltmeter. Corona-charge the specimen first, then manually transfer the same specimen to the adjacent measurement station. Do not invent an automated motion stage, continuous scan, conveyor, or Kelvin probe. Preserve the confirmed series-level topology without inventing an exact model."
+    source:
+      kind: iteration_comment
+      locator: "Fig1 Panel E human review (2026-07-19)"
+      quote: "코로나 차지를 한 후에, 직접 옆에 있는, 저 측정 장비 쪽으로 옮기는거야 우리가 자동 모션 기계는 아니야 / 아까 너가 말한 시리즈는 맞아"
+    transfer_policy: use_as_constraint
 ---
 
 # Project authoring rule catalog (polymer_paper_project)
