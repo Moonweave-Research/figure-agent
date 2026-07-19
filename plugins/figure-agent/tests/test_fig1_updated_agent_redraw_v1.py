@@ -200,6 +200,15 @@ def test_repaired_top_row_summary_captions_share_one_text_level() -> None:
     assert r"\node[body label, align=center]" in panel_b
 
 
+def test_repaired_s8_atom_labels_survive_reduction() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+
+    assert r"minimum size=1.60mm" in panel_a
+    assert r"\fontsize{3.8}{4.6}\selectfont" in panel_a
+    assert r"\fontsize{3.1}{3.8}\selectfont" not in panel_a
+
+
 def test_repaired_panel_a_strokes_survive_nature_double_column_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     separators = source.split("% Panel A", 1)[0].split(
