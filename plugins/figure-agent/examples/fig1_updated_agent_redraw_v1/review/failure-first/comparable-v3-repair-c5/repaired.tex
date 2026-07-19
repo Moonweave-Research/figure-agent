@@ -125,56 +125,90 @@
   \node[font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont, text=cAmber!90!black,
         anchor=east] at (14.42,5.47) {HERO};
 
-  \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (3.52,4.88) {real space};
-  \draw[cGray!55, line width=0.46pt]
-    (0.68,2.30) .. controls (1.45,3.75) and (2.28,1.18) .. (3.06,2.84)
-    .. controls (3.70,4.10) and (4.55,1.15) .. (5.23,2.70)
-    .. controls (5.70,3.70) and (6.16,2.35) .. (6.65,2.92);
-  \draw[cAmber, line width=1.15pt]
-    (0.70,3.15) .. controls (1.35,4.02) and (2.05,2.70) .. (2.72,3.45)
-    .. controls (3.42,4.18) and (4.18,2.72) .. (4.88,3.35)
-    .. controls (5.55,3.92) and (6.05,3.05) .. (6.62,3.62);
-  \foreach \x/\y in {1.22/3.58,2.72/3.45,4.92/3.38} {
-    \draw[cBlue, line width=0.58pt] (\x-0.22,\y-0.32)
-      .. controls (\x-0.10,\y-0.70) and (\x+0.10,\y-0.70) .. (\x+0.22,\y-0.32);
-    \node[electron] at (\x,\y-0.53) {};
+  % Real-space view: both trap classes are localized sites in one disordered film,
+  % not separate material phases.
+  \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (3.42,4.88) {real space};
+  \fill[black, opacity=0.12, rounded corners=1.2mm] (0.91,1.13) rectangle (6.30,4.21);
+  \shade[top color=cAmber!8, bottom color=cAmber!28, rounded corners=1.2mm]
+    (0.82,1.22) rectangle (6.21,4.30);
+  \draw[cAmber!70!black, line width=0.58pt, rounded corners=1.2mm]
+    (0.82,1.22) rectangle (6.21,4.30);
+  \draw[white, opacity=0.62, line width=0.38pt] (0.98,4.23)--(6.05,4.23);
+  \foreach \yy/\phase in {3.63/0,2.78/18,1.92/-12} {
+    \draw[cBrown!72!black, line width=0.56pt]
+      (1.12,\yy) .. controls (1.65,{\yy+0.34}) and (2.14,{\yy-0.30}) .. (2.74,\yy)
+      .. controls (3.32,{\yy+0.31}) and (3.92,{\yy-0.28}) .. (4.48,\yy)
+      .. controls (5.02,{\yy+0.28}) and (5.55,{\yy-0.24}) .. (5.91,\yy);
+    \foreach \xx in {1.42,2.70,4.45,5.62} {
+      \shade[ball color=cAmberSphere!80] (\xx,{\yy+0.055*cos(\phase+\xx*70)}) circle (0.045);
+    }
   }
-  \foreach \x/\y in {2.02/2.68,3.78/2.52,5.72/2.82} {
-    \draw[cRed!90!black, line width=0.82pt] (\x-0.30,\y-0.20)
-      .. controls (\x-0.18,\y-1.02) and (\x+0.18,\y-1.02) .. (\x+0.30,\y-0.20);
-    \node[circle, draw=cRed!90!black, fill=cRed!72, line width=0.34pt,
-          minimum size=1.20mm, inner sep=0pt] at (\x,\y-0.78) {};
+  \foreach \x/\y in {1.72/3.48,4.88/2.92} {
+    \shade[ball color=cBlue!66] (\x,\y) circle (0.095);
+    \draw[cBlue!85!black, line width=0.26pt] (\x,\y) circle (0.095);
   }
-  \node[body label, text=cBlue!85!black, anchor=west] at (0.82,1.03) {shallow localization};
-  \draw[leader, cBlue] (1.82,1.12)--(2.58,2.98);
-  \node[body label, text=cRed!88!black, anchor=east] at (6.28,0.63) {deep localization};
-  \draw[leader, cRed!88!black] (5.28,0.78)--(4.02,1.72);
+  \foreach \x/\y in {2.56/1.78,5.26/1.62} {
+    \shade[ball color=cRed!68] (\x,\y) circle (0.11);
+    \draw[cRed!88!black, line width=0.26pt] (\x,\y) circle (0.11);
+  }
+  \node[small label, text=cBlue!85!black, anchor=west] at (1.02,0.78) {shallow sites};
+  \draw[leader, cBlue!78!black] (2.02,0.86)--(1.74,3.33);
+  \node[small label, text=cRed!88!black, anchor=east] at (6.02,0.78) {deep sites};
+  \draw[leader, cRed!82!black] (5.12,0.86)--(5.25,1.47);
+  \node[small label, text=cBrown, anchor=north east] at (6.03,4.12) {poly(S-\emph{r}-DIB) film};
 
-  \draw[cLGray, line width=0.32pt] (7.10,0.52)--(7.10,4.88);
-  \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (10.92,4.88) {energy landscape};
-  \draw[axis line] (7.72,0.72)--(7.72,4.40);
-  \node[body label, rotate=90] at (7.34,2.58) {energy};
-  \draw[cGray, line width=0.48pt] (8.12,3.82)--(13.98,3.82);
-  \node[small label, fill=white, inner sep=1.2pt, anchor=south west] at (8.26,3.92) {mobility edge};
-  \draw[cBlue, line width=0.78pt]
-    (8.25,3.82) .. controls (8.50,3.26) and (8.72,3.26) .. (8.97,3.82);
-  \draw[cBlue, line width=0.78pt]
-    (9.48,3.82) .. controls (9.72,3.12) and (9.98,3.12) .. (10.22,3.82);
-  \draw[cRed!90!black, line width=1.02pt]
-    (10.78,3.82) .. controls (11.04,1.58) and (11.42,1.58) .. (11.70,3.82);
-  \draw[cRed!90!black, line width=1.02pt]
-    (12.42,3.82) .. controls (12.68,1.02) and (13.08,1.02) .. (13.38,3.82);
-  \node[electron] at (8.61,3.46) {};
-  \node[electron] at (9.85,3.34) {};
-  \node[circle, draw=cRed!90!black, fill=cRed!72, line width=0.34pt,
-        minimum size=1.20mm, inner sep=0pt] at (11.24,2.42) {};
-  \node[circle, draw=cRed!90!black, fill=cRed!72, line width=0.34pt,
-        minimum size=1.20mm, inner sep=0pt] at (12.91,1.82) {};
-  \draw[-{Stealth[length=2.7pt,width=2.0pt]}, cBlue, line width=0.45pt]
-    (9.86,3.12) .. controls (10.05,2.75) and (10.40,2.96) .. (10.42,3.48);
-  \node[small label, text=cBlue!85!black, anchor=north] at (9.48,2.72) {thermal escape};
-  \node[body label, text=cBlue!85!black] at (8.95,1.10) {shallow states};
-  \node[body label, text=cRed!88!black] at (12.18,0.62) {deep states};
+  % Energy-space view: continuous shallow/deep trap DOS below the mobility edge.
+  \draw[cLGray, line width=0.32pt] (6.72,0.52)--(6.72,4.88);
+  \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (10.78,4.88) {energy diagram};
+  \draw[axis line] (7.48,0.72)--(7.48,4.52);
+  \node[body label, rotate=90] at (7.10,2.58) {energy};
+
+  \draw[cGray!72, dash pattern=on 3pt off 2pt, line width=0.36pt] (7.72,4.25)--(12.98,4.25);
+  \node[small label, anchor=west] at (13.10,4.25) {vacuum};
+  \draw[cGray!88!black, line width=0.52pt] (7.72,3.78)--(12.98,3.78);
+  \node[body label, anchor=west] at (13.10,3.78) {$E_C$};
+  \draw[cGray!70, dash pattern=on 3pt off 2pt, line width=0.38pt]
+    (7.72,3.30)--(8.05,3.30) (9.58,3.30)--(12.98,3.30);
+  \node[small label, anchor=south west] at (8.05,3.36) {mobility edge};
+  \draw[cGray!88!black, line width=0.52pt] (7.72,0.86)--(12.98,0.86);
+  \node[body label, anchor=west] at (13.10,0.86) {$E_V$};
+
+  \fill[cBlue!5, rounded corners=1.2mm] (7.80,2.47) rectangle (13.30,3.22);
+  \fill[cRed!4, rounded corners=1.2mm] (7.80,1.02) rectangle (13.30,2.32);
+  \shade[left color=cBlue!48, right color=cBlue!8]
+    (7.82,2.52) .. controls (8.68,2.62) and (9.10,2.82) .. (9.28,2.91)
+                 .. controls (9.08,3.02) and (8.62,3.16) .. (7.82,3.20) -- cycle;
+  \draw[cBlue!82!black, line width=0.66pt]
+    (7.82,2.52) .. controls (8.68,2.62) and (9.10,2.82) .. (9.28,2.91)
+                 .. controls (9.08,3.02) and (8.62,3.16) .. (7.82,3.20);
+  \shade[left color=cRed!45, right color=cRed!8]
+    (7.82,1.08) .. controls (8.64,1.18) and (9.42,1.52) .. (9.68,1.70)
+                 .. controls (9.42,1.92) and (8.62,2.22) .. (7.82,2.28) -- cycle;
+  \draw[cRed!82!black, line width=0.72pt]
+    (7.82,1.08) .. controls (8.64,1.18) and (9.42,1.52) .. (9.68,1.70)
+                 .. controls (9.42,1.92) and (8.62,2.22) .. (7.82,2.28);
+
+  \foreach \y in {2.72,3.04} {
+    \draw[cBlue!82!black, line width=0.62pt] (9.18,\y)--(10.15,\y);
+    \shade[ball color=cBlue!70] (9.62,\y) circle (0.085);
+  }
+  \foreach \y in {1.46,1.88} {
+    \draw[cRed!82!black, line width=0.68pt] (9.42,\y)--(10.38,\y);
+    \shade[ball color=cRed!72] (9.88,\y) circle (0.09);
+  }
+  \node[body label, font=\sffamily\bfseries\fontsize{6.0}{7.2}\selectfont,
+        text=cBlue!82!black, anchor=west] at (10.62,2.90) {shallow};
+  \node[body label, font=\sffamily\bfseries\fontsize{6.0}{7.2}\selectfont,
+        text=cRed!82!black, anchor=west] at (10.62,1.68) {deep};
+
+  \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cBlue!78!black, line width=0.44pt]
+    (9.60,3.04) .. controls (9.43,3.22) and (9.58,3.43) .. (9.73,3.63);
+  \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cRed!76!black, line width=0.44pt, dashed]
+    (9.88,1.88) .. controls (10.12,2.30) and (10.10,2.78) .. (9.95,3.56);
+  \node[small label, anchor=west, text=cGray!85!black] at (10.30,3.48) {thermal escape};
+  \draw[{Stealth[length=2.7pt,width=2.0pt]}-{Stealth[length=2.7pt,width=2.0pt]},
+        cRed!72!black, line width=0.42pt] (13.72,1.10)--(13.72,3.20);
+  \node[body label, rotate=90, text=cRed!80!black] at (14.08,2.15) {$\Delta E_t$};
 \end{scope}
 
 % Panel D
