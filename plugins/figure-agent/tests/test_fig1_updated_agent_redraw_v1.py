@@ -159,6 +159,7 @@ def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
     assert "text=cRed" not in panel_f
     assert "text=cGray!88!black" in panel_f
     assert "text=cGray!92!black" in panel_f
+    assert r"{$V_{\mathrm{app}}$}" in panel_f
     assert r"circle (0.055)" in panel_f
     assert "cGray!54!black, line width=0.84pt" in panel_f
     assert "cAmber!7, rounded corners=0.45mm" in panel_f
