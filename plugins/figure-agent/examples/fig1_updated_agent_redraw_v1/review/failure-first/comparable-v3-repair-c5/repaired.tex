@@ -272,13 +272,13 @@
   \draw[cGray!92!black, line width=0.26pt] (0.62,3.08) rectangle (1.29,3.27);
   \node[font=\sffamily\bfseries\fontsize{4.0}{4.8}\selectfont, text=white] at (0.955,3.175) {$V/A$};
   \node[font=\sffamily\bfseries\fontsize{4.2}{5.0}\selectfont, text=cGray!85!black] at (0.83,2.86) {SMU};
-  \shade[ball color=cBlue!58] (1.27,2.90) circle (0.055);
-  \shade[ball color=cRed!58] (1.27,2.74) circle (0.055);
+  \shade[ball color=cGray!66] (1.27,2.90) circle (0.055);
+  \shade[ball color=cGray!58] (1.27,2.74) circle (0.055);
 
   % Two independent leads make the top/bottom electrode ownership explicit.
-  \draw[cBlue!75!black, line width=0.38pt]
+  \draw[cGray!76!black, line width=0.38pt]
     (1.32,2.90) .. controls (1.58,2.91) and (1.60,3.27) .. (1.91,3.27);
-  \draw[cRed!72!black, line width=0.38pt]
+  \draw[cGray!68!black, line width=0.38pt]
     (1.32,2.74) .. controls (1.56,2.73) and (1.62,2.66) .. (1.91,2.66);
 
   % MIM specimen, drawn as layered material rather than a generic container.
@@ -299,6 +299,8 @@
 
   % Symbolic log--log response: specimen-owned slopes carry the power-law contrast.
   \node[body label, anchor=west] at (0.72,2.27) {$I(t)\sim t^{-n}$};
+  \node[small label, anchor=east, text=cGray!82!black] at (4.18,2.27)
+    {$V=V_0$};
   \draw[axis line] (0.66,0.47)--(0.66,2.10);
   \draw[axis line] (0.66,0.47)--(4.28,0.47);
   \node[body label, rotate=90] at (0.28,1.28) {$\log I$};
@@ -313,9 +315,9 @@
     \shade[ball color=cRed!68] (\x,\yr) circle (0.052);
   }
   \node[small label, font=\sffamily\bfseries\fontsize{5.2}{6.2}\selectfont,
-        text=cBlue!82!black, rotate=-14] at (3.12,1.53) {control: low $n$};
+        text=cBlue!82!black, rotate=-14] at (3.12,1.53) {PI control: low $n$};
   \node[small label, font=\sffamily\bfseries\fontsize{5.2}{6.2}\selectfont,
-        text=cRed!82!black, rotate=-22] at (3.05,0.80) {sulfur: high $n$};
+        text=cRed!82!black, rotate=-22] at (3.05,0.82) {S-rich: high $n$};
 \end{scope}
 
 % Panel E
